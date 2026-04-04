@@ -31,7 +31,7 @@ const FEATURES: FeatureCardProps[] = [
     icon: "\uD83E\uDD16",
     title: "KI-Lerntutor",
     description:
-      "Stelle Fragen, lass dir Themen erklaeren oder generiere neue Karten per Chat mit Claude.",
+      "Stelle Fragen, lass dir Themen erklären oder generiere neue Karten per Chat mit Claude.",
     color: "purple",
   },
 ]
@@ -69,7 +69,7 @@ export default function LandingFeatures() {
             Alles, was du zum Lernen brauchst
           </h2>
           <p className="text-lg text-text-light max-w-2xl mx-auto">
-            Vier maechtige Werkzeuge in einer App — entwickelt von Studenten, fuer Studenten.
+            Vier mächtige Werkzeuge in einer App — entwickelt von Studenten, für Studenten.
           </p>
         </div>
 

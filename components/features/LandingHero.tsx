@@ -15,14 +15,14 @@ export default function LandingHero() {
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-8">
           <span className="text-sm" aria-hidden="true">{"\u26A1"}</span>
           <span className="text-sm font-bold text-primary-dark">
-            Kostenlos fuer Studenten
+            Kostenlos für Studenten
           </span>
         </div>
 
         {/* Headline */}
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-text-dark leading-tight mb-6">
           Lerne smarter,{" "}
-          <span className="text-primary">nicht haerter</span>
+          <span className="text-primary">nicht härter</span>
         </h1>
 
         {/* Subtitle */}
@@ -35,7 +35,7 @@ export default function LandingHero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/register"
-            className="btn-press w-full sm:w-auto px-8 py-4 text-lg font-extrabold text-white bg-primary rounded-xl shadow-button hover:bg-primary-dark transition-all"
+            className="btn-press w-full sm:w-auto px-8 py-4 text-lg font-extrabold text-white bg-primary-button rounded-xl shadow-button hover:bg-primary-dark transition-all"
           >
             Jetzt kostenlos starten
           </Link>

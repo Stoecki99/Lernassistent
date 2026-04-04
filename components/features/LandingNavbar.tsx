@@ -15,13 +15,13 @@ export default function LandingNavbar() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="px-5 py-2 text-sm font-bold text-secondary hover:text-secondary-dark transition-colors"
+              className="px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-bold text-secondary hover:text-secondary-dark transition-colors"
             >
               Anmelden
             </Link>
             <Link
               href="/register"
-              className="btn-press px-5 py-2 text-sm font-bold text-white bg-primary rounded-xl shadow-button hover:bg-primary-dark transition-all"
+              className="btn-press px-5 py-2.5 min-h-[44px] inline-flex items-center text-sm font-bold text-white bg-primary-button rounded-xl shadow-button hover:bg-primary-dark transition-all"
             >
               Kostenlos starten
             </Link>

@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -19,6 +18,12 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Gamification & Streak
+  streak        Int       @default(0)
+  longestStreak Int       @default(0)
+  points        Int       @default(0)
+  lastStudyDate DateTime?
 
   decks         Deck[]
   sessions      Session[]
@@ -65,6 +70,8 @@ model Deck {
   id          String   @id @default(cuid())
   name        String
   description String?
+  color       String   @default("#58CC02")
+  icon        String   @default("📚")
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -90,6 +97,7 @@ model Card {
   reps          Int      @default(0)
   lapses        Int      @default(0)
   state         Int      @default(0) // 0=New, 1=Learning, 2=Review, 3=Relearning
+  lastReview    DateTime?
 
   deck    Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
   reviews Review[]
@@ -99,6 +107,7 @@ model Review {
   id        String   @id @default(cuid())
   cardId    String
   rating    Int      // 1=Again, 2=Hard, 3=Good, 4=Easy
+  duration  Int      @default(0) // Antwortzeit in Sekunden
   createdAt DateTime @default(now())
 
   card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)

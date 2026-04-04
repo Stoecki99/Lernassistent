@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 export default function LandingSocialProof() {
   return (
     <section className="py-16 sm:py-24 bg-white">
@@ -5,7 +7,7 @@ export default function LandingSocialProof() {
         {/* Section header */}
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-text-dark mb-4">
-            Fuer Studenten gemacht
+            Für Studenten gemacht
           </h2>
           <p className="text-lg text-text-light max-w-2xl mx-auto">
             Egal ob Medizin, Jura, Informatik oder Sprachen — der Lernassistent passt sich deinem Fach an.
@@ -17,7 +19,7 @@ export default function LandingSocialProof() {
           <BenefitItem
             icon={"\u23F1"}
             title="Spart dir Zeit"
-            description="Lerne nur das, was du wirklich wiederholen musst. Kein sinnloses Durchblaettern."
+            description="Lerne nur das, was du wirklich wiederholen musst. Kein sinnloses Durchblättern."
           />
           <BenefitItem
             icon={"\uD83D\uDCAA"}
@@ -26,8 +28,8 @@ export default function LandingSocialProof() {
           />
           <BenefitItem
             icon={"\uD83C\uDF1F"}
-            title="Macht Spass"
-            description="Punkte, Streaks und Quiz-Challenges machen Lernen zum taeglichen Highlight."
+            title="Macht Spaß"
+            description="Punkte, Streaks und Quiz-Challenges machen Lernen zum täglichen Highlight."
           />
         </div>
 
@@ -39,12 +41,12 @@ export default function LandingSocialProof() {
           <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
             Erstelle dein kostenloses Konto in 30 Sekunden und starte sofort.
           </p>
-          <a
+          <Link
             href="/register"
             className="btn-press inline-block px-8 py-4 text-lg font-extrabold text-primary bg-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
             Jetzt kostenlos starten
-          </a>
+          </Link>
         </div>
       </div>
     </section>

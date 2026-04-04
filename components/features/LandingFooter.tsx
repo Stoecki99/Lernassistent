@@ -16,7 +16,7 @@ export default function LandingFooter() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed">
-              Dein persoenlicher Lernassistent mit KI-Power. Fuer Studenten, die smarter lernen wollen.
+              Dein persönlicher Lernassistent mit KI-Power. Für Studenten, die smarter lernen wollen.
             </p>
           </div>
 
