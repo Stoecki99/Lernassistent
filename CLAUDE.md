@@ -5,13 +5,32 @@ Claude hält sich in jeder Aufgabe an diese Regeln, ohne explizite Aufforderung.
 
 ---
 
+## Session-Start Workflow
+
+**Bei jeder neuen Session ZUERST diese Dateien lesen:**
+
+1. **`STATUS.md`** — Aktueller Projektstatus, was funktioniert, was fehlt, offene Probleme
+2. **`DEPLOYMENT.md`** — VPS-Architektur, Deployment-Schritte, Troubleshooting
+3. **`CLAUDE.md`** (dieses Dokument) — Projektregeln und Konventionen
+
+**Wichtige Regeln:**
+- Vor jeder Aenderung pruefen: Was ist der aktuelle Status? (STATUS.md lesen)
+- Nach abgeschlossener Arbeit: STATUS.md aktualisieren
+- VPS-Befehle dem User geben, NICHT selbst ausfuehren (kein direkter SSH-Zugang)
+- `~/stack/` auf dem VPS NIEMALS anfassen (Caddy + CV-Website)
+- Befehle fuer den VPS EINZELN geben (nicht mit && verketten — User kopiert sie einzeln)
+
+---
+
 ## Projektkontext
 
 - **App:** Lernassistent für Studenten (Karteikarten, Quiz, SRS, Claude-Chat)
 - **Domain:** `lernen.jan-stocker.cloud` (Hostinger VPS)
-- **Stack:** Next.js 14 (App Router), PostgreSQL, Prisma, NextAuth.js, Claude API
+- **Stack:** Next.js 14 (App Router), PostgreSQL, Prisma v7, NextAuth.js, Claude API
 - **Sprache der App:** Deutsch
-- **Deployment:** Docker Compose + Nginx + Let's Encrypt
+- **Deployment:** Docker Compose + Caddy (Auto-SSL) auf Hostinger VPS
+- **GitHub:** https://github.com/Stoecki99/Lernassistent (public)
+- **VPS-User:** jan, App unter ~/lernassistent/, Repo unter ~/lernassistent/repo/
 
 ---
 
