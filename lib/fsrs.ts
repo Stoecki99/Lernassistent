@@ -135,7 +135,7 @@ export function calculateDifficulty(
 ): number {
   const w = DEFAULT_W
   const d0Mean = initialDifficulty(Rating.Good) // D0(3) = Mittelwert-Schwierigkeit
-  const newD = w[6] * d0Mean + (1 - w[6]) * (d - w[5] * (rating - 3))
+  const newD = w[6] * d0Mean + (1 - w[6]) * (d - w[7] * (rating - 3))
   return clamp(newD, 1, 10)
 }
 
@@ -159,7 +159,7 @@ export function calculateStability(
 ): number {
   const w = DEFAULT_W
   const hardPenalty = rating === Rating.Hard ? w[15] : 1
-  const easyBonus = rating === Rating.Easy ? w[16] : 0
+  const easyBonus = rating === Rating.Easy ? (1 + w[16]) : 1
 
   // S'_r = S * (e^w7 * (11-D) * S^(-w8) * (e^(w9*(1-R)) - 1) * hardPenalty * easyBonus + 1)
   const newS =
@@ -170,7 +170,7 @@ export function calculateStability(
         Math.pow(s, -w[8]) *
         (Math.exp(w[9] * (1 - r)) - 1) *
         hardPenalty *
-        (1 + easyBonus))
+        easyBonus)
 
   return clamp(newS, 0.1, 36500) // Max ~100 Jahre
 }

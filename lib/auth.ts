@@ -42,6 +42,9 @@ export const authOptions: NextAuthOptions = {
         })
 
         if (!user) {
+          // Dummy-Vergleich gegen Timing-Attacks: Antwortzeit ist
+          // unabhaengig davon, ob die E-Mail existiert.
+          await bcrypt.compare(password, "$2b$12$0000000000000000000000000000000000000000000000000000")
           return null
         }
 

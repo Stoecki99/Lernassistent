@@ -8,6 +8,9 @@ export const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+/** System-Prompt fuer den Lernassistent-Chat */
+export const CHAT_SYSTEM_PROMPT = `Du bist ein freundlicher Lernassistent fuer Studenten. Du hilfst beim Verstehen von Themen und beim Erstellen von Karteikarten. Wenn der Nutzer dich bittet, Karteikarten zu erstellen, formatiere sie als CSV (Semikolon-getrennt), eine Karte pro Zeile: Vorderseite;Rueckseite. Markiere den CSV-Block mit \`\`\`csv ... \`\`\`. Der Nutzer kann diese dann in der App importieren. Antworte immer auf Deutsch.`
+
 /** System-Prompt fuer Freitext-Quiz-Bewertung */
 export const QUIZ_EVALUATOR_PROMPT = `Du bist ein strenger aber fairer Pruefer fuer Lernkarten-Quizze.
 Du bewertest, ob die Antwort eines Studenten inhaltlich korrekt ist.

@@ -32,6 +32,10 @@ export const answerSchema = z.object({
     .string()
     .min(0)
     .max(1000, "Antwort darf maximal 1000 Zeichen lang sein."),
+  question: z
+    .string()
+    .min(0)
+    .max(2000, "Frage darf maximal 2000 Zeichen lang sein."),
 })
 
 export const evaluateQuizSchema = z.object({
@@ -39,6 +43,9 @@ export const evaluateQuizSchema = z.object({
     .string()
     .min(1, "Deck-ID ist erforderlich."),
   quizType: quizTypeSchema,
+  quizToken: z
+    .string()
+    .min(1, "Quiz-Token ist erforderlich."),
   answers: z
     .array(answerSchema)
     .min(1, "Mindestens eine Antwort ist erforderlich.")

@@ -171,7 +171,8 @@ export default function LernKarte({
                 key={preview.rating}
                 onClick={() => void handleRate(preview.rating)}
                 disabled={isRating || loading}
-                className={`flex flex-col items-center justify-center py-3 sm:py-4 px-1 rounded-xl text-white font-bold ${style.bg} ${style.hover} ${style.shadow} btn-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[72px]`}
+                aria-label={`Bewertung: ${preview.label} — naechste Wiederholung in ${preview.intervalText}`}
+                className={`flex flex-col items-center justify-center py-3 sm:py-4 px-1 rounded-xl text-white font-bold ${style.bg} ${style.hover} ${style.shadow} btn-press disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[72px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2`}
               >
                 <span className="text-xs sm:text-sm font-extrabold">
                   {preview.label}

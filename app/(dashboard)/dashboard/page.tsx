@@ -1,27 +1,101 @@
 // app/(dashboard)/dashboard/page.tsx
-// Dashboard-Hauptseite mit Begruessung, Streak, Fortschritt und Schnellzugriff.
+// Dashboard-Hauptseite mit echten Statistiken, Streak, Fortschritt und Schnellzugriff.
 
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { getCurrentUser } from "@/lib/auth"
-import StreakBadge from "@/components/ui/StreakBadge"
+import { prisma } from "@/lib/prisma"
+import StreakAnzeige from "@/components/features/StreakAnzeige"
+import StatistikWidget from "@/components/features/StatistikWidget"
+import WochenChart from "@/components/features/WochenChart"
 import ProgressBar from "@/components/ui/ProgressBar"
 
 export const metadata = {
-  title: "Dashboard — Lernassistent",
+  title: "Dashboard \u2014 Lernassistent",
 }
 
-// Platzhalter-Daten bis die DB-Integration steht
-const PLACEHOLDER_STATS = {
-  streakDays: 5,
-  cardsToday: 12,
-  cardsDailyGoal: 30,
-  totalPoints: 1250,
-  recentActivity: [
-    { label: "Biologie Deck gelernt", time: "vor 2 Stunden" },
-    { label: "Quiz: Chemie bestanden", time: "vor 5 Stunden" },
-    { label: "10 neue Karten erstellt", time: "gestern" },
-  ],
+const DAILY_GOAL = 30
+
+interface DayActivity {
+  date: string
+  cardsStudied: number
+  minutesStudied: number
+}
+
+interface QuizSummary {
+  totalQuestions: number
+  correctAnswers: number
+}
+
+interface ReviewRecord {
+  createdAt: Date
+  duration: number
+}
+
+async function getDashboardData(userId: string) {
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const weekStart = new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000)
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { streak: true, longestStreak: true, points: true },
+  })
+
+  const cardsToday = await prisma.review.count({
+    where: {
+      card: { deck: { userId } },
+      createdAt: { gte: todayStart },
+    },
+  })
+
+  const reviewsLast7Days: ReviewRecord[] = await prisma.review.findMany({
+    where: {
+      card: { deck: { userId } },
+      createdAt: { gte: weekStart },
+    },
+    select: { createdAt: true, duration: true },
+  })
+
+  const quizResults: QuizSummary[] = await prisma.quizResult.findMany({
+    where: { userId },
+    select: { totalQuestions: true, correctAnswers: true },
+  })
+
+  const badgeCount = await prisma.userBadge.count({ where: { userId } })
+
+  // Quiz-Durchschnitt
+  const totalQ = quizResults.reduce((s: number, r: QuizSummary) => s + r.totalQuestions, 0)
+  const totalC = quizResults.reduce((s: number, r: QuizSummary) => s + r.correctAnswers, 0)
+  const quizAverage = totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0
+
+  // Letzte 7 Tage
+  const last7Days: DayActivity[] = []
+  for (let i = 6; i >= 0; i--) {
+    const dayStart = new Date(todayStart.getTime() - i * 24 * 60 * 60 * 1000)
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000)
+    const dayReviews = reviewsLast7Days.filter(
+      (r: ReviewRecord) => r.createdAt >= dayStart && r.createdAt < dayEnd
+    )
+    last7Days.push({
+      date: dayStart.toISOString().split("T")[0],
+      cardsStudied: dayReviews.length,
+      minutesStudied: Math.round(
+        dayReviews.reduce((s: number, r: ReviewRecord) => s + r.duration, 0) / 60
+      ),
+    })
+  }
+
+  return {
+    streak: user?.streak ?? 0,
+    longestStreak: user?.longestStreak ?? 0,
+    points: user?.points ?? 0,
+    cardsToday,
+    quizAverage,
+    quizCount: quizResults.length,
+    badgeCount,
+    last7Days,
+  }
 }
 
 export default async function DashboardPage() {
@@ -32,7 +106,7 @@ export default async function DashboardPage() {
   }
 
   const firstName = user.name?.split(" ")[0] ?? "Student"
-  const stats = PLACEHOLDER_STATS
+  const stats = await getDashboardData(user.id)
 
   return (
     <div className="space-y-6">
@@ -44,12 +118,41 @@ export default async function DashboardPage() {
         <p className="text-text-light mt-1">Bereit zum Lernen?</p>
       </div>
 
-      {/* Streak + Punkte */}
-      <div className="flex flex-wrap gap-3">
-        <StreakBadge days={stats.streakDays} size="md" />
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/10 text-secondary font-bold">
-          <span aria-hidden="true">&#11088;</span>
-          <span>{stats.totalPoints.toLocaleString("de-DE")} Punkte</span>
+      {/* Streak + Punkte Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <StreakAnzeige
+          currentStreak={stats.streak}
+          longestStreak={stats.longestStreak}
+        />
+
+        {/* Statistik-Widgets Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatistikWidget
+            icon="&#11088;"
+            title="Punkte"
+            value={stats.points.toLocaleString("de-DE")}
+            color="accent"
+          />
+          <StatistikWidget
+            icon="&#128218;"
+            title="Heute gelernt"
+            value={stats.cardsToday}
+            subtitle={`Ziel: ${DAILY_GOAL}`}
+            color="primary"
+          />
+          <StatistikWidget
+            icon="&#129504;"
+            title="Quiz-Schnitt"
+            value={stats.quizCount > 0 ? `${stats.quizAverage}%` : "\u2014"}
+            subtitle={`${stats.quizCount} Quizze`}
+            color="secondary"
+          />
+          <StatistikWidget
+            icon="&#127942;"
+            title="Badges"
+            value={stats.badgeCount}
+            color="default"
+          />
         </div>
       </div>
 
@@ -58,19 +161,24 @@ export default async function DashboardPage() {
         <div className="flex justify-between items-center mb-3">
           <h2 className="font-bold text-text-dark">Tagesfortschritt</h2>
           <span className="text-sm text-text-light">
-            {stats.cardsToday} / {stats.cardsDailyGoal} Karten
+            {stats.cardsToday} / {DAILY_GOAL} Karten
           </span>
         </div>
         <ProgressBar
           value={stats.cardsToday}
-          max={stats.cardsDailyGoal}
+          max={DAILY_GOAL}
           color="primary"
           size="lg"
         />
         <p className="text-sm text-text-light mt-2">
-          Noch {stats.cardsDailyGoal - stats.cardsToday} Karten bis zum Tagesziel!
+          {stats.cardsToday >= DAILY_GOAL
+            ? "Tagesziel erreicht! Grossartig!"
+            : `Noch ${DAILY_GOAL - stats.cardsToday} Karten bis zum Tagesziel!`}
         </p>
       </div>
+
+      {/* Wochen-Chart */}
+      <WochenChart data={stats.last7Days} />
 
       {/* Schnellzugriff-Buttons */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -95,21 +203,6 @@ export default async function DashboardPage() {
           description="Wissen testen"
           color="accent"
         />
-      </div>
-
-      {/* Letzte Aktivitaet */}
-      <div className="bg-surface-card rounded-2xl shadow-card p-5">
-        <h2 className="font-bold text-text-dark mb-3">Letzte Aktivitaet</h2>
-        <ul className="space-y-3">
-          {stats.recentActivity.map((activity, index) => (
-            <li key={index} className="flex justify-between items-center">
-              <span className="text-sm text-text">{activity.label}</span>
-              <span className="text-xs text-text-light whitespace-nowrap ml-4">
-                {activity.time}
-              </span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   )

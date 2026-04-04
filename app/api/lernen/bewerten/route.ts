@@ -13,6 +13,7 @@ import {
   type RatingType,
   scheduleCard,
 } from "@/lib/fsrs"
+import { checkAndAwardBadges } from "@/lib/badges"
 
 /** Punkte pro bewertete Karte */
 const POINTS_PER_REVIEW = 10
@@ -77,10 +78,10 @@ export async function POST(request: Request) {
     const result = scheduleCard(fsrsCard, rating as RatingType)
     const updatedCard = result.card
 
-    // Karte und Review in einer Transaktion aktualisieren
-    await prisma.$transaction([
+    // Karte, Review und Streak atomar in einer Transaktion aktualisieren
+    await prisma.$transaction(async (tx) => {
       // Karte aktualisieren
-      prisma.card.update({
+      await tx.card.update({
         where: { id: cardId },
         data: {
           due: updatedCard.due,
@@ -93,19 +94,23 @@ export async function POST(request: Request) {
           state: updatedCard.state,
           lastReview: updatedCard.lastReview,
         },
-      }),
+      })
+
       // Review-Eintrag erstellen
-      prisma.review.create({
+      await tx.review.create({
         data: {
           cardId,
           rating,
           duration,
         },
-      }),
-    ])
+      })
 
-    // Streak und Punkte aktualisieren
-    await updateUserStreak(session.user.id)
+      // Streak und Punkte atomar aktualisieren
+      await updateUserStreak(tx, session.user.id)
+    })
+
+    // Badge-Pruefung
+    const newBadges = await checkAndAwardBadges(session.user.id)
 
     return NextResponse.json({
       success: true,
@@ -114,6 +119,7 @@ export async function POST(request: Request) {
         due: updatedCard.due.toISOString(),
         state: updatedCard.state,
       },
+      newBadges,
     })
   } catch (error) {
     console.error("[lernen/bewerten]", error)
@@ -126,18 +132,21 @@ export async function POST(request: Request) {
 
 /**
  * Aktualisiert Streak, longestStreak und Punkte des Users.
+ * Laeuft innerhalb der uebergebenen Transaktion (tx) fuer Atomaritaet.
  * Streak-Logik:
  * - lastStudyDate === gestern: streak++
  * - lastStudyDate === heute: streak bleibt (nur Punkte addieren)
  * - Sonst: streak = 1 (Neustart)
  */
-async function updateUserStreak(userId: string): Promise<void> {
-  const user = await prisma.user.findUnique({
+async function updateUserStreak(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  userId: string
+): Promise<void> {
+  const user = await tx.user.findUnique({
     where: { id: userId },
     select: {
       streak: true,
       longestStreak: true,
-      points: true,
       lastStudyDate: true,
     },
   })
@@ -159,9 +168,9 @@ async function updateUserStreak(userId: string): Promise<void> {
 
     if (lastDate.getTime() === today.getTime()) {
       // Heute schon gelernt: Streak bleibt, nur Punkte addieren
-      await prisma.user.update({
+      await tx.user.update({
         where: { id: userId },
-        data: { points: user.points + POINTS_PER_REVIEW },
+        data: { points: { increment: POINTS_PER_REVIEW } },
       })
       return
     } else if (lastDate.getTime() === yesterday.getTime()) {
@@ -178,12 +187,12 @@ async function updateUserStreak(userId: string): Promise<void> {
 
   const newLongestStreak = Math.max(user.longestStreak, newStreak)
 
-  await prisma.user.update({
+  await tx.user.update({
     where: { id: userId },
     data: {
       streak: newStreak,
       longestStreak: newLongestStreak,
-      points: user.points + POINTS_PER_REVIEW,
+      points: { increment: POINTS_PER_REVIEW },
       lastStudyDate: now,
     },
   })
