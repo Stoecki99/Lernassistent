@@ -56,7 +56,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /opt/lernassistent
+            cd ~/lernassistent
 
             # Login to GitHub Container Registry
             echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -66,6 +66,9 @@ jobs:
 
             # Run database migrations
             docker compose run --rm app npx prisma migrate deploy
+
+            # Seed badges (idempotent — safe to re-run)
+            docker compose run --rm app npx prisma db seed
 
             # Restart services
             docker compose up -d
@@ -81,5 +84,5 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             sleep 15
-            curl -f http://localhost:3000/api/health || exit 1
+            docker exec lernassistent-app wget -q --spider http://localhost:3000/api/health || exit 1
             echo "Deployment successful!"

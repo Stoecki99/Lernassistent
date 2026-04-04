@@ -1,6 +1,7 @@
 # =============================================================================
-# Lernassistent — Docker Compose Production Stack
-# Services: app (Next.js), db (PostgreSQL), nginx (Reverse Proxy), certbot (SSL)
+# Lernassistent — Docker Compose (VPS mit Caddy als Reverse Proxy)
+# Services: app (Next.js), db (PostgreSQL)
+# Caddy laeuft separat in ~/stack/ und verbindet sich via caddy-lernassistent
 # =============================================================================
 
 services:
@@ -8,9 +9,7 @@ services:
   # Next.js Application
   # ---------------------------------------------------------------------------
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/stoecki99/lernassistent:latest
     container_name: lernassistent-app
     restart: unless-stopped
     env_file: .env
@@ -30,6 +29,7 @@ services:
       start_period: 40s
     networks:
       - internal
+      - caddy-lernassistent
 
   # ---------------------------------------------------------------------------
   # PostgreSQL Database
@@ -53,47 +53,11 @@ services:
     networks:
       - internal
 
-  # ---------------------------------------------------------------------------
-  # Nginx Reverse Proxy (SSL termination)
-  # ---------------------------------------------------------------------------
-  nginx:
-    image: nginx:alpine
-    container_name: lernassistent-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - certbot_conf:/etc/letsencrypt:ro
-      - certbot_www:/var/www/certbot:ro
-    depends_on:
-      app:
-        condition: service_healthy
-    networks:
-      - internal
-
-  # ---------------------------------------------------------------------------
-  # Certbot — SSL certificate management (auto-renewal every 12h)
-  # ---------------------------------------------------------------------------
-  certbot:
-    image: certbot/certbot
-    container_name: lernassistent-certbot
-    restart: unless-stopped
-    volumes:
-      - certbot_conf:/etc/letsencrypt
-      - certbot_www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
-
 # ---------------------------------------------------------------------------
 # Volumes
 # ---------------------------------------------------------------------------
 volumes:
   postgres_data:
-    driver: local
-  certbot_conf:
-    driver: local
-  certbot_www:
     driver: local
 
 # ---------------------------------------------------------------------------
@@ -102,3 +66,5 @@ volumes:
 networks:
   internal:
     driver: bridge
+  caddy-lernassistent:
+    external: true
