@@ -13,6 +13,9 @@ COPY prisma ./prisma
 RUN npx prisma generate
 
 COPY . .
+
+# Dummy DATABASE_URL für Build (wird zur Laufzeit überschrieben)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npm run build
 
 # Production Stage
@@ -26,6 +29,7 @@ RUN apk add --no-cache openssl
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Public nur kopieren wenn es existiert
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
