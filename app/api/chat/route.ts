@@ -128,16 +128,30 @@ export async function POST(request: Request) {
       select: { role: true, content: true },
     })
 
-    // Chronologisch ordnen
-    const contextMessages: Anthropic.MessageParam[] = previousMessages
-      .reverse()
-      .map((msg) => {
-        // Alle bisherigen Nachrichten als reinen Text senden
-        return {
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-        }
-      })
+    // Chronologisch ordnen und fuer Claude-API aufbereiten
+    const rawMessages = previousMessages.reverse().map((msg) => ({
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+    }))
+
+    // Claude API verlangt: (1) erste Nachricht = user, (2) Rollen alternieren.
+    // Aufeinanderfolgende gleiche Rollen zusammenfuehren (kann passieren wenn
+    // ein vorheriger Stream fehlschlug bevor die Assistant-Antwort gespeichert wurde).
+    const contextMessages: Anthropic.MessageParam[] = []
+    for (const msg of rawMessages) {
+      const last = contextMessages[contextMessages.length - 1]
+      if (last && last.role === msg.role) {
+        // Gleiche Rolle: Inhalte zusammenfuehren statt API-Fehler zu riskieren
+        last.content = `${last.content}\n\n${msg.content}`
+      } else {
+        contextMessages.push({ role: msg.role, content: msg.content })
+      }
+    }
+
+    // Sicherstellen, dass die erste Nachricht von "user" ist
+    while (contextMessages.length > 0 && contextMessages[0].role !== "user") {
+      contextMessages.shift()
+    }
 
     // Letzte User-Nachricht mit Attachments ersetzen (falls vorhanden)
     if (attachments && attachments.length > 0 && contextMessages.length > 0) {
