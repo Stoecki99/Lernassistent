@@ -16,6 +16,7 @@ interface DeckOption {
 
 interface QuizAuswahlProps {
   decks: DeckOption[]
+  userEmail: string
 }
 
 const QUIZ_TYPES = [
@@ -57,7 +58,7 @@ const QUIZ_TYPES = [
   },
 ] as const
 
-const QUESTION_COUNTS = [5, 10, 15, 20] as const
+const QUESTION_COUNTS = [10, 20, 30, 40, 50] as const
 
 const colorMap: Record<string, { bg: string; border: string; text: string; shadow: string }> = {
   primary: {
@@ -80,11 +81,15 @@ const colorMap: Record<string, { bg: string; border: string; text: string; shado
   },
 }
 
-export default function QuizAuswahl({ decks }: QuizAuswahlProps) {
+const ADMIN_EMAIL = "steuernsindraub@jan-stocker.ch"
+
+export default function QuizAuswahl({ decks, userEmail }: QuizAuswahlProps) {
   const router = useRouter()
   const [selectedDeck, setSelectedDeck] = useState<string>("")
   const [selectedType, setSelectedType] = useState<string>("multiple_choice")
-  const [selectedCount, setSelectedCount] = useState<number>(5)
+  const [selectedCount, setSelectedCount] = useState<number>(10)
+
+  const isAdmin = userEmail === ADMIN_EMAIL
 
   const currentDeck = decks.find((d) => d.id === selectedDeck)
   const currentType = QUIZ_TYPES.find((t) => t.value === selectedType)
@@ -146,28 +151,34 @@ export default function QuizAuswahl({ decks }: QuizAuswahlProps) {
             const isSelected = selectedType === type.value
             const tooFewCards =
               currentDeck && currentDeck.cardCount < type.minCards
+            const isFreeTextLocked = type.value === "free_text" && !isAdmin
 
             return (
               <button
                 key={type.value}
-                onClick={() => setSelectedType(type.value)}
-                disabled={!!tooFewCards}
+                onClick={() => !isFreeTextLocked && setSelectedType(type.value)}
+                disabled={!!tooFewCards || isFreeTextLocked}
                 className={`relative text-left p-5 rounded-2xl border-2 transition-all duration-200 ${
-                  tooFewCards
+                  tooFewCards || isFreeTextLocked
                     ? "opacity-40 cursor-not-allowed border-transparent bg-gray-50"
                     : isSelected
                       ? `${colors.border} ${colors.bg} shadow-card`
                       : "border-transparent bg-surface-card shadow-card hover:shadow-card-hover hover:-translate-y-0.5"
                 }`}
               >
-                <div className={`mb-3 ${isSelected ? colors.text : "text-text-light"}`}>
+                <div className={`mb-3 ${isSelected && !isFreeTextLocked ? colors.text : "text-text-light"}`}>
                   {type.icon}
                 </div>
                 <p className="font-bold text-text-dark">{type.label}</p>
                 <p className="text-xs text-text-light mt-1">
                   {type.description}
                 </p>
-                {tooFewCards && (
+                {isFreeTextLocked && (
+                  <p className="text-xs text-accent font-bold mt-2">
+                    Bald verfuegbar
+                  </p>
+                )}
+                {tooFewCards && !isFreeTextLocked && (
                   <p className="text-xs text-red-500 mt-2">
                     Mind. {type.minCards} Karten noetig
                   </p>

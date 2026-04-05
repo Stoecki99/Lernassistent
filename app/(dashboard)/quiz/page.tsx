@@ -45,7 +45,7 @@ export default async function QuizPage() {
       </div>
 
       {deckOptions.length > 0 ? (
-        <QuizAuswahl decks={deckOptions} />
+        <QuizAuswahl decks={deckOptions} userEmail={user.email ?? ""} />
       ) : (
         <div className="text-center py-16">
           <span className="text-6xl block mb-4" aria-hidden="true">
