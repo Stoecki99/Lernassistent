@@ -9,6 +9,7 @@ import { getAuthSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { anthropic, CHAT_SYSTEM_PROMPT } from "@/lib/claude"
 import { chatMessageSchema } from "@/lib/validations/chat"
+import { canUseChat, checkApiCostLimit, incrementApiUsage } from "@/lib/subscription"
 
 /** Einfaches In-Memory Rate-Limiting */
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
@@ -49,6 +50,24 @@ export async function POST(request: Request) {
     }
 
     const userId = session.user.id
+
+    // Plan-Check: Nur Pro-Nutzer duerfen chatten
+    const chatAllowed = await canUseChat(userId)
+    if (!chatAllowed) {
+      return NextResponse.json(
+        { error: "Der KI-Chat ist nur mit dem Pro-Plan verfuegbar.", upgrade: true },
+        { status: 403 }
+      )
+    }
+
+    // API-Kostenlimit pruefen
+    const withinBudget = await checkApiCostLimit(userId)
+    if (!withinBudget) {
+      return NextResponse.json(
+        { error: "Dein monatliches KI-Budget ist aufgebraucht. Es wird am Monatsanfang zurueckgesetzt." },
+        { status: 429 }
+      )
+    }
 
     // Rate-Limiting pruefen
     if (!checkRateLimit(userId)) {
@@ -130,6 +149,20 @@ export async function POST(request: Request) {
                 content: fullResponse,
               },
             })
+          }
+
+          // API-Token-Verbrauch tracken
+          try {
+            const finalMessage = await stream.finalMessage()
+            if (finalMessage.usage) {
+              await incrementApiUsage(
+                userId,
+                finalMessage.usage.input_tokens,
+                finalMessage.usage.output_tokens
+              )
+            }
+          } catch {
+            // Usage-Tracking darf Streaming nicht blockieren
           }
 
           controller.close()

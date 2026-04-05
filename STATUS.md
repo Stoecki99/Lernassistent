@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-04-05
+**Zuletzt aktualisiert:** 2026-04-05 (Update 2)
 
 ---
 
@@ -49,6 +49,18 @@
 | DB-Migration | Erledigt | Initial-Migration 20260404_init angewendet |
 | Badge-Seed | Erledigt | Alle Badges geseeded |
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
+
+## Aenderungen 2026-04-05 (Update 2)
+
+- **Neu: Abo-Modell (Free/Pro)** — User-Model um plan, planExpiresAt, storageUsedBytes, apiTokensUsedThisMonth erweitert
+- **Neu: Admin-Panel** — Geheimer Zugang via /admin/[ADMIN_SECRET], Nutzertabelle mit Plan-Verwaltung
+- **Neu: Chat-Gating** — Free-Nutzer sehen Upgrade-Prompt, Pro-Nutzer koennen chatten
+- **Neu: Speicher-Tracking** — storageUsedBytes wird bei Karten-CRUD aktualisiert (2GB Free, 6GB Pro)
+- **Neu: API-Usage-Tracking** — Claude Token-Verbrauch wird pro Nutzer/Monat getrackt (2 CHF Cap)
+- **Neu: KI-Prompt-Tipps** — Import-Seite zeigt 4 kopierbare Prompts fuer Claude/ChatGPT
+- **Neu: Upgrade-Prompt** — TWINT-Bezahlinfo fuer Free-Nutzer (18 CHF / 6 Monate)
+- **DB-Migration noetig** — `npx prisma migrate dev --name add-subscription-fields`
+- **Neue Env-Variable** — `ADMIN_SECRET` muss gesetzt werden
 
 ## Aenderungen 2026-04-05
 

@@ -1,7 +1,7 @@
 "use client"
 
 // components/features/KarteAnzeige.tsx
-// Einzelne Karteikarte mit Vorderseite/Rueckseite und Flip-Animation.
+// Einzelne Karteikarte mit Vorderseite/Rueckseite, optionalem Hinweis und Flip-Animation.
 
 import { useState } from "react"
 import CardMarkdown from "@/components/ui/CardMarkdown"
@@ -9,6 +9,7 @@ import CardMarkdown from "@/components/ui/CardMarkdown"
 interface KarteAnzeigeProps {
   front: string
   back: string
+  hint?: string | null
   state?: number
 }
 
@@ -19,8 +20,9 @@ const STATE_LABELS: Record<number, { label: string; color: string }> = {
   3: { label: "Erneut lernen", color: "bg-red-100 text-red-600" },
 }
 
-export default function KarteAnzeige({ front, back, state }: KarteAnzeigeProps) {
+export default function KarteAnzeige({ front, back, hint, state }: KarteAnzeigeProps) {
   const [isFlipped, setIsFlipped] = useState(false)
+  const [showHint, setShowHint] = useState(false)
   const stateInfo = state !== undefined ? STATE_LABELS[state] : null
 
   return (
@@ -33,6 +35,10 @@ export default function KarteAnzeige({ front, back, state }: KarteAnzeigeProps) 
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault()
           setIsFlipped((prev) => !prev)
+        }
+        if (!isFlipped && hint && (e.key === "h" || e.key === "H")) {
+          e.preventDefault()
+          setShowHint(true)
         }
       }}
       aria-label={isFlipped ? "Rueckseite anzeigen" : "Vorderseite anzeigen"}
@@ -52,6 +58,28 @@ export default function KarteAnzeige({ front, back, state }: KarteAnzeigeProps) 
           <div className="font-semibold text-text-dark text-center break-words">
             <CardMarkdown content={front} />
           </div>
+
+          {hint && !showHint && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowHint(true)
+              }}
+              className="mt-3 px-3 py-1.5 text-xs font-bold text-accent bg-accent/10 rounded-lg hover:bg-accent/20 transition-colors self-center"
+            >
+              Hinweis
+            </button>
+          )}
+
+          {hint && showHint && (
+            <div className="mt-3 px-3 py-2 bg-accent/5 rounded-lg border border-accent/20">
+              <p className="text-xs font-bold text-accent mb-1">Hinweis</p>
+              <div className="text-xs text-text-dark">
+                <CardMarkdown content={hint} />
+              </div>
+            </div>
+          )}
+
           <p className="text-xs text-text-light text-center mt-3">
             Klicke zum Umdrehen
           </p>

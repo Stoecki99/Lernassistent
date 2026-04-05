@@ -1,10 +1,12 @@
 // app/(dashboard)/chat/page.tsx
-// Chat-Seite: Laedt letzte Chat-Nachrichten aus DB, uebergibt an Client Component.
+// Chat-Seite: Pro-Nutzer sehen den Chat, Free-Nutzer den Upgrade-Prompt.
 
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getUserPlan } from "@/lib/subscription"
 import ChatFenster from "@/components/features/ChatFenster"
+import UpgradePrompt from "@/components/features/UpgradePrompt"
 
 export const metadata = {
   title: "Chat - Lernassistent",
@@ -19,6 +21,13 @@ export default async function ChatPage() {
 
   if (!user?.id) {
     redirect("/login")
+  }
+
+  // Plan pruefen
+  const { plan } = await getUserPlan(user.id)
+
+  if (plan === "free") {
+    return <UpgradePrompt />
   }
 
   const messagesDesc = await prisma.chatMessage.findMany({

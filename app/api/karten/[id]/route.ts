@@ -14,6 +14,7 @@ import { NextResponse } from "next/server"
 import { getAuthSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { updateCardSchema } from "@/lib/validations/karte"
+import { estimateCardBytes, decrementStorageUsed } from "@/lib/subscription"
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -29,6 +30,7 @@ async function getOwnedCard(cardId: string, userId: string) {
       id: true,
       front: true,
       back: true,
+      hint: true,
       deckId: true,
       state: true,
       due: true,
@@ -89,18 +91,21 @@ export async function PUT(request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Karte nicht gefunden." }, { status: 404 })
     }
 
-    const { front, back } = parsed.data
+    const { front, back, hint } = parsed.data
+    const normalizedHint = hint !== undefined ? (hint?.trim() || null) : undefined
 
     const updatedCard = await prisma.card.update({
       where: { id },
       data: {
         ...(front !== undefined && { front }),
         ...(back !== undefined && { back }),
+        ...(normalizedHint !== undefined && { hint: normalizedHint }),
       },
       select: {
         id: true,
         front: true,
         back: true,
+        hint: true,
         state: true,
         due: true,
         createdAt: true,
@@ -133,7 +138,9 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Karte nicht gefunden." }, { status: 404 })
     }
 
+    const cardBytes = estimateCardBytes(existing.front, existing.back, existing.hint)
     await prisma.card.delete({ where: { id } })
+    await decrementStorageUsed(session.user.id, cardBytes)
 
     return NextResponse.json({ message: "Karte erfolgreich geloescht." })
   } catch (error) {

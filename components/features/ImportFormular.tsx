@@ -20,6 +20,7 @@ interface ParseError {
 interface PreviewCard {
   front: string
   back: string
+  hint: string | null
 }
 
 type ImportFormat = "csv" | "anki"
@@ -72,12 +73,23 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
 
       if (!line.includes(separator)) continue
 
-      const sepIndex = line.indexOf(separator)
-      const front = line.substring(0, sepIndex).trim()
-      const back = line.substring(sepIndex + 1).trim()
+      const parts = line.split(separator)
+      let front: string
+      let hint: string | null
+      let back: string
+
+      if (parts.length >= 3) {
+        front = parts[0].trim()
+        hint = parts[1].trim() || null
+        back = parts.slice(2).join(separator).trim()
+      } else {
+        front = parts[0].trim()
+        hint = null
+        back = parts[1]?.trim() ?? ""
+      }
 
       if (front && back) {
-        cards.push({ front, back })
+        cards.push({ front, back, hint })
       }
     }
 
@@ -256,9 +268,9 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
           <>
             <p className="font-bold text-secondary mb-1">CSV-Format</p>
             <p className="text-text-light">
-              Jede Zeile: <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite;Rueckseite</code>
+              Jede Zeile: <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite;Hinweis;Rueckseite</code> oder <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite;Rueckseite</code>
             </p>
-            <p className="text-text-light mt-1">Die erste Zeile kann optional ein Header sein.</p>
+            <p className="text-text-light mt-1">Hinweis ist optional. Die erste Zeile kann ein Header sein.</p>
           </>
         ) : (
           <>
@@ -335,6 +347,9 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
               <div key={index} className="bg-white rounded-xl shadow-sm p-3 flex gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-text-dark truncate">{card.front}</p>
+                  {card.hint && (
+                    <p className="text-xs text-accent truncate italic mt-0.5">{card.hint}</p>
+                  )}
                 </div>
                 <div className="text-text-light shrink-0 self-center">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">

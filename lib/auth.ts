@@ -38,6 +38,8 @@ export const authOptions: NextAuthOptions = {
             email: true,
             name: true,
             password: true,
+            plan: true,
+            planExpiresAt: true,
           },
         })
 
@@ -53,10 +55,16 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        // Plan-Ablauf pruefen: abgelaufener Pro wird als free behandelt
+        const isExpired = user.planExpiresAt ? user.planExpiresAt < new Date() : false
+        const effectivePlan = (user.plan === "pro" && !isExpired) ? "pro" : "free"
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
+          plan: effectivePlan,
+          planExpiresAt: user.planExpiresAt?.toISOString() ?? null,
         }
       },
     }),
@@ -65,13 +73,25 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string
+        session.user.plan = (token.plan as "free" | "pro") ?? "free"
       }
       return session
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.plan = user.plan ?? "free"
+        token.planExpiresAt = user.planExpiresAt ?? null
       }
+
+      // Plan-Ablauf bei jedem Token-Refresh pruefen
+      if (token.planExpiresAt) {
+        const expiresAt = new Date(token.planExpiresAt)
+        if (expiresAt < new Date()) {
+          token.plan = "free"
+        }
+      }
+
       return token
     },
   },

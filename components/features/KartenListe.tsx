@@ -12,6 +12,7 @@ interface CardData {
   id: string
   front: string
   back: string
+  hint?: string | null
   state: number
   due: string
 }
@@ -33,10 +34,12 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
   // Formular-State
   const [front, setFront] = useState("")
   const [back, setBack] = useState("")
+  const [hint, setHint] = useState("")
 
   function resetForm() {
     setFront("")
     setBack("")
+    setHint("")
     setError("")
     setIsSubmitting(false)
   }
@@ -49,6 +52,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
   function openEditForm(card: CardData) {
     setFront(card.front)
     setBack(card.back)
+    setHint(card.hint ?? "")
     setError("")
     setEditingCard(card)
   }
@@ -66,7 +70,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
       const response = await fetch("/api/karten", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ front: front.trim(), back: back.trim(), deckId }),
+        body: JSON.stringify({ front: front.trim(), back: back.trim(), hint: hint.trim() || undefined, deckId }),
       })
 
       if (!response.ok) {
@@ -99,7 +103,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
       const response = await fetch(`/api/karten/${editingCard.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ front: front.trim(), back: back.trim() }),
+        body: JSON.stringify({ front: front.trim(), back: back.trim(), hint: hint.trim() || null }),
       })
 
       if (!response.ok) {
@@ -232,8 +236,10 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
         <CardForm
           front={front}
           back={back}
+          hint={hint}
           onFrontChange={setFront}
           onBackChange={setBack}
+          onHintChange={setHint}
           error={error}
         />
       </Modal>
@@ -264,8 +270,10 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
         <CardForm
           front={front}
           back={back}
+          hint={hint}
           onFrontChange={setFront}
           onBackChange={setBack}
+          onHintChange={setHint}
           error={error}
         />
       </Modal>
@@ -315,6 +323,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
             <KarteAnzeige
               front={previewCard.front}
               back={previewCard.back}
+              hint={previewCard.hint}
               state={previewCard.state}
             />
           </div>
@@ -385,12 +394,14 @@ function CardRow({ card, onEdit, onDelete, onPreview }: CardRowProps) {
 interface CardFormProps {
   front: string
   back: string
+  hint: string
   onFrontChange: (value: string) => void
   onBackChange: (value: string) => void
+  onHintChange: (value: string) => void
   error: string
 }
 
-function CardForm({ front, back, onFrontChange, onBackChange, error }: CardFormProps) {
+function CardForm({ front, back, hint, onFrontChange, onBackChange, onHintChange, error }: CardFormProps) {
   return (
     <div className="space-y-4">
       {error && (
@@ -408,10 +419,25 @@ function CardForm({ front, back, onFrontChange, onBackChange, error }: CardFormP
           onChange={(e) => onFrontChange(e.target.value)}
           placeholder="Frage oder Begriff..."
           rows={3}
-          maxLength={1000}
+          maxLength={2000}
           className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-text focus:border-primary focus:outline-none transition-colors resize-none"
         />
-        <p className="text-xs text-text-light mt-1 text-right">{front.length}/1000</p>
+        <p className="text-xs text-text-light mt-1 text-right">{front.length}/2000</p>
+      </div>
+      <div>
+        <label htmlFor="card-hint" className="block text-sm font-bold text-text-dark mb-1">
+          Hinweis <span className="font-normal text-text-light">(optional)</span>
+        </label>
+        <textarea
+          id="card-hint"
+          value={hint}
+          onChange={(e) => onHintChange(e.target.value)}
+          placeholder="Tipp oder Eselsbruecke..."
+          rows={2}
+          maxLength={500}
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-text focus:border-accent focus:outline-none transition-colors resize-none"
+        />
+        <p className="text-xs text-text-light mt-1 text-right">{hint.length}/500</p>
       </div>
       <div>
         <label htmlFor="card-back" className="block text-sm font-bold text-text-dark mb-1">
@@ -423,10 +449,10 @@ function CardForm({ front, back, onFrontChange, onBackChange, error }: CardFormP
           onChange={(e) => onBackChange(e.target.value)}
           placeholder="Antwort oder Definition..."
           rows={3}
-          maxLength={1000}
+          maxLength={2000}
           className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-text focus:border-primary focus:outline-none transition-colors resize-none"
         />
-        <p className="text-xs text-text-light mt-1 text-right">{back.length}/1000</p>
+        <p className="text-xs text-text-light mt-1 text-right">{back.length}/2000</p>
       </div>
     </div>
   )

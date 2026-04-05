@@ -1,8 +1,8 @@
 "use client"
 
 // components/features/LernKarte.tsx
-// Einzelne Lernkarte mit Flip-Animation und Bewertungs-Buttons.
-// Zeigt Vorderseite, flippt bei Klick, zeigt dann Rueckseite + 4 Rating-Buttons.
+// Einzelne Lernkarte mit Flip-Animation, optionalem Hinweis und Bewertungs-Buttons.
+// Zeigt Vorderseite, optional Hinweis-Button, flippt bei Klick, zeigt Rueckseite + 4 Rating-Buttons.
 
 import { useState, useRef } from "react"
 import CardMarkdown from "@/components/ui/CardMarkdown"
@@ -11,6 +11,7 @@ interface CardData {
   id: string
   front: string
   back: string
+  hint?: string | null
   state: number
 }
 
@@ -67,6 +68,7 @@ export default function LernKarte({
 }: LernKarteProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [isRating, setIsRating] = useState(false)
+  const [showHint, setShowHint] = useState(false)
   const startTimeRef = useRef<number>(Date.now())
 
   const handleFlip = () => {
@@ -86,11 +88,19 @@ export default function LernKarte({
     } finally {
       setIsFlipped(false)
       setIsRating(false)
+      setShowHint(false)
       startTimeRef.current = Date.now()
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Hinweis per H-Taste anzeigen (nur auf Vorderseite)
+    if (!isFlipped && card.hint && (e.key === "h" || e.key === "H")) {
+      e.preventDefault()
+      setShowHint(true)
+      return
+    }
+
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault()
       handleFlip()
@@ -134,7 +144,32 @@ export default function LernKarte({
             <div className="text-xl sm:text-2xl font-bold text-text-dark text-center break-words leading-relaxed">
               <CardMarkdown content={card.front} />
             </div>
-            <p className="text-sm text-text-light mt-6">
+
+            {/* Hinweis-Button */}
+            {card.hint && !showHint && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowHint(true)
+                }}
+                className="mt-4 px-4 py-2 text-sm font-bold text-accent bg-accent/10 rounded-xl hover:bg-accent/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                aria-label="Hinweis anzeigen"
+              >
+                Hinweis anzeigen (H)
+              </button>
+            )}
+
+            {/* Hinweis-Anzeige */}
+            {card.hint && showHint && (
+              <div className="mt-4 px-4 py-3 bg-accent/5 rounded-xl border border-accent/20 max-w-full">
+                <p className="text-xs font-bold text-accent mb-1">Hinweis</p>
+                <div className="text-sm text-text-dark">
+                  <CardMarkdown content={card.hint} />
+                </div>
+              </div>
+            )}
+
+            <p className="text-sm text-text-light mt-4">
               Tippe zum Umdrehen
             </p>
           </div>
@@ -186,7 +221,7 @@ export default function LernKarte({
           })}
         </div>
         <p className="text-center text-xs text-text-light mt-3">
-          Tastatur: 1-4 zum Bewerten
+          Tastatur: 1-4 zum Bewerten, H fuer Hinweis
         </p>
       </div>
     </div>

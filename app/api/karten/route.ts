@@ -11,6 +11,7 @@ import { getAuthSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createCardSchema } from "@/lib/validations/karte"
 import { z } from "zod"
+import { checkStorageLimit, estimateCardBytes, incrementStorageUsed } from "@/lib/subscription"
 
 const deckIdQuerySchema = z.string().cuid("Ungueltige Deck-ID.")
 
@@ -48,6 +49,7 @@ export async function GET(request: Request) {
         id: true,
         front: true,
         back: true,
+        hint: true,
         state: true,
         due: true,
         reps: true,
@@ -82,7 +84,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
-    const { front, back, deckId } = parsed.data
+    const { front, back, deckId, hint } = parsed.data
+    const normalizedHint = hint?.trim() || null
 
     const deck = await prisma.deck.findUnique({
       where: { id: deckId, userId: session.user.id },
@@ -93,18 +96,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Deck nicht gefunden." }, { status: 404 })
     }
 
+    // Speicherlimit pruefen
+    const cardBytes = estimateCardBytes(front, back, normalizedHint)
+    const { allowed } = await checkStorageLimit(session.user.id, cardBytes)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Speicherlimit erreicht. Loesche Karten oder upgrade auf Pro." },
+        { status: 403 }
+      )
+    }
+
     const card = await prisma.card.create({
-      data: { front, back, deckId },
+      data: { front, back, hint: normalizedHint, deckId },
       select: {
         id: true,
         front: true,
         back: true,
+        hint: true,
         state: true,
         due: true,
         createdAt: true,
         updatedAt: true,
       },
     })
+
+    await incrementStorageUsed(session.user.id, cardBytes)
 
     return NextResponse.json(card, { status: 201 })
   } catch (error) {

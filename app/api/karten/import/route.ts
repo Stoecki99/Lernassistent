@@ -1,8 +1,8 @@
 // POST /api/karten/import
 // Auth: erforderlich
 // Importiert Karten aus CSV oder Anki-Format in ein Deck.
-// CSV-Format: Vorderseite;Rueckseite (Semikolon-getrennt)
-// Anki-Format: Tab-getrennte .txt Dateien
+// CSV-Format: Vorderseite;Hinweis;Rueckseite oder Vorderseite;Rueckseite
+// Anki-Format: Tab-getrennte .txt Dateien (optional 3 Spalten mit Hinweis)
 // Max 500 Karten pro Import, max 5 MB Dateigroesse
 
 import { NextResponse } from "next/server"
@@ -14,6 +14,7 @@ import { checkStorageLimit, estimateCardBytes, incrementStorageUsed } from "@/li
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const MAX_CARDS = 500
 const MAX_FIELD_LENGTH = 2000
+const MAX_HINT_LENGTH = 500
 
 interface ParseError {
   line: number
@@ -23,6 +24,7 @@ interface ParseError {
 interface ParsedCard {
   front: string
   back: string
+  hint: string | null
 }
 
 interface ParseResult {
@@ -56,9 +58,22 @@ function parseCsv(content: string): ParseResult {
       continue
     }
 
-    const separatorIndex = line.indexOf(";")
-    const front = line.substring(0, separatorIndex).trim()
-    const back = line.substring(separatorIndex + 1).trim()
+    const parts = line.split(";")
+    let front: string
+    let hint: string | null
+    let back: string
+
+    if (parts.length >= 3) {
+      // 3-Spalten-Format: Vorderseite;Hinweis;Rueckseite
+      front = parts[0].trim()
+      hint = parts[1].trim() || null
+      back = parts.slice(2).join(";").trim()
+    } else {
+      // 2-Spalten-Format: Vorderseite;Rueckseite
+      front = parts[0].trim()
+      hint = null
+      back = parts[1].trim()
+    }
 
     if (!front) {
       errors.push({ line: lineNumber, message: "Vorderseite ist leer." })
@@ -80,7 +95,12 @@ function parseCsv(content: string): ParseResult {
       continue
     }
 
-    cards.push({ front, back })
+    if (hint && hint.length > MAX_HINT_LENGTH) {
+      errors.push({ line: lineNumber, message: `Hinweis ist zu lang (max. ${MAX_HINT_LENGTH} Zeichen).` })
+      continue
+    }
+
+    cards.push({ front, back, hint })
   }
 
   return { cards, errors }
@@ -107,7 +127,15 @@ function parseAnki(content: string): ParseResult {
 
     const parts = line.split("\t")
     const front = parts[0].trim()
-    const back = parts[1]?.trim() ?? ""
+    let hint: string | null = null
+    let back: string
+
+    if (parts.length >= 3) {
+      hint = parts[1].trim() || null
+      back = parts[2]?.trim() ?? ""
+    } else {
+      back = parts[1]?.trim() ?? ""
+    }
 
     if (!front) {
       errors.push({ line: lineNumber, message: "Vorderseite ist leer." })
@@ -129,7 +157,12 @@ function parseAnki(content: string): ParseResult {
       continue
     }
 
-    cards.push({ front, back })
+    if (hint && hint.length > MAX_HINT_LENGTH) {
+      errors.push({ line: lineNumber, message: `Hinweis ist zu lang (max. ${MAX_HINT_LENGTH} Zeichen).` })
+      continue
+    }
+
+    cards.push({ front, back, hint })
   }
 
   return { cards, errors }
@@ -200,7 +233,7 @@ export async function POST(request: Request) {
 
     // Speicherlimit pruefen
     const totalBytes = result.cards.reduce(
-      (sum, card) => sum + estimateCardBytes(card.front, card.back),
+      (sum, card) => sum + estimateCardBytes(card.front, card.back, card.hint),
       0
     )
     const { allowed } = await checkStorageLimit(session.user.id, totalBytes)
@@ -216,6 +249,7 @@ export async function POST(request: Request) {
       data: result.cards.map((card) => ({
         front: card.front,
         back: card.back,
+        hint: card.hint,
         deckId: parsed.data.deckId,
       })),
     })

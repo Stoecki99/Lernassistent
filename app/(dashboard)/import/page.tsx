@@ -6,6 +6,7 @@ import Link from "next/link"
 import { getCurrentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import ImportPageClient from "@/components/features/ImportPageClient"
+import AiPromptTips from "@/components/features/AiPromptTips"
 
 export const metadata = {
   title: "Karten importieren — Lernassistent",
@@ -92,6 +93,11 @@ export default async function ImportPage({ searchParams }: ImportPageProps) {
         decks={decks}
         preselectedDeckId={deckId ?? null}
       />
+
+      {/* Trennlinie */}
+      <div className="border-t border-gray-200 pt-6">
+        <AiPromptTips />
+      </div>
     </div>
   )
 }

@@ -19,6 +19,7 @@ interface CardData {
   id: string
   front: string
   back: string
+  hint?: string | null
   state: number
 }
 
