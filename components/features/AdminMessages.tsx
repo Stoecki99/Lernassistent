@@ -28,6 +28,33 @@ export default function AdminMessages({ messages: initialMessages }: AdminMessag
 
   const unreadCount = messages.filter((m) => !m.read).length
 
+  async function deleteMessage(messageId: string) {
+    if (!confirm("Nachricht wirklich loeschen?")) return
+
+    setLoading(messageId)
+    setError(null)
+
+    try {
+      const res = await fetch("/api/admin/nachrichten", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? "Fehler beim Loeschen.")
+        return
+      }
+
+      setMessages((prev) => prev.filter((m) => m.id !== messageId))
+    } catch {
+      setError("Netzwerkfehler.")
+    } finally {
+      setLoading(null)
+    }
+  }
+
   async function toggleRead(messageId: string, currentRead: boolean) {
     setLoading(messageId)
     setError(null)
@@ -117,21 +144,30 @@ export default function AdminMessages({ messages: initialMessages }: AdminMessag
                       {new Date(msg.createdAt).toLocaleString("de-CH")}
                     </p>
                   </div>
-                  <button
-                    onClick={() => toggleRead(msg.id, msg.read)}
-                    disabled={loading === msg.id}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 shrink-0 min-h-[44px] min-w-[44px] ${
-                      msg.read
-                        ? "bg-gray-100 text-text-light hover:bg-gray-200"
-                        : "bg-primary text-white hover:bg-primary-dark"
-                    }`}
-                  >
-                    {loading === msg.id
-                      ? "..."
-                      : msg.read
-                        ? "Ungelesen"
-                        : "Gelesen"}
-                  </button>
+                  <div className="flex flex-col gap-2 shrink-0">
+                    <button
+                      onClick={() => toggleRead(msg.id, msg.read)}
+                      disabled={loading === msg.id}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] ${
+                        msg.read
+                          ? "bg-gray-100 text-text-light hover:bg-gray-200"
+                          : "bg-primary text-white hover:bg-primary-dark"
+                      }`}
+                    >
+                      {loading === msg.id
+                        ? "..."
+                        : msg.read
+                          ? "Ungelesen"
+                          : "Gelesen"}
+                    </button>
+                    <button
+                      onClick={() => deleteMessage(msg.id)}
+                      disabled={loading === msg.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-50 text-red-500 hover:bg-red-100 transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px]"
+                    >
+                      {loading === msg.id ? "..." : "Loeschen"}
+                    </button>
+                  </div>
                 </div>
               </div>
             )

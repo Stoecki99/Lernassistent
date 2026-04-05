@@ -50,6 +50,47 @@ export async function GET() {
   }
 }
 
+const deleteSchema = z.object({
+  messageId: z.string().cuid("Ungueltige Nachrichten-ID."),
+})
+
+export async function DELETE(request: Request) {
+  try {
+    if (!(await verifyAdmin())) {
+      return NextResponse.json({ error: "Nicht autorisiert." }, { status: 403 })
+    }
+
+    const body: unknown = await request.json()
+    const parsed = deleteSchema.safeParse(body)
+
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      return NextResponse.json({ error: firstError }, { status: 400 })
+    }
+
+    const existing = await prisma.contactMessage.findUnique({
+      where: { id: parsed.data.messageId },
+      select: { id: true },
+    })
+
+    if (!existing) {
+      return NextResponse.json({ error: "Nachricht nicht gefunden." }, { status: 404 })
+    }
+
+    await prisma.contactMessage.delete({
+      where: { id: parsed.data.messageId },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[admin/nachrichten/DELETE]", error)
+    return NextResponse.json(
+      { error: "Nachricht konnte nicht geloescht werden." },
+      { status: 500 }
+    )
+  }
+}
+
 const markReadSchema = z.object({
   messageId: z.string().cuid("Ungültige Nachrichten-ID."),
   read: z.boolean(),
