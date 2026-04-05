@@ -111,33 +111,35 @@ export default function Navigation({ variant }: NavigationProps) {
   }
 
   return (
-    <nav className="flex flex-col gap-1 w-full" aria-label="Hauptnavigation">
-      {items.map((item) => {
-        const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={isActive ? "page" : undefined}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-              isActive
-                ? "bg-primary/10 text-primary"
-                : "text-text-light hover:bg-gray-100 hover:text-text"
-            }`}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </Link>
-        )
-      })}
-    </nav>
+    <>
+      <nav className="flex flex-col gap-1 w-full" aria-label="Hauptnavigation">
+        {items.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-text-light hover:bg-gray-100 hover:text-text"
+              }`}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          )
+        })}
+      </nav>
 
-    {/* Legal Links */}
-    <div className="mt-auto px-4 py-3 border-t border-gray-100">
-      <div className="flex gap-3 text-xs text-gray-400">
-        <Link href="/datenschutz" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
-        <Link href="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+      {/* Legal Links */}
+      <div className="mt-auto px-4 py-3 border-t border-gray-100">
+        <div className="flex gap-3 text-xs text-gray-400">
+          <Link href="/datenschutz" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
+          <Link href="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
