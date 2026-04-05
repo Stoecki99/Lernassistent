@@ -1,0 +1,95 @@
+// app/(dashboard)/admin/page.tsx
+// Admin-Bereich: Zeigt alle Nutzer mit Plan-Status und Speicherverbrauch.
+// Zugang nur fuer eingeloggte User deren E-Mail mit ADMIN_EMAIL uebereinstimmt.
+
+import { redirect } from "next/navigation"
+import { getCurrentUser } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import AdminUserTable from "@/components/features/AdminUserTable"
+
+export const metadata = {
+  title: "Admin — Lernassistent",
+  robots: "noindex, nofollow",
+}
+
+export default async function AdminPage() {
+  const user = await getCurrentUser()
+
+  if (!user?.email) {
+    redirect("/login")
+  }
+
+  // Nur Admin-E-Mail darf zugreifen
+  const adminEmail = process.env.ADMIN_EMAIL
+  if (!adminEmail || user.email !== adminEmail) {
+    redirect("/dashboard")
+  }
+
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      plan: true,
+      planExpiresAt: true,
+      storageUsedBytes: true,
+      apiTokensUsedThisMonth: true,
+      _count: {
+        select: {
+          decks: true,
+          chatMessages: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  // Karten-Anzahl pro User
+  const userCardCounts = await prisma.card.groupBy({
+    by: ["deckId"],
+    _count: { id: true },
+  })
+
+  const deckToUser = await prisma.deck.findMany({
+    select: { id: true, userId: true },
+  })
+
+  const deckUserMap = new Map(deckToUser.map((d) => [d.id, d.userId]))
+  const cardCountByUser = new Map<string, number>()
+
+  for (const group of userCardCounts) {
+    const userId = deckUserMap.get(group.deckId)
+    if (userId) {
+      cardCountByUser.set(userId, (cardCountByUser.get(userId) ?? 0) + group._count.id)
+    }
+  }
+
+  const serializedUsers = users.map((u) => ({
+    id: u.id,
+    name: u.name ?? "—",
+    email: u.email,
+    createdAt: u.createdAt.toISOString(),
+    plan: u.plan as "free" | "pro",
+    planExpiresAt: u.planExpiresAt?.toISOString() ?? null,
+    storageUsedMB: Number(u.storageUsedBytes) / (1024 * 1024),
+    apiTokensUsedThisMonth: u.apiTokensUsedThisMonth,
+    deckCount: u._count.decks,
+    cardCount: cardCountByUser.get(u.id) ?? 0,
+    chatMessageCount: u._count.chatMessages,
+  }))
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-extrabold text-text-dark">
+          Admin Panel
+        </h1>
+        <p className="text-text-light mt-1">
+          Nutzerverwaltung und Abo-Uebersicht
+        </p>
+      </div>
+      <AdminUserTable users={serializedUsers} />
+    </div>
+  )
+}

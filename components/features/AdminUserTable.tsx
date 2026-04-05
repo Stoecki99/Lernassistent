@@ -21,10 +21,9 @@ interface AdminUser {
 
 interface AdminUserTableProps {
   users: AdminUser[]
-  adminToken: string
 }
 
-export default function AdminUserTable({ users: initialUsers, adminToken }: AdminUserTableProps) {
+export default function AdminUserTable({ users: initialUsers }: AdminUserTableProps) {
   const [users, setUsers] = useState(initialUsers)
   const [loading, setLoading] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -34,7 +33,6 @@ export default function AdminUserTable({ users: initialUsers, adminToken }: Admi
     setMessage(null)
 
     const newPlan = currentPlan === "free" ? "pro" : "free"
-    // Pro-Plan: 6 Monate ab jetzt
     const planExpiresAt = newPlan === "pro"
       ? new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000).toISOString()
       : null
@@ -43,7 +41,7 @@ export default function AdminUserTable({ users: initialUsers, adminToken }: Admi
       const res = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: adminToken, userId, plan: newPlan, planExpiresAt }),
+        body: JSON.stringify({ userId, plan: newPlan, planExpiresAt }),
       })
 
       if (!res.ok) {

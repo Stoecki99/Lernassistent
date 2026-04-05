@@ -1,13 +1,13 @@
 // PATCH /api/admin/users
-// Auth: Admin-Token erforderlich
+// Auth: Eingeloggt + ADMIN_EMAIL
 // Aendert den Plan eines Nutzers (Free/Pro).
 
 import { NextResponse } from "next/server"
+import { getAuthSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const updatePlanSchema = z.object({
-  token: z.string(),
   userId: z.string().cuid("Ungueltige User-ID."),
   plan: z.enum(["free", "pro"]),
   planExpiresAt: z.string().datetime().nullable().optional(),
@@ -15,6 +15,17 @@ const updatePlanSchema = z.object({
 
 export async function PATCH(request: Request) {
   try {
+    const session = await getAuthSession()
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Nicht autorisiert." }, { status: 401 })
+    }
+
+    // Admin-E-Mail pruefen
+    const adminEmail = process.env.ADMIN_EMAIL
+    if (!adminEmail || session.user.email !== adminEmail) {
+      return NextResponse.json({ error: "Nicht autorisiert." }, { status: 403 })
+    }
+
     const body: unknown = await request.json()
     const parsed = updatePlanSchema.safeParse(body)
 
@@ -23,13 +34,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
-    const { token, userId, plan, planExpiresAt } = parsed.data
-
-    // Admin-Token pruefen
-    const adminSecret = process.env.ADMIN_SECRET
-    if (!adminSecret || token !== adminSecret) {
-      return NextResponse.json({ error: "Nicht autorisiert." }, { status: 403 })
-    }
+    const { userId, plan, planExpiresAt } = parsed.data
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -45,7 +50,6 @@ export async function PATCH(request: Request) {
       data: {
         plan,
         planExpiresAt: planExpiresAt ? new Date(planExpiresAt) : null,
-        // Bei Wechsel auf Free: API-Tokens zuruecksetzen
         ...(plan === "free" && { apiTokensUsedThisMonth: 0 }),
       },
       select: {
