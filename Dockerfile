@@ -38,6 +38,11 @@ RUN npx prisma generate
 # Dummy DATABASE_URL for build time — overridden at runtime
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# NEXT_PUBLIC_ vars must be present at build time
+ARG NEXT_PUBLIC_RECAPTCHA_SITE_KEY=""
+ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
+
 RUN npm run build
 
 # ---------------------------------------------------------------------------
