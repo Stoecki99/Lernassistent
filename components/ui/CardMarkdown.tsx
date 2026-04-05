@@ -94,7 +94,9 @@ export default function CardMarkdown({ content, className = "" }: CardMarkdownPr
             <td className="border border-gray-200 px-2 py-1">{children}</td>
           ),
         }}
-      />
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   )
 }
