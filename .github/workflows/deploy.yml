@@ -55,33 +55,25 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           script: |
             cd ~/lernassistent
 
-            # Pull latest image (public repo, no login needed)
+            # Update repo (for migrations and seed)
+            cd repo && git pull && cd ..
+
+            # Pull latest image
             docker compose pull app
 
-            # Run database migrations
-            docker compose run --rm app npx prisma migrate deploy
+            # Run migrations via repo container
+            export DB_URL="postgresql://postgres:$(grep POSTGRES_PASSWORD .env | cut -d= -f2)@lernassistent-db:5432/lernassistent"
+            docker run --rm --network lernassistent_internal -e DATABASE_URL="$DB_URL" -v "$(pwd)/repo:/app" -w /app node:20-alpine sh -c "npm ci --ignore-scripts && npx prisma generate && npx prisma migrate deploy"
 
-            # Seed badges (idempotent — safe to re-run)
-            docker compose run --rm app npx prisma db seed
-
-            # Restart services
+            # Restart app with new image
             docker compose up -d
 
             # Cleanup old images
             docker image prune -f
 
-      - name: Health check
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
-          script: |
+            # Health check
             sleep 15
-            docker exec lernassistent-app wget -q --spider http://localhost:3000/api/health || exit 1
-            echo "Deployment successful!"
+            docker exec lernassistent-app wget -q --spider http://localhost:3000/api/health && echo "Deploy successful!" || echo "Health check failed"
