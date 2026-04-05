@@ -27,7 +27,7 @@ Claude hält sich in jeder Aufgabe an diese Regeln, ohne explizite Aufforderung.
 - **App:** Lernassistent für Studenten (Karteikarten, Quiz, SRS, Claude-Chat)
 - **Domain:** `lernen.jan-stocker.cloud` (Hostinger VPS)
 - **Stack:** Next.js 14 (App Router), PostgreSQL, Prisma v7, NextAuth.js, Claude API
-- **Sprache der App:** Deutsch
+- **Sprache der App:** Deutsch (Schweizer Rechtschreibung)
 - **Deployment:** Docker Compose + Caddy (Auto-SSL) auf Hostinger VPS
 - **GitHub:** https://github.com/Stoecki99/Lernassistent (public)
 - **VPS-User:** jan, App unter ~/lernassistent/, Repo unter ~/lernassistent/repo/
@@ -68,6 +68,16 @@ Claude hält sich in jeder Aufgabe an diese Regeln, ohne explizite Aufforderung.
 - Keine Funktion länger als ~50 Zeilen — bei Bedarf aufteilen
 - Keine tief verschachtelten Bedingungen (max. 3 Ebenen) — früh returnen ("early return")
 - Variablen- und Funktionsnamen auf **Englisch**, UI-Text auf **Deutsch**
+
+### Sprache & Umlaute (KRITISCH)
+- **UI-Text** (was der Nutzer sieht): Deutsch in **Schweizer Rechtschreibung**
+  - Umlaute (ä, ö, ü) sind erlaubt und korrekt in UI-Strings
+  - Kein `ß` — immer `ss` (Schweizer Deutsch): `groß` → `gross`, `Straße` → `Strasse`
+- **Code** (Variablen, Funktionen, CSS-Klassen, Keywords): **Niemals Umlaute!**
+  - Englische Bezeichner: `questions`, `value`, `true`, `blue` — NICHT `qüstions`, `valü`, `trü`, `blü`
+  - Auch in Kommentaren im Code: ASCII-Umschreibung (`ue`, `ae`, `oe`) verwenden
+- **Dateinamen**: Kein Umlaut, nur ASCII
+- **String-Literale in Code** (z.B. Fehlermeldungen, Platzhalter): Umlaute erlaubt, da sie dem User angezeigt werden
 
 ### TypeScript
 - Strikt: `strict: true` in `tsconfig.json`
