@@ -3,7 +3,15 @@
 // components/features/UpgradePrompt.tsx
 // Zeigt Upgrade-Info fuer Free-Nutzer an, wenn sie auf Pro-Features zugreifen.
 
+// Telefonnummer wird zur Laufzeit zusammengesetzt, um Scraping durch Bots zu erschweren.
+function useObfuscatedPhone(): string {
+  const parts = ["+41", " 77", " 412", " 59", " 68"]
+  return parts.join("")
+}
+
 export default function UpgradePrompt() {
+  const phone = useObfuscatedPhone()
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
       <div className="bg-white rounded-2xl shadow-md p-8 max-w-lg w-full text-center space-y-6">
@@ -17,6 +25,10 @@ export default function UpgradePrompt() {
           <p className="text-text-light">
             Mit dem Pro-Plan kannst du direkt mit dem KI-Lernassistenten chatten,
             Karteikarten erstellen lassen und Fragen zu deinem Lernstoff stellen.
+          </p>
+          <p className="text-xs text-text-light">
+            Der Betrag deckt die Kosten fuer die Anbindung an die Claude-KI (Anthropic API),
+            die fuer den Chat und die Kartenerstellung genutzt wird.
           </p>
         </div>
 
@@ -54,7 +66,7 @@ export default function UpgradePrompt() {
         <div className="bg-surface rounded-xl p-4 space-y-3">
           <h3 className="font-bold text-text-dark text-sm">So gehts:</h3>
           <ol className="text-left text-sm text-text-light space-y-1.5 list-decimal list-inside">
-            <li>Sende <strong>CHF 18.—</strong> via TWINT an die angezeigte Nummer</li>
+            <li>Sende <strong>CHF 18.—</strong> via TWINT an <strong className="text-text-dark">{phone}</strong></li>
             <li>Schreibe deine <strong>E-Mail-Adresse</strong> in die TWINT-Nachricht</li>
             <li>Dein Pro-Plan wird innerhalb von 24 Stunden freigeschaltet</li>
           </ol>
