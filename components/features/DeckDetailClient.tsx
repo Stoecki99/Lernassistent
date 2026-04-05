@@ -101,7 +101,7 @@ export default function DeckDetailClient({ deck }: DeckDetailClientProps) {
           {/* Aktions-Buttons */}
           <div className="flex flex-wrap gap-3 mt-6">
             <Link
-              href={`/lernen?deck=${deck.id}`}
+              href={`/lernen/${deck.id}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold rounded-xl shadow-button hover:bg-primary-dark active:translate-y-1 active:shadow-none transition-all"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">

@@ -10,7 +10,7 @@ interface DeckWithStats {
   description: string | null
   color: string
   icon: string
-  _count: { cards: number }
+  cardCount: number
   dueCount: number
   newCount: number
 }
@@ -119,7 +119,7 @@ export default function LernenPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {decks.map((deck) => {
-          const totalCards = deck._count?.cards ?? 0
+          const totalCards = deck.cardCount ?? 0
           const hasDueCards = deck.dueCount > 0 || deck.newCount > 0
 
           return (

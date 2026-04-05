@@ -42,23 +42,38 @@ function isCsvHeader(line: string): boolean {
   )
 }
 
+/** Erkennt automatisch ob Tab oder Semikolon als Trennzeichen verwendet wird */
+function detectDelimiter(lines: string[]): string {
+  // Erste nicht-leere, nicht-Header Zeile pruefen
+  for (const line of lines) {
+    if (!line.trim()) continue
+    const tabCount = (line.match(/\t/g) || []).length
+    const semicolonCount = (line.match(/;/g) || []).length
+    // Tabs gewinnen wenn mindestens 1 Tab und mehr Tabs als Semikolons
+    if (tabCount >= 1 && tabCount >= semicolonCount) return "\t"
+    if (semicolonCount >= 1) return ";"
+  }
+  return ";"
+}
+
 function parseCsv(content: string): ParseResult {
   const lines = content.split(/\r?\n/).filter((line) => line.trim() !== "")
   const cards: ParsedCard[] = []
   const errors: ParseError[] = []
 
   const startIndex = lines.length > 0 && isCsvHeader(lines[0]) ? 1 : 0
+  const delimiter = detectDelimiter(lines.slice(startIndex))
 
   for (let i = startIndex; i < lines.length; i++) {
     const lineNumber = i + 1
     const line = lines[i]
 
-    if (!line.includes(";")) {
-      errors.push({ line: lineNumber, message: "Kein Semikolon gefunden. Format: Vorderseite;Rückseite" })
+    if (!line.includes(delimiter)) {
+      errors.push({ line: lineNumber, message: `Kein Trennzeichen gefunden. Format: Vorderseite${delimiter === "\t" ? "[TAB]" : ";"}Rueckseite` })
       continue
     }
 
-    const parts = line.split(";")
+    const parts = line.split(delimiter)
     let front: string
     let hint: string | null
     let back: string
@@ -67,7 +82,7 @@ function parseCsv(content: string): ParseResult {
       // 3-Spalten-Format: Vorderseite;Hinweis;Rueckseite
       front = parts[0].trim()
       hint = parts[1].trim() || null
-      back = parts.slice(2).join(";").trim()
+      back = parts.slice(2).join(delimiter).trim()
     } else {
       // 2-Spalten-Format: Vorderseite;Rueckseite
       front = parts[0].trim()
