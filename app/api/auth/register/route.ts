@@ -3,7 +3,7 @@
 // Registriert einen neuen Benutzer mit Name, E-Mail und Passwort.
 
 import { NextResponse } from "next/server"
-import bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { registerSchema } from "@/lib/validations/auth"
 
