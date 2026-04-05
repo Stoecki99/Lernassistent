@@ -6,6 +6,7 @@ import { z } from "zod"
 const hintField = z
   .string()
   .max(500, "Der Hinweis darf maximal 500 Zeichen lang sein.")
+  .nullable()
   .optional()
   .or(z.literal(""))
 
