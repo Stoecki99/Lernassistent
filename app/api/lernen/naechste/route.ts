@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     const parsed = deckIdQuerySchema.safeParse(deckId)
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Ungueltige Deck-ID." },
+        { error: "Ungültige Deck-ID." },
         { status: 400 }
       )
     }
@@ -237,9 +237,9 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
-    console.error("[lernen/naechste]", error)
+    console.error("[lernen/nächste]", error)
     return NextResponse.json(
-      { error: "Naechste Karte konnte nicht geladen werden." },
+      { error: "Nächste Karte konnte nicht geladen werden." },
       { status: 500 }
     )
   }

@@ -6,9 +6,9 @@ import { z } from "zod"
 export const importSchema = z.object({
   deckId: z
     .string()
-    .cuid("Ungueltige Deck-ID."),
+    .cuid("Ungültige Deck-ID."),
   format: z.enum(["csv", "anki"], {
-    error: "Bitte waehle ein gueltiges Format (CSV oder Anki).",
+    error: "Bitte wähle ein gültiges Format (CSV oder Anki).",
   }),
 })
 

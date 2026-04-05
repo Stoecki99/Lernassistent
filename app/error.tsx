@@ -26,7 +26,7 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
         </h1>
         <p className="text-text-light mb-8 leading-relaxed">
           Keine Sorge, das passiert den Besten! Versuch es einfach nochmal
-          oder geh zurueck zur Startseite.
+          oder geh zurück zur Startseite.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button

@@ -26,7 +26,7 @@ export default function UpgradePrompt() {
             CHF 18.—
           </div>
           <div className="text-sm text-text-light font-medium mt-1">
-            fuer 6 Monate (CHF 3.— / Monat)
+            für 6 Monate (CHF 3.— / Monat)
           </div>
         </div>
 
@@ -34,7 +34,7 @@ export default function UpgradePrompt() {
         <ul className="text-left space-y-2 text-sm">
           <li className="flex items-start gap-2">
             <span className="text-primary font-bold mt-0.5">&#10003;</span>
-            <span>KI-Chat mit Claude — Fragen stellen, Erklaerungen erhalten</span>
+            <span>KI-Chat mit Claude — Fragen stellen, Erklärungen erhalten</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary font-bold mt-0.5">&#10003;</span>
@@ -62,14 +62,12 @@ export default function UpgradePrompt() {
 
         {/* Kontakt */}
         <p className="text-xs text-text-light">
-          Fragen? Schreib an{" "}
+          Fragen? Nutze unser{" "}
           <a
-            href="https://jan-stocker.ch/#contact"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/kontakt"
             className="text-primary hover:underline font-semibold"
           >
-            jan-stocker.ch/contact
+            Kontaktformular
           </a>
         </p>
       </div>

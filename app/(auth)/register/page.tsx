@@ -65,7 +65,7 @@ export default function RegisterPage() {
       setSuccess(true)
       setTimeout(() => router.push("/login"), 1500)
     } catch {
-      setErrors({ general: "Netzwerkfehler. Bitte pruefe deine Verbindung." })
+      setErrors({ general: "Netzwerkfehler. Bitte prüfe deine Verbindung." })
     } finally {
       setIsLoading(false)
     }
@@ -164,7 +164,7 @@ export default function RegisterPage() {
         {/* Passwort bestaetigen */}
         <div>
           <label htmlFor="confirmPassword" className="block text-sm font-bold text-text-dark mb-1.5">
-            Passwort bestaetigen
+            Passwort bestätigen
           </label>
           <input
             id="confirmPassword"

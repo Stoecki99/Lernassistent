@@ -57,3 +57,4 @@ export type QuestionCount = z.infer<typeof questionCountSchema>
 export type GenerateQuizInput = z.infer<typeof generateQuizSchema>
 export type AnswerInput = z.infer<typeof answerSchema>
 export type EvaluateQuizInput = z.infer<typeof evaluateQuizSchema>
+

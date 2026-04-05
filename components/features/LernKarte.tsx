@@ -127,7 +127,7 @@ export default function LernKarte({
         onKeyDown={handleKeyDown}
         aria-label={
           isFlipped
-            ? "Rueckseite wird angezeigt"
+            ? "Rückseite wird angezeigt"
             : "Klicke zum Umdrehen"
         }
       >
@@ -221,7 +221,7 @@ export default function LernKarte({
           })}
         </div>
         <p className="text-center text-xs text-text-light mt-3">
-          Tastatur: 1-4 zum Bewerten, H fuer Hinweis
+          Tastatur: 1-4 zum Bewerten, H für Hinweis
         </p>
       </div>
     </div>

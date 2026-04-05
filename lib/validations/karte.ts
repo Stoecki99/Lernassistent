@@ -16,12 +16,12 @@ export const createCardSchema = z.object({
     .max(2000, "Die Vorderseite darf maximal 2000 Zeichen lang sein."),
   back: z
     .string()
-    .min(1, "Die Rueckseite darf nicht leer sein.")
-    .max(2000, "Die Rueckseite darf maximal 2000 Zeichen lang sein."),
+    .min(1, "Die Rückseite darf nicht leer sein.")
+    .max(2000, "Die Rückseite darf maximal 2000 Zeichen lang sein."),
   hint: hintField,
   deckId: z
     .string()
-    .cuid("Ungueltige Deck-ID."),
+    .cuid("Ungültige Deck-ID."),
 })
 
 export const updateCardSchema = z.object({
@@ -32,8 +32,8 @@ export const updateCardSchema = z.object({
     .optional(),
   back: z
     .string()
-    .min(1, "Die Rueckseite darf nicht leer sein.")
-    .max(2000, "Die Rueckseite darf maximal 2000 Zeichen lang sein.")
+    .min(1, "Die Rückseite darf nicht leer sein.")
+    .max(2000, "Die Rückseite darf maximal 2000 Zeichen lang sein.")
     .optional(),
   hint: hintField,
 })

@@ -2,9 +2,9 @@ import Link from "next/link"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Datenschutzerklaerung | Lernassistent",
+  title: "Datenschutzerklärung | Lernassistent",
   description:
-    "Datenschutzerklaerung des Lernassistenten nach Schweizer Datenschutzgesetz (DSG/nDSG).",
+    "Datenschutzerklärung des Lernassistenten nach Schweizer Datenschutzgesetz (DSG/nDSG).",
 }
 
 export default function DatenschutzPage() {
@@ -19,7 +19,7 @@ export default function DatenschutzPage() {
             href="/"
             className="text-gray-500 hover:text-gray-700 text-sm"
           >
-            Zurueck zur Startseite
+            Zurück zur Startseite
           </Link>
         </div>
       </header>
@@ -27,7 +27,7 @@ export default function DatenschutzPage() {
       <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="bg-white rounded-2xl shadow-md p-8 md:p-12">
           <h1 className="text-3xl font-bold text-gray-800 mb-8">
-            Datenschutzerklaerung
+            Datenschutzerklärung
           </h1>
 
           <div className="space-y-6">
@@ -36,18 +36,18 @@ export default function DatenschutzPage() {
                 1. Verantwortliche Stelle
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Verantwortlich fuer die Datenbearbeitung auf dieser Website ist:
+                Verantwortlich für die Datenbearbeitung auf dieser Website ist:
               </p>
               <p className="text-gray-600 leading-relaxed mt-2">
                 Jan Stocker
                 <br />
-                E-Mail:{" "}
-                <a
-                  href="mailto:kontakt@jan-stocker.cloud"
+                Kontakt:{" "}
+                <Link
+                  href="/kontakt"
                   className="text-primary hover:underline"
                 >
-                  kontakt@jan-stocker.cloud
-                </a>
+                  Kontaktformular
+                </Link>
               </p>
             </section>
 
@@ -56,12 +56,12 @@ export default function DatenschutzPage() {
                 2. Geltungsbereich
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Diese Datenschutzerklaerung gilt fuer die Nutzung der
+                Diese Datenschutzerklärung gilt für die Nutzung der
                 Web-Applikation &quot;Lernassistent&quot; unter der Domain
-                lernen.jan-stocker.cloud. Sie erlaeutert, welche Personendaten
+                lernen.jan-stocker.cloud. Sie erläutert, welche Personendaten
                 wir bearbeiten, zu welchem Zweck und auf welcher
                 Rechtsgrundlage. Massgeblich ist das Schweizer Bundesgesetz
-                ueber den Datenschutz (DSG/nDSG).
+                über den Datenschutz (DSG/nDSG).
               </p>
             </section>
 
@@ -75,7 +75,7 @@ export default function DatenschutzPage() {
               <p className="text-gray-600 leading-relaxed">
                 Bei der Registrierung erheben wir: Name, E-Mail-Adresse und ein
                 Passwort. Das Passwort wird ausschliesslich als
-                kryptographischer Hash (bcrypt) gespeichert und ist fuer uns
+                kryptographischer Hash (bcrypt) gespeichert und ist für uns
                 nicht einsehbar.
               </p>
 
@@ -83,7 +83,7 @@ export default function DatenschutzPage() {
                 3.2 Nutzungsdaten
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Waehrend der Nutzung speichern wir: Karteikarten und Decks (von
+                Während der Nutzung speichern wir: Karteikarten und Decks (von
                 dir erstellt), Lernfortschritt und Statistiken (Streaks, Punkte,
                 Lernzeit), Quiz-Ergebnisse sowie Chat-Nachrichten mit dem
                 KI-Assistenten.
@@ -96,8 +96,8 @@ export default function DatenschutzPage() {
                 Beim Zugriff auf unsere Website werden automatisch technische
                 Daten erfasst: IP-Adresse (in Server-Logs), Browsertyp und
                 -version, Betriebssystem sowie Zeitpunkt des Zugriffs. Diese
-                Daten werden fuer den technischen Betrieb benoetigt und nach 30
-                Tagen automatisch geloescht.
+                Daten werden für den technischen Betrieb benötigt und nach 30
+                Tagen automatisch gelöscht.
               </p>
             </section>
 
@@ -106,7 +106,7 @@ export default function DatenschutzPage() {
                 4. Zweck der Datenbearbeitung
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Wir bearbeiten deine Daten ausschliesslich fuer folgende Zwecke:
+                Wir bearbeiten deine Daten ausschliesslich für folgende Zwecke:
               </p>
               <ul className="list-disc list-inside text-gray-600 space-y-1 mt-2">
                 <li>Bereitstellung und Betrieb der Lernplattform</li>
@@ -115,7 +115,7 @@ export default function DatenschutzPage() {
                   Berechnung des Lernfortschritts (Spaced Repetition /
                   FSRS-Algorithmus)
                 </li>
-                <li>Bereitstellung der KI-gestuetzten Chat-Funktion</li>
+                <li>Bereitstellung der KI-gestützten Chat-Funktion</li>
                 <li>Technischer Betrieb und Sicherheit der Website</li>
               </ul>
             </section>
@@ -125,13 +125,13 @@ export default function DatenschutzPage() {
                 5. KI-Verarbeitung (Claude API)
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Fuer die Chat-Funktion und Quiz-Generierung nutzen wir die
+                Für die Chat-Funktion und Quiz-Generierung nutzen wir die
                 Claude API von Anthropic (USA). Dabei werden deine
                 Chat-Nachrichten und ggf. Karteikarten-Inhalte an Anthropic
-                uebermittelt. Anthropic verarbeitet diese Daten gemaess ihrer
+                übermittelt. Anthropic verarbeitet diese Daten gemäss ihrer
                 eigenen Datenschutzrichtlinie. Es werden keine
                 personenbezogenen Daten (Name, E-Mail) an Anthropic
-                uebermittelt — nur die Inhalte deiner Lernmaterialien und
+                übermittelt — nur die Inhalte deiner Lernmaterialien und
                 Nachrichten.
               </p>
             </section>
@@ -145,11 +145,11 @@ export default function DatenschutzPage() {
               </p>
               <ul className="list-disc list-inside text-gray-600 space-y-1 mt-2">
                 <li>
-                  An Anthropic (USA) fuer die KI-Chat-Funktion (siehe Abschnitt
+                  An Anthropic (USA) für die KI-Chat-Funktion (siehe Abschnitt
                   5)
                 </li>
                 <li>
-                  An unseren Hosting-Anbieter (Hostinger) fuer den technischen
+                  An unseren Hosting-Anbieter (Hostinger) für den technischen
                   Betrieb
                 </li>
                 <li>Wenn wir gesetzlich dazu verpflichtet sind</li>
@@ -162,10 +162,10 @@ export default function DatenschutzPage() {
               </h2>
               <p className="text-gray-600 leading-relaxed">
                 Wir treffen angemessene technische und organisatorische
-                Massnahmen zum Schutz deiner Daten. Dazu gehoeren:
-                Verschluesselte Uebertragung (HTTPS/TLS), gehashte Passwoerter
+                Massnahmen zum Schutz deiner Daten. Dazu gehören:
+                Verschlüsselte Übertragung (HTTPS/TLS), gehashte Passwörter
                 (bcrypt), Zugriffskontrolle auf die Datenbank sowie
-                regelmaessige Sicherheitsupdates.
+                regelmässige Sicherheitsupdates.
               </p>
             </section>
 
@@ -174,35 +174,36 @@ export default function DatenschutzPage() {
                 8. Deine Rechte
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Gemaess dem Schweizer Datenschutzgesetz (nDSG) hast du folgende
+                Gemäss dem Schweizer Datenschutzgesetz (nDSG) hast du folgende
                 Rechte:
               </p>
               <ul className="list-disc list-inside text-gray-600 space-y-1 mt-2">
                 <li>
                   <strong>Auskunftsrecht:</strong> Du kannst jederzeit Auskunft
-                  ueber deine gespeicherten Daten verlangen.
+                  über deine gespeicherten Daten verlangen.
                 </li>
                 <li>
                   <strong>Berichtigungsrecht:</strong> Du kannst die
                   Berichtigung unrichtiger Daten verlangen.
                 </li>
                 <li>
-                  <strong>Loeschungsrecht:</strong> Du kannst die Loeschung
+                  <strong>Löschungsrecht:</strong> Du kannst die Löschung
                   deiner Daten verlangen.
                 </li>
                 <li>
                   <strong>Datenherausgabe:</strong> Du kannst die Herausgabe
-                  deiner Daten in einem gaengigen Format verlangen.
+                  deiner Daten in einem gängigen Format verlangen.
                 </li>
               </ul>
               <p className="text-gray-600 leading-relaxed mt-2">
-                Zur Ausuebung deiner Rechte wende dich bitte per E-Mail an:{" "}
-                <a
-                  href="mailto:kontakt@jan-stocker.cloud"
+                Zur Ausuebung deiner Rechte nutze bitte unser{" "}
+                <Link
+                  href="/kontakt"
                   className="text-primary hover:underline"
                 >
-                  kontakt@jan-stocker.cloud
-                </a>
+                  Kontaktformular
+                </Link>
+                .
               </p>
             </section>
 
@@ -211,7 +212,7 @@ export default function DatenschutzPage() {
                 9. Cookies
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Wir verwenden ausschliesslich technisch notwendige Cookies fuer
+                Wir verwenden ausschliesslich technisch notwendige Cookies für
                 die Session-Verwaltung (Login). Es werden keine Tracking- oder
                 Werbe-Cookies eingesetzt. Analyse-Tools von Drittanbietern (z.B.
                 Google Analytics) werden nicht verwendet.
@@ -220,10 +221,10 @@ export default function DatenschutzPage() {
 
             <section>
               <h2 className="text-xl font-bold text-gray-800 mt-8 mb-3">
-                10. Aenderungen
+                10. Änderungen
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Wir behalten uns vor, diese Datenschutzerklaerung jederzeit
+                Wir behalten uns vor, diese Datenschutzerklärung jederzeit
                 anzupassen. Die aktuelle Fassung ist stets auf dieser Seite
                 abrufbar.
               </p>
@@ -246,3 +247,4 @@ export default function DatenschutzPage() {
     </div>
   )
 }
+

@@ -59,7 +59,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
 
   async function handleCreateCard() {
     if (!front.trim() || !back.trim()) {
-      setError("Beide Seiten muessen ausgefuellt sein.")
+      setError("Beide Seiten müssen ausgefüllt sein.")
       return
     }
 
@@ -92,7 +92,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
   async function handleUpdateCard() {
     if (!editingCard) return
     if (!front.trim() || !back.trim()) {
-      setError("Beide Seiten muessen ausgefuellt sein.")
+      setError("Beide Seiten müssen ausgefüllt sein.")
       return
     }
 
@@ -157,7 +157,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
               <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
             </svg>
-            Neue Karte
+            Neu Karte
           </button>
           <a
             href={`/import?deckId=${deckId}`}
@@ -191,7 +191,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
             Dieses Deck hat noch keine Karten
           </h3>
           <p className="text-text-light mb-4">
-            Fuege jetzt welche hinzu und starte mit dem Lernen!
+            Füge jetzt welche hinzu und starte mit dem Lernen!
           </p>
           <div className="flex justify-center gap-3">
             <button
@@ -214,7 +214,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
       <Modal
         isOpen={showNewCardForm}
         onClose={() => { setShowNewCardForm(false); resetForm() }}
-        title="Neue Karte erstellen"
+        title="Neu Karte erstellen"
         actions={
           <>
             <button
@@ -282,7 +282,7 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
       <Modal
         isOpen={deletingCard !== null}
         onClose={() => setDeletingCard(null)}
-        title="Karte loeschen?"
+        title="Karte löschen?"
         actions={
           <>
             <button
@@ -296,13 +296,13 @@ export default function KartenListe({ cards, deckId }: KartenListeProps) {
               disabled={isSubmitting}
               className="px-4 py-2 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? "Wird geloescht..." : "Loeschen"}
+              {isSubmitting ? "Wird gelöscht..." : "Löschen"}
             </button>
           </>
         }
       >
         <p className="text-text">
-          Bist du sicher, dass du diese Karte loeschen moechtest? Dies kann nicht rueckgaengig gemacht werden.
+          Bist du sicher, dass du diese Karte löschen möchtest? Dies kann nicht rückgängig gemacht werden.
         </p>
         {deletingCard && (
           <div className="mt-3 p-3 bg-gray-50 rounded-lg">
@@ -379,7 +379,7 @@ function CardRow({ card, onEdit, onDelete, onPreview }: CardRowProps) {
         <button
           onClick={onDelete}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-text-light hover:bg-red-50 hover:text-red-500 transition-colors"
-          aria-label="Karte loeschen"
+          aria-label="Karte löschen"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.519.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
@@ -432,7 +432,7 @@ function CardForm({ front, back, hint, onFrontChange, onBackChange, onHintChange
           id="card-hint"
           value={hint}
           onChange={(e) => onHintChange(e.target.value)}
-          placeholder="Tipp oder Eselsbruecke..."
+          placeholder="Tipp oder Eselsbrücke..."
           rows={2}
           maxLength={500}
           className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-text focus:border-accent focus:outline-none transition-colors resize-none"
@@ -441,7 +441,7 @@ function CardForm({ front, back, hint, onFrontChange, onBackChange, onHintChange
       </div>
       <div>
         <label htmlFor="card-back" className="block text-sm font-bold text-text-dark mb-1">
-          Rueckseite
+          Rückseite
         </label>
         <textarea
           id="card-back"

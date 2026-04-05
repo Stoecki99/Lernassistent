@@ -13,16 +13,27 @@ interface ChatNachrichtProps {
   onCsvImport: (csv: string) => void
 }
 
-/** Extrahiert alle ```csv ... ``` Bloecke aus dem Text */
+/** Extrahiert alle ```csv ... ``` Bloecke aus dem Text und validiert Zeilen */
 function extractCsvBlocks(text: string): string[] {
   const regex = /```csv\s*\n([\s\S]*?)```/g
   const blocks: string[] = []
   let match = regex.exec(text)
 
   while (match !== null) {
-    const csvContent = match[1]?.trim()
-    if (csvContent) {
-      blocks.push(csvContent)
+    const rawContent = match[1]?.trim()
+    if (rawContent) {
+      // Jede Zeile auf Semikolon-Trennung pruefen, leere/fehlerhafte ueberspringen
+      const validLines = rawContent
+        .split("\n")
+        .filter((line) => {
+          const trimmed = line.trim()
+          if (!trimmed) return false // Leere Zeilen ignorieren
+          return trimmed.includes(";") // Mind. 1 Semikolon
+        })
+
+      if (validLines.length > 0) {
+        blocks.push(validLines.join("\n"))
+      }
     }
     match = regex.exec(text)
   }

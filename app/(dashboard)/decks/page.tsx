@@ -65,7 +65,7 @@ export default async function DecksPage() {
           >
             <span className="text-4xl text-primary mb-2" aria-hidden="true">+</span>
             <span className="font-bold text-text-light group-hover:text-primary text-center">
-              Neues Deck erstellen
+              Neus Deck erstellen
             </span>
           </Link>
         </div>
@@ -77,8 +77,8 @@ export default async function DecksPage() {
             Noch keine Decks vorhanden
           </h2>
           <p className="text-text-light mb-6 max-w-md mx-auto">
-            Erstelle dein erstes Deck und beginne, Karteikarten hinzuzufuegen.
-            Mit regelmaessigem Lernen erreichst du deine Ziele!
+            Erstelle dein erstes Deck und beginne, Karteikarten hinzuzufügen.
+            Mit regelmässigem Lernen erreichst du deine Ziele!
           </p>
           <Link
             href="/decks/neu"

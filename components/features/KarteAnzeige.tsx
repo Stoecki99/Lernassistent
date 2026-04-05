@@ -41,7 +41,7 @@ export default function KarteAnzeige({ front, back, hint, state }: KarteAnzeigeP
           setShowHint(true)
         }
       }}
-      aria-label={isFlipped ? "Rueckseite anzeigen" : "Vorderseite anzeigen"}
+      aria-label={isFlipped ? "Rückseite anzeigen" : "Vorderseite anzeigen"}
     >
       <div
         className={`relative w-full min-h-[120px] transition-transform duration-500 transform-style-preserve-3d ${
@@ -92,7 +92,7 @@ export default function KarteAnzeige({ front, back, hint, state }: KarteAnzeigeP
             <CardMarkdown content={back} />
           </div>
           <p className="text-xs text-text-light text-center mt-3">
-            Klicke zum Zurueckdrehen
+            Klicke zum Zurückdrehen
           </p>
         </div>
       </div>

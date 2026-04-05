@@ -28,7 +28,7 @@ export default function LandingSocialProof() {
           />
           <BenefitItem
             icon={"\uD83C\uDF1F"}
-            title="Macht Spaß"
+            title="Macht Spass"
             description="Punkte, Streaks und Quiz-Challenges machen Lernen zum täglichen Highlight."
           />
         </div>

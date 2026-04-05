@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import AdminUserTable from "@/components/features/AdminUserTable"
+import AdminMessages from "@/components/features/AdminMessages"
 
 export const metadata = {
   title: "Admin — Lernassistent",
@@ -65,6 +66,20 @@ export default async function AdminPage() {
     }
   }
 
+  const contactMessages = await prisma.contactMessage.findMany({
+    orderBy: { createdAt: "desc" },
+  })
+
+  const serializedMessages = contactMessages.map((m) => ({
+    id: m.id,
+    name: m.name,
+    subject: m.subject,
+    message: m.message,
+    emailSent: m.emailSent,
+    read: m.read,
+    createdAt: m.createdAt.toISOString(),
+  }))
+
   const serializedUsers = users.map((u) => ({
     id: u.id,
     name: u.name ?? "—",
@@ -86,10 +101,11 @@ export default async function AdminPage() {
           Admin Panel
         </h1>
         <p className="text-text-light mt-1">
-          Nutzerverwaltung und Abo-Uebersicht
+          Nutzerverwaltung und Abo-Übersicht
         </p>
       </div>
       <AdminUserTable users={serializedUsers} />
+      <AdminMessages messages={serializedMessages} />
     </div>
   )
 }

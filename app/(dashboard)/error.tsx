@@ -27,7 +27,7 @@ export default function DashboardError({ error, reset }: ErrorPageProps) {
         </h1>
         <p className="text-text-light mb-8 leading-relaxed">
           Keine Sorge, versuch es einfach nochmal! Falls das Problem bestehen
-          bleibt, geh zurueck zum Dashboard.
+          bleibt, geh zurück zum Dashboard.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button

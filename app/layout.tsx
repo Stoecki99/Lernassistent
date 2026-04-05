@@ -4,11 +4,11 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   title: {
-    default: "Lernassistent — Lerne smarter, nicht haerter",
+    default: "Lernassistent — Lerne smarter, nicht härter",
     template: "%s | Lernassistent",
   },
   description:
-    "Dein persoenlicher Lernassistent mit Karteikarten, Spaced Repetition, Quiz und KI-Chat. Fuer Studenten gemacht.",
+    "Dein persönlicher Lernassistent mit Karteikarten, Spaced Repetition, Quiz und KI-Chat. Für Studenten gemacht.",
   keywords: ["Lernen", "Karteikarten", "Spaced Repetition", "Quiz", "Studenten", "KI"],
   metadataBase: new URL("https://lernen.jan-stocker.cloud"),
   openGraph: {
@@ -16,15 +16,15 @@ export const metadata: Metadata = {
     locale: "de_DE",
     url: "https://lernen.jan-stocker.cloud",
     siteName: "Lernassistent",
-    title: "Lernassistent — Lerne smarter, nicht haerter",
+    title: "Lernassistent — Lerne smarter, nicht härter",
     description:
-      "Dein persoenlicher Lernassistent mit Karteikarten, Spaced Repetition, Quiz und KI-Chat. Fuer Studenten gemacht.",
+      "Dein persönlicher Lernassistent mit Karteikarten, Spaced Repetition, Quiz und KI-Chat. Für Studenten gemacht.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Lernassistent — Lerne smarter, nicht haerter",
+    title: "Lernassistent — Lerne smarter, nicht härter",
     description:
-      "Karteikarten, Spaced Repetition, Quiz und KI-Chat. Fuer Studenten gemacht.",
+      "Karteikarten, Spaced Repetition, Quiz und KI-Chat. Für Studenten gemacht.",
   },
   robots: {
     index: true,

@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const updatePlanSchema = z.object({
-  userId: z.string().cuid("Ungueltige User-ID."),
+  userId: z.string().cuid("Ungültige User-ID."),
   plan: z.enum(["free", "pro"]),
   planExpiresAt: z.string().datetime().nullable().optional(),
 })
@@ -30,7 +30,7 @@ export async function PATCH(request: Request) {
     const parsed = updatePlanSchema.safeParse(body)
 
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      const firstError = parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 

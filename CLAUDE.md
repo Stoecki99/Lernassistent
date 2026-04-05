@@ -214,5 +214,5 @@ Claude arbeitet in dieser Reihenfolge — keine Phase überspringen:
 7. Quiz-Modus (Multiple Choice, Wahr/Falsch, Freitext)
 8. Dashboard / Statistiken (Streak, Fortschritt, Lernzeit)
 9. Claude-Chat-Fenster (Karten erstellen + CSV-Export)
-10. Deployment auf Hostinger VPS (Nginx, HTTPS, Let's Encrypt)
+10. Deployment auf Hostinger VPS (Caddy, HTTPS, Let's Encrypt)
 11. Polish & Gamification (Animationen, Abzeichen, Punkte)

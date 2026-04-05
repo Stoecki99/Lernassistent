@@ -81,7 +81,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const parsed = updateCardSchema.safeParse(body)
 
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      const firstError = parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
@@ -142,11 +142,11 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     await prisma.card.delete({ where: { id } })
     await decrementStorageUsed(session.user.id, cardBytes)
 
-    return NextResponse.json({ message: "Karte erfolgreich geloescht." })
+    return NextResponse.json({ message: "Karte erfolgreich gelöscht." })
   } catch (error) {
     console.error("[karten/[id]/DELETE]", error)
     return NextResponse.json(
-      { error: "Karte konnte nicht geloescht werden." },
+      { error: "Karte konnte nicht gelöscht werden." },
       { status: 500 }
     )
   }

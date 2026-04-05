@@ -13,7 +13,7 @@ import { createCardSchema } from "@/lib/validations/karte"
 import { z } from "zod"
 import { checkStorageLimit, estimateCardBytes, incrementStorageUsed } from "@/lib/subscription"
 
-const deckIdQuerySchema = z.string().cuid("Ungueltige Deck-ID.")
+const deckIdQuerySchema = z.string().cuid("Ungültige Deck-ID.")
 
 export async function GET(request: Request) {
   try {
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     const parsedDeckId = deckIdQuerySchema.safeParse(deckId)
     if (!parsedDeckId.success) {
-      return NextResponse.json({ error: "Ungueltige Deck-ID." }, { status: 400 })
+      return NextResponse.json({ error: "Ungültige Deck-ID." }, { status: 400 })
     }
 
     const deck = await prisma.deck.findUnique({
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     const parsed = createCardSchema.safeParse(body)
 
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      const firstError = parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
     const { allowed } = await checkStorageLimit(session.user.id, cardBytes)
     if (!allowed) {
       return NextResponse.json(
-        { error: "Speicherlimit erreicht. Loesche Karten oder upgrade auf Pro." },
+        { error: "Speicherlimit erreicht. Lösche Karten oder upgrade auf Pro." },
         { status: 403 }
       )
     }

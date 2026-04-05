@@ -127,7 +127,7 @@ function initialDifficulty(rating: RatingType): number {
 /**
  * Berechnet die neue Schwierigkeit nach einem Review.
  * Verwendet Mean-Reversion: D' = w6 * D0(3) + (1 - w6) * (D - w7 * (G - 3))
- * Dies zieht die Schwierigkeit langsam zum Mittelwert zurueck.
+ * Dies zieht die Schwierigkeit langsam zum Mittelwert zurück.
  */
 export function calculateDifficulty(
   d: number,
@@ -140,7 +140,7 @@ export function calculateDifficulty(
 }
 
 /**
- * Berechnet die initiale Stabilitaet nach dem ersten Review.
+ * Berechnet die initiale Stabilität nach dem ersten Review.
  * S0(G) = w[G-1] (direkt aus den Parametern)
  */
 function initialStability(rating: RatingType): number {
@@ -148,7 +148,7 @@ function initialStability(rating: RatingType): number {
 }
 
 /**
- * Berechnet die neue Stabilitaet nach einem erfolgreichen Review (Rating >= 2).
+ * Berechnet die neu Stabilität nach einem erfolgreichen Review (Rating >= 2).
  * S'_r(D, S, R, G) = S * (e^w7 * (11 - D) * S^(-w8) * (e^(w9*(1-R)) - 1) * hardPenalty * easyBonus + 1)
  */
 export function calculateStability(
@@ -176,7 +176,7 @@ export function calculateStability(
 }
 
 /**
- * Berechnet die neue Stabilitaet nach einem fehlgeschlagenen Review (Again).
+ * Berechnet die neu Stabilität nach einem fehlgeschlagenen Review (Again).
  * S'_f(D, S, R) = w11 * D^(-w12) * ((S+1)^w13 - 1) * e^(w14*(1-R))
  */
 function calculateForgetStability(

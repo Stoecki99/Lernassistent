@@ -54,7 +54,7 @@ function parseCsv(content: string): ParseResult {
     const line = lines[i]
 
     if (!line.includes(";")) {
-      errors.push({ line: lineNumber, message: "Kein Semikolon gefunden. Format: Vorderseite;Rueckseite" })
+      errors.push({ line: lineNumber, message: "Kein Semikolon gefunden. Format: Vorderseite;Rückseite" })
       continue
     }
 
@@ -81,7 +81,7 @@ function parseCsv(content: string): ParseResult {
     }
 
     if (!back) {
-      errors.push({ line: lineNumber, message: "Rueckseite ist leer." })
+      errors.push({ line: lineNumber, message: "Rückseite ist leer." })
       continue
     }
 
@@ -121,7 +121,7 @@ function parseAnki(content: string): ParseResult {
     }
 
     if (!line.includes("\t")) {
-      errors.push({ line: lineNumber, message: "Kein Tab-Trennzeichen gefunden. Anki-Format: Vorderseite[TAB]Rueckseite" })
+      errors.push({ line: lineNumber, message: "Kein Tab-Trennzeichen gefunden. Anki-Format: Vorderseite[TAB]Rückseite" })
       continue
     }
 
@@ -143,7 +143,7 @@ function parseAnki(content: string): ParseResult {
     }
 
     if (!back) {
-      errors.push({ line: lineNumber, message: "Rueckseite ist leer." })
+      errors.push({ line: lineNumber, message: "Rückseite ist leer." })
       continue
     }
 
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
 
     const parsed = importSchema.safeParse({ deckId, format })
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      const firstError = parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
@@ -192,7 +192,7 @@ export async function POST(request: Request) {
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "Die Datei ist zu gross. Maximale Groesse: 5 MB." },
+        { error: "Die Datei ist zu gross. Maximale Grösse: 5 MB." },
         { status: 400 }
       )
     }
@@ -216,7 +216,7 @@ export async function POST(request: Request) {
     if (result.cards.length === 0) {
       return NextResponse.json(
         {
-          error: "Keine gueltigen Karten gefunden.",
+          error: "Keine gültigen Karten gefunden.",
           errors: result.errors,
           imported: 0,
         },
@@ -239,7 +239,7 @@ export async function POST(request: Request) {
     const { allowed } = await checkStorageLimit(session.user.id, totalBytes)
     if (!allowed) {
       return NextResponse.json(
-        { error: "Speicherlimit erreicht. Loesche Karten oder upgrade auf Pro." },
+        { error: "Speicherlimit erreicht. Lösche Karten oder upgrade auf Pro." },
         { status: 403 }
       )
     }

@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const parsed = createDeckSchema.safeParse(body)
 
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      const firstError = parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 

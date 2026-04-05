@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       const firstError =
-        parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+        parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     const tokenAnswers = verifyQuizToken(quizToken)
     if (!tokenAnswers) {
       return NextResponse.json(
-        { error: "Ungueltiges oder manipuliertes Quiz-Token." },
+        { error: "Ungültiges oder manipuliertes Quiz-Token." },
         { status: 400 }
       )
     }
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
       const correctAnswer = correctAnswerMap.get(answer.questionId)
       if (!correctAnswer) {
         return NextResponse.json(
-          { error: "Frage-ID stimmt nicht mit dem Quiz ueberein." },
+          { error: "Frage-ID stimmt nicht mit dem Quiz überein." },
           { status: 400 }
         )
       }

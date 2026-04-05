@@ -96,7 +96,7 @@ export default function QuizCard({
               disabled={freeTextInput.trim().length === 0}
               className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-button hover:bg-primary-dark btn-press disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Antwort pruefen
+              Antwort prüfen
             </button>
           )}
         </div>
@@ -150,7 +150,7 @@ export default function QuizCard({
             className="w-full py-3 bg-primary text-white font-bold rounded-xl shadow-button hover:bg-primary-dark btn-press transition-all"
           >
             {questionIndex + 1 < totalQuestions
-              ? "Naechste Frage"
+              ? "Nächste Frage"
               : "Ergebnis anzeigen"}
           </button>
         </div>

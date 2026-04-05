@@ -29,7 +29,7 @@ export default function AuthLayout({
       {/* Footer */}
       <footer className="py-4 text-center text-sm text-text-light">
         <Link href="/" className="hover:text-primary transition-colors">
-          &larr; Zurueck zur Startseite
+          &larr; Zurück zur Startseite
         </Link>
       </footer>
     </div>

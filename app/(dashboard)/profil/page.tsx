@@ -172,7 +172,7 @@ export default async function ProfilPage() {
         </h2>
         {profil.badges.length === 0 ? (
           <p className="text-sm text-text-light bg-surface-card rounded-2xl shadow-card p-5 text-center">
-            Noch keine Badges verfuegbar. Lerne weiter!
+            Noch keine Badges verfügbar. Lerne weiter!
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

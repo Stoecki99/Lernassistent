@@ -11,9 +11,9 @@ interface StreakAnzeigeProps {
 const motivationTexts: Record<string, string> = {
   none: "Starte heute deinen Streak!",
   low: "Guter Anfang! Bleib dran!",
-  medium: "Laeuft super! Weiter so!",
+  medium: "Läuft super! Weiter so!",
   high: "Unglaublich! Du bist on fire!",
-  legendary: "Legendaer! Nicht aufzuhalten!",
+  legendary: "Legendär! Nicht aufzuhalten!",
 }
 
 function getMotivationLevel(streak: number): string {
@@ -51,7 +51,7 @@ export default function StreakAnzeige({ currentStreak, longestStreak }: StreakAn
       {/* Laengster Streak */}
       <div className="mt-3 pt-3 border-t border-gray-100">
         <p className="text-xs text-text-light">
-          Laengster Streak: <span className="font-bold text-text">{longestStreak} Tage</span>
+          Längster Streak: <span className="font-bold text-text">{longestStreak} Tage</span>
         </p>
       </div>
 

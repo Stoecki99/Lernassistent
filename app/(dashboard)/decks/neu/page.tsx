@@ -28,7 +28,7 @@ export default function NewDeckPage() {
     setError("")
 
     if (!name.trim()) {
-      setError("Bitte gib einen Namen fuer dein Deck ein.")
+      setError("Bitte gib einen Namen für dein Deck ein.")
       return
     }
 
@@ -71,7 +71,7 @@ export default function NewDeckPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-extrabold text-text-dark">
-          Neues Deck erstellen
+          Neus Deck erstellen
         </h1>
         <p className="text-text-light mt-1">
           Erstelle ein Deck, um deine Karteikarten zu organisieren.

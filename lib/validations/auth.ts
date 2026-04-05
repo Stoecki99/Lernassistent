@@ -7,7 +7,7 @@ export const loginSchema = z.object({
   email: z
     .string()
     .min(1, "Bitte gib deine E-Mail-Adresse ein.")
-    .email("Bitte gib eine gueltige E-Mail-Adresse ein."),
+    .email("Bitte gib eine gültige E-Mail-Adresse ein."),
   password: z
     .string()
     .min(8, "Das Passwort muss mindestens 8 Zeichen lang sein."),
@@ -21,7 +21,7 @@ export const registerSchema = z
     email: z
       .string()
       .min(1, "Bitte gib deine E-Mail-Adresse ein.")
-      .email("Bitte gib eine gueltige E-Mail-Adresse ein."),
+      .email("Bitte gib eine gültige E-Mail-Adresse ein."),
     password: z
       .string()
       .min(8, "Das Passwort muss mindestens 8 Zeichen lang sein.")
@@ -30,7 +30,7 @@ export const registerSchema = z
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Die Passwoerter stimmen nicht ueberein.",
+    message: "Die Passwörter stimmen nicht überein.",
     path: ["confirmPassword"],
   })
 

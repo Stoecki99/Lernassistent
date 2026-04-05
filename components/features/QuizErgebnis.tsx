@@ -41,7 +41,7 @@ function getMotivation(
     return { message: "Gut gemacht! Weiter so!", emoji: "\u{1F4AA}" }
   }
   return {
-    message: "Nicht schlimm! Uebung macht den Meister!",
+    message: "Nicht schlimm! Übung macht den Meister!",
     emoji: "\u{1F60A}",
   }
 }
@@ -110,7 +110,7 @@ export default function QuizErgebnis({
         <p className="text-3xl font-extrabold text-primary">+{score}</p>
         {isPerfect && (
           <p className="text-xs text-accent font-bold mt-1">
-            inkl. 50 Bonus fuer 100%!
+            inkl. 50 Bonus für 100%!
           </p>
         )}
       </div>
@@ -200,9 +200,10 @@ export default function QuizErgebnis({
           href={`/decks/${deckId}`}
           className="block text-center w-full py-3 text-text-light font-semibold hover:text-text-dark transition-colors"
         >
-          Zurueck zum Deck
+          Zurück zum Deck
         </Link>
       </div>
     </div>
   )
 }
+

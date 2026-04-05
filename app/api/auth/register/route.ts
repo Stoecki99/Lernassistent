@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
     const parsed = registerSchema.safeParse(body)
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      const firstError = parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[auth/register]", error)
     return NextResponse.json(
-      { error: "Registrierung fehlgeschlagen. Bitte versuche es spaeter erneut." },
+      { error: "Registrierung fehlgeschlagen. Bitte versuche es später erneut." },
       { status: 500 }
     )
   }

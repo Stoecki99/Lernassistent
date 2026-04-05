@@ -92,7 +92,7 @@ export default function AdminUserTable({ users: initialUsers }: AdminUserTablePr
               <th className="px-4 py-3 font-semibold">E-Mail</th>
               <th className="px-4 py-3 font-semibold">Registriert</th>
               <th className="px-4 py-3 font-semibold">Plan</th>
-              <th className="px-4 py-3 font-semibold">Laeuft ab</th>
+              <th className="px-4 py-3 font-semibold">Läuft ab</th>
               <th className="px-4 py-3 font-semibold">Speicher</th>
               <th className="px-4 py-3 font-semibold">Karten</th>
               <th className="px-4 py-3 font-semibold">API-Tokens</th>

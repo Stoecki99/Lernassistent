@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-04-05 (Update 2)
+**Zuletzt aktualisiert:** 2026-04-05 (Update 3)
 
 ---
 
@@ -33,7 +33,7 @@
 - Chat: Rate-Limit Memory Leak Cleanup
 - Badges: Race Condition mit upsert behoben
 - Health-Check: DB-Connectivity pruefen
-- Nginx-Headers: Security-Headers in Sub-Locations wiederholt
+- Caddy-Headers: Security-Headers im Site-Block aktiv
 - Statistiken: Parallel Queries mit Promise.all
 
 ## Deployment-Status
@@ -41,7 +41,7 @@
 | Komponente | Status | Details |
 |-----------|--------|---------|
 | GitHub Repo | Laeuft | https://github.com/Stoecki99/Lernassistent (public) |
-| GitHub Actions CI/CD | Laeuft | Auto-Deploy bei Push auf master (GHCR + SSH) |
+| GitHub Actions CI/CD | Deaktiviert | Workflow vorhanden, aktuell manuelles Deployment |
 | VPS Docker | Laeuft | App-Image gebaut, Container laufen |
 | PostgreSQL | Laeuft | Container healthy, Migration angewendet |
 | Caddy Reverse Proxy | Laeuft | In ~/stack/, lernen.jan-stocker.cloud konfiguriert |
@@ -49,6 +49,17 @@
 | DB-Migration | Erledigt | Initial-Migration 20260404_init angewendet |
 | Badge-Seed | Erledigt | Alle Badges geseeded |
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
+
+## Aenderungen 2026-04-05 (Update 3)
+
+- **Neu: Kontaktformular** — Oeffentliches Formular unter `/kontakt` mit dreifachem Anti-Spam-Schutz (Honeypot + reCAPTCHA v3 + Rate-Limiting)
+- **Neu: E-Mail-Benachrichtigung** — Kontaktnachrichten werden via Resend an Betreiber gesendet UND in DB gespeichert
+- **Neu: Admin-Nachrichten** — Admin-Panel zeigt alle Kontaktnachrichten mit Gelesen-Markierung
+- **Neu: API-Route** — `POST /api/kontakt` (keine Auth), `GET/PATCH /api/admin/nachrichten` (Admin-Auth)
+- **E-Mail-Adressen entfernt** — Impressum, Datenschutz und UpgradePrompt verlinken jetzt auf `/kontakt` statt E-Mail
+- **DB-Migration noetig** — `npx prisma migrate deploy` (ContactMessage-Tabelle)
+- **Neue Env-Variablen** — `RESEND_API_KEY`, `RECAPTCHA_SECRET_KEY`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
+- **Neue Pakete** — `resend`, `react-google-recaptcha-v3`
 
 ## Aenderungen 2026-04-05 (Update 2)
 

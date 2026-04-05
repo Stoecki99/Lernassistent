@@ -102,7 +102,7 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
     setImportResult(null)
 
     if (selectedFile.size > 5 * 1024 * 1024) {
-      setError("Die Datei ist zu gross. Maximale Groesse: 5 MB.")
+      setError("Die Datei ist zu gross. Maximale Grösse: 5 MB.")
       setPreview([])
       setTotalParsed(0)
       return
@@ -115,7 +115,7 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
       setTotalParsed(total)
 
       if (total === 0) {
-        setError("Keine gueltigen Karten in der Datei gefunden. Pruefe das Format.")
+        setError("Keine gültigen Karten in der Datei gefunden. Prüfe das Format.")
       }
     } catch {
       setError("Datei konnte nicht gelesen werden.")
@@ -161,7 +161,7 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
         const { cards, total } = parsePreview(content, newFormat)
         setPreview(cards)
         setTotalParsed(total)
-        setError(total === 0 ? "Keine gueltigen Karten in der Datei gefunden. Pruefe das Format." : "")
+        setError(total === 0 ? "Keine gültigen Karten in der Datei gefunden. Prüfe das Format." : "")
       } catch {
         setPreview([])
         setTotalParsed(0)
@@ -268,7 +268,7 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
           <>
             <p className="font-bold text-secondary mb-1">CSV-Format</p>
             <p className="text-text-light">
-              Jede Zeile: <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite;Hinweis;Rueckseite</code> oder <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite;Rueckseite</code>
+              Jede Zeile: <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite;Hinweis;Rückseite</code> oder <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite;Rückseite</code>
             </p>
             <p className="text-text-light mt-1">Hinweis ist optional. Die erste Zeile kann ein Header sein.</p>
           </>
@@ -276,9 +276,9 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
           <>
             <p className="font-bold text-secondary mb-1">Anki-Format</p>
             <p className="text-text-light">
-              Jede Zeile: <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite[TAB]Rueckseite</code>
+              Jede Zeile: <code className="bg-white px-1.5 py-0.5 rounded text-xs font-mono">Vorderseite[TAB]Rückseite</code>
             </p>
-            <p className="text-text-light mt-1">Kommentarzeilen (mit #) werden uebersprungen.</p>
+            <p className="text-text-light mt-1">Kommentarzeilen (mit #) werden übersprungen.</p>
           </>
         )}
       </div>
@@ -316,14 +316,14 @@ export default function ImportFormular({ deckId, deckName }: ImportFormularProps
               onClick={(e) => { e.stopPropagation(); resetAll() }}
               className="mt-3 text-sm font-bold text-red-500 hover:text-red-600 transition-colors"
             >
-              Andere Datei waehlen
+              Andere Datei wählen
             </button>
           </div>
         ) : (
           <div>
             <span className="text-4xl block mb-2" aria-hidden="true">&#128228;</span>
             <p className="font-bold text-text-dark">Datei hierher ziehen</p>
-            <p className="text-sm text-text-light mt-1">oder klicken zum Auswaehlen</p>
+            <p className="text-sm text-text-light mt-1">oder klicken zum Auswählen</p>
             <p className="text-xs text-text-light mt-2">CSV, TXT oder TSV (max. 5 MB)</p>
           </div>
         )}

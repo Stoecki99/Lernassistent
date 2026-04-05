@@ -58,7 +58,7 @@ export default function LoginPage() {
       router.push("/dashboard")
       router.refresh()
     } catch {
-      setErrors({ general: "Netzwerkfehler. Bitte pruefe deine Verbindung." })
+      setErrors({ general: "Netzwerkfehler. Bitte prüfe deine Verbindung." })
     } finally {
       setIsLoading(false)
     }
@@ -68,7 +68,7 @@ export default function LoginPage() {
     <div className="bg-surface-card rounded-2xl shadow-card p-8">
       <div className="text-center mb-8">
         <h1 className="text-2xl font-extrabold text-text-dark">
-          Willkommen zurueck! &#128075;
+          Willkommen zurück! &#128075;
         </h1>
         <p className="text-text-light mt-2">
           Melde dich an und lerne weiter.

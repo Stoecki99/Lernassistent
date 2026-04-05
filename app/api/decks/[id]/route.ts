@@ -87,7 +87,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     const parsed = updateDeckSchema.safeParse(body)
 
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]?.message ?? "Ungueltige Eingabe."
+      const firstError = parsed.error.issues[0]?.message ?? "Ungültige Eingabe."
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
@@ -151,11 +151,11 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     await prisma.deck.delete({ where: { id } })
 
-    return NextResponse.json({ message: "Deck erfolgreich geloescht." })
+    return NextResponse.json({ message: "Deck erfolgreich gelöscht." })
   } catch (error) {
     console.error("[decks/[id]/DELETE]", error)
     return NextResponse.json(
-      { error: "Deck konnte nicht geloescht werden." },
+      { error: "Deck konnte nicht gelöscht werden." },
       { status: 500 }
     )
   }

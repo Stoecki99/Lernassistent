@@ -187,7 +187,7 @@ export default function QuizSession({
             href="/quiz"
             className="mt-3 text-text-light hover:text-text-dark font-semibold transition-colors"
           >
-            Zurueck zur Quiz-Auswahl
+            Zurück zur Quiz-Auswahl
           </Link>
         </div>
       )
@@ -247,7 +247,7 @@ export default function QuizSession({
         <Link
           href="/quiz"
           className="text-text-light hover:text-text-dark transition-colors"
-          aria-label="Zurueck zur Quiz-Auswahl"
+          aria-label="Zurück zur Quiz-Auswahl"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

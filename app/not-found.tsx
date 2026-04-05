@@ -22,7 +22,7 @@ export default function NotFound() {
         </h2>
         <p className="text-text-light mb-8 leading-relaxed">
           Ups! Diese Seite existiert nicht. Vielleicht hast du dich verlaufen?
-          Kein Problem, wir bringen dich zurueck!
+          Kein Problem, wir bringen dich zurück!
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link

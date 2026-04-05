@@ -155,7 +155,7 @@ export default function LernSession({ deck }: LernSessionProps) {
           Super gemacht!
         </h2>
         <p className="text-text-light mb-2">
-          Du hast alle Karten fuer heute gelernt.
+          Du hast alle Karten für heute gelernt.
         </p>
         {reviewCount > 0 && (
           <p className="text-primary font-bold mb-6">
@@ -167,7 +167,7 @@ export default function LernSession({ deck }: LernSessionProps) {
             href={`/decks/${deck.id}`}
             className="block text-center px-6 py-3 bg-primary text-white font-bold rounded-xl shadow-button hover:bg-primary-dark btn-press"
           >
-            Zurueck zum Deck
+            Zurück zum Deck
           </Link>
           <Link
             href="/decks"
@@ -188,7 +188,7 @@ export default function LernSession({ deck }: LernSessionProps) {
         <Link
           href={`/decks/${deck.id}`}
           className="text-text-light hover:text-text-dark transition-colors"
-          aria-label="Zurueck zum Deck"
+          aria-label="Zurück zum Deck"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

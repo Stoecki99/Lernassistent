@@ -31,7 +31,7 @@ const FEATURES: FeatureCardProps[] = [
     icon: "\uD83E\uDD16",
     title: "KI-Lerntutor",
     description:
-      "Stelle Fragen, lass dir Themen erklären oder generiere neue Karten per Chat mit Claude.",
+      "Stelle Fragen, lass dir Themen erklären oder generiere neu Karten per Chat mit Claude.",
     color: "purple",
   },
 ]

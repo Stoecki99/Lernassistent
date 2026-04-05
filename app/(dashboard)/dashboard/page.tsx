@@ -186,13 +186,13 @@ export default async function DashboardPage() {
           href="/lernen"
           icon="&#128218;"
           title="Weiterlernen"
-          description="Faellige Karten wiederholen"
+          description="Fällige Karten wiederholen"
           color="primary"
         />
         <QuickActionCard
           href="/decks"
           icon="&#10133;"
-          title="Neues Deck"
+          title="Neus Deck"
           description="Karteikarten erstellen"
           color="secondary"
         />

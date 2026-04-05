@@ -5,12 +5,12 @@ import { z } from "zod"
 
 export const deckIdQuerySchema = z
   .string()
-  .cuid("Ungueltige Deck-ID.")
+  .cuid("Ungültige Deck-ID.")
 
 export const bewertungSchema = z.object({
   cardId: z
     .string()
-    .cuid("Ungueltige Karten-ID."),
+    .cuid("Ungültige Karten-ID."),
   rating: z
     .number()
     .int()

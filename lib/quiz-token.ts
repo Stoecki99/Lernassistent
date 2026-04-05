@@ -67,7 +67,7 @@ export function verifyQuizToken(
     return payload.split(SEPARATOR).map((entry) => {
       const colonIndex = entry.indexOf(":")
       if (colonIndex === -1) {
-        throw new Error("Ungueltiges Token-Format.")
+        throw new Error("Ungültiges Token-Format.")
       }
       return {
         questionId: entry.slice(0, colonIndex),

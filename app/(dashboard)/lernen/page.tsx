@@ -88,10 +88,10 @@ export default function LernenPage() {
           <h2 className="text-xl font-bold text-gray-800 mb-2">
             Noch keine Decks vorhanden
           </h2>
-          <p className="text-gray-500 mb-6">
-            Erstelle zuerst ein Deck mit Karteikarten, um mit dem Lernen zu
-            beginnen.
-          </p>
+            <p className="text-gray-500 mb-6">
+              Erstelle zuerst ein Deck mit Karteikarten, um mit dem Lernen zu
+              beginnen.
+            </p>
           <Link
             href="/decks/neu"
             className="inline-flex items-center gap-2 bg-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-primary-dark transition-colors"
@@ -112,7 +112,7 @@ export default function LernenPage() {
         <h1 className="text-2xl font-bold text-gray-800">Lernen</h1>
         <p className="text-gray-500 mt-1">
           {totalDue > 0 || totalNew > 0
-            ? `${totalDue} faellige und ${totalNew} neue Karten warten auf dich!`
+            ? `${totalDue} fällige und ${totalNew} neue Karten warten auf dich!`
             : "Alle Karten sind aktuell gelernt. Gut gemacht!"}
         </p>
       </div>
@@ -158,7 +158,7 @@ export default function LernenPage() {
                       </span>
                     )}
                     {deck.newCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-blue-500 font-semibold">
+                        <span className="inline-flex items-center gap-1 text-blue-500 font-semibold">
                         {deck.newCount} neu
                       </span>
                     )}

@@ -28,11 +28,11 @@ export const createDeckSchema = z.object({
     .or(z.literal("")),
   color: z
     .string()
-    .regex(hexColorRegex, "Bitte waehle eine gueltige Farbe.")
+    .regex(hexColorRegex, "Bitte wähle eine gültige Farbe.")
     .default("#58CC02"),
   icon: z
     .string()
-    .min(1, "Bitte waehle ein Icon.")
+    .min(1, "Bitte wähle ein Icon.")
     .max(10, "Das Icon ist zu lang.")
     .default("📚"),
 })
@@ -50,11 +50,11 @@ export const updateDeckSchema = z.object({
     .or(z.literal("")),
   color: z
     .string()
-    .regex(hexColorRegex, "Bitte waehle eine gueltige Farbe.")
+    .regex(hexColorRegex, "Bitte wähle eine gültige Farbe.")
     .optional(),
   icon: z
     .string()
-    .min(1, "Bitte waehle ein Icon.")
+    .min(1, "Bitte wähle ein Icon.")
     .max(10, "Das Icon ist zu lang.")
     .optional(),
 })
