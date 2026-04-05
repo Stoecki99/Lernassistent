@@ -5,6 +5,7 @@
 // Zeigt Vorderseite, flippt bei Klick, zeigt dann Rueckseite + 4 Rating-Buttons.
 
 import { useState, useRef } from "react"
+import CardMarkdown from "@/components/ui/CardMarkdown"
 
 interface CardData {
   id: string
@@ -130,9 +131,9 @@ export default function LernKarte({
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-text-light mb-4">
               {STATE_LABELS[card.state] ?? "Unbekannt"}
             </span>
-            <p className="text-xl sm:text-2xl font-bold text-text-dark text-center break-words leading-relaxed">
-              {card.front}
-            </p>
+            <div className="text-xl sm:text-2xl font-bold text-text-dark text-center break-words leading-relaxed">
+              <CardMarkdown content={card.front} />
+            </div>
             <p className="text-sm text-text-light mt-6">
               Tippe zum Umdrehen
             </p>
@@ -143,9 +144,9 @@ export default function LernKarte({
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary mb-4">
               Antwort
             </span>
-            <p className="text-xl sm:text-2xl font-bold text-text-dark text-center break-words leading-relaxed">
-              {card.back}
-            </p>
+            <div className="text-xl sm:text-2xl font-bold text-text-dark text-center break-words leading-relaxed">
+              <CardMarkdown content={card.back} />
+            </div>
           </div>
         </div>
       </div>

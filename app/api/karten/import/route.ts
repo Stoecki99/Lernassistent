@@ -9,10 +9,11 @@ import { NextResponse } from "next/server"
 import { getAuthSession } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { importSchema } from "@/lib/validations/import"
+import { checkStorageLimit, estimateCardBytes, incrementStorageUsed } from "@/lib/subscription"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const MAX_CARDS = 500
-const MAX_FIELD_LENGTH = 1000
+const MAX_FIELD_LENGTH = 2000
 
 interface ParseError {
   line: number
@@ -197,6 +198,19 @@ export async function POST(request: Request) {
       )
     }
 
+    // Speicherlimit pruefen
+    const totalBytes = result.cards.reduce(
+      (sum, card) => sum + estimateCardBytes(card.front, card.back),
+      0
+    )
+    const { allowed } = await checkStorageLimit(session.user.id, totalBytes)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Speicherlimit erreicht. Loesche Karten oder upgrade auf Pro." },
+        { status: 403 }
+      )
+    }
+
     // Bulk-Insert
     const created = await prisma.card.createMany({
       data: result.cards.map((card) => ({
@@ -205,6 +219,9 @@ export async function POST(request: Request) {
         deckId: parsed.data.deckId,
       })),
     })
+
+    // Speicherverbrauch aktualisieren
+    await incrementStorageUsed(session.user.id, totalBytes)
 
     return NextResponse.json({
       message: `${created.count} ${created.count === 1 ? "Karte" : "Karten"} erfolgreich importiert!`,

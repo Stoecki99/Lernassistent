@@ -6,6 +6,7 @@
 // serverseitiger Auswertung am Ende des Quiz.
 
 import { useState } from "react"
+import CardMarkdown from "@/components/ui/CardMarkdown"
 
 interface QuizQuestion {
   id: string
@@ -72,9 +73,9 @@ export default function QuizCard({
 
       {/* Frage */}
       <div className="bg-surface-card rounded-2xl shadow-card p-6 sm:p-8 mb-6">
-        <p className="text-xl sm:text-2xl font-bold text-text-dark text-center leading-relaxed">
-          {question.question}
-        </p>
+        <div className="text-xl sm:text-2xl font-bold text-text-dark text-center leading-relaxed">
+          <CardMarkdown content={question.question} />
+        </div>
       </div>
 
       {/* Antwort-Optionen */}
