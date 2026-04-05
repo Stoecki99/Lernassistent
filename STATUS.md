@@ -41,7 +41,7 @@
 | Komponente | Status | Details |
 |-----------|--------|---------|
 | GitHub Repo | Laeuft | https://github.com/Stoecki99/Lernassistent (public) |
-| GitHub Actions CI/CD | Deaktiviert | Workflow vorhanden, aktuell manuelles Deployment |
+| GitHub Actions CI/CD | Aktiv | Automatisch bei git push: Build, Migration, Deploy |
 | VPS Docker | Laeuft | App-Image gebaut, Container laufen |
 | PostgreSQL | Laeuft | Container healthy, Migration angewendet |
 | Caddy Reverse Proxy | Laeuft | In ~/stack/, lernen.jan-stocker.cloud konfiguriert |

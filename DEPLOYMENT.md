@@ -28,62 +28,101 @@ Docker Networks:
   caddy/Caddyfile                 # Reverse Proxy Config
 
 ~/lernassistent/                  # Lernassistent Deployment
-  docker-compose.yml              # App + PostgreSQL
-  .env                            # Secrets (DB-Passwort, NextAuth, Anthropic Key)
+  docker-compose.yml              # App (lokaler Build) + PostgreSQL
+  .env                            # Secrets (DB-Passwort, NextAuth, Anthropic, Resend, reCAPTCHA)
   repo/                           # Git-Klon von GitHub
 ```
 
-## Environment-Variablen (.env)
+## Deployment-Methode: CI/CD via GitHub Actions (AKTIV)
+
+**Deployment ist vollautomatisch.** Bei jedem `git push` auf `master` fuehrt GitHub Actions aus:
+
+1. Docker-Image lokal auf dem VPS bauen (mit `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` als Build-Arg)
+2. Prisma-Migrationen automatisch ausfuehren
+3. Container neu starten
+4. Health Check
+
+**Es ist KEIN manuelles Deployment auf dem VPS noetig.** Einfach Code pushen — der Rest passiert automatisch.
+
+### Workflow-Datei
+`.github/workflows/deploy.yml`
+
+### Benoetigte GitHub Secrets
+- `VPS_HOST` — VPS IP-Adresse
+- `VPS_USER` — `jan`
+- `VPS_SSH_KEY` — Private SSH Key (ohne Passphrase, ed25519)
+- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` — Google reCAPTCHA v3 Site Key
+
+### Wichtig fuer NEXT_PUBLIC_ Variablen
+`NEXT_PUBLIC_`-Variablen werden von Next.js zur **Build-Zeit** ins Client-Bundle eingebettet.
+Sie muessen als `ARG` in der Dockerfile und als `--build-arg` beim `docker compose build` uebergeben werden.
+Runtime-Environment-Variablen reichen dafuer **nicht** aus.
+
+Aktuell betroffene Variable:
+- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` — wird aus der `.env` auf dem VPS gelesen und als Build-Arg uebergeben
+
+## Environment-Variablen (.env auf dem VPS)
 
 ```env
-POSTGRES_PASSWORD=<generiert>     # DB-Passwort
-NEXTAUTH_SECRET=<generiert>       # Session-Verschluesselung
-ANTHROPIC_API_KEY=sk-ant-...      # Claude API Key
+POSTGRES_PASSWORD=<generiert>               # DB-Passwort
+NEXTAUTH_SECRET=<generiert>                 # Session-Verschluesselung
+ANTHROPIC_API_KEY=sk-ant-...                # Claude API Key
+ADMIN_EMAIL=<admin-email>                   # E-Mail fuer Admin-Panel-Zugriff
+RESEND_API_KEY=re_...                       # Resend API Key (E-Mail-Versand)
+RECAPTCHA_SECRET_KEY=6Le...                 # Google reCAPTCHA v3 Secret Key (serverseitig)
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY=6Le...       # Google reCAPTCHA v3 Site Key (wird beim Build eingebettet)
 ```
 
 Die DATABASE_URL wird in docker-compose.yml zusammengebaut:
 `postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/lernassistent`
 
-## Deployment-Schritte (manuell)
+## docker-compose.yml auf dem VPS
 
-### Erstmaliges Setup
+Die App wird **lokal auf dem VPS gebaut** (nicht von ghcr.io gezogen):
 
-```bash
-# 1. Repo klonen (bereits erledigt)
-cd ~/lernassistent
-git clone https://github.com/Stoecki99/Lernassistent.git repo
-
-# 2. .env erstellen (bereits erledigt)
-# POSTGRES_PASSWORD, NEXTAUTH_SECRET, ANTHROPIC_API_KEY setzen
-
-# 3. Docker-Netzwerk erstellen (bereits erledigt)
-docker network create caddy-lernassistent
-
-# 4. Image bauen
-docker compose build app
-
-# 5. Container starten
-docker compose up -d
-
-# 6. DB migrieren (NOCH OFFEN — siehe Problem unten)
-# 7. Badges seeden (NOCH OFFEN)
+```yaml
+app:
+  build:
+    context: ./repo
+    dockerfile: Dockerfile
+  # ... environment, depends_on, etc.
 ```
 
-### Update deployen (nach Code-Aenderungen)
+## Manuelles Deployment (nur falls CI/CD ausfaellt)
 
 ```bash
 cd ~/lernassistent/repo
 git pull
 
 cd ~/lernassistent
-docker compose build app
-docker compose up -d
 
-# Falls Schema-Aenderungen:
-# Migration ausfuehren (siehe Abschnitt unten)
+# RECAPTCHA_KEY aus .env lesen und als Build-Arg uebergeben
+RECAPTCHA_KEY=$(grep -m1 '^NEXT_PUBLIC_RECAPTCHA_SITE_KEY=' .env | sed 's/^NEXT_PUBLIC_RECAPTCHA_SITE_KEY=//')
+docker compose build --build-arg NEXT_PUBLIC_RECAPTCHA_SITE_KEY="$RECAPTCHA_KEY" app
+
+docker compose up -d
 ```
 
-### Container verwalten
+### Manuelle Migration (nur falls CI/CD die Migration nicht ausfuehrt)
+
+```bash
+cd ~/lernassistent
+
+# DB-Passwort aus .env lesen
+DB_PASS=$(grep -m1 '^POSTGRES_PASSWORD=' .env | sed 's/^POSTGRES_PASSWORD=//')
+
+# Migration ausfuehren
+docker run -it --rm --network lernassistent_internal \
+  -e DATABASE_URL="postgresql://postgres:${DB_PASS}@lernassistent-db:5432/lernassistent" \
+  -v $(pwd)/repo:/app -w /app node:20-alpine sh
+
+# Im Container:
+npm ci
+npx prisma migrate deploy
+exit
+```
+
+## Container verwalten
 
 ```bash
 cd ~/lernassistent
@@ -103,39 +142,6 @@ docker compose down
 
 # Alles stoppen + DB-Daten loeschen (ACHTUNG!)
 docker compose down -v
-```
-
-## Bekanntes Problem: Prisma v7 Migration
-
-### Problem
-Prisma v7 hat die `url` aus dem `datasource`-Block im Schema entfernt. Die URL muss jetzt in `prisma.config.ts` stehen. Das standalone Docker Image enthaelt diese Datei nicht.
-
-### Loesung: Migration via separaten Container
-
-```bash
-cd ~/lernassistent
-
-# Migration ausfuehren (mit vollem Repo + node_modules)
-docker run --rm \
-  --network lernassistent_internal \
-  -e DATABASE_URL="postgresql://postgres:$(grep POSTGRES_PASSWORD .env | cut -d= -f2)@lernassistent-db:5432/lernassistent" \
-  -v $(pwd)/repo:/app \
-  -w /app \
-  node:20-alpine sh -c "npm ci && npx prisma migrate deploy"
-
-# Badges seeden
-docker run --rm \
-  --network lernassistent_internal \
-  -e DATABASE_URL="postgresql://postgres:$(grep POSTGRES_PASSWORD .env | cut -d= -f2)@lernassistent-db:5432/lernassistent" \
-  -v $(pwd)/repo:/app \
-  -w /app \
-  node:20-alpine sh -c "npm ci && npx prisma db seed"
-```
-
-### Alternative: Dockerfile anpassen
-`prisma.config.ts` in den Runner-Stage kopieren:
-```dockerfile
-COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 ```
 
 ## Caddy-Konfiguration
@@ -163,15 +169,14 @@ Caddy handhabt SSL automatisch via Let's Encrypt. Kein manuelles Zertifikat noet
 |-----|------|------|-----|
 | A | lernen | VPS-IP | Hostinger DNS-Manager |
 
-## GitHub Actions CI/CD (aktuell deaktiviert)
+## Externe Services
 
-Der Workflow in `.github/workflows/deploy.yml` ist konfiguriert aber funktioniert nicht wegen SSH-Key-Passphrase-Problem. Wird aktuell manuell deployed.
+| Service | Zweck | Dashboard |
+|---------|-------|-----------|
+| Resend | E-Mail-Versand (Kontaktformular) | https://resend.com/domains |
+| Google reCAPTCHA v3 | Spam-Schutz Kontaktformular | https://www.google.com/recaptcha/admin |
 
-### Benoetigte GitHub Secrets (fuer spaeter)
-- `VPS_HOST` — VPS IP-Adresse
-- `VPS_USER` — `jan`
-- `VPS_SSH_KEY` — Private SSH Key (ohne Passphrase!)
-- `VPS_SSH_PASSPHRASE` — SSH Key Passphrase
+**Wichtig:** Domain `jan-stocker.cloud` muss bei Resend verifiziert sein (DNS-Eintraege im Hostinger DNS-Manager).
 
 ## Troubleshooting
 
@@ -194,8 +199,14 @@ docker network inspect caddy-lernassistent
 cd ~/stack && docker compose restart caddy
 ```
 
-### Image neu bauen nach Code-Aenderung
-```bash
-cd ~/lernassistent/repo && git pull
-cd ~/lernassistent && docker compose build app && docker compose up -d
-```
+### CI/CD schlaegt fehl
+- Pruefe GitHub Actions Logs: https://github.com/Stoecki99/Lernassistent/actions
+- SSH-Key muss ohne Passphrase sein
+- Alle GitHub Secrets muessen gesetzt sein
+
+### Kontaktformular zeigt "nicht verfuegbar"
+`NEXT_PUBLIC_RECAPTCHA_SITE_KEY` fehlt im Build. Neu bauen mit `--build-arg`.
+
+### Bekanntes Problem: Prisma v7 Migration
+Prisma v7 hat die `url` aus dem `datasource`-Block entfernt. Die URL steht in `prisma.config.ts`.
+Das standalone Docker Image enthaelt diese Datei nicht — Migrationen laufen daher via separatem Container mit gemountem Repo.
