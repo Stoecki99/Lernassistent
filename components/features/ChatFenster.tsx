@@ -441,6 +441,32 @@ export default function ChatFenster({ initialMessages, decks }: ChatFensterProps
   }
 
   // -------------------------------------------------------------------------
+  // Neuer Chat
+  // -------------------------------------------------------------------------
+
+  async function handleNewChat(): Promise<void> {
+    if (isStreaming) return
+
+    try {
+      const res = await fetch("/api/chat", { method: "DELETE" })
+      if (!res.ok) {
+        setError("Chat konnte nicht zurueckgesetzt werden.")
+        return
+      }
+
+      setMessages([WELCOME_MESSAGE])
+      setInput("")
+      setError(null)
+      setAttachedFiles([])
+      setShowChips(true)
+      setCsvToImport("")
+      setImportResult(null)
+    } catch {
+      setError("Netzwerkfehler beim Zuruecksetzen.")
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Render
   // -------------------------------------------------------------------------
 
@@ -467,12 +493,21 @@ export default function ChatFenster({ initialMessages, decks }: ChatFensterProps
             />
           </svg>
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-lg font-bold text-text-dark">Lernassistent</h1>
           <p className="text-xs text-text-light">
             Frag mich alles zum Lernen oder lass mich Karteikarten erstellen
           </p>
         </div>
+        <button
+          type="button"
+          onClick={handleNewChat}
+          disabled={isStreaming}
+          className="px-3 py-2 text-sm font-bold text-primary bg-primary/10 rounded-xl hover:bg-primary/20 transition-colors disabled:opacity-50 min-h-[44px] min-w-[44px] shrink-0"
+          title="Neuer Chat"
+        >
+          + Neuer Chat
+        </button>
       </div>
 
       {/* Drag-Overlay */}

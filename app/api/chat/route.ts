@@ -289,3 +289,27 @@ Analysiere den Inhalt gruendlich und beziehe ihn in deine Antwort ein.`
     )
   }
 }
+
+// DELETE /api/chat
+// Auth: erforderlich
+// Loescht alle Chat-Nachrichten des eingeloggten Nutzers.
+export async function DELETE() {
+  try {
+    const session = await getAuthSession()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Nicht autorisiert." }, { status: 401 })
+    }
+
+    await prisma.chatMessage.deleteMany({
+      where: { userId: session.user.id },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[chat/DELETE]", error)
+    return NextResponse.json(
+      { error: "Chat konnte nicht geloescht werden." },
+      { status: 500 }
+    )
+  }
+}
