@@ -131,5 +131,13 @@ export default function Navigation({ variant }: NavigationProps) {
         )
       })}
     </nav>
+
+    {/* Legal Links */}
+    <div className="mt-auto px-4 py-3 border-t border-gray-100">
+      <div className="flex gap-3 text-xs text-gray-400">
+        <Link href="/datenschutz" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
+        <Link href="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+      </div>
+    </div>
   )
 }

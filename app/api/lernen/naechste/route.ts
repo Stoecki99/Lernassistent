@@ -40,6 +40,8 @@ export async function GET(request: Request) {
       )
     }
 
+    const countOnly = searchParams.get("countOnly") === "true"
+
     const parsed = deckIdQuerySchema.safeParse(deckId)
     if (!parsed.success) {
       return NextResponse.json(
@@ -62,6 +64,27 @@ export async function GET(request: Request) {
     }
 
     const now = new Date()
+
+    // Count-only mode: nur Zaehler zurueckgeben
+    if (countOnly) {
+      const [dueCount, newCount] = await Promise.all([
+        prisma.card.count({
+          where: {
+            deckId,
+            state: { gt: 0 },
+            due: { lte: now },
+          },
+        }),
+        prisma.card.count({
+          where: {
+            deckId,
+            state: 0,
+          },
+        }),
+      ])
+
+      return NextResponse.json({ dueCount, newCount })
+    }
 
     // Zaehle Karten fuer Fortschrittsanzeige
     const totalCards = await prisma.card.count({

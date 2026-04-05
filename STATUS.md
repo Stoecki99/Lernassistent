@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-04-04
+**Zuletzt aktualisiert:** 2026-04-05
 
 ---
 
@@ -49,6 +49,15 @@
 | **DB-Migration** | **FEHLT** | Prisma v7 + prisma.config.ts Problem im Docker |
 | **Badge-Seed** | **FEHLT** | Abhaengig von Migration |
 | **App erreichbar** | **NEIN** | Migration muss zuerst laufen |
+
+## Aenderungen 2026-04-05
+
+- **Fix: Lernen-Seite 404** — `/lernen` page.tsx erstellt (Deck-Uebersicht mit faelligen/neuen Karten)
+- **Fix: API countOnly** — `/api/lernen/naechste?countOnly=true` fuer Karten-Zaehlung
+- **Neu: Datenschutzerklaerung** — `/datenschutz` nach Schweizer DSG/nDSG
+- **Neu: Impressum** — `/impressum` mit Kontaktinfo und Haftungsausschluss
+- **Neu: Legal-Links** — Datenschutz + Impressum in Dashboard-Sidebar
+- **Kontaktformular** — Verweis auf jan-stocker.ch/#contact (kein eigenes noetig)
 
 ## Offenes Problem: Prisma Migration
 
