@@ -191,6 +191,22 @@ export default async function ProfilPage() {
         )}
       </div>
 
+      {/* Kontakt */}
+      <div className="bg-surface-card rounded-2xl shadow-card p-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="font-extrabold text-text-dark">Kontakt & Support</h2>
+          <p className="text-sm text-text-light mt-1">
+            Fragen, Feedback oder ein Problem?
+          </p>
+        </div>
+        <a
+          href="/kontakt"
+          className="px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors text-sm min-h-[44px] min-w-[44px] flex items-center shrink-0"
+        >
+          Kontaktformular
+        </a>
+      </div>
+
       {/* Logout */}
       <div className="bg-surface-card rounded-2xl shadow-card p-4">
         <LogoutButton />
