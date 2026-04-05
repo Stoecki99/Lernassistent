@@ -32,6 +32,7 @@ export async function GET() {
     const serialized = messages.map((m) => ({
       id: m.id,
       name: m.name,
+      email: m.email,
       subject: m.subject,
       message: m.message,
       emailSent: m.emailSent,

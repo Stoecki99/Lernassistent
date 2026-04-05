@@ -73,6 +73,7 @@ export default async function AdminPage() {
   const serializedMessages = contactMessages.map((m) => ({
     id: m.id,
     name: m.name,
+    email: m.email,
     subject: m.subject,
     message: m.message,
     emailSent: m.emailSent,

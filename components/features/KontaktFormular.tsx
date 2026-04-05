@@ -11,6 +11,7 @@ function KontaktFormularInner() {
   const { executeRecaptcha } = useGoogleReCaptcha()
 
   const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
   const [subject, setSubject] = useState<ContactSubject | "">("")
   const [message, setMessage] = useState("")
   const [website, setWebsite] = useState("") // Honeypot
@@ -54,6 +55,7 @@ function KontaktFormularInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          email,
           subject,
           message,
           recaptchaToken,
@@ -70,6 +72,7 @@ function KontaktFormularInner() {
 
       setSuccess(true)
       setName("")
+      setEmail("")
       setSubject("")
       setMessage("")
       setCooldown(60)
@@ -78,7 +81,7 @@ function KontaktFormularInner() {
     } finally {
       setLoading(false)
     }
-  }, [executeRecaptcha, name, subject, message, website, formLoadedAt])
+  }, [executeRecaptcha, name, email, subject, message, website, formLoadedAt])
 
   if (success) {
     return (
@@ -142,6 +145,25 @@ function KontaktFormularInner() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Dein Name"
+          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none transition-colors text-text-dark min-h-[44px]"
+        />
+      </div>
+
+      {/* E-Mail */}
+      <div className="space-y-2">
+        <label htmlFor="contact-email" className="block text-sm font-bold text-text-dark">
+          E-Mail
+        </label>
+        <input
+          type="email"
+          id="contact-email"
+          name="email"
+          required
+          maxLength={254}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Deine E-Mail-Adresse"
+          autoComplete="email"
           className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none transition-colors text-text-dark min-h-[44px]"
         />
       </div>

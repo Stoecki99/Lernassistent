@@ -19,6 +19,11 @@ export const contactSchema = z.object({
     .string()
     .min(2, "Name muss mindestens 2 Zeichen haben.")
     .max(100, "Name darf maximal 100 Zeichen haben."),
+  email: z
+    .string()
+    .min(1, "Bitte gib deine E-Mail-Adresse ein.")
+    .email("Bitte gib eine gueltige E-Mail-Adresse ein.")
+    .max(254, "E-Mail-Adresse ist zu lang."),
   subject: z.enum(contactSubjects, {
     error: "Bitte wähle einen Betreff aus.",
   }),

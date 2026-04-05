@@ -89,7 +89,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: firstError }, { status: 400 })
     }
 
-    const { name, subject, message, recaptchaToken, website, formLoadedAt } = parsed.data
+    const { name, email, subject, message, recaptchaToken, website, formLoadedAt } = parsed.data
 
     // Honeypot: Wenn ausgefuellt, Erfolg vortaeuschen
     if (website) {
@@ -130,6 +130,7 @@ export async function POST(request: Request) {
     const contactMessage = await prisma.contactMessage.create({
       data: {
         name,
+        email,
         subject,
         message,
         ipHash,
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
     // Schritt 2: E-Mail senden
     const emailResult = await sendContactNotification({
       name,
+      email,
       subject: subject as ContactSubject,
       message,
     })

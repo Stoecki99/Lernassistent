@@ -6,12 +6,14 @@ import { contactSubjectLabels, type ContactSubject } from "@/lib/validations/con
 
 interface ContactNotificationParams {
   name: string
+  email: string
   subject: ContactSubject
   message: string
 }
 
 export async function sendContactNotification({
   name,
+  email,
   subject,
   message,
 }: ContactNotificationParams): Promise<{ success: boolean; error?: string }> {
@@ -31,6 +33,10 @@ export async function sendContactNotification({
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #555;">Name:</td>
               <td style="padding: 8px 0;">${escapeHtml(name)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; color: #555;">E-Mail:</td>
+              <td style="padding: 8px 0;"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td>
             </tr>
             <tr>
               <td style="padding: 8px 0; font-weight: bold; color: #555;">Betreff:</td>

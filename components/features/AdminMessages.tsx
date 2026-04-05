@@ -9,6 +9,7 @@ import { contactSubjectLabels, type ContactSubject } from "@/lib/validations/con
 interface ContactMessageItem {
   id: string
   name: string
+  email: string
   subject: string
   message: string
   emailSent: boolean
@@ -94,6 +95,7 @@ export default function AdminMessages({ messages: initialMessages }: AdminMessag
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-text-dark">{msg.name}</span>
+                      <a href={`mailto:${msg.email}`} className="text-sm text-primary hover:underline">{msg.email}</a>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-text-light font-medium">
                         {subjectLabel}
                       </span>
