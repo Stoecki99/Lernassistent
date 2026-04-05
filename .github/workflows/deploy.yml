@@ -60,17 +60,23 @@ jobs:
           script: |
             cd ~/lernassistent
 
-            # Update repo (for migrations and seed)
+            # Update repo
             cd repo && git pull && cd ..
 
-            # Pull latest image
-            docker compose pull app
+            # Read DB password from .env
+            DB_PASS=$(grep -m1 '^POSTGRES_PASSWORD=' .env | sed 's/^POSTGRES_PASSWORD=//')
+            RECAPTCHA_KEY=$(grep -m1 '^NEXT_PUBLIC_RECAPTCHA_SITE_KEY=' .env | sed 's/^NEXT_PUBLIC_RECAPTCHA_SITE_KEY=//')
 
-            # Run migrations via repo container
-            export DB_URL="postgresql://postgres:$(grep POSTGRES_PASSWORD .env | cut -d= -f2)@lernassistent-db:5432/lernassistent"
-            docker run --rm --network lernassistent_internal -e DATABASE_URL="$DB_URL" -v "$(pwd)/repo:/app" -w /app node:20-alpine sh -c "npm ci --ignore-scripts && npx prisma generate && npx prisma migrate deploy"
+            # Build with NEXT_PUBLIC vars as build args
+            docker compose build --build-arg NEXT_PUBLIC_RECAPTCHA_SITE_KEY="$RECAPTCHA_KEY" app
 
-            # Restart app with new image
+            # Run migrations
+            docker run --rm --network lernassistent_internal \
+              -e DATABASE_URL="postgresql://postgres:${DB_PASS}@lernassistent-db:5432/lernassistent" \
+              -v "$(pwd)/repo:/app" -w /app node:20-alpine \
+              sh -c "npm ci --ignore-scripts && npx prisma generate && npx prisma migrate deploy"
+
+            # Restart app
             docker compose up -d
 
             # Cleanup old images
