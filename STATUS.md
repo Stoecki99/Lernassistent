@@ -41,14 +41,14 @@
 | Komponente | Status | Details |
 |-----------|--------|---------|
 | GitHub Repo | Laeuft | https://github.com/Stoecki99/Lernassistent (public) |
-| GitHub Actions CI/CD | Fehlerhaft | SSH-Key Passphrase/IP Problem — wird manuell deployed |
+| GitHub Actions CI/CD | Laeuft | Auto-Deploy bei Push auf master (GHCR + SSH) |
 | VPS Docker | Laeuft | App-Image gebaut, Container laufen |
-| PostgreSQL | Laeuft | Container healthy |
+| PostgreSQL | Laeuft | Container healthy, Migration angewendet |
 | Caddy Reverse Proxy | Laeuft | In ~/stack/, lernen.jan-stocker.cloud konfiguriert |
 | CV-Website | Laeuft | jan-stocker.cloud, NICHT ANFASSEN |
-| **DB-Migration** | **FEHLT** | Prisma v7 + prisma.config.ts Problem im Docker |
-| **Badge-Seed** | **FEHLT** | Abhaengig von Migration |
-| **App erreichbar** | **NEIN** | Migration muss zuerst laufen |
+| DB-Migration | Erledigt | Initial-Migration 20260404_init angewendet |
+| Badge-Seed | Erledigt | Alle Badges geseeded |
+| App erreichbar | Ja | https://lernen.jan-stocker.cloud |
 
 ## Aenderungen 2026-04-05
 
@@ -59,25 +59,23 @@
 - **Neu: Legal-Links** — Datenschutz + Impressum in Dashboard-Sidebar
 - **Kontaktformular** — Verweis auf jan-stocker.ch/#contact (kein eigenes noetig)
 
-## Offenes Problem: Prisma Migration
+## Geloeste Probleme
 
-**Problem:** `prisma migrate deploy` braucht in Prisma v7 die `datasource.url` aus `prisma.config.ts`. Das standalone Next.js Docker Image kopiert `prisma.config.ts` nicht mit.
+### Prisma v7 Migration (geloest 2026-04-05)
+**Problem:** Standalone Docker Image enthielt `prisma.config.ts` nicht.
+**Loesung:** Migration via separaten node:20-alpine Container mit gemountem Repo. Wird automatisch im GitHub Actions Workflow ausgefuehrt.
 
-**Loesungsansaetze:**
-1. `prisma.config.ts` im Dockerfile in den Runner-Stage kopieren
-2. Migration ueber einen separaten Container ausfuehren der das volle Repo hat
-3. `DATABASE_URL` direkt als CLI-Flag uebergeben
+### bcrypt Alpine Kompatibilitaet (geloest 2026-04-05)
+**Problem:** Native `bcrypt` Binary nicht verfuegbar auf Alpine Linux (musl).
+**Loesung:** Ersetzt durch `bcryptjs` (pure JS, gleiche API).
 
-**Empfohlene Loesung:** Option 2 — Migration via `docker compose run` mit dem Build-Context (repo-Ordner):
-```bash
-cd ~/lernassistent
-docker run --rm \
-  --network lernassistent_internal \
-  -e DATABASE_URL="postgresql://postgres:PASSWORT@lernassistent-db:5432/lernassistent" \
-  -v $(pwd)/repo:/app \
-  -w /app \
-  node:20-alpine sh -c "npm ci && npx prisma migrate deploy"
-```
+### DNS-Eintrag (geloest 2026-04-05)
+**Problem:** A-Record fuer `lernen.jan-stocker.cloud` fehlte.
+**Loesung:** A-Record `lernen` -> VPS-IP im Hostinger DNS-Manager erstellt.
+
+### Caddy Netzwerk (geloest 2026-04-05)
+**Problem:** Caddy war nicht im `caddy-lernassistent` Docker-Netzwerk.
+**Loesung:** `docker network connect caddy-lernassistent stack-caddy-1`
 
 ## VPS-Zugangsdaten
 
