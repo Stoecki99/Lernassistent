@@ -202,12 +202,23 @@ export const anthropic = new Anthropic({
 
 ---
 
-## 8. Deployment (Docker)
+## 8. Deployment (Docker + CI/CD)
 
 - `Dockerfile` mit Multi-Stage Build (builder + runner)
 - Produktions-Image läuft als non-root User
 - Datenbank-Passwörter nur über Docker-Secrets oder Env-Variablen
 - Health-Checks im `docker-compose.yml` für App und DB definieren
+
+### CI/CD-Pipeline (GitHub Actions)
+- **Automatisches Deployment** bei Push auf `master` via `.github/workflows/deploy.yml`
+- Pipeline-Ablauf:
+  1. Docker-Image bauen und auf `ghcr.io` pushen
+  2. SSH auf VPS: `git pull`, Prisma-Migrations ausfuehren, Container neustarten
+  3. Health-Check nach 15 Sekunden
+- **Manuelles Deployment auf dem VPS ist NICHT noetig** — einfach committen und pushen
+- Prisma-Migrations werden automatisch via `prisma migrate deploy` ausgefuehrt
+- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` wird als Build-Arg aus GitHub Secrets uebergeben
+- VPS-Secrets (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`) sind in GitHub Secrets konfiguriert
 
 ---
 
