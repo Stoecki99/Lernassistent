@@ -175,11 +175,11 @@ export default function LernKarte({
           </div>
 
           {/* Rueckseite */}
-          <div className="absolute inset-0 w-full bg-white rounded-2xl shadow-card p-6 sm:p-8 backface-hidden rotate-y-180 flex flex-col justify-center items-center">
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary mb-4">
+          <div className="absolute inset-0 w-full bg-white rounded-2xl shadow-card p-6 sm:p-8 backface-hidden rotate-y-180 flex flex-col justify-center items-center overflow-y-auto">
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary mb-4 shrink-0">
               Antwort
             </span>
-            <div className="text-xl sm:text-2xl font-bold text-text-dark text-center break-words leading-relaxed">
+            <div className="text-base sm:text-lg font-bold text-text-dark text-center break-words leading-relaxed w-full">
               <CardMarkdown content={card.back} />
             </div>
           </div>

@@ -54,7 +54,7 @@ export default function UpgradePrompt() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary font-bold mt-0.5">&#10003;</span>
-            <span>6 GB Speicherplatz (statt 2 GB)</span>
+            <span>6 GB Speicherplatz (statt 1 GB)</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary font-bold mt-0.5">&#10003;</span>

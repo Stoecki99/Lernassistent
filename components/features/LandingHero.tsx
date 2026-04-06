@@ -10,7 +10,7 @@ export default function LandingHero() {
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+      <div className="max-w-4xl mx-auto px-6 sm:px-6 text-center">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-8">
           <span className="text-sm" aria-hidden="true">{"\u26A1"}</span>
@@ -35,13 +35,13 @@ export default function LandingHero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/register"
-            className="btn-press w-full sm:w-auto px-8 py-4 text-lg font-extrabold text-white bg-primary-button rounded-xl shadow-button hover:bg-primary-dark transition-all"
+            className="btn-press w-full sm:w-auto px-6 sm:px-8 py-4 text-base sm:text-lg font-extrabold text-white bg-primary-button rounded-xl shadow-button hover:bg-primary-dark transition-all text-center"
           >
             Jetzt kostenlos starten
           </Link>
           <Link
             href="#features"
-            className="btn-press w-full sm:w-auto px-8 py-4 text-lg font-extrabold text-secondary border-2 border-secondary/30 bg-white rounded-xl hover:bg-secondary/5 transition-all"
+            className="btn-press w-full sm:w-auto px-6 sm:px-8 py-4 text-base sm:text-lg font-extrabold text-secondary border-2 border-secondary/30 bg-white rounded-xl hover:bg-secondary/5 transition-all text-center"
           >
             Mehr erfahren
           </Link>
@@ -49,7 +49,7 @@ export default function LandingHero() {
 
         {/* Stats row */}
         <div className="mt-14 flex flex-wrap items-center justify-center gap-8 sm:gap-12 text-text-light">
-          <StatItem icon={"\uD83D\uDCDA"} value="Karteikarten" label="unbegrenzt" />
+          <StatItem icon={"\uD83D\uDCDA"} value="Bis zu 2 Mio." label="Karteikarten" />
           <StatItem icon={"\uD83E\uDDE0"} value="SRS" label="wissenschaftlich" />
           <StatItem icon={"\uD83D\uDE80"} value="KI-Chat" label="integriert" />
         </div>

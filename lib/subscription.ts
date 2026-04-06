@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 export const PLAN_LIMITS = {
   free: {
-    storageBytes: 2n * 1024n * 1024n * 1024n, // 2 GB
+    storageBytes: 1n * 1024n * 1024n * 1024n, // 1 GB
     canChat: false,
   },
   pro: {
