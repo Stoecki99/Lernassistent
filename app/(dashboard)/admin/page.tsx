@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import AdminUserTable from "@/components/features/AdminUserTable"
 import AdminMessages from "@/components/features/AdminMessages"
+import AdminOpenDecks from "@/components/features/AdminOpenDecks"
 
 export const metadata = {
   title: "Admin — Lernassistent",
@@ -81,6 +82,26 @@ export default async function AdminPage() {
     createdAt: m.createdAt.toISOString(),
   }))
 
+  const pendingDecks = await prisma.deck.findMany({
+    where: { shareStatus: "pending" },
+    include: {
+      user: { select: { name: true, email: true } },
+      _count: { select: { cards: true } },
+    },
+    orderBy: { shareRequestedAt: "desc" },
+  })
+
+  const serializedPendingDecks = pendingDecks.map((d) => ({
+    id: d.id,
+    name: d.name,
+    description: d.description,
+    icon: d.icon,
+    cardCount: d._count.cards,
+    userName: d.user.name ?? "Anonym",
+    userEmail: d.user.email,
+    requestedAt: d.shareRequestedAt?.toISOString() ?? d.createdAt.toISOString(),
+  }))
+
   const serializedUsers = users.map((u) => ({
     id: u.id,
     name: u.name ?? "—",
@@ -106,6 +127,7 @@ export default async function AdminPage() {
         </p>
       </div>
       <AdminUserTable users={serializedUsers} />
+      <AdminOpenDecks decks={serializedPendingDecks} />
       <AdminMessages messages={serializedMessages} />
     </div>
   )
