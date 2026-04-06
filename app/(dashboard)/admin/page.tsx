@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma"
 import AdminUserTable from "@/components/features/AdminUserTable"
 import AdminMessages from "@/components/features/AdminMessages"
 import AdminOpenDecks from "@/components/features/AdminOpenDecks"
+import AdminOpenDeckManager from "@/components/features/AdminOpenDeckManager"
 
 export const metadata = {
   title: "Admin — Lernassistent",
@@ -82,14 +83,24 @@ export default async function AdminPage() {
     createdAt: m.createdAt.toISOString(),
   }))
 
-  const pendingDecks = await prisma.deck.findMany({
-    where: { shareStatus: "pending" },
-    include: {
-      user: { select: { name: true, email: true } },
-      _count: { select: { cards: true } },
-    },
-    orderBy: { shareRequestedAt: "desc" },
-  })
+  const [pendingDecks, approvedDecks] = await Promise.all([
+    prisma.deck.findMany({
+      where: { shareStatus: "pending" },
+      include: {
+        user: { select: { name: true, email: true } },
+        _count: { select: { cards: true } },
+      },
+      orderBy: { shareRequestedAt: "desc" },
+    }),
+    prisma.deck.findMany({
+      where: { shareStatus: "approved" },
+      include: {
+        user: { select: { name: true, email: true } },
+        _count: { select: { cards: true } },
+      },
+      orderBy: { shareReviewedAt: "desc" },
+    }),
+  ])
 
   const serializedPendingDecks = pendingDecks.map((d) => ({
     id: d.id,
@@ -100,6 +111,19 @@ export default async function AdminPage() {
     userName: d.user.name ?? "Anonym",
     userEmail: d.user.email,
     requestedAt: d.shareRequestedAt?.toISOString() ?? d.createdAt.toISOString(),
+  }))
+
+  const serializedApprovedDecks = approvedDecks.map((d) => ({
+    id: d.id,
+    name: d.name,
+    description: d.description,
+    icon: d.icon,
+    color: d.color,
+    cardCount: d._count.cards,
+    userName: d.user.name ?? "Anonym",
+    userEmail: d.user.email,
+    isFeatured: d.isFeatured,
+    approvedAt: d.shareReviewedAt?.toISOString() ?? d.createdAt.toISOString(),
   }))
 
   const serializedUsers = users.map((u) => ({
@@ -128,6 +152,7 @@ export default async function AdminPage() {
       </div>
       <AdminUserTable users={serializedUsers} />
       <AdminOpenDecks decks={serializedPendingDecks} />
+      <AdminOpenDeckManager decks={serializedApprovedDecks} />
       <AdminMessages messages={serializedMessages} />
     </div>
   )

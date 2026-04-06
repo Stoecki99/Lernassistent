@@ -19,7 +19,7 @@ export async function GET() {
         user: { select: { name: true } },
         _count: { select: { cards: true } },
       },
-      orderBy: { shareReviewedAt: "desc" },
+      orderBy: [{ isFeatured: "desc" }, { shareReviewedAt: "desc" }],
     })
 
     const serialized = decks.map((d) => ({
@@ -30,6 +30,7 @@ export async function GET() {
       icon: d.icon,
       cardCount: d._count.cards,
       authorName: d.user.name ?? "Anonym",
+      isFeatured: d.isFeatured,
       sharedAt: d.shareReviewedAt?.toISOString() ?? d.createdAt.toISOString(),
     }))
 

@@ -20,4 +20,12 @@ export const copyDeckSchema = z.object({
   deckId: z.string().cuid("Ungueltige Deck-ID."),
 })
 
+export const adminDeleteOpenDeckSchema = z.object({
+  deckId: z.string().cuid("Ungueltige Deck-ID."),
+})
+
+export const adminToggleFeaturedSchema = z.object({
+  deckId: z.string().cuid("Ungueltige Deck-ID."),
+})
+
 export const MIN_CARDS_FOR_SHARE = 20

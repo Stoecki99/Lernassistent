@@ -14,6 +14,7 @@ interface OpenDeckData {
   icon: string
   cardCount: number
   authorName: string
+  isFeatured: boolean
 }
 
 interface OpenDeckCardProps {
@@ -52,11 +53,18 @@ export default function OpenDeckCard({ deck }: OpenDeckCardProps) {
   }
 
   return (
-    <div className="bg-surface-card rounded-2xl shadow-card p-5 flex flex-col">
-      <div
-        className="h-1.5 w-10 rounded-full mb-3"
-        style={{ backgroundColor: deck.color }}
-      />
+    <div className={`bg-surface-card rounded-2xl shadow-card p-5 flex flex-col ${deck.isFeatured ? "ring-2 ring-yellow-400" : ""}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <div
+          className="h-1.5 w-10 rounded-full"
+          style={{ backgroundColor: deck.color }}
+        />
+        {deck.isFeatured && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 font-bold">
+            Empfohlen
+          </span>
+        )}
+      </div>
       <span className="text-2xl mb-2">{deck.icon}</span>
       <h3 className="font-bold text-text-dark truncate">{deck.name}</h3>
       {deck.description && (
