@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 interface FeatureCardProps {
   icon: string
   title: string
@@ -10,7 +13,7 @@ const FEATURES: FeatureCardProps[] = [
     icon: "\uD83C\uDCCF",
     title: "Smarte Karteikarten",
     description:
-      "Erstelle Decks, importiere aus CSV oder Anki — oder lass die KI deine Karten generieren.",
+      "Erstelle Decks, importiere aus CSV oder Anki — oder lass die generative KI deine Karten erstellen.",
     color: "primary",
   },
   {
@@ -29,9 +32,9 @@ const FEATURES: FeatureCardProps[] = [
   },
   {
     icon: "\uD83E\uDD16",
-    title: "KI-Lerntutor",
+    title: "Generativer KI-Tutor",
     description:
-      "Stelle Fragen, lass dir Themen erklären oder generiere neu Karten per Chat mit Claude.",
+      "Stelle Fragen, lass dir Themen erklaeren oder generiere neue Karten per Chat — powered by Claude.",
     color: "purple",
   },
 ]

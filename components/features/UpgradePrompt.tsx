@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 "use client"
 
 // components/features/UpgradePrompt.tsx
@@ -20,10 +23,10 @@ export default function UpgradePrompt() {
 
         <div className="space-y-2">
           <h2 className="text-2xl font-extrabold text-text-dark">
-            KI-Chat freischalten
+            KI-Tutor freischalten
           </h2>
           <p className="text-text-light">
-            Mit dem Pro-Plan kannst du direkt mit dem KI-Lernassistenten chatten,
+            Mit dem Pro-Plan kannst du direkt mit dem generativen KI-Tutor chatten,
             Karteikarten erstellen lassen und Fragen zu deinem Lernstoff stellen.
           </p>
           <p className="text-xs text-text-light">
@@ -46,7 +49,7 @@ export default function UpgradePrompt() {
         <ul className="text-left space-y-2 text-sm">
           <li className="flex items-start gap-2">
             <span className="text-primary font-bold mt-0.5">&#10003;</span>
-            <span>KI-Chat mit Claude — Fragen stellen, Erklärungen erhalten</span>
+            <span>KI-Tutor powered by Claude — Fragen stellen, Erklaerungen erhalten</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary font-bold mt-0.5">&#10003;</span>

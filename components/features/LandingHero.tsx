@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 import Link from "next/link"
 
 export default function LandingHero() {
@@ -27,7 +30,7 @@ export default function LandingHero() {
 
         {/* Subtitle */}
         <p className="text-lg sm:text-xl text-text-light max-w-2xl mx-auto mb-10 leading-relaxed">
-          Karteikarten, Spaced Repetition, Quiz und ein KI-Tutor — alles in
+          Karteikarten, Spaced Repetition, Quiz und ein generativer KI-Tutor — alles in
           einer App. Dein Lernassistent merkt sich, was du vergisst.
         </p>
 
@@ -51,7 +54,7 @@ export default function LandingHero() {
         <div className="mt-14 flex flex-wrap items-center justify-center gap-8 sm:gap-12 text-text-light">
           <StatItem icon={"\uD83D\uDCDA"} value="Bis zu 2 Mio." label="Karteikarten" />
           <StatItem icon={"\uD83E\uDDE0"} value="SRS" label="wissenschaftlich" />
-          <StatItem icon={"\uD83D\uDE80"} value="KI-Chat" label="integriert" />
+          <StatItem icon={"\uD83D\uDE80"} value="KI-Tutor" label="integriert" />
         </div>
       </div>
     </section>

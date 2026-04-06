@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 import Link from "next/link"
 
 export default function LandingFooter() {
@@ -16,7 +19,7 @@ export default function LandingFooter() {
               </span>
             </Link>
             <p className="text-sm leading-relaxed">
-              Dein persönlicher Lernassistent mit KI-Power. Für Studenten, die smarter lernen wollen.
+              Dein persoenlicher Lernassistent mit generativer KI. Fuer Studenten, die smarter lernen wollen.
             </p>
           </div>
 
@@ -58,6 +61,11 @@ export default function LandingFooter() {
               <li>
                 <Link href="/impressum" className="hover:text-white transition-colors">
                   Impressum
+                </Link>
+              </li>
+              <li>
+                <Link href="/nutzungsbedingungen" className="hover:text-white transition-colors">
+                  Nutzungsbedingungen
                 </Link>
               </li>
             </ul>
