@@ -212,13 +212,27 @@ export const anthropic = new Anthropic({
 ### CI/CD-Pipeline (GitHub Actions)
 - **Automatisches Deployment** bei Push auf `master` via `.github/workflows/deploy.yml`
 - Pipeline-Ablauf:
-  1. Docker-Image bauen und auf `ghcr.io` pushen
-  2. SSH auf VPS: `git pull`, Prisma-Migrations ausfuehren, Container neustarten
+  1. Docker-Image bauen und auf `ghcr.io` pushen (mit `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` als Build-Arg)
+  2. SSH auf VPS: `git pull`, GHCR-Image pullen, Prisma-Migrations ausfuehren, Container neustarten
   3. Health-Check nach 15 Sekunden
 - **Manuelles Deployment auf dem VPS ist NICHT noetig** — einfach committen und pushen
 - Prisma-Migrations werden automatisch via `prisma migrate deploy` ausgefuehrt
-- `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` wird als Build-Arg aus GitHub Secrets uebergeben
 - VPS-Secrets (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`) sind in GitHub Secrets konfiguriert
+
+### WICHTIG: Image NICHT lokal auf dem VPS bauen
+- Das GHCR-Image wird in der Pipeline fertig gebaut (mit allen `NEXT_PUBLIC_` Vars)
+- Auf dem VPS wird nur `docker compose pull app` ausgefuehrt — KEIN `docker compose build`
+- Lokales Bauen auf dem VPS fuehrt dazu, dass `NEXT_PUBLIC_` Variablen fehlen (z.B. reCAPTCHA Site Key)
+- Das hat in der Vergangenheit das Kontaktformular intermittierend kaputt gemacht
+
+### VPS `.env`-Datei (~/lernassistent/.env)
+Folgende Keys muessen auf dem VPS gesetzt sein und sind in `docker-compose.yml` explizit gemappt:
+- `POSTGRES_PASSWORD`, `POSTGRES_USER`, `POSTGRES_DB`
+- `NEXTAUTH_SECRET`
+- `ANTHROPIC_API_KEY`
+- `RECAPTCHA_SECRET_KEY` (Server-seitige reCAPTCHA-Verifikation)
+- `RESEND_API_KEY` (E-Mail-Versand via Resend)
+- `ADMIN_EMAIL` (Admin-Zugang)
 
 ---
 
