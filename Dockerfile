@@ -43,6 +43,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_RECAPTCHA_SITE_KEY=""
 ENV NEXT_PUBLIC_RECAPTCHA_SITE_KEY=$NEXT_PUBLIC_RECAPTCHA_SITE_KEY
 
+# Lernseiten-Inhalte pruefen: fehlerhafte Inhalte stoppen den Build
+RUN npm run lernseiten:pruefen
 RUN npm run build
 
 # ---------------------------------------------------------------------------
@@ -72,6 +74,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
+# Lernseiten-Inhalte (werden zur Laufzeit gelesen, siehe lib/lernseiten.ts)
+COPY --from=builder /app/content ./content
 
 USER nextjs
 

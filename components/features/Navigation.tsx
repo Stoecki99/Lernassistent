@@ -36,6 +36,15 @@ const navItems: NavItem[] = [
     ),
   },
   {
+    href: "/lernseiten",
+    label: "Lernseiten",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6" aria-hidden="true">
+        <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" />
+      </svg>
+    ),
+  },
+  {
     href: "/lernen",
     label: "Lernen",
     icon: (
@@ -107,14 +116,14 @@ export default function Navigation({ variant }: NavigationProps) {
               href={item.href}
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
-              className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-2 py-1 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+              className={`flex flex-col items-center justify-center min-w-[44px] min-h-[44px] px-1 sm:px-2 py-1 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                 isActive
                   ? "text-primary"
                   : "text-text-light hover:text-text"
               }`}
             >
               {item.icon}
-              <span className="text-xs font-semibold mt-0.5">{item.label}</span>
+              <span className="text-[10px] sm:text-xs font-semibold mt-0.5">{item.label}</span>
             </Link>
           )
         })}
