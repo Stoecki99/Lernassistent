@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-04-05 (Update 3)
+**Zuletzt aktualisiert:** 2026-10-28 (Lernseiten)
 
 ---
 
@@ -20,6 +20,7 @@
 | 10. Statistiken & Gamification | Fertig | Badges, Punkte, Streak, WochenChart |
 | 11. Deployment | Fertig | Dockerfile, Docker Compose, Caddy |
 | 12. Polish | Fertig | Skeletons, Error States, A11y, SEO |
+| 13. Lernseiten | Fertig (lokal, Branch `feat/lernseiten`) | Reiter Lernseiten, interaktive Themenseiten pro Fach, erstes Fach MSTW |
 
 ## Security-Fixes (alle angewendet)
 
@@ -51,6 +52,15 @@
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
 
 ## Changelog
+
+### 2026-10-28
+
+- **chore: Git wiederhergestellt** — Lokale Kopie nach Umzug (OneDrive → `C:\Dev\Lernassistent`) war ohne `.git`; seit April ungepushte Änderungen (Copyright-Köpfe, LICENSE, Nutzungsbedingungen) als eigener Commit erfasst
+- **feat: Lernseiten** — Neuer Reiter unter Decks, `/lernseiten` (Fächer), `/lernseiten/[fach]` (Themen nach Sektion + Spickzettel), `/lernseiten/[fach]/[thema]` (Bausteine, Lösungsschritte mit Stepper und Zuordnung, Analyse, Lösungsfilm, Selbsttest, Merksätze); Kurzlinks `/MSTW`, `/mstw`
+- **feat: Inhaltsformat** — JSON unter `content/lernseiten/`, Zod-Prüfung, `npm run lernseiten:pruefen` (läuft auch im Docker-Build), Format in `docs/lernseiten-format.md`
+- **feat: MSTW 04** — Erstes Thema «Prädikatenlogik: Sätze modellieren» (S1-V4&5, Bsp. 4.3, 4.6)
+- **chore: Pakete** — `remark-math`, `rehype-katex`, `katex`, `rehype-raw`, `rehype-sanitize`; dev: `tsx` (Tests: `npm test`)
+- **Bekannt:** `prisma migrate deploy` scheitert auf einer frischen Datenbank (`20260405_add_contact_email` sortiert vor `20260405_add_contact_messages`); Produktion nicht betroffen
 
 ### 2026-04-06
 
