@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/quiz/[deckId]/page.tsx
 // Server Component: Laedt Deck-Info und rendert die Quiz-Session.
 

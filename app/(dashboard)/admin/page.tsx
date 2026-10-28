@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/admin/page.tsx
 // Admin-Bereich: Zeigt alle Nutzer mit Plan-Status und Speicherverbrauch.
 // Zugang nur fuer eingeloggte User deren E-Mail mit ADMIN_EMAIL uebereinstimmt.

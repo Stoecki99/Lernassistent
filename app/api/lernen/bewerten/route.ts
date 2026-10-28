@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // POST /api/lernen/bewerten
 // Auth: erforderlich
 // Body: { cardId, rating (1-4), duration (Sekunden) }

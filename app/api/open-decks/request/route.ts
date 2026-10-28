@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // POST /api/open-decks/request
 // Auth: erforderlich
 // Stellt eine Freigabe-Anfrage fuer ein eigenes Deck.

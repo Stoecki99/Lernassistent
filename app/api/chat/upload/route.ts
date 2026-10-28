@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // POST /api/chat/upload
 // Auth: erforderlich
 // Verarbeitet Datei-Uploads fuer Chat (PDF, Bilder, Text).

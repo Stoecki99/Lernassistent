@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // POST /api/kontakt
 // Auth: nicht erforderlich
 // Speichert Kontaktnachrichten und sendet E-Mail-Benachrichtigung.

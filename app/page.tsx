@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 import LandingNavbar from "@/components/features/LandingNavbar"
 import LandingHero from "@/components/features/LandingHero"
 import LandingFeatures from "@/components/features/LandingFeatures"

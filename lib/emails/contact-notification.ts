@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/emails/contact-notification.ts
 // Sendet E-Mail-Benachrichtigung bei neuer Kontaktnachricht.
 

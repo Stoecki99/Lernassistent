@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/dashboard/page.tsx
 // Dashboard-Hauptseite mit echten Statistiken, Streak, Fortschritt und Schnellzugriff.
 

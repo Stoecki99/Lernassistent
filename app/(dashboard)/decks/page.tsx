@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/decks/page.tsx
 // Deck-Uebersicht: zeigt alle Decks des Nutzers als Grid mit DeckCards.
 

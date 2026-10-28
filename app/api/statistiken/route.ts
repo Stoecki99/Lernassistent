@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // GET /api/statistiken
 // Auth: erforderlich
 // Gibt umfassende Nutzer-Statistiken zurueck (Streak, Punkte, Lernzeit, Deck-Fortschritte, Badges).

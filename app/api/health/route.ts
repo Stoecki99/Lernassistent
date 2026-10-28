@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // GET /api/health
 // Auth: nicht erforderlich
 // Health-Check Endpoint fuer Docker und Monitoring — prueft App + DB

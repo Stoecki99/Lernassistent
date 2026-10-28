@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // GET /api/decks/[id]
 // Auth: erforderlich
 // Gibt ein einzelnes Deck mit Karten-Anzahl und Fortschritt zurueck

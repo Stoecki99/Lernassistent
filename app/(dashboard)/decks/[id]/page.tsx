@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/decks/[id]/page.tsx
 // Einzelansicht eines Decks mit Header, Aktionen und Karten-Liste (Platzhalter).
 

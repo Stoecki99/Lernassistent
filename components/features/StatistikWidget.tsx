@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // components/features/StatistikWidget.tsx
 // Wiederverwendbares Dashboard-Widget fuer verschiedene Statistiken.
 

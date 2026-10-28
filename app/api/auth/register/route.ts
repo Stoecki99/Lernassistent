@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // POST /api/auth/register
 // Auth: nein
 // Registriert einen neuen Benutzer mit Name, E-Mail und Passwort.

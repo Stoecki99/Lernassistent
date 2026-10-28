@@ -1,253 +1,117 @@
-# CLAUDE.md — Lernassistent Projektregeln
+# Lernassistent — Claude Code Konfiguration
 
-Dieses Dokument definiert verbindliche Regeln für die Entwicklung des Lernassistenten.
-Claude hält sich in jeder Aufgabe an diese Regeln, ohne explizite Aufforderung.
+## Projekt
 
----
+KI-gestützte Lernplattform für Studierende. Karteikarten mit Spaced Repetition (FSRS), Quiz, Claude-Chat, PDF-Upload.
 
-## Session-Start Workflow
+## Technische Eckdaten
+
+| Eigenschaft | Wert |
+|-------------|------|
+| Stack | Next.js 14 / TypeScript / PostgreSQL 16 / Prisma 7 / NextAuth |
+| Domain | lernen.jan-stocker.cloud |
+| Port | 3000 (nur Docker-intern, kein Host-Mapping) |
+| Container | lernassistent-app, lernassistent-db |
+| Image | ghcr.io/stoecki99/lernassistent:latest |
+| VPS-Pfad | ~/lernassistent/ |
+
+## Session-Start-Workflow
 
 **Bei jeder neuen Session ZUERST diese Dateien lesen:**
 
 1. **`STATUS.md`** — Aktueller Projektstatus, was funktioniert, was fehlt, offene Probleme
 2. **`DEPLOYMENT.md`** — VPS-Architektur, Deployment-Schritte, Troubleshooting
-3. **`CLAUDE.md`** (dieses Dokument) — Projektregeln und Konventionen
+3. **`CLAUDE.md`** (dieses Dokument) und `~/.claude/CLAUDE.md` (global)
 
-**Wichtige Regeln:**
-- Vor jeder Aenderung pruefen: Was ist der aktuelle Status? (STATUS.md lesen)
-- Nach abgeschlossener Arbeit: STATUS.md aktualisieren
-- VPS-Befehle dem User geben, NICHT selbst ausfuehren (kein direkter SSH-Zugang)
-- `~/stack/` auf dem VPS NIEMALS anfassen (Caddy + CV-Website)
-- Befehle fuer den VPS EINZELN geben (nicht mit && verketten — User kopiert sie einzeln)
+- Vor jeder Änderung: STATUS.md auf aktuellen Stand prüfen.
+- Nach abgeschlossener Arbeit: STATUS.md aktualisieren.
 
----
+## Projekt-spezifische Regeln
 
-## Projektkontext
+### TypeScript & Next.js
+- Strict Mode, kein unnötiges `any`
+- Server Components als Default, `use client` nur wenn erforderlich
+- Zod-basierte Validierung bei API-Ein-/Ausgaben
+- UI-Texte Deutsch (Schweizer Rechtschreibung, ss statt ß), Code-Namen Englisch
+- Keine Umlaute in Variablen, Funktionen, CSS-Klassen, Dateinamen
 
-- **App:** Lernassistent für Studenten (Karteikarten, Quiz, SRS, Claude-Chat)
-- **Domain:** `lernen.jan-stocker.cloud` (Hostinger VPS)
-- **Stack:** Next.js 14 (App Router), PostgreSQL, Prisma v7, NextAuth.js, Claude API
-- **Sprache der App:** Deutsch (Schweizer Rechtschreibung)
-- **Deployment:** Docker Compose + Caddy (Auto-SSL) auf Hostinger VPS
-- **GitHub:** https://github.com/Stoecki99/Lernassistent (public)
-- **VPS-User:** jan, App unter ~/lernassistent/, Repo unter ~/lernassistent/repo/
+### Commit-Konvention
+- Commit-Messages auf Deutsch nach Conventional-Commits-Standard.
+- Erlaubte Typen: feat, fix, chore, docs, refactor, test, style.
+- Diese Regel überschreibt die alte projekt-lokale Englisch-Konvention aus CLAUDE.md.backup.
 
----
+### Datenbank
+- Prisma für alle DB-Zugriffe, kein Raw-SQL
+- `onDelete` bei neuen Relationen immer definieren
+- Migrationen mit `npx prisma migrate dev` erstellen
+- Passwort-Felder nie versehentlich selektieren
 
-## 1. Sicherheit (Security)
+### Claude API
+- Anthropic SDK für Chat-Funktion, zentralisiert in `lib/claude.ts`
+- API-Key nur serverseitig, nie im Client
+- Streaming-Responses für Chat
 
-### Umgebungsvariablen
-- Secrets niemals im Code hardcoden — immer über `.env.local` / Docker-Env
-- `.env.local` ist in `.gitignore`, wird nie committed
-- Pflicht-Variablen: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
+### Deployment
+- Image wird in CI gebaut und auf GHCR gepusht — NICHT lokal auf VPS bauen
+- `NEXT_PUBLIC_`-Variablen müssen als Build-Arg in der Pipeline gesetzt werden
+- VPS-Befehle dem User geben, NICHT selbst ausführen (kein SSH-Zugang)
+- VPS-Befehle EINZELN geben, niemals mit && verketten — ich kopiere sie einzeln.
+- `~/stack/` auf dem VPS NIEMALS anfassen (Caddy + andere Projekte)
 
-### Authentifizierung
-- Passwörter werden ausschließlich mit **bcrypt** (min. 12 Rounds) gehasht
-- Sessions via NextAuth.js — kein manuelles JWT-Handling
-- Alle geschützten Routen prüfen die Session serverseitig (nicht nur clientseitig)
-
-### API-Sicherheit
-- Alle `/api/` Routen prüfen Authentifizierung, bevor Daten zurückgegeben werden
-- Rate-Limiting auf Claude-API-Proxy-Route (max. Anfragen pro Nutzer/Minute)
+### Security
+- NextAuth-konforme Session-Prüfung serverseitig
+- bcrypt mit mindestens 12 Rounds
+- Rate-Limiting an Chat-Endpoint (API-Kosten!)
 - CORS nur für eigene Domain erlauben
-- Nutzereingaben werden serverseitig validiert (mit **Zod**)
-- Niemals rohe SQL-Queries — ausschließlich Prisma ORM verwenden
+- Kein `$queryRaw` ohne Parametervalidierung — Prisma-Standard-Methoden bevorzugen
+- Kein `dangerouslySetInnerHTML` ohne explizite Sanitization
+- Passwort-Hash in `select`-Statements immer explizit ausschliessen
 
-### OWASP Top 10
-- **Injection:** Prisma verhindert SQL-Injection — kein `$queryRaw` ohne Parametervalidierung
-- **XSS:** React escapet automatisch — kein `dangerouslySetInnerHTML` ohne Sanitization
-- **CSRF:** NextAuth.js schützt standardmäßig dagegen
-- **Sensitive Data:** Keine Passwörter oder API-Keys in Logs oder API-Responses
+### Pflicht-Env-Variablen
 
----
+`ANTHROPIC_API_KEY`, `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
 
-## 2. Clean Code
+## Error-Handling-Pattern
 
-### Allgemein
-- Funktionen haben eine einzige Verantwortung (Single Responsibility)
-- Keine Funktion länger als ~50 Zeilen — bei Bedarf aufteilen
-- Keine tief verschachtelten Bedingungen (max. 3 Ebenen) — früh returnen ("early return")
-- Variablen- und Funktionsnamen auf **Englisch**, UI-Text auf **Deutsch**
+```ts
+try {
+  // Logik
+} catch (error) {
+  console.error("[route-name]", error)
+  return NextResponse.json({ error: "Generische Meldung" }, { status: 500 })
+}
+```
 
-### Sprache & Umlaute (KRITISCH)
-- **UI-Text** (was der Nutzer sieht): Deutsch in **Schweizer Rechtschreibung**
-  - Umlaute (ä, ö, ü) sind erlaubt und korrekt in UI-Strings
-  - Kein `ß` — immer `ss` (Schweizer Deutsch): `groß` → `gross`, `Straße` → `Strasse`
-- **Code** (Variablen, Funktionen, CSS-Klassen, Keywords): **Niemals Umlaute!**
-  - Englische Bezeichner: `questions`, `value`, `true`, `blue` — NICHT `qüstions`, `valü`, `trü`, `blü`
-  - Auch in Kommentaren im Code: ASCII-Umschreibung (`ue`, `ae`, `oe`) verwenden
-- **Dateinamen**: Kein Umlaut, nur ASCII
-- **String-Literale in Code** (z.B. Fehlermeldungen, Platzhalter): Umlaute erlaubt, da sie dem User angezeigt werden
+- Interne Fehlerdetails niemals an den Client weitergeben
+- Logging mit `console.error`, niemals sensitive Daten loggen
 
-### TypeScript
-- Strikt: `strict: true` in `tsconfig.json`
-- Kein `any` — immer explizite Typen oder `unknown` mit Type Guard
-- Interfaces für Datenstrukturen, Types für Unions/Aliases
-- API-Response-Typen immer mit Zod validieren und ableiten (`z.infer<>`)
+## Dateistruktur
 
-### Next.js Konventionen
-- Server Components als Standard — nur bei Bedarf `"use client"` hinzufügen
-- Datenabruf in Server Components, nicht in Client Components
-- Loading States mit `loading.tsx`, Error Handling mit `error.tsx`
-- API-Routen in `app/api/` mit expliziten `NextResponse`-Rückgaben
-
-### Dateistruktur
 ```
 app/                    # Next.js App Router
-  (auth)/               # Öffentliche Auth-Seiten (Login, Register)
-  (dashboard)/          # Geschützte Seiten (nur eingeloggt)
+  (auth)/               # Oeffentliche Auth-Seiten
+  (dashboard)/          # Geschuetzte Seiten
   api/                  # API Routes
 components/
-  ui/                   # Generische UI-Komponenten (Button, Card, Input...)
-  features/             # Feature-spezifische Komponenten (KartenListe, QuizCard...)
+  ui/                   # Generische UI-Komponenten
+  features/             # Feature-spezifische Komponenten
 lib/
   fsrs.ts               # SRS-Algorithmus
   claude.ts             # Anthropic API Client
-  auth.ts               # Auth-Helpers / Session-Utilities
+  auth.ts               # Auth-Helpers
   validations/          # Zod-Schemas
 prisma/
   schema.prisma         # Datenbankschema
 ```
 
----
+## MVP-Phase
 
-## 3. Dokumentation
+Aktuelle MVP-Phase und Reihenfolge: siehe `STATUS.md`.
 
-### Code-Kommentare
-- Kommentare nur, wenn die Logik nicht selbsterklärend ist
-- Kein auskommentierter Code im Repository
-- Komplexe Algorithmen (FSRS, CSV-Parser) erhalten einen kurzen Erklärungsblock oben
+## Referenzen
 
-### Datei-Header (nur bei komplexen Utility-Dateien)
-```ts
-// lib/fsrs.ts
-// Implementierung des FSRS-4.5 Algorithmus für Spaced Repetition.
-// Basierend auf: https://github.com/open-spaced-repetition/fsrs4anki
-```
-
-### API-Routen
-Jede API-Route hat einen kurzen Kommentar mit:
-- Methode und Pfad
-- Authentifizierung erforderlich: ja/nein
-- Kurze Beschreibung
-
-```ts
-// POST /api/karten/import
-// Auth: erforderlich
-// Importiert Karteikarten aus CSV oder Anki-Format in ein Deck
-```
-
----
-
-## 4. Fehlerbehandlung (Error Handling)
-
-- Fehler an Systemgrenzen abfangen (API-Aufrufe, DB-Queries, Datei-Parsing)
-- Interne Fehler niemals direkt an den Client weitergeben — generische Fehlermeldung zurückgeben
-- Claude-API-Fehler graceful behandeln (Timeout, Rate-Limit) mit Nutzer-freundlicher Meldung
-- Logging mit `console.error` im Server, niemals sensitive Daten loggen
-
-```ts
-// Muster für API-Routes
-try {
-  // Logik
-} catch (error) {
-  console.error("[karten/import]", error)
-  return NextResponse.json({ error: "Import fehlgeschlagen" }, { status: 500 })
-}
-```
-
----
-
-## 5. Datenbank (Prisma / PostgreSQL)
-
-- Schema-Änderungen nur über Prisma-Migrations (`prisma migrate dev`)
-- Niemals direkt in die Produktionsdatenbank schreiben ohne Migration
-- Alle Relations explizit mit `onDelete` definieren
-- Sensible Felder (Passwort-Hash) niemals in `select` zurückgeben ohne explizites Ausschließen
-
-```ts
-// Passwort immer ausschließen:
-const user = await prisma.user.findUnique({
-  where: { email },
-  select: { id: true, name: true, email: true } // kein password!
-})
-```
-
----
-
-## 6. Claude API Integration
-
-- Anthropic Client in `lib/claude.ts` zentralisiert — nicht in API-Routes direkt instanziieren
-- Modell: `claude-sonnet-4-6` (Standard) — kein hardcoded Modellwechsel ohne Rücksprache
-- System-Prompts in separaten Konstanten definieren, nicht inline
-- Streaming für Chat-Antworten verwenden (bessere UX)
-- API-Key nur serverseitig — niemals im Client-Bundle
-
-```ts
-// lib/claude.ts
-import Anthropic from "@anthropic-ai/sdk"
-
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-```
-
----
-
-## 7. Git & Versionierung
-
-- Commit-Messages auf Englisch, Konvention: `feat:`, `fix:`, `chore:`, `docs:`
-- Keine Secrets, `.env`-Dateien oder `node_modules` im Repository
-- `.gitignore` enthält: `.env*`, `node_modules/`, `.next/`, `*.log`
-
----
-
-## 8. Deployment (Docker + CI/CD)
-
-- `Dockerfile` mit Multi-Stage Build (builder + runner)
-- Produktions-Image läuft als non-root User
-- Datenbank-Passwörter nur über Docker-Secrets oder Env-Variablen
-- Health-Checks im `docker-compose.yml` für App und DB definieren
-
-### CI/CD-Pipeline (GitHub Actions)
-- **Automatisches Deployment** bei Push auf `master` via `.github/workflows/deploy.yml`
-- Pipeline-Ablauf:
-  1. Docker-Image bauen und auf `ghcr.io` pushen (mit `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` als Build-Arg)
-  2. SSH auf VPS: `git pull`, GHCR-Image pullen, Prisma-Migrations ausfuehren, Container neustarten
-  3. Health-Check nach 15 Sekunden
-- **Manuelles Deployment auf dem VPS ist NICHT noetig** — einfach committen und pushen
-- Prisma-Migrations werden automatisch via `prisma migrate deploy` ausgefuehrt
-- VPS-Secrets (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`) sind in GitHub Secrets konfiguriert
-
-### WICHTIG: Image NICHT lokal auf dem VPS bauen
-- Das GHCR-Image wird in der Pipeline fertig gebaut (mit allen `NEXT_PUBLIC_` Vars)
-- Auf dem VPS wird nur `docker compose pull app` ausgefuehrt — KEIN `docker compose build`
-- Lokales Bauen auf dem VPS fuehrt dazu, dass `NEXT_PUBLIC_` Variablen fehlen (z.B. reCAPTCHA Site Key)
-- Das hat in der Vergangenheit das Kontaktformular intermittierend kaputt gemacht
-
-### VPS `.env`-Datei (~/lernassistent/.env)
-Folgende Keys muessen auf dem VPS gesetzt sein und sind in `docker-compose.yml` explizit gemappt:
-- `POSTGRES_PASSWORD`, `POSTGRES_USER`, `POSTGRES_DB`
-- `NEXTAUTH_SECRET`
-- `ANTHROPIC_API_KEY`
-- `RECAPTCHA_SECRET_KEY` (Server-seitige reCAPTCHA-Verifikation)
-- `RESEND_API_KEY` (E-Mail-Versand via Resend)
-- `ADMIN_EMAIL` (Admin-Zugang)
-
----
-
-## 9. Entwicklungsreihenfolge (MVP)
-
-Claude arbeitet in dieser Reihenfolge — keine Phase überspringen:
-
-1. Projekt-Setup (Next.js, Prisma, Docker Compose lokal)
-2. Landing Page (öffentlich, Deutsch, Duolingo-Style)
-3. Auth (NextAuth, Register, Login)
-4. Datenbank-Schema + Migrations
-5. Karteikarten-Import (CSV + Anki) + Deck-Verwaltung
-6. SRS-Lernmodus (FSRS-Algorithmus)
-7. Quiz-Modus (Multiple Choice, Wahr/Falsch, Freitext)
-8. Dashboard / Statistiken (Streak, Fortschritt, Lernzeit)
-9. Claude-Chat-Fenster (Karten erstellen + CSV-Export)
-10. Deployment auf Hostinger VPS (Caddy, HTTPS, Let's Encrypt)
-11. Polish & Gamification (Animationen, Abzeichen, Punkte)
+- Globale Regeln: `~/.claude/CLAUDE.md` (wird automatisch geladen)
+- Infrastruktur-Details: Vault `03 Bereiche/Persönliche Infrastruktur/Projekte/lernen.jan-stocker.cloud.md`
+- Deployment-Details: `DEPLOYMENT.md`
+- Projektstatus: `STATUS.md`
+- Reviews: globaler Agent `review-orchestrator`

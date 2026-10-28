@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // GET /api/decks
 // Auth: erforderlich
 // Gibt alle Decks des eingeloggten Nutzers zurueck (mit Karten-Anzahl)

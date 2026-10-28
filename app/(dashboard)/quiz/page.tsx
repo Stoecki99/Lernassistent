@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/quiz/page.tsx
 // Quiz-Auswahl: Deck und Quiz-Typ waehlen, dann Quiz starten.
 

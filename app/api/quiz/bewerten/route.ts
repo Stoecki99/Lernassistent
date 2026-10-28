@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // POST /api/quiz/bewerten
 // Auth: erforderlich
 // Wertet Quiz aus, speichert Ergebnis in DB, vergibt Punkte.

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // components/features/WochenChart.tsx
 // Mini-Bar-Chart fuer die Lernaktivitaet der letzten 7 Tage (CSS/Tailwind).
 

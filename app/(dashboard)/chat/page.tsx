@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/chat/page.tsx
 // Chat-Seite: Pro-Nutzer sehen den Chat, Free-Nutzer den Upgrade-Prompt.
 

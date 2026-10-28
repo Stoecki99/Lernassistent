@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 import Link from "next/link"
 import { Metadata } from "next"
 
@@ -35,6 +38,9 @@ export default function ImpressumPage() {
               <p className="text-gray-600 leading-relaxed">
                 Jan Stocker
                 <br />
+                Private, nicht-kommerzielle Website
+                <br />
+                <br />
                 Kontakt:{" "}
                 <Link
                   href="/kontakt"
@@ -60,7 +66,7 @@ export default function ImpressumPage() {
                 Kontakt
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Fuer Fragen, Anregungen oder Probleme nutze bitte unser{" "}
+                Für Fragen, Anregungen oder Probleme nutze bitte das{" "}
                 <Link
                   href="/kontakt"
                   className="text-primary hover:underline font-semibold"
@@ -89,16 +95,29 @@ export default function ImpressumPage() {
                 Haftungsausschluss
               </h2>
               <p className="text-gray-600 leading-relaxed">
-                Die Inhalte dieser Website werden mit grösster Sorgfalt
-                erstellt. Für die Richtigkeit, Vollständigkeit und
-                Aktualität der Inhalte können wir jedoch keine Gewähr
-                übernehmen. Die Nutzung der Inhalte erfolgt auf eigene Gefahr.
+                Der Lernassistent ist ein kostenloses, privat betriebenes
+                Hilfsmittel. Die Nutzung erfolgt vollständig auf eigene
+                Gefahr. Da es sich um eine unentgeltliche Leistung handelt,
+                übernehme ich (Jan Stocker) keinerlei Gewährleistung oder
+                Haftung für die Richtigkeit, Vollständigkeit oder
+                Verfügbarkeit der Inhalte und des Dienstes.
               </p>
               <p className="text-gray-600 leading-relaxed mt-2">
-                Der Lernassistent ist ein kostenloses Hilfsmittel. Die durch die
-                KI generierten Inhalte (Quiz-Fragen, Chat-Antworten) können
-                Fehler enthalten und ersetzen nicht das eigenständige Lernen
-                und Prüfen der Inhalte.
+                Die durch die KI generierten Inhalte (Quiz-Fragen,
+                Chat-Antworten) können Fehler enthalten und ersetzen nicht
+                das eigenständige Lernen und Prüfen der Inhalte. Eine
+                Haftung für Datenverlust, technische Fehler oder Ausfälle
+                ist ausgeschlossen.
+              </p>
+              <p className="text-gray-600 leading-relaxed mt-2">
+                Die vollständigen Bedingungen findest Du in den{" "}
+                <Link
+                  href="/nutzungsbedingungen"
+                  className="text-primary hover:underline"
+                >
+                  Nutzungsbedingungen
+                </Link>
+                .
               </p>
             </section>
 
@@ -107,9 +126,15 @@ export default function ImpressumPage() {
                 Urheberrecht
               </h2>
               <p className="text-gray-600 leading-relaxed">
+                Der Quellcode, das Design und die Struktur des Lernassistenten
+                sind urheberrechtlich geschütztes Eigentum von Jan Stocker.
+                Jegliches Kopieren, Modifizieren oder Weiterverbreiten des
+                Quellcodes oder wesentlicher Teile davon ist ohne
+                ausdrückliche schriftliche Genehmigung untersagt.
+              </p>
+              <p className="text-gray-600 leading-relaxed mt-2">
                 Die von Nutzern erstellten Inhalte (Karteikarten, Decks)
-                verbleiben im Eigentum der jeweiligen Nutzer. Die Software und
-                das Design des Lernassistenten sind urheberrechtlich geschützt.
+                verbleiben im Eigentum der jeweiligen Nutzer.
               </p>
               <p className="text-gray-500 text-sm mt-4">Stand: April 2026</p>
             </section>
@@ -124,6 +149,9 @@ export default function ImpressumPage() {
           </Link>
           <Link href="/impressum" className="hover:text-gray-600">
             Impressum
+          </Link>
+          <Link href="/nutzungsbedingungen" className="hover:text-gray-600">
+            Nutzungsbedingungen
           </Link>
         </div>
       </footer>

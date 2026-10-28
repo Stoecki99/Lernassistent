@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/badges.ts
 // Badge-Vergabe-Logik: Prueft Bedingungen und vergibt neue Badges.
 

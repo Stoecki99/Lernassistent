@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/subscription.ts
 // Zentrales Modul fuer Abo-Plan-Checks, Speicher-Limits und API-Usage-Tracking.
 

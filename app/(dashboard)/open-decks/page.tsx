@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/open-decks/page.tsx
 // OpenDecks: Von der Community geteilte und gepruefterte Decks.
 

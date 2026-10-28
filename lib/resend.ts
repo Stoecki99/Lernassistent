@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/resend.ts
 // Zentraler Resend-Client fuer E-Mail-Versand.
 // Alle E-Mail-Aufrufe gehen ueber diesen Client.

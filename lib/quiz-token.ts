@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/quiz-token.ts
 // Signiert und verifiziert Quiz-Antwortdaten mit HMAC-SHA256.
 // Verhindert, dass Clients korrekte Antworten manipulieren koennen.

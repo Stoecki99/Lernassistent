@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 "use client"
 
 // components/features/Navigation.tsx
@@ -147,6 +150,7 @@ export default function Navigation({ variant }: NavigationProps) {
         <div className="flex gap-3 text-xs text-gray-400">
           <Link href="/datenschutz" className="hover:text-gray-600 transition-colors">Datenschutz</Link>
           <Link href="/impressum" className="hover:text-gray-600 transition-colors">Impressum</Link>
+          <Link href="/nutzungsbedingungen" className="hover:text-gray-600 transition-colors">AGB</Link>
         </div>
       </div>
     </>

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/validations/openDeck.ts
 // Zod-Schemas fuer OpenDeck-Freigabe, Admin-Review und Deck-Kopie.
 

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/validations/quiz.ts
 // Zod-Schemas fuer Quiz-Generierung und -Bewertung.
 

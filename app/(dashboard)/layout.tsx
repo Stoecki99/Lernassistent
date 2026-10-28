@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/layout.tsx
 // Dashboard-Layout mit Sidebar (Desktop) und Bottom-Navigation (Mobile).
 // Prueft Session serverseitig — leitet bei fehlender Session zum Login weiter.

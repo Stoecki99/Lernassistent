@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/prisma.ts
 // Singleton-Instanz des Prisma-Clients (Prisma v7 mit Driver Adapter).
 // Verhindert mehrfache Instanzen im Development-Modus (Hot Reload).

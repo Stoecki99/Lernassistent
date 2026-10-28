@@ -50,37 +50,46 @@
 | Badge-Seed | Erledigt | Alle Badges geseeded |
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
 
-## Aenderungen 2026-04-05 (Update 3)
+## Changelog
 
-- **Neu: Kontaktformular** — Oeffentliches Formular unter `/kontakt` mit dreifachem Anti-Spam-Schutz (Honeypot + reCAPTCHA v3 + Rate-Limiting)
-- **Neu: E-Mail-Benachrichtigung** — Kontaktnachrichten werden via Resend an Betreiber gesendet UND in DB gespeichert
-- **Neu: Admin-Nachrichten** — Admin-Panel zeigt alle Kontaktnachrichten mit Gelesen-Markierung
-- **Neu: API-Route** — `POST /api/kontakt` (keine Auth), `GET/PATCH /api/admin/nachrichten` (Admin-Auth)
-- **E-Mail-Adressen entfernt** — Impressum, Datenschutz und UpgradePrompt verlinken jetzt auf `/kontakt` statt E-Mail
-- **DB-Migration noetig** — `npx prisma migrate deploy` (ContactMessage-Tabelle)
-- **Neue Env-Variablen** — `RESEND_API_KEY`, `RECAPTCHA_SECRET_KEY`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
-- **Neue Pakete** — `resend`, `react-google-recaptcha-v3`
+### 2026-04-06
 
-## Aenderungen 2026-04-05 (Update 2)
+- **feat: OpenDecks** — Community Deck Sharing Feature
+- **feat: Quiz-Fragenzahl** — Anzahl Quizfragen konfigurierbar, Freitext fuer Nicht-Admins gesperrt
+- **feat: Admin Nachrichten loeschen** — Delete-Button fuer Kontaktnachrichten im Admin-Panel
+- **feat: Upgrade-Prompt** — TWINT-Nummer und API-Kosten-Erklaerung anzeigen
+- **fix: Karten-Hint** — Null-Wert fuer Hint beim Karten-Update erlaubt
 
-- **Neu: Abo-Modell (Free/Pro)** — User-Model um plan, planExpiresAt, storageUsedBytes, apiTokensUsedThisMonth erweitert
-- **Neu: Admin-Panel** — Geheimer Zugang via /admin/[ADMIN_SECRET], Nutzertabelle mit Plan-Verwaltung
-- **Neu: Chat-Gating** — Free-Nutzer sehen Upgrade-Prompt, Pro-Nutzer koennen chatten
-- **Neu: Speicher-Tracking** — storageUsedBytes wird bei Karten-CRUD aktualisiert (2GB Free, 6GB Pro)
-- **Neu: API-Usage-Tracking** — Claude Token-Verbrauch wird pro Nutzer/Monat getrackt (2 CHF Cap)
-- **Neu: KI-Prompt-Tipps** — Import-Seite zeigt 4 kopierbare Prompts fuer Claude/ChatGPT
-- **Neu: Upgrade-Prompt** — TWINT-Bezahlinfo fuer Free-Nutzer (18 CHF / 6 Monate)
-- **DB-Migration noetig** — `npx prisma migrate dev --name add-subscription-fields`
-- **Neue Env-Variable** — `ADMIN_SECRET` muss gesetzt werden
+### 2026-04-05 (Update 3)
 
-## Aenderungen 2026-04-05
+- **feat: Kontaktformular** — `/kontakt` mit Honeypot + reCAPTCHA v3 + Rate-Limiting
+- **feat: E-Mail-Benachrichtigung** — Kontaktnachrichten via Resend + DB-Speicherung
+- **feat: Admin-Nachrichten** — Alle Kontaktnachrichten mit Gelesen-Markierung
+- **feat: API-Route** — `POST /api/kontakt` (public), `GET/PATCH /api/admin/nachrichten` (Admin)
+- **refactor: E-Mail entfernt** — Impressum/Datenschutz verlinken auf `/kontakt`
+- **chore: Migration** — ContactMessage-Tabelle
+- **chore: Env-Vars** — `RESEND_API_KEY`, `RECAPTCHA_SECRET_KEY`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`
+- **chore: Pakete** — `resend`, `react-google-recaptcha-v3`
 
-- **Fix: Lernen-Seite 404** — `/lernen` page.tsx erstellt (Deck-Uebersicht mit faelligen/neuen Karten)
-- **Fix: API countOnly** — `/api/lernen/naechste?countOnly=true` fuer Karten-Zaehlung
-- **Neu: Datenschutzerklaerung** — `/datenschutz` nach Schweizer DSG/nDSG
-- **Neu: Impressum** — `/impressum` mit Kontaktinfo und Haftungsausschluss
-- **Neu: Legal-Links** — Datenschutz + Impressum in Dashboard-Sidebar
-- **Kontaktformular** — Verweis auf jan-stocker.ch/#contact (kein eigenes noetig)
+### 2026-04-05 (Update 2)
+
+- **feat: Abo-Modell (Free/Pro)** — plan, planExpiresAt, storageUsedBytes, apiTokensUsedThisMonth
+- **feat: Admin-Panel** — `/admin/[ADMIN_SECRET]`, Nutzertabelle mit Plan-Verwaltung
+- **feat: Chat-Gating** — Free = Upgrade-Prompt, Pro = Chat
+- **feat: Speicher-Tracking** — 2GB Free, 6GB Pro
+- **feat: API-Usage-Tracking** — Claude Token pro Nutzer/Monat (2 CHF Cap)
+- **feat: KI-Prompt-Tipps** — 4 kopierbare Prompts auf Import-Seite
+- **feat: Upgrade-Prompt** — TWINT-Bezahlinfo (18 CHF / 6 Monate)
+- **chore: Migration** — `add-subscription-fields`
+- **chore: Env-Var** — `ADMIN_SECRET`
+
+### 2026-04-05
+
+- **fix: Lernen-Seite 404** — `/lernen` page.tsx erstellt
+- **fix: API countOnly** — `/api/lernen/naechste?countOnly=true`
+- **feat: Datenschutzerklaerung** — `/datenschutz` nach Schweizer DSG/nDSG
+- **feat: Impressum** — `/impressum` mit Kontaktinfo
+- **feat: Legal-Links** — Datenschutz + Impressum in Sidebar
 
 ## Geloeste Probleme
 

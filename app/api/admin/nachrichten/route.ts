@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // GET /api/admin/nachrichten
 // Auth: Eingeloggt + ADMIN_EMAIL
 // Laedt alle Kontaktnachrichten.

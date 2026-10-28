@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // app/(dashboard)/import/page.tsx
 // Import-Seite: Deck-Auswahl und Import-Formular fuer Karteikarten.
 

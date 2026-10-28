@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/fsrs.ts
 // Implementierung des FSRS-4.5 Algorithmus fuer Spaced Repetition.
 // Basierend auf: https://github.com/open-spaced-repetition/fsrs4anki

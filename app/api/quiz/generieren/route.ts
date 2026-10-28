@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // POST /api/quiz/generieren
 // Auth: erforderlich
 // Generiert Quiz-Fragen aus einem Deck basierend auf Quiz-Typ und Fragenanzahl.

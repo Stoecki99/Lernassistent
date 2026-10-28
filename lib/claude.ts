@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Jan Stocker. All rights reserved.
+// Proprietary — copying, modification, or distribution prohibited without permission.
+
 // lib/claude.ts
 // Zentraler Anthropic API Client fuer Claude-Integration.
 // Alle Claude-Aufrufe gehen ueber diesen Client.
