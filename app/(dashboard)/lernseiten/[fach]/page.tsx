@@ -15,6 +15,8 @@ interface FachPageProps {
 }
 
 export async function generateMetadata({ params }: FachPageProps) {
+  // Next loest Metadaten auch bei einem Redirect auf: ohne Login keine Inhalte lesen.
+  if (!(await getCurrentUser())) return { title: "Lernseite" }
   const { fach } = await params
   const ergebnis = ladeFach(fach)
   return { title: ergebnis?.fach.kuerzel ?? "Lernseite" }

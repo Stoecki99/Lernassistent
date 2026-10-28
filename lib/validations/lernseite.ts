@@ -109,7 +109,8 @@ export const seiteSchema = z
 const szeneSchema = z.object({
   phase: z.number().int().min(-1).optional(),
   text: z.union([z.literal("alle"), z.number().int().min(0), z.null()]).optional(),
-  hl: z.array(z.string()).optional(),
+  // IDs werden in CSS-Selektoren verwendet (Server-Rendering, ohne CSS.escape) — daher eng begrenzt.
+  hl: z.array(z.string().regex(/^[a-z0-9-]+$/, "hl-ID: nur a-z, 0-9 und Bindestrich.")).optional(),
   wb: z.number().int().min(0).optional(),
   wbAktiv: z.array(z.number().int().min(0)).optional(),
   formel: z.string().optional(),

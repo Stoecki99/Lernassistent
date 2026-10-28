@@ -60,6 +60,9 @@
 - **feat: Inhaltsformat** — JSON unter `content/lernseiten/`, Zod-Prüfung, `npm run lernseiten:pruefen` (läuft auch im Docker-Build), Format in `docs/lernseiten-format.md`
 - **feat: MSTW 04** — Erstes Thema «Prädikatenlogik: Sätze modellieren» (S1-V4&5, Bsp. 4.3, 4.6)
 - **chore: Pakete** — `remark-math`, `rehype-katex`, `katex`, `rehype-raw`, `rehype-sanitize`; dev: `tsx` (Tests: `npm test`)
+- **Review (review-orchestrator):** keine kritischen/hohen Befunde; eingearbeitet: Absturzgefahr `CSS.escape` beim Server-Rendering, `LernInhalt` ohne `"use client"` (Fachseite 267 → 96 kB JS), abschliessende Tag-Liste im HTML-Filter, Fokus-Führung und Live-Regionen (Übung, Stepper, Film, Selbsttest), Prüfmodul getrennt (kein `app/` im Image), Metadaten erst nach Login
+- **Fachprüfung MSTW 04:** Endformeln bestätigt; 13 Befunde (1 fachlicher Fehler in Quizfrage 8) eingearbeitet
+- **Bekannt:** KaTeX-Advisory GHSA-238p-pmpm-9mq7 (low, nur mit vorhandener Prototype-Pollution ausnutzbar; Fix erst in KaTeX 0.19, `rehype-katex` verlangt ^0.16). Mobile-Leiste hat 7 Einträge mit 10-px-Beschriftung (bei 320 px knapp, kein Überlauf)
 - **Bekannt:** `prisma migrate deploy` scheitert auf einer frischen Datenbank (`20260405_add_contact_email` sortiert vor `20260405_add_contact_messages`); Produktion nicht betroffen
 
 ### 2026-04-06

@@ -2,7 +2,7 @@
 // Proprietary — copying, modification, or distribution prohibited without permission.
 
 // components/features/BottomNav.tsx
-// Mobile Bottom-Navigation mit 5 Haupt-Icons.
+// Mobile Bottom-Navigation mit den Haupt-Icons aus Navigation.tsx.
 
 import Navigation from "@/components/features/Navigation"
 

@@ -30,12 +30,44 @@ Fachordner: nur `a-z` und `0-9`, darf nicht wie eine bestehende App-Seite heisse
 
 Alle Felder, die unten mit *(md)* markiert sind, sind Markdown mit zwei Erweiterungen:
 
-- **KaTeX:** `$…$` inline, `$$…$$` abgesetzt (für allgemeine Mathematik, z. B. Wahrscheinlichkeiten).
+- **KaTeX:** `$…# Lernseiten — Datenformat
+
+Lernseiten sind interaktive Themenseiten pro Studienfach (z. B. MSTW). Sie liegen als JSON-Dateien im Repo unter `content/lernseiten/` und werden von der App hinter dem Login angezeigt:
+
+| Adresse | Inhalt |
+|---------|--------|
+| `/lernseiten` | Liste aller Fächer (Kacheln) |
+| `/lernseiten/<fach>` | Themen eines Fachs, gruppiert nach Sektion, plus Spickzettel |
+| `/lernseiten/<fach>/<thema>` | Die Lernseite selbst |
+| `/<FACH>`, `/<fach>` | Kurzlink, leitet auf `/lernseiten/<fach>` weiter |
+
+Neue Fächer und Themen brauchen **nur Inhaltsdateien**, keinen Code. `npm run lernseiten:pruefen` prüft alle Dateien; dieselbe Prüfung läuft im Docker-Build, fehlerhafte Inhalte stoppen also die Auslieferung.
+
+## Ordnerstruktur
+
+```
+content/lernseiten/
+  mstw/                                  # Fachordner = Kürzel in Kleinbuchstaben
+    fach.json
+    04-praedikatenlogik-modellierung/    # NN-slug, NN = Reihenfolge im Semester
+      seite.json                         # Text und Lösungsschritte
+      film.json                          # Lösungsfilm
+      quiz.json                          # Selbsttest
+      spick.json                         # Einträge für den Spickzettel des Fachs
+```
+
+Fachordner: nur `a-z` und `0-9`, darf nicht wie eine bestehende App-Seite heissen (`chat`, `decks` …). Themenordner: `NN-` plus Kleinbuchstaben, Ziffern und Bindestriche.
+
+## Textfelder: Markdown, Formeln, Symbol-Markup
+
+Alle Felder, die unten mit *(md)* markiert sind, sind Markdown mit zwei Erweiterungen:
+
+ inline. Abgesetzt nur mit `$` auf eigenen Zeilen (`$`, Zeilenumbruch, Formel, Zeilenumbruch, `$`); `$…$` auf einer Zeile wird inline gesetzt. In JSON den Backslash verdoppeln: `"$\frac{1}{2}$"`.
 - **HTML-Spans** für Logik-Formeln und Verknüpfungen. Gedacht sind `span`, `strong`, `em`, `br`, `sub`, `sup`. Ein Filter (`rehype-sanitize`) lässt nur harmlose Tags durch; bei `span` bleiben nur die Klassen aus der Tabelle unten sowie `data-link` und `data-ph`. Skripte, `style`, Event-Handler und unbekannte Attribute werden entfernt.
 
 | Klasse | Bedeutung |
 |--------|-----------|
-| `m` | Formel-Container (Monospace, kein Umbruch in Symbolen) |
+| `m` | Formel-Container (Mathe-Schrift) |
 | `v` | Variable |
 | `c` | Konstante |
 | `fn` | Funktion |
@@ -159,7 +191,7 @@ Die Reihenfolge der Abschnitte ist fest (didaktisches Gerüst): Bausteine → L�
 | `szenen` | 15–35 Szenen, jede ändert genau eine Sache |
 | `phase` | `-1` = Intro, sonst Index in `phasen` |
 | `text` | `"alle"` = alle Aufgabentexte, Zahl = nur `texte[n]`, `null` = ausblenden |
-| `hl` | `data-ph`-IDs, die gelb markiert werden (müssen in `texte` vorkommen) |
+| `hl` | `data-ph`-IDs, die gelb markiert werden (müssen in `texte` vorkommen; nur `a-z`, `0-9`, `-`) |
 | `wb` | Anzahl sichtbarer Wörterbuch-Einträge (von vorne gezählt) |
 | `wbAktiv` | Indizes der hervorgehobenen Einträge (müssen sichtbar sein) |
 | `formel` | aktueller Formelstand (md), Neues mit `class="nw"` |

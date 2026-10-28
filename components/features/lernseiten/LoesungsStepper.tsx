@@ -17,7 +17,7 @@ import Zuordnung from "@/components/features/lernseiten/Zuordnung"
 type Aufgabe = Seite["schritte"]["aufgaben"][number]
 
 const knopf =
-  "px-4 py-2 rounded-xl border-2 font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+  "px-4 py-2 rounded-xl border-2 font-bold transition-colors aria-disabled:opacity-40 aria-disabled:cursor-not-allowed"
 
 export default function LoesungsStepper({ aufgabe, methode }: { aufgabe: Aufgabe; methode: string[] }) {
   const [schritt, setSchritt] = useState(0)
@@ -69,7 +69,7 @@ export default function LoesungsStepper({ aufgabe, methode }: { aufgabe: Aufgabe
         <button
           type="button"
           onClick={() => setSchritt((s) => Math.max(0, s - 1))}
-          disabled={schritt === 0}
+          aria-disabled={schritt === 0}
           className={`${knopf} border-gray-200 text-text hover:border-secondary`}
         >
           Zurück
@@ -77,7 +77,7 @@ export default function LoesungsStepper({ aufgabe, methode }: { aufgabe: Aufgabe
         <button
           type="button"
           onClick={() => setSchritt((s) => Math.min(letzter, s + 1))}
-          disabled={schritt === letzter}
+          aria-disabled={schritt === letzter}
           className={`${knopf} border-secondary bg-secondary text-white hover:bg-secondary-dark`}
         >
           Weiter
@@ -85,7 +85,7 @@ export default function LoesungsStepper({ aufgabe, methode }: { aufgabe: Aufgabe
         <button
           type="button"
           onClick={() => setSchritt(letzter)}
-          disabled={schritt === letzter}
+          aria-disabled={schritt === letzter}
           className={`${knopf} border-gray-200 text-text hover:border-secondary`}
         >
           Ganze Lösung

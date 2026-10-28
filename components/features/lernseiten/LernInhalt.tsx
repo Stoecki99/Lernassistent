@@ -1,14 +1,13 @@
 // Copyright (c) 2026 Jan Stocker. All rights reserved.
 // Proprietary — copying, modification, or distribution prohibited without permission.
 
-"use client"
-
 // components/features/lernseiten/LernInhalt.tsx
 // Rendert Textfelder der Lernseiten: Markdown, KaTeX-Formeln ($…$, $$…$$)
 // und Formel-Spans (class m/v/c/fn/p/q/nw, data-link, data-ph).
 // HTML wird mit rehype-sanitize gefiltert — kein dangerouslySetInnerHTML.
+// Ohne "use client": in Server-Komponenten wird auf dem Server gerendert,
+// ins Client-Bundle kommt sie nur dort, wo Client-Komponenten sie einbinden.
 
-import type { ComponentPropsWithoutRef } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkMath from "remark-math"
 import rehypeRaw from "rehype-raw"
@@ -18,11 +17,17 @@ import "katex/dist/katex.min.css"
 
 const FORMEL_KLASSEN = ["m", "v", "c", "fn", "p", "q", "nw"]
 
-// Erlaubt zusaetzlich zum Standard: <span> mit Formel-Klassen und Verknuepfungs-Attributen,
+// Abschliessende Liste erlaubter Tags (keine Bilder, Formulare, Medien).
+const ERLAUBTE_TAGS = [
+  "p", "br", "strong", "em", "del", "sub", "sup", "span", "code", "pre", "a", "blockquote",
+  "ul", "ol", "li", "table", "thead", "tbody", "tr", "th", "td",
+]
+
+// Zusaetzlich zum Standard: <span> mit Formel-Klassen und Verknuepfungs-Attributen,
 // sowie die Klassen, die remark-math fuer rehype-katex setzt.
 const sanitizeSchema = {
   ...defaultSchema,
-  tagNames: [...(defaultSchema.tagNames ?? []), "span"],
+  tagNames: ERLAUBTE_TAGS,
   attributes: {
     ...defaultSchema.attributes,
     span: [["className", ...FORMEL_KLASSEN], "dataLink", "dataPh"],
@@ -37,12 +42,6 @@ interface LernInhaltProps {
   className?: string
 }
 
-function Span({ node: _node, ...props }: ComponentPropsWithoutRef<"span"> & { node?: unknown }) {
-  // Verknuepfte Elemente per Tastatur erreichbar machen (Zuordnung).
-  const verknuepft = (props as Record<string, unknown>)["data-link"] !== undefined
-  return <span {...props} tabIndex={verknuepft ? 0 : undefined} />
-}
-
 export default function LernInhalt({ inhalt, inline = false, className = "" }: LernInhaltProps) {
   const Wrapper = inline ? "span" : "div"
   return (
@@ -51,7 +50,6 @@ export default function LernInhalt({ inhalt, inline = false, className = "" }: L
         remarkPlugins={[remarkMath]}
         rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema], rehypeKatex]}
         components={{
-          span: Span,
           p: ({ children }) =>
             inline ? <>{children}</> : <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
           ul: ({ children }) => <ul className="list-disc pl-5 space-y-1 mb-3 last:mb-0">{children}</ul>,

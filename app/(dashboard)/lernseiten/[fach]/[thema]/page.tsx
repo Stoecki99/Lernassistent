@@ -23,6 +23,8 @@ interface ThemaPageProps {
 }
 
 export async function generateMetadata({ params }: ThemaPageProps) {
+  // Next loest Metadaten auch bei einem Redirect auf: ohne Login keine Inhalte lesen.
+  if (!(await getCurrentUser())) return { title: "Lernseite" }
   const { fach, thema } = await params
   const ergebnis = ladeThema(fach, thema)
   return {
@@ -95,8 +97,8 @@ export default async function ThemaPage({ params }: ThemaPageProps) {
         <div className="bg-surface-card rounded-2xl shadow-card p-5">
           <p className="text-xs font-bold uppercase tracking-wide text-text-light mb-2">Lernziele</p>
           <ul className="list-disc pl-5 space-y-1 text-text">
-            {seite.lernziele.map((ziel) => (
-              <li key={ziel}>{ziel}</li>
+            {seite.lernziele.map((ziel, i) => (
+              <li key={i}>{ziel}</li>
             ))}
           </ul>
           {seite.einleitung && (

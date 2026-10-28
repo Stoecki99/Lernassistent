@@ -5,7 +5,8 @@
 // Prueft alle Inhaltsdateien unter content/lernseiten/.
 // Laeuft lokal (npm run lernseiten:pruefen) und im Docker-Build vor `next build`.
 
-import { pruefeAlleInhalte, ladeFaecher } from "@/lib/lernseiten"
+import { ladeFaecher } from "@/lib/lernseiten"
+import { pruefeAlleInhalte } from "@/lib/lernseiten-pruefung"
 
 const fehler = pruefeAlleInhalte()
 

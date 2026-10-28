@@ -16,7 +16,8 @@ import {
   ersteInhaltsSzene,
   klartextLaenge,
 } from "@/lib/lernseiten-film"
-import { ladeFaecher, ladeFach, ladeThema, ladeSpickzettel, pruefeAlleInhalte } from "@/lib/lernseiten"
+import { ladeFaecher, ladeFach, ladeThema, ladeSpickzettel } from "@/lib/lernseiten"
+import { pruefeAlleInhalte } from "@/lib/lernseiten-pruefung"
 
 describe("szenenAufloesen", () => {
   test("setzt Startwerte und vererbt fehlende Felder", () => {
@@ -259,6 +260,14 @@ describe("Inhalte laden und pruefen", () => {
     assert.match(fehler, /data-ph «fehlt»/)
     assert.match(fehler, /texte\[3\]/)
     assert.match(fehler, /wbAktiv 4/)
+  })
+
+  test("meldet hl-ID mit unerlaubten Zeichen (wird in CSS-Selektor verwendet)", () => {
+    schreibe("test/fach.json", fach())
+    const f = film()
+    f.szenen.push({ hl: ['x"]{}body{'], sage: "boese ID" } as never)
+    thema("test/10-erstes", { film: f })
+    assert.match(pruefeAlleInhalte(basis).join("\n"), /hl-ID/)
   })
 
   test("meldet Fachordner, der nicht zum Kuerzel passt", () => {

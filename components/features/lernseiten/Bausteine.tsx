@@ -12,8 +12,8 @@ export default function Bausteine({ bausteine }: { bausteine: Seite["bausteine"]
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
-        {bausteine.begriffe.map((begriff) => (
-          <div key={begriff.name} className="bg-surface-card rounded-2xl shadow-card p-5">
+        {bausteine.begriffe.map((begriff, i) => (
+          <div key={i} className="bg-surface-card rounded-2xl shadow-card p-5">
             <h3 className="font-extrabold text-text-dark text-lg mb-2">{begriff.name}</h3>
             <div className="text-sm text-text space-y-2">
               <div>

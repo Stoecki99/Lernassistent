@@ -29,7 +29,7 @@ export default function Brille({ analyse }: { analyse: Analyse }) {
         <div className="flex flex-wrap gap-2 mb-4" role="group" aria-label="Ansicht wählen">
           {analyse.brillen.map((b, i) => (
             <button
-              key={b.name}
+              key={i}
               type="button"
               onClick={() => setAktiv(i)}
               aria-pressed={i === aktiv}

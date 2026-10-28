@@ -33,6 +33,7 @@ KI-gestützte Lernplattform für Studierende. Karteikarten mit Spaced Repetition
 - Server Components als Default, `use client` nur wenn erforderlich
 - Zod-basierte Validierung bei API-Ein-/Ausgaben
 - UI-Texte Deutsch (Schweizer Rechtschreibung, ss statt ß), Code-Namen Englisch
+- Ausnahme Lernseiten (`lib/lernseiten*`, `components/features/lernseiten/`): deutsche Namen passend zum Inhaltsformat (`docs/lernseiten-format.md`, Design 2026-10-28)
 - Keine Umlaute in Variablen, Funktionen, CSS-Klassen, Dateinamen
 
 ### Commit-Konvention

@@ -20,7 +20,7 @@ import {
 import LernInhalt from "@/components/features/lernseiten/LernInhalt"
 
 const knopf =
-  "min-w-[44px] min-h-[44px] px-3 rounded-xl border-2 font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+  "min-w-[44px] min-h-[44px] px-3 rounded-xl border-2 font-bold transition-colors aria-disabled:opacity-40 aria-disabled:cursor-not-allowed"
 
 const TEMPO_NAMEN: Record<Tempo, string> = { langsam: "Langsam", normal: "Normal", schnell: "Schnell" }
 
@@ -37,6 +37,7 @@ export default function LoesungsFilm({ film, selbsttestAnker }: { film: Film; se
   // Fortschritt der aktuellen Szene (0..1) ohne Re-Render pro Frame.
   const anteilRef = useRef(0)
   const balkenRef = useRef<HTMLDivElement>(null)
+  const playRef = useRef<HTMLButtonElement>(null)
 
   const szene = szenen[index]
   const letzte = szenen.length - 1
@@ -64,6 +65,8 @@ export default function LoesungsFilm({ film, selbsttestAnker }: { film: Film; se
   function nochmals() {
     geheZu(ersteSzene)
     setSpielt(true)
+    // Der Knopf «Nochmals» verschwindet: Fokus auf Play/Pause setzen, damit er nicht verloren geht.
+    playRef.current?.focus()
   }
 
   useEffect(() => {
@@ -121,7 +124,7 @@ export default function LoesungsFilm({ film, selbsttestAnker }: { film: Film; se
         {szene.hl.length > 0 && (
           <style>
             {szene.hl
-              .map((id) => `#${buehneId} [data-ph="${CSS.escape(id)}"]`)
+              .map((id) => `#${buehneId} [data-ph="${id}"]`)
               .join(",") + "{background-color:#FEF08A;border-radius:3px;box-shadow:0 0 0 2px #FDE047;}"}
           </style>
         )}
@@ -177,8 +180,8 @@ export default function LoesungsFilm({ film, selbsttestAnker }: { film: Film; se
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => geheZu(index - 1)}
-          disabled={index === 0}
+          onClick={() => index > 0 && geheZu(index - 1)}
+          aria-disabled={index === 0}
           aria-label="Vorherige Szene"
           className={`${knopf} border-gray-200 text-text hover:border-secondary`}
         >
@@ -186,16 +189,16 @@ export default function LoesungsFilm({ film, selbsttestAnker }: { film: Film; se
         </button>
         <button
           type="button"
+          ref={playRef}
           onClick={playPause}
-          aria-label={spielt ? "Pause" : "Abspielen"}
           className={`${knopf} border-secondary bg-secondary text-white hover:bg-secondary-dark px-5`}
         >
-          {spielt ? "Pause" : "Play"}
+          {spielt ? "Pause" : "Abspielen"}
         </button>
         <button
           type="button"
-          onClick={() => geheZu(index + 1)}
-          disabled={index === letzte}
+          onClick={() => index < letzte && geheZu(index + 1)}
+          aria-disabled={index === letzte}
           aria-label="Nächste Szene"
           className={`${knopf} border-gray-200 text-text hover:border-secondary`}
         >
