@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: ThemaPageProps) {
   const { fach, thema } = await params
   const ergebnis = ladeThema(fach, thema)
   return {
-    title: ergebnis ? `${ergebnis.seite.titel} — ${ergebnis.fach.kuerzel}` : "Lernseite — Lernassistent",
+    title: ergebnis ? `${ergebnis.seite.titel} — ${ergebnis.fach.kuerzel}` : "Lernseite",
   }
 }
 

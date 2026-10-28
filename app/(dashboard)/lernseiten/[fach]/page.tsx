@@ -17,7 +17,7 @@ interface FachPageProps {
 export async function generateMetadata({ params }: FachPageProps) {
   const { fach } = await params
   const ergebnis = ladeFach(fach)
-  return { title: `${ergebnis?.fach.kuerzel ?? "Lernseite"} — Lernassistent` }
+  return { title: ergebnis?.fach.kuerzel ?? "Lernseite" }
 }
 
 export default async function FachPage({ params }: FachPageProps) {

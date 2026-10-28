@@ -31,7 +31,7 @@ Fachordner: nur `a-z` und `0-9`, darf nicht wie eine bestehende App-Seite heisse
 Alle Felder, die unten mit *(md)* markiert sind, sind Markdown mit zwei Erweiterungen:
 
 - **KaTeX:** `$…$` inline, `$$…$$` abgesetzt (für allgemeine Mathematik, z. B. Wahrscheinlichkeiten).
-- **HTML-Spans** für Logik-Formeln und Verknüpfungen. Erlaubt sind nur `span`, `strong`, `em`, `br`, `sub`, `sup` mit den Attributen `class`, `data-link`, `data-ph`. Alles andere wird herausgefiltert.
+- **HTML-Spans** für Logik-Formeln und Verknüpfungen. Gedacht sind `span`, `strong`, `em`, `br`, `sub`, `sup`. Ein Filter (`rehype-sanitize`) lässt nur harmlose Tags durch; bei `span` bleiben nur die Klassen aus der Tabelle unten sowie `data-link` und `data-ph`. Skripte, `style`, Event-Handler und unbekannte Attribute werden entfernt.
 
 | Klasse | Bedeutung |
 |--------|-----------|

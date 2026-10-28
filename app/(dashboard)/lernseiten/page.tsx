@@ -10,7 +10,7 @@ import { ladeFaecher } from "@/lib/lernseiten"
 import LernseiteKarte from "@/components/features/lernseiten/LernseiteKarte"
 
 export const metadata = {
-  title: "Lernseiten — Lernassistent",
+  title: "Lernseiten",
 }
 
 export default async function LernseitenPage() {
