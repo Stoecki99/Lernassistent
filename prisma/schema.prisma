@@ -38,6 +38,7 @@ model User {
   quizResults   QuizResult[]
   chatMessages  ChatMessage[]
   userBadges    UserBadge[]
+  lernfortschritte Lernfortschritt[]
 }
 
 model Account {
@@ -183,6 +184,25 @@ model UserBadge {
 
   @@unique([userId, badgeId])
   @@index([userId])
+}
+
+// Fortschritt im Lernpfad: eine Zeile pro Konto, Fach und Thema (Station).
+// Fach und Thema verweisen auf content/lernseiten/<fach>/fach.json (kein Fremdschluessel).
+model Lernfortschritt {
+  id          String   @id @default(cuid())
+  userId      String
+  fach        String   // z.B. "mstw"
+  thema       String   // Slug der Station, z.B. "08-laplace-bedingte-wahrscheinlichkeit"
+  status      String   // "begonnen" | "erledigt" (erledigt wird nie zurueckgestuft)
+  quizRichtig Int?
+  quizGesamt  Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fach, thema])
+  @@index([userId, fach])
 }
 
 model ContactMessage {

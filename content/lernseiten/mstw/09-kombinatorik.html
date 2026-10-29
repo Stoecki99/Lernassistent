@@ -1,0 +1,1371 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kombinatorik · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/10-zufallsvariablen" title="Zufallsvariablen, Erwartungswert, Standardabweichung">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t09-», nur Farben aus :root -->
+  <style>
+    .t09-ziele, .t09-vierfragen{margin:0; padding-left:1.3em}
+    .t09-ziele li, .t09-vierfragen li{margin-bottom:4px}
+    .t09-ti{font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.88em; background:var(--board); border:1px solid var(--line); border-radius:6px; padding:0 5px; white-space:nowrap}
+    .t09-fakliste{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
+    .t09-fakliste li{border:1px solid var(--line); border-radius:8px; padding:2px 10px; background:var(--surface); font-variant-numeric:tabular-nums}
+    .t09-uebersicht td{min-width:8.5em}
+    .t09-uebersicht td .hint{display:block}
+    @media (max-width: 480px){
+      .t09-uebersicht td{min-width:0}
+      .t09-uebersicht th, .t09-uebersicht td{padding-left:6px; padding-right:6px}
+    }
+    .t09-punkte{font-family:var(--f-math); font-size:1.15rem; letter-spacing:.08em}
+
+    /* Navigator: Fragen */
+    .t09-beispiele{display:flex; flex-wrap:wrap; gap:6px}
+    .t09-fragen{display:flex; flex-direction:column; gap:10px}
+    .t09-frage{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 14px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg)}
+    .t09-frage p{flex:1 1 14em; min-width:0}
+    .t09-frage .btn{min-width:4.6em}
+    .t09-frage.t09-offen{border-color:var(--accent); box-shadow:inset 3px 0 0 var(--accent)}
+    .t09-baum{font-size:.92rem}
+    .t09-leer{font-family:var(--f-body); font-size:.95rem; color:var(--muted)}
+    .t09-modell{font-size:.95rem; line-height:1.55}
+
+    /* Navigator: Urne und Plätze */
+    .t09-urne{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; padding:14px 12px 18px; border:2px solid var(--muted); border-top-style:dashed; border-radius:8px 8px 30px 30px; background:var(--board); min-height:3.8em}
+    .t09-kugel{inline-size:2.3em; block-size:2.3em; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:var(--f-math); font-weight:700; font-size:1.05rem; color:var(--ink); background:var(--surface); border:2px solid var(--accent); transition:opacity .35s, transform .35s, box-shadow .35s}
+    .t09-kugel.t09-f1{border-color:var(--s1)} .t09-kugel.t09-f2{border-color:var(--s2)} .t09-kugel.t09-f3{border-color:var(--s3)}
+    .t09-kugel.t09-f4{border-color:var(--s4)} .t09-kugel.t09-f5{border-color:var(--s5)}
+    .t09-kugel.t09-weg{opacity:.28; transform:scale(.8); border-style:dashed}
+    .t09-kugel.t09-zurueck{box-shadow:0 0 0 4px var(--lit)}
+    .t09-plaetze{display:flex; flex-wrap:wrap; gap:10px 8px; align-items:flex-start; min-height:3.6em}
+    .t09-platz{display:inline-flex; flex-direction:column; align-items:center; gap:2px}
+    .t09-feld{inline-size:2.5em; block-size:2.5em; border:2px dashed var(--line); border-radius:10px; display:inline-flex; align-items:center; justify-content:center; font-family:var(--f-math); font-weight:700; font-size:1.05rem}
+    .t09-platz small{font-size:.72rem; color:var(--muted)}
+    .t09-platz.t09-voll .t09-feld{border-style:solid; border-color:var(--accent); background:var(--accent-soft)}
+    .t09-platz.t09-neu .t09-feld{animation:t09-rein .45s ease-out}
+    .t09-menge{align-self:center; font-family:var(--f-math); font-size:1.12rem; font-weight:700; color:var(--accent); padding:3px 12px; border:2px solid var(--accent); border-radius:999px; background:var(--accent-soft)}
+    @keyframes t09-rein{from{opacity:0; transform:translateY(-12px)} to{opacity:1; transform:none}}
+
+    /* Navigator: Liste aller Möglichkeiten */
+    .t09-listebox{max-height:17rem; overflow-y:auto; position:relative; border:1px solid var(--line); border-radius:10px; padding:8px; background:var(--bg)}
+    .t09-liste{list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px}
+    .t09-liste > li{display:inline-flex; flex-direction:column; align-items:center; font-family:var(--f-math); font-size:1rem; line-height:1.3; border:1px solid var(--line); border-radius:7px; padding:2px 8px; background:var(--surface); white-space:nowrap}
+    .t09-liste > li.t09-an{background:var(--lit); border-color:var(--accent); box-shadow:0 0 0 2px var(--accent)}
+    .t09-sb{font-family:var(--f-body); font-size:.7rem; color:var(--muted); letter-spacing:.06em}
+    .t09-liste > li.t09-gruppe{display:flex; flex-direction:row; flex-wrap:wrap; gap:6px; align-items:center; inline-size:100%; border:0; border-bottom:1px dashed var(--line); border-radius:0; background:transparent; padding:5px 2px; white-space:normal; box-shadow:none}
+    .t09-gruppe .t09-mengen{font-weight:700; color:var(--accent); min-inline-size:5.2em}
+    .t09-gruppe .t09-ord{border:1px solid var(--line); border-radius:6px; padding:0 6px; background:var(--surface)}
+    .t09-gruppe .t09-ord.t09-an{background:var(--lit); border-color:var(--accent)}
+    .t09-liste > li.t09-gruppe.t09-an{background:var(--accent-soft); box-shadow:none}
+
+    @media (prefers-reduced-motion: reduce){
+      .t09-platz.t09-neu .t09-feld{animation:none}
+      .t09-kugel{transition:none}
+    }
+  </style>
+</head>
+<body data-fach="mstw" data-thema="09-kombinatorik">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V4 · Kombinatorik</span>
+    <h1>Kombinatorik: zählen, ohne alles aufzuschreiben</h1>
+    <p class="lead">Für eine Laplace-Wahrscheinlichkeit brauchst du zwei Zahlen: die günstigen und die möglichen Fälle. Oft sind das Tausende oder Millionen. Die Kombinatorik ist die Lehre vom geschickten Zählen. Du lernst vier Fragen, mit denen du jede Zählaufgabe einer von sechs Formeln zuordnest. Danach löst du Aufgabe 4a der exemplarischen Modulschlussprüfung sicher.</p>
+    <div class="card stack">
+      <h3>Das kannst du nach dieser Station</h3>
+      <ul class="prose t09-ziele">
+        <li>Teilschritte mit der <b>Produktregel</b> multiplizieren und getrennte Fälle mit der <b>Summenregel</b> addieren (Satz 3.5).</li>
+        <li><b>Fakultät</b> \(n!\) und <b>Binomialkoeffizient</b> \(\binom{n}{k}\) berechnen, von Hand und mit dem TI-Nspire.</li>
+        <li>In jeder Aufgabe \(n\) und \(k\) bestimmen und die Fragen «Reihenfolge wichtig?» und «Wiederholung erlaubt?» beantworten.</li>
+        <li>Die sechs Modelle unterscheiden und ausrechnen: Permutation, Variation und Kombination, je ohne und mit Wiederholung (Sätze 3.19 bis 3.27).</li>
+        <li>Gruppen als <b>Blöcke</b> anordnen und Dinge auf Personen <b>verteilen</b>.</li>
+        <li>Mit dem <b>Urnenmodell</b> eine Wahrscheinlichkeit durch Zählen bestimmen (Satz 3.28).</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#regeln"><b>2</b>Grundregeln</a>
+    <a href="#modelle"><b>3</b>Sechs Modelle</a>
+    <a href="#navigator"><b>4</b>Navigator</a>
+    <a href="#bloecke"><b>5</b>Blöcke &amp; Verteilen</a>
+    <a href="#urne"><b>6</b>Urnenmodell</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine fürs Zählen</h2>
+    <p class="prose">Fast jede Zählaufgabe hat dieselbe Form: Aus einem Vorrat wählst du mehrmals etwas aus. Die Kombinatorik nennt diesen Vorrat <b>Urne</b>, wie ein Topf mit Kugeln. Stell dir für den Anfang eine Glace-Theke vor.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Urne n = Vorrat</span><span class="ex">\(n = 5\) Sorten</span><p>Alles, was zur Auswahl steht. An der Theke sind das 5 Sorten. \(n\) zählt die <b>verschiedenen</b> Dinge, aus denen du wählst.</p></div>
+      <div class="concept"><span class="tag">Ziehung k = eine Wahl</span><span class="ex">\(k = 3\) Kugeln</span><p>Wie oft du wählst. Nimmst du 3 Kugeln Glace, ziehst du dreimal aus der Urne: \(k = 3\).</p></div>
+      <div class="concept"><span class="tag">Reihenfolge = geordnet</span><span class="ex">(A, B) ≠ (B, A)</span><p>Beim Podest ist Gold nicht Silber: Tauschen ergibt ein neues Ergebnis. In einem Ausschuss sind alle gleichberechtigt: {A, B} = {B, A}.</p></div>
+      <div class="concept"><span class="tag">Wiederholung = Zurücklegen</span><span class="ex">PIN 7-7-3</span><p>Beim PIN darf eine Ziffer mehrmals vorkommen: Die Kugel kommt zurück in die Urne. Beim Lotto kommt jede Zahl höchstens einmal: ohne Zurücklegen.</p></div>
+      <div class="concept"><span class="tag">Fakultät n! = alle Reihenfolgen</span><span class="ex">\(3! = 3 \cdot 2 \cdot 1 = 6\)</span><p>3 Personen stellen sich in eine Schlange. Vorne stehen 3 zur Wahl, dann 2, dann 1. Das Ausrufezeichen heisst «Fakultät».</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Spielt die Reihenfolge eine Rolle?</h3>
+      <p class="hint">Frag dich: Entsteht etwas Neues, wenn ich zwei gewählte Dinge vertausche?</p>
+      <div id="t09-sort-rf"></div>
+    </div>
+    <div class="card stack">
+      <h3>Und: Ist Wiederholung erlaubt?</h3>
+      <p class="hint">Frag dich: Darf dasselbe Ding mehr als einmal gewählt werden?</p>
+      <div id="t09-sort-wdh"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole und Namen festlegen</span>
+    <h2>Das Wörterbuch der Kombinatorik</h2>
+    <p class="prose">Die Formeln brauchen nur wenige Symbole. Die Farbe zeigt die Art: die gesuchte Anzahl blau, feste Zahlen orange, Rechenvorschriften grün.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="v">x</span></td><td><span class="kind kind-v">Variable</span></td><td>die gesuchte Anzahl Möglichkeiten. So heisst sie im Skript.</td></tr>
+          <tr><td><span class="c">n</span></td><td><span class="kind kind-c">Konstante</span></td><td>Anzahl Elemente in der Urne: was zur Auswahl steht</td></tr>
+          <tr><td><span class="c">k</span></td><td><span class="kind kind-c">Konstante</span></td><td>Anzahl Ziehungen: wie oft gewählt wird. Das Skript spricht von «Kombinationen <span class="c">k</span>-ter Ordnung».</td></tr>
+          <tr><td><span class="c">n</span><sub>1</sub>, …, <span class="c">n</span><sub>r</sub></td><td><span class="kind kind-c">Konstante</span></td><td>Grössen der Klassen gleicher Elemente, zusammen <span class="c">n</span><sub>1</sub> + … + <span class="c">n</span><sub>r</sub> = <span class="c">n</span></td></tr>
+          <tr><td><span class="c">n</span><span class="fn">!</span></td><td><span class="kind kind-fn">Funktion</span></td><td>«<span class="c">n</span> Fakultät» = 1 · 2 · … · <span class="c">n</span>, dazu 0! = 1 (Def. 3.8)</td></tr>
+          <tr><td>\(\htmlClass{fn}{\binom{\htmlClass{c}{n}}{\htmlClass{c}{k}}}\)</td><td><span class="kind kind-fn">Funktion</span></td><td>Binomialkoeffizient, gelesen «<span class="c">n</span> über <span class="c">k</span>» (Def. 3.11). Zählt die Gruppen mit <span class="c">k</span> Elementen aus <span class="c">n</span>, ohne Reihenfolge.</td></tr>
+          <tr><td><span class="op">·</span> und <span class="op">+</span></td><td><span class="kind kind-op">Operator</span></td><td>Produktregel (Schritte nacheinander) und Summenregel (getrennte Fälle), Satz 3.5</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die Unterlagen verwenden für dieselben Fälle verschiedene Namen. Skript und KOCH sagen «Kombination» (im Spezialfall \(k = n\) «Permutation») und unterscheiden «mit» oder «ohne Berücksichtigung der Anordnung». OTT sagt «Variation», sobald die Reihenfolge zählt, und kürzt ab.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Drei Namen für dasselbe</caption>
+        <thead><tr><th>OTT</th><th>Anzahl</th><th>Reihenfolge</th><th>Wiederholung</th><th>Skript und KOCH</th></tr></thead>
+        <tbody>
+          <tr><td>PoW</td><td>\(n!\)</td><td>ja</td><td>nein, alle \(n\)</td><td>Permutationen von \(n\) Elementen (Satz 3.20)</td></tr>
+          <tr><td>PmW</td><td>\(\frac{n!}{n_1!\cdots n_r!}\)</td><td>ja</td><td>gleiche Elemente</td><td>Permutationen mit Klassen gleicher Elemente (Satz 3.24)</td></tr>
+          <tr><td>VoW</td><td>\(\frac{n!}{(n-k)!}\)</td><td>ja</td><td>nein</td><td>Komb. ohne Wiederholung, mit Berücksichtigung der Anordnung (Satz 3.19)</td></tr>
+          <tr><td>VmW</td><td>\(n^k\)</td><td>ja</td><td>ja</td><td>Komb. mit Wiederholung, mit Berücksichtigung der Anordnung (Satz 3.22)</td></tr>
+          <tr><td>KoW</td><td>\(\binom{n}{k}\)</td><td>nein</td><td>nein</td><td>Komb. ohne Wiederholung, ohne Berücksichtigung der Anordnung (Satz 3.26)</td></tr>
+          <tr><td>KmW</td><td>\(\binom{n+k-1}{k}\)</td><td>nein</td><td>ja</td><td>Komb. mit Wiederholung, ohne Berücksichtigung der Anordnung (Satz 3.27)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> «mit Berücksichtigung der Anordnung» heisst nichts anderes als «die Reihenfolge zählt». Die OTT-Kürzel lesen sich so: P = Permutation, V = Variation, K = Kombination, dann o = ohne, m = mit Wiederholung.</div>
+    <div class="note falle"><b>Achtung Folie:</b> Auf den OTT-Folien zur 6. Fragestellung steht im Titel «Kombinationen ohne Wiederholungen (KmW)». Gemeint ist <b>mit</b> Wiederholung. Das Kürzel KmW und die Formel mit \(n+k-1\) stimmen, nur das Wort im Titel nicht.</div>
+  </section>
+
+  <!-- ===== 2 · Grundregeln ===== -->
+  <section id="regeln">
+    <span class="eyebrow">Schritt 2 · Skript WT Kap. 3.2 und 3.3</span>
+    <h2>Produktregel, Fakultät, Binomialkoeffizient</h2>
+    <h3>Satz 3.5: multiplizieren oder addieren?</h3>
+    <p class="prose">Viele Zählungen laufen in Stufen ab. Lässt sich <b>jede</b> Möglichkeit der ersten Stufe mit <b>jeder</b> Möglichkeit der zweiten kombinieren, multiplizierst du: Produktregel. Sie heisst auch <b>Fundamentalprinzip des Zählens</b>, denn alle Formeln weiter unten bauen auf ihr auf. Zerfällt das Ganze dagegen in getrennte Fälle, die sich nicht überschneiden und zusammen alles abdecken, addierst du: Summenregel.</p>
+    <div class="board">
+      <p class="hint">Produktregel: Stufen nacheinander («und dann»)</p>
+      $$\htmlClass{v}{x} = n_1 \cdot n_2$$
+      <p class="hint">Summenregel: getrennte Fälle («oder»)</p>
+      $$\htmlClass{v}{x} = n_1 + n_2$$
+    </div>
+    <p class="prose">Ein Beispiel zur Produktregel: 3 Hosen, 5 T-Shirts und 2 Paar Schuhe ergeben \(3 \cdot 5 \cdot 2 = 30\) Outfits. Zu jeder Hose passt jedes Shirt, zu jeder dieser Kombinationen jedes Paar Schuhe. Im nächsten Beispiel kommen beide Regeln vor. Klick dich mit «Weiter» durch und fahre über die unterstrichenen Satzteile.</p>
+    <div id="t09-stepper-kiosk"></div>
+
+    <h3>Def. 3.8: Fakultät</h3>
+    <p class="prose">\(n!\) ist das Produkt aller Zahlen von 1 bis \(n\). Es zählt, auf wie viele Arten du \(n\) verschiedene Dinge in eine Reihe stellen kannst. Speziell gilt \(0! = 1\) (Bem. 3.9): Für null Dinge gibt es genau eine Anordnung, die leere. So entstehen in den Formeln auch keine Divisionen durch 0.</p>
+    <ul class="t09-fakliste" aria-label="Fakultäten von 0 bis 13">
+      <li>\(0! = 1\)</li><li>\(1! = 1\)</li><li>\(2! = 2\)</li><li>\(3! = 6\)</li><li>\(4! = 24\)</li><li>\(5! = 120\)</li>
+      <li>\(6! = 720\)</li><li>\(7! = \text{5'040}\)</li><li>\(8! = \text{40'320}\)</li><li>\(10! = \text{3'628'800}\)</li><li>\(13! = \text{6'227'020'800}\)</li>
+    </ul>
+    <div class="note tipp"><b>TI-Nspire:</b> Zahl eingeben, dann das Ausrufezeichen aus Menü 5 → 1 (Wahrscheinlichkeit → Fakultät). <code class="t09-ti">13!</code> liefert 6227020800.</div>
+    <div class="note falle"><b>Falle:</b> Fakultäten wachsen extrem schnell. Kürze darum vor dem Ausrechnen: \(\dfrac{9!}{7!} = 9 \cdot 8 = 72\). Die Faktoren von 1 bis 7 stehen oben und unten und fallen weg.</div>
+
+    <h3>Def. 3.11: Binomialkoeffizient</h3>
+    <p class="prose">Der Binomialkoeffizient \(\binom{n}{k}\), gelesen «\(n\) über \(k\)», zählt, wie viele Gruppen mit \(k\) Elementen du aus \(n\) verschiedenen Elementen bilden kannst, wenn die Reihenfolge egal ist. Den Namen hat er, weil dieselben Zahlen beim Ausmultiplizieren von \((a+b)^n\) als Koeffizienten auftauchen.</p>
+    <div class="board">
+      $$\binom{n}{k} = \frac{n!}{k!\,(n-k)!}$$
+      $$\binom{5}{2} = \frac{5!}{2!\cdot 3!} = \frac{5 \cdot 4}{1 \cdot 2} = 10$$
+    </div>
+    <p class="prose">Satz 3.15 liefert vier Eigenschaften, die viel Rechenarbeit sparen:</p>
+    <ul class="prose t09-ziele">
+      <li>\(\binom{n}{0} = \binom{n}{n} = 1\): Nichts auswählen oder alles auswählen geht nur auf eine Art.</li>
+      <li>\(\binom{n}{1} = n\): Ein einzelnes Element auswählen geht auf \(n\) Arten.</li>
+      <li>Symmetrie \(\binom{n}{k} = \binom{n}{n-k}\): 2 von 5 auswählen heisst zugleich 3 von 5 weglassen.</li>
+      <li>Kurzform: oben \(k\) Faktoren ab \(n\) abwärts, unten \(k!\). Beispiel: \(\binom{12}{2} = \tfrac{12 \cdot 11}{1 \cdot 2} = 66\).</li>
+    </ul>
+    <p class="prose">Die OTT-Folien lesen \(\binom{n}{k}\) auch als «\(k\) aus \(n\)» und legen zusätzlich fest: \(\binom{n}{k} = 0\), falls \(k > n\). Aus 3 Personen kannst du keine Gruppe mit 5 Personen bilden.</p>
+    <div class="note tipp"><b>TI-Nspire:</b> <code class="t09-ti">nCr(n,k)</code> aus Menü 5 → 3 (Wahrscheinlichkeit → Kombinationen). <code class="t09-ti">nCr(12,2)</code> liefert 66.</div>
+    <div class="note falle"><b>Falle:</b> \(\binom{5}{3}\) ist kein Bruch, auch wenn die Zahlen übereinanderstehen. Es gilt \(\binom{5}{3} = 10\), nicht \(\tfrac{5}{3}\). «5 über 3» gehört zum Binomialkoeffizienten, den Bruch liest du «5 durch 3» (vgl. Bem. 3.12).</div>
+    <div id="t09-auswahl-binom"></div>
+  </section>
+
+  <!-- ===== 3 · Sechs Modelle ===== -->
+  <section id="modelle">
+    <span class="eyebrow">Schritt 3 · Skript WT Kap. 3.4 und 3.5</span>
+    <h2>Sechs Modelle, vier Fragen</h2>
+    <p class="prose">Das Skript führt jede Zählaufgabe auf dieselbe Grundsituation zurück: Aus einer Urne mit \(n\) Elementen ziehst du \(k\)-mal. Danach stellst du die vier Fragen aus Kapitel 3.5, immer in dieser Reihenfolge:</p>
+    <ol class="prose t09-vierfragen">
+      <li><b>Was liegt in der Urne?</b> Also \(n = ?\)</li>
+      <li><b>Wie oft wird gezogen?</b> Also \(k = ?\)</li>
+      <li><b>Mit oder ohne Wiederholung?</b> Darf dasselbe Element mehrmals vorkommen?</li>
+      <li><b>Spielt die Reihenfolge eine Rolle?</b> Entsteht durch Vertauschen etwas Neues?</li>
+    </ol>
+    <p class="prose">Die Antworten auf Frage 3 und 4 ergeben eine Tabelle mit vier Feldern. Werden alle \(n\) Elemente angeordnet, heisst der Spezialfall Permutation.</p>
+    <div class="card tablebox">
+      <table class="tabelle t09-uebersicht">
+        <caption>Übersicht nach Skript WT Kap. 3.5 (steht auch in der Formelsammlung)</caption>
+        <thead><tr><th></th><th>ohne Wiederholung</th><th>mit Wiederholung</th></tr></thead>
+        <tbody>
+          <tr><th>Reihenfolge wichtig</th><td>\(\dfrac{n!}{(n-k)!}\) <span class="hint">VoW · Satz 3.19</span></td><td>\(n^k\) <span class="hint">VmW · Satz 3.22</span></td></tr>
+          <tr><th>Reihenfolge egal</th><td>\(\dbinom{n}{k}\) <span class="hint">KoW · Satz 3.26</span></td><td>\(\dbinom{n+k-1}{k}\) <span class="hint">KmW · Satz 3.27</span></td></tr>
+          <tr><th>alle anordnen, \(k = n\)</th><td>\(n!\) <span class="hint">PoW · Satz 3.20</span></td><td>\(\dfrac{n!}{n_1! \cdots n_r!}\) <span class="hint">PmW · Satz 3.24, gleiche Elemente</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">So sieht jedes Modell an einem Beispiel aus. Ein Team hat 5 Personen: A, B, C, D und E. Es geht um den Pikettdienst am Abend. Die OTT-Folien spielen dieselben sechs Fälle mit Ferientagen und Freunden durch; die Zahlen \(n = 5\) und \(k = 3\) sind dort gleich.</p>
+    <div class="grid2">
+      <div class="concept"><span class="tag">VoW · Reihenfolge ja, Wiederholung nein</span><span class="ex">\(5 \cdot 4 \cdot 3 = \dfrac{5!}{2!} = 60\)</span><p>3 Abende, jeden Abend eine <b>andere</b> Person. Montag A und Dienstag B ist etwas anderes als Montag B und Dienstag A. Für Montag stehen 5 zur Wahl, für Dienstag noch 4, für Mittwoch noch 3.</p></div>
+      <div class="concept"><span class="tag">PoW · alle anordnen</span><span class="ex">\(5! = 120\)</span><p>5 Abende, jede Person genau einmal. Das ist VoW mit \(k = n\). Im Nenner bleibt \(0! = 1\).</p></div>
+      <div class="concept"><span class="tag">VmW · Reihenfolge ja, Wiederholung ja</span><span class="ex">\(5 \cdot 5 \cdot 5 = 5^3 = 125\)</span><p>3 Abende, dieselbe Person darf mehrmals Dienst haben. Jeden Abend stehen wieder alle 5 zur Wahl.</p></div>
+      <div class="concept"><span class="tag">PmW · alle anordnen, gleiche Elemente</span><span class="ex">\(\dfrac{5!}{3!\cdot 1!\cdot 1!} = 20\)</span><p>5 Abende: A übernimmt 3, B und C je einen. Die drei A-Abende lassen sich nicht unterscheiden. Darum teilst du durch \(3!\).</p></div>
+      <div class="concept"><span class="tag">KoW · Reihenfolge nein, Wiederholung nein</span><span class="ex">\(\dbinom{5}{3} = 10\)</span><p>3 Personen bilden das Pikett-Team, ohne feste Abende. {A, B, C} ist dasselbe Team wie {C, A, B}.</p></div>
+      <div class="concept"><span class="tag">KmW · Reihenfolge nein, Wiederholung ja</span><span class="ex">\(\dbinom{5+3-1}{3} = \dbinom{7}{3} = 35\)</span><p>3 gleiche Dankes-Gutscheine gehen an die 5 Personen. Jemand darf mehrere bekommen. Es zählt nur, wer wie viele hat.</p></div>
+    </div>
+
+    <h3>Warum teilt man durch k!? Vom Podest zum Team</h3>
+    <p class="prose">Die Formel für KoW musst du nicht auswendig lernen. Du leitest sie aus VoW her. Das Skript zeigt dieselbe Idee mit der «Fläche» in Abbildung 21: erst geordnet zählen, dann die Doppelten wegteilen.</p>
+    <div id="t09-stepper-team"></div>
+
+    <h3>Gleiche Elemente: Satz 3.24</h3>
+    <p class="prose">Sind einige Elemente gleich, liefern Vertauschungen unter ihnen nichts Neues. Du rechnest zuerst so, als wären alle verschieden, und teilst dann die mehrfach gezählten weg.</p>
+    <div id="t09-stepper-wort"></div>
+
+    <details class="sol"><summary>Warum steht bei KmW \(\binom{n+k-1}{k}\)? (Punkte und Striche)</summary>
+      <div class="stack">
+        <p>Das Skript führt Satz 3.27 ohne Herleitung auf. Die Idee dahinter ist ein Trick mit Punkten und Strichen. Nimm die 3 Gutscheine für 5 Personen. Jeder Gutschein ist ein Punkt ●. Zwischen die 5 Personen setzt du 4 Trennstriche |.</p>
+        <p><span class="t09-punkte">●|●●|||</span> bedeutet: A bekommt 1, B bekommt 2, C, D und E bekommen nichts.</p>
+        <p><span class="t09-punkte">|||●|●●</span> bedeutet: D bekommt 1, E bekommt 2, die anderen nichts.</p>
+        <p>Jede Verteilung ist genau eine Reihe aus 3 Punkten und 4 Strichen, also 7 Zeichen. Du wählst nur noch, welche 3 der 7 Stellen Punkte sind: \(\binom{7}{3} = 35\). Allgemein ergeben \(k\) Punkte und \(n - 1\) Striche zusammen \(n + k - 1\) Stellen, davon sind \(k\) Punkte.</p>
+        <p>Auf der Folie KOCH S2-V4 steht dazu das Beispiel einer Wahl mit 3 Kandidaten und 20 Wahlberechtigten. Mit dem Trick: 20 Punkte und 2 Striche, also \(\binom{22}{20} = 231\) mögliche Wahlausgänge (eigene Rechnung).</p>
+      </div>
+    </details>
+    <div class="note falle"><b>Falle:</b> Bei KmW darfst du <b>nicht</b> einfach \(n^k\) durch \(k!\) teilen. Die Auswahl \(\{A, A, A\}\) entsteht aus einer einzigen Reihenfolge, \(\{A, B, C\}\) aus sechs. Darum braucht es die eigene Formel.</div>
+  </section>
+
+  <!-- ===== 4 · Themeneigene Interaktion: Navigator ===== -->
+  <section id="navigator">
+    <span class="eyebrow">Schritt 4 · Ausprobieren</span>
+    <h2>Der Kombinatorik-Navigator</h2>
+    <p class="prose">Hier wird der Entscheidungsbaum der OTT-Folie «Zusammenfassung und Übersicht» lebendig. Beantworte die Fragen oder lade ein Beispiel. Du siehst sofort, welcher Ast im Baum gilt, die Formel, das Ergebnis und den Befehl für den TI-Nspire. Unten ziehst du selbst aus der Urne und zählst alle Möglichkeiten nach.</p>
+    <div class="card stack">
+      <h3>1 · Beispiel laden oder selbst entscheiden</h3>
+      <div class="t09-beispiele" role="group" aria-label="Beispiel laden">
+        <button type="button" class="btn" data-beispiel="kino" aria-pressed="false">Kinoschlange</button>
+        <button type="button" class="btn" data-beispiel="abba" aria-pressed="false">Wort ABBA</button>
+        <button type="button" class="btn" data-beispiel="podest" aria-pressed="false">Podest</button>
+        <button type="button" class="btn" data-beispiel="schloss" aria-pressed="false">Zahlenschloss</button>
+        <button type="button" class="btn" data-beispiel="ausschuss" aria-pressed="false">Ausschuss</button>
+        <button type="button" class="btn" data-beispiel="glace" aria-pressed="false">Glace-Becher</button>
+      </div>
+      <p class="note" id="t09-szenario" aria-live="polite" hidden></p>
+      <div class="t09-fragen">
+        <div class="t09-frage" id="t09-f-alle">
+          <p id="t09-f-alle-t"><b>Frage A:</b> Werden alle vorhandenen Elemente verwendet, und gesucht ist nur ihre Reihenfolge (\(k = n\))?</p>
+          <div class="row" role="group" aria-labelledby="t09-f-alle-t">
+            <button type="button" class="btn" data-frage="alle" data-wert="ja" aria-pressed="false">Ja</button>
+            <button type="button" class="btn" data-frage="alle" data-wert="nein" aria-pressed="false">Nein</button>
+          </div>
+        </div>
+        <div class="t09-frage" id="t09-f-gleich" hidden>
+          <p id="t09-f-gleich-t"><b>Frage B:</b> Kommen gleiche Elemente mehrfach vor, die man nicht unterscheiden kann (wie das A in ABBA)?</p>
+          <div class="row" role="group" aria-labelledby="t09-f-gleich-t">
+            <button type="button" class="btn" data-frage="gleich" data-wert="ja" aria-pressed="false">Ja</button>
+            <button type="button" class="btn" data-frage="gleich" data-wert="nein" aria-pressed="false">Nein</button>
+          </div>
+        </div>
+        <div class="t09-frage" id="t09-f-rf" hidden>
+          <p id="t09-f-rf-t"><b>Frage B:</b> Spielt die Reihenfolge eine Rolle?</p>
+          <div class="row" role="group" aria-labelledby="t09-f-rf-t">
+            <button type="button" class="btn" data-frage="rf" data-wert="ja" aria-pressed="false">Ja</button>
+            <button type="button" class="btn" data-frage="rf" data-wert="nein" aria-pressed="false">Nein</button>
+          </div>
+        </div>
+        <div class="t09-frage" id="t09-f-wdh" hidden>
+          <p id="t09-f-wdh-t"><b>Frage C:</b> Ist Wiederholung erlaubt (Kugel zurücklegen)?</p>
+          <div class="row" role="group" aria-labelledby="t09-f-wdh-t">
+            <button type="button" class="btn" data-frage="wdh" data-wert="ja" aria-pressed="false">Ja</button>
+            <button type="button" class="btn" data-frage="wdh" data-wert="nein" aria-pressed="false">Nein</button>
+          </div>
+        </div>
+      </div>
+      <ul class="baum t09-baum" aria-label="Entscheidungsbaum, der aktuelle Weg ist hervorgehoben">
+        <li id="t09-b-start"><span class="baum-knoten">Alle vorhandenen Elemente verwendet?</span>
+          <ul>
+            <li id="t09-b-ja"><span class="baum-knoten">ja → Permutation: gleiche Elemente dabei?</span>
+              <ul>
+                <li id="t09-b-PoW"><span class="baum-knoten">nein → PoW <span class="baum-p">\(n!\)</span></span></li>
+                <li id="t09-b-PmW"><span class="baum-knoten">ja → PmW <span class="baum-p">\(\frac{n!}{n_1!\cdots n_r!}\)</span></span></li>
+              </ul>
+            </li>
+            <li id="t09-b-nein"><span class="baum-knoten">nein → Reihenfolge wichtig?</span>
+              <ul>
+                <li id="t09-b-rfja"><span class="baum-knoten">ja → Wiederholung?</span>
+                  <ul>
+                    <li id="t09-b-VoW"><span class="baum-knoten">nein → VoW <span class="baum-p">\(\frac{n!}{(n-k)!}\)</span></span></li>
+                    <li id="t09-b-VmW"><span class="baum-knoten">ja → VmW <span class="baum-p">\(n^k\)</span></span></li>
+                  </ul>
+                </li>
+                <li id="t09-b-rfnein"><span class="baum-knoten">nein → Wiederholung?</span>
+                  <ul>
+                    <li id="t09-b-KoW"><span class="baum-knoten">nein → KoW <span class="baum-p">\(\binom{n}{k}\)</span></span></li>
+                    <li id="t09-b-KmW"><span class="baum-knoten">ja → KmW <span class="baum-p">\(\binom{n+k-1}{k}\)</span></span></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+      <p class="hint">Auf der OTT-Folie folgt im Ja-Ast zuerst noch «Spielt die Reihenfolge eine Rolle?» (ja → Permutationen). Frage A fasst beides zusammen, denn wer alle Elemente anordnet, fragt nach der Reihenfolge. Danach heisst die Frage im Permutations-Ast «Sind Wiederholungen zugelassen?». Gemeint ist dasselbe wie hier: Kommt ein Element mehrmals vor? Das Skript spricht von «Klassen gleicher Elemente» (Satz 3.24).</p>
+
+      <h3>2 · Zahlen einstellen</h3>
+      <div class="rechner">
+        <div class="regler" id="t09-r-n">
+          <label for="t09-n">Elemente in der Urne \(n\)</label>
+          <input type="range" id="t09-n" min="1" max="8" step="1" value="5">
+          <output for="t09-n" id="t09-n-w">5</output>
+        </div>
+        <div class="regler" id="t09-r-k">
+          <label for="t09-k">Ziehungen \(k\)</label>
+          <input type="range" id="t09-k" min="1" max="8" step="1" value="3">
+          <output for="t09-k" id="t09-k-w">3</output>
+        </div>
+        <div class="regler" id="t09-r-n1" hidden>
+          <label for="t09-n1">Anzahl A \((n_1)\)</label>
+          <input type="range" id="t09-n1" min="1" max="4" step="1" value="2">
+          <output for="t09-n1" id="t09-n1-w">2</output>
+        </div>
+        <div class="regler" id="t09-r-n2" hidden>
+          <label for="t09-n2">Anzahl B \((n_2)\)</label>
+          <input type="range" id="t09-n2" min="0" max="4" step="1" value="2">
+          <output for="t09-n2" id="t09-n2-w">2</output>
+        </div>
+        <div class="regler" id="t09-r-n3" hidden>
+          <label for="t09-n3">Anzahl C \((n_3)\)</label>
+          <input type="range" id="t09-n3" min="0" max="3" step="1" value="0">
+          <output for="t09-n3" id="t09-n3-w">0</output>
+        </div>
+        <div class="rechner-ergebnis" id="t09-ergebnis" aria-live="polite"></div>
+        <p class="t09-modell" id="t09-modell"></p>
+      </div>
+
+      <h3>3 · Selbst aus der Urne ziehen</h3>
+      <div class="t09-urne" id="t09-urne" role="img" aria-label="Urne"></div>
+      <div class="t09-plaetze" id="t09-plaetze" aria-hidden="true"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t09-zug">Eine Kugel ziehen</button>
+        <button type="button" class="btn" id="t09-alle-zuege">Ganze Ziehung</button>
+        <button type="button" class="btn" id="t09-neu">Urne neu füllen</button>
+      </div>
+      <p class="explain" id="t09-zuginfo" aria-live="polite"></p>
+
+      <h3>4 · Alle Möglichkeiten zum Nachzählen</h3>
+      <p class="hint" id="t09-listeinfo" aria-live="polite"></p>
+      <div class="row"><button type="button" class="btn" id="t09-gruppen" aria-pressed="false" hidden>Nach Mengen gruppieren: warum ÷ k!?</button></div>
+      <div class="t09-listebox" id="t09-listebox" tabindex="0" role="region" aria-label="Liste aller Möglichkeiten"><ul class="t09-liste" id="t09-liste"></ul></div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Blöcke und Verteilen ===== -->
+  <section id="bloecke">
+    <span class="eyebrow">Schritt 5 · Zwei Muster aus der Prüfung</span>
+    <h2>Blöcke anordnen und Dinge verteilen</h2>
+    <p class="prose">Aufgabe 4a der exemplarischen Modulschlussprüfung prüft zwei Muster, die nicht direkt in der Tabelle stehen. Beide setzt du aus bekannten Teilen zusammen. Teil b derselben Aufgabe (Lose in Couverts) ist eine bedingte Wahrscheinlichkeit; die übst du in Station 08.</p>
+
+    <h3>Muster 1: Gruppen bleiben zusammen</h3>
+    <p class="prose">Sollen Dinge derselben Sorte zusammenstehen, packst du jede Sorte gedanklich in eine Schachtel. Zuerst ordnest du die Schachteln an, danach den Inhalt jeder Schachtel. Die Produktregel verbindet beides.</p>
+    <div class="board">$$\htmlClass{v}{x} = r! \cdot n_1! \cdot n_2! \cdots n_r!$$</div>
+    <p class="hint">\(r\) = Anzahl Blöcke, \(n_i\) = Anzahl Elemente im Block \(i\). Alle Elemente sind verschieden.</p>
+    <div id="t09-stepper-regal"></div>
+    <div class="note falle"><b>Falle:</b> Der Faktor \(r!\) für die Reihenfolge der Blöcke geht oft vergessen. Ohne ihn kämen im Regal-Beispiel nur 288 Anordnungen heraus statt 1728. Die Musterlösung zu A4a,ii gibt einen Punkt für die Idee und einen für das Ergebnis. Die Idee beginnt dort ausdrücklich mit «3 Typen anordnen».</div>
+    <div class="note tipp"><b>Umgekehrt:</b> Ist die Reihenfolge der Blöcke fest vorgegeben, fällt \(r!\) weg. Beispiel aus dem Stützkurs (Aufgabe 39b): 5 Damen und 5 Herren passieren ein Drehkreuz, die Damen haben Vortritt. Dann gilt \(5! \cdot 5! = \text{14'400}\). Lies also genau: Dürfen die Blöcke die Plätze tauschen? Mehr Übung bietet Skript-Aufgabe 3.51 (vier Themen-Blöcke).</div>
+
+    <h3>Muster 2: Dinge auf Personen verteilen</h3>
+    <p class="prose">Beim Verteilen ist die Frage «Was ist die Urne?» entscheidend. Jedes Ding «wählt» eine Person. Die <b>Personen</b> sind die Urne (\(n\)), die <b>Dinge</b> sind die Ziehungen (\(k\)). Genau hier passieren die meisten Fehler.</p>
+    <div id="t09-stepper-schoggi"></div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>\(k\) Dinge auf \(n\) Personen verteilen</caption>
+        <thead><tr><th>Was wird verteilt?</th><th>Modell</th><th>Anzahl</th></tr></thead>
+        <tbody>
+          <tr><td>gleiche Dinge, jede Person beliebig viele</td><td>KmW</td><td>\(\binom{n+k-1}{k}\)</td></tr>
+          <tr><td>verschiedene Dinge, jede Person beliebig viele</td><td>VmW</td><td>\(n^k\)</td></tr>
+          <tr><td>gleiche Dinge, jede Person höchstens eines</td><td>KoW</td><td>\(\binom{n}{k}\)</td></tr>
+          <tr><td>verschiedene Dinge, jede Person höchstens eines</td><td>VoW</td><td>\(\frac{n!}{(n-k)!}\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <details class="sol"><summary>Prüfung A4a,iii: 15 oder 81?</summary>
+      <div class="stack">
+        <p>In Aufgabe 4a,iii der exemplarischen Modulschlussprüfung werden 4 Winterjacken an 3 Models verteilt. Ein Model darf alle oder keine Jacke zeigen. Die <b>Musterlösung</b> rechnet mit \(n = 3\) Models und \(k = 4\) Jacken als Kombination mit Wiederholung: \(\binom{3+4-1}{4} = \binom{6}{4} = 15\). Sie zählt damit nur, <b>wie viele</b> Jacken jedes Model trägt.</p>
+        <p>Lehrbuchrein lässt die Aufgabe auch eine zweite Lesart zu. In den Teilen a,i und a,ii zählen die Jacken als unterscheidbar. Zählt auch, <b>welche</b> Jacke welches Model trägt, wählt jede Jacke eines von 3 Models, mit Reihenfolge: \(3^4 = 81\).</p>
+        <p><b>Für die Prüfung:</b> Die Musterlösung erwartet 15. Schreib das Modell und deine Annahme dazu, zum Beispiel «es zählt nur die Anzahl Jacken pro Model». Dann ist dein Weg nachvollziehbar.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 6 · Urnenmodell ===== -->
+  <section id="urne">
+    <span class="eyebrow">Schritt 6 · Skript WT Kap. 3.6</span>
+    <h2>Vom Zählen zur Wahrscheinlichkeit</h2>
+    <p class="prose">Kombinatorik liefert die beiden Zahlen der Laplace-Formel \(P(A) = \tfrac{g}{m}\): günstige durch mögliche Fälle. Ein häufiger Fall ist eine Urne mit zwei Sorten, zum Beispiel Gewinne und Nieten. Du ziehst ohne Zurücklegen, die Reihenfolge ist egal. Dann gilt Satz 3.28:</p>
+    <div class="board">$$\htmlClass{fn}{P}(A) = \frac{\dbinom{M}{x} \cdot \dbinom{N-M}{k-x}}{\dbinom{N}{k}}$$</div>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="c">N</span></td><td><span class="kind kind-c">Konstante</span></td><td>Anzahl Kugeln in der Urne</td></tr>
+          <tr><td><span class="c">M</span></td><td><span class="kind kind-c">Konstante</span></td><td>davon Kugeln der ersten Sorte, zum Beispiel Gewinne</td></tr>
+          <tr><td><span class="c">k</span></td><td><span class="kind kind-c">Konstante</span></td><td>Anzahl gezogener Kugeln, ohne Zurücklegen</td></tr>
+          <tr><td><span class="v">x</span></td><td><span class="kind kind-v">Variable</span></td><td>wie viele der gezogenen Kugeln zur ersten Sorte gehören</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Achtung Bezeichnung:</b> Im Skript (Satz 3.28) heisst die Anzahl Ziehungen \(k\). Auf den OTT-Folien heisst sie \(n\). Die Rechnung ist dieselbe: günstige Fälle mit der Produktregel, mögliche Fälle mit einem Binomialkoeffizienten.</div>
+    <p class="prose"><b>Beispiel mit eigenen Zahlen:</b> Eine Tombola-Kiste enthält 12 Lose, davon 5 Gewinne. Du ziehst 4 Lose. Wie gross ist die Wahrscheinlichkeit für genau 2 Gewinne?</p>
+    <details class="sol"><summary>Lösung zeigen</summary>
+      <div class="stack">
+        <p>Mögliche Fälle: 4 aus 12 Losen, Reihenfolge egal, ohne Zurücklegen: \(m = \binom{12}{4} = 495\).</p>
+        <p>Günstige Fälle: 2 der 5 Gewinne <b>und</b> 2 der 7 Nieten. Produktregel: \(g = \binom{5}{2} \cdot \binom{7}{2} = 10 \cdot 21 = 210\).</p>
+        <p>\(P(\text{genau 2 Gewinne}) = \tfrac{210}{495} \approx 0.4242\). TI-Nspire: <code class="t09-ti">nCr(5,2)*nCr(7,2)/nCr(12,4)</code>.</p>
+      </div>
+    </details>
+    <p class="hint">Dieses Modell heisst später hypergeometrische Verteilung. Du vertiefst es in Station 11.</p>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Löse jede Aufgabe zuerst auf Papier. Vier Übungen sind im Stil der Prüfungen: Übung 6 und 7 wie Aufgabe 4a der exemplarischen Modulschlussprüfung, Übung 9 wie Aufgabe 3c und Übung 10 wie Aufgabe 4 des Tests S2-LB1. Übung 8 lehnt sich an Skript-Aufgabe 3.53 an. Die Rechenaufgaben haben eigene Zahlen und Kontexte; Beispiele aus dem Skript sind mit der Aufgabennummer gekennzeichnet. Die Lösungen sind eigene Lösungen, nicht vom Dozenten bestätigt; die Wege folgen den Musterlösungen zu A4a und zum Lernblock S2-LB1.</p>
+    <p class="hint">TI-Nspire, Menü 5 (Wahrscheinlichkeit): 1 = Fakultät <code class="t09-ti">!</code>, 2 = Permutationen <code class="t09-ti">nPr(n,k)</code>, 3 = Kombinationen <code class="t09-ti">nCr(n,k)</code>.</p>
+    <div class="card stack">
+      <h3>Übung 1 · Welches Modell passt?</h3>
+      <p class="hint">Ordne jede Situation einem der sechs Modelle zu. Stell dir zuerst die vier Fragen.</p>
+      <div id="t09-u-sort"></div>
+    </div>
+    <div id="t09-u-schloss"></div>
+    <div id="t09-u-wort"></div>
+    <div id="t09-u-wf"></div>
+    <div class="card stack">
+      <h3>Übung 5 · Turnier</h3>
+      <div id="t09-u-turnier"></div>
+    </div>
+    <div id="t09-u-fenster"></div>
+    <div id="t09-u-gutscheine"></div>
+    <div id="t09-u-kommission"></div>
+    <div id="t09-u-ananas"></div>
+    <div id="t09-u-usb"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Prüfungsaufgabe am Stück gelöst</h2>
+    <p class="prose">Die Aufgabe ist eine eigene Aufgabe im Stil von Aufgabe 4a der exemplarischen Modulschlussprüfung: andere Zahlen, anderer Kontext, derselbe Lösungsweg wie in der Musterlösung. Die Zahlen im Film sind darum eine eigene Lösung, nicht vom Dozenten bestätigt. Drück auf Play. Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t09-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je genau eine Antwort ist richtig. Vier davon sind typische Stolperfallen.</p>
+    <div id="t09-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Vier Fragen</b> vor jeder Formel: Was ist die Urne (\(n\))? Wie oft wird gezogen (\(k\))? Ist Wiederholung erlaubt? Spielt die Reihenfolge eine Rolle?</li>
+      <li><b>Produktregel</b> für Schritte nacheinander (multiplizieren), <b>Summenregel</b> für getrennte Fälle (addieren).</li>
+      <li><b>Doppelte wegteilen:</b> Bei gleichen Elementen oder egaler Reihenfolge zuerst so zählen, als wäre alles verschieden und geordnet, dann durch die Anzahl gleichwertiger Reihenfolgen teilen.</li>
+      <li><b>Blöcke:</b> Reihenfolge der Blöcke \(r!\) mal die Anordnungen in jedem Block.</li>
+      <li><b>Verteilen:</b> Die Personen sind die Urne (\(n\)), die verteilten Dinge die Ziehungen (\(k\)). Gleiche Dinge, beliebig viele pro Person: \(\binom{n+k-1}{k}\).</li>
+      <li><b>Urnenmodell:</b> \(P = \binom{M}{x}\binom{N-M}{k-x} \big/ \binom{N}{k}\), also günstige durch mögliche Fälle.</li>
+    </ul>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Formeln mit Taschenrechner-Befehl</caption>
+        <thead><tr><th>Modell</th><th>Anzahl</th><th>TI-Nspire</th></tr></thead>
+        <tbody>
+          <tr><td>PoW: alle \(n\) anordnen</td><td>\(n!\)</td><td><code class="t09-ti">n!</code></td></tr>
+          <tr><td>PmW: alle anordnen, gleiche Elemente</td><td>\(\frac{n!}{n_1!\cdots n_r!}\)</td><td><code class="t09-ti">n!/(n1!*n2!)</code></td></tr>
+          <tr><td>VoW: Reihenfolge ja, ohne Wdh.</td><td>\(\frac{n!}{(n-k)!}\)</td><td><code class="t09-ti">nPr(n,k)</code></td></tr>
+          <tr><td>VmW: Reihenfolge ja, mit Wdh.</td><td>\(n^k\)</td><td><code class="t09-ti">n^k</code></td></tr>
+          <tr><td>KoW: Reihenfolge egal, ohne Wdh.</td><td>\(\binom{n}{k}\)</td><td><code class="t09-ti">nCr(n,k)</code></td></tr>
+          <tr><td>KmW: Reihenfolge egal, mit Wdh.</td><td>\(\binom{n+k-1}{k}\)</td><td><code class="t09-ti">nCr(n+k-1,k)</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer>Quellen: Skript «Einführung in die Wahrscheinlichkeitstheorie» Kap. 3.1–3.7 (Satz 3.5 bis Satz 3.28, Aufgaben 3.38 bis 3.53) und Kap. 8.1 (Taschenrechner); Folien OTT S2-V3/V4 (Kombinatorik) und KOCH S2-V4; Lösungen Lernblock S2-LB1 (Auswahl aus den Aufgaben 3.30–3.65) und Test S2-LB1; Aufgabenskript Stützkurs (Aufgaben 37–41); exemplarische Modulschlussprüfung, Aufgabe 4a, mit Musterlösung. Die Rechenaufgaben auf dieser Seite sind eigene Aufgaben mit eigenen Zahlen; Beispiele aus dem Skript tragen die Aufgabennummer.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text (Interpolation).
+  const T = String.raw;
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const ZEILEN = (...z) => z.map((s) => "<div>" + s + "</div>").join("");
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t09-sort-rf", {
+    kategorien: ["Reihenfolge wichtig", "Reihenfolge egal"],
+    elemente: [
+      { html: "Podest beim Skirennen: Gold, Silber, Bronze", kategorie: 0, erklaerung: "Gold für A und Silber für B ist nicht dasselbe wie umgekehrt. Die Plätze sind verschieden." },
+      { html: "Ein Ausschuss mit 3 Personen aus der Klasse", kategorie: 1, erklaerung: "Alle Mitglieder sind gleichberechtigt. {A, B, C} ist derselbe Ausschuss wie {C, B, A}." },
+      { html: "Ein PIN-Code mit 4 Ziffern", kategorie: 0, erklaerung: "1-2-3-4 öffnet nicht dasselbe wie 4-3-2-1." },
+      { html: "Ein Lottotipp «6 aus 42»", kategorie: 1, erklaerung: "Du kreuzt 6 Zahlen an. In welcher Reihenfolge du kreuzt, spielt keine Rolle." },
+      { html: "Die Sitzordnung von 5 Gästen in einer Reihe", kategorie: 0, erklaerung: "Tauschen zwei Gäste die Plätze, entsteht eine neue Sitzordnung." },
+      { html: "Beim Apéro: Wer stösst mit wem an?", kategorie: 1, erklaerung: "A stösst mit B an ist dasselbe wie B mit A. Ein Anstossen ist ein Paar ohne Reihenfolge." }
+    ]
+  });
+  L.sortierer("#t09-sort-wdh", {
+    kategorien: ["mit Wiederholung", "ohne Wiederholung"],
+    elemente: [
+      { html: "Dreimal würfeln", kategorie: 0, erklaerung: "Die 6 kann mehrmals fallen. Die Augenzahl «kommt zurück in die Urne»." },
+      { html: "Lotto: 6 Kugeln ziehen", kategorie: 1, erklaerung: "Eine gezogene Kugel ist draussen. Sie kann nicht nochmals kommen." },
+      { html: "Toto: für 13 Spiele je 1, X oder 2 tippen", kategorie: 0, erklaerung: "Du darfst bei vielen Spielen dasselbe tippen, zum Beispiel überall X." },
+      { html: "Jede Person bekommt einen eigenen Stuhl", kategorie: 1, erklaerung: "Niemand sitzt auf zwei Stühlen, und kein Stuhl wird doppelt vergeben." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper Produkt- und Summenregel ---------- */
+  const K1 = T`$\htmlData{link=kaffee}{4 \cdot 2} = 8$ Kaffees`;
+  const K2 = T`$\htmlData{link=tee}{3 \cdot 1} = 3$ Tees`;
+  L.stepper("#t09-stepper-kiosk", {
+    titel: "Beispiel: Getränke am Kiosk",
+    text: 'Ein Kiosk bietet <span data-link="kaffee">4 Kaffeesorten in je 2 Grössen</span> <span data-link="oder">oder</span> <span data-link="tee">3 Teesorten in einer Grösse</span> an. Wie viele <span data-link="total">verschiedene Getränke</span> kannst du bestellen?',
+    schritte: [
+      { html: ZEILEN(NW(K1)),
+        warum: "Produktregel: Jede der 4 Sorten gibt es in jeder der 2 Grössen. Zu jeder Sorte passen 2 Grössen, also 4 mal 2." },
+      { html: ZEILEN(K1, NW(K2)),
+        warum: "Beim Tee gibt es nur eine Grösse. Also 3 Möglichkeiten." },
+      { html: ZEILEN(K1, K2, NW(T`$\htmlData{link=total}{x} = 8 \htmlData{link=oder}{+} 3 = 11$`)),
+        warum: "Ein Getränk ist entweder ein Kaffee oder ein Tee, nie beides. Die Fälle überschneiden sich nicht. Summenregel: addieren." }
+    ]
+  });
+
+  L.auswahl("#t09-auswahl-binom", {
+    frage: T`Kurz geprüft: Wie gross ist $\binom{6}{2}$?`,
+    optionen: ["$3$", "$15$", "$30$", "$36$"],
+    richtig: 1,
+    erklaerung: T`$\binom{6}{2} = \frac{6 \cdot 5}{1 \cdot 2} = 15$. Die 30 wäre $6 \cdot 5$ ohne das Teilen durch $2!$, also mit Reihenfolge. Die 3 entsteht, wenn man $\binom{6}{2}$ fälschlich als Bruch liest.`
+  });
+
+  /* ---------- Schritt 3: Stepper KoW aus VoW ---------- */
+  const TE1 = T`$\htmlData{link=n}{n = 5}, \; \htmlData{link=k}{k = 3}$`;
+  const TE2 = T`$5 \cdot 4 \cdot 3 = 60$ geordnet`;
+  const TE3 = T`jedes Team $\htmlData{link=k}{3!} = 6$-mal`;
+  L.stepper("#t09-stepper-team", {
+    titel: "Beispiel: Vom Podest zum Team",
+    text: 'Aus <span data-link="n">5 Personen</span> wird ein <span data-link="k">Team mit 3 gleichberechtigten Mitgliedern</span> gebildet. Wie viele <span data-link="x">verschiedene Teams</span> gibt es?',
+    schritte: [
+      { html: ZEILEN(NW(TE1)),
+        warum: "Zuerst die Urne: 5 Personen stehen zur Wahl. Gezogen wird dreimal, ohne Zurücklegen, denn niemand ist doppelt im Team." },
+      { html: ZEILEN(TE1, NW(TE2)),
+        warum: "Tu zuerst so, als ob die Reihenfolge zählt (VoW): erste Wahl 5, zweite 4, dritte 3 Möglichkeiten. Produktregel." },
+      { html: ZEILEN(TE1, TE2, NW(TE3)),
+        warum: "Das Team {A, B, C} steht in dieser Liste als ABC, ACB, BAC, BCA, CAB und CBA. Drei Mitglieder lassen sich auf 3! = 6 Arten ordnen." },
+      { html: ZEILEN(TE1, TE2, TE3, NW(T`$\htmlData{link=x}{x} = \dfrac{60}{3!} = \dfrac{5!}{3!\,2!} = \binom{5}{3} = 10$`)),
+        warum: "Die Doppelten wegteilen. Das Ergebnis ist genau der Binomialkoeffizient aus Satz 3.26." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper PmW ---------- */
+  const W1 = T`$\htmlData{link=alle}{6!} = 720$`;
+  const W2 = T`$720 : \htmlData{link=gleichA}{2!} = 360$`;
+  const W3 = T`$360 : \htmlData{link=gleichN}{2!} = 180$`;
+  L.stepper("#t09-stepper-wort", {
+    titel: "Beispiel: Wörter aus BANANE",
+    text: 'Wie viele verschiedene Buchstabenfolgen kannst du aus <span data-link="alle">allen 6 Buchstaben</span> von BANANE bilden? <span data-link="gleichA">A kommt zweimal vor</span>, <span data-link="gleichN">N auch</span>.',
+    schritte: [
+      { html: ZEILEN(NW(W1)),
+        warum: "Wären alle 6 Buchstaben verschieden, gäbe es 6! Reihenfolgen. Nummeriere sie gedanklich: B, A₁, N₁, A₂, N₂, E." },
+      { html: ZEILEN(W1, NW(W2)),
+        warum: "Vertauschst du A₁ und A₂, sieht das Wort gleich aus. Jedes Wort ist darum doppelt gezählt: durch 2! teilen." },
+      { html: ZEILEN(W1, W2, NW(W3)),
+        warum: "Dasselbe gilt für N₁ und N₂: nochmals durch 2! teilen." },
+      { html: ZEILEN(W1, W2, W3, NW(T`$x = \dfrac{6!}{\htmlData{link=gleichA}{2!} \cdot \htmlData{link=gleichN}{2!} \cdot 1! \cdot 1!} = 180$`)),
+        warum: "Zusammengefasst ist das Satz 3.24: n! geteilt durch die Fakultäten der Klassengrössen. A: 2, N: 2, B: 1, E: 1." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Stepper Blöcke ---------- */
+  const R1 = T`$\htmlData{link=block}{3!} = 6$ Blockfolgen`;
+  const R2 = T`Krimis: $\htmlData{link=krimi}{3!} = 6$`;
+  const R3 = T`Kochbücher: $\htmlData{link=koch}{2!} = 2$, Romane: $\htmlData{link=roman}{4!} = 24$`;
+  L.stepper("#t09-stepper-regal", {
+    titel: "Beispiel: Bücher im Regal",
+    text: 'Im Regal stehen <span data-link="krimi">3 Krimis</span>, <span data-link="koch">2 Kochbücher</span> und <span data-link="roman">4 Romane</span>, alle verschieden. <span data-link="block">Bücher derselben Sorte stehen zusammen.</span> Wie viele Anordnungen gibt es?',
+    schritte: [
+      { html: ZEILEN(NW(R1)),
+        warum: "Jede Sorte ist ein Block. Die 3 Blöcke lassen sich auf 3! Arten nebeneinanderstellen, zum Beispiel Krimis, Romane, Kochbücher." },
+      { html: ZEILEN(R1, NW(R2)),
+        warum: "Innerhalb des Krimi-Blocks lassen sich die 3 Krimis auf 3! Arten ordnen." },
+      { html: ZEILEN(R1, R2, NW(R3)),
+        warum: "Ebenso die 2 Kochbücher und die 4 Romane in ihren Blöcken." },
+      { html: ZEILEN(R1, R2, R3, NW(T`$x = \htmlData{link=block}{3!} \cdot \htmlData{link=krimi}{3!} \cdot \htmlData{link=koch}{2!} \cdot \htmlData{link=roman}{4!} = 1728$`)),
+        warum: "Jede Blockfolge passt zu jeder Innenordnung. Produktregel: 6 · 6 · 2 · 24 = 1728." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Stepper Verteilen ---------- */
+  const S1 = T`$\htmlData{link=n}{n = 3}$ Kinder (Urne)`;
+  const S2 = T`$\htmlData{link=k}{k = 6}$ Stängel (Ziehungen)`;
+  const S3 = T`$\htmlData{link=wdh}{\text{mit Wdh.}}$, Reihenfolge egal: KmW`;
+  const S4 = T`$x = \binom{3+6-1}{6} = \binom{8}{6} = 28$`;
+  L.stepper("#t09-stepper-schoggi", {
+    titel: "Beispiel: Schoggistängel verteilen",
+    text: '<span data-link="k">6 gleiche Schoggistängel</span> werden an <span data-link="n">3 Kinder</span> verteilt. <span data-link="wdh">Ein Kind darf mehrere oder auch keinen bekommen.</span> Wie viele Verteilungen gibt es?',
+    schritte: [
+      { html: ZEILEN(NW(S1)),
+        warum: "Jeder Stängel «wählt» ein Kind. Zur Auswahl stehen die Kinder. Sie sind die Urne, nicht die Schoggi." },
+      { html: ZEILEN(S1, NW(S2)),
+        warum: "Gewählt wird sechsmal, einmal pro Stängel." },
+      { html: ZEILEN(S1, S2, NW(S3)),
+        warum: "Ein Kind darf mehrere Stängel bekommen: mit Wiederholung. Die Stängel sind gleich, es zählt nur, wie viele jedes Kind hat: ohne Reihenfolge." },
+      { html: ZEILEN(S1, S2, S3, NW(S4)),
+        warum: T`Satz 3.27 einsetzen. TI-Nspire: <code class="t09-ti">nCr(8,6)</code> liefert 28.` },
+      { html: ZEILEN(S1, S2, S3, S4, NW("Kontrolle: ●●|●●●|● = (2, 3, 1)")),
+        warum: T`Jede Verteilung ist eine Reihe aus 6 Punkten und 2 Strichen. Von 8 Stellen sind 6 Punkte. Variante: Soll jedes Kind mindestens einen Stängel bekommen, gibst du zuerst jedem einen und verteilst die restlichen 3: $\binom{3+3-1}{3} = 10$. Dieselbe Frage mit 12 Schokoladen stellt Skript-Aufgabe 3.49.` }
+    ]
+  });
+
+  /* ---------- Themeneigene Interaktion: Kombinatorik-Navigator ---------- */
+  (function navigator() {
+    const BU = "ABCDEFGH";
+    const GRENZE = 240; // bis zu so vielen Möglichkeiten wird alles aufgelistet
+    const id = (s) => document.getElementById(s);
+    const fak = (n) => { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; };
+    const binom = (n, k) => {
+      if (k < 0 || k > n) return 0;
+      let r = 1;
+      for (let i = 1; i <= k; i++) r = (r * (n - k + i)) / i;
+      return Math.round(r);
+    };
+    const zt = (x) => L.zahlText(x, 0);
+    const zk = (x) => (x >= 10000 ? "\\text{" + zt(x) + "}" : String(x)); // Zahl für KaTeX mit Hochkomma
+    const INFO = {
+      PoW: { name: "Permutation ohne Wiederholung", skript: "Satz 3.20, Permutationen von n Elementen", geordnet: true },
+      PmW: { name: "Permutation mit Wiederholung", skript: "Satz 3.24, Permutationen mit Klassen gleicher Elemente", geordnet: true },
+      VoW: { name: "Variation ohne Wiederholung", skript: "Satz 3.19, Kombination ohne Wiederholung, mit Berücksichtigung der Anordnung", geordnet: true },
+      VmW: { name: "Variation mit Wiederholung", skript: "Satz 3.22, Kombination mit Wiederholung, mit Berücksichtigung der Anordnung", geordnet: true },
+      KoW: { name: "Kombination ohne Wiederholung", skript: "Satz 3.26, Kombination ohne Wiederholung, ohne Berücksichtigung der Anordnung", geordnet: false },
+      KmW: { name: "Kombination mit Wiederholung", skript: "Satz 3.27, Kombination mit Wiederholung, ohne Berücksichtigung der Anordnung", geordnet: false }
+    };
+    const BEISPIELE = {
+      kino: { titel: "Kinoschlange", text: "4 Freunde (A bis D) stellen sich an der Kinokasse in eine Schlange. Alle 4 werden angeordnet, jeder genau einmal.",
+        z: { alle: true, gleich: false, n: 4 } },
+      abba: { titel: "Wort ABBA", text: "Wie viele Buchstabenfolgen gibt es aus den Buchstaben von ABBA? Alle 4 Buchstaben werden verwendet, A und B kommen je zweimal vor.",
+        z: { alle: true, gleich: true, n1: 2, n2: 2, n3: 0 } },
+      podest: { titel: "Podest", text: "5 Läuferinnen (A bis E) kämpfen um Gold, Silber und Bronze. Die Plätze sind verschieden, niemand steht doppelt auf dem Podest.",
+        z: { alle: false, rf: true, wdh: false, n: 5, k: 3 } },
+      schloss: { titel: "Zahlenschloss", text: "Ein Schloss hat 3 Ringe, jeder zeigt eines von 4 Symbolen (A bis D). Symbole dürfen sich wiederholen, die Ringe haben eine feste Reihenfolge.",
+        z: { alle: false, rf: true, wdh: true, n: 4, k: 3 } },
+      ausschuss: { titel: "Ausschuss", text: "Aus 5 Personen (A bis E) wird ein Ausschuss mit 3 gleichberechtigten Mitgliedern gewählt.",
+        z: { alle: false, rf: false, wdh: false, n: 5, k: 3 } },
+      glace: { titel: "Glace-Becher", text: "Ein Becher mit 3 Kugeln aus 4 Sorten (A bis D). Eine Sorte darf mehrfach drin sein, die Lage im Becher spielt keine Rolle.",
+        z: { alle: false, rf: false, wdh: true, n: 4, k: 3 } }
+    };
+
+    const z = { alle: null, gleich: null, rf: null, wdh: null, n: 5, k: 3, n1: 2, n2: 2, n3: 0, gruppen: false };
+    const regler = { n: id("t09-n"), k: id("t09-k"), n1: id("t09-n1"), n2: id("t09-n2"), n3: id("t09-n3") };
+    const fragen = { alle: id("t09-f-alle"), gleich: id("t09-f-gleich"), rf: id("t09-f-rf"), wdh: id("t09-f-wdh") };
+    const szenario = id("t09-szenario");
+    const ergebnis = id("t09-ergebnis");
+    const modellInfo = id("t09-modell");
+    const urne = id("t09-urne");
+    const plaetze = id("t09-plaetze");
+    const zugInfo = id("t09-zuginfo");
+    const bZug = id("t09-zug"), bAlle = id("t09-alle-zuege"), bNeu = id("t09-neu");
+    const listeInfo = id("t09-listeinfo");
+    const bGruppen = id("t09-gruppen");
+    const listeBox = id("t09-listebox");
+    const liste = id("t09-liste");
+    const knoepfeBeispiel = Array.from(document.querySelectorAll("[data-beispiel]"));
+    const knoepfeFrage = Array.from(document.querySelectorAll("[data-frage]"));
+
+    function modell() {
+      if (z.alle === null) return null;
+      if (z.alle) return z.gleich === null ? null : z.gleich ? "PmW" : "PoW";
+      if (z.rf === null || z.wdh === null) return null;
+      return z.rf ? (z.wdh ? "VmW" : "VoW") : (z.wdh ? "KmW" : "KoW");
+    }
+    function param(m) {
+      if (m === "PmW") {
+        const n = z.n1 + z.n2 + z.n3;
+        return { n: n, k: n, kl: [z.n1, z.n2, z.n3] };
+      }
+      if (m === "PoW") return { n: z.n, k: z.n, kl: null };
+      return { n: z.n, k: z.k, kl: null };
+    }
+    function anzahl(m, p) {
+      if (m === "PoW") return fak(p.n);
+      if (m === "PmW") return Math.round(p.kl.reduce((r, c) => r / fak(c), fak(p.n)));
+      if (m === "VoW") return p.k > p.n ? 0 : fak(p.n) / fak(p.n - p.k);
+      if (m === "VmW") return Math.pow(p.n, p.k);
+      if (m === "KoW") return binom(p.n, p.k);
+      return binom(p.n + p.k - 1, p.k);
+    }
+    const klassenText = (kl, mal) => kl.filter((c) => c > 0).map((c) => c + "!").join(mal);
+    function formelTex(m, p, x) {
+      const n = p.n, k = p.k;
+      if (m === "PoW") return "x = n! = " + n + "! = " + zk(x);
+      if (m === "PmW") return "x = \\dfrac{n!}{n_1! \\cdots n_r!} = \\dfrac{" + n + "!}{" + klassenText(p.kl, " \\cdot ") + "} = " + zk(x);
+      if (m === "VoW") {
+        if (k > n) return "k > n \\;\\Rightarrow\\; x = 0";
+        const prod = k <= 5 ? " = " + Array.from({ length: k }, (_, i) => n - i).join(" \\cdot ") : "";
+        return "x = \\dfrac{n!}{(n-k)!} = \\dfrac{" + n + "!}{" + (n - k) + "!}" + prod + " = " + zk(x);
+      }
+      if (m === "VmW") return "x = n^k = " + n + "^{" + k + "} = " + zk(x);
+      if (m === "KoW") return k > n ? "k > n \\;\\Rightarrow\\; x = 0" : "x = \\binom{n}{k} = \\binom{" + n + "}{" + k + "} = " + zk(x);
+      return "x = \\binom{n+k-1}{k} = \\binom{" + (n + k - 1) + "}{" + k + "} = " + zk(x);
+    }
+    function tiText(m, p) {
+      if (m === "PoW") return p.n + "!";
+      if (m === "PmW") return p.n + "!/(" + klassenText(p.kl, "*") + ")";
+      if (m === "VoW") return "nPr(" + p.n + "," + p.k + ")";
+      if (m === "VmW") return p.n + "^" + p.k;
+      if (m === "KoW") return "nCr(" + p.n + "," + p.k + ")";
+      return "nCr(" + (p.n + p.k - 1) + "," + p.k + ")";
+    }
+
+    // Alle Möglichkeiten aufzählen (höchstens «max» Stück, bricht danach ab)
+    function aufzaehlen(m, p, max) {
+      const aus = [];
+      const voll = () => aus.length >= max;
+      if (m === "PmW") {
+        const rest = p.kl.slice();
+        const zeichen = ["A", "B", "C"];
+        (function rek(pref) {
+          if (voll()) return;
+          if (pref.length === p.n) { aus.push(pref.slice()); return; }
+          for (let i = 0; i < 3 && !voll(); i++) {
+            if (rest[i] === 0) continue;
+            rest[i]--; pref.push(zeichen[i]);
+            rek(pref);
+            pref.pop(); rest[i]++;
+          }
+        })([]);
+        return aus;
+      }
+      const el = BU.slice(0, p.n).split("");
+      const k = p.k;
+      const ohneWdh = m === "PoW" || m === "VoW" || m === "KoW";
+      if (ohneWdh && k > p.n) return aus;
+      const benutzt = [];
+      (function rek(pref, start) {
+        if (voll()) return;
+        if (pref.length === k) { aus.push(pref.slice()); return; }
+        const ab = m === "KoW" || m === "KmW" ? start : 0;
+        for (let i = ab; i < el.length && !voll(); i++) {
+          if ((m === "PoW" || m === "VoW") && benutzt[i]) continue;
+          benutzt[i] = true; pref.push(el[i]);
+          rek(pref, m === "KoW" ? i + 1 : i);
+          pref.pop(); benutzt[i] = false;
+        }
+      })([], 0);
+      return aus;
+    }
+    function reihenfolgen(a) {
+      if (a.length <= 1) return [a.slice()];
+      const aus = [];
+      a.forEach((x, i) => {
+        reihenfolgen(a.slice(0, i).concat(a.slice(i + 1))).forEach((r) => aus.push([x].concat(r)));
+      });
+      return aus;
+    }
+    const schluessel = (m, a) => (INFO[m].geordnet ? a.join("") : "{" + a.join(",") + "}");
+    function striche(a, n) {
+      const teile = [];
+      for (let i = 0; i < n; i++) teile.push("●".repeat(a.filter((b) => b === BU[i]).length));
+      return teile.join("|");
+    }
+
+    /* Anzeige: Fragen, Baum, Regler */
+    function fragenZeigen() {
+      fragen.gleich.hidden = z.alle !== true;
+      fragen.rf.hidden = z.alle !== false;
+      fragen.wdh.hidden = z.alle !== false;
+      knoepfeFrage.forEach((b) => {
+        const an = z[b.dataset.frage] === (b.dataset.wert === "ja");
+        b.setAttribute("aria-pressed", String(an));
+        b.classList.toggle("on", an);
+      });
+      // Nächste offene Frage markieren
+      let offen = null;
+      if (z.alle === null) offen = "alle";
+      else if (z.alle && z.gleich === null) offen = "gleich";
+      else if (!z.alle && z.rf === null) offen = "rf";
+      else if (!z.alle && z.wdh === null) offen = "wdh";
+      Object.keys(fragen).forEach((f) => fragen[f].classList.toggle("t09-offen", f === offen));
+    }
+    function baumMarkieren() {
+      document.querySelectorAll(".t09-baum li").forEach((li) => li.classList.remove("an"));
+      const pfad = [];
+      if (z.alle !== null) pfad.push("start", z.alle ? "ja" : "nein");
+      if (z.alle === true && z.gleich !== null) pfad.push(z.gleich ? "PmW" : "PoW");
+      if (z.alle === false && z.rf !== null) {
+        pfad.push(z.rf ? "rfja" : "rfnein");
+        if (z.wdh !== null) pfad.push(modell());
+      }
+      pfad.forEach((s) => id("t09-b-" + s).classList.add("an"));
+    }
+    function reglerZeigen() {
+      const pmw = z.alle === true && z.gleich === true;
+      id("t09-r-n").hidden = pmw;
+      id("t09-r-k").hidden = z.alle === true;
+      ["n1", "n2", "n3"].forEach((s) => { id("t09-r-" + s).hidden = !pmw; });
+      Object.keys(regler).forEach((s) => { id("t09-" + s + "-w").textContent = String(z[s]); });
+    }
+
+    /* Formel, Ergebnis, Modell */
+    function rechnen() {
+      const m = modell();
+      if (!m) {
+        ergebnis.innerHTML = '<span class="t09-leer">Beantworte die Fragen oben oder lade ein Beispiel. Dann erscheint hier die Formel.</span>';
+        modellInfo.innerHTML = "";
+        return;
+      }
+      const p = param(m), x = anzahl(m, p);
+      ergebnis.innerHTML = "$\\displaystyle " + formelTex(m, p, x) + "$";
+      L.formeln(ergebnis);
+      modellInfo.innerHTML = "<b>" + m + " · " + INFO[m].name + "</b><br>Skript: " + INFO[m].skript +
+        '<br>TI-Nspire: <code class="t09-ti">' + tiText(m, p) + "</code>";
+    }
+
+    /* Liste aller Möglichkeiten */
+    function listeZeichnen() {
+      const m = modell();
+      bGruppen.hidden = m !== "KoW";
+      if (!m) {
+        liste.innerHTML = "";
+        listeInfo.textContent = "Die Liste erscheint, sobald das Modell feststeht.";
+        return;
+      }
+      const p = param(m), x = anzahl(m, p);
+      if (x === 0) {
+        liste.innerHTML = "";
+        listeInfo.textContent = "Ohne Wiederholung kannst du höchstens n = " + p.n + " Elemente ziehen. Stell k kleiner.";
+        return;
+      }
+      if (m === "KoW" && z.gruppen) {
+        const geordnet = fak(p.n) / fak(p.n - p.k);
+        if (geordnet <= GRENZE) {
+          liste.innerHTML = aufzaehlen("KoW", p, x).map((a) => {
+            const s = schluessel("KoW", a);
+            const ords = reihenfolgen(a).map((o) => '<span class="t09-ord" data-ord="' + o.join("") + '">' + o.join("") + "</span>").join("");
+            return '<li class="t09-gruppe" data-key="' + s + '"><span class="t09-mengen">' + s + "</span>" + ords + "</li>";
+          }).join("");
+          listeInfo.innerHTML = "Jede Zeile ist eine Menge mit ihren " + p.k + "! = " + fak(p.k) + " Reihenfolgen. " +
+            zt(geordnet) + " geordnete Ziehungen ÷ " + fak(p.k) + " = <b>" + zt(x) + "</b> Mengen.";
+          return;
+        }
+      }
+      const alle = x <= GRENZE;
+      liste.innerHTML = aufzaehlen(m, p, alle ? x : 60).map((a) => {
+        const s = schluessel(m, a);
+        return '<li data-key="' + s + '">' + s + (m === "KmW" ? '<span class="t09-sb">' + striche(a, p.n) + "</span>" : "") + "</li>";
+      }).join("");
+      let t = x === 1
+        ? "Hier steht die einzige Möglichkeit. Auch die Formel liefert <b>1</b>."
+        : alle
+        ? "Hier stehen alle <b>" + zt(x) + "</b> Möglichkeiten. Zähl nach: Es sind genau so viele, wie die Formel sagt."
+        :"Es gibt " + zt(x) + " Möglichkeiten, zu viele zum Auflisten. Hier siehst du die ersten 60. Mit kleinerem n oder k siehst du alle.";
+      if (m === "KmW") t += " Unter jedem Eintrag steht die Darstellung mit Punkten und Strichen.";
+      if (m === "KoW" && z.gruppen) t = "Für die Gruppenansicht sind es zu viele geordnete Ziehungen. Stell n oder k kleiner. " + t;
+      listeInfo.innerHTML = t;
+    }
+
+    /* Urne und Ziehung */
+    let zug = null;
+    const mitWdh = (m) => m === "VmW" || m === "KmW";
+    function urneFuellen() {
+      const m = modell();
+      if (!m) {
+        zug = null;
+        urne.innerHTML = '<span class="t09-leer">Die Urne füllt sich, sobald das Modell feststeht.</span>';
+        urne.setAttribute("aria-label", "Urne, noch leer");
+        plaetze.innerHTML = "";
+        zugInfo.textContent = "";
+        bZug.disabled = true; bAlle.disabled = true; bNeu.disabled = true;
+        return;
+      }
+      const p = param(m);
+      let kugeln = [];
+      if (m === "PmW") ["A", "B", "C"].forEach((b, i) => { for (let j = 0; j < p.kl[i]; j++) kugeln.push(b); });
+      else kugeln = BU.slice(0, p.n).split("");
+      urne.innerHTML = kugeln.map((b) => '<span class="t09-kugel t09-f' + ((BU.indexOf(b) % 5) + 1) + '">' + b + "</span>").join("");
+      const els = Array.from(urne.children);
+      zug = {
+        m: m, p: p, x: anzahl(m, p),
+        k: m === "PoW" || m === "PmW" ? kugeln.length : p.k,
+        kugeln: kugeln.map((b, i) => ({ b: b, weg: false, el: els[i] })),
+        gezogen: [], faktoren: [], zuletzt: -1
+      };
+      urne.setAttribute("aria-label", "Urne mit " + kugeln.length + " Kugeln: " + kugeln.join(", ") +
+        (mitWdh(m) ? ". Gezogene Kugeln kommen zurück." : ". Gezogene Kugeln bleiben draussen."));
+      bNeu.disabled = false;
+      zugZeichnen(false);
+    }
+    function zugMoeglich() {
+      if (!zug || zug.gezogen.length >= zug.k) return false;
+      return mitWdh(zug.m) || zug.k <= zug.kugeln.length;
+    }
+    function ziehen() {
+      if (!zugMoeglich()) return;
+      const frei = [];
+      zug.kugeln.forEach((x, i) => { if (!x.weg) frei.push(i); });
+      const i = frei[Math.floor(Math.random() * frei.length)];
+      zug.faktoren.push(frei.length);
+      zug.gezogen.push(zug.kugeln[i].b);
+      if (mitWdh(zug.m)) zug.zuletzt = i;
+      else zug.kugeln[i].weg = true;
+    }
+    function zugZeichnen(neu) {
+      const m = zug.m, p = zug.p, k = zug.k, g = zug.gezogen;
+      zug.kugeln.forEach((x, i) => {
+        x.el.classList.toggle("t09-weg", x.weg);
+        x.el.classList.toggle("t09-zurueck", i === zug.zuletzt);
+      });
+      const fertig = g.length === k && k > 0;
+      const sortiert = g.slice().sort();
+      let html = "";
+      for (let j = 0; j < k; j++) {
+        const b = g[j];
+        html += '<span class="t09-platz' + (b ? " t09-voll" : "") + (neu && j === g.length - 1 ? " t09-neu" : "") +
+          '"><span class="t09-feld">' + (b || "") + "</span><small>" + (j + 1) + ". Zug</small></span>";
+      }
+      if (fertig && !INFO[m].geordnet) html += '<span class="t09-menge">→ ' + schluessel(m, sortiert) + "</span>";
+      plaetze.innerHTML = html;
+
+      // Erklärung zum Zug
+      const anzGeordnet = zug.faktoren.reduce((a, b) => a * b, 1);
+      const prod = zug.faktoren.join(" · ") + " = " + zt(anzGeordnet);
+      let t;
+      if (!mitWdh(m) && k > zug.kugeln.length) {
+        t = "Ohne Wiederholung kannst du höchstens " + zug.kugeln.length + " Kugeln ziehen. Stell k kleiner.";
+      } else if (!g.length) {
+        t = "Drück «Eine Kugel ziehen». " + (mitWdh(m)
+          ? "Jede gezogene Kugel kommt zurück in die Urne: mit Wiederholung."
+          : "Gezogene Kugeln bleiben draussen: ohne Wiederholung.");
+      } else if (!fertig) {
+        t = zug.faktoren.map((f, j) => (j + 1) + ". Zug: " + f + " Kugeln zur Wahl").join(" · ") + ". Weiter!";
+      } else if (m === "PoW" || m === "VoW" || m === "VmW") {
+        t = "Ergebnis <b>" + g.join("") + "</b>. Bei jedem Zug zählst du die Möglichkeiten und multiplizierst (Produktregel): " +
+          prod + ". Dein Ergebnis ist in der Liste markiert.";
+      } else if (m === "PmW") {
+        t = "Ergebnis <b>" + g.join("") + "</b>. Mit nummerierten Kugeln gäbe es " + prod + " Reihenfolgen. Gleiche Buchstaben kannst du aber nicht unterscheiden: ÷ " +
+          klassenText(p.kl, " · ") + " = " + zt(zug.x) + ".";
+      } else if (m === "KoW") {
+        t = "Gezogen in der Reihenfolge " + g.join(", ") + ". Die Reihenfolge zählt nicht, also sortierst du: <b>" + schluessel(m, sortiert) +
+          "</b>. Geordnet gäbe es " + prod + " Ziehungen. Jede Menge steckt darin " + k + "! = " + fak(k) + "-mal, also ÷ " + fak(k) + " = " + zt(zug.x) + ".";
+      } else {
+        t = "Gezogen in der Reihenfolge " + g.join(", ") + ". Die Reihenfolge zählt nicht: <b>" + schluessel(m, sortiert) + "</b>, als Punkte und Striche " +
+          striche(sortiert, p.n) + ". Teilen durch " + k + "! geht hier nicht. Beispiel mit 3 Zügen: {A,A,A} entsteht aus einer einzigen Reihenfolge, {A,B,C} aus sechs. Darum gilt die eigene Formel mit n + k − 1.";
+      }
+
+      // Ergebnis in der Liste markieren
+      Array.from(liste.querySelectorAll(".t09-an")).forEach((e) => e.classList.remove("t09-an"));
+      if (fertig) {
+        const s = schluessel(m, INFO[m].geordnet ? g : sortiert);
+        const li = Array.from(liste.children).find((e) => e.dataset.key === s);
+        if (li) {
+          li.classList.add("t09-an");
+          const ord = Array.from(li.querySelectorAll(".t09-ord")).find((e) => e.dataset.ord === g.join(""));
+          if (ord) ord.classList.add("t09-an");
+          listeBox.scrollTop = Math.max(0, li.offsetTop - listeBox.clientHeight / 2);
+        } else if (liste.children.length) {
+          t += " (Dieser Eintrag liegt ausserhalb der angezeigten ersten 60.)";
+        }
+      }
+      zugInfo.innerHTML = t;
+
+      const kann = zugMoeglich();
+      const fokusWeg = !kann && (document.activeElement === bZug || document.activeElement === bAlle);
+      bZug.disabled = !kann;
+      bAlle.disabled = !kann;
+      if (fokusWeg) bNeu.focus();
+    }
+
+    /* Alles neu aufbauen */
+    function allesNeu() {
+      fragenZeigen();
+      baumMarkieren();
+      reglerZeigen();
+      rechnen();
+      listeZeichnen();
+      urneFuellen();
+    }
+    function beispielLoesen() {
+      knoepfeBeispiel.forEach((b) => { b.setAttribute("aria-pressed", "false"); b.classList.remove("on"); });
+      szenario.hidden = true;
+    }
+
+    knoepfeBeispiel.forEach((b) => {
+      b.addEventListener("click", () => {
+        const B = BEISPIELE[b.dataset.beispiel];
+        Object.assign(z, { alle: null, gleich: null, rf: null, wdh: null, gruppen: false }, B.z);
+        Object.keys(regler).forEach((s) => { regler[s].value = String(z[s]); });
+        bGruppen.setAttribute("aria-pressed", "false");
+        bGruppen.classList.remove("on");
+        knoepfeBeispiel.forEach((x) => { x.setAttribute("aria-pressed", String(x === b)); x.classList.toggle("on", x === b); });
+        szenario.hidden = false;
+        szenario.innerHTML = "<b>" + B.titel + ":</b> " + B.text;
+        allesNeu();
+      });
+    });
+    knoepfeFrage.forEach((b) => {
+      b.addEventListener("click", () => {
+        z[b.dataset.frage] = b.dataset.wert === "ja";
+        beispielLoesen();
+        allesNeu();
+      });
+    });
+    Object.keys(regler).forEach((s) => {
+      regler[s].addEventListener("input", () => {
+        z[s] = Number(regler[s].value);
+        beispielLoesen();
+        reglerZeigen();
+        rechnen();
+        listeZeichnen();
+        urneFuellen();
+      });
+    });
+    bZug.addEventListener("click", () => { ziehen(); zugZeichnen(true); });
+    bAlle.addEventListener("click", () => { while (zugMoeglich()) ziehen(); zugZeichnen(true); });
+    bNeu.addEventListener("click", () => { urneFuellen(); bZug.focus(); });
+    bGruppen.addEventListener("click", () => {
+      z.gruppen = !z.gruppen;
+      bGruppen.setAttribute("aria-pressed", String(z.gruppen));
+      bGruppen.classList.toggle("on", z.gruppen);
+      listeZeichnen();
+      if (zug) zugZeichnen(false);
+    });
+
+    allesNeu();
+  })();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t09-u-sort", {
+    kategorien: ["PoW", "PmW", "VoW", "VmW", "KoW", "KmW"],
+    elemente: [
+      { html: "Wie viele Ranglisten gibt es bei einem Rennen mit 8 Teilnehmenden?", kategorie: "PoW",
+        erklaerung: T`Alle 8 werden angeordnet, niemand doppelt: $8! = \text{40'320}$.` },
+      { html: "Wie viele Wörter lassen sich aus allen Buchstaben von KAKAO bilden?", kategorie: "PmW",
+        erklaerung: T`Alle 5 Buchstaben, K und A je zweimal: $\frac{5!}{2!\cdot 2!\cdot 1!} = 30$.` },
+      { html: "Aus 12 Mitgliedern werden Präsidentin, Vize und Kassier gewählt.", kategorie: "VoW",
+        erklaerung: T`Drei verschiedene Ämter: Die Reihenfolge zählt, niemand hat zwei Ämter. $12 \cdot 11 \cdot 10 = 1320$.` },
+      { html: "Wie viele Tipps gibt es beim Toto mit 13 Spielen (je 1, X oder 2)?", kategorie: "VmW",
+        erklaerung: T`Jedes Spiel ist eine Ziehung aus {1, X, 2}, mit Wiederholung und fester Reihenfolge: $3^{13} = \text{1'594'323}$ (vgl. Skript-Aufgabe 3.38).` },
+      { html: "11 Teams spielen jeder gegen jeden. Wie viele Spiele gibt es?", kategorie: "KoW",
+        erklaerung: T`Ein Spiel ist ein Paar ohne Reihenfolge, kein Team spielt gegen sich selbst: $\binom{11}{2} = 55$.` },
+      { html: "Zwei gleiche, nicht unterscheidbare Würfel werden geworfen. Wie viele Ergebnisse gibt es?", kategorie: "KmW",
+        erklaerung: T`$n = 6$ Augenzahlen, $k = 2$ Würfel, mit Wiederholung, Reihenfolge egal: $\binom{7}{2} = 21$ (vgl. Skript-Aufgabe 3.48).` }
+    ]
+  });
+
+  L.zahlAufgabe("#t09-u-schloss", {
+    titel: "Übung 2 · Velo-Zahlenschloss",
+    frage: "Ein Velo-Zahlenschloss hat 4 Ringe mit je den Ziffern 0 bis 9. Wie viele Codes gibt es, wenn im Code keine Ziffer doppelt vorkommen darf?",
+    antwort: 5040,
+    anzeige: "10 · 9 · 8 · 7 = 5040",
+    hinweise: [
+      "Die Urne sind die 10 Ziffern. Gezogen wird viermal, einmal pro Ring.",
+      "Spielt die Reihenfolge eine Rolle? Ist 1-2-3-4 derselbe Code wie 4-3-2-1?",
+      "«Keine Ziffer doppelt» heisst: ohne Wiederholung."
+    ],
+    loesungsweg: [
+      T`$n = 10$ Ziffern, $k = 4$ Ringe. Reihenfolge wichtig, ohne Wiederholung: VoW (Satz 3.19).`,
+      T`$x = \dfrac{10!}{(10-4)!} = 10 \cdot 9 \cdot 8 \cdot 7 = 5040$`,
+      T`TI-Nspire: <code class="t09-ti">nPr(10,4)</code> oder <code class="t09-ti">10!/6!</code>. Ohne die Einschränkung wären es $10^4 = \text{10'000}$ Codes.`
+    ]
+  });
+
+  L.zahlAufgabe("#t09-u-wort", {
+    titel: "Übung 3 · Buchstabensalat",
+    frage: "Wie viele verschiedene Buchstabenfolgen lassen sich mit allen 9 Buchstaben des Wortes STATISTIK bilden?",
+    antwort: 15120,
+    anzeige: "9!/(2!·3!·2!) = 15'120",
+    hinweise: [
+      "Zähle, wie oft jeder Buchstabe vorkommt.",
+      "S: 2, T: 3, A: 1, I: 2, K: 1. Zusammen sind es 9.",
+      T`Satz 3.24: $n!$ geteilt durch die Fakultäten der Klassengrössen.`
+    ],
+    loesungsweg: [
+      T`Klassen gleicher Buchstaben: S (2), T (3), A (1), I (2), K (1), zusammen $n = 9$.`,
+      T`$x = \dfrac{9!}{2!\cdot 3!\cdot 1!\cdot 2!\cdot 1!} = \dfrac{\text{362'880}}{24} = \text{15'120}$`,
+      T`TI-Nspire: <code class="t09-ti">9!/(2!*3!*2!)</code>`
+    ]
+  });
+
+  L.wahrFalsch("#t09-u-wf", {
+    titel: "Übung 4 · Wahr oder falsch?",
+    aussagen: [
+      { html: T`$\binom{n}{k} = \binom{n}{n-k}$ gilt für alle $0 \le k \le n$.`, wahr: true,
+        erklaerung: T`Symmetrie aus Satz 3.15: $k$ auswählen heisst zugleich $n - k$ weglassen.` },
+      { html: "$0! = 0$", wahr: false,
+        erklaerung: T`Es gilt $0! = 1$ (Def. 3.8, Bem. 3.9). Für null Dinge gibt es genau eine Anordnung.` },
+      { html: "Beim Lotto «6 aus 42» spielt die Reihenfolge der gezogenen Zahlen eine Rolle.", wahr: false,
+        erklaerung: T`Ein Tipp ist eine Menge von 6 Zahlen. Darum zählt man mit $\binom{42}{6}$.` },
+      { html: T`Ein 4-stelliger PIN aus den Ziffern 0 bis 9 hat $10^4 = \text{10'000}$ Möglichkeiten.`, wahr: true,
+        erklaerung: "Reihenfolge wichtig, Ziffern dürfen sich wiederholen: VmW mit $n = 10$, $k = 4$." },
+      { html: T`Aus allen Buchstaben von OTTO lassen sich $4! = 24$ verschiedene Wörter bilden.`, wahr: false,
+        erklaerung: T`O und T kommen je zweimal vor: $\frac{4!}{2!\cdot 2!} = 6$.` },
+      { html: T`Kombinationen ohne Wiederholung zählt man als Variationen ohne Wiederholung geteilt durch $k!$.`, wahr: true,
+        erklaerung: T`$\binom{n}{k} = \frac{n!}{(n-k)!} : k!$, weil jede Auswahl in $k!$ Reihenfolgen vorkommt.` }
+    ]
+  });
+
+  L.auswahl("#t09-u-turnier", {
+    frage: "An einem Turnier spielen 9 Teams, jedes Team genau einmal gegen jedes andere. Wie viele Spiele finden statt?",
+    optionen: [T`$9 \cdot 8 = 72$`, T`$\binom{9}{2} = 36$`, T`$9^2 = 81$`, T`$9! = \text{362'880}$`],
+    richtig: 1,
+    erklaerung: T`Ein Spiel ist ein Paar von Teams. A gegen B ist dasselbe Spiel wie B gegen A, und kein Team spielt gegen sich selbst: KoW mit $n = 9$, $k = 2$. Die 72 zählt jedes Spiel doppelt. TI-Nspire: <code class="t09-ti">nCr(9,2)</code>.`
+  });
+
+  L.schrittAufgabe("#t09-u-fenster", {
+    titel: "Übung 6 · Pflanzen auf dem Fenstersims (im Stil von Aufgabe 4a der Modulschlussprüfung)",
+    aufgabe: "<p>Auf einem langen Fenstersims stehen 12 Topfpflanzen: 3 Farne, 5 Kakteen und 4 Orchideen. Alle Pflanzen sind verschieden.</p>" +
+      "<p><b>i)</b> Wie viele Möglichkeiten gibt es, die 12 Pflanzen in einer Reihe aufzustellen?<br>" +
+      "<b>ii)</b> Wie viele sind es, wenn die drei Sorten nicht durchmischt werden dürfen?<br>" +
+      "<b>iii)</b> Die 3 Farne werden an 4 Nachbarn verschenkt. Jemand darf auch alle oder keinen bekommen. Es zählt nur, wie viele Farne jede Person erhält. Wie viele Zuteilungen gibt es?</p>",
+    schritte: [
+      { html: T`i) $x = 12! = \text{479'001'600}$`,
+        warum: "Alle 12 Pflanzen werden angeordnet, jede genau einmal: Permutation (Satz 3.20). TI-Nspire: 12!" },
+      { html: T`ii) Blöcke anordnen: $3! = 6$`,
+        warum: "Jede Sorte bildet einen Block. Die 3 Blöcke lassen sich auf 3! Arten nebeneinanderstellen." },
+      { html: T`ii) innen: $3! \cdot 5! \cdot 4! = 6 \cdot 120 \cdot 24$`,
+        warum: "In den Blöcken: Farne 3!, Kakteen 5!, Orchideen 4!." },
+      { html: T`ii) $x = 3! \cdot 3! \cdot 5! \cdot 4! = \text{103'680}$`,
+        warum: "Produktregel: Blockfolge mal Innenordnungen. Wer den ersten Faktor 3! vergisst, erhält nur 17'280." },
+      { html: T`iii) $n = 4$ Nachbarn, $k = 3$ Farne, mit Wiederholung, Reihenfolge egal`,
+        warum: "Jeder Farn wählt einen Nachbarn: Die Nachbarn sind die Urne. Ein Nachbar darf mehrere bekommen, gezählt wird nur die Anzahl pro Person." },
+      { html: T`iii) $x = \binom{4+3-1}{3} = \binom{6}{3} = 20$`,
+        warum: T`Kombination mit Wiederholung (Satz 3.27), TI-Nspire: <code class="t09-ti">nCr(6,3)</code>. Würde auch zählen, welcher Farn zu wem geht, wären es $4^3 = 64$.` }
+    ]
+  });
+
+  L.zahlAufgabe("#t09-u-gutscheine", {
+    titel: "Übung 7 · Gutscheine verlosen (im Stil von Aufgabe 4a,iii der Modulschlussprüfung)",
+    frage: "In einem Büro werden 6 gleiche Kinogutscheine rein zufällig unter 4 Mitarbeitenden verlost. Eine Person darf auch alle oder keinen Gutschein bekommen. Wie viele Möglichkeiten gibt es für die Zuteilung?",
+    antwort: 84,
+    anzeige: "(9 über 6) = 84",
+    hinweise: [
+      "Was steht zur Auswahl? Jeder Gutschein «wählt» eine Person. Die Personen sind die Urne.",
+      T`Also $n = 4$ Personen und $k = 6$ Gutscheine. Wer hier $n$ und $k$ vertauscht, erhält 126.`,
+      "Eine Person darf mehrere Gutscheine bekommen: mit Wiederholung. Die Gutscheine sind gleich: Reihenfolge egal."
+    ],
+    loesungsweg: [
+      T`$n = 4$ Mitarbeitende (Urne), $k = 6$ Gutscheine (Ziehungen).`,
+      "Mit Wiederholung, ohne Reihenfolge: Kombination mit Wiederholung (KmW, Satz 3.27). So rechnet auch die Musterlösung zu A4a,iii.",
+      T`$x = \binom{n+k-1}{k} = \binom{4+6-1}{6} = \binom{9}{6} = 84$. TI-Nspire: <code class="t09-ti">nCr(9,6)</code>.`,
+      T`Kontrolle mit Punkten und Strichen: 6 Punkte für die Gutscheine, 3 Striche zwischen den 4 Personen, also 9 Stellen. Davon wählst du 6 für die Punkte.`
+    ]
+  });
+
+  L.zahlAufgabe("#t09-u-kommission", {
+    titel: "Übung 8 · Kommission zusammenstellen (vgl. Skript-Aufgabe 3.53, eigene Zahlen)",
+    frage: "Im Vorstand eines Vereins sitzen 6 Frauen und 8 Männer. Für eine Kommission werden 2 Frauen und 3 Männer gewählt; alle Mitglieder sind gleichberechtigt. Wie viele verschiedene Kommissionen gibt es?",
+    antwort: 840,
+    anzeige: "15 · 56 = 840",
+    hinweise: [
+      "Teile die Wahl in zwei Stufen: zuerst die Frauen, dann die Männer.",
+      "In der Kommission ist die Reihenfolge egal, niemand ist doppelt dabei: KoW.",
+      "Die beiden Stufen verbindest du mit der Produktregel."
+    ],
+    loesungsweg: [
+      T`Frauen: $\binom{6}{2} = 15$`,
+      T`Männer: $\binom{8}{3} = 56$`,
+      T`Produktregel: $x = 15 \cdot 56 = 840$. TI-Nspire: <code class="t09-ti">nCr(6,2)*nCr(8,3)</code>`
+    ]
+  });
+
+  L.schrittAufgabe("#t09-u-ananas", {
+    titel: "Übung 9 · Drei Buchstaben aus ANANAS (im Stil von Aufgabe 3c des Tests S2-LB1)",
+    aufgabe: "<p>Du nimmst die Buchstaben des Wortes ANANAS und wählst davon 3 aus. Wie viele verschiedene Wörter mit 3 Buchstaben lassen sich so bilden? (Sinnlose Wörter zählen mit.)</p>" +
+      '<p class="hint">Tipp: Keine einzelne Formel passt. Teile die Wörter in getrennte Fälle ein und addiere (Summenregel, Satz 3.5).</p>',
+    schritte: [
+      { html: T`Vorrat: A (3-mal), N (2-mal), S (1-mal)`,
+        warum: "Zuerst zählen, wie oft jeder Buchstabe verfügbar ist. Davon hängt ab, welche Wörter überhaupt möglich sind." },
+      { html: T`Fall 1, drei verschiedene: $\{A, N, S\}$, $3! = 6$`,
+        warum: "Es gibt nur 3 verschiedene Buchstaben. Sie alle zu verwenden geht auf eine Art, ordnen lassen sie sich auf 3! Arten (Permutation)." },
+      { html: T`Fall 2, genau zwei gleiche: $2 \cdot 2 \cdot \dfrac{3!}{2!} = 12$`,
+        warum: "Das Doppel ist AA oder NN (2 Möglichkeiten). Der dritte Buchstabe ist einer der 2 übrigen. Jede solche Auswahl, etwa A, A, N, lässt sich auf 3!/2! = 3 Arten ordnen (Satz 3.24)." },
+      { html: T`Fall 3, drei gleiche: nur AAA, also $1$`,
+        warum: "Nur A ist dreimal vorhanden. NNN oder SSS gibt es nicht." },
+      { html: T`$x = 6 + 12 + 1 = 19$`,
+        warum: "Die drei Fälle überschneiden sich nicht und decken alles ab. Summenregel: addieren. Genau so löst die Musterlösung Aufgabe 3c des Tests S2-LB1 mit AUTOSTRADA." }
+    ]
+  });
+
+  L.zahlAufgabe("#t09-u-usb", {
+    titel: "Übung 10 · Defekte USB-Sticks (Urnenmodell, im Stil von Aufgabe 4 des Tests S2-LB1)",
+    frage: "In einer Schachtel liegen 12 USB-Sticks, 3 davon sind defekt. Du nimmst zufällig 4 Sticks auf einmal heraus. Wie gross ist die Wahrscheinlichkeit, dass genau einer davon defekt ist? Runde auf vier Nachkommastellen.",
+    antwort: 252 / 495,
+    toleranz: 0.0001,
+    anzeige: "252/495 ≈ 0.5091",
+    hinweise: [
+      "Mögliche Fälle: 4 aus 12, Reihenfolge egal, ohne Zurücklegen.",
+      "Günstige Fälle: 1 der 3 defekten und 3 der 9 intakten Sticks.",
+      "Satz 3.28: günstige durch mögliche Fälle."
+    ],
+    loesungsweg: [
+      T`$m = \binom{12}{4} = 495$`,
+      T`$g = \binom{3}{1} \cdot \binom{9}{3} = 3 \cdot 84 = 252$`,
+      T`$P = \dfrac{252}{495} \approx 0.5091$. TI-Nspire: <code class="t09-ti">nCr(3,1)*nCr(9,3)/nCr(12,4)</code>`
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const DIM = (s) => '<span class="dimv">' + s + "</span>";
+  const FI = T`i) $\text{39'916'800}$`;
+  const FII = T`ii) $\text{34'560}$`;
+  const B1 = "Blöcke: [Sa] [Tu] [St]";
+  const B2 = T`Blockfolge: $3! = 6$`;
+  const B3 = T`Sandalen innen: $2!$`;
+  const B4 = T`Turnschuhe innen: $5!$`;
+  const B5 = T`Stiefel innen: $4!$`;
+  const B6 = T`$x = 3! \cdot 2! \cdot 5! \cdot 4!$`;
+  const B7 = T`$= 6 \cdot 2 \cdot 120 \cdot 24 = \text{34'560}$`;
+  const V0 = "Wer bekommt wie viele Paare?";
+  const V1 = T`$n = 3$ Mitbewohner`;
+  const V2 = T`$k = 5$ Paare`;
+  const V3 = "Wiederholung: ja";
+  const V4 = "Reihenfolge: nein";
+  const V5 = T`KmW: $x = \binom{n+k-1}{k}$`;
+  const V6 = T`$= \binom{7}{5} = 21$`;
+  L.film("#t09-film", {
+    phasen: ["Muster", "i · Alle anordnen", "ii · Blöcke", "iii · Verteilen"],
+    texte: [
+      'Im Schuhregal einer WG stehen <span data-ph="elf">11 Paar Schuhe</span>: <span data-ph="sand">2 Paar Sandalen</span>, <span data-ph="turn">5 Paar Turnschuhe</span> und <span data-ph="stief">4 Paar Stiefel</span>. Alle Paare sind verschieden.',
+      '<b>i)</b> Wie viele Möglichkeiten gibt es, <span data-ph="reihe">alle 11 Paare in einer Reihe</span> anzuordnen?',
+      '<b>ii)</b> Wie viele sind es, wenn die <span data-ph="typen">drei Typen nicht durchmischt</span> werden dürfen?',
+      '<b>iii)</b> Die 5 Paar Turnschuhe werden <span data-ph="verteilt">rein zufällig an 3 Mitbewohner</span> verschenkt. Wie viele Möglichkeiten gibt es für die Zuteilung? (<span data-ph="leer">Jemand darf auch alle oder keine Paare bekommen.</span>)'
+    ],
+    woerterbuch: [
+      T`$n$ = was zur Auswahl steht`,
+      T`$k$ = wie oft gewählt wird`,
+      "Block = ein Typ als Einheit",
+      "Mitbewohner = Urne, Paare = Ziehungen"
+    ],
+    beschriftung: { texte: "Die Aufgabe", formel: "Rechnung" },
+    szenen: [
+      { ph: 0, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Für jede Teilfrage bestimmst du n, also was zur Auswahl steht, und k, also wie oft gewählt wird. Dann beantwortest du zwei Fragen: Spielt die Reihenfolge eine Rolle? Ist Wiederholung erlaubt? Daraus folgt die Formel." },
+      { ph: 1, hl: ["elf", "reihe"], dict: 1, dh: [0], f: ZEILEN(NW(T`$n = 11$`)),
+        say: "Teil i: Ins Regal kommen alle Paare. Zur Auswahl stehen 11 verschiedene Paare, also n = 11." },
+      { hl: ["reihe"], dict: 2, dh: [1], f: ZEILEN(T`$n = 11$`, NW(T`$k = 11$ (alle)`)),
+        say: "Jeder Platz im Regal wird genau einmal besetzt. Es werden alle 11 Paare angeordnet: k = n = 11." },
+      { hl: ["reihe"], f: ZEILEN(T`$n = 11$`, T`$k = 11$ (alle)`, NW("Reihenfolge: ja")),
+        say: "Vertauschst du zwei Paare, entsteht eine neue Anordnung. Die Reihenfolge zählt." },
+      { f: ZEILEN(T`$n = 11$`, T`$k = 11$ (alle)`, "Reihenfolge: ja", NW("Wiederholung: nein")),
+        say: "Jedes Paar steht genau einmal im Regal. Also ohne Wiederholung." },
+      { f: ZEILEN(T`$n = k = 11$, Reihenfolge ja, ohne Wdh.`, NW(T`PoW: $x = n!$`)),
+        say: "Alle Elemente, Reihenfolge wichtig, keine Wiederholung: Das ist eine Permutation von n Elementen, Satz 3.20." },
+      { f: ZEILEN(T`PoW: $x = 11!$`, NW(T`$= \text{39'916'800}$`)),
+        say: "Für den ersten Platz hast du 11 Paare, für den zweiten noch 10 und so weiter bis 1. Der TI-Nspire liefert 11! = 39'916'800." },
+      { ph: 2, hl: ["typen"], dict: 3, dh: [2], f: ZEILEN(DIM(FI), NW(B1)),
+        say: "Teil ii: Die Typen dürfen nicht durchmischt werden. Jeder Typ bildet einen Block. Stell dir jeden Block als eine grosse Schachtel vor." },
+      { hl: ["typen"], f: ZEILEN(DIM(FI), B1, NW(B2)),
+        say: "Zuerst ordnest du die 3 Schachteln an, zum Beispiel Stiefel, Sandalen, Turnschuhe. Dafür gibt es 3! = 6 Möglichkeiten." },
+      { hl: ["sand"], f: ZEILEN(DIM(FI), B2, NW(B3)),
+        say: "Dann ordnest du den Inhalt jeder Schachtel. Die 2 Paar Sandalen: 2! = 2 Möglichkeiten." },
+      { hl: ["turn"], f: ZEILEN(DIM(FI), B2, B3, NW(B4)),
+        say: "Die 5 Paar Turnschuhe: 5! = 120 Möglichkeiten." },
+      { hl: ["stief"], f: ZEILEN(DIM(FI), B2, B3, B4, NW(B5)),
+        say: "Die 4 Paar Stiefel: 4! = 24 Möglichkeiten." },
+      { f: ZEILEN(DIM(FI), NW(B6)),
+        say: "Jede Reihenfolge der Blöcke lässt sich mit jeder Innenordnung kombinieren. Darum multiplizierst du alles: Produktregel." },
+      { f: ZEILEN(DIM(FI), B6, NW(B7)),
+        say: "Ausrechnen: 6 mal 2 mal 120 mal 24 ergibt 34'560." },
+      { f: ZEILEN(DIM(FI), B6, B7, NW('<span class="strike">' + T`$2! \cdot 5! \cdot 4! = \text{5'760}$` + "</span>")),
+        say: "Typischer Fehler: Wer den Faktor 3! vergisst, erhält nur 5'760. Die Blöcke selbst dürfen die Plätze tauschen. In der Musterlösung gibt es einen Punkt für die Idee, und die beginnt genau mit diesem Faktor." },
+      { ph: 3, hl: ["verteilt", "leer"], f: ZEILEN(DIM(FI), DIM(FII), NW(V0)),
+        say: "Teil iii: Jetzt wird verteilt. Lies genau: Was steht zur Auswahl, und wie oft wird gewählt?" },
+      { hl: ["verteilt"], dict: 4, dh: [3], f: ZEILEN(DIM(FI), DIM(FII), V0, NW(V1)),
+        say: "Jedes Paar «wählt» einen Mitbewohner. Zur Auswahl stehen also die 3 Mitbewohner: n = 3. Achtung, n ist hier nicht die Anzahl Schuhe." },
+      { hl: ["turn"], dh: [3], f: ZEILEN(DIM(FI), DIM(FII), V1, NW(V2)),
+        say: "Gewählt wird fünfmal, einmal für jedes Paar Turnschuhe: k = 5." },
+      { hl: ["leer"], f: ZEILEN(DIM(FI), DIM(FII), V1, V2, NW(V3)),
+        say: "Ein Mitbewohner darf mehrere Paare bekommen, sogar alle. Also mit Wiederholung." },
+      { f: ZEILEN(DIM(FI), DIM(FII), V1, V2, V3, NW(V4)),
+        say: "Gezählt wird, wie viele Paare jeder bekommt. Genau so rechnet die Musterlösung zur Prüfungsaufgabe 4a,iii: ohne Reihenfolge." },
+      { f: ZEILEN(DIM(FII), T`$n = 3$, $k = 5$, mit Wdh., ohne Reihenfolge`, NW(V5)),
+        say: "Mit Wiederholung und ohne Reihenfolge: Kombination mit Wiederholung, Satz 3.27." },
+      { f: ZEILEN(DIM(FII), V5, NW(V6)),
+        say: "Einsetzen: 3 plus 5 minus 1 ergibt 7. Also 7 über 5, das sind 21. Auf dem TI-Nspire: nCr(7,5)." },
+      { f: ZEILEN(DIM(FII), V5, V6, NW("Kontrolle: ●●|●●●| = (2, 3, 0)")),
+        say: "Zur Kontrolle: Jede Zuteilung ist eine Reihe aus 5 Punkten für die Paare und 2 Trennstrichen zwischen den 3 Personen. Von 7 Stellen wählst du 5 für die Punkte." },
+      { f: ZEILEN(DIM(FII), V5, V6, NW(DIM(T`unterscheidbar: $3^5 = 243$`))),
+        say: "Zweite Lesart: Soll auch zählen, welches Paar wer bekommt, wählt jedes Paar einzeln einen von 3 Mitbewohnern: 3 hoch 5 gleich 243. Die Musterlösung meint die Version ohne Reihenfolge. Schreib deine Annahme dazu." },
+      { hl: [], f: ZEILEN(NW(T`i) $11! = \text{39'916'800}$`), NW(T`ii) $3! \cdot 2! \cdot 5! \cdot 4! = \text{34'560}$`), NW(T`iii) $\binom{7}{5} = 21$`)),
+        say: "Fertig: i) 39'916'800, ii) 34'560, iii) 21. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t09-selbsttest", {
+    fragen: [
+      { q: "Du stellst 6 verschiedene Bücher nebeneinander ins Regal. Wie viele Anordnungen gibt es?",
+        o: ["$6$", "$36$", "$720$", T`$\text{46'656}$`], a: 2,
+        e: T`Alle 6 werden angeordnet, jedes genau einmal: $6! = 720$. Die 46'656 wäre $6^6$, also mit Wiederholung.` },
+      { q: "Aus 10 Bewerbenden wird ein Team mit 3 gleichberechtigten Mitgliedern gewählt. Welche Formel passt?",
+        o: [T`$10^3$`, T`$\dfrac{10!}{7!}$`, T`$\dbinom{12}{3}$`, T`$\dbinom{10}{3}$`], a: 3,
+        e: T`Reihenfolge egal, niemand doppelt: KoW, $\binom{10}{3} = 120$.` },
+      { q: "Stolperfalle: Aus denselben 10 Bewerbenden werden Präsidentin, Vize und Kassier gewählt. Wie viele Möglichkeiten gibt es?",
+        o: ["$120$", "$720$", T`$\text{1'000}$`, "$30$"], a: 1,
+        e: T`Die Ämter sind verschieden, also zählt die Reihenfolge: $10 \cdot 9 \cdot 8 = 720$. Wer hier $\binom{10}{3} = 120$ rechnet, übersieht die Rollen.` },
+      { q: "Wie gross ist $0!$?",
+        o: ["nicht definiert", "$0$", "$1$"], a: 2,
+        e: "Per Definition gilt $0! = 1$ (Def. 3.8, Bem. 3.9). Für null Dinge gibt es genau eine Anordnung." },
+      { q: "Stolperfalle: 7 gleiche Bonbons werden an 3 Kinder verteilt, jedes darf leer ausgehen. Was ist n, was ist k?",
+        o: [T`$n = 3$, $k = 7$`, T`$n = 7$, $k = 3$`, T`$n = 10$, $k = 7$`], a: 0,
+        e: T`Jedes Bonbon wählt ein Kind: Die Kinder sind die Urne ($n = 3$), die Bonbons die Ziehungen ($k = 7$). Ergebnis $\binom{3+7-1}{7} = \binom{9}{7} = 36$.` },
+      { q: "Wie viele verschiedene Wörter lassen sich aus allen Buchstaben von LEBEN bilden?",
+        o: ["$120$", "$30$", "$24$", "$60$"], a: 3,
+        e: T`E kommt zweimal vor: $\frac{5!}{2!} = 60$. Die 120 zählt jedes Wort doppelt.` },
+      { q: "Stolperfalle: 3 Krimis und 4 Romane (alle verschieden) kommen ins Regal. Krimis stehen zusammen, Romane auch. Wie viele Anordnungen gibt es?",
+        o: ["$144$", "$288$", T`$\text{5'040}$`, "$35$"], a: 1,
+        e: T`Zwei Blöcke: $2! \cdot 3! \cdot 4! = 2 \cdot 6 \cdot 24 = 288$. Die 144 vergisst, dass die beiden Blöcke die Plätze tauschen können.` },
+      { q: "Stolperfalle: Wie viele PIN-Codes mit 4 Ziffern (0 bis 9) gibt es, wenn sich Ziffern wiederholen dürfen?",
+        o: [T`$\text{5'040}$`, T`$4^{10}$`, T`$\text{10'000}$`, "$210$"], a: 2,
+        e: T`Reihenfolge wichtig, mit Wiederholung: $10^4 = \text{10'000}$. Achtung: $n = 10$ Ziffern ist die Basis, $k = 4$ der Exponent.` },
+      { q: "Welche Aussage über den Binomialkoeffizienten stimmt?",
+        o: [T`$\binom{n}{k} = \frac{n!}{(n-k)!}$`, T`$\binom{n}{0} = 0$`, T`$\binom{n}{1} = 1$`, T`$\binom{n}{k} = \binom{n}{n-k}$`], a: 3,
+        e: T`Symmetrie aus Satz 3.15. Richtig wären auch $\binom{n}{0} = 1$ und $\binom{n}{1} = n$. $\frac{n!}{(n-k)!}$ ist die Formel mit Reihenfolge (VoW).` },
+      { q: T`Mit welchem TI-Nspire-Befehl berechnest du $\binom{12}{4}$?`,
+        o: ['<code class="t09-ti">nCr(12,4)</code>', '<code class="t09-ti">nPr(12,4)</code>', '<code class="t09-ti">12^4</code>', '<code class="t09-ti">binomPdf(12,4)</code>'], a: 0,
+        e: T`<code class="t09-ti">nCr(12,4)</code> liefert 495 (Menü 5 → 3). <code class="t09-ti">nPr</code> zählt mit Reihenfolge, <code class="t09-ti">binomPdf</code> ist eine Verteilung aus Station 11.` }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

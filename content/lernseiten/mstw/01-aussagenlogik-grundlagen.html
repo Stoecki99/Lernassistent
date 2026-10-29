@@ -1,0 +1,1396 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aussagenlogik: Grundlagen · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/02-aequivalenzen-normalformen" title="Modelle, Äquivalenzen und Normalformen">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t01-», nur Farben aus :root -->
+  <style>
+    .t01-ziele{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
+    .t01-ziele-titel{font-weight:600}
+    .t01-zeilen{display:flex; flex-direction:column; gap:4px}
+    /* Zeilen dürfen umbrechen: auf dem Handy lesbar statt seitlich abgeschnitten */
+    .t01-zeilen > div{white-space:normal; overflow-wrap:break-word}
+    .t01-neu{border-left:3px solid var(--accent); padding-left:8px}
+    .t01-unter{display:block; font-size:.72rem; font-weight:400; color:var(--muted); white-space:nowrap}
+    .t01-tafel th, .t01-tafel td{padding:5px 9px}
+    .t01-tafel th{white-space:nowrap}
+    .t01-tafel td.t01-leer{color:var(--muted)}
+    .t01-tafel td.t01-fokus{outline:2px solid var(--accent); outline-offset:-3px; font-weight:700}
+    .t01-tafel th.t01-aktiv{background:var(--accent-soft); color:var(--accent)}
+    .t01-tafel th.t01-quelle{text-decoration:underline; text-decoration-color:var(--accent); text-decoration-thickness:3px; text-underline-offset:4px}
+    .t01-tafel td.t01-quelle{background:var(--board)}
+    .t01-tafel button.t01-gesetzt{border-color:var(--accent)}
+    .t01-tafel button.t01-falsch{border-color:var(--bad); background:var(--bad-bg); color:var(--bad)}
+    .t01-tafel button.t01-falsch::after{content:" ✗"; font-size:.8em}
+    .t01-filmtafel{font-size:.95rem}
+    .t01-filmtafel th, .t01-filmtafel td{padding:3px 6px}
+    .t01-filmzeile{font-size:1.05rem; white-space:normal; line-height:1.5; margin-bottom:8px}
+    .t01-antwort{font-family:var(--f-body); font-size:1rem; white-space:normal; margin-top:8px}
+    /* Junktor-Explorer */
+    .t01-schalter-reihe{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px}
+    .t01-schalter{display:flex; align-items:center; gap:12px; text-align:left; border:2px solid var(--line); background:var(--surface); color:var(--ink); border-radius:12px; padding:10px 12px; min-height:48px; min-width:0}
+    .t01-schalter:hover{border-color:var(--accent)}
+    .t01-schalter:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+    .t01-schalter[aria-pressed="true"]{border-color:var(--ok); background:var(--ok-bg)}
+    .t01-knopf{flex:0 0 auto; width:46px; height:26px; border-radius:999px; background:var(--line); position:relative; transition:background-color .2s}
+    .t01-knopf::after{content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:var(--surface); transition:transform .2s}
+    .t01-schalter[aria-pressed="true"] .t01-knopf{background:var(--ok)}
+    .t01-schalter[aria-pressed="true"] .t01-knopf::after{transform:translateX(20px)}
+    .t01-sw-text{display:flex; flex-direction:column; line-height:1.3; min-width:0}
+    .t01-sw-wert{font-weight:600}
+    .t01-ergebnis{display:flex; flex-direction:column; gap:6px}
+    .t01-ergebnis .t01-gross{font-family:var(--f-math); font-size:1.35rem}
+    .t01-w{color:var(--ok); font-weight:600}
+    .t01-f{color:var(--bad); font-weight:600}
+    .t01-alle{display:flex; flex-wrap:wrap; gap:6px}
+    .t01-alle span{border:1px solid var(--line); border-radius:8px; padding:2px 10px; font-family:var(--f-math); background:var(--bg); white-space:nowrap}
+    /* Wahrheitstafel-Baukasten */
+    .t01-eingabe-reihe{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .t01-eingabe-reihe label{font-weight:600; min-width:4.5em}
+    .t01-eingabe-reihe select{flex:1 1 220px; min-width:0; max-width:100%}
+    .t01-eingabe{flex:1 1 220px; min-width:0; font-family:var(--f-math); font-size:1.15rem; padding:7px 10px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink)}
+    .t01-eingabe:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+    .t01-eingabe[aria-invalid="true"]{border-color:var(--bad)}
+    .t01-tasten{display:flex; flex-wrap:wrap; gap:6px}
+    .t01-tasten .btn{min-width:44px; min-height:40px; font-family:var(--f-math); font-size:1.05rem; padding:5px 10px}
+    .t01-taste{white-space:nowrap}
+    .t01-meldung{min-height:1.5em; font-size:.95rem; color:var(--muted)}
+    .t01-meldung.t01-bad{color:var(--bad)}
+    .t01-meldung.t01-ok{color:var(--ok)}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="01-aussagenlogik-grundlagen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S1-V1 · Aussagenlogik</span>
+    <h1>Aussagenlogik: Grundlagen</h1>
+    <p class="lead">In der Aussagenlogik zählt bei einem Satz nur eines: Ist er wahr oder falsch? Du lernst, Sätze mit fünf Verbindungszeichen zu Formeln zu verknüpfen und mit einer Wahrheitstafel auszurechnen, wann eine Formel wahr ist. Das ist die Grundlage für Aufgabe 1 der Modulschlussprüfung.</p>
+    <div class="card">
+      <p class="t01-ziele-titel">Das kannst du danach</p>
+      <ul class="t01-ziele">
+        <li>Aussagen von Nicht-Aussagen unterscheiden.</li>
+        <li>Die Junktoren ¬, ∧, ∨, ⇒, ⇔ lesen, richtig klammern und ihren Wahrheitswert bestimmen.</li>
+        <li>Syntax (Was ist eine Formel?) und Semantik (Wann ist sie wahr?) auseinanderhalten.</li>
+        <li>Eine vollständige Wahrheitstafel aufstellen und die Modelle ablesen.</li>
+        <li>Deutsche Sätze in Formeln übersetzen, auch mit «nur wenn» und «entweder … oder».</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#junktoren"><b>1</b>Junktoren</a>
+    <a href="#syntax"><b>2</b>Syntax</a>
+    <a href="#semantik"><b>3</b>Semantik</a>
+    <a href="#implikation"><b>4</b>Implikation</a>
+    <a href="#wahrheitstafel"><b>5</b>Wahrheitstafel</a>
+    <a href="#formalisieren"><b>6</b>Formalisieren</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Vier Bausteine der Aussagenlogik</h2>
+    <p class="prose"><b>Logik</b> ist die Lehre vom folgerichtigen Denken. Die <b>Aussagenlogik</b> ist ihr einfachster Teil: Sie fragt nicht, <em>was</em> ein Satz bedeutet, sondern nur, ob er wahr oder falsch ist und was beim Verknüpfen mehrerer Sätze herauskommt. Dafür brauchst du vier Begriffe.</p>
+    <div class="grid4">
+      <div class="concept">
+        <span class="tag">Aussage = wahr oder falsch</span>
+        <span class="ex">«Ein Hai ist ein Säugetier.»</span>
+        <p>Ein Satz, der entweder wahr oder falsch ist (Def. 1.1). Wie eine Quizfrage mit Ja/Nein: Es gibt genau eine richtige Antwort, auch wenn du sie nicht kennst. Dieser Satz ist falsch, aber trotzdem eine Aussage.</p>
+      </div>
+      <div class="concept">
+        <span class="tag">Atom = Kürzel für eine Aussage</span>
+        <span class="ex">$\at{R}$ := «Es regnet.»</span>
+        <p>Ein Buchstabe, der für eine einfache Aussage steht (Def. 2.1a, Notation 2.3a). Wie ein Kürzel auf dem Einkaufszettel: Du schreibst nicht jedes Mal den ganzen Satz.</p>
+      </div>
+      <div class="concept">
+        <span class="tag">Junktor = Verbindungsstück</span>
+        <span class="ex">$\at{R} \land \at{N}$</span>
+        <p>Ein Zeichen, das Aussagen zu grösseren Aussagen verbindet: $\neg$ (nicht), $\land$ (und), $\lor$ (oder), $\Rightarrow$ (wenn … dann), $\Leftrightarrow$ (genau dann, wenn). Wie die Steckverbindung bei Legosteinen.</p>
+      </div>
+      <div class="concept">
+        <span class="tag">Belegung = Schalterstellung</span>
+        <span class="ex">$\al(\at{R}) = 1$</span>
+        <p>Die Belegung $\al$ gibt jedem Atom einen Wahrheitswert: 1 für wahr, 0 für falsch (Def. 2.4b). Wie Lichtschalter: Jedes Atom ist entweder an oder aus.</p>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Aussage oder keine Aussage?</h3>
+      <p class="hint">Frag dich: Kann der Satz wahr oder falsch sein? Fragen, Befehle und Wünsche können das nicht.</p>
+      <div id="t01-sort-aussage"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Junktoren ===== -->
+  <section id="junktoren">
+    <span class="eyebrow">Schritt 1 · Wörterbuch</span>
+    <h2>Die fünf Junktoren und ihre Zeichen</h2>
+    <p class="prose">Bevor du rechnest, legst du fest, was jedes Zeichen bedeutet. Die Farbe zeigt die Art: Atome (also Aussagen) violett, Platzhalter für ganze Formeln blau, die Belegung $\al$ als Funktion grün, Wahrheitswerte orange.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Zeichen</th><th>Art</th><th>Name und Lesart</th><th>wahr genau dann, wenn …</th></tr></thead>
+        <tbody>
+          <tr><td>$\neg \at{A}$</td><td><span class="kind kind-op">Junktor</span></td><td><b>Negation</b>: «nicht A»</td><td>A falsch ist</td></tr>
+          <tr><td>$\at{A} \land \at{B}$</td><td><span class="kind kind-op">Junktor</span></td><td><b>Konjunktion</b>: «A und B», «sowohl A als auch B»</td><td>A und B beide wahr sind</td></tr>
+          <tr><td>$\at{A} \lor \at{B}$</td><td><span class="kind kind-op">Junktor</span></td><td><b>Disjunktion</b>: «A oder B (oder beides)»</td><td>mindestens eines wahr ist</td></tr>
+          <tr><td>$\at{A} \Rightarrow \at{B}$</td><td><span class="kind kind-op">Junktor</span></td><td><b>Implikation</b> (Folgerung): «wenn A, dann B», «A nur, wenn B»</td><td>nicht der Fall «A wahr, B falsch» vorliegt</td></tr>
+          <tr><td>$\at{A} \Leftrightarrow \at{B}$</td><td><span class="kind kind-op">Junktor</span></td><td><b>Äquivalenz</b>: «A genau dann, wenn B»</td><td>A und B denselben Wert haben</td></tr>
+          <tr><td>$\at{A}, \at{B}, \at{C}$</td><td><span class="kind kind-p">Aussage</span></td><td><b>Atom</b> (atomare Formel)</td><td>die Belegung es so festlegt</td></tr>
+          <tr><td>$\fv{F}, \fv{G}$</td><td><span class="kind kind-v">Platzhalter</span></td><td>beliebige <b>Formel</b>, zum Beispiel $\at{A} \land \neg \at{B}$</td><td>sich das aus ihren Teilen ergibt</td></tr>
+          <tr><td>$\al$</td><td><span class="kind kind-fn">Funktion</span></td><td><b>Belegung</b>: ordnet jedem Atom 0 oder 1 zu</td><td>–</td></tr>
+          <tr><td>$\htmlClass{c}{0}, \htmlClass{c}{1}$</td><td><span class="kind kind-c">Konstante</span></td><td><b>Wahrheitswerte</b> falsch und wahr</td><td>–</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Andere Schreibweisen:</b> Statt $\Rightarrow$ steht oft $\rightarrow$, statt $\Leftrightarrow$ oft $\leftrightarrow$. Gemeint ist dasselbe. Die Folien und die Prüfung verwenden $\Rightarrow$ und $\Leftrightarrow$.</div>
+    <h3>Wer bindet stärker?</h3>
+    <p class="prose">Wie «Punkt vor Strich» beim Rechnen gibt es eine Reihenfolge. Sie bestimmt, welche Teile zusammengehören, wenn Klammern fehlen.</p>
+    <div class="board">
+      <div class="t01-zeilen">
+        <div>1. $\neg$ bindet am stärksten: $\neg \at{A} \land \at{B}$ heisst $(\neg \at{A}) \land \at{B}$, nicht $\neg(\at{A} \land \at{B})$.</div>
+        <div>2. $\land$ und $\lor$ binden <b>gleich stark</b>: Mischst du sie, brauchst du Klammern.</div>
+        <div>3. $\Rightarrow$ und $\Leftrightarrow$ binden am schwächsten: $\at{X} \Leftrightarrow \at{Y} \land \neg \at{Z}$ heisst $\at{X} \Leftrightarrow (\at{Y} \land \neg \at{Z})$.</div>
+      </div>
+    </div>
+    <div class="note falle"><b>Falle:</b> Laut Folie ist $\at{A_1} \land \at{A_2} \lor \at{A_3}$ <b>keine Formel</b>, weil $\land$ und $\lor$ gleich stark binden (Bsp. 2.2c). In Java oder SQL bindet <code>&amp;&amp;</code> bzw. <code>AND</code> stärker als <code>||</code> bzw. <code>OR</code>, und manche Lehrbücher übernehmen diese Regel. Im MSTW gilt die Folie: Setz bei gemischtem $\land$ und $\lor$ immer Klammern.</div>
+    <div class="note tipp"><b>Woher kommt Regel 3?</b> Auf den Folien steht sie nicht: Dort sind $\Rightarrow$ und $\Leftrightarrow$ nur Abkürzungen mit Klammern (Notation 2.3). In der Musterlösung zur exemplarischen Prüfung (Aufgabe 1b) lässt der Dozent die Klammern um eine $\land$-Kette neben $\Leftrightarrow$ aber weg. Das geht nur mit Regel 3, und so ist es in Lehrbüchern üblich. Im Zweifel klammerst du trotzdem: Zusätzliche Klammern sind nie falsch.</div>
+  </section>
+
+  <!-- ===== 2 · Syntax ===== -->
+  <section id="syntax">
+    <span class="eyebrow">Schritt 2 · Syntax (Def. 1.3a, Def. 2.1, Notation 2.3)</span>
+    <h2>Welche Zeichenketten sind Formeln?</h2>
+    <p class="prose">Ein <b>logisches System</b> hat laut Def. 1.3 drei Teile. Vergleich mit der Sprache: Die Grammatik sagt, welche Sätze korrekt gebaut sind. Ob ein korrekt gebauter Satz stimmt, ist eine andere Frage.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Syntax = Bauregeln</span><span class="ex">$(\at{A} \land \at{B})$ ✓</span><p>Legt fest, wie man aus atomaren Formeln mit Junktoren grössere Formeln baut. Eine Formel ist zunächst nur eine Zeichenkette ohne Bedeutung.</p></div>
+      <div class="concept"><span class="tag">Semantik = Bedeutung</span><span class="ex">$\al(\at{A} \land \at{B}) = 0$</span><p>Legt fest, wie Formeln einen Wahrheitswert bekommen. Eine Belegung, unter der die Formel wahr wird, heisst <b>Modell</b>.</p></div>
+      <div class="concept"><span class="tag">Kalkül = Rechenregeln</span><span class="ex">mechanisch</span><p>Optional: feste Umformungsregeln, die ein Computer abarbeiten kann. Das kommt in S1-V3 (Resolution).</p></div>
+    </div>
+    <p class="prose">Die Bauregeln der Aussagenlogik (Def. 2.1) in eigenen Worten:</p>
+    <div class="board">
+      <div class="t01-zeilen">
+        <div>a) Atomare Formeln sind die einfachen Aussagen $\at{A_0}, \at{A_1}, \at{A_2}, \dots$ (kurz auch $\at{A}, \at{B}, \at{C}$, Notation 2.3a)</div>
+        <div>b1) Jede atomare Formel ist eine Formel.</div>
+        <div>b2) Sind $\fv{F}$ und $\fv{G}$ Formeln, dann auch $(\fv{F} \land \fv{G})$ und $(\fv{F} \lor \fv{G})$.</div>
+        <div>b3) Ist $\fv{F}$ eine Formel, dann auch $\neg \fv{F}$.</div>
+      </div>
+    </div>
+    <div class="note"><b>Merke:</b> Die Klammern in b2 gehören zur Regel. Wer zwei Formeln mit $\land$ oder $\lor$ verbindet, setzt eine Klammer darum. Nur die äusserste Klammer der ganzen Formel lässt man weg.</div>
+    <div id="t01-stepper-syntax"></div>
+    <p class="prose">$\Rightarrow$ und $\Leftrightarrow$ kommen in Def. 2.1 gar nicht vor. Sie sind <b>Abkürzungen</b> (Notation 2.3):</p>
+    <div class="board">
+      <div class="t01-zeilen">
+        <div>b) $(\fv{F_1} \Rightarrow \fv{F_2})$ steht für $(\neg \fv{F_1} \lor \fv{F_2})$ und heisst <b>Folgerung</b> (Implikation).</div>
+        <div>c) $(\fv{F_1} \Leftrightarrow \fv{F_2})$ steht für $((\fv{F_1} \land \fv{F_2}) \lor (\neg \fv{F_1} \land \neg \fv{F_2}))$ und heisst <b>Äquivalenz</b>.</div>
+        <div>d, e) Lange Ketten kürzt man ab: $\bigvee_{i=1}^{n} \fv{F_i}$ für $\fv{F_1} \lor \dots \lor \fv{F_n}$, $\bigwedge_{i=1}^{n} \fv{F_i}$ für $\fv{F_1} \land \dots \land \fv{F_n}$.</div>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Formel oder keine Formel?</h3>
+      <p class="hint">Prüfe jede Zeichenkette gegen die Regeln b1 bis b3. Die äusserste Klammer darf fehlen.</p>
+      <div id="t01-sort-formel"></div>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Semantik ===== -->
+  <section id="semantik">
+    <span class="eyebrow">Schritt 3 · Semantik (Def. 2.4, Bem. 2.6)</span>
+    <h2>Wann ist eine Formel wahr?</h2>
+    <p class="prose">Die <b>Wahrheitswerte</b> sind wahr und falsch, kurz 1 und 0. Eine <b>Belegung</b> $\al$ ordnet jedem Atom einen dieser Werte zu (Def. 2.4b). Aus den Werten der Atome rechnest du dann den Wert jeder Formel aus, von innen nach aussen (Def. 2.4c):</p>
+    <div class="board">
+      <div class="t01-zeilen">
+        <div>$\al(\fv{F} \land \fv{G}) = 1$, falls $\al(\fv{F}) = 1$ und $\al(\fv{G}) = 1$, sonst $0$</div>
+        <div>$\al(\fv{F} \lor \fv{G}) = 1$, falls $\al(\fv{F}) = 1$ oder $\al(\fv{G}) = 1$ (oder beides), sonst $0$</div>
+        <div>$\al(\neg \fv{F}) = 1$, falls $\al(\fv{F}) = 0$, sonst $0$</div>
+      </div>
+    </div>
+    <p class="prose">Fasst man diese Regeln und die Abkürzungen $\Rightarrow$, $\Leftrightarrow$ zusammen, ergeben sich die <b>Grundtafeln</b> (Bem. 2.6). Diese Tabelle musst du auswendig können:</p>
+    <div class="card tablebox">
+      <table class="wahrheitstabelle t01-tafel">
+        <thead><tr><th scope="col">$\fv{F}$</th><th scope="col">$\fv{G}$</th><th scope="col" class="erg">$\neg \fv{F}$</th><th scope="col">$\fv{F} \land \fv{G}$</th><th scope="col">$\fv{F} \lor \fv{G}$</th><th scope="col">$\fv{F} \Rightarrow \fv{G}$</th><th scope="col">$\fv{F} \Leftrightarrow \fv{G}$</th></tr></thead>
+        <tbody>
+          <tr><td class="f">0</td><td class="f">0</td><td class="erg w">1</td><td class="f">0</td><td class="f">0</td><td class="w">1</td><td class="w">1</td></tr>
+          <tr><td class="f">0</td><td class="w">1</td><td class="erg w">1</td><td class="f">0</td><td class="w">1</td><td class="w">1</td><td class="f">0</td></tr>
+          <tr><td class="w">1</td><td class="f">0</td><td class="erg f">0</td><td class="f">0</td><td class="w">1</td><td class="f">0</td><td class="f">0</td></tr>
+          <tr><td class="w">1</td><td class="w">1</td><td class="erg f">0</td><td class="w">1</td><td class="w">1</td><td class="w">1</td><td class="w">1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Eselsbrücke:</b> $\land$ hat nur <b>eine 1</b> (unten). $\lor$ hat nur <b>eine 0</b> (oben). $\Rightarrow$ hat nur <b>eine 0</b>: bei 1 ⇒ 0. $\Leftrightarrow$ ist 1, wenn beide <b>gleich</b> sind.</div>
+    <div id="t01-stepper-semantik"></div>
+
+    <div class="card stack" id="t01-explorer">
+      <h3>Junktor-Explorer</h3>
+      <p class="hint">Schalte A und B um und wähle einen Junktor. Du siehst den Wahrheitswert, die passende Zeile der Wahrheitstafel und warum es so ist.</p>
+      <div class="t01-schalter-reihe">
+        <button type="button" class="t01-schalter" id="t01-sw-a" aria-pressed="true"></button>
+        <button type="button" class="t01-schalter" id="t01-sw-b" aria-pressed="true"></button>
+      </div>
+      <div class="modes row" role="group" aria-label="Junktor wählen" id="t01-junktorwahl"></div>
+      <div class="t01-ergebnis info" id="t01-ex-ergebnis" aria-live="polite"></div>
+      <div class="tablebox" id="t01-ex-tafel"></div>
+      <div>
+        <p class="hint">Alle fünf Junktoren bei dieser Schalterstellung:</p>
+        <div class="t01-alle" id="t01-ex-alle"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 4 · Implikation ===== -->
+  <section id="implikation">
+    <span class="eyebrow">Schritt 4 · Die Implikation richtig lesen</span>
+    <h2>Wenn … dann: ein Versprechen</h2>
+    <p class="prose">Die Implikation ist der Junktor, bei dem die meisten Fehler passieren. Stell sie dir als Versprechen vor: «Wenn du die Prüfung bestehst ($\at{P}$), lade ich dich zum Essen ein ($\at{E}$).» Wann habe ich das Versprechen gebrochen?</p>
+    <div class="card tablebox">
+      <table class="wahrheitstabelle t01-tafel">
+        <thead><tr><th scope="col">$\at{P}$ bestanden</th><th scope="col">$\at{E}$ eingeladen</th><th scope="col">Versprechen</th><th scope="col" class="erg">$\at{P} \Rightarrow \at{E}$</th></tr></thead>
+        <tbody>
+          <tr><td class="f">0</td><td class="f">0</td><td>nicht auf die Probe gestellt</td><td class="erg w">1</td></tr>
+          <tr><td class="f">0</td><td class="w">1</td><td>nicht auf die Probe gestellt (Einladung als Trost)</td><td class="erg w">1</td></tr>
+          <tr class="an"><td class="w">1</td><td class="f">0</td><td><b>gebrochen</b></td><td class="erg f">0</td></tr>
+          <tr><td class="w">1</td><td class="w">1</td><td>gehalten</td><td class="erg w">1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> $\at{A} \Rightarrow \at{B}$ verbietet genau einen Fall: A wahr und B falsch. Ist A falsch, ist die Implikation automatisch wahr. Sie behauptet auch keine Ursache: «Wenn 2 + 2 = 4, dann ist Bern in der Schweiz» ist wahr.</div>
+    <h3>Viele Sätze, ein Pfeil</h3>
+    <p class="prose">Alle diese Sätze bedeuten $\at{A} \Rightarrow \at{B}$. Die Bedingung, ohne die es nicht geht (die <b>notwendige</b>), steht immer rechts.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Formel</th><th>Satz</th></tr></thead>
+        <tbody>
+          <tr><td>$\at{A} \Rightarrow \at{B}$</td><td>Wenn A, dann B. · B, falls A. · B, wenn A.</td></tr>
+          <tr><td>$\at{A} \Rightarrow \at{B}$</td><td>A nur (dann), wenn B. · Nur wenn B, (dann) A.</td></tr>
+          <tr><td>$\at{A} \Rightarrow \at{B}$</td><td>A ist hinreichend für B. · B ist notwendig für A.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle «nur wenn»:</b> «Ich gehe nur joggen ($\at{J}$), wenn die Sonne scheint ($\at{S}$).» heisst $\at{J} \Rightarrow \at{S}$. Joggst du, dann scheint die Sonne. Umgekehrt zwingt dich die Sonne nicht zum Joggen. $\at{S} \Rightarrow \at{J}$ wäre falsch übersetzt.</div>
+    <h3>Umkehrung, Kontraposition, Verneinung</h3>
+    <p class="prose">Drei Formeln sehen ähnlich aus. Die Wahrheitstafel zeigt, welche dasselbe bedeutet wie $\at{A} \Rightarrow \at{B}$: Gleiche Spalte heisst gleiche Bedeutung.</p>
+    <div class="card tablebox">
+      <table class="wahrheitstabelle t01-tafel">
+        <thead><tr><th scope="col">$\at{A}$</th><th scope="col">$\at{B}$</th><th scope="col" class="erg">$\at{A} \Rightarrow \at{B}$</th><th scope="col">$\at{B} \Rightarrow \at{A}$<span class="t01-unter">Umkehrung</span></th><th scope="col">$\neg \at{B} \Rightarrow \neg \at{A}$<span class="t01-unter">Kontraposition</span></th><th scope="col">$\at{A} \land \neg \at{B}$<span class="t01-unter">Verneinung</span></th></tr></thead>
+        <tbody>
+          <tr><td class="f">0</td><td class="f">0</td><td class="erg w">1</td><td class="w">1</td><td class="w">1</td><td class="f">0</td></tr>
+          <tr><td class="f">0</td><td class="w">1</td><td class="erg w">1</td><td class="f">0</td><td class="w">1</td><td class="f">0</td></tr>
+          <tr><td class="w">1</td><td class="f">0</td><td class="erg f">0</td><td class="w">1</td><td class="f">0</td><td class="w">1</td></tr>
+          <tr><td class="w">1</td><td class="w">1</td><td class="erg w">1</td><td class="w">1</td><td class="w">1</td><td class="f">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="prose">
+      <li>Die <b>Kontraposition</b> $\neg \at{B} \Rightarrow \neg \at{A}$ hat dieselbe Spalte: gleiche Bedeutung (Aufgabe 2.5a).</li>
+      <li>Die <b>Umkehrung</b> $\at{B} \Rightarrow \at{A}$ unterscheidet sich in Zeile 2 und 3: andere Bedeutung.</li>
+      <li>Die <b>Verneinung</b> $\neg(\at{A} \Rightarrow \at{B})$ ist genau dort 1, wo $\at{A} \Rightarrow \at{B}$ 0 ist. Das ist die Spalte von $\at{A} \land \neg \at{B}$: «A, und trotzdem nicht B».</li>
+    </ul>
+    <details class="sol"><summary>Warum ist «Wenn du bestehst, lade ich dich nicht ein» keine Verneinung?</summary>
+      <div class="stack">
+        <p>Die Verneinung muss genau dann wahr sein, wenn das Versprechen gebrochen ist, also nur bei $\at{P} = 1$ und $\at{E} = 0$.</p>
+        <p>$\at{P} \Rightarrow \neg \at{E}$ ist aber auch bei $\at{P} = 0$ wahr (dort ist jede Implikation wahr). Also passt die Spalte nicht.</p>
+        <p>Richtig verneint: «Du bestehst, und ich lade dich trotzdem nicht ein.» Genau so verlangt es Aufgabe 1a der Modulschlussprüfung: einen ganzen deutschen Satz, kein vorangestelltes «nicht».</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Wahrheitstafel ===== -->
+  <section id="wahrheitstafel">
+    <span class="eyebrow">Schritt 5 · Wahrheitstafeln aufstellen</span>
+    <h2>Alle Belegungen auf einmal</h2>
+    <p class="prose">Eine <b>Wahrheitstafel</b> listet jede mögliche Belegung als Zeile auf und rechnet die Formel für jede aus. So gehst du vor:</p>
+    <ol class="prose">
+      <li><b>Atome bestimmen</b> und alphabetisch ordnen. Bei $n$ Atomen gibt es $2^n$ Zeilen (2 Werte pro Atom).</li>
+      <li><b>Atom-Spalten füllen</b> wie Binärzahlen: Die erste Spalte ist zur Hälfte 0, dann 1. Jede weitere wechselt doppelt so oft. Die letzte wechselt in jeder Zeile.</li>
+      <li><b>Teilformeln</b> von innen nach aussen als eigene Spalten anlegen.</li>
+      <li><b>Spalte für Spalte</b> mit der Grundtafel ihres Junktors aus den schon fertigen Spalten berechnen.</li>
+      <li><b>Ablesen:</b> Zeilen mit 1 in der letzten Spalte sind die <b>Modelle</b>. Steht überall 1, ist die Formel eine <b>Tautologie</b>; steht überall 0, ist sie <b>unerfüllbar</b> (Def. 1.3b). Hat sie mindestens ein Modell, heisst sie <b>erfüllbar</b>.</li>
+    </ol>
+    <div id="t01-stepper-tafel"></div>
+
+    <div class="card stack" id="t01-baukasten">
+      <h3>Wahrheitstafel-Baukasten</h3>
+      <p class="hint">Wähle eine Vorlage oder setze eine eigene Formel mit den Tasten zusammen. Dann füllst du Spalte für Spalte aus: Tippe auf ein Feld, um 1 oder 0 zu setzen, und prüfe die Spalte. Unterstrichen sind die Spalten, aus denen die aktuelle Spalte entsteht.</p>
+      <div class="t01-eingabe-reihe">
+        <label for="t01-vorlage">Vorlage</label>
+        <select id="t01-vorlage" class="btn">
+          <option value="¬A ∨ B">¬A ∨ B</option>
+          <option value="A ⇒ B">A ⇒ B</option>
+          <option value="(A ⇒ B) ∧ (B ⇒ A)">(A ⇒ B) ∧ (B ⇒ A) · wie A ⇔ B?</option>
+          <option value="A ∧ (B ∨ ¬C)">A ∧ (B ∨ ¬C) · Bsp. 2.5</option>
+          <option value="(A ∧ ¬B) ∨ (A ∧ C)">(A ∧ ¬B) ∨ (A ∧ C) · Bsp. 1.4</option>
+          <option value="¬(A ⇒ B)">¬(A ⇒ B) · Verneinung</option>
+          <option value="(G ⇒ K) ∧ ¬(K ∧ P) ∧ (P ⇒ G)">(G ⇒ K) ∧ ¬(K ∧ P) ∧ (P ⇒ G) · Lösungsfilm</option>
+          <option value="(A ∨ F) ∧ ((F ∧ ¬J) ∨ (¬F ∧ J)) ∧ ((A ∧ ¬J) ∨ (¬A ∧ J))">Regierung und Opposition · Folienbeispiel</option>
+          <option value="A ∨ ¬A">A ∨ ¬A · Tautologie?</option>
+          <option value="A ∧ ¬A">A ∧ ¬A · unerfüllbar?</option>
+        </select>
+      </div>
+      <div class="t01-eingabe-reihe">
+        <label for="t01-eingabe">Formel</label>
+        <input id="t01-eingabe" class="t01-eingabe" type="text" autocomplete="off" spellcheck="false" autocapitalize="characters" aria-describedby="t01-eingabe-hilfe">
+      </div>
+      <p class="hint" id="t01-eingabe-hilfe">Atome: Grossbuchstaben, auch mit Ziffer (S1). Über die Tastatur: <code class="t01-taste">!</code> oder <code class="t01-taste">~</code> für ¬, <code class="t01-taste">&amp;</code> für ∧, <code class="t01-taste">|</code> für ∨, <code class="t01-taste">-&gt;</code> für ⇒, <code class="t01-taste">&lt;-&gt;</code> für ⇔. Höchstens 4 Atome.</p>
+      <div class="t01-tasten" role="group" aria-label="Zeichen einfügen" id="t01-tasten"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t01-bauen">Tafel bauen</button>
+      </div>
+      <p class="t01-meldung" id="t01-meldung" aria-live="polite"></p>
+      <div class="tablebox" id="t01-tafelbox"></div>
+      <div class="row" id="t01-steuerung" hidden>
+        <button type="button" class="btn primary" id="t01-pruefen">Spalte prüfen</button>
+        <button type="button" class="btn" id="t01-tipp">Tipp</button>
+        <button type="button" class="btn" id="t01-zeigen">Spalte zeigen</button>
+        <button type="button" class="btn" id="t01-alles">Alles zeigen</button>
+        <button type="button" class="btn" id="t01-neu">Neu ausfüllen</button>
+      </div>
+      <p class="t01-meldung" id="t01-rueck" aria-live="polite"></p>
+      <div class="note" id="t01-resultat" hidden></div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Formalisieren ===== -->
+  <section id="formalisieren">
+    <span class="eyebrow">Schritt 6 · Sätze formalisieren</span>
+    <h2>Vom deutschen Satz zur Formel</h2>
+    <p class="prose"><b>Formalisieren</b> heisst: einen Sachverhalt in eine Formel übersetzen. In der Prüfung (Aufgabe 1b) und in den Musterlösungen geht das immer gleich:</p>
+    <ol class="prose">
+      <li><b>Atome festlegen:</b> kurze, positive Aussagen, zum Beispiel $\at{B}$ := «Die Gruppe trinkt Bier». Ein «nicht» kommt später als $\neg$ dazu.</li>
+      <li><b>Jeden Satz einzeln übersetzen:</b> $\fv{F_1}, \fv{F_2}, \dots$ Achte auf die Signalwörter in der Tabelle unten.</li>
+      <li><b>Alles verbinden:</b> Alle Sätze gelten zugleich, also $\fv{F} = \fv{F_1} \land \fv{F_2} \land \dots \land \fv{F_k}$.</li>
+    </ol>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Formel</th><th>Signalwörter</th></tr></thead>
+        <tbody>
+          <tr><td>$\at{A} \land \at{B}$</td><td>A und B · sowohl A als auch B · A, aber B</td></tr>
+          <tr><td>$\at{A} \lor \at{B}$</td><td>A oder B (beides erlaubt)</td></tr>
+          <tr><td>$(\at{A} \land \neg \at{B}) \lor (\neg \at{A} \land \at{B})$</td><td>entweder A oder B (nicht beides)</td></tr>
+          <tr><td>$\neg \at{A} \land \neg \at{B}$</td><td>weder A noch B</td></tr>
+          <tr><td>$\neg(\at{A} \land \at{B})$</td><td>nicht beide · höchstens eines von A, B</td></tr>
+          <tr><td>$\at{A} \Rightarrow \at{B}$</td><td>wenn A, dann B · B, falls A · A nur, wenn B</td></tr>
+          <tr><td>$\at{A} \Leftrightarrow \at{B}$</td><td>A genau dann, wenn B</td></tr>
+          <tr><td>$\at{A} \lor (\at{C} \Rightarrow \at{B})$</td><td>A oder, wenn C, dann B</td></tr>
+          <tr><td>$\at{X} \Leftrightarrow \fv{S}$</td><td>Person X sagt «S» (Rätsel), mit X := «X sagt die Wahrheit»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle «oder»:</b> Das mathematische «oder» ist inklusiv, beides darf stimmen. Steht im Text «entweder … oder», ist beides verboten. Dann brauchst du die lange Formel aus der Tabelle.</div>
+    <p class="prose">Das Folienbeispiel aus S1-V1 zeigt alle drei Schritte. Drei Politiker machen je eine Aussage. Gibt es eine Verteilung auf Regierung und Opposition, bei der alle drei Aussagen stimmen?</p>
+    <div id="t01-stepper-formal"></div>
+    <details class="sol"><summary>Die ganze Wahrheitstafel zum Folienbeispiel</summary>
+      <div class="stack">
+        <p>Mit $\fv{G_1} = \at{A} \lor \at{F}$, $\fv{G_2} = (\at{F} \land \neg \at{J}) \lor (\neg \at{F} \land \at{J})$, $\fv{G_3} = (\at{A} \land \neg \at{J}) \lor (\neg \at{A} \land \at{J})$ und $\fv{G} = \fv{G_1} \land \fv{G_2} \land \fv{G_3}$:</p>
+        <div class="tablebox" id="t01-tafel-regierung"></div>
+        <p>Nur Zeile 7 hat $\fv{G} = 1$. Das einzige Modell ist $\al(\at{A}) = 1$, $\al(\at{F}) = 1$, $\al(\at{J}) = 0$: Angela und Franz regieren, Joschka ist in der Opposition. Probier es auch im Baukasten (Vorlage «Regierung und Opposition»).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst üben</span>
+    <h2>Übungen</h2>
+    <p class="prose">Die Aufgaben 5 bis 7 sind im Stil von Aufgabe 1 der Modulschlussprüfung gebaut, Aufgabe 8 im Stil der Rätsel aus Lernblock und Übungsset. Alle Aufgaben sind eigene Aufgaben mit eigener Lösung: selbst gerechnet und mit einem Programm geprüft, aber nicht vom Dozenten bestätigt. Einen Taschenrechner brauchst du für dieses Thema nicht: In der Prüfung zählt der Lösungsweg.</p>
+    <div id="t01-ue-wf"></div>
+    <div class="card stack">
+      <h3>2 · Welche Richtung hat der Pfeil?</h3>
+      <p class="hint">A und B sind zwei Aussagen. Ordne jeden Satz der passenden Formel zu.</p>
+      <div id="t01-ue-sort"></div>
+    </div>
+    <div id="t01-ue-zahl1"></div>
+    <div id="t01-ue-zahl2"></div>
+    <div id="t01-ue-neg1"></div>
+    <div id="t01-ue-neg2"></div>
+    <div id="t01-ue-formal"></div>
+    <div id="t01-ue-raetsel"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Formalisieren und mit der Wahrheitstafel beweisen</h2>
+    <p class="prose">Diese Aufgabe ist im Stil von Aufgabe 1 im Übungsset S1 gebaut (eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt). Drück auf Play. Gelb leuchtet immer, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t01-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t01-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Eine <b>Aussage</b> ist entweder wahr oder falsch (Def. 1.1). Fragen, Befehle und Wünsche sind keine Aussagen. Atome sind Kürzel für einfache Aussagen.</li>
+      <li><b>Syntax</b> sagt, welche Zeichenketten Formeln sind (Def. 2.1). <b>Semantik</b> sagt, welchen Wert eine Formel unter einer Belegung $\al$ hat (Def. 2.4).</li>
+      <li><b>Bindung:</b> $\neg$ zuerst, dann $\land$ und $\lor$ (gleich stark, also klammern), zuletzt $\Rightarrow$ und $\Leftrightarrow$.</li>
+      <li>$\at{A} \Rightarrow \at{B}$ ist nur bei A = 1 und B = 0 falsch. «A nur, wenn B» heisst ebenfalls $\at{A} \Rightarrow \at{B}$.</li>
+      <li><b>Wahrheitstafel:</b> $n$ Atome geben $2^n$ Zeilen. Teilformeln von innen nach aussen. Zeilen mit 1 sind Modelle.</li>
+      <li><b>Formalisieren:</b> Atome festlegen, jeden Satz als $\fv{F_i}$ übersetzen, dann $\fv{F} = \fv{F_1} \land \dots \land \fv{F_k}$. Bei Rätseln: $\at{X} \Leftrightarrow$ Gesagtes.</li>
+    </ul>
+    <div class="board">
+      <div class="t01-zeilen">
+        <div>$\fv{F} \Rightarrow \fv{G}$ &nbsp;bedeutet&nbsp; $\neg \fv{F} \lor \fv{G}$ &nbsp; (Notation 2.3b)</div>
+        <div>$\fv{F} \Leftrightarrow \fv{G}$ &nbsp;bedeutet&nbsp; $(\fv{F} \land \fv{G}) \lor (\neg \fv{F} \land \neg \fv{G})$ &nbsp; (Notation 2.3c)</div>
+        <div>entweder A oder B: &nbsp;$(\at{A} \land \neg \at{B}) \lor (\neg \at{A} \land \at{B})$</div>
+        <div>Verneinung von «wenn A, dann B»: &nbsp;$\at{A} \land \neg \at{B}$</div>
+      </div>
+    </div>
+    <footer>Quellen: Folien S1-V1 von U. Koch und S. Ott (Def. 1.1, 1.3, 2.1, 2.4, Bsp. 1.4, 2.2, 2.5, Notation 2.3, Bem. 2.6, Motivationsbeispiel), Übung S1-Ü1, Lösungen Lernblock S1-LB1 (Aufgaben 2.1–2.5), Übungsset S1 (Aufgabe 1), Exemplarische Modulschlussprüfung (Aufgabe 1). Grundlage der Folien: Kreuzer/Kühling, «Logik für Informatiker», Kap. 1 und 2 (Skript KK S. 7–23). Alle Beispiele in eigenen Worten, Übungen und Film mit eigenen Zusammenhängen.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text.
+  const T = String.raw;
+  const L = window.Lernpfad;
+
+  // Farbcode als Makros: Atom = Aussage (violett), Platzhalter-Formel (blau), Belegung α (grün)
+  L.makros["\\at"] = "\\htmlClass{p}{#1}";
+  L.makros["\\fv"] = "\\htmlClass{v}{#1}";
+  L.makros["\\al"] = "\\htmlClass{fn}{\\alpha}";
+
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const imp = (a, b) => (!a || b ? 1 : 0);
+  const zeilen = (liste) => '<div class="t01-zeilen">' + liste.map((z) => "<div>" + z + "</div>").join("") + "</div>";
+  // Letzte Zeile als neu markieren
+  const zeilenNeu = (liste) =>
+    '<div class="t01-zeilen">' + liste.map((z, i) => '<div' + (i === liste.length - 1 ? ' class="t01-neu"' : "") + ">" + z + "</div>").join("") + "</div>";
+
+  /* ---------- Hilfsfunktion: Wahrheitstafel als HTML ---------- */
+  // kopf: HTML je Spalte; werte: je Spalte ein Array aus 0/1 oder null (noch leer)
+  // opt: { erg, neu, an: [Zeilen], fokus: { spalte, zeilen }, links: [data-link je Spalte], klasse, zeilen }
+  function tafelHtml(kopf, werte, opt) {
+    opt = opt || {};
+    const voll = werte.filter(Boolean)[0];
+    const n = opt.zeilen || (voll ? voll.length : 0);
+    let h = '<table class="wahrheitstabelle t01-tafel' + (opt.klasse ? " " + opt.klasse : "") + '"><thead><tr>';
+    kopf.forEach((k, j) => {
+      h += '<th scope="col"' + (opt.erg === j ? ' class="erg"' : "") +
+        (opt.links && opt.links[j] ? ' data-link="' + opt.links[j] + '"' : "") + ">" + k + "</th>";
+    });
+    h += "</tr></thead><tbody>";
+    for (let r = 0; r < n; r++) {
+      h += "<tr" + (opt.an && opt.an.indexOf(r) >= 0 ? ' class="an"' : "") + ">";
+      kopf.forEach((k, j) => {
+        const sp = werte[j];
+        const cls = [];
+        if (opt.erg === j) cls.push("erg");
+        let inhalt;
+        if (!sp) { cls.push("t01-leer"); inhalt = "·"; }
+        else {
+          cls.push(sp[r] ? "w" : "f");
+          inhalt = String(sp[r]);
+          if (opt.neu === j) inhalt = NW(inhalt);
+        }
+        if (opt.fokus && opt.fokus.spalte === j && opt.fokus.zeilen.indexOf(r) >= 0) cls.push("t01-fokus");
+        h += '<td class="' + cls.join(" ") + '">' + inhalt + "</td>";
+      });
+      h += "</tr>";
+    }
+    return h + "</tbody></table>";
+  }
+  // Atom-Spalte k von n Atomen (erste Spalte wechselt am seltensten)
+  function atomSpalte(k, n) {
+    const out = [];
+    for (let r = 0; r < Math.pow(2, n); r++) out.push((r >> (n - 1 - k)) & 1);
+    return out;
+  }
+
+  /* ---------- 0 · Sortierer Aussage ---------- */
+  L.sortierer("#t01-sort-aussage", {
+    kategorien: ["Aussage", "keine Aussage"],
+    elemente: [
+      { html: "«Luzern liegt am Vierwaldstättersee.»", kategorie: "Aussage", erklaerung: "Der Satz ist wahr. Damit ist er eine Aussage." },
+      { html: "«Ein Hai ist ein Säugetier.»", kategorie: "Aussage", erklaerung: "Der Satz ist falsch, aber er hat einen Wahrheitswert. Auch falsche Sätze sind Aussagen." },
+      { html: "«Schliess bitte das Fenster.»", kategorie: "keine Aussage", erklaerung: "Ein Befehl ist weder wahr noch falsch." },
+      { html: "«Wie spät ist es?»", kategorie: "keine Aussage", erklaerung: "Eine Frage hat keinen Wahrheitswert." },
+      { html: "$x + 3 = 7$", kategorie: "keine Aussage", erklaerung: "Ob das stimmt, hängt von $x$ ab. Erst wenn du für $x$ eine Zahl einsetzt, wird es wahr oder falsch." },
+      { html: "«Jede gerade Zahl ist durch 2 teilbar.»", kategorie: "Aussage", erklaerung: "Der Satz ist wahr, für jede gerade Zahl." },
+      { html: "«Am 1. Januar 2100 schneit es in Rapperswil.»", kategorie: "Aussage", erklaerung: "Heute kennt niemand den Wert. Trotzdem ist der Satz entweder wahr oder falsch. Das genügt für eine Aussage." },
+      { html: "«Hoffentlich bestehe ich die Prüfung!»", kategorie: "keine Aussage", erklaerung: "Ein Wunsch ist weder wahr noch falsch." }
+    ]
+  });
+
+  /* ---------- 2 · Stepper Syntax (Bsp. 2.2) ---------- */
+  L.stepper("#t01-stepper-syntax", {
+    titel: "Formel bauen (Bsp. 2.2a)",
+    text: 'Ist der Ausdruck (<span data-link="na1">¬A₁</span> ∨ (<span data-link="k">A₂ ∧ ¬A₃</span>)) eine Formel? Baue ihn mit den Regeln aus Def. 2.1 auf.',
+    schritte: [
+      { html: zeilenNeu([T`$\at{A_1},\ \at{A_2},\ \at{A_3}$`]),
+        warum: "Regel b1: Die Atome selbst sind Formeln. Damit fängt jeder Aufbau an." },
+      { html: zeilenNeu([T`$\at{A_1},\ \at{A_2},\ \at{A_3}$`, T`$\neg \at{A_3}$`]),
+        warum: "Regel b3: Vor eine Formel darf ein ¬. Aus A₃ wird ¬A₃." },
+      { html: zeilenNeu([T`$\at{A_1},\ \at{A_2},\ \at{A_3}$`, T`$\neg \at{A_3}$`, T`$\htmlData{link=k}{(\at{A_2} \land \neg \at{A_3})}$`]),
+        warum: "Regel b2: Zwei Formeln mit ∧ verbinden, und zwar mit Klammern darum." },
+      { html: zeilenNeu([T`$\at{A_1},\ \at{A_2},\ \at{A_3}$`, T`$\neg \at{A_3}$`, T`$\htmlData{link=k}{(\at{A_2} \land \neg \at{A_3})}$`, T`$\htmlData{link=na1}{\neg \at{A_1}}$`]),
+        warum: "Noch einmal Regel b3, diesmal auf A₁." },
+      { html: zeilenNeu([T`$\at{A_1},\ \at{A_2},\ \at{A_3}$`, T`$\neg \at{A_3}$`, T`$\htmlData{link=k}{(\at{A_2} \land \neg \at{A_3})}$`, T`$\htmlData{link=na1}{\neg \at{A_1}}$`, T`$(\htmlData{link=na1}{\neg \at{A_1}} \lor \htmlData{link=k}{(\at{A_2} \land \neg \at{A_3})})$`]),
+        warum: "Regel b2 mit ∨ verbindet die beiden Teile. Jeder Schritt war erlaubt: Der Ausdruck ist eine Formel." },
+      { html: zeilenNeu([T`$(\neg \at{A_1} \lor (\at{A_2} \land \neg \at{A_3}))$ ✓`, T`$\at{A_1} \land \at{A_2} \lor \at{A_3}$ ✗`]),
+        warum: "Gegenbeispiel (Bsp. 2.2c): Hier fehlt die Klammer, die Regel b2 verlangt. Weil ∧ und ∨ gleich stark binden, ist unklar, was zusammengehört. Keine Formel." }
+    ]
+  });
+
+  /* ---------- 2 · Sortierer Formel ---------- */
+  L.sortierer("#t01-sort-formel", {
+    kategorien: ["Formel", "keine Formel"],
+    elemente: [
+      { html: T`$(\at{A} \land \at{B}) \lor \at{C}$`, kategorie: "Formel", erklaerung: "Innen b2 mit ∧, aussen b2 mit ∨. Die äusserste Klammer darf fehlen." },
+      { html: T`$\at{A} \land \at{B} \lor \at{C}$`, kategorie: "keine Formel", erklaerung: "∧ und ∨ binden gleich stark. Ohne Klammer ist nicht festgelegt, was zusammengehört (Bsp. 2.2c)." },
+      { html: T`$\neg \neg \at{A}$`, kategorie: "Formel", erklaerung: "Zweimal Regel b3: erst ¬A, dann ¬¬A." },
+      { html: T`$(\at{A} \neg \at{B})$`, kategorie: "keine Formel", erklaerung: "¬ verbindet nicht zwei Formeln. Es steht nur vor einer Formel. Zwischen A und ¬B fehlt ein Junktor." },
+      { html: T`$\at{A} \Rightarrow (\at{B} \land \at{C})$`, kategorie: "Formel", erklaerung: "⇒ ist eine erlaubte Abkürzung (Notation 2.3b) für ¬A ∨ (B ∧ C)." },
+      { html: T`$\land \at{A} \at{B}$`, kategorie: "keine Formel", erklaerung: "∧ steht immer zwischen zwei Formeln, nicht davor." },
+      { html: T`$\neg(\at{A} \lor \at{B})$`, kategorie: "Formel", erklaerung: "Erst b2 mit ∨, dann b3 vor die ganze Klammer." },
+      { html: T`$(\at{A} \lor \at{B}))$`, kategorie: "keine Formel", erklaerung: "Eine Klammer zu viel. Jede schliessende Klammer braucht eine öffnende." }
+    ]
+  });
+
+  /* ---------- 3 · Stepper Semantik (Bsp. 1.4) ---------- */
+  const SEM = [
+    T`$\htmlData{link=f}{\fv{F} = (\at{A} \land \neg \at{B}) \lor (\at{A} \land \at{C})}$`,
+    T`$\htmlData{link=a}{\al(\at{A}) = 1},\ \htmlData{link=b}{\al(\at{B}) = 0},\ \htmlData{link=c}{\al(\at{C}) = 0}$`,
+    T`$\al(\neg \at{B}) = 1$`,
+    T`$\al(\at{A} \land \neg \at{B}) = 1$`,
+    T`$\al(\at{A} \land \at{C}) = 0$`,
+    T`$\htmlData{link=f}{\al(\fv{F}) = 1}$`
+  ];
+  L.stepper("#t01-stepper-semantik", {
+    titel: "Formel auswerten (Bsp. 1.4)",
+    text: 'Die Belegung α setzt <span data-link="a">A auf 1</span>, <span data-link="b">B auf 0</span> und <span data-link="c">C auf 0</span>. Welchen Wahrheitswert hat <span data-link="f">F = (A ∧ ¬B) ∨ (A ∧ C)</span>?',
+    schritte: [
+      { html: zeilenNeu(SEM.slice(0, 1)), warum: "Schreib die Formel hin und such die innersten Teile: ¬B, dann die beiden Klammern, zuletzt das ∨ dazwischen." },
+      { html: zeilenNeu(SEM.slice(0, 2)), warum: "Die Belegung gibt nur den Atomen einen Wert (Def. 2.4b). Alles andere rechnest du daraus aus." },
+      { html: zeilenNeu(SEM.slice(0, 3)), warum: "Regel für ¬: B ist 0, also ist ¬B gleich 1." },
+      { html: zeilenNeu(SEM.slice(0, 4)), warum: "∧ ist 1, weil beide Teile 1 sind: α(A) = 1 und α(¬B) = 1." },
+      { html: zeilenNeu(SEM.slice(0, 5)), warum: "C ist 0. Ein falscher Teil genügt, und die Konjunktion wird 0." },
+      { html: zeilenNeu(SEM.slice(0, 6)), warum: "∨ braucht nur einen wahren Teil, und die linke Klammer ist 1. Also ist F wahr und α ein Modell für F (Def. 1.3b)." }
+    ]
+  });
+
+  /* ---------- 3 · Junktor-Explorer ---------- */
+  const JUNKTOREN = [
+    { zeichen: "¬A", lesart: "nicht A", satz: "«Es regnet nicht.»", f: (a) => (a ? 0 : 1), einstellig: true,
+      warum: { "1": "A ist wahr: Es regnet. ¬ kehrt den Wert um, also ist ¬A falsch.",
+               "0": "A ist falsch: Es regnet nicht. Dann stimmt «Es regnet nicht», ¬A ist wahr." } },
+    { zeichen: "A ∧ B", lesart: "A und B", satz: "«Es regnet, und die Strasse ist nass.»", f: (a, b) => (a && b ? 1 : 0),
+      warum: { "11": "Beide Teile stimmen. Nur in diesem einen Fall ist A ∧ B wahr.",
+               "10": "Es regnet, aber die Strasse ist trocken. Ein Teil ist falsch, also ist das Ganze falsch.",
+               "01": "Die Strasse ist nass, aber es regnet nicht. Schon ein falscher Teil macht A ∧ B falsch.",
+               "00": "Beide Teile sind falsch, also ist A ∧ B falsch." } },
+    { zeichen: "A ∨ B", lesart: "A oder B (oder beides)", satz: "«Es regnet, oder die Strasse ist nass.»", f: (a, b) => (a || b ? 1 : 0),
+      warum: { "11": "Beide Teile stimmen. Das «oder» der Logik erlaubt beides, also wahr.",
+               "10": "Es regnet. Ein wahrer Teil genügt: wahr.",
+               "01": "Die Strasse ist nass. Ein wahrer Teil genügt: wahr.",
+               "00": "Kein Teil stimmt. Nur in diesem Fall ist A ∨ B falsch." } },
+    { zeichen: "A ⇒ B", lesart: "wenn A, dann B", satz: "«Wenn es regnet, ist die Strasse nass.»", f: (a, b) => imp(a, b),
+      warum: { "11": "Es regnet, und die Strasse ist nass. Die Regel ist eingehalten: wahr.",
+               "10": "Es regnet, aber die Strasse bleibt trocken. Genau dieser Fall widerlegt die Regel: falsch. Das ist die einzige 0 von ⇒.",
+               "01": "Es regnet nicht, die Strasse ist trotzdem nass, etwa wegen der Strassenreinigung. Die Regel sagt nichts darüber, was ohne Regen passiert: wahr.",
+               "00": "Es regnet nicht, die Strasse ist trocken. Kein Widerspruch zur Regel: wahr." } },
+    { zeichen: "A ⇔ B", lesart: "A genau dann, wenn B", satz: "«Es regnet genau dann, wenn die Strasse nass ist.»", f: (a, b) => (a === b ? 1 : 0),
+      warum: { "11": "Beide wahr, also gleicher Wert: wahr.",
+               "10": "Regen ohne nasse Strasse widerspricht «genau dann»: falsch.",
+               "01": "Nasse Strasse ohne Regen widerspricht «genau dann» ebenfalls: falsch. Hier unterscheidet sich ⇔ von ⇒.",
+               "00": "Beide falsch, also gleicher Wert: wahr." } }
+  ];
+  const ex = { a: 1, b: 1, j: 3 };
+  const swA = document.getElementById("t01-sw-a");
+  const swB = document.getElementById("t01-sw-b");
+  const wahl = document.getElementById("t01-junktorwahl");
+  const exErg = document.getElementById("t01-ex-ergebnis");
+  const exTafel = document.getElementById("t01-ex-tafel");
+  const exAlle = document.getElementById("t01-ex-alle");
+  const wertText = (w) => (w ? '<span class="t01-w">1 · wahr</span>' : '<span class="t01-f">0 · falsch</span>');
+  const wahlKnoepfe = JUNKTOREN.map((j, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.textContent = j.zeichen;
+    b.addEventListener("click", () => { ex.j = i; exZeichnen(); });
+    wahl.appendChild(b);
+    return b;
+  });
+  function schalterHtml(name, satz, w) {
+    return '<span class="t01-knopf" aria-hidden="true"></span><span class="t01-sw-text"><span><b>' + name + "</b> = " + satz +
+      '</span><span class="t01-sw-wert">' + (w ? "1 · wahr" : "0 · falsch") + "</span></span>";
+  }
+  function exZeichnen() {
+    swA.innerHTML = schalterHtml("A", "«Es regnet.»", ex.a);
+    swB.innerHTML = schalterHtml("B", "«Die Strasse ist nass.»", ex.b);
+    swA.setAttribute("aria-pressed", ex.a ? "true" : "false");
+    swB.setAttribute("aria-pressed", ex.b ? "true" : "false");
+    const j = JUNKTOREN[ex.j];
+    wahlKnoepfe.forEach((b, i) => {
+      b.classList.toggle("on", i === ex.j);
+      b.setAttribute("aria-pressed", i === ex.j ? "true" : "false");
+    });
+    const w = j.f(ex.a, ex.b);
+    const schluessel = j.einstellig ? String(ex.a) : String(ex.a) + String(ex.b);
+    exErg.innerHTML = '<span class="t01-gross">' + j.zeichen + " = " + wertText(w) + "</span>" +
+      "<span>Lesart: «" + j.lesart + "», hier: " + j.satz + "</span>" +
+      "<span>" + j.warum[schluessel] + "</span>";
+    if (j.einstellig) {
+      exTafel.innerHTML = tafelHtml(["A", j.zeichen], [[0, 1], [1, 0]], { erg: 1, an: [ex.a] });
+    } else {
+      const sp = [0, 1, 2, 3].map((r) => j.f(r >> 1, r & 1));
+      exTafel.innerHTML = tafelHtml(["A", "B", j.zeichen], [[0, 0, 1, 1], [0, 1, 0, 1], sp], { erg: 2, an: [ex.a * 2 + ex.b] });
+    }
+    exAlle.innerHTML = JUNKTOREN.map((x) => "<span>" + x.zeichen + " = " + x.f(ex.a, ex.b) + "</span>").join("");
+  }
+  swA.addEventListener("click", () => { ex.a = ex.a ? 0 : 1; exZeichnen(); });
+  swB.addEventListener("click", () => { ex.b = ex.b ? 0 : 1; exZeichnen(); });
+  exZeichnen();
+
+  /* ---------- 5 · Stepper Wahrheitstafel ---------- */
+  const ST_KOPF = ["A", "B", "¬A", "¬A ∨ B", "A ⇒ B"];
+  const ST_A = [0, 0, 1, 1], ST_B = [0, 1, 0, 1];
+  const ST_NA = ST_A.map((a) => 1 - a);
+  const ST_OR = ST_A.map((a, r) => (1 - a) | ST_B[r]);
+  const ST_IMP = ST_A.map((a, r) => imp(a, ST_B[r]));
+  const ST_LINKS = ["", "", "", "oder", "pfeil"];
+  const st = (werte, neu, extra) => tafelHtml(ST_KOPF, werte, Object.assign({ zeilen: 4, erg: 4, neu: neu, links: ST_LINKS }, extra || {}));
+  L.stepper("#t01-stepper-tafel", {
+    titel: "Wahrheitstafel Schritt für Schritt",
+    text: 'Zeige mit einer Wahrheitstafel, dass <span data-link="oder">¬A ∨ B</span> und <span data-link="pfeil">A ⇒ B</span> dasselbe bedeuten (Notation 2.3b).',
+    schritte: [
+      { html: st([null, null, null, null, null]),
+        warum: "Zwei Atome A und B, also 2² = 4 Zeilen. Die Spalten: zuerst die Atome, dann die Teilformel ¬A, dann die beiden Formeln, die du vergleichst." },
+      { html: st([ST_A, null, null, null, null], 0),
+        warum: "Erste Atom-Spalte: zur Hälfte 0, dann 1." },
+      { html: st([ST_A, ST_B, null, null, null], 1),
+        warum: "Zweite Atom-Spalte: wechselt in jeder Zeile. So kommt jede Kombination genau einmal vor." },
+      { html: st([ST_A, ST_B, ST_NA, null, null], 2),
+        warum: "¬A kehrt die Spalte A um: Aus 0 wird 1, aus 1 wird 0." },
+      { html: st([ST_A, ST_B, ST_NA, ST_OR, null], 3),
+        warum: "¬A ∨ B ist 1, sobald ¬A oder B eine 1 hat. Nur in Zeile 3 sind beide 0." },
+      { html: st([ST_A, ST_B, ST_NA, ST_OR, ST_IMP], 4),
+        warum: "A ⇒ B mit der Grundtafel: nur bei A = 1 und B = 0 falsch, also wieder nur Zeile 3." },
+      { html: st([ST_A, ST_B, ST_NA, ST_OR, ST_IMP], undefined, { an: [2] }),
+        warum: "Beide Spalten sind gleich: 1, 1, 0, 1. Also bedeuten die Formeln dasselbe. Darum darf man ¬A ∨ B als A ⇒ B abkürzen." }
+    ]
+  });
+
+  /* ---------- 5 · Wahrheitstafel-Baukasten ---------- */
+  const BK = {
+    eingabe: document.getElementById("t01-eingabe"),
+    vorlage: document.getElementById("t01-vorlage"),
+    tasten: document.getElementById("t01-tasten"),
+    bauen: document.getElementById("t01-bauen"),
+    meldung: document.getElementById("t01-meldung"),
+    box: document.getElementById("t01-tafelbox"),
+    steuerung: document.getElementById("t01-steuerung"),
+    pruefen: document.getElementById("t01-pruefen"),
+    tipp: document.getElementById("t01-tipp"),
+    zeigen: document.getElementById("t01-zeigen"),
+    alles: document.getElementById("t01-alles"),
+    neu: document.getElementById("t01-neu"),
+    rueck: document.getElementById("t01-rueck"),
+    resultat: document.getElementById("t01-resultat")
+  };
+  const BINAER = { "∧": 1, "∨": 1, "⇒": 1, "⇔": 1 };
+  const istBinaer = (n) => BINAER[n.op] === 1;
+
+  // Zeichenkette in Teile zerlegen
+  function zerlegen(text) {
+    const s = text.replace(/\s+/g, "");
+    const t = [];
+    let i = 0;
+    while (i < s.length) {
+      const r = s.slice(i);
+      let m;
+      if ((m = r.match(/^(<->|<=>|↔|⇔)/))) { t.push({ art: "bin", op: "⇔" }); i += m[0].length; continue; }
+      if ((m = r.match(/^(->|=>|→|⇒)/))) { t.push({ art: "bin", op: "⇒" }); i += m[0].length; continue; }
+      if ((m = r.match(/^[A-Z][0-9]*/))) { t.push({ art: "atom", name: m[0] }); i += m[0].length; continue; }
+      const c = s.charAt(i);
+      if (c === "¬" || c === "!" || c === "~") t.push({ art: "nicht" });
+      else if (c === "∧" || c === "&") t.push({ art: "bin", op: "∧" });
+      else if (c === "∨" || c === "|") t.push({ art: "bin", op: "∨" });
+      else if (c === "(") t.push({ art: "auf" });
+      else if (c === ")") t.push({ art: "zu" });
+      else throw new Error("Unbekanntes Zeichen «" + c.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "». Atome sind Grossbuchstaben.");
+      i++;
+    }
+    return t;
+  }
+  // Rekursiver Abstieg nach den Regeln des Moduls:
+  // ¬ am stärksten, ∧ und ∨ gleich stark (nicht mischen), ⇒ und ⇔ am schwächsten (nicht verketten)
+  function parsen(tokens) {
+    let k = 0;
+    const info = { pfeilOhneKlammer: false };
+    const blick = () => tokens[k];
+    function formel() {
+      const links = kette();
+      const t = blick();
+      if (t && t.art === "bin" && (t.op === "⇒" || t.op === "⇔")) {
+        k++;
+        const rechts = kette();
+        const t2 = blick();
+        if (t2 && t2.art === "bin" && (t2.op === "⇒" || t2.op === "⇔"))
+          throw new Error("Zwei Pfeile ohne Klammer sind mehrdeutig. Setze Klammern, zum Beispiel (A ⇒ B) ⇒ C.");
+        if ((istBinaer(links) && !links.geklammert) || (istBinaer(rechts) && !rechts.geklammert)) info.pfeilOhneKlammer = true;
+        return { op: t.op, l: links, r: rechts };
+      }
+      return links;
+    }
+    function kette() {
+      let links = einzeln();
+      let kettenOp = null;
+      while (blick() && blick().art === "bin" && (blick().op === "∧" || blick().op === "∨")) {
+        const op = blick().op;
+        if (kettenOp && op !== kettenOp)
+          throw new Error("∧ und ∨ binden gleich stark (Bsp. 2.2c). Setze Klammern, zum Beispiel (A ∧ B) ∨ C.");
+        kettenOp = op;
+        k++;
+        links = { op: op, l: links, r: einzeln() };
+      }
+      return links;
+    }
+    function einzeln() {
+      const t = blick();
+      if (!t) throw new Error("Die Formel hört zu früh auf. Nach einem Junktor fehlt noch etwas.");
+      if (t.art === "nicht") { k++; return { op: "¬", l: einzeln() }; }
+      if (t.art === "atom") { k++; return { op: "atom", name: t.name }; }
+      if (t.art === "auf") {
+        k++;
+        const f = formel();
+        if (!blick() || blick().art !== "zu") throw new Error("Eine Klammer «(» wird nicht geschlossen.");
+        k++;
+        f.geklammert = true;
+        return f;
+      }
+      if (t.art === "zu") throw new Error("Hier steht eine Klammer «)» zu viel oder zu früh.");
+      throw new Error("Vor «" + t.op + "» fehlt eine Formel.");
+    }
+    if (!tokens.length) throw new Error("Gib zuerst eine Formel ein.");
+    const f = formel();
+    if (k < tokens.length) {
+      const t = tokens[k];
+      if (t.art === "zu") throw new Error("Hier steht eine Klammer «)» zu viel.");
+      throw new Error("Zwischen zwei Teilen fehlt ein Junktor.");
+    }
+    return { baum: f, info: info };
+  }
+  // Text einer Teilformel, Klammern nach den Regeln des Moduls
+  function text(n) {
+    if (n.op === "atom") return n.name;
+    if (n.op === "¬") return "¬" + (istBinaer(n.l) ? "(" + text(n.l) + ")" : text(n.l));
+    const kette = (n.op === "∧" || n.op === "∨") && n.l.op === n.op;
+    const l = istBinaer(n.l) && !kette ? "(" + text(n.l) + ")" : text(n.l);
+    const r = istBinaer(n.r) ? "(" + text(n.r) + ")" : text(n.r);
+    return l + " " + n.op + " " + r;
+  }
+  function wert(n, bel) {
+    switch (n.op) {
+      case "atom": return bel[n.name];
+      case "¬": return 1 - wert(n.l, bel);
+      case "∧": return wert(n.l, bel) & wert(n.r, bel);
+      case "∨": return wert(n.l, bel) | wert(n.r, bel);
+      case "⇒": return imp(wert(n.l, bel), wert(n.r, bel));
+      default: return wert(n.l, bel) === wert(n.r, bel) ? 1 : 0;
+    }
+  }
+  function atomeSammeln(n, menge) {
+    if (n.op === "atom") menge[n.name] = true;
+    else { atomeSammeln(n.l, menge); if (n.r) atomeSammeln(n.r, menge); }
+    return menge;
+  }
+  // Teilformeln von innen nach aussen, ohne Doppelte
+  function teilformeln(n, liste, gesehen) {
+    if (n.op === "atom") return;
+    teilformeln(n.l, liste, gesehen);
+    if (n.r) teilformeln(n.r, liste, gesehen);
+    const t = text(n);
+    if (!gesehen[t]) { gesehen[t] = true; liste.push(n); }
+  }
+  function tippText(n) {
+    const x = text(n.l), y = n.r ? text(n.r) : "";
+    switch (n.op) {
+      case "¬": return "Kehre die Spalte «" + x + "» um: aus 1 wird 0, aus 0 wird 1.";
+      case "∧": return "1 nur dort, wo «" + x + "» und «" + y + "» beide 1 sind. Sonst 0.";
+      case "∨": return "0 nur dort, wo «" + x + "» und «" + y + "» beide 0 sind. Sonst 1.";
+      case "⇒": return "0 nur dort, wo «" + x + "» 1 ist und «" + y + "» 0. Sonst 1.";
+      default: return "1 dort, wo «" + x + "» und «" + y + "» denselben Wert haben. Sonst 0.";
+    }
+  }
+
+  let tf = null; // aktueller Zustand des Baukastens
+
+  function meldungSetzen(el, html, art) {
+    el.innerHTML = html;
+    el.classList.toggle("t01-bad", art === "bad");
+    el.classList.toggle("t01-ok", art === "ok");
+  }
+
+  function bauen() {
+    BK.resultat.hidden = true;
+    meldungSetzen(BK.rueck, "");
+    let p;
+    try {
+      p = parsen(zerlegen(BK.eingabe.value));
+    } catch (e) {
+      BK.eingabe.setAttribute("aria-invalid", "true");
+      meldungSetzen(BK.meldung, "✗ " + e.message, "bad");
+      return;
+    }
+    const atome = Object.keys(atomeSammeln(p.baum, {})).sort((x, y) => x.localeCompare(y, "de", { numeric: true }));
+    if (atome.length > 4) {
+      BK.eingabe.setAttribute("aria-invalid", "true");
+      meldungSetzen(BK.meldung, "✗ Höchstens 4 Atome (16 Zeilen). Deine Formel hat " + atome.length + ".", "bad");
+      return;
+    }
+    const spalten = [];
+    teilformeln(p.baum, spalten, {});
+    if (!spalten.length) {
+      BK.eingabe.setAttribute("aria-invalid", "true");
+      meldungSetzen(BK.meldung, "✗ Ein einzelnes Atom hat keine Spalte zum Ausrechnen. Verknüpfe es mit einem Junktor.", "bad");
+      return;
+    }
+    if (spalten.length > 16) {
+      BK.eingabe.setAttribute("aria-invalid", "true");
+      meldungSetzen(BK.meldung, "✗ Zu viele Teilformeln für den Baukasten. Wähle eine kürzere Formel.", "bad");
+      return;
+    }
+    BK.eingabe.removeAttribute("aria-invalid");
+    const n = atome.length, zeilenZahl = Math.pow(2, n);
+    const belegungen = [];
+    for (let r = 0; r < zeilenZahl; r++) {
+      const bel = {};
+      atome.forEach((a, k) => { bel[a] = (r >> (n - 1 - k)) & 1; });
+      belegungen.push(bel);
+    }
+    tf = {
+      atome: atome,
+      belegungen: belegungen,
+      spalten: spalten.map((s) => ({ knoten: s, text: text(s), soll: belegungen.map((b) => wert(s, b)), ist: belegungen.map(() => null), fertig: false })),
+      aktiv: 0,
+      falsch: {}
+    };
+    let m = "Formel: <b>" + text(p.baum) + "</b> · " + n + (n === 1 ? " Atom" : " Atome") + " → 2" + (n > 1 ? "<sup>" + n + "</sup>" : "") +
+      " = " + zeilenZahl + " Zeilen · " + spalten.length + (spalten.length === 1 ? " Spalte" : " Spalten") + " zum Ausfüllen.";
+    if (p.info.pfeilOhneKlammer) m += " Hinweis: ⇒ und ⇔ binden schwächer als ∧ und ∨, darum gehört die ∧- bzw. ∨-Kette zusammen.";
+    meldungSetzen(BK.meldung, m);
+    BK.steuerung.hidden = false;
+    zeichnen();
+  }
+
+  // Indizes der Spalten bzw. Atome, aus denen die aktive Spalte entsteht
+  function quellen() {
+    const out = { atome: [], spalten: [] };
+    if (!tf || tf.aktiv >= tf.spalten.length) return out;
+    const kn = tf.spalten[tf.aktiv].knoten;
+    [kn.l, kn.r].forEach((c) => {
+      if (!c) return;
+      if (c.op === "atom") out.atome.push(tf.atome.indexOf(c.name));
+      else {
+        const t = text(c);
+        tf.spalten.forEach((s, j) => { if (s.text === t) out.spalten.push(j); });
+      }
+    });
+    return out;
+  }
+
+  function zeichnen() {
+    const q = quellen();
+    const letzte = tf.spalten.length - 1;
+    let h = '<table class="wahrheitstabelle t01-tafel"><thead><tr>';
+    tf.atome.forEach((a, k) => { h += '<th scope="col"' + (q.atome.indexOf(k) >= 0 ? ' class="t01-quelle"' : "") + ">" + a + "</th>"; });
+    tf.spalten.forEach((s, j) => {
+      const cls = [];
+      if (j === letzte) cls.push("erg");
+      if (j === tf.aktiv) cls.push("t01-aktiv");
+      if (q.spalten.indexOf(j) >= 0) cls.push("t01-quelle");
+      h += '<th scope="col"' + (cls.length ? ' class="' + cls.join(" ") + '"' : "") + ">" + s.text + "</th>";
+    });
+    h += "</tr></thead><tbody>";
+    const alleFertig = tf.aktiv >= tf.spalten.length;
+    tf.belegungen.forEach((bel, r) => {
+      const modell = alleFertig && tf.spalten[letzte].soll[r] === 1;
+      h += "<tr" + (modell ? ' class="an"' : "") + ">";
+      tf.atome.forEach((a, k) => {
+        h += '<td class="' + (bel[a] ? "w" : "f") + (q.atome.indexOf(k) >= 0 ? " t01-quelle" : "") + '">' + bel[a] + "</td>";
+      });
+      tf.spalten.forEach((s, j) => {
+        const cls = [];
+        if (j === letzte) cls.push("erg");
+        if (q.spalten.indexOf(j) >= 0) cls.push("t01-quelle");
+        if (s.fertig) {
+          cls.push(s.soll[r] ? "w" : "f");
+          h += '<td class="' + cls.join(" ") + '">' + s.soll[r] + "</td>";
+        } else if (j === tf.aktiv) {
+          const v = s.ist[r];
+          const falsch = tf.falsch[r];
+          h += '<td class="' + cls.join(" ") + '"><button type="button" class="t01-zelle' + (v !== null ? " t01-gesetzt" : "") +
+            (falsch ? " t01-falsch" : "") + '" data-zeile="' + r + '"' + (falsch ? ' aria-invalid="true"' : "") +
+            ' aria-label="Zeile ' + (r + 1) + ", " + s.text + ": " + (v === null ? "leer" : v) + (falsch ? ", falsch" : "") + '">' +
+            (v === null ? "?" : v) + "</button></td>";
+        } else {
+          cls.push("t01-leer");
+          h += '<td class="' + cls.join(" ") + '">·</td>';
+        }
+      });
+      h += "</tr>";
+    });
+    h += "</tbody></table>";
+    BK.box.innerHTML = h;
+    const offen = !alleFertig;
+    [BK.pruefen, BK.tipp, BK.zeigen].forEach((b) => { b.disabled = !offen; });
+    BK.alles.disabled = !offen;
+    if (alleFertig) resultatZeigen();
+  }
+
+  function zelleKlicken(ev) {
+    const knopf = ev.target.closest("button.t01-zelle");
+    if (!knopf || !tf) return;
+    const r = Number(knopf.getAttribute("data-zeile"));
+    const s = tf.spalten[tf.aktiv];
+    s.ist[r] = s.ist[r] === null ? 1 : 1 - s.ist[r];
+    delete tf.falsch[r];
+    // Knopf direkt aktualisieren, damit der Fokus bleibt
+    knopf.textContent = String(s.ist[r]);
+    knopf.classList.add("t01-gesetzt");
+    knopf.classList.remove("t01-falsch");
+    knopf.removeAttribute("aria-invalid");
+    knopf.setAttribute("aria-label", "Zeile " + (r + 1) + ", " + s.text + ": " + s.ist[r]);
+  }
+
+  function weiter(meldung) {
+    tf.spalten[tf.aktiv].fertig = true;
+    tf.aktiv++;
+    tf.falsch = {};
+    meldungSetzen(BK.rueck, meldung, "ok");
+    zeichnen();
+    // Fokus auf einen bleibenden Knopf setzen, falls der gedrückte deaktiviert wurde
+    if (tf.aktiv >= tf.spalten.length) BK.neu.focus();
+  }
+
+  function pruefen() {
+    if (!tf || tf.aktiv >= tf.spalten.length) return;
+    const s = tf.spalten[tf.aktiv];
+    const leer = s.ist.filter((v) => v === null).length;
+    if (leer) {
+      meldungSetzen(BK.rueck, "Fülle zuerst alle Felder der Spalte «" + s.text + "» aus. Noch leer: " + leer + ".", "bad");
+      return;
+    }
+    tf.falsch = {};
+    let fehler = 0;
+    s.ist.forEach((v, r) => { if (v !== s.soll[r]) { tf.falsch[r] = true; fehler++; } });
+    if (!fehler) {
+      weiter("✓ Die Spalte «" + s.text + "» stimmt." + (tf.aktiv + 1 < tf.spalten.length ? " Weiter mit der nächsten Spalte." : ""));
+      return;
+    }
+    meldungSetzen(BK.rueck, "✗ " + fehler + (fehler === 1 ? " Feld stimmt" : " Felder stimmen") + " nicht (rot mit ✗ markiert). Tipp: " + tippText(s.knoten), "bad");
+    zeichnen();
+  }
+
+  function resultatZeigen() {
+    const letzte = tf.spalten[tf.spalten.length - 1];
+    const z = tf.belegungen.length;
+    const modelle = [];
+    letzte.soll.forEach((v, r) => { if (v) modelle.push(r); });
+    let h = "<b>Ergebnis:</b> «" + letzte.text + "» ist in " + modelle.length + " von " + z + " Zeilen wahr. ";
+    if (modelle.length === z) h += "Jede Belegung ist ein Modell: Die Formel ist eine <b>Tautologie</b> (Def. 1.3b).";
+    else if (!modelle.length) h += "Es gibt kein Modell: Die Formel ist <b>unerfüllbar</b> (Def. 1.3b).";
+    else {
+      h += "Die Formel ist <b>erfüllbar</b>, aber keine Tautologie. Modelle (gelb markiert): ";
+      h += modelle.map((r) => "(" + tf.atome.map((a) => a + " = " + tf.belegungen[r][a]).join(", ") + ")").join("; ") + ".";
+    }
+    BK.resultat.innerHTML = h;
+    BK.resultat.hidden = false;
+  }
+
+  // Tasten zum Zusammensetzen
+  [["A", "A"], ["B", "B"], ["C", "C"], ["D", "D"], ["¬", "nicht"], ["∧", "und"], ["∨", "oder"], ["⇒", "Implikation"], ["⇔", "Äquivalenz"],
+    ["(", "Klammer auf"], [")", "Klammer zu"], ["⌫", "Zeichen löschen"]].forEach((t) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.textContent = t[0];
+    b.setAttribute("aria-label", t[1]);
+    b.addEventListener("click", () => {
+      const e = BK.eingabe;
+      const a = e.selectionStart === null ? e.value.length : e.selectionStart;
+      const z = e.selectionEnd === null ? e.value.length : e.selectionEnd;
+      if (t[0] === "⌫") {
+        const von = a === z ? Math.max(0, a - 1) : a;
+        e.value = e.value.slice(0, von) + e.value.slice(z);
+        e.setSelectionRange(von, von);
+      } else {
+        const ein = /[∧∨⇒⇔]/.test(t[0]) ? " " + t[0] + " " : t[0];
+        e.value = e.value.slice(0, a) + ein + e.value.slice(z);
+        e.setSelectionRange(a + ein.length, a + ein.length);
+      }
+      e.removeAttribute("aria-invalid");
+    });
+    BK.tasten.appendChild(b);
+  });
+
+  BK.vorlage.addEventListener("change", () => { BK.eingabe.value = BK.vorlage.value; bauen(); });
+  BK.bauen.addEventListener("click", bauen);
+  BK.eingabe.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); bauen(); } });
+  BK.box.addEventListener("click", zelleKlicken);
+  BK.pruefen.addEventListener("click", pruefen);
+  BK.tipp.addEventListener("click", () => {
+    if (tf && tf.aktiv < tf.spalten.length) meldungSetzen(BK.rueck, "Tipp: " + tippText(tf.spalten[tf.aktiv].knoten));
+  });
+  BK.zeigen.addEventListener("click", () => {
+    if (!tf || tf.aktiv >= tf.spalten.length) return;
+    const s = tf.spalten[tf.aktiv];
+    s.ist = s.soll.slice();
+    weiter("Spalte «" + s.text + "» aufgedeckt. " + tippText(s.knoten));
+    if (tf.aktiv < tf.spalten.length) BK.zeigen.focus();
+  });
+  BK.alles.addEventListener("click", () => {
+    if (!tf) return;
+    tf.spalten.forEach((s) => { s.ist = s.soll.slice(); s.fertig = true; });
+    tf.aktiv = tf.spalten.length;
+    tf.falsch = {};
+    meldungSetzen(BK.rueck, "Ganze Tafel aufgedeckt.");
+    zeichnen();
+    BK.neu.focus();
+  });
+  BK.neu.addEventListener("click", () => {
+    if (!tf) return;
+    tf.spalten.forEach((s) => { s.ist = s.soll.map(() => null); s.fertig = false; });
+    tf.aktiv = 0;
+    tf.falsch = {};
+    BK.resultat.hidden = true;
+    meldungSetzen(BK.rueck, "Alle Spalten geleert. Beginne mit der ersten.");
+    zeichnen();
+  });
+  BK.eingabe.value = BK.vorlage.value;
+  bauen();
+
+  /* ---------- 6 · Stepper Formalisieren (Motivationsbeispiel) ---------- */
+  const FO = [
+    T`$\at{A}, \at{F}, \at{J}$ := «Angela / Franz / Joschka ist in der Regierung»`,
+    T`$\htmlData{link=ang}{\fv{G_1} = \at{A} \lor \at{F}}$`,
+    T`$\htmlData{link=fra}{\fv{G_2} = (\at{F} \land \neg \at{J}) \lor (\neg \at{F} \land \at{J})}$`,
+    T`$\htmlData{link=jos}{\fv{G_3} = (\at{A} \land \neg \at{J}) \lor (\neg \at{A} \land \at{J})}$`,
+    T`$\fv{G} = \htmlData{link=ang}{\fv{G_1}} \land \htmlData{link=fra}{\fv{G_2}} \land \htmlData{link=jos}{\fv{G_3}}$`,
+    T`einziges Modell: $\al(\at{A}) = 1,\ \al(\at{F}) = 1,\ \al(\at{J}) = 0$`
+  ];
+  L.stepper("#t01-stepper-formal", {
+    titel: "Regierung und Opposition (Motivationsbeispiel S1-V1)",
+    text: '<span data-link="ang">Angela: «Franz oder ich sind in der Regierung.»</span><br>' +
+      '<span data-link="fra">Franz: «Entweder Joschka oder ich sind in der Regierung.»</span><br>' +
+      '<span data-link="jos">Joschka: «Entweder Angela oder ich sind in der Opposition.»</span>',
+    schritte: [
+      { html: zeilenNeu(FO.slice(0, 1)), warum: "Ein Atom pro Person, positiv formuliert. «In der Opposition» heisst «nicht in der Regierung» und wird zu ¬." },
+      { html: zeilenNeu(FO.slice(0, 2)), warum: "Angela sagt «oder» ohne «entweder». Das ist das inklusive Oder: Beide dürfen in der Regierung sein." },
+      { html: zeilenNeu(FO.slice(0, 3)), warum: "«Entweder … oder» heisst: genau einer. Du schreibst beide erlaubten Fälle hin (F ohne J, J ohne F) und verbindest sie mit ∨." },
+      { html: zeilenNeu(FO.slice(0, 4)), warum: "Opposition heisst ¬A bzw. ¬J. Genau einer von beiden in der Opposition: entweder A ∧ ¬J (Joschka draussen) oder ¬A ∧ J (Angela draussen)." },
+      { html: zeilenNeu(FO.slice(0, 5)), warum: "Alle drei Aussagen sollen zugleich stimmen. Darum verbindest du sie mit ∧ zur Gesamtformel G." },
+      { html: zeilenNeu(FO.slice(0, 6)), warum: "Die Wahrheitstafel (unten aufklappen oder im Baukasten) hat genau eine Zeile mit G = 1: Angela und Franz regieren, Joschka ist in der Opposition." }
+    ]
+  });
+  // Ganze Tafel zum Folienbeispiel
+  (function () {
+    const A = atomSpalte(0, 3), F = atomSpalte(1, 3), J = atomSpalte(2, 3);
+    const g1 = A.map((a, r) => a | F[r]);
+    const g2 = F.map((f, r) => (f & (1 - J[r])) | ((1 - f) & J[r]));
+    const g3 = A.map((a, r) => (a & (1 - J[r])) | ((1 - a) & J[r]));
+    const g = g1.map((x, r) => x & g2[r] & g3[r]);
+    const an = [];
+    g.forEach((v, r) => { if (v) an.push(r); });
+    document.getElementById("t01-tafel-regierung").innerHTML =
+      tafelHtml(["A", "F", "J", "G₁", "G₂", "G₃", "G"], [A, F, J, g1, g2, g3, g], { erg: 6, an: an });
+  })();
+
+  /* ---------- 7 · Übungen ---------- */
+  L.wahrFalsch("#t01-ue-wf", {
+    titel: "1 · Junktoren und Syntax",
+    aussagen: [
+      { html: T`Ist $\at{A}$ falsch, so ist $\at{A} \Rightarrow \at{B}$ wahr, egal welchen Wert $\at{B}$ hat.`, wahr: true,
+        erklaerung: "Die Implikation verbietet nur den Fall A = 1, B = 0. Bei A = 0 ist sie immer wahr." },
+      { html: T`$\at{A} \lor \at{B}$ ist falsch, wenn $\at{A}$ und $\at{B}$ beide wahr sind.`, wahr: false,
+        erklaerung: "Das logische Oder ist inklusiv: Bei A = B = 1 ist A ∨ B wahr. Falsch ist es nur bei A = B = 0." },
+      { html: T`$\at{A} \Leftrightarrow \at{B}$ ist genau dann wahr, wenn $\at{A}$ und $\at{B}$ denselben Wert haben.`, wahr: true,
+        erklaerung: "So ist die Äquivalenz definiert: 1 bei (0, 0) und (1, 1)." },
+      { html: T`$\at{A} \Rightarrow \at{B}$ und $\at{B} \Rightarrow \at{A}$ haben dieselbe Wahrheitstafel.`, wahr: false,
+        erklaerung: "Bei A = 0, B = 1 ist A ⇒ B wahr, B ⇒ A aber falsch. Die Umkehrung bedeutet etwas anderes." },
+      { html: "Eine Formel mit 3 Atomen hat eine Wahrheitstafel mit 6 Zeilen.", wahr: false,
+        erklaerung: T`Jedes Atom hat 2 Werte: $2^3 = 8$ Zeilen, nicht $2 \cdot 3$.` },
+      { html: T`Nach Def. 2.1 ist $\neg \neg \at{A}$ eine Formel.`, wahr: true,
+        erklaerung: "Regel b3 darf man beliebig oft anwenden: A, dann ¬A, dann ¬¬A." }
+    ]
+  });
+
+  L.sortierer("#t01-ue-sort", {
+    kategorien: ["A ⇒ B", "B ⇒ A"],
+    elemente: [
+      { html: "«Wenn A, dann B.»", kategorie: 0, erklaerung: "Was nach «wenn» steht, ist die Voraussetzung und kommt links." },
+      { html: "«A nur, wenn B.»", kategorie: 0, erklaerung: "Nach «nur wenn» steht die notwendige Bedingung. Sie kommt rechts: A ⇒ B." },
+      { html: "«B, falls A.»", kategorie: 0, erklaerung: "«falls» wirkt wie «wenn»: Die Voraussetzung ist A." },
+      { html: "«Nur wenn A, dann B.»", kategorie: 1, erklaerung: "Hier ist A die notwendige Bedingung. Sie kommt rechts: B ⇒ A." },
+      { html: "«A ist notwendig für B.»", kategorie: 1, erklaerung: "Ohne A kein B. Gilt B, dann gilt also A: B ⇒ A." },
+      { html: "«A ist hinreichend für B.»", kategorie: 0, erklaerung: "A genügt, damit B gilt: A ⇒ B." },
+      { html: "«A, sofern B.»", kategorie: 1, erklaerung: "«sofern» wirkt wie «wenn»: Die Voraussetzung ist B, also B ⇒ A." }
+    ]
+  });
+
+  L.zahlAufgabe("#t01-ue-zahl1", {
+    titel: "3 · Zeilen zählen",
+    frage: T`In wie vielen Zeilen der Wahrheitstafel ist $(\at{A} \lor \at{B}) \Rightarrow \at{C}$ wahr?`,
+    antwort: 5,
+    anzeige: "5 von 8 Zeilen",
+    hinweise: [
+      T`Drei Atome, also $2^3 = 8$ Zeilen.`,
+      "Die Implikation ist nur falsch, wenn links 1 und rechts 0 steht.",
+      T`Zähle die Zeilen mit $\at{A} \lor \at{B} = 1$ und $\at{C} = 0$. Die ziehst du von 8 ab.`
+    ],
+    loesungsweg: [
+      T`8 Zeilen. $\at{A} \lor \at{B}$ ist nur bei $\at{A} = \at{B} = 0$ falsch, also in 2 von 8 Zeilen; in 6 Zeilen ist es wahr.`,
+      T`Die Implikation ist falsch, wenn $\at{A} \lor \at{B} = 1$ und $\at{C} = 0$: Das sind 3 Zeilen (110, 100, 010 für A, B, C).`,
+      T`Also ist die Formel in $8 - 3 = 5$ Zeilen wahr: 000, 001, 011, 101, 111.`
+    ]
+  });
+
+  L.zahlAufgabe("#t01-ue-zahl2", {
+    titel: "4 · Modelle zählen",
+    frage: T`Wie viele Modelle hat $\fv{F} = (\at{A} \Rightarrow \at{B}) \land (\at{B} \Rightarrow \at{C})$? (Ein Modell ist eine Belegung, unter der $\fv{F}$ wahr ist.)`,
+    antwort: 4,
+    anzeige: "4 Modelle",
+    hinweise: [
+      "Beide Implikationen müssen gleichzeitig wahr sein.",
+      "Verboten ist A = 1 mit B = 0 und B = 1 mit C = 0.",
+      "Stell die Tafel mit 8 Zeilen auf oder nutze den Baukasten."
+    ],
+    loesungsweg: [
+      T`$\at{A} \Rightarrow \at{B}$ ist falsch in den Zeilen 100 und 101. $\at{B} \Rightarrow \at{C}$ ist falsch in 010 und 110.`,
+      "Diese vier Zeilen fallen weg. Übrig bleiben 000, 001, 011, 111.",
+      "Also 4 Modelle. Merkhilfe: Sobald eine 1 kommt, müssen alle folgenden Atome auch 1 sein."
+    ]
+  });
+
+  L.auswahl("#t01-ue-neg1", {
+    frage: "5 · Im Stil von Aufgabe 1a der Modulschlussprüfung: Verneine «Wenn es schneit, fahren wir Ski.» als ganzen Satz.",
+    optionen: [
+      "Wenn es nicht schneit, fahren wir nicht Ski.",
+      "Es schneit, und wir fahren trotzdem nicht Ski.",
+      "Wenn es schneit, fahren wir nicht Ski.",
+      "Es schneit nicht, und wir fahren Ski."
+    ],
+    richtig: 1,
+    erklaerung: T`Lösungsweg: $\at{S}$ := «es schneit», $\at{K}$ := «wir fahren Ski». Der Satz ist $\at{S} \Rightarrow \at{K}$. Die Verneinung $\neg(\at{S} \Rightarrow \at{K})$ hat dieselbe Spalte wie $\at{S} \land \neg \at{K}$: «Es schneit, und wir fahren trotzdem nicht Ski.» Die anderen Sätze passen nicht: «Wenn es schneit, fahren wir nicht Ski» ($\at{S} \Rightarrow \neg \at{K}$) ist auch wahr, wenn es gar nicht schneit. «Wenn es nicht schneit, fahren wir nicht Ski» ($\neg \at{S} \Rightarrow \neg \at{K}$) ist auch wahr, wenn es schneit und wir Ski fahren, also zusammen mit dem Originalsatz. «Es schneit nicht, und wir fahren Ski» ($\neg \at{S} \land \at{K}$) verneint die Umkehrung $\at{K} \Rightarrow \at{S}$.`
+  });
+
+  L.auswahl("#t01-ue-neg2", {
+    frage: "6 · Im Stil von Aufgabe 1a: Verneine «Nur wenn der Zug pünktlich ist, erreichen wir den Anschluss.»",
+    optionen: [
+      "Wenn der Zug nicht pünktlich ist, erreichen wir den Anschluss nicht.",
+      "Der Zug ist pünktlich, und wir erreichen den Anschluss nicht.",
+      "Wir erreichen den Anschluss, obwohl der Zug nicht pünktlich ist.",
+      "Der Zug ist nicht pünktlich, und wir erreichen den Anschluss nicht."
+    ],
+    richtig: 2,
+    erklaerung: T`Lösungsweg: $\at{Z}$ := «der Zug ist pünktlich», $\at{K}$ := «wir erreichen den Anschluss». «Nur wenn Z, dann K» heisst $\at{K} \Rightarrow \at{Z}$ (Z ist notwendig). Die Verneinung ist $\at{K} \land \neg \at{Z}$: «Wir erreichen den Anschluss, obwohl der Zug nicht pünktlich ist.» Wer falsch $\at{Z} \Rightarrow \at{K}$ übersetzt, landet bei «Der Zug ist pünktlich, und wir erreichen den Anschluss nicht.» Der Satz «Wenn der Zug nicht pünktlich ist, erreichen wir den Anschluss nicht» ist gar keine Verneinung: Er ist $\neg \at{Z} \Rightarrow \neg \at{K}$, die Kontraposition des Originalsatzes, und bedeutet dasselbe wie dieser.`
+  });
+
+  L.schrittAufgabe("#t01-ue-formal", {
+    titel: "7 · Firmenausflug formalisieren",
+    aufgabe: "<p>Im Stil von Aufgabe 1b der exemplarischen Modulschlussprüfung (eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt).</p>" +
+      "<p>Ein Team plant seinen Ausflug. Es gilt:</p><ul>" +
+      "<li>Wenn das Team wandert (W), isst es danach Käsefondue (K).</li>" +
+      "<li>Das Team macht nur dann eine Schifffahrt (S), wenn es nicht regnet (R).</li>" +
+      "<li>Das Team isst genau dann Käsefondue, wenn es regnet oder wandert.</li>" +
+      "<li>Entweder wandert das Team, oder es macht eine Schifffahrt.</li></ul>" +
+      "<p>Übersetze den Sachverhalt in eine aussagenlogische Formel.</p>",
+    schritte: [
+      { html: T`$\at{W}, \at{K}, \at{S}, \at{R}$ wie im Text`,
+        warum: "Die Aufgabe gibt die Buchstaben vor. Jeder steht für eine positive Aussage, zum Beispiel R := «es regnet»." },
+      { html: T`$\fv{F_1} = \at{W} \Rightarrow \at{K}$`,
+        warum: "«Wenn …, (dann) …»: Was nach «wenn» steht, kommt links vom Pfeil." },
+      { html: T`$\fv{F_2} = \at{S} \Rightarrow \neg \at{R}$`,
+        warum: "«nur dann, wenn»: Die Bedingung nach «wenn» ist notwendig und steht rechts. Nicht verwechseln mit ¬R ⇒ S." },
+      { html: T`$\fv{F_3} = \at{K} \Leftrightarrow (\at{R} \lor \at{W})$`,
+        warum: "«genau dann, wenn» ist die Äquivalenz. Die Klammer zeigt, dass «regnet oder wandert» zusammengehört." },
+      { html: T`$\fv{F_4} = (\at{W} \land \neg \at{S}) \lor (\neg \at{W} \land \at{S})$`,
+        warum: "«Entweder … oder» schliesst beides aus. Schreib die zwei erlaubten Fälle hin und verbinde sie mit ∨." },
+      { html: T`$\fv{F} = \fv{F_1} \land \fv{F_2} \land \fv{F_3} \land \fv{F_4}$`,
+        warum: "Alle Regeln gelten zugleich, also ∧. Schreib wie in der Musterlösung jede Teilformel einzeln auf, dann die Verknüpfung." }
+    ]
+  });
+
+  // Rätsel: Tafel berechnen
+  const RA = atomSpalte(0, 3), RB = atomSpalte(1, 3), RC = atomSpalte(2, 3);
+  const RF1 = RA.map((a, r) => (a === 1 - RB[r] ? 1 : 0));
+  const RI = RA.map((a, r) => imp(a, 1 - RC[r]));
+  const RF2 = RB.map((b, r) => (b === RI[r] ? 1 : 0));
+  const RN = RA.map((a, r) => (1 - a) & (1 - RB[r]));
+  const RF3 = RC.map((c, r) => (c === RN[r] ? 1 : 0));
+  const RF = RF1.map((x, r) => x & RF2[r] & RF3[r]);
+  const RAN = [];
+  RF.forEach((v, r) => { if (v) RAN.push(r); });
+  L.schrittAufgabe("#t01-ue-raetsel", {
+    titel: "8 · Wer sagt die Wahrheit?",
+    aufgabe: "<p>Im Stil der Lernblock-Aufgabe 2.1 und von Aufgabe 1 im Übungsset S1 (eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt).</p>" +
+      "<p>Nach einem Serverausfall befragt die IT-Leiterin drei Mitarbeitende. Jede Person sagt entweder die Wahrheit oder lügt.</p><ul>" +
+      "<li>Alex: «Bea lügt.»</li>" +
+      "<li>Bea: «Wenn Alex die Wahrheit sagt, dann lügt Chris.»</li>" +
+      "<li>Chris: «Alex und Bea lügen beide.»</li></ul>" +
+      "<p>Wer sagt die Wahrheit? Löse mit einer Wahrheitstafel.</p>",
+    schritte: [
+      { html: T`$\at{A}, \at{B}, \at{C}$ := «Alex / Bea / Chris sagt die Wahrheit»`,
+        warum: "Bei Aussagen von Personen ist das Atom immer «… sagt die Wahrheit». «Lügt» ist dann ¬." },
+      { html: T`$\fv{F_1} = \at{A} \Leftrightarrow \neg \at{B}$`,
+        warum: "Was Alex sagt, stimmt genau dann, wenn Alex die Wahrheit sagt. Darum steht ⇔ zwischen Person und Inhalt." },
+      { html: T`$\fv{F_2} = \at{B} \Leftrightarrow (\at{A} \Rightarrow \neg \at{C})$`,
+        warum: "Bea sagt eine Implikation. Sie kommt als Ganzes in die Klammer." },
+      { html: T`$\fv{F_3} = \at{C} \Leftrightarrow (\neg \at{A} \land \neg \at{B})$`,
+        warum: "«beide lügen» heisst ¬A ∧ ¬B." },
+      { html: T`$\fv{F} = \fv{F_1} \land \fv{F_2} \land \fv{F_3}$, drei Atome, also $2^3 = 8$ Zeilen`,
+        warum: "Alle drei Gleichwertigkeiten müssen zugleich gelten." },
+      { html: '<div class="tablebox">' + tafelHtml(["A", "B", "C", "F₁", "A ⇒ ¬C", "F₂", "¬A ∧ ¬B", "F₃", "F"],
+          [RA, RB, RC, RF1, RI, RF2, RN, RF3, RF], { erg: 8, an: RAN }) + "</div>",
+        warum: "Spalte für Spalte mit den Grundtafeln. Nur eine Zeile hat F = 1 (gelb)." },
+      { html: T`$\al(\at{A}) = 0,\ \al(\at{B}) = 1,\ \al(\at{C}) = 0$: Nur Bea sagt die Wahrheit.`,
+        warum: "Gegenprobe: Alex lügt, also stimmt «Bea lügt» nicht. Beas Satz ist wahr, weil Alex lügt. Chris lügt, denn Bea sagt die Wahrheit." }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const FG = atomSpalte(0, 3), FK = atomSpalte(1, 3), FP = atomSpalte(2, 3);
+  const FF1 = FG.map((g, r) => imp(g, FK[r]));
+  const FF2 = FK.map((k, r) => 1 - (k & FP[r]));
+  const FF3 = FP.map((p, r) => imp(p, FG[r]));
+  const FFF = FF1.map((x, r) => x & FF2[r] & FF3[r]);
+  const FILM_KOPF = ["G", "K", "P",
+    'F₁<span class="t01-unter">G ⇒ K</span>', 'F₂<span class="t01-unter">¬(K ∧ P)</span>',
+    'F₃<span class="t01-unter">P ⇒ G</span>', "F"];
+  const FILM_WERTE = [FG, FK, FP, FF1, FF2, FF3, FFF];
+  const MODELLE = [];
+  FFF.forEach((v, r) => { if (v) MODELLE.push(r); });
+  const FORMEL_F = T`$\fv{F} = (\at{G} \Rightarrow \at{K}) \land \neg(\at{K} \land \at{P}) \land (\at{P} \Rightarrow \at{G})$`;
+  // Film-Tafel mit n gefüllten Spalten; neu = Index der neuen Spalte
+  function ft(n, extra) {
+    const werte = FILM_WERTE.map((s, j) => (j < n ? s : null));
+    const opt = Object.assign({ zeilen: 8, erg: 6, klasse: "t01-filmtafel" }, extra || {});
+    return '<div class="t01-filmzeile">' + FORMEL_F + "</div>" + tafelHtml(FILM_KOPF, werte, opt);
+  }
+  // Absätze unter der Tafel; neu = kurz gelb aufleuchten lassen
+  const ANTWORT = (neu) => '<p class="t01-antwort' + (neu ? " nw" : "") + '">' + T`In jedem Modell gilt $\al(\at{P}) = 0$.` + " <b>Das Paddle bleibt zu Hause.</b></p>";
+  const GEGEN = (neu) => '<p class="t01-antwort' + (neu ? " nw" : "") + '">Gegenprobe: P = 1 erzwingt G = 1 (Regel 3), das erzwingt K = 1 (Regel 1). K und P zusammen verbietet Regel 2. Widerspruch.</p>';
+  const F_ATOME = [T`$\at{G}$ := Grill kommt mit`, T`$\at{K}$ := Kühlbox kommt mit`, T`$\at{P}$ := Paddle kommt mit`];
+  const F_REGELN = [T`$\fv{F_1} = \at{G} \Rightarrow \at{K}$`, T`$\fv{F_2} = \neg(\at{K} \land \at{P})$`, T`$\fv{F_3} = \at{P} \Rightarrow \at{G}$`];
+  const fz = (liste, neuIndex) =>
+    '<div class="t01-zeilen">' + liste.map((z, i) => "<div>" + (i === neuIndex ? NW(z) : z) + "</div>").join("") + "</div>";
+
+  L.film("#t01-film", {
+    phasen: ["1 · Atome", "2 · Formeln", "3 · Tafel", "4 · Spalten", "5 · Antwort"],
+    texte: [
+      'Für einen Tagesausflug an den See packen Lea und Nico ihr kleines Auto. Sie überlegen, ob <span data-ph="g">der Grill</span>, <span data-ph="k">die Kühlbox</span> und <span data-ph="p">das Stand-up-Paddle</span> mitkommen.',
+      '<span data-ph="r1">(1) Wenn der Grill mitkommt, kommt auch die Kühlbox mit.</span>',
+      '<span data-ph="r2">(2) Kühlbox und Paddle passen nicht beide in den Kofferraum.</span>',
+      '(3) <span data-ph="r3a">Das Paddle kommt</span> <span data-ph="nurwenn">nur mit, wenn</span> <span data-ph="r3b">auch der Grill mitkommt</span>.',
+      '<span data-ph="frage">Zeige mit einer Wahrheitstafel: Das Paddle bleibt zu Hause.</span>'
+    ],
+    woerterbuch: [
+      T`$\at{G}$ Grill kommt mit`,
+      T`$\at{K}$ Kühlbox kommt mit`,
+      T`$\at{P}$ Paddle kommt mit`,
+      T`$\Rightarrow$ wenn … dann, nur wenn`,
+      T`$\neg(\ldots \land \ldots)$ nicht beide`
+    ],
+    beschriftung: { texte: "Die Aufgabe", formel: "Lösung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Atome festlegen, jede Regel einzeln übersetzen, alles mit ∧ verbinden, die Wahrheitstafel aufstellen und die Zeilen mit F = 1 lesen." },
+      { ph: 0, hl: ["g"], dict: 1, dh: [0], f: fz(F_ATOME.slice(0, 1), 0),
+        say: "Zuerst die Atome. Jedes Atom ist eine kurze Aussage, die wahr oder falsch sein kann: G heisst «der Grill kommt mit»." },
+      { hl: ["k"], dict: 2, dh: [1], f: fz(F_ATOME.slice(0, 2), 1),
+        say: "K heisst «die Kühlbox kommt mit»." },
+      { hl: ["p"], dict: 3, dh: [2], f: fz(F_ATOME, 2),
+        say: "P heisst «das Paddle kommt mit». Formuliere Atome immer positiv. Ein «nicht» kommt später als ¬ in die Formel." },
+      { ph: 1, hl: ["r1"], dict: 4, dh: [3], f: fz(F_REGELN.slice(0, 1), 0),
+        say: "Regel 1 ist ein «wenn …, dann …». Das wird zum Pfeil. Was nach «wenn» steht, kommt links: G ⇒ K." },
+      { hl: ["r2"], dict: 5, dh: [4], f: fz(F_REGELN.slice(0, 2), 1),
+        say: "Regel 2 sagt «nicht beide». Es ist nicht so, dass K und P zusammen wahr sind. Das ¬ steht vor der Klammer." },
+      { hl: ["nurwenn", "r3b"], dh: [3], f: fz(F_REGELN, 2),
+        say: "Achtung bei Regel 3: «nur wenn». Der Grill ist die notwendige Bedingung für das Paddle. Die notwendige Bedingung steht rechts vom Pfeil: P ⇒ G." },
+      { hl: ["r1", "r2", "r3a", "nurwenn", "r3b"], f: fz(F_REGELN.concat([FORMEL_F]), 3),
+        say: "Alle drei Regeln gelten gleichzeitig. Darum verbindest du sie mit ∧ zu einer einzigen Formel F." },
+      { ph: 2, hl: ["g", "k", "p"], f: ft(0),
+        say: "Drei Atome ergeben 2 hoch 3, also 8 Zeilen. Jede Zeile ist eine Belegung, also eine mögliche Packliste." },
+      { f: ft(1, { neu: 0 }),
+        say: "Die erste Atom-Spalte G: vier Nullen, dann vier Einsen." },
+      { f: ft(2, { neu: 1 }),
+        say: "Die zweite Spalte K wechselt doppelt so oft: zwei Nullen, zwei Einsen, und so weiter." },
+      { f: ft(3, { neu: 2 }),
+        say: "Die letzte Spalte P wechselt in jeder Zeile. So kommt jede Kombination genau einmal vor." },
+      { ph: 3, hl: ["r1"], f: ft(4, { neu: 3 }),
+        say: "Spalte F1 ist G ⇒ K. Der Pfeil ist nur falsch, wenn links 1 und rechts 0 steht, also bei G = 1 und K = 0. Das sind die Zeilen 5 und 6." },
+      { hl: ["r2"], f: ft(5, { neu: 4 }),
+        say: "Spalte F2 ist ¬(K ∧ P). K ∧ P ist nur in den Zeilen 4 und 8 wahr. Das ¬ dreht es um: dort 0, sonst 1." },
+      { hl: ["r3a", "nurwenn", "r3b"], f: ft(6, { neu: 5 }),
+        say: "Spalte F3 ist P ⇒ G. Falsch nur bei P = 1 und G = 0: in den Zeilen 2 und 4." },
+      { hl: [], f: ft(7, { neu: 6 }),
+        say: "Spalte F: Eine Konjunktion ist nur 1, wenn F1, F2 und F3 alle 1 sind. Das gilt in den Zeilen 1, 3 und 7." },
+      { ph: 4, hl: ["frage"], f: ft(7, { an: MODELLE }),
+        say: "Diese drei Zeilen sind die Modelle von F: die Packlisten, die alle Regeln einhalten." },
+      { f: ft(7, { an: MODELLE, fokus: { spalte: 2, zeilen: MODELLE } }),
+        say: "Schau in die Spalte P: In allen drei Modellen steht eine 0." },
+      { f: ft(7, { an: MODELLE, fokus: { spalte: 2, zeilen: MODELLE } }) + GEGEN(true),
+        say: "Zur Kontrolle ohne Tafel: Kommt das Paddle mit, muss der Grill mit, also auch die Kühlbox. Kühlbox und Paddle zusammen verbietet aber Regel 2." },
+      { f: ft(7, { an: MODELLE, fokus: { spalte: 2, zeilen: MODELLE } }) + GEGEN(false) + ANTWORT(true), end: true,
+        say: "Ergebnis: Jede Packliste, die alle Regeln einhält, lässt das Paddle zu Hause. Jetzt kannst du dich im Selbsttest prüfen." }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t01-selbsttest", {
+    fragen: [
+      { q: "Welcher Satz ist eine Aussage im Sinne von Def. 1.1?",
+        o: ["«Schliess die Tür!»", "«Der Rhein fliesst durch Basel.»", T`«$x$ ist grösser als 3.»`], a: 1,
+        e: "Nur dieser Satz ist entweder wahr oder falsch. Ein Befehl hat keinen Wahrheitswert, und bei «x ist grösser als 3» hängt der Wert von x ab." },
+      { q: "Wie viele Zeilen hat die Wahrheitstafel einer Formel mit 4 Atomen?",
+        o: ["8", "12", "16"], a: 2,
+        e: T`Jedes Atom hat 2 Werte: $2^4 = 16$ Zeilen.` },
+      { q: T`Stolperfalle: Wann ist $\at{A} \Rightarrow \at{B}$ falsch?`,
+        o: ["Wenn A falsch und B wahr ist", "Wenn A wahr und B falsch ist", "Wenn A und B beide falsch sind"], a: 1,
+        e: "Die Implikation verbietet nur einen Fall: Die Voraussetzung gilt, die Folge nicht. Ist A falsch, ist sie immer wahr." },
+      { q: "Stolperfalle: «Wir grillieren (G) nur, wenn die Sonne scheint (S).» Welche Formel passt?",
+        o: [T`$\at{G} \Rightarrow \at{S}$`, T`$\at{S} \Rightarrow \at{G}$`, T`$\at{G} \Leftrightarrow \at{S}$`], a: 0,
+        e: "Nach «nur wenn» steht die notwendige Bedingung, sie kommt rechts. Sonne zwingt nicht zum Grillieren, also nicht S ⇒ G und auch nicht ⇔." },
+      { q: T`Stolperfalle: Ist $\at{A} \land \at{B} \lor \at{C}$ eine Formel nach Def. 2.1?`,
+        o: ["Ja, denn ∧ bindet stärker als ∨", "Nein, denn ∧ und ∨ binden gleich stark, die Klammer fehlt", "Ja, man liest einfach von links nach rechts"], a: 1,
+        e: "So steht es in Bsp. 2.2c. Die Regel «∧ vor ∨» aus Programmiersprachen gilt im MSTW nicht." },
+      { q: T`Wofür steht $\fv{F_1} \Rightarrow \fv{F_2}$ laut Notation 2.3b?`,
+        o: [T`$\neg \fv{F_1} \lor \fv{F_2}$`, T`$\fv{F_1} \lor \neg \fv{F_2}$`, T`$\neg \fv{F_1} \land \fv{F_2}$`], a: 0,
+        e: "¬F₁ ∨ F₂ ist nur 0, wenn F₁ = 1 und F₂ = 0. Genau wie die Implikation." },
+      { q: T`Die Belegung ist $\al(\at{A}) = 0$, $\al(\at{B}) = 1$. Welchen Wert hat $\neg \at{A} \land (\at{A} \Leftrightarrow \at{B})$?`,
+        o: ["1", "0", "Das hängt noch von einem dritten Atom ab"], a: 1,
+        e: "¬A = 1, aber A ⇔ B = 0, weil A und B verschiedene Werte haben. 1 ∧ 0 ergibt 0." },
+      { q: "Stolperfalle: «Entweder A oder B» (nicht beides). Welche Formel passt?",
+        o: [T`$\at{A} \lor \at{B}$`, T`$(\at{A} \land \neg \at{B}) \lor (\neg \at{A} \land \at{B})$`, T`$\neg(\at{A} \land \at{B})$`], a: 1,
+        e: "A ∨ B ist auch wahr, wenn beides gilt. ¬(A ∧ B) ist auch wahr, wenn keines von beiden gilt. Nur die mittlere Formel verlangt genau eines." },
+      { q: "Was ist eine Belegung?",
+        o: ["Eine Abbildung, die jedem Atom 0 oder 1 zuordnet", "Eine Formel ohne Klammern", "Ein anderes Wort für Junktor"], a: 0,
+        e: "Def. 2.4b: α: M → {0, 1}. Aus den Werten der Atome folgt der Wert jeder Formel." },
+      { q: "Was legt die Syntax eines logischen Systems fest?",
+        o: ["Welche Zeichenketten Formeln sind", "Welche Formeln wahr sind", "Wie ein Computer Formeln umformt"], a: 0,
+        e: "Def. 1.3: Syntax = Bauregeln, Semantik = Wahrheitswerte, Kalkül = mechanische Umformungsregeln." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

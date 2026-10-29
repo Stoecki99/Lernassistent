@@ -1,0 +1,1433 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zufallsvariablen, Erwartungswert, Standardabweichung · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/11-diskrete-verteilungen" title="Binomial-, hypergeometrische und Poisson-Verteilung">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t10-», nur Farben aus :root -->
+  <style>
+    .t10-ziele{margin:6px 0 0; padding-left:1.2em; display:flex; flex-direction:column; gap:3px}
+    .t10-felder{display:grid; grid-template-columns:repeat(auto-fill, minmax(5.2em, 1fr)); gap:8px}
+    .t10-feldlabel{display:flex; flex-direction:column; gap:2px; font-family:var(--f-math); font-size:1rem; color:var(--muted); min-width:0}
+    .t10-feld{font:inherit; font-family:var(--f-math); font-size:1.05rem; font-variant-numeric:tabular-nums; width:100%; min-width:0; min-height:40px;
+      padding:4px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink)}
+    .t10-feld:hover{border-color:var(--accent)}
+    .t10-feld:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
+    .t10-feld[aria-invalid="true"]{border-color:var(--bad); background:var(--bad-bg)}
+    .t10-check{display:flex; gap:8px; align-items:center; font-size:.95rem}
+    .t10-check input{width:20px; height:20px; accent-color:var(--accent); flex:0 0 auto}
+    .t10-status{font-weight:600; min-height:1.5em}
+    .t10-status.ok{color:var(--ok)}
+    .t10-status.bad{color:var(--bad)}
+    .t10-kennzahlen{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(135px,100%),1fr)); gap:8px}
+    .t10-kz{background:var(--board); border-radius:10px; padding:8px 12px; display:flex; flex-direction:column; gap:2px; min-width:0}
+    .t10-kz span{font-size:.8rem; color:var(--muted)}
+    .t10-kz b{font-family:var(--f-math); font-size:1.2rem; font-weight:600; font-variant-numeric:tabular-nums; color:var(--ink); overflow-wrap:anywhere}
+    .t10-kz.t10-haupt{box-shadow:inset 0 0 0 2px var(--accent)}
+    .t10-ablesen{display:flex; flex-wrap:wrap; gap:8px 12px; align-items:flex-end}
+    .t10-ablesen label{display:flex; flex-direction:column; gap:2px; font-size:.85rem; color:var(--muted)}
+    .t10-rechnung{font-family:var(--f-math); font-size:1.12rem; background:var(--board); border-radius:10px; padding:10px 14px; overflow-x:auto; font-variant-numeric:tabular-nums}
+    .t10-rechnung small{display:block; font-family:var(--f-body); font-size:.88rem; color:var(--muted); margin-top:4px}
+    .t10-zieh{touch-action:none; -webkit-user-select:none; user-select:none}
+    .diagramm .t10-griff{fill:transparent; cursor:ns-resize}
+    .diagramm .t10-band{fill:var(--accent); fill-opacity:.13; stroke:none}
+    .diagramm .t10-mu{stroke:var(--accent); stroke-width:2; stroke-dasharray:4 3}
+    .diagramm .t10-wippe{fill:var(--accent)}
+    .diagramm .t10-mutext{fill:var(--accent); font-weight:600}
+    .diagramm .t10-wert{fill:var(--ink); font-size:11px}
+    .diagramm .t10-stufe{stroke:currentColor; stroke-width:2.5; fill:none}
+    .diagramm .t10-offen{fill:var(--surface); stroke:currentColor; stroke-width:1.6}
+    .diagramm .t10-zu{fill:currentColor}
+    .diagramm .t10-stab{stroke:currentColor; stroke-width:3; stroke-linecap:round}
+    .t10-spieltab{table-layout:fixed}
+    .t10-spieltab th:first-child{width:5.2em}
+    .t10-spieltab th, .t10-spieltab td{padding-left:6px; padding-right:6px}
+    .t10-spieltab td{min-width:0}
+    /* Formeln im Tabellenkopf nicht in Grossbuchstaben setzen (x ≠ X, f ≠ F) */
+    .tabelle.t10-formelkopf thead th{text-transform:none; letter-spacing:0; font-size:.98rem; color:var(--ink)}
+    .t10-feldzeile{display:flex; flex-direction:column; gap:4px; font-size:.92rem; font-weight:600}
+    @media (max-width:420px){ .t10-klein{font-size:.88em} }
+  </style>
+</head>
+<body data-fach="mstw" data-thema="10-zufallsvariablen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V5 · Zufallsvariablen</span>
+    <h1>Zufallsvariablen, Erwartungswert, Standardabweichung</h1>
+    <p class="lead">Eine Zufallsvariable macht aus jedem Ergebnis eines Zufallsexperiments eine Zahl: Anzahl Kopf, Augensumme, Gewinn in Franken. Mit dieser Zahl kannst du rechnen. Du stellst ihre Verteilung als Tabelle, Stabdiagramm und Treppe dar, liest Wahrscheinlichkeiten wie \(P(X > 3)\) ab und beurteilst mit Erwartungswert und Standardabweichung, ob ein Spiel fair ist.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t10-ziele">
+        <li>eine Zufallsvariable als Zuordnung «Ergebnis → Zahl» beschreiben und ihre Werte angeben,</li>
+        <li>die Wahrscheinlichkeitsfunktion \(f(x)\) als Tabelle und Stabdiagramm aufstellen,</li>
+        <li>die Verteilungsfunktion \(F(x)\) als Treppe zeichnen und \(P(X \le b)\), \(P(X > a)\), \(P(a < X \le b)\) damit ablesen,</li>
+        <li>Erwartungswert, Varianz und Standardabweichung berechnen und deuten, zum Beispiel als fairen Einsatz,</li>
+        <li>die Rechenregeln für \(Y = aX + b\) anwenden.</li>
+      </ul>
+    </div>
+    <p class="hint">Prüfungsbezug: Grundlage für die Aufgaben 5 und 6 der exemplarischen Modulschlussprüfung. Quellen: Skript Wahrscheinlichkeitstheorie (WT) Kap. 4.1–4.6, Folien OTT S2-V5, Lernblock S2-LB2.</p>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#bausteine"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#zufallsvariable"><b>2</b>Zufallsvariable</a>
+    <a href="#ablesen"><b>3</b>Ablesen mit F</a>
+    <a href="#kennzahlen"><b>4</b>μ und σ</a>
+    <a href="#fair"><b>5</b>Fairer Einsatz</a>
+    <a href="#regeln"><b>6</b>Rechenregeln</a>
+    <a href="#stetig"><b>7</b>Ausblick stetig</a>
+    <a href="#werkstatt"><b>8</b>Werkstatt</a>
+    <a href="#spiel"><b>9</b>Glücksspiel-Rechner</a>
+    <a href="#uebungen"><b>10</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="bausteine">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine, die du brauchst</h2>
+    <p class="prose">Bis jetzt hast du Wahrscheinlichkeiten für Ereignisse berechnet, etwa «mindestens eine 6». Oft interessiert dich aber nicht das ganze Ergebnis, sondern nur eine Zahl daraus. Bei drei Münzwürfen ist dir egal, ob Kopf zuerst oder zuletzt kam. Du willst wissen: Wie oft Kopf? Genau dafür gibt es die folgenden fünf Begriffe. Das Beispiel ist immer dasselbe: Du wirfst eine faire Münze dreimal, \(K\) heisst Kopf, \(Z\) heisst Zahl.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Zufallsvariable = Regel «Ergebnis → Zahl»</span><span class="ex">\(X(KZK) = 2\)</span><p>Wie das Drehkreuz am Stadioneingang: Es fragt nicht, wer durchgeht, es zählt nur. \(X\) macht aus jedem Ergebnis eine Zahl, hier die Anzahl Kopf.</p></div>
+      <div class="concept"><span class="tag">Wert = mögliche Zahl</span><span class="ex">\(x \in \{0, 1, 2, 3\}\)</span><p>\(X\) ist die Frage «Wie oft Kopf?», \(x\) eine mögliche Antwort. Grosses \(X\) ist die Regel, kleines \(x\) eine Zahl.</p></div>
+      <div class="concept"><span class="tag">Wahrscheinlichkeitsfunktion = Gewicht pro Wert</span><span class="ex">\(f(1) = P(X = 1) = \tfrac{3}{8}\)</span><p>Stell dir 1 kg Sand vor, verteilt auf die Werte. \(f(x)\) sagt, wie viel davon auf \(x\) liegt. Zusammen immer genau 1.</p></div>
+      <div class="concept"><span class="tag">Verteilungsfunktion = alles bis zur Stelle aufsummiert</span><span class="ex">\(F(1) = P(X \le 1) = \tfrac{4}{8}\)</span><p>Wie ein Kilometerzähler: Er zählt alles bis und mit \(x\) zusammen. Er steigt, aber er fällt nie zurück.</p></div>
+      <div class="concept"><span class="tag">Erwartungswert = langfristiger Durchschnitt</span><span class="ex">\(E(X) = 1.5\)</span><p>Der Balancepunkt einer Wippe: Legst du die Gewichte \(f(x)\) an die Stellen \(x\), liegt das Brett bei \(\mu = 1.5\) im Gleichgewicht.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Regel, Zahl oder Wahrscheinlichkeit?</h3>
+      <p class="hint">Frag dich: Beschreibt es, <i>was</i> gezählt wird (Zufallsvariable)? Ist es ein möglicher Ausgang der Zählung (Wert)? Oder eine Zahl zwischen 0 und 1, die zu einem Wert gehört (Wahrscheinlichkeit)?</p>
+      <div id="t10-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
+    <h2>Das Wörterbuch dieser Station</h2>
+    <p class="prose">Skript, Folien und Taschenrechner benutzen für dieselbe Sache manchmal verschiedene Zeichen. Die Tabelle legt fest, was gemeint ist. Farbe: Zufallsvariable und Ergebnis blau, feste Zahlen orange, Funktionen grün.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>\(\Omega\)</td><td><span class="kind kind-c">Konstante</span></td><td>Ergebnismenge, alle möglichen Ergebnisse. Im Skript heisst sie \(M\).</td></tr>
+          <tr><td>\(\omega\)</td><td><span class="kind kind-v">Variable</span></td><td>ein einzelnes Ergebnis, zum Beispiel \(KZK\)</td></tr>
+          <tr><td>\(X\)</td><td><span class="kind kind-v">Variable</span></td><td>Zufallsvariable: ordnet jedem \(\omega\) eine Zahl \(X(\omega)\) zu</td></tr>
+          <tr><td>\(x_1, \dots, x_n\)</td><td><span class="kind kind-c">Konstante</span></td><td>die möglichen Werte (Realisationen) von \(X\)</td></tr>
+          <tr><td>\(p_i = f(x_i)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>Wahrscheinlichkeits&shy;funktion: \(P(X = x_i)\). Die drei Schreibweisen sind gleichwertig (Bem. 4.13).</td></tr>
+          <tr><td>\(F(x)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>Verteilungs&shy;funktion: \(P(X \le x)\), «Summen&shy;häufigkeits&shy;funktion»</td></tr>
+          <tr><td>\(\mu = E(X)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>Erwartungswert, der langfristige Mittelwert von \(X\)</td></tr>
+          <tr><td>\(\sigma^2 = V(X)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>Varianz, mittlere quadrierte Abweichung von \(\mu\). Folien: \(VAR(X)\)</td></tr>
+          <tr><td>\(\sigma\)</td><td><span class="kind kind-c">Konstante</span></td><td>Standard&shy;abweichung \(\sigma = \sqrt{\sigma^2}\), gleiche Einheit wie \(X\)</td></tr>
+          <tr><td>\(\sum_{x_i \le x}\)</td><td><span class="kind kind-op">Operator</span></td><td>«zähle zusammen für alle Werte \(x_i\), die höchstens \(x\) sind»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Grosses \(X\) ist die Regel, kleines \(x\) eine Zahl. \(P(X = 2)\) liest du «Wahrscheinlichkeit, dass \(X\) den Wert 2 annimmt». \(P(2)\) allein ergibt keinen Sinn.</div>
+  </section>
+
+  <!-- ===== 2 · Zufallsvariable, f und F ===== -->
+  <section id="zufallsvariable">
+    <span class="eyebrow">Schritt 2 · Skript WT 4.1–4.2</span>
+    <h2>Von den Ergebnissen zur Verteilung</h2>
+    <p class="prose"><b>Def. 4.7</b> in eigenen Worten: Eine Zufallsvariable ist eine Abbildung, die jedem Ergebnis der Ergebnismenge genau eine reelle Zahl zuordnet. Zufällig ist nur, welches Ergebnis eintritt. Die Regel selbst steht fest.</p>
+    <div class="board">$$X: \Omega \to \mathbb{R}, \qquad \omega \mapsto X(\omega)$$</div>
+    <p class="prose"><b>Def. 4.9:</b> \(X\) heisst <b>diskret</b>, wenn sie nur endlich viele oder abzählbar unendlich viele Werte annimmt (0, 1, 2, …). Anzahl Kopf, Augensumme und Anzahl Unfälle pro Monat sind diskret. Eine Rendite kann jeden Wert in einem Intervall annehmen. Sie heisst <b>stetig</b> (Def. 4.18, siehe <a href="#stetig">Ausblick</a>).</p>
+    <p class="prose">Klick dich durch das Kernbeispiel des Skripts (Bsp. 4.17). Fahre über einen unterstrichenen Satzteil oder tipp darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="t10-stepper-muenze"></div>
+    <p class="prose">Daraus ergeben sich die beiden Funktionen, mit denen du ab jetzt arbeitest:</p>
+    <div class="board">
+      $$f(x) = \begin{cases} p_i & \text{für } x = x_i \\ 0 & \text{sonst} \end{cases}$$
+      $$F(x) = P(X \le x) = \sum_{x_i \le x} f(x_i)$$
+    </div>
+    <p class="hint">Oben die Wahrscheinlichkeitsfunktion mit \(p_i = P(X = x_i)\) (Def. 4.10), unten die Verteilungsfunktion (Def. 4.14, Bem. 4.15).</p>
+    <div class="grid2">
+      <div class="note"><b>Bild von f:</b> Du zeichnest bei jedem Wert \(x_i\) einen Stab der Höhe \(f(x_i)\) (Stabdiagramm, Bem. 4.11). Liegen die Werte genau 1 auseinander, darfst du Balken der Breite 1 zeichnen. Dann ist die Fläche jedes Balkens gleich seiner Wahrscheinlichkeit.</div>
+      <div class="note"><b>Bild von F:</b> Eine Treppe (Bem. 4.16). Zwischen zwei Werten bleibt \(F\) flach. Bei jedem Wert \(x_i\) springt \(F\) um genau \(f(x_i)\) nach oben. Links von allen Werten ist \(F = 0\), rechts von allen ist \(F = 1\).</div>
+    </div>
+    <div class="note tipp"><b>Gleiche Ergebnismenge, andere Verteilung (Bem. 4.12):</b> Ein fairer Würfel hat \(f(x) = \tfrac16\) für \(x = 1, \dots, 6\). Ein gezinkter Würfel mit derselben Ergebnismenge kann \(f(x) = \tfrac17\) für \(x = 1, \dots, 5\) und \(f(6) = \tfrac27\) haben. Erst Ergebnismenge <i>und</i> Wahrscheinlichkeitsfunktion zusammen beschreiben die Verteilung. Du kannst beide in der <a href="#werkstatt">Werkstatt</a> laden.</div>
+    <div class="note falle"><b>Achtung Folie:</b> In der Tabelle zu Bsp. 4.8 (Anzahl Knaben bei vier Kindern) stehen in den Zeilen 14 und 15 «KMKM» und «MMMK». Für drei Knaben müssen es <b>KMKK</b> und <b>MKKK</b> sein. Die Wahrscheinlichkeit \(f(3) = \tfrac{4}{16}\) auf der Folie stimmt.</div>
+  </section>
+
+  <!-- ===== 3 · Ablesen mit F ===== -->
+  <section id="ablesen">
+    <span class="eyebrow">Schritt 3 · Folien S2-V5 «Weitere Aufgaben»</span>
+    <h2>Wahrscheinlichkeiten mit F ablesen</h2>
+    <p class="prose">\(F\) beantwortet nur eine Frage: «Wie wahrscheinlich ist höchstens \(x\)?» Jede andere Frage übersetzt du in diese Form. Die Tabelle gilt, wenn die Werte ganze Zahlen sind (Anzahlen). Die Beispiele rechnen mit der Münze: \(F(0) = 0.125\), \(F(1) = 0.5\), \(F(2) = 0.875\), \(F(3) = 1\).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Übersetzung in die Sprache von F (ganzzahlige Werte)</caption>
+        <thead><tr><th scope="col">gesucht</th><th scope="col">in Worten</th><th scope="col">mit F</th><th scope="col">Münze</th></tr></thead>
+        <tbody>
+          <tr><td>\(P(X \le b)\)</td><td>höchstens \(b\)</td><td>\(F(b)\)</td><td>\(P(X \le 1) = 0.5\)</td></tr>
+          <tr><td>\(P(X < b)\)</td><td>weniger als \(b\)</td><td>\(F(b - 1)\)</td><td>\(P(X < 2) = F(1) = 0.5\)</td></tr>
+          <tr><td>\(P(X > a)\)</td><td>mehr als \(a\)</td><td>\(1 - F(a)\)</td><td>\(P(X > 1) = 1 - 0.5 = 0.5\)</td></tr>
+          <tr><td>\(P(X \ge a)\)</td><td>mindestens \(a\)</td><td>\(1 - F(a - 1)\)</td><td>\(P(X \ge 1) = 1 - F(0) = 0.875\)</td></tr>
+          <tr><td>\(P(a < X \le b)\)</td><td>über \(a\), bis und mit \(b\)</td><td>\(F(b) - F(a)\)</td><td>\(P(0 < X \le 2) = 0.875 - 0.125 = 0.75\)</td></tr>
+          <tr><td>\(P(a \le X \le b)\)</td><td>von \(a\) bis \(b\), beide mit</td><td>\(F(b) - F(a - 1)\)</td><td>\(P(1 \le X \le 2) = F(2) - F(0) = 0.75\)</td></tr>
+          <tr><td>\(P(X = a)\)</td><td>genau \(a\)</td><td>\(F(a) - F(a - 1)\)</td><td>\(P(X = 2) = 0.875 - 0.5 = 0.375\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle:</b> Bei einer diskreten Zufallsvariable ist «kleiner als» nicht dasselbe wie «kleiner gleich». \(P(X < 3) = F(2)\), nicht \(F(3)\). In der Prüfung heisst «mehr als 3 Tore» \(P(X > 3) = 1 - F(3)\) (Aufgabe 5a der exemplarischen Modulschlussprüfung).</div>
+    <div class="note tipp"><b>Tipp für Zwischenwerte:</b> \(F(1.7) = F(1)\), denn zwischen 1 und 2 liegt keine Wahrscheinlichkeit. Darum ist bei der Augensumme \(P(3.5 < X < 4.5) = P(X = 4)\). «\(a - 1\)» heisst allgemein: der nächstkleinere mögliche Wert.</div>
+    <div class="note falle"><b>Achtung Folie:</b> Im Bild zur Augensumme (Folie «Weitere Aufgaben») heisst die Ellipse um die Paare 14, 23, 32, 41 «\(A_4\)». Diese Paare haben aber die Summe 5, der Pfeil zeigt auch auf \(x = 5\). Gemeint ist \(A_5 = \{X = 5\}\). Zu \(A_4\) gehören die Paare 13, 22, 31.</div>
+    <div class="card stack">
+      <h3>Kurz prüfen</h3>
+      <div id="t10-auswahl-ablesen"></div>
+    </div>
+  </section>
+
+  <!-- ===== 4 · Erwartungswert, Varianz, Standardabweichung ===== -->
+  <section id="kennzahlen">
+    <span class="eyebrow">Schritt 4 · Skript WT 4.5</span>
+    <h2>Erwartungswert, Varianz, Standardabweichung</h2>
+    <p class="prose">Beschreibende Statistik schaut zurück: Was ist passiert? Wahrscheinlichkeitsrechnung schaut nach vorn: Was ist zu erwarten? Die Kennzahlen sind dieselben wie beim Mittelwert und der Standardabweichung einer Häufigkeitstabelle. Statt der beobachteten relativen Häufigkeiten \(f_i\) setzt du die theoretischen Wahrscheinlichkeiten \(f(x_i)\) ein.</p>
+    <div class="board">
+      $$\mu = E(X) = \sum_{i=1}^{n} x_i \cdot f(x_i)$$
+      $$\sigma^2 = V(X) = \sum_{i=1}^{n} (x_i - \mu)^2 f(x_i)$$
+      $$\sigma^2 = \sum_{i=1}^{n} x_i^2 f(x_i) - \mu^2$$
+      $$\sigma = \sqrt{\sigma^2}$$
+    </div>
+    <p class="hint">Von oben nach unten: Erwartungswert (Def. 4.31), Varianz nach Definition (Def. 4.35), Rechenformel für die Varianz (Bem. 4.37, steht in der Formelsammlung), Standardabweichung (Def. 4.35).</p>
+    <div class="grid2">
+      <div class="note"><b>Erwartungswert deuten (Bem. 4.32):</b> Wiederholst du das Experiment sehr oft, nähert sich der Durchschnitt der Werte \(\mu\). \(\mu\) muss kein möglicher Wert sein. Beim Würfel ist \(\mu = 3.5\).</div>
+      <div class="note"><b>Standardabweichung deuten (Bem. 4.36):</b> \(\sigma\) misst, wie weit die Werte typischerweise von \(\mu\) entfernt liegen. Du deutest \(\sigma\), nicht \(\sigma^2\), weil \(\sigma\) dieselbe Einheit hat wie \(X\) (Franken statt Franken²).</div>
+    </div>
+    <p class="prose">Im Kernbeispiel des Skripts (Bsp. 4.8 und 4.38) baust du dafür eine Hilfstabelle mit den Spalten \(x \cdot f(x)\) und \(x^2 \cdot f(x)\). Klick dich durch.</p>
+    <div id="t10-stepper-kinder"></div>
+    <div class="note"><b>Vergleich mit der beschreibenden Statistik (Bsp. 4.38):</b> Bei 190 beobachteten Familien mit vier Kindern ergibt die Häufigkeitstabelle \(\bar x = 2.0106\) und \(s = 1.0155\). Das Modell mit \(P(\text{Knabe}) = 0.5\) liefert \(\mu = 2\) und \(\sigma = 1\). Die Beobachtung liegt nahe beim Modell, aber nicht genau darauf. Das Skript rechnet \(s^2\) hier mit relativen Häufigkeiten, also mit Teiler \(n\). In der schliessenden Statistik brauchst du später \(s\) mit Teiler \(n - 1\).</div>
+    <div class="note tipp"><b>Taschenrechner (TI-Nspire, Calculator):</b> Listen eingeben, zum Beispiel <code>x:={0,1,2,3,4}</code> und <code>p:={0.0625,0.25,0.375,0.25,0.0625}</code>. Dann liefert <code>sum(x·p)</code> den Erwartungswert, <code>sum(x^2·p)-sum(x·p)^2</code> die Varianz und die Wurzel daraus \(\sigma\). So vertippst du dich weniger als bei langen Summen.</div>
+    <details class="sol"><summary>Selbst rechnen: Bsp. 4.29 (erwarteter Tagesumsatz)</summary>
+      <div class="stack">
+        <p>Ein Gastrobetrieb setzt bei schönem Wetter 12 000 CHF um, bei mittlerem 7 000 CHF, bei schlechtem 3 000 CHF. Wie gross ist der erwartete Tagesumsatz, (a) wenn alle drei Wetterlagen je \(\tfrac13\) wahrscheinlich sind, (b) wenn schönes Wetter 50 % und die anderen je 25 % wahrscheinlich sind?</p>
+        <p>(a) \(E(X) = \tfrac13 \cdot 12\,000 + \tfrac13 \cdot 7\,000 + \tfrac13 \cdot 3\,000 = 7\,333.33\) CHF</p>
+        <p>(b) \(E(X) = 0.5 \cdot 12\,000 + 0.25 \cdot 7\,000 + 0.25 \cdot 3\,000 = 8\,500\) CHF</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Fairer Einsatz ===== -->
+  <section id="fair">
+    <span class="eyebrow">Schritt 5 · Skript WT Bsp. 4.30, Aufgaben 4.69–4.71</span>
+    <h2>Ist das Spiel fair?</h2>
+    <p class="prose">Bei Glücksspielen unterscheidest du zwei Grössen. Die <b>Auszahlung</b> \(A\) ist, was du bekommst. Der <b>Reingewinn</b> \(G = A - \text{Einsatz}\) ist, was dir nach Abzug des Einsatzes bleibt. Ein Spiel heisst <b>fair</b> (im Skript: «gerecht»), wenn der erwartete Reingewinn null ist. Dann verliert langfristig weder Spieler noch Anbieter.</p>
+    <div class="board">$$\begin{gathered} E(G) = E(A) - \text{Einsatz} = 0 \\ \Longleftrightarrow\quad \text{fairer Einsatz} = E(A) \end{gathered}$$</div>
+    <div class="note"><b>Bsp. 4.30:</b> Ein Spiel bringt den Reingewinn 500, 50, 5 oder −30 CHF mit den Wahrscheinlichkeiten 0.02, 0.1, 0.3, 0.58. Dann ist \(E(X) = 0.02 \cdot 500 + 0.1 \cdot 50 + 0.3 \cdot 5 + 0.58 \cdot (-30) = -0.90\) CHF. Wer oft spielt, verliert im Mittel 90 Rappen pro Spiel.</div>
+    <div class="note tipp"><b>Anbieter will verdienen (Aufgabe 4.71):</b> Soll der Anbieter im Mittel \(g\) Franken pro Spiel verdienen, verlangt er den Einsatz \(E(A) + g\). In der Musterlösung (LB2) ist \(E(A) = 1\) CHF und \(g = 0.50\) CHF, also beträgt der Mindesteinsatz 1.50 CHF.</div>
+    <p class="prose">Das folgende Beispiel ist Aufgabe 4.69. Die Folie S2-V5 verlangt zusätzlich die Standardabweichung des Gewinns.</p>
+    <div id="t10-stepper-fair"></div>
+  </section>
+
+  <!-- ===== 6 · Rechenregeln ===== -->
+  <section id="regeln">
+    <span class="eyebrow">Schritt 6 · Lineare Transformation</span>
+    <h2>Rechenregeln für Y = aX + b</h2>
+    <p class="prose">Oft rechnest du aus \(X\) eine neue Grösse aus: Reingewinn = Auszahlung − Einsatz, Gewinn = Marge pro Stück · Stückzahl − Fixkosten. Das hat immer die Form \(Y = aX + b\). Dann musst du \(E(Y)\) und \(\sigma_Y\) nicht neu aus einer Tabelle rechnen.</p>
+    <div class="board">
+      $$E(aX + b) = a \cdot E(X) + b$$
+      $$V(aX + b) = a^2 \cdot V(X)$$
+      $$\sigma_{aX+b} = |a| \cdot \sigma_X$$
+    </div>
+    <div class="grid2">
+      <div class="note"><b>Warum \(+b\) die Streuung nicht ändert:</b> Alle Werte rutschen gleich weit. Der Balancepunkt rutscht mit, die Abstände untereinander bleiben gleich.</div>
+      <div class="note"><b>Warum \(a^2\):</b> Der Faktor \(a\) streckt alle Abstände zu \(\mu\) um \(|a|\). Die Varianz misst <i>quadrierte</i> Abstände, also wächst sie um \(a^2\). \(\sigma\) ist nie negativ, darum \(|a|\).</div>
+    </div>
+    <div class="note falle"><b>Falle:</b> \(V(2X + 3)\) ist nicht \(2 \cdot V(X) + 3\), sondern \(4 \cdot V(X)\). Und \(V(-X) = V(X)\): Spiegeln ändert die Streuung nicht.</div>
+    <div class="note"><b>Wo das im Modul steckt:</b> Diese Regeln stehen nicht als nummerierte Sätze im Skript-Kapitel 4. Du brauchst sie trotzdem beim Reingewinn (Lösungsfilm unten), in der Lösung zu Aufgabe 48c im Aufgabenskript Stützkurs (Reingewinn hängt linear von der Anzahl Gewinne ab) und beim Standardisieren \(Z = \frac{X - \mu}{\sigma}\) in Kap. 6.4: Dort ist \(a = \frac1\sigma\) und \(b = -\frac{\mu}{\sigma}\), also \(E(Z) = 0\) und \(\sigma_Z = 1\).</div>
+    <details class="sol"><summary>Warum gilt das? Kurze Herleitung</summary>
+      <div class="stack">
+        <p>\(E(aX + b) = \sum (a x_i + b) f(x_i) = a \sum x_i f(x_i) + b \sum f(x_i) = a \cdot E(X) + b \cdot 1\)</p>
+        <p>\(V(aX + b) = \sum \big(a x_i + b - (a\mu + b)\big)^2 f(x_i) = a^2 \sum (x_i - \mu)^2 f(x_i) = a^2 \cdot V(X)\)</p>
+      </div>
+    </details>
+    <div class="card rechner">
+      <h3>Ausprobieren: X = Anzahl Kopf bei drei Münzwürfen, Y = aX + b</h3>
+      <div class="regler">
+        <label for="t10-ta">Faktor a</label>
+        <input type="range" id="t10-ta" min="-2" max="3" step="0.5" value="2">
+        <output for="t10-ta" id="t10-ta-wert">2</output>
+      </div>
+      <div class="regler">
+        <label for="t10-tb">Verschiebung b</label>
+        <input type="range" id="t10-tb" min="-4" max="4" step="1" value="1">
+        <output for="t10-tb" id="t10-tb-wert">1</output>
+      </div>
+      <figure class="diagramm">
+        <svg id="t10-svg-trans" viewBox="0 0 320 200" role="img" aria-labelledby="t10-svg-trans-titel">
+          <title id="t10-svg-trans-titel">Stabdiagramme von X und Y = aX + b mit Erwartungswert und Band von μ − σ bis μ + σ</title>
+        </svg>
+        <figcaption>Oben \(X\), unten \(Y\). Stäbe: Wahrscheinlichkeiten. Dreieck: Erwartungswert. Band: \(\mu - \sigma\) bis \(\mu + \sigma\). Die Stabhöhen bleiben gleich, nur die Positionen ändern sich. Ausnahme \(a = 0\): Dann fallen alle Werte auf \(b\), \(Y\) ist sicher und \(\sigma_Y = 0\).</figcaption>
+      </figure>
+      <div class="t10-kennzahlen" id="t10-trans-kz" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Ausblick stetig ===== -->
+  <section id="stetig">
+    <span class="eyebrow">Schritt 7 · Skript WT 4.3–4.4 · Ausblick</span>
+    <h2>Diskret und stetig im Vergleich</h2>
+    <p class="prose">Kann \(X\) jeden Wert in einem Intervall annehmen (Rendite, Füllmenge, Körpergrösse), heisst \(X\) stetig. Ein einzelner Wert hat dann die Wahrscheinlichkeit 0. Wahrscheinlichkeiten sind Flächen unter einer <b>Dichtefunktion</b> \(f(x)\) (Def. 4.20; auf der Folie S2-V5 heisst sie «Def. 4.19», im Skript ist 4.19 ein Beispiel). Die Ideen bleiben gleich, aus der Summe wird ein Integral. Ausführlich kommt das bei der Normalverteilung (Station 12).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col"></th><th scope="col">diskret</th><th scope="col">stetig</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Werte</th><td>einzelne Zahlen \(x_1, x_2, \dots\)</td><td>ein ganzes Intervall</td></tr>
+          <tr><th scope="row">Funktion</th><td>Wahrscheinlichkeits&shy;funktion, \(f(x_i) = P(X = x_i)\)</td><td>Dichte \(f(x) \ge 0\), kein Wahrscheinlichkeits&shy;wert, \(f(x) > 1\) möglich</td></tr>
+          <tr><th scope="row">Normierung</th><td>\(\sum f(x_i) = 1\)</td><td>\(\int_{-\infty}^{\infty} f(x)\,dx = 1\)</td></tr>
+          <tr><th scope="row">\(F(x)\)</th><td>\(\sum_{x_i \le x} f(x_i)\), Treppe</td><td>\(\int_{-\infty}^{x} f(t)\,dt\), glatte Kurve</td></tr>
+          <tr><th scope="row">\(P(a < X \le b)\)</th><td>\(F(b) - F(a)\)</td><td>\(F(b) - F(a)\)<br>\(= \int_a^b f(x)\,dx\)</td></tr>
+          <tr><th scope="row">\(\le\) oder \(<\)?</th><td>macht einen Unterschied</td><td>egal, weil \(P(X = a) = 0\)</td></tr>
+          <tr><th scope="row">\(E(X)\)</th><td>\(\sum x_i f(x_i)\)</td><td>\(\int x \, f(x)\,dx\) (Def. 4.33)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Achtung Folie:</b> Auf der Folie «Vergleich diskrete vs. stetige Zufallsvariablen» fehlt beim Integral für \(F(x)\) das Minuszeichen. Die untere Grenze ist \(-\infty\), so wie im Skript Kap. 4.4.</div>
+    <div class="note tipp"><b>Prüfungsbezug Aufgabe 6:</b> Dort ist eine Rendite normalverteilt, also stetig. Die Übersetzung in \(F\) bleibt gleich: «mindestens \(c\) Prozent» ist \(P(X \ge c) = 1 - F(c)\). Weil ein einzelner Wert die Wahrscheinlichkeit 0 hat, musst du hier \(\ge\) und \(>\) nicht unterscheiden. Den Wert liefert der TI-Nspire mit <code>normCdf(untere Grenze, obere Grenze, μ, σ)</code>. Eigenes Beispiel: «mindestens 2 %» bei \(\mu = 5\,\%\) und \(\sigma = 8\,\%\) ergibt <code>normCdf(2, ∞, 5, 8)</code> \(\approx 0.6462\). Mehr dazu in Station 12.</div>
+    <div class="note tipp"><b>Prüfungsbezug Aufgabe 5c:</b> «Bestimme den Parameter \(a\) einer Dichte» ist die stetige Version von «die Summe muss 1 sein». Du setzt die Fläche gleich 1 und löst nach \(a\) auf. Eine Übung dazu findest du unten (Übung 9).</div>
+  </section>
+
+  <!-- ===== 8 · Verteilungs-Werkstatt ===== -->
+  <section id="werkstatt">
+    <span class="eyebrow">Schritt 8 · Ausprobieren</span>
+    <h2>Verteilungs-Werkstatt</h2>
+    <p class="prose">Hier baust du selbst Verteilungen. Zieh einen Balken mit Maus oder Finger nach oben oder unten, oder tipp die Wahrscheinlichkeit ins Feld darunter (auch Brüche wie 3/8). Beobachte drei Dinge: Die Treppe \(F\) springt bei jedem Wert um genau dessen Balkenhöhe. Das Dreieck unter der Achse ist der Balancepunkt \(\mu\). Das schattierte Band reicht von \(\mu - \sigma\) bis \(\mu + \sigma\).</p>
+    <div class="card stack">
+      <div class="row" role="group" aria-label="Vorlagen laden">
+        <button type="button" class="btn" data-t10-vorlage="muenze">Münze 3×</button>
+        <button type="button" class="btn" data-t10-vorlage="kinder">4 Kinder: Knaben</button>
+        <button type="button" class="btn" data-t10-vorlage="wuerfel">fairer Würfel</button>
+        <button type="button" class="btn" data-t10-vorlage="gezinkt">gezinkter Würfel</button>
+        <button type="button" class="btn" data-t10-vorlage="tore">Tore pro Spiel</button>
+        <button type="button" class="btn" data-t10-vorlage="gleich">alle gleich</button>
+      </div>
+      <label class="t10-check" for="t10-auto"><input type="checkbox" id="t10-auto" checked> Summe automatisch auf 1 halten (die anderen Balken passen sich an)</label>
+      <figure class="diagramm">
+        <svg id="t10-svg-f" class="t10-zieh" viewBox="0 0 320 224" role="img" aria-labelledby="t10-svg-f-titel">
+          <title id="t10-svg-f-titel">Wahrscheinlichkeitsfunktion als Balkendiagramm für die Werte 0 bis 6, mit Erwartungswert als Balancepunkt und Band von μ − σ bis μ + σ</title>
+        </svg>
+        <figcaption>Balken: \(f(x)\), zum Ziehen. Dreieck: Balancepunkt \(\mu\). Band: \(\mu \pm \sigma\). Balken in der zweiten Farbe: die Werte, die beim Ablesen unten mitzählen (sie stehen auch im Ergebnis unter «Markierte Balken»).</figcaption>
+      </figure>
+      <div class="t10-felder" id="t10-felder"></div>
+      <div class="row">
+        <p class="t10-status" id="t10-status" aria-live="polite"></p>
+        <button type="button" class="btn" id="t10-normieren" hidden>Auf Summe 1 normieren</button>
+      </div>
+      <div class="t10-kennzahlen" id="t10-kenn"></div>
+      <figure class="diagramm s3">
+        <svg id="t10-svg-t" viewBox="0 0 320 190" role="img" aria-labelledby="t10-svg-t-titel">
+          <title id="t10-svg-t-titel">Verteilungsfunktion F als Treppenfunktion</title>
+        </svg>
+        <figcaption>Verteilungsfunktion \(F(x) = P(X \le x)\). Gefüllter Punkt: Dieser Wert gehört zur Stufe. Leerer Kreis: Dieser Wert gehört nicht mehr dazu. Gestrichelt: die \(F\)-Werte, die beim Ablesen gebraucht werden.</figcaption>
+      </figure>
+      <h3>Ablesen üben</h3>
+      <div class="t10-ablesen">
+        <label for="t10-art">gesucht
+          <select class="btn" id="t10-art">
+            <option value="le">P(X ≤ b), höchstens b</option>
+            <option value="lt">P(X &lt; b), weniger als b</option>
+            <option value="gt">P(X &gt; a), mehr als a</option>
+            <option value="ge">P(X ≥ a), mindestens a</option>
+            <option value="ab" selected>P(a &lt; X ≤ b)</option>
+            <option value="aib">P(a ≤ X ≤ b)</option>
+            <option value="aob">P(a &lt; X &lt; b)</option>
+            <option value="eq">P(X = a), genau a</option>
+          </select>
+        </label>
+        <label for="t10-a" id="t10-a-box">a
+          <select class="btn" id="t10-a"><option>0</option><option selected>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+        </label>
+        <label for="t10-b" id="t10-b-box">b
+          <select class="btn" id="t10-b"><option>0</option><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
+        </label>
+      </div>
+      <div class="t10-rechnung" id="t10-ablesen-erg" aria-live="polite"></div>
+      <h3>Hilfstabelle wie im Skript</h3>
+      <div class="tablebox">
+        <table class="tabelle t10-formelkopf">
+          <thead><tr><th scope="col">\(x\)</th><th scope="col" class="zahl">\(f(x)\)</th><th scope="col" class="zahl">\(x \cdot f(x)\)</th><th scope="col" class="zahl">\(x^2 \cdot f(x)\)</th></tr></thead>
+          <tbody id="t10-hilf-body"></tbody>
+          <tfoot id="t10-hilf-fuss"></tfoot>
+        </table>
+      </div>
+      <p class="t10-rechnung" id="t10-hilf-erg"></p>
+    </div>
+    <div class="card stack">
+      <h3>Forschungsaufträge</h3>
+      <ol class="prose">
+        <li>Schieb das ganze Gewicht auf einen einzigen Wert. Was passiert mit \(\sigma\) und mit der Treppe?</li>
+        <li>Lade «alle gleich» und mach dann nur die Balken bei 0 und 6 gleich hoch, alle anderen 0. Wo liegt \(\mu\), wie gross ist \(\sigma\)?</li>
+        <li>Lade «fairer Würfel» und dann «gezinkter Würfel». In welche Richtung wandert \(\mu\), und warum?</li>
+        <li>Schalte «Summe automatisch auf 1» aus und mach einen Balken kleiner. Woran erkennst du an der Treppe, dass keine gültige Verteilung vorliegt?</li>
+      </ol>
+      <details class="sol"><summary>Antworten</summary>
+        <div class="stack">
+          <p>1. \(\sigma = 0\): Es gibt keine Streuung, \(X\) ist sicher. Die Treppe hat nur eine einzige Stufe von 0 auf 1.</p>
+          <p>2. \(\mu = 3\) (genau in der Mitte), \(\sigma = 3\): Jeder Wert liegt 3 von \(\mu\) entfernt. Das Band reicht genau von 0 bis 6.</p>
+          <p>3. \(\mu\) steigt von 3.5 auf \(\tfrac{1+2+3+4+5+2 \cdot 6}{7} = 3.857\). Die 6 hat mehr Gewicht und zieht den Balancepunkt nach rechts.</p>
+          <p>4. Die Treppe endet nicht bei 1. Erwartungswert und Standardabweichung sind dann nicht definiert.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Glücksspiel-Rechner ===== -->
+  <section id="spiel">
+    <span class="eyebrow">Schritt 9 · Ausprobieren</span>
+    <h2>Glücksspiel-Rechner «fairer Einsatz»</h2>
+    <p class="prose">Trag bis zu drei Gewinnstufen ein. Die Wahrscheinlichkeit für «nichts» rechnet der Rechner selbst aus. Er zeigt die erwartete Auszahlung, den fairen Einsatz und deinen erwarteten Reingewinn. Mit der Simulation siehst du, wie sich der Durchschnitt vieler Spiele dem Erwartungswert nähert (Bem. 4.32).</p>
+    <div class="card stack">
+      <div class="row" role="group" aria-label="Vorlagen laden">
+        <button type="button" class="btn" data-t10-spiel="a469">Aufgabe 4.69</button>
+        <button type="button" class="btn" data-t10-spiel="a471">Drei Würfel (Aufgabe 4.71)</button>
+        <button type="button" class="btn" data-t10-spiel="los">Losbude</button>
+      </div>
+      <div class="tablebox">
+        <table class="tabelle t10-spieltab">
+          <caption>Auszahlungen pro Spiel. Leere Zeilen zählen nicht. Brüche wie 1/216 sind erlaubt.</caption>
+          <thead><tr><th scope="col">Stufe</th><th scope="col">Auszahlung (CHF)</th><th scope="col">Wahrschein&shy;lichkeit</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1</th><td><input class="t10-feld" id="t10-a1" type="text" inputmode="decimal" autocomplete="off" aria-label="Auszahlung Stufe 1 in CHF"></td><td><input class="t10-feld" id="t10-p1" type="text" inputmode="decimal" autocomplete="off" aria-label="Wahrscheinlichkeit Stufe 1"></td></tr>
+            <tr><th scope="row">2</th><td><input class="t10-feld" id="t10-a2" type="text" inputmode="decimal" autocomplete="off" aria-label="Auszahlung Stufe 2 in CHF"></td><td><input class="t10-feld" id="t10-p2" type="text" inputmode="decimal" autocomplete="off" aria-label="Wahrscheinlichkeit Stufe 2"></td></tr>
+            <tr><th scope="row">3</th><td><input class="t10-feld" id="t10-a3" type="text" inputmode="decimal" autocomplete="off" aria-label="Auszahlung Stufe 3 in CHF"></td><td><input class="t10-feld" id="t10-p3" type="text" inputmode="decimal" autocomplete="off" aria-label="Wahrscheinlichkeit Stufe 3"></td></tr>
+            <tr><th scope="row">nichts</th><td class="zahl">0</td><td class="zahl" id="t10-prest">–</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid2">
+        <label class="t10-feldzeile" for="t10-einsatz">Einsatz pro Spiel (CHF)
+          <input class="t10-feld" id="t10-einsatz" type="text" inputmode="decimal" autocomplete="off"></label>
+        <label class="t10-feldzeile" for="t10-bank">Gewünschter Gewinn des Anbieters pro Spiel (CHF)
+          <input class="t10-feld" id="t10-bank" type="text" inputmode="decimal" autocomplete="off"></label>
+      </div>
+      <div class="t10-kennzahlen" id="t10-spiel-kz"></div>
+      <p class="prose" id="t10-spiel-text" aria-live="polite"></p>
+      <div class="row" role="group" aria-label="Spiele simulieren">
+        <button type="button" class="btn" data-t10-sim="100">100 Spiele simulieren</button>
+        <button type="button" class="btn" data-t10-sim="1000">1000 Spiele</button>
+        <button type="button" class="btn primary" data-t10-sim="10000">10’000 Spiele</button>
+      </div>
+      <figure class="diagramm">
+        <svg id="t10-svg-sim" viewBox="0 0 320 170" role="img" aria-labelledby="t10-svg-sim-titel">
+          <title id="t10-svg-sim-titel">Durchschnittlicher Reingewinn pro Spiel in Abhängigkeit der Anzahl gespielter Runden, mit dem Erwartungswert als gestrichelte Linie</title>
+        </svg>
+        <figcaption>Linie: durchschnittlicher Reingewinn nach \(n\) Spielen. Gestrichelt: Erwartungswert \(E(G)\).</figcaption>
+      </figure>
+      <p class="hint" id="t10-sim-text" aria-live="polite">Noch keine Simulation. Drück auf einen der Knöpfe.</p>
+    </div>
+  </section>
+
+  <!-- ===== 10 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 10 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Übung 1 rechnet eine Übungsaufgabe der Folie S2-V5 (Augensumme) durch. Alle anderen Übungen verwenden eigene Zahlen und Zusammenhänge. Die Lösungen sind selbst gerechnet und mit Python nachgeprüft, aber <b>nicht vom Dozenten bestätigt</b>. Übung 4 und Übung 9 sind im Stil der exemplarischen Modulschlussprüfung (Aufgabe 5a und 5c).</p>
+    <div id="t10-u1"></div>
+    <div id="t10-u2"></div>
+    <div id="t10-u3"></div>
+    <div id="t10-u4"></div>
+    <div id="t10-u5"></div>
+    <div id="t10-u6"></div>
+    <div id="t10-u7"></div>
+    <div id="t10-u8"></div>
+    <div id="t10-u9"></div>
+    <div id="t10-u10"></div>
+    <div class="note falle"><b>Achtung Musterlösung:</b> In der Lösung zur Skriptaufgabe 4.73 (Lernblock S2-LB2: 8 Stück, 2 fehlerhaft, Stichprobe von 3 ohne Zurücklegen) steht \(f(1) = 0.5347\). Richtig ist \(f(1) = 3 \cdot \tfrac{2 \cdot 6 \cdot 5}{8 \cdot 7 \cdot 6} = \tfrac{180}{336} \approx 0.5357\). Die übrigen Werte \(f(0) = 0.3571\), \(f(2) = 0.1071\), \(F(1) = 0.8929\) und \(E(X) = 0.75\) stimmen, sie passen nur zu 0.5357. In derselben Lösung heisst der letzte Wert «\(x_3 = 3\)», gemeint ist \(x_3 = 2\).</div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine ganze Aufgabe am Stück</h2>
+    <p class="prose">Drück auf Play. Der Film löst eine typische Aufgabe vom Anfang bis zur Antwort: Zufallsvariable, Verteilung, Treppe, Ablesen, Kennzahlen, fairer Einsatz. Gelb leuchtet immer, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Eigene Aufgabe, eigene Lösung.</p>
+    <div id="t10-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t10-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Eine <b>Zufallsvariable</b> \(X\) ordnet jedem Ergebnis eine Zahl zu. Diskret heisst: einzelne, abzählbare Werte.</li>
+      <li><b>Wahrscheinlichkeitsfunktion</b> \(f(x_i) = P(X = x_i)\), alle zusammen ergeben 1. <b>Verteilungsfunktion</b> \(F(x) = P(X \le x)\) ist eine Treppe, die bei jedem Wert um \(f(x_i)\) springt.</li>
+      <li>Jede Frage in «höchstens» übersetzen: \(P(X > a) = 1 - F(a)\), \(P(a < X \le b) = F(b) - F(a)\), \(P(X < b) = F(b-1)\) bei ganzzahligen Werten.</li>
+      <li>\(\mu = E(X)\) ist der langfristige Durchschnitt (Balancepunkt), \(\sigma\) die typische Abweichung davon, in der Einheit von \(X\).</li>
+      <li>Ein Spiel ist <b>fair</b>, wenn der Einsatz gleich der erwarteten Auszahlung ist, also \(E(G) = 0\).</li>
+      <li>\(Y = aX + b\): Erwartungswert macht alles mit, die Streuung nur den Faktor: \(\sigma_Y = |a| \cdot \sigma_X\).</li>
+    </ul>
+    <div class="board">
+      $$\mu = \sum x_i f(x_i)$$
+      $$\sigma^2 = \sum x_i^2 f(x_i) - \mu^2$$
+      $$\sigma = \sqrt{\sigma^2}$$
+      $$F(x) = \sum_{x_i \le x} f(x_i)$$
+      $$P(a < X \le b) = F(b) - F(a)$$
+      $$E(aX + b) = aE(X) + b$$
+      $$V(aX + b) = a^2 V(X)$$
+    </div>
+    <footer>Quellen: Skript Wahrscheinlichkeitstheorie 2018 (Stand Aug. 2020), Kap. 4.1–4.6; Folien S. Ott, MSTBW-S2-V5; Folien Wahrscheinlichkeitstheorie (MST2b), Zufallsvariablen und Wahrscheinlichkeitsverteilungen; Lernblock S2-LB2 (Zusatzaufgaben Zufallsvariablen, Lösungen zu 4.71, 4.73, 4.75); Aufgabenskript Stützkurs MSTB; exemplarische Modulschlussprüfung MSTW, Aufgaben 5 und 6. Alle Texte in eigenen Worten. Alle Übungszahlen sind eigene, ausser Übung 1 und der Kurzfrage in Schritt 3 (Folienaufgaben zur Augensumme).</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text verwenden.
+  const T = String.raw;
+  const L = window.Lernpfad;
+  if (!L) return;
+  const NS = "http://www.w3.org/2000/svg";
+  const MINUS = "−";
+
+  /* ---------- Hilfsfunktionen ---------- */
+  function svgEl(tag, attr, eltern) {
+    const e = document.createElementNS(NS, tag);
+    Object.keys(attr || {}).forEach((k) => e.setAttribute(k, attr[k]));
+    if (eltern) eltern.appendChild(e);
+    return e;
+  }
+  function svgText(eltern, x, y, text, attr) {
+    const t = svgEl("text", Object.assign({ x: x, y: y }, attr || {}), eltern);
+    t.textContent = text;
+    return t;
+  }
+  function leeren(knoten) {
+    while (knoten.firstChild) knoten.removeChild(knoten.firstChild);
+  }
+  // Zahl mit Dezimalpunkt, höchstens s Nachkommastellen
+  const zt = (w, s) => L.zahlText(Math.abs(w) < 1e-12 ? 0 : w, s === undefined ? 4 : s);
+  // Franken mit genau zwei Nachkommastellen
+  function chf(w) {
+    if (!Number.isFinite(w)) return "–";
+    const r = Math.abs(w) < 0.005 ? 0 : w;
+    return (r < 0 ? MINUS : "") + Math.abs(r).toFixed(2);
+  }
+  const fz = (n) => (n < 0 ? MINUS + Math.abs(n) : String(n)); // ganze Zahl mit echtem Minus
+  function kz(label, wert, haupt) {
+    return '<div class="t10-kz' + (haupt ? " t10-haupt" : "") + '"><span>' + label + "</span><b>" + wert + "</b></div>";
+  }
+
+  /* ================= Schritt 0: Sortierer ================= */
+  L.sortierer("#t10-sortierer", {
+    kategorien: ["Zufallsvariable", "Wert", "Wahrscheinlichkeit"],
+    elemente: [
+      { html: "Anzahl Kopf bei drei Münzwürfen", kategorie: "Zufallsvariable",
+        erklaerung: "Das ist eine Zählregel: Jedes Ergebnis wie KZK bekommt eine Zahl. Also eine Zufallsvariable." },
+      { html: "$x = 2$ (zweimal Kopf)", kategorie: "Wert",
+        erklaerung: "Eine mögliche Zahl, die die Zufallsvariable annehmen kann." },
+      { html: "$P(X = 2) = 0.375$", kategorie: "Wahrscheinlichkeit",
+        erklaerung: "Eine Zahl zwischen 0 und 1, die zum Wert 2 gehört: $f(2) = 0.375$." },
+      { html: "Augensumme zweier Würfel", kategorie: "Zufallsvariable",
+        erklaerung: "Aus dem Paar (3, 5) wird die Zahl 8. Eine Regel «Ergebnis → Zahl»." },
+      { html: "$F(1) = 0.5$", kategorie: "Wahrscheinlichkeit",
+        erklaerung: T`$F(1) = P(X \le 1)$ ist die Wahrscheinlichkeit für «höchstens 1».` },
+      { html: "Gewinn in CHF bei einem Los", kategorie: "Zufallsvariable",
+        erklaerung: "Jedes mögliche Los führt zu einem Betrag. Auch Geldbeträge sind Zufallsvariablen." },
+      { html: "Reingewinn von $-30$ CHF in einem Spiel", kategorie: "Wert",
+        erklaerung: "Ein möglicher Wert der Zufallsvariable «Reingewinn», hier ein Verlust. Werte dürfen negativ sein. Wahrscheinlichkeiten nie." }
+    ]
+  });
+
+  /* ================= Schritt 2: Stepper Münze (Bsp. 4.17) ================= */
+  // Senkrechte Tabelle x | f(x) (| F(x)), optional mit Summenzeile. Senkrecht passt sie auch auf schmale Bildschirme.
+  function mTab(mitF, mitSumme) {
+    const f = ["0.125", "0.375", "0.375", "0.125"], F = ["0.125", "0.5", "0.875", "1"];
+    const kopf = "x & " + T`\htmlData{link=m-f}{f(x)}` + (mitF ? " & " + T`\htmlData{link=m-F}{F(x)}` : "");
+    const zeilen = f.map((w, i) => i + " & " + w + (mitF ? " & " + F[i] : ""));
+    const summe = mitSumme ? T` \\ \hline \Sigma & 1 \;\checkmark` : "";
+    return T`$\begin{array}{` + (mitF ? "c|c|c" : "c|c") + "}" + kopf + T` \\ \hline ` + zeilen.join(T` \\ `) + summe + T`\end{array}$`;
+  }
+  L.stepper("#t10-stepper-muenze", {
+    titel: "Bsp. 4.17 · Münze dreimal werfen",
+    text: 'Du wirfst <span data-link="m-exp">eine faire Münze dreimal</span>. Die Zufallsvariable <span data-link="m-X">X zählt, wie oft Kopf (K) fällt</span>. Bestimme die <span data-link="m-f">Wahrscheinlichkeitsfunktion</span> und die <span data-link="m-F">Verteilungsfunktion</span>.',
+    schritte: [
+      { html: T`$\htmlData{link=m-exp}{\begin{aligned} \Omega = \{&ZZZ,\ ZZK,\ ZKZ, \\ &KZZ,\ ZKK,\ KZK, \\ &KKZ,\ KKK\} \end{aligned}}$`,
+        warum: "Zuerst alle Ergebnisse aufschreiben. Jeder Wurf hat zwei Ausgänge, zusammen 2 · 2 · 2 = 8. Die Münze ist fair, also hat jedes Ergebnis die Wahrscheinlichkeit 1/8." },
+      { html: T`$\htmlData{link=m-X}{X}: \begin{aligned} ZZZ &\mapsto 0 \\ ZZK,\ ZKZ,\ KZZ &\mapsto 1 \\ ZKK,\ KZK,\ KKZ &\mapsto 2 \\ KKK &\mapsto 3 \end{aligned}$`,
+        warum: "Die Zufallsvariable ordnet jedem Ergebnis genau eine Zahl zu (Def. 4.7). Verschiedene Ergebnisse dürfen dieselbe Zahl bekommen." },
+      { html: T`$x_1 = 0,\quad x_2 = 1,\quad x_3 = 2,\quad x_4 = 3$`,
+        warum: "X nimmt nur vier Werte an, also endlich viele. X ist diskret (Def. 4.9)." },
+      { html: mTab(false, false),
+        warum: "Pro Wert die passenden Ergebnisse zählen und durch 8 teilen: f(1) = 3/8 = 0.375, weil drei Ergebnisse genau einmal Kopf haben." },
+      { html: mTab(false, true),
+        warum: "Kontrolle: Alle Wahrscheinlichkeiten zusammen ergeben 1. Sonst hast du ein Ergebnis vergessen oder doppelt gezählt." },
+      { html: mTab(true, false),
+        warum: "F(x) = P(X ≤ x) heisst: in der Tabelle von oben nach unten aufsummieren (Def. 4.14). F(2) = 0.125 + 0.375 + 0.375 = 0.875." },
+      { html: mTab(true, false) + "<br>" + T`$\htmlData{link=m-F}{F(x)} = \begin{cases} 0 & x < 0 \\ 0.125 & 0 \le x < 1 \\ 0.5 & 1 \le x < 2 \\ 0.875 & 2 \le x < 3 \\ 1 & x \ge 3 \end{cases}$`,
+        warum: "F ist für jede reelle Zahl definiert, nicht nur für 0, 1, 2, 3. Zwischen zwei Werten kommt nichts dazu, F bleibt flach. Bei jedem Wert springt F um f(x): Das ist die Treppe (Bem. 4.16). Tabelle und Fallunterscheidung zusammen sind die Lösung." }
+    ]
+  });
+
+  /* ================= Schritt 3: Auswahl ================= */
+  L.auswahl("#t10-auswahl-ablesen", {
+    frage: T`$X$ ist die Augensumme zweier fairer Würfel. Welcher Ausdruck ergibt $P(3 < X < 7)$?`,
+    optionen: [T`$F(7) - F(3)$`, T`$F(6) - F(3)$`, T`$F(6) - F(4)$`],
+    richtig: 1,
+    erklaerung: T`Gesucht sind die Summen 4, 5 und 6. «Alles bis 6» minus «alles bis 3»: $F(6) - F(3) = \tfrac{15}{36} - \tfrac{3}{36} = \tfrac{12}{36} = \tfrac13$. $F(7)$ würde die 7 mitzählen, $F(4)$ würde die 4 abziehen. (Eigene Lösung.)`
+  });
+
+  /* ================= Schritt 4: Stepper Kinder (Bsp. 4.8 / 4.38) ================= */
+  // Hilfstabelle senkrecht: Spalten x | f | x·f | x²·f; spalten = Anzahl sichtbarer Spalten nach x und f
+  function kinderTab(spalten, neu) {
+    const daten = [
+      ["0", "0.0625", "0", "0"],
+      ["1", "0.25", "0.25", "0.25"],
+      ["2", "0.375", "0.75", "1.5"],
+      ["3", "0.25", "0.75", "2.25"],
+      ["4", "0.0625", "0.25", "1"]
+    ];
+    const summe = [T`\Sigma`, "1", T`\htmlData{link=k-mu}{2}`, "5"];
+    const n = 2 + spalten;
+    const kopf = ["x", T`\htmlData{link=k-p}{f(x)}`, T`x\,f(x)`, T`x^2 f(x)`].slice(0, n);
+    const mark = (s, j) => (j === neu ? T`\htmlClass{nw}{` + s + "}" : s);
+    const zeilen = daten.map((z) => z.slice(0, n).map(mark).join(" & "));
+    // t10-klein: auf schmalen Bildschirmen etwas kleinere Schrift, damit vier Spalten Platz haben
+    return T`$\htmlClass{t10-klein}{\begin{array}{` + "c|".repeat(n - 1) + "c}" + kopf.join(" & ") + T` \\ \hline ` + zeilen.join(T` \\ `) +
+      T` \\ \hline ` + summe.slice(0, n).map(mark).join(" & ") + T`\end{array}}$`;
+  }
+  L.stepper("#t10-stepper-kinder", {
+    titel: "Bsp. 4.8 / 4.38 · Anzahl Knaben",
+    text: 'In Familien mit <span data-link="k-n">vier Kindern</span> ist jedes Kind <span data-link="k-p">mit Wahrscheinlichkeit 0.5 ein Knabe</span>. <span data-link="k-X">X ist die Anzahl Knaben.</span> Berechne <span data-link="k-mu">Erwartungswert</span>, <span data-link="k-var">Varianz</span> und <span data-link="k-sigma">Standardabweichung</span>.',
+    schritte: [
+      { html: kinderTab(0, -1),
+        warum: "Es gibt 2⁴ = 16 gleich wahrscheinliche Reihenfolgen. Für 0, 1, 2, 3, 4 Knaben passen 1, 4, 6, 4, 1 davon. Geteilt durch 16 ergibt das f(x)." },
+      { html: kinderTab(1, 2),
+        warum: "Für den Erwartungswert multiplizierst du jeden Wert mit seiner Wahrscheinlichkeit. Die neue Spalte ist x · f(x)." },
+      { html: kinderTab(1, 2) + "<br>" + T`$\htmlData{link=k-mu}{\mu = E(X)} = \sum x_i \, f(x_i) = 2$`,
+        warum: "Spalte zusammenzählen (Def. 4.31). Im langfristigen Mittel hat eine Familie mit vier Kindern 2 Knaben." },
+      { html: kinderTab(2, 3) + "<br>" + T`$\mu = 2$`,
+        warum: "Für die Rechenformel der Varianz brauchst du noch die Spalte x² · f(x). Ihre Summe ist 5." },
+      { html: kinderTab(2, -1) + "<br>" + T`$\htmlData{link=k-var}{\sigma^2} = \sum x_i^2 f(x_i) - \mu^2 = 5 - 2^2 = 1$`,
+        warum: "Rechenformel aus der Formelsammlung (Bem. 4.37): Summe der x² · f(x) minus μ². Sie liefert dasselbe wie die Definition, ist aber von Hand schneller." },
+      { html: T`$\begin{aligned} \htmlData{link=k-var}{\sigma^2} &= \sum (x_i - \mu)^2 f(x_i) \\ &= 4 \cdot 0.0625 + 1 \cdot 0.25 \\ &\quad + 0 + 1 \cdot 0.25 \\ &\quad + 4 \cdot 0.0625 \\ &= 1 \;\checkmark \end{aligned}$`,
+        warum: "Kontrolle mit der Definition (Def. 4.35): mittlere quadrierte Abweichung von μ = 2. Gleiches Resultat." },
+      { html: T`$\begin{aligned} \htmlData{link=k-mu}{\mu} &= 2 \\ \htmlData{link=k-var}{\sigma^2} &= 1 \\ \htmlData{link=k-sigma}{\sigma} &= \sqrt{\sigma^2} = \sqrt{1} = 1 \end{aligned}$`,
+        warum: "Wurzel ziehen. σ hat die Einheit «Knaben». Typisch liegt X etwa zwischen μ − σ = 1 und μ + σ = 3 Knaben. Damit stehen alle drei gesuchten Kennzahlen da." }
+    ]
+  });
+
+  /* ================= Schritt 5: Stepper fairer Einsatz (Aufgabe 4.69) ================= */
+  L.stepper("#t10-stepper-fair", {
+    titel: "Aufgabe 4.69 · Gerechter Preis",
+    text: 'Bei einem Spiel gewinnst du <span data-link="e-25">25 CHF mit Wahrscheinlichkeit 0.2</span> und <span data-link="e-10">10 CHF mit Wahrscheinlichkeit 0.4</span>. Wie hoch ist der <span data-link="e-fair">gerechte Einsatz</span>? Berechne zusätzlich die <span data-link="e-sigma">Standardabweichung des Gewinns</span>.',
+    schritte: [
+      { html: T`$\begin{array}{c|ccc} a & \htmlData{link=e-25}{25} & \htmlData{link=e-10}{10} & 0 \\ \hline f(a) & \htmlData{link=e-25}{0.2} & \htmlData{link=e-10}{0.4} & 0.4 \end{array}$`,
+        warum: "A ist die Auszahlung in CHF. Was nicht gewinnt, zahlt 0 aus. Dieser Wert bekommt die Restwahrscheinlichkeit 1 − 0.2 − 0.4 = 0.4. Ihn vergisst man leicht." },
+      { html: T`$E(A) = 25 \cdot 0.2 + 10 \cdot 0.4 + 0 \cdot 0.4 = 5 + 4 = 9$`,
+        warum: "Im langfristigen Mittel zahlt das Spiel 9 CHF pro Runde aus." },
+      { html: T`$E(A) = 9 \quad\Rightarrow\quad \htmlData{link=e-fair}{\text{fairer Einsatz} = 9 \text{ CHF}}$`,
+        warum: "Fair heisst: erwarteter Reingewinn 0. Das gilt genau dann, wenn der Einsatz gleich der erwarteten Auszahlung ist." },
+      { html: T`$\sum a_i^2 f(a_i) = 625 \cdot 0.2 + 100 \cdot 0.4 + 0 = 125 + 40 = 165$`,
+        warum: "Für die Standardabweichung brauchst du die Summe der Quadrate mal Wahrscheinlichkeit." },
+      { html: T`$\sigma_A^2 = 165 - 9^2 = 84, \qquad \sigma_A = \sqrt{84} \approx 9.1652$`,
+        warum: "Rechenformel: Summe der Quadrate minus μ². Die Auszahlung streut um rund 9.17 CHF." },
+      { html: T`$G = A - 9 \quad\Rightarrow\quad \htmlData{link=e-sigma}{\sigma_G = \sigma_A \approx 9.1652 \text{ CHF}}$` + "<br>" + T`$\htmlData{link=e-fair}{\text{fairer Einsatz} = 9 \text{ CHF}}$`,
+        warum: "Der Gewinn ist Auszahlung minus fester Einsatz. Eine Verschiebung ändert die Streuung nicht (Schritt 6). Die Standardabweichung des Gewinns ist also gleich gross. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  /* ================= Schritt 6: Regler Y = aX + b ================= */
+  (function transformation() {
+    const regA = document.getElementById("t10-ta");
+    const regB = document.getElementById("t10-tb");
+    const ausA = document.getElementById("t10-ta-wert");
+    const ausB = document.getElementById("t10-tb-wert");
+    const svg = document.getElementById("t10-svg-trans");
+    const kzBox = document.getElementById("t10-trans-kz");
+    if (!regA || !svg) return;
+    const xs = [0, 1, 2, 3], ps = [0.125, 0.375, 0.375, 0.125];
+    const MU = 1.5, SIG = Math.sqrt(0.75);
+    const U0 = -10, U1 = 13, X0 = 22, B = 288;
+    const ux = (u) => X0 + ((u - U0) / (U1 - U0)) * B;
+    const ZEILEN = [{ y: 80, name: "X", cls: "s1" }, { y: 168, name: "Y", cls: "s2" }];
+    const H = 60;
+    // statischer Teil: Gitter, Achsen, Beschriftung
+    for (let u = -10; u <= 10; u += 5) {
+      svgEl("line", { class: "gitter", x1: ux(u), y1: 14, x2: ux(u), y2: 168 }, svg);
+      svgText(svg, ux(u), 186, fz(u), { "text-anchor": "middle" });
+    }
+    ZEILEN.forEach((z) => {
+      svgEl("line", { class: "achse", x1: X0, y1: z.y, x2: X0 + B, y2: z.y }, svg);
+      svgText(svg, 4, z.y - 44, z.name, { class: "t10-mutext" });
+    });
+    const dyn = svgEl("g", {}, svg);
+
+    function zeile(z, werte, mu, sig) {
+      const g = svgEl("g", { class: z.cls }, dyn);
+      const l = Math.max(X0, ux(mu - sig)), r = Math.min(X0 + B, ux(mu + sig));
+      if (sig > 1e-9) svgEl("rect", { class: "t10-band", x: l, y: z.y - H - 4, width: Math.max(0, r - l), height: H + 4 }, g);
+      werte.forEach((w) => {
+        const x = ux(w.u), h = w.p * H * 1.6;
+        svgEl("line", { class: "t10-stab", x1: x, y1: z.y, x2: x, y2: z.y - h }, g);
+        svgEl("circle", { class: "punkt", cx: x, cy: z.y - h, r: 3.5 }, g);
+      });
+      const m = ux(mu);
+      svgEl("polygon", { class: "t10-wippe", points: m + "," + (z.y + 1) + " " + (m - 6) + "," + (z.y + 11) + " " + (m + 6) + "," + (z.y + 11) }, g);
+    }
+    function rechnen() {
+      const a = Number(regA.value), b = Number(regB.value);
+      ausA.textContent = zt(a, 1);
+      ausB.textContent = fz(b);
+      leeren(dyn);
+      zeile(ZEILEN[0], xs.map((x, i) => ({ u: x, p: ps[i] })), MU, SIG);
+      // Werte von Y zusammenfassen (bei a = 0 fallen alle auf denselben Punkt)
+      const karte = new Map();
+      xs.forEach((x, i) => { const y = a * x + b; karte.set(y, (karte.get(y) || 0) + ps[i]); });
+      const ywerte = Array.from(karte.entries()).map((e) => ({ u: e[0], p: Math.min(e[1], 0.6) }));
+      const muY = a * MU + b, sigY = Math.abs(a) * SIG;
+      zeile(ZEILEN[1], ywerte, muY, sigY);
+      kzBox.innerHTML =
+        kz("X: Erwartungswert und σ", "μ = 1.5, σ ≈ 0.866") +
+        kz("E(Y) = a · E(X) + b", zt(a, 1) + " · 1.5 " + (b < 0 ? MINUS : "+") + " " + Math.abs(b) + " = " + zt(muY, 4), true) +
+        kz("V(Y) = a² · V(X)", zt(a * a, 2) + " · 0.75 = " + zt(a * a * 0.75, 4)) +
+        kz("σ<sub>Y</sub> = |a| · σ<sub>X</sub>", zt(Math.abs(a), 1) + " · 0.866 = " + zt(sigY, 4), true);
+    }
+    regA.addEventListener("input", rechnen);
+    regB.addEventListener("input", rechnen);
+    rechnen();
+  })();
+
+  /* ================= Schritt 8: Verteilungs-Werkstatt ================= */
+  (function werkstatt() {
+    const svgF = document.getElementById("t10-svg-f");
+    const svgT = document.getElementById("t10-svg-t");
+    const feldBox = document.getElementById("t10-felder");
+    const auto = document.getElementById("t10-auto");
+    const status = document.getElementById("t10-status");
+    const knopfNorm = document.getElementById("t10-normieren");
+    const kennBox = document.getElementById("t10-kenn");
+    const artWahl = document.getElementById("t10-art");
+    const aWahl = document.getElementById("t10-a");
+    const bWahl = document.getElementById("t10-b");
+    const aBox = document.getElementById("t10-a-box");
+    const bBox = document.getElementById("t10-b-box");
+    const ablesenErg = document.getElementById("t10-ablesen-erg");
+    const hilfBody = document.getElementById("t10-hilf-body");
+    const hilfFuss = document.getElementById("t10-hilf-fuss");
+    const hilfErg = document.getElementById("t10-hilf-erg");
+    if (!svgF || !svgT) return;
+
+    const XS = [0, 1, 2, 3, 4, 5, 6];
+    const VORLAGEN = {
+      muenze: [1 / 8, 3 / 8, 3 / 8, 1 / 8, 0, 0, 0],
+      kinder: [1 / 16, 4 / 16, 6 / 16, 4 / 16, 1 / 16, 0, 0],
+      wuerfel: [0, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6],
+      gezinkt: [0, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 2 / 7],
+      tore: [0.10, 0.25, 0.30, 0.20, 0.10, 0.05, 0],
+      gleich: [1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7, 1 / 7]
+    };
+    let p = VORLAGEN.muenze.slice();
+
+    // Geometrie Balkendiagramm
+    const FX0 = 34, FB = 280, FY0 = 170, FH = 136, SLOT = FB / 7;
+    const fx = (v) => FX0 + (v + 0.5) * SLOT;
+    const fy = (q) => FY0 - q * FH;
+    // Geometrie Treppe (x von −1 bis 7)
+    const TX0 = 34, TB = 280, TY0 = 160, TH = 136;
+    const tx = (v) => TX0 + ((v + 1) * TB) / 8;
+    const ty = (q) => TY0 - q * TH;
+
+    // statischer Teil Balkendiagramm
+    [0.25, 0.5, 0.75, 1].forEach((q) => svgEl("line", { class: "gitter", x1: FX0, y1: fy(q), x2: FX0 + FB, y2: fy(q) }, svgF));
+    [0, 0.5, 1].forEach((q) => svgText(svgF, FX0 - 6, fy(q) + 4, zt(q, 1), { "text-anchor": "end" }));
+    svgEl("line", { class: "achse", x1: FX0, y1: FY0, x2: FX0 + FB, y2: FY0 }, svgF);
+    svgEl("line", { class: "achse", x1: FX0, y1: FY0, x2: FX0, y2: fy(1) - 6 }, svgF);
+    XS.forEach((v) => svgText(svgF, fx(v), FY0 + 27, String(v), { "text-anchor": "middle" }));
+    svgText(svgF, FX0 + FB, FY0 + 27, "x", { "text-anchor": "end", class: "beschriftung" });
+    const gF = svgEl("g", {}, svgF);
+    const gGriffe = svgEl("g", {}, svgF);
+    XS.forEach((v) => {
+      const r = svgEl("rect", { class: "t10-griff", x: fx(v) - SLOT / 2, y: fy(1) - 12, width: SLOT, height: FH + 14, "data-k": v }, gGriffe);
+      r.setAttribute("aria-hidden", "true");
+    });
+
+    // statischer Teil Treppe
+    [0.25, 0.5, 0.75, 1].forEach((q) => svgEl("line", { class: "gitter", x1: TX0, y1: ty(q), x2: TX0 + TB, y2: ty(q) }, svgT));
+    [0, 0.25, 0.5, 0.75, 1].forEach((q) => svgText(svgT, TX0 - 6, ty(q) + 4, zt(q, 2), { "text-anchor": "end" }));
+    svgEl("line", { class: "achse", x1: TX0, y1: TY0, x2: TX0 + TB, y2: TY0 }, svgT);
+    svgEl("line", { class: "achse", x1: tx(0), y1: TY0 + 4, x2: tx(0), y2: ty(1) - 8 }, svgT);
+    XS.forEach((v) => svgText(svgT, tx(v), TY0 + 18, String(v), { "text-anchor": "middle" }));
+    svgText(svgT, TX0 + TB, TY0 + 18, "x", { "text-anchor": "end", class: "beschriftung" });
+    const gT = svgEl("g", {}, svgT);
+
+    // Eingabefelder f(0) … f(6)
+    const felder = XS.map((v) => {
+      const lab = document.createElement("label");
+      lab.className = "t10-feldlabel";
+      const sp = document.createElement("span");
+      sp.textContent = "f(" + v + ")";
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.inputMode = "decimal";
+      inp.autocomplete = "off";
+      inp.className = "t10-feld";
+      inp.setAttribute("aria-label", "Wahrscheinlichkeit f(" + v + ") = P(X = " + v + ")");
+      lab.append(sp, inp);
+      feldBox.appendChild(lab);
+      inp.addEventListener("input", () => {
+        const w = L.zahlLesen(inp.value);
+        if (!Number.isFinite(w) || w < 0 || w > 1) { inp.setAttribute("aria-invalid", "true"); return; }
+        inp.removeAttribute("aria-invalid");
+        setze(v, w);
+        zeichnen(inp);
+      });
+      inp.addEventListener("change", () => { inp.removeAttribute("aria-invalid"); inp.value = zt(p[v], 4); });
+      return inp;
+    });
+
+    const summe = () => p.reduce((s, q) => s + q, 0);
+    const gueltig = () => Math.abs(summe() - 1) < 0.0005;
+    function Fw(t) { // F(t) = P(X ≤ t)
+      let s = 0;
+      XS.forEach((v) => { if (v <= t + 1e-9) s += p[v]; });
+      return s;
+    }
+    function kennwerte() {
+      const mu = XS.reduce((s, v) => s + v * p[v], 0);
+      const e2 = XS.reduce((s, v) => s + v * v * p[v], 0);
+      const varianz = Math.max(0, e2 - mu * mu);
+      return { mu: mu, e2: e2, varianz: varianz, sigma: Math.sqrt(varianz) };
+    }
+    function setze(k, w) {
+      w = Math.max(0, Math.min(1, w));
+      if (auto.checked) {
+        const rest = 1 - w;
+        const alt = p.reduce((s, q, j) => (j === k ? s : s + q), 0);
+        p = p.map((q, j) => (j === k ? w : alt > 1e-12 ? (q * rest) / alt : rest / 6));
+      } else {
+        p[k] = w;
+      }
+    }
+
+    // Ablesen: Arten mit Mitglieds-Test und F-Termen
+    const ARTEN = {
+      le: { a: false, b: true, titel: (a, b) => "P(X ≤ " + b + ")", drin: (x, a, b) => x <= b, eins: false, terme: (a, b) => [[1, b]] },
+      lt: { a: false, b: true, titel: (a, b) => "P(X < " + b + ")", drin: (x, a, b) => x < b, eins: false, terme: (a, b) => [[1, b - 1]] },
+      gt: { a: true, b: false, titel: (a) => "P(X > " + a + ")", drin: (x, a) => x > a, eins: true, terme: (a) => [[-1, a]] },
+      ge: { a: true, b: false, titel: (a) => "P(X ≥ " + a + ")", drin: (x, a) => x >= a, eins: true, terme: (a) => [[-1, a - 1]] },
+      ab: { a: true, b: true, titel: (a, b) => "P(" + a + " < X ≤ " + b + ")", drin: (x, a, b) => a < x && x <= b, eins: false, terme: (a, b) => [[1, b], [-1, a]] },
+      aib: { a: true, b: true, titel: (a, b) => "P(" + a + " ≤ X ≤ " + b + ")", drin: (x, a, b) => a <= x && x <= b, eins: false, terme: (a, b) => [[1, b], [-1, a - 1]] },
+      aob: { a: true, b: true, titel: (a, b) => "P(" + a + " < X < " + b + ")", drin: (x, a, b) => a < x && x < b, eins: false, terme: (a, b) => [[1, b - 1], [-1, a]] },
+      eq: { a: true, b: false, titel: (a) => "P(X = " + a + ")", drin: (x, a) => x === a, eins: false, terme: (a) => [[1, a], [-1, a - 1]] }
+    };
+    function ablesen() {
+      const art = ARTEN[artWahl.value] || ARTEN.ab;
+      const a = Number(aWahl.value), b = Number(bWahl.value);
+      aBox.hidden = !art.a;
+      bBox.hidden = !art.b;
+      const drin = XS.filter((x) => art.drin(x, a, b));
+      const terme = art.terme(a, b);
+      const teile = (art.eins ? "1 " : "") + terme.map((t, i) => (i === 0 && !art.eins ? "" : t[0] < 0 ? MINUS + " " : "+ ") + "F(" + fz(t[1]) + ")").join(" ");
+      const zahlen = (art.eins ? "1 " : "") + terme.map((t, i) => (i === 0 && !art.eins ? "" : t[0] < 0 ? MINUS + " " : "+ ") + zt(Fw(t[1]), 4)).join(" ");
+      const wert = (art.eins ? 1 : 0) + terme.reduce((s, t) => s + t[0] * Fw(t[1]), 0);
+      const leer = art.a && art.b && drin.length === 0 && (a >= b);
+      // Bei nur einem F-Wert ohne «1 −» wäre die Zahlenzeile doppelt («= 0.875 = 0.875»)
+      const einfach = !art.eins && terme.length === 1;
+      let html = art.titel(a, b) + " = " + teile + (einfach ? "" : " = " + zahlen) + " = <b>" + zt(Math.max(0, wert), 4) + "</b>";
+      if (leer) html = art.titel(a, b) + " = <b>0</b><small>Das Intervall ist leer: Wähle b grösser als a.</small>";
+      else {
+        // Nur Werte mit positiver Wahrscheinlichkeit nennen (Balken der Höhe 0 sieht man nicht)
+        const sichtbar = drin.filter((x) => p[x] > 1e-9);
+        const balken = sichtbar.length ? "Markierte Balken: x = " + sichtbar.join(", ") + ". Ihre Summe ist " + zt(sichtbar.reduce((s, x) => s + p[x], 0), 4) + "." : "Kein möglicher Wert liegt im gesuchten Bereich.";
+        const hinweis = terme.some((t) => t[1] < 0) ? " F(−1) = 0, links von 0 liegt keine Wahrscheinlichkeit." : "";
+        const ganz = (artWahl.value === "lt" || artWahl.value === "ge" || artWahl.value === "aib" || artWahl.value === "aob" || artWahl.value === "eq")
+          ? " «− 1», weil die Werte ganze Zahlen sind: Der nächstkleinere Wert gehört nicht mehr dazu." : "";
+        html += "<small>" + balken + hinweis + ganz + "</small>";
+      }
+      ablesenErg.innerHTML = html;
+      return { drin: drin, levels: leer ? [] : terme.map((t) => t[1]) };
+    }
+
+    function zeichnen(ausser) {
+      const ok = gueltig();
+      const k = kennwerte();
+      const ab = ablesen();
+      // Balkendiagramm
+      leeren(gF);
+      if (ok) {
+        const l = Math.max(FX0, fx(k.mu - k.sigma)), r = Math.min(FX0 + FB, fx(k.mu + k.sigma));
+        svgEl("rect", { class: "t10-band", x: l, y: fy(1) - 4, width: Math.max(0, r - l), height: FH + 4 }, gF);
+        if (k.sigma > 1e-9) svgText(gF, (l + r) / 2, fy(1) - 8, "μ − σ … μ + σ", { "text-anchor": "middle", class: "t10-mutext" });
+        svgEl("line", { class: "t10-mu", x1: fx(k.mu), y1: fy(1) - 4, x2: fx(k.mu), y2: FY0 }, gF);
+      }
+      XS.forEach((v) => {
+        const h = Math.max(0, Math.min(1, p[v])) * FH;
+        svgEl("rect", { class: "balken" + (ab.drin.indexOf(v) >= 0 ? " an" : ""), x: fx(v) - 11, y: FY0 - h, width: 22, height: h }, gF);
+        svgText(gF, fx(v), FY0 - h - 4, zt(p[v], 3), { "text-anchor": "middle", class: "t10-wert" });
+      });
+      if (ok) {
+        const m = fx(k.mu);
+        svgEl("polygon", { class: "t10-wippe", points: m + "," + (FY0 + 1) + " " + (m - 8) + "," + (FY0 + 14) + " " + (m + 8) + "," + (FY0 + 14) }, gF);
+        const tx0 = Math.max(FX0 + 30, Math.min(FX0 + FB - 30, m));
+        svgText(gF, tx0, FY0 + 46, "μ = " + zt(k.mu, 3), { "text-anchor": "middle", class: "t10-mutext" });
+      }
+      // Treppe
+      leeren(gT);
+      ab.levels.forEach((t) => {
+        const y = ty(Fw(t));
+        svgEl("line", { class: "markierung", x1: TX0, y1: y, x2: TX0 + TB, y2: y }, gT);
+        svgText(gT, TX0 + TB, y - 4, "F(" + fz(t) + ") = " + zt(Fw(t), 4), { "text-anchor": "end", class: "beschriftung" });
+      });
+      let stufe = 0, start = -1;
+      const punkte = [];
+      XS.filter((v) => p[v] > 1e-9).forEach((v) => {
+        svgEl("line", { class: "t10-stufe", x1: tx(start), y1: ty(stufe), x2: tx(v), y2: ty(stufe) }, gT);
+        punkte.push(["t10-offen", v, stufe]);
+        stufe += p[v];
+        punkte.push(["t10-zu", v, stufe]);
+        start = v;
+      });
+      svgEl("line", { class: "t10-stufe", x1: tx(start), y1: ty(stufe), x2: tx(7), y2: ty(stufe) }, gT);
+      punkte.forEach((q) => svgEl("circle", { class: q[0], cx: tx(q[1]), cy: ty(q[2]), r: 3.6 }, gT));
+      // Felder
+      felder.forEach((inp, v) => { if (inp !== ausser) { inp.value = zt(p[v], 4); inp.removeAttribute("aria-invalid"); } });
+      // Status und Kennzahlen
+      const s = summe();
+      status.className = "t10-status " + (ok ? "ok" : "bad");
+      status.textContent = ok
+        ? "✓ Σ f(x) = 1: gültige Wahrscheinlichkeitsfunktion."
+        : "✗ Σ f(x) = " + zt(s, 4) + ": keine Wahrscheinlichkeitsfunktion, die Summe muss 1 sein.";
+      // Knopf nur bei ungültiger Summe zeigen; verschwindet er mit Fokus, Fokus auf die Checkbox setzen
+      if (knopfNorm.hidden !== ok) {
+        if (ok && document.activeElement === knopfNorm) auto.focus();
+        knopfNorm.hidden = ok;
+      }
+      const imBand = ok ? XS.filter((v) => v >= k.mu - k.sigma - 1e-9 && v <= k.mu + k.sigma + 1e-9).reduce((t, v) => t + p[v], 0) : NaN;
+      kennBox.innerHTML =
+        kz("μ = E(X)", ok ? zt(k.mu, 4) : "–", true) +
+        kz("σ² = V(X)", ok ? zt(k.varianz, 4) : "–") +
+        kz("σ", ok ? zt(k.sigma, 4) : "–", true) +
+        kz("P(μ − σ ≤ X ≤ μ + σ)", ok ? zt(imBand, 4) : "–");
+      // Hilfstabelle
+      const zeilen = XS.filter((v) => p[v] > 1e-9).map((v) =>
+        "<tr><td>" + v + '</td><td class="zahl">' + zt(p[v], 4) + '</td><td class="zahl">' + zt(v * p[v], 4) + '</td><td class="zahl">' + zt(v * v * p[v], 4) + "</td></tr>");
+      hilfBody.innerHTML = zeilen.join("");
+      hilfFuss.innerHTML = '<tr><th scope="row">Σ</th><td class="zahl">' + zt(s, 4) + '</td><td class="zahl">' + zt(k.mu, 4) + '</td><td class="zahl">' + zt(k.e2, 4) + "</td></tr>";
+      hilfErg.innerHTML = ok
+        ? "μ = " + zt(k.mu, 4) + " · σ² = " + zt(k.e2, 4) + " " + MINUS + " " + zt(k.mu, 4) + "² = " + zt(k.varianz, 4) + " · σ = √" + zt(k.varianz, 4) + " ≈ " + zt(k.sigma, 4)
+        : "Erst wenn Σ f(x) = 1 ist, sind μ und σ sinnvoll.";
+    }
+
+    // Ziehen mit Maus, Stift oder Finger
+    let ziehK = -1;
+    function wertAus(e) {
+      const m = svgF.getScreenCTM();
+      if (!m) return null;
+      const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
+      return Math.round(Math.max(0, Math.min(1, (FY0 - pt.y) / FH)) * 100) / 100;
+    }
+    Array.from(gGriffe.children).forEach((r) => {
+      r.addEventListener("pointerdown", (e) => {
+        ziehK = Number(r.getAttribute("data-k"));
+        try { svgF.setPointerCapture(e.pointerId); } catch (err) { /* egal */ }
+        const w = wertAus(e);
+        if (w !== null) { setze(ziehK, w); zeichnen(); }
+        e.preventDefault();
+      });
+    });
+    svgF.addEventListener("pointermove", (e) => {
+      if (ziehK < 0) return;
+      const w = wertAus(e);
+      if (w !== null) { setze(ziehK, w); zeichnen(); }
+    });
+    const ende = () => { ziehK = -1; };
+    svgF.addEventListener("pointerup", ende);
+    svgF.addEventListener("pointercancel", ende);
+    svgF.addEventListener("lostpointercapture", ende);
+
+    knopfNorm.addEventListener("click", () => {
+      const s = summe();
+      p = s > 1e-12 ? p.map((q) => q / s) : p.map(() => 1 / 7);
+      zeichnen();
+    });
+    auto.addEventListener("change", () => zeichnen());
+    [artWahl, aWahl, bWahl].forEach((w) => w.addEventListener("change", () => zeichnen()));
+    document.querySelectorAll("[data-t10-vorlage]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        p = (VORLAGEN[btn.getAttribute("data-t10-vorlage")] || VORLAGEN.muenze).slice();
+        zeichnen();
+      });
+    });
+    zeichnen();
+  })();
+
+  /* ================= Schritt 9: Glücksspiel-Rechner ================= */
+  (function spiel() {
+    const A = [1, 2, 3].map((i) => document.getElementById("t10-a" + i));
+    const P = [1, 2, 3].map((i) => document.getElementById("t10-p" + i));
+    const einsatzF = document.getElementById("t10-einsatz");
+    const bankF = document.getElementById("t10-bank");
+    const rest = document.getElementById("t10-prest");
+    const kzBox = document.getElementById("t10-spiel-kz");
+    const text = document.getElementById("t10-spiel-text");
+    const svg = document.getElementById("t10-svg-sim");
+    const simText = document.getElementById("t10-sim-text");
+    if (!einsatzF || !svg) return;
+    const VORLAGEN = {
+      a469: { a: ["25", "10", ""], p: ["0.2", "0.4", ""], e: "10", g: "0" },
+      a471: { a: ["66", "10", ""], p: ["1/216", "15/216", ""], e: "1.50", g: "0.50" },
+      los: { a: ["100", "20", "5"], p: ["0.005", "0.03", "0.1"], e: "2", g: "0" }
+    };
+    let modell = null;
+
+    function lesen() {
+      const stufen = [];
+      let fehler = "";
+      A.forEach((fa, i) => {
+        const fp = P[i];
+        const leer = !fa.value.trim() && !fp.value.trim();
+        fa.removeAttribute("aria-invalid");
+        fp.removeAttribute("aria-invalid");
+        if (leer) return;
+        const a = L.zahlLesen(fa.value), q = L.zahlLesen(fp.value);
+        if (!Number.isFinite(a)) { fa.setAttribute("aria-invalid", "true"); fehler = "Bitte bei Stufe " + (i + 1) + " eine Auszahlung eintragen."; return; }
+        if (!Number.isFinite(q) || q < 0 || q > 1) { fp.setAttribute("aria-invalid", "true"); fehler = "Bitte bei Stufe " + (i + 1) + " eine Wahrscheinlichkeit zwischen 0 und 1 eintragen."; return; }
+        stufen.push({ a: a, p: q });
+      });
+      const sp = stufen.reduce((s, x) => s + x.p, 0);
+      if (!fehler && sp > 1 + 1e-9) fehler = "Die Wahrscheinlichkeiten ergeben zusammen " + zt(sp, 4) + ", mehr als 1.";
+      const e = L.zahlLesen(einsatzF.value || "0"), g = L.zahlLesen(bankF.value || "0");
+      einsatzF.toggleAttribute("aria-invalid", !Number.isFinite(e));
+      bankF.toggleAttribute("aria-invalid", !Number.isFinite(g));
+      if (!fehler && (!Number.isFinite(e) || !Number.isFinite(g))) fehler = "Bitte Einsatz und Anbietergewinn als Zahl eintragen.";
+      return { stufen: stufen, rest: 1 - sp, e: e, g: g, fehler: fehler };
+    }
+    function rechnen() {
+      const d = lesen();
+      if (d.fehler) {
+        rest.textContent = "–";
+        kzBox.innerHTML = "";
+        text.textContent = d.fehler;
+        modell = null;
+        return;
+      }
+      rest.textContent = zt(d.rest, 4);
+      const EA = d.stufen.reduce((s, x) => s + x.a * x.p, 0);
+      const EA2 = d.stufen.reduce((s, x) => s + x.a * x.a * x.p, 0);
+      const sig = Math.sqrt(Math.max(0, EA2 - EA * EA));
+      const EG = EA - d.e;
+      modell = { stufen: d.stufen, e: d.e, EG: EG, sig: sig };
+      kzBox.innerHTML =
+        kz("E(A), erwartete Auszahlung", chf(EA) + " CHF") +
+        kz("σ der Auszahlung (= σ von G)", chf(sig) + " CHF") +
+        kz("fairer Einsatz = E(A)", chf(EA) + " CHF", true) +
+        kz("E(G) = E(A) − Einsatz", chf(EG) + " CHF", true) +
+        kz("Mindesteinsatz für " + chf(d.g) + " CHF Anbietergewinn", chf(EA + d.g) + " CHF");
+      let satz;
+      if (Math.abs(EG) < 0.005) satz = "Das Spiel ist fair: Mit " + chf(d.e) + " CHF Einsatz gewinnt langfristig weder der Spieler noch der Anbieter.";
+      else if (EG < 0) satz = "Das Spiel ist für dich ungünstig: Bei " + chf(d.e) + " CHF Einsatz verlierst du im Mittel " + chf(-EG) + " CHF pro Spiel. Nach 1000 Spielen sind das rund " + L.zahlText(Math.round(-EG * 1000), 0) + " CHF. Diesen Betrag verdient der Anbieter.";
+      else satz = "Das Spiel ist für dich günstig: Bei " + chf(d.e) + " CHF Einsatz gewinnst du im Mittel " + chf(EG) + " CHF pro Spiel. Der Anbieter verliert langfristig.";
+      text.textContent = satz + " Fair wäre ein Einsatz von " + chf(EA) + " CHF.";
+    }
+    function simulieren(n) {
+      if (!modell) { simText.textContent = "Zuerst gültige Werte eintragen."; return; }
+      const kum = [];
+      let s = 0;
+      modell.stufen.forEach((x) => { s += x.p; kum.push([s, x.a]); });
+      const punkte = [];
+      const schritt = Math.max(1, Math.floor(n / 240));
+      let summeG = 0;
+      for (let i = 1; i <= n; i++) {
+        const u = Math.random();
+        let a = 0;
+        for (let j = 0; j < kum.length; j++) { if (u < kum[j][0]) { a = kum[j][1]; break; } }
+        summeG += a - modell.e;
+        if (i % schritt === 0 || i === n) punkte.push([i, summeG / i]);
+      }
+      zeichneSim(punkte, n);
+      const mittel = summeG / n;
+      simText.textContent = "Nach " + L.zahlText(n, 0) + " Spielen: durchschnittlicher Reingewinn " + chf(mittel) + " CHF pro Spiel. Erwartungswert: " + chf(modell.EG) + " CHF. Je mehr Spiele, desto näher liegt der Durchschnitt meist beim Erwartungswert.";
+    }
+    const SX0 = 52, SB = 258, SY0 = 140, SH = 120;
+    function zeichneSim(punkte, n) {
+      leeren(svg);
+      const titel = document.createElementNS(NS, "title");
+      titel.id = "t10-svg-sim-titel";
+      titel.textContent = "Durchschnittlicher Reingewinn pro Spiel in Abhängigkeit der Anzahl gespielter Runden, mit dem Erwartungswert als gestrichelte Linie";
+      svg.appendChild(titel);
+      const E = modell.EG;
+      let R = 0;
+      punkte.forEach((q) => { if (q[0] >= n / 40) R = Math.max(R, Math.abs(q[1] - E)); });
+      R = Math.max(R * 1.2, 0.05, (modell.sig / Math.sqrt(n)) * 3);
+      const yv = (w) => SY0 - ((Math.max(E - R, Math.min(E + R, w)) - (E - R)) / (2 * R)) * SH;
+      const xv = (i) => SX0 + (i / n) * SB;
+      svgEl("line", { class: "achse", x1: SX0, y1: SY0, x2: SX0 + SB, y2: SY0 }, svg);
+      svgEl("line", { class: "achse", x1: SX0, y1: SY0, x2: SX0, y2: SY0 - SH }, svg);
+      svgText(svg, SX0 - 4, SY0 - SH + 4, chf(E + R), { "text-anchor": "end" });
+      svgText(svg, SX0 - 4, SY0 + 4, chf(E - R), { "text-anchor": "end" });
+      svgEl("line", { class: "markierung", x1: SX0, y1: yv(E), x2: SX0 + SB, y2: yv(E) }, svg);
+      svgText(svg, SX0 - 4, yv(E) + 4, "E(G)", { "text-anchor": "end", class: "t10-mutext" });
+      svgEl("polyline", { class: "kurve", points: punkte.map((q) => xv(q[0]).toFixed(1) + "," + yv(q[1]).toFixed(1)).join(" ") }, svg);
+      svgText(svg, SX0, SY0 + 18, "1", { "text-anchor": "middle" });
+      svgText(svg, SX0 + SB, SY0 + 18, L.zahlText(n, 0) + " Spiele", { "text-anchor": "end" });
+    }
+    // Alte Simulation entfernen, sobald sich das Spiel ändert (sonst zeigt sie ein veraltetes E(G)); der <title> bleibt
+    function simLeeren() {
+      Array.from(svg.children).forEach((k) => { if (k.tagName.toLowerCase() !== "title") svg.removeChild(k); });
+      simText.textContent = "Noch keine Simulation. Drück auf einen der Knöpfe.";
+    }
+    function laden(name) {
+      const v = VORLAGEN[name];
+      A.forEach((f, i) => { f.value = v.a[i]; });
+      P.forEach((f, i) => { f.value = v.p[i]; });
+      einsatzF.value = v.e;
+      bankF.value = v.g;
+      rechnen();
+      simLeeren();
+    }
+    A.concat(P, [einsatzF, bankF]).forEach((f) => f.addEventListener("input", () => { rechnen(); simLeeren(); }));
+    document.querySelectorAll("[data-t10-spiel]").forEach((b) => b.addEventListener("click", () => laden(b.getAttribute("data-t10-spiel"))));
+    document.querySelectorAll("[data-t10-sim]").forEach((b) => b.addEventListener("click", () => simulieren(Number(b.getAttribute("data-t10-sim")))));
+    laden("a469");
+  })();
+
+  /* ================= Übungen ================= */
+  L.zahlAufgabe("#t10-u1", {
+    titel: "Übung 1 · Augensumme: nur mit F",
+    frage: T`<p>$X$ ist die Augensumme zweier fairer Würfel. Die Tabelle zeigt $36 \cdot F(x)$, also die Verteilungsfunktion in 36steln (wie auf der Folie S2-V5).</p>
+      <div class="tablebox"><table class="tabelle"><tbody>
+      <tr><th scope="row">$x$</th><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td>10</td><td>11</td><td>12</td></tr>
+      <tr><th scope="row">$36 F(x)$</th><td>1</td><td>3</td><td>6</td><td>10</td><td>15</td><td>21</td><td>26</td><td>30</td><td>33</td><td>35</td><td>36</td></tr>
+      </tbody></table></div>
+      <p>Berechne nur mit $F$: $P(4 \le X \le 9)$. Gib das Resultat als Dezimalzahl an.</p>`,
+    antwort: 0.75,
+    toleranz: 0.0005,
+    anzeige: "27/36 = 0.75",
+    hinweise: [
+      T`«$4 \le X$» heisst: Die 4 gehört dazu. Du ziehst also nur alles bis und mit 3 ab.`,
+      T`$P(4 \le X \le 9) = F(9) - F(3)$`
+    ],
+    loesungsweg: [
+      T`$P(4 \le X \le 9) = P(X \le 9) - P(X \le 3) = F(9) - F(3)$`,
+      T`$= \tfrac{30}{36} - \tfrac{3}{36} = \tfrac{27}{36} = 0.75$`,
+      "Kontrolle mit $f$: Die Summen 4 bis 9 entstehen aus 3 + 4 + 5 + 6 + 5 + 4 = 27 von 36 Paaren.",
+      "Eigene Lösung, nicht vom Dozenten bestätigt."
+    ]
+  });
+
+  L.zahlAufgabe("#t10-u2", {
+    titel: "Übung 2 · Von F zurück zu f",
+    frage: T`<p>Die Verteilungsfunktion einer Zufallsvariable $X$ ist gegeben (Typ Aufgabe 92, eigene Zahlen):</p>
+      <div class="board">$$F(x) = \begin{cases} 0 & x < 1 \\ 0.2 & 1 \le x < 2 \\ 0.5 & 2 \le x < 4 \\ 0.9 & 4 \le x < 5 \\ 1 & x \ge 5 \end{cases}$$</div>
+      <p>Berechne $P(1.5 \le X < 4.5)$.</p>`,
+    antwort: 0.7,
+    toleranz: 0.0005,
+    anzeige: "0.7",
+    hinweise: [
+      "Die Sprungstellen von $F$ sind die möglichen Werte von $X$: 1, 2, 4 und 5.",
+      T`Sprunghöhe = Wahrscheinlichkeit: $f(2) = 0.5 - 0.2 = 0.3$, $f(4) = 0.9 - 0.5 = 0.4$.`,
+      "Welche möglichen Werte liegen zwischen 1.5 und 4.5?"
+    ],
+    loesungsweg: [
+      T`Werte von $X$: $f(1) = 0.2$, $f(2) = 0.3$, $f(4) = 0.4$, $f(5) = 0.1$.`,
+      T`Im Bereich $1.5 \le x < 4.5$ liegen nur die Werte 2 und 4.`,
+      T`$P(1.5 \le X < 4.5) = f(2) + f(4) = 0.3 + 0.4 = 0.7$`,
+      T`Mit $F$: $F(4) - F(1) = 0.9 - 0.2 = 0.7$, denn «unter 4.5» endet bei 4 und «ab 1.5» beginnt nach 1.`,
+      "Eigene Lösung, nicht vom Dozenten bestätigt."
+    ]
+  });
+
+  L.wahrFalsch("#t10-u3", {
+    titel: "Übung 3 · Eigenschaften von f, F, μ und σ",
+    aussagen: [
+      { html: T`Für jede Wahrscheinlichkeitsfunktion gilt $\sum f(x_i) = 1$.`, wahr: true,
+        erklaerung: "Irgendein Wert tritt sicher ein. Das ist die Normierung (Axiom II)." },
+      { html: T`$F(x)$ kann kleiner werden, wenn $x$ wächst.`, wahr: false,
+        erklaerung: "F zählt nur dazu, nie weg. Die Treppe steigt oder bleibt flach." },
+      { html: T`Hat $X$ die Werte 0, 1, 2, …, dann gilt $P(X < 3) = F(3)$.`, wahr: false,
+        erklaerung: T`$P(X < 3) = P(X \le 2) = F(2)$. $F(3)$ zählt die 3 mit.` },
+      { html: "Der Erwartungswert ist immer einer der möglichen Werte von $X$.", wahr: false,
+        erklaerung: "Beim fairen Würfel ist E(X) = 3.5. Diese Augenzahl gibt es nicht." },
+      { html: T`Die Varianz $\sigma^2$ ist nie negativ.`, wahr: true,
+        erklaerung: "Sie ist eine Summe von Quadraten mal Wahrscheinlichkeiten, also mindestens 0." },
+      { html: T`$V(2X + 3) = 2 \cdot V(X) + 3$`, wahr: false,
+        erklaerung: T`Die Verschiebung fällt weg, der Faktor kommt quadriert: $V(2X + 3) = 4 \cdot V(X)$.` }
+    ]
+  });
+
+  L.zahlAufgabe("#t10-u4", {
+    titel: "Übung 4 · Mehr als 2 Tore (Stil Prüfungsaufgabe 5a)",
+    frage: T`<p>Der FC Seedamm schiesst pro Heimspiel $X$ Tore:</p>
+      <div class="tablebox"><table class="tabelle"><tbody>
+      <tr><th scope="row">$x$</th><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+      <tr><th scope="row">$f(x)$</th><td>0.15</td><td>0.30</td><td>0.25</td><td>0.15</td><td>0.10</td><td>0.05</td></tr>
+      </tbody></table></div>
+      <p>Wie gross ist die Wahrscheinlichkeit, dass er in einem Heimspiel mehr als 2 Tore schiesst? (im Stil von Aufgabe 5a der exemplarischen Modulschlussprüfung)</p>`,
+    antwort: 0.3,
+    toleranz: 0.0005,
+    anzeige: "0.30",
+    hinweise: [
+      "«Mehr als 2» heisst 3, 4 oder 5 Tore.",
+      T`Das Gegenteil ist «höchstens 2», also $F(2)$.`
+    ],
+    loesungsweg: [
+      T`$P(X > 2) = 1 - P(X \le 2) = 1 - F(2)$`,
+      T`$F(2) = 0.15 + 0.30 + 0.25 = 0.70$`,
+      T`$P(X > 2) = 1 - 0.70 = 0.30$. Kontrolle: $0.15 + 0.10 + 0.05 = 0.30$.`,
+      T`In der Prüfung kommt $F$ meist aus dem Taschenrechner. Bei «mehr als 3 Tore» mit Poisson-Verteilung zum Beispiel $1 - \text{poissCdf}(\mu, 0, 3)$ (Station 11). Die Übersetzung «mehr als $k$» $= 1 - F(k)$ bleibt gleich.`,
+      "Eigene Lösung, nicht vom Dozenten bestätigt."
+    ]
+  });
+
+  L.zahlAufgabe("#t10-u5", {
+    titel: "Übung 5 · Standardabweichung",
+    frage: T`<p>Ein Onlineshop erhält pro Tag $X$ Reklamationen:</p>
+      <div class="tablebox"><table class="tabelle"><tbody>
+      <tr><th scope="row">$x$</th><td>0</td><td>1</td><td>2</td><td>3</td></tr>
+      <tr><th scope="row">$f(x)$</th><td>0.35</td><td>0.30</td><td>0.20</td><td>0.15</td></tr>
+      </tbody></table></div>
+      <p>Berechne die Standardabweichung $\sigma$ auf vier Nachkommastellen.</p>`,
+    antwort: Math.sqrt(1.1275),
+    toleranz: 0.0005,
+    anzeige: "σ = √1.1275 ≈ 1.0618",
+    hinweise: [
+      T`Zuerst $\mu = \sum x \cdot f(x)$.`,
+      T`Dann $\sum x^2 \cdot f(x)$ und $\sigma^2 = \sum x^2 f(x) - \mu^2$. Die Wurzel nicht vergessen.`
+    ],
+    loesungsweg: [
+      T`$\mu = 0 \cdot 0.35 + 1 \cdot 0.30 + 2 \cdot 0.20 + 3 \cdot 0.15 = 1.15$`,
+      T`$\sum x^2 f(x) = 0 + 0.30 + 0.80 + 1.35 = 2.45$`,
+      T`$\sigma^2 = 2.45 - 1.15^2 = 2.45 - 1.3225 = 1.1275$`,
+      T`$\sigma = \sqrt{1.1275} \approx 1.0618$ Reklamationen`,
+      "TI-Nspire: <code>x:={0,1,2,3}</code>, <code>p:={0.35,0.3,0.2,0.15}</code>, dann <code>√(sum(x^2·p)-sum(x·p)^2)</code>.",
+      "Eigene Lösung, nicht vom Dozenten bestätigt."
+    ]
+  });
+
+  L.schrittAufgabe("#t10-u6", {
+    titel: "Übung 6 · Würfelbude: Welcher Einsatz?",
+    aufgabe: "<p>Ein Verein bietet ein Spiel mit zwei fairen Würfeln an. Bei einer Doppelsechs zahlt er 26 CHF aus, bei genau einer Sechs 1 CHF, sonst nichts. Der Verein will pro Spiel im Mittel 0.25 CHF verdienen. Welchen Einsatz muss er verlangen? (im Stil von Aufgabe 4.71 im Skript und ihrer Musterlösung)</p>",
+    schritte: [
+      { html: T`$X$ = Auszahlung in CHF, Werte $0,\ 1,\ 26$`,
+        warum: "Wie in der Musterlösung zu 4.71: zuerst die Auszahlung ohne Einsatz betrachten." },
+      { html: T`$P(X = 26) = \tfrac16 \cdot \tfrac16 = \tfrac{1}{36}$`,
+        warum: "Beide Würfel müssen eine 6 zeigen. Ein Pfad im Baum." },
+      { html: T`$P(X = 1) = 2 \cdot \tfrac16 \cdot \tfrac56 = \tfrac{10}{36}$`,
+        warum: "Genau eine Sechs: Entweder der erste oder der zweite Würfel zeigt sie. Zwei Pfade mit je 5/36." },
+      { html: T`$P(X = 0) = 1 - \tfrac{1}{36} - \tfrac{10}{36} = \tfrac{25}{36}$`,
+        warum: T`Gegenwahrscheinlichkeit. Kontrolle direkt: keine Sechs $= \tfrac56 \cdot \tfrac56 = \tfrac{25}{36}$.` },
+      { html: T`$E(X) = 26 \cdot \tfrac{1}{36} + 1 \cdot \tfrac{10}{36} + 0 \cdot \tfrac{25}{36} = \tfrac{36}{36} = 1 \text{ CHF}$`,
+        warum: "Im Mittel zahlt der Verein 1 CHF pro Spiel aus. Das wäre der faire Einsatz." },
+      { html: T`$\text{Einsatz} = E(X) + 0.25 = 1.25 \text{ CHF}$`,
+        warum: "Damit bleiben dem Verein im Mittel 1.25 − 1 = 0.25 CHF pro Spiel. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.auswahl("#t10-u7", {
+    frage: "Übung 7 · Ein Los kostet 5 CHF. Mit Wahrscheinlichkeit 0.01 gewinnst du 200 CHF, mit 0.10 gewinnst du 20 CHF, sonst nichts. Was stimmt?",
+    optionen: [
+      "Das Spiel ist fair: Der erwartete Reingewinn ist 0 CHF.",
+      "Das Spiel ist für dich günstig: Du gewinnst im Mittel 1 CHF pro Los.",
+      "Das Spiel ist für dich ungünstig: Du verlierst im Mittel 1 CHF pro Los.",
+      "Das Spiel ist für dich ungünstig: Du verlierst im Mittel 4 CHF pro Los."
+    ],
+    richtig: 2,
+    erklaerung: T`$E(A) = 200 \cdot 0.01 + 20 \cdot 0.10 = 4$ CHF, also $E(G) = 4 - 5 = -1$ CHF. Fair wäre ein Lospreis von 4 CHF. «4 CHF Verlust» verwechselt die erwartete Auszahlung mit dem Verlust. (Eigene Lösung.)`
+  });
+
+  L.schrittAufgabe("#t10-u8", {
+    titel: "Übung 8 · Kiosk: lineare Transformation",
+    aufgabe: T`<p>Ein Kiosk verkauft pro Stunde $X$ Zeitungen mit $E(X) = 14$ und $\sigma_X = 4$. Pro Zeitung verdient er 1.20 CHF, pro Stunde hat er 8 CHF Fixkosten. Der Gewinn pro Stunde ist $G = 1.2 \cdot X - 8$. Bestimme $E(G)$ und $\sigma_G$.</p>`,
+    schritte: [
+      { html: T`$G = aX + b$ mit $a = 1.2$ und $b = -8$`,
+        warum: "Zuerst die Form erkennen: Faktor vor X, fester Betrag dahinter." },
+      { html: T`$E(G) = 1.2 \cdot 14 - 8 = 8.80 \text{ CHF}$`,
+        warum: "Der Erwartungswert macht alles mit: mal a, plus b." },
+      { html: T`$\sigma_G = |1.2| \cdot 4 = 4.80 \text{ CHF}$`,
+        warum: "Die Fixkosten verschieben nur und ändern die Streuung nicht. Der Faktor 1.2 streckt alle Abstände." },
+      { html: T`$V(G) = 1.2^2 \cdot 4^2 = 23.04 = 4.8^2 \;\checkmark$`,
+        warum: "Kontrolle über die Varianz: Faktor quadriert. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.schrittAufgabe("#t10-u9", {
+    titel: "Übung 9 · Parameter einer Dichte (Stil Prüfungsaufgabe 5c)",
+    aufgabe: T`<p>Gegeben ist die Dichtefunktion einer stetigen Zufallsvariable $X$:</p>
+      <p>$f(x) = a \cdot (x - 2)(x - 6)$ für $2 \le x \le 6$, sonst $f(x) = 0$.</p>
+      <p>Berechne den Parameter $a$. (im Stil von Aufgabe 5c der exemplarischen Modulschlussprüfung, eigene Zahlen)</p>`,
+    schritte: [
+      { html: T`Nullstellen $x_1 = 2$, $x_2 = 6$. Zwischen ihnen ist $(x-2)(x-6) < 0$, also muss $a < 0$ sein.`,
+        warum: "Skizze: eine nach unten offene Parabel zwischen 2 und 6. Eine Dichte darf nicht negativ sein. So beginnt auch die Musterlösung zu 5c." },
+      { html: T`$\displaystyle\int_2^6 a \cdot (x - 2)(x - 6)\,dx = 1$`,
+        warum: "Def. 4.20: Die ganze Fläche unter der Dichte ist 1. Ausserhalb von [2, 6] ist f = 0, darum reichen die Grenzen 2 und 6." },
+      { html: T`$\displaystyle\int_2^6 (x^2 - 8x + 12)\,dx = \Big[\tfrac{x^3}{3} - 4x^2 + 12x\Big]_2^6 = 0 - \tfrac{32}{3} = -\tfrac{32}{3}$`,
+        warum: "Ausmultiplizieren, Stammfunktion bilden, Grenzen einsetzen." },
+      { html: T`$a \cdot \left(-\tfrac{32}{3}\right) = 1 \;\Rightarrow\; a = -\tfrac{3}{32} = -0.09375$`,
+        warum: "Nach a auflösen. TI-Nspire: solve(∫(a·(x−2)·(x−6),x,2,6)=1,a) liefert a = −3/32. Zum Vergleich: Bei Prüfungsaufgabe 5c (Nullstellen 5 und 8) liefert dasselbe Vorgehen a = −2/9. Diesen Wert habe ich selbst nachgerechnet, die Musterlösung zeigt nur den Ansatz. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.schrittAufgabe("#t10-u10", {
+    titel: "Übung 10 · Stichprobe ohne Zurücklegen",
+    aufgabe: "<p>In einer Lieferung von 10 Akkus sind 3 defekt. Du ziehst 2 Akkus ohne Zurücklegen. $X$ ist die Anzahl defekter Akkus in der Stichprobe. Bestimme $f$, $F$ und $E(X)$. (Typ Aufgabe 4.73, eigene Zahlen)</p>",
+    schritte: [
+      { html: T`Werte: $x \in \{0,\ 1,\ 2\}$`,
+        warum: "Mehr als 2 defekte gehen nicht, es werden nur 2 gezogen." },
+      { html: T`$f(0) = \tfrac{7}{10} \cdot \tfrac{6}{9} = \tfrac{42}{90} = \tfrac{7}{15} \approx 0.4667$`,
+        warum: "Baum: zweimal einen intakten Akku ziehen. Beim zweiten Zug ist ein intakter weniger da." },
+      { html: T`$f(2) = \tfrac{3}{10} \cdot \tfrac{2}{9} = \tfrac{6}{90} = \tfrac{1}{15} \approx 0.0667$`,
+        warum: "Zweimal einen defekten ziehen." },
+      { html: T`$f(1) = 1 - \tfrac{7}{15} - \tfrac{1}{15} = \tfrac{7}{15} \approx 0.4667$`,
+        warum: "Gegenwahrscheinlichkeit. Kontrolle über die zwei Pfade «defekt, intakt» und «intakt, defekt»: 3/10 · 7/9 + 7/10 · 3/9 = 42/90 = 7/15." },
+      { html: T`$F(x) = \begin{cases} 0 & x < 0 \\ 0.4667 & 0 \le x < 1 \\ 0.9333 & 1 \le x < 2 \\ 1 & x \ge 2 \end{cases}$`,
+        warum: "Schrittweise aufsummieren: 7/15, dann 14/15, dann 1." },
+      { html: T`$E(X) = 0 \cdot \tfrac{7}{15} + 1 \cdot \tfrac{7}{15} + 2 \cdot \tfrac{1}{15} = \tfrac{9}{15} = 0.6$`,
+        warum: "Im Mittel sind 0.6 defekte Akkus in der Stichprobe. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  /* ================= Lösungsfilm ================= */
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const N = (s) => T`\htmlClass{nw}{` + s + "}";
+  const fr = (z, n) => T`\tfrac{` + z + "}{" + n + "}";
+  // Waagrechte Tabelle x | f | F
+  function tab(zeilen) {
+    return T`$\def\arraystretch{1.5}\begin{array}{r|ccc}` + zeilen[0].join(" & ") + T` \\ \hline ` + zeilen.slice(1).map((z) => z.join(" & ")).join(T` \\ `) + T`\end{array}$`;
+  }
+  // Senkrechte Hilfstabelle x | f | x·f | x²·f
+  function htab(spalten, neu) {
+    const kopf = ["x", "f(x)", T`x \cdot f(x)`, T`x^2 f(x)`].slice(0, spalten);
+    const daten = [
+      ["0", fr(24, 36), "0", "0"],
+      ["3", fr(6, 36), fr(18, 36), fr(54, 36)],
+      ["6", fr(6, 36), fr(36, 36), fr(216, 36)],
+      [T`\Sigma`, "1", fr(54, 36), fr(270, 36)]
+    ];
+    const mk = (s, j) => (j === neu ? N(s) : s);
+    const z = daten.map((d) => d.slice(0, spalten).map(mk).join(" & "));
+    return T`$\def\arraystretch{1.5}\begin{array}{` + "c|".repeat(spalten - 1) + "c}" + kopf.join(" & ") + T` \\ \hline ` + z.slice(0, 3).join(T` \\ `) + T` \\ \hline ` + z[3] + T`\end{array}$`;
+  }
+  const X0 = ["x", "0", "3", "6"];
+  const fVoll = ["f(x)", fr(24, 36), fr(6, 36), fr(6, 36)];
+  const FVoll = ["F(x)", fr(24, 36), fr(30, 36), "1"];
+  const kopfX = "$X =$ Auszahlung in CHF";
+  L.film("#t10-film", {
+    phasen: ["1 · Zufallsvariable", "2 · f(x)", "3 · F(x)", "4 · Ablesen", "5 · μ und σ", "6 · Fairness"],
+    texte: [
+      'An einem Vereinsfest wirfst du <span data-ph="wuerfel">zwei faire Würfel</span>. Bei einem <span data-ph="pasch">Pasch (zwei gleiche Augenzahlen) erhältst du 6 CHF</span>, bei <span data-ph="sieben">Augensumme 7 erhältst du 3 CHF</span>, sonst nichts. <span data-ph="einsatz">Der Einsatz beträgt 2 CHF.</span>',
+      '(a) Bestimme <span data-ph="f">Wahrscheinlichkeitsfunktion</span> und <span data-ph="F">Verteilungsfunktion</span> der <span data-ph="X">Auszahlung X</span>. (b) Berechne <span data-ph="pgt">P(X &gt; 0)</span>. (c) Berechne <span data-ph="kenn">Erwartungswert und Standardabweichung</span>. (d) <span data-ph="fair">Ist das Spiel fair? Welcher Einsatz wäre fair?</span>'
+    ],
+    woerterbuch: [
+      "$X$ Auszahlung in CHF",
+      "$f(x) = P(X = x)$",
+      T`$F(x) = P(X \le x)$`,
+      T`$\mu = E(X)$`,
+      T`$\sigma = \sqrt{\sigma^2}$`,
+      "$G = X - 2$ Reingewinn"
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Teil", formel: "Rechnung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Zufallsvariable festlegen, Werte und Wahrscheinlichkeiten in eine Tabelle, Summe 1 prüfen, F aufsummieren, Fragen mit F übersetzen, Hilfstabelle für μ und σ, zum Schluss Einsatz und erwartete Auszahlung vergleichen." },
+      { ph: 0, hl: ["X"], dict: 1, dh: [0], f: NW(kopfX),
+        say: "Zuerst legst du fest, was X zählt: die Auszahlung in Franken. Den Einsatz ziehst du erst ganz am Schluss ab." },
+      { ph: 0, hl: ["wuerfel"], f: kopfX + "<br>" + NW(T`$|\Omega| = 6 \cdot 6 = 36$`),
+        say: "Zwei Würfel ergeben 36 gleich wahrscheinliche Paare: erster Würfel, zweiter Würfel. Damit rechnest du mit Laplace." },
+      { ph: 0, hl: ["pasch", "sieben"], f: kopfX + "<br>" + T`$|\Omega| = 36,\quad$` + NW(T`$x \in \{0,\ 3,\ 6\}$`),
+        say: "X kann nur drei Werte annehmen: 0, 3 oder 6 Franken. X ist also diskret." },
+      { ph: 1, hl: ["pasch"], dict: 2, dh: [1], f: tab([X0, ["f(x)", "", "", N(fr(6, 36))]]) + "<br>" + NW("Pasch: (1,1), (2,2), …, (6,6)"),
+        say: "Ein Pasch entsteht auf sechs Arten. Also ist f(6) gleich 6 durch 36." },
+      { ph: 1, hl: ["sieben"], dh: [1], f: tab([X0, ["f(x)", "", N(fr(6, 36)), fr(6, 36)]]) + "<br>" + NW("Summe 7: (1,6), …, (6,1)"),
+        say: "Die Augensumme 7 entsteht ebenfalls auf sechs Arten. Also ist f(3) gleich 6 durch 36." },
+      { ph: 1, hl: ["pasch", "sieben"], f: tab([X0, ["f(x)", "", fr(6, 36), fr(6, 36)]]) + "<br>" + NW(T`$\text{Pasch} \cap \{\text{Summe } 7\} = \{\}$`),
+        say: "Kann ein Wurf beides sein? Nein: Ein Pasch hat immer eine gerade Summe, 7 ist ungerade. Die beiden Fälle überschneiden sich nicht." },
+      { ph: 1, hl: ["f"], f: tab([X0, ["f(x)", N(fr(24, 36)), fr(6, 36), fr(6, 36)]]) + "<br>" + NW(T`$f(0) = 1 - \tfrac{12}{36} = \tfrac{24}{36}$`),
+        say: "Alles andere zahlt nichts aus. Mit der Gegenwahrscheinlichkeit: f(0) ist 1 minus 12 durch 36, also 24 durch 36." },
+      { ph: 1, hl: ["f"], f: tab([X0, fVoll]) + "<br>" + NW(T`$\tfrac{24}{36} + \tfrac{6}{36} + \tfrac{6}{36} = 1 \;\checkmark$`),
+        say: "Kontrolle: Die drei Wahrscheinlichkeiten ergeben zusammen 1. Die Wahrscheinlichkeitsfunktion ist vollständig." },
+      { ph: 2, hl: ["F"], dict: 3, dh: [2], f: tab([X0, fVoll, ["F(x)", N(fr(24, 36)), "", ""]]),
+        say: "Jetzt die Verteilungsfunktion: von links aufsummieren. F(0) ist einfach f(0), also 24 durch 36." },
+      { ph: 2, hl: ["F"], dh: [2], f: tab([X0, fVoll, ["F(x)", fr(24, 36), N(fr(30, 36)), ""]]),
+        say: "F(3) ist f(0) plus f(3): 24 plus 6 ergibt 30 Sechsunddreissigstel." },
+      { ph: 2, hl: ["F"], dh: [2], f: tab([X0, fVoll, ["F(x)", fr(24, 36), fr(30, 36), N("1")]]),
+        say: "F(6) zählt alles zusammen und ist 1. Bei der letzten Stufe muss immer 1 stehen." },
+      { ph: 2, hl: ["F"], dh: [2], f: tab([X0, fVoll, FVoll]) + "<br>" + NW(T`$F(x) = \begin{cases} 0 & x < 0 \\ \tfrac23 & 0 \le x < 3 \\ \tfrac56 & 3 \le x < 6 \\ 1 & x \ge 6 \end{cases}$`),
+        say: "F gilt für jede reelle Zahl: zwischen den Werten flach, bei 0, 3 und 6 je ein Sprung. So schreibst du die Treppe auf." },
+      { ph: 3, hl: ["pgt"], f: tab([X0, fVoll, FVoll]) + "<br>" + NW(T`$P(X > 0) = 1 - P(X \le 0)$`),
+        say: "Teil b: «grösser als 0» ist das Gegenteil von «höchstens 0». Darum rechnest du 1 minus F(0)." },
+      { ph: 3, hl: ["pgt"], f: tab([X0, fVoll, FVoll]) + "<br>" + T`$P(X > 0) = 1 - F(0)$` + "<br>" + T`$= 1 - \tfrac{24}{36}$` + "<br>" + NW(T`$= \tfrac13 \approx 0.3333$`),
+        say: "1 minus 24 durch 36 ergibt einen Drittel. Mit gut 33 Prozent Wahrscheinlichkeit zahlt das Spiel überhaupt etwas aus." },
+      { ph: 4, hl: ["kenn"], dict: 4, dh: [3], f: htab(3, 2),
+        say: "Teil c: Hilfstabelle wie im Skript. Jeden Wert mit seiner Wahrscheinlichkeit multiplizieren und die Spalte zusammenzählen." },
+      { ph: 4, hl: ["kenn"], dh: [3], f: htab(3, -1) + "<br>" + NW(T`$\mu = E(X) = \tfrac{54}{36} = 1.5$`),
+        say: "Die Summe ist 54 durch 36, also 1.5. Im langfristigen Mittel zahlt das Spiel 1.50 CHF pro Runde aus." },
+      { ph: 4, hl: ["kenn"], f: htab(4, 3) + "<br>" + T`$\mu = 1.5$`,
+        say: "Für die Varianz quadrierst du die Werte: 9 und 36, je mal 6 durch 36. Die Summe ist 270 durch 36, also 7.5." },
+      { ph: 4, hl: ["kenn"], f: htab(4, -1) + "<br>" + T`$\mu = 1.5$` + "<br>" + NW(T`$\sigma^2 = 7.5 - 1.5^2 = 5.25$`),
+        say: "Rechenformel: Summe der x² f(x) minus μ². 7.5 minus 2.25 ergibt 5.25." },
+      { ph: 4, hl: ["kenn"], dict: 5, dh: [4], f: htab(4, -1) + "<br>" + T`$\mu = 1.5,\quad \sigma^2 = 5.25$` + "<br>" + NW(T`$\sigma = \sqrt{5.25} \approx 2.2913$`),
+        say: "Wurzel ziehen: σ ist rund 2.29 Franken. So weit liegt die Auszahlung typischerweise von 1.50 CHF entfernt." },
+      { ph: 5, hl: ["einsatz"], dict: 6, dh: [5], f: T`$\mu = 1.5,\quad \sigma \approx 2.2913$` + "<br>" + NW(T`$G = X - 2$`),
+        say: "Teil d: Der Reingewinn ist Auszahlung minus Einsatz. Das ist eine lineare Transformation mit a gleich 1 und b gleich minus 2." },
+      { ph: 5, hl: ["einsatz"], dh: [5], f: T`$\mu = 1.5,\quad \sigma \approx 2.2913$` + "<br>" + T`$G = X - 2$` + "<br>" + NW(T`$E(G) = E(X) - 2 = -0.5$`),
+        say: "Der Erwartungswert verschiebt sich mit: Im Mittel verlierst du pro Spiel 50 Rappen." },
+      { ph: 5, dh: [5], f: T`$\mu = 1.5,\quad \sigma \approx 2.2913$` + "<br>" + T`$G = X - 2,\quad E(G) = -0.5$` + "<br>" + NW(T`$\sigma_G = \sigma_X \approx 2.2913$`),
+        say: "Eine Verschiebung um 2 Franken ändert die Streuung nicht. Die Standardabweichung des Reingewinns bleibt 2.29 CHF." },
+      { ph: 5, hl: ["fair"], f: T`$E(G) = -0.5$` + "<br>" + NW(T`$\begin{aligned} \text{fair} &\iff E(G) = 0 \\ &\iff \text{Einsatz} = E(X) \\ &\iff \text{Einsatz} = 1.50 \text{ CHF} \end{aligned}$`),
+        say: "Fair wäre das Spiel, wenn der erwartete Reingewinn null ist. Dazu muss der Einsatz gleich der erwarteten Auszahlung sein: 1.50 CHF statt 2 CHF." },
+      { ph: 5, sent: "all", hl: [], f:
+          tab([X0, fVoll, FVoll]) + "<br>" +
+          T`$P(X > 0) = \tfrac13 \approx 0.3333$` + "<br>" +
+          T`$\mu = 1.50 \text{ CHF}$` + "<br>" +
+          T`$\sigma \approx 2.29 \text{ CHF}$` + "<br>" +
+          T`$E(G) = -0.50 \text{ CHF}$` + "<br>" +
+          NW(T`$\text{fairer Einsatz} = 1.50 \text{ CHF}$`),
+        say: "Fertig. P(X > 0) ist ein Drittel, μ ist 1.50 CHF, σ rund 2.29 CHF. Mit 2 CHF Einsatz verlierst du im Mittel 50 Rappen pro Spiel, das Spiel ist nicht fair. Fair wäre ein Einsatz von 1.50 CHF. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ================= Selbsttest ================= */
+  L.selbsttest("#t10-selbsttest", {
+    fragen: [
+      { q: "Was ist eine Zufallsvariable?",
+        o: ["Eine Zahl, die ohne feste Regel zufällig gewählt wird", "Eine Funktion, die jedem Ergebnis eine reelle Zahl zuordnet", "Die Wahrscheinlichkeit eines Ereignisses"], a: 1,
+        e: T`Def. 4.7: $X: \Omega \to \mathbb{R}$. Zufällig ist nur, welches Ergebnis eintritt. Die Zuordnung selbst steht fest.` },
+      { q: T`$X$ hat die Werte $0, 1, 2, \dots, 5$. Was ist $P(X < 3)$?`,
+        o: ["$F(3)$", "$F(2)$", "$1 - F(3)$"], a: 1,
+        e: T`Stolperfalle: «kleiner als 3» heisst 0, 1 oder 2, also $F(2)$. $F(3)$ würde die 3 mitzählen.` },
+      { q: T`Bei ganzzahligen Werten: Was ist $P(X > 4)$?`,
+        o: ["$1 - F(4)$", "$1 - F(3)$", "$F(4)$"], a: 0,
+        e: T`«Grösser als 4» ist das Gegenteil von «höchstens 4»: $1 - F(4)$. $1 - F(3)$ wäre $P(X \ge 4)$.` },
+      { q: T`Was ist $P(2 < X \le 5)$?`,
+        o: ["$F(5) - F(3)$", "$F(5) - F(2)$", "$F(4) - F(2)$"], a: 1,
+        e: "Alles bis 5 minus alles bis 2. Die 2 ist ausgeschlossen, die 5 eingeschlossen: genau die Form F(b) − F(a)." },
+      { q: T`Beim fairen Würfel ist $E(X) = 3.5$. Was bedeutet das?`,
+        o: ["3.5 ist die häufigste Augenzahl.", "Im langfristigen Mittel zeigt der Würfel 3.5 Augen pro Wurf.", "Nach genügend vielen Würfen fällt einmal 3.5."], a: 1,
+        e: "Stolperfalle: Der Erwartungswert muss kein möglicher Wert sein. Er ist der Durchschnitt über sehr viele Würfe (Bem. 4.32)." },
+      { q: "Wo macht die Verteilungsfunktion einer diskreten Zufallsvariable einen Sprung?",
+        o: [T`An jedem Wert $x_i$ mit $f(x_i) > 0$, um genau $f(x_i)$`, "Nirgends, sie ist eine Gerade", "Nur beim grössten Wert, dort auf 1"], a: 0,
+        e: "F ist eine Treppe (Bem. 4.16). Zwischen den Werten bleibt sie flach, bei jedem Wert springt sie um dessen Wahrscheinlichkeit." },
+      { q: T`Die Varianz eines Gewinns ist $V(X) = 9\ \text{CHF}^2$. Wie gross ist $\sigma$?`,
+        o: ["81 CHF", "3 CHF", "4.5 CHF"], a: 1,
+        e: T`$\sigma = \sqrt{V(X)} = \sqrt 9 = 3$ CHF, wieder in der Einheit von $X$.` },
+      { q: T`$E(X) = 5$ und $\sigma_X = 2$. Wie gross ist $\sigma_Y$ für $Y = 3X - 2$?`,
+        o: ["4", "6", "18"], a: 1,
+        e: T`Stolperfalle: Die Verschiebung $-2$ ändert die Streuung nicht. $\sigma_Y = |3| \cdot 2 = 6$. 4 entsteht, wenn man $3 \cdot 2 - 2$ rechnet. 18 entsteht mit $a^2$ statt $|a|$.` },
+      { q: "Ein Spiel zahlt 10 CHF mit Wahrscheinlichkeit 0.3, sonst nichts. Welcher Einsatz ist fair?",
+        o: ["3 CHF", "7 CHF", "10 CHF"], a: 0,
+        e: T`Fairer Einsatz = erwartete Auszahlung: $E(A) = 10 \cdot 0.3 = 3$ CHF.` },
+      { q: T`Welche Tabelle für $f(0), f(1), f(2)$ ist eine gültige Wahrscheinlichkeitsfunktion?`,
+        o: ["0.5, 0.4, 0.2", "0.3, 0.7, 0", T`0.6, $-0.1$, 0.5`], a: 1,
+        e: "Alle Werte zwischen 0 und 1, Summe genau 1. Bei 0.5, 0.4, 0.2 ist die Summe 1.1. −0.1 ist keine Wahrscheinlichkeit. Ein Wert mit f = 0 ist erlaubt." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

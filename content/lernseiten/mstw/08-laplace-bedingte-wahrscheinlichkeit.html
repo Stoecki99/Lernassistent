@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laplace, Ereignisbäume und bedingte Wahrscheinlichkeit · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/09-kombinatorik" title="Kombinatorik">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t08-», nur Farben aus :root -->
+  <style>
+    .t08-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t08-ziele li{margin-bottom:2px}
+    /* Kumulative Zeilen im Stepper und im Film */
+    .t08-z + .t08-z{margin-top:6px}
+    .t08-fz{margin-top:6px}
+    .t08-fz.t08-text{white-space:normal; font-family:var(--f-body); font-size:1rem; line-height:1.5}
+
+    /* Ereignisbaum als SVG (Farben nur über Tokens) */
+    .t08-baum{--t08-halo:var(--surface); display:block; width:100%; height:auto; max-width:420px}
+    .fstage .t08-baum{--t08-halo:var(--board); max-width:380px; margin-bottom:4px}
+    .t08-baum text{font-family:var(--f-math); font-size:13px; fill:var(--ink)}
+    .t08-baum .t08-ast{stroke:var(--line); stroke-width:2.5; fill:none}
+    .t08-baum .t08-ast.an{stroke:var(--accent); stroke-width:3.5}
+    .t08-baum .t08-ast.mit{stroke:var(--accent); stroke-width:2.5; stroke-dasharray:6 4}
+    .t08-baum .t08-k{fill:var(--surface); stroke:var(--muted); stroke-width:1.5}
+    .t08-baum .t08-k.an{fill:var(--lit); stroke:var(--accent); stroke-width:2}
+    .t08-baum .t08-k.mit{stroke:var(--accent); stroke-dasharray:4 3}
+    .t08-baum .t08-wurzel{fill:var(--muted)}
+    .t08-baum .t08-astp{fill:var(--accent); font-size:12.5px; paint-order:stroke; stroke:var(--t08-halo); stroke-width:4px; stroke-linejoin:round}
+    .t08-baum .t08-astp.t08-neu{animation:t08-glow 2.6s ease-out}
+    .t08-baum .t08-box{fill:var(--board); stroke:var(--line); stroke-width:1.2}
+    .fstage .t08-baum .t08-box{fill:var(--surface)}
+    .t08-baum .an > .t08-box{fill:var(--lit); stroke:var(--accent); stroke-width:2}
+    .t08-baum .mit > .t08-box{stroke:var(--accent); stroke-dasharray:4 3}
+    .t08-baum .t08-dim{opacity:.35}
+    .t08-baum [data-blatt]{cursor:pointer}
+    @keyframes t08-glow{0%,55%{stroke:var(--lit)}100%{stroke:var(--t08-halo)}}
+
+    /* Baum-Labor */
+    .t08-legende{font-size:.95rem}
+    .t08-legende b{color:var(--const); font-family:var(--f-math); font-style:italic}
+    .t08-zahl{font:inherit; font-family:var(--f-math); font-size:1.05rem; width:6.5ch; min-height:38px; padding:4px 6px; text-align:right;
+      border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font-variant-numeric:tabular-nums}
+    .t08-zahl:hover{border-color:var(--accent)}
+    .t08-zahl[aria-invalid="true"]{border-color:var(--bad); background:var(--bad-bg)}
+    .t08-gruppe{display:flex; flex-direction:column; gap:6px}
+    .t08-gruppe .hint{margin:0}
+    .t08-zelle{font:inherit; font-variant-numeric:tabular-nums; border:0; background:transparent; color:var(--ink); padding:4px 6px; border-radius:6px; min-height:34px; min-width:3.5em}
+    .t08-zelle:hover{text-decoration:underline; text-underline-offset:3px}
+    .vierfelder td.t08-mit{box-shadow:inset 0 0 0 2px var(--accent)}
+    .t08-vf{width:7.5ch}
+    .t08-checks{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; font-size:.95rem}
+    .t08-checks li{padding:6px 10px; border-radius:8px; background:var(--board)}
+    .t08-checks .t08-ok{color:var(--ok); font-weight:700}
+    .t08-checks .t08-nein{color:var(--bad); font-weight:700}
+    .t08-um-form{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(150px,100%),1fr)); gap:10px}
+    .t08-um-form label{display:flex; flex-direction:column; gap:4px; font-weight:600; font-size:.92rem}
+    .t08-um-form .t08-zahl{width:100%; max-width:9ch}
+    .t08-um-form .t08-zahl.richtig{border-color:var(--ok); background:var(--ok-bg)}
+    .t08-um-form .t08-zahl.falsch{border-color:var(--bad); background:var(--bad-bg)}
+    .t08-liste{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px; font-weight:400}
+    /* Formelzeile aus mehreren Einzelformeln darf umbrechen */
+    .t08-umbruch{white-space:normal}
+
+    /* Schmale Bildschirme: Tafeln enger, Rechenzeilen im Film etwas kleiner */
+    @media (max-width: 480px){
+      .vierfelder.t08-eng th, .vierfelder.t08-eng td{padding:6px 6px}
+      .t08-eng .t08-zelle{min-width:0; padding:4px 2px}
+      .fstage .t08-fz:not(.t08-text){font-size:.82em}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .t08-baum .t08-astp.t08-neu{animation:none; stroke:var(--lit)}
+    }
+  </style>
+</head>
+<body data-fach="mstw" data-thema="08-laplace-bedingte-wahrscheinlichkeit">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V2/V3 · Laplace und bedingte Wahrscheinlichkeit</span>
+    <h1>Laplace, Ereignisbäume und bedingte Wahrscheinlichkeit</h1>
+    <p class="lead">Hier lernst du, Wahrscheinlichkeiten zu zählen, mehrstufige Zufallsexperimente mit einem Baum zu rechnen und Fragen der Art «Wie wahrscheinlich ist A, wenn ich schon weiss, dass B passiert ist?» zu beantworten. Am Schluss löst du eine typische Prüfungsaufgabe: Baum zeichnen, rückwärts fragen, Satz von Bayes. Unterstrichene und farbige Stellen kannst du anklicken oder mit der Maus berühren.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t08-ziele">
+        <li>Laplace-Wahrscheinlichkeiten mit «günstige durch mögliche» berechnen und prüfen, ob das Modell überhaupt passt,</li>
+        <li>einen Ereignisbaum zeichnen und mit den Pfadregeln rechnen,</li>
+        <li>\(P(A \mid B)\) richtig lesen, mit Satz 2.53 berechnen und von \(P(B \mid A)\) unterscheiden,</li>
+        <li>prüfen, ob zwei Ereignisse unabhängig sind,</li>
+        <li>rückwärts rechnen: totale Wahrscheinlichkeit, Satz von Bayes, Vierfeldertafel.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> «Baum zeichnen, dann rückwärts fragen» ist typischer Prüfungsstoff. In der exemplarischen Modulschlussprüfung ist es Aufgabe 4b (4 Punkte). Der Lösungsfilm unten zeigt genau dieses Muster mit eigenen Zahlen. Auch Aufgabe 5b baut auf dieser Station auf: «Viele unabhängige Versuche, kein einziger Treffer» ist ein einziger Pfad im Baum, also Pfadregel 1. In Station 11 lernst du dafür die Binomialverteilung.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#laplace"><b>1</b>Laplace</a>
+    <a href="#baum"><b>2</b>Baum</a>
+    <a href="#bedingt"><b>3</b>Bedingt</a>
+    <a href="#bayes"><b>4</b>Bayes</a>
+    <a href="#labor"><b>5</b>Labor</a>
+    <a href="#uebungen"><b>6</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Ein <b>Zufallsexperiment</b> ist ein Vorgang mit mehreren möglichen Ausgängen, bei dem du vorher nicht weisst, welcher eintritt: ein Würfelwurf, eine Ziehung aus einer Urne, eine Qualitätskontrolle. Ein einzelner Ausgang heisst <b>Ergebnis</b>, eine Sammlung von Ergebnissen <b>Ereignis</b> (das kennst du aus Station 7). Für diese Station brauchst du fünf weitere Begriffe.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Laplace = fairer Zufall</span><span class="ex"><span class="fn">P</span>(«6») = 1/6</span><p>Alle Ergebnisse sind gleich wahrscheinlich, wie gleich grosse Lose in einer Trommel. Dann zählst du nur noch: günstige durch mögliche.</p></div>
+      <div class="concept"><span class="tag">Mehrstufig = Zufall in Etappen</span><span class="ex">1. Kugel, dann 2. Kugel</span><p>Wie eine Wanderung mit Wegweisern: An jeder Kreuzung entscheidet der Zufall neu. Jede Kreuzung ist eine Stufe.</p></div>
+      <div class="concept"><span class="tag">Baum = Karte aller Wege</span><span class="ex">Wurzel → Ast → Blatt</span><p>Jeder Weg von der Wurzel bis ganz nach rechts heisst Pfad und ist ein mögliches Ergebnis. Auf jedem Ast steht seine Wahrscheinlichkeit.</p></div>
+      <div class="concept"><span class="tag">Bedingt = mit Vorwissen</span><span class="ex"><span class="fn">P</span>(<span class="c">A</span> | <span class="c">B</span>)</span><p>Die Chance für <span class="c">A</span>, wenn du schon weisst, dass <span class="c">B</span> passiert ist. Wie die Regenwahrscheinlichkeit, wenn schon dunkle Wolken da sind. Der Strich heisst «gegeben».</p></div>
+      <div class="concept"><span class="tag">Unabhängig = ohne Gedächtnis</span><span class="ex"><span class="fn">P</span>(<span class="c">A</span> | <span class="c">B</span>) = <span class="fn">P</span>(<span class="c">A</span>)</span><p>Das Wissen über <span class="c">B</span> ändert nichts an <span class="c">A</span>. Eine Münze weiss nicht, was sie beim letzten Wurf gezeigt hat.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Hat der Zufall ein Gedächtnis?</h3>
+      <p class="hint">Frag dich jedes Mal: Ändert das Wissen über das eine Ereignis die Chance für das andere? Wenn ja, sind die Ereignisse abhängig. Das gilt für zwei Vorgänge nacheinander und für zwei Eigenschaften desselben Wurfs.</p>
+      <div id="t08-sortierer-1"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Laplace ===== -->
+  <section id="laplace">
+    <span class="eyebrow">Schritt 1 · Wörterbuch und Laplace (Skript WT Kap. 2.7)</span>
+    <h2>Zählen, wenn alles gleich wahrscheinlich ist</h2>
+    <p class="prose">Bevor du rechnest, legst du fest, was jedes Symbol bedeutet. Die Tabelle gilt für die ganze Station. Die Farbe zeigt die Art: Variablen blau, feste Mengen orange, die Funktion <span class="fn">P</span> grün.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="v">ω</span></td><td><span class="kind kind-v">Variable</span></td><td>ein einzelnes Ergebnis, ein Platzhalter</td></tr>
+          <tr><td><span class="c">M</span></td><td><span class="kind kind-c">Konstante</span></td><td>Ergebnismenge: alle möglichen Ergebnisse. So schreiben Skript und Folien. Viele Bücher schreiben <span class="c">Ω</span>. Gleiche Sache.</td></tr>
+          <tr><td><span class="c">A</span>, <span class="c">B</span></td><td><span class="kind kind-c">Konstante</span></td><td>Ereignisse, also Teilmengen von <span class="c">M</span></td></tr>
+          <tr><td><span class="c">Ā</span></td><td><span class="kind kind-c">Konstante</span></td><td>Gegenereignis «nicht <span class="c">A</span>»</td></tr>
+          <tr><td><span class="op">|</span><span class="c">A</span><span class="op">|</span></td><td><span class="kind kind-op">Operator</span></td><td>Anzahl Elemente von <span class="c">A</span> (Mächtigkeit). Kurz: <i>g</i> = |<span class="c">A</span>| günstige, <i>m</i> = |<span class="c">M</span>| mögliche Fälle</td></tr>
+          <tr><td><span class="c">A</span> <span class="op">∩</span> <span class="c">B</span></td><td><span class="kind kind-op">Operator</span></td><td>«<span class="c">A</span> und <span class="c">B</span>»: beide treten ein</td></tr>
+          <tr><td><span class="fn">P</span>(<span class="c">A</span>)</td><td><span class="kind kind-fn">Funktion</span></td><td>Wahrscheinlichkeit von <span class="c">A</span>, eine Zahl zwischen 0 und 1</td></tr>
+          <tr><td><span class="fn">P</span>(<span class="c">A</span> | <span class="c">B</span>)</td><td><span class="kind kind-fn">Funktion</span></td><td>bedingte Wahrscheinlichkeit «<span class="c">A</span>, gegeben <span class="c">B</span>». Was du schon weisst, steht hinter dem Strich.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><b>Def. 2.36 (in eigenen Worten):</b> Ein Zufallsexperiment heisst <b>Laplace-Experiment</b>, wenn es nur endlich viele Ergebnisse hat und jedes davon gleich wahrscheinlich ist. Typisch sind ideale Spielsituationen: faire Münze, fairer Würfel, eine Kugel aus einer gut gemischten Urne. <b>Satz 2.38</b> sagt dann, wie du rechnest:</p>
+    <div class="board">
+      $$\htmlClass{fn}{P}(\htmlClass{c}{A}) = \frac{|\htmlClass{c}{A}|}{|\htmlClass{c}{M}|} = \frac{g}{m}$$
+      $$\frac{g}{m} = \frac{\text{Anzahl günstige Fälle}}{\text{Anzahl mögliche Fälle}}$$
+    </div>
+    <div class="note falle"><b>Falle:</b> Die Formel gilt nur, wenn die Ergebnisse, die du zählst, wirklich gleich wahrscheinlich sind. Ziehst du aus 6 weissen und 4 schwarzen Kugeln zwei ohne Zurücklegen, sind die Farbfolgen ww, ws, sw, ss <b>nicht</b> gleich wahrscheinlich. Mit Laplace käme für jede \(\tfrac14\) heraus. Das ist falsch. Solche Experimente rechnest du mit dem Baum (Schritt 2). Das Skript weist in Beispiel 2.37 genau darauf hin. Auch mit Zurücklegen sind die vier Farbfolgen nicht gleich wahrscheinlich, weil die Urne mehr weisse als schwarze Kugeln enthält.</div>
+    <p class="prose">Klick dich mit «Weiter» durch das Kernbeispiel. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf, und umgekehrt.</p>
+    <div id="t08-stepper-laplace"></div>
+  </section>
+
+  <!-- ===== 2 · Ereignisbaum ===== -->
+  <section id="baum">
+    <span class="eyebrow">Schritt 2 · Mehrstufige Zufallsexperimente (Skript WT Kap. 2.9)</span>
+    <h2>Der Ereignisbaum und die zwei Pfadregeln</h2>
+    <p class="prose">Viele Experimente laufen in Stufen ab: erste Kugel, dann zweite Kugel. Manchmal gibt es keine zeitliche Reihenfolge, etwa wenn drei Jäger gleichzeitig schiessen. Du zerlegst trotzdem in Stufen: erster Jäger, zweiter Jäger, dritter Jäger. Darstellen kannst du das mit einem <b>Ereignisbaum</b> (Def. 2.41).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Begriff</th><th>Bedeutung im Baum</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Wurzel</th><td>der Startpunkt ganz links, bevor etwas passiert ist</td></tr>
+          <tr><th scope="row">Ast</th><td>eine Verbindungslinie. Auf ihr steht die Wahrscheinlichkeit dieses Schritts.</td></tr>
+          <tr><th scope="row">Knoten</th><td>ein Zwischenstand nach einer Stufe, zum Beispiel «erste Kugel weiss»</td></tr>
+          <tr><th scope="row">Blatt</th><td>ein Endpunkt ganz rechts. Dort ist das ganze Experiment fertig.</td></tr>
+          <tr><th scope="row">Pfad</th><td>der ganze Weg von der Wurzel bis zu einem Blatt. Jeder Pfad ist ein Ergebnis des mehrstufigen Experiments (Bem. 2.45).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card stack">
+      <h3>Mit oder ohne Zurücklegen? (Bsp. 2.46 und 2.47)</h3>
+      <p class="hint">Urne mit 6 weissen (w) und 4 schwarzen (s) Kugeln, zwei Züge. Das Skript zieht drei Kugeln. Hier sind es zwei, damit der Baum auch auf dem Handy lesbar bleibt. Die Regeln sind dieselben. Hervorgehoben ist der Pfad «zweimal weiss».</p>
+      <div class="modes" role="group" aria-label="Art des Ziehens">
+        <button type="button" class="btn on" aria-pressed="true" data-t08-zug="ohne">ohne Zurücklegen (Bsp. 2.47)</button>
+        <button type="button" class="btn" aria-pressed="false" data-t08-zug="mit">mit Zurücklegen (Bsp. 2.46)</button>
+      </div>
+      <figure class="diagramm">
+        <div id="t08-anatomie"></div>
+        <figcaption>Links die Wurzel, in der Mitte die Knoten der ersten Stufe, rechts die Blätter. In den Kästchen steht die Wahrscheinlichkeit des ganzen Pfades.</figcaption>
+      </figure>
+      <p class="explain" id="t08-anatomie-text" aria-live="polite"></p>
+    </div>
+    <p class="prose">Für das Rechnen im Baum gibt es zwei Regeln:</p>
+    <div class="board">
+      <p><b>Pfadregel 1 (Satz 2.43, Multiplikationssatz):</b> Die Wahrscheinlichkeit eines Pfades ist das Produkt der Wahrscheinlichkeiten entlang des Pfades.</p>
+      $$P(ww) = \tfrac{6}{10} \cdot \tfrac{5}{9} = \tfrac{30}{90}$$
+      <p><b>Pfadregel 2 (Satz 2.44, Additionssatz):</b> Die Wahrscheinlichkeiten aller Pfade eines Baums ergeben zusammen 1.</p>
+      $$\tfrac{30}{90} + \tfrac{24}{90} + \tfrac{24}{90} + \tfrac{12}{90} = 1$$
+    </div>
+    <div class="note"><b>Skript und Lehrbuch:</b> Das Skript formuliert Pfadregel 2 als «alle Pfade zusammen ergeben 1». Viele Lehrbücher formulieren sie so: «Die Wahrscheinlichkeit eines Ereignisses ist die Summe der Wahrscheinlichkeiten seiner Pfade.» Beides folgt aus demselben Grund: Verschiedene Pfade schliessen sich gegenseitig aus, also darfst du ihre Wahrscheinlichkeiten addieren (Axiom III). In Aufgaben brauchst du fast immer die Lehrbuch-Form. Die Skript-Form ist deine Kontrolle.</div>
+    <div class="note tipp"><b>Tipp (Bem. 2.45):</b> Zeichne nur den Teil des Baums, den du für die Frage brauchst. Steht in der Frage «mindestens» oder «wenigstens», rechnest du meist schneller über das Gegenereignis: \(P(\text{mindestens eins}) = 1 - P(\text{keins})\).</div>
+    <div id="t08-stepper-baum"></div>
+  </section>
+
+  <!-- ===== 3 · Bedingte Wahrscheinlichkeit ===== -->
+  <section id="bedingt">
+    <span class="eyebrow">Schritt 3 · Bedingte Wahrscheinlichkeit und Unabhängigkeit (Skript WT Kap. 2.10)</span>
+    <h2>Wenn du schon etwas weisst</h2>
+    <p class="prose"><b>Def. 2.48 (in eigenen Worten):</b> Die Wahrscheinlichkeit für \(A\), wenn du bereits weisst, dass \(B\) eingetreten ist, heisst <b>bedingte Wahrscheinlichkeit</b> von \(A\) unter der Bedingung \(B\). Du schreibst \(P(A \mid B)\) und sprichst «P von A, gegeben B» (Bem. 2.49). Das Vorwissen \(B\) schränkt die möglichen Ergebnisse ein: \(B\) wird die neue Ergebnismenge.</p>
+    <div id="t08-stepper-bedingt"></div>
+    <p class="prose">Abzählen geht nur bei gleich wahrscheinlichen Ergebnissen. Allgemein rechnest du mit <b>Satz 2.53</b>: Wie gross ist der Anteil von «\(A\) und \(B\)» an ganz \(B\)?</p>
+    <div class="board">
+      $$P(A \mid B) = \frac{P(A \cap B)}{P(B)}$$
+      <p>Das gilt für \(P(B) \neq 0\). Umgestellt ergibt das den <b>Multiplikationssatz</b>. Laut Bem. 2.54 ist das genau Pfadregel 1, nur mit bedingten Wahrscheinlichkeiten geschrieben:</p>
+      $$\begin{aligned} P(A \cap B) &= P(A) \cdot P(B \mid A) \\ &= P(B) \cdot P(A \mid B) \end{aligned}$$
+    </div>
+    <div class="note"><b>Merke:</b> Die Äste der zweiten Stufe eines Baums sind immer bedingte Wahrscheinlichkeiten. Der Ast von «1. Kugel weiss» zu «2. Kugel weiss» trägt \(P(\text{2. weiss} \mid \text{1. weiss}) = \tfrac59\). Du hast also schon in Schritt 2 mit bedingten Wahrscheinlichkeiten gerechnet, ohne sie so zu nennen.</div>
+    <div class="card stack">
+      <h3>Kurz üben: Welche Wahrscheinlichkeit ist gemeint?</h3>
+      <p class="hint">\(K\) = «Person ist krank», \(T\) = «Test ist positiv». Achte darauf, was schon bekannt ist. Das kommt hinter den Strich.</p>
+      <div id="t08-sortierer-2"></div>
+    </div>
+    <p class="prose"><b>Def. 2.56 (in eigenen Worten):</b> Zwei Ereignisse \(A\) und \(B\) heissen <b>(stochastisch) unabhängig</b>, wenn das Eintreten des einen die Wahrscheinlichkeit des anderen nicht verändert: \(P(A \mid B) = P(A)\) beziehungsweise \(P(B \mid A) = P(B)\). Ziehen mit Zurücklegen erzeugt unabhängige Ereignisse (Bsp. 2.57). Die Lottozahlen dieser Woche hängen nicht von denen der letzten Woche ab (Bsp. 2.58).</p>
+    <div class="board">
+      $$\begin{gathered} A, B \text{ unabhängig} \\ \iff P(A \mid B) = P(A) \\ \iff P(A \cap B) = P(A) \cdot P(B) \end{gathered}$$
+    </div>
+    <div class="note"><b>Skript, Vorlesung und Lehrbuch:</b> Das Skript definiert Unabhängigkeit über \(P(A \mid B) = P(A)\). In der Vorlesung (Ott, S2-V3) wird daraus die Produktform \(P(A \cap B) = P(A) \cdot P(B)\) hergeleitet, und viele Lehrbücher definieren Unabhängigkeit direkt so. Für \(P(B) &gt; 0\) ist das dasselbe: Setz \(P(A \mid B) = P(A)\) in Satz 2.53 ein und multipliziere mit \(P(B)\). Die Produktform ist zum Prüfen oft bequemer. Sie ist auch die Idee hinter dem Chi-Quadrat-Unabhängigkeitstest (Station 17): Bei Unabhängigkeit ist jedes Feld einer Tafel gleich dem Produkt seiner Randanteile.</div>
+    <div class="note falle"><b>Falle:</b> «Unvereinbar» (\(A \cap B = \{\}\)) heisst <b>nicht</b> «unabhängig». Im Gegenteil: Weisst du, dass \(B\) eingetreten ist, ist \(A\) unmöglich. Dann gilt \(P(A \mid B) = 0\), obwohl \(P(A) &gt; 0\). Unvereinbare Ereignisse mit positiver Wahrscheinlichkeit sind immer abhängig.</div>
+    <div id="t08-frage-unabh"></div>
+  </section>
+
+  <!-- ===== 4 · Totale Wahrscheinlichkeit und Bayes ===== -->
+  <section id="bayes">
+    <span class="eyebrow">Schritt 4 · Rückwärts rechnen</span>
+    <h2>Totale Wahrscheinlichkeit, Bayes und die Vierfeldertafel</h2>
+    <p class="prose">Im Baum rechnest du vorwärts: zuerst die Ursache (Lieferant, Urne, defekt oder nicht), dann die Beobachtung (Testergebnis, Farbe). In Prüfungen wird oft <b>rückwärts</b> gefragt: Die Beobachtung ist bekannt, gesucht ist die Wahrscheinlichkeit der Ursache. Dafür brauchst du zwei Schritte.</p>
+    <div class="board">
+      <p><b>1. Totale Wahrscheinlichkeit:</b> Alle Pfade addieren, die bei \(B\) enden.</p>
+      $$\begin{aligned} P(B) &= P(A) \cdot P(B \mid A) \\ &\quad + P(\bar A) \cdot P(B \mid \bar A) \end{aligned}$$
+      <p>Bei mehr als zwei Ästen in der ersten Stufe (\(A_1, \dots, A_n\)):</p>
+      $$P(B) = \sum_{i=1}^{n} P(A_i) \cdot P(B \mid A_i)$$
+      <p><b>2. Satz von Bayes:</b> Gesuchter Pfad geteilt durch alle Pfade zu \(B\).</p>
+      $$P(A \mid B) = \frac{P(A) \cdot P(B \mid A)}{P(B)}$$
+    </div>
+    <div class="note"><b>Skript und Lehrbuch:</b> Die Namen «Satz der totalen Wahrscheinlichkeit» und «Satz von Bayes» kommen im Skript nicht vor. Das Skript löst dieselben Aufgaben (2.21b, 2.22b, 2.26) mit Baum, Pfadregeln und Satz 2.53. Das ist exakt dieselbe Rechnung: Der Zähler ist Pfadregel 1, der Nenner ist die Summe der Pfade, der Bruch ist Satz 2.53. Die Lehrbuch-Namen helfen dir beim Nachschlagen, in der Prüfung zählt der Lösungsweg.</div>
+    <div class="note tipp"><b>So bewertet die Musterlösung:</b> In der Musterlösung zu Aufgabe 4b der exemplarischen Modulschlussprüfung gibt es je einen Punkt für den Baum, für \(P(\text{Bedingung})\) als Summe der Pfade, für den Ansatz mit Satz 2.53 und für das Resultat. Schreib also alle vier Teile hin. Ein Trick aus der Musterlösung zu Skript-Aufgabe 2.21: Hast du in Teil a schon \(P(\text{schwarz})\) berechnet, bekommst du die Bedingung «weiss» in Teil b geschenkt als \(1 - P(\text{schwarz})\).</div>
+    <p class="prose">Das Kernbeispiel ist Aufgabe 2.22 aus dem Skript, in eigenen Worten.</p>
+    <div id="t08-stepper-bayes"></div>
+    <p class="hint">Das Endresultat 0.5103 stimmt mit dem Ergebnis in Anhang A des Skripts überein. Einen ausführlichen Lösungsweg zu Aufgabe 2.22 gibt es in den Unterlagen nicht. Der Weg oben ist eine eigene Darstellung, nicht vom Dozenten bestätigt. Er folgt der Musterlösung zu Aufgabe 2.21b und zur Prüfungsaufgabe 4b.</p>
+
+    <h3>Dasselbe als Vierfeldertafel</h3>
+    <p class="prose">Stell dir 10'000 Bauteile vor und verteile sie auf die vier Kombinationen. Die vier inneren Felder sind genau die vier Pfade des Baums, mal 10'000. Die Randsummen sind die einfachen Wahrscheinlichkeiten. Mit ganzen Zahlen sieht man sofort, warum das Resultat so klein ist.</p>
+    <div class="card tablebox">
+      <table class="vierfelder t08-eng">
+        <thead><tr><th scope="col"><span class="sr-only">Zustand</span></th><th scope="col">E: Alarm</th><th scope="col">Ē: kein Alarm</th><th scope="col">Summe</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">D: defekt</th><td class="an">495</td><td>5</td><td class="summe">500</td></tr>
+          <tr><th scope="row">D̄: gut</th><td>475</td><td>9'025</td><td class="summe">9'500</td></tr>
+          <tr><th scope="row">Summe</th><td class="summe t08-mit">970</td><td class="summe">9'030</td><td class="summe">10'000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Von 970 Alarmen sind 495 echt: \(P(D \mid E) = \tfrac{495}{970} \approx 0.5103\). So liest du jede bedingte Wahrscheinlichkeit aus der Tafel: <b>Feld durch Randsumme der Bedingung</b>. Die Bedingung \(E\) ist eine Spalte, also teilst du durch die Spaltensumme.</p>
+    <h3>Der umgedrehte Baum</h3>
+    <p class="prose">Bayes heisst anschaulich: Baum umdrehen. Im umgedrehten Baum kommt zuerst die Beobachtung (Alarm ja oder nein), dann der Zustand (defekt oder gut). Die Pfade bleiben dieselben, nur die Äste ändern sich. Der Ast von \(E\) nach \(D\) ist genau das gesuchte \(P(D \mid E)\). Im Labor (Schritt 5) kannst du Baum, Tafel und umgedrehten Baum nebeneinander vergleichen und selbst ausfüllen.</p>
+    <div class="note tipp"><b>Taschenrechner TI-Nspire:</b> Für Bayes gibt es keinen eigenen Befehl. Tipp den ganzen Bruch in einer Zeile ein, zum Beispiel <span class="keine-formel">(0.05·0.99)/(0.05·0.99+0.95·0.05)</span>. Mit ctrl + enter erhältst du den Dezimalwert. Ist in der Prüfung der Lösungsweg verlangt, schreibst du Baum, \(P(E)\) und den Ansatz trotzdem hin.</div>
+  </section>
+
+  <!-- ===== 5 · Themeneigene Interaktion: Baum-Labor ===== -->
+  <section id="labor">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Das Baum-Labor: vorwärts, Tafel, rückwärts</h2>
+    <p class="prose">Wähle ein Beispiel oder stell eigene Wahrscheinlichkeiten ein. Klicke auf ein Blatt des Baums oder einen Pfad-Knopf: Du siehst die Rechnung. Schalte zwischen Baum, Vierfeldertafel und umgedrehtem Baum um. Die Kontrollen unten zeigen, ob alle Zahlen zusammenpassen. In Tafel und umgedrehtem Baum kannst du die Zahlen auch selbst ausfüllen.</p>
+    <div class="card stack t08-labor">
+      <div class="t08-gruppe">
+        <h3>1 · Beispiel wählen</h3>
+        <div class="modes" role="group" aria-label="Beispiel wählen" id="t08-vorlagen">
+          <button type="button" class="btn on" aria-pressed="true" data-t08-vorlage="kontrolle">Endkontrolle (2.22)</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-vorlage="spam">Spamfilter</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-vorlage="urne">Urne (Bsp. 2.55)</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-vorlage="muenze">Zwei Münzwürfe</button>
+        </div>
+        <p class="t08-legende" id="t08-legende"></p>
+      </div>
+      <div class="t08-gruppe">
+        <h3>2 · Wahrscheinlichkeiten einstellen</h3>
+        <p class="hint">Regler schieben oder Zahl eintippen (Dezimalzahl, Bruch wie 5/9 oder Prozent wie 5%).</p>
+        <div class="regler">
+          <label for="t08-pa">P(A)</label>
+          <input type="range" id="t08-pa" min="0" max="1" step="0.001" value="0.05">
+          <input type="text" inputmode="decimal" class="t08-zahl" id="t08-pa-zahl" aria-label="P(A) als Zahl" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="regler">
+          <label for="t08-pba">P(B | A)</label>
+          <input type="range" id="t08-pba" min="0" max="1" step="0.001" value="0.99">
+          <input type="text" inputmode="decimal" class="t08-zahl" id="t08-pba-zahl" aria-label="P(B gegeben A) als Zahl" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="regler">
+          <label for="t08-pbna">P(B | Ā)</label>
+          <input type="range" id="t08-pbna" min="0" max="1" step="0.001" value="0.05">
+          <input type="text" inputmode="decimal" class="t08-zahl" id="t08-pbna-zahl" aria-label="P(B gegeben nicht A) als Zahl" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="t08-gruppe">
+        <h3>3 · Ansicht</h3>
+        <div class="modes" role="group" aria-label="Ansicht wählen" id="t08-ansichten">
+          <button type="button" class="btn on" aria-pressed="true" data-t08-ansicht="baum">Baum</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-ansicht="tafel">Vierfeldertafel</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-ansicht="um">Umgedrehter Baum</button>
+        </div>
+      </div>
+
+      <div id="t08-v-baum" class="stack">
+        <figure class="diagramm">
+          <div id="t08-baum-vor"></div>
+          <figcaption>Vorwärtsbaum: zuerst <i>A</i> oder <i>Ā</i>, dann <i>B</i> oder <i>B̄</i>. Klicke auf ein Kästchen rechts.</figcaption>
+        </figure>
+      </div>
+
+      <div id="t08-v-tafel" class="stack" hidden>
+        <div class="row">
+          <button type="button" class="btn" id="t08-anzahl" aria-pressed="false">Als Anzahl von 10'000 zeigen</button>
+          <button type="button" class="btn" id="t08-tafel-ueben" aria-pressed="false">Selbst ausfüllen</button>
+        </div>
+        <div class="tablebox" id="t08-tafel"></div>
+        <div class="stack" id="t08-tafel-uebung" hidden>
+          <p class="hint">Trag die vier inneren Felder und die beiden Spaltensummen ein, auf vier Nachkommastellen. Die Zeilensummen sind gegeben.</p>
+          <div class="row">
+            <button type="button" class="btn primary" id="t08-tafel-pruefen">Prüfen</button>
+            <button type="button" class="btn" id="t08-tafel-loesung">Lösung zeigen</button>
+          </div>
+          <div class="rueckmeldung" id="t08-tafel-fb" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div id="t08-v-um" class="stack" hidden>
+        <div class="row">
+          <button type="button" class="btn" id="t08-um-ueben" aria-pressed="false">Selbst ausfüllen</button>
+        </div>
+        <figure class="diagramm">
+          <div id="t08-baum-um"></div>
+          <figcaption>Umgedrehter Baum: zuerst <i>B</i> oder <i>B̄</i>, dann <i>A</i> oder <i>Ā</i>. Die Kästchen rechts sind dieselben Pfade wie im Vorwärtsbaum.</figcaption>
+        </figure>
+        <div class="stack" id="t08-um-uebung" hidden>
+          <p class="hint">Die Pfadwerte rechts sind gegeben. Berechne daraus die Äste des umgedrehten Baums, auf vier Nachkommastellen.</p>
+          <div class="t08-um-form">
+            <label for="t08-um-pb">P(B)<input type="text" inputmode="decimal" class="t08-zahl" id="t08-um-pb" autocomplete="off" spellcheck="false"></label>
+            <label for="t08-um-pab">P(A | B)<input type="text" inputmode="decimal" class="t08-zahl" id="t08-um-pab" autocomplete="off" spellcheck="false"></label>
+            <label for="t08-um-pabn">P(A | B̄)<input type="text" inputmode="decimal" class="t08-zahl" id="t08-um-pabn" autocomplete="off" spellcheck="false"></label>
+          </div>
+          <div class="row">
+            <button type="button" class="btn primary" id="t08-um-pruefen">Prüfen</button>
+            <button type="button" class="btn" id="t08-um-loesung">Lösung zeigen</button>
+          </div>
+          <div class="rueckmeldung" id="t08-um-fb" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="t08-gruppe">
+        <h3>4 · Pfad oder Ereignis wählen</h3>
+        <div class="row" role="group" aria-label="Pfad oder Ereignis wählen" id="t08-wahl">
+          <button type="button" class="btn" aria-pressed="false" data-t08-wahl="11">A ∩ B</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-wahl="10">A ∩ B̄</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-wahl="01">Ā ∩ B</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-wahl="00">Ā ∩ B̄</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-wahl="pb">P(B): totale W.</button>
+          <button type="button" class="btn" aria-pressed="false" data-t08-wahl="bayes">P(A | B): Bayes</button>
+        </div>
+      </div>
+      <div class="card info" id="t08-info" aria-live="polite"></div>
+      <div class="t08-gruppe">
+        <h3>Passen die Zahlen zusammen?</h3>
+        <ul class="t08-checks" id="t08-checks"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 6 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zuerst selbst rechnen, dann prüfen. Tipps und Lösungsweg deckst du einzeln auf. Alle Aufgaben haben eigene Zahlen. Die Lösungen sind eigene Lösungen, doppelt nachgerechnet, aber nicht vom Dozenten bestätigt. Die Aufgaben im Prüfungsstil folgen dem Lösungsweg der Musterlösungen zu Aufgabe 4b der exemplarischen Modulschlussprüfung und zu Aufgabe 2b des Lernblock-Tests S2-LB1.</p>
+    <div id="t08-ue-1"></div>
+    <div id="t08-ue-2"></div>
+    <div id="t08-ue-3"></div>
+    <div id="t08-ue-9"></div>
+    <div id="t08-ue-10"></div>
+    <div id="t08-ue-4"></div>
+    <div id="t08-ue-5"></div>
+    <div id="t08-ue-6"></div>
+    <div id="t08-ue-7"></div>
+    <div id="t08-ue-8"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Bayes-Aufgabe am Stück gelöst</h2>
+    <p class="prose">Eine Prüfungsaufgabe im Stil von Aufgabe 4b der exemplarischen Modulschlussprüfung, mit eigenen Zahlen. Der Lösungsweg folgt der Musterlösung zu 4b, das Resultat ist eine eigene Lösung (nachgerechnet, nicht vom Dozenten bestätigt). Drück auf Play. Der Film startet sofort, der farbige Balken zeigt, wann der nächste Schritt kommt. Gelb leuchtet, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t08-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t08-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Laplace</b> (Def. 2.36, Satz 2.38): \(P(A) = \tfrac{g}{m}\), aber nur bei endlich vielen, gleich wahrscheinlichen Ergebnissen.</li>
+      <li><b>Baum:</b> Entlang eines Pfades multiplizieren (Pfadregel 1). Pfade, die zum selben Ereignis gehören, addieren. Alle Pfade zusammen ergeben 1 (Pfadregel 2).</li>
+      <li><b>\(P(A \mid B)\)</b> heisst «\(A\), gegeben \(B\)». Was du schon weisst, steht hinter dem Strich. \(P(A \mid B)\) und \(P(B \mid A)\) sind verschiedene Zahlen.</li>
+      <li><b>Unabhängig</b> heisst: \(P(A \mid B) = P(A)\), gleichwertig \(P(A \cap B) = P(A) \cdot P(B)\). Unvereinbar ist etwas ganz anderes.</li>
+      <li><b>Rückwärts fragen</b> (Bayes): gesuchter Pfad geteilt durch alle Pfade zur Bedingung. In der Vierfeldertafel: Feld durch Randsumme der Bedingung.</li>
+    </ul>
+    <div class="board">
+      $$P(A) = \frac{|A|}{|M|}$$
+      $$P(A \mid B) = \frac{P(A \cap B)}{P(B)}$$
+      $$P(A \cap B) = P(A) \cdot P(B \mid A)$$
+      $$P(B) = \sum_{i} P(A_i) \cdot P(B \mid A_i)$$
+      $$P(A_k \mid B) = \frac{P(A_k) \cdot P(B \mid A_k)}{P(B)}$$
+    </div>
+    <footer>Lernhilfe zu MSTW S2-V2/V3. Quellen: Skript «Einführung in die Wahrscheinlichkeitstheorie» (2018), Kap. 2.7–2.10 (Def. 2.36, Satz 2.38, Def. 2.41, Satz 2.43, Satz 2.44, Bem. 2.45, Bsp. 2.46–2.58, Def. 2.48, Satz 2.53, Def. 2.56); Folien Ott S2-V2 und S2-V3/4; Folien Koch S2-V3 und S2-Ü1; Lösungen Lernblock S2-LB1; Aufgabenskript Stützkurs; exemplarische Modulschlussprüfung, Aufgabe 4b (nur Aufgabentyp, eigene Zahlen). Alle Texte in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Achtung: nie Dollar direkt vor geschweifter Klammer (Interpolation).
+  const T = String.raw;
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  // Kumulative Zeilen für Stepper
+  const Z = function () { return Array.prototype.map.call(arguments, (z) => '<div class="t08-z">' + z + "</div>").join(""); };
+
+  /* =====================================================================
+     Ereignisbaum als SVG-Text (für Theorie, Labor und Film)
+     o.s1: [{ name, p }]            Knoten und Ast-Beschriftungen der 1. Stufe
+     o.s2: [[{ name, p }], …]       je Knoten der 1. Stufe die Blätter
+     o.ende: [Text]                 Pfadwert je Blatt (leer = kein Kästchen)
+     o.stufen: 1 | 2                nur 1. Stufe zeichnen oder beide
+     o.an, o.mit, o.dim: [Blattindex]  hervorgehoben, gestrichelt, blass
+     o.neu: ["s1", "s2", "s2:0:1", …]   Beschriftungen, die kurz leuchten
+     o.klick: true                  Blätter mit data-blatt (Klick im Labor)
+     ===================================================================== */
+  const XW = 14, X1 = 112, X2 = 206, XB = 226, WB = 90, ZEILE = 40, RAND = 22;
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function baumSvg(o) {
+    const s1 = o.s1, s2 = o.s2 || [], stufen = o.stufen || 2, ende = o.ende || [];
+    const an = o.an || [], mit = o.mit || [], dim = o.dim || [], neu = o.neu || [];
+    const blaetter = [];
+    s1.forEach((k, i) => (s2[i] || []).forEach((b, j) => blaetter.push({ i: i, j: j, b: b })));
+    const H = 2 * RAND + (blaetter.length - 1) * ZEILE;
+    const yBl = blaetter.map((_, k) => RAND + k * ZEILE);
+    const yS1 = s1.map((_, i) => {
+      const ys = yBl.filter((y, k) => blaetter[k].i === i);
+      return (Math.min.apply(null, ys) + Math.max.apply(null, ys)) / 2;
+    });
+    const yW = H / 2;
+    const hat = (liste, k) => liste.indexOf(k) >= 0;
+    const s1Hat = (liste, i) => blaetter.some((b, k) => b.i === i && hat(liste, k));
+    const istNeu = (key) => neu.some((t) => key === t || key.indexOf(t + ":") === 0);
+    const kl = (basis, istAn, istMit, istDim) => basis + (istAn ? " an" : istMit ? " mit" : "") + (istDim ? " t08-dim" : "");
+
+    function astLabel(x1, y1, x2, y2, text, key) {
+      if (text === "" || text === undefined || text === null) return "";
+      const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+      let x, y, anker;
+      if (Math.abs(y2 - y1) < 4) { x = mx; y = my - 7; anker = "middle"; }
+      else if (y2 < y1) { x = mx - 3; y = my - 6; anker = "end"; }
+      else { x = mx - 3; y = my + 15; anker = "end"; }
+      return '<text class="t08-astp' + (istNeu(key) ? " t08-neu" : "") + '" x="' + x + '" y="' + y + '" text-anchor="' + anker + '">' + esc(text) + "</text>";
+    }
+    let s = '<svg class="t08-baum" viewBox="0 0 320 ' + H + '" role="img" aria-label="' + esc(o.titel || "Ereignisbaum") + '">';
+    // Linien zuerst, damit Knoten darüber liegen
+    s1.forEach((k, i) => {
+      s += '<line class="' + kl("t08-ast", s1Hat(an, i), s1Hat(mit, i), dim.length && blaetter.every((b, kk) => b.i !== i || hat(dim, kk))) +
+        '" x1="' + XW + '" y1="' + yW + '" x2="' + X1 + '" y2="' + yS1[i] + '"/>';
+    });
+    if (stufen >= 2) {
+      blaetter.forEach((b, k) => {
+        s += '<line class="' + kl("t08-ast", hat(an, k), hat(mit, k), hat(dim, k)) + '" x1="' + X1 + '" y1="' + yS1[b.i] + '" x2="' + X2 + '" y2="' + yBl[k] + '"/>';
+      });
+    }
+    // Beschriftungen der Äste
+    s1.forEach((k, i) => { s += astLabel(XW, yW, X1, yS1[i], k.p, "s1:" + i); });
+    if (stufen >= 2) {
+      blaetter.forEach((b, k) => { s += astLabel(X1, yS1[b.i], X2, yBl[k], b.b.p, "s2:" + b.i + ":" + b.j); });
+    }
+    // Wurzel und Knoten
+    s += '<circle class="t08-wurzel" cx="' + XW + '" cy="' + yW + '" r="4"/>';
+    s1.forEach((k, i) => {
+      s += '<g><circle class="' + kl("t08-k", s1Hat(an, i), s1Hat(mit, i), false) + '" cx="' + X1 + '" cy="' + yS1[i] + '" r="12"/>' +
+        '<text x="' + X1 + '" y="' + (yS1[i] + 4.5) + '" text-anchor="middle">' + esc(k.name) + "</text></g>";
+    });
+    if (stufen >= 2) {
+      blaetter.forEach((b, k) => {
+        const zust = hat(an, k) ? " an" : hat(mit, k) ? " mit" : "";
+        s += "<g" + (o.klick ? ' data-blatt="' + k + '"' : "") + ' class="' + zust.trim() + (hat(dim, k) ? " t08-dim" : "") + '">';
+        s += '<circle class="' + kl("t08-k", hat(an, k), hat(mit, k), false) + '" cx="' + X2 + '" cy="' + yBl[k] + '" r="12"/>' +
+          '<text x="' + X2 + '" y="' + (yBl[k] + 4.5) + '" text-anchor="middle">' + esc(b.b.name) + "</text>";
+        if (ende[k] !== undefined && ende[k] !== "") {
+          s += '<g class="' + zust.trim() + '"><rect class="t08-box" x="' + XB + '" y="' + (yBl[k] - 12) + '" width="' + WB + '" height="24" rx="6"/>' +
+            '<text x="' + (XB + WB / 2) + '" y="' + (yBl[k] + 4.5) + '" text-anchor="middle">' + esc(ende[k]) + "</text></g>";
+        }
+        s += "</g>";
+      });
+    }
+    return s + "</svg>";
+  }
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t08-sortierer-1", {
+    kategorien: ["unabhängig", "abhängig"],
+    elemente: [
+      { html: "Zwei Münzwürfe nacheinander", kategorie: "unabhängig",
+        erklaerung: "Die Münze hat kein Gedächtnis. Der zweite Wurf ist wieder 50 zu 50, egal was vorher kam." },
+      { html: "Zwei Kugeln aus einer Urne ziehen, <b>ohne</b> Zurücklegen", kategorie: "abhängig",
+        erklaerung: "Nach dem ersten Zug fehlt eine Kugel. Die Chancen beim zweiten Zug hängen davon ab, welche Farbe fehlt (Bsp. 2.47)." },
+      { html: "Zwei Kugeln aus einer Urne ziehen, <b>mit</b> Zurücklegen", kategorie: "unabhängig",
+        erklaerung: "Die Urne ist vor jedem Zug wieder gleich. Darum sind die Züge unabhängig (Bsp. 2.46 und 2.57)." },
+      { html: "Lottozahlen diese Woche und letzte Woche", kategorie: "unabhängig",
+        erklaerung: "Die Kugeln erinnern sich nicht an die letzte Ziehung (Bsp. 2.58)." },
+      { html: "Erste Karte ein Ass, zweite Karte ein Ass (gleicher Stapel, ohne Zurücklegen)", kategorie: "abhängig",
+        erklaerung: "Ist die erste Karte ein Ass, liegen nur noch 3 Asse im Stapel. Die zweite Chance sinkt." },
+      { html: "Beim Würfeln: «eine 6» und «eine gerade Zahl» im selben Wurf", kategorie: "abhängig",
+        erklaerung: T`Weisst du «gerade», ist die 6 eine von nur drei Möglichkeiten: $P(6 \mid \text{gerade}) = \tfrac13 \neq \tfrac16$.` }
+    ]
+  });
+
+  /* ---------- Schritt 1: Laplace-Stepper ---------- */
+  const lp1 = T`$|M| = \htmlData{link=rad}{4} \cdot \htmlData{link=zwei}{4} = 16$`;
+  const lp2 = T`$\htmlData{link=zwei}{M = \{11, 12, \dots, 43, 44\}}$`;
+  const lp3 = T`$\htmlData{link=vier}{A = \{12, 24, 32, 44\}}$`;
+  const lp4 = T`$\htmlData{link=wk}{P(A)} = \dfrac{|A|}{|M|} = \dfrac{g}{m}$`;
+  const lp5 = T`$\htmlData{link=wk}{P(A)} = \dfrac{\htmlData{link=vier}{4}}{16} = 0.25$`;
+  L.stepper("#t08-stepper-laplace", {
+    titel: "Kernbeispiel 1 · Glücksrad (angelehnt an Stützkurs Aufgabe 35)",
+    text: 'Ein Glücksrad mit den <span data-link="rad">Ziffern 1, 2, 3 und 4</span> auf gleich grossen Feldern wird <span data-link="zwei">zweimal gedreht</span>. Die beiden Ziffern bilden eine zweistellige Zahl. Wie gross ist die <span data-link="wk">Wahrscheinlichkeit</span>, dass die Zahl <span data-link="vier">durch 4 teilbar</span> ist?',
+    schritte: [
+      { html: Z(NW(lp1)),
+        warum: "Gleich grosse Felder heisst: Jede Ziffer ist gleich wahrscheinlich. Jede erste Ziffer lässt sich mit jeder zweiten kombinieren, also 4 mal 4. Alle 16 Zahlen sind gleich wahrscheinlich, das Laplace-Modell passt." },
+      { html: Z(lp1, NW(lp2)),
+        warum: "Schreib die Ergebnisse auf, mindestens den Anfang. So siehst du, was ein einzelnes Ergebnis ist: eine zweistellige Zahl." },
+      { html: Z(lp1, lp2, NW(lp3)),
+        warum: "Jetzt die günstigen Ergebnisse: 12 = 3 · 4, 24 = 6 · 4, 32 = 8 · 4 und 44 = 11 · 4. Zahlen wie 16, 28 oder 36 kommen nicht vor, weil das Rad keine 6 und keine 8 hat." },
+      { html: Z(lp1, lp2, lp3, NW(lp4)),
+        warum: "Satz 2.38: günstige Fälle durch mögliche Fälle." },
+      { html: Z(lp1, lp2, lp3, lp4, NW(lp5)),
+        warum: "Einsetzen: 4 von 16 Zahlen sind günstig. Die Wahrscheinlichkeit beträgt 0.25, also 25 %." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Anatomie-Baum mit Umschalter, Pfadregel-Stepper ---------- */
+  const ANAT = {
+    ohne: {
+      s2: [[{ name: "w", p: "5/9" }, { name: "s", p: "4/9" }], [{ name: "w", p: "6/9" }, { name: "s", p: "3/9" }]],
+      ende: ["30/90", "24/90", "24/90", "12/90"],
+      text: "Ohne Zurücklegen ändern sich die Äste der zweiten Stufe: Nach einer weissen Kugel liegen nur noch 5 weisse unter 9 Kugeln. Der zweite Zug hängt vom ersten ab. Die vier Pfade ergeben zusammen 90/90 = 1."
+    },
+    mit: {
+      s2: [[{ name: "w", p: "6/10" }, { name: "s", p: "4/10" }], [{ name: "w", p: "6/10" }, { name: "s", p: "4/10" }]],
+      ende: ["36/100", "24/100", "24/100", "16/100"],
+      text: "Mit Zurücklegen ist die Urne vor jedem Zug gleich. Alle Äste der zweiten Stufe sind gleich wie die der ersten. Der zweite Zug hängt nicht vom ersten ab (Bsp. 2.57). Die vier Pfade ergeben zusammen 100/100 = 1."
+    }
+  };
+  const anatBox = document.getElementById("t08-anatomie");
+  const anatText = document.getElementById("t08-anatomie-text");
+  function anatZeigen(art) {
+    const a = ANAT[art];
+    anatBox.innerHTML = baumSvg({
+      titel: "Ereignisbaum: Urne mit 6 weissen und 4 schwarzen Kugeln, zwei Züge " + (art === "mit" ? "mit" : "ohne") + " Zurücklegen",
+      s1: [{ name: "w", p: "6/10" }, { name: "s", p: "4/10" }], s2: a.s2, ende: a.ende, an: [0], neu: art === "mit" ? ["s2"] : []
+    });
+    anatText.textContent = a.text;
+    document.querySelectorAll("[data-t08-zug]").forEach((b) => {
+      const on = b.getAttribute("data-t08-zug") === art;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+  document.querySelectorAll("[data-t08-zug]").forEach((b) => b.addEventListener("click", () => anatZeigen(b.getAttribute("data-t08-zug"))));
+  anatZeigen("ohne");
+
+  const bm1 = T`$\htmlData{link=gleich}{G = \{ww, ss\}}$`;
+  const bm2 = T`$P(ww) = \htmlData{link=urne}{\tfrac{6}{10}} \cdot \htmlData{link=ohne}{\tfrac{5}{9}} = \tfrac{30}{90}$`;
+  const bm3 = T`$P(ss) = \htmlData{link=urne}{\tfrac{4}{10}} \cdot \htmlData{link=ohne}{\tfrac{3}{9}} = \tfrac{12}{90}$`;
+  const bm4 = T`$\htmlData{link=wk}{P(G)} = \tfrac{30}{90} + \tfrac{12}{90} = \tfrac{42}{90} = \tfrac{7}{15} \approx 0.4667$`;
+  const bm5 = T`Kontrolle: $\tfrac{30}{90} + \tfrac{24}{90} + \tfrac{24}{90} + \tfrac{12}{90} = 1$`;
+  L.stepper("#t08-stepper-baum", {
+    titel: "Kernbeispiel 2 · Gleiche Farbe",
+    text: 'In einer Urne liegen <span data-link="urne">6 weisse und 4 schwarze Kugeln</span>. Du ziehst <span data-link="ohne">zwei Kugeln ohne Zurücklegen</span>. Wie gross ist die <span data-link="wk">Wahrscheinlichkeit</span>, dass <span data-link="gleich">beide die gleiche Farbe</span> haben?',
+    schritte: [
+      { html: Z(NW(bm1)),
+        warum: "Übersetze das Ereignis in Pfade: gleiche Farbe heisst zweimal weiss oder zweimal schwarz. Zwei Pfade des Baums oben gehören dazu." },
+      { html: Z(bm1, NW(bm2)),
+        warum: "Pfadregel 1 (Satz 2.43): entlang des Pfades multiplizieren. Nach der ersten weissen Kugel liegen nur noch 5 weisse unter 9 Kugeln." },
+      { html: Z(bm1, bm2, NW(bm3)),
+        warum: "Gleich für zweimal schwarz: zuerst 4 von 10, dann 3 von 9." },
+      { html: Z(bm1, bm2, bm3, NW(bm4)),
+        warum: "Die beiden Pfade schliessen sich gegenseitig aus. Darum addierst du sie." },
+      { html: Z(bm1, bm2, bm3, bm4, NW(bm5)),
+        warum: "Pfadregel 2 (Satz 2.44): Alle vier Pfade zusammen ergeben 1. Stimmt die Summe nicht, steckt ein Fehler im Baum." }
+    ]
+  });
+
+  /* ---------- Schritt 3: bedingte Wahrscheinlichkeit ---------- */
+  // drei einzelne Formeln, damit die Zeile auf schmalen Bildschirmen umbrechen kann
+  const bd1 = '<span class="t08-umbruch">' + T`$\htmlData{link=w}{M = \{1, \dots, 6\}}$, $\htmlData{link=a}{A = \{2, 4, 6\}}$, $\htmlData{link=b}{B = \{2, 3, 5\}}$` + "</span>";
+  const bd2 = T`Neue Ergebnismenge: $\htmlData{link=b}{B = \{2, 3, 5\}}$`;
+  const bd3 = T`$A \cap B = \{2\}$`;
+  const bd4 = T`$\htmlData{link=wk}{P(A \mid B)} = \dfrac{|A \cap B|}{|B|} = \dfrac{1}{3}$`;
+  const bd5 = T`$\htmlData{link=wk}{P(A \mid B)} = \dfrac{P(A \cap B)}{P(B)} = \dfrac{1/6}{3/6} = \dfrac{1}{3}$`;
+  const bd6 = T`$P(A \mid B) = \tfrac{1}{3} \neq P(A) = \tfrac{1}{2}$`;
+  L.stepper("#t08-stepper-bedingt", {
+    titel: "Kernbeispiel 3 · Würfel mit Vorwissen (Bsp. 2.52)",
+    text: 'Du wirfst <span data-link="w">einen fairen Würfel</span>. Jemand verrät dir: <span data-link="b">Es ist eine Primzahl.</span> Wie gross ist jetzt die <span data-link="wk">Wahrscheinlichkeit</span> für <span data-link="a">eine gerade Zahl</span>?',
+    schritte: [
+      { html: Z(NW(bd1)),
+        warum: "Zuerst alle Ergebnisse und beide Ereignisse aufschreiben. Ohne Vorwissen gilt P(A) = 3/6 = 0.5." },
+      { html: Z(bd1, NW(bd2)),
+        warum: "B ist sicher eingetreten. Die Zahlen 1, 4 und 6 sind damit ausgeschlossen. Nur noch die drei Primzahlen kommen in Frage, alle gleich wahrscheinlich." },
+      { html: Z(bd1, bd2, NW(bd3)),
+        warum: "Von den drei verbleibenden Zahlen ist nur die 2 gerade." },
+      { html: Z(bd1, bd2, bd3, NW(bd4)),
+        warum: "Laplace in der neuen, kleineren Ergebnismenge: 1 günstige von 3 möglichen Zahlen." },
+      { html: Z(bd1, bd2, bd3, bd4, NW(bd5)),
+        warum: "Satz 2.53 liefert dasselbe, ohne Abzählen. Diese Formel brauchst du, wenn die Ergebnisse nicht gleich wahrscheinlich sind." },
+      { html: Z(bd1, bd2, bd3, bd4, bd5, NW(bd6)),
+        warum: "Das Wissen «Primzahl» ändert die Chance für «gerade». Also sind A und B abhängig (Def. 2.56)." }
+    ]
+  });
+
+  L.sortierer("#t08-sortierer-2", {
+    kategorien: ["P(K ∩ T)", "P(T | K)", "P(K | T)"],
+    elemente: [
+      { html: "«Der Test ist bei 95 % der Kranken positiv.»", kategorie: 1,
+        erklaerung: T`«Von den Kranken» ist bekannt, also hinter den Strich: $P(T \mid K) = 0.95$.` },
+      { html: "«2 % aller Getesteten sind krank <b>und</b> positiv.»", kategorie: 0,
+        erklaerung: T`Bezogen auf alle Getesteten, ohne Vorwissen: $P(K \cap T) = 0.02$.` },
+      { html: "«Von den positiv Getesteten sind 27 % krank.»", kategorie: 2,
+        erklaerung: T`«Von den positiv Getesteten» ist die Bedingung: $P(K \mid T) = 0.27$.` },
+      { html: "«Wie wahrscheinlich bin ich krank, wenn mein Test positiv ist?»", kategorie: 2,
+        erklaerung: T`Bekannt ist das Testergebnis, gefragt die Krankheit: $P(K \mid T)$. Das ist die typische Bayes-Frage.` },
+      { html: "«Ein Kranker erhält mit Wahrscheinlichkeit 0.95 ein positives Resultat.»", kategorie: 1,
+        erklaerung: T`Bekannt ist «krank», gefragt das Testergebnis: $P(T \mid K)$.` },
+      { html: "«Wie gross ist der Anteil aller Personen, die krank sind und positiv getestet werden?»", kategorie: 0,
+        erklaerung: T`«und» ohne Vorwissen: $P(K \cap T)$. Im Baum ist das ein ganzer Pfad.` }
+    ]
+  });
+
+  L.auswahl("#t08-frage-unabh", {
+    frage: T`Einmal würfeln. $A$ = «eine 6», $B$ = «eine gerade Zahl». Sind $A$ und $B$ unabhängig?`,
+    optionen: [
+      "Ja, ein Würfel hat kein Gedächtnis.",
+      T`Nein: $P(A \mid B) = \tfrac{1}{3}$, aber $P(A) = \tfrac{1}{6}$.`,
+      T`Nein, weil $A$ und $B$ unvereinbar sind.`
+    ],
+    richtig: 1,
+    erklaerung: T`Weisst du «gerade», bleiben 2, 4, 6 übrig, und die 6 ist eine von drei: $P(A \mid B) = \tfrac13 \neq \tfrac16 = P(A)$. Also abhängig. «Kein Gedächtnis» betrifft zwei verschiedene Würfe, hier geht es um zwei Eigenschaften desselben Wurfs. Unvereinbar sind sie auch nicht: Die 6 ist gerade (Beispiel 3 aus Koch S2-V3).`
+  });
+
+  /* ---------- Schritt 4: Bayes-Stepper (Skript Aufgabe 2.22) ---------- */
+  const by1 = Z(NW(T`$\htmlData{link=praev}{P(D) = 0.05}$`), NW(T`$\htmlData{link=sens}{P(E \mid D) = 0.99}$`), NW(T`$\htmlData{link=spez}{P(\bar E \mid \bar D) = 0.95}$`));
+  const by1a = Z(T`$\htmlData{link=praev}{P(D) = 0.05}$`, T`$\htmlData{link=sens}{P(E \mid D) = 0.99}$`, T`$\htmlData{link=spez}{P(\bar E \mid \bar D) = 0.95}$`);
+  const by2 = T`$P(\bar D) = 0.95, \; P(E \mid \bar D) = 0.05$`;
+  const by3 = T`Gesucht: $\htmlData{link=ges}{P(D} \htmlData{link=geg}{\mid E)}$`;
+  const by4 = T`$P(D \cap E) = 0.05 \cdot 0.99 = 0.0495$`;
+  const by4b = T`$P(\bar D \cap E) = 0.95 \cdot 0.05 = 0.0475$`;
+  const by5 = T`$\htmlData{link=geg}{P(E)} = 0.0495 + 0.0475 = 0.097$`;
+  const by6 = T`$\htmlData{link=ges}{P(D \mid E)} = \dfrac{P(D \cap E)}{P(E)} = \dfrac{0.0495}{0.097} \approx 0.5103$`;
+  const by7 = "Nur rund 51 % der Alarme sind echt.";
+  L.stepper("#t08-stepper-bayes", {
+    titel: "Kernbeispiel 4 · Endkontrolle (Skript Aufgabe 2.22)",
+    text: 'Ein Prüfgerät erkennt <span data-link="sens">99 % der defekten Bauteile</span> als defekt und <span data-link="spez">95 % der fehlerfreien als fehlerfrei</span>. Aus Erfahrung sind <span data-link="praev">5 % der Bauteile defekt</span>. Wie gross ist die Wahrscheinlichkeit, dass ein <span data-link="geg">als defekt eingestuftes</span> Bauteil <span data-link="ges">tatsächlich defekt</span> ist?',
+    schritte: [
+      { html: by1,
+        warum: "Übersetzen. D = «defekt», E = «als defekt eingestuft». «99 % der defekten» ist eine bedingte Wahrscheinlichkeit: Die Bedingung «defekt» kommt hinter den Strich." },
+      { html: by1a + Z(NW(by2)),
+        warum: "Gegenwahrscheinlichkeiten: An jeder Verzweigung ergeben die Äste zusammen 1. Fehlalarm: 5 % der guten Teile werden als defekt eingestuft." },
+      { html: by1a + Z(by2, NW(by3)),
+        warum: "«Als defekt eingestuft» weiss man schon: Bedingung, hinter den Strich. «Tatsächlich defekt» ist gefragt: vor den Strich. Achtung: P(E | D) = 0.99 ist die Gegenrichtung und nicht gefragt." },
+      { html: by1a + Z(by2, by3, NW(by4), NW(by4b)),
+        warum: "Im Baum führen zwei Pfade zu E: defekt und erkannt, gut und Fehlalarm. Pfadregel 1: entlang des Pfades multiplizieren." },
+      { html: by1a + Z(by2, by3, by4, by4b, NW(by5)),
+        warum: "Totale Wahrscheinlichkeit: Alle Pfade, die bei E enden, addieren. 9.7 % aller Teile werden als defekt eingestuft." },
+      { html: by1a + Z(by2, by3, by4, by4b, by5, NW(by6)),
+        warum: "Satz 2.53, hier als Satz von Bayes: gesuchter Pfad geteilt durch alle Pfade zur Bedingung." },
+      { html: by1a + Z(by2, by3, by4, by4b, by5, by6, NW(by7)),
+        warum: "Das überrascht viele. Grund: Es gibt 19-mal mehr gute als defekte Teile. Die 5 % Fehlalarme bei den vielen guten Teilen sind fast so zahlreich wie die echten Treffer." }
+    ]
+  });
+
+  /* =====================================================================
+     Schritt 5: Baum-Labor
+     Zellen: "11" = A∩B, "10" = A∩B̄, "01" = Ā∩B, "00" = Ā∩B̄
+     ===================================================================== */
+  const VORLAGEN = {
+    kontrolle: { a: "Bauteil ist defekt", b: "Gerät meldet «defekt»", pa: 0.05, pba: 0.99, pbna: 0.05,
+      text: "Skript Aufgabe 2.22: 5 % defekt, 99 % davon erkannt, 5 % Fehlalarm bei guten Teilen." },
+    spam: { a: "Mail ist Spam", b: "Mail enthält das Wort «gratis»", pa: 0.3, pba: 0.4, pbna: 0.02,
+      text: "Eigenes Beispiel: 30 % der Mails sind Spam, 40 % davon enthalten «gratis», aber nur 2 % der normalen Mails." },
+    urne: { a: "1. Kugel weiss", b: "2. Kugel weiss", pa: 0.6, pba: 5 / 9, pbna: 6 / 9,
+      text: "Bsp. 2.55: 6 weisse und 4 schwarze Kugeln, zwei Züge ohne Zurücklegen. Gefragt ist P(A | B): Die zweite Kugel ist weiss, wie wahrscheinlich war die erste weiss? Im Skript ist die Lösung leer, das Labor rechnet sie aus (eigene Lösung)." },
+    muenze: { a: "1. Wurf zeigt Kopf", b: "2. Wurf zeigt Kopf", pa: 0.5, pba: 0.5, pbna: 0.5,
+      text: "Eine faire Münze hat kein Gedächtnis. Schau dir die Kontrolle zur Unabhängigkeit an." }
+  };
+  const lab = { pa: 0.05, pba: 0.99, pbna: 0.05, vorlage: "kontrolle", ansicht: "baum", wahl: null,
+    anzahl: false, tafelUeben: false, tafelLoesung: false, umUeben: false, umLoesung: false, eingaben: {} };
+  const BLATT_VOR = ["11", "10", "01", "00"];
+  const BLATT_UM = ["11", "01", "10", "00"];
+  const ZELLE_TEX = { "11": T`A \cap B`, "10": T`A \cap \bar B`, "01": T`\bar A \cap B`, "00": T`\bar A \cap \bar B` };
+  const ZELLE_TXT = { "11": "A ∩ B", "10": "A ∩ B̄", "01": "Ā ∩ B", "00": "Ā ∩ B̄" };
+  const $id = (id) => document.getElementById(id);
+
+  function lies(text) {
+    const t = String(text || "").trim();
+    let x = L.zahlLesen(t);
+    if (/%\s*$/.test(t)) x = x / 100;
+    return x;
+  }
+  // Anzeige: kleine Werte mit mehr Stellen, damit 0.000554 nicht als 0.0006 erscheint
+  function zt(x) {
+    if (!Number.isFinite(x)) return "–";
+    const a = Math.abs(x);
+    return L.zahlText(x, a > 0 && a < 0.01 ? 6 : 4);
+  }
+  function werte() {
+    const pa = lab.pa, pba = lab.pba, pbna = lab.pbna;
+    const w = { pa: pa, pan: 1 - pa, pba: pba, pbnA: 1 - pba, pbna: pbna, pbnAn: 1 - pbna };
+    w["11"] = pa * pba; w["10"] = pa * (1 - pba); w["01"] = (1 - pa) * pbna; w["00"] = (1 - pa) * (1 - pbna);
+    w.pb = w["11"] + w["01"]; w.pbn = w["10"] + w["00"];
+    w.pab = w.pb > 0 ? w["11"] / w.pb : NaN; w.pnab = w.pb > 0 ? w["01"] / w.pb : NaN;
+    w.pabn = w.pbn > 0 ? w["10"] / w.pbn : NaN; w.pnabn = w.pbn > 0 ? w["00"] / w.pbn : NaN;
+    return w;
+  }
+  // Welche Blätter sind hervorgehoben (an) oder gestrichelt (mit)?
+  function markierung(reihenfolge) {
+    const w = lab.wahl;
+    if (!w) return { an: [], mit: [] };
+    if (w === "pb") return { an: [reihenfolge.indexOf("11"), reihenfolge.indexOf("01")], mit: [] };
+    if (w === "bayes") return { an: [reihenfolge.indexOf("11")], mit: [reihenfolge.indexOf("01")] };
+    return { an: [reihenfolge.indexOf(w)], mit: [] };
+  }
+
+  function baumVorZeichnen(w) {
+    const m = markierung(BLATT_VOR);
+    $id("t08-baum-vor").innerHTML = baumSvg({
+      titel: "Vorwärtsbaum mit P(A) = " + zt(w.pa) + ", P(B | A) = " + zt(w.pba) + ", P(B | nicht A) = " + zt(w.pbna),
+      s1: [{ name: "A", p: zt(w.pa) }, { name: "Ā", p: zt(w.pan) }],
+      s2: [[{ name: "B", p: zt(w.pba) }, { name: "B̄", p: zt(w.pbnA) }], [{ name: "B", p: zt(w.pbna) }, { name: "B̄", p: zt(w.pbnAn) }]],
+      ende: BLATT_VOR.map((z) => zt(w[z])), an: m.an, mit: m.mit, klick: true
+    });
+  }
+  function baumUmZeichnen(w) {
+    const m = markierung(BLATT_UM);
+    const verdeckt = lab.umUeben && !lab.umLoesung;
+    const q = (x) => (verdeckt ? "?" : zt(x));
+    $id("t08-baum-um").innerHTML = baumSvg({
+      titel: verdeckt ? "Umgedrehter Baum, Äste noch auszufüllen" : "Umgedrehter Baum mit P(B) = " + zt(w.pb) + ", P(A | B) = " + zt(w.pab),
+      s1: [{ name: "B", p: q(w.pb) }, { name: "B̄", p: q(w.pbn) }],
+      s2: [[{ name: "A", p: q(w.pab) }, { name: "Ā", p: q(w.pnab) }], [{ name: "A", p: q(w.pabn) }, { name: "Ā", p: q(w.pnabn) }]],
+      ende: BLATT_UM.map((z) => zt(w[z])), an: m.an, mit: m.mit, klick: true
+    });
+  }
+
+  // Vierfeldertafel: Anzeige (Knöpfe in den Feldern) oder Übung (Eingabefelder)
+  const TAFEL_FELDER = ["11", "10", "01", "00", "sB", "sBn"];
+  const TAFEL_NAME = { "11": "Feld A und B", "10": "Feld A und nicht B", "01": "Feld nicht A und B", "00": "Feld nicht A und nicht B", sB: "Spaltensumme B", sBn: "Spaltensumme nicht B" };
+  function tafelZeichnen(w) {
+    const ueben = lab.tafelUeben && !lab.tafelLoesung;
+    const faktor = lab.anzahl && !lab.tafelUeben ? 10000 : 1;
+    const f = (x) => (faktor === 1 ? zt(x) : L.zahlText(x * faktor, 1));
+    const m = lab.wahl;
+    const klasse = (z) => {
+      if (!m) return "";
+      if (m === z) return "an";
+      if (m === "pb" && (z === "11" || z === "01")) return "an";
+      if (m === "pb" && z === "sB") return "t08-mit";
+      if (m === "bayes" && z === "11") return "an";
+      if (m === "bayes" && z === "sB") return "t08-mit";
+      return "";
+    };
+    const feld = (z, wert, summe) => {
+      const k = (summe ? "summe " : "") + klasse(z);
+      if (ueben) {
+        const v = lab.eingaben[z] !== undefined ? esc(lab.eingaben[z]) : "";
+        return '<td class="' + k + '"><input type="text" inputmode="decimal" class="vf-feld t08-vf" data-t08-feld="' + z + '" value="' + v +
+          '" aria-label="' + TAFEL_NAME[z] + '" autocomplete="off" spellcheck="false"></td>';
+      }
+      if (summe) return '<td class="' + k + '">' + f(wert) + "</td>";
+      return '<td class="' + k + '"><button type="button" class="t08-zelle" data-t08-wahl="' + z + '" aria-label="' + ZELLE_TXT[z] + ": " + f(wert) + '">' + f(wert) + "</button></td>";
+    };
+    $id("t08-tafel").innerHTML =
+      '<table class="vierfelder t08-eng"><thead><tr><th scope="col"><span class="sr-only">Ereignis</span></th><th scope="col">B</th><th scope="col">B̄</th><th scope="col">Summe</th></tr></thead><tbody>' +
+      '<tr><th scope="row">A</th>' + feld("11", w["11"]) + feld("10", w["10"]) + '<td class="summe">' + f(w.pa) + "</td></tr>" +
+      '<tr><th scope="row">Ā</th>' + feld("01", w["01"]) + feld("00", w["00"]) + '<td class="summe">' + f(w.pan) + "</td></tr>" +
+      '<tr><th scope="row">Summe</th>' + feld("sB", w.pb, true) + feld("sBn", w.pbn, true) + '<td class="summe">' + (faktor === 1 ? "1" : "10'000") + "</td></tr>" +
+      "</tbody></table>";
+  }
+
+  // Rechnung zur Auswahl, passend zur Ansicht
+  function info(w) {
+    const box = $id("t08-info");
+    const a = lab.ansicht, m = lab.wahl;
+    let h = "";
+    if (a === "um" && lab.umUeben && !lab.umLoesung) {
+      h = '<p class="hint">Ausfüllmodus: Die Rechnungen zu den Ästen erscheinen, sobald du «Lösung zeigen» wählst oder alles richtig ist.</p>';
+    } else if (!m) {
+      h = '<p class="hint">Klicke auf ein Kästchen im Baum, ein Feld der Tafel oder einen Knopf oben.</p>';
+    } else if (m === "pb") {
+      if (a === "um") h = T`<p>Im umgedrehten Baum steht $P(B)$ direkt auf dem ersten Ast: $P(B) = ` + zt(w.pb) + T`$.</p><p>Berechnet hast du es vorher mit der totalen Wahrscheinlichkeit: alle Pfade, die bei $B$ enden.</p>`;
+      else if (a === "tafel") h = T`<p>Spaltensumme $B$: $P(B) = P(A \cap B) + P(\bar A \cap B) = ` + zt(w["11"]) + " + " + zt(w["01"]) + " = " + zt(w.pb) + T`$.</p>`;
+      else h = T`<p>Totale Wahrscheinlichkeit: alle Pfade, die bei $B$ enden, addieren.</p><div class="board">$P(B) = P(A) \cdot P(B \mid A) + P(\bar A) \cdot P(B \mid \bar A)$<br>$\phantom{P(B)} = ` + zt(w.pa) + T` \cdot ` + zt(w.pba) + " + " + zt(w.pan) + T` \cdot ` + zt(w.pbna) + " = " + zt(w.pb) + "$</div>";
+    } else if (m === "bayes") {
+      if (!(w.pb > 0)) h = T`<p>$P(B) = 0$: Die Bedingung tritt nie ein. Dann ist $P(A \mid B)$ nicht definiert (Satz 2.53 verlangt $P(B) \neq 0$).</p>`;
+      else if (a === "um") h = T`<p>Im umgedrehten Baum ist $P(A \mid B)$ einfach der Ast von $B$ nach $A$: $` + zt(w.pab) + T`$.</p><p>Bayes heisst: Baum umdrehen. Der Ast entsteht aus Pfad durch Summe: $\dfrac{` + zt(w["11"]) + "}{" + zt(w.pb) + "} = " + zt(w.pab) + "$.</p>";
+      else if (a === "tafel") h = T`<p>Feld durch Randsumme der Bedingung: $P(A \mid B) = \dfrac{P(A \cap B)}{P(B)} = \dfrac{` + zt(w["11"]) + "}{" + zt(w.pb) + "} = " + zt(w.pab) + "$</p>" +
+        "<p>In Anzahlen von 10'000: " + L.zahlText(w["11"] * 10000, 1) + " von " + L.zahlText(w.pb * 10000, 1) + " Fällen mit B gehören auch zu A.</p>";
+      else h = T`<p>Satz von Bayes: gesuchter Pfad (voll markiert) durch alle Pfade zu $B$ (voll und gestrichelt).</p><div class="board">$P(A \mid B) = \dfrac{P(A) \cdot P(B \mid A)}{P(B)} = \dfrac{` + zt(w["11"]) + "}{" + zt(w["11"]) + " + " + zt(w["01"]) + "} = " + zt(w.pab) + "$</div>";
+    } else {
+      const z = m;
+      const ia = z.charAt(0) === "1", ib = z.charAt(1) === "1";
+      const tA = ia ? "A" : T`\bar A`, tB = ib ? "B" : T`\bar B`;
+      const pA = ia ? w.pa : w.pan;
+      const pBgA = ia ? (ib ? w.pba : w.pbnA) : (ib ? w.pbna : w.pbnAn);
+      const pB = ib ? w.pb : w.pbn;
+      const pAgB = ib ? (ia ? w.pab : w.pnab) : (ia ? w.pabn : w.pnabn);
+      if (a === "um") h = T`<p>Umgedrehter Pfad $` + tB + T` \to ` + tA + T`$:</p><div class="board">$P(` + tB + T`) \cdot P(` + tA + T` \mid ` + tB + T`) = ` + zt(pB) + T` \cdot ` + zt(pAgB) + " = " + zt(w[z]) + T`$</div><p>Derselbe Wert wie vorwärts mit $P(` + tA + T`) \cdot P(` + tB + T` \mid ` + tA + T`)$. So prüfst du, ob dein umgedrehter Baum stimmt.</p>`;
+      else if (a === "tafel") h = T`<p>Feld $` + ZELLE_TEX[z] + "$: " + zt(w[z]) + T`. Das ist genau der Pfad $` + tA + T` \to ` + tB + T`$ im Baum.</p><p>Die Zeile $` + tA + T`$ summiert sich zu $` + zt(pA) + T`$, die Spalte $` + tB + T`$ zu $` + zt(pB) + "$.</p>";
+      else h = T`<p>Pfadregel 1 (Satz 2.43): entlang des Pfades multiplizieren.</p><div class="board">$P(` + ZELLE_TEX[z] + ") = P(" + tA + T`) \cdot P(` + tB + T` \mid ` + tA + T`) = ` + zt(pA) + T` \cdot ` + zt(pBgA) + " = " + zt(w[z]) + "$</div>";
+    }
+    box.innerHTML = h;
+    L.formeln(box);
+  }
+
+  // Kontrollen: Passen die Zahlen zusammen?
+  function kontrollen(w) {
+    const nah = (x, y) => Math.abs(x - y) < 1e-9;
+    const ok = (b) => (b ? '<span class="t08-ok">✓</span> ' : '<span class="t08-nein">✗</span> ');
+    const summe = w["11"] + w["10"] + w["01"] + w["00"];
+    // Produktform: P(A ∩ B) = P(A) · P(B); gilt auch in den Randfällen P(A) = 0 oder 1
+    const unabh = nah(w["11"], w.pa * w.pb);
+    let h = "";
+    h += "<li>" + ok(nah(summe, 1)) + T`Pfadregel 2: alle vier Pfade zusammen $` + zt(w["11"]) + " + " + zt(w["10"]) + " + " + zt(w["01"]) + " + " + zt(w["00"]) + " = " + zt(summe) + "$</li>";
+    h += "<li>" + ok(nah(w["11"] + w["01"], w.pb)) + T`Tafel: Spalte $B$ ergibt $P(B) = ` + zt(w.pb) + T`$, Zeile $A$ ergibt $P(A) = ` + zt(w["11"] + w["10"]) + "$</li>";
+    if (w.pb > 0) h += "<li>" + ok(nah(w.pa * w.pba, w.pb * w.pab)) + T`Beide Bäume, gleicher Pfad: $P(A) \cdot P(B \mid A) = ` + zt(w.pa * w.pba) + T` = P(B) \cdot P(A \mid B)$</li>`;
+    const rand = w.pa === 0 || w.pa === 1;
+    h += "<li>" + (unabh ? '<span class="t08-ok">=</span> ' : '<span class="t08-nein">≠</span> ') +
+      (rand
+        ? T`Unabhängigkeit: $A$ ist unmöglich oder sicher. Dann gilt $P(A \cap B) = P(A) \cdot P(B)$ immer, $A$ und $B$ sind <b>unabhängig</b>.`
+        : T`Unabhängigkeit (Def. 2.56): $P(B \mid A) = ` + zt(w.pba) + T`$, $P(B) = ` + zt(w.pb) + "$. " +
+          (unabh ? "Gleich, also sind A und B <b>unabhängig</b>." : "Verschieden, also sind A und B <b>abhängig</b>.")) + "</li>";
+    const ul = $id("t08-checks");
+    ul.innerHTML = h;
+    L.formeln(ul);
+  }
+
+  function knoepfeSetzen() {
+    document.querySelectorAll("#t08-wahl [data-t08-wahl]").forEach((b) => {
+      const on = b.getAttribute("data-t08-wahl") === lab.wahl;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+  function alles() {
+    const w = werte();
+    const v = VORLAGEN[lab.vorlage];
+    $id("t08-legende").innerHTML = "<b>A</b> = " + v.a + " · <b>B</b> = " + v.b + '<br><span class="hint">' + v.text + "</span>";
+    baumVorZeichnen(w);
+    tafelZeichnen(w);
+    baumUmZeichnen(w);
+    knoepfeSetzen();
+    info(w);
+    kontrollen(w);
+  }
+
+  // Regler und Zahlenfelder synchron halten
+  const REGLER = [{ k: "pa", id: "t08-pa" }, { k: "pba", id: "t08-pba" }, { k: "pbna", id: "t08-pbna" }];
+  function reglerAnzeigen() {
+    REGLER.forEach((r) => {
+      $id(r.id).value = String(lab[r.k]);
+      const feld = $id(r.id + "-zahl");
+      feld.value = L.zahlText(lab[r.k], 4);
+      feld.removeAttribute("aria-invalid");
+    });
+  }
+  REGLER.forEach((r) => {
+    const range = $id(r.id), feld = $id(r.id + "-zahl");
+    range.addEventListener("input", () => {
+      lab[r.k] = Number(range.value);
+      feld.value = L.zahlText(lab[r.k], 4);
+      feld.removeAttribute("aria-invalid");
+      alles();
+    });
+    feld.addEventListener("input", () => {
+      const x = lies(feld.value);
+      if (Number.isFinite(x) && x >= 0 && x <= 1) {
+        lab[r.k] = x;
+        range.value = String(x);
+        feld.removeAttribute("aria-invalid");
+        alles();
+      } else {
+        feld.setAttribute("aria-invalid", "true");
+      }
+    });
+    feld.addEventListener("change", () => {
+      feld.value = L.zahlText(lab[r.k], 4);
+      feld.removeAttribute("aria-invalid");
+    });
+  });
+
+  function uebungenZuruecksetzen() {
+    lab.tafelUeben = false; lab.tafelLoesung = false; lab.umUeben = false; lab.umLoesung = false; lab.eingaben = {};
+    $id("t08-tafel-ueben").setAttribute("aria-pressed", "false");
+    $id("t08-tafel-ueben").classList.remove("on");
+    $id("t08-um-ueben").setAttribute("aria-pressed", "false");
+    $id("t08-um-ueben").classList.remove("on");
+    $id("t08-tafel-uebung").hidden = true;
+    $id("t08-um-uebung").hidden = true;
+    $id("t08-anzahl").disabled = false;
+    ["t08-tafel-fb", "t08-um-fb"].forEach((id) => { $id(id).className = "rueckmeldung"; $id(id).innerHTML = ""; });
+    ["t08-um-pb", "t08-um-pab", "t08-um-pabn"].forEach((id) => { $id(id).value = ""; $id(id).classList.remove("richtig", "falsch"); });
+  }
+
+  // Vorlagen
+  document.querySelectorAll("[data-t08-vorlage]").forEach((b) => b.addEventListener("click", () => {
+    const k = b.getAttribute("data-t08-vorlage"), v = VORLAGEN[k];
+    lab.vorlage = k; lab.pa = v.pa; lab.pba = v.pba; lab.pbna = v.pbna;
+    document.querySelectorAll("[data-t08-vorlage]").forEach((x) => {
+      const on = x === b;
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-pressed", String(on));
+    });
+    uebungenZuruecksetzen();
+    reglerAnzeigen();
+    alles();
+  }));
+
+  // Ansichten
+  document.querySelectorAll("[data-t08-ansicht]").forEach((b) => b.addEventListener("click", () => {
+    lab.ansicht = b.getAttribute("data-t08-ansicht");
+    document.querySelectorAll("[data-t08-ansicht]").forEach((x) => {
+      const on = x === b;
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-pressed", String(on));
+    });
+    $id("t08-v-baum").hidden = lab.ansicht !== "baum";
+    $id("t08-v-tafel").hidden = lab.ansicht !== "tafel";
+    $id("t08-v-um").hidden = lab.ansicht !== "um";
+    info(werte());
+  }));
+
+  // Auswahl über Knöpfe, Tafel-Felder und Blätter der Bäume
+  function waehlen(z) {
+    lab.wahl = lab.wahl === z ? null : z;
+    alles();
+  }
+  $id("t08-wahl").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-t08-wahl]");
+    if (b) waehlen(b.getAttribute("data-t08-wahl"));
+  });
+  $id("t08-tafel").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-t08-wahl]");
+    if (!b) return;
+    const z = b.getAttribute("data-t08-wahl");
+    waehlen(z);
+    // Fokus behalten: Der Knopf wurde neu gezeichnet
+    const neu = $id("t08-tafel").querySelector('button[data-t08-wahl="' + z + '"]');
+    if (neu) neu.focus();
+  });
+  $id("t08-baum-vor").addEventListener("click", (e) => {
+    const g = e.target.closest("[data-blatt]");
+    if (g) waehlen(BLATT_VOR[Number(g.getAttribute("data-blatt"))]);
+  });
+  $id("t08-baum-um").addEventListener("click", (e) => {
+    const g = e.target.closest("[data-blatt]");
+    if (g) waehlen(BLATT_UM[Number(g.getAttribute("data-blatt"))]);
+  });
+
+  // Tafel: Anzahl von 10'000
+  $id("t08-anzahl").addEventListener("click", () => {
+    lab.anzahl = !lab.anzahl;
+    $id("t08-anzahl").setAttribute("aria-pressed", String(lab.anzahl));
+    $id("t08-anzahl").classList.toggle("on", lab.anzahl);
+    tafelZeichnen(werte());
+  });
+
+  // Gemeinsame Prüfung eines Eingabewerts (vier Nachkommastellen). Erlaubt Rundung plus fortgepflanzte Rundung
+  // aus den angezeigten Werten (z. B. 0.6 · 0.5556 = 0.3334 statt 0.3333), höchstens rund 0.0001.
+  // Streng genug, dass 0.05 statt 0.0495 (P(A) statt Pfadprodukt) als falsch gilt.
+  // Quotienten (umgedrehter Baum) bekommen zusätzlich 0.03 % relativ, weil dort durch gerundete Werte geteilt wird.
+  function passt(x, soll, relativ) {
+    if (!Number.isFinite(x) || !Number.isFinite(soll)) return false;
+    return Math.abs(x - soll) <= Math.max(0.00011, relativ ? Math.abs(soll) * 0.0003 : 0);
+  }
+
+  // Tafel selbst ausfüllen
+  $id("t08-tafel-ueben").addEventListener("click", () => {
+    const an = !lab.tafelUeben;
+    const fb = $id("t08-tafel-fb");
+    lab.tafelUeben = an; lab.tafelLoesung = false; lab.eingaben = {};
+    fb.className = "rueckmeldung"; fb.innerHTML = "";
+    $id("t08-tafel-ueben").setAttribute("aria-pressed", String(an));
+    $id("t08-tafel-ueben").classList.toggle("on", an);
+    $id("t08-tafel-uebung").hidden = !an;
+    $id("t08-anzahl").disabled = an;
+    tafelZeichnen(werte());
+  });
+  $id("t08-tafel").addEventListener("input", (e) => {
+    const f = e.target.closest("[data-t08-feld]");
+    if (!f) return;
+    lab.eingaben[f.getAttribute("data-t08-feld")] = f.value;
+    f.classList.remove("richtig", "falsch");
+  });
+  $id("t08-tafel-pruefen").addEventListener("click", () => {
+    const w = werte();
+    const soll = { "11": w["11"], "10": w["10"], "01": w["01"], "00": w["00"], sB: w.pb, sBn: w.pbn };
+    const e = {};
+    let richtig = 0;
+    TAFEL_FELDER.forEach((z) => {
+      const el = $id("t08-tafel").querySelector('[data-t08-feld="' + z + '"]');
+      if (!el) return;
+      e[z] = lies(el.value);
+      const okay = passt(e[z], soll[z]);
+      el.classList.toggle("richtig", okay);
+      el.classList.toggle("falsch", !okay);
+      if (okay) richtig++;
+    });
+    const sum = (a, b) => (Number.isFinite(a) && Number.isFinite(b) ? a + b : NaN);
+    // Summen aus zwei gerundeten Eingaben: doppelte Toleranz eines Einzelfelds
+    const passtSumme = (x, s) => Number.isFinite(x) && Number.isFinite(s) && Math.abs(x - s) <= 0.00025;
+    const pr = (bed, txt) => "<li>" + (bed ? "✓ " : "✗ ") + txt + "</li>";
+    const zA = sum(e["11"], e["10"]), zAn = sum(e["01"], e["00"]);
+    const sBist = sum(e["11"], e["01"]), sBnist = sum(e["10"], e["00"]);
+    let h = "<p>" + (richtig === 6 ? "✓ Alle 6 Felder stimmen." : "✗ " + richtig + " von 6 Feldern stimmen.") + "</p>";
+    h += '<ul class="t08-liste">' +
+      pr(passtSumme(zA, w.pa), "Zeile A: " + zt(zA) + (passtSumme(zA, w.pa) ? " = " : " ≠ ") + "P(A) = " + zt(w.pa)) +
+      pr(passtSumme(zAn, w.pan), "Zeile Ā: " + zt(zAn) + (passtSumme(zAn, w.pan) ? " = " : " ≠ ") + "P(Ā) = " + zt(w.pan)) +
+      pr(passtSumme(sBist, e.sB), "Spalte B: deine Felder ergeben " + zt(sBist) + ", eingetragen ist " + zt(e.sB)) +
+      pr(passtSumme(sBnist, e.sBn), "Spalte B̄: deine Felder ergeben " + zt(sBnist) + ", eingetragen ist " + zt(e.sBn)) +
+      pr(passtSumme(sum(e.sB, e.sBn), 1), "Spaltensummen zusammen: " + zt(sum(e.sB, e.sBn)) + " (soll 1 sein)") +
+      "</ul>";
+    if (richtig < 6) h += '<p class="hint">Tipp: Die vier inneren Felder sind die vier Pfade des Baums: P(A) · P(B | A) und so weiter.</p>';
+    const fb = $id("t08-tafel-fb");
+    fb.className = "rueckmeldung " + (richtig === 6 ? "ok" : "bad");
+    fb.innerHTML = h;
+  });
+  $id("t08-tafel-loesung").addEventListener("click", () => {
+    lab.tafelLoesung = true;
+    const fb = $id("t08-tafel-fb");
+    fb.className = "rueckmeldung leer";
+    fb.textContent = "Lösung eingeblendet. Mit «Selbst ausfüllen» beendest du die Übung.";
+    tafelZeichnen(werte());
+    $id("t08-tafel-pruefen").focus();
+  });
+
+  // Umgedrehter Baum selbst ausfüllen
+  $id("t08-um-ueben").addEventListener("click", () => {
+    const an = !lab.umUeben;
+    lab.umUeben = an; lab.umLoesung = false;
+    $id("t08-um-ueben").setAttribute("aria-pressed", String(an));
+    $id("t08-um-ueben").classList.toggle("on", an);
+    $id("t08-um-uebung").hidden = !an;
+    const fb = $id("t08-um-fb");
+    fb.className = "rueckmeldung"; fb.innerHTML = "";
+    ["t08-um-pb", "t08-um-pab", "t08-um-pabn"].forEach((id) => { $id(id).value = ""; $id(id).classList.remove("richtig", "falsch"); });
+    baumUmZeichnen(werte());
+    info(werte());
+  });
+  ["t08-um-pb", "t08-um-pab", "t08-um-pabn"].forEach((id) => $id(id).addEventListener("input", () => $id(id).classList.remove("richtig", "falsch")));
+  $id("t08-um-pruefen").addEventListener("click", () => {
+    const w = werte();
+    const e = { pb: lies($id("t08-um-pb").value), pab: lies($id("t08-um-pab").value), pabn: lies($id("t08-um-pabn").value) };
+    const soll = { pb: w.pb, pab: w.pab, pabn: w.pabn };
+    let richtig = 0;
+    ["pb", "pab", "pabn"].forEach((k) => {
+      const okay = passt(e[k], soll[k], k !== "pb");
+      $id("t08-um-" + k).classList.toggle("richtig", okay);
+      $id("t08-um-" + k).classList.toggle("falsch", !okay);
+      if (okay) richtig++;
+    });
+    const p1 = e.pb * e.pab, p2 = (1 - e.pb) * e.pabn;
+    const naheProdukt = (x, s) => Number.isFinite(x) && Math.abs(x - s) <= Math.max(0.0006, Math.abs(s) * 0.01);
+    const pr = (bed, txt) => "<li>" + (bed ? "✓ " : "✗ ") + txt + "</li>";
+    let h = "<p>" + (richtig === 3 ? "✓ Alle 3 Äste stimmen." : "✗ " + richtig + " von 3 Ästen stimmen.") + "</p>";
+    h += '<ul class="t08-liste">' +
+      pr(naheProdukt(p1, w["11"]), "Pfad B → A: dein P(B) · P(A | B) = " + zt(p1) + ", der Pfad A ∩ B ist " + zt(w["11"])) +
+      pr(naheProdukt(p2, w["10"]), "Pfad B̄ → A: dein (1 − P(B)) · P(A | B̄) = " + zt(p2) + ", der Pfad A ∩ B̄ ist " + zt(w["10"])) +
+      "</ul>";
+    if (richtig < 3) h += '<p class="hint">Tipp: P(B) ist die Summe der Pfade mit B. P(A | B) ist der Pfad A ∩ B geteilt durch P(B).</p>';
+    const fb = $id("t08-um-fb");
+    fb.className = "rueckmeldung " + (richtig === 3 ? "ok" : "bad");
+    fb.innerHTML = h;
+    if (richtig === 3) { lab.umLoesung = true; baumUmZeichnen(w); info(w); }
+  });
+  $id("t08-um-loesung").addEventListener("click", () => {
+    lab.umLoesung = true;
+    const fb = $id("t08-um-fb");
+    fb.className = "rueckmeldung leer";
+    fb.textContent = "Lösung im Baum eingeblendet.";
+    const w = werte();
+    baumUmZeichnen(w);
+    info(w);
+  });
+
+  reglerAnzeigen();
+  alles();
+
+  /* ---------- Schritt 6: Übungen ---------- */
+  L.zahlAufgabe("#t08-ue-1", {
+    titel: "Laplace: Augenprodukt gerade",
+    frage: "<p>Du wirfst zwei unterscheidbare, faire Würfel und multiplizierst die beiden Augenzahlen. Wie gross ist die Wahrscheinlichkeit, dass das Produkt gerade ist? Gib eine Dezimalzahl an.</p>",
+    antwort: 0.75, toleranz: 0.0005, anzeige: "27/36 = 0.75",
+    hinweise: [
+      T`Ein Ergebnis ist ein geordnetes Paar $(i, j)$. Es gibt $6 \cdot 6 = 36$ gleich wahrscheinliche Paare.`,
+      "Ein Produkt ist gerade, sobald mindestens eine der beiden Zahlen gerade ist. «Mindestens» ruft nach dem Gegenereignis.",
+      "Gegenereignis: Das Produkt ist ungerade, also sind beide Zahlen ungerade."
+    ],
+    loesungsweg: [
+      T`$|M| = 6 \cdot 6 = 36$ gleich wahrscheinliche Paare, also Laplace.`,
+      T`Gegenereignis $\bar G$ = «beide ungerade»: $3 \cdot 3 = 9$ Paare, $P(\bar G) = \tfrac{9}{36}$.`,
+      T`$P(G) = 1 - \tfrac{9}{36} = \tfrac{27}{36} = 0.75$`
+    ]
+  });
+
+  L.zahlAufgabe("#t08-ue-2", {
+    titel: "Mindestens ein Ass",
+    frage: "<p>Du ziehst zwei Karten ohne Zurücklegen aus einem gut gemischten Jassspiel mit 36 Karten, darunter 4 Asse. Wie gross ist die Wahrscheinlichkeit, mindestens ein Ass zu ziehen? Auf vier Nachkommastellen.</p>",
+    antwort: 67 / 315, toleranz: 0.0005, anzeige: "1 − 32/36 · 31/35 = 67/315 ≈ 0.2127",
+    hinweise: [
+      "«Mindestens ein» löst du über das Gegenereignis «kein Ass» (Bem. 2.45).",
+      "Kein Ass heisst: zweimal eine der 32 anderen Karten. Zeichne den Pfad und multipliziere.",
+      "Beim zweiten Zug liegen nur noch 35 Karten im Stapel, davon 31 ohne Ass."
+    ],
+    loesungsweg: [
+      T`Pfad «kein Ass, kein Ass»: $P(\bar A_1 \cap \bar A_2) = \tfrac{32}{36} \cdot \tfrac{31}{35} = \tfrac{992}{1260}$`,
+      T`$P(\text{mindestens ein Ass}) = 1 - \tfrac{992}{1260} = \tfrac{268}{1260} = \tfrac{67}{315} \approx 0.2127$`,
+      T`Kontrolle mit dem TI-Nspire (Kombinatorik, nächste Station): $1 - \text{nCr}(32, 2) / \text{nCr}(36, 2) = 1 - \tfrac{496}{630} \approx 0.2127$`
+    ]
+  });
+
+  L.zahlAufgabe("#t08-ue-3", {
+    titel: "Gesamte Ausschussquote",
+    frage: "<p>Im Stil von Skript Aufgabe 2.12: Ein Werkstück durchläuft drei Maschinen. Sie erzeugen unabhängig voneinander Fehler mit den Quoten 4 %, 1.5 % und 2.5 %. Ein Werkstück ist nur gut, wenn keine Maschine einen Fehler macht. Wie hoch ist die gesamte Ausschussquote? In Prozent auf zwei Nachkommastellen.</p>",
+    antwort: 7.804, einheit: "%", toleranz: 0.005, anzeige: "1 − 0.96 · 0.985 · 0.975 = 0.07804 = 7.804 %",
+    hinweise: [
+      "Ausschuss entsteht auf vielen Wegen (erste Maschine, zweite, beide …). Gut ist nur ein einziger Pfad.",
+      "Rechne den Pfad «gut, gut, gut» und nimm das Gegenereignis.",
+      "Gut-Wahrscheinlichkeiten: 0.96, 0.985 und 0.975."
+    ],
+    loesungsweg: [
+      T`Pfad «alle drei Maschinen fehlerfrei»: $0.96 \cdot 0.985 \cdot 0.975 = 0.92196$`,
+      T`Ausschuss = Gegenereignis: $1 - 0.92196 = 0.07804$`,
+      "Das sind 7.80 %. Achtung: Die Quoten einfach zu addieren (8 %) ist falsch, weil ein Werkstück mehrere Fehler haben kann."
+    ]
+  });
+
+  L.zahlAufgabe("#t08-ue-9", {
+    titel: "Prüfungsstil: Nur wegen der ersten Maschine",
+    frage: "<p>Im Stil von Aufgabe 2b des Lernblock-Tests S2-LB1, mit den Zahlen der vorherigen Aufgabe (Fehlerquoten 4 %, 1.5 % und 2.5 %, unabhängig). Du hältst ein fehlerhaftes Werkstück in der Hand. Wie gross ist die Wahrscheinlichkeit, dass es <b>nur</b> wegen eines Fehlers der ersten Maschine Ausschuss ist? Auf vier Nachkommastellen.</p>",
+    antwort: 0.038415 / 0.07804, toleranz: 0.0005, anzeige: "0.038415 / 0.07804 ≈ 0.4922",
+    hinweise: [
+      "Bekannt ist «fehlerhaft». Das ist die Bedingung B, mit P(B) = 0.07804 aus der vorherigen Aufgabe.",
+      "«Nur wegen Maschine 1» heisst: Maschine 1 macht einen Fehler, Maschine 2 und 3 arbeiten korrekt. Das ist genau ein Pfad im Baum.",
+      T`Dieser Pfad liegt ganz in $B$. Darum ist $P(A \cap B) = P(A)$.`
+    ],
+    loesungsweg: [
+      T`$B$ = «Werkstück fehlerhaft»: $P(B) = 1 - 0.96 \cdot 0.985 \cdot 0.975 = 0.07804$`,
+      T`$A$ = «nur Maschine 1 fehlerhaft», ein Pfad: $P(A) = 0.04 \cdot 0.985 \cdot 0.975 = 0.038415$`,
+      T`$A$ liegt ganz in $B$, also $P(A \cap B) = P(A) = 0.038415$`,
+      T`Satz 2.53: $P(A \mid B) = \dfrac{0.038415}{0.07804} \approx 0.4922$`,
+      T`Falle: $\tfrac{0.04}{0.07804} \approx 0.5126$ ist falsch. Darin stecken auch Werkstücke, bei denen zusätzlich Maschine 2 oder 3 einen Fehler macht. «Nur» verlangt die Gut-Äste 0.985 und 0.975.`
+    ]
+  });
+
+  L.zahlAufgabe("#t08-ue-10", {
+    titel: "Viele unabhängige Versuche: mindestens ein Gewinn",
+    frage: "<p>Ein Onlineshop verlost bei jeder Bestellung unabhängig mit Wahrscheinlichkeit 2.5 % einen Gutschein. Lea bestellt in einem Jahr 60-mal. Wie gross ist die Wahrscheinlichkeit, dass sie mindestens einen Gutschein gewinnt? Auf vier Nachkommastellen.</p>",
+    antwort: 1 - Math.pow(0.975, 60), toleranz: 0.0005, anzeige: "1 − 0.975⁶⁰ ≈ 0.7811",
+    hinweise: [
+      "«Mindestens einen» löst du über das Gegenereignis «keinen einzigen Gutschein» (Bem. 2.45).",
+      "Kein Gutschein ist ein einziger Pfad: 60-mal hintereinander der Ast «kein Gewinn».",
+      "Die Verlosungen sind unabhängig. Darum hat jeder dieser 60 Äste dieselbe Wahrscheinlichkeit 0.975."
+    ],
+    loesungsweg: [
+      T`Pfadregel 1, 60 gleiche Äste: $P(\text{kein Gutschein}) = 0.975^{60} \approx 0.2189$`,
+      T`Gegenereignis: Mindestens ein Gutschein hat die Wahrscheinlichkeit $1 - 0.975^{60} \approx 0.7811$.`,
+      T`TI-Nspire: direkt $1 - 0.975^{60}$ eintippen. Mit der Binomialverteilung aus Station 11 geht es auch: $1 - \text{binomPdf}(60, 0.025, 0)$.`,
+      "Dieses Muster «viele unabhängige Versuche, kein einziger Treffer» steckt auch in Aufgabe 5b der exemplarischen Modulschlussprüfung."
+    ]
+  });
+
+  L.wahrFalsch("#t08-ue-4", {
+    titel: "Bedingt, unabhängig, Baum",
+    aussagen: [
+      { html: "Beim Ziehen mit Zurücklegen sind die Ereignisse der einzelnen Züge unabhängig.", wahr: true,
+        erklaerung: "Die Urne ist vor jedem Zug gleich, darum ändern sich die Äste nicht (Bsp. 2.57)." },
+      { html: T`Für alle Ereignisse gilt $P(A \mid B) = P(B \mid A)$.`, wahr: false,
+        erklaerung: T`Gegenbeispiel Würfel: $A$ = «6», $B$ = «gerade». $P(A \mid B) = \tfrac13$, aber $P(B \mid A) = 1$, denn die 6 ist sicher gerade.` },
+      { html: "Die Wahrscheinlichkeiten aller Pfade eines vollständigen Ereignisbaums ergeben zusammen 1.", wahr: true,
+        erklaerung: "Das ist Pfadregel 2 (Satz 2.44)." },
+      { html: T`Sind $A$ und $B$ unabhängig, gilt $P(A \cap B) = P(A) \cdot P(B)$.`, wahr: true,
+        erklaerung: T`Setz $P(A \mid B) = P(A)$ in den Multiplikationssatz $P(A \cap B) = P(B) \cdot P(A \mid B)$ ein.` },
+      { html: "Die Ast-Wahrscheinlichkeiten auf der zweiten Stufe eines Baums sind bedingte Wahrscheinlichkeiten.", wahr: true,
+        erklaerung: "Sie gelten jeweils unter der Bedingung, dass man im Knoten davor steht (Bem. 2.54)." },
+      { html: T`Es gilt immer $P(A \mid B) + P(A \mid \bar B) = 1$.`, wahr: false,
+        erklaerung: T`Zu 1 ergänzen sich $P(A \mid B) + P(\bar A \mid B)$, also gleiche Bedingung. Bei der Endkontrolle ist $P(D \mid E) + P(D \mid \bar E) \approx 0.5103 + 0.0006$, weit weg von 1.` }
+    ]
+  });
+
+  const vfHomeoffice = '<div class="tablebox"><table class="vierfelder t08-eng"><thead><tr><th scope="col"><span class="sr-only">Arbeitsort</span></th><th scope="col">Z</th><th scope="col">Z̄</th><th scope="col">Summe</th></tr></thead><tbody>' +
+    '<tr><th scope="row">H</th><td class="an">84</td><td>56</td><td class="summe">140</td></tr>' +
+    '<tr><th scope="row">H̄</th><td>44</td><td>66</td><td class="summe">110</td></tr>' +
+    '<tr><th scope="row">Summe</th><td class="summe t08-mit">128</td><td class="summe">122</td><td class="summe">250</td></tr></tbody></table></div>';
+  L.zahlAufgabe("#t08-ue-5", {
+    titel: "Vierfeldertafel: Homeoffice und Zufriedenheit",
+    frage: "<p>Von 250 Mitarbeitenden arbeiten 140 regelmässig im Homeoffice (H). Von ihnen sind 84 mit der IT-Unterstützung zufrieden (Z). Von den übrigen 110 sind 44 zufrieden. Eine zufällig gewählte Person ist zufrieden. Wie gross ist die Wahrscheinlichkeit, dass sie im Homeoffice arbeitet? Auf vier Nachkommastellen.</p>",
+    antwort: 84 / 128, toleranz: 0.0005, anzeige: "84/128 = 0.65625",
+    hinweise: [
+      "Zeichne eine Vierfeldertafel mit den Zeilen H und H̄ und den Spalten Z und Z̄.",
+      "Bekannt ist «zufrieden». Das ist die Bedingung, also teilst du durch die Spaltensumme Z.",
+      "Spaltensumme Z = 84 + 44."
+    ],
+    loesungsweg: [
+      "Vierfeldertafel (Anzahlen):" + vfHomeoffice,
+      T`$P(H \mid Z) = \dfrac{|H \cap Z|}{|Z|} = \dfrac{84}{128} = 0.65625 \approx 0.6563$`,
+      T`Zusatz: Sind H und Z unabhängig? $P(Z \mid H) = \tfrac{84}{140} = 0.6$, aber $P(Z) = \tfrac{128}{250} = 0.512$. Verschieden, also abhängig.`
+    ]
+  });
+
+  L.schrittAufgabe("#t08-ue-6", {
+    titel: "Prüfungsstil: Gutscheine aus drei Schachteln (4 Punkte)",
+    aufgabe: "<p>Im Stil von Aufgabe 4b der exemplarischen Modulschlussprüfung, mit eigenen Zahlen. In drei Schachteln liegen Gutscheine: Schachtel 1 enthält 3 Kino- und 5 Restaurantgutscheine, Schachtel 2 enthält 6 Kino- und 2 Restaurantgutscheine, Schachtel 3 enthält 1 Kino- und 3 Restaurantgutscheine. Zuerst wird zufällig eine Schachtel gewählt, dann zufällig ein Gutschein daraus.</p><p>Der gezogene Gutschein ist ein Kinogutschein. Wie gross ist die Wahrscheinlichkeit, dass er aus Schachtel 2 stammt?</p>",
+    schritte: [
+      { html: T`$S_1, S_2, S_3$ = Schachtel, $K$ = Kinogutschein. Gesucht: $P(S_2 \mid K)$`,
+        warum: "Bekannt ist «Kino». Das ist die Bedingung und kommt hinter den Strich. Nicht verwechseln mit P(K | S2) = 6/8." },
+      { html: T`Baum: $P(S_i) = \tfrac13$; $\;P(K \mid S_1) = \tfrac38,\; P(K \mid S_2) = \tfrac68,\; P(K \mid S_3) = \tfrac14$`,
+        warum: "Erste Stufe: Schachtel, alle gleich wahrscheinlich. Zweite Stufe: In jeder Schachtel ist jeder Gutschein gleich wahrscheinlich, also Laplace (günstige durch mögliche)." },
+      { html: T`$P(S_1 \cap K) = \tfrac13 \cdot \tfrac38 = \tfrac18, \quad P(S_2 \cap K) = \tfrac13 \cdot \tfrac68 = \tfrac14, \quad P(S_3 \cap K) = \tfrac13 \cdot \tfrac14 = \tfrac{1}{12}$`,
+        warum: "Pfadregel 1 für alle Pfade, die bei «Kino» enden." },
+      { html: T`$P(K) = \tfrac18 + \tfrac14 + \tfrac{1}{12} = \tfrac{3}{24} + \tfrac{6}{24} + \tfrac{2}{24} = \tfrac{11}{24} \approx 0.4583$`,
+        warum: "Totale Wahrscheinlichkeit: Pfade zur Bedingung addieren. Gibt in der Prüfung typischerweise einen eigenen Punkt." },
+      { html: T`$P(S_2 \mid K) = \dfrac{P(S_2 \cap K)}{P(K)} = \dfrac{1/4}{11/24} = \dfrac{6}{11} \approx 0.5455$`,
+        warum: "Satz 2.53: gesuchter Pfad durch die Summe aller Pfade zu K." },
+      { html: "Antwort: Ein Kinogutschein stammt mit rund 54.5 % aus Schachtel 2.",
+        warum: "Plausibel: Schachtel 2 hat mit 6 von 8 den höchsten Kinoanteil. Darum steigt ihr Anteil von 1/3 auf über die Hälfte." }
+    ]
+  });
+
+  L.zahlAufgabe("#t08-ue-7", {
+    titel: "Prüfungsstil: Schnelltest (Diagnose)",
+    frage: "<p>Im Stil von Skript Aufgabe 2.22 und der Diagnose-Aufgaben aus dem Lernblock-Test, mit eigenen Zahlen. 2 % der Bevölkerung haben eine bestimmte Grippe. Ein Schnelltest zeigt bei 90 % der Erkrankten «positiv» (Sensitivität) und bei 95 % der Gesunden «negativ» (Spezifität). Eine Person testet positiv. Wie gross ist die Wahrscheinlichkeit, dass sie wirklich erkrankt ist? Auf vier Nachkommastellen.</p>",
+    antwort: 0.018 / 0.067, toleranz: 0.0005, anzeige: "0.018 / 0.067 ≈ 0.2687",
+    hinweise: [
+      T`Bezeichnungen: $K$ = krank, $T$ = positiv. Gegeben: $P(K) = 0.02$, $P(T \mid K) = 0.9$, $P(\bar T \mid \bar K) = 0.95$.`,
+      T`Der Fehlalarm bei Gesunden ist $P(T \mid \bar K) = 1 - 0.95 = 0.05$.`,
+      T`Gesucht ist $P(K \mid T)$. Rechne zuerst $P(T)$ mit der totalen Wahrscheinlichkeit.`
+    ],
+    loesungsweg: [
+      T`Pfade zu $T$: $P(K \cap T) = 0.02 \cdot 0.9 = 0.018$ und $P(\bar K \cap T) = 0.98 \cdot 0.05 = 0.049$`,
+      T`Totale Wahrscheinlichkeit: $P(T) = 0.018 + 0.049 = 0.067$`,
+      T`Bayes: $P(K \mid T) = \dfrac{0.018}{0.067} \approx 0.2687$`,
+      "Gegenprobe mit 10'000 Personen: 200 krank, davon 180 positiv. 9'800 gesund, davon 490 positiv. Von 670 Positiven sind 180 krank: 180/670 ≈ 0.2687.",
+      T`TI-Nspire: $(0.02 \cdot 0.9)/(0.02 \cdot 0.9 + 0.98 \cdot 0.05)$ eintippen, mit ctrl + enter als Dezimalzahl.`
+    ]
+  });
+
+  L.auswahl("#t08-ue-8", {
+    frage: T`Ein Prüfgerät meldet ein Bauteil als defekt ($E$). Gefragt ist: «Wie wahrscheinlich ist ein gemeldetes Teil wirklich defekt ($D$)?» Welcher Ausdruck ist gesucht?`,
+    optionen: [T`$P(E \mid D)$`, T`$P(D \mid E)$`, T`$P(D \cap E)$`, T`$P(D)$`],
+    richtig: 1,
+    erklaerung: T`Die Meldung $E$ ist bekannt, also die Bedingung hinter dem Strich: $P(D \mid E)$. $P(E \mid D)$ ist die Erkennungsrate des Geräts, $P(D \cap E)$ ein einzelner Pfad, $P(D)$ der Anteil ohne Vorwissen.`
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const FB_S1 = [{ name: "L1", p: "0.5" }, { name: "L2", p: "0.3" }, { name: "L3", p: "0.2" }];
+  const FB_S2 = [[{ name: "D", p: "0.02" }, { name: "D̄", p: "0.98" }], [{ name: "D", p: "0.05" }, { name: "D̄", p: "0.95" }], [{ name: "D", p: "0.04" }, { name: "D̄", p: "0.96" }]];
+  const FB_ENDE = ["0.010", "0.490", "0.015", "0.285", "0.008", "0.192"];
+  // fb({ stufen, nurD, ende: [Blattindizes mit Kästchen], an, mit, dim, neu })
+  function fb(o) {
+    const s2 = FB_S2.map((liste) => liste.map((b) => ({ name: b.name, p: o.nurD && b.name !== "D" ? "" : b.p })));
+    const ende = FB_ENDE.map((t, k) => ((o.ende || []).indexOf(k) >= 0 ? t : ""));
+    return baumSvg({ titel: "Ereignisbaum Lieferant und defekt", s1: FB_S1, s2: s2, stufen: o.stufen || 2, ende: ende,
+      an: o.an || [], mit: o.mit || [], dim: o.dim || [], neu: o.neu || [] });
+  }
+  const FZ = function () { return Array.prototype.map.call(arguments, (z) => '<div class="t08-fz">' + z + "</div>").join(""); };
+  const FT = (s) => '<div class="t08-fz t08-text">' + s + "</div>";
+  const zZiel = T`Gesucht: $P(L_2 \mid D)$`;
+  const zP1 = T`$P(L_1 \cap D) = 0.5 \cdot 0.02 = 0.010$`;
+  const zP2 = T`$P(L_2 \cap D) = 0.3 \cdot 0.05 = 0.015$`;
+  const zP3 = T`$P(L_3 \cap D) = 0.2 \cdot 0.04 = 0.008$`;
+  const zPD = T`$P(D) = 0.010 + 0.015 + 0.008$`;
+  const zPDs = T`$\phantom{P(D)} = 0.033$`;
+  const zPDv = T`$P(D) = 0.033$`;
+  const zB1 = T`$P(L_2 \mid D) = \dfrac{P(L_2 \cap D)}{P(D)}$`;
+  const zB2 = T`$P(L_2 \mid D) = \dfrac{0.015}{P(D)}$`;
+  const zB3 = T`$P(L_2 \mid D) = \dfrac{0.015}{0.033}$`;
+  const zB4 = T`$P(L_2 \mid D) = \dfrac{0.015}{0.033} \approx 0.4545$`;
+  const zB5 = T`$P(L_2 \mid D) = \dfrac{15}{33} = \dfrac{5}{11} \approx 0.4545$`;
+  const zK = T`Kontrolle: $\tfrac{10}{33} + \tfrac{15}{33} + \tfrac{8}{33} = 1$`;
+  const zPl = T`Plausibel: $P(L_2) = 0.3$, aber $P(L_2 \mid D) \approx 0.45$`;
+  const DPF = [0, 2, 4];   // Blätter «defekt»
+  const OKPF = [1, 3, 5];  // Blätter «in Ordnung»
+
+  L.film("#t08-film", {
+    phasen: ["1 · Lesen", "2 · Baum", "3 · Pfade", "4 · Total", "5 · Bayes", "6 · Antwort"],
+    texte: [
+      'Ein Onlinehändler bezieht Ladegeräte von drei Lieferanten: <span data-ph="anteile">L1 liefert 50 %, L2 30 % und L3 20 % der Geräte.</span> <span data-ph="quoten">Bei L1 sind 2 %, bei L2 5 % und bei L3 4 % der Geräte defekt.</span> Eine Kundin meldet, <span data-ph="geg">ihr Ladegerät ist defekt</span>. <span data-ph="ges">Mit welcher Wahrscheinlichkeit stammt es von L2?</span>'
+    ],
+    woerterbuch: [
+      T`$L_1, L_2, L_3$ Lieferant`,
+      T`$D$ defekt, $\bar D$ in Ordnung`,
+      T`$P(L_i)$ Lieferanteil`,
+      T`$P(D \mid L_i)$ Ausschussquote`,
+      T`$P(L_2 \mid D)$ gesucht`
+    ],
+    beschriftung: { texte: "Die Aufgabe", woerterbuch: "Bezeichnungen", formel: "Baum und Rechnung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Stufen erkennen, Baum zeichnen, Pfade multiplizieren, alle Pfade zum Bekannten addieren und am Schluss den gesuchten Pfad durch diese Summe teilen." },
+      { ph: 0, hl: ["anteile"], dict: 1, dh: [0],
+        say: "Lies zuerst, was nacheinander passiert. Stufe 1: Von welchem Lieferanten kommt das Gerät? Drei Möglichkeiten: L1, L2 und L3." },
+      { ph: 0, hl: ["quoten"], dict: 2, dh: [1],
+        say: "Stufe 2: Ist das Gerät defekt oder nicht? D heisst defekt, D quer heisst in Ordnung." },
+      { ph: 0, hl: ["anteile"], dict: 3, dh: [2],
+        say: "Die Lieferanteile sind die Wahrscheinlichkeiten der ersten Stufe: 0.5, 0.3 und 0.2." },
+      { ph: 0, hl: ["quoten"], dict: 4, dh: [3],
+        say: "Die Ausschussquoten gelten jeweils nur für einen Lieferanten. «Bei L2 sind 5 % defekt» heisst P(D | L2) = 0.05. Das sind bedingte Wahrscheinlichkeiten." },
+      { ph: 0, hl: ["geg"], f: FZ(NW(T`Bekannt: $D$`)),
+        say: "Jetzt die wichtigste Frage: Was weiss man schon? Das Gerät ist defekt. D ist die Bedingung und kommt hinter den Strich." },
+      { ph: 0, hl: ["ges"], dict: 5, dh: [4], f: FZ(T`Bekannt: $D$`, NW(zZiel)),
+        say: "Gefragt ist der Lieferant L2. Er steht vor dem Strich. Gesucht ist also P(L2 | D)." },
+      { ph: 0, hl: ["ges", "quoten"], f: FZ(T`Bekannt: $D$`, zZiel) + FT(NW('Nicht gefragt: <span class="strike">' + T`$P(D \mid L_2) = 0.05$` + "</span>")),
+        say: "Achtung, Falle: P(D | L2) = 0.05 steht schon in der Aufgabe. Das ist die Gegenrichtung und nicht gefragt." },
+      { ph: 1, hl: [], f: fb({ stufen: 1, neu: ["s1"] }) + FZ(zZiel),
+        say: "Jetzt der Baum. Von der Wurzel gehen drei Äste ab, je einer pro Lieferant. Kontrolle: 0.5 plus 0.3 plus 0.2 ergibt 1." },
+      { ph: 1, f: fb({ nurD: true, neu: ["s2"] }) + FZ(zZiel),
+        say: "An jeden Lieferanten hängen zwei Äste: defekt oder in Ordnung. Auf die D-Äste kommen die Ausschussquoten." },
+      { ph: 1, f: fb({ neu: ["s2:0:1", "s2:1:1", "s2:2:1"] }) + FZ(zZiel),
+        say: "Die Gegenäste ergänzen jede Verzweigung zu 1: 0.98, 0.95 und 0.96. Damit ist der Baum vollständig." },
+      { ph: 2, f: fb({ ende: [0], an: [0] }) + FZ(zZiel, NW(zP1)),
+        say: "Pfadregel 1, Satz 2.43: Entlang eines Pfades multiplizierst du. Weg über L1 zu defekt: 0.5 mal 0.02 gleich 0.010." },
+      { ph: 2, f: fb({ ende: [0, 2], an: [2] }) + FZ(zZiel, zP1, NW(zP2)),
+        say: "Weg über L2 zu defekt: 0.3 mal 0.05 gleich 0.015. Das ist der Pfad, nach dem gefragt ist. Merk ihn dir." },
+      { ph: 2, f: fb({ ende: [0, 2, 4], an: [4] }) + FZ(zZiel, zP1, zP2, NW(zP3)),
+        say: "Weg über L3 zu defekt: 0.2 mal 0.04 gleich 0.008." },
+      { ph: 2, f: fb({ ende: [0, 2, 4], an: DPF, dim: OKPF }) + FZ(zZiel, zP1, zP2, zP3),
+        say: "Die Pfade zu «in Ordnung» brauchst du nicht. Rechne nur, was zur Frage gehört (Bem. 2.45). Darum sind sie jetzt blass." },
+      { ph: 3, f: fb({ ende: [0, 2, 4], an: DPF, dim: OKPF }) + FZ(zZiel, NW(zPD)),
+        say: "Wie gross ist die Wahrscheinlichkeit, überhaupt ein defektes Gerät zu erwischen? Alle Pfade, die bei D enden, zusammenzählen. Das ist die totale Wahrscheinlichkeit." },
+      { ph: 3, f: fb({ ende: [0, 2, 4], an: DPF, dim: OKPF }) + FZ(zZiel, zPD, NW(zPDs)),
+        say: "Zusammen 0.033. Also sind 3.3 % aller Geräte defekt. Das gibt in der Prüfung einen eigenen Punkt." },
+      { ph: 4, f: fb({ ende: [0, 2, 4], an: [2], mit: [0, 4], dim: OKPF }) + FZ(zZiel, zPDv, NW(zB1)),
+        say: "Jetzt rückwärts. Satz 2.53: bedingte Wahrscheinlichkeit gleich Schnitt durch Bedingung." },
+      { ph: 4, f: fb({ ende: [0, 2, 4], an: [2], mit: [0, 4], dim: OKPF }) + FZ(zZiel, zPDv, NW(zB2)),
+        say: "Im Zähler steht der gesuchte Pfad über L2 zu defekt: 0.015. Er ist im Baum voll markiert." },
+      { ph: 4, f: fb({ ende: [0, 2, 4], an: [2], mit: [0, 4], dim: OKPF }) + FZ(zZiel, zPDv, NW(zB3)),
+        say: "Im Nenner steht die Summe aller defekten Pfade, also P(D) = 0.033. Das sind der volle und die beiden gestrichelten Pfade." },
+      { ph: 4, f: fb({ ende: [0, 2, 4], an: [2], mit: [0, 4], dim: OKPF }) + FZ(zZiel, zPDv, NW(zB4)),
+        say: "0.015 geteilt durch 0.033 ergibt rund 0.4545." },
+      { ph: 4, f: fb({ ende: [0, 2, 4], an: [2], mit: [0, 4], dim: OKPF }) + FZ(zZiel, zPDv, NW(zB5)),
+        say: "Exakt sind es 15 Dreiunddreissigstel, gekürzt 5 Elftel." },
+      { ph: 5, f: fb({ ende: [0, 2, 4], an: DPF, dim: OKPF }) + FZ(zZiel, zPDv, zB5) + FT(NW(zK)),
+        say: "Kontrolle: Rechnest du das für alle drei Lieferanten, ergibt die Summe 1. Ein defektes Gerät muss ja von irgendwem stammen." },
+      { ph: 5, f: fb({ ende: [0, 2, 4], an: [2], dim: OKPF }) + FZ(zZiel, zPDv, zB5) + FT(zK) + FT(NW(zPl)),
+        say: "Plausibel? L2 liefert nur 30 % der Geräte, aber rund 45 % der defekten. Das passt, weil L2 die höchste Ausschussquote hat." },
+      { ph: 5, f: fb({ ende: [0, 2, 4], an: [2], dim: OKPF }) + FZ(zZiel, zPDv, zB5) + FT(zK) + FT(zPl) + FT(NW("<b>Antwort:</b> Ein defektes Ladegerät stammt mit rund 45.5 % von L2.")),
+        say: "Antwortsatz: Ein defektes Ladegerät stammt mit rund 45.5 % von L2. Schreib in der Prüfung alle Teile hin: Baum, P(D), Ansatz und Resultat. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t08-selbsttest", {
+    fragen: [
+      { q: T`Wann darfst du $P(A) = \tfrac{g}{m}$ (Satz 2.38) verwenden?`,
+        o: ["Bei jedem Zufallsexperiment", "Wenn es endlich viele, gleich wahrscheinliche Ergebnisse gibt", T`Nur wenn $A$ mehr als ein Ergebnis enthält`], a: 1,
+        e: "Das ist die Definition des Laplace-Experiments (Def. 2.36). Sind die Ergebnisse nicht gleich wahrscheinlich, liefert das Abzählen falsche Werte." },
+      { q: "Wie berechnest du die Wahrscheinlichkeit eines Pfades im Ereignisbaum?",
+        o: ["Die Ast-Wahrscheinlichkeiten entlang des Pfades multiplizieren", "Die Ast-Wahrscheinlichkeiten entlang des Pfades addieren", "Den grössten Ast des Pfades nehmen"], a: 0,
+        e: "Pfadregel 1 (Satz 2.43). Addiert werden erst die verschiedenen Pfade, die zum selben Ereignis gehören." },
+      { q: "Stolperfalle: «90 % der Spam-Mails enthalten das Wort ‹gratis›.» Welche Wahrscheinlichkeit ist 0.9? (S = Spam, G = enthält «gratis»)",
+        o: [T`$P(S \mid G)$`, T`$P(G \mid S)$`, T`$P(S \cap G)$`], a: 1,
+        e: T`«Von den Spam-Mails» ist die Bedingung, sie steht hinter dem Strich: $P(G \mid S) = 0.9$. $P(S \mid G)$ hiesse: «Von den Mails mit ‹gratis› sind 90 % Spam.» Das ist eine andere Aussage.` },
+      { q: "Urne mit 6 weissen und 4 schwarzen Kugeln, zwei Züge ohne Zurücklegen. Die erste Kugel war weiss. Wie gross ist P(2. weiss | 1. weiss)?",
+        o: [T`$\tfrac{6}{10}$`, T`$\tfrac{6}{9}$`, T`$\tfrac{5}{9}$`], a: 2,
+        e: "Nach einer weissen Kugel liegen noch 9 Kugeln in der Urne, davon 5 weisse." },
+      { q: T`Es gilt $P(A) = 0.4$, $P(B) = 0.5$ und $P(A \cap B) = 0.2$. Was folgt daraus?`,
+        o: [T`$A$ und $B$ sind unabhängig.`, T`$A$ und $B$ sind abhängig.`, T`$A$ und $B$ sind unvereinbar.`], a: 0,
+        e: T`$P(A) \cdot P(B) = 0.4 \cdot 0.5 = 0.2 = P(A \cap B)$. Gleichwertig: $P(A \mid B) = \tfrac{0.2}{0.5} = 0.4 = P(A)$. Unvereinbar wären sie nur bei $P(A \cap B) = 0$.` },
+      { q: T`Stolperfalle: $A$ und $B$ sind unvereinbar ($A \cap B = \{\}$), beide mit positiver Wahrscheinlichkeit. Sind sie unabhängig?`,
+        o: ["Ja, sie haben ja nichts miteinander zu tun.", T`Nein: Tritt $B$ ein, ist $A$ unmöglich. $P(A \mid B) = 0 \neq P(A)$.`, T`Das hängt von der Grösse von $P(A)$ ab.`], a: 1,
+        e: "Unvereinbar heisst: Sie schliessen sich aus. Das Wissen über B verändert A also maximal. Das ist das Gegenteil von unabhängig." },
+      { q: T`Erste Stufe $A$ oder $\bar A$, zweite Stufe $B$ oder $\bar B$. Wie berechnest du $P(B)$?`,
+        o: [T`$P(B \mid A) + P(B \mid \bar A)$`, T`$P(A) \cdot P(B \mid A)$`, T`$P(A) \cdot P(B \mid A) + P(\bar A) \cdot P(B \mid \bar A)$`], a: 2,
+        e: T`Totale Wahrscheinlichkeit: alle Pfade addieren, die bei $B$ enden. Die blosse Summe $P(B \mid A) + P(B \mid \bar A)$ ist keine Wahrscheinlichkeit, sie kann grösser als 1 werden. $P(A) \cdot P(B \mid A)$ allein ist nur ein einzelner Pfad.` },
+      { q: "Eine Krankheit ist selten (1 %), der Test ist sehr gut. Warum kann P(krank | positiv) trotzdem klein sein?",
+        o: ["Weil der Test viele Kranke übersieht", "Weil die vielen Gesunden schon bei wenigen Fehlalarmen viele positive Resultate liefern", "Weil eine bedingte Wahrscheinlichkeit immer kleiner als 0.5 ist"], a: 1,
+        e: "Bei 99 % Gesunden fallen schon wenige Prozent Fehlalarme stark ins Gewicht. Im Nenner von Bayes stehen dann viele falsche Alarme, wie bei der Endkontrolle (nur rund 51 % echte Alarme)." },
+      { q: T`In einer Vierfeldertafel stehen $A$, $\bar A$ in den Zeilen und $B$, $\bar B$ in den Spalten. Wie liest du $P(A \mid B)$ ab?`,
+        o: [T`Feld $A \cap B$ geteilt durch die Zeilensumme $A$`, T`Feld $A \cap B$ geteilt durch die Gesamtsumme`, T`Feld $A \cap B$ geteilt durch die Spaltensumme $B$`], a: 2,
+        e: T`Die Bedingung $B$ ist eine Spalte. Darum teilst du durch deren Summe. Feld durch Zeilensumme $A$ ergäbe $P(B \mid A)$, Feld durch Gesamtsumme ergäbe $P(A \cap B)$.` },
+      { q: T`Im umgedrehten Baum steht auf dem ersten Ast $P(B)$. Woher kommt diese Zahl meistens?`,
+        o: [T`Aus der totalen Wahrscheinlichkeit: Summe aller Pfade, die bei $B$ enden`, "Sie steht direkt in der Aufgabe.", T`Aus $1 - P(A)$`], a: 0,
+        e: T`In Bayes-Aufgaben ist $P(B)$ fast nie gegeben. Du berechnest sie im Vorwärtsbaum als Summe der Pfade zu $B$. $1 - P(A)$ ist $P(\bar A)$, eine ganz andere Zahl.` }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

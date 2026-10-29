@@ -1,0 +1,1441 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zufallsexperimente und Ereignisse · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/08-laplace-bedingte-wahrscheinlichkeit" title="Laplace, Ereignisbäume und bedingte Wahrscheinlichkeit">
+  <style>
+    /* Seiteneigene Stile der Station 07: nur Präfix «t07-», nur Farben aus :root */
+    .t07-ziele ul{margin:6px 0 0; padding-left:1.2em}
+    .t07-ziele li{margin-bottom:2px}
+    .t07-bedingungen{margin:6px 0; padding-left:1.4em}
+    .t07-bedingungen li{margin-bottom:2px}
+
+    /* Venn-Diagramme (statisch, im Stepper, im Film und im Spiel) */
+    .t07-venn{display:block; width:100%; height:auto; max-width:340px; margin-inline:auto; overflow:visible}
+    .t07-venn.t07-klein{max-width:220px}
+    .t07-venn .t07-rahmen{fill:none; stroke:var(--muted); stroke-width:1.5}
+    .t07-venn .t07-kreis{fill:none; stroke:var(--ink); stroke-width:1.6; pointer-events:none}
+    .t07-venn .t07-feld{fill:transparent; stroke:none; transition:fill .2s ease}
+    .t07-venn .t07-feld.an{fill:var(--accent); fill-opacity:.32}
+    .t07-venn .t07-name{fill:var(--ink); font-family:var(--f-math); font-style:italic; font-size:20px; pointer-events:none}
+    .t07-venn .t07-mname{fill:var(--muted); font-family:var(--f-math); font-style:italic; font-size:17px; pointer-events:none}
+    .t07-venn .t07-wert{fill:var(--ink); font-family:var(--f-math); font-size:18px; font-weight:600; text-anchor:middle; dominant-baseline:central; pointer-events:none}
+    .t07-venn .t07-wert.t07-neu{fill:var(--accent); animation:t07-auf .7s ease-out}
+    .t07-venn .t07-marke{font-family:var(--f-body); font-size:15px; font-weight:700; text-anchor:middle; dominant-baseline:central; pointer-events:none}
+    .t07-venn .t07-marke.ok{fill:var(--ok)}
+    .t07-venn .t07-marke.bad{fill:var(--bad)}
+    .t07-venn.t07-interaktiv .t07-feld{cursor:pointer; pointer-events:all}
+    .t07-venn.t07-interaktiv .t07-feld:hover{fill:var(--accent-soft)}
+    .t07-venn.t07-interaktiv .t07-feld.an:hover{fill:var(--accent)}
+    .t07-venn .t07-feld:focus-visible{stroke:var(--accent); stroke-width:3; stroke-dasharray:6 4}
+    .t07-venn .t07-feld.falsch{stroke:var(--bad); stroke-width:2.5; stroke-dasharray:5 3}
+    .t07-venn .t07-feld.fehlt{stroke:var(--ok); stroke-width:2.5; stroke-dasharray:2 3}
+    @keyframes t07-auf{from{opacity:0}to{opacity:1}}
+
+    /* Verknüpfungen als Karten */
+    .t07-ops{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(200px,100%),1fr)); gap:12px}
+    .t07-ops .concept .t07-venn{max-width:200px}
+
+    /* Tafel mit Venn-Diagramm und Rechenzeilen (Stepper und Film) */
+    .t07-tafel{display:flex; flex-wrap:wrap; gap:12px 22px; align-items:flex-start; white-space:normal}
+    .t07-tafel-venn{flex:0 1 230px; min-width:0; max-width:100%}
+    .t07-tafel-zeilen{flex:1 1 210px; min-width:0; display:flex; flex-direction:column; gap:6px; font-size:1.05rem; line-height:1.5}
+    .t07-tafel-zeilen > div{min-width:0}
+    /* Fortsetzungszeile einer Rechnung: beginnt mit «=», leicht eingerückt */
+    .t07-fort{display:block; padding-left:1.2em}
+    .fstage .t07-tafel{font-size:1rem}
+
+    /* Regel-Listen auf der Tafel */
+    .t07-regeln{margin:0; padding-left:1.4em; display:flex; flex-direction:column; gap:8px}
+    .t07-regeln .t07-regelname{color:var(--muted); font-size:.92rem}
+
+    /* Wirklichkeit und Modell */
+    .t07-modell .card{display:flex; flex-direction:column; gap:6px}
+    .t07-modell h3{font-size:1rem}
+
+    /* Venn-Spiel */
+    .t07-spiel-kopf{display:flex; flex-wrap:wrap; gap:10px 18px; justify-content:space-between}
+    .t07-auftrag{font-size:1.08rem; min-height:1.8em}
+    .t07-steuer{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .t07-steuer label{font-weight:600; font-size:.95rem}
+    .t07-steuer select{max-width:100%}
+    .t07-stand{font-size:.88rem; color:var(--muted); font-variant-numeric:tabular-nums}
+
+    /* Simulator */
+    .t07-sim-wahl{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center}
+    .t07-sim-wahl label{font-weight:600; font-size:.95rem}
+    .t07-sim-wahl select{max-width:100%}
+    .t07-sim-erg{font-size:1.15rem; line-height:1.7}
+    .t07-sim-erg .t07-zeile{display:block}
+    .diagramm .t07-alt{color:var(--muted); opacity:.55}
+    .diagramm .t07-plinie{stroke:var(--fn); stroke-width:2; stroke-dasharray:6 4; fill:none}
+    .diagramm .t07-pname{fill:var(--fn); font-family:var(--f-math); font-style:italic; font-size:12px}
+    .t07-inA{font-size:.85rem; color:var(--accent); font-weight:600}
+
+    @media (prefers-reduced-motion: reduce){
+      .t07-venn .t07-wert.t07-neu{animation:none}
+      .t07-venn .t07-feld{transition:none}
+    }
+  </style>
+</head>
+<body data-fach="mstw" data-thema="07-zufallsexperimente">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V1 · Zufallsexperimente</span>
+    <h1>Zufallsexperimente und Ereignisse</h1>
+    <p class="lead">Bevor du Wahrscheinlichkeiten ausrechnest, brauchst du eine saubere Sprache: Was kann passieren, was interessiert mich, und wie verknüpfe ich das? Diese Station baut diese Sprache von null auf. Danach kannst du Ereignisse als Mengen aufschreiben, im Venn-Diagramm einzeichnen und mit den Axiomen von Kolmogorow und zwei Rechenregeln Wahrscheinlichkeiten bestimmen.</p>
+    <div class="note t07-ziele">
+      <b>Nach dieser Station kannst du</b>
+      <ul>
+        <li>prüfen, ob ein Vorgang ein Zufallsexperiment ist (Def. 2.1),</li>
+        <li>die Ergebnismenge \(M\) aufschreiben und Ereignisse als Teilmengen angeben,</li>
+        <li>Ereignisse mit «und», «oder», «ohne» und «nicht» verknüpfen und im Venn-Diagramm einzeichnen,</li>
+        <li>relative Häufigkeiten berechnen und erklären, warum sie sich einer Wahrscheinlichkeit annähern,</li>
+        <li>die drei Axiome nennen und mit Gegenwahrscheinlichkeit und Additionssatz rechnen.</li>
+      </ul>
+    </div>
+    <p class="hint">Prüfungsbezug: Grundlage für die Aufgaben 4 bis 6 der exemplarischen Modulschlussprüfung. Dort brauchst du das Übersetzen von Text in Ereignisse und die Gegenwahrscheinlichkeit. Steht \(X\) für die Anzahl Tore (solche Zufallsvariablen folgen in Station 10), dann heisst «kein einziges Tor» \(X = 0\), und «mehr als 3 Tore» rechnest du als \(1 - P(X \le 3)\).</p>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#verknuepfen"><b>2</b>Verknüpfen</a>
+    <a href="#haeufigkeit"><b>3</b>Häufigkeit</a>
+    <a href="#axiome"><b>4</b>Axiome</a>
+    <a href="#venn"><b>5</b>Venn-Spiel</a>
+    <a href="#simulator"><b>6</b>Simulator</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Grundbegriffe</h2>
+    <p class="prose">Die ganze Wahrscheinlichkeitsrechnung steht auf fünf Begriffen. Sie klingen ähnlich, meinen aber verschiedene Dinge: einen Vorgang, einen einzelnen Ausgang, alle Ausgänge zusammen, eine Auswahl von Ausgängen und eine Zahl. Wer sie sauber trennt, macht später kaum Fehler.</p>
+    <div class="grid4">
+      <div class="concept">
+        <span class="tag">Zufallsexperiment = Vorgang</span>
+        <span class="ex">Würfel werfen</span>
+        <p>Ein Vorgang mit fester Vorschrift, beliebig wiederholbar, mit mehreren möglichen Ausgängen. Welcher eintritt, weisst du vorher nicht (Def. 2.1).</p>
+        <p><b>Wie im Alltag:</b> eine Losbude. Du kennst die Regeln und den Inhalt der Trommel, aber nicht dein Los.</p>
+      </div>
+      <div class="concept">
+        <span class="tag">Ergebnis = ein Ausgang</span>
+        <span class="ex">die gewürfelte 4</span>
+        <p>Ein einzelner möglicher Ausgang. Zwei Ergebnisse schliessen sich gegenseitig aus. Das Skript sagt auch Elementarereignis (Def. 2.4).</p>
+        <p><b>Wie im Alltag:</b> das eine Los, das du tatsächlich ziehst.</p>
+      </div>
+      <div class="concept">
+        <span class="tag">Ergebnismenge = alle Ausgänge</span>
+        <span class="ex"><span class="c">M</span> = {1, 2, 3, 4, 5, 6}</span>
+        <p>Die Menge aller Ergebnisse. Skript und Folien schreiben \(M\), viele Bücher \(\Omega\) (Def. 2.8, Bem. 2.9).</p>
+        <p><b>Wie im Alltag:</b> die Liste aller Lose in der Trommel.</p>
+      </div>
+      <div class="concept">
+        <span class="tag">Ereignis = Teilmenge</span>
+        <span class="ex"><span class="c">A</span> = {2, 4, 6}</span>
+        <p>Eine Sammlung von Ergebnissen, also eine Teilmenge von \(M\). \(A\) tritt ein, wenn eines seiner Ergebnisse fällt (Def. 2.16).</p>
+        <p><b>Wie im Alltag:</b> «Ich gewinne» umfasst alle Gewinnlose zusammen.</p>
+      </div>
+      <div class="concept">
+        <span class="tag">Wahrscheinlichkeit = Zahl</span>
+        <span class="ex"><span class="fn">P</span>(<span class="c">A</span>) = 0.5</span>
+        <p>Eine Zahl zwischen 0 und 1, die zu einem Ereignis gehört. Je näher bei 1, desto eher tritt das Ereignis ein. Das unmögliche Ereignis hat 0, das sichere Ereignis 1.</p>
+        <p><b>Wie im Alltag:</b> «30 % Regenrisiko» im Wetterbericht.</p>
+      </div>
+    </div>
+    <div class="note"><b>Wann ist ein Vorgang ein Zufallsexperiment?</b> Das Skript verlangt in Def. 2.1 drei Bedingungen, hier in eigenen Worten:
+      <ol class="t07-bedingungen">
+        <li>Es gibt eine feste Vorschrift. Darum lässt sich der Vorgang unter gleichen Bedingungen beliebig oft wiederholen.</li>
+        <li>Es sind mehrere Ergebnisse möglich, und du kennst sie im Voraus (oder kannst sie wenigstens abschätzen).</li>
+        <li>Welches Ergebnis eintritt, weisst du vorher nicht sicher.</li>
+      </ol>
+      Die Folien Wahrscheinlichkeitstheorie (Folie 5) zählen etwas anders: Vorschrift, Wiederholbarkeit und mehrere mögliche Ergebnisse. Die Ungewissheit steckt dort im «mehrere Ergebnisse möglich». Gemeint ist dasselbe. Halte dich an die drei Bedingungen des Skripts.</div>
+    <div class="note"><b>Zwei Sonderfälle:</b> \(M\) selbst ist auch eine Teilmenge von \(M\), also ein Ereignis. Es tritt immer ein und heisst <b>sicheres Ereignis</b>. Die leere Menge \(\{\}\) (auch \(\emptyset\)) tritt nie ein und heisst <b>unmögliches Ereignis</b>, zum Beispiel «Augenzahl 7» beim Würfel (Def. 2.16).</div>
+
+    <div class="card stack">
+      <h3>Kurz üben: Ergebnis, Ereignis oder Wahrscheinlichkeit?</h3>
+      <p class="hint">Achte auf Mengenklammern und auf Zahlen zwischen 0 und 1. Jede Zeile hat genau eine passende Kategorie.</p>
+      <div id="t07-sortierer"></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Ist das ein Zufallsexperiment?</h3>
+      <div id="t07-zufall"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
+    <h2>Das Wörterbuch der Ereignisse</h2>
+    <p class="prose">Die Wahrscheinlichkeitsrechnung leiht sich ihre Zeichen aus der Mengenlehre, spricht sie aber anders aus. In der Mengenlehre heisst \(A \cap B\) «Schnittmenge», hier sagst du «A und B treten ein» (Skript WT Kap. 2.3). Die Farbe zeigt die Art: feste Mengen orange, Funktionen grün, Variablen blau.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>So sprichst du es</th><th>Würfel-Beispiel</th></tr></thead>
+        <tbody>
+          <tr><td>\(\htmlClass{c}{M}\) oder \(\htmlClass{c}{\Omega}\)</td><td><span class="kind kind-c">Konstante</span></td><td>Ergebnismenge, sicheres Ereignis</td><td>\(\{1, 2, 3, 4, 5, 6\}\)</td></tr>
+          <tr><td>\(\{\}\) oder \(\emptyset\)</td><td><span class="kind kind-c">Konstante</span></td><td>unmögliches Ereignis</td><td>«Augenzahl 7»</td></tr>
+          <tr><td>\(\htmlClass{c}{A}, \htmlClass{c}{B}, \htmlClass{c}{C}\)</td><td><span class="kind kind-c">Konstante</span></td><td>Ereignisse, feste Teilmengen von \(M\)</td><td>\(A = \{2, 4, 6\}\)</td></tr>
+          <tr><td>\(x \in \htmlClass{c}{A}\)</td><td><span class="kind kind-p">Aussage</span></td><td>«Das Ergebnis \(x\) liegt in \(A\)»</td><td>\(4 \in A\)</td></tr>
+          <tr><td>\(\htmlClass{c}{A} \subseteq \htmlClass{c}{B}\)</td><td><span class="kind kind-p">Aussage</span></td><td>«A ist Teilmenge von B»: Tritt \(A\) ein, tritt sicher auch \(B\) ein</td><td>\(\{6\} \subseteq \{4, 5, 6\}\)</td></tr>
+          <tr><td>\(|\htmlClass{c}{A}|\)</td><td><span class="kind kind-op">Operator</span></td><td>Mächtigkeit: Anzahl Elemente von \(A\) (Def. 2.19)</td><td>\(|A| = 3\)</td></tr>
+          <tr><td>\(\htmlClass{c}{A} \cap \htmlClass{c}{B}\)</td><td><span class="kind kind-op">Operator</span></td><td>«A und B treten ein»</td><td>gerade <b>und</b> mindestens 4</td></tr>
+          <tr><td>\(\htmlClass{c}{A} \cup \htmlClass{c}{B}\)</td><td><span class="kind kind-op">Operator</span></td><td>«A oder B tritt ein» (auch beide)</td><td>gerade <b>oder</b> mindestens 4</td></tr>
+          <tr><td>\(\htmlClass{c}{A} \setminus \htmlClass{c}{B}\)</td><td><span class="kind kind-op">Operator</span></td><td>«A tritt ein, B nicht»</td><td>gerade, aber unter 4</td></tr>
+          <tr><td>\(\overline{\htmlClass{c}{A}}\)</td><td><span class="kind kind-op">Operator</span></td><td>Gegenereignis: «A tritt nicht ein»</td><td>ungerade</td></tr>
+          <tr><td>\(\htmlClass{c}{A} \cap \htmlClass{c}{B} = \{\}\)</td><td><span class="kind kind-p">Aussage</span></td><td>«A und B sind unvereinbar» (auch unverträglich, disjunkt)</td><td>«gerade» und «ungerade»</td></tr>
+          <tr><td>\(\htmlClass{fn}{P}(\htmlClass{c}{A})\)</td><td><span class="kind kind-fn">Funktion</span></td><td>Wahrscheinlichkeit von \(A\), eine Zahl</td><td>\(P(A) = 0.5\)</td></tr>
+          <tr><td>\(\htmlClass{fn}{h}(\htmlClass{c}{A}), \htmlClass{fn}{f}(\htmlClass{c}{A})\)</td><td><span class="kind kind-fn">Funktion</span></td><td>absolute und relative Häufigkeit von \(A\) in einer Versuchsreihe</td><td>21-mal ungerade in 50 Würfen</td></tr>
+          <tr><td>\(\htmlClass{v}{n}\)</td><td><span class="kind kind-v">Variable</span></td><td>Anzahl Versuche (Wiederholungen)</td><td>\(n = 50\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> \(A\) ist eine Menge, \(P(A)\) ist eine Zahl. Du kannst Mengen schneiden und vereinigen, Zahlen addierst und subtrahierst du. Ein Ausdruck wie \(P(A) \cap P(B)\) ergibt keinen Sinn.</div>
+  </section>
+
+  <!-- ===== 2 · Verknüpfen ===== -->
+  <section id="verknuepfen">
+    <span class="eyebrow">Schritt 2 · Ereignisse verknüpfen</span>
+    <h2>Und, oder, ohne, nicht</h2>
+    <p class="prose">Oft interessiert nicht ein einzelnes Ereignis, sondern eine Kombination: «gerade <b>und</b> gross», «rot <b>oder</b> ungerade». Def. 2.18 legt dafür vier Verknüpfungen fest. Das Rechteck steht immer für die ganze Ergebnismenge \(M\), die Kreise für die Ereignisse. Die gefärbte Fläche ist das Ergebnis der Verknüpfung (Venn-Diagramm).</p>
+    <div class="t07-ops" id="t07-ops"></div>
+    <div class="note falle"><b>Falle «oder»:</b> Im Alltag meint «oder» oft «entweder oder». In der Wahrscheinlichkeitsrechnung schliesst \(A \cup B\) den Fall «beide» immer ein. Für «genau eines von beiden» brauchst du \((A \setminus B) \cup (B \setminus A)\).</div>
+    <p class="prose">Klick dich jetzt durch ein vollständiges Beispiel. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf, und umgekehrt.</p>
+    <div id="t07-stepper-1"></div>
+    <div class="note tipp"><b>Tipp:</b> Schreib bei jeder Aufgabe zuerst \(M\) auf. Ohne \(M\) kannst du kein Gegenereignis bilden: «nicht gerade» heisst nur dann \(\{1, 3, 5\}\), wenn du weisst, dass \(M = \{1, \dots, 6\}\) ist.</div>
+  </section>
+
+  <!-- ===== 3 · Relative Häufigkeit und Wahrscheinlichkeitsbegriff ===== -->
+  <section id="haeufigkeit">
+    <span class="eyebrow">Schritt 3 · Was ist Wahrscheinlichkeit?</span>
+    <h2>Von der Häufigkeit zur Wahrscheinlichkeit</h2>
+    <p class="prose">Das Wort «Wahrscheinlichkeit» wird auf vier Arten gebraucht (Folien S2-V1, Folie 21 «Wahrscheinlichkeitsbegriffe»; Skript WT Kap. 2.4). Für die Rechnungen im Modul zählen vor allem die mathematische und die statistische Sicht.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">frequentistisch</span><p>Du wiederholst ein Experiment sehr oft. Die relative Häufigkeit pendelt sich auf einen Wert ein.</p></div>
+      <div class="concept"><span class="tag">mathematisch</span><p>Aus den Eigenschaften des Objekts exakt berechnet, zeitlich stabil. Ein symmetrischer Würfel zeigt jede Zahl mit \(\tfrac{1}{6}\).</p></div>
+      <div class="concept"><span class="tag">subjektiv</span><p>Eine persönliche Einschätzung: «Wahrscheinlich bestehe ich die Prüfung.» Damit rechnet das Modul nicht.</p></div>
+      <div class="concept"><span class="tag">statistisch</span><p>Aus Beobachtungsdaten geschätzt, kann sich mit der Zeit ändern. Beispiel: Anteil Knabengeburten rund 0.514 (Skript Bsp. 2.28).</p></div>
+    </div>
+
+    <h3>Die Anteilsregel</h3>
+    <p class="prose">Schon im 17. Jahrhundert rechneten Fermat und Pascal Gewinnchancen mit einer einfachen Regel: Die Chance eines Ereignisses ist der Anteil der günstigen Fälle an allen möglichen Fällen (Skript WT Kap. 2.4). Sie funktioniert nur, wenn alle Fälle gleich wahrscheinlich sind. Diese Bedingung fassen erst Bernoulli und Laplace im 18. und 19. Jahrhundert genau; das Laplace-Modell folgt in der nächsten Station.</p>
+    <div class="board">$$P(A) = \frac{\text{günstige Fälle}}{\text{mögliche Fälle}}$$</div>
+    <details class="sol"><summary>Bsp. 2.24: Viermal würfeln, Gewinn ohne Sechs. Wer ist im Vorteil? (eigene Lösung, nicht vom Dozenten bestätigt)</summary>
+      <div class="stack">
+        <p>Mögliche Fälle: Jeder der vier Würfe hat 6 Ausgänge, also \(6^4 = 1296\) gleich wahrscheinliche Viererfolgen.</p>
+        <p>Günstige Fälle (keine Sechs): Jeder Wurf hat 5 erlaubte Ausgänge, also \(5^4 = 625\).</p>
+        <p>\(P(\text{keine Sechs}) = \dfrac{625}{1296} \approx 0.4823\). Das ist knapp unter 0.5: Auf lange Sicht gewinnt die Bank.</p>
+      </div>
+    </details>
+
+    <h3>Relative Häufigkeit</h3>
+    <p class="prose">Du führst ein Zufallsexperiment \(n\)-mal durch und zählst, wie oft \(A\) eintritt. Diese Anzahl ist die <b>absolute Häufigkeit</b> \(h(A)\). Teilst du durch \(n\), erhältst du die <b>relative Häufigkeit</b>:</p>
+    <div class="board">$$f(A) = \frac{h(A)}{n}$$</div>
+    <p class="prose">Ein Beispiel mit eigenen Zahlen: Ein Würfel wurde 50-mal geworfen.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>50 Würfe eines Würfels (eigene Zahlen)</caption>
+        <thead><tr><th>Augenzahl</th><th class="zahl">1</th><th class="zahl">2</th><th class="zahl">3</th><th class="zahl">4</th><th class="zahl">5</th><th class="zahl">6</th><th class="zahl">Summe</th></tr></thead>
+        <tbody>
+          <tr><th>\(h_i\)</th><td class="zahl">7</td><td class="zahl">10</td><td class="zahl">8</td><td class="zahl">9</td><td class="zahl">6</td><td class="zahl">10</td><td class="zahl">50</td></tr>
+          <tr><th>\(f_i\)</th><td class="zahl">0.14</td><td class="zahl">0.20</td><td class="zahl">0.16</td><td class="zahl">0.18</td><td class="zahl">0.12</td><td class="zahl">0.20</td><td class="zahl">1</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Drei Eigenschaften gelten für jede Versuchsreihe (Skript WT Kap. 2.5 und Einleitung von Kap. 2.6, Folien WT Folie 9): \(f(A) \ge 0\), \(f(M) = 1\) und \(f(A \cup B) = f(A) + f(B)\), falls \(A\) und \(B\) unvereinbar sind. Prüf das an der Tabelle:</p>
+    <details class="sol"><summary>Rechne mit: \(A\) = ungerade, \(B\) = kleiner als 3, \(C = \{4, 6\}\)</summary>
+      <div class="stack">
+        <p>\(f(A) = \tfrac{7 + 8 + 6}{50} = 0.42\), \(f(B) = \tfrac{7 + 10}{50} = 0.34\), \(f(C) = \tfrac{9 + 10}{50} = 0.38\).</p>
+        <p><b>\(C\) und \(B\) sind unvereinbar</b> (\(C \cap B = \{\}\)): \(f(C \cup B) = \tfrac{7 + 10 + 9 + 10}{50} = 0.72 = 0.38 + 0.34\). Die Summe stimmt.</p>
+        <p><b>\(A\) und \(B\) sind nicht unvereinbar</b>, beide enthalten die 1: \(f(A \cup B) = \tfrac{7 + 10 + 8 + 6}{50} = 0.62\), aber \(0.42 + 0.34 = 0.76\). Die Differenz \(0.14\) ist genau \(f(\{1\})\): Die Einsen wurden doppelt gezählt. Diesen Gedanken brauchst du gleich beim Additionssatz.</p>
+      </div>
+    </details>
+
+    <h3>Das empirische Gesetz der grossen Zahlen</h3>
+    <p class="prose">Wiederholst du ein Experiment sehr oft, stabilisiert sich die relative Häufigkeit eines Ereignisses um einen festen Wert (Skript WT Kap. 2.5). Diesen Wert nennt das Skript <b>statistische Wahrscheinlichkeit</b>. Das ist eine Erfahrungstatsache, kein mathematischer Beweis. Im Simulator in Schritt 6 siehst du es selbst.</p>
+    <div class="note falle"><b>Falle:</b> \(f(A) = 0\) heisst nicht, dass \(A\) unmöglich ist. Es ist möglich, dass in 50 Würfen nie eine 2 fällt, auch wenn das sehr selten vorkommt (etwa 0.01 %). Und umgekehrt: \(f(A) = 1\) in einer kurzen Reihe ist nur ein Hinweis, kein Beweis für \(P(A) = 1\).</div>
+  </section>
+
+  <!-- ===== 4 · Axiome und Rechenregeln ===== -->
+  <section id="axiome">
+    <span class="eyebrow">Schritt 4 · Axiome von Kolmogorow</span>
+    <h2>Drei Regeln tragen die ganze Theorie</h2>
+    <p class="prose">Relative Häufigkeiten sind messbar, aber schwanken. 1933 hatte Kolmogorow eine einfache Idee: Er übernahm die drei Eigenschaften der relativen Häufigkeit als Grundregeln (Axiome) für eine Zahl \(P(A)\). Jede Zuordnung, die diese drei Regeln erfüllt, heisst Wahrscheinlichkeit (Axiom 2.29).</p>
+    <div class="board">
+      <ol class="t07-regeln">
+        <li>\(P(A) \ge 0\) <span class="t07-regelname">· Axiom I, Nichtnegativität: keine negativen Wahrscheinlichkeiten</span></li>
+        <li>\(P(M) = 1\) <span class="t07-regelname">· Axiom II, Normierung: irgendein Ergebnis tritt sicher ein</span></li>
+        <li>\(P(A \cup B) = {P(A) + P(B)}\), falls \(A \cap B = \{\}\) <span class="t07-regelname">· Axiom III, Additivität: unvereinbare Ereignisse addieren sich</span></li>
+      </ol>
+    </div>
+    <p class="prose">\(M\) und \(P\) zusammen bilden das Modell, den <b>Wahrscheinlichkeitsraum</b> \((M, P)\) (Bem. 2.30). Die Axiome sagen nicht, welche Zahl \(P(A)\) konkret hat. Sie sagen nur, welche Regeln jede Wahrscheinlichkeit einhalten muss.</p>
+    <div class="grid2 t07-modell">
+      <div class="card"><h3>Wirklichkeit</h3><p>Zufallsexperiment durchführen und beobachten.</p><p>Ergebnis: relative Häufigkeit \(f(A)\)</p></div>
+      <div class="card"><h3>Modell</h3><p>Wahrscheinlichkeitsraum \((M, P)\) aufstellen und rechnen.</p><p>Ergebnis: Wahrscheinlichkeit \(P(A)\)</p></div>
+    </div>
+    <div class="note"><b>Verbindung:</b> In langen Versuchsreihen gilt \(f(A) \approx P(A)\). Die Beobachtung bestätigt das Modell, und das Modell sagt voraus, was du beobachten wirst (Skript WT Abb. 8).</div>
+
+    <h3>Folgerungen: die Rechenregeln (Satz 2.34)</h3>
+    <p class="prose">Aus den drei Axiomen folgen sechs Regeln. Die Nummern sind die des Skripts.</p>
+    <div class="board">
+      <ol class="t07-regeln">
+        <li>\(P(\{\}) = 0\) <span class="t07-regelname">· das unmögliche Ereignis</span></li>
+        <li>\(P(\overline{A}) = 1 - P(A)\) <span class="t07-regelname">· Gegenwahrscheinlichkeit</span></li>
+        <li>\(P(A \cup B) = {P(A) + P(B) - P(A \cap B)}\) <span class="t07-regelname">· Additionssatz, für beliebige Ereignisse</span></li>
+        <li>\(P(A \setminus B) = {P(A) - P(A \cap B)}\) <span class="t07-regelname">· Differenz</span></li>
+        <li>\(A \subseteq B \Rightarrow P(A) \le P(B)\) <span class="t07-regelname">· Monotonie, siehe Hinweis unten</span></li>
+        <li>\(P(A) = \sum_{x_i \in A} p_i\) und \(\sum_{i=1}^{n} p_i = 1\) <span class="t07-regelname">· endliches \(M = \{x_1, \dots, x_n\}\) mit \(p_i = P(\{x_i\})\): Wahrscheinlichkeiten der Ergebnisse aufsummieren</span></li>
+      </ol>
+    </div>
+    <p class="prose">Daraus folgt auch \(P(A) \le 1\): Wegen Regel 2 ist \(P(A) = 1 - P(\overline{A})\), und \(P(\overline{A})\) ist nach Axiom I nicht negativ.</p>
+    <details class="sol"><summary>Warum gilt Regel 1? (eigene Herleitung aus den Axiomen)</summary>
+      <div class="stack">
+        <p>\(M\) und \(\{\}\) haben keine gemeinsamen Elemente, sie sind unvereinbar. Ausserdem ist \(M \cup \{\} = M\).</p>
+        <p>Axiom III liefert \(P(M) = P(M \cup \{\}) = P(M) + P(\{\})\).</p>
+        <p>Zieh auf beiden Seiten \(P(M)\) ab: \(P(\{\}) = 0\).</p>
+      </div>
+    </details>
+    <details class="sol"><summary>Warum gilt Regel 2? (eigene Herleitung)</summary>
+      <div class="stack">
+        <p>\(A\) und \(\overline{A}\) sind unvereinbar und decken zusammen ganz \(M\) ab: \(A \cup \overline{A} = M\).</p>
+        <p>Axiom III und Axiom II: \(P(A) + P(\overline{A}) = P(M) = 1\), also \(P(\overline{A}) = 1 - P(A)\).</p>
+        <p>Im Venn-Diagramm: Die ganze Fläche ist 1, der Kreis \(A\) und der Rest teilen sie unter sich auf.</p>
+      </div>
+    </details>
+    <div class="note falle"><b>Falle Additionssatz:</b> \(P(A \cup B) = P(A) + P(B)\) gilt nur für unvereinbare Ereignisse (Axiom III). Überlappen sich \(A\) und \(B\), zählst du den Schnitt doppelt. Darum wird er bei Regel 3 einmal abgezogen.</div>
+    <div class="note"><b>Hinweis zur Monotonie (Regel 5):</b> Das Skript formuliert Satz 2.34 Nr. 5 mit echter Teilmenge und striktem «kleiner»: \(A \subset B \Rightarrow P(A) &lt; P(B)\). Die Folien Wahrscheinlichkeitstheorie (Folie 13) und die Lehrbücher schreiben \(P(A) \le P(B)\). Das ist die sichere Form, denn Gleichheit ist möglich, wenn die zusätzlichen Ergebnisse von \(B\) die Wahrscheinlichkeit 0 haben. Ein Beispiel folgt bei der Normalverteilung: Dort ist \(P(X = 2) = 0\), also \(P(X &lt; 2) = P(X \le 2)\), obwohl \(\{X &lt; 2\}\) eine echte Teilmenge von \(\{X \le 2\}\) ist. Schreib in der Prüfung \(\le\).</div>
+
+    <p class="prose">So rechnest du mit den Regeln 2, 3 und 4. Das Venn-Diagramm füllt sich dabei mit Zahlen.</p>
+    <div id="t07-stepper-2"></div>
+    <details class="sol"><summary>Bsp. 2.35: Dreimal würfeln, nicht drei Sechser (eigene Lösung, nicht vom Dozenten bestätigt)</summary>
+      <div class="stack">
+        <p>\(M\) enthält alle Dreierfolgen, \(|M| = 6 \cdot 6 \cdot 6 = 216\), alle gleich wahrscheinlich.</p>
+        <p>«Drei Sechser» ist genau ein Ergebnis: \((6, 6, 6)\). Also \(P(\text{drei Sechser}) = \tfrac{1}{216}\).</p>
+        <p>«Nicht drei Sechser» ist das Gegenereignis: \(P = 1 - \tfrac{1}{216} = \tfrac{215}{216} \approx 0.9954\). Direkt zählen wäre mühsam, über das Gegenereignis ist es eine Zeile.</p>
+      </div>
+    </details>
+    <div class="note tipp"><b>Tipp für die Prüfung:</b> Bei «mindestens eines», «mehr als …», «keines» und «nicht …» denkst du zuerst an das Gegenereignis. «Keines» und «mindestens eines» sind Gegenereignisse voneinander: Kennst du das eine, hast du mit \(1 - \dots\) auch das andere. Aufgabe 5 der exemplarischen Modulschlussprüfung nutzt genau das, zum Beispiel \(P(X &gt; 3) = 1 - P(X \le 3)\). Auch im Test zum Lernblock S2-LB1 (Aufgabe 4b) zeigt die Musterlösung neben der direkten Summe den kürzeren Weg: «kein Gewinn» als 1 minus «Gewinn».</div>
+  </section>
+
+  <!-- ===== 5 · Venn-Spiel ===== -->
+  <section id="venn">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Das Venn-Spiel</h2>
+    <p class="prose">Hier übst du das Übersetzen in beide Richtungen. <b>Erkunden:</b> Tippe auf ein Feld und lies, welcher Ausdruck dazu gehört, oder wähle einen Ausdruck und sieh seine Fläche. <b>Einfärben:</b> Färbe die Fläche eines vorgegebenen Ausdrucks selbst ein. <b>Erkennen:</b> Eine Fläche ist gefärbt, du wählst den passenden Ausdruck. Mit drei Ereignissen wird es kniffliger.</p>
+    <div class="card stack" id="t07-spiel">
+      <div class="t07-spiel-kopf">
+        <div class="modes" role="group" aria-label="Spielart">
+          <button type="button" class="btn on" aria-pressed="true" data-modus="erkunden">Erkunden</button>
+          <button type="button" class="btn" aria-pressed="false" data-modus="faerben">Einfärben</button>
+          <button type="button" class="btn" aria-pressed="false" data-modus="erkennen">Erkennen</button>
+        </div>
+        <div class="modes" role="group" aria-label="Anzahl Ereignisse">
+          <button type="button" class="btn on" aria-pressed="true" data-anzahl="2">A, B</button>
+          <button type="button" class="btn" aria-pressed="false" data-anzahl="3">A, B, C</button>
+        </div>
+      </div>
+      <p class="t07-auftrag" id="t07-auftrag"></p>
+      <div id="t07-spiel-venn"></div>
+      <div class="t07-steuer" id="t07-steuer"></div>
+      <div class="qopts" id="t07-optionen" hidden></div>
+      <p class="info" id="t07-info" aria-live="polite"></p>
+      <p class="t07-stand" id="t07-stand"></p>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Simulator ===== -->
+  <section id="simulator">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Würfel- und Münz-Simulator</h2>
+    <p class="prose">Wirf eine Münze oder einen Würfel, so oft du willst. Die Linie zeigt die relative Häufigkeit \(f(A)\) nach jedem Wurf, die gestrichelte Linie die Wahrscheinlichkeit \(P(A)\). Am Anfang springt \(f(A)\) wild, mit vielen Würfen pendelt es sich ein. Starte mehrere Versuchsreihen: Jede verläuft anders, alle landen in der Nähe von \(P(A)\).</p>
+    <div class="card rechner" id="t07-sim">
+      <div class="t07-sim-wahl">
+        <label for="t07-exp">Experiment und Ereignis</label>
+        <select id="t07-exp" class="btn">
+          <option value="kopf">Münze: A = «Kopf»</option>
+          <option value="sechs">Würfel: A = «Augenzahl 6»</option>
+          <option value="gerade">Würfel: A = «gerade Augenzahl»</option>
+          <option value="min5">Würfel: A = «mindestens 5»</option>
+        </select>
+      </div>
+      <div class="row" role="group" aria-label="Würfe ausführen">
+        <button type="button" class="btn primary" data-wuerfe="1">+1 Wurf</button>
+        <button type="button" class="btn" data-wuerfe="10">+10</button>
+        <button type="button" class="btn" data-wuerfe="100">+100</button>
+        <button type="button" class="btn" data-wuerfe="1000">+1000</button>
+      </div>
+      <div class="rechner-ergebnis t07-sim-erg" id="t07-sim-erg" aria-live="polite"></div>
+      <p class="hint" id="t07-sim-letzte"></p>
+      <figure class="diagramm">
+        <svg id="t07-sim-svg" viewBox="0 0 320 200" role="img" aria-labelledby="t07-sim-titel">
+          <title id="t07-sim-titel">Verlauf der relativen Häufigkeit f(A) über die Anzahl Würfe, mit der Wahrscheinlichkeit P(A) als gestrichelte Linie</title>
+        </svg>
+        <figcaption>Farbige Linie: aktuelle Versuchsreihe. Graue Linien: frühere Reihen. Gestrichelt: \(P(A)\).</figcaption>
+      </figure>
+      <div class="tablebox">
+        <table class="tabelle" id="t07-sim-tab"></table>
+      </div>
+      <div class="row">
+        <button type="button" class="btn" id="t07-sim-neu">Neue Versuchsreihe</button>
+        <button type="button" class="btn" id="t07-sim-loeschen">Alles löschen</button>
+      </div>
+    </div>
+    <div class="note tipp"><b>Auf dem TI-Nspire:</b> <code>w:=randInt(1,6,100)</code> würfelt 100-mal und speichert die Liste in <code>w</code>. <code>countIf(w,6)/100</code> liefert die relative Häufigkeit der Sechs.</div>
+    <div class="note falle"><b>Falle Spielerfehlschluss:</b> Nach fünfmal Kopf ist Zahl nicht «fällig». Die Münze hat kein Gedächtnis, \(P(\text{Kopf})\) bleibt 0.5. Das Gesetz der grossen Zahlen gleicht frühere Abweichungen nicht aus, es verdünnt sie durch viele weitere Würfe.</div>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Sieben Aufgaben, von leicht zu prüfungsnah. Die Übungen 4, 5 und 7 sind im Stil der exemplarischen Modulschlussprüfung gebaut, mit eigenen Zahlen und Kontexten. Alle Lösungswege sind eigene Lösungen, nicht vom Dozenten bestätigt.</p>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung · Zuordnen</span><h3>Übung 1 · Vom Satz zum Ausdruck</h3></div>
+      <p class="prose">Eine Kundin im Laden wird zufällig beobachtet. \(A\) = «sie zahlt mit Karte», \(B\) = «sie kauft mehr als drei Artikel». Ordne jeden Satz dem passenden Ausdruck zu.</p>
+      <div id="t07-ue-sort"></div>
+    </div>
+    <div id="t07-ue-wuerfel"></div>
+    <div id="t07-ue-haeufigkeit"></div>
+    <div id="t07-ue-wf"></div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung · Genau eine richtig</span><h3>Übung 5 · Ein Kreuz pro Block (Kreuzformat wie Aufgabe 8b der Modulschlussprüfung)</h3></div>
+      <p class="prose">Ein Glücksrad hat 8 gleich grosse Felder mit den Zahlen 1 bis 8. \(A\) = «Zahl höchstens 4», \(B\) = «Zahl zwischen 4 und 6, beide inklusive». Von den folgenden Aussagen ist höchstens eine korrekt:</p>
+      <ol class="prose">
+        <li>\(A\) und \(B\) sind unvereinbar.</li>
+        <li>\(A \cup B\) enthält 7 Ergebnisse.</li>
+        <li>\(A \setminus B = \{1, 2, 3\}\)</li>
+        <li>\(\overline{A} = \{5, 6, 7\}\)</li>
+      </ol>
+      <div id="t07-ue-block"></div>
+    </div>
+    <div id="t07-ue-homeoffice"></div>
+    <div id="t07-ue-gluecksrad"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Die ganze Aufgabe am Stück gelöst</h2>
+    <p class="prose">Drück auf Play. Der Film startet sofort, der farbige Balken zeigt, wann der nächste Schritt kommt. Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Aufgabe ist eine eigene, prüfungsnahe Textaufgabe (eigene Lösung, nicht vom Dozenten bestätigt). Sie trainiert das Übersetzen von Text in Ereignisse und die Gegenwahrscheinlichkeit, die du in den Aufgaben 4 bis 6 der exemplarischen Modulschlussprüfung immer wieder brauchst.</p>
+    <div id="t07-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je genau eine Antwort richtig. Fünf davon sind typische Stolperfallen.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Zufallsexperiment:</b> feste Vorschrift, beliebig wiederholbar, mehrere mögliche Ergebnisse, Ausgang vorher ungewiss (Def. 2.1).</li>
+      <li><b>Ergebnis</b> = ein Ausgang. <b>Ergebnismenge</b> \(M\) (auch \(\Omega\)) = alle Ausgänge. <b>Ereignis</b> = Teilmenge von \(M\). \(M\) ist sicher, \(\{\}\) unmöglich.</li>
+      <li><b>Verknüpfen:</b> \(A \cap B\) «und», \(A \cup B\) «oder, auch beide», \(A \setminus B\) «A ohne B», \(\overline{A}\) «nicht A». Unvereinbar heisst \(A \cap B = \{\}\).</li>
+      <li><b>Relative Häufigkeit</b> \(f(A) = \tfrac{h(A)}{n}\) stabilisiert sich in langen Reihen. Modell und Wirklichkeit: \(f(A) \approx P(A)\).</li>
+      <li><b>Bei «mindestens eines», «mehr als», «keines» und «nicht»</b> zuerst an das Gegenereignis denken: Die Wahrscheinlichkeiten von «keines» und «mindestens eines» ergänzen sich zu 1. Bei «oder» den Schnitt nicht doppelt zählen.</li>
+    </ul>
+    <div class="board">
+      <ol class="t07-regeln">
+        <li>\(P(A) \ge 0, \quad P(M) = 1\) <span class="t07-regelname">· Axiome I und II</span></li>
+        <li>\(P(A \cup B) = {P(A) + P(B)}\), falls \(A \cap B = \{\}\) <span class="t07-regelname">· Axiom III</span></li>
+        <li>\(P(\overline{A}) = 1 - P(A)\) <span class="t07-regelname">· Gegenwahrscheinlichkeit</span></li>
+        <li>\(P(A \cup B) = {P(A) + P(B) - P(A \cap B)}\) <span class="t07-regelname">· Additionssatz</span></li>
+        <li>\(P(A \setminus B) = {P(A) - P(A \cap B)}\) <span class="t07-regelname">· Differenz</span></li>
+      </ol>
+    </div>
+    <footer class="hint">Quellen: Skript «Einführung in die Wahrscheinlichkeitstheorie» (Bleiker, Stand Aug. 2020), Kap. 2.1 bis 2.6; Folien S2-V1 «Grundlagen, Zufallsexperimente» (Ott); Folien Wahrscheinlichkeitstheorie (Bleiker), Folien 4 bis 13; Lernblock S2-LB1; exemplarische Modulschlussprüfung (Aufgaben 4 bis 6 als Prüfungsbezug). Definitionen in eigenen Worten mit Verweis auf die Nummern im Skript. Alle Zahlenbeispiele, Übungen und der Lösungsfilm sind eigene Aufgaben mit eigenen Lösungen, nicht vom Dozenten bestätigt.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text verwenden.
+  const T = String.raw;
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  // Fortsetzungszeile einer Rechnung (statt \phantom-Ausrichtung, die auf schmalen Schirmen umbricht)
+  const FORT = (s) => '<span class="t07-fort">' + s + "</span>";
+
+  /* =====================================================================
+     Venn-Diagramme: exakte Flächen aus Kreisbögen
+     Feld-Schlüssel: ein Zeichen pro Ereignis, «1» = drin, «0» = draussen.
+     Beispiel bei drei Ereignissen: "110" = in A, in B, nicht in C.
+     ===================================================================== */
+  const GEOMETRIE = {
+    2: { breite: 320, hoehe: 200, rahmen: [8, 8, 304, 184],
+         kreise: [{ x: 122, y: 102, r: 68 }, { x: 198, y: 102, r: 68 }],
+         namen: [{ x: 50, y: 40 }, { x: 266, y: 40 }], aussen: { x: 36, y: 176 } },
+    3: { breite: 320, hoehe: 252, rahmen: [8, 8, 304, 236],
+         kreise: [{ x: 131, y: 96, r: 62 }, { x: 189, y: 96, r: 62 }, { x: 160, y: 147, r: 62 }],
+         namen: [{ x: 58, y: 40 }, { x: 258, y: 40 }, { x: 228, y: 226 }], aussen: { x: 36, y: 228 } },
+    getrennt: { breite: 320, hoehe: 200, rahmen: [8, 8, 304, 184],
+         kreise: [{ x: 92, y: 102, r: 56 }, { x: 228, y: 102, r: 56 }],
+         namen: [{ x: 36, y: 42 }, { x: 284, y: 42 }], aussen: { x: 36, y: 176 } }
+  };
+  const FELDER = { 2: ["10", "01", "11", "00"], 3: ["100", "010", "001", "110", "101", "011", "111", "000"], getrennt: ["10", "01", "00"] };
+  const cache = {};
+
+  const r2 = (z) => Math.round(z * 100) / 100;
+  const drin = (c, p) => Math.hypot(p.x - c.x, p.y - c.y) < c.r - 0.01;
+
+  function schnittpunkte(c1, c2) {
+    const dx = c2.x - c1.x, dy = c2.y - c1.y, d = Math.hypot(dx, dy);
+    const a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
+    const h = Math.sqrt(c1.r * c1.r - a * a);
+    const mx = c1.x + (a * dx) / d, my = c1.y + (a * dy) / d;
+    return [{ x: mx + (h * dy) / d, y: my - (h * dx) / d }, { x: mx - (h * dy) / d, y: my + (h * dx) / d }];
+  }
+
+  // Bogen auf Kreis c von «von» nach «nach»; gewählt wird der Bogen, dessen Mittelpunkt die Bedingung erfüllt
+  function bogen(c, von, nach, bed) {
+    const tV = Math.atan2(von.y - c.y, von.x - c.x), tN = Math.atan2(nach.y - c.y, nach.x - c.x);
+    let span = (tN - tV) % (2 * Math.PI);
+    if (span < 0) span += 2 * Math.PI;
+    const m = tV + span / 2;
+    const mitte = { x: c.x + c.r * Math.cos(m), y: c.y + c.r * Math.sin(m) };
+    const ziel = r2(nach.x) + " " + r2(nach.y);
+    if (bed(mitte)) return " A" + c.r + " " + c.r + " 0 " + (span > Math.PI ? 1 : 0) + " 1 " + ziel;
+    const span2 = 2 * Math.PI - span;
+    return " A" + c.r + " " + c.r + " 0 " + (span2 > Math.PI ? 1 : 0) + " 0 " + ziel;
+  }
+
+  // ecken: [Punkt, Kreisindex, Punkt, Kreisindex, …] – vom Punkt entlang des Kreises zum nächsten Punkt
+  function feldPfad(kreise, ecken, bits) {
+    let d = "M" + r2(ecken[0].x) + " " + r2(ecken[0].y);
+    for (let i = 0; i < ecken.length; i += 2) {
+      const von = ecken[i], k = ecken[i + 1], nach = ecken[(i + 2) % ecken.length];
+      const bed = (p) => kreise.every((c, j) => j === k || drin(c, p) === (bits[j] === "1"));
+      d += bogen(kreise[k], von, nach, bed);
+    }
+    return d + " Z";
+  }
+
+  function kreisPfad(c) {
+    return "M" + (c.x - c.r) + " " + c.y + " A" + c.r + " " + c.r + " 0 1 0 " + (c.x + c.r) + " " + c.y +
+      " A" + c.r + " " + c.r + " 0 1 0 " + (c.x - c.r) + " " + c.y + " Z";
+  }
+
+  function geometrie(art) {
+    if (cache[art]) return cache[art];
+    const g = GEOMETRIE[art], K = g.kreise, [rx, ry, rw, rh] = g.rahmen;
+    const rechteck = "M" + rx + " " + ry + " H" + (rx + rw) + " V" + (ry + rh) + " H" + rx + " Z ";
+    const pfade = {};
+    if (art === "getrennt") {
+      pfade["10"] = kreisPfad(K[0]);
+      pfade["01"] = kreisPfad(K[1]);
+      pfade["00"] = rechteck + kreisPfad(K[0]) + " " + kreisPfad(K[1]);
+    } else if (art === 2) {
+      const [p, q] = schnittpunkte(K[0], K[1]);
+      const P1 = p.y < q.y ? p : q, P2 = p.y < q.y ? q : p;
+      pfade["11"] = feldPfad(K, [P1, 1, P2, 0], "11");
+      pfade["10"] = feldPfad(K, [P1, 0, P2, 1], "10");
+      pfade["01"] = feldPfad(K, [P1, 1, P2, 0], "01");
+      pfade["00"] = rechteck + feldPfad(K, [P1, 0, P2, 1], "00");
+    } else {
+      // Paar (i, j) mit drittem Kreis k: innerer Punkt liegt in k, äusserer nicht
+      const paar = (i, j, k) => {
+        const s = schnittpunkte(K[i], K[j]);
+        return drin(K[k], s[0]) ? { I: s[0], O: s[1] } : { I: s[1], O: s[0] };
+      };
+      const AB = paar(0, 1, 2), BC = paar(1, 2, 0), CA = paar(2, 0, 1);
+      pfade["111"] = feldPfad(K, [AB.I, 1, BC.I, 2, CA.I, 0], "111");
+      pfade["110"] = feldPfad(K, [AB.O, 1, BC.I, 2, CA.I, 0], "110");
+      pfade["011"] = feldPfad(K, [BC.O, 2, CA.I, 0, AB.I, 1], "011");
+      pfade["101"] = feldPfad(K, [CA.O, 0, AB.I, 1, BC.I, 2], "101");
+      pfade["100"] = feldPfad(K, [AB.O, 0, CA.O, 2, BC.I, 1], "100");
+      pfade["010"] = feldPfad(K, [BC.O, 1, AB.O, 0, CA.I, 2], "010");
+      pfade["001"] = feldPfad(K, [CA.O, 2, BC.O, 1, AB.I, 0], "001");
+      pfade["000"] = rechteck + feldPfad(K, [AB.O, 0, CA.O, 2, BC.O, 1], "000");
+    }
+    // Beschriftungspunkt je Feld: Gitterpunkt mit grösstem Abstand zu allen Rändern
+    const punkte = {};
+    const beste = {};
+    for (let x = rx + 2; x < rx + rw; x += 2) {
+      for (let y = ry + 2; y < ry + rh; y += 2) {
+        const p = { x: x, y: y };
+        const bits = K.map((c) => (drin(c, p) ? "1" : "0")).join("");
+        let ab = Math.min(x - rx, rx + rw - x, y - ry, ry + rh - y);
+        K.forEach((c) => { ab = Math.min(ab, Math.abs(Math.hypot(x - c.x, y - c.y) - c.r)); });
+        if (!beste[bits] || ab > beste[bits]) { beste[bits] = ab; punkte[bits] = p; }
+      }
+    }
+    if (art === "getrennt") { punkte["10"] = { x: K[0].x, y: K[0].y }; punkte["01"] = { x: K[1].x, y: K[1].y }; }
+    punkte[art === 3 ? "000" : "00"] = g.aussen;
+    cache[art] = { g: g, pfade: pfade, punkte: punkte, felder: FELDER[art] };
+    return cache[art];
+  }
+
+  // Beschreibung eines Felds in Worten, z. B. «in A, nicht in B»
+  function feldWorte(bits, namen) {
+    return bits.split("").map((b, i) => (b === "1" ? "in " : "nicht in ") + namen[i]).join(", ");
+  }
+
+  /* Venn-Diagramm als SVG-Text.
+     opt: art (2 | 3 | "getrennt"), namen, an (Felder gefärbt), werte ({Feld: Text}), neu (Felder mit neuem Wert),
+          interaktiv, klein, titel */
+  function venn(opt) {
+    const art = opt.art || 2;
+    const geo = geometrie(art), g = geo.g;
+    const namen = opt.namen || ["A", "B", "C"];
+    const an = opt.an || [], werte = opt.werte || {}, neu = opt.neu || [];
+    const titel = opt.titel || "Venn-Diagramm";
+    let s = '<svg class="t07-venn' + (opt.interaktiv ? " t07-interaktiv" : "") + (opt.klein ? " t07-klein" : "") +
+      '" viewBox="0 0 ' + g.breite + " " + g.hoehe + '" role="' + (opt.interaktiv ? "group" : "img") + '" aria-label="' + titel + '">';
+    if (!opt.interaktiv) s += "<title>" + titel + "</title>";
+    geo.felder.forEach((f) => {
+      const aussen = f.indexOf("1") < 0;
+      s += '<path class="t07-feld' + (an.indexOf(f) >= 0 ? " an" : "") + '" data-feld="' + f + '" d="' + geo.pfade[f] + '"' +
+        (aussen ? ' fill-rule="evenodd"' : "");
+      if (opt.interaktiv) {
+        s += ' tabindex="0" role="button" aria-pressed="' + (an.indexOf(f) >= 0) + '" aria-label="Feld ' + feldWorte(f, namen) + '"';
+      }
+      s += "></path>";
+    });
+    g.kreise.forEach((c) => { s += '<circle class="t07-kreis" cx="' + c.x + '" cy="' + c.y + '" r="' + c.r + '"></circle>'; });
+    const [rx, ry, rw, rh] = g.rahmen;
+    s += '<rect class="t07-rahmen" x="' + rx + '" y="' + ry + '" width="' + rw + '" height="' + rh + '" rx="6"></rect>';
+    g.kreise.forEach((c, i) => {
+      s += '<text class="t07-name" x="' + g.namen[i].x + '" y="' + g.namen[i].y + '" text-anchor="middle">' + namen[i] + "</text>";
+    });
+    s += '<text class="t07-mname" x="' + (rx + rw - 8) + '" y="' + (ry + rh - 8) + '" text-anchor="end">M</text>';
+    Object.keys(werte).forEach((f) => {
+      const p = geo.punkte[f];
+      if (!p) return;
+      s += '<text class="t07-wert' + (neu.indexOf(f) >= 0 ? " t07-neu" : "") + '" x="' + r2(p.x) + '" y="' + r2(p.y) + '">' + werte[f] + "</text>";
+    });
+    s += '<g class="t07-marken"></g></svg>';
+    return s;
+  }
+
+  // Tafel: Venn-Diagramm links, Rechenzeilen rechts; «neu» = Index der neuen Zeile (-1: keine)
+  function tafel(vennSvg, zeilen, neu) {
+    return '<div class="t07-tafel">' + (vennSvg ? '<div class="t07-tafel-venn">' + vennSvg + "</div>" : "") +
+      '<div class="t07-tafel-zeilen">' + zeilen.map((z, i) => "<div>" + (i === neu ? NW(z) : z) + "</div>").join("") + "</div></div>";
+  }
+
+  /* =====================================================================
+     Schritt 0 · Sortierer und Einzelfrage
+     ===================================================================== */
+  L.sortierer("#t07-sortierer", {
+    kategorien: ["Ergebnis", "Ereignis", "Wahrscheinlichkeit"],
+    elemente: [
+      { html: "die gewürfelte 5", kategorie: "Ergebnis", erklaerung: "Ein einzelner Ausgang des Wurfs ist ein Ergebnis." },
+      { html: T`$\{5\}$`, kategorie: "Ereignis", erklaerung: T`Mit Mengenklammern ist $\{5\}$ eine Teilmenge von $M$, also ein Ereignis. Es enthält genau ein Ergebnis.` },
+      { html: "«Augenzahl mindestens 5»", kategorie: "Ereignis", erklaerung: T`Die Beschreibung passt auf mehrere Ergebnisse: $\{5, 6\}$.` },
+      { html: T`$\tfrac{1}{3}$ als Chance auf «mindestens 5»`, kategorie: "Wahrscheinlichkeit", erklaerung: T`Eine Zahl zwischen 0 und 1, die zu einem Ereignis gehört: $P(\{5, 6\}) = \tfrac{2}{6} = \tfrac{1}{3}$.` },
+      { html: T`$M = \{1, 2, 3, 4, 5, 6\}$`, kategorie: "Ereignis", erklaerung: T`$M$ ist Teilmenge von sich selbst, also ein Ereignis: das sichere Ereignis.` },
+      { html: "«Augenzahl 7»", kategorie: "Ereignis", erklaerung: T`Kein Ergebnis passt. Das ist die leere Menge $\{\}$, das unmögliche Ereignis.` },
+      { html: "die Seite «Zahl» beim Münzwurf", kategorie: "Ergebnis", erklaerung: T`Ein einzelner Ausgang der Münze. Die Ergebnismenge ist $M = \{K, Z\}$.` },
+      { html: "0.5 als Chance auf eine gerade Zahl", kategorie: "Wahrscheinlichkeit", erklaerung: T`$P(\{2, 4, 6\}) = 0.5$ ist eine Zahl, kein Ausgang und keine Menge.` }
+    ]
+  });
+
+  L.auswahl("#t07-zufall", {
+    frage: "Welcher Vorgang ist nach Def. 2.1 <b>kein</b> Zufallsexperiment?",
+    optionen: [
+      "Einen Würfel werfen und die Augenzahl notieren",
+      "Die Anzahl Besuche einer Webseite in einer Stunde zählen",
+      "Einen Stein loslassen und prüfen, ob er nach unten fällt",
+      "Aus 30 Studierenden eine Person auslosen und befragen"
+    ],
+    richtig: 2,
+    erklaerung: "Der Ausgang steht wegen der Schwerkraft vorher fest. Es gibt nur ein mögliches Ergebnis, und Bedingung 3 (Ausgang ungewiss) fehlt. Die anderen drei Vorgänge haben mehrere mögliche Ausgänge, die vorher unbekannt sind. Auch das Zählen von Besuchen gilt im Skript als Zufallsexperiment (Bsp. 2.7)."
+  });
+
+  /* =====================================================================
+     Schritt 2 · Verknüpfungen als Karten
+     ===================================================================== */
+  const OPS = [
+    { art: 2, an: ["11"], tag: "Schnitt: A und B", tex: T`$A \cap B$`, text: T`Beide treten ein. Würfel: gerade und mindestens 4 ergibt $\{4, 6\}$.` },
+    { art: 2, an: ["10", "01", "11"], tag: "Vereinigung: A oder B", tex: T`$A \cup B$`, text: T`Mindestens eines tritt ein, auch beide. Würfel: $\{2, 4, 5, 6\}$.` },
+    { art: 2, an: ["10"], tag: "Differenz: A ohne B", tex: T`$A \setminus B$`, text: T`$A$ tritt ein, $B$ nicht. Würfel: gerade, aber unter 4, also $\{2\}$.` },
+    { art: 2, an: ["01", "00"], tag: "Gegenereignis: nicht A", tex: T`$\overline{A}$`, text: T`Alles in $M$ ausserhalb von $A$. Würfel: $\{1, 3, 5\}$.` },
+    { art: "getrennt", an: [], tag: "unvereinbar", tex: T`$A \cap B = \{\}$`, text: "Die Kreise berühren sich nicht. A und B können nie zusammen eintreten. Würfel: «gerade» und «ungerade»." },
+    { art: 2, an: ["10", "01", "11", "00"], tag: "sicheres Ereignis", tex: "$M$", text: T`Die ganze Fläche. Das Gegenstück, das unmögliche Ereignis $\{\}$, hat keine Fläche.` }
+  ];
+  document.getElementById("t07-ops").innerHTML = OPS.map((o) =>
+    '<div class="concept"><span class="tag">' + o.tag + '</span><span class="ex">' + o.tex + "</span>" +
+    venn({ art: o.art, an: o.an, klein: true, titel: "Venn-Diagramm: " + o.tag + ", gefärbte Fläche" }) +
+    "<p>" + o.text + "</p></div>"
+  ).join("");
+  L.formeln(document.getElementById("t07-ops"));
+
+  /* =====================================================================
+     Schritt 2 · Stepper 1: Würfel, Mengen verknüpfen
+     ===================================================================== */
+  const S1 = [
+    T`$\htmlData{link=m}{M = \{1, 2, 3, 4, 5, 6\}}$`,
+    T`$\htmlData{link=a}{A = \{2, 4, 6\}}$`,
+    T`$\htmlData{link=b}{B = \{4, 5, 6\}}$`,
+    T`$\htmlData{link=und}{A \cap B} = \{4, 6\}$`,
+    T`$\htmlData{link=oder}{A \cup B} = \{2, 4, 5, 6\}$`,
+    T`$\htmlData{link=ohne}{A \setminus B} = \{2\}$`,
+    T`$\htmlData{link=nicht}{\overline{A}} = \{1, 3, 5\}$`,
+    T`$A \cap \overline{A} = \{\}$ und $A \cup \overline{A} = M$`
+  ];
+  const ELEMENTE = { "10": "2", "11": "4 · 6", "01": "5", "00": "1 · 3" };
+  const vennS1 = (an) => venn({ art: 2, an: an, werte: ELEMENTE, titel: "Venn-Diagramm mit den Augenzahlen: 2 nur in A, 4 und 6 in A und B, 5 nur in B, 1 und 3 ausserhalb" });
+  const S1an = [null, null, [], ["11"], ["10", "01", "11"], ["10"], ["01", "00"], []];
+  const S1warum = [
+    "Zuerst alle möglichen Ergebnisse aufschreiben. Ohne M kannst du später kein Gegenereignis bilden.",
+    "Ein Ereignis ist eine Teilmenge von M: alle Augenzahlen, für die «gerade» stimmt.",
+    "Genauso für B: alle Augenzahlen ab 4. Jetzt kannst du jede Zahl im Venn-Diagramm einem Feld zuordnen.",
+    "«Und» heisst Schnitt: nur die Zahlen, die in beiden Mengen stehen. Im Diagramm die Mitte.",
+    "«Oder» heisst Vereinigung: alles, was in mindestens einer Menge steht. Die 4 und die 6 schreibst du nur einmal.",
+    "Differenz «A ohne B»: Aus A streichst du alles, was auch in B liegt. Übrig bleibt die 2.",
+    "Gegenereignis: alles aus M, was nicht in A liegt. Darum brauchst du M aus dem ersten Schritt.",
+    "Kontrolle: A und sein Gegenereignis haben nichts gemeinsam (unvereinbar) und ergeben zusammen ganz M."
+  ];
+  L.stepper("#t07-stepper-1", {
+    titel: "Beispiel 1 · Ein Würfel, zwei Ereignisse",
+    text: 'Du <span data-link="m">wirfst einen fairen Würfel</span>. <span data-link="a">A heisst «Augenzahl gerade»</span>, <span data-link="b">B heisst «Augenzahl mindestens 4»</span>. Bestimme die Ereignisse <span data-link="und">«A und B»</span>, <span data-link="oder">«A oder B»</span>, <span data-link="ohne">«A, aber nicht B»</span> und <span data-link="nicht">«nicht A»</span>.',
+    schritte: S1.map((z, k) => ({
+      html: tafel(S1an[k] ? vennS1(S1an[k]) : "", S1.slice(0, k + 1), k),
+      warum: S1warum[k]
+    }))
+  });
+
+  /* =====================================================================
+     Schritt 4 · Stepper 2: Additionssatz, Gegenwahrscheinlichkeit, Differenz
+     ===================================================================== */
+  const S2 = [
+    T`$\htmlData{link=m}{M}$: alle Besuchenden, $\htmlData{link=a}{A}$: Newsletter, $\htmlData{link=b}{B}$: Instagram`,
+    T`$\htmlData{link=a}{P(A) = 0.40}$, $\htmlData{link=b}{P(B) = 0.25}$`,
+    T`$\htmlData{link=ab}{P(A \cap B) = 0.12}$`,
+    T`$\htmlData{link=oder}{P(A \cup B)} = {P(A) + P(B) - P(A \cap B)}$`,
+    FORT(T`$= {0.40 + 0.25 - 0.12} = 0.53$`),
+    T`$\htmlData{link=weder}{P(\overline{A \cup B})} = 1 - 0.53 = 0.47$`,
+    T`$\htmlData{link=nur}{P(A \setminus B)} = 0.40 - 0.12 = 0.28$`,
+    "Kontrolle: $" + T`{0.28 + 0.12 + 0.13 + 0.47} = 1$`
+  ];
+  const S2venn = [
+    null, null,
+    { werte: { "11": "0.12" }, neu: ["11"], an: [] },
+    { werte: { "11": "0.12" }, an: [] },
+    { werte: { "11": "0.12" }, an: ["10", "01", "11"] },
+    { werte: { "11": "0.12", "00": "0.47" }, neu: ["00"], an: ["00"] },
+    { werte: { "11": "0.12", "00": "0.47", "10": "0.28" }, neu: ["10"], an: ["10"] },
+    { werte: { "11": "0.12", "00": "0.47", "10": "0.28", "01": "0.13" }, neu: ["01"], an: [] }
+  ];
+  const S2warum = [
+    "Erst benennen, dann rechnen. Aus M, allen Besuchenden, wird eine Person zufällig gezogen. Jede Eigenschaft wird zu einem Ereignis, also zu einer Teilmenge von M.",
+    "Prozente werden zu Wahrscheinlichkeiten: 40 % heisst 0.40.",
+    "«Beides» heisst A und B, also der Schnitt. Trag ihn zuerst in die Mitte des Diagramms ein.",
+    "«Mindestens eines» heisst A oder B. A und B überlappen sich, darum gilt der Additionssatz (Satz 2.34 Nr. 3), nicht Axiom III.",
+    "Einsetzen. Ohne den Abzug wären die 0.12 in der Mitte doppelt gezählt.",
+    "«Keines davon» ist das Gegenereignis von «mindestens eines» (Satz 2.34 Nr. 2). Das ist die Fläche ausserhalb beider Kreise.",
+    "«Nur Newsletter» heisst A ohne B (Satz 2.34 Nr. 4): Vom ganzen Kreis A ziehst du die Mitte ab.",
+    "Das letzte Feld: nur Instagram ist 0.25 − 0.12 = 0.13. Alle vier Felder zusammen ergeben 1, wie Axiom II verlangt."
+  ];
+  L.stepper("#t07-stepper-2", {
+    titel: "Beispiel 2 · Webshop: Newsletter und Instagram",
+    text: 'Von den <span data-link="m">Personen, die einen Webshop besuchen</span>, <span data-link="a">abonnieren 40 % den Newsletter</span>, <span data-link="b">25 % folgen dem Shop auf Instagram</span> und <span data-link="ab">12 % tun beides</span>. Eine Person wird zufällig ausgewählt. Wie gross ist die Wahrscheinlichkeit, dass sie <span data-link="oder">mindestens eines davon tut</span>, <span data-link="weder">keines davon tut</span> oder <span data-link="nur">nur den Newsletter abonniert</span>?',
+    schritte: S2.map((z, k) => ({
+      html: tafel(S2venn[k] ? venn(Object.assign({ art: 2, titel: "Venn-Diagramm mit den Wahrscheinlichkeiten der Felder" }, S2venn[k])) : "", S2.slice(0, k + 1), k),
+      warum: S2warum[k]
+    }))
+  });
+
+  /* =====================================================================
+     Schritt 5 · Venn-Spiel
+     ===================================================================== */
+  // Ausdrücke: tex für KaTeX, u für Auswahllisten (ohne Formelsatz), wort = Sprechweise, f = Zugehörigkeit
+  const AUSDRUECKE = [
+    { n: 2, tex: T`A \cap B`, u: "A ∩ B", wort: "A und B treten ein", f: (a, b) => a && b },
+    { n: 2, tex: T`A \cup B`, u: "A ∪ B", wort: "A oder B tritt ein, auch beide", f: (a, b) => a || b },
+    { n: 2, tex: T`A \setminus B`, u: "A \\ B", wort: "A tritt ein, B nicht", f: (a, b) => a && !b },
+    { n: 2, tex: T`B \setminus A`, u: "B \\ A", wort: "B tritt ein, A nicht", f: (a, b) => b && !a },
+    { n: 2, tex: T`\overline{A}`, u: "nicht A", wort: "A tritt nicht ein", f: (a) => !a },
+    { n: 2, tex: T`\overline{B}`, u: "nicht B", wort: "B tritt nicht ein", f: (a, b) => !b },
+    { n: 2, tex: T`\overline{A \cup B}`, u: "nicht (A ∪ B)", wort: "weder A noch B", f: (a, b) => !a && !b },
+    { n: 2, tex: T`\overline{A \cap B}`, u: "nicht (A ∩ B)", wort: "nicht beide zugleich", f: (a, b) => !(a && b) },
+    { n: 2, tex: T`(A \setminus B) \cup (B \setminus A)`, u: "(A \\ B) ∪ (B \\ A)", wort: "genau eines von beiden", f: (a, b) => a !== b },
+    { n: 2, tex: T`\overline{A} \cup B`, u: "(nicht A) ∪ B", wort: "A tritt nicht ein oder B tritt ein", f: (a, b) => !a || b },
+    { n: 3, tex: T`A \cap B \cap C`, u: "A ∩ B ∩ C", wort: "alle drei treten ein", f: (a, b, c) => a && b && c },
+    { n: 3, tex: T`A \cup B \cup C`, u: "A ∪ B ∪ C", wort: "mindestens eines tritt ein", f: (a, b, c) => a || b || c },
+    { n: 3, tex: T`(A \cap B) \setminus C`, u: "(A ∩ B) \\ C", wort: "A und B, aber nicht C", f: (a, b, c) => a && b && !c },
+    { n: 3, tex: T`A \cap (B \cup C)`, u: "A ∩ (B ∪ C)", wort: "A und zusätzlich B oder C", f: (a, b, c) => a && (b || c) },
+    { n: 3, tex: T`(A \cup B) \cap C`, u: "(A ∪ B) ∩ C", wort: "A oder B, und zusätzlich C", f: (a, b, c) => (a || b) && c },
+    { n: 3, tex: T`A \setminus (B \cup C)`, u: "A \\ (B ∪ C)", wort: "nur A", f: (a, b, c) => a && !b && !c },
+    { n: 3, tex: T`\overline{A \cup B \cup C}`, u: "nicht (A ∪ B ∪ C)", wort: "keines der drei", f: (a, b, c) => !a && !b && !c },
+    { n: 3, tex: T`(A \cap B) \cup C`, u: "(A ∩ B) ∪ C", wort: "A und B zusammen, oder C", f: (a, b, c) => (a && b) || c },
+    { n: 3, tex: T`A \cup (B \cap C)`, u: "A ∪ (B ∩ C)", wort: "A, oder B und C zusammen", f: (a, b, c) => a || (b && c) },
+    { n: 3, tex: T`\overline{A} \cap B \cap C`, u: "(nicht A) ∩ B ∩ C", wort: "B und C, aber nicht A", f: (a, b, c) => !a && b && c },
+    { n: 3, tex: T`(A \cap B) \cup (A \cap C) \cup (B \cap C)`, u: "(A ∩ B) ∪ (A ∩ C) ∪ (B ∩ C)", wort: "mindestens zwei treten ein", f: (a, b, c) => a + b + c >= 2 },
+    { n: 3, tex: T`C \setminus A`, u: "C \\ A", wort: "C tritt ein, A nicht", f: (a, b, c) => c && !a },
+    { n: 3, tex: T`\overline{C} \cap (A \cup B)`, u: "(nicht C) ∩ (A ∪ B)", wort: "A oder B, aber nicht C", f: (a, b, c) => !c && (a || b) }
+  ];
+
+  // gezaehlt: Aufgabe schon im Stand mitgezählt; geloest: schon als gelöst gezählt; loesungGezeigt: Lösung aufgedeckt
+  const spiel = {
+    modus: "erkunden", n: 2, an: new Set(), aufgabe: null, geprueft: false,
+    richtig: 0, gesamt: 0, gewaehlt: null, gezaehlt: false, geloest: false, loesungGezeigt: false
+  };
+  const elSpiel = document.getElementById("t07-spiel");
+  const elVenn = document.getElementById("t07-spiel-venn");
+  const elAuftrag = document.getElementById("t07-auftrag");
+  const elSteuer = document.getElementById("t07-steuer");
+  const elOptionen = document.getElementById("t07-optionen");
+  const elInfo = document.getElementById("t07-info");
+  const elStand = document.getElementById("t07-stand");
+  const NAMEN = ["A", "B", "C"];
+
+  const ausdrueckeFuer = (n) => AUSDRUECKE.filter((x) => x.n <= n);
+  function felderVon(ausdruck, n) {
+    return FELDER[n].filter((f) => ausdruck.f(f[0] === "1", f[1] === "1", n === 3 && f[2] === "1"));
+  }
+  const signatur = (felder) => felder.slice().sort().join(",");
+  function feldTex(f) {
+    return f.split("").map((b, i) => (b === "1" ? NAMEN[i] : T`\overline{` + NAMEN[i] + "}")).join(T` \cap `);
+  }
+  const zufall = (liste) => liste[Math.floor(Math.random() * liste.length)];
+  // Faires Mischen (Fisher-Yates); sort mit Zufallsvergleich bevorzugt Rand-Positionen
+  function mischen(liste) {
+    const a = liste.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  function felderEls() { return Array.prototype.slice.call(elVenn.querySelectorAll(".t07-feld")); }
+
+  function vennZeichnen() {
+    elVenn.innerHTML = venn({ art: spiel.n, interaktiv: true, an: Array.from(spiel.an),
+      titel: "Venn-Diagramm mit " + (spiel.n === 2 ? "zwei" : "drei") + " Ereignissen zum Anklicken" });
+    felderEls().forEach((p) => {
+      p.addEventListener("click", () => feldGeklickt(p));
+      p.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); feldGeklickt(p); }
+      });
+    });
+  }
+
+  function faerbungSetzen() {
+    felderEls().forEach((p) => {
+      const ist = spiel.an.has(p.dataset.feld);
+      p.classList.toggle("an", ist);
+      p.setAttribute("aria-pressed", String(ist));
+    });
+  }
+
+  function markenLeeren() {
+    felderEls().forEach((p) => p.classList.remove("falsch", "fehlt"));
+    const g = elVenn.querySelector(".t07-marken");
+    if (g) g.innerHTML = "";
+  }
+
+  function marke(feld, text, klasse) {
+    const g = elVenn.querySelector(".t07-marken");
+    const p = geometrie(spiel.n).punkte[feld];
+    const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.setAttribute("class", "t07-marke " + klasse);
+    t.setAttribute("x", r2(p.x));
+    t.setAttribute("y", r2(p.y));
+    t.textContent = text;
+    g.appendChild(t);
+  }
+
+  function standZeigen() {
+    elStand.textContent = spiel.gesamt ? "Gelöst: " + spiel.richtig + " von " + spiel.gesamt + " Aufgaben" : "";
+  }
+
+  function info(html) {
+    elInfo.innerHTML = html;
+    L.formeln(elInfo);
+  }
+
+  function feldGeklickt(p) {
+    const f = p.dataset.feld;
+    if (spiel.modus === "erkunden") {
+      spiel.an = new Set([f]);
+      faerbungSetzen();
+      const sel = document.getElementById("t07-wahl");
+      if (sel) sel.value = "";
+      const nur = f.split("").filter((b) => b === "1").length;
+      let worte;
+      if (nur === 0) worte = "keines der Ereignisse tritt ein";
+      else worte = f.split("").map((b, i) => NAMEN[i] + (b === "1" ? " tritt ein" : " nicht")).join(", ");
+      info("Dieses Feld liegt " + feldWorte(f, NAMEN) + ". Als Ausdruck: $" + feldTex(f) + "$. In Worten: " + worte + ".");
+    } else if (spiel.modus === "faerben") {
+      if (spiel.geprueft) { markenLeeren(); spiel.geprueft = false; }
+      if (spiel.an.has(f)) spiel.an.delete(f); else spiel.an.add(f);
+      faerbungSetzen();
+      info(spiel.an.size ? "Gefärbt: " + spiel.an.size + (spiel.an.size === 1 ? " Feld" : " Felder") + ". Drück «Prüfen», wenn du fertig bist." : "");
+    } else {
+      info("Wähle unten den Ausdruck, der zur gefärbten Fläche passt.");
+    }
+  }
+
+  function steuerAufbauen() {
+    const liste = ausdrueckeFuer(spiel.n);
+    const optionenHtml = liste.map((x, i) => '<option value="' + i + '">' + x.u + "</option>").join("");
+    if (spiel.modus === "erkunden") {
+      elSteuer.innerHTML = '<label for="t07-wahl">Ausdruck zeigen</label><select id="t07-wahl" class="btn"><option value="">– wählen –</option>' + optionenHtml + "</select>";
+      document.getElementById("t07-wahl").addEventListener("change", (e) => {
+        if (e.target.value === "") return;
+        const x = liste[+e.target.value];
+        spiel.an = new Set(felderVon(x, spiel.n));
+        faerbungSetzen();
+        info("$" + x.tex + "$ heisst: " + x.wort + ". Gefärbt " + (spiel.an.size === 1 ? "ist 1 Feld." : "sind " + spiel.an.size + " Felder."));
+      });
+    } else if (spiel.modus === "faerben") {
+      elSteuer.innerHTML = '<label for="t07-wahl">Aufgabe</label><select id="t07-wahl" class="btn">' + optionenHtml + "</select>" +
+        '<button type="button" class="btn" id="t07-zufall-knopf">Zufällige Aufgabe</button>' +
+        '<button type="button" class="btn primary" id="t07-pruefen">Prüfen</button>' +
+        '<button type="button" class="btn" id="t07-loesung">Lösung zeigen</button>';
+      const sel = document.getElementById("t07-wahl");
+      sel.value = String(liste.indexOf(spiel.aufgabe));
+      sel.addEventListener("change", () => { neueFaerbAufgabe(liste[+sel.value]); });
+      document.getElementById("t07-zufall-knopf").addEventListener("click", () => {
+        let x;
+        do { x = zufall(liste); } while (liste.length > 1 && x === spiel.aufgabe);
+        neueFaerbAufgabe(x);
+        sel.value = String(liste.indexOf(x));
+      });
+      document.getElementById("t07-pruefen").addEventListener("click", pruefen);
+      document.getElementById("t07-loesung").addEventListener("click", () => {
+        markenLeeren();
+        spiel.an = new Set(felderVon(spiel.aufgabe, spiel.n));
+        faerbungSetzen();
+        spiel.geprueft = true;
+        // Aufgedeckte Lösung zählt als Versuch, aber nicht als gelöst
+        if (!spiel.gezaehlt) { spiel.gesamt++; spiel.gezaehlt = true; }
+        spiel.loesungGezeigt = true;
+        standZeigen();
+        info("So sieht die Fläche von $" + spiel.aufgabe.tex + "$ aus: " + spiel.aufgabe.wort + ".");
+      });
+    } else {
+      elSteuer.innerHTML = '<button type="button" class="btn primary" id="t07-weiter">Nächste Aufgabe</button>';
+      document.getElementById("t07-weiter").addEventListener("click", neueErkennAufgabe);
+    }
+  }
+
+  function neueFaerbAufgabe(x) {
+    spiel.aufgabe = x;
+    spiel.an = new Set();
+    spiel.geprueft = false;
+    spiel.gezaehlt = false;
+    spiel.geloest = false;
+    spiel.loesungGezeigt = false;
+    markenLeeren();
+    faerbungSetzen();
+    elAuftrag.innerHTML = "Färbe die Fläche von $" + x.tex + "$ ein. Tippe dazu auf die Felder.";
+    L.formeln(elAuftrag);
+    info("");
+  }
+
+  function pruefen() {
+    const soll = new Set(felderVon(spiel.aufgabe, spiel.n));
+    markenLeeren();
+    let fehler = 0;
+    FELDER[spiel.n].forEach((f) => {
+      const ist = spiel.an.has(f), muss = soll.has(f);
+      const p = elVenn.querySelector('[data-feld="' + f + '"]');
+      if (ist && !muss) { fehler++; p.classList.add("falsch"); marke(f, "✗", "bad"); }
+      else if (!ist && muss) { fehler++; p.classList.add("fehlt"); marke(f, "fehlt", "ok"); }
+      else if (ist && muss) marke(f, "✓", "ok");
+    });
+    spiel.geprueft = true;
+    // Jede Aufgabe zählt einmal; gelöst nur, wenn ohne aufgedeckte Lösung richtig gefärbt
+    if (!spiel.gezaehlt) { spiel.gesamt++; spiel.gezaehlt = true; }
+    if (!fehler) {
+      if (!spiel.geloest && !spiel.loesungGezeigt) { spiel.richtig++; spiel.geloest = true; }
+      info("✓ Richtig. $" + spiel.aufgabe.tex + "$ heisst: " + spiel.aufgabe.wort + ". Weiter mit «Zufällige Aufgabe».");
+    } else {
+      info("✗ Noch nicht. ✗ markiert Felder, die nicht dazugehören, «fehlt» Felder, die noch fehlen. Tipp: $" +
+        spiel.aufgabe.tex + "$ heisst " + spiel.aufgabe.wort + ". Klick ein Feld an, um weiterzufärben.");
+    }
+    standZeigen();
+  }
+
+  function neueErkennAufgabe() {
+    const liste = ausdrueckeFuer(spiel.n);
+    let ziel;
+    do { ziel = zufall(liste); } while (liste.length > 1 && ziel === spiel.aufgabe);
+    spiel.aufgabe = ziel;
+    const zielSig = signatur(felderVon(ziel, spiel.n));
+    // Ablenker mit anderer Fläche, untereinander verschieden
+    const gesehen = new Set([zielSig]);
+    const ablenker = [];
+    mischen(liste).forEach((x) => {
+      const s = signatur(felderVon(x, spiel.n));
+      if (ablenker.length < 3 && !gesehen.has(s)) { gesehen.add(s); ablenker.push(x); }
+    });
+    const optionen = mischen(ablenker.concat([ziel]));
+    spiel.an = new Set(felderVon(ziel, spiel.n));
+    spiel.gewaehlt = null;
+    markenLeeren();
+    faerbungSetzen();
+    const beschreibung = Array.from(spiel.an).map((f) => feldWorte(f, NAMEN)).join("; ");
+    elAuftrag.innerHTML = "Welcher Ausdruck beschreibt die gefärbte Fläche?" +
+      '<span class="sr-only"> Gefärbt sind die Felder: ' + beschreibung + ".</span>";
+    elOptionen.innerHTML = "";
+    optionen.forEach((x) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "qopt";
+      b.innerHTML = "$" + x.tex + "$";
+      b.addEventListener("click", () => {
+        if (spiel.gewaehlt) return;
+        spiel.gewaehlt = x;
+        const ok = signatur(felderVon(x, spiel.n)) === zielSig;
+        spiel.gesamt++;
+        if (ok) spiel.richtig++;
+        Array.prototype.forEach.call(elOptionen.children, (k, i) => {
+          const istZiel = signatur(felderVon(optionen[i], spiel.n)) === zielSig;
+          k.setAttribute("aria-disabled", "true");
+          if (istZiel) { k.classList.add("right"); k.insertAdjacentHTML("afterbegin", '<span class="marke" aria-hidden="true">✓ </span>'); }
+          else if (k === b) { k.classList.add("wrong"); k.insertAdjacentHTML("afterbegin", '<span class="marke" aria-hidden="true">✗ </span>'); }
+        });
+        info((ok ? "✓ Richtig. " : "✗ Leider nicht. Richtig ist $" + ziel.tex + "$. ") +
+          "Die Fläche bedeutet: " + ziel.wort + "." +
+          (ok ? "" : " Dein Ausdruck $" + x.tex + "$ heisst: " + x.wort + "."));
+        standZeigen();
+      });
+      elOptionen.appendChild(b);
+    });
+    L.formeln(elOptionen);
+    info("");
+  }
+
+  function modusSetzen() {
+    elSpiel.querySelectorAll("[data-modus]").forEach((b) => {
+      const an = b.dataset.modus === spiel.modus;
+      b.classList.toggle("on", an);
+      b.setAttribute("aria-pressed", String(an));
+    });
+    elSpiel.querySelectorAll("[data-anzahl]").forEach((b) => {
+      const an = +b.dataset.anzahl === spiel.n;
+      b.classList.toggle("on", an);
+      b.setAttribute("aria-pressed", String(an));
+    });
+    spiel.an = new Set();
+    spiel.geprueft = false;
+    vennZeichnen();
+    elOptionen.hidden = spiel.modus !== "erkennen";
+    elOptionen.innerHTML = "";
+    info("");
+    if (spiel.modus === "erkunden") {
+      spiel.aufgabe = null;
+      elAuftrag.innerHTML = "Tippe auf ein Feld oder wähle unten einen Ausdruck.";
+      steuerAufbauen();
+    } else if (spiel.modus === "faerben") {
+      const liste = ausdrueckeFuer(spiel.n);
+      spiel.aufgabe = spiel.n === 3 ? liste[12] : liste[2];
+      steuerAufbauen();
+      neueFaerbAufgabe(spiel.aufgabe);
+    } else {
+      steuerAufbauen();
+      neueErkennAufgabe();
+    }
+    standZeigen();
+  }
+
+  elSpiel.querySelectorAll("[data-modus]").forEach((b) => b.addEventListener("click", () => { spiel.modus = b.dataset.modus; modusSetzen(); }));
+  elSpiel.querySelectorAll("[data-anzahl]").forEach((b) => b.addEventListener("click", () => { spiel.n = +b.dataset.anzahl; modusSetzen(); }));
+  modusSetzen();
+
+  /* =====================================================================
+     Schritt 6 · Simulator für relative Häufigkeiten
+     ===================================================================== */
+  const EXPERIMENTE = {
+    kopf: { seiten: ["K", "Z"], namen: ["Kopf", "Zahl"], A: [0], p: 1 / 2, pTex: T`\tfrac{1}{2}`, aTex: T`A = \{K\}` },
+    sechs: { seiten: ["1", "2", "3", "4", "5", "6"], A: [5], p: 1 / 6, pTex: T`\tfrac{1}{6}`, aTex: T`A = \{6\}` },
+    gerade: { seiten: ["1", "2", "3", "4", "5", "6"], A: [1, 3, 5], p: 1 / 2, pTex: T`\tfrac{3}{6}`, aTex: T`A = \{2, 4, 6\}` },
+    min5: { seiten: ["1", "2", "3", "4", "5", "6"], A: [4, 5], p: 1 / 3, pTex: T`\tfrac{2}{6}`, aTex: T`A = \{5, 6\}` }
+  };
+  const MAX_N = 50000, MAX_REIHEN = 4;
+  const sim = { exp: "kopf", reihen: [], zaehler: [], letzte: [] };
+  const elExp = document.getElementById("t07-exp");
+  const elErg = document.getElementById("t07-sim-erg");
+  const elLetzte = document.getElementById("t07-sim-letzte");
+  const elTab = document.getElementById("t07-sim-tab");
+  const svgSim = document.getElementById("t07-sim-svg");
+  const SVGNS = "http://www.w3.org/2000/svg";
+
+  function simNeueReihe() {
+    sim.reihen.push({ f: [], h: 0 });
+    if (sim.reihen.length > MAX_REIHEN) sim.reihen.shift();
+    sim.zaehler = EXPERIMENTE[sim.exp].seiten.map(() => 0);
+    sim.letzte = [];
+  }
+  function simLoeschen() {
+    sim.reihen = [];
+    simNeueReihe();
+  }
+
+  function werfen(k) {
+    const e = EXPERIMENTE[sim.exp];
+    const reihe = sim.reihen[sim.reihen.length - 1];
+    k = Math.min(k, MAX_N - reihe.f.length);
+    for (let i = 0; i < k; i++) {
+      const s = Math.floor(Math.random() * e.seiten.length);
+      sim.zaehler[s]++;
+      if (e.A.indexOf(s) >= 0) reihe.h++;
+      reihe.f.push(reihe.h / (reihe.f.length + 1));
+      sim.letzte.push(e.seiten[s]);
+    }
+    if (sim.letzte.length > 20) sim.letzte = sim.letzte.slice(-20);
+    simZeigen();
+  }
+
+  function svgEl(tag, attr, text) {
+    const el = document.createElementNS(SVGNS, tag);
+    Object.keys(attr).forEach((k) => el.setAttribute(k, attr[k]));
+    if (text !== undefined) el.textContent = text;
+    return el;
+  }
+
+  function simZeichnen() {
+    const e = EXPERIMENTE[sim.exp];
+    // Titel behalten, Rest neu zeichnen
+    Array.prototype.slice.call(svgSim.childNodes).forEach((k) => { if (k.nodeName !== "title") svgSim.removeChild(k); });
+    const X0 = 40, X1 = 306, Y0 = 168, Y1 = 14;
+    // Massstab nach der aktuellen Reihe, damit eine neue Reihe nicht neben einer langen alten verschwindet
+    const nMax = Math.max(10, sim.reihen[sim.reihen.length - 1].f.length);
+    const STUFEN = [10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000];
+    const xMax = STUFEN.find((s) => s >= nMax) || MAX_N;
+    const sx = (n) => X0 + ((X1 - X0) * n) / xMax;
+    const sy = (f) => Y0 - (Y0 - Y1) * f;
+    [0.25, 0.5, 0.75, 1].forEach((v) => svgSim.appendChild(svgEl("line", { class: "gitter", x1: X0, y1: sy(v), x2: X1, y2: sy(v) })));
+    svgSim.appendChild(svgEl("line", { class: "achse", x1: X0, y1: Y0, x2: X1, y2: Y0 }));
+    svgSim.appendChild(svgEl("line", { class: "achse", x1: X0, y1: Y0, x2: X0, y2: Y1 }));
+    [0, 0.5, 1].forEach((v) => svgSim.appendChild(svgEl("text", { x: X0 - 6, y: sy(v) + 4, "text-anchor": "end" }, String(v))));
+    [0, xMax / 2, xMax].forEach((v) => svgSim.appendChild(svgEl("text", { x: sx(v), y: Y0 + 16, "text-anchor": "middle" }, L.zahlText(v, 0))));
+    svgSim.appendChild(svgEl("text", { x: X1, y: Y0 + 30, "text-anchor": "end" }, "Anzahl Würfe n"));
+    svgSim.appendChild(svgEl("text", { x: X0 - 6, y: Y1 - 4, "text-anchor": "start" }, "f(A)"));
+    svgSim.appendChild(svgEl("line", { class: "t07-plinie", x1: X0, y1: sy(e.p), x2: X1, y2: sy(e.p) }));
+    svgSim.appendChild(svgEl("text", { class: "t07-pname", x: X1 - 2, y: sy(e.p) - 5, "text-anchor": "end" }, "P(A)"));
+    sim.reihen.forEach((r, idx) => {
+      // Ältere, längere Reihen nur im sichtbaren Bereich zeichnen
+      const len = Math.min(r.f.length, xMax);
+      if (!len) return;
+      const aktuell = idx === sim.reihen.length - 1;
+      const PUNKTE = 400;
+      let d = "";
+      const schritt = len <= PUNKTE ? 1 : (len - 1) / (PUNKTE - 1);
+      for (let k = 0; k < Math.min(len, PUNKTE); k++) {
+        const i = Math.round(k * schritt);
+        d += (k ? " L" : "M") + r2(sx(i + 1)) + " " + r2(sy(r.f[i]));
+      }
+      const g = svgEl("g", { class: aktuell ? "s5" : "t07-alt" });
+      g.appendChild(svgEl("path", { class: "kurve", d: d }));
+      if (aktuell) g.appendChild(svgEl("circle", { class: "punkt", cx: r2(sx(len)), cy: r2(sy(r.f[len - 1])), r: 4 }));
+      svgSim.appendChild(g);
+    });
+  }
+
+  // Ganze Zahl für KaTeX: Hochkomma ab 10'000 im Textmodus, sonst warnt KaTeX im Strict-Modus
+  const zahlTex = (z) => L.zahlText(z, 0).replace(/’/g, T`\text{’}`);
+
+  function simZeigen() {
+    const e = EXPERIMENTE[sim.exp];
+    const reihe = sim.reihen[sim.reihen.length - 1];
+    const n = reihe.f.length, h = reihe.h;
+    if (!n) {
+      elErg.innerHTML = '<span class="t07-zeile">$' + e.aTex + ", \\quad P(A) = " + e.pTex + " \\approx " + L.zahlText(e.p, 4) + "$</span>" +
+        '<span class="t07-zeile">Noch kein Wurf. Drück auf «+1 Wurf».</span>';
+    } else {
+      const f = h / n;
+      elErg.innerHTML =
+        '<span class="t07-zeile">$n = ' + zahlTex(n) + ", \\quad h(A) = " + zahlTex(h) + "$</span>" +
+        '<span class="t07-zeile">$f(A) = \\tfrac{' + zahlTex(h) + "}{" + zahlTex(n) + "} \\approx " + L.zahlText(f, 4) + "$</span>" +
+        '<span class="t07-zeile">$P(A) = ' + e.pTex + " \\approx " + L.zahlText(e.p, 4) + "$</span>" +
+        '<span class="t07-zeile">$|f(A) - P(A)| \\approx ' + L.zahlText(Math.abs(f - e.p), 4) + "$</span>";
+    }
+    L.formeln(elErg);
+    elLetzte.textContent = sim.letzte.length ? "Letzte Ergebnisse: " + sim.letzte.join(" ") : "";
+    // Häufigkeitstabelle
+    let t = "<caption>Häufigkeiten der Ergebnisse in der aktuellen Reihe</caption><thead><tr><th>Ergebnis</th><th class=\"zahl\">h</th><th class=\"zahl\">f</th><th>in A?</th></tr></thead><tbody>";
+    e.seiten.forEach((s, i) => {
+      const inA = e.A.indexOf(i) >= 0;
+      t += "<tr" + (inA ? ' class="an"' : "") + "><th>" + (e.namen ? e.namen[i] : s) + '</th><td class="zahl">' + sim.zaehler[i] +
+        '</td><td class="zahl">' + (n ? L.zahlText(sim.zaehler[i] / n, 4) : "–") + "</td><td>" + (inA ? '<span class="t07-inA">∈ A</span>' : "") + "</td></tr>";
+    });
+    t += '<tr><th>Summe</th><td class="zahl">' + n + '</td><td class="zahl">' + (n ? "1" : "–") + "</td><td></td></tr></tbody>";
+    elTab.innerHTML = t;
+    // Knöpfe sperren, wenn die Reihe voll ist
+    document.querySelectorAll("#t07-sim [data-wuerfe]").forEach((b) => { b.disabled = n >= MAX_N; });
+    simZeichnen();
+  }
+
+  document.querySelectorAll("#t07-sim [data-wuerfe]").forEach((b) => b.addEventListener("click", () => werfen(+b.dataset.wuerfe)));
+  document.getElementById("t07-sim-neu").addEventListener("click", () => { simNeueReihe(); simZeigen(); });
+  document.getElementById("t07-sim-loeschen").addEventListener("click", () => { simLoeschen(); simZeigen(); });
+  elExp.addEventListener("change", () => { sim.exp = elExp.value; simLoeschen(); simZeigen(); });
+  simLoeschen();
+  simZeigen();
+
+  /* =====================================================================
+     Schritt 7 · Übungen
+     ===================================================================== */
+  L.sortierer("#t07-ue-sort", {
+    kategorien: ["A ∩ B", "A ∪ B", "A ∖ B", "nicht A"],
+    elemente: [
+      { html: "Sie zahlt mit Karte und kauft mehr als drei Artikel.", kategorie: 0, erklaerung: T`«und»: beide Ereignisse treten ein, also $A \cap B$.` },
+      { html: "Sie zahlt mit Karte oder kauft mehr als drei Artikel, vielleicht auch beides.", kategorie: 1, erklaerung: T`«oder, auch beides» ist die Vereinigung $A \cup B$.` },
+      { html: "Sie zahlt mit Karte, kauft aber höchstens drei Artikel.", kategorie: 2, erklaerung: T`«höchstens drei» ist das Gegenteil von $B$. $A$ ohne $B$ ist $A \setminus B$.` },
+      { html: "Sie zahlt nicht mit Karte.", kategorie: 3, erklaerung: T`Das Gegenereignis $\overline{A}$. Über $B$ sagt der Satz nichts.` },
+      { html: "Mindestens eine der beiden Aussagen trifft zu.", kategorie: 1, erklaerung: T`«Mindestens eines» ist die Vereinigung $A \cup B$.` },
+      { html: "Beide Aussagen treffen zu.", kategorie: 0, erklaerung: T`«Beide» ist der Schnitt $A \cap B$.` },
+      { html: "Sie zahlt bar oder mit TWINT (andere Zahlungsarten gibt es nicht).", kategorie: 3, erklaerung: T`Bar oder TWINT heisst hier: nicht mit Karte, also $\overline{A}$. Das «oder» verbindet zwei Ergebnisse innerhalb von $\overline{A}$.` },
+      { html: "Von den beiden trifft nur die Kartenzahlung zu.", kategorie: 2, erklaerung: T`«Nur A» heisst $A$ tritt ein, $B$ nicht: $A \setminus B$.` }
+    ]
+  });
+  L.zahlAufgabe("#t07-ue-wuerfel", {
+    titel: "Übung 2 · Zwei Würfel: Ergebnisse zählen",
+    frage: T`Du wirfst zwei unterscheidbare Würfel. $M$ enthält die 36 Paare $(x, y)$ (vgl. Skript Bsp. 2.13). $D$ = «beide Augenzahlen gleich», $E$ = «Augensumme mindestens 9». Wie viele Ergebnisse enthält $D \cup E$?`,
+    antwort: 14,
+    anzeige: "14",
+    hinweise: [
+      T`Zähle zuerst $|D|$ und $|E|$ einzeln.`,
+      T`Welche Paare liegen in $D$ und in $E$? Die darfst du nur einmal zählen.`,
+      T`$|D \cup E| = |D| + |E| - |D \cap E|$, dieselbe Idee wie beim Additionssatz.`
+    ],
+    loesungsweg: [
+      T`$D = \{(1,1), (2,2), \dots, (6,6)\}$, also $|D| = 6$.`,
+      T`$E$: Summe 9: $(3,6), (4,5), (5,4), (6,3)$; Summe 10: $(4,6), (5,5), (6,4)$; Summe 11: $(5,6), (6,5)$; Summe 12: $(6,6)$. Also $|E| = 10$.`,
+      T`$D \cap E = \{(5,5), (6,6)\}$, also $|D \cap E| = 2$.`,
+      T`$|D \cup E| = 6 + 10 - 2 = 14$. Als Wahrscheinlichkeit wären das $\tfrac{14}{36} \approx 0.3889$.`
+    ]
+  });
+
+  L.zahlAufgabe("#t07-ue-haeufigkeit", {
+    titel: "Übung 3 · Relative Häufigkeit",
+    frage: '<p>Ein Würfel wurde 120-mal geworfen (eigene Zahlen):</p>' +
+      '<div class="tablebox"><table class="tabelle"><thead><tr><th>Augenzahl</th><th class="zahl">1</th><th class="zahl">2</th><th class="zahl">3</th><th class="zahl">4</th><th class="zahl">5</th><th class="zahl">6</th></tr></thead>' +
+      '<tbody><tr><th>h</th><td class="zahl">16</td><td class="zahl">22</td><td class="zahl">19</td><td class="zahl">21</td><td class="zahl">17</td><td class="zahl">25</td></tr></tbody></table></div>' +
+      T`<p>$A$ = «Augenzahl kleiner als 3», $C$ = «Augenzahl grösser als 4». Berechne die relative Häufigkeit $f(A \cup C)$ auf vier Nachkommastellen.</p>`,
+    antwort: 80 / 120,
+    toleranz: 0.0005,
+    anzeige: "80/120 ≈ 0.6667",
+    hinweise: [
+      T`$A = \{1, 2\}$ und $C = \{5, 6\}$. Haben die beiden gemeinsame Ergebnisse?`,
+      T`Für unvereinbare Ereignisse addieren sich relative Häufigkeiten: $f(A \cup C) = f(A) + f(C)$.`
+    ],
+    loesungsweg: [
+      T`$h(A) = 16 + 22 = 38$, also $f(A) = \tfrac{38}{120} \approx 0.3167$.`,
+      T`$h(C) = 17 + 25 = 42$, also $f(C) = \tfrac{42}{120} = 0.35$.`,
+      T`$A \cap C = \{\}$, darum $f(A \cup C) = f(A) + f(C) = \tfrac{80}{120} \approx 0.6667$.`
+    ]
+  });
+
+  L.wahrFalsch("#t07-ue-wf", {
+    titel: "Übung 4 · Wahr oder falsch (Kreuzformat wie Aufgabe 8a der Modulschlussprüfung)",
+    aussagen: [
+      { html: T`Sind $A$ und $B$ unvereinbar, gilt $P(A \cup B) = P(A) + P(B)$.`, wahr: true,
+        erklaerung: "Genau das sagt Axiom III." },
+      { html: T`Tritt $A$ in 200 Würfen nie ein, also $f(A) = 0$, dann ist $A$ das unmögliche Ereignis.`, wahr: false,
+        erklaerung: "Eine relative Häufigkeit von 0 ist nur ein Hinweis. Auch ein mögliches Ereignis kann in einer Versuchsreihe zufällig ausbleiben." },
+      { html: T`Für beliebige Ereignisse gilt $P(A \cup B) \le P(A) + P(B)$.`, wahr: true,
+        erklaerung: T`Nach dem Additionssatz ist $P(A \cup B) = P(A) + P(B) - P(A \cap B)$, und $P(A \cap B) \ge 0$.` },
+      { html: T`Sind $A$ und $B$ unvereinbar, dann sind auch $\overline{A}$ und $\overline{B}$ unvereinbar.`, wahr: false,
+        erklaerung: T`Gegenbeispiel Würfel: $A = \{1\}$, $B = \{2\}$. Fällt eine 3, treten $\overline{A}$ und $\overline{B}$ gleichzeitig ein.` },
+      { html: T`Aus $P(A) = 0.7$ und $P(B) = 0.6$ folgt, dass $A$ und $B$ nicht unvereinbar sind.`, wahr: true,
+        erklaerung: T`Wären sie unvereinbar, gälte nach Axiom III $P(A \cup B) = 0.7 + 0.6 = 1.3$. Keine Wahrscheinlichkeit ist grösser als 1, denn $P(A \cup B) = 1 - P(\overline{A \cup B}) \le 1$. Also haben $A$ und $B$ gemeinsame Ergebnisse.` },
+      { html: T`$P(A \setminus B) = P(A) - P(B)$ gilt für alle Ereignisse.`, wahr: false,
+        erklaerung: T`Allgemein gilt $P(A \setminus B) = P(A) - P(A \cap B)$ (Satz 2.34 Nr. 4). Nur wenn $B$ ganz in $A$ liegt, ist $A \cap B = B$.` }
+    ]
+  });
+
+  L.auswahl("#t07-ue-block", {
+    frage: "Setz genau ein Kreuz: Welche Antwort stimmt?",
+    optionen: ["Aussage (1)", "Aussage (2)", "Aussage (3)", "Aussage (4)", "Keine der Aussagen (1) bis (4) ist korrekt."],
+    richtig: 2,
+    erklaerung: T`$A = \{1, 2, 3, 4\}$, $B = \{4, 5, 6\}$. (1) falsch, beide enthalten die 4. (2) falsch, $A \cup B = \{1, \dots, 6\}$ hat 6 Elemente. (3) richtig: Aus $A$ streichst du die 4. (4) falsch, die 8 fehlt: $\overline{A} = \{5, 6, 7, 8\}$.`
+  });
+
+  L.schrittAufgabe("#t07-ue-homeoffice", {
+    titel: "Übung 6 · Homeoffice (prüfungsnahe Textaufgabe, eigene Zahlen)",
+    aufgabe: "<p>In einer Firma arbeiten 30 % der Mitarbeitenden montags im Homeoffice, 45 % freitags und 18 % an beiden Tagen. Eine Person wird zufällig ausgewählt. Berechne die Wahrscheinlichkeit, dass sie</p>" +
+      "<p>a) an mindestens einem der beiden Tage, b) an keinem der beiden Tage, c) nur freitags, d) an genau einem der beiden Tage im Homeoffice arbeitet.</p>",
+    schritte: [
+      { html: T`$H$ = «Homeoffice am Montag», $F$ = «Homeoffice am Freitag»<br>$P(H) = 0.30$<br>$P(F) = 0.45$<br>$P(H \cap F) = 0.18$`,
+        warum: "Zuerst übersetzen: «an beiden Tagen» heisst H und F, also der Schnitt." },
+      { html: T`a) $P(H \cup F) = {0.30 + 0.45 - 0.18}$` + FORT("$= 0.57$"),
+        warum: "«Mindestens einer der Tage» ist die Vereinigung. H und F überlappen sich, also Additionssatz (Satz 2.34 Nr. 3)." },
+      { html: T`b) $P(\overline{H \cup F}) = {1 - 0.57} = 0.43$`,
+        warum: "«An keinem Tag» ist das Gegenereignis von «an mindestens einem Tag» (Satz 2.34 Nr. 2)." },
+      { html: T`c) $P(F \setminus H) = {0.45 - 0.18} = 0.27$`,
+        warum: "«Nur freitags» heisst F ohne H (Satz 2.34 Nr. 4)." },
+      { html: "d) $" + T`{P(H \setminus F) + P(F \setminus H)}$` + FORT("$= {0.12 + 0.27} = 0.39$"),
+        warum: "«Genau ein Tag» besteht aus zwei unvereinbaren Teilen: nur montags (0.30 − 0.18 = 0.12) und nur freitags. Unvereinbare Teile addierst du (Axiom III). Kontrolle: 0.57 − 0.18 = 0.39." }
+    ]
+  });
+
+  L.zahlAufgabe("#t07-ue-gluecksrad", {
+    titel: "Übung 7 · Gegenwahrscheinlichkeit (im Stil von Aufgabe 5 der Modulschlussprüfung)",
+    frage: "Ein Glücksrad hat 8 gleich grosse Felder mit den Zahlen 1 bis 8. Es wird dreimal gedreht. Wie gross ist die Wahrscheinlichkeit, <b>nicht</b> dreimal die 8 zu erhalten? Gib das Resultat auf vier Nachkommastellen an.",
+    antwort: 511 / 512,
+    toleranz: 0.00005,
+    anzeige: "511/512 ≈ 0.9980",
+    hinweise: [
+      "Wie viele Ergebnisse hat M? Jede Drehung hat 8 Möglichkeiten (vgl. Skript Bsp. 2.21).",
+      "«Nicht dreimal die 8» ist das Gegenereignis von «dreimal die 8».",
+      T`«Dreimal die 8» enthält genau ein Ergebnis: $(8, 8, 8)$.`
+    ],
+    loesungsweg: [
+      T`$|M| = 8 \cdot 8 \cdot 8 = 512$ gleich wahrscheinliche Ergebnisse (Anteilsregel).`,
+      T`$P(\text{dreimal } 8) = \tfrac{1}{512}$`,
+      T`$P(\text{nicht dreimal } 8) = 1 - \tfrac{1}{512} = \tfrac{511}{512} \approx 0.9980$ (Satz 2.34 Nr. 2)`,
+      "TI-Nspire: <code>1-1/512</code> eingeben, mit ctrl + enter erscheint der Dezimalwert 0.998047."
+    ]
+  });
+
+  /* =====================================================================
+     Lösungsfilm: Fitnesscenter
+     ===================================================================== */
+  const FV = (opt) => venn(Object.assign({ art: 2, namen: ["K", "R"], titel: "Venn-Diagramm Fitnesscenter: K Kurse, R Kraftraum, mit den Wahrscheinlichkeiten der Felder" }, opt));
+  const G = [T`$P(M) = 1$`, T`$P(K) = 0.45$`, T`$P(R) = 0.60$`, T`$P(K \cap R) = 0.20$`];
+  const A1 = T`a) «oder»: $K \cup R$`;
+  const A2 = T`$P(K \cup R) = {P(K) + P(R) - P(K \cap R)}$`;
+  const A3 = FORT(T`$= {0.45 + 0.60 - 0.20}$`);
+  const A4 = FORT(T`$= 0.85$`);
+  const AS = T`a) $P(K \cup R) = 0.85$`;
+  const B1 = T`b) «weder noch»: $\overline{K \cup R}$`;
+  const B2 = T`$P(\overline{K \cup R}) = 1 - P(K \cup R)$`;
+  const B3 = FORT(T`$= 1 - 0.85 = 0.15$`);
+  const BS = T`b) $P(\overline{K \cup R}) = 0.15$`;
+  const C1 = T`c) «nur Kraftraum»: $R \setminus K$`;
+  const C2 = T`$P(R \setminus K) = P(R) - P(K \cap R)$`;
+  const C3 = FORT(T`$= 0.60 - 0.20 = 0.40$`);
+  const CS = T`c) $P(R \setminus K) = 0.40$`;
+  const D1 = T`d) unvereinbar heisst $K \cap R = \{\}$`;
+  const D2 = T`$P(K \cap R) = 0.20 \neq 0$`;
+  const D3 = T`zudem $P(K) + P(R) = 1.05 > 1$`;
+  const DS = "d) K und R sind nicht unvereinbar";
+  const E1 = T`$P(K \setminus R) = 0.45 - 0.20 = 0.25$`;
+  const E2 = "$" + T`{0.25 + 0.20 + 0.40 + 0.15} = 1 = P(M)$`; // «$» getrennt, sonst «${» = Interpolation
+  const W1 = { "11": "0.20" };
+  const W2 = { "11": "0.20", "00": "0.15" };
+  const W3 = { "11": "0.20", "00": "0.15", "01": "0.40" };
+  const W4 = { "11": "0.20", "00": "0.15", "01": "0.40", "10": "0.25" };
+
+  L.film("#t07-film", {
+    phasen: ["1 · Ereignisse", "2 · a) oder", "3 · b) weder noch", "4 · c) nur", "5 · d) unvereinbar?", "6 · Kontrolle"],
+    texte: [
+      'In einem Fitnesscenter <span data-ph="k">besuchen 45 % der Mitglieder Gruppenkurse</span>, <span data-ph="r">60 % trainieren im Kraftraum</span> und <span data-ph="kr">20 % tun beides</span>. Ein Mitglied wird <span data-ph="zufall">zufällig ausgewählt</span>.',
+      'a) Wie gross ist die Wahrscheinlichkeit, dass es <span data-ph="oder">Kurse besucht oder im Kraftraum trainiert</span>?',
+      'b) Wie gross ist die Wahrscheinlichkeit, dass es <span data-ph="weder">weder das eine noch das andere tut</span>?',
+      'c) Wie gross ist die Wahrscheinlichkeit, dass es <span data-ph="nur">nur im Kraftraum trainiert</span>?',
+      'd) <span data-ph="unv">Sind die Ereignisse «Kurse» und «Kraftraum» unvereinbar?</span>'
+    ],
+    woerterbuch: [
+      T`$M$ alle Mitglieder`,
+      T`$K$ besucht Kurse`,
+      T`$R$ trainiert im Kraftraum`,
+      T`$K \cap R$ beides`,
+      T`$K \cup R$ mindestens eines`,
+      T`$\overline{K \cup R}$ keines`,
+      T`$R \setminus K$ nur Kraftraum`
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Teil", formel: "Rechnung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Ereignisse benennen, Gegebenes ins Venn-Diagramm eintragen, jede Frage in einen Mengenausdruck übersetzen, mit der passenden Regel rechnen und am Schluss prüfen, ob alles zusammen 1 ergibt." },
+      { ph: 0, sent: 0, hl: ["zufall"], dict: 1, dh: [0], f: tafel("", G.slice(0, 1), 0),
+        say: "Das Zufallsexperiment: ein Mitglied zufällig auswählen. Die Ergebnismenge M sind alle Mitglieder. Nach Axiom II gilt P(M) = 1." },
+      { hl: ["k"], dict: 2, dh: [1], f: tafel("", G.slice(0, 2), 1),
+        say: "Erstes Ereignis: K heisst «besucht Kurse». 45 Prozent werden zur Wahrscheinlichkeit 0.45." },
+      { hl: ["r"], dict: 3, dh: [2], f: tafel("", G.slice(0, 3), 2),
+        say: "Zweites Ereignis: R heisst «trainiert im Kraftraum». Also P(R) = 0.60." },
+      { hl: ["kr"], dict: 4, dh: [3], f: tafel("", G, 3),
+        say: "«Beides» heisst: K und R treten zusammen ein. Das ist der Schnitt K ∩ R mit P(K ∩ R) = 0.20." },
+      { hl: ["kr"], dh: [3], f: tafel(FV({ werte: W1, neu: ["11"] }), G, -1),
+        say: "Jetzt das Venn-Diagramm. Den Schnitt trägst du zuerst ein: 0.20 gehört in die Mitte, weil diese Mitglieder in beiden Kreisen liegen." },
+      { ph: 1, sent: 1, hl: ["oder"], dict: 5, dh: [4], f: tafel(FV({ werte: W1 }), G.concat([A1]), 4),
+        say: "Frage a: «Kurse oder Kraftraum». Oder heisst hier: mindestens eines, beides ist erlaubt. Das ist die Vereinigung K ∪ R." },
+      { hl: ["oder"], dh: [4], f: tafel(FV({ werte: W1 }), G.concat([A1, A2]), 5),
+        say: "K und R können gleichzeitig eintreten. Darum brauchst du den Additionssatz aus Satz 2.34 Nr. 3, nicht das einfache Axiom III." },
+      { hl: ["oder"], dh: [4], f: tafel(FV({ werte: W1 }), G.concat([A1, A2, A3]), 6),
+        say: "Einsetzen. Ohne den Abzug kämen 1.05 heraus, also mehr als 1. Die 0.20 in der Mitte wären doppelt gezählt." },
+      { hl: ["oder"], dh: [4], f: tafel(FV({ werte: W1, an: ["10", "01", "11"] }), G.concat([A1, A2, A3, A4]), 7),
+        say: "Ergebnis a: P(K ∪ R) = 0.85. Im Diagramm sind das beide Kreise zusammen." },
+      { ph: 2, sent: 2, hl: ["weder"], dict: 6, dh: [5], f: tafel(FV({ werte: W1 }), G.concat([AS, B1]), 5),
+        say: "Frage b: weder Kurse noch Kraftraum. Das ist das Gegenteil von «mindestens eines», also das Gegenereignis von K ∪ R." },
+      { hl: ["weder"], dh: [5], f: tafel(FV({ werte: W1 }), G.concat([AS, B1, B2]), 6),
+        say: "Satz 2.34 Nr. 2: Ein Ereignis und sein Gegenereignis ergeben zusammen 1." },
+      { hl: ["weder"], dh: [5], f: tafel(FV({ werte: W2, neu: ["00"], an: ["00"] }), G.concat([AS, B1, B2, B3]), 7),
+        say: "1 − 0.85 = 0.15. Im Diagramm ist das die Fläche ausserhalb beider Kreise." },
+      { ph: 3, sent: 3, hl: ["nur"], dict: 7, dh: [6], f: tafel(FV({ werte: W2 }), G.concat([AS, BS, C1]), 6),
+        say: "Frage c: «nur Kraftraum» heisst: R tritt ein, K nicht. Das ist die Differenz R ohne K." },
+      { hl: ["nur"], dh: [6], f: tafel(FV({ werte: W2 }), G.concat([AS, BS, C1, C2]), 7),
+        say: "Satz 2.34 Nr. 4: Vom ganzen Kreis R ziehst du den Teil ab, der auch zu K gehört." },
+      { hl: ["nur"], dh: [6], f: tafel(FV({ werte: W3, neu: ["01"], an: ["01"] }), G.concat([AS, BS, C1, C2, C3]), 8),
+        say: "0.60 − 0.20 = 0.40. Diese Zahl gehört in den Teil von R ausserhalb von K." },
+      { ph: 4, sent: 4, hl: ["unv"], dh: [3], f: tafel(FV({ werte: W3 }), G.concat([AS, BS, CS, D1]), 7),
+        say: "Frage d: Unvereinbar heisst, dass K und R nie zusammen eintreten. Der Schnitt müsste leer sein." },
+      { hl: ["unv"], dh: [3], f: tafel(FV({ werte: W3, an: ["11"] }), G.concat([AS, BS, CS, D1, D2]), 8),
+        say: "Hier ist P(K ∩ R) = 0.20, nicht 0. Es gibt Mitglieder, die beides tun. K und R sind also nicht unvereinbar." },
+      { hl: ["unv"], dh: [1, 2], f: tafel(FV({ werte: W3 }), G.concat([AS, BS, CS, D1, D2, D3]), 9),
+        say: "Es geht auch ohne den Schnitt: Wären K und R unvereinbar, gälte nach Axiom III P(K ∪ R) = 1.05. Das ist mehr als P(M) = 1, also unmöglich." },
+      { ph: 5, sent: "all", dh: [], f: tafel(FV({ werte: W4, neu: ["10"], an: ["10"] }), G.concat([AS, BS, CS, DS, E1]), 8),
+        say: "Zur Kontrolle fehlt noch ein Feld: nur Kurse. 0.45 − 0.20 = 0.25." },
+      { f: tafel(FV({ werte: W4, an: ["10", "01", "11", "00"] }), G.concat([AS, BS, CS, DS, E1, E2]), 9),
+        say: "Alle vier Felder zusammen ergeben 1, wie es Axiom II verlangt. Die Rechnung ist stimmig." },
+      { f: tafel(FV({ werte: W4 }), [AS, BS, CS, DS], -1),
+        say: "Fertig. a) 0.85, b) 0.15, c) 0.40, d) nicht unvereinbar. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* =====================================================================
+     Selbsttest
+     ===================================================================== */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Was ist ein Ereignis?",
+        o: ["Ein einzelner Ausgang des Experiments", T`Eine Teilmenge der Ergebnismenge $M$`, "Eine Zahl zwischen 0 und 1"], a: 1,
+        e: T`Def. 2.16: Jede Teilmenge von $M$ ist ein Ereignis. Ein einzelner Ausgang ist ein Ergebnis, die Zahl ist eine Wahrscheinlichkeit.` },
+      { q: T`Würfelwurf: $A = \{1, 2, 3\}$, $B = \{3, 4\}$. Was ist $A \cup B$?`,
+        o: [T`$\{3\}$`, T`$\{1, 2, 3, 4\}$`, T`$\{1, 2, 4\}$`], a: 1,
+        e: T`Vereinigung: alles, was in mindestens einer Menge liegt. $\{3\}$ wäre der Schnitt, $\{1, 2, 4\}$ lässt die gemeinsame 3 fälschlich weg.` },
+      { q: "Stolperfalle: Was bedeutet «A oder B tritt ein»?",
+        o: ["Genau eines von beiden tritt ein", "Mindestens eines tritt ein, beide zusammen sind erlaubt", "Beide treten gleichzeitig ein"], a: 1,
+        e: T`In der Wahrscheinlichkeitsrechnung ist «oder» nie exklusiv. $A \cup B$ enthält den Fall «beide». Für «genau eines» brauchst du $(A \setminus B) \cup (B \setminus A)$.` },
+      { q: T`Es gilt $P(A) = 0.35$. Wie gross ist $P(\overline{A})$?`,
+        o: ["$0.35$", "$0.65$", "$1.35$"], a: 1,
+        e: T`Gegenwahrscheinlichkeit (Satz 2.34 Nr. 2): $P(\overline{A}) = 1 - 0.35 = 0.65$.` },
+      { q: T`Stolperfalle: $P(A) = 0.5$, $P(B) = 0.3$, $P(A \cap B) = 0.1$. Wie gross ist $P(A \cup B)$?`,
+        o: ["$0.8$", "$0.7$", "$0.15$", "$0.9$"], a: 1,
+        e: T`Additionssatz: $0.5 + 0.3 - 0.1 = 0.7$. Wer $0.8$ wählt, hat den Schnitt doppelt gezählt.` },
+      { q: "Welche Zahl kann keine Wahrscheinlichkeit sein?",
+        o: ["$0$", "$0.999$", "$1$", "$1.05$"], a: 3,
+        e: T`Aus den Axiomen folgt $0 \le P(A) \le 1$. Die Grenzen 0 und 1 selbst sind erlaubt, zum Beispiel $P(\{\}) = 0$ und $P(M) = 1$.` },
+      { q: "Stolperfalle: Eine Münze zeigt in 10 Würfen 7-mal Kopf. Was folgt daraus?",
+        o: ["Die Münze ist sicher gezinkt.", T`$f(\text{Kopf}) = 0.7$; über $P(\text{Kopf})$ sagen 10 Würfe noch wenig aus.`, T`$P(\text{Kopf}) = 0.7$`], a: 1,
+        e: "Die relative Häufigkeit stabilisiert sich erst in langen Versuchsreihen. In 10 Würfen sind 7-mal Kopf auch bei einer fairen Münze gut möglich." },
+      { q: T`Stolperfalle: $A$ und $B$ sind unvereinbar. Was heisst das?`,
+        o: [T`Sie können nicht gleichzeitig eintreten: $A \cap B = \{\}$.`, "Sie beeinflussen sich gegenseitig nicht.", T`Eines von beiden tritt sicher ein: $A \cup B = M$.`], a: 0,
+        e: "Unvereinbar heisst: kein gemeinsames Ergebnis. «Beeinflussen sich nicht» ist Unabhängigkeit, ein anderer Begriff, der in der nächsten Station folgt." },
+      { q: T`Wie berechnest du $P(A \setminus B)$ für beliebige Ereignisse?`,
+        o: [T`$P(A) - P(B)$`, T`$P(A) - P(A \cap B)$`, T`$P(A) + P(B) - P(A \cap B)$`], a: 1,
+        e: T`Satz 2.34 Nr. 4: Vom Kreis $A$ ziehst du nur den Teil ab, der auch in $B$ liegt. $P(A) - P(B)$ stimmt nur, wenn $B$ ganz in $A$ liegt. Die dritte Formel ist der Additionssatz.` },
+      { q: "Stolperfalle: Eine faire Münze zeigte fünfmal hintereinander Kopf. Wie gross ist die Wahrscheinlichkeit für Kopf im sechsten Wurf?",
+        o: ["Kleiner als 0.5, jetzt ist Zahl «fällig»", "Genau 0.5", "Grösser als 0.5, Kopf ist «in Serie»"], a: 1,
+        e: "Die Münze hat kein Gedächtnis. Das Gesetz der grossen Zahlen gleicht nicht aus, es verdünnt frühere Abweichungen durch viele weitere Würfe." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

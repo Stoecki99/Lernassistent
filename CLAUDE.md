@@ -33,7 +33,7 @@ KI-gestützte Lernplattform für Studierende. Karteikarten mit Spaced Repetition
 - Server Components als Default, `use client` nur wenn erforderlich
 - Zod-basierte Validierung bei API-Ein-/Ausgaben
 - UI-Texte Deutsch (Schweizer Rechtschreibung, ss statt ß), Code-Namen Englisch
-- Ausnahme Lernseiten (`lib/lernseiten*`, `components/features/lernseiten/`): deutsche Namen passend zum Inhaltsformat (`docs/lernseiten-format.md`, Design 2026-10-28)
+- Ausnahme Lernpfad (`lib/lernseiten*`, `lib/validations/lernseite.ts`, `lib/validations/lernfortschritt.ts`, `components/features/lernseiten/`, `app/(lernpfad)/`, `app/api/lernfortschritt/`): deutsche Namen passend zum Inhaltsformat (`docs/lernpfad-format.md`, Baukasten `docs/lernpfad-baukasten.md`)
 - Keine Umlaute in Variablen, Funktionen, CSS-Klassen, Dateinamen
 
 ### Commit-Konvention
@@ -92,6 +92,7 @@ try {
 app/                    # Next.js App Router
   (auth)/               # Oeffentliche Auth-Seiten
   (dashboard)/          # Geschuetzte Seiten
+  (lernpfad)/           # Lernpfad: Themenseiten (HTML aus content/lernseiten/) hinter Login
   api/                  # API Routes
 components/
   ui/                   # Generische UI-Komponenten

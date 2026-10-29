@@ -1,0 +1,1434 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hornlogik und Markierungsalgorithmus · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/05-praedikatenlogik-grundlagen" title="Prädikatenlogik: Grundlagen">
+  <style>
+    /* Seiteneigene Stile der Station 04: nur Präfix «t04-», nur Farben aus :root */
+    .t04-ziele{margin:6px 0 0; padding-left:1.3em; display:flex; flex-direction:column; gap:3px}
+    .t04-f{font-family:var(--f-math)}
+    .t04-kl{display:inline-block; white-space:nowrap}
+    .t04-lit{border-radius:3px}
+    .t04-mark{text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:4px; text-decoration-color:var(--accent); background:var(--lit)}
+    .t04-neu{background:var(--accent-soft); box-shadow:inset 0 -2px 0 var(--accent); border-radius:3px}
+    .t04-zahl{display:inline-block; min-width:1.5em; margin-left:3px; padding:0 5px; border-radius:999px; font-family:var(--f-body); font-style:normal;
+      font-size:.6em; font-weight:700; line-height:1.5; text-align:center; vertical-align:super; border:1px solid var(--line); color:var(--muted); background:var(--surface)}
+    .t04-zahl.t04-zuviel{color:var(--bad); border-color:var(--bad); background:var(--bad-bg)}
+    .t04-zahl.t04-gut{color:var(--ok); border-color:var(--ok); background:var(--ok-bg)}
+    .t04-zeilen{display:flex; flex-direction:column; gap:6px; font-size:.85em; line-height:1.55}
+    .t04-zeilen > div{min-width:0}
+    .t04-klist{display:flex; flex-wrap:wrap; gap:4px 16px; font-size:.85em; line-height:1.6}
+    .t04-nr{font-family:var(--f-body); font-style:normal; font-size:.78em; color:var(--muted); margin-right:4px; font-variant-numeric:tabular-nums}
+    .t04-aus{font-family:var(--f-body); font-size:.8em; color:var(--muted)}
+    .t04-typ{display:inline-block; font-family:var(--f-body); font-style:normal; font-size:.72rem; line-height:1.5; padding:0 8px; border-radius:999px;
+      border:1px solid currentColor; white-space:nowrap; vertical-align:middle}
+    .t04-typ-t{color:var(--ok)} .t04-typ-p{color:var(--accent)} .t04-typ-z{color:var(--free)}
+    .t04-ff{white-space:normal; font-size:1.02rem; line-height:1.7}
+    .t04-ff .t04-zeilen{font-size:1em}
+    .t04-schluss{font-family:var(--f-body); font-weight:600}
+    /* Tabellen mit Formeln */
+    .t04-tab td.t04-f, .t04-tab td .t04-f{white-space:nowrap}
+    .t04-tab code, .t04-code-inline{font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.9em; white-space:nowrap}
+    /* Markierungs-Simulator */
+    .t04-sim-liste{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(min(240px,100%),1fr)); gap:8px}
+    .t04-sim-k{display:flex; flex-wrap:wrap; align-items:center; gap:2px 10px; border:1px solid var(--line); border-radius:10px; padding:6px 10px;
+      background:var(--surface); min-width:0; transition:background-color .3s, border-color .3s}
+    .t04-sim-k .m{font-size:1.15rem; line-height:1.6}
+    .t04-sim-k.t04-feuert{border-color:var(--accent); background:var(--accent-soft)}
+    .t04-sim-k.t04-voll{border-color:var(--bad); background:var(--bad-bg); border-width:2px}
+    .t04-status{font-family:var(--f-body); font-style:normal; font-size:.8rem; font-weight:600; color:var(--accent)}
+    .t04-voll .t04-status{color:var(--bad)}
+    .t04-pl{font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.85em}
+    .t04-atome{display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-height:2em}
+    .t04-atom{font-family:var(--f-math); font-size:1.08rem; border:1px solid var(--line); border-radius:8px; padding:0 8px; background:var(--bg)}
+    .t04-atom sup{font-family:var(--f-body); font-size:.68em; color:var(--muted); margin-left:2px}
+    .t04-ergebnis{border-radius:10px; padding:10px 14px; border:1px solid var(--line)}
+    .t04-ergebnis.t04-unerf{background:var(--bad-bg); border-color:var(--bad)}
+    .t04-ergebnis.t04-erf{background:var(--ok-bg); border-color:var(--ok)}
+    .t04-ergebnis b{font-family:var(--f-display)}
+    .t04-eingabe{font:inherit; font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.92rem; width:100%; min-height:11em; padding:8px 10px;
+      border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); resize:vertical}
+    .t04-eingabe:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+    .t04-fehler{color:var(--bad); font-size:.92rem; font-weight:600}
+    .t04-gruppe{display:flex; flex-direction:column; gap:6px}
+    .t04-gruppe > span{font-size:.75rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600}
+    /* PROLOG-Programme */
+    .t04-prog{list-style:none; margin:0; padding:12px 16px; background:var(--board); border-radius:12px; display:flex; flex-direction:column; gap:4px}
+    .t04-prog li{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px}
+    .t04-prog code{font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.95rem; white-space:nowrap}
+    .t04-prog .t04-nr{min-width:2.2em}
+    .t04-prog .hint{flex:1 1 12em}
+    /* SLD-Baum */
+    .t04-baumbox{overflow-x:auto; padding:4px 2px}
+    .t04-baum ul{margin-left:6px; padding-left:12px}
+    .t04-baum ul > li::before{left:-12px; width:10px}
+    .t04-baum .baum-knoten{font-family:var(--f-math); font-size:1.05rem; align-items:center; white-space:nowrap}
+    .t04-via{font-family:var(--f-body); font-size:.78rem; color:var(--muted); margin-right:4px}
+    .t04-knr{display:inline-flex; align-items:center; justify-content:center; min-width:1.6em; height:1.6em; border-radius:999px; background:var(--accent);
+      color:var(--surface); font-family:var(--f-body); font-size:.75rem; font-weight:700; padding:0 5px}
+    .t04-baum .t04-wartet > .baum-knoten{border-style:dashed; color:var(--muted); background:var(--bg)}
+    .t04-baum .t04-akt > .baum-knoten{border-width:2px; border-color:var(--accent); background:var(--lit)}
+    .t04-baum .t04-sack > .baum-knoten{background:var(--bad-bg); border-color:var(--bad)}
+    .t04-baum .t04-erfolg > .baum-knoten{background:var(--ok-bg); border-color:var(--ok); border-width:2px}
+    .t04-baum .t04-kreis > .baum-knoten{background:var(--free-bg); border-color:var(--free)}
+    .t04-baum .t04-sack .t04-status{color:var(--bad)}
+    .t04-baum .t04-erfolg .t04-status{color:var(--ok)}
+    .t04-baum .t04-kreis .t04-status{color:var(--free)}
+    .t04-offen{display:flex; flex-wrap:wrap; gap:6px; align-items:center; min-height:2em}
+    .t04-offen .t04-atom{font-size:.98rem}
+    .t04-leer{font-size:.9rem; color:var(--muted); font-style:italic}
+    .t04-legende{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:.85rem; color:var(--muted)}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="04-hornlogik">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S1-DLE1/DLE2 · Hornlogik</span>
+    <h1>Hornlogik und Markierungsalgorithmus</h1>
+    <p class="lead">Ob eine beliebige Formel erfüllbar ist, kann sehr lange dauern. Für Hornformeln geht es schnell: Du markierst alles, was sicher wahr sein muss, und siehst sofort, ob ein Widerspruch entsteht. Auf derselben Idee beruht die Programmiersprache PROLOG. Unterstrichene und farbige Stellen kannst du anklicken oder mit der Maus berühren.</p>
+    <div class="note">
+      <b>Das kannst du danach:</b>
+      <ul class="t04-ziele">
+        <li>Hornklauseln erkennen und als Tatsache, Prozedur oder Ziel einordnen.</li>
+        <li>Eine Formel durch Substitution in eine Hornformel umbauen (Prüfung, Aufgabe 3b,i).</li>
+        <li>Mit dem Markierungsalgorithmus die Erfüllbarkeit entscheiden und ein Modell ablesen.</li>
+        <li>Eine Folgerung als Unerfüllbarkeitsproblem stellen.</li>
+        <li>Lineare, Input- und SLD-Resolution unterscheiden und eine Input-Resolution sauber notieren (Aufgabe 3b,ii).</li>
+        <li>Ein Hornprogramm in PROLOG lesen und Tiefen- gegen Breitensuche im SLD-Baum abwägen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#hornformel"><b>2</b>Hornformel</a>
+    <a href="#markierung"><b>3</b>Markierung</a>
+    <a href="#simulator"><b>4</b>Ausprobieren</a>
+    <a href="#resolution"><b>5</b>Resolution</a>
+    <a href="#prolog"><b>6</b>PROLOG</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine, die du brauchst</h2>
+    <p class="prose">Hornlogik ist Aussagenlogik mit einer Zusatzregel für die Bauart der Formel. Dafür brauchst du fünf Begriffe aus den Stationen 1 bis 3. Hier stehen sie kurz, je mit einem Bild aus dem Alltag.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Literal = Atom oder Gegenteil</span><span class="ex t04-f">A, ¬A</span><p>Ein Atom ist eine einfache Aussage, wahr (1) oder falsch (0). Wie ein Lichtschalter: A verlangt «an» (positives Literal), ¬A verlangt «aus» (negatives Literal).</p></div>
+      <div class="concept"><span class="tag">Klausel = mindestens eins</span><span class="ex t04-f">{¬A, B} = ¬A ∨ B</span><p>Eine Oder-Liste, als Menge geschrieben. Wie ein Gutschein «Glace oder Kaffee»: Er ist eingelöst, sobald eines davon klappt.</p></div>
+      <div class="concept"><span class="tag">Klauselmenge = alle zugleich</span><span class="ex t04-f">{{A}, {¬A, B}}</span><p>Alle Klauseln müssen gleichzeitig stimmen, wie alle Punkte einer Checkliste. Das ist eine Formel in konjunktiver Normalform, kurz KNF: ein Und von Oder-Listen (Def. 2.24).</p></div>
+      <div class="concept"><span class="tag">Wenn-dann = Oder</span><span class="ex t04-f">A ⇒ B ≡ ¬A ∨ B</span><p>«Wenn es regnet, nehme ich den Schirm» ist nur gebrochen, wenn es regnet und du keinen Schirm hast. Darum ist A ⇒ B dasselbe wie ¬A ∨ B.</p></div>
+      <div class="concept"><span class="tag">Erfüllbar = es gibt ein Modell</span><span class="ex t04-f">{A}, {¬A} → unerfüllbar</span><p>Ein Modell ist eine Belegung mit 0 und 1, die alle Klauseln wahr macht. Gibt es keine, ist die Formel unerfüllbar, wie ein Stundenplan mit zwei Pflichtfächern zur selben Zeit.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Wie viele positive Literale?</h3>
+      <p class="hint">Positiv heisst: ohne ¬ davor. Wandle eine Implikation zuerst in ein Oder um: A ⇒ B wird zu ¬A ∨ B.</p>
+      <div id="t04-sort-pos"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Zeichen und Begriffe</span>
+    <h2>Das Wörterbuch dieser Station</h2>
+    <p class="prose">Die Farbe zeigt die Art: Atome (Aussagen) sind violett, die Wahrheitswerte 0 und 1 orange.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Zeichen</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td class="t04-f">A, B, C</td><td><span class="kind kind-p">Atom</span></td><td>eine Aussage, wahr (1) oder falsch (0)</td></tr>
+          <tr><td class="t04-f">A, ¬A</td><td><span class="kind kind-op">Literal</span></td><td>positives bzw. negatives Literal</td></tr>
+          <tr><td class="t04-f">{¬A, B}</td><td><span class="kind kind-op">Klausel</span></td><td>Oder-Verknüpfung der Literale, als Menge geschrieben (Def. 2.24)</td></tr>
+          <tr><td><span class="fn">K</span>(<i>F</i>)</td><td><span class="kind kind-fn">Klauselmenge</span></td><td>alle Klauseln der Formel <i>F</i>; sie gelten alle zugleich (Def. 2.24)</td></tr>
+          <tr><td>∅</td><td><span class="kind kind-c">leere Klausel</span></td><td>nicht erfüllbar; steht am Ende jedes Widerspruchsbeweises (Def. 2.26c)</td></tr>
+          <tr><td><span class="c">1</span>, <span class="c">0</span></td><td><span class="kind kind-c">Konstante</span></td><td>wahr, falsch; in der Implikationsschreibweise <span class="t04-f"><span class="c">1</span> ⇒ B</span> und <span class="t04-f">A ⇒ <span class="c">0</span></span></td></tr>
+          <tr><td>⇒, ≡</td><td><span class="kind kind-op">Operator</span></td><td>«wenn, dann»; «ist äquivalent zu»</td></tr>
+          <tr><td class="t04-f">X := ¬X</td><td><span class="kind kind-op">Substitution</span></td><td>das Atom X überall durch ¬X ersetzen (umbenennen)</td></tr>
+          <tr><td>(7) aus (4) und (2)</td><td><span class="kind kind-op">Notation</span></td><td>Zeile einer Input-Resolution: Klausel (7) entsteht aus den Klauseln (4) und (2)</td></tr>
+          <tr><td><code class="t04-code-inline">b :- a.</code></td><td><span class="kind kind-fn">PROLOG</span></td><td>Regel «b gilt, wenn a gilt»; <code class="t04-code-inline">?- b.</code> ist die Anfrage «gilt b?»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle Komma:</b> In der Klausel <span class="t04-f">{¬A, ¬B, C}</span> trennt das Komma die Teile eines <b>Oder</b>. In der PROLOG-Regel <code class="t04-code-inline">c :- a, b.</code> bedeutet das Komma <b>und</b>. Beide beschreiben dieselbe Hornklausel.</div>
+  </section>
+
+  <!-- ===== 2 · Hornformel ===== -->
+  <section id="hornformel">
+    <span class="eyebrow">Schritt 2 · Def. 3.1 und Klauseltypen</span>
+    <h2>Hornformeln erkennen und herstellen</h2>
+    <p class="prose">Eine <b>Hornklausel</b> enthält höchstens ein positives Literal. Eine <b>Hornformel</b> ist eine Formel in KNF, deren Klauseln alle Hornklauseln sind (Def. 3.1 im Buch «Logik für Informatiker» von Kreuzer und Kühling, Kap. 3). Der Name erinnert an den Logiker Alfred Horn.</p>
+    <div class="board stack">
+      <p class="t04-f">(¬A ∨ B) ∧ (¬B ∨ ¬C) ∧ A &nbsp; <span class="t04-schluss">✓ Hornformel</span></p>
+      <p class="t04-f">(A ∨ B) ∧ ¬C &nbsp; <span class="t04-schluss">✗ keine Hornformel: (A ∨ B) hat zwei positive Literale</span></p>
+    </div>
+
+    <h3>Drei Arten von Hornklauseln</h3>
+    <div class="card tablebox">
+      <table class="tabelle t04-tab">
+        <thead><tr><th>Typ</th><th>Klausel</th><th>Implikation</th><th>PROLOG</th><th>gelesen</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Tatsachenklausel (Fakt)</th><td class="t04-f">{B}</td><td class="t04-f"><span class="c">1</span> ⇒ B</td><td><code>b.</code></td><td>«B gilt.»</td></tr>
+          <tr><th scope="row">Prozedurklausel (Regel)</th><td class="t04-f">{¬A₁, …, ¬Aₖ, B}</td><td class="t04-f">A₁ ∧ … ∧ Aₖ ⇒ B</td><td><code>b :- a1, …, ak.</code></td><td>«B gilt, wenn A₁ bis Aₖ gelten.»</td></tr>
+          <tr><th scope="row">Zielklausel (Frage)</th><td class="t04-f">{¬A₁, …, ¬Aₖ}</td><td class="t04-f">A₁ ∧ … ∧ Aₖ ⇒ <span class="c">0</span></td><td><code>?- a1, …, ak.</code></td><td>«A₁ bis Aₖ gelten nicht alle zugleich.»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die Implikation entsteht mit dem Gesetz von De Morgan aus Station 2: <span class="t04-f">¬A₁ ∨ … ∨ ¬Aₖ ∨ B ≡ ¬(A₁ ∧ … ∧ Aₖ) ∨ B ≡ A₁ ∧ … ∧ Aₖ ⇒ B</span>. Fehlt der Kopf B, steht rechts <span class="c">0</span> (falsch). Fehlt die Bedingung, steht links <span class="c">1</span> (wahr).</p>
+    <div class="note"><b>Namen:</b> Im Lösungsheft zum Lernblock S1-LB2 heisst die Prozedurklausel auch «Prozessklausel». Tatsachen- und Prozedurklauseln zusammen heissen Programmklauseln. Die leere Klausel ∅ zählt als Zielklausel ohne Literale.</div>
+
+    <h3>Umbenennen: Aus einer Formel eine Hornformel machen</h3>
+    <p class="prose">Manchmal fehlt nur wenig. Dann hilft ein Trick: Du ersetzt ein Atom X überall durch ¬X (Substitution X := ¬X). Aus X wird ¬X, aus ¬X wird X. Genau das verlangt Aufgabe 3b,i der exemplarischen Modulschlussprüfung.</p>
+    <ol class="prose">
+      <li>Zähle in jeder Klausel die positiven Literale. Finde die Klauseln mit zwei oder mehr.</li>
+      <li>Wähle ein Atom aus so einer Klausel und ersetze es in <b>allen</b> Klauseln, auch in Einerklauseln.</li>
+      <li>Zähle neu. Ist eine neue Problemklausel entstanden, ersetze ein weiteres Atom.</li>
+      <li>Schreibe die Hornformel hin und begründe: Jede Klausel hat höchstens ein positives Literal.</li>
+    </ol>
+    <div id="t04-step-sub"></div>
+    <div class="note"><b>Und mit B statt D?</b> Dann wird <span class="t04-f">(¬B ∨ ¬D ∨ C)</span> zu <span class="t04-f">(B ∨ ¬D ∨ C)</span> mit zwei positiven Literalen, und jede weitere Ersetzung verschiebt das Problem nur. Für <i>G</i> klappt einzig das Paar C und D. Hast du zwei Kandidaten, probiere kurz beide aus.</div>
+    <div class="note falle"><b>Falle Einerklausel:</b> Die Ersetzung gilt für die ganze Formel. Steht ¬D allein da, wird daraus die Tatsache D. Wer das vergisst, rechnet mit einer falschen Formel weiter.</div>
+    <details class="sol"><summary>Ist das noch «dieselbe» Formel?</summary>
+      <div class="stack">
+        <p>Die Prüfung schreibt «äquivalent zu einer Hornformel». Genau genommen ist <i>G</i>* nicht logisch äquivalent zu <i>G</i>, denn die Atome C und D bedeuten nach dem Umbenennen das Gegenteil. <i>G</i>* ist aber <b>erfüllbarkeitsäquivalent</b>: <i>G</i> ist genau dann erfüllbar, wenn <i>G</i>* erfüllbar ist.</p>
+        <p>Ein Modell von <i>G</i>* wird zu einem Modell von <i>G</i>, wenn du die Werte der ersetzten Atome umdrehst. Für die Frage «erfüllbar oder nicht?» reicht das. So ist auch die Formulierung in der Prüfung gemeint.</p>
+      </div>
+    </details>
+    <details class="sol"><summary>Geht das immer?</summary>
+      <div class="stack">
+        <p>Nein. Nimm <span class="t04-f">(A ∨ B) ∧ (A ∨ C) ∧ (B ∨ C) ∧ (¬A ∨ ¬B) ∧ (¬A ∨ ¬C) ∧ (¬B ∨ ¬C)</span>. Jede Klausel mit zwei positiven Literalen verlangt, dass du mindestens ein Atom des Paars ersetzt. Jede Klausel mit zwei negativen verbietet, beide zu ersetzen.</p>
+        <p>Also müsstest du aus jedem der Paare A/B, A/C und B/C genau ein Atom ersetzen. Bei drei Atomen geht das nicht auf. Diese Formel lässt sich nicht zur Hornformel umbenennen.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 3 · Markierungsalgorithmus ===== -->
+  <section id="markierung">
+    <span class="eyebrow">Schritt 3 · Markierungsalgorithmus</span>
+    <h2>Markieren, was sicher wahr ist</h2>
+    <p class="prose">Der Markierungsalgorithmus entscheidet, ob eine Hornformel erfüllbar ist. Die Idee: Eine Tatsache muss in jedem Modell wahr sein. Eine Regel, deren Bedingungen alle wahr sein müssen, zwingt auch ihren Kopf auf wahr. Du sammelst also alle Atome, die zwingend wahr sind, und prüfst dann die Zielklauseln.</p>
+    <div class="board">
+      <ol class="stack" start="0">
+        <li>Schreibe die Hornformel als Klauselmenge.</li>
+        <li>Markiere jede Tatsache {A}, und zwar <b>jedes</b> Vorkommen von A in allen Klauseln (auch in ¬A).</li>
+        <li>Gibt es eine Prozedurklausel {¬A₁, …, ¬Aₖ, B}, deren A₁ bis Aₖ alle markiert sind, B aber noch nicht: Markiere B überall. Wiederhole, bis keine neue Markierung mehr möglich ist (Fixpunkt).</li>
+        <li>Ist eine Zielklausel {¬A₁, …, ¬Aₖ} vollständig markiert: <b>unerfüllbar</b>. Sonst: <b>erfüllbar</b>, und ein Modell ist «markierte Atome = 1, alle anderen = 0».</li>
+      </ol>
+    </div>
+    <p class="hint">Nummern wie in der Gegenüberstellung im Lösungsheft S1-LB2 (Lösung 3.3, dort «Markierungsalgorithmus 3.6»; Lösung 3.1 zitiert ihn als Satz 3.7). Die Lösungen markieren in einem «Schritt» alles, was gerade möglich ist. Das heisst hier Durchlauf. Ist eine Zielklausel schon früher voll markiert, darfst du abbrechen: Sie bleibt voll markiert.</p>
+    <div class="note"><b>Zwei Zählweisen, ein Verfahren:</b> Der Lernblock zählt die Durchläufe als «1. Schritt, 2. Schritt, …». Die Lösung zu Aufgabe 3 des Übungssets S1 nennt den ersten Durchlauf «Schritt 1)» und jeden weiteren wieder «Schritt 2)», weil dort Schritt 2 des Algorithmus wiederholt wird. Beide Schreibweisen sind richtig. Wichtig ist, dass du pro Durchlauf sagst, welche Atome neu markiert werden.</div>
+    <details class="sol"><summary>Warum stimmt das Ergebnis?</summary>
+      <div class="stack">
+        <p><b>Unerfüllbar:</b> Jedes markierte Atom muss in jedem Modell den Wert 1 haben. Eine voll markierte Zielklausel {¬A₁, …, ¬Aₖ} verlangt aber, dass mindestens eines dieser Atome 0 ist. Das geht nicht.</p>
+        <p><b>Erfüllbar:</b> Setze die markierten Atome auf 1, alle anderen auf 0. Jede Tatsache ist markiert, also wahr. Eine Regel hat entweder eine unmarkierte Bedingung (dann ist deren ¬ wahr) oder alle Bedingungen markiert (dann ist auch der Kopf markiert). Eine Zielklausel ist nicht voll markiert, also enthält sie ein ¬ eines Atoms mit Wert 0. Alle Klauseln sind wahr.</p>
+      </div>
+    </details>
+
+    <h3>Folgerung prüfen: Behauptung verneinen</h3>
+    <p class="prose">Oft fragt die Aufgabe nicht «erfüllbar?», sondern «folgt K aus den Regeln?». Wie beim Resolutionskalkül (Bem. 2.23) gilt: K folgt aus <i>F</i>₁, …, <i>F</i>ₙ genau dann, wenn <i>F</i>₁ ∧ … ∧ <i>F</i>ₙ ∧ ¬K unerfüllbar ist. Das verneinte Ziel kommt als neue Klausel dazu.</p>
+    <div class="card tablebox">
+      <table class="tabelle t04-tab">
+        <caption>Behauptung verneinen und als Klauseln anhängen</caption>
+        <thead><tr><th>Behauptung</th><th>verneint</th><th>neue Klauseln</th></tr></thead>
+        <tbody>
+          <tr><td class="t04-f">K</td><td class="t04-f">¬K</td><td class="t04-f">{¬K} &nbsp;<span class="t04-typ t04-typ-z">Ziel</span></td></tr>
+          <tr><td class="t04-f">C ∧ E ⇒ F</td><td class="t04-f">C ∧ E ∧ ¬F</td><td class="t04-f">{C}, {E}, {¬F}</td></tr>
+          <tr><td class="t04-f">W₁ ∧ H ⇒ ¬B</td><td class="t04-f">W₁ ∧ H ∧ B</td><td class="t04-f">{W₁}, {H}, {B}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Die beiden unteren Zeilen entsprechen den Lösungen 3.5 und 3.2 im Lernblock S1-LB2: Aus einer verneinten Implikation werden Tatsachen und höchstens eine Zielklausel.</p>
+
+    <div id="t04-step-mark"></div>
+    <div class="note"><b>Lies im Lösungsheft genau:</b> In Lösung 3.2 steht am Schluss «Zielklausel {¬W2, ¬B} vollständig markiert». Eine solche Klausel gibt es in der Klauselmenge nicht. Gemeint ist {¬W3, ¬B}: W3 wird im 5. Schritt markiert, B schon im ersten.</div>
+
+    <h3>Wie schnell ist das?</h3>
+    <p class="prose">Jeder Durchlauf markiert mindestens ein neues Atom, sonst ist Schluss. Bei <i>n</i> Atomen gibt es darum höchstens <i>n</i> + 1 Durchläufe, und jeder Durchlauf geht die Klauseln einmal durch. Der Aufwand wächst nur polynomial mit der Länge der Formel, geschickt programmiert sogar linear. Eine Wahrheitstafel braucht 2<sup><i>n</i></sup> Zeilen, und der allgemeine Resolutionskalkül kann sehr viele Resolventen erzeugen.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Aufwand im Vergleich (S1-DLE2: Effizienz)</caption>
+        <thead><tr><th>Atome <i>n</i></th><th class="zahl">Zeilen der Wahrheitstafel 2<sup><i>n</i></sup></th><th class="zahl">Durchläufe Markierung, höchstens <i>n</i> + 1</th></tr></thead>
+        <tbody>
+          <tr><td>10</td><td class="zahl">1'024</td><td class="zahl">11</td></tr>
+          <tr><td>20</td><td class="zahl">1'048'576</td><td class="zahl">21</td></tr>
+          <tr><td>50</td><td class="zahl">1'125'899'906'842'624</td><td class="zahl">51</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Darum steckt Hornlogik in Regelsystemen und in PROLOG: viele Regeln und trotzdem eine schnelle Antwort.</p>
+  </section>
+
+  <!-- ===== 4 · Simulator ===== -->
+  <section id="simulator">
+    <span class="eyebrow">Schritt 4 · Ausprobieren</span>
+    <h2>Markierungsalgorithmus zum Durchklicken</h2>
+    <p class="prose">Wähle eine Hornformel oder tippe eine eigene ein. Mit «Nächster Durchlauf» markierst du Schritt für Schritt. Der Algorithmus stoppt bei einem Widerspruch (eine Zielklausel ist voll markiert) oder wenn nichts Neues mehr dazukommt (Fixpunkt).</p>
+    <div class="card stack" id="t04-sim">
+      <div class="t04-gruppe">
+        <span id="t04-sim-bsp-lbl">Beispiel</span>
+        <div class="modes" role="group" aria-labelledby="t04-sim-bsp-lbl">
+          <button type="button" class="btn on" aria-pressed="true" data-t04-bsp="release">Release</button>
+          <button type="button" class="btn" aria-pressed="false" data-t04-bsp="wochenende">Wochenende</button>
+          <button type="button" class="btn" aria-pressed="false" data-t04-bsp="gstern">G* aus Schritt 2</button>
+          <button type="button" class="btn" aria-pressed="false" data-t04-bsp="eigen">Eigene Formel</button>
+        </div>
+      </div>
+      <div class="stack" id="t04-eigen" hidden>
+        <label for="t04-eingabe"><b>Eine Klausel pro Zeile.</b> Erlaubt sind PROLOG (<code class="t04-code-inline">r :- f, t.</code>, <code class="t04-code-inline">f.</code>, <code class="t04-code-inline">?- r.</code>), Implikationen (<code class="t04-code-inline">F ∧ T ⇒ R</code>, <code class="t04-code-inline">1 ⇒ F</code>, <code class="t04-code-inline">R ⇒ 0</code>, auch mit <code class="t04-code-inline">-&gt;</code> und Komma) und Klauseln (<code class="t04-code-inline">{¬F, ¬T, R}</code>, <code class="t04-code-inline">¬R ∨ S</code>). Zeilen mit % sind Kommentare.</label>
+        <textarea id="t04-eingabe" class="t04-eingabe" spellcheck="false"></textarea>
+        <div class="row"><button type="button" class="btn primary" id="t04-uebernehmen">Formel übernehmen</button></div>
+        <p class="t04-fehler" id="t04-fehler" aria-live="polite"></p>
+      </div>
+      <p class="hint" id="t04-sim-legende"></p>
+      <div class="t04-gruppe">
+        <span id="t04-sim-ans-lbl">Ansicht</span>
+        <div class="modes" role="group" aria-labelledby="t04-sim-ans-lbl">
+          <button type="button" class="btn on" aria-pressed="true" data-t04-ans="klausel">Klauseln</button>
+          <button type="button" class="btn" aria-pressed="false" data-t04-ans="impl">Implikationen</button>
+          <button type="button" class="btn" aria-pressed="false" data-t04-ans="prolog">PROLOG</button>
+        </div>
+      </div>
+      <ul class="t04-sim-liste" id="t04-sim-liste" aria-label="Klauseln der Hornformel"></ul>
+      <div class="t04-gruppe"><span>Markierte Atome (hochgestellt: Durchlauf)</span><div class="t04-atome" id="t04-sim-atome"></div></div>
+      <p class="info" id="t04-sim-info" aria-live="polite"></p>
+      <div id="t04-sim-ergebnis" aria-live="polite"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t04-sim-weiter">Nächster Durchlauf</button>
+        <button type="button" class="btn" id="t04-sim-ende">Bis zum Ende</button>
+        <button type="button" class="btn" id="t04-sim-reset">Zurücksetzen</button>
+      </div>
+      <p class="t04-legende"><span>gelb hinterlegt und unterstrichen = markiert</span><span>Rahmen in Akzentfarbe = feuert in diesem Durchlauf</span><span>roter Rahmen = Zielklausel voll markiert</span></p>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Resolution ===== -->
+  <section id="resolution">
+    <span class="eyebrow">Schritt 5 · Lineare, Input- und SLD-Resolution</span>
+    <h2>Resolution mit Plan</h2>
+    <p class="prose">Zur Erinnerung: Enthält eine Klausel X und eine andere ¬X, streichst du beide und vereinigst den Rest. Das Ergebnis heisst <b>Resolvente</b> (Def. 2.26), etwa {¬A, B} und {¬B} ergeben {¬A}. Der Resolutionskalkül aus Station 3 bildet alle Resolventen aller Klauseln (Def. 2.30) und wartet auf ∅ (Satz 2.31). Das sind schnell sehr viele, die meisten nutzlos. Die drei Strategien hier legen fest, welche Klauseln du miteinander resolvieren darfst. Für Hornformeln verlieren sie dabei nichts: Ist die Formel unerfüllbar, finden sie ∅.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Lineare Resolution</span><span class="ex">eine Kette</span><p>Jede neue Resolvente entsteht aus der vorherigen und einer Seitenklausel. Die Seitenklausel ist eine Eingabeklausel oder eine frühere Resolvente der Kette. Funktioniert für alle Formeln.</p></div>
+      <div class="concept"><span class="tag">Input-Resolution</span><span class="ex">immer eine Eingabeklausel</span><p>Bei jedem Schritt ist mindestens eine der beiden Klauseln eine Eingabeklausel, also eine Klausel der Ausgangsmenge (1) … (n). Zwei hergeleitete Klauseln miteinander sind verboten. Vollständig für Hornformeln.</p></div>
+      <div class="concept"><span class="tag">SLD-Resolution</span><span class="ex">vom Ziel aus</span><p>Eine Input-Resolution, die mit einer Zielklausel startet und sie in jedem Schritt mit einer Programmklausel resolviert. Jede Resolvente ist wieder eine Zielklausel. So arbeitet PROLOG.</p></div>
+    </div>
+    <p class="hint">SLD steht für <span lang="en">Selection, Linear, Definite</span>: ein Literal auswählen, linear weiterrechnen, nur Programmklauseln (definite Klauseln) als Partner. Jede SLD-Resolution ist eine Input-Resolution und zugleich linear.</p>
+    <div class="note falle"><b>Nicht für jede Formel:</b> Die Menge {A, B}, {¬A, B}, {A, ¬B}, {¬A, ¬B} ist unerfüllbar. ∅ entsteht aber nur aus zwei Einerklauseln wie {B} und {¬B}, und eine davon müsste eine Eingabeklausel sein. Hier gibt es keine. Input-Resolution findet ∅ also nicht. Kein Widerspruch zum Satz oben: {A, B} hat zwei positive Literale, das ist keine Hornformel.</div>
+
+    <h3>Rezept für Aufgabe 3b,ii</h3>
+    <p class="prose">In der exemplarischen Modulschlussprüfung bringt Teil 3b (Substitution und Input-Resolution) 7 der 10 Punkte von Aufgabe 3. Die Input-Resolution gehst du so an:</p>
+    <ol class="prose">
+      <li>Nummeriere die Klauseln der Hornformel als Eingabeklauseln: (1), (2), …</li>
+      <li>Starte mit einer Zielklausel. Gibt es mehrere, spiel die Markierung im Kopf durch: Die voll markierte Zielklausel ist der richtige Start.</li>
+      <li>Wähle ein negatives Literal ¬X und resolviere mit einer Eingabeklausel, die X positiv enthält. Notiere: «(7) {…} aus (4) und (2) über X».</li>
+      <li>Rechne mit der neuen Klausel weiter, bis ∅ entsteht. Schluss: ∅ hergeleitet, also unerfüllbar.</li>
+    </ol>
+    <div id="t04-step-ir"></div>
+    <div class="note"><b>Andere Richtung, auch richtig:</b> Die Musterlösung zur exemplarischen Prüfung startet bei der Tatsache C: Zuerst entsteht {D} aus einer Regel und der Tatsache. Dann resolviert sie mit der Zielklausel und arbeitet sich von dort Literal für Literal bis ∅ zurück. Auch das ist eine Input-Resolution, denn jede Zeile nutzt eine Eingabeklausel. Entscheidend ist, dass jede Zeile korrekt notiert ist.</div>
+    <details class="sol"><summary>Vorwärts-Variante für G* (eigene Lösung)</summary>
+      <div class="stack">
+        <div class="board"><div class="m t04-zeilen" id="t04-vorwaerts"></div></div>
+        <p>Jede Zeile nutzt eine Eingabeklausel: (6) und (5), dann (1), (2), (4) und (6). Die Kette ist einen Schritt länger als die Variante ab der Zielklausel.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 6 · PROLOG und SLD-Baum ===== -->
+  <section id="prolog">
+    <span class="eyebrow">Schritt 6 · PROLOG und SLD-Baum</span>
+    <h2>Hornlogik als Programm</h2>
+    <p class="prose">PROLOG ist eine Programmiersprache, deren Programme aus Hornklauseln bestehen. Tatsachen und Regeln bilden das Programm, die Zielklausel ist die Anfrage. PROLOG beantwortet eine Anfrage mit einer SLD-Resolution: Es nimmt das Gegenteil an und sucht die leere Klausel. Findet es ∅, antwortet es «true».</p>
+    <div class="grid2">
+      <div class="stack">
+        <h3>Das Release-Beispiel als Programm</h3>
+        <ol class="t04-prog" id="t04-prog-release" aria-label="PROLOG-Programm Release"></ol>
+      </div>
+      <div class="stack">
+        <div class="note"><b>Kleinschreibung:</b> In echtem PROLOG schreibst du Atome klein, denn Grossbuchstaben bedeuten dort Variablen. Das Lösungsheft S1-LB2 schreibt <code class="t04-code-inline">Mi:-Me,E.</code> gross, weil es nur um die Struktur geht.</div>
+        <div class="note tipp"><b>Zwei Richtungen:</b> Die Markierung arbeitet vorwärts von den Tatsachen zum Ziel. Die SLD-Resolution arbeitet rückwärts vom Ziel zu den Tatsachen. Beide beantworten dieselbe Frage.</div>
+      </div>
+    </div>
+    <div id="t04-step-sld"></div>
+
+    <h3>Der SLD-Baum: Tiefensuche oder Breitensuche?</h3>
+    <p class="prose">Gibt es für ein Ziel mehrere passende Regeln, verzweigt sich die Suche. Alle Möglichkeiten zusammen bilden den SLD-Baum. Ein Ast endet mit ∅ (Erfolg) oder in einer Sackgasse, wenn für das linke Ziel keine Klausel passt. Offen ist nur, in welcher Reihenfolge du den Baum absuchst.</p>
+    <div class="grid2">
+      <div class="concept"><span class="tag">Tiefensuche (depth-first)</span><p>Immer zuerst den ersten Ast bis ganz unten verfolgen. Bei einer Sackgasse einen Schritt zurück (Backtracking) und den nächsten Ast nehmen. So arbeitet PROLOG. Braucht wenig Speicher, kann sich aber in einer Schleife verlieren.</p></div>
+      <div class="concept"><span class="tag">Breitensuche (breadth-first)</span><p>Ebene für Ebene: zuerst alle Knoten nach einem Schritt, dann alle nach zwei Schritten und so weiter. Gibt es einen Beweis, findet sie ihn sicher, und zwar den kürzesten. Ein endloser Ast hält sie davon nicht ab. Muss aber viele offene Knoten gleichzeitig speichern.</p></div>
+    </div>
+    <div class="card stack" id="t04-sld">
+      <div class="t04-gruppe">
+        <span id="t04-sld-prog-lbl">Programm</span>
+        <div class="modes" role="group" aria-labelledby="t04-sld-prog-lbl">
+          <button type="button" class="btn on" aria-pressed="true" data-t04-prog="kaffee">Kaffee</button>
+          <button type="button" class="btn" aria-pressed="false" data-t04-prog="schleife">Kaffee mit Schleife</button>
+        </div>
+      </div>
+      <ol class="t04-prog" id="t04-sld-programm" aria-label="PROLOG-Programm für den SLD-Baum"></ol>
+      <div class="t04-gruppe">
+        <span id="t04-sld-art-lbl">Suche</span>
+        <div class="modes" role="group" aria-labelledby="t04-sld-art-lbl">
+          <button type="button" class="btn on" aria-pressed="true" data-t04-art="tiefe">Tiefensuche (PROLOG)</button>
+          <button type="button" class="btn" aria-pressed="false" data-t04-art="breite">Breitensuche</button>
+        </div>
+      </div>
+      <p class="hint">Regel wie in PROLOG: immer das linke Ziel der Zielklausel, Programmklauseln von oben nach unten.</p>
+      <div class="t04-baumbox"><ul class="baum t04-baum" id="t04-sld-baum" aria-label="SLD-Baum"></ul></div>
+      <div class="t04-gruppe"><span id="t04-sld-offen-lbl">Stapel</span><div class="t04-offen" id="t04-sld-offen"></div></div>
+      <p class="info" id="t04-sld-info" aria-live="polite"></p>
+      <p class="hint" id="t04-sld-vergleich" aria-live="polite"></p>
+      <div class="row">
+        <button type="button" class="btn primary" id="t04-sld-weiter">Nächster Knoten</button>
+        <button type="button" class="btn" id="t04-sld-ende">Bis zum Ende</button>
+        <button type="button" class="btn" id="t04-sld-reset">Zurücksetzen</button>
+      </div>
+      <p class="t04-legende"><span>gestrichelt = erzeugt, wartet</span><span>Zahl = Besuchsreihenfolge</span><span>gelb = aktueller Pfad</span><span>✗ = Sackgasse</span><span>↻ = Ziel schon weiter oben</span><span>✓ = ∅ erreicht</span></p>
+    </div>
+    <details class="sol"><summary>Und die Bäume im Lösungsheft?</summary>
+      <div class="stack">
+        <p>Die SLD-Bäume in den Lösungen 3.7 und 3.8 des Lernblocks verzweigen nicht nur nach der Klausel, sondern auch nach der Wahl des Literals: Aus {¬A, ¬B} entstehen dort Äste für ¬A und für ¬B. Darum werden die Bäume grösser.</p>
+        <p>PROLOG nimmt immer das linke Literal. Auch mit dieser festen Auswahl enthält der SLD-Baum immer einen Ast, der mit ∅ endet, sofern Programm und Anfrage zusammen unerfüllbar sind. Ob die Suche diesen Ast auch erreicht, hängt von der Suchstrategie ab (siehe «Kaffee mit Schleife»). Beide Darstellungen sind korrekt; in der Prüfung zählt, dass jeder Schritt eine gültige Resolution mit einer Programmklausel ist.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst lösen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Alle Aufgaben sind eigene Aufgaben mit eigenen Formeln. Die Lösungen sind eigene Lösungen, nicht vom Dozenten bestätigt, aber mit einem Programm nachgerechnet. Einen Taschenrechner brauchst du hier nicht.</p>
+    <div class="card stack">
+      <h3>Übung 1 · Klauseltyp bestimmen</h3>
+      <div id="t04-ueb-sort"></div>
+    </div>
+    <div id="t04-ueb-prolog"></div>
+    <div id="t04-ueb-wf"></div>
+    <div id="t04-ueb-zahl"></div>
+    <div id="t04-ueb-3b"></div>
+    <div id="t04-ueb-tausch"></div>
+    <div id="t04-ueb-sld"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Prüfungsaufgabe am Stück gelöst</h2>
+    <p class="prose">Der Film löst eine Aufgabe im Stil von Aufgabe 3b der exemplarischen Modulschlussprüfung, mit eigener Formel. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt, aber mit einem Programm nachgerechnet; die Notation folgt der Musterlösung. Drück auf Play. Der farbige Balken zeigt, wann der nächste Schritt kommt. Gelb leuchtet, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t04-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t04-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Hornklausel:</b> höchstens ein positives Literal. <b>Hornformel:</b> KNF, deren Klauseln alle Hornklauseln sind (Def. 3.1).</li>
+      <li><b>Substitution</b> X := ¬X wirkt in allen Klauseln, auch in Einerklauseln. Danach neu zählen. Das Ergebnis ist erfüllbarkeitsäquivalent.</li>
+      <li><b>Markierung:</b> Tatsachen markieren, Regeln feuern lassen bis zum Fixpunkt. Zielklausel voll markiert: unerfüllbar. Sonst erfüllbar mit dem Modell «markiert = 1, Rest = 0». Höchstens <i>n</i> + 1 Durchläufe.</li>
+      <li><b>Folgerung</b> zeigst du über Widerspruch: Behauptung verneinen, als Klauseln anhängen, Unerfüllbarkeit zeigen.</li>
+      <li><b>Input-Resolution:</b> Jede Zeile «(k) {…} aus (i) und (j) über X» nutzt mindestens eine Eingabeklausel. Ab der Zielklausel gerechnet ist es eine SLD-Resolution.</li>
+      <li><b>PROLOG</b> = Hornklauseln plus SLD-Resolution mit Tiefensuche. Die Tiefensuche kann sich in Schleifen verlieren; die Breitensuche findet den kürzesten Beweis.</li>
+    </ul>
+    <div class="card tablebox">
+      <table class="tabelle t04-tab">
+        <caption>Die wichtigsten Schreibweisen</caption>
+        <thead><tr><th>Typ</th><th>Klausel</th><th>Implikation</th><th>PROLOG</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Tatsache</th><td class="t04-f">{B}</td><td class="t04-f"><span class="c">1</span> ⇒ B</td><td><code>b.</code></td></tr>
+          <tr><th scope="row">Prozedur</th><td class="t04-f">{¬A₁, …, ¬Aₖ, B}</td><td class="t04-f">A₁ ∧ … ∧ Aₖ ⇒ B</td><td><code>b :- a1, …, ak.</code></td></tr>
+          <tr><th scope="row">Ziel</th><td class="t04-f">{¬A₁, …, ¬Aₖ}</td><td class="t04-f">A₁ ∧ … ∧ Aₖ ⇒ <span class="c">0</span></td><td><code>?- a1, …, ak.</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="board"><p><i>F</i>₁ ∧ … ∧ <i>F</i>ₙ ⇒ <i>G</i> ist eine Tautologie &nbsp;⟺&nbsp; <i>F</i>₁ ∧ … ∧ <i>F</i>ₙ ∧ ¬<i>G</i> ist unerfüllbar &nbsp;⟺&nbsp; ∅ ist herleitbar</p></div>
+    <footer>Lernhilfe zu MSTW Sektion 1, digitale Lerneinheiten S1-DLE1 und S1-DLE2 (Hornlogik). Grundlagen: Lösungen zum Lernblock S1-LB2 (Kap. 3 von «Logik für Informatiker», Def. 3.1, Lösungen 3.1 bis 3.8), Folien S1-V3 von U. Koch (Def. 2.24, 2.26, 2.30, Satz 2.31, Bem. 2.23), Übungsset S1 (Aufgabe 3), exemplarische Modulschlussprüfung (Aufgabe 3b). Alle Beispiele und Aufgaben sind eigene Formulierungen; jede Lösung ist nachgerechnet.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+
+  /* =====================================================================
+     Hilfen: Formeln mit Farbcode
+     ===================================================================== */
+
+  // Färbt Atome (Grossbuchstabe, optional Ziffer oder tiefgestellte Ziffer) violett und setzt Junktoren mit Abstand.
+  // Nur für eigene Texte. In <i>, .fn, .c, .p und .t04-nf wird nichts eingefärbt (Formelnamen wie G, H).
+  const VOID = /^<(br|img|input|hr|wbr)\b/i;
+  const SKIP = /^<(i\b|span[^>]*class="(fn|c|p|t04-nf|t04-pl)")/i;
+  function F(s) {
+    const stapel = [];
+    return String(s).split(/(<[^>]+>)/).map(function (teil) {
+      if (teil.charAt(0) === "<") {
+        if (teil.charAt(1) === "/") stapel.pop();
+        else if (!VOID.test(teil) && !/\/>$/.test(teil)) stapel.push(SKIP.test(teil));
+        return teil;
+      }
+      if (stapel.indexOf(true) >= 0) return teil;
+      return teil
+        .replace(/(^|[^A-Za-zÄÖÜäöüß0-9_])([A-Z](?:[0-9]|[₀-₉ₖ])?)(?![A-Za-zÄÖÜäöüß0-9_₀-₉ₖ])/g, '$1<span class="p">$2</span>')
+        .replace(/ ?([∧∨⇒≡]) ?/g, '<span class="op">$1</span>');
+    }).join("");
+  }
+  const esc = (s) => String(s).replace(/[&<>"]/g, (z) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[z]));
+  const NR = (n) => '<span class="t04-nr">(' + n + ")</span>";
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  // Literal-Liste «¬F, ¬T, R» → [["F", false], ["T", false], ["R", true]]
+  function litsLesen(s) {
+    return String(s).split(",").map((x) => x.trim()).filter(Boolean)
+      .map((x) => (x.charAt(0) === "¬" ? [x.slice(1).trim(), false] : [x, true]));
+  }
+  // Klausel als Menge, markierte Atome unterstrichen
+  function klHtml(s, mark, link) {
+    const innen = s === "∅" ? "" : litsLesen(s).map(function (l) {
+      return '<span class="t04-lit' + (mark && mark.has(l[0]) ? " t04-mark" : "") + '">' + (l[1] ? "" : "¬") + '<span class="p">' + esc(l[0]) + "</span></span>";
+    }).join(", ");
+    const text = s === "∅" ? "∅" : "{" + innen + "}";
+    return '<span class="t04-kl"' + (link ? ' data-link="' + link + '"' : "") + ">" + text + "</span>";
+  }
+  // Disjunktion «B ∨ ¬D» mit optionaler Zählmarke und Hervorhebung geänderter Atome
+  function disj(s, i, o) {
+    o = o || {};
+    const teile = s.split("∨").map((x) => x.trim());
+    let pos = 0;
+    const innen = teile.map(function (l) {
+      const neg = l.charAt(0) === "¬";
+      const a = neg ? l.slice(1).trim() : l;
+      if (!neg) pos++;
+      const neu = o.neu && o.neu.indexOf(a) >= 0;
+      return '<span class="' + (neu ? "t04-neu" : "t04-lit") + '">' + (neg ? "¬" : "") + '<span class="p">' + a + "</span></span>";
+    }).join('<span class="op">∨</span>');
+    const text = teile.length > 1 ? "(" + innen + ")" : innen;
+    let marke = "";
+    if (o.zaehlen) {
+      const k = pos >= 2 ? " t04-zuviel" : o.alleGut ? " t04-gut" : "";
+      marke = '<span class="t04-zahl' + k + '" title="positive Literale">' + pos + "</span>";
+    }
+    return '<span class="t04-kl"' + (o.link ? ' data-link="' + o.link + (i + 1) + '"' : "") + ">" + text + marke + "</span>";
+  }
+  function konj(arr, o) {
+    return arr.map((s, i) => disj(s, i, o)).join('<span class="op">∧</span>');
+  }
+  // Zeile einer Input-Resolution; mit «jLink» wird die Nummer (j) mit data-link verknüpft
+  function irZeile(nr, kl, i, j, x, mark, jLink) {
+    const jText = jLink ? '<span data-link="' + jLink + j + '">(' + j + ")</span>" : "(" + j + ")";
+    return "<div>" + NR(nr) + klHtml(kl, mark) + ' <span class="t04-aus">aus (' + i + ") und " + jText + " über " + '<span class="p">' + x + "</span></span></div>";
+  }
+  function eingabe(liste, link) {
+    return '<div class="t04-klist">' + liste.map((s, i) => '<span class="t04-kl">' + NR(i + 1) + klHtml(s, null, link ? link + (i + 1) : null) + "</span>").join("") + "</div>";
+  }
+
+  // Statische Formeln im HTML einfärben (vor dem Start von lernpfad.js)
+  document.querySelectorAll(".t04-f").forEach((el) => { el.innerHTML = F(el.innerHTML); });
+
+  /* =====================================================================
+     Schritt 0 · Sortierer: Anzahl positiver Literale
+     ===================================================================== */
+  const M = (s) => '<span class="m">' + F(s) + "</span>";
+  L.sortierer("#t04-sort-pos", {
+    kategorien: ["kein positives", "genau ein positives", "zwei oder mehr"],
+    elemente: [
+      { html: M("{¬A, ¬B}"), kategorie: 0, erklaerung: "Beide Literale sind verneint." },
+      { html: M("{C}"), kategorie: 1, erklaerung: F("Ein einzelnes Atom ohne ¬. Das ist eine Tatsache.") },
+      { html: M("{¬A, ¬B, C}"), kategorie: 1, erklaerung: F("Nur C ist positiv.") },
+      { html: M("A ∨ B"), kategorie: 2, erklaerung: F("A und B sind beide positiv.") },
+      { html: M("¬D"), kategorie: 0, erklaerung: "Ein einzelnes verneintes Atom." },
+      { html: M("A ⇒ B"), kategorie: 1, erklaerung: F("A ⇒ B ≡ ¬A ∨ B: Nur B ist positiv.") },
+      { html: M("A ∧ B ⇒ C"), kategorie: 1, erklaerung: F("A ∧ B ⇒ C ≡ ¬A ∨ ¬B ∨ C: Nur C ist positiv.") },
+      { html: M("A ⇒ B ∨ C"), kategorie: 2, erklaerung: F("A ⇒ B ∨ C ≡ ¬A ∨ B ∨ C: B und C sind positiv.") }
+    ]
+  });
+
+  /* =====================================================================
+     Schritt 2 · Stepper: Substitution (Kernbeispiel G)
+     ===================================================================== */
+  const G0 = ["B ∨ D", "¬B ∨ ¬C", "¬B ∨ ¬D ∨ C", "¬A ∨ C", "¬A ∨ ¬D", "A"];
+  const G1 = ["B ∨ ¬D", "¬B ∨ ¬C", "¬B ∨ D ∨ C", "¬A ∨ C", "¬A ∨ D", "A"];
+  const G2 = ["B ∨ ¬D", "¬B ∨ C", "¬B ∨ D ∨ ¬C", "¬A ∨ ¬C", "¬A ∨ D", "A"];
+  const gText = F("Zeige durch geeignete Substitution, dass <i>G</i> ≡ ") + konj(G0, { link: "g" }) +
+    F(" zu einer Hornformel umgebaut werden kann.");
+  L.stepper("#t04-step-sub", {
+    titel: "Kernbeispiel G",
+    text: gText,
+    schritte: [
+      { html: '<div class="t04-zeilen"><div>' + F("<i>G</i> ≡ ") + konj(G0, { link: "g", zaehlen: true }) + "</div></div>",
+        warum: F("Zuerst zählen. Die kleine Zahl zeigt die positiven Literale je Klausel. Nur (B ∨ D) hat zwei, alle anderen Klauseln sind schon Hornklauseln.") },
+      { html: '<div class="t04-zeilen"><div>' + F("D := ¬D") + "</div><div>" + F("<i>G</i>′ ≡ ") + konj(G1, { link: "g", neu: ["D"] }) + "</div></div>",
+        warum: F("Wir ersetzen D, eines der beiden Atome der Problemklausel. Jedes D wird zu ¬D, jedes ¬D zu D. Das betrifft drei Klauseln.") },
+      { html: '<div class="t04-zeilen"><div>' + F("<i>G</i>′ ≡ ") + konj(G1, { link: "g", zaehlen: true }) + "</div></div>",
+        warum: F("Neu zählen: (B ∨ ¬D) ist repariert. Dafür hat (¬B ∨ D ∨ C) jetzt zwei positive Literale, nämlich D und C. Wir müssen weiter.") },
+      { html: '<div class="t04-zeilen"><div>' + F("C := ¬C") + "</div><div>" + F("<i>G</i>* ≡ ") + konj(G2, { link: "g", neu: ["C"] }) + "</div></div>",
+        warum: F("D drehen wir nicht zurück, sonst wären wir wieder am Anfang. Also ersetzen wir C. Das betrifft wieder drei Klauseln.") },
+      { html: '<div class="t04-zeilen"><div>' + F("<i>G</i>* ≡ ") + konj(G2, { link: "g", zaehlen: true, alleGut: true }) + "</div></div>",
+        warum: F("Jede Klausel hat jetzt höchstens ein positives Literal. <i>G</i>* ist eine Hornformel. Damit ist gezeigt, was die Aufgabe verlangt.") },
+      { html: '<div class="t04-zeilen">' +
+          "<div>" + NR(1) + F("D ⇒ B") + ' <span class="t04-typ t04-typ-p">Prozedur</span></div>' +
+          "<div>" + NR(2) + F("B ⇒ C") + ' <span class="t04-typ t04-typ-p">Prozedur</span></div>' +
+          "<div>" + NR(3) + F("B ∧ C ⇒ D") + ' <span class="t04-typ t04-typ-p">Prozedur</span></div>' +
+          "<div>" + NR(4) + F('A ∧ C ⇒ <span class="c">0</span>') + ' <span class="t04-typ t04-typ-z">Ziel</span></div>' +
+          "<div>" + NR(5) + F("A ⇒ D") + ' <span class="t04-typ t04-typ-p">Prozedur</span></div>' +
+          "<div>" + NR(6) + F('<span class="c">1</span> ⇒ A') + ' <span class="t04-typ t04-typ-t">Tatsache</span></div></div>',
+        warum: F("In Implikationsschreibweise sieht man die Bauart: eine Tatsache, vier Regeln, ein Ziel. Damit kann der Markierungsalgorithmus arbeiten. Weiter geht es mit <i>G</i>* in Schritt 5.") }
+    ]
+  });
+
+  /* =====================================================================
+     Schritt 3 · Stepper: Markierung (Kernbeispiel Release)
+     ===================================================================== */
+  const REL = ["F", "T", "D", "¬F, ¬T, R", "¬T, S", "¬R, ¬D, Q", "¬Q, ¬S, L", "¬L, K", "¬K"];
+  function relListe(mark, feuert, voll) {
+    return '<div class="t04-klist">' + REL.map(function (s, i) {
+      let zusatz = "";
+      // Tatsachen werden markiert, Regeln feuern (wie im Simulator)
+      if (feuert && feuert.indexOf(i) >= 0) zusatz = ' <span class="t04-status">' + (s.indexOf(",") < 0 && s.charAt(0) !== "¬" ? "→ markiert" : "→ feuert") + "</span>";
+      if (voll === i) zusatz = ' <span class="t04-status">✗ voll markiert</span>';
+      return '<span class="t04-kl">' + NR(i + 1) + klHtml(s, mark, "r" + (i + 1)) + zusatz + "</span>";
+    }).join("") + "</div>";
+  }
+  const relText =
+    'Bekannt ist: <span data-link="r1">Das Feature ist fertig</span>, <span data-link="r2">die Tests sind grün</span> und <span data-link="r3">die Doku ist geschrieben</span>. ' +
+    '<span data-link="r4">Sind Feature und Tests bereit, ist das Code-Review bestanden.</span> ' +
+    '<span data-link="r5">Sind die Tests grün, ist der Sicherheitscheck bestanden.</span> ' +
+    '<span data-link="r6">Review und Doku ergeben die Qualitätsfreigabe.</span> ' +
+    '<span data-link="r7">Freigabe und Sicherheitscheck bringen das Release live.</span> ' +
+    '<span data-link="r8">Ist es live, wird die Kundschaft informiert.</span> ' +
+    'Folgt daraus, dass <span data-link="r9">die Kundschaft informiert wird</span>?';
+  const m = (arr) => new Set(arr);
+  L.stepper("#t04-step-mark", {
+    titel: "Kernbeispiel Release",
+    text: relText,
+    schritte: [
+      { html: '<div class="t04-zeilen">' +
+          "<div>" + F('<span data-link="r1">F</span>, <span data-link="r2">T</span>, <span data-link="r3">D</span>') + ' <span class="t04-typ t04-typ-t">Tatsachen</span></div>' +
+          '<div><span data-link="r4">' + F("F ∧ T ⇒ R") + '</span> &nbsp; <span data-link="r5">' + F("T ⇒ S") + '</span> &nbsp; <span data-link="r6">' + F("R ∧ D ⇒ Q") + "</span></div>" +
+          '<div><span data-link="r7">' + F("Q ∧ S ⇒ L") + '</span> &nbsp; <span data-link="r8">' + F("L ⇒ K") + "</span></div></div>",
+        warum: F("Abkürzungen: F Feature, T Tests, D Doku, R Review, S Sicherheitscheck, Q Qualitätsfreigabe, L live, K Kundschaft informiert. Die Bekannten werden Tatsachen, jedes «wenn, dann» eine Regel.") },
+      { html: relListe(m([])),
+        warum: F("Wir zeigen «K folgt» durch Widerspruch: ¬K kommt als Zielklausel (9) {¬K} dazu. Jede Klausel hat höchstens ein positives Literal, es ist also eine Hornformel.") },
+      { html: relListe(m(["F", "T", "D"]), [0, 1, 2]),
+        warum: F("Durchlauf 1: Die Tatsachen F, T und D werden markiert, und zwar überall, auch in ¬F, ¬T und ¬D.") },
+      { html: relListe(m(["F", "T", "D", "R", "S"]), [3, 4]),
+        warum: F("Durchlauf 2: In (4) sind F und T markiert, also wird R markiert. In (5) ist T markiert, also S.") },
+      { html: relListe(m(["F", "T", "D", "R", "S", "Q"]), [5]),
+        warum: F("Durchlauf 3: (6) braucht R und D. Beide sind markiert, also wird Q markiert.") },
+      { html: relListe(m(["F", "T", "D", "R", "S", "Q", "L"]), [6]),
+        warum: F("Durchlauf 4: (7) braucht Q und S. Also wird L markiert.") },
+      { html: relListe(m(["F", "T", "D", "R", "S", "Q", "L", "K"]), [7], 8),
+        warum: F("Durchlauf 5: (8) braucht nur L, und L ist markiert. Also wird K markiert. Jetzt ist die Zielklausel (9) {¬K} vollständig markiert. Abbruch.") },
+      { html: '<div class="t04-zeilen"><div>' + F("Zielklausel {¬K} voll markiert") + "</div><div>" + F("⇒ Regeln ∧ Tatsachen ∧ ¬K ist unerfüllbar") + "</div><div>" + F("⇒ Regeln ∧ Tatsachen ⇒ K ist eine Tautologie") + "</div></div>",
+        warum: "Ergebnis: Die Implikation ist eine Tautologie, also bei jeder Belegung wahr. Die Behauptung folgt: Die Kundschaft wird informiert." }
+    ]
+  });
+
+  /* =====================================================================
+     Schritt 4 · Markierungs-Simulator
+     ===================================================================== */
+  const BSP = {
+    release: {
+      legende: "F Feature fertig · T Tests grün · D Doku geschrieben · R Review bestanden · S Sicherheitscheck bestanden · Q Qualitätsfreigabe · L Release live · K Kundschaft informiert. Klausel (9) ist die verneinte Behauptung «K».",
+      zeilen: REL,
+      unerf: "Also folgt K: Die Kundschaft wird informiert.",
+      erf: ""
+    },
+    wochenende: {
+      legende: "S Sonne scheint · F du hast frei · W ihr geht wandern · P du packst ein Picknick ein · R es regnet · K ihr geht ins Kino. (6) heisst: Kino und Picknick am selben Tag gibt es nicht.",
+      zeilen: ["S", "F", "¬S, ¬F, W", "¬W, P", "¬R, ¬F, K", "¬K, ¬P"],
+      unerf: "",
+      erf: "Der Plan ist widerspruchsfrei: Ihr wandert mit Picknick, ins Kino geht ihr nicht."
+    },
+    gstern: {
+      legende: "<i>G</i>* aus Schritt 2, nach der Substitution C := ¬C und D := ¬D. Gleiche Nummern wie in der Input-Resolution in Schritt 5.",
+      zeilen: ["B, ¬D", "¬B, C", "¬B, D, ¬C", "¬A, ¬C", "¬A, D", "A"],
+      unerf: "Also ist <i>G</i>* unerfüllbar und damit auch <i>G</i>.",
+      erf: ""
+    }
+  };
+  const EIGEN_START = [
+    "% Beispiel in drei Schreibweisen",
+    "p.",
+    "q :- p.",
+    "P ∧ Q ⇒ R",
+    "{¬R, S}",
+    "?- S."
+  ].join("\n");
+
+  const simListe = document.getElementById("t04-sim-liste");
+  const simAtome = document.getElementById("t04-sim-atome");
+  const simInfo = document.getElementById("t04-sim-info");
+  const simErg = document.getElementById("t04-sim-ergebnis");
+  const simLeg = document.getElementById("t04-sim-legende");
+  const bWeiter = document.getElementById("t04-sim-weiter");
+  const bEnde = document.getElementById("t04-sim-ende");
+  const bReset = document.getElementById("t04-sim-reset");
+  const eigenBox = document.getElementById("t04-eigen");
+  const eingabeFeld = document.getElementById("t04-eingabe");
+  const fehlerFeld = document.getElementById("t04-fehler");
+  eingabeFeld.value = EIGEN_START;
+
+  let simKl = [], simRunden = [], simStand = 0, simAnsicht = "klausel", simBsp = "release";
+
+  const kopfVon = (k) => { const p = k.filter((l) => l[1]); return p.length ? p[0][0] : null; };
+  const rumpfVon = (k) => k.filter((l) => !l[1]).map((l) => l[0]);
+  const typVon = (k) => (kopfVon(k) ? (rumpfVon(k).length ? "p" : "t") : "z");
+
+  function zielVoll(kls, markiert) {
+    for (let i = 0; i < kls.length; i++) {
+      if (typVon(kls[i]) === "z" && rumpfVon(kls[i]).every((a) => markiert.has(a))) return i;
+    }
+    return -1;
+  }
+  // Durchläufe wie im Lösungsheft: pro Durchlauf alles markieren, was gerade möglich ist
+  function rundenBerechnen(kls) {
+    const markiert = new Set(), runden = [];
+    const neu1 = [], f1 = [];
+    kls.forEach((k, i) => {
+      if (typVon(k) === "t") { f1.push(i); const a = kopfVon(k); if (neu1.indexOf(a) < 0) neu1.push(a); }
+    });
+    neu1.forEach((a) => markiert.add(a));
+    runden.push({ neu: neu1, feuert: f1, voll: zielVoll(kls, markiert), fix: neu1.length === 0 });
+    while (runden[runden.length - 1].voll < 0 && !runden[runden.length - 1].fix && runden.length < 200) {
+      const neu = [], feuert = [];
+      kls.forEach((k, i) => {
+        if (typVon(k) !== "p") return;
+        const kopf = kopfVon(k);
+        if (!markiert.has(kopf) && rumpfVon(k).every((a) => markiert.has(a))) {
+          feuert.push(i);
+          if (neu.indexOf(kopf) < 0) neu.push(kopf);
+        }
+      });
+      neu.forEach((a) => markiert.add(a));
+      runden.push({ neu: neu, feuert: feuert, voll: zielVoll(kls, markiert), fix: neu.length === 0 });
+    }
+    return runden;
+  }
+
+  const atomSpan = (a, mk) => '<span class="t04-lit' + (mk.has(a) ? " t04-mark" : "") + '"><span class="p">' + esc(a) + "</span></span>";
+  const klein = (a) => a.charAt(0).toLowerCase() + a.slice(1);
+  function ansichtHtml(k, mk) {
+    const kopf = kopfVon(k), rumpf = rumpfVon(k);
+    if (simAnsicht === "impl") {
+      const links = rumpf.length ? rumpf.map((a) => atomSpan(a, mk)).join('<span class="op">∧</span>') : '<span class="c">1</span>';
+      return links + '<span class="op">⇒</span>' + (kopf ? atomSpan(kopf, mk) : '<span class="c">0</span>');
+    }
+    if (simAnsicht === "prolog") {
+      const plAtom = (a) => '<span class="t04-lit' + (mk.has(a) ? " t04-mark" : "") + '">' + esc(klein(a)) + "</span>";
+      let t;
+      if (!kopf) t = "?- " + rumpf.map(plAtom).join(", ") + ".";
+      else if (!rumpf.length) t = plAtom(kopf) + ".";
+      else t = plAtom(kopf) + " :- " + rumpf.map(plAtom).join(", ") + ".";
+      return '<span class="t04-pl">' + t + "</span>";
+    }
+    return "{" + k.map((l) => '<span class="t04-lit' + (mk.has(l[0]) ? " t04-mark" : "") + '">' + (l[1] ? "" : "¬") + '<span class="p">' + esc(l[0]) + "</span></span>").join(", ") + "}";
+  }
+  const TYPNAME = { t: "Tatsache", p: "Prozedur", z: "Ziel" };
+  function aufzaehlen(arr) {
+    const s = arr.map((a) => '<span class="p">' + esc(a) + "</span>");
+    if (s.length <= 1) return s.join("");
+    return s.slice(0, -1).join(", ") + " und " + s[s.length - 1];
+  }
+
+  function simZeichnen() {
+    const mk = new Map();
+    for (let r = 0; r < simStand; r++) simRunden[r].neu.forEach((a) => { if (!mk.has(a)) mk.set(a, r + 1); });
+    const akt = simStand > 0 ? simRunden[simStand - 1] : null;
+    simListe.innerHTML = simKl.map(function (k, i) {
+      const cls = ["t04-sim-k"];
+      let status = "";
+      if (akt && !akt.fix && akt.feuert.indexOf(i) >= 0) {
+        cls.push("t04-feuert");
+        status = '<span class="t04-status">' + (typVon(k) === "t" ? "→ markiert" : "→ feuert") + "</span>";
+      }
+      if (akt && akt.voll === i) { cls.push("t04-voll"); status = '<span class="t04-status">✗ voll markiert</span>'; }
+      const t = typVon(k);
+      return '<li class="' + cls.join(" ") + '">' + NR(i + 1) + '<span class="m">' + ansichtHtml(k, mk) + "</span>" +
+        '<span class="t04-typ t04-typ-' + t + '">' + TYPNAME[t] + "</span>" + status + "</li>";
+    }).join("");
+    simAtome.innerHTML = mk.size
+      ? Array.from(mk.entries()).map((e) => '<span class="t04-atom"><span class="p">' + esc(e[0]) + '</span><sup><span class="sr-only">Durchlauf </span>' + e[1] + "</sup></span>").join("")
+      : '<span class="t04-leer">noch keine</span>';
+
+    // Erklärung des aktuellen Durchlaufs
+    let info = "";
+    if (!akt) info = "Noch nichts markiert. Klicke auf «Nächster Durchlauf».";
+    else {
+      info = "<b>Durchlauf " + simStand + ":</b> ";
+      if (simStand === 1) {
+        if (!akt.neu.length) info += "Es gibt keine Tatsache. Nichts wird markiert.";
+        else if (akt.neu.length === 1) info += "Die Tatsache " + aufzaehlen(akt.neu) + " wird markiert, und zwar überall, wo sie vorkommt.";
+        else info += "Die Tatsachen " + aufzaehlen(akt.neu) + " werden markiert, und zwar überall, wo sie vorkommen.";
+      } else if (akt.fix) {
+        info += "Keine Regel kann mehr feuern. Es kommt nichts Neues dazu: Fixpunkt.";
+      } else {
+        info += akt.feuert.map(function (i) {
+          const r = rumpfVon(simKl[i]);
+          return "(" + (i + 1) + ") feuert, weil " + aufzaehlen(r) + (r.length > 1 ? " markiert sind" : " markiert ist") + ' → <span class="p">' + esc(kopfVon(simKl[i])) + "</span>";
+        }).join("; ") + ".";
+      }
+      if (akt.voll >= 0) info += " Die Zielklausel (" + (akt.voll + 1) + ") ist vollständig markiert. Abbruch.";
+      else if (akt.fix) info += " Keine Zielklausel ist vollständig markiert.";
+    }
+    simInfo.innerHTML = info;
+
+    // Ergebnis am Ende
+    const fertig = simStand === simRunden.length;
+    if (fertig && akt) {
+      const bsp = BSP[simBsp] || { unerf: "", erf: "" };
+      if (akt.voll >= 0) {
+        simErg.innerHTML = '<div class="t04-ergebnis t04-unerf"><b>✗ Unerfüllbar.</b> ' + F(bsp.unerf || "Die Formel hat kein Modell.") + "</div>";
+      } else {
+        const alle = [];
+        simKl.forEach((k) => k.forEach((l) => { if (alle.indexOf(l[0]) < 0) alle.push(l[0]); }));
+        alle.sort();
+        const modell = alle.map((a) => '<span class="p">' + esc(a) + "</span> = " + (mk.has(a) ? "1" : "0")).join(", ");
+        simErg.innerHTML = '<div class="t04-ergebnis t04-erf"><b>✓ Erfüllbar.</b> Modell: ' + modell + ". " + F(bsp.erf || "") + "</div>";
+      }
+    } else simErg.innerHTML = "";
+
+    // Knöpfe; Fokus nicht verlieren
+    const fokusWeg = document.activeElement === bWeiter || document.activeElement === bEnde;
+    bWeiter.disabled = fertig;
+    bEnde.disabled = fertig;
+    bReset.disabled = simStand === 0;
+    if (fertig && fokusWeg) bReset.focus();
+    if (simStand === 0 && document.activeElement === bReset) bWeiter.focus();
+  }
+  function simLaden(zeilen) {
+    simKl = zeilen.map((s) => (Array.isArray(s) ? s : litsLesen(s)));
+    simRunden = rundenBerechnen(simKl);
+    simStand = 0;
+    simZeichnen();
+  }
+
+  // Eingabe lesen: PROLOG, Implikation oder Klausel. Atome: Buchstabe, dann Buchstaben, Ziffern, _
+  const ATOM = /^[A-Za-zÄÖÜäöü][A-Za-zÄÖÜäöü0-9_]*$/;
+  const norm = (a) => a.charAt(0).toUpperCase() + a.slice(1);
+  function atomLesen(a, nr) {
+    a = a.trim();
+    if (!ATOM.test(a)) throw new Error("Zeile " + nr + ": «" + a + "» ist kein gültiger Atomname.");
+    return norm(a);
+  }
+  function listeLesen(s, nr) {
+    s = s.trim();
+    if (s === "" || s === "1" || s === "⊤") return [];
+    return s.split(/,|∧|&/).map((x) => atomLesen(x, nr));
+  }
+  function zeileLesen(z, nr) {
+    let s = z.trim().replace(/\.\s*$/, "").trim();
+    if (s.indexOf("?-") === 0) {
+      const r = listeLesen(s.slice(2), nr);
+      if (!r.length) throw new Error("Zeile " + nr + ": Die Anfrage braucht mindestens ein Atom.");
+      return r.map((a) => [a, false]);
+    }
+    if (s.indexOf(":-") >= 0) {
+      const t = s.split(":-");
+      const kopf = atomLesen(t[0], nr);
+      return listeLesen(t[1], nr).map((a) => [a, false]).concat([[kopf, true]]);
+    }
+    const pfeil = s.split(/->|=>|→|⇒/);
+    if (pfeil.length === 2) {
+      const rumpf = listeLesen(pfeil[0], nr).map((a) => [a, false]);
+      const rechts = pfeil[1].trim();
+      if (rechts === "0" || rechts === "⊥" || rechts === "") {
+        if (!rumpf.length) throw new Error("Zeile " + nr + ": Links vom Pfeil fehlt etwas.");
+        return rumpf;
+      }
+      return rumpf.concat([[atomLesen(rechts, nr), true]]);
+    }
+    if (pfeil.length > 2) throw new Error("Zeile " + nr + ": Bitte nur einen Pfeil pro Zeile.");
+    let teile;
+    if (s.charAt(0) === "{") teile = s.replace(/^\{|\}$/g, "").split(",");
+    else teile = s.split(/∨|\|/);
+    const lits = teile.map(function (x) {
+      x = x.trim();
+      const neg = /^(¬|~|!|-)/.test(x);
+      return [atomLesen(neg ? x.slice(1) : x, nr), !neg];
+    });
+    if (lits.filter((l) => l[1]).length > 1) throw new Error("Zeile " + nr + ": «" + z.trim() + "» hat mehr als ein positives Literal. Das ist keine Hornklausel.");
+    return lits;
+  }
+  function eigenLesen(text) {
+    const kls = [];
+    text.split(/\r?\n/).forEach(function (z, i) {
+      const s = z.trim();
+      if (!s || s.charAt(0) === "%" || s.charAt(0) === "#") return;
+      const k = zeileLesen(s, i + 1);
+      const ohne = [];
+      k.forEach((l) => { if (!ohne.some((o) => o[0] === l[0] && o[1] === l[1])) ohne.push(l); });
+      kls.push(ohne);
+    });
+    if (!kls.length) throw new Error("Es steht noch keine Klausel da.");
+    if (kls.length > 30) throw new Error("Bitte höchstens 30 Klauseln.");
+    return kls;
+  }
+
+  function bspWaehlen(name) {
+    simBsp = name;
+    document.querySelectorAll("[data-t04-bsp]").forEach((b) => {
+      const an = b.getAttribute("data-t04-bsp") === name;
+      b.classList.toggle("on", an);
+      b.setAttribute("aria-pressed", an ? "true" : "false");
+    });
+    eigenBox.hidden = name !== "eigen";
+    fehlerFeld.textContent = "";
+    if (name === "eigen") {
+      simLeg.innerHTML = "Eigene Formel: Tippe die Klauseln ein und klicke auf «Formel übernehmen».";
+      eigenUebernehmen();
+    } else {
+      simLeg.innerHTML = F(BSP[name].legende);
+      simLaden(BSP[name].zeilen);
+    }
+  }
+  function eigenUebernehmen() {
+    try {
+      const kls = eigenLesen(eingabeFeld.value);
+      fehlerFeld.textContent = "";
+      eingabeFeld.removeAttribute("aria-invalid");
+      simLaden(kls);
+    } catch (e) {
+      fehlerFeld.textContent = e.message;
+      eingabeFeld.setAttribute("aria-invalid", "true");
+    }
+  }
+  document.querySelectorAll("[data-t04-bsp]").forEach((b) => b.addEventListener("click", () => bspWaehlen(b.getAttribute("data-t04-bsp"))));
+  document.querySelectorAll("[data-t04-ans]").forEach((b) => b.addEventListener("click", function () {
+    simAnsicht = b.getAttribute("data-t04-ans");
+    document.querySelectorAll("[data-t04-ans]").forEach((x) => {
+      const an = x === b;
+      x.classList.toggle("on", an);
+      x.setAttribute("aria-pressed", an ? "true" : "false");
+    });
+    simZeichnen();
+  }));
+  document.getElementById("t04-uebernehmen").addEventListener("click", eigenUebernehmen);
+  bWeiter.addEventListener("click", () => { if (simStand < simRunden.length) { simStand++; simZeichnen(); } });
+  bEnde.addEventListener("click", () => { simStand = simRunden.length; simZeichnen(); });
+  bReset.addEventListener("click", () => { simStand = 0; simZeichnen(); });
+  bspWaehlen("release");
+
+  /* =====================================================================
+     Schritt 5 · Stepper: Input-Resolution für G*
+     ===================================================================== */
+  const GS = ["B, ¬D", "¬B, C", "¬B, D, ¬C", "¬A, ¬C", "¬A, D", "A"];
+  const irText = F("Zeige die Unerfüllbarkeit von <i>G</i>* ≡ ") +
+    konj(["B ∨ ¬D", "¬B ∨ C", "¬B ∨ D ∨ ¬C", "¬A ∨ ¬C", "¬A ∨ D", "A"], { link: "e" }) +
+    F(" mit einer Input-Resolution.");
+  const irA = '<div class="t04-zeilen"><div>' + eingabe(GS, "e") + "</div>";
+  const ir7 = irZeile(7, "¬A, ¬B", 4, 2, "C");
+  const ir8 = irZeile(8, "¬A, ¬D", 7, 1, "B");
+  const ir9 = irZeile(9, "¬A", 8, 5, "D");
+  const ir10 = irZeile(10, "∅", 9, 6, "A");
+  L.stepper("#t04-step-ir", {
+    titel: "Kernbeispiel G* (Fortsetzung)",
+    text: irText,
+    schritte: [
+      { html: irA + "</div>",
+        warum: "Zuerst die Eingabeklauseln nummerieren. Bei jedem Schritt muss eine dieser Nummern vorkommen." },
+      { html: irA + "<div>" + F('Start: (4) {¬A, ¬C} <span class="t04-typ t04-typ-z">Ziel</span>') + "</div></div>",
+        warum: F("Wir starten bei der einzigen Zielklausel (4). Die Markierung bestätigt den Start: A, dann D, dann B, dann C. Danach ist (4) voll markiert.") },
+      { html: irA + ir7 + "</div>",
+        warum: F("¬C soll weg. Ein positives C steht nur in (2) {¬B, C}. Übrig bleibt {¬A, ¬B}.") },
+      { html: irA + ir7 + ir8 + "</div>",
+        warum: F("Jetzt ¬B. Positives B steht in (1) {B, ¬D}. Dafür kommt ¬D dazu.") },
+      { html: irA + ir7 + ir8 + ir9 + "</div>",
+        warum: F("(5) {¬A, D} liefert D. ¬A steht in beiden Klauseln und zählt in der Menge nur einmal.") },
+      { html: irA + ir7 + ir8 + ir9 + ir10 + "</div>",
+        warum: F("Die Tatsache (6) {A} räumt das letzte Literal weg. ∅ ist hergeleitet: <i>G</i>* ist unerfüllbar, also auch <i>G</i>.") },
+      { html: irA + ir7 + ir8 + ir9 + ir10 + '<div class="t04-schluss">' + F("Eingabeklauseln je Zeile: (2), (1), (5), (6) ✓") + "</div></div>",
+        warum: "Kontrolle: Jede Zeile nutzt eine Eingabeklausel und baut auf der vorherigen auf. Das ist eine Input-Resolution und sogar eine SLD-Resolution." }
+    ]
+  });
+  document.getElementById("t04-vorwaerts").innerHTML = eingabe(GS) +
+    irZeile(7, "D", 6, 5, "A") + irZeile(8, "B", 7, 1, "D") + irZeile(9, "C", 8, 2, "B") +
+    irZeile(10, "¬A", 9, 4, "C") + irZeile(11, "∅", 10, 6, "A");
+
+  /* =====================================================================
+     Schritt 6 · PROLOG-Programm Release und SLD-Stepper
+     ===================================================================== */
+  // Programmliste; z = [Nummer, Code, Hinweis]
+  function progListe(el, zeilen) {
+    document.getElementById(el).innerHTML = zeilen.map((z) =>
+      "<li>" + (z[0] ? NR(z[0]) : '<span class="t04-nr"></span>') + "<code>" + esc(z[1]) + "</code>" + (z[2] ? '<span class="hint">' + z[2] + "</span>" : "") + "</li>").join("");
+  }
+  const REL_PROG = [[1, "f.", "Feature fertig"], [2, "t.", "Tests grün"], [3, "d.", "Doku geschrieben"],
+    [4, "r :- f, t.", ""], [5, "s :- t.", ""], [6, "q :- r, d.", ""], [7, "l :- q, s.", ""], [8, "k :- l.", ""]];
+  progListe("t04-prog-release", REL_PROG.concat([[9, "?- k.", "Anfrage = Zielklausel {¬K}"]]));
+  // Kompakte Fassung für die Satzkarte des Steppers, mit data-link je Programmklausel
+  const relProgInline = '<span class="t04-klist">' + REL_PROG.map((z) =>
+    '<span class="t04-kl">' + NR(z[0]) + '<code class="t04-code-inline" data-link="sp' + z[0] + '">' + esc(z[1]) + "</code></span>").join("") + "</span>";
+  const SLD = [
+    ["¬K", null, null, null],
+    ["¬L", 9, 8, "K"],
+    ["¬Q, ¬S", 10, 7, "L"],
+    ["¬R, ¬D, ¬S", 11, 6, "Q"],
+    ["¬F, ¬T, ¬D, ¬S", 12, 4, "R"],
+    ["¬T, ¬D, ¬S", 13, 1, "F"],
+    ["¬D, ¬S", 14, 2, "T"],
+    ["¬S", 15, 3, "D"],
+    ["¬T", 16, 5, "S"],
+    ["∅", 17, 2, "T"]
+  ];
+  const SLD_WARUM = [
+    F("Start: Die Anfrage ?- k. ist die Zielklausel (9) {¬K}."),
+    F("Das linke (und einzige) Ziel ist K. Die Regel (8) k :- l. hat den Kopf K. Resolvieren ersetzt ¬K durch ¬L."),
+    F("Für L passt (7) l :- q, s. Aus ¬L werden die zwei neuen Ziele ¬Q und ¬S."),
+    F("Linkes Ziel Q: Regel (6) ersetzt es durch ¬R und ¬D. Die neuen Ziele kommen nach vorne."),
+    F("Linkes Ziel R: Regel (4) ersetzt es durch ¬F und ¬T. Die Zielklausel ist jetzt am längsten."),
+    F("Linkes Ziel F: Die Tatsache (1) streicht ¬F ersatzlos."),
+    F("Die Tatsache (2) streicht ¬T."),
+    F("Die Tatsache (3) streicht ¬D."),
+    F("Linkes Ziel S: Regel (5) s :- t. braucht wieder T."),
+    F("Die Tatsache (2) streicht das letzte Ziel. ∅ ist erreicht: PROLOG antwortet «true». Jede Zeile nutzte eine Programmklausel, also ist das eine SLD-Resolution.")
+  ];
+  L.stepper("#t04-step-sld", {
+    titel: "Kernbeispiel Release, rückwärts gelesen",
+    text: 'Die Anfrage <code class="t04-code-inline" data-link="sq">?- k.</code> an das Programm ' + relProgInline +
+      'PROLOG nimmt immer das linke Literal der Zielklausel und probiert die Programmklauseln von oben nach unten. Berühre eine Klauselnummer in der Rechnung, dann leuchtet die passende Programmklausel auf.',
+    schritte: SLD.map(function (z, n) {
+      const zeilen = SLD.slice(0, n + 1).map(function (y, j) {
+        const nr = j === 0 ? 9 : 9 + j;
+        const inhalt = j === 0 ? "<div>" + NR(9) + klHtml(y[0], null, "sq") + "</div>" : irZeile(nr, y[0], y[1], y[2], y[3], null, "sp");
+        return j === n && n > 0 ? inhalt.replace("<div>", '<div class="t04-neu">') : inhalt;
+      }).join("");
+      return { html: '<div class="t04-zeilen">' + zeilen + "</div>", warum: SLD_WARUM[n] };
+    })
+  });
+
+  /* =====================================================================
+     Schritt 6 · SLD-Baum mit Tiefen- und Breitensuche
+     ===================================================================== */
+  const PROG = {
+    kaffee: [
+      ["K", ["M", "W"], "Kaffee gibt es, wenn die Maschine läuft und Wasser im Tank ist."],
+      ["K", ["A"], "Kaffee gibt es auch, wenn der Automat im Gang geht."],
+      ["M", ["S", "E"], "Die Maschine läuft, wenn Strom da ist und sie entkalkt ist."],
+      ["E", ["R"], "Sie ist entkalkt, wenn Entkalker vorrätig ist."],
+      ["E", ["H"], "Sie ist entkalkt, wenn der Hausdienst da war."],
+      ["S", [], "Strom ist da."],
+      ["W", [], "Wasser ist im Tank."],
+      ["H", [], "Der Hausdienst war da."],
+      ["A", [], "Der Automat geht."]
+    ]
+  };
+  PROG.schleife = PROG.kaffee.slice(0, 2)
+    .concat([["M", ["K"], "Die Maschine läuft, wenn es Kaffee gibt. Unsinnig, aber erlaubt."]])
+    .concat(PROG.kaffee.slice(2));
+  const MAX_BESUCHE = 10;
+
+  const zielText = (z) => (z.length ? "{" + z.map((a) => "¬" + a).join(", ") + "}" : "∅");
+  const gleicheMenge = (a, b) => a.length === b.length && a.every((x) => b.indexOf(x) >= 0);
+
+  // Suchmaschine für den SLD-Baum (auch ohne Anzeige nutzbar, für den Vergleich)
+  function sldSuche(progName, art) {
+    const prog = PROG[progName];
+    const neuerKnoten = (ziel, via, eltern) => ({ ziel: ziel, via: via, eltern: eltern, kinder: null, zustand: "wartet", nr: 0, tiefe: eltern ? eltern.tiefe + 1 : 0 });
+    const s = { wurzel: null, offen: [], zaehler: 0, fertig: false, aktuell: null, meldung: "", erfolg: null, abbruch: false };
+    s.wurzel = neuerKnoten(["K"], null, null);
+    s.offen = [s.wurzel];
+    s.meldung = "Start: Die Anfrage ?- k. ist die Zielklausel {¬K}. Sie liegt als einziger Knoten bereit.";
+    s.schritt = function () {
+      if (s.fertig) return;
+      if (!s.offen.length) { s.fertig = true; s.meldung = "Keine offenen Knoten mehr: ∅ ist nicht herleitbar. Die Antwort ist «false»."; return; }
+      const n = art === "tiefe" ? s.offen.pop() : s.offen.shift();
+      s.zaehler++;
+      n.nr = s.zaehler;
+      s.aktuell = n;
+      const kopf = "Knoten " + s.zaehler + ": " + zielText(n.ziel) + ". ";
+      if (!n.ziel.length) {
+        n.zustand = "erfolg";
+        s.fertig = true;
+        s.erfolg = n;
+        s.meldung = kopf + "Die leere Klausel ist erreicht, nach " + s.zaehler + " besuchten Knoten. Der Beweis hat " + n.tiefe + " Resolutionsschritte. " + (art === "tiefe" ? "PROLOG antwortet «true»." : "Die Antwort ist «true». PROLOG selbst sucht allerdings in die Tiefe.");
+        return;
+      }
+      const g = n.ziel[0];
+      n.kinder = [];
+      prog.forEach(function (c, i) {
+        if (c[0] !== g) return;
+        const neu = [];
+        c[1].concat(n.ziel.slice(1)).forEach((a) => { if (neu.indexOf(a) < 0) neu.push(a); });
+        n.kinder.push(neuerKnoten(neu, i + 1, n));
+      });
+      let v = n.eltern, wieder = false;
+      while (v) { if (gleicheMenge(v.ziel, n.ziel)) { wieder = true; break; } v = v.eltern; }
+      if (!n.kinder.length) {
+        n.zustand = "sack";
+        s.meldung = kopf + "Linkes Ziel " + g + ": Keine Klausel hat den Kopf " + g + ". Sackgasse. " +
+          (art === "tiefe" ? "Zurück zum obersten Knoten im Stapel (Backtracking)." : "Weiter mit dem vordersten Knoten der Warteschlange.");
+      } else {
+        n.zustand = wieder ? "kreis" : "besucht";
+        (art === "tiefe" ? n.kinder.slice().reverse() : n.kinder).forEach((k) => s.offen.push(k));
+        s.meldung = kopf + "Linkes Ziel " + g + ". Passende Klauseln: " + n.kinder.map((k) => "(" + k.via + ")").join(", ") +
+          ". Neue Knoten: " + n.kinder.map((k) => zielText(k.ziel)).join(", ") + "." +
+          (wieder ? " Achtung: Dieses Ziel gab es weiter oben schon. Die Suche dreht sich im Kreis." : "");
+      }
+      if (!s.fertig && s.zaehler >= MAX_BESUCHE) {
+        s.fertig = true;
+        s.abbruch = true;
+        s.meldung += " Hier brechen wir nach " + MAX_BESUCHE + " Knoten ab. Die Tiefensuche würde endlos weiterlaufen und nie zum zweiten Ast kommen. PROLOG würde nicht antworten.";
+      }
+    };
+    return s;
+  }
+  function sldErgebnis(progName, art) {
+    const s = sldSuche(progName, art);
+    while (!s.fertig) s.schritt();
+    return s;
+  }
+
+  const sldBaum = document.getElementById("t04-sld-baum");
+  const sldOffen = document.getElementById("t04-sld-offen");
+  const sldOffenLbl = document.getElementById("t04-sld-offen-lbl");
+  const sldInfo = document.getElementById("t04-sld-info");
+  const sldVgl = document.getElementById("t04-sld-vergleich");
+  const sWeiter = document.getElementById("t04-sld-weiter");
+  const sEnde = document.getElementById("t04-sld-ende");
+  const sReset = document.getElementById("t04-sld-reset");
+  let sldProg = "kaffee", sldArt = "tiefe", sld = null;
+
+  function knotenHtml(n, pfad) {
+    const cls = ["t04-" + n.zustand];
+    if (pfad.indexOf(n) >= 0) cls.push("an");
+    if (n === sld.aktuell) cls.push("t04-akt");
+    const status = { sack: "✗ Sackgasse", erfolg: "✓ Erfolg", kreis: "↻ schon da", wartet: "", besucht: "" }[n.zustand];
+    let h = "<li class=\"" + cls.join(" ") + "\">" + (n.via ? '<span class="t04-via">(' + n.via + ")</span>" : "") +
+      '<span class="baum-knoten">' + (n.nr ? '<span class="t04-knr"><span class="sr-only">Besuch </span>' + n.nr + "</span>" : "") +
+      '<span class="t04-f">' + F(zielText(n.ziel)) + "</span>" +
+      (status ? '<span class="t04-status">' + status + "</span>" : "") +
+      (n.zustand === "wartet" ? '<span class="sr-only">(wartet)</span>' : "") + "</span>";
+    if (n.kinder && n.kinder.length) h += "<ul>" + n.kinder.map((k) => knotenHtml(k, pfad)).join("") + "</ul>";
+    return h + "</li>";
+  }
+  function sldZeichnen() {
+    const pfad = [];
+    let v = sld.aktuell;
+    while (v) { pfad.push(v); v = v.eltern; }
+    sldBaum.innerHTML = knotenHtml(sld.wurzel, pfad);
+    const reihe = sldArt === "tiefe" ? sld.offen.slice().reverse() : sld.offen.slice();
+    sldOffenLbl.textContent = sldArt === "tiefe" ? "Stapel (links liegt der nächste Knoten)" : "Warteschlange (links steht der nächste Knoten)";
+    sldOffen.innerHTML = reihe.length
+      ? reihe.map((k) => '<span class="t04-atom">' + F(zielText(k.ziel)) + "</span>").join("")
+      : '<span class="t04-leer">leer</span>';
+    sldInfo.innerHTML = F(sld.meldung);
+    if (sld.fertig) {
+      const t = sldErgebnis(sldProg, "tiefe"), b = sldErgebnis(sldProg, "breite");
+      const txt = (r, name) => name + ": " + (r.erfolg ? r.zaehler + " besuchte Knoten, Beweis mit " + r.erfolg.tiefe + " Schritten" : "kein Ergebnis, Endlosschleife");
+      sldVgl.textContent = "Vergleich für dieses Programm. " + txt(t, "Tiefensuche") + ". " + txt(b, "Breitensuche") + ".";
+    } else sldVgl.textContent = "";
+    const fokusWeg = document.activeElement === sWeiter || document.activeElement === sEnde;
+    sWeiter.disabled = sld.fertig;
+    sEnde.disabled = sld.fertig;
+    sReset.disabled = sld.zaehler === 0;
+    if (sld.fertig && fokusWeg) sReset.focus();
+    if (sld.zaehler === 0 && document.activeElement === sReset) sWeiter.focus();
+  }
+  function sldNeu() {
+    sld = sldSuche(sldProg, sldArt);
+    progListe("t04-sld-programm", PROG[sldProg].map((c, i) => [i + 1, klein(c[0]) + (c[1].length ? " :- " + c[1].map(klein).join(", ") : "") + ".", c[2]])
+      .concat([[0, "?- k.", "Gibt es Kaffee?"]]));
+    sldZeichnen();
+  }
+  function gruppeSetzen(attr, wert) {
+    document.querySelectorAll("[" + attr + "]").forEach((b) => {
+      const an = b.getAttribute(attr) === wert;
+      b.classList.toggle("on", an);
+      b.setAttribute("aria-pressed", an ? "true" : "false");
+    });
+  }
+  document.querySelectorAll("[data-t04-prog]").forEach((b) => b.addEventListener("click", function () {
+    sldProg = b.getAttribute("data-t04-prog");
+    gruppeSetzen("data-t04-prog", sldProg);
+    sldNeu();
+  }));
+  document.querySelectorAll("[data-t04-art]").forEach((b) => b.addEventListener("click", function () {
+    sldArt = b.getAttribute("data-t04-art");
+    gruppeSetzen("data-t04-art", sldArt);
+    sldNeu();
+  }));
+  sWeiter.addEventListener("click", () => { sld.schritt(); sldZeichnen(); });
+  sEnde.addEventListener("click", () => { while (!sld.fertig) sld.schritt(); sldZeichnen(); });
+  sReset.addEventListener("click", sldNeu);
+  sldNeu();
+
+  /* =====================================================================
+     Schritt 7 · Übungen
+     ===================================================================== */
+  L.sortierer("#t04-ueb-sort", {
+    kategorien: ["Tatsache", "Prozedur", "Ziel", "keine Hornklausel"],
+    elemente: [
+      { html: M("{¬B, ¬C}"), kategorie: 2, erklaerung: F("Kein positives Literal: B ∧ C ⇒ 0.") },
+      { html: M("{E}"), kategorie: 0, erklaerung: F("Genau ein positives Literal und sonst nichts: 1 ⇒ E.") },
+      { html: M("{¬A, ¬D, C}"), kategorie: 1, erklaerung: F("Ein positives und zwei negative Literale: A ∧ D ⇒ C.") },
+      { html: M("{A, ¬B, C}"), kategorie: 3, erklaerung: F("A und C sind beide positiv.") },
+      { html: '<code class="t04-code-inline">g :- h, k.</code>', kategorie: 1, erklaerung: F("Eine PROLOG-Regel ist die Prozedurklausel {¬H, ¬K, G}.") },
+      { html: '<code class="t04-code-inline">?- a, b.</code>', kategorie: 2, erklaerung: F("Die Anfrage ist die Zielklausel {¬A, ¬B}.") },
+      { html: M('A ∧ B ⇒ <span class="c">0</span>'), kategorie: 2, erklaerung: F("Rechts steht falsch: ¬A ∨ ¬B, eine Zielklausel.") },
+      { html: M("¬A ⇒ B"), kategorie: 3, erklaerung: F("¬A ⇒ B ≡ A ∨ B: zwei positive Literale. Vorsicht, das ¬ steht nur links vom Pfeil.") },
+      { html: M('<span class="c">1</span> ⇒ D'), kategorie: 0, erklaerung: F("Ohne Bedingung: Das ist die Tatsache {D}.") }
+    ]
+  });
+
+  L.auswahl("#t04-ueb-prolog", {
+    frage: "Übung 2 · " + F("Welches PROLOG-Programm gehört zur Klauselmenge {{A}, {B}, {¬A, ¬B, C}, {¬C}}?"),
+    optionen: [
+      '<code class="t04-code-inline">a. b. c :- a, b. ?- c.</code>',
+      '<code class="t04-code-inline">a. b. a :- b, c. ?- c.</code>',
+      '<code class="t04-code-inline">a. b. c. ?- a, b.</code>',
+      '<code class="t04-code-inline">a. b. c :- a, b. ?- a.</code>'
+    ],
+    richtig: 0,
+    erklaerung: F("Die Tatsachen {A} und {B} werden zu a. und b. Die Prozedurklausel {¬A, ¬B, C} hat den Kopf C: c :- a, b. Die Zielklausel {¬C} ist die Anfrage ?- c.")
+  });
+
+  L.wahrFalsch("#t04-ueb-wf", {
+    titel: "Übung 3 · Wahr oder falsch?",
+    aussagen: [
+      { html: "Jede Formel in KNF, deren Klauseln höchstens zwei Literale haben, ist eine Hornformel.", wahr: false,
+        erklaerung: F("(A ∨ B) hat nur zwei Literale, aber beide sind positiv.") },
+      { html: F("{¬A, ¬B, ¬C} ist eine Hornklausel."), wahr: true,
+        erklaerung: "Null positive Literale sind erlaubt. Das ist eine Zielklausel." },
+      { html: "Eine Hornformel ohne Tatsachenklausel ist immer erfüllbar.", wahr: true,
+        erklaerung: "Setze alle Atome auf 0. Jede Regel und jede Zielklausel enthält ein negatives Literal, das dann wahr ist. Der Algorithmus markiert nichts." },
+      { html: "Eine Hornformel ohne Zielklausel ist immer erfüllbar.", wahr: true,
+        erklaerung: "Setze alle Atome auf 1. Jede Tatsache und jede Regel enthält ein positives Literal, das dann wahr ist." },
+      { html: "Der Markierungsalgorithmus braucht bei <i>n</i> Atomen im schlimmsten Fall 2<sup><i>n</i></sup> Durchläufe.", wahr: false,
+        erklaerung: "Jeder Durchlauf markiert mindestens ein neues Atom oder beendet den Algorithmus. Also höchstens <i>n</i> + 1 Durchläufe." },
+      { html: "Bei einer Input-Resolution darfst du zwei bereits hergeleitete Resolventen miteinander resolvieren.", wahr: false,
+        erklaerung: "Mindestens eine der beiden Klauseln muss eine Eingabeklausel sein." },
+      { html: "PROLOG durchsucht den SLD-Baum mit Tiefensuche und kann darum in eine Endlosschleife geraten.", wahr: true,
+        erklaerung: "Steht ein endloser Ast vor dem Ast mit ∅, kommt die Tiefensuche nie dort an. Siehe das Programm «Kaffee mit Schleife»." }
+    ]
+  });
+
+  L.zahlAufgabe("#t04-ueb-zahl", {
+    titel: "Übung 4 · Markieren und zählen",
+    frage: F("Gegeben ist die Hornformel <i>Z</i> ≡ A ∧ B ∧ (¬A ∨ ¬B ∨ C) ∧ (¬C ∨ D) ∧ (¬D ∨ ¬E ∨ F) ∧ (¬F ∨ ¬A) ∧ (¬E ∨ G). Wie viele Atome sind markiert, wenn der Markierungsalgorithmus stoppt?"),
+    antwort: 4,
+    anzeige: "4 Atome: A, B, C, D",
+    hinweise: [
+      F("Starte mit den Tatsachen A und B."),
+      F("Eine Regel feuert erst, wenn alle Atome links vom Pfeil markiert sind. Wird E je markiert?")
+    ],
+    loesungsweg: [
+      F("Klauseln: {A}, {B}, {¬A, ¬B, C}, {¬C, D}, {¬D, ¬E, F}, {¬F, ¬A}, {¬E, G}."),
+      F("Durchlauf 1: A und B (Tatsachen)."),
+      F("Durchlauf 2: C, weil A ∧ B ⇒ C feuert."),
+      F("Durchlauf 3: D, weil C ⇒ D feuert."),
+      F("Durchlauf 4: nichts Neues. D ∧ E ⇒ F braucht E, und E ist nie markiert. Fixpunkt."),
+      F("Markiert sind A, B, C, D, also 4 Atome. Die Zielklausel {¬F, ¬A} ist nicht voll markiert (F fehlt): erfüllbar. Modell: A = B = C = D = 1, E = F = G = 0.")
+    ]
+  });
+
+  const J0 = ["¬D ∨ ¬C", "¬A ∨ ¬B ∨ C", "B", "A ∨ ¬B ∨ D", "B ∨ ¬D", "¬D", "¬B ∨ ¬C"];
+  const J1 = ["¬D ∨ ¬C", "A ∨ ¬B ∨ C", "B", "¬A ∨ ¬B ∨ D", "B ∨ ¬D", "¬D", "¬B ∨ ¬C"];
+  const J2 = ["¬D ∨ C", "A ∨ ¬B ∨ ¬C", "B", "¬A ∨ ¬B ∨ D", "B ∨ ¬D", "¬D", "¬B ∨ C"];
+  const JS = ["C, ¬D", "A, ¬B, ¬C", "B", "¬A, ¬B, D", "B, ¬D", "¬D", "¬B, C"];
+  L.schrittAufgabe("#t04-ueb-3b", {
+    titel: "Übung 5 · Prüfungsstil: Substitution und Input-Resolution",
+    aufgabe: "<p>Im Stil von Aufgabe 3b der exemplarischen Modulschlussprüfung, mit eigener Formel. Gegeben ist</p>" +
+      '<div class="board m">' + F("<i>J</i> ≡ ") + konj(J0) + "</div>" +
+      "<p>(i) Zeige durch geeignete Substitution, dass <i>J</i> zu einer Hornformel umgebaut werden kann. (ii) Zeige die Unerfüllbarkeit mit einer Input-Resolution.</p>",
+    schritte: [
+      { html: '<div class="m">' + konj(J0, { zaehlen: true }) + "</div>",
+        warum: F("Zählen: Nur (A ∨ ¬B ∨ D) hat zwei positive Literale, A und D.") },
+      { html: '<div class="m t04-zeilen"><div>' + F("A := ¬A") + "</div><div>" + konj(J1, { zaehlen: true, neu: ["A"] }) + "</div></div>",
+        warum: F("Wir ersetzen A. (A ∨ ¬B ∨ D) wird zu (¬A ∨ ¬B ∨ D). Aber (¬A ∨ ¬B ∨ C) wird zu (A ∨ ¬B ∨ C) mit zwei positiven Literalen.") },
+      { html: '<div class="m t04-zeilen"><div>' + F("C := ¬C") + "</div><div>" + F("<i>J</i>* ≡ ") + konj(J2, { zaehlen: true, alleGut: true, neu: ["C"] }) + "</div></div>",
+        warum: F("Also ersetzen wir auch C. Neu gezählt: höchstens ein positives Literal pro Klausel. <i>J</i>* ist eine Hornformel. (Mit D statt A klappt es nicht: Dann wird (B ∨ ¬D) zu (B ∨ D).)") },
+      { html: '<div class="m">' + eingabe(JS) + "</div>",
+        warum: F("Teil (ii): Eingabeklauseln nummerieren. Die einzige Zielklausel ist (6) {¬D}.") },
+      { html: '<div class="m t04-zeilen">' + irZeile(8, "¬A, ¬B", 6, 4, "D") + "</div>",
+        warum: F("Positives D steht nur in (4).") },
+      { html: '<div class="m t04-zeilen">' + irZeile(8, "¬A, ¬B", 6, 4, "D") + irZeile(9, "¬B, ¬C", 8, 2, "A") + "</div>",
+        warum: F("Positives A steht in (2). ¬B steht in beiden Klauseln und bleibt einmal.") },
+      { html: '<div class="m t04-zeilen">' + irZeile(8, "¬A, ¬B", 6, 4, "D") + irZeile(9, "¬B, ¬C", 8, 2, "A") + irZeile(10, "¬B", 9, 7, "C") + "</div>",
+        warum: F("Positives C steht in (1) und (7). Mit (7) {¬B, C} bleibt nur {¬B}.") },
+      { html: '<div class="m t04-zeilen">' + irZeile(8, "¬A, ¬B", 6, 4, "D") + irZeile(9, "¬B, ¬C", 8, 2, "A") + irZeile(10, "¬B", 9, 7, "C") + irZeile(11, "∅", 10, 3, "B") + "</div>",
+        warum: F("Die Tatsache (3) {B} räumt den Rest weg. ∅ ist hergeleitet: <i>J</i>* und damit <i>J</i> sind unerfüllbar. Jede Zeile nutzt eine Eingabeklausel: (4), (2), (7), (3).") }
+    ]
+  });
+
+  L.schrittAufgabe("#t04-ueb-tausch", {
+    titel: "Übung 6 · Prüfungsstil: Tauschbörse",
+    aufgabe: "<p>Im Stil von Aufgabe 3 des Übungssets S1, mit eigener Geschichte. Nora braucht für die Fasnacht ein Drachenkostüm. An der Tauschbörse gelten diese Tausche:</p>" +
+      "<ul><li>Stoff + Faden → Umhang</li><li>Karton + Farbe → Maske + Hut</li><li>Umhang + Maske → Drachenkostüm</li><li>Leim + Karton → Flügel</li></ul>" +
+      "<p>Nora hat Stoff, Faden, Karton und Farbe. (a) Stelle die Frage «Bekommt Nora das Kostüm?» als Erfüllbarkeitsfrage für eine Hornformel. (b) Löse sie mit dem Markierungsalgorithmus. (c) Bekommt sie auch Flügel?</p>",
+    schritte: [
+      { html: F("S Stoff, N Faden, K Karton, F Farbe, L Leim, U Umhang, M Maske, H Hut, D Drachenkostüm, G Flügel"),
+        warum: "Abkürzungen festlegen, jeweils im Sinn von «… ist organisierbar»." },
+      { html: '<div class="m t04-zeilen"><div>' + F("S ∧ N ⇒ U") + "</div><div>" + F("K ∧ F ⇒ M ∧ H ≡ (¬K ∨ ¬F ∨ M) ∧ (¬K ∨ ¬F ∨ H)") + "</div><div>" + F("U ∧ M ⇒ D") + "</div><div>" + F("L ∧ K ⇒ G") + "</div></div>",
+        warum: F("Jeder Tausch wird eine Implikation. Zwei Dinge rechts vom Pfeil ergeben zwei Klauseln, denn ¬X ∨ (M ∧ H) ≡ (¬X ∨ M) ∧ (¬X ∨ H) (Distributivgesetz).") },
+      { html: '<div class="m">' + eingabe(["¬S, ¬N, U", "¬K, ¬F, M", "¬K, ¬F, H", "¬U, ¬M, D", "¬L, ¬K, G", "S", "N", "K", "F", "¬D"]) + "</div>",
+        warum: F("Dazu die vorhandenen Dinge als Tatsachen und die verneinte Behauptung ¬D als Zielklausel. Jede Klausel hat höchstens ein positives Literal: eine Hornformel. Zu zeigen ist ihre Unerfüllbarkeit.") },
+      { html: '<div class="m">' + eingabe(["¬S, ¬N, U", "¬K, ¬F, M", "¬K, ¬F, H", "¬U, ¬M, D", "¬L, ¬K, G", "S", "N", "K", "F", "¬D"]).replace(/<span class="t04-lit">(¬?)<span class="p">(S|N|K|F)<\/span><\/span>/g, '<span class="t04-lit t04-mark">$1<span class="p">$2</span></span>') + "</div>",
+        warum: F("Durchlauf 1: S, N, K und F markieren, überall wo sie vorkommen.") },
+      { html: F("Durchlauf 2: U (aus S ∧ N), M und H (aus K ∧ F)"),
+        warum: "Alle drei Regeln haben jetzt nur markierte Bedingungen." },
+      { html: F("Durchlauf 3: D (aus U ∧ M) ⇒ Zielklausel {¬D} voll markiert"),
+        warum: "Abbruch: unerfüllbar. Also folgt D: Nora bekommt das Kostüm." },
+      { html: F("(c) Zielklausel {¬G} statt {¬D}: markiert werden S, N, K, F, U, M, H, D; dann Fixpunkt"),
+        warum: F("L ist nie markiert, also feuert L ∧ K ⇒ G nie. {¬G} ist nicht voll markiert: erfüllbar. Ein Modell: alle markierten Atome = 1, L = G = 0. Die Flügel folgen nicht.") }
+    ]
+  });
+
+  L.schrittAufgabe("#t04-ueb-sld", {
+    titel: "Übung 7 · SLD-Baum mit Tiefensuche",
+    aufgabe: '<p>Programm:</p><ol class="t04-prog"><li>' + NR(1) + "<code>z :- a, b.</code></li><li>" + NR(2) + "<code>a :- c.</code></li><li>" + NR(3) + "<code>a :- d.</code></li><li>" +
+      NR(4) + "<code>b.</code></li><li>" + NR(5) + '<code>d.</code></li><li><span class="t04-nr"></span><code>?- z.</code></li></ol>' +
+      "<p>Arbeite den SLD-Baum so ab, wie PROLOG es tut: immer das linke Ziel, Klauseln von oben nach unten, Tiefensuche. Wo gibt es eine Sackgasse?</p>",
+    schritte: [
+      { html: '<div class="m">' + F("{¬Z} —(1)→ {¬A, ¬B}") + "</div>", warum: F("Nur (1) hat den Kopf Z.") },
+      { html: '<div class="m">' + F("{¬A, ¬B} —(2)→ {¬C, ¬B}") + "</div>", warum: F("Für A gibt es zwei Regeln. Die Tiefensuche nimmt zuerst (2).") },
+      { html: '<div class="m">' + F("{¬C, ¬B} ✗ Sackgasse") + "</div>", warum: F("Keine Klausel hat den Kopf C. Zurück zum letzten Abzweig (Backtracking).") },
+      { html: '<div class="m">' + F("{¬A, ¬B} —(3)→ {¬D, ¬B}") + "</div>", warum: F("Jetzt die zweite Regel für A.") },
+      { html: '<div class="m">' + F("{¬D, ¬B} —(5)→ {¬B} —(4)→ ∅") + "</div>", warum: F("D und B sind Tatsachen. ∅ ist erreicht: PROLOG antwortet «true».") },
+      { html: F("Besucht: {¬Z}, {¬A, ¬B}, {¬C, ¬B}, {¬D, ¬B}, {¬B}, ∅"),
+        warum: "Sechs Knoten. Die Breitensuche besucht hier dieselben Knoten in derselben Reihenfolge, weil der Baum schmal ist." }
+    ]
+  });
+
+  /* =====================================================================
+     Lösungsfilm (Aufgabe im Stil von 3b, Formel H)
+     ===================================================================== */
+  const H0 = ["B ∨ A", "C ∨ ¬B", "¬A ∨ D", "C ∨ ¬D", "¬C ∨ ¬D", "¬C"];
+  const H1 = ["¬B ∨ A", "C ∨ B", "¬A ∨ D", "C ∨ ¬D", "¬C ∨ ¬D", "¬C"];
+  const H2 = ["¬B ∨ A", "¬C ∨ B", "¬A ∨ D", "¬C ∨ ¬D", "C ∨ ¬D", "C"];
+  const HS = ["¬B, A", "¬C, B", "¬A, D", "¬C, ¬D", "C, ¬D", "C"];
+  const FF = (inhalt) => '<div class="t04-ff"><div class="t04-zeilen">' + inhalt + "</div></div>";
+  const Z = (s) => "<div>" + s + "</div>";
+  const hZeile = (arr, o) => Z(F("<i>H</i> ≡ ") + konj(arr, o));
+  const hAlt = Z(F("<i>H</i> ≡ ") + konj(H0));
+  const h1Zeile = (o) => Z(F("B := ¬B: &nbsp;") + konj(H1, o));
+  const h2Zeile = (o) => Z(F("C := ¬C: &nbsp;<i>H</i>* ≡ ") + konj(H2, o));
+  const hEin = Z(eingabe(HS));
+  const r7 = irZeile(7, "¬C, ¬A", 4, 3, "D");
+  const r8 = irZeile(8, "¬C, ¬B", 7, 1, "A");
+  const r9 = irZeile(9, "¬C", 8, 2, "B");
+  const r10 = irZeile(10, "∅", 9, 6, "C");
+  // Ergebnis von Teil (i) mit beiden Ersetzungen, bleibt bis zum Endstand stehen
+  const teil1 = Z(F("B := ¬B, C := ¬C: &nbsp;<i>H</i>* ≡ ") + konj(H2, { zaehlen: true, alleGut: true }));
+
+  L.film("#t04-film", {
+    phasen: ["1 · Zählen", "2 · Substituieren", "3 · Nummerieren", "4 · Resolvieren", "5 · Schluss"],
+    texte: [
+      F('Gegeben ist <span data-ph="h"><i>H</i> ≡ <span data-ph="k1">(B ∨ A)</span> ∧ <span data-ph="k2">(C ∨ ¬B)</span> ∧ <span data-ph="k3">(¬A ∨ D)</span> ∧ <span data-ph="k4">(C ∨ ¬D)</span> ∧ <span data-ph="k5">(¬C ∨ ¬D)</span> ∧ <span data-ph="k6">¬C</span></span>.'),
+      '(i) Zeige durch <span data-ph="sub">geeignete Substitution</span>, dass <i>H</i> zu einer <span data-ph="horn">Hornformel</span> umgebaut werden kann.',
+      '(ii) Zeige die <span data-ph="unerf">Unerfüllbarkeit</span> mit einer <span data-ph="ir">Input-Resolution</span>.'
+    ],
+    woerterbuch: [
+      "<b>Hornklausel</b> höchstens 1 positives Literal",
+      "<b>X := ¬X</b> überall umdrehen",
+      "<b>Eingabeklauseln</b> (1) … (6)",
+      "<b>Input-Resolution</b> jede Zeile mit Eingabeklausel",
+      "<b>∅</b> Widerspruch, also unerfüllbar"
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Teil", formel: "Lösung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: positive Literale zählen, mit einer Substitution reparieren, die Klauseln als Eingabeklauseln nummerieren und von der Zielklausel aus resolvieren, bis die leere Klausel entsteht." },
+      { ph: 0, sent: 0, hl: ["h"], f: FF(NW(hAlt)),
+        say: "Schreib H ab. Dann gehst du Klausel für Klausel durch und zählst die positiven Literale, also die Atome ohne Verneinung." },
+      { ph: 0, sent: 0, hl: ["k1"], dict: 1, dh: [0], f: FF(hZeile(H0, { zaehlen: true })),
+        say: "Die erste Klausel hat zwei positive Literale, B und A. Sie ist keine Hornklausel." },
+      { ph: 0, sent: 0, hl: ["k2", "k3", "k4", "k5", "k6"], dh: [0],
+        say: "Alle anderen Klauseln haben höchstens ein positives Literal. Es gibt also genau eine Problemklausel." },
+      { ph: 1, sent: 1, hl: ["sub"], dict: 2, dh: [1], f: FF(hZeile(H0, { zaehlen: true }) + Z(NW(F("Kandidaten: B oder A")))),
+        say: "Substitution heisst: Du ersetzt ein Atom der Problemklausel überall durch seine Verneinung. In Frage kommen B und A." },
+      { ph: 1, sent: 1, hl: ["sub"], dh: [1], f: FF(hAlt + NW(h1Zeile({ neu: ["B"] }))),
+        say: "Wir nehmen B. Aus (B ∨ A) wird (¬B ∨ A). Das ist jetzt eine Hornklausel." },
+      { ph: 1, sent: 1, dh: [1], f: FF(hAlt + h1Zeile({ zaehlen: true })),
+        say: "Aber aus (C ∨ ¬B) wird (C ∨ B). Diese Klausel hat jetzt zwei positive Literale. Wir müssen weiter." },
+      { ph: 1, sent: 1, dh: [1], f: FF(hAlt + h1Zeile({ zaehlen: true }) + NW(h2Zeile({ neu: ["C"] }))),
+        say: "B drehen wir nicht zurück. Also ersetzen wir zusätzlich C, und zwar in allen Klauseln, in denen C vorkommt." },
+      { ph: 1, sent: 1, dh: [1],
+        say: "(C ∨ B) wird zu (¬C ∨ B). (C ∨ ¬D) wird zur Zielklausel (¬C ∨ ¬D), und (¬C ∨ ¬D) wird zu (C ∨ ¬D)." },
+      { ph: 1, sent: 0, hl: ["k6"], dh: [1],
+        say: "Vorsicht bei der Einerklausel ganz rechts: Aus ¬C wird die Tatsache C. Wer das vergisst, rechnet mit einer falschen Formel weiter." },
+      { ph: 1, sent: 1, hl: ["horn"], dh: [0], f: FF(hAlt + h1Zeile({ zaehlen: true }) + NW(teil1)),
+        say: "Neu zählen: Jede Klausel hat höchstens ein positives Literal. H Stern ist eine Hornformel. Damit ist Teil i gelöst." },
+      { ph: 1, sent: 1, dh: [1], f: FF(hAlt + teil1 + Z(NW('<span class="t04-aus">' + F("Mit A statt B: (¬A ∨ D) wird zu (A ∨ D), dann D, dann C … das geht nicht auf.") + "</span>"))),
+        say: "Hättest du A statt B gewählt, würde (¬A ∨ D) zu (A ∨ D). Danach müsstest du D ersetzen, dann C, und die Kette geht nicht auf. Für H klappt nur das Paar B und C." },
+      { ph: 1, sent: 1, dh: [1], f: FF(hAlt + teil1 + Z(NW('<span class="t04-aus">' + F("<i>H</i> erfüllbar ⟺ <i>H</i>* erfüllbar") + "</span>"))),
+        say: "Warum darf man das? In H Stern bedeutet B einfach «nicht B», und C bedeutet «nicht C». H Stern ist genau dann erfüllbar, wenn H erfüllbar ist. Die Prüfung nennt das «äquivalent zu einer Hornformel»." },
+      { ph: 2, sent: 2, hl: ["ir"], dict: 3, dh: [2], f: FF(teil1 + NW(hEin)),
+        say: "Teil ii: Zuerst nummerierst du die Klauseln von H Stern als Eingabeklauseln (1) bis (6)." },
+      { ph: 2, sent: 2, dh: [2], f: FF(teil1 + hEin + Z(NW(F('(6) {C} <span class="t04-typ t04-typ-t">Tatsache</span> &nbsp; (4) {¬C, ¬D} <span class="t04-typ t04-typ-z">Ziel</span>')))),
+        say: "Klausel (6) ist die einzige Tatsache. Klausel (4) ist die einzige Zielklausel. Dort starten wir." },
+      { ph: 2, sent: 2, dh: [2], f: FF(teil1 + hEin + Z(F('(6) {C} <span class="t04-typ t04-typ-t">Tatsache</span> &nbsp; (4) {¬C, ¬D} <span class="t04-typ t04-typ-z">Ziel</span>')) + Z(NW('<span class="t04-aus">' + F("Kontrolle mit Markierung: C → B → A → D, dann ist (4) voll markiert") + "</span>"))),
+        say: "Kurzer Kontrollblick mit dem Markierungsalgorithmus: C, dann B, dann A, dann D. Jetzt ist (4) voll markiert. Die Formel ist also wirklich unerfüllbar." },
+      { ph: 3, sent: 2, hl: ["ir"], dict: 4, dh: [3], f: FF(teil1 + hEin + NW(r7)),
+        say: "Wir streichen ¬D aus (4). Ein positives D steht nur in (3). Die Resolvente ist {¬C, ¬A}." },
+      { ph: 3, dh: [3], f: FF(teil1 + hEin + r7 + NW(r8)),
+        say: "Jetzt ¬A. Ein positives A steht in (1). Übrig bleibt {¬C, ¬B}." },
+      { ph: 3, dh: [3], f: FF(teil1 + hEin + r7 + r8 + NW(r9)),
+        say: "Für ¬B nehmen wir (2). ¬C steht in beiden Klauseln und zählt in der Menge nur einmal. Es bleibt {¬C}." },
+      { ph: 3, dh: [3, 4], f: FF(teil1 + hEin + r7 + r8 + r9 + NW(r10)),
+        say: "Die Tatsache (6) räumt das letzte Literal weg. Die leere Klausel ist da." },
+      { ph: 3, dh: [3], f: FF(teil1 + hEin + r7 + r8 + r9 + r10 + Z(NW('<span class="t04-aus">' + F("Eingabeklausel je Zeile: (3), (1), (2), (6) ✓") + "</span>"))),
+        say: "Kontrolle: Jede Zeile nutzt eine Eingabeklausel, nämlich (3), (1), (2) und (6). Also ist das eine Input-Resolution." },
+      { ph: 4, sent: 2, hl: ["unerf"], dict: 5, dh: [4], f: FF(teil1 + hEin + r7 + r8 + r9 + r10 + Z(NW('<span class="t04-schluss">' + F("∅ hergeleitet ⇒ <i>H</i>* unerfüllbar ⇒ <i>H</i> unerfüllbar") + "</span>"))),
+        say: "Die leere Klausel ist hergeleitet. Also ist H Stern unerfüllbar und damit auch H. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* =====================================================================
+     Selbsttest
+     ===================================================================== */
+  L.selbsttest("#t04-selbsttest", {
+    fragen: [
+      { q: "Welche Klausel ist eine Hornklausel?",
+        o: [M("{A, B, ¬C}"), M("{¬A, ¬B, ¬C}"), M("{A, B}")], a: 1,
+        e: F("Höchstens ein positives Literal. {¬A, ¬B, ¬C} hat keines; das ist erlaubt und eine Zielklausel.") },
+      { q: F("Stolperfalle: Du ersetzt in (A ∨ C) ∧ (¬A ∨ B) ∧ ¬A das Atom A durch ¬A. Was entsteht?"),
+        o: [M("(¬A ∨ C) ∧ (A ∨ B) ∧ A"), M("(¬A ∨ C) ∧ (A ∨ B) ∧ ¬A"), M("(¬A ∨ C) ∧ (¬A ∨ B) ∧ A")], a: 0,
+        e: F("Jedes Vorkommen dreht um, auch in der Einerklausel: ¬A wird zur Tatsache A. Danach hat (A ∨ B) zwei positive Literale; B müsste also auch ersetzt werden.") },
+      { q: F("Was bedeutet die Prozedurklausel {¬A, ¬B, C} in Implikationsschreibweise?"),
+        o: [M("C ⇒ A ∧ B"), M("A ∧ B ⇒ C"), M("A ∨ B ⇒ C")], a: 1,
+        e: F("¬A ∨ ¬B ∨ C ≡ ¬(A ∧ B) ∨ C ≡ A ∧ B ⇒ C.") },
+      { q: "Der Markierungsalgorithmus stoppt, und keine Zielklausel ist voll markiert. Was gilt?",
+        o: ["Die Formel ist unerfüllbar.", "Die Formel ist erfüllbar; «markierte Atome = 1, alle anderen = 0» ist ein Modell.", "Man weiss nichts und braucht eine Wahrheitstafel."], a: 1,
+        e: "Ohne voll markierte Zielklausel gibt es keinen Widerspruch. Die markierten Atome auf 1 und den Rest auf 0 zu setzen, erfüllt alle Klauseln." },
+      { q: F("Stolperfalle: Du willst zeigen, dass das Atom K aus Tatsachen und Regeln folgt. Was hängst du an die Klauselmenge an?"),
+        o: [F("die Tatsache {K}"), F("die Zielklausel {¬K}"), F("die Klausel {¬K, K}")], a: 1,
+        e: F("Folgerung über Widerspruch: Regeln ∧ Tatsachen ∧ ¬K muss unerfüllbar sein. Mit {K} wäre K sofort markiert, und du hättest nichts gezeigt.") },
+      { q: F("Stolperfalle: In einer Input-Resolution hast du schon (7) {B} und (8) {¬B} hergeleitet. Darfst du ∅ aus (7) und (8) bilden?"),
+        o: ["Ja, so endet jede Resolution.", "Nein, mindestens eine der beiden Klauseln muss eine Eingabeklausel sein.", "Ja, aber nur bei Hornformeln."], a: 1,
+        e: "Bei der Input-Resolution stützt sich jede Zeile auf eine Eingabeklausel. Zwei hergeleitete Klauseln zu kombinieren, ist allgemeine Resolution." },
+      { q: "Womit startet eine SLD-Resolution?",
+        o: ["mit einer Tatsache", "mit einer Zielklausel", "mit der längsten Klausel"], a: 1,
+        e: "Sie startet mit einer Zielklausel und resolviert jeweils mit einer Programmklausel. Jede Resolvente ist wieder eine Zielklausel." },
+      { q: "Warum kann PROLOG bei einer Anfrage endlos rechnen, obwohl die Antwort «true» wäre?",
+        o: ["Weil die Tiefensuche in einem endlosen Ast hängen bleiben kann, bevor sie den Ast mit ∅ erreicht.", "Weil Hornformeln grundsätzlich nicht entscheidbar sind.", "Weil die Breitensuche zu viel Speicher braucht."], a: 0,
+        e: "PROLOG sucht in die Tiefe. Kommt zuerst ein endloser Ast, erreicht es den Ast mit ∅ nie. Die Breitensuche hätte das Problem nicht." },
+      { q: "Wie schreibst du in PROLOG: «Projekt d wird fertig, wenn Projekt a fertig ist und Statistik e vorliegt»?",
+        o: ['<code class="t04-code-inline">a, e :- d.</code>', '<code class="t04-code-inline">d :- a, e.</code>', '<code class="t04-code-inline">d :- a; e.</code>'], a: 1,
+        e: "Der Kopf steht links, die Bedingungen rechts, das Komma heisst «und». Das Semikolon wäre «oder»." },
+      { q: "Wie viele Durchläufe braucht der Markierungsalgorithmus bei einer Hornformel mit 6 Atomen höchstens?",
+        o: ["6 + 1 = 7", "2<sup>6</sup> = 64", "6 · 6 = 36"], a: 0,
+        e: "Jeder Durchlauf ausser dem letzten markiert mindestens ein neues Atom. Nach höchstens 6 solchen Durchläufen folgt einer ohne Neues." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

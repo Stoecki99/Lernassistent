@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prädikatenlogik: Grundlagen · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/06-praedikatenlogik-modellieren" title="Prädikatenlogik: Sätze modellieren">
+  <style>
+    /* Station 05: nur Klassen mit Präfix t05-, nur Farben aus :root */
+    .t05-fi{font-family:var(--f-math); font-size:1.08em; line-height:1.5}
+    .t05-luecke{display:inline-block; width:1.6em}
+    .t05-ziele ul{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
+    .t05-bereich{background:var(--accent-soft); border-bottom:2px solid var(--accent); border-radius:4px; padding:0 2px}
+    .t05-geb{border-bottom:3px double var(--ok); padding:0 1px}
+    .t05-quant{outline:2px solid var(--accent); outline-offset:1px; border-radius:4px}
+    .t05-legende{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.88rem; color:var(--muted)}
+    .t05-legende span{display:inline-flex; align-items:center; gap:6px}
+    .t05-muster{display:inline-block; min-width:1.6em; text-align:center; font-family:var(--f-math); color:var(--ink)}
+    .t05-regeltab td{vertical-align:top}
+    .t05-regeltab td.t05-nrsp{font-family:var(--f-body); font-size:.9rem; color:var(--muted); white-space:nowrap}
+    .t05-regeltab td.t05-fsp{font-family:var(--f-math); font-size:1.08rem}
+    .t05-rezept{margin:0; padding-left:1.4em; display:flex; flex-direction:column; gap:8px}
+    .t05-rezept li::marker{color:var(--accent); font-weight:700}
+    .t05-lesezeile{font-family:var(--f-body); font-size:.95rem; color:var(--muted); margin-top:4px; white-space:normal}
+    .t05-quelle{display:inline-block; font-size:.72rem; letter-spacing:.03em; padding:0 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); vertical-align:middle}
+    /* Lösungsfilm: mehrere Lösungszeilen */
+    .t05-zl{display:flex; gap:10px; align-items:baseline; font-size:.8em; line-height:1.7; padding:0 4px}
+    .t05-nr{font-family:var(--f-body); font-size:.72em; color:var(--muted); min-width:1.4em; font-style:normal}
+    .t05-zl.t05-falsch{color:var(--bad); text-decoration:line-through; text-decoration-color:var(--bad)}
+    .t05-zl.t05-falsch .t05-nr{color:var(--bad)}
+    .t05-zl.t05-vgl{background:var(--accent-soft); border-radius:6px}
+    .t05-loesung{margin:0; padding-left:1.6em; display:flex; flex-direction:column; gap:4px}
+    .t05-loesung li::marker{color:var(--muted)}
+    /* Quantor-Labor */
+    .t05-welt{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(270px,100%),1fr)); gap:16px; align-items:center}
+    .t05-matrix{border-collapse:collapse; margin-inline:auto}
+    .t05-matrix th{font-size:.85rem; color:var(--muted); font-weight:600; padding:4px 6px; text-align:center}
+    .t05-matrix th.t05-ecke{font-family:var(--f-math); font-weight:400; font-size:.95rem}
+    .t05-matrix td{padding:3px; text-align:center}
+    .t05-matrix th.t05-bad{color:var(--bad); text-decoration:underline wavy var(--bad)}
+    .t05-matrix th.t05-ok{color:var(--ok); text-decoration:underline var(--ok)}
+    .t05-zelle{min-width:44px; min-height:40px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--muted); font:inherit; font-weight:700; cursor:pointer}
+    .t05-zelle:hover{border-color:var(--accent)}
+    .t05-zelle[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+    .t05-zelle.t05-ok{box-shadow:0 0 0 3px var(--ok)}
+    .t05-zelle.t05-bad{box-shadow:0 0 0 3px var(--bad)}
+    .t05-graph svg{max-width:360px; margin-inline:auto}
+    .t05-graph .t05-kante{fill:none; stroke:var(--muted); stroke-width:1.6}
+    .t05-graph .t05-kante.t05-ok{stroke:var(--ok); stroke-width:3}
+    .t05-graph .t05-kante.t05-bad{stroke:var(--bad); stroke-width:3}
+    .t05-graph .t05-kante.t05-fehlt{stroke:var(--bad); stroke-width:2; stroke-dasharray:5 4}
+    .t05-graph .t05-kante.t05-leer{stroke:var(--ok); stroke-width:2; stroke-dasharray:2 4}
+    .t05-graph .t05-spitze{fill:var(--muted)}
+    .t05-graph .t05-spitze-ok{fill:var(--ok)}
+    .t05-graph .t05-spitze-bad{fill:var(--bad)}
+    .t05-graph .t05-knoten circle{fill:var(--surface); stroke:var(--line); stroke-width:2}
+    .t05-graph .t05-knoten.t05-bad circle{stroke:var(--bad); stroke-width:3; stroke-dasharray:4 3}
+    .t05-graph .t05-knoten.t05-ok circle{stroke:var(--ok); stroke-width:3}
+    .t05-graph .t05-knoten text{fill:var(--ink); font-size:13px; font-weight:600}
+    .t05-graph .t05-knoten text.t05-konst{fill:var(--const); font-family:var(--f-math); font-style:italic; font-weight:400; font-size:13px}
+    .t05-fliste{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(250px,100%),1fr)); gap:8px}
+    .t05-fbtn{display:flex; justify-content:space-between; align-items:center; gap:10px; width:100%; text-align:left; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font:inherit; cursor:pointer; min-width:0}
+    .t05-fbtn:hover{border-color:var(--accent)}
+    .t05-fbtn[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+    .t05-fbtn-txt{display:flex; flex-direction:column; min-width:0}
+    .t05-lesart{font-size:.85rem; color:var(--muted)}
+    .t05-wert{font-size:.82rem; font-weight:700; white-space:nowrap}
+    .t05-wert.t05-w{color:var(--ok)}
+    .t05-wert.t05-f{color:var(--bad)}
+    .t05-urteil{font-size:1.05rem}
+    .t05-urteil b.t05-w{color:var(--ok)}
+    .t05-urteil b.t05-f{color:var(--bad)}
+    .t05-erkl{margin:0; padding-left:1.4em; display:flex; flex-direction:column; gap:4px; font-size:.95rem}
+    .t05-erkl li.t05-ok::marker{content:"✓ "; color:var(--ok)}
+    .t05-erkl li.t05-bad::marker{content:"✗ "; color:var(--bad)}
+    .t05-ziel{font-weight:600}
+    .t05-ziel.t05-ok{color:var(--ok)}
+    /* Pränexform-Umformer */
+    .t05-herleitung{margin:0; padding-left:1.6em; display:flex; flex-direction:column; gap:10px}
+    .t05-herleitung li::marker{color:var(--muted); font-size:.85rem}
+    .t05-herleitung .board{padding:10px 14px}
+    .t05-herleitung .m{font-size:1.12rem; white-space:nowrap}
+    .t05-herleitung li.t05-neu .board{box-shadow:0 0 0 2px var(--accent)}
+    .t05-uf-info{font-size:.93rem; margin-top:6px}
+    .t05-regel{display:inline-block; font-size:.78rem; font-weight:600; padding:1px 8px; border-radius:999px; border:1px solid var(--accent); color:var(--accent); margin-right:6px; white-space:nowrap}
+    .t05-uf-kontext{font-size:.9rem; color:var(--muted)}
+    .t05-ufbtn{white-space:normal; text-align:left; max-width:100%}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="05-praedikatenlogik-grundlagen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S1-V4 · Prädikatenlogik</span>
+    <h1>Prädikatenlogik: Grundlagen</h1>
+    <p class="lead">Die Aussagenlogik kennt nur ganze Sätze, die wahr oder falsch sind. Die Prädikatenlogik schaut in die Sätze hinein: Sie spricht über Dinge, über Beziehungen zwischen Dingen und über «alle» und «mindestens einen». Hier lernst du die Bausteine, liest ab, wofür ein Quantor gilt, rechnest mit Quantoren und bringst Formeln in Pränexform. In den Schritt-für-Schritt-Beispielen kannst du unterstrichene Satzstücke antippen: Dann leuchtet der passende Teil der Formel auf.</p>
+    <div class="card stack t05-ziele">
+      <p><b>Nach dieser Station kannst du</b></p>
+      <ul class="prose">
+        <li>Terme, atomare Formeln und Formeln nach Def. 4.1 unterscheiden und selbst aufbauen,</li>
+        <li>den Wirkungsbereich eines Quantors bestimmen, jedes Vorkommen einer Variablen als frei oder gebunden einordnen und die Matrixformel angeben (Def. 4.5),</li>
+        <li>Formeln mit zwei Quantoren in einer kleinen Welt auswerten und begründen, warum <span class="t05-fi" data-f>∀x: ∃y</span> etwas anderes sagt als <span class="t05-fi" data-f>∃y: ∀x</span>,</li>
+        <li>Quantoren mit Satz 4.13 verneinen, vertauschen und verschieben und gebundene Variablen umbenennen,</li>
+        <li>eine Formel Schritt für Schritt in Pränexform bringen (Def. 4.12b),</li>
+        <li>Sätze wie in Aufgabe 3a der Modulschlussprüfung («Wer mag wen?») sauber in Formeln übersetzen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#bausteine"><b>0</b>Bausteine</a>
+    <a href="#syntax"><b>1</b>Syntax</a>
+    <a href="#frei"><b>2</b>Frei und gebunden</a>
+    <a href="#aequivalenzen"><b>3</b>Äquivalenzen</a>
+    <a href="#praenex"><b>4</b>Pränexform</a>
+    <a href="#labor"><b>5</b>Quantor-Labor</a>
+    <a href="#umformer"><b>6</b>Umformer</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="bausteine">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Begriffe, ohne die nichts geht</h2>
+    <p class="prose">Prädikatenlogik ist eine sehr strenge Sprache. Sie trennt sauber zwischen <b>Dingen</b> und <b>Aussagen über Dinge</b>. Ein Ding ist nie wahr oder falsch. Eine Aussage ist immer wahr oder falsch. Die Farben bleiben auf der ganzen Seite gleich: <span class="v">Variablen</span> blau, <span class="c">Konstanten</span> orange, <span class="fn">Funktionen</span> grün, <span class="p">Prädikate</span> violett.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Grundmenge = die Gästeliste</span><span class="ex"><i>U</i> = {Ana, Ben, Cem}</span><p>Bevor du etwas behauptest, legst du fest, über wen du redest. Wie die Gästeliste eines Fests: Nur wer drauf steht, zählt.</p></div>
+      <div class="concept"><span class="tag">Term = ein Ding</span><span class="ex" data-f>x, a, g(x)</span><p>Ein Name (<span class="c">a</span> = Ana), ein Platzhalter (<span class="v">x</span> = irgendwer) oder ein Ausdruck wie «der Götti von <span class="v">x</span>». Wie ein Feld auf einem Formular: Es bezeichnet jemanden, behauptet aber nichts.</p></div>
+      <div class="concept"><span class="tag">Prädikat = Ja-Nein-Frage</span><span class="ex" data-f>M(a, b)</span><p>«Mag Ana Ben?» Ein Prädikat bekommt Dinge und liefert wahr oder falsch. Mit eingesetzten Termen heisst es atomare Formel.</p></div>
+      <div class="concept"><span class="tag">Quantor = Mengenwort</span><span class="ex" data-f>∀x: M(x, a)   ∃x: M(x, a)</span><p>«Alle Gäste mögen Ana» oder «mindestens ein Gast mag Ana». <span class="q">∀</span> heisst «für alle», <span class="q">∃</span> heisst «es gibt mindestens ein».</p></div>
+      <div class="concept"><span class="tag">Frei = Pronomen ohne Bezug</span><span class="ex" data-f>M(x, a)</span><p>«Er mag Ana.» Wer ist er? Solange das offen ist, kannst du nicht entscheiden, ob der Satz stimmt. So eine Variable heisst frei. Steht ein passender Quantor davor, ist sie gebunden.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Term, Formel oder ungültig?</h3>
+      <p class="hint"><span class="t05-fi" data-f>M(x, y)</span> heisst «x mag y» (zweistellig), <span class="t05-fi" data-f>g(x)</span> ist «der Götti von x», <span class="c">a</span> und <span class="c">b</span> sind Ana und Ben. Frag dich bei jedem Ausdruck: Bezeichnet er ein Ding, ist er wahr oder falsch, oder passt er gar nicht zusammen?</p>
+      <div id="t05-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Syntax ===== -->
+  <section id="syntax">
+    <span class="eyebrow">Schritt 1 · Syntax der Prädikatenlogik (Def. 4.1, Notationen 4.2)</span>
+    <h2>Warum Aussagenlogik nicht reicht und was dazukommt</h2>
+    <p class="prose">Nimm den Satz «Jeder Kunde des Webshops hat mindestens eine Bestellung aufgegeben.» In der Aussagenlogik bleiben dir nur ganze Aussagen wie <i>A</i>, <i>B</i>, <i>C</i>. Drei Dinge gehen damit nicht:</p>
+    <ol class="prose">
+      <li>Du müsstest für jeden Kunden ein eigenes Aussagensymbol anlegen. Wie viele Kunden es gibt, weisst du aber nicht.</li>
+      <li>«hat bestellt» ist eine <b>Beziehung</b> zwischen zwei Dingen, einem Kunden und einer Bestellung. Aussagensymbole haben keine Stellen für Dinge.</li>
+      <li>«mindestens eine Bestellung» sagt nicht, <b>welche</b>. Es ist eine reine Existenzaussage.</li>
+    </ol>
+    <p class="prose">Die Prädikatenlogik löst alle drei Probleme mit Variablen, Prädikaten und Quantoren: <span class="t05-fi" data-f>∀x: (K(x) ⇒ ∃y: B(x, y))</span> mit <span class="t05-fi" data-f>K(x)</span> «x ist Kunde» und <span class="t05-fi" data-f>B(x, y)</span> «x hat y bestellt». Die Folien zeigen dieselben drei Probleme an Inspektor Craig und den Bewohnern Transsylvaniens. Umgekehrt steckt die Aussagenlogik ganz in der Prädikatenlogik: Nullstellige Prädikate ohne Variablen sind einfach Aussagen (Satz 4.11).</p>
+
+    <h3>Das Wörterbuch der Symbole</h3>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="v">x</span>, <span class="v">y</span>, <span class="v">z</span>, <span class="v">u</span>, <span class="v">v</span>, <span class="v">w</span></td><td><span class="kind kind-v">Variable</span></td><td>Platzhalter für irgendein Ding aus der Grundmenge (Def. 4.1a, Notation 4.2a). Offiziell heissen sie <span class="v">x</span><sub>0</sub>, <span class="v">x</span><sub>1</sub>, …</td></tr>
+          <tr><td><span class="c">a</span>, <span class="c">b</span>, <span class="c">c</span></td><td><span class="kind kind-c">Konstante</span></td><td>ein ganz bestimmtes Ding mit Namen, zum Beispiel <span class="c">a</span> = Ana. Eine Konstante ist eine Funktion ohne Argument, also nullstellig (Def. 4.1b, Notation 4.2c).</td></tr>
+          <tr><td><span class="fn">f</span>, <span class="fn">g</span>, <span class="fn">h</span></td><td><span class="kind kind-fn">Funktion</span></td><td>macht aus <i>k</i> Dingen wieder ein Ding. <span class="t05-fi" data-f>g(x)</span> = «der Götti von x» ist einstellig. Die Zahl der Argumente heisst Stelligkeit (Def. 4.1b).</td></tr>
+          <tr><td><span class="p">P</span>, <span class="p">Q</span>, <span class="p">R</span>, <span class="p">M</span></td><td><span class="kind kind-p">Prädikat</span></td><td>Eigenschaft (einstellig, <span class="t05-fi" data-f>K(x)</span>) oder Beziehung (zweistellig, <span class="t05-fi" data-f>M(x, y)</span>). Liefert wahr oder falsch. Auch hier heisst die Zahl der Argumente Stelligkeit (Def. 4.1c). Die Reihenfolge der Argumente zählt.</td></tr>
+          <tr><td><span class="op">¬</span> <span class="op">∧</span> <span class="op">∨</span> <span class="op">⇒</span> <span class="op">⇔</span></td><td><span class="kind kind-op">Junktor</span></td><td>«nicht», «und», «oder», «wenn, dann», «genau dann, wenn». Def. 4.1 e2 nennt nur ¬, ∨ und ∧. ⇒ und ⇔ sind wie in der Aussagenlogik Abkürzungen, zum Beispiel <span class="t05-fi" data-f>F ⇒ G</span> für <span class="t05-fi" data-f>¬F ∨ G</span> (Notationen 2.3b und c).</td></tr>
+          <tr><td><span class="q">∀</span><span class="v">x</span>:</td><td><span class="kind kind-q">Allquantor</span></td><td>«für alle <span class="v">x</span> gilt …» (Def. 4.1 e3)</td></tr>
+          <tr><td><span class="q">∃</span><span class="v">x</span>:</td><td><span class="kind kind-q">Existenzquantor</span></td><td>«es gibt mindestens ein <span class="v">x</span>, für das gilt …» (Def. 4.1 e3)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Die Bauregeln: Term oder Formel?</h3>
+    <p class="prose">Def. 4.1 baut alles aus wenigen Regeln auf. Die Regeln d1 und d2 erzeugen <b>Terme</b> (Dinge), die Regeln e1 bis e3 erzeugen <b>Formeln</b> (Aussagen). Ein Prädikat und eine Funktion bekommen nur Terme, nie eine Formel. Ein Quantor bindet nur eine Variable, nie eine Konstante.</p>
+    <div class="card tablebox">
+      <table class="symtab t05-regeltab">
+        <thead><tr><th>Regel</th><th>Beispiel</th><th>Ergebnis</th></tr></thead>
+        <tbody>
+          <tr><td>d1 · jede Variable</td><td data-f>x</td><td>Term</td></tr>
+          <tr><td>d2 · Funktion auf Terme</td><td data-f>g(x), g(g(a)), a</td><td>Term (Konstante: ohne Klammer)</td></tr>
+          <tr><td>e1 · Prädikat auf Terme</td><td data-f>M(x, g(x))</td><td>atomare Formel (Def. 4.5a)</td></tr>
+          <tr><td>e2 · Junktoren</td><td data-f>¬M(a, b), (F ∧ G), (F ∨ G)</td><td>Formel</td></tr>
+          <tr><td>e3 · Quantoren</td><td data-f>∀x: F, ∃x: F</td><td>Formel</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Klick dich durch den Aufbau einer ganzen Formel. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Formel leuchtet auf.</p>
+    <div id="t05-stepper-aufbau"></div>
+
+    <h3>Bindungsstärke: Wie weit reicht ein Quantor?</h3>
+    <p class="prose">Bei Bsp. 4.3 halten die Folien fest: <b>Quantoren binden stärker als ¬, ∧ und ∨.</b> Ein Quantor wirkt also nur auf die kleinste vollständige Formel direkt hinter seinem Doppelpunkt: ein Atom, eine Negation davon, einen weiteren Quantor samt dessen Bereich oder eine ganze Klammer. Die Lösungen zu Lernblock 3 behandeln ⇒ und ⇔ genauso.</p>
+    <div class="board"><div class="m" data-f>∀x: P(x) ∧ Q(x)   bedeutet   (∀x: P(x)) ∧ Q(x)</div></div>
+    <div class="note falle"><b>Falle:</b> Wer <span class="t05-fi" data-f>∀x: (P(x) ∧ Q(x))</span> meint, muss die Klammer schreiben. Ohne Klammer ist das <span class="v">x</span> in <span class="t05-fi" data-f>Q(x)</span> frei. Die handschriftliche Musterlösung zu Aufgabe 3a d) der exemplarischen Prüfung lässt diese Klammer weg (<span class="t05-fi" data-f>∀x: ∃y: ∃z: P(x, y) ∧ P(y, z)</span>), ebenso Lösung 4.1 (<i>F</i><sub>3</sub>) in Lernblock 3. Gemeint ist <span class="t05-fi" data-f>∀x: ∃y: ∃z: (P(x, y) ∧ P(y, z))</span>. Schreib die Klammer in der Prüfung immer.</div>
+  </section>
+
+  <!-- ===== 2 · Frei und gebunden ===== -->
+  <section id="frei">
+    <span class="eyebrow">Schritt 2 · Bezeichnungen (Def. 4.5)</span>
+    <h2>Wirkungsbereich, frei, gebunden, Matrixformel</h2>
+    <p class="prose">Der <b>Wirkungsbereich</b> eines Quantors <span class="t05-fi" data-f>∀x:</span> oder <span class="t05-fi" data-f>∃x:</span> ist die Formel, auf die er wirkt. Damit lassen sich die Begriffe aus Def. 4.5 in eigenen Worten sagen:</p>
+    <div class="card tablebox">
+      <table class="symtab t05-regeltab">
+        <thead><tr><th>Begriff</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>atomare Formel</td><td>ein Prädikat mit eingesetzten Termen, zum Beispiel <span class="t05-fi" data-f>R(x, y)</span> (Def. 4.5a)</td></tr>
+          <tr><td>Teilformel</td><td>ein zusammenhängendes Stück der Formel, das selbst eine Formel ist (Def. 4.5b)</td></tr>
+          <tr><td>gebunden</td><td>ein Vorkommen von <span class="v">x</span>, das im Wirkungsbereich eines Quantors mit derselben Variablen <span class="v">x</span> liegt (Def. 4.5c)</td></tr>
+          <tr><td>frei</td><td>jedes andere Vorkommen (Def. 4.5c). Dieselbe Variable kann in einer Formel frei <b>und</b> gebunden vorkommen.</td></tr>
+          <tr><td>geschlossen</td><td>keine Variable kommt frei vor. Dann heisst die Formel auch prädikatenlogische Aussage (Def. 4.5d).</td></tr>
+          <tr><td>Matrixformel <i>F</i>*</td><td>die Formel <i>F</i>, in der jedes «<span class="t05-fi" data-f>∀x:</span>» und «<span class="t05-fi" data-f>∃x:</span>» gestrichen ist (Def. 4.5e)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Mit «Vorkommen» sind die Stellen gemeint, an denen die Variable in einem Term steht. Die Variable direkt hinter <span class="q">∀</span> oder <span class="q">∃</span> zeigt nur an, <i>welche</i> Variable gebunden wird. So zählt auch Bsp. 4.6b.</p>
+    <div class="t05-legende" aria-label="Legende">
+      <span><span class="t05-muster t05-bereich">…</span>Wirkungsbereich</span>
+      <span><span class="t05-muster t05-geb">x</span>gebunden (doppelt unterstrichen)</span>
+      <span><span class="t05-muster hl-free">x</span>frei (fett hinterlegt)</span>
+    </div>
+    <div id="t05-stepper-frei"></div>
+    <details class="sol"><summary>Und die Teilformeln von G?</summary>
+      <div class="stack">
+        <p>Von innen nach aussen (wie in Lösung 4.7 zu Lernblock 3):</p>
+        <ul class="prose">
+          <li><span class="t05-fi" data-f>R(x, y)</span>, <span class="t05-fi" data-f>Q(f(x))</span>, <span class="t05-fi" data-f>R(y, x)</span> (die Atome)</li>
+          <li><span class="t05-fi" data-f>(R(x, y) ⇒ Q(f(x)))</span></li>
+          <li><span class="t05-fi" data-f>∀x: (R(x, y) ⇒ Q(f(x)))</span> und <span class="t05-fi" data-f>∃y: R(y, x)</span></li>
+          <li><i>G</i> selbst</li>
+        </ul>
+        <p>Die Terme von <i>G</i> sind <span class="t05-fi" data-f>x, y, f(x)</span>. Kein Term ist <span class="t05-fi" data-f>R(x, y)</span>: Das ist eine Formel.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 3 · Fundamentale Äquivalenzen ===== -->
+  <section id="aequivalenzen">
+    <span class="eyebrow">Schritt 3 · Fundamentale Äquivalenzen (Satz 4.13)</span>
+    <h2>Mit Quantoren rechnen</h2>
+    <p class="prose">Zwei Formeln heissen <b>äquivalent</b> (<span class="t05-fi" data-f>F ≡ G</span>), wenn sie in jeder passenden Struktur denselben Wahrheitswert haben (Def. 4.12a). Alle fundamentalen Äquivalenzen der Aussagenlogik gelten weiter (Satz 4.13a mit Satz 2.15, also zum Beispiel De Morgan und <span class="t05-fi" data-f>¬¬F ≡ F</span>). Ebenso bleibt <span class="t05-fi" data-f>F ⇒ G</span> eine Abkürzung für <span class="t05-fi" data-f>¬F ∨ G</span> (Notation 2.3b). Dazu kommen zehn neue (Satz 4.13b). In Nr. 7 bis 10 darf <i>H</i> die Variable <span class="v">x</span> <b>nicht</b> enthalten.</p>
+    <div class="card tablebox">
+      <table class="symtab t05-regeltab">
+        <thead><tr><th>Nr.</th><th>Äquivalenz</th><th>in Worten</th></tr></thead>
+        <tbody>
+          <tr><td class="t05-nrsp">1</td><td class="t05-fsp" data-f>¬(∀x: F) ≡ ∃x: ¬F</td><td>«Nicht alle» heisst «mindestens einer nicht». Die Negation kippt den Quantor.</td></tr>
+          <tr><td class="t05-nrsp">2</td><td class="t05-fsp" data-f>¬(∃x: F) ≡ ∀x: ¬F</td><td>«Keiner» heisst «alle nicht».</td></tr>
+          <tr><td class="t05-nrsp">3</td><td class="t05-fsp" data-f>(∀x: F) ∧ (∀x: G) ≡ ∀x: (F ∧ G)</td><td>∀ lässt sich über ∧ zusammenfassen.</td></tr>
+          <tr><td class="t05-nrsp">4</td><td class="t05-fsp" data-f>(∃x: F) ∨ (∃x: G) ≡ ∃x: (F ∨ G)</td><td>∃ lässt sich über ∨ zusammenfassen.</td></tr>
+          <tr><td class="t05-nrsp">5</td><td class="t05-fsp" data-f>∀x: ∀y: F ≡ ∀y: ∀x: F</td><td>Zwei ∀ darfst du vertauschen.</td></tr>
+          <tr><td class="t05-nrsp">6</td><td class="t05-fsp" data-f>∃x: ∃y: F ≡ ∃y: ∃x: F</td><td>Zwei ∃ darfst du vertauschen.</td></tr>
+          <tr><td class="t05-nrsp">7</td><td class="t05-fsp" data-f>(∀x: F) ∧ H ≡ ∀x: (F ∧ H)</td><td rowspan="4">Ein Quantor darf eine Formel <i>H</i> in seinen Bereich aufnehmen (oder umgekehrt herausgeben), wenn <i>H</i> kein <span class="v">x</span> enthält. Die Seiten von ∧ und ∨ darfst du vorher tauschen.</td></tr>
+          <tr><td class="t05-nrsp">8</td><td class="t05-fsp" data-f>(∀x: F) ∨ H ≡ ∀x: (F ∨ H)</td></tr>
+          <tr><td class="t05-nrsp">9</td><td class="t05-fsp" data-f>(∃x: F) ∧ H ≡ ∃x: (F ∧ H)</td></tr>
+          <tr><td class="t05-nrsp">10</td><td class="t05-fsp" data-f>(∃x: F) ∨ H ≡ ∃x: (F ∨ H)</td></tr>
+          <tr><td class="t05-nrsp">Umb.</td><td class="t05-fsp" data-f>∀x: F ≡ ∀z: F′   ∃x: F ≡ ∃z: F′</td><td><b>Umbenennung:</b> <i>F</i>′ ist <i>F</i> mit <span class="v">z</span> statt <span class="v">x</span>. Erlaubt, wenn <span class="v">z</span> in <i>F</i> nicht vorkommt. Nur gebundene Variablen umbenennen, nie freie.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Die Umbenennung steht nicht in Satz 4.13. Die Lösungen zu Lernblock 3 benutzen sie laufend (zum Beispiel in 4.5, 4.9 und 4.19, in 4.9 und 4.19 mit der Notation «x → z» über dem ≡). In Lösung 4.15 wird dort auch ein <b>freies</b> <span class="v">y</span> umbenannt. Das geht nur, weil 4.15 auf die Skolemform zielt, bei der nur noch die Erfüllbarkeit zählt. Für eine äquivalente Umformung benennst du nur gebundene Variablen um.</p>
+    <div class="note falle"><b>Falle: Das gilt nicht.</b>
+      <span class="t05-fi" data-f>(∀x: F) ∨ (∀x: G)</span> ist nicht äquivalent zu <span class="t05-fi" data-f>∀x: (F ∨ G)</span>, und <span class="t05-fi" data-f>(∃x: F) ∧ (∃x: G)</span> nicht zu <span class="t05-fi" data-f>∃x: (F ∧ G)</span>. Ebenso darfst du <span class="t05-fi" data-f>∀x: ∃y</span> nie zu <span class="t05-fi" data-f>∃y: ∀x</span> vertauschen. Es gilt jeweils nur eine Richtung (Lösung 4.3 in Lernblock 3).</div>
+    <details class="sol"><summary>Gegenbeispiele zum Nachprüfen</summary>
+      <div class="stack">
+        <p><b>∀ über ∨:</b> Grundmenge <span class="t05-fi"><i>U</i> = {1, 2}</span>, <span class="p">P</span> gilt nur für 1, <span class="p">Q</span> nur für 2. Dann hat jedes Element <span class="p">P</span> oder <span class="p">Q</span>, also ist <span class="t05-fi" data-f>∀x: (P(x) ∨ Q(x))</span> wahr. Aber weder <span class="t05-fi" data-f>∀x: P(x)</span> noch <span class="t05-fi" data-f>∀x: Q(x)</span> ist wahr.</p>
+        <p><b>∃ über ∧:</b> Gleiche Welt. <span class="t05-fi" data-f>∃x: P(x)</span> und <span class="t05-fi" data-f>∃x: Q(x)</span> sind beide wahr (1 und 2), aber kein Element hat <span class="p">P</span> und <span class="p">Q</span> zugleich. <span class="t05-fi" data-f>∃x: (P(x) ∧ Q(x))</span> ist falsch.</p>
+        <p><b>Bedingung «H ohne x» verletzt:</b> Gleiche Grundmenge, <span class="p">P</span> gilt für niemanden, <span class="p">Q</span> nur für 1, und das freie <span class="v">x</span> steht für 1. Dann ist <span class="t05-fi" data-f>(∀x: P(x)) ∨ Q(x)</span> wahr, weil <span class="t05-fi" data-f>Q(1)</span> gilt. <span class="t05-fi" data-f>∀x: (P(x) ∨ Q(x))</span> ist falsch, weil für 2 weder <span class="p">P</span> noch <span class="p">Q</span> gilt. Beim Hineinziehen wurde das freie <span class="v">x</span> eingefangen.</p>
+        <p><b>Quantoren vertauschen:</b> Im Quantor-Labor weiter unten (Welt «Kreis»).</p>
+      </div>
+    </details>
+    <p class="prose">Die wichtigste Anwendung von Nr. 1 und 2: eine verneinte Aussage umformulieren. Klick dich durch.</p>
+    <div id="t05-stepper-negation"></div>
+  </section>
+
+  <!-- ===== 4 · Pränexform ===== -->
+  <section id="praenex">
+    <span class="eyebrow">Schritt 4 · Pränexform (Def. 4.12b)</span>
+    <h2>Alle Quantoren nach vorne</h2>
+    <p class="prose">Eine Formel ist in <b>Pränexform</b>, wenn vorne alle Quantoren stehen und dahinter eine Formel ohne Quantor folgt: <span class="t05-fi" data-f>Q₁x₁: Q₂x₂: … Qₙxₙ: G</span>. Hier steht jedes <i>Q</i><sub><i>i</i></sub> für ∀ oder ∃. Die Folien halten nur das Ziel fest: Zu jeder Formel gibt es eine äquivalente Pränexform. Das ist der erste Schritt zum Resolutionskalkül der Prädikatenlogik, so wie die KNF in der Aussagenlogik.</p>
+    <p class="prose">Wie man hinkommt, regelt Satz 4.18 im Skript. Die Lösungen zum Übungsset S1 und zu Lernblock 3 nennen daraus die Schritte 1 (bereinigte Form), 3 (Negationen hineinziehen) und 5 (Quantoren vorziehen). Diese Seite fasst das in vier Schritten zusammen (eigene Nummerierung):</p>
+    <ol class="t05-rezept prose">
+      <li><b>Bereinigen (umbenennen):</b> Gebundene Variablen so umbenennen, dass jeder Quantor seine eigene Variable hat und keine Variable zugleich frei und gebunden vorkommt. Dann heisst die Formel <b>bereinigt</b> (Satz 4.18, Schritt 1).</li>
+      <li><b>⇒ und ⇔ ersetzen:</b> <span class="t05-fi" data-f>F ⇒ G ≡ ¬F ∨ G</span>, <span class="t05-fi" data-f>F ⇔ G ≡ (¬F ∨ G) ∧ (F ∨ ¬G)</span>. Satz 4.13 kennt nur ∧ und ∨. Die Lösungen machen das oft im selben Zug wie Schritt 1.</li>
+      <li><b>¬ nach innen:</b> über einen Quantor mit Nr. 1 und 2 (der Quantor kippt), über eine Klammer mit De Morgan, <span class="t05-fi" data-f>¬¬F ≡ F</span> streichen (Satz 4.18, Schritt 3).</li>
+      <li><b>Quantoren nach vorne:</b> mit Nr. 7 bis 10, von aussen nach innen. Ein Quantor, der im Bereich eines anderen steht, bleibt hinter diesem (Satz 4.18, Schritt 5).</li>
+    </ol>
+    <div id="t05-stepper-praenex"></div>
+    <div class="note tipp"><b>Tipp:</b> Die Pränexform ist nicht eindeutig. Ziehst du zwei unabhängige Quantoren in anderer Reihenfolge heraus, entsteht eine andere, ebenfalls richtige Pränexform. Wichtig ist nur, dass jeder Schritt eine Äquivalenz ist.</div>
+    <div class="note"><b>Merke:</b> Pränexform verändert nichts an freien Variablen. Was frei war, bleibt frei. Erst für die Skolemform (Satz 4.22, Lernblock 3 und Übungsset S1) werden freie Variablen mit ∃ abgeschlossen und ∃-Quantoren durch Konstanten oder Funktionen ersetzt. Die Skolemform ist dann nur noch erfüllbarkeitsäquivalent, nicht mehr äquivalent. Das ist Stoff der nächsten Lernblöcke.</div>
+  </section>
+
+  <!-- ===== 5 · Quantor-Labor ===== -->
+  <section id="labor">
+    <span class="eyebrow">Ausprobieren · Quantor-Labor</span>
+    <h2>Formeln in einer kleinen Welt auswerten</h2>
+    <p class="prose">Vier Personen, eine Beziehung: <span class="t05-fi" data-f>M(x, y)</span> heisst «x mag y», die Konstante <span class="c">a</span> ist Ana. Das ist eine <b>Struktur</b> im Sinne von Def. 4.7: Grundmenge <span class="t05-fi"><i>U</i> = {Ana, Ben, Cem, Dua}</span>, und das Prädikat <span class="p">M</span> ist die Menge aller Paare, bei denen die erste Person die zweite mag. Nach Def. 4.7 c3 ist <span class="t05-fi" data-f>∀x: G</span> wahr, wenn <i>G</i> für jede Person als <span class="v">x</span> stimmt, und <span class="t05-fi" data-f>∃x: G</span>, wenn es für mindestens eine Person stimmt. Ist eine Formel in der Welt wahr, ist die Welt ein <b>Modell</b> der Formel (Def. 4.9b).</p>
+    <p class="prose">Tippe Felder in der Tabelle an, um Beziehungen ein- und auszuschalten, oder wähle eine fertige Welt. Wähle dann eine Formel. Das Labor zeigt, ob sie gilt, und begründet es mit Zeugen und Gegenbeispielen.</p>
+    <div class="card stack">
+      <h3>1 · Die Welt</h3>
+      <div class="modes" role="group" aria-label="Fertige Welten" id="t05-welten"></div>
+      <div class="t05-welt">
+        <div class="tablebox">
+          <table class="t05-matrix" id="t05-matrix">
+            <caption class="sr-only">Wer mag wen: Zeilen sind x, Spalten sind y</caption>
+          </table>
+          <p class="hint">Zeile <span class="v">x</span> mag Spalte <span class="v">y</span>. ✓ = mag, – = mag nicht.</p>
+        </div>
+        <figure class="diagramm t05-graph">
+          <svg id="t05-svg" viewBox="0 0 320 236" role="img" aria-labelledby="t05-svg-titel">
+            <title id="t05-svg-titel">Pfeildiagramm: Ein Pfeil von x nach y heisst x mag y</title>
+          </svg>
+          <figcaption>Pfeil von <span class="v">x</span> nach <span class="v">y</span>: <span class="v">x</span> mag <span class="v">y</span>. Dick grün: Zeuge. Dick rot: Gegenbeispiel. Rot gestrichelt: Pfeil, der fehlt. Grün gepunktet: fehlender Pfeil als Zeuge.</figcaption>
+        </figure>
+      </div>
+      <h3>2 · Die Formel</h3>
+      <div class="t05-fliste" id="t05-fliste" role="group" aria-label="Formel wählen"></div>
+      <div class="board stack" id="t05-auswertung" aria-live="polite"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t05-tausch">⇄ Quantoren vertauschen</button>
+      </div>
+      <p class="fb" id="t05-vergleich" aria-live="polite"></p>
+    </div>
+    <div class="card stack">
+      <h3>Knobelaufgabe</h3>
+      <p class="prose"><b>Ziel 1:</b> Baue eine Welt, in der <span class="t05-fi" data-f>∀x: ∃y: M(x, y)</span> wahr und <span class="t05-fi" data-f>∃y: ∀x: M(x, y)</span> falsch ist.</p>
+      <p class="t05-ziel" id="t05-ziel1" aria-live="polite"></p>
+      <p class="prose"><b>Ziel 2:</b> Und umgekehrt? <span class="t05-fi" data-f>∃y: ∀x: M(x, y)</span> wahr, aber <span class="t05-fi" data-f>∀x: ∃y: M(x, y)</span> falsch.</p>
+      <p class="t05-ziel" id="t05-ziel2" aria-live="polite"></p>
+      <details class="sol"><summary>Warum klappt Ziel 2 nie?</summary>
+        <div class="stack">
+          <p>Ist <span class="t05-fi" data-f>∃y: ∀x: M(x, y)</span> wahr, gibt es eine Person, die von allen gemocht wird, sagen wir Ben. Dann hat jede Person <span class="v">x</span> jemanden, den sie mag: eben Ben. Also ist auch <span class="t05-fi" data-f>∀x: ∃y: M(x, y)</span> wahr.</p>
+          <p>Aus <span class="t05-fi" data-f>∃y: ∀x</span> folgt immer <span class="t05-fi" data-f>∀x: ∃y</span>, umgekehrt nicht. Bei <span class="t05-fi" data-f>∀x: ∃y</span> darf jede Person ihren eigenen Zeugen haben, bei <span class="t05-fi" data-f>∃y: ∀x</span> muss es für alle derselbe sein. Den formalen Beweis findest du in Lösung 4.3c zu Lernblock 3.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Pränexform-Umformer ===== -->
+  <section id="umformer">
+    <span class="eyebrow">Ausprobieren · Pränexform-Umformer</span>
+    <h2>Welche Regel ist jetzt dran?</h2>
+    <p class="prose">Wähle eine Formel. Bei jedem Schritt entscheidest du, welcher Schritt aus dem Rezept als Nächstes kommt. Liegst du richtig, schreibt der Umformer die neue Zeile hin und erklärt sie. Liegst du falsch, bekommst du einen Hinweis. Mit «Schritt zeigen» geht es auch ohne Raten weiter.</p>
+    <div class="card stack">
+      <div class="modes" role="group" aria-label="Formel wählen" id="t05-uf-wahl"></div>
+      <p class="t05-uf-kontext" id="t05-uf-kontext"></p>
+      <ol class="t05-herleitung" id="t05-uf-weg"></ol>
+      <div class="stack" id="t05-uf-frage">
+        <p><b>Welcher Schritt kommt jetzt?</b></p>
+        <div class="row" id="t05-uf-regeln" role="group" aria-label="Schritt wählen"></div>
+      </div>
+      <p class="fb" id="t05-uf-fb" aria-live="polite"></p>
+      <div class="row">
+        <button type="button" class="btn" id="t05-uf-zeigen">Schritt zeigen</button>
+        <button type="button" class="btn" id="t05-uf-zurueck">Zurück</button>
+        <button type="button" class="btn" id="t05-uf-neu">Neu starten</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst lösen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Acht Aufgaben vom Lesen einer Formel bis zur Prüfungsaufgabe. Einen Taschenrechner brauchst du hier nicht: Logik rechnest du von Hand, auch in der Prüfung. Aufgabe 3 ist im Stil von Aufgabe 1a der exemplarischen Modulschlussprüfung (verneinte Allaussage umwandeln), Aufgabe 5 im Stil von Aufgabe 3a, Aufgabe 6 im Stil von Aufgabe 4a des Übungssets S1, Aufgabe 7 im Stil von Lösung 4.3c zu Lernblock 3. Alle Formeln und Sätze sind eigene. Die Lösungen sind eigene Lösungen, nicht vom Dozenten bestätigt.</p>
+    <div id="t05-ue1"></div>
+    <div id="t05-ue2"></div>
+    <div id="t05-ue3"></div>
+    <div class="card stack">
+      <h3>Aufgabe 4 · Pränexform oder nicht?</h3>
+      <p class="hint">Achte auf die Bindungsstärke: Ein Quantor ohne Klammer wirkt nur auf die kleinste Formel dahinter.</p>
+      <div id="t05-ue4"></div>
+    </div>
+    <div id="t05-ue5"></div>
+    <div id="t05-ue6"></div>
+    <div id="t05-ue7"></div>
+    <div id="t05-ue8"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>«Wer vertraut wem?» am Stück gelöst</h2>
+    <p class="prose">Aufgabe 3a der exemplarischen Modulschlussprüfung («Wer mag wen?») verlangt, kurze Sätze mit einem zweistelligen Prädikat und einer Konstanten zu übersetzen. Der Film löst eine Aufgabe im selben Stil mit eigenen Sätzen: <span class="t05-fi" data-f>V(x, y)</span> heisst «x vertraut y», <span class="c">c</span> ist Chiara. Drück auf Play. Gelb leuchtet immer das, was gerade neu dazukommt. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t05-film"></div>
+    <details class="sol"><summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <ol class="t05-loesung" type="a">
+          <li><span class="t05-fi" data-f>∀x: V(x, c)</span></li>
+          <li><span class="t05-fi" data-f>∀x: ∃y: V(x, y)</span></li>
+          <li><span class="t05-fi" data-f>∃y: ∀x: V(x, y)</span></li>
+          <li><span class="t05-fi" data-f>∀x: ∃y: (V(x, y) ∧ V(y, c))</span></li>
+          <li><span class="t05-fi" data-f>∃x: ∀y: ¬V(x, y)</span>, gleichwertig <span class="t05-fi" data-f>∃x: ¬∃y: V(x, y)</span></li>
+          <li><span class="t05-fi" data-f>∀x: (x ≠ c ⇒ V(c, x)) ∧ ¬V(c, c)</span>, mit der Kurzschreibweise der Musterlösung <span class="t05-fi">(<span class="q">∀</span><span class="v">x</span>≠<span class="c">c</span>: <span class="p">V</span>(<span class="c">c</span>, <span class="v">x</span>))</span> <span class="op">∧</span> <span class="t05-fi" data-f>¬V(c, c)</span></li>
+        </ol>
+        <p class="hint">Zu f: Die Musterlösung der Prüfung schreibt in der ersten Zeile nur <span class="t05-fi"><span class="q">∀</span><span class="v">x</span>≠<span class="c">a</span>: <span class="p">P</span>(<span class="c">a</span>, <span class="v">x</span>)</span>. Diese Seite hängt <span class="t05-fi" data-f>¬V(c, c)</span> an, weil «ausser sich selbst» meist auch heisst: sich selbst nicht. Die zweite Zeile der Musterlösung will dasselbe, lässt dort aber die Bedingung <span class="t05-fi" data-f>x ≠ a</span> weg (siehe Falle im Film).</p>
+        <p class="hint">Das Gleichheitszeichen kommt in Def. 4.1 nicht vor. Die Musterlösung der Prüfung verwendet es trotzdem (∀x≠a). Willst du ganz ohne auskommen, brauchst du ein eigenes Prädikat für «ist dieselbe Person wie».</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je eine Antwort ist richtig. Fünf davon sind typische Stolperfallen.</p>
+    <div id="t05-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Terme sind Dinge</b> (<span class="t05-fi" data-f>x, a, g(x)</span>), <b>Formeln sind wahr oder falsch</b> (<span class="t05-fi" data-f>M(x, a)</span>, ¬, ∧, ∨, <span class="t05-fi" data-f>∀x:</span>, <span class="t05-fi" data-f>∃x:</span>). Prädikate und Funktionen bekommen nur Terme.</li>
+      <li><b>Quantoren binden stärker als ¬, ∧, ∨:</b> <span class="t05-fi" data-f>∀x: P(x) ∧ Q(x)</span> heisst <span class="t05-fi" data-f>(∀x: P(x)) ∧ Q(x)</span>. Klammern verlängern den Wirkungsbereich.</li>
+      <li><b>Gebunden</b> = im Wirkungsbereich eines Quantors mit derselben Variablen, sonst <b>frei</b>. Keine freie Variable: <b>geschlossene Formel</b>. Alle Quantoren gestrichen: <b>Matrixformel</b> <i>F</i>*.</li>
+      <li><b>Reihenfolge zählt:</b> <span class="t05-fi" data-f>∀x: ∃y</span> («jeder hat seinen eigenen») ist schwächer als <span class="t05-fi" data-f>∃y: ∀x</span> («einer für alle»). Gleichartige Quantoren darfst du tauschen.</li>
+      <li><b>Verneinen kippt den Quantor:</b> <span class="t05-fi" data-f>¬(∀x: F) ≡ ∃x: ¬F</span> und <span class="t05-fi" data-f>¬(∃x: F) ≡ ∀x: ¬F</span>.</li>
+      <li><b>Pränexform:</b> bereinigen, ⇒ ersetzen, ¬ nach innen, Quantoren mit Nr. 7 bis 10 nach vorne. Nur über <i>H</i> ziehen, wenn <i>H</i> die Variable nicht enthält.</li>
+    </ul>
+    <div class="board stack">
+      <div class="m" data-f>¬(∀x: F) ≡ ∃x: ¬F   ¬(∃x: F) ≡ ∀x: ¬F</div>
+      <div class="m" data-f>(∀x: F) ∧ (∀x: G) ≡ ∀x: (F ∧ G)   (∃x: F) ∨ (∃x: G) ≡ ∃x: (F ∨ G)</div>
+      <div class="m" data-f>∀x: ∀y: F ≡ ∀y: ∀x: F   ∃x: ∃y: F ≡ ∃y: ∃x: F</div>
+      <div class="m" data-f>(∀x: F) ∧ H ≡ ∀x: (F ∧ H)   (∀x: F) ∨ H ≡ ∀x: (F ∨ H)</div>
+      <div class="m" data-f>(∃x: F) ∧ H ≡ ∃x: (F ∧ H)   (∃x: F) ∨ H ≡ ∃x: (F ∨ H)</div>
+      <p class="hint">Die letzten vier nur, wenn <i>H</i> die Variable <span class="v">x</span> nicht enthält.</p>
+    </div>
+    <footer>Quellen: Folien OTT «MSTW-S1-V45 Prädikatenlogik, Fundamentale Äquivalenzen» (Def. 4.1, 4.5, 4.7, 4.9, 4.12, Notationen 4.2, Satz 4.11, Satz 4.13, Bsp. 4.3 und 4.6; entspricht Skript KK S. 60–68, Aufgaben S. 99 ff.), Lösungen zu Lernblock 3 (4.1, 4.3, 4.5, 4.7, 4.9, 4.15, 4.19), Übungsset S1 Aufgabe 4a mit Lösung (Satz 4.18), exemplarische Modulschlussprüfung Aufgabe 3a mit Musterlösung. Definitionen sind sinngemäss wiedergegeben. Alle Beispiele, Übungen und Erklärungen sind eigene Formulierungen.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+  /* =====================================================================
+     Farbcode: Formeltext (Unicode) → HTML mit den Baukasten-Klassen
+     - einzelner Grossbuchstabe vor «(» → Prädikat (.p), sonst Formelname kursiv
+     - einzelner Kleinbuchstabe vor «(» → Funktion (.fn), a/b/c → Konstante (.c),
+       r…z → Variable (.v); Wörter aus mehreren Buchstaben bleiben Text
+     - ∀ ∃ → .q, Junktoren und ≡ → .op, drei Leerschläge → Lücke
+     - Markierung ⟨spez|…⟩: spez = «link», «.klasse» oder «link.klasse1.klasse2»
+     ===================================================================== */
+  const KONST = "abc", VARS = "rstuvwxyz";
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  function faerben(txt) {
+    txt = String(txt).replace(/\s*([∧∨⇒⇔≡])\s*/g, "$1");
+    let out = "";
+    let i = 0;
+    while (i < txt.length) {
+      const ch = txt[i];
+      if (ch === "⟨") {
+        const ende = txt.indexOf("|", i);
+        const spez = txt.slice(i + 1, ende).split(".");
+        const link = spez.shift();
+        out += "<span" + (link ? ' data-link="' + link + '"' : "") + (spez.length ? ' class="' + spez.join(" ") + '"' : "") + ">";
+        i = ende + 1;
+        continue;
+      }
+      if (ch === "⟩") { out += "</span>"; i++; continue; }
+      const w = /^[A-Za-zÄÖÜäöü]+/.exec(txt.slice(i));
+      if (w) {
+        const wort = w[0];
+        if (wort.length > 1) { out += wort; i += wort.length; continue; }
+        let j = i + 1, idx = "";
+        while (j < txt.length && /[₀-₉ₙ′*]/.test(txt[j])) { idx += txt[j]; j++; }
+        let k = j;
+        while (txt[k] === "⟩") k++;
+        const klammer = txt[k] === "(";
+        let cls = null;
+        if (/[A-Z]/.test(wort)) cls = klammer ? "p" : null;
+        else if (klammer) cls = "fn";
+        else if (KONST.indexOf(wort) >= 0) cls = "c";
+        else if (VARS.indexOf(wort) >= 0) cls = "v";
+        out += cls ? '<span class="' + cls + '">' + wort + idx + "</span>" : "<i>" + wort + "</i>" + idx;
+        i = j;
+        continue;
+      }
+      if (ch === "∀" || ch === "∃") out += '<span class="q">' + ch + "</span>";
+      else if ("∧∨⇒⇔≡".indexOf(ch) >= 0) out += '<span class="op">' + ch + "</span>";
+      else if (txt.substr(i, 3) === "   ") {
+        out += '<span class="t05-luecke"></span>';
+        while (txt[i] === " ") i++;
+        continue;
+      } else out += esc(ch);
+      i++;
+    }
+    return out;
+  }
+  const F = faerben;                                                     // Formel in einer Formelzeile
+  const FI = (s) => '<span class="t05-fi">' + faerben(s) + "</span>";   // Formel im Fliesstext
+  const M = (s) => '<span class="m">' + faerben(s) + "</span>";         // Formel in Formelschrift (gross)
+  const NW = (s) => "⟨.nw|" + s + "⟩";                                   // neues Teil im Film
+
+  // Statische Formeln im HTML einfärben
+  $$("[data-f]").forEach((el) => { el.innerHTML = faerben(el.textContent); });
+
+  /* =====================================================================
+     0 · Sortierer: Term, Formel oder ungültig?
+     ===================================================================== */
+  L.sortierer("#t05-sortierer", {
+    kategorien: ["Term (Ding)", "Formel (wahr/falsch)", "ungültig"],
+    elemente: [
+      { html: M("g(g(a))"), kategorie: 0, erklaerung: "Funktion auf einen Term ergibt wieder einen Term (Def. 4.1 d2): der Götti des Göttis von Ana. Eine Person, nicht wahr oder falsch." },
+      { html: M("M(a, g(b))"), kategorie: 1, erklaerung: "Prädikat mit zwei Termen: «Ana mag den Götti von Ben». Das stimmt oder stimmt nicht, also eine atomare Formel (Regel e1)." },
+      { html: M("g(M(a, b))"), kategorie: 2, erklaerung: "Eine Funktion bekommt nur Terme. M(a, b) ist eine Formel. «Der Götti von wahr» ergibt keinen Sinn." },
+      { html: M("∃y: M(x, y)"), kategorie: 1, erklaerung: "Quantor vor einer Formel ergibt eine Formel (Regel e3). Das x ist frei. Es bleibt trotzdem eine Formel, nur nicht geschlossen." },
+      { html: M("x"), kategorie: 0, erklaerung: "Jede Variable ist ein Term (Regel d1)." },
+      { html: M("M(a)"), kategorie: 2, erklaerung: "M ist zweistellig und braucht genau zwei Terme (Regel e1 mit k = 2). Mit nur einem Argument passt es nicht." },
+      { html: M("¬g(x)"), kategorie: 2, erklaerung: "¬ steht nur vor Formeln (Regel e2). g(x) ist eine Person. «Nicht der Götti» ist keine Aussage." },
+      { html: M("M(x, y) ∧ M(y, x)"), kategorie: 1, erklaerung: "Zwei Formeln mit ∧ verbunden: «x und y mögen sich gegenseitig». Eine Formel." },
+      { html: M("∀a: M(a, b)"), kategorie: 2, erklaerung: "Ein Quantor bindet nur Variablen (Regel e3). a ist eine Konstante, also eine feste Person. «Für alle Ana» geht nicht." },
+      { html: M("a"), kategorie: 0, erklaerung: "Eine Konstante ist eine nullstellige Funktion, also ein Term (Def. 4.1b und d2)." }
+    ]
+  });
+
+  /* =====================================================================
+     1 · Stepper: Aufbau einer Formel nach Def. 4.1
+     ===================================================================== */
+  L.stepper("#t05-stepper-aufbau", {
+    titel: "Eine Formel aufbauen",
+    text: 'Für <span data-link="q">jede Person</span> gilt: <span data-link="imp">Wenn</span> <span data-link="x">sie</span> <span data-link="a">Ana</span> <span data-link="m1">mag</span>, <span data-link="imp">dann</span> <span data-link="m2">mag</span> auch <span data-link="gx">ihr Götti</span> Ana.',
+    schritte: [
+      { html: F("⟨x|x⟩"),
+        warum: "Regel d1: Jede Variable ist ein Term. x steht für irgendeine Person aus der Grundmenge. Wahr oder falsch ist x nicht." },
+      { html: F("⟨gx|g(x)⟩"),
+        warum: "Regel d2: Eine Funktion auf einen Term ergibt wieder einen Term. g(x) ist «der Götti von x», also wieder eine Person." },
+      { html: F("⟨a|a⟩"),
+        warum: "Ana ist eine bestimmte Person: die Konstante a. Konstanten sind nullstellige Funktionen (Def. 4.1b). Nach d2 fällt die Klammer weg. Auch das ist ein Term." },
+      { html: F("⟨m1|M⟩(⟨x|x⟩, ⟨a|a⟩)"),
+        warum: "Regel e1: Das Prädikat M bekommt zwei Terme. M(x, a) heisst «x mag Ana». Jetzt kann etwas wahr oder falsch sein: eine atomare Formel (Def. 4.5a)." },
+      { html: F("⟨m2|M⟩(⟨gx|g(x)⟩, a)"),
+        warum: "Noch einmal e1, diesmal mit dem Term g(x) an erster Stelle: «der Götti von x mag Ana». Ein Term darf selbst eine Funktion enthalten." },
+      { html: F("(⟨m1|M⟩(x, a) ⟨imp|⇒⟩ ⟨m2|M⟩(⟨gx|g(x)⟩, a))"),
+        warum: "Regel e2: Zwei Formeln verbindest du mit einem Junktor. Def. 4.1 nennt nur ¬, ∨ und ∧. ⇒ ist wie in der Aussagenlogik eine Abkürzung: F ⇒ G steht für ¬F ∨ G. Darum ist auch das eine Formel." },
+      { html: F("⟨q|∀x:⟩ (⟨m1|M⟩(x, a) ⟨imp|⇒⟩ ⟨m2|M⟩(⟨gx|g(x)⟩, a))"),
+        warum: "Regel e3: «Für jede Person» wird ∀x. Die Klammer ist nötig: Ohne sie reicht ∀x nur bis M(x, a), und das x in M(g(x), a) wäre frei. Mit Klammer ist jedes x gebunden, die Formel ist geschlossen." }
+    ]
+  });
+
+  /* =====================================================================
+     2 · Stepper: Wirkungsbereich, frei, gebunden, Matrixformel
+     ===================================================================== */
+  const GB = ".t05-bereich", GQ = ".t05-quant";
+  L.stepper("#t05-stepper-frei", {
+    titel: "Formel G analysieren",
+    text: 'Gegeben ist ' + FI("G = ∀x: (R(x, y) ⇒ Q(f(x))) ∧ ∃y: R(y, x)") + '. Bestimme die <span data-link="bereich">Wirkungsbereiche</span>, die <span data-link="geb">gebundenen</span> und die <span data-link="frei">freien</span> Vorkommen und die <span data-link="matrix">Matrixformel</span>.',
+    schritte: [
+      { html: F("G = ∀x: (R(x, y) ⇒ Q(f(x))) ∧ ∃y: R(y, x)"),
+        warum: "Zuerst die Klammern klären. Quantoren binden stärker als ∧. G ist also (∀x: …) ∧ (∃y: R(y, x)): zwei Teile, verbunden mit ∧." },
+      { html: F("G = ⟨" + GQ + "|∀x:⟩ ⟨bereich" + GB + "|(R(x, y) ⇒ Q(f(x)))⟩ ∧ ∃y: R(y, x)"),
+        warum: "Direkt hinter ∀x: steht eine Klammer. Der Wirkungsbereich von ∀x ist genau diese Klammer. Das ∧ danach liegt schon ausserhalb." },
+      { html: F("G = ⟨" + GQ + "|∀x:⟩ ⟨bereich" + GB + "|(R(x, y) ⇒ Q(f(x)))⟩ ∧ ⟨" + GQ + "|∃y:⟩ ⟨bereich" + GB + "|R(y, x)⟩"),
+        warum: "Hinter ∃y: steht keine Klammer, sondern das Atom R(y, x). Der Wirkungsbereich von ∃y ist nur R(y, x)." },
+      { html: F("G = ∀x: ⟨" + GB + "|(R(⟨geb.t05-geb|x⟩, y) ⇒ Q(f(⟨geb.t05-geb|x⟩)))⟩ ∧ ∃y: ⟨" + GB + "|R(⟨geb.t05-geb|y⟩, x)⟩"),
+        warum: "Gebunden ist ein Vorkommen, wenn es im Wirkungsbereich eines Quantors mit derselben Variablen liegt (Def. 4.5c). Das sind die beiden x im Bereich von ∀x und das y in R(y, x)." },
+      { html: F("G = ∀x: ⟨" + GB + "|(R(⟨geb.t05-geb|x⟩, ⟨frei.hl-free|y⟩) ⇒ Q(f(⟨geb.t05-geb|x⟩)))⟩ ∧ ∃y: ⟨" + GB + "|R(⟨geb.t05-geb|y⟩, ⟨frei.hl-free|x⟩)⟩"),
+        warum: "Frei ist der Rest. Das y in R(x, y) liegt zwar im Bereich von ∀x, aber ∀x bindet nur x. Das x in R(y, x) liegt ausserhalb des Bereichs von ∀x. So kommen x und y je frei und gebunden vor. Weil etwas frei vorkommt, ist G nicht geschlossen und keine prädikatenlogische Aussage (Def. 4.5d)." },
+      { html: F("⟨matrix|G* = (R(x, y) ⇒ Q(f(x))) ∧ R(y, x)⟩"),
+        warum: "Für die Matrixformel streichst du jedes «∀x:» und «∃y:» (Def. 4.5e). Alles andere bleibt stehen, auch die Klammern." },
+      { html: F("⟨matrix|G* = (R(x, y) ⇒ Q(f(x))) ∧ R(y, x)⟩") + '<div class="t05-lesezeile">Terme von G: ' + FI("x, y, f(x)") + "</div>",
+        warum: "Zum Schluss die Terme, so wie Bsp. 4.6a sie zählt: die Variablen x und y und der Funktionsterm f(x). R(x, y) ist kein Term, sondern eine Formel." }
+    ]
+  });
+
+  /* =====================================================================
+     3 · Stepper: Verneinung mit Satz 4.13 Nr. 1 und 2
+     ===================================================================== */
+  L.stepper("#t05-stepper-negation", {
+    titel: "Eine Verneinung umformen",
+    text: '«<span data-link="neg">Nicht</span> <span data-link="qx">jeder</span> <span data-link="m">mag</span> <span data-link="qy">jemanden</span>.»',
+    schritte: [
+      { html: F("⟨neg|¬⟩(⟨qx|∀x:⟩ ⟨qy|∃y:⟩ ⟨m|M⟩(x, y))"),
+        warum: "Wörtlich übersetzt: Es stimmt nicht, dass jeder jemanden mag. Das ¬ steht vor der ganzen Formel ∀x: ∃y: M(x, y)." },
+      { html: F("⟨qx|∃x:⟩ ⟨neg|¬⟩⟨qy|∃y:⟩ ⟨m|M⟩(x, y)"),
+        warum: "Nr. 1: ¬(∀x: F) ≡ ∃x: ¬F. Das ¬ springt über ∀x nach rechts, aus ∀ wird ∃." },
+      { html: F("⟨qx|∃x:⟩ ⟨qy|∀y:⟩ ⟨neg|¬⟩⟨m|M⟩(x, y)"),
+        warum: "Nr. 2: ¬(∃y: F) ≡ ∀y: ¬F. Das ¬ springt über ∃y, aus ∃ wird ∀. Jetzt steht ¬ direkt vor dem Atom." },
+      { html: F("⟨qx|∃x:⟩ ⟨qy|∀y:⟩ ⟨neg|¬⟩⟨m|M⟩(x, y)") + '<div class="t05-lesezeile">«Es gibt jemanden, der niemanden mag.»</div>',
+        warum: "Lies das Ergebnis zurück: Es gibt ein x, das jedes y nicht mag. Merke: Jeder Quantor, über den das ¬ springt, kippt. Die Reihenfolge der Quantoren bleibt." }
+    ]
+  });
+
+  /* =====================================================================
+     4 · Stepper: Pränexform mit freier Variable
+     ===================================================================== */
+  const YF = "⟨yfrei.hl-free|y⟩";
+  L.stepper("#t05-stepper-praenex", {
+    titel: "Beispiel: Pränexform bilden",
+    text: "Bringe " + FI("F = (∀x: R(x, y)) ⇒ ∃y: Q(y)") + ' in Pränexform. Achte auf das <span data-link="yfrei">freie y</span>.',
+    schritte: [
+      { html: F("(∀x: R(x, " + YF + ")) ⇒ ∃y: Q(y)"),
+        warum: "Ausgangslage. Das y in R(x, y) ist frei, das y in Q(y) ist durch ∃y gebunden. Gleicher Buchstabe, zwei Rollen: Das musst du zuerst bereinigen." },
+      { html: F("(∀x: R(x, " + YF + ")) ⇒ " + NW("∃z: Q(z)")),
+        warum: "Schritt 1, bereinigen: Das gebundene y wird zu z. Würdest du ∃y später nach vorne ziehen, fiele das freie y in seinen Bereich und wäre plötzlich gebunden." },
+      { html: F(NW("¬(∀x: R(x, " + YF + ")) ∨") + " ∃z: Q(z)"),
+        warum: "Schritt 2, ⇒ ersetzen: F ⇒ G ≡ ¬F ∨ G. Satz 4.13 rechnet nur mit ∧ und ∨." },
+      { html: F(NW("(∃x: ¬R(x, " + YF + "))") + " ∨ ∃z: Q(z)"),
+        warum: "Schritt 3, ¬ nach innen: Nr. 1 macht aus ¬(∀x: …) ein ∃x: ¬… . Der Quantor kippt." },
+      { html: F(NW("∃x:") + " (¬R(x, " + YF + ") ∨ ∃z: Q(z))"),
+        warum: "Schritt 4, Quantoren nach vorne: Nr. 10 mit H = ∃z: Q(z). H enthält kein x, also darf ∃x die ganze Disjunktion in seinen Bereich nehmen." },
+      { html: F("∃x: " + NW("∃z:") + " (¬R(x, " + YF + ") ∨ Q(z))"),
+        warum: "Noch einmal Nr. 10, jetzt für ∃z mit H = ¬R(x, y). Die Seiten von ∨ darfst du dafür tauschen. H enthält kein z. Fertig: Vorne stehen nur Quantoren, dahinter keiner mehr (Def. 4.12b). Das y ist frei geblieben, so wie am Anfang." }
+    ]
+  });
+
+  /* =====================================================================
+     5 · Quantor-Labor
+     ===================================================================== */
+  const NAMEN = ["Ana", "Ben", "Cem", "Dua"];
+  const IDX = [0, 1, 2, 3];
+  const POS = [[60, 52], [260, 52], [260, 184], [60, 184]];
+  const MITTE = [160, 118], RAD = 22;
+  const alleZweier = [];
+  IDX.forEach((x) => IDX.forEach((y) => alleZweier.push([x, y])));
+  const WELTEN = [
+    { name: "Kreis", paare: [[0, 1], [1, 2], [2, 3], [3, 0]] },
+    { name: "Alle mögen Ana", paare: [[0, 0], [1, 0], [2, 0], [3, 0]] },
+    { name: "Dua mag niemanden", paare: [[0, 1], [1, 0], [1, 2], [2, 3]] },
+    { name: "Alle mögen alle", paare: alleZweier },
+    { name: "Niemand mag jemanden", paare: [] }
+  ];
+  const W = IDX.map(() => IDX.map(() => false));
+  const mag = (x, y) => W[x][y];
+  const nm = (i) => NAMEN[i];
+  function aufzaehlen(liste) {
+    const n = liste.map(nm);
+    return n.length < 2 ? n.join("") : n.slice(0, -1).join(", ") + " und " + n[n.length - 1];
+  }
+  function ergebnis() { return { wahr: false, regel: "", zeilen: [], kanten: [], knoten: [], koepfe: [] }; }
+  const OK = (html) => ({ ok: true, html: html });
+  const BAD = (html) => ({ ok: false, html: html });
+  const REGEL_ALLE = (w) => w ? "∀ ist wahr, weil es für jede Person stimmt (Def. 4.7 c3)." : "∀ ist falsch: Ein einziges Gegenbeispiel genügt.";
+  const REGEL_EX = (w) => w ? "∃ ist wahr: Eine passende Person, ein Zeuge, genügt (Def. 4.7 c3)." : "∃ ist falsch: Keine einzige Person passt.";
+
+  const FORMELN = [
+    { txt: "∀x: M(x, a)", lesart: "Jeder mag Ana.", einzeln: true,
+      pruefe() {
+        const r = ergebnis();
+        IDX.forEach((x) => {
+          if (mag(x, 0)) { r.zeilen.push(OK(nm(x) + " mag Ana.")); r.kanten.push([x, 0, "ok"]); }
+          else { r.zeilen.push(BAD(nm(x) + " mag Ana nicht. Gegenbeispiel für x.")); r.kanten.push([x, 0, "fehlt"]); r.koepfe.push(["z", x, false]); }
+        });
+        r.wahr = IDX.every((x) => mag(x, 0));
+        r.regel = REGEL_ALLE(r.wahr);
+        return r;
+      } },
+    { txt: "∀x: ∃y: M(x, y)", lesart: "Jeder mag jemanden.", tausch: 2,
+      pruefe() {
+        const r = ergebnis();
+        IDX.forEach((x) => {
+          const ys = IDX.filter((y) => mag(x, y));
+          if (ys.length) { r.zeilen.push(OK("x = " + nm(x) + ": mag " + aufzaehlen(ys) + ". Zeuge für y: " + nm(ys[0]) + ".")); r.kanten.push([x, ys[0], "ok"]); }
+          else { r.zeilen.push(BAD("x = " + nm(x) + ": mag niemanden. Für diese Person gibt es kein y.")); r.knoten.push([x, "bad"]); r.koepfe.push(["z", x, false]); }
+        });
+        r.wahr = IDX.every((x) => IDX.some((y) => mag(x, y)));
+        r.regel = REGEL_ALLE(r.wahr) + " Jede Person darf dabei ihren eigenen Zeugen y haben.";
+        return r;
+      } },
+    { txt: "∃y: ∀x: M(x, y)", lesart: "Es gibt jemanden, den alle mögen.", tausch: 1,
+      pruefe() {
+        const r = ergebnis();
+        const zeugen = IDX.filter((y) => IDX.every((x) => mag(x, y)));
+        r.wahr = zeugen.length > 0;
+        IDX.forEach((y) => {
+          const fehlt = IDX.filter((x) => !mag(x, y));
+          if (!fehlt.length) r.zeilen.push(OK("y = " + nm(y) + ": wird von allen gemocht. Zeuge."));
+          else {
+            r.zeilen.push(BAD("y = " + nm(y) + ": passt nicht, " + aufzaehlen(fehlt) + (fehlt.length > 1 ? " mögen " : " mag ") + nm(y) + " nicht."));
+            if (!r.wahr) r.kanten.push([fehlt[0], y, "fehlt"]);
+          }
+        });
+        if (r.wahr) { IDX.forEach((x) => r.kanten.push([x, zeugen[0], "ok"])); r.knoten.push([zeugen[0], "ok"]); r.koepfe.push(["s", zeugen[0], true]); }
+        r.regel = REGEL_EX(r.wahr) + " Hier muss ein und dieselbe Person y für alle x passen.";
+        return r;
+      } },
+    { txt: "∃x: ∀y: M(x, y)", lesart: "Es gibt jemanden, der alle mag.", tausch: 4,
+      pruefe() {
+        const r = ergebnis();
+        const zeugen = IDX.filter((x) => IDX.every((y) => mag(x, y)));
+        r.wahr = zeugen.length > 0;
+        IDX.forEach((x) => {
+          const fehlt = IDX.filter((y) => !mag(x, y));
+          if (!fehlt.length) r.zeilen.push(OK("x = " + nm(x) + ": mag alle, auch sich selbst. Zeuge."));
+          else {
+            r.zeilen.push(BAD("x = " + nm(x) + ": passt nicht, mag " + aufzaehlen(fehlt) + " nicht."));
+            if (!r.wahr) r.kanten.push([x, fehlt[0], "fehlt"]);
+          }
+        });
+        if (r.wahr) { IDX.forEach((y) => r.kanten.push([zeugen[0], y, "ok"])); r.knoten.push([zeugen[0], "ok"]); r.koepfe.push(["z", zeugen[0], true]); }
+        r.regel = REGEL_EX(r.wahr) + " «Alle» umfasst auch die Person selbst.";
+        return r;
+      } },
+    { txt: "∀y: ∃x: M(x, y)", lesart: "Jeder wird von jemandem gemocht.", tausch: 3,
+      pruefe() {
+        const r = ergebnis();
+        IDX.forEach((y) => {
+          const xs = IDX.filter((x) => mag(x, y));
+          if (xs.length) { r.zeilen.push(OK("y = " + nm(y) + ": wird von " + aufzaehlen(xs) + " gemocht. Zeuge für x: " + nm(xs[0]) + ".")); r.kanten.push([xs[0], y, "ok"]); }
+          else { r.zeilen.push(BAD("y = " + nm(y) + ": niemand mag " + nm(y) + ".")); r.knoten.push([y, "bad"]); r.koepfe.push(["s", y, false]); }
+        });
+        r.wahr = IDX.every((y) => IDX.some((x) => mag(x, y)));
+        r.regel = REGEL_ALLE(r.wahr) + " Für jede Person y braucht es irgendeinen Fan x.";
+        return r;
+      } },
+    { txt: "∃x: ∀y: ¬M(y, x)", lesart: "Es gibt jemanden, den keiner mag.", tausch: 6,
+      pruefe() {
+        const r = ergebnis();
+        const zeugen = IDX.filter((x) => IDX.every((y) => !mag(y, x)));
+        r.wahr = zeugen.length > 0;
+        IDX.forEach((x) => {
+          const fans = IDX.filter((y) => mag(y, x));
+          if (!fans.length) r.zeilen.push(OK("x = " + nm(x) + ": niemand mag " + nm(x) + ". Zeuge."));
+          else {
+            r.zeilen.push(BAD("x = " + nm(x) + ": passt nicht, " + aufzaehlen(fans) + (fans.length > 1 ? " mögen " : " mag ") + nm(x) + "."));
+            if (!r.wahr) r.kanten.push([fans[0], x, "bad"]);
+          }
+        });
+        if (r.wahr) { r.knoten.push([zeugen[0], "ok"]); r.koepfe.push(["s", zeugen[0], true]); }
+        r.regel = REGEL_EX(r.wahr) + " Gesucht ist eine Person ohne einen einzigen Pfeil, der auf sie zeigt.";
+        return r;
+      } },
+    { txt: "∀y: ∃x: ¬M(y, x)", lesart: "Jeder mag mindestens eine Person nicht.", tausch: 5,
+      pruefe() {
+        const r = ergebnis();
+        IDX.forEach((y) => {
+          const xs = IDX.filter((x) => !mag(y, x));
+          if (xs.length) { r.zeilen.push(OK("y = " + nm(y) + ": mag " + aufzaehlen(xs) + " nicht. Zeuge für x: " + nm(xs[0]) + ".")); r.kanten.push([y, xs[0], "leer"]); }
+          else { r.zeilen.push(BAD("y = " + nm(y) + ": mag alle, auch sich selbst. Kein x passt.")); r.knoten.push([y, "bad"]); r.koepfe.push(["z", y, false]); }
+        });
+        r.wahr = IDX.every((y) => IDX.some((x) => !mag(y, x)));
+        r.regel = REGEL_ALLE(r.wahr) + " Der Zeuge ist hier ein Pfeil, der fehlt.";
+        return r;
+      } },
+    { txt: "∀x: ∃y: ∃z: (M(x, y) ∧ M(y, z))", lesart: "Jeder mag jemanden, der jemanden mag.", gleichartig: true,
+      pruefe() {
+        const r = ergebnis();
+        IDX.forEach((x) => {
+          const ys = IDX.filter((y) => mag(x, y));
+          const y = ys.find((k) => IDX.some((z) => mag(k, z)));
+          if (y !== undefined) {
+            const z = IDX.find((k) => mag(y, k));
+            r.zeilen.push(OK("x = " + nm(x) + ": mag " + nm(y) + ", und " + nm(y) + " mag " + nm(z) + "."));
+            r.kanten.push([x, y, "ok"], [y, z, "ok"]);
+          } else if (!ys.length) {
+            r.zeilen.push(BAD("x = " + nm(x) + ": mag niemanden.")); r.knoten.push([x, "bad"]); r.koepfe.push(["z", x, false]);
+          } else {
+            r.zeilen.push(BAD("x = " + nm(x) + ": mag " + aufzaehlen(ys) + ", aber " + (ys.length > 1 ? "keine dieser Personen mag jemanden" : nm(ys[0]) + " mag niemanden") + "."));
+            r.knoten.push([x, "bad"]); r.koepfe.push(["z", x, false]);
+          }
+        });
+        r.wahr = IDX.every((x) => IDX.some((y) => mag(x, y) && IDX.some((z) => mag(y, z))));
+        r.regel = REGEL_ALLE(r.wahr) + " Für jedes x braucht es eine Kette aus zwei Pfeilen.";
+        return r;
+      } },
+    { txt: "¬∃x: M(x, x)", lesart: "Niemand mag sich selbst.", einzeln: true,
+      pruefe() {
+        const r = ergebnis();
+        IDX.forEach((x) => {
+          if (mag(x, x)) { r.zeilen.push(BAD(nm(x) + " mag sich selbst. Das ist ein Zeuge für ∃x: M(x, x).")); r.kanten.push([x, x, "bad"]); r.koepfe.push(["z", x, false]); }
+          else r.zeilen.push(OK(nm(x) + " mag sich nicht selbst."));
+        });
+        r.wahr = IDX.every((x) => !mag(x, x));
+        r.regel = r.wahr ? "∃x: M(x, x) ist falsch, also ist ¬∃x: M(x, x) wahr. Gleichwertig: ∀x: ¬M(x, x) (Nr. 2)." : "Ein Zeuge macht ∃x: M(x, x) wahr. Die Verneinung ist dann falsch. Gleichwertig: ∀x: ¬M(x, x) (Nr. 2) hat ein Gegenbeispiel.";
+        return r;
+      } }
+  ];
+
+  let aktuell = 1;
+  const weltWahl = $("#t05-welten"), tab = $("#t05-matrix"), svg = $("#t05-svg");
+  const fliste = $("#t05-fliste"), ausw = $("#t05-auswertung"), vergleich = $("#t05-vergleich");
+
+  // Welt-Knöpfe
+  const weltKnoepfe = WELTEN.map((w, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.textContent = w.name; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => weltLaden(i));
+    weltWahl.appendChild(b);
+    return b;
+  });
+
+  // Tabelle einmal bauen, danach nur Attribute ändern
+  const kopfZeile = document.createElement("tr");
+  kopfZeile.innerHTML = '<th class="t05-ecke" scope="col">' + F("x") + " \\ " + F("y") + "</th>";
+  const spaltenKoepfe = IDX.map((y) => {
+    const th = document.createElement("th"); th.scope = "col"; th.textContent = nm(y); kopfZeile.appendChild(th); return th;
+  });
+  const thead = document.createElement("thead"); thead.appendChild(kopfZeile); tab.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  const zeilenKoepfe = [], zellen = [];
+  IDX.forEach((x) => {
+    const tr = document.createElement("tr");
+    const th = document.createElement("th"); th.scope = "row"; th.textContent = nm(x); tr.appendChild(th); zeilenKoepfe.push(th);
+    zellen.push(IDX.map((y) => {
+      const td = document.createElement("td");
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "t05-zelle"; b.setAttribute("aria-label", nm(x) + " mag " + (x === y ? "sich selbst" : nm(y)));
+      b.addEventListener("click", () => {
+        W[x][y] = !W[x][y];
+        weltKnoepfe.forEach((k) => { k.setAttribute("aria-pressed", "false"); k.classList.remove("on"); });
+        vergleich.textContent = "";
+        aktualisieren();
+      });
+      td.appendChild(b); tr.appendChild(td);
+      return b;
+    }));
+    tbody.appendChild(tr);
+  });
+  tab.appendChild(tbody);
+
+  // Graph: Knoten einmal zeichnen, Kanten bei jeder Änderung neu
+  const NS = "http://www.w3.org/2000/svg";
+  function sv(tag, attr, text) {
+    const e = document.createElementNS(NS, tag);
+    Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  const gKanten = sv("g", {});
+  svg.appendChild(gKanten);
+  const knotenEl = POS.map((p, i) => {
+    const g = sv("g", { class: "t05-knoten" });
+    g.appendChild(sv("circle", { cx: p[0], cy: p[1], r: RAD }));
+    g.appendChild(sv("text", { x: p[0], y: p[1] + (i === 0 ? 0 : 4.5), "text-anchor": "middle" }, nm(i)));
+    if (i === 0) g.appendChild(sv("text", { x: p[0], y: p[1] + 14, "text-anchor": "middle", class: "t05-konst" }, "a"));
+    svg.appendChild(g);
+    return g;
+  });
+  const pt = (p) => p[0].toFixed(1) + "," + p[1].toFixed(1);
+  function spitze(e, von) {
+    let ux = e[0] - von[0], uy = e[1] - von[1];
+    const l = Math.hypot(ux, uy) || 1; ux /= l; uy /= l;
+    const b = [e[0] - ux * 9, e[1] - uy * 9];
+    return [e, [b[0] - uy * 4.5, b[1] + ux * 4.5], [b[0] + uy * 4.5, b[1] - ux * 4.5]].map(pt).join(" ");
+  }
+  function geometrie(i, j) {
+    const x1 = POS[i][0], y1 = POS[i][1];
+    if (i === j) {
+      let ox = x1 - MITTE[0], oy = y1 - MITTE[1];
+      const l = Math.hypot(ox, oy); ox /= l; oy /= l;
+      const dreh = (a, r) => [x1 + r * (ox * Math.cos(a) - oy * Math.sin(a)), y1 + r * (ox * Math.sin(a) + oy * Math.cos(a))];
+      const s = dreh(0.5, RAD), e = dreh(-0.5, RAD + 1), c1 = dreh(0.85, RAD + 30), c2 = dreh(-0.85, RAD + 30);
+      return { d: "M" + pt(s) + " C" + pt(c1) + " " + pt(c2) + " " + pt(e), spitze: spitze(e, c2) };
+    }
+    const x2 = POS[j][0], y2 = POS[j][1];
+    let dx = x2 - x1, dy = y2 - y1;
+    const l = Math.hypot(dx, dy); dx /= l; dy /= l;
+    const nx = -dy * 7, ny = dx * 7;
+    const s = [x1 + dx * RAD + nx, y1 + dy * RAD + ny];
+    const e = [x2 - dx * (RAD + 1) + nx, y2 - dy * (RAD + 1) + ny];
+    return { d: "M" + pt(s) + " L" + pt([e[0] - dx * 6, e[1] - dy * 6]), spitze: spitze(e, [e[0] - dx, e[1] - dy]) };
+  }
+  const KANTE = { ok: ["t05-ok", "t05-spitze-ok"], bad: ["t05-bad", "t05-spitze-bad"], fehlt: ["t05-fehlt", "t05-spitze-bad"], leer: ["t05-leer", "t05-spitze-ok"] };
+  function graphZeichnen(r) {
+    while (gKanten.firstChild) gKanten.removeChild(gKanten.firstChild);
+    const art = {};
+    r.kanten.forEach((k) => { art[k[0] + "-" + k[1]] = k[2]; });
+    const zeichne = (x, y, a) => {
+      const g = geometrie(x, y);
+      gKanten.appendChild(sv("path", { d: g.d, class: "t05-kante" + (a ? " " + KANTE[a][0] : "") }));
+      gKanten.appendChild(sv("polygon", { points: g.spitze, class: a ? KANTE[a][1] : "t05-spitze" }));
+    };
+    alleZweier.forEach(([x, y]) => { if (W[x][y] && !art[x + "-" + y]) zeichne(x, y, null); });
+    alleZweier.forEach(([x, y]) => { const a = art[x + "-" + y]; if (a) zeichne(x, y, a); });
+    knotenEl.forEach((g, i) => {
+      const k = r.knoten.find((n) => n[0] === i);
+      g.setAttribute("class", "t05-knoten" + (k ? " t05-" + k[1] : ""));
+    });
+  }
+  function matrixZeichnen(r) {
+    const art = {};
+    r.kanten.forEach((k) => { art[k[0] + "-" + k[1]] = k[2]; });
+    IDX.forEach((x) => IDX.forEach((y) => {
+      const b = zellen[x][y], a = art[x + "-" + y];
+      b.setAttribute("aria-pressed", String(W[x][y]));
+      b.textContent = W[x][y] ? "✓" : "–";
+      b.classList.toggle("t05-ok", a === "ok" || a === "leer");
+      b.classList.toggle("t05-bad", a === "bad" || a === "fehlt");
+    }));
+    zeilenKoepfe.concat(spaltenKoepfe).forEach((th) => th.classList.remove("t05-ok", "t05-bad"));
+    r.koepfe.forEach(([wo, i, ok]) => (wo === "z" ? zeilenKoepfe : spaltenKoepfe)[i].classList.add(ok ? "t05-ok" : "t05-bad"));
+  }
+
+  // Formel-Knöpfe
+  const formelKnoepfe = FORMELN.map((f, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "t05-fbtn"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = '<span class="t05-fbtn-txt"><span class="t05-fi">' + F(f.txt) + '</span><span class="t05-lesart">«' + f.lesart + '»</span></span><span class="t05-wert"></span>';
+    b.addEventListener("click", () => { aktuell = i; vergleich.textContent = ""; aktualisieren(); });
+    fliste.appendChild(b);
+    return b;
+  });
+
+  const wertText = (w) => (w ? '<b class="t05-w">wahr</b>' : '<b class="t05-f">falsch</b>');
+  function aktualisieren() {
+    const f = FORMELN[aktuell];
+    const r = f.pruefe();
+    matrixZeichnen(r);
+    graphZeichnen(r);
+    formelKnoepfe.forEach((b, i) => {
+      const w = FORMELN[i].pruefe().wahr;
+      b.setAttribute("aria-pressed", String(i === aktuell));
+      const s = $(".t05-wert", b);
+      s.className = "t05-wert " + (w ? "t05-w" : "t05-f");
+      s.textContent = w ? "wahr" : "falsch";
+    });
+    ausw.innerHTML = '<p class="t05-urteil">In dieser Welt ist ' + FI(f.txt) + " " + wertText(r.wahr) + ".</p>" +
+      '<p class="hint">«' + f.lesart + "» " + r.regel + "</p>" +
+      '<ul class="t05-erkl">' + r.zeilen.map((z) => '<li class="' + (z.ok ? "t05-ok" : "t05-bad") + '"><span class="sr-only">' + (z.ok ? "passt: " : "passt nicht: ") + "</span>" + z.html + "</li>").join("") + "</ul>";
+    const v2 = FORMELN[1].pruefe().wahr, v3 = FORMELN[2].pruefe().wahr;
+    const z1 = $("#t05-ziel1"), z2 = $("#t05-ziel2");
+    const stand = "Im Moment ist ∀x: ∃y " + (v2 ? "wahr" : "falsch") + " und ∃y: ∀x " + (v3 ? "wahr" : "falsch") + ".";
+    z1.className = "t05-ziel" + (v2 && !v3 ? " t05-ok" : "");
+    z1.textContent = v2 && !v3 ? "✓ Geschafft: Jede Person hat ihren eigenen Zeugen, aber keine Person wird von allen gemocht." : "Noch nicht. " + stand;
+    z2.className = "t05-ziel";
+    z2.textContent = "Noch nicht. " + stand + (v3 ? " Sobald ∃y: ∀x wahr ist, ist auch ∀x: ∃y wahr." : "");
+  }
+  function weltLaden(i) {
+    IDX.forEach((x) => IDX.forEach((y) => { W[x][y] = false; }));
+    WELTEN[i].paare.forEach(([x, y]) => { W[x][y] = true; });
+    weltKnoepfe.forEach((k, j) => { k.setAttribute("aria-pressed", String(j === i)); k.classList.toggle("on", j === i); });
+    vergleich.textContent = "";
+    aktualisieren();
+  }
+  $("#t05-tausch").addEventListener("click", () => {
+    const f = FORMELN[aktuell];
+    if (f.einzeln) { vergleich.textContent = "Diese Formel hat nur einen Quantor. Hier gibt es nichts zu vertauschen. Wähle eine Formel mit zwei Quantoren."; return; }
+    if (f.gleichartig) { vergleich.innerHTML = "∃y und ∃z sind gleichartig. Sie zu tauschen ändert nie etwas (Satz 4.13, Nr. 6). ∀x und ∃y dagegen darfst du nicht tauschen."; return; }
+    const vorher = f.pruefe().wahr;
+    aktuell = f.tausch;
+    const g = FORMELN[aktuell];
+    const nachher = g.pruefe().wahr;
+    aktualisieren();
+    vergleich.innerHTML = "Vorher: " + FI(f.txt) + " ist " + wertText(vorher) + ". Nach dem Tausch: " + FI(g.txt) + " ist " + wertText(nachher) + ". " +
+      (vorher !== nachher ? "Gleiche Bausteine, anderer Wahrheitswert: Verschiedene Quantoren darfst du nicht vertauschen."
+        : "In dieser Welt stimmen beide überein. Das ist Zufall. Wähle die Welt «Kreis» und tausche nochmals.");
+  });
+  weltLaden(0);
+
+  /* =====================================================================
+     6 · Pränexform-Umformer
+     ===================================================================== */
+  const REGELN = [
+    { art: "umb", txt: "1 · Bereinigen" },
+    { art: "imp", txt: "2 · ⇒ ersetzen" },
+    { art: "neg", txt: "3 · ¬ nach innen" },
+    { art: "quant", txt: "4 · Quantor nach vorne" },
+    { art: "fertig", txt: "Fertig: Pränexform" }
+  ];
+  const REGELNAME = { umb: "1 · Bereinigen", imp: "2 · ⇒ ersetzen", neg: "3 · ¬ nach innen", quant: "4 · Quantor nach vorne" };
+  const AUFGABEN = [
+    { name: "A", start: "¬∃x: P(x) ∨ ∀y: Q(y)",
+      kontext: "Lies zuerst die Klammern: (¬∃x: P(x)) ∨ (∀y: Q(y)). Die Quantoren binden stärker als ∨.",
+      schritte: [
+        { art: "neg", nr: "Nr. 2", f: "(∀x: ¬P(x)) ∨ ∀y: Q(y)", warum: "Kein ⇒, nichts umzubenennen. Das ¬ springt über ∃x, aus ∃ wird ∀." },
+        { art: "quant", nr: "Nr. 8", f: "∀x: (¬P(x) ∨ ∀y: Q(y))", warum: "∀x nimmt die rechte Seite auf. H = ∀y: Q(y) enthält kein x." },
+        { art: "quant", nr: "Nr. 8", f: "∀x: ∀y: (¬P(x) ∨ Q(y))", warum: "Jetzt ∀y: Seiten von ∨ tauschen, Nr. 8 mit H = ¬P(x) anwenden, zurücktauschen. H enthält kein y." }
+      ] },
+    { name: "B", start: "∀x: P(x) ∧ ∃x: Q(x)",
+      kontext: "Lies zuerst die Klammern: (∀x: P(x)) ∧ (∃x: Q(x)). Zwei Quantoren binden dieselbe Variable x.",
+      schritte: [
+        { art: "umb", nr: "x → y", f: "(∀x: P(x)) ∧ ∃y: Q(y)", warum: "Das zweite x wird zu y. Ohne Umbenennung enthielte H = ∃x: Q(x) die Variable x, und Nr. 7 wäre verboten." },
+        { art: "quant", nr: "Nr. 7", f: "∀x: (P(x) ∧ ∃y: Q(y))", warum: "∀x nimmt die rechte Seite auf. H = ∃y: Q(y) enthält kein x." },
+        { art: "quant", nr: "Nr. 9", f: "∀x: ∃y: (P(x) ∧ Q(y))", warum: "Seiten von ∧ tauschen, Nr. 9 mit H = P(x), zurücktauschen. H enthält kein y. Auch ∃y: ∀x: (P(x) ∧ Q(y)) wäre richtig, wenn du ∃y zuerst herausziehst." }
+      ] },
+    { name: "C", start: "¬∀x: (P(x) ⇒ ∃y: R(x, y))",
+      kontext: "Das ist die Verneinung von «Jedes x mit P hat ein y mit R(x, y)». Jede Variable hat ihren eigenen Quantor.",
+      schritte: [
+        { art: "imp", nr: "F ⇒ G ≡ ¬F ∨ G", f: "¬∀x: (¬P(x) ∨ ∃y: R(x, y))", warum: "Zuerst ⇒ ersetzen, damit nur noch ¬, ∧ und ∨ übrig sind." },
+        { art: "neg", nr: "Nr. 1", f: "∃x: ¬(¬P(x) ∨ ∃y: R(x, y))", warum: "Das ¬ springt über ∀x, aus ∀ wird ∃." },
+        { art: "neg", nr: "De Morgan", f: "∃x: (¬¬P(x) ∧ ¬∃y: R(x, y))", warum: "¬ über eine Klammer mit ∨: Jedes Glied wird verneint, aus ∨ wird ∧." },
+        { art: "neg", nr: "¬¬F ≡ F", f: "∃x: (P(x) ∧ ¬∃y: R(x, y))", warum: "Doppelte Verneinung streichen." },
+        { art: "neg", nr: "Nr. 2", f: "∃x: (P(x) ∧ ∀y: ¬R(x, y))", warum: "Das letzte ¬ springt über ∃y, aus ∃ wird ∀. Jetzt steht jedes ¬ vor einem Atom." },
+        { art: "quant", nr: "Nr. 7", f: "∃x: ∀y: (P(x) ∧ ¬R(x, y))", warum: "Seiten von ∧ tauschen, Nr. 7 mit H = P(x), zurücktauschen. H enthält kein y. Gelesen: Es gibt ein x mit P, das zu keinem y in Beziehung R steht." }
+      ] },
+    { name: "D", start: "∀x: (∀y: (K(y, x) ⇒ E(y)) ⇒ A(x))",
+      kontext: "K(y, x): y ist Kind von x, E(y): y ist ehrlich, A(x): x ist angesehen. «Wer nur ehrliche Kinder hat, ist angesehen», gebaut wie Lösung 4.11 und 4.17 in Lernblock 3. Innen gilt: (∀y: …) ⇒ A(x).",
+      schritte: [
+        { art: "imp", nr: "F ⇒ G ≡ ¬F ∨ G", f: "∀x: (∀y: (¬K(y, x) ∨ E(y)) ⇒ A(x))", warum: "Das innere ⇒ ersetzen." },
+        { art: "imp", nr: "F ⇒ G ≡ ¬F ∨ G", f: "∀x: (¬∀y: (¬K(y, x) ∨ E(y)) ∨ A(x))", warum: "Jetzt das äussere ⇒. Der linke Teil ist die ganze Formel ∀y: (…), sie bekommt das ¬." },
+        { art: "neg", nr: "Nr. 1", f: "∀x: (∃y: ¬(¬K(y, x) ∨ E(y)) ∨ A(x))", warum: "Das ¬ springt über ∀y, aus ∀ wird ∃." },
+        { art: "neg", nr: "De Morgan, ¬¬", f: "∀x: (∃y: (K(y, x) ∧ ¬E(y)) ∨ A(x))", warum: "De Morgan über die Klammer und die doppelte Verneinung vor K streichen." },
+        { art: "quant", nr: "Nr. 10", f: "∀x: ∃y: ((K(y, x) ∧ ¬E(y)) ∨ A(x))", warum: "∃y nimmt A(x) auf. H = A(x) enthält kein y. Gelesen: Für jedes x gibt es ein unehrliches Kind, oder x ist angesehen." }
+      ] },
+    { name: "E", start: "(∃x: P(x)) ⇒ ∀y: (Q(y) ∧ ¬∀x: R(x, y))",
+      kontext: "Hier kommen alle vier Schritte vor. Schau genau hin: Das x ist zweimal gebunden.",
+      schritte: [
+        { art: "umb", nr: "x → z", f: "(∃x: P(x)) ⇒ ∀y: (Q(y) ∧ ¬∀z: R(z, y))", warum: "Das innere x wird zu z. Jetzt hat jeder Quantor seine eigene Variable." },
+        { art: "imp", nr: "F ⇒ G ≡ ¬F ∨ G", f: "¬(∃x: P(x)) ∨ ∀y: (Q(y) ∧ ¬∀z: R(z, y))", warum: "Das ⇒ ersetzen." },
+        { art: "neg", nr: "Nr. 2", f: "(∀x: ¬P(x)) ∨ ∀y: (Q(y) ∧ ¬∀z: R(z, y))", warum: "Links springt das ¬ über ∃x, aus ∃ wird ∀." },
+        { art: "neg", nr: "Nr. 1", f: "(∀x: ¬P(x)) ∨ ∀y: (Q(y) ∧ ∃z: ¬R(z, y))", warum: "Rechts springt das ¬ über ∀z, aus ∀ wird ∃." },
+        { art: "quant", nr: "Nr. 8", f: "∀x: (¬P(x) ∨ ∀y: (Q(y) ∧ ∃z: ¬R(z, y)))", warum: "∀x nimmt die rechte Seite auf. Sie enthält kein x mehr, dank der Umbenennung." },
+        { art: "quant", nr: "Nr. 8", f: "∀x: ∀y: (¬P(x) ∨ (Q(y) ∧ ∃z: ¬R(z, y)))", warum: "∀y nimmt ¬P(x) auf (Seiten tauschen). ¬P(x) enthält kein y." },
+        { art: "quant", nr: "Nr. 9", f: "∀x: ∀y: (¬P(x) ∨ ∃z: (Q(y) ∧ ¬R(z, y)))", warum: "Innen nimmt ∃z das Q(y) auf (Seiten tauschen). Q(y) enthält kein z." },
+        { art: "quant", nr: "Nr. 10", f: "∀x: ∀y: ∃z: (¬P(x) ∨ (Q(y) ∧ ¬R(z, y)))", warum: "Zum Schluss nimmt ∃z das ¬P(x) auf (Seiten tauschen). ¬P(x) enthält kein z." }
+      ] }
+  ];
+  function ufTipp(soll, gewaehlt) {
+    if (soll === "fertig") return "Die Formel ist schon in Pränexform: vorne nur Quantoren, dahinter keiner mehr. Wähle «Fertig».";
+    if (gewaehlt === "fertig") return "Noch nicht fertig: Hinter einem Junktor oder hinter einem ¬ steht noch ein Quantor.";
+    if (soll === "umb") return "Schau zuerst auf die Variablen: Eine Variable wird zweimal gebunden oder kommt frei und gebunden vor. Bereinige zuerst.";
+    if (gewaehlt === "umb") return "Hier muss nichts umbenannt werden: Jeder Quantor hat seine eigene Variable, und keine gebundene Variable kommt frei vor.";
+    if (soll === "imp") return "In der Formel steht noch ein ⇒. Satz 4.13 rechnet nur mit ∧ und ∨. Ersetze zuerst F ⇒ G durch ¬F ∨ G.";
+    if (soll === "neg") return gewaehlt === "quant"
+      ? "Vor einem Quantor oder vor einer Klammer steht noch ein ¬. Erst muss das ¬ nach innen. Sonst ziehst du einen Quantor heraus, der eigentlich kippen müsste."
+      : "Kein ⇒ mehr übrig. Jetzt muss das ¬ nach innen wandern.";
+    if (soll === "quant") return "Kein ⇒ mehr, und jedes ¬ steht direkt vor einem Atom. Jetzt ziehst du die Quantoren nach vorne (Nr. 7 bis 10).";
+    return "Das passt noch nicht.";
+  }
+  const ufWahl = $("#t05-uf-wahl"), ufKontext = $("#t05-uf-kontext"), ufWeg = $("#t05-uf-weg");
+  const ufRegeln = $("#t05-uf-regeln"), ufFb = $("#t05-uf-fb");
+  let ufA = 0, ufK = 0, ufFertig = false;
+  const ufKnoepfe = AUFGABEN.map((a, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn t05-ufbtn"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = a.name + " · " + FI(a.start);
+    b.addEventListener("click", () => { ufA = i; ufK = 0; ufFertig = false; ufFb.textContent = ""; ufZeichnen(); });
+    ufWahl.appendChild(b);
+    return b;
+  });
+  const zeileUf = (inhalt, info, neu) => '<li' + (neu ? ' class="t05-neu"' : "") + '><div class="board"><div class="m">' + inhalt + "</div></div>" + (info ? '<p class="t05-uf-info">' + info + "</p>" : "") + "</li>";
+  function ufZeichnen() {
+    const a = AUFGABEN[ufA];
+    ufKnoepfe.forEach((b, i) => { b.setAttribute("aria-pressed", String(i === ufA)); b.classList.toggle("on", i === ufA); });
+    ufKontext.innerHTML = a.kontext;
+    let html = zeileUf(F(a.start), '<span class="t05-regel">Start</span>', false);
+    a.schritte.slice(0, ufK).forEach((s, i) => {
+      html += zeileUf("≡ " + F(s.f), '<span class="t05-regel">' + REGELNAME[s.art] + " · " + s.nr + "</span>" + s.warum, i === ufK - 1);
+    });
+    ufWeg.innerHTML = html;
+  }
+  function ufWeiter(gezeigt) {
+    const a = AUFGABEN[ufA];
+    if (ufK < a.schritte.length) {
+      const s = a.schritte[ufK];
+      ufK++;
+      ufZeichnen();
+      ufFb.innerHTML = (gezeigt ? "Schritt gezeigt: " : "✓ Richtig: ") + REGELNAME[s.art] + " (" + s.nr + ").";
+    } else {
+      ufFertig = true;
+      ufFb.innerHTML = (gezeigt ? "" : "✓ Richtig. ") + "Fertig: Vorne stehen nur Quantoren, dahinter keiner mehr (Def. 4.12b). Wähle oben die nächste Formel.";
+    }
+  }
+  REGELN.forEach((r) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.textContent = r.txt;
+    b.addEventListener("click", () => {
+      const a = AUFGABEN[ufA];
+      if (ufFertig) { ufFb.textContent = "Diese Formel ist fertig. Wähle oben eine andere oder starte neu."; return; }
+      const soll = ufK < a.schritte.length ? a.schritte[ufK].art : "fertig";
+      if (r.art === soll) ufWeiter(false);
+      else ufFb.innerHTML = "✗ Noch nicht. " + ufTipp(soll, r.art);
+    });
+    ufRegeln.appendChild(b);
+  });
+  $("#t05-uf-zeigen").addEventListener("click", () => {
+    if (ufFertig) { ufFb.textContent = "Diese Formel ist fertig. Wähle oben eine andere oder starte neu."; return; }
+    ufWeiter(true);
+  });
+  $("#t05-uf-zurueck").addEventListener("click", () => {
+    if (ufFertig) {
+      ufFertig = false;
+      ufFb.textContent = "«Fertig» zurückgenommen. Die Herleitung bleibt stehen.";
+    } else if (ufK > 0) {
+      ufK--;
+      ufFb.textContent = "Einen Schritt zurück.";
+    } else ufFb.textContent = "Du bist schon am Start.";
+    ufZeichnen();
+  });
+  $("#t05-uf-neu").addEventListener("click", () => { ufK = 0; ufFertig = false; ufFb.textContent = ""; ufZeichnen(); });
+  ufZeichnen();
+
+  /* =====================================================================
+     7 · Übungen
+     ===================================================================== */
+  // Aufgabe 1 · Äquivalent oder nicht?
+  L.wahrFalsch("#t05-ue1", {
+    titel: "Aufgabe 1 · Äquivalent oder nicht?",
+    aussagen: [
+      { html: FI("¬∃x: P(x) ≡ ∀x: ¬P(x)"), wahr: true, erklaerung: "Satz 4.13, Nr. 2: «Keiner hat P» heisst «alle haben P nicht»." },
+      { html: FI("∀x: (P(x) ∨ Q(x)) ≡ (∀x: P(x)) ∨ (∀x: Q(x))"), wahr: false, erklaerung: "Gegenbeispiel U = {1, 2}, P nur für 1, Q nur für 2: links wahr, rechts falsch. Nur von rechts nach links gilt die Folgerung (Lösung 4.3a)." },
+      { html: FI("∃x: ∃y: R(x, y) ≡ ∃y: ∃x: R(x, y)"), wahr: true, erklaerung: "Satz 4.13, Nr. 6: Gleichartige Quantoren darfst du vertauschen." },
+      { html: FI("∀x: ∃y: R(x, y) ≡ ∃y: ∀x: R(x, y)"), wahr: false, erklaerung: "Verschiedene Quantoren nie vertauschen. In der Welt «Kreis» im Labor ist links wahr und rechts falsch." },
+      { html: FI("(∃x: P(x)) ∧ Q(a) ≡ ∃x: (P(x) ∧ Q(a))"), wahr: true, erklaerung: "Satz 4.13, Nr. 9 mit H = Q(a). H enthält kein x, die Konstante a stört nicht." },
+      { html: FI("(∀x: P(x)) ∨ Q(x) ≡ ∀x: (P(x) ∨ Q(x))"), wahr: false, erklaerung: "H = Q(x) enthält x. Beim Hineinziehen würde das freie x eingefangen. Erst umbenennen: ∀z: (P(z) ∨ Q(x))." },
+      { html: FI("(∃x: P(x)) ∧ (∃x: Q(x)) ≡ ∃x: (P(x) ∧ Q(x))"), wahr: false, erklaerung: "Zwei verschiedene Zeugen sind nicht ein gemeinsamer. Nur von rechts nach links gilt die Folgerung (Lösung 4.3a)." },
+      { html: FI("∀x: ∀y: R(x, y) ≡ ∀y: ∀x: R(x, y)"), wahr: true, erklaerung: "Satz 4.13, Nr. 5: Zwei ∀ darfst du vertauschen." }
+    ]
+  });
+
+  // Aufgabe 2 · Freie Vorkommen zählen
+  const H2 = "H = ∃y: (P(x, y) ∧ ∀x: Q(x, z)) ∨ R(y)";
+  L.zahlAufgabe("#t05-ue2", {
+    titel: "Aufgabe 2 · Freie Vorkommen zählen",
+    frage: "<p>Gegeben ist " + FI(H2) + ".</p><p>Wie viele <b>Vorkommen</b> von Variablen sind in <i>H</i> frei? Zähle jede Stelle in einem Term einzeln. Die Variable direkt hinter ∀ oder ∃ zählt nicht.</p>",
+    antwort: 3,
+    anzeige: "3 freie Vorkommen",
+    hinweise: [
+      "Bestimme zuerst die Wirkungsbereiche. Hinter " + FI("∃y:") + " steht eine Klammer, hinter " + FI("∀x:") + " nur " + FI("Q(x, z)") + ".",
+      FI("R(y)") + " liegt ausserhalb der Klammer von " + FI("∃y") + ".",
+      "Es gibt fünf Vorkommen: x und y in " + FI("P(x, y)") + ", x und z in " + FI("Q(x, z)") + ", y in " + FI("R(y)") + "."
+    ],
+    loesungsweg: [
+      "Bereiche: " + FI("∃y") + " wirkt auf " + FI("(P(x, y) ∧ ∀x: Q(x, z))") + ", " + FI("∀x") + " nur auf " + FI("Q(x, z)") + ".",
+      "x in " + FI("P(x, y)") + ": <b>frei</b>, ∀x reicht nicht bis hierhin. y in " + FI("P(x, y)") + ": gebunden durch ∃y.",
+      "x in " + FI("Q(x, z)") + ": gebunden durch ∀x. z in " + FI("Q(x, z)") + ": <b>frei</b>, es gibt kein ∀z oder ∃z.",
+      "y in " + FI("R(y)") + ": <b>frei</b>, R(y) liegt ausserhalb der Klammer von ∃y.",
+      "Frei sind <b>3</b> Vorkommen. x und y kommen frei und gebunden vor. <i>H</i> ist nicht geschlossen."
+    ]
+  });
+
+  // Aufgabe 3 · Verneinen
+  L.auswahl("#t05-ue3", {
+    frage: "<b>Aufgabe 3 · Verneinen (Prüfungsstil).</b> Im Stil von Aufgabe 1a der exemplarischen Modulschlussprüfung: Dort wandelst du verneinte All- und Existenzaussagen um. Gegeben ist " + FI("¬∀x: (K(x) ⇒ ∃y: B(x, y))") + ": «Nicht jeder Kunde hat eine Bestellung aufgegeben.» Welche Formel ist dazu äquivalent?",
+    optionen: [
+      FI("∃x: (K(x) ⇒ ∀y: ¬B(x, y))"),
+      FI("∀x: (K(x) ∧ ¬∃y: B(x, y))"),
+      FI("∃x: (K(x) ∧ ∀y: ¬B(x, y))"),
+      FI("∃x: (¬K(x) ∧ ∀y: ¬B(x, y))")
+    ],
+    richtig: 2,
+    erklaerung: "Nr. 1: " + FI("¬∀x") + " wird " + FI("∃x: ¬") + ". Dann " + FI("¬(K(x) ⇒ G) ≡ ¬(¬K(x) ∨ G) ≡ K(x) ∧ ¬G") + " mit De Morgan. Zum Schluss Nr. 2: " + FI("¬∃y: B(x, y) ≡ ∀y: ¬B(x, y)") + ". Gelesen: Es gibt einen Kunden, der nichts bestellt hat. Die erste Formel ist schon wahr, wenn es irgendeine Person gibt, die kein Kunde ist."
+  });
+
+  // Aufgabe 4 · Pränexform oder nicht?
+  L.sortierer("#t05-ue4", {
+    kategorien: ["Pränexform", "keine Pränexform"],
+    elemente: [
+      { html: M("∀x: ∃y: (P(x) ∨ Q(y))"), kategorie: 0, erklaerung: "Vorne zwei Quantoren, dahinter eine Formel ohne Quantor." },
+      { html: M("∀x: P(x) ∨ ∃y: Q(y)"), kategorie: 1, erklaerung: "Quantoren binden stärker als ∨: (∀x: P(x)) ∨ ∃y: Q(y). Der Quantor ∃y steht hinter dem ∨." },
+      { html: M("∃x: ¬∀y: R(x, y)"), kategorie: 1, erklaerung: "Hinter dem ¬ steht noch ein Quantor. Mit Nr. 1 wird daraus ∃x: ∃y: ¬R(x, y), und das ist in Pränexform." },
+      { html: M("∀x: ∀y: (R(x, y) ⇒ R(y, x))"), kategorie: 0, erklaerung: "Hinter den Quantoren darf jeder Junktor stehen, auch ⇒. Def. 4.12b verlangt nur: dort kein Quantor mehr." },
+      { html: M("∃x: (P(x) ∧ ∀y: R(x, y))"), kategorie: 1, erklaerung: "∀y steckt in der Klammer hinter dem ∧. Mit Nr. 7 wird daraus ∃x: ∀y: (P(x) ∧ R(x, y))." },
+      { html: M("∀x: ∃y: ¬R(x, y)"), kategorie: 0, erklaerung: "Ein ¬ direkt vor einem Atom ist erlaubt. Hinten steht kein Quantor." },
+      { html: M("¬∀x: P(x)"), kategorie: 1, erklaerung: "Ganz vorne steht ein ¬, kein Quantor. Pränexform wäre ∃x: ¬P(x)." },
+      { html: M("∃x: ∀y: (P(x) ∧ ¬Q(x, y))"), kategorie: 0, erklaerung: "Alle Quantoren vorne, dahinter nur Atome, ¬ und ∧." }
+    ]
+  });
+
+  // Aufgabe 5 · Prüfungsstil 3a
+  const SAETZE5 = '<ol type="a" class="t05-loesung"><li>Alle abonnieren Bo.</li><li>Jeder abonniert jemanden.</li><li>Es gibt jemanden, den alle abonnieren.</li><li>Niemand abonniert sich selbst.</li><li>Bo abonniert alle, die ihn abonnieren.</li><li>Jeder, den jemand abonniert, abonniert selbst jemanden.</li></ol>';
+  L.schrittAufgabe("#t05-ue5", {
+    titel: "Aufgabe 5 · Wer abonniert wen? (Prüfungsstil)",
+    aufgabe: "<p>Im Stil von Aufgabe 3a der exemplarischen Modulschlussprüfung. Formuliere die Sätze in prädikatenlogischer Notation. Verwende " + FI("A(x, y)") + " für «x abonniert den Kanal von y» und die Konstante " + FI("b") + " für Bo. Grundmenge: alle Personen auf einer Plattform.</p>" + SAETZE5 +
+      '<p class="hint">Eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt.</p>',
+    schritte: [
+      { html: "a) " + F("∀x: A(x, b)"),
+        warum: "«Alle» wird ∀x. Wer abonniert? x, also erste Stelle. Wen? Bo, also b an zweiter Stelle." },
+      { html: "b) " + F("∀x: ∃y: A(x, y)"),
+        warum: "Zuerst «jeder» (∀x), dann «jemanden» (∃y). Weil ∃y hinter ∀x steht, darf jeder eine andere Person abonnieren." },
+      { html: "c) " + F("∃y: ∀x: A(x, y)"),
+        warum: "«Es gibt jemanden» kommt zuerst: ∃y vorne. «den alle abonnieren»: ∀x und x an erster Stelle. Dieselben Bausteine wie b, andere Reihenfolge, andere Aussage." },
+      { html: "d) " + F("∀x: ¬A(x, x)") + "   ≡   " + F("¬∃x: A(x, x)"),
+        warum: "«Niemand» heisst «für alle nicht» oder «es gibt keinen». Beide Formen sind gleichwertig (Satz 4.13, Nr. 2). «sich selbst»: zweimal dieselbe Variable." },
+      { html: "e) " + F("∀x: (A(x, b) ⇒ A(b, x))"),
+        warum: "«alle, die ihn abonnieren» ist eine Bedingung: ∀ mit ⇒. Wenn x Bo abonniert (A(x, b)), dann abonniert Bo x (A(b, x)). Achte auf die Stellen." },
+      { html: "f) " + F("∀x: (∃y: A(y, x) ⇒ ∃z: A(x, z))"),
+        warum: "«Jeder, den jemand abonniert»: für alle x mit der Bedingung ∃y: A(y, x). Hier steht x an zweiter Stelle, weil x abonniert wird. «abonniert selbst jemanden»: ∃z: A(x, z). Die äussere Klammer gehört zu ∀x. Ohne sie wäre das x in A(x, z) frei." }
+    ]
+  });
+
+  // Aufgabe 6 · Pränexform (Stil Übungsset S1, Aufgabe 4a)
+  L.schrittAufgabe("#t05-ue6", {
+    titel: "Aufgabe 6 · Pränexform und Matrixformel (Prüfungsstil)",
+    aufgabe: "<p>Im Stil von Aufgabe 4a des Übungssets S1 (dort ist die Pränexform der erste Schritt zur Skolemform). Gegeben ist</p><p class=\"m\">" + F("F = ∀x: (P(x) ⇒ Q(x, y)) ∨ ¬∃y: R(y)") + "</p><p>Bringe <i>F</i> in eine äquivalente Pränexform und gib die Matrixformel <i>F</i>* an. Ist <i>F</i> geschlossen?</p>" +
+      '<p class="hint">Eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt.</p>',
+    schritte: [
+      { html: F("(∀x: (P(x) ⇒ Q(x, ⟨.hl-free|y⟩))) ∨ ¬∃y: R(y)"),
+        warum: "Klammern klären: ∀x wirkt auf die Klammer, rechts vom ∨ steht ¬∃y: R(y). Das y in Q(x, y) ist frei, das y in R(y) ist gebunden." },
+      { html: F("∀x: (P(x) ⇒ Q(x, y)) ∨ ¬∃z: R(z)"),
+        warum: "Schritt 1, bereinigen: Das gebundene y wird zu z. Das freie y bleibt, wie es ist." },
+      { html: F("∀x: (¬P(x) ∨ Q(x, y)) ∨ ¬∃z: R(z)"),
+        warum: "Schritt 2: P(x) ⇒ Q(x, y) ≡ ¬P(x) ∨ Q(x, y)." },
+      { html: F("∀x: (¬P(x) ∨ Q(x, y)) ∨ ∀z: ¬R(z)"),
+        warum: "Schritt 3: Nr. 2, das ¬ springt über ∃z, aus ∃ wird ∀." },
+      { html: F("∀x: ((¬P(x) ∨ Q(x, y)) ∨ ∀z: ¬R(z))"),
+        warum: "Schritt 4: Nr. 8 mit H = ∀z: ¬R(z). H enthält kein x. Achtung: (∀x: …) ∨ (∀z: …) darfst du nicht zu einem einzigen ∀ zusammenfassen. Nr. 3 gilt nur für ∧." },
+      { html: F("∀x: ∀z: (¬P(x) ∨ Q(x, y) ∨ ¬R(z))"),
+        warum: "Nochmals Nr. 8 (Seiten tauschen), H = ¬P(x) ∨ Q(x, y) enthält kein z. Die inneren Klammern fallen wegen der Assoziativität von ∨ weg. Das ist die Pränexform." },
+      { html: F("F* = ¬P(x) ∨ Q(x, y) ∨ ¬R(z)"),
+        warum: "Matrixformel: Quantoren streichen (Def. 4.5e). F ist nicht geschlossen, weil y frei vorkommt. Für die Skolemform würdest du y erst mit ∃ abschliessen (wie Lösung 4.5)." }
+    ]
+  });
+
+  // Aufgabe 7 · Formeln in einer Struktur auswerten
+  const U7 = ["∀x: ∃y: P(x, y)", "∃y: ∀x: P(x, y)", "∃x: ∀y: P(x, y)", "∀x: ∀y: (P(x, y) ∨ P(y, x))", "∀x: ∃y: ¬P(x, y)", "∃x: ∀y: ¬P(y, x)"];
+  L.zahlAufgabe("#t05-ue7", {
+    titel: "Aufgabe 7 · Wahr in dieser Struktur?",
+    frage: "<p>Im Stil von Lösung 4.3c zu Lernblock 3. Struktur: Grundmenge <i>U</i> = {1, 2, 3, 4}, " + FI("P(x, y)") + " heisst «x ≤ y».</p><ol class=\"t05-loesung\">" +
+      U7.map((s) => "<li>" + FI(s) + "</li>").join("") + "</ol><p>Wie viele der sechs Formeln sind in dieser Struktur wahr?</p>",
+    antwort: 4,
+    anzeige: "4 Formeln (1 bis 4)",
+    hinweise: [
+      "Bei ∀ suchst du ein Gegenbeispiel, bei ∃ einen Zeugen.",
+      "Denk an die Ränder: Die kleinste Zahl ist 1, die grösste 4. Und es gilt immer x ≤ x."
+    ],
+    loesungsweg: [
+      "(1) wahr: Zu jedem x passt y = x, denn x ≤ x.",
+      "(2) wahr: Zeuge y = 4. Jede Zahl aus U ist ≤ 4.",
+      "(3) wahr: Zeuge x = 1. 1 ist ≤ jeder Zahl.",
+      "(4) wahr: Von zwei Zahlen ist immer eine die kleinere oder beide sind gleich.",
+      "(5) falsch: Gegenbeispiel x = 1. Es gibt kein y mit nicht 1 ≤ y.",
+      "(6) falsch: Für jedes x ist y = x ein Gegenbeispiel, denn x ≤ x.",
+      "Also sind <b>4</b> Formeln wahr. Vergleich mit Lösung 4.3c: In der Grundmenge ℤ wäre (2) falsch, weil es keine grösste ganze Zahl gibt. Ob eine Formel gilt, hängt von der Struktur ab."
+    ]
+  });
+
+  // Aufgabe 8 · Stolperfalle beim Hineinziehen
+  L.auswahl("#t05-ue8", {
+    frage: "<b>Aufgabe 8 · Erlaubt?</b> Lea formt so um: " + FI("(∀x: P(x)) ∨ Q(x) ≡ ∀x: (P(x) ∨ Q(x))") + ". Was stimmt?",
+    optionen: [
+      "Das ist korrekt, es ist genau Nr. 8 aus Satz 4.13.",
+      "Das ist korrekt, aber nur bei endlicher Grundmenge.",
+      "Falsch: Quantoren darf man nie über ∨ ziehen, nur über ∧.",
+      "Falsch: " + FI("Q(x)") + " enthält x. Erst umbenennen: " + FI("∀z: (P(z) ∨ Q(x))") + "."
+    ],
+    richtig: 3,
+    erklaerung: "Nr. 8 verlangt, dass H = Q(x) die Variable x nicht enthält. Hier ist das x in Q(x) frei und würde beim Hineinziehen eingefangen. Ein Gegenbeispiel steht oben bei «Gegenbeispiele zum Nachprüfen». Mit der Umbenennung x → z ist die Bedingung erfüllt."
+  });
+
+  /* =====================================================================
+     Lösungsfilm «Wer vertraut wem?»
+     ===================================================================== */
+  const FL = {
+    a: "∀x: V(x, c)",
+    b: "∀x: ∃y: V(x, y)",
+    c: "∃y: ∀x: V(x, y)",
+    d: "∀x: ∃y: (V(x, y) ∧ V(y, c))",
+    e: "∃x: ∀y: ¬V(x, y)",
+    f: "∀x: (x ≠ c ⇒ V(c, x)) ∧ ¬V(c, c)"
+  };
+  const ZL = (nr, s, extra) => '<div class="t05-zl' + (extra ? " " + extra : "") + '"><span class="t05-nr">' + nr + "</span><span>" + F(s) + "</span></div>";
+  const BIS = (n) => "abcdef".slice(0, n).split("").map((k) => ZL(k + ")", FL[k])).join("");
+  const WBF = (s, t) => '<span class="t05-fi">' + F(s) + "</span> " + t;
+  L.film("#t05-film", {
+    phasen: ["1 · Wörterbuch", "2 · Sätze a bis c", "3 · Sätze d und e", "4 · Satz f", "5 · Kontrolle"],
+    texte: [
+      'a) <span data-ph="a-alle">Alle</span> <span data-ph="a-vert">vertrauen</span> <span data-ph="a-c">Chiara</span>.',
+      'b) <span data-ph="b-jeder">Jeder</span> <span data-ph="b-vert">vertraut</span> <span data-ph="b-jem">jemandem</span>.',
+      'c) <span data-ph="c-gibt">Es gibt jemanden</span>, <span data-ph="c-alle">dem alle vertrauen</span>.',
+      'd) <span data-ph="d-jeder">Jeder</span> <span data-ph="d-vert">vertraut</span> <span data-ph="d-jem">jemandem</span>, <span data-ph="d-der">der Chiara vertraut</span>.',
+      'e) <span data-ph="e-gibt">Es gibt jemanden</span>, <span data-ph="e-nie">der niemandem</span> <span data-ph="e-vert">vertraut</span>.',
+      'f) <span data-ph="f-c">Chiara vertraut</span> <span data-ph="f-alle">allen</span> <span data-ph="f-aus">ausser sich selbst</span>.'
+    ],
+    woerterbuch: [
+      WBF("V(x, y)", "x vertraut y"),
+      WBF("c", "Chiara"),
+      WBF("∀x:", "jeder, alle"),
+      WBF("∃y:", "jemand, es gibt"),
+      WBF("¬", "nicht, niemand = für alle nicht")
+    ],
+    beschriftung: { texte: "Die Sätze", text: "Satz", formel: "Lösung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Wörterbuch festlegen, dann jeden Satz von links nach rechts lesen. Jedes «jeder» oder «alle» wird ein ∀, jedes «jemand» oder «es gibt» ein ∃, in der Reihenfolge des Satzes. Zum Schluss füllst du die Stellen im Prädikat und prüfst die Klammern." },
+      { ph: 0, dict: 1, dh: [0],
+        say: "Das Prädikat ist vorgegeben: V(x, y) heisst «x vertraut y». Merke dir die Reihenfolge: vorne steht, wer vertraut, hinten, wem vertraut wird." },
+      { dict: 2, dh: [1],
+        say: "Chiara ist eine bestimmte Person. Bestimmte Personen werden Konstanten, hier c." },
+      { dict: 4, dh: [2, 3],
+        say: "Die Signalwörter: «jeder» und «alle» werden zum Allquantor ∀, «jemand» und «es gibt» zum Existenzquantor ∃." },
+      { ph: 1, sent: 0, hl: ["a-alle"], dh: [2], f: ZL("a)", NW("∀x:")),
+        say: "Satz a. «Alle» wird ∀x. Das x steht für eine beliebige Person." },
+      { hl: ["a-vert", "a-c"], dh: [0, 1], f: ZL("a)", "∀x: " + NW("V(x, c)")),
+        say: "Wer vertraut? x. Wem? Chiara. Also V(x, c). Satz a ist fertig." },
+      { sent: 1, hl: ["b-jeder"], dh: [2], f: BIS(1) + ZL("b)", NW("∀x:")),
+        say: "Satz b. «Jeder» kommt zuerst: ∀x." },
+      { hl: ["b-jem"], dh: [3], f: BIS(1) + ZL("b)", "∀x: " + NW("∃y:")),
+        say: "«jemandem» ist eine weitere Person: ∃y. Weil ∃y hinter ∀x steht, darf jede Person x ihr eigenes y haben." },
+      { hl: ["b-vert"], dh: [0], f: BIS(1) + ZL("b)", "∀x: ∃y: " + NW("V(x, y)")),
+        say: "x vertraut y: V(x, y). Satz b ist fertig." },
+      { sent: 2, hl: ["c-gibt"], dh: [3], f: BIS(2) + ZL("c)", NW("∃y:")),
+        say: "Satz c beginnt mit «Es gibt jemanden». Darum steht ∃y diesmal vorne." },
+      { hl: ["c-alle"], dh: [2, 0], f: BIS(2) + ZL("c)", "∃y: " + NW("∀x: V(x, y)")),
+        say: "«dem alle vertrauen»: Für alle x gilt, x vertraut y. Die Person y ist für alle dieselbe." },
+      { hl: [], f: BIS(1) + ZL("b)", FL.b, "t05-vgl") + ZL("c)", FL.c, "t05-vgl"),
+        say: "Vergleiche b und c: gleiche Bausteine, andere Reihenfolge. c sagt mehr. Aus c folgt b, umgekehrt nicht (Lernblock 3, Lösung 4.3c). Im Quantor-Labor kannst du das ausprobieren." },
+      { ph: 2, sent: 3, hl: ["d-jeder", "d-jem"], dh: [2, 3], f: BIS(3) + ZL("d)", NW("∀x: ∃y:")),
+        say: "Satz d. «Jeder» wird ∀x, «jemandem» wird ∃y, genau wie in b." },
+      { hl: ["d-vert"], dh: [0], f: BIS(3) + ZL("d)", "∀x: ∃y: " + NW("V(x, y)")),
+        say: "x vertraut diesem y: V(x, y)." },
+      { hl: ["d-der"], dh: [0, 1], f: BIS(3) + ZL("d)", "∀x: ∃y: " + NW("(") + "V(x, y) " + NW("∧ V(y, c))")),
+        say: "«der Chiara vertraut» beschreibt dieses y genauer: V(y, c). Beides muss gelten, also ∧. Und eine Klammer um beides." },
+      { hl: [], f: BIS(4),
+        say: "Warum die Klammer? Quantoren binden stärker als ∧. Ohne Klammer reicht ∃y nur bis V(x, y), und das y in V(y, c) wäre frei. Die Musterlösung der Prüfung lässt die Klammer bei d weg. Schreib sie trotzdem." },
+      { sent: 4, hl: ["e-gibt"], dh: [3], f: BIS(4) + ZL("e)", NW("∃x:")),
+        say: "Satz e. «Es gibt jemanden» wird ∃x." },
+      { hl: ["e-nie"], dict: 5, dh: [4, 2], f: BIS(4) + ZL("e)", "∃x: " + NW("∀y: ¬")),
+        say: "«niemandem» heisst: für alle y nicht. Also ∀y und ein ¬." },
+      { hl: ["e-vert"], dh: [0], f: BIS(4) + ZL("e)", "∃x: ∀y: ¬" + NW("V(x, y)")),
+        say: "x vertraut y nicht: ¬V(x, y). Gleichwertig ist ∃x: ¬∃y: V(x, y) nach Satz 4.13, Nr. 2. Beide Formen sind richtig." },
+      { ph: 3, sent: 5, hl: ["f-c"], dh: [0, 1], f: BIS(5) + ZL("f)", NW("V(c, x)")),
+        say: "Satz f. Jetzt vertraut Chiara. Sie steht darum vorne: V(c, x)." },
+      { hl: ["f-alle"], dh: [2], f: BIS(5) + ZL("f)", NW("∀x: (x ≠ c ⇒") + " V(c, x)" + NW(")")),
+        say: "«allen ausser sich selbst»: allen x, die nicht Chiara sind. Das ist eine Bedingung, also ⇒. Die Musterlösung kürzt das mit ∀x≠a ab." },
+      { hl: ["f-aus"], dh: [4], f: BIS(5) + ZL("f)", "∀x: (x ≠ c ⇒ V(c, x)) " + NW("∧ ¬V(c, c)")),
+        say: "«ausser sich selbst» sagt auch: Sich selbst vertraut Chiara nicht. Darum kommt ∧ ¬V(c, c) dazu." },
+      { hl: [], f: BIS(6) + ZL("✗", "∀x: V(c, x) ∧ ¬V(c, c)", "t05-falsch"),
+        say: "Vorsicht, Falle: Ohne die Bedingung x ≠ c widerspricht sich die Formel. ∀x umfasst auch x = c und verlangt damit V(c, c) und ¬V(c, c) zugleich. Genau so, mit P und a, steht es in der zweiten Zeile der Musterlösung zu 3a f." },
+      { ph: 4, sent: "all", hl: [], f: BIS(6), end: true,
+        say: "Kontrolle: Jede Variable steht im Bereich ihres Quantors. Alle sechs Formeln sind geschlossen, also prädikatenlogische Aussagen. Das ist die ganze Lösung. Prüfe dich jetzt im Selbsttest." }
+    ]
+  });
+
+  /* =====================================================================
+     Selbsttest
+     ===================================================================== */
+  L.selbsttest("#t05-selbsttest", {
+    fragen: [
+      { q: "Was ist " + FI("g(g(a))") + "?",
+        o: ["eine atomare Formel", "ein Term", "ein Prädikat", "keine gültige Schreibweise"], a: 1,
+        e: "Funktion auf Term ergibt Term (Def. 4.1 d2). g(g(a)) ist «der Götti des Göttis von Ana», also eine Person." },
+      { q: "Stolperfalle: Wie ist " + FI("∀x: P(x) ∧ Q(x)") + " zu lesen?",
+        o: [FI("(∀x: P(x)) ∧ Q(x)"), FI("∀x: (P(x) ∧ Q(x))"), FI("(∀x: P(x)) ∧ (∀x: Q(x))")], a: 0,
+        e: "Quantoren binden stärker als ∧ (Bsp. 4.3). ∀x wirkt nur auf P(x), das x in Q(x) ist frei. Für die zweite Lesart brauchst du die Klammer." },
+      { q: "Stolperfalle: Welche Vorkommen sind in " + FI("∃y: R(x, y) ∨ P(y)") + " frei?",
+        o: ["nur x", "nur das y in P(y)", "x und das y in P(y)", "keines"], a: 2,
+        e: "∃y wirkt nur auf R(x, y). Darin ist x frei, y gebunden. P(y) liegt ausserhalb des Bereichs, dieses y ist frei." },
+      { q: "Welche Formel ist äquivalent zu " + FI("¬∀x: ∃y: M(x, y)") + "?",
+        o: [FI("∀x: ¬∃y: M(x, y)"), FI("∃x: ∃y: ¬M(x, y)"), FI("¬∃x: ∀y: M(x, y)"), FI("∃x: ∀y: ¬M(x, y)")], a: 3,
+        e: "Das ¬ springt nacheinander über beide Quantoren, und jeder kippt: Nr. 1 macht ∀x zu ∃x, Nr. 2 macht ∃y zu ∀y." },
+      { q: "Stolperfalle: Was gilt für " + FI("A = ∀x: ∃y: M(x, y)") + " und " + FI("B = ∃y: ∀x: M(x, y)") + "?",
+        o: ["A und B sind äquivalent.", "Aus B folgt A, aber nicht umgekehrt.", "Aus A folgt B, aber nicht umgekehrt.", "A und B widersprechen sich."], a: 1,
+        e: "Gibt es eine Person, die alle mögen (B), dann mag jeder jemanden (A). Umgekehrt nicht: In der Welt «Kreis» ist A wahr und B falsch (Lösung 4.3c)." },
+      { q: "Stolperfalle: Ist " + FI("(∀x: P(x)) ∨ (∀x: Q(x))") + " äquivalent zu " + FI("∀x: (P(x) ∨ Q(x))") + "?",
+        o: ["Ja, nach Satz 4.13 Nr. 3.", "Ja, aber nur bei endlicher Grundmenge.", "Nein. Aus der linken folgt die rechte, aber nicht umgekehrt.", "Nein. Aus der rechten folgt die linke, aber nicht umgekehrt."], a: 2,
+        e: "Nr. 3 gilt nur für ∧. Gegenbeispiel U = {1, 2}, P nur für 1, Q nur für 2: rechts wahr, links falsch (Lösung 4.3a)." },
+      { q: "Wann darfst du " + FI("(∃x: F) ∧ H") + " durch " + FI("∃x: (F ∧ H)") + " ersetzen?",
+        o: ["wenn H die Variable x nicht enthält", "immer", "wenn F die Variable x nicht enthält", "nie, das geht nur bei ∀"], a: 0,
+        e: "Satz 4.13 Nr. 9 setzt voraus, dass H kein x enthält. Sonst würde ein freies x in H vom Quantor eingefangen." },
+      { q: "Welche Formel ist in Pränexform?",
+        o: [FI("∀x: P(x) ∨ ∃y: Q(y)"), FI("¬∃x: ∀y: R(x, y)"), FI("∀x: ∃y: (¬P(x) ∨ R(x, y))"), FI("∃x: (P(x) ∧ ∀y: R(x, y))")], a: 2,
+        e: "Nur hier stehen alle Quantoren vorne und dahinter keiner mehr. Bei der ersten steht ∃y hinter dem ∨, bei der zweiten ein ¬ vor dem Quantor, bei der vierten ∀y in der Klammer." },
+      { q: "Wie lautet die Matrixformel von " + FI("∀x: (P(x) ∨ ∃y: R(x, y))") + "?",
+        o: [FI("P(x) ∨ R(x, y)"), FI("∀x: P(x) ∨ R(x, y)"), FI("P(x) ∨ ∃y: R(x, y)"), FI("R(x, y)")], a: 0,
+        e: "Jedes «∀x:» und «∃y:» streichen, alles andere bleibt (Def. 4.5e). Übrig bleibt (P(x) ∨ R(x, y)). Die äussere Klammer darfst du weglassen." },
+      { q: "Stolperfalle: In " + FI("∀x: R(x, y)") + " ist y frei. Welche Umbenennung ist erlaubt?",
+        o: [FI("∀x: R(x, y) ≡ ∀y: R(y, y)"), FI("∀x: R(x, y) ≡ ∀x: R(x, z)"), "keine, gebundene Variablen darf man nie umbenennen", FI("∀x: R(x, y) ≡ ∀z: R(z, y)")], a: 3,
+        e: "Die gebundene Variable x darf zu einer neuen Variablen z werden. Zu y nicht, sonst wird das freie y eingefangen. Das freie y selbst darfst du nicht umbenennen, sonst spricht die Formel über eine andere Person." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

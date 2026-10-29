@@ -2,52 +2,42 @@
 // Proprietary — copying, modification, or distribution prohibited without permission.
 
 // lib/lernseiten.ts
-// Liest die Inhaltsdateien der Lernseiten (nur serverseitig).
+// Liest Faecher, Lernpfade und Themenseiten (nur serverseitig).
+// Jede Themenseite ist eine fertige HTML-Datei: content/lernseiten/<fach>/<slug>.html
 // Die Gesamtpruefung fuer Skript und Tests liegt in lib/lernseiten-pruefung.ts.
-// Ordnerstruktur und Format: docs/lernseiten-format.md
+// Format: docs/lernpfad-format.md
 
 import fs from "node:fs"
 import path from "node:path"
 import type { z } from "zod"
 import {
   fachSchema,
-  seiteSchema,
-  filmSchema,
-  quizSchema,
-  spickSchema,
+  FACH_SLUG,
+  THEMA_SLUG,
   type Fach,
-  type Seite,
-  type Film,
-  type QuizFrage,
-  type SpickEintrag,
+  type Station,
 } from "@/lib/validations/lernseite"
 
+export { FACH_SLUG, THEMA_SLUG }
+
 export const STANDARD_BASIS = path.join(process.cwd(), "content", "lernseiten")
-export const FACH_ORDNER = /^[a-z0-9]+$/
-export const THEMA_ORDNER = /^\d{2}-[a-z0-9-]+$/
 
-export type FachKurz = Fach & { slug: string; anzahlThemen: number }
-
-export interface ThemaKurz {
+/** Fach ohne Pfad, mit Ordnername und Zaehlern (fuer Kacheln und Kopfzeilen). */
+export type FachKurz = Omit<Fach, "pfad"> & {
   slug: string
-  titel: string
-  sektion: string
-  vorlesung: string
-  dauer_min: number
-  weight: number
-  lernziele: string[]
+  /** Stationen, fuer die es schon eine HTML-Datei gibt. */
+  anzahlThemen: number
+  /** Alle Stationen im Pfad, auch die, die noch folgen. */
+  anzahlStationen: number
 }
 
-export interface ThemaVoll {
-  fach: Fach & { slug: string }
-  slug: string
-  seite: Seite
-  film: Film
-  quiz: QuizFrage[]
-  spick: SpickEintrag[]
-}
+/** Station im Lernpfad; `verfuegbar` = HTML-Datei vorhanden (sonst «folgt»). */
+export type StationMitStatus = Station & { verfuegbar: boolean }
 
-export type SpickzettelEintrag = SpickEintrag & { thema: string; themaSlug: string }
+export interface FachMitPfad {
+  fach: FachKurz
+  pfad: StationMitStatus[]
+}
 
 // ---------------------------------------------------------------------------
 // Hilfsfunktionen
@@ -62,8 +52,17 @@ export function unterordner(pfad: string): string[] {
     .sort()
 }
 
-function themenOrdner(fachPfad: string): string[] {
-  return unterordner(fachPfad).filter((name) => THEMA_ORDNER.test(name))
+function istDatei(pfad: string): boolean {
+  try {
+    return fs.statSync(pfad).isFile()
+  } catch {
+    return false
+  }
+}
+
+/** Pfad der HTML-Datei einer Station im Fachordner. */
+export function themaDatei(fachOrdner: string, slug: string): string {
+  return path.join(fachOrdner, `${slug}.html`)
 }
 
 /** Liest eine JSON-Datei und prueft sie gegen ein Schema. Wirft mit verstaendlicher Meldung. */
@@ -88,86 +87,82 @@ export function lese<S extends z.ZodType>(datei: string, schema: S, basis: strin
   return ergebnis.data
 }
 
-/** Normalisiert ein Fach aus der URL und gibt den Ordnerpfad zurueck, sonst null. */
-function fachPfad(fach: string, basis: string): string | null {
+/** Normalisiert ein Fach aus der Adresse und liest dessen fach.json, sonst null. */
+function ladeFachDaten(
+  fach: string,
+  basis: string,
+): { slug: string; ordner: string; daten: Fach } | null {
+  if (typeof fach !== "string") return null
   const slug = fach.toLowerCase()
-  if (!FACH_ORDNER.test(slug)) return null
-  const pfad = path.join(basis, slug)
-  return fs.existsSync(path.join(pfad, "fach.json")) ? pfad : null
+  if (!FACH_SLUG.test(slug)) return null
+  const ordner = path.join(basis, slug)
+  const datei = path.join(ordner, "fach.json")
+  if (!istDatei(datei)) return null
+  return { slug, ordner, daten: lese(datei, fachSchema, basis) }
+}
+
+function fachKurz(slug: string, daten: Fach, pfad: StationMitStatus[]): FachKurz {
+  // Rohpfad bewusst weglassen: er steht mit Verfuegbarkeit in FachMitPfad.pfad.
+  return {
+    kuerzel: daten.kuerzel,
+    titel: daten.titel,
+    beschreibung: daten.beschreibung,
+    icon: daten.icon,
+    farbe: daten.farbe,
+    semester: daten.semester,
+    sektionen: daten.sektionen,
+    slug,
+    anzahlThemen: pfad.filter((station) => station.verfuegbar).length,
+    anzahlStationen: pfad.length,
+  }
+}
+
+function pfadMitStatus(ordner: string, daten: Fach): StationMitStatus[] {
+  return daten.pfad.map((station) => ({
+    ...station,
+    verfuegbar: istDatei(themaDatei(ordner, station.slug)),
+  }))
 }
 
 // ---------------------------------------------------------------------------
 // Laden
 // ---------------------------------------------------------------------------
 
-/** Alle Faecher mit Anzahl Themen, sortiert nach Kuerzel. */
+/** Alle Faecher mit Anzahl verfuegbarer Themen, sortiert nach Kuerzel. */
 export function ladeFaecher(basis = STANDARD_BASIS): FachKurz[] {
   return unterordner(basis)
-    .filter((slug) => FACH_ORDNER.test(slug) && fs.existsSync(path.join(basis, slug, "fach.json")))
+    .filter((slug) => FACH_SLUG.test(slug) && istDatei(path.join(basis, slug, "fach.json")))
     .map((slug) => {
-      const pfad = path.join(basis, slug)
-      const fach = lese(path.join(pfad, "fach.json"), fachSchema, basis)
-      return { ...fach, slug, anzahlThemen: themenOrdner(pfad).length }
+      const ordner = path.join(basis, slug)
+      const daten = lese(path.join(ordner, "fach.json"), fachSchema, basis)
+      return fachKurz(slug, daten, pfadMitStatus(ordner, daten))
     })
     .sort((a, b) => a.kuerzel.localeCompare(b.kuerzel))
 }
 
-/** Ein Fach mit seinen Themen (sortiert nach weight) oder null, wenn es das Fach nicht gibt. */
-export function ladeFach(
-  fach: string,
-  basis = STANDARD_BASIS,
-): { fach: FachKurz; themen: ThemaKurz[] } | null {
-  const pfad = fachPfad(fach, basis)
-  if (!pfad) return null
-
-  const slug = path.basename(pfad)
-  const daten = lese(path.join(pfad, "fach.json"), fachSchema, basis)
-  const themen = themenOrdner(pfad)
-    .map((themaSlug): ThemaKurz => {
-      const seite = lese(path.join(pfad, themaSlug, "seite.json"), seiteSchema, basis)
-      return {
-        slug: themaSlug,
-        titel: seite.titel,
-        sektion: seite.sektion,
-        vorlesung: seite.vorlesung,
-        dauer_min: seite.dauer_min,
-        weight: seite.weight,
-        lernziele: seite.lernziele,
-      }
-    })
-    .sort((a, b) => a.weight - b.weight)
-
-  return { fach: { ...daten, slug, anzahlThemen: themen.length }, themen }
+/** Ein Fach mit seinem Lernpfad (Reihenfolge aus fach.json) oder null, wenn es das Fach nicht gibt. */
+export function ladeFach(fach: string, basis = STANDARD_BASIS): FachMitPfad | null {
+  const geladen = ladeFachDaten(fach, basis)
+  if (!geladen) return null
+  const pfad = pfadMitStatus(geladen.ordner, geladen.daten)
+  return { fach: fachKurz(geladen.slug, geladen.daten, pfad), pfad }
 }
 
-/** Ein Thema mit allen Dateien oder null, wenn es das Fach oder Thema nicht gibt. */
-export function ladeThema(fach: string, thema: string, basis = STANDARD_BASIS): ThemaVoll | null {
-  const pfad = fachPfad(fach, basis)
-  if (!pfad || !THEMA_ORDNER.test(thema)) return null
+/**
+ * HTML einer Themenseite oder null, wenn Fach, Station oder Datei fehlen.
+ * Nur Slugs aus dem Pfad von fach.json kommen in einen Dateipfad (kein Pfad-Traversal).
+ */
+export function ladeThemaHtml(fach: string, thema: string, basis = STANDARD_BASIS): string | null {
+  if (typeof thema !== "string" || !THEMA_SLUG.test(thema)) return null
 
-  const themaPfad = path.join(pfad, thema)
-  if (!fs.existsSync(path.join(themaPfad, "seite.json"))) return null
+  const geladen = ladeFachDaten(fach, basis)
+  if (!geladen) return null
+  if (!geladen.daten.pfad.some((station) => station.slug === thema)) return null
 
-  return {
-    fach: { ...lese(path.join(pfad, "fach.json"), fachSchema, basis), slug: path.basename(pfad) },
-    slug: thema,
-    seite: lese(path.join(themaPfad, "seite.json"), seiteSchema, basis),
-    film: lese(path.join(themaPfad, "film.json"), filmSchema, basis),
-    quiz: lese(path.join(themaPfad, "quiz.json"), quizSchema, basis),
-    spick: lese(path.join(themaPfad, "spick.json"), spickSchema, basis),
-  }
-}
+  const datei = themaDatei(geladen.ordner, thema)
+  // Zusaetzliche Absicherung: die Datei muss direkt im Fachordner liegen.
+  if (path.dirname(path.resolve(datei)) !== path.resolve(geladen.ordner)) return null
+  if (!istDatei(datei)) return null
 
-/** Spickzettel-Eintraege aller Themen eines Fachs, in Themen-Reihenfolge. */
-export function ladeSpickzettel(fach: string, basis = STANDARD_BASIS): SpickzettelEintrag[] {
-  const ergebnis = ladeFach(fach, basis)
-  if (!ergebnis) return []
-  const pfad = path.join(basis, ergebnis.fach.slug)
-  return ergebnis.themen.flatMap((thema) =>
-    lese(path.join(pfad, thema.slug, "spick.json"), spickSchema, basis).map((eintrag) => ({
-      ...eintrag,
-      thema: thema.titel,
-      themaSlug: thema.slug,
-    })),
-  )
+  return fs.readFileSync(datei, "utf8")
 }

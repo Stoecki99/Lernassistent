@@ -1,0 +1,1576 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statistische Tests · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/17-chi-quadrat-test" title="Chi-Quadrat-Unabhängigkeitstest">
+  <style>
+    /* Station 16: nur Klassen mit Präfix t16-, nur Farben aus :root */
+    .t16-ziele{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
+    .t16-ziele li::marker{color:var(--accent)}
+    .t16-liste{margin:0; padding-left:1.5em; display:flex; flex-direction:column; gap:8px}
+    .t16-liste li::marker{color:var(--accent); font-weight:700}
+    .t16-ti{font-family:var(--f-body); font-weight:600; background:var(--board); border:1px solid var(--line); border-radius:6px; padding:1px 6px; white-space:nowrap}
+    /* Zeilen im Stepper und im Film */
+    .t16-st{font-family:var(--f-body); font-size:1rem; line-height:1.75; white-space:normal}
+    .t16-st > div + div{margin-top:4px}
+    .t16-nr{display:inline-block; min-width:2.2em; font-weight:700; color:var(--accent); font-size:.9rem}
+    .t16-ff{font-size:.78em; display:flex; flex-direction:column; gap:3px}
+    .t16-ff > div{white-space:normal}
+    .t16-ff .t16-nr{min-width:1.8em}
+    /* Verteilungsbild */
+    .t16-bild [hidden], .t16-assistent [hidden], .t16-matrix-karte [hidden]{display:none !important}
+    .t16-steuer{display:flex; flex-direction:column; gap:6px}
+    .t16-steuer > span{font-weight:600; font-size:.95rem}
+    .t16-check{display:flex; gap:8px; align-items:center; font-weight:600; font-size:.95rem}
+    .t16-check input{width:20px; height:20px; accent-color:var(--accent); flex:none}
+    .t16-svg .t16-rot{fill:var(--bad); fill-opacity:.26; stroke:none}
+    .t16-svg .t16-pw{fill:var(--accent); fill-opacity:.5; stroke:none}
+    .t16-svg .t16-beta{fill:var(--const); fill-opacity:.24; stroke:none}
+    .t16-svg .t16-h1{stroke:var(--const); stroke-width:2; stroke-dasharray:6 4; fill:none}
+    .t16-svg .t16-stat{stroke:var(--ink); stroke-width:2.5}
+    .t16-svg .t16-stat-txt{fill:var(--ink); font-weight:700; font-size:15px}
+    .t16-svg .t16-krit-txt{fill:var(--bad); font-weight:600}
+    .t16-bild .diagramm svg{max-width:540px; margin-inline:auto}
+    .t16-svg text{font-size:14px}
+    .t16-erg{background:var(--board); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:4px; font-variant-numeric:tabular-nums; min-height:6.5em}
+    .t16-erg b{font-weight:700}
+    .t16-entscheid{color:var(--accent); font-weight:700}
+    /* Fehlerarten-Matrix */
+    .t16-matrix{display:grid; grid-template-columns:minmax(0,.75fr) minmax(0,1fr) minmax(0,1fr); gap:8px}
+    .t16-mkopf{font-size:.82rem; font-weight:600; color:var(--muted); text-align:center; align-self:end; padding:2px 4px}
+    .t16-mzeile{font-size:.9rem; font-weight:700; align-self:center}
+    .t16-zelle{font:inherit; text-align:left; display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:10px; border:2px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; min-width:0; min-height:96px}
+    .t16-zelle:hover{border-color:var(--accent)}
+    .t16-zelle:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+    .t16-zelle.t16-fehler{border-color:var(--bad); background:var(--bad-bg)}
+    .t16-zelle.t16-gut{border-color:var(--ok); background:var(--ok-bg)}
+    .t16-zelle b{font-size:.98rem}
+    .t16-zelle .t16-w{font-size:.85rem; font-style:italic}
+    .t16-zelle .t16-kx{font-size:.88rem}
+    .t16-zelle.t16-treffer{box-shadow:0 0 0 3px var(--accent)}
+    .t16-situation{background:var(--board); border-radius:10px; padding:10px 14px; font-weight:600}
+    @media (max-width:560px){
+      .t16-matrix{grid-template-columns:repeat(2, minmax(0,1fr))}
+      .t16-mzeile{grid-column:1 / -1; margin-top:4px}
+      .t16-mecke{display:none}
+      .t16-zelle{padding:8px 10px}
+      .t16-zelle .t16-kx{font-size:.85rem}
+    }
+    /* Test-Assistent */
+    .t16-lage{background:var(--board); border-radius:12px; padding:12px 16px}
+    .t16-schritte{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px}
+    .t16-schritt{border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; background:var(--surface); min-width:0}
+    .t16-schritt.t16-ok{border-left-color:var(--ok)}
+    .t16-skopf{display:flex; flex-wrap:wrap; gap:2px 10px; align-items:baseline}
+    .t16-snr{font-size:.75rem; letter-spacing:.07em; text-transform:uppercase; color:var(--accent); font-weight:600}
+    .t16-feld{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .t16-feld label{font-weight:600}
+    .t16-erkl{border-left:3px solid var(--accent); padding-left:12px; font-size:.95rem}
+    .t16-ende{background:var(--ok-bg); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:8px}
+    /* breite Tafelformeln auf schmalen Bildschirmen etwas kleiner, damit sie nicht in sich scrollen */
+    @media (max-width:420px){ .t16-eng .katex-display .katex{font-size:.96em} }
+  </style>
+</head>
+<body data-fach="mstw" data-thema="16-statistische-tests">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V13/V14 · Statistische Tests</span>
+    <h1>Statistische Tests</h1>
+    <p class="lead">Jemand behauptet etwas über alle Kundinnen, alle Autos oder alle Jugendlichen. Du hast aber nur eine Stichprobe. Ein statistischer Test entscheidet, ob die Abweichung zwischen Behauptung und Stichprobe noch Zufall ist oder so gross, dass du die Behauptung verwirfst. Nach dieser Station löst du Tests für einen Mittelwert und für einen Anteil, wie sie in der Prüfung vorkommen: von Hand mit Ablehnungsbereich und mit dem TI-Nspire über den p-Wert.</p>
+    <div class="card stack">
+      <b>Danach kannst du</b>
+      <ul class="t16-ziele prose">
+        <li>Nullhypothese \(H_0\) und Alternativhypothese \(H_1\) aus einem Aufgabentext richtig formulieren und ein- von zweiseitigen Fragen unterscheiden,</li>
+        <li>das Testschema des Skripts (Kap. 6.3) Schritt für Schritt abarbeiten,</li>
+        <li>Tests für einen Mittelwert (z und t) und für einen Anteilswert von Hand mit Ablehnungsgrenzen rechnen,</li>
+        <li>den p-Wert deuten und mit \(\alpha\) vergleichen,</li>
+        <li>Fehler 1. und 2. Art unterscheiden und \(\beta\) berechnen,</li>
+        <li>Tests mit <span class="t16-ti">z Test</span>, <span class="t16-ti">t Test</span> und <span class="t16-ti">1-Prop z Test</span> auf dem TI-Nspire lösen und den Entscheid in Worten begründen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#schema"><b>2</b>Testschema</a>
+    <a href="#mittelwert"><b>3</b>Mittelwert</a>
+    <a href="#anteil"><b>4</b>Anteil</a>
+    <a href="#pwert"><b>5</b>p-Wert</a>
+    <a href="#fehler"><b>6</b>Fehlerarten</a>
+    <a href="#bild"><b>7</b>Verteilungsbild</a>
+    <a href="#assistent"><b>8</b>Test-Assistent</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine, ohne die kein Test funktioniert</h2>
+    <p class="prose">Ein Test prüft eine Behauptung über die <b>Grundgesamtheit</b> (alle, über die du etwas wissen willst) mit Hilfe einer <b>Stichprobe</b> (die wenigen, die du wirklich misst oder befragst). Das Skript vergleicht das Vorgehen mit einem Indizienprozess vor Gericht (Skript SS Bem. 6.1). Diesen Vergleich nimmst du durch die ganze Station mit.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Hypothese = Behauptung über alle</span><span class="ex"><span class="p">H</span><sub>0</sub>: <span class="c">μ</span> = 5.8</span><p>Eine <b>Hypothese</b> ist eine Aussage über einen <b>Parameter</b> der Grundgesamtheit, zum Beispiel über den Mittelwert \(\mu\) aller Autos oder den Anteil \(p\) aller Jugendlichen. Vor Gericht lautet sie: «Die Angeklagte ist unschuldig.» Mini-Beispiel: Ein Hersteller sagt, sein Auto brauche im Schnitt 5.8 Liter.</p></div>
+      <div class="concept"><span class="tag">H0 und H1 = Behauptung und Gegenteil</span><span class="ex"><span class="p">H</span><sub>0</sub>: <span class="c">p</span> ≥ 0.9 · <span class="p">H</span><sub>1</sub>: <span class="c">p</span> &lt; 0.9</span><p>Die <b>Nullhypothese</b> \(H_0\) ist der Ausgangspunkt, an den du vorläufig glaubst. Die <b>Alternativhypothese</b> \(H_1\) ist ihr Gegenteil. Beweisen kannst du nur \(H_1\), so wie ein Gericht Schuld beweist und nie Unschuld. Was jemand zeigen will, gehört darum in \(H_1\).</p></div>
+      <div class="concept"><span class="tag">Signifikanzniveau α = erlaubtes Irrtumsrisiko</span><span class="ex"><span class="c">α</span> = 0.05</span><p>\(\alpha\) ist die Wahrscheinlichkeit, \(H_0\) zu verwerfen, obwohl sie stimmt. Vor Gericht: das Risiko, eine Unschuldige zu verurteilen. Üblich sind 5 %, 1 % oder 10 %. Das Skript nennt \(\alpha\) auch <b>Irrtumswahrscheinlichkeit</b>; Schritt 4 heisst dort «Festlegung der Signifikanzzahl».</p></div>
+      <div class="concept"><span class="tag">Testgrösse = das Indiz aus der Stichprobe</span><span class="ex"><span class="v">x̄</span> = 6.09 → <span class="v">z</span> = 2.32</span><p>Aus der Stichprobe berechnest du eine Zahl: den Mittelwert \(\bar x\), den Anteil \(\bar p\) oder deren standardisierte Form \(z\) bzw. \(t\). Das ist das Indiz. Je weiter sie vom Wert in \(H_0\) weg liegt, desto stärker spricht sie gegen \(H_0\).</p></div>
+      <div class="concept"><span class="tag">Ablehnungsbereich und p-Wert = «zu unwahrscheinlich»</span><span class="ex"><span class="fn">p-Wert</span> = 0.01 &lt; <span class="c">α</span></span><p>Der <b>Ablehnungsbereich</b> umfasst die Werte der Testgrösse, die unter \(H_0\) höchstens mit Wahrscheinlichkeit \(\alpha\) vorkommen. Der <b>p-Wert</b> misst, wie überraschend deine Stichprobe wäre, wenn \(H_0\) stimmte. Ist er kleiner als \(\alpha\), verwirfst du \(H_0\). Vor Gericht: Die Indizien sind erdrückend.</p></div>
+    </div>
+    <div class="note"><b>Merke:</b> Wird \(H_0\) nicht verworfen, ist \(H_0\) damit <b>nicht bewiesen</b>. Es heisst nur: Die Indizien reichen nicht. Vor Gericht ist ein Freispruch mangels Beweisen auch kein Beweis der Unschuld (Skript SS Bem. 6.1 und 6.2).</div>
+    <div class="card stack">
+      <h3>Kurz üben: Gehört die Aussage in H0 oder in H1?</h3>
+      <p class="hint">Faustregel: Das Gleichheitszeichen (=, ≤, ≥) steht immer in \(H_0\). Was jemand beweisen will, steht in \(H_1\).</p>
+      <div id="t16-sort-h"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
+    <h2>Das Wörterbuch dieser Station</h2>
+    <p class="prose">Die Farbe zeigt die Art: Parameter der Grundgesamtheit und feste Zahlen orange, Werte aus der Stichprobe blau, Wahrscheinlichkeiten und Quantile grün, Hypothesen violett.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="p">H</span><sub>0</sub>, <span class="p">H</span><sub>1</sub></td><td><span class="kind kind-p">Hypothese</span></td><td>Nullhypothese und Alternativhypothese: Aussagen über die Grundgesamtheit, wahr oder falsch</td></tr>
+          <tr><td><span class="c">μ</span>, <span class="c">p</span></td><td><span class="kind kind-c">Parameter</span></td><td>Mittelwert bzw. Anteilswert der Grundgesamtheit: fest, aber unbekannt</td></tr>
+          <tr><td><span class="c">μ</span><sub>0</sub>, <span class="c">p</span><sub>0</sub></td><td><span class="kind kind-c">Konstante</span></td><td>der behauptete Wert, also die Zahl in den Hypothesen, z. B. \(\mu_0 = 5.8\)</td></tr>
+          <tr><td><span class="c">σ</span></td><td><span class="kind kind-c">Parameter</span></td><td>Standardabweichung der Grundgesamtheit; ist sie gegeben, rechnest du mit z</td></tr>
+          <tr><td><span class="c">n</span></td><td><span class="kind kind-c">Konstante</span></td><td>Stichprobenumfang</td></tr>
+          <tr><td><span class="v">x̄</span>, <span class="v">s</span></td><td><span class="kind kind-v">Stichprobe</span></td><td>Mittelwert und Standardabweichung der Stichprobe (\(s\) mit \(n-1\) im Nenner, TI: <span class="t16-ti">sx</span>)</td></tr>
+          <tr><td><span class="v">x</span>, <span class="v">p̄</span></td><td><span class="kind kind-v">Stichprobe</span></td><td>Anzahl Treffer und Anteil in der Stichprobe: \(\bar p = x/n\) (TI: <span class="t16-ti">p̂</span>)</td></tr>
+          <tr><td><span class="c">α</span>, 1 − <span class="c">α</span></td><td><span class="kind kind-c">Konstante</span></td><td>Signifikanzniveau (Irrtumswahrscheinlichkeit) und seine Gegenwahrscheinlichkeit</td></tr>
+          <tr><td><span class="fn">z</span><sub>1−α</sub>, <span class="fn">t</span><sub>n−1</sub></td><td><span class="kind kind-fn">Quantil</span></td><td>Grenze aus der Normal- bzw. t-Verteilung: einseitig \(z_{1-\alpha}\), zweiseitig \(z_{1-\alpha/2}\) (TI: <span class="t16-ti">invNorm</span>, <span class="t16-ti">invt</span>)</td></tr>
+          <tr><td><span class="c">c</span><sub>u</sub>, <span class="c">c</span><sub>o</sub></td><td><span class="kind kind-c">Konstante</span></td><td>untere und obere Ablehnungsgrenze (Skript: \(c_u\), \(c_o\))</td></tr>
+          <tr><td><span class="v">z</span>, <span class="v">t</span></td><td><span class="kind kind-v">Teststatistik</span></td><td>standardisierte Testgrösse: Wie viele Standardfehler liegt \(\bar x\) bzw. \(\bar p\) vom behaupteten Wert weg?</td></tr>
+          <tr><td><span class="fn">p-Wert</span></td><td><span class="kind kind-fn">Wahrscheinlichkeit</span></td><td>Wahrscheinlichkeit unter \(H_0\) für eine mindestens so extreme Testgrösse (TI: <span class="t16-ti">PVal</span>)</td></tr>
+          <tr><td><span class="fn">β</span>, 1 − <span class="fn">β</span></td><td><span class="kind kind-fn">Wahrscheinlichkeit</span></td><td>Wahrscheinlichkeit für einen Fehler 2. Art und Macht des Tests</td></tr>
+          <tr><td><span class="fn">P</span>, <span class="fn">Φ</span></td><td><span class="kind kind-fn">Funktion</span></td><td>Wahrscheinlichkeit und Verteilungsfunktion der Standardnormalverteilung (TI: <span class="t16-ti">normCdf</span>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle: zwei verschiedene p.</b> \(p\) allein ist der Anteil in der Grundgesamtheit. Der <b>p-Wert</b> ist eine Wahrscheinlichkeit aus dem Test. Die Musterlösung schreibt kurz «\(p = 0.0074\)». Schreib in der Prüfung besser «p-Wert = …», dann ist klar, was gemeint ist.</div>
+  </section>
+
+  <!-- ===== 2 · Testschema ===== -->
+  <section id="schema">
+    <span class="eyebrow">Schritt 2 · Skript SS Kap. 6.1–6.4, Folien 34–35</span>
+    <h2>Das Testschema: immer dieselben Schritte</h2>
+    <p class="prose">Ein Test ist ein <b>Widerspruchsbeweis</b> (Skript SS Kap. 6.1): Du nimmst an, \(H_0\) stimme, und prüfst, ob die Stichprobe dazu passt. Passt sie überhaupt nicht, verwirfst du \(H_0\). Anders als bei einer Schätzung kommen die Daten erst am Schluss (Kap. 6.3). Zuerst legst du fest, was du prüfst und wie streng. So kannst du die Regeln nicht nachträglich ans Ergebnis anpassen.</p>
+    <div class="card stack">
+      <h3>Die neun Schritte</h3>
+      <ol class="t16-liste prose">
+        <li><b>Grundgesamtheit festlegen:</b> Über wen wird etwas behauptet?</li>
+        <li><b>Nullhypothese \(H_0\):</b> die Behauptung bzw. der Vergleichswert, immer mit \(=\), \(\le\) oder \(\ge\).</li>
+        <li><b>Alternativhypothese \(H_1\):</b> das, was gezeigt werden soll, mit \(\ne\), \(\lt\) oder \(\gt\).</li>
+        <li><b>Signifikanzniveau \(\alpha\) festlegen</b> (Skript: «Signifikanzzahl»), meist 0.05.</li>
+        <li><b>Voraussetzung prüfen:</b> Mittelwert → z oder t? (Folie 27). Anteil → Approximationskriterium \(n\,p_0(1-p_0) \gt 9\).</li>
+        <li><b>Verteilung der Testgrösse unter \(H_0\):</b> \(\bar X \sim N\big(\mu_0;\ \sigma/\sqrt n\big)\) bzw. \(\bar P \sim N\big(p_0;\ \sqrt{p_0(1-p_0)/n}\big)\).</li>
+        <li><b>Ablehnungsgrenze(n) berechnen</b>, z. B. \(c_o = \mu_0 + z \cdot \sigma/\sqrt n\). Oder mit dem Rechner Teststatistik und p-Wert bestimmen (Kap. 6.6).</li>
+        <li><b>Stichprobendaten einsetzen:</b> \(\bar x\) bzw. \(\bar p = x/n\).</li>
+        <li><b>Testentscheid und Interpretation in Worten:</b> \(H_0\) verworfen oder nicht, und was das für die Frage heisst.</li>
+      </ol>
+    </div>
+    <div class="note"><b>Zur Nummerierung:</b> Das Skript zählt beim Mittelwert-Test (Bsp. 6.3 und 6.4) acht Schritte, ohne eigenen Schritt «Voraussetzung». Beim Anteilstest (Bsp. 6.10) steht das Approximationskriterium als Schritt 5, darum sind es dort neun. Diese Seite nimmt immer die neun Schritte. Beim Mittelwert entscheidest du in Schritt 5, ob z oder t passt.</div>
+
+    <h3>H0 und H1 richtig formulieren (Skript SS Kap. 6.4.2)</h3>
+    <ul class="t16-ziele prose">
+      <li><b>Hypothesen handeln von der Grundgesamtheit</b> (\(\mu\), \(p\)), nie von der Stichprobe. «\(H_0: \bar x = 6.09\)» ist sinnlos, denn \(\bar x\) kennst du ja.</li>
+      <li><b>Das Gleichheitszeichen gehört in \(H_0\).</b> \(H_0\) hat \(=\), \(\le\) oder \(\ge\); \(H_1\) hat \(\ne\), \(\lt\) oder \(\gt\).</li>
+      <li><b>Was bewiesen werden soll, kommt in \(H_1\).</b> Wer einer Behauptung misstraut, setzt die Behauptung in \(H_0\) und versucht, sie zu verwerfen.</li>
+      <li><b>Signalwörter</b> im Text bestimmen die Richtung:</li>
+    </ul>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Richtung des Tests (\(\mu\) steht hier stellvertretend, beim Anteil gilt dasselbe mit \(p\))</caption>
+        <thead><tr><th>Frage im Text</th><th>\(H_0\)</th><th>\(H_1\)</th><th>Test</th><th>Ablehnungsbereich</th></tr></thead>
+        <tbody>
+          <tr><td>«grösser», «mehr als», «gestiegen», «zu hoch»</td><td>\(\mu \le \mu_0\)</td><td>\(\mu \gt \mu_0\)</td><td>rechtsseitig</td><td>\(\bar x \gt c_o = \mu_0 + z_{1-\alpha}\tfrac{\sigma}{\sqrt n}\)</td></tr>
+          <tr><td>«kleiner», «weniger als», «gesunken», «noch geringer»</td><td>\(\mu \ge \mu_0\)</td><td>\(\mu \lt \mu_0\)</td><td>linksseitig</td><td>\(\bar x \lt c_u = \mu_0 - z_{1-\alpha}\tfrac{\sigma}{\sqrt n}\)</td></tr>
+          <tr><td>«verändert», «weicht ab», «stimmt die Angabe?»</td><td>\(\mu = \mu_0\)</td><td>\(\mu \ne \mu_0\)</td><td>zweiseitig</td><td>\(\bar x \lt c_u\) oder \(\bar x \gt c_o\), mit \(z_{1-\alpha/2}\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Quantile bei α = 5 %:</b> einseitig \(z_{0.95} = 1.6449\) (die ganzen 5 % liegen auf einer Seite), zweiseitig \(z_{0.975} = 1.96\) (je 2.5 % links und rechts). Auf dem TI: <span class="t16-ti">invNorm(0.95)</span> bzw. <span class="t16-ti">invNorm(0.975)</span>.</div>
+    <div class="note falle"><b>Falle «Signifikanzniveau»:</b> Der Begriff wird nicht einheitlich gebraucht. In der Modulschlussprüfung heisst «Signifikanzniveau 5 %» \(\alpha = 0.05\). In Skript-Aufgaben steht manchmal «Signifikanzniveau 0.95» oder «90 %»; dann ist \(1-\alpha\) gemeint. Erkenne es am Wert: Kleine Zahlen sind \(\alpha\).</div>
+    <div id="t16-a-hyp"></div>
+    <details class="sol"><summary>Schätzen oder testen: Wo ist der Unterschied? (Skript SS Kap. 6.2)</summary>
+      <div class="stack">
+        <p>Ein Konfidenzintervall (Station 15) beantwortet die Frage «Wo liegt \(\mu\) ungefähr?». Ergebnis ist ein Intervall. Ein Test beantwortet «Hält die Behauptung \(\mu = \mu_0\) der Stichprobe stand?». Ergebnis ist ein Entscheid: verwerfen oder nicht verwerfen.</p>
+        <p>Beim Mittelwert hängen beide eng zusammen: Liegt \(\mu_0\) nicht im \((1-\alpha)\)-Konfidenzintervall, verwirft der zweiseitige Test \(H_0: \mu = \mu_0\) zum Niveau \(\alpha\). Tests können aber mehr: Sie prüfen auch Verteilungen und Zusammenhänge, etwa im Chi-Quadrat-Test der nächsten Station.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 3 · Mittelwert ===== -->
+  <section id="mittelwert">
+    <span class="eyebrow">Schritt 3 · Skript SS Bsp. 6.3 und 6.4, Folie 27</span>
+    <h2>Test für einen Mittelwert μ</h2>
+    <p class="prose">Du prüfst eine Behauptung über den Durchschnitt aller. Die Testgrösse ist der Stichprobenmittelwert \(\bar x\). Stimmt \(H_0\), streut \(\bar x\) um \(\mu_0\), und zwar mit der Standardabweichung \(\sigma/\sqrt n\), dem <b>Standardfehler</b> (Skript SS Satz 2.26 und 2.29).</p>
+    <div class="board">
+      $$\bar X \sim N\!\left(\mu_0;\ \frac{\sigma}{\sqrt n}\right)$$
+      $$c_{u} = \mu_0 - z\cdot\frac{\sigma}{\sqrt n}$$
+      $$c_{o} = \mu_0 + z\cdot\frac{\sigma}{\sqrt n}$$
+      $$z = \frac{\bar x - \mu_0}{\sigma/\sqrt n}$$
+      $$t = \frac{\bar x - \mu_0}{s/\sqrt n}\ \ (n-1 \text{ FG})$$
+    </div>
+    <p class="prose">Das Skript vergleicht \(\bar x\) direkt mit den Grenzen \(c_u\) und \(c_o\). Der Taschenrechner rechnet stattdessen die <b>Teststatistik</b> \(z\) oder \(t\) aus: den Abstand von \(\bar x\) zu \(\mu_0\), gemessen in Standardfehlern. Beide Wege führen zum selben Entscheid.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>z oder t? (vereinfacht nach Folie 27; dort für das Vertrauensintervall formuliert, beim Test gilt dasselbe)</caption>
+        <thead><tr><th>Situation</th><th>Verteilung</th><th>Quantil</th><th>TI-Nspire</th></tr></thead>
+        <tbody>
+          <tr><td>\(\sigma\) der Grundgesamtheit gegeben, \(X\) normalverteilt oder \(n \gt 30\)</td><td>Normalverteilung</td><td>\(z\)</td><td><span class="t16-ti">z Test</span> (6 · 7 · 1)</td></tr>
+          <tr><td>\(\sigma\) unbekannt, nur \(s\) aus der Stichprobe</td><td>t-Verteilung, \(n-1\) Freiheitsgrade (FG, auf dem TI «df»)</td><td>\(t_{n-1}\)</td><td><span class="t16-ti">t Test</span> (6 · 7 · 2)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Offen angesprochen:</b> Folie 27 nennt noch Sonderfälle: Ist \(X\) nicht normalverteilt und \(n \le 30\), nimmt sie auch bei bekanntem \(\sigma\) die t-Verteilung; bei Ausreissern ein anderes Verfahren. Für die Aufgaben reicht die Frage: Ist \(\sigma\) der Grundgesamtheit gegeben? Ja → z. Nein → t. Der Stützkurs (Aufgabe 64) rechnet bei \(n = 36\) mit \(s\) trotzdem mit z. Bei \(n \gt 30\) ist der Unterschied klein. Nach Folie 27 ist t korrekt, und so rechnet auch der <span class="t16-ti">t Test</span>.</div>
+
+    <h3>Beispiel 1: einseitiger z-Test von Hand</h3>
+    <p class="prose">Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="t16-stepper-z"></div>
+    <div class="note tipp"><b>Taschenrechner (Skript SS Kap. 7.3):</b> In der Rechner-App <span class="t16-ti">menu</span> → 6 Statistik → 7 Stat-Tests → 1 <span class="t16-ti">z Test</span>, Eingabeart «Stats». Eingabe: \(\mu_0 = 5.8\), \(\sigma = 0.5\), \(\bar x = 6.09\), \(n = 16\), Alternativhypothese \(\mu \gt \mu_0\). Ausgabe: \(z = 2.32\) und der p-Wert <span class="t16-ti">PVal</span> \(= 0.0102\).</div>
+    <details class="sol"><summary>Und zweiseitig? Dieselben Daten, anderer Entscheid (Skript SS Bsp. 6.3)</summary>
+      <div class="stack">
+        <p>Fragt die Zeitschrift nur «Stimmt die Angabe 5.8 l?», ist der Test zweiseitig: \(H_0: \mu = 5.8\), \(H_1: \mu \ne 5.8\). Die 5 % teilen sich auf beide Seiten, also \(z_{0.975} = 1.96\).</p>
+        <div class="board t16-eng">$$c_u = 5.8 - 1.96 \cdot 0.125 = 5.555$$
+              $$c_o = 5.8 + 1.96 \cdot 0.125 = 6.045$$</div>
+        <p>Der Nicht-Ablehnungsbereich ist \([5.555;\ 6.045]\). Ein Stichprobenmittel von \(\bar x = 6.03\) liegt darin: zweiseitig wird \(H_0\) <b>nicht</b> verworfen. Einseitig (Grenze 6.0056) wäre dasselbe \(\bar x = 6.03\) im Ablehnungsbereich gelandet.</p>
+        <p>Darum: Die Richtung legst du <b>vor</b> dem Blick in die Daten fest, aus der Frage heraus. Einseitige Tests erkennen eine Abweichung in die vermutete Richtung leichter (höhere Macht, Skript SS Bem. 6.5).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 4 · Anteil ===== -->
+  <section id="anteil">
+    <span class="eyebrow">Schritt 4 · Skript SS Kap. 6.5, Bsp. 6.10</span>
+    <h2>Test für einen Anteilswert p</h2>
+    <p class="prose">Beim Anteil zählst du Treffer: \(x\) von \(n\) Befragten haben eine Eigenschaft. Die Anzahl Treffer ist eigentlich binomialverteilt. Ist \(n\) gross genug, nähert die Normalverteilung sie gut an (Station 13). Das Skript rechnet nur diese Variante. Ob sie erlaubt ist, sagt das <b>Approximationskriterium</b>.</p>
+    <div class="board">
+      $$n \cdot p_0 \cdot (1 - p_0) \gt 9$$
+      $$\bar P \sim N\!\left(p_0;\ \sqrt{\frac{p_0(1-p_0)}{n}}\right)$$
+      $$c_{u} = p_0 - z\cdot\sqrt{\frac{p_0(1-p_0)}{n}}$$
+      $$c_{o} = p_0 + z\cdot\sqrt{\frac{p_0(1-p_0)}{n}}$$
+      $$z = \frac{\bar p - p_0}{\sqrt{p_0(1-p_0)/n}}$$
+    </div>
+    <div class="note falle"><b>Falle:</b> Im Test steht \(p_0\) unter der Wurzel, nicht \(\bar p\). Du rechnest ja «unter \(H_0\)», also so, als ob \(p = p_0\) gälte. Beim Konfidenzintervall (Station 15) steht dagegen \(\bar p\), weil es dort kein \(p_0\) gibt.</div>
+    <h3>Beispiel 2: einseitiger Anteilstest von Hand</h3>
+    <div id="t16-stepper-p"></div>
+    <div class="note tipp"><b>Taschenrechner:</b> <span class="t16-ti">menu</span> → 6 → 7 → 5 <span class="t16-ti">1-Prop z Test</span>. Eingabe: \(p_0 = 0.9\), Erfolge \(x = 160\) (die <b>Anzahl</b>, nicht der Anteil), \(n = 200\), Alternativhypothese «prop &lt; p0». Ausgabe: \(z\), <span class="t16-ti">PVal</span> und \(\hat p\).</div>
+    <div class="note"><b>Abweichung im Skript:</b> Skript SS Bsp. 7.10 nennt für den Anteilstest das Menü 6-7-3. Auf dem TI-Nspire CX liegt unter 6 · 7 · 3 aber der Zweistichproben-z-Test. Die Musterlösung der exemplarischen Modulschlussprüfung schreibt 6 · 7 · 5, und das passt zum Menü. Nimm 6 · 7 · 5.</div>
+  </section>
+
+  <!-- ===== 5 · p-Wert ===== -->
+  <section id="pwert">
+    <span class="eyebrow">Schritt 5 · Skript SS Kap. 6.6, Bsp. 6.11, Kap. 7.3</span>
+    <h2>Der p-Wert: Wie überraschend ist die Stichprobe?</h2>
+    <p class="prose">Der TI-Nspire und Statistikprogramme geben keine Ablehnungsgrenzen aus, sondern den <b>p-Wert</b>. Er ist die Wahrscheinlichkeit, unter \(H_0\) eine Testgrösse zu erhalten, die mindestens so weit in Richtung \(H_1\) liegt wie deine. Anders gesagt: Würdest du die Ablehnungsgrenze genau auf deinen Stichprobenwert legen, wäre der p-Wert das zugehörige \(\alpha\) (Skript SS Kap. 6.6).</p>
+    <div class="board t16-eng">
+      $$\text{p-Wert} \lt \alpha \;\Rightarrow\; H_0 \text{ verwerfen}$$
+      $$\text{p-Wert} \ge \alpha \;\Rightarrow\; H_0 \text{ nicht verwerfen}$$
+      $$\text{rechtsseitig: } P(Z \ge z)$$
+      $$\text{linksseitig: } P(Z \le z)$$
+      $$\text{zweiseitig: } 2\cdot P(Z \ge |z|)$$
+    </div>
+    <div class="note falle"><b>Falle:</b> Der p-Wert ist <b>nicht</b> die Wahrscheinlichkeit, dass \(H_0\) stimmt. Er wird unter der Annahme berechnet, dass \(H_0\) stimmt. Ein p-Wert von 0.03 heisst: Wenn \(H_0\) stimmte, käme eine so extreme Stichprobe nur in 3 % der Fälle vor.</div>
+    <div class="note tipp"><b>Beide Wege, ein Ergebnis:</b> Testgrösse im Ablehnungsbereich \(\Leftrightarrow\) p-Wert \(\lt \alpha\). Den Weg über die Grenze rechnest du von Hand, den Weg über den p-Wert mit dem Rechner.</div>
+    <h3>Beispiel 3: t-Test mit p-Wert (σ unbekannt)</h3>
+    <div id="t16-stepper-t"></div>
+    <h3>Die drei Tests auf dem TI-Nspire</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Rechner-App: menu → 6 Statistik → 7 Stat-Tests; Eingabeart «Stats» für Kennzahlen, «Data» für eine Liste</caption>
+        <thead><tr><th>Situation</th><th>Menü</th><th>Eingabe</th><th>Ausgabe</th></tr></thead>
+        <tbody>
+          <tr><td>Mittelwert, \(\sigma\) bekannt</td><td>6 · 7 · 1 <span class="t16-ti">z Test</span></td><td>\(\mu_0\), \(\sigma\), \(\bar x\), \(n\), Richtung</td><td>\(z\), PVal</td></tr>
+          <tr><td>Mittelwert, \(\sigma\) unbekannt</td><td>6 · 7 · 2 <span class="t16-ti">t Test</span></td><td>\(\mu_0\), \(\bar x\), sx, \(n\), Richtung</td><td>\(t\), PVal, df</td></tr>
+          <tr><td>Anteilswert</td><td>6 · 7 · 5 <span class="t16-ti">1-Prop z Test</span></td><td>\(p_0\), \(x\) (Treffer), \(n\), Richtung</td><td>\(z\), PVal, \(\hat p\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Prüfungsbezug:</b> Aufgabe 9a der exemplarischen Modulschlussprüfung ist ein einseitiger Anteilstest, ganz mit dem Rechner lösbar. Verlangt sind fünf Felder: (i) Hypothesensystem, (ii) Prüfung des Approximationskriteriums, (iii) verwendetes Verfahren, (iv) Ergebnis auf vier Nachkommastellen, (v) Entscheidung und Interpretation. Laut Musterlösung geben unbegründete oder zum Ergebnis widersprüchliche Angaben 0 Punkte. Schreib also immer: «p-Wert = … &lt; \(\alpha\) = …, darum …». Aufgabe 9b fragt nach \(\alpha\) aus einer Entscheidungsregel und nach \(\beta\) (Schritt 6).</div>
+  </section>
+
+  <!-- ===== 6 · Fehlerarten ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Schritt 6 · Skript SS Kap. 6.4, Def. 6.6, Folien 36–37</span>
+    <h2>Fehler 1. und 2. Art</h2>
+    <p class="prose">Ein Test entscheidet auf Grund einer Stichprobe. Darum kann er sich irren, und zwar auf zwei Arten (Def. 6.6). Die Matrix zeigt alle vier Möglichkeiten: oben, was in Wirklichkeit gilt, links, wie der Test entscheidet.</p>
+    <div class="card stack t16-matrix-karte">
+      <div class="t16-steuer">
+        <span id="t16-kontext-label">Beispiel</span>
+        <div class="modes" role="group" aria-labelledby="t16-kontext-label">
+          <button type="button" class="btn on" aria-pressed="true" data-kontext="gericht">Gericht</button>
+          <button type="button" class="btn" aria-pressed="false" data-kontext="podcast">Podcast-Umfrage</button>
+          <button type="button" class="btn" aria-pressed="false" data-kontext="lieferung">Lieferkontrolle</button>
+        </div>
+      </div>
+      <p class="hint" id="t16-kontext-hyp"></p>
+      <div class="t16-matrix" role="group" aria-label="Fehlerarten-Matrix">
+        <div class="t16-mkopf t16-mecke"></div>
+        <div class="t16-mkopf">In Wirklichkeit gilt H0</div>
+        <div class="t16-mkopf">In Wirklichkeit gilt H1</div>
+        <div class="t16-mzeile">Test verwirft H0</div>
+        <button type="button" class="t16-zelle t16-fehler" data-zelle="f1"><b>✗ Fehler 1. Art</b><span class="t16-w">P = α</span><span class="t16-kx"></span></button>
+        <button type="button" class="t16-zelle t16-gut" data-zelle="macht"><b>✓ richtig</b><span class="t16-w">P = 1 − β (Macht)</span><span class="t16-kx"></span></button>
+        <div class="t16-mzeile">Test verwirft H0 nicht</div>
+        <button type="button" class="t16-zelle t16-gut" data-zelle="ok"><b>✓ richtig</b><span class="t16-w">P = 1 − α</span><span class="t16-kx"></span></button>
+        <button type="button" class="t16-zelle t16-fehler" data-zelle="f2"><b>✗ Fehler 2. Art</b><span class="t16-w">P = β</span><span class="t16-kx"></span></button>
+      </div>
+      <h3>Einordnen: Welches Feld passt?</h3>
+      <p class="t16-situation" id="t16-situation"></p>
+      <p class="rueckmeldung leer" id="t16-matrix-fb" aria-live="polite">Klick auf das passende Feld der Matrix.</p>
+      <div class="row">
+        <button type="button" class="btn primary" id="t16-matrix-weiter">Nächste Situation</button>
+        <span class="hint" id="t16-matrix-stand"></span>
+      </div>
+    </div>
+    <ul class="t16-ziele prose">
+      <li><b>Fehler 1. Art:</b> \(H_0\) verwerfen, obwohl \(H_0\) stimmt. Seine Wahrscheinlichkeit ist \(\alpha\). Du legst sie selbst fest (Bem. 6.7).</li>
+      <li><b>Fehler 2. Art:</b> \(H_0\) nicht verwerfen, obwohl \(H_0\) falsch ist. Seine Wahrscheinlichkeit heisst \(\beta\). Sie hängt vom wahren Wert ab, und den kennst du nicht. Du rechnest \(\beta\) darum für einen <b>angenommenen</b> wahren Wert \(\mu_1\) bzw. \(p_1\) (Bem. 6.7, 6.8).</li>
+      <li><b>Macht</b> \(1-\beta\): die Wahrscheinlichkeit, eine tatsächlich vorhandene Abweichung zu erkennen.</li>
+      <li>Wird \(\alpha\) kleiner, wird \(\beta\) grösser, und umgekehrt. Beide gleichzeitig klein bekommst du nur mit einem grösseren \(n\) (Folien 36–37, Kap. 6.4.1 «Trennschärfe»).</li>
+    </ul>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Wie gross wählst du α? (Skript SS Kap. 6.4.2, Punkt 3)</caption>
+        <thead><tr><th>Wenn …</th><th>dann α</th></tr></thead>
+        <tbody>
+          <tr><td>ein irrtümliches Verwerfen von \(H_0\) teuer oder gefährlich ist (Fehler 1. Art schlimm)</td><td>klein, z. B. 0.01</td></tr>
+          <tr><td>ein irrtümliches Festhalten an \(H_0\) teuer oder gefährlich ist (Fehler 2. Art schlimm)</td><td>gross, z. B. 0.10</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Beispiel 4: β berechnen (Skript SS Bsp. 6.9)</h3>
+    <p class="prose">Rezept: Nimm den Nicht-Ablehnungsbereich des Tests. Setz einen wahren Wert an. Berechne, wie wahrscheinlich die Testgrösse <b>trotzdem</b> im Nicht-Ablehnungsbereich landet.</p>
+    <div id="t16-stepper-b"></div>
+    <div class="note falle"><b>Falle beim Anteil:</b> Für \(\beta\) rechnest du die Standardabweichung mit dem wahren Anteil \(p_1\), nicht mit \(p_0\): \(\sqrt{p_1(1-p_1)/n}\). Die Grenze \(c\) selbst kommt aber aus dem Test unter \(H_0\), also mit \(p_0\). So verlangt es auch Aufgabe 9b der exemplarischen Modulschlussprüfung.</div>
+  </section>
+
+  <!-- ===== 7 · Verteilungsbild ===== -->
+  <section id="bild">
+    <span class="eyebrow">Schritt 7 · Ausprobieren</span>
+    <h2>Ablehnungsbereich, Teststatistik und p-Wert sehen</h2>
+    <p class="prose">Die Kurve zeigt, wie die standardisierte Testgrösse verteilt ist, <b>wenn \(H_0\) stimmt</b>. Rot ist der Ablehnungsbereich: Seine Fläche ist genau \(\alpha\). Die dicke senkrechte Linie mit der Beschriftung «z = …» bzw. «t = …» ist deine Teststatistik. Die Fläche hinter ihr (Akzentfarbe) ist der p-Wert. Schieb die Regler und beobachte: Sobald die Linie in den roten Bereich rutscht, wird der p-Wert kleiner als \(\alpha\).</p>
+    <div class="card rechner t16-bild">
+      <div class="t16-steuer">
+        <span id="t16-seite-label">Richtung von H1</span>
+        <div class="modes" role="group" aria-labelledby="t16-seite-label">
+          <button type="button" class="btn" aria-pressed="false" data-seite="links">linksseitig (&lt;)</button>
+          <button type="button" class="btn on" aria-pressed="true" data-seite="zwei">zweiseitig (≠)</button>
+          <button type="button" class="btn" aria-pressed="false" data-seite="rechts">rechtsseitig (&gt;)</button>
+        </div>
+      </div>
+      <div class="t16-steuer">
+        <span id="t16-vert-label">Verteilung der Teststatistik</span>
+        <div class="modes" role="group" aria-labelledby="t16-vert-label">
+          <button type="button" class="btn on" aria-pressed="true" data-vert="z">z (Normalverteilung)</button>
+          <button type="button" class="btn" aria-pressed="false" data-vert="t">t-Verteilung</button>
+        </div>
+      </div>
+      <div class="regler" id="t16-fg-zeile" hidden>
+        <label for="t16-fg">Freiheitsgrade</label>
+        <input type="range" id="t16-fg" min="3" max="60" step="1" value="19">
+        <output for="t16-fg" id="t16-fg-wert">19</output>
+      </div>
+      <div class="regler">
+        <label for="t16-alpha">Signifikanzniveau α</label>
+        <input type="range" id="t16-alpha" min="0.01" max="0.2" step="0.01" value="0.05">
+        <output for="t16-alpha" id="t16-alpha-wert">0.05</output>
+      </div>
+      <div class="regler">
+        <label for="t16-stat">Teststatistik</label>
+        <input type="range" id="t16-stat" min="-4" max="4" step="0.01" value="1.5">
+        <output for="t16-stat" id="t16-stat-wert">1.50</output>
+      </div>
+      <label class="t16-check" for="t16-beta-an"><input type="checkbox" id="t16-beta-an"> Fehler 2. Art einblenden (wahre Lage unter H1)</label>
+      <div class="regler" id="t16-delta-zeile" hidden>
+        <label for="t16-delta">wahre Lage δ</label>
+        <input type="range" id="t16-delta" min="-4" max="4" step="0.1" value="2.4">
+        <output for="t16-delta" id="t16-delta-wert">2.4</output>
+      </div>
+      <figure class="diagramm">
+        <svg id="t16-svg" class="t16-svg" viewBox="0 0 340 205" role="img" aria-labelledby="t16-svg-titel">
+          <title id="t16-svg-titel">Dichte der Teststatistik unter H0 mit rot markiertem Ablehnungsbereich, Linie für die Teststatistik und hervorgehobener p-Wert-Fläche</title>
+        </svg>
+        <figcaption>Durchgezogene Kurve: Verteilung unter \(H_0\). Gestrichelt (nur mit «Fehler 2. Art»): Verteilung, wenn in Wahrheit der Wert \(\delta\) Standardfehler neben \(\mu_0\) liegt.</figcaption>
+      </figure>
+      <div class="legend">
+        <span style="--sw:var(--bad)">Ablehnungsbereich (Fläche α)</span>
+        <span style="--sw:var(--accent)">p-Wert</span>
+        <span style="--sw:var(--const)">β (nur mit Fehler 2. Art)</span>
+      </div>
+      <div class="t16-erg" id="t16-erg" aria-live="polite"></div>
+      <div class="t16-steuer">
+        <span id="t16-bsp-label">Beispiele laden</span>
+        <div class="row" role="group" aria-labelledby="t16-bsp-label">
+          <button type="button" class="btn" data-beispiel="b64">Bsp. 6.4 (z, rechts)</button>
+          <button type="button" class="btn" data-beispiel="b611">Bsp. 6.11 (t, rechts)</button>
+          <button type="button" class="btn" data-beispiel="b69">Bsp. 6.9 (β)</button>
+          <button type="button" class="btn" data-beispiel="film">Lösungsfilm</button>
+        </div>
+      </div>
+    </div>
+    <div class="note"><b>Was ist δ?</b> δ ist der Abstand zwischen dem wahren Wert und \(\mu_0\), gemessen in Standardfehlern: \(\delta = \dfrac{\mu_1 - \mu_0}{\sigma/\sqrt n}\). In Skript-Bsp. 6.9 ist \(\delta = \dfrac{6.1 - 5.8}{0.125} = 2.4\). Das Bild rechnet mit den ungerundeten Grenzen und zeigt \(\beta = 0.3299\); mit den gerundeten Grenzen 5.555 und 6.045 wie in Beispiel 4 ergibt sich 0.3300. Probier aus: Mit grösserem \(\alpha\) schrumpft \(\beta\). Mit grösserem \(|\delta|\), etwa durch ein grösseres \(n\), schrumpft \(\beta\) ebenfalls.</div>
+  </section>
+
+  <!-- ===== 8 · Test-Assistent ===== -->
+  <section id="assistent">
+    <span class="eyebrow">Schritt 8 · Selbst durchführen</span>
+    <h2>Test-Assistent: das Schema Schritt für Schritt ausfüllen</h2>
+    <p class="prose">Wähle eine Situation. Der Assistent führt dich durch das Testschema. Jeder Schritt wird geprüft, bevor der nächste erscheint. Für die Zahlen brauchst du den Taschenrechner oder Stift und Papier. Die Situationen sind eigene Aufgaben mit eigener Lösung, nicht vom Dozenten bestätigt; alle Zahlen sind nachgerechnet.</p>
+    <div class="card stack t16-assistent">
+      <div class="t16-steuer">
+        <span id="t16-sit-label">Situation</span>
+        <div class="modes" role="group" aria-labelledby="t16-sit-label">
+          <button type="button" class="btn on" aria-pressed="true" data-sit="A">A · Kaffeeautomat</button>
+          <button type="button" class="btn" aria-pressed="false" data-sit="B">B · Lieferzeit</button>
+          <button type="button" class="btn" aria-pressed="false" data-sit="C">C · Retouren</button>
+        </div>
+      </div>
+      <div class="t16-lage" id="t16-lage"></div>
+      <ol class="t16-schritte" id="t16-schritte"></ol>
+      <div class="t16-ende" id="t16-ende" hidden></div>
+      <div class="row">
+        <span class="hint" id="t16-ass-stand" aria-live="polite"></span>
+      </div>
+      <div class="row">
+        <button type="button" class="btn" id="t16-ass-neu">Neu beginnen</button>
+        <button type="button" class="btn" id="t16-ass-alles">Alle Lösungen zeigen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Die ersten drei Aufgaben sind im Stil von Aufgabe 9 der exemplarischen Modulschlussprüfung, mit eigenen Zahlen und eigenem Kontext. Alle Lösungen sind eigene Lösungen, nicht vom Dozenten bestätigt, und mit dem Computer nachgerechnet.</p>
+    <div id="t16-u1"></div>
+    <div id="t16-u2"></div>
+    <div id="t16-u3"></div>
+    <div id="t16-u4"></div>
+    <div id="t16-u5"></div>
+    <div id="t16-u6"></div>
+    <div id="t16-u7"></div>
+    <div class="card stack">
+      <h3>Welche Testrichtung?</h3>
+      <p class="hint">Achte auf das Signalwort: Was soll gezeigt werden?</p>
+      <div id="t16-u8"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein Anteilstest wie in der Prüfung, am Stück gelöst</h2>
+    <p class="prose">Drück auf Play. Der Film startet sofort, der farbige Balken zeigt, wann der nächste Schritt kommt. Gelb leuchtet, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Aufgabe ist im Stil von Aufgabe 9a der exemplarischen Modulschlussprüfung gebaut; Zahlen und Kontext sind eigene, die Lösung ist eine eigene Lösung.</p>
+    <div id="t16-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t16-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Ein Test ist ein <b>Widerspruchsbeweis</b>: Du versuchst, \(H_0\) zu verwerfen. Beweisbar ist nur \(H_1\). Nicht verwerfen heisst nicht beweisen.</li>
+      <li>Hypothesen handeln von \(\mu\) oder \(p\). Das <b>Gleichheitszeichen steht in \(H_0\)</b>, die Vermutung in \(H_1\). Das Signalwort bestimmt links-, rechts- oder zweiseitig.</li>
+      <li><b>Testschema:</b> Grundgesamtheit, \(H_0\), \(H_1\), \(\alpha\), Voraussetzung, Verteilung unter \(H_0\), Grenze oder p-Wert, Stichprobe, Entscheid in Worten.</li>
+      <li>\(\sigma\) bekannt → <span class="t16-ti">z Test</span> (6 · 7 · 1). \(\sigma\) unbekannt → <span class="t16-ti">t Test</span> mit \(n-1\) Freiheitsgraden (6 · 7 · 2). Anteil → erst \(n\,p_0(1-p_0) \gt 9\) prüfen, dann <span class="t16-ti">1-Prop z Test</span> (6 · 7 · 5).</li>
+      <li><b>p-Wert \(\lt \alpha\) ⇒ \(H_0\) verwerfen.</b> Das ist derselbe Entscheid wie «Testgrösse im Ablehnungsbereich».</li>
+      <li><b>Fehler 1. Art</b> (\(\alpha\)): \(H_0\) fälschlich verwerfen. <b>Fehler 2. Art</b> (\(\beta\)): \(H_0\) fälschlich behalten; \(\beta\) mit dem wahren Wert \(\mu_1\) bzw. \(p_1\) rechnen. Beide klein nur mit grösserem \(n\).</li>
+    </ul>
+    <div class="board">
+      $$c = \mu_0 \pm z\cdot\frac{\sigma}{\sqrt n}$$
+      $$z = \frac{\bar x-\mu_0}{\sigma/\sqrt n}$$
+      $$t = \frac{\bar x-\mu_0}{s/\sqrt n}\ \ (n-1 \text{ FG})$$
+      $$z = \frac{\bar p - p_0}{\sqrt{p_0(1-p_0)/n}}$$
+      $$\text{einseitig: } z_{1-\alpha}$$
+      $$\text{zweiseitig: } z_{1-\alpha/2}$$
+    </div>
+    <footer>Quellen: Skript «Einführung in die Schliessende Statistik» (SS) Kap. 6.1–6.6 und 7.3; Folien Schliessende Statistik (Folie 27 sowie Testtheorie, Folien 34–37); exemplarische Modulschlussprüfung, Aufgabe 9 mit Lösungen; Aufgabenskript Stützkurs MSTB, Aufgaben 62–67. Die Beispiele 1 bis 4 folgen den Skript-Beispielen 6.3, 6.4, 6.9, 6.10 und 6.11; Übungen, Assistent und Film sind eigene Aufgaben.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Achtung: nie «${» im Text.
+  const T = String.raw;
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ======================================================================
+     Mathe-Hilfen (Normal- und t-Verteilung), ohne Bibliotheken
+     ====================================================================== */
+  // MATHE-START
+  // erfc nach Numerical Recipes (relativer Fehler unter 1.2e-7)
+  function erfc(x) {
+    const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+    const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
+      t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+    return x >= 0 ? r : 2 - r;
+  }
+  const Phi = (x) => 0.5 * erfc(-x / Math.SQRT2);
+  const phi = (x) => Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+  // Inverse Normalverteilung nach Acklam
+  function invPhi(p) {
+    const a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+    const b = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01];
+    const c = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+    const d = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
+    const pl = 0.02425;
+    let q, r;
+    if (p < pl) {
+      q = Math.sqrt(-2 * Math.log(p));
+      return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    if (p > 1 - pl) {
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      return -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    q = p - 0.5; r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  // log Gamma nach Lanczos
+  function lgamma(x) {
+    const g = 7, k = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+      -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x);
+    x -= 1;
+    let s = k[0];
+    const t = x + g + 0.5;
+    for (let i = 1; i < 9; i++) s += k[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(s);
+  }
+  // Kettenbruch für die unvollständige Betafunktion (Numerical Recipes)
+  function betacf(a, b, x) {
+    const FPMIN = 1e-300;
+    const qab = a + b, qap = a + 1, qam = a - 1;
+    let c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    d = 1 / d;
+    let h = d;
+    for (let m = 1; m <= 300; m++) {
+      const m2 = 2 * m;
+      let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d;
+      const del = d * c;
+      h *= del;
+      if (Math.abs(del - 1) < 3e-14) break;
+    }
+    return h;
+  }
+  function ibeta(a, b, x) {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    const bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  const tPdf = (x, v) => Math.exp(lgamma((v + 1) / 2) - lgamma(v / 2) - 0.5 * Math.log(v * Math.PI) - (v + 1) / 2 * Math.log(1 + x * x / v));
+  function tCdf(x, v) {
+    const ende = 0.5 * ibeta(v / 2, 0.5, v / (v + x * x));
+    return x >= 0 ? 1 - ende : ende;
+  }
+  function invT(p, v) {
+    let lo = -200, hi = 200;
+    for (let i = 0; i < 120; i++) {
+      const m = (lo + hi) / 2;
+      if (tCdf(m, v) < p) lo = m; else hi = m;
+    }
+    return (lo + hi) / 2;
+  }
+  // MATHE-ENDE
+
+  // Zahl mit fester Stellenzahl, Minus als «−»
+  function fmt(x, k) {
+    const s = Math.abs(x).toFixed(k);
+    return (x < 0 && Number(s) !== 0 ? "−" : "") + s;
+  }
+  function fmtP(p) { return p < 0.00005 ? "&lt; 0.0001" : "= " + fmt(p, 4); }
+
+  /* ======================================================================
+     Schritt 0: Sortierer H0 / H1
+     ====================================================================== */
+  L.sortierer("#t16-sort-h", {
+    kategorien: ["gehört in H0", "gehört in H1"],
+    elemente: [
+      { html: T`$\mu = 500$`, kategorie: 0, erklaerung: "Mit Gleichheitszeichen: Das ist eine Nullhypothese." },
+      { html: T`$\mu \ne 500$`, kategorie: 1, erklaerung: T`«Ungleich» ist das Gegenteil von $\mu = 500$ und steht in $H_1$ (zweiseitiger Test).` },
+      { html: T`$p \ge 0.9$`, kategorie: 0, erklaerung: T`$\ge$ enthält das Gleichheitszeichen, also $H_0$.` },
+      { html: T`$p \lt 0.25$`, kategorie: 1, erklaerung: T`Echt kleiner, ohne Gleichheitszeichen: $H_1$.` },
+      { html: "«Die Shop-Leitung will zeigen, dass die Retourenquote unter 25 % gesunken ist.»", kategorie: 1,
+        erklaerung: T`Was gezeigt werden soll, gehört in $H_1$: $p \lt 0.25$. Dazu gehört $H_0: p \ge 0.25$.` },
+      { html: "Die Angabe des Herstellers «Das Auto braucht höchstens 5.8 Liter», der eine Zeitschrift misstraut", kategorie: 0,
+        erklaerung: T`Die Behauptung des Herstellers ist der Ausgangspunkt: $H_0: \mu \le 5.8$. Die Zeitschrift will das Gegenteil zeigen: $H_1: \mu \gt 5.8$.` },
+      { html: "«Die mittlere Wartezeit hat sich verändert.»", kategorie: 1,
+        erklaerung: T`«Verändert» heisst ungleich und soll gezeigt werden: $H_1: \mu \ne \mu_0$.` }
+    ]
+  });
+
+  /* ======================================================================
+     Schritt 2: Hypothesen wählen
+     ====================================================================== */
+  L.auswahl("#t16-a-hyp", {
+    frage: "Ein Hersteller garantiert, dass mindestens 98 % seiner Teile fehlerfrei sind. Du misstraust ihm und willst das Gegenteil zeigen. Welches Hypothesensystem passt? (nach Aufgabe 67a des Stützkurs-Aufgabenskripts)",
+    optionen: [
+      T`$H_0: p \ge 0.98$, $\ H_1: p \lt 0.98$`,
+      T`$H_0: p \lt 0.98$, $\ H_1: p \ge 0.98$`,
+      T`$H_0: p = 0.98$, $\ H_1: p \ne 0.98$`,
+      T`$H_0: \bar p \ge 0.98$, $\ H_1: \bar p \lt 0.98$`
+    ],
+    richtig: 0,
+    erklaerung: T`Die Garantie «mindestens 98 %» ist die Behauptung mit Gleichheitszeichen: $H_0: p \ge 0.98$. Du willst «weniger» zeigen: $H_1: p \lt 0.98$, ein linksseitiger Test. Die letzte Option ist falsch, weil Hypothesen nie von $\bar p$ handeln.`
+  });
+
+  /* ======================================================================
+     Stepper: Zeilen sammeln sich, die neueste leuchtet
+     ====================================================================== */
+  function stepperZeilen(zeilen) {
+    return zeilen.map((z, i) => ({
+      html: '<div class="t16-st">' + zeilen.slice(0, i + 1).map((y, j) =>
+        "<div>" + (j === i ? NW(y.z) : y.z) + "</div>").join("") + "</div>",
+      warum: zeilen[i].w
+    }));
+  }
+  const NR = (n) => '<span class="t16-nr">' + n + "</span>";
+
+  // Beispiel 1: einseitiger z-Test (nach Skript Bsp. 6.4)
+  L.stepper("#t16-stepper-z", {
+    titel: "Verbrauch eines Automodells (nach Skript SS Bsp. 6.4)",
+    text: 'Ein Hersteller gibt an, sein neues Modell brauche <span data-link="mu0">im Schnitt höchstens 5.8 l/100 km</span>. Die Standardabweichung beträgt <span data-link="sigma">σ = 0.5 l</span>, die Verbräuche sind normalverteilt. Eine Zeitschrift <span data-link="h1">misstraut der Angabe</span> und misst <span data-link="n">16 Autos</span>. Ergebnis: <span data-link="xq">x̄ = 6.09 l</span>. Teste mit <span data-link="alpha">α = 5 %</span>.',
+    schritte: stepperZeilen([
+      { z: NR("1") + "Grundgesamtheit: alle Autos dieses Modells",
+        w: "Zuerst klären, über wen die Aussage gilt. Die 16 gemessenen Autos sind nur die Stichprobe." },
+      { z: NR("2") + T`$\htmlData{link=mu0}{H_0: \mu \le 5.8}$`,
+        w: "Die Angabe des Herstellers ist der Ausgangspunkt. «Höchstens» heisst ≤, und das Gleichheitszeichen gehört in H0." },
+      { z: NR("3") + T`$\htmlData{link=h1}{H_1: \mu \gt 5.8}$` + " (rechtsseitig)",
+        w: "Die Zeitschrift will zeigen, dass der Verbrauch höher ist. Nur Abweichungen nach oben zählen: Der Ablehnungsbereich liegt rechts." },
+      { z: NR("4") + T`$\htmlData{link=alpha}{\alpha = 0.05}$, $\ z_{0.95} = 1.6449$`,
+        w: "Einseitig liegen die ganzen 5 % rechts. Darum das 95-%-Quantil: invNorm(0.95) = 1.6449, nicht 1.96." },
+      { z: NR("5") + T`$\htmlData{link=sigma}{\sigma = 0.5}$ bekannt, normalverteilt $\Rightarrow$ z`,
+        w: "σ der Grundgesamtheit ist gegeben und die Daten sind normalverteilt. Also rechnest du mit der Normalverteilung." },
+      { z: NR("6") + T`$\bar X \sim N\!\left(5.8;\ \tfrac{0.5}{\sqrt{\htmlData{link=n}{16}}}\right) = N(5.8;\ 0.125)$`,
+        w: "Stimmt H0 gerade noch (µ = 5.8), streut x̄ um 5.8. Der Standardfehler ist 0.5 / 4 = 0.125." },
+      { z: NR("7") + T`$c_o = 5.8 + 1.6449 \cdot 0.125 = 6.0056$`,
+        w: "Nur in 5 % aller Stichproben läge x̄ über 6.0056, wenn H0 stimmt. Rechts davon beginnt der Ablehnungsbereich." },
+      { z: NR("8") + T`$\htmlData{link=xq}{\bar x = 6.09} \gt c_o = 6.0056$`,
+        w: "Erst jetzt kommt die Stichprobe ins Spiel. 6.09 liegt über der Grenze, also im Ablehnungsbereich." },
+      { z: NR("9") + T`$H_0$ verworfen: $\mu \gt 5.8$ (Irrtum höchstens 5 %)`,
+        w: "Interpretation zur Frage: Der Durchschnittsverbrauch liegt signifikant über der Herstellerangabe. «Signifikant» heisst: zu weit weg, um Zufall zu sein." },
+      { z: NR("TR") + T`z Test: $z = \tfrac{6.09 - 5.8}{0.125} = 2.32$, p-Wert $= 0.0102 \lt 0.05$`,
+        w: "Kontrolle mit dem Rechner: Der p-Wert ist kleiner als α. Gleicher Entscheid wie über die Grenze." }
+    ])
+  });
+
+  // Beispiel 2: Anteilstest (nach Skript Bsp. 6.10)
+  L.stepper("#t16-stepper-p", {
+    titel: "Wirkt das Allergiemittel? (nach Skript SS Bsp. 6.10)",
+    text: 'Ein Hersteller behauptet, sein Allergiemittel helfe <span data-link="p0">mindestens 90 % der Anwender</span>. Du <span data-link="h1">misstraust der Behauptung</span>. In einer Stichprobe von <span data-link="n">200 Allergikern</span> hilft es <span data-link="x">160 Personen</span>. Teste mit <span data-link="alpha">α = 5 %</span>.',
+    schritte: stepperZeilen([
+      { z: NR("1") + "Grundgesamtheit: alle Anwender des Mittels",
+        w: "Die Aussage betrifft alle Anwender, nicht nur die 200 Befragten." },
+      { z: NR("2") + T`$\htmlData{link=p0}{H_0: p \ge 0.9}$`,
+        w: "Die Behauptung des Herstellers steht in H0, mit Gleichheitszeichen." },
+      { z: NR("3") + T`$\htmlData{link=h1}{H_1: p \lt 0.9}$` + " (linksseitig)",
+        w: "Du willst zeigen, dass es weniger sind. Der Ablehnungsbereich liegt links." },
+      { z: NR("4") + T`$\htmlData{link=alpha}{\alpha = 0.05}$, $\ z_{0.95} = 1.6449$`,
+        w: "Einseitiger Test: Die ganzen 5 % liegen links. Das Quantil ist wieder 1.6449." },
+      { z: NR("5") + T`$\htmlData{link=n}{200} \cdot 0.9 \cdot 0.1 = 18 \gt 9$ ✓`,
+        w: "Approximationskriterium mit p0: erfüllt. Du darfst mit der Normalverteilung rechnen." },
+      { z: NR("6") + T`$\bar P \sim N\!\left(0.9;\ \sqrt{\tfrac{0.9 \cdot 0.1}{200}}\right) = N(0.9;\ 0.0212)$`,
+        w: "Standardfehler mit p0 = 0.9, weil du so rechnest, als ob H0 gälte." },
+      { z: NR("7") + T`$c_u = 0.9 - 1.6449 \cdot 0.0212 = 0.8651$`,
+        w: "Links von 0.8651 liegt der Ablehnungsbereich. Nur 5 % der Stichproben fielen dorthin, wenn das Mittel 90 % hilft." },
+      { z: NR("8") + T`$\htmlData{link=x}{\bar p = \tfrac{160}{200}} = 0.80 \lt c_u = 0.8651$`,
+        w: "Der Stichprobenanteil liegt deutlich im Ablehnungsbereich." },
+      { z: NR("9") + T`$H_0$ verworfen: $p \lt 0.9$`,
+        w: "Mit höchstens 5 % Irrtumswahrscheinlichkeit hilft das Mittel weniger als 90 % der Anwender. Die Behauptung des Herstellers ist widerlegt." },
+      { z: NR("TR") + T`1-Prop z Test: $z = -4.7140$, p-Wert $\approx 0.0000012$`,
+        w: "Der Rechner bestätigt: Der p-Wert ist winzig, weit unter 0.05." }
+    ])
+  });
+
+  // Beispiel 3: t-Test mit p-Wert (nach Skript Bsp. 6.11)
+  L.stepper("#t16-stepper-t", {
+    titel: "t-Test über den p-Wert (nach Skript SS Bsp. 6.11)",
+    text: 'Getestet wird <span data-link="h0">H0: µ ≤ 22 gegen H1: µ &gt; 22</span> mit <span data-link="alpha">α = 0.05</span>. Eine Stichprobe von <span data-link="n">n = 32</span> ergibt <span data-link="xq">x̄ = 23.14</span> und <span data-link="s">s = 3.253</span>. Die Standardabweichung der Grundgesamtheit ist unbekannt.',
+    schritte: stepperZeilen([
+      { z: NR("2+3") + T`$\htmlData{link=h0}{H_0: \mu \le 22,\ H_1: \mu \gt 22}$` + " (rechtsseitig)",
+        w: "Die Hypothesen sind gegeben. Der Ablehnungsbereich liegt rechts." },
+      { z: NR("5") + T`$\sigma$ unbekannt $\Rightarrow$ t mit $\htmlData{link=n}{32} - 1 = 31$ FG`,
+        w: "Nur s aus der Stichprobe ist bekannt. Darum die t-Verteilung mit n − 1 = 31 Freiheitsgraden." },
+      { z: NR("6") + T`Standardfehler $\tfrac{\htmlData{link=s}{3.253}}{\sqrt{32}} = 0.57505$`,
+        w: "Statt σ steht s im Standardfehler." },
+      { z: NR("7+8") + T`$t = \dfrac{\htmlData{link=xq}{23.14} - 22}{0.57505} = 1.9824$`,
+        w: "Die Teststatistik: x̄ liegt 1.98 Standardfehler über dem behaupteten Wert." },
+      { z: NR("7+8") + T`p-Wert $= P(T_{31} \ge 1.9824) = 0.0282$`,
+        w: "Rechtsseitig: die Fläche rechts von t. Auf dem TI: tCdf(1.9824, ∞, 31) oder direkt t Test." },
+      { z: NR("9") + T`$0.0282 \lt \htmlData{link=alpha}{0.05} \Rightarrow H_0$ verworfen`,
+        w: "Der p-Wert ist kleiner als α. Der Mittelwert der Grundgesamtheit ist signifikant grösser als 22." },
+      { z: NR("Kontr.") + T`$c_o = 22 + 1.6955 \cdot 0.57505 = 22.975 \lt 23.14$`,
+        w: "Gegenprobe über die Grenze mit invt(0.95, 31) = 1.6955: x̄ liegt im Ablehnungsbereich. Gleicher Entscheid." }
+    ])
+  });
+
+  // Beispiel 4: Fehler 2. Art (nach Skript Bsp. 6.9)
+  L.stepper("#t16-stepper-b", {
+    titel: "Wie oft übersieht der Test einen Mehrverbrauch? (nach Skript SS Bsp. 6.9)",
+    text: 'Ein Hersteller gibt <span data-link="mu0">5.8 l/100 km</span> an, σ = 0.5 l, normalverteilt. Getestet wird zweiseitig mit <span data-link="n">16 Autos</span> und α = 5 %. Angenommen, <span data-link="mu1">der wahre Durchschnitt ist 6.1 l</span>. Wie gross ist die Wahrscheinlichkeit, <span data-link="beta">H0 trotzdem nicht zu verwerfen</span>?',
+    schritte: stepperZeilen([
+      { z: NR("a") + T`$H_0: \htmlData{link=mu0}{\mu = 5.8}$, $\ H_1: \mu \ne 5.8$, Standardfehler $\tfrac{0.5}{\sqrt{\htmlData{link=n}{16}}} = 0.125$`,
+        w: "Zuerst der Test selbst, wie in Beispiel 1, aber zweiseitig." },
+      { z: NR("b") + T`Nicht-Ablehnungsbereich $[5.555;\ 6.045]$`,
+        w: "5.8 ± 1.96 · 0.125. Landet x̄ hier, bleibt H0 stehen." },
+      { z: NR("c") + T`Annahme: $\htmlData{link=mu1}{\mu_1 = 6.1}$, also ist $H_0$ falsch`,
+        w: "β gibt es nur für einen angenommenen wahren Wert. Hier ist H0 falsch, jeder Nicht-Verwurf wäre ein Fehler 2. Art." },
+      { z: NR("d") + T`$\bar X \sim N(6.1;\ 0.125)$`,
+        w: "In Wahrheit streut x̄ um 6.1. Der Standardfehler bleibt 0.125, nur die Mitte verschiebt sich." },
+      { z: NR("e") + T`$\htmlData{link=beta}{\beta} = P(5.555 \le \bar X \le 6.045 \mid \mu = 6.1)$`,
+        w: "Fehler 2. Art heisst: x̄ fällt trotzdem in den Nicht-Ablehnungsbereich." },
+      { z: NR("f") + T`$\htmlData{link=beta}{\beta} = $ normCdf$(5.555;\ 6.045;\ 6.1;\ 0.125) = 0.3300$`,
+        w: "Auf dem TI: normCdf mit unterer Grenze, oberer Grenze, μ = 6.1 und σ = 0.125." },
+      { z: NR("g") + T`Macht $1 - \beta = 0.6700$`,
+        w: "Nur in zwei von drei Fällen erkennt dieser Test einen Mehrverbrauch von 0.3 l. Mit mehr Autos stiege die Macht." }
+    ])
+  });
+
+  /* ======================================================================
+     Fehlerarten-Matrix mit Einordnen
+     ====================================================================== */
+  const KONTEXTE = {
+    gericht: {
+      hyp: "H0: «Die Angeklagte ist unschuldig.» · H1: «Die Angeklagte ist schuldig.»",
+      f1: "Eine Unschuldige wird verurteilt.",
+      macht: "Eine Schuldige wird verurteilt.",
+      ok: "Eine Unschuldige wird freigesprochen.",
+      f2: "Eine Schuldige wird mangels Beweisen freigesprochen."
+    },
+    podcast: {
+      hyp: "H0: p ≤ 0.38 (höchstens 38 % hören täglich Podcasts) · H1: p > 0.38",
+      f1: "Das Label meldet «signifikant über 38 %», obwohl es in Wahrheit höchstens 38 % sind.",
+      macht: "Es sind wirklich mehr als 38 %, und der Test erkennt es.",
+      ok: "Es sind höchstens 38 %, und der Test bleibt bei H0.",
+      f2: "Es sind in Wahrheit mehr als 38 %, aber der Test findet keinen signifikanten Unterschied."
+    },
+    lieferung: {
+      hyp: "H0: Ausschussanteil p ≤ 0.02 (Lieferung in Ordnung) · H1: p > 0.02 (zurückweisen)",
+      f1: "Eine einwandfreie Lieferung wird zurückgewiesen (Risiko des Lieferanten).",
+      macht: "Eine schlechte Lieferung wird zurückgewiesen.",
+      ok: "Eine einwandfreie Lieferung wird angenommen.",
+      f2: "Eine schlechte Lieferung wird angenommen (Risiko des Käufers)."
+    }
+  };
+  const NAMEN = { f1: "Fehler 1. Art", f2: "Fehler 2. Art", ok: "richtige Entscheidung (1 − α)", macht: "richtige Entscheidung (Macht 1 − β)" };
+  const SITUATIONEN_M = [
+    { text: "Ein Allergiemittel hilft in Wahrheit 92 % der Anwender. Der Test verwirft trotzdem H0: p ≥ 0.9.", zelle: "f1",
+      erkl: "H0 stimmt (92 % ≥ 90 %), der Test verwirft sie aber: Fehler 1. Art." },
+    { text: "In der Zielgruppe hören in Wahrheit 44 % täglich Podcasts. Die Umfrage findet keinen signifikanten Unterschied zu 38 %.", zelle: "f2",
+      erkl: "H0: p ≤ 0.38 ist falsch (44 %), der Test hält trotzdem an H0 fest: Fehler 2. Art." },
+    { text: "Eine Abfüllanlage ist richtig eingestellt. Der Test verwirft H0: µ = 500 nicht.", zelle: "ok",
+      erkl: "H0 stimmt und bleibt stehen: richtige Entscheidung. Ihre Wahrscheinlichkeit ist 1 − α." },
+    { text: "Ein Auto braucht in Wahrheit 6.1 l statt 5.8 l. Die Zeitschrift verwirft H0: µ ≤ 5.8.", zelle: "macht",
+      erkl: "H0 ist falsch, und der Test erkennt es. Die Wahrscheinlichkeit dafür ist die Macht 1 − β." },
+    { text: "Ein Angeklagter hat die Tat begangen, wird aber mangels Beweisen freigesprochen.", zelle: "f2",
+      erkl: "H0 «unschuldig» ist falsch, wird aber nicht verworfen: Fehler 2. Art." },
+    { text: "Eine Lieferung hat nur 1 % Ausschuss, wird nach dem Test aber zurückgewiesen.", zelle: "f1",
+      erkl: "H0: p ≤ 0.02 stimmt, der Test verwirft sie trotzdem: Fehler 1. Art." }
+  ];
+  (function matrix() {
+    const knoepfe = Array.from(document.querySelectorAll("[data-kontext]"));
+    const zellen = Array.from(document.querySelectorAll(".t16-zelle"));
+    const hyp = document.getElementById("t16-kontext-hyp");
+    const sit = document.getElementById("t16-situation");
+    const fb = document.getElementById("t16-matrix-fb");
+    const weiter = document.getElementById("t16-matrix-weiter");
+    const stand = document.getElementById("t16-matrix-stand");
+    let k = 0, geloest = false, richtig = 0;
+
+    function kontext(name) {
+      const K = KONTEXTE[name];
+      hyp.textContent = K.hyp;
+      zellen.forEach((z) => { z.querySelector(".t16-kx").textContent = K[z.dataset.zelle]; });
+      knoepfe.forEach((b) => {
+        const an = b.dataset.kontext === name;
+        b.classList.toggle("on", an);
+        b.setAttribute("aria-pressed", an ? "true" : "false");
+      });
+    }
+    function zeigen() {
+      const s = SITUATIONEN_M[k];
+      sit.textContent = "Situation " + (k + 1) + " von " + SITUATIONEN_M.length + ": " + s.text;
+      fb.className = "rueckmeldung leer";
+      fb.textContent = "Klick auf das passende Feld der Matrix.";
+      zellen.forEach((z) => z.classList.remove("t16-treffer"));
+      geloest = false;
+      weiter.textContent = k === SITUATIONEN_M.length - 1 ? "Nochmals von vorn" : "Nächste Situation";
+      stand.textContent = richtig + " beim ersten Versuch richtig";
+    }
+    let versuch = 0;
+    zellen.forEach((z) => z.addEventListener("click", () => {
+      if (geloest) {
+        // nach dem Lösen nur noch Kontext-Text lesen
+        return;
+      }
+      const s = SITUATIONEN_M[k];
+      versuch++;
+      if (z.dataset.zelle === s.zelle) {
+        geloest = true;
+        if (versuch === 1) richtig++;
+        z.classList.add("t16-treffer");
+        fb.className = "rueckmeldung ok";
+        fb.innerHTML = '<span class="marke">✓</span> Richtig: ' + NAMEN[s.zelle] + ". " + s.erkl;
+        stand.textContent = richtig + " beim ersten Versuch richtig";
+      } else {
+        fb.className = "rueckmeldung bad";
+        fb.innerHTML = '<span class="marke">✗</span> Nicht ganz. Frag dich zuerst: Stimmt H0 in Wirklichkeit? Dann: Hat der Test H0 verworfen?';
+      }
+    }));
+    weiter.addEventListener("click", () => {
+      if (k === SITUATIONEN_M.length - 1) { k = 0; richtig = 0; } else { k++; }
+      versuch = 0;
+      zeigen();
+    });
+    knoepfe.forEach((b) => b.addEventListener("click", () => kontext(b.dataset.kontext)));
+    kontext("gericht");
+    zeigen();
+  })();
+
+  /* ======================================================================
+     Verteilungsbild (SVG) mit Ablehnungsbereich, Teststatistik, p-Wert, β
+     ====================================================================== */
+  const bild = (function verteilungsbild() {
+    const svg = document.getElementById("t16-svg");
+    const NS = "http://www.w3.org/2000/svg";
+    const X0 = 20, X1 = 320, XMIN = -4.5, XMAX = 4.5, Y0 = 160, SKAL = 300;
+    const px = (x) => X0 + (x - XMIN) / (XMAX - XMIN) * (X1 - X0);
+    const py = (d) => Y0 - d * SKAL;
+    function el(tag, attr, eltern) {
+      const e = document.createElementNS(NS, tag);
+      Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+      (eltern || svg).appendChild(e);
+      return e;
+    }
+    function linie(f, a, b) {
+      const n = Math.max(2, Math.ceil((b - a) / 0.04));
+      let s = "";
+      for (let i = 0; i <= n; i++) {
+        const x = a + (b - a) * i / n;
+        s += (i ? " L" : "M") + px(x).toFixed(1) + " " + py(f(x)).toFixed(1);
+      }
+      return s;
+    }
+    function flaeche(f, a, b) {
+      a = Math.max(a, XMIN); b = Math.min(b, XMAX);
+      if (!(b > a)) return "";
+      return "M" + px(a).toFixed(1) + " " + Y0 + " " + linie(f, a, b).replace(/^M/, "L") + " L" + px(b).toFixed(1) + " " + Y0 + " Z";
+    }
+    // feste Teile: Gitter, Achse, Beschriftung
+    const g = el("g", { class: "s1" });
+    for (let x = -4; x <= 4; x++) {
+      el("line", { class: "gitter", x1: px(x), y1: Y0, x2: px(x), y2: Y0 + 4 }, g);
+      const t = el("text", { x: px(x), y: Y0 + 17, "text-anchor": "middle" }, g);
+      t.textContent = x < 0 ? "−" + Math.abs(x) : String(x);
+    }
+    const flRotL = el("path", { class: "t16-rot" });
+    const flRotR = el("path", { class: "t16-rot" });
+    const flBeta = el("path", { class: "t16-beta" });
+    const flPL = el("path", { class: "t16-pw" });
+    const flPR = el("path", { class: "t16-pw" });
+    // Kurve nach den Flächen zeichnen, damit sie oben liegt
+    const kurveH0 = el("path", { class: "kurve" }, el("g", { class: "s1" }));
+    const kurveH1 = el("path", { class: "t16-h1" });
+    el("line", { class: "achse", x1: X0, y1: Y0, x2: X1, y2: Y0 });
+    const kritL = el("line", { class: "markierung" });
+    const kritR = el("line", { class: "markierung" });
+    const kritLT = el("text", { class: "t16-krit-txt", y: Y0 + 36, "text-anchor": "middle" });
+    const kritRT = el("text", { class: "t16-krit-txt", y: Y0 + 36, "text-anchor": "middle" });
+    const statL = el("line", { class: "t16-stat" });
+    const statT = el("text", { class: "t16-stat-txt", y: 16, "text-anchor": "middle" });
+
+    const st = { seite: "zwei", vert: "z", df: 19, alpha: 0.05, stat: 1.5, beta: false, delta: 2.4 };
+    const q = (s) => document.querySelector(s);
+    const rFg = q("#t16-fg"), rAlpha = q("#t16-alpha"), rStat = q("#t16-stat"), rDelta = q("#t16-delta"), cBeta = q("#t16-beta-an");
+    const oFg = q("#t16-fg-wert"), oAlpha = q("#t16-alpha-wert"), oStat = q("#t16-stat-wert"), oDelta = q("#t16-delta-wert");
+    const zFg = q("#t16-fg-zeile"), zDelta = q("#t16-delta-zeile"), erg = q("#t16-erg");
+    const seiteKn = Array.from(document.querySelectorAll("[data-seite]"));
+    const vertKn = Array.from(document.querySelectorAll("[data-vert]"));
+
+    function setzeLinie(l, x, sichtbar, yOben) {
+      if (!sichtbar) { l.setAttribute("visibility", "hidden"); return; }
+      l.setAttribute("visibility", "visible");
+      l.setAttribute("x1", px(x)); l.setAttribute("x2", px(x));
+      l.setAttribute("y1", Y0); l.setAttribute("y2", yOben);
+    }
+    function setzeText(t, x, text, sichtbar) {
+      t.setAttribute("visibility", sichtbar ? "visible" : "hidden");
+      t.setAttribute("x", Math.min(X1 - 14, Math.max(X0 + 14, px(x))));
+      t.textContent = text;
+    }
+
+    function zeichnen() {
+      const istZ = st.vert === "z";
+      const dichte = istZ ? phi : (x) => tPdf(x, st.df);
+      const F = istZ ? Phi : (x) => tCdf(x, st.df);
+      const Q = istZ ? invPhi : (p) => invT(p, st.df);
+      const zwei = st.seite === "zwei", links = st.seite === "links", rechts = st.seite === "rechts";
+      const c = Q(1 - (zwei ? st.alpha / 2 : st.alpha));
+      const s = st.stat;
+      const name = istZ ? "z" : "t";
+
+      // Steuerelemente nachführen
+      seiteKn.forEach((b) => { const an = b.dataset.seite === st.seite; b.classList.toggle("on", an); b.setAttribute("aria-pressed", an ? "true" : "false"); });
+      vertKn.forEach((b) => { const an = b.dataset.vert === st.vert; b.classList.toggle("on", an); b.setAttribute("aria-pressed", an ? "true" : "false"); });
+      zFg.hidden = istZ;
+      cBeta.disabled = !istZ;
+      zDelta.hidden = !(istZ && st.beta);
+      oFg.textContent = String(st.df);
+      oAlpha.textContent = fmt(st.alpha, 2);
+      oStat.textContent = fmt(s, 2);
+      oDelta.textContent = fmt(st.delta, 1);
+
+      // Flächen und Kurven
+      kurveH0.setAttribute("d", linie(dichte, XMIN, XMAX));
+      flRotL.setAttribute("d", (links || zwei) ? flaeche(dichte, XMIN, -c) : "");
+      flRotR.setAttribute("d", (rechts || zwei) ? flaeche(dichte, c, XMAX) : "");
+      let pWert;
+      if (links) {
+        pWert = F(s);
+        flPL.setAttribute("d", flaeche(dichte, XMIN, s)); flPR.setAttribute("d", "");
+      } else if (rechts) {
+        pWert = 1 - F(s);
+        flPL.setAttribute("d", ""); flPR.setAttribute("d", flaeche(dichte, s, XMAX));
+      } else {
+        pWert = 2 * (1 - F(Math.abs(s)));
+        flPL.setAttribute("d", flaeche(dichte, XMIN, -Math.abs(s))); flPR.setAttribute("d", flaeche(dichte, Math.abs(s), XMAX));
+      }
+      let beta = null;
+      if (istZ && st.beta) {
+        const d = st.delta;
+        const f1 = (x) => phi(x - d);
+        kurveH1.setAttribute("d", linie(f1, XMIN, XMAX));
+        const a = zwei || links ? -c : XMIN, b = zwei || rechts ? c : XMAX;
+        flBeta.setAttribute("d", flaeche(f1, a, b));
+        beta = zwei ? Phi(c - d) - Phi(-c - d) : (rechts ? Phi(c - d) : 1 - Phi(-c - d));
+      } else {
+        kurveH1.setAttribute("d", ""); flBeta.setAttribute("d", "");
+      }
+
+      // Grenzen und Teststatistik
+      const innen = (x) => x >= XMIN && x <= XMAX;
+      setzeLinie(kritL, -c, (links || zwei) && innen(-c), 30);
+      setzeLinie(kritR, c, (rechts || zwei) && innen(c), 30);
+      setzeText(kritLT, -c, innen(-c) ? fmt(-c, 2) : "← " + fmt(-c, 2), links || zwei);
+      setzeText(kritRT, c, innen(c) ? fmt(c, 2) : fmt(c, 2) + " →", rechts || zwei);
+      setzeLinie(statL, Math.max(XMIN, Math.min(XMAX, s)), true, 22);
+      setzeText(statT, s, name + " = " + fmt(s, 2), true);
+
+      // Auswertung in Worten
+      const ablehnen = pWert < st.alpha;
+      const pFormel = links ? "P(" + name.toUpperCase() + " ≤ " + fmt(s, 2) + ")"
+        : rechts ? "P(" + name.toUpperCase() + " ≥ " + fmt(s, 2) + ")"
+        : "2 · P(" + name.toUpperCase() + " ≥ " + fmt(Math.abs(s), 2) + ")";
+      const kritText = zwei ? "−" + fmt(c, 4) + " und " + fmt(c, 4) + " (je α/2 = " + fmt(st.alpha / 2, 3) + " pro Seite)"
+        : (links ? fmt(-c, 4) : fmt(c, 4)) + " (ganze Fläche α = " + fmt(st.alpha, 2) + " auf einer Seite)";
+      let html = "<div><b>Kritische" + (zwei ? " Werte" : "r Wert") + ":</b> " + kritText + "</div>" +
+        "<div><b>p-Wert</b> = " + pFormel + " " + fmtP(pWert) + "</div>" +
+        '<div class="t16-entscheid">' + (ablehnen
+          ? "p-Wert &lt; α: Teststatistik im Ablehnungsbereich ⇒ H<sub>0</sub> verwerfen."
+          : "p-Wert ≥ α: Teststatistik im Nicht-Ablehnungsbereich ⇒ H<sub>0</sub> nicht verwerfen.") + "</div>";
+      if (!istZ) html += "<div>t-Verteilung mit " + st.df + " Freiheitsgraden: breiter als die Normalverteilung, darum liegen die Grenzen weiter aussen.</div>";
+      // Liegt die wahre Lage auf der Seite von H0, gibt es keinen Fehler 2. Art
+      const lageInH0 = (rechts && st.delta <= 0) || (links && st.delta >= 0) || (zwei && st.delta === 0);
+      if (beta !== null && lageInH0) html += "<div><b>Wahre Lage δ = " + fmt(st.delta, 1) + "</b> gehört zu H<sub>0</sub>. Dann ist kein Fehler 2. Art möglich: Die markierte Fläche (" + fmt(beta, 4) + ") ist hier die Wahrscheinlichkeit, H<sub>0</sub> zu Recht nicht zu verwerfen. Schieb δ auf die Seite von H<sub>1</sub>.</div>";
+      else if (beta !== null) html += "<div><b>Fehler 2. Art</b> bei δ = " + fmt(st.delta, 1) + ": β = " + fmt(beta, 4) + ", Macht 1 − β = " + fmt(1 - beta, 4) + "</div>";
+      else if (!istZ) html += '<div class="hint">β zeigt das Bild nur bei der Normalverteilung.</div>';
+      erg.innerHTML = html;
+    }
+
+    seiteKn.forEach((b) => b.addEventListener("click", () => { st.seite = b.dataset.seite; zeichnen(); }));
+    vertKn.forEach((b) => b.addEventListener("click", () => { st.vert = b.dataset.vert; zeichnen(); }));
+    rFg.addEventListener("input", () => { st.df = Number(rFg.value); zeichnen(); });
+    rAlpha.addEventListener("input", () => { st.alpha = Number(rAlpha.value); zeichnen(); });
+    rStat.addEventListener("input", () => { st.stat = Number(rStat.value); zeichnen(); });
+    rDelta.addEventListener("input", () => { st.delta = Number(rDelta.value); zeichnen(); });
+    cBeta.addEventListener("change", () => { st.beta = cBeta.checked; zeichnen(); });
+
+    function laden(cfg) {
+      Object.assign(st, { beta: false }, cfg);
+      rFg.value = String(st.df);
+      rAlpha.value = String(st.alpha);
+      rStat.value = String(st.stat);
+      rDelta.value = String(st.delta);
+      cBeta.checked = st.beta;
+      zeichnen();
+    }
+    const BEISPIELE = {
+      b64: { seite: "rechts", vert: "z", alpha: 0.05, stat: 2.32 },
+      b611: { seite: "rechts", vert: "t", df: 31, alpha: 0.05, stat: 1.9824 },
+      b69: { seite: "zwei", vert: "z", alpha: 0.05, stat: 2.4, beta: true, delta: 2.4 },
+      film: { seite: "rechts", vert: "z", alpha: 0.05, stat: 2.2518 }
+    };
+    Array.from(document.querySelectorAll("[data-beispiel]")).forEach((b) =>
+      b.addEventListener("click", () => laden(BEISPIELE[b.dataset.beispiel])));
+    zeichnen();
+    return { laden };
+  })();
+
+  /* ======================================================================
+     Test-Assistent
+     ====================================================================== */
+  const SIT = {
+    A: {
+      text: "Ein Kaffeeautomat soll im Mittel 200 ml abfüllen. Laut Hersteller beträgt die Standardabweichung σ = 6 ml. Eine Kontrolle misst 36 Becher und findet x̄ = 197.8 ml. Die Betreiberin vermutet, dass der Automat zu wenig abfüllt. Teste mit α = 5 %.",
+      bild: { seite: "links", vert: "z", alpha: 0.05, stat: -2.2 },
+      ende: T`Gegenprobe von Hand: $c_u = 200 - 1.6449 \cdot 1 = 198.36$ und $\bar x = 197.8 \lt 198.36$. Auch so liegt die Stichprobe im Ablehnungsbereich.`,
+      schritte: [
+        { nr: "1", name: "Grundgesamtheit", typ: "info", html: "alle Becher, die dieser Automat abfüllt", erkl: "Die 36 gemessenen Becher sind nur die Stichprobe." },
+        { nr: "2 + 3", name: "Hypothesen", typ: "wahl", frage: "Welches Hypothesensystem passt zur Vermutung der Betreiberin?",
+          optionen: [T`$H_0: \mu \le 200$, $\ H_1: \mu \gt 200$`, T`$H_0: \mu \ge 200$, $\ H_1: \mu \lt 200$`, T`$H_0: \mu = 200$, $\ H_1: \mu \ne 200$`, T`$H_0: \bar x \ge 200$, $\ H_1: \bar x \lt 200$`],
+          richtig: 1, erkl: T`«Zu wenig» ist die Vermutung, also $H_1: \mu \lt 200$. Das Gleichheitszeichen steht in $H_0$. Hypothesen handeln von $\mu$, nie von $\bar x$. Der Test ist linksseitig.` },
+        { nr: "4", name: "Signifikanzniveau", typ: "info", html: T`$\alpha = 0.05$, die ganzen 5 % liegen links`, erkl: "" },
+        { nr: "5", name: "Voraussetzung und Verfahren", typ: "wahl", frage: "Welches Verfahren passt?",
+          optionen: ["z Test (menu 6 · 7 · 1)", "t Test (menu 6 · 7 · 2)", "1-Prop z Test (menu 6 · 7 · 5)"],
+          richtig: 0, erkl: T`$\sigma = 6$ ml ist bekannt und $n = 36 \gt 30$: Normalverteilung, also z Test.` },
+        { nr: "6", name: "Verteilung unter H0", typ: "info", html: T`$\bar X \sim N\!\left(200;\ \tfrac{6}{\sqrt{36}}\right) = N(200;\ 1)$`, erkl: "" },
+        { nr: "7 + 8", name: "Teststatistik", typ: "zahl", frage: T`Setz die Stichprobe ein und berechne $z = \dfrac{\bar x - \mu_0}{\sigma/\sqrt n}$ auf zwei Nachkommastellen.`,
+          label: "z =", antwort: -2.2, tol: 0.006, loesung: T`$z = \dfrac{197.8 - 200}{6/\sqrt{36}} = \dfrac{-2.2}{1} = -2.20$` },
+        { nr: "7 + 8", name: "p-Wert", typ: "zahl", frage: "Bestimme den p-Wert auf vier Nachkommastellen (linksseitiger Test).",
+          label: "p-Wert =", antwort: 0.0139, tol: 0.0006, loesung: T`p-Wert $= P(Z \le -2.2) = $ normCdf$(-\infty;\ -2.2;\ 0;\ 1) = 0.0139$. Der z Test liefert direkt PVal $= 0.0139$.` },
+        { nr: "9", name: "Entscheid", typ: "wahl", frage: "Wie entscheidest du?",
+          optionen: [T`$H_0$ nicht verwerfen, weil p-Wert $\lt \alpha$`, T`$H_0$ verwerfen, weil p-Wert $\lt \alpha$`, T`$H_0$ ist bewiesen, weil p-Wert $\lt \alpha$`],
+          richtig: 1, erkl: T`$0.0139 \lt 0.05$: Die Teststatistik liegt im Ablehnungsbereich, $H_0$ wird verworfen.` },
+        { nr: "9", name: "Interpretation", typ: "wahl", frage: "Welcher Satz beantwortet die Frage richtig?",
+          optionen: ["Der Automat füllt im Mittel genau 197.8 ml ab.", "Mit 5 % Wahrscheinlichkeit füllt der Automat richtig ab.", "Der Automat füllt im Mittel signifikant weniger als 200 ml ab (Irrtumswahrscheinlichkeit höchstens 5 %)."],
+          richtig: 2, erkl: "Die Aussage betrifft µ, den Mittelwert aller Becher. 197.8 ml ist nur der Stichprobenwert, und die 5 % sind das Irrtumsrisiko des Entscheids." }
+      ]
+    },
+    B: {
+      text: "Ein Lieferdienst wirbt mit einer mittleren Lieferzeit von 30 Minuten. Die Filialleiterin will wissen, ob die mittlere Lieferzeit davon abweicht, egal in welche Richtung. Sie notiert 20 zufällige Lieferungen: x̄ = 32.4 min, s = 4.5 min. Die Lieferzeiten sind normalverteilt. Teste mit α = 5 %.",
+      bild: { seite: "zwei", vert: "t", df: 19, alpha: 0.05, stat: 2.3851 },
+      ende: T`Gegenprobe von Hand: $c = 30 \pm 2.0930 \cdot \tfrac{4.5}{\sqrt{20}}$, also Nicht-Ablehnungsbereich $[27.89;\ 32.11]$. $\bar x = 32.4$ liegt rechts daneben.`,
+      schritte: [
+        { nr: "1", name: "Grundgesamtheit", typ: "info", html: "alle Lieferungen dieser Filiale", erkl: "" },
+        { nr: "2 + 3", name: "Hypothesen", typ: "wahl", frage: "Welches Hypothesensystem passt?",
+          optionen: [T`$H_0: \mu = 30$, $\ H_1: \mu \ne 30$`, T`$H_0: \mu \le 30$, $\ H_1: \mu \gt 30$`, T`$H_0: \mu \ne 30$, $\ H_1: \mu = 30$`, T`$H_0: \mu \ge 30$, $\ H_1: \mu \lt 30$`],
+          richtig: 0, erkl: T`«Weicht ab, egal in welche Richtung» heisst ungleich: $H_1: \mu \ne 30$. Der Test ist zweiseitig.` },
+        { nr: "4", name: "Signifikanzniveau", typ: "info", html: T`$\alpha = 0.05$, je $0.025$ links und rechts`, erkl: "" },
+        { nr: "5", name: "Voraussetzung und Verfahren", typ: "wahl", frage: "Welches Verfahren passt?",
+          optionen: ["z Test (menu 6 · 7 · 1)", "t Test (menu 6 · 7 · 2)", "1-Prop z Test (menu 6 · 7 · 5)"],
+          richtig: 1, erkl: T`$\sigma$ der Grundgesamtheit ist unbekannt, nur $s = 4.5$ aus der Stichprobe: t-Verteilung mit $20 - 1 = 19$ Freiheitsgraden.` },
+        { nr: "6", name: "Verteilung unter H0", typ: "info", html: T`$T = \dfrac{\bar X - 30}{S/\sqrt{20}} \sim t_{19}$`, erkl: "" },
+        { nr: "7 + 8", name: "Teststatistik", typ: "zahl", frage: T`Berechne $t = \dfrac{\bar x - \mu_0}{s/\sqrt n}$ auf zwei Nachkommastellen.`,
+          label: "t =", antwort: 2.3851, tol: 0.006, loesung: T`$t = \dfrac{32.4 - 30}{4.5/\sqrt{20}} = \dfrac{2.4}{1.0062} = 2.3851 \approx 2.39$` },
+        { nr: "7 + 8", name: "p-Wert", typ: "zahl", frage: "Bestimme den p-Wert auf vier Nachkommastellen (zweiseitiger Test).",
+          label: "p-Wert =", antwort: 0.0276, tol: 0.0006, loesung: T`p-Wert $= 2 \cdot P(T_{19} \ge 2.3851) = 2 \cdot $ tCdf$(2.3851;\ \infty;\ 19) = 0.0276$. Der t Test mit $\mu \ne \mu_0$ liefert ihn direkt.` },
+        { nr: "9", name: "Entscheid", typ: "wahl", frage: "Wie entscheidest du?",
+          optionen: [T`$H_0$ verwerfen, weil p-Wert $\lt \alpha$`, T`$H_0$ nicht verwerfen, weil p-Wert $\gt 0.025$`, T`$H_0$ nicht verwerfen, weil $\bar x$ nahe bei 30 liegt`],
+          richtig: 0, erkl: T`Der zweiseitige p-Wert wird mit dem ganzen $\alpha = 0.05$ verglichen: $0.0276 \lt 0.05$. Die Halbierung steckt schon im p-Wert (Faktor 2).` },
+        { nr: "9", name: "Interpretation", typ: "wahl", frage: "Welcher Satz beantwortet die Frage richtig?",
+          optionen: ["Die mittlere Lieferzeit beträgt sicher 32.4 Minuten.", "Die mittlere Lieferzeit weicht signifikant von 30 Minuten ab; die Stichprobe deutet auf längere Lieferzeiten.", "Die Werbung stimmt, weil 32.4 nahe bei 30 liegt."],
+          richtig: 1, erkl: "Der zweiseitige Test zeigt eine signifikante Abweichung. Die Richtung liest du am Stichprobenmittel ab." }
+      ]
+    },
+    C: {
+      text: "Ein Online-Shop hatte bisher eine Retourenquote von 25 %. Nach der Einführung einer neuen Grössentabelle werden 400 zufällige Bestellungen geprüft: 82 davon kommen zurück. Die Shop-Leitung möchte zeigen, dass die Quote gesunken ist. Teste mit α = 1 %.",
+      bild: { seite: "links", vert: "z", alpha: 0.01, stat: -2.0785 },
+      ende: T`Gegenprobe von Hand: $c_u = 0.25 - 2.3263 \cdot 0.02165 = 0.1996$, und $\bar p = 0.205 \gt 0.1996$: nicht im Ablehnungsbereich. Mit $\alpha = 5\,\%$ wäre $H_0$ verworfen worden. Darum legst du $\alpha$ fest, bevor du die Daten anschaust.`,
+      schritte: [
+        { nr: "1", name: "Grundgesamtheit", typ: "info", html: "alle Bestellungen seit der neuen Grössentabelle", erkl: "" },
+        { nr: "2 + 3", name: "Hypothesen", typ: "wahl", frage: "Welches Hypothesensystem passt?",
+          optionen: [T`$H_0: p \le 0.25$, $\ H_1: p \gt 0.25$`, T`$H_0: \bar p \ge 0.25$, $\ H_1: \bar p \lt 0.25$`, T`$H_0: p \lt 0.25$, $\ H_1: p \ge 0.25$`, T`$H_0: p \ge 0.25$, $\ H_1: p \lt 0.25$`],
+          richtig: 3, erkl: T`Gezeigt werden soll «gesunken»: $H_1: p \lt 0.25$. $H_0$ bekommt das Gleichheitszeichen. Linksseitiger Test.` },
+        { nr: "4", name: "Signifikanzniveau", typ: "info", html: T`$\alpha = 0.01$, ganz links`, erkl: "" },
+        { nr: "5", name: "Verfahren", typ: "wahl", frage: "Welches Verfahren passt?",
+          optionen: ["z Test (menu 6 · 7 · 1)", "t Test (menu 6 · 7 · 2)", "1-Prop z Test (menu 6 · 7 · 5)"],
+          richtig: 2, erkl: "Getestet wird ein Anteil, also der 1-Prop z Test." },
+        { nr: "5", name: "Approximationskriterium", typ: "zahl", frage: T`Berechne $n \cdot p_0 \cdot (1 - p_0)$.`,
+          label: T`$n\,p_0(1-p_0) =$`, antwort: 75, tol: 0.01, loesung: T`$400 \cdot 0.25 \cdot 0.75 = 75 \gt 9$ ✓. Die Normalverteilung ist erlaubt.` },
+        { nr: "6", name: "Verteilung unter H0", typ: "info", html: T`$\bar P \sim N\!\left(0.25;\ \sqrt{\tfrac{0.25 \cdot 0.75}{400}}\right) = N(0.25;\ 0.0217)$`, erkl: "" },
+        { nr: "7 + 8", name: "Teststatistik", typ: "zahl", frage: T`Mit $\bar p = 82/400 = 0.205$: Berechne $z$ auf zwei Nachkommastellen.`,
+          label: "z =", antwort: -2.0785, tol: 0.006, loesung: T`$z = \dfrac{0.205 - 0.25}{\sqrt{0.25 \cdot 0.75/400}} = \dfrac{-0.045}{0.02165} = -2.0785 \approx -2.08$` },
+        { nr: "7 + 8", name: "p-Wert", typ: "zahl", frage: "Bestimme den p-Wert auf vier Nachkommastellen.",
+          label: "p-Wert =", antwort: 0.0188, tol: 0.0006, loesung: T`p-Wert $= P(Z \le -2.0785) = 0.0188$. Der 1-Prop z Test mit $p_0 = 0.25$, $x = 82$, $n = 400$, «prop &lt; p0» liefert ihn direkt.` },
+        { nr: "9", name: "Entscheid", typ: "wahl", frage: "Wie entscheidest du?",
+          optionen: [T`$H_0$ verwerfen, weil p-Wert $\lt 0.05$`, T`$H_0$ verwerfen, weil $\bar p = 0.205 \lt 0.25$`, T`$H_0$ nicht verwerfen, weil p-Wert $\ge \alpha = 0.01$`],
+          richtig: 2, erkl: T`Massgebend ist das vorgegebene $\alpha = 0.01$: $0.0188 \gt 0.01$. Dass $\bar p$ unter 0.25 liegt, reicht allein nicht; die Abweichung könnte Zufall sein.` },
+        { nr: "9", name: "Interpretation", typ: "wahl", frage: "Welcher Satz beantwortet die Frage richtig?",
+          optionen: ["Eine Senkung der Retourenquote ist auf dem 1-%-Niveau nicht nachgewiesen. Das heisst nicht, dass die Quote gleich geblieben ist.", "Die Quote ist bewiesenermassen bei 25 % geblieben.", "Die Quote ist signifikant auf 20.5 % gesunken."],
+          richtig: 0, erkl: "Nicht verwerfen ist kein Beweis für H0. Die Daten reichen auf diesem strengen Niveau nur nicht für den Nachweis." }
+      ]
+    }
+  };
+
+  (function assistent() {
+    const lage = document.getElementById("t16-lage");
+    const liste = document.getElementById("t16-schritte");
+    const ende = document.getElementById("t16-ende");
+    const stand = document.getElementById("t16-ass-stand");
+    const knoepfe = Array.from(document.querySelectorAll("[data-sit]"));
+    let aktiv = "A", items = [], geloest = 0, zaehlbar = 0;
+
+    function knopf(text, klasse) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn" + (klasse ? " " + klasse : "");
+      b.textContent = text;
+      return b;
+    }
+    function standZeigen() {
+      stand.textContent = geloest + " von " + zaehlbar + " Prüfschritten gelöst";
+    }
+    // Schritt als gelöst markieren und den nächsten zeigen
+    // gezeigt = true: Lösung wurde aufgedeckt, zählt nicht als gelöst
+    function fertig(i, fokus, gezeigt) {
+      const it = items[i];
+      if (it.fertig) return;
+      it.fertig = true;
+      it.li.classList.add("t16-ok");
+      if (it.def.typ !== "info" && !gezeigt) geloest++;
+      standZeigen();
+      oeffnen(i + 1, fokus);
+    }
+    function oeffnen(i, fokus) {
+      if (i >= items.length) { abschluss(fokus); return; }
+      const it = items[i];
+      it.li.hidden = false;
+      if (it.def.typ === "info") { fertig(i, fokus); return; }
+      if (fokus) {
+        const ziel = it.li.querySelector(".qopt:not([aria-disabled='true']), input");
+        if (ziel) { ziel.focus({ preventScroll: true }); it.li.scrollIntoView({ block: "nearest" }); }
+      }
+    }
+    function abschluss(fokus) {
+      const S = SIT[aktiv];
+      ende.hidden = false;
+      ende.innerHTML = "<b>✓ Testschema vollständig.</b><p>" + S.ende + "</p>";
+      const b = knopf("Im Verteilungsbild ansehen", "primary");
+      b.addEventListener("click", () => {
+        bild.laden(S.bild);
+        document.getElementById("bild").scrollIntoView({ block: "start" });
+      });
+      const reihe = document.createElement("div");
+      reihe.className = "row";
+      reihe.appendChild(b);
+      ende.appendChild(reihe);
+      L.formeln(ende);
+      if (fokus) { b.focus({ preventScroll: true }); ende.scrollIntoView({ block: "nearest" }); }
+    }
+
+    function bauen(sit) {
+      aktiv = sit;
+      const S = SIT[sit];
+      knoepfe.forEach((b) => { const an = b.dataset.sit === sit; b.classList.toggle("on", an); b.setAttribute("aria-pressed", an ? "true" : "false"); });
+      lage.innerHTML = "<b>Situation " + sit + ":</b> " + S.text;
+      liste.innerHTML = "";
+      ende.hidden = true;
+      ende.innerHTML = "";
+      items = [];
+      geloest = 0;
+      zaehlbar = S.schritte.filter((d) => d.typ !== "info").length;
+      S.schritte.forEach((d, i) => {
+        const li = document.createElement("li");
+        li.className = "t16-schritt";
+        li.hidden = true;
+        li.innerHTML = '<div class="t16-skopf"><span class="t16-snr">Schritt ' + d.nr + "</span><b>" + d.name + "</b></div>";
+        const it = { def: d, li, fertig: false };
+        items.push(it);
+        if (d.typ === "info") {
+          li.insertAdjacentHTML("beforeend", "<p>" + d.html + "</p>" + (d.erkl ? '<p class="hint">' + d.erkl + "</p>" : ""));
+        } else {
+          li.insertAdjacentHTML("beforeend", "<p>" + d.frage + "</p>");
+          const fb = document.createElement("p");
+          fb.className = "rueckmeldung leer";
+          fb.setAttribute("aria-live", "polite");
+          const erkl = document.createElement("p");
+          erkl.className = "t16-erkl";
+          erkl.hidden = true;
+          const zeige = knopf("Lösung zeigen");
+          if (d.typ === "wahl") {
+            const box = document.createElement("div");
+            box.className = "qopts";
+            const opts = d.optionen.map((o, j) => {
+              const b = document.createElement("button");
+              b.type = "button";
+              b.className = "qopt";
+              b.innerHTML = o;
+              b.addEventListener("click", () => {
+                if (it.fertig || b.getAttribute("aria-disabled") === "true") return;
+                if (j === d.richtig) {
+                  b.classList.add("right");
+                  opts.forEach((x) => x.setAttribute("aria-disabled", "true"));
+                  fb.className = "rueckmeldung ok";
+                  fb.innerHTML = '<span class="marke">✓</span> Richtig.';
+                  erkl.innerHTML = d.erkl; erkl.hidden = false; L.formeln(erkl);
+                  zeige.hidden = true;
+                  fertig(i, true);
+                } else {
+                  b.classList.add("wrong");
+                  b.setAttribute("aria-disabled", "true");
+                  fb.className = "rueckmeldung bad";
+                  fb.innerHTML = '<span class="marke">✗</span> Noch nicht. Lies die Frage nochmals und versuch eine andere Antwort.';
+                }
+              });
+              box.appendChild(b);
+              return b;
+            });
+            it.loesen = () => {
+              opts[d.richtig].classList.add("right");
+              opts.forEach((x) => x.setAttribute("aria-disabled", "true"));
+              fb.className = "rueckmeldung leer";
+              fb.textContent = "Lösung gezeigt.";
+              erkl.innerHTML = d.erkl; erkl.hidden = false; L.formeln(erkl);
+              zeige.hidden = true;
+            };
+            li.appendChild(box);
+          } else {
+            const feld = document.createElement("div");
+            feld.className = "t16-feld";
+            const id = "t16-ein-" + sit + "-" + i;
+            feld.innerHTML = '<label for="' + id + '">' + d.label + '</label><input class="zahl-feld" id="' + id + '" inputmode="decimal" autocomplete="off">';
+            const pruefen = knopf("Prüfen", "primary");
+            feld.appendChild(pruefen);
+            const eingabe = feld.querySelector("input");
+            const pruefe = () => {
+              if (it.fertig) return;
+              const w = L.zahlLesen(eingabe.value);
+              if (!Number.isFinite(w)) {
+                fb.className = "rueckmeldung leer";
+                fb.textContent = "Gib eine Zahl ein, zum Beispiel 0.0123 oder −1.5.";
+                return;
+              }
+              if (Math.abs(w - d.antwort) <= d.tol) {
+                fb.className = "rueckmeldung ok";
+                fb.innerHTML = '<span class="marke">✓</span> Richtig.';
+                erkl.innerHTML = d.loesung; erkl.hidden = false; L.formeln(erkl);
+                eingabe.readOnly = true;
+                zeige.hidden = true;
+                fertig(i, true);
+                pruefen.hidden = true;
+              } else {
+                fb.className = "rueckmeldung bad";
+                fb.innerHTML = '<span class="marke">✗</span> ' + (Math.sign(w) !== Math.sign(d.antwort) && w !== 0
+                  ? "Achte auf das Vorzeichen." : "Noch nicht. Prüf Formel, Einsetzen und Rundung.");
+              }
+            };
+            pruefen.addEventListener("click", pruefe);
+            eingabe.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); pruefe(); } });
+            it.loesen = () => {
+              eingabe.value = fmt(d.antwort, d.tol < 0.001 ? 4 : 2).replace("−", "-");
+              eingabe.readOnly = true;
+              pruefen.hidden = true;
+              fb.className = "rueckmeldung leer";
+              fb.textContent = "Lösung gezeigt.";
+              erkl.innerHTML = d.loesung; erkl.hidden = false; L.formeln(erkl);
+              zeige.hidden = true;
+            };
+            li.appendChild(feld);
+          }
+          const reihe = document.createElement("div");
+          reihe.className = "row";
+          reihe.appendChild(zeige);
+          zeige.addEventListener("click", () => {
+            it.loesen();
+            // Fokus nicht verlieren: auf den nächsten offenen Schritt setzen
+            fertig(i, true, true);
+          });
+          li.append(fb, erkl, reihe);
+        }
+        liste.appendChild(li);
+      });
+      L.formeln(lage);
+      L.formeln(liste);
+      standZeigen();
+      oeffnen(0, false);
+    }
+
+    knoepfe.forEach((b) => b.addEventListener("click", () => bauen(b.dataset.sit)));
+    document.getElementById("t16-ass-neu").addEventListener("click", () => bauen(aktiv));
+    document.getElementById("t16-ass-alles").addEventListener("click", () => {
+      items.forEach((it, i) => {
+        if (!it.fertig) {
+          it.li.hidden = false;
+          if (it.loesen) it.loesen();
+          fertig(i, false, true);
+        }
+      });
+    });
+    bauen("A");
+  })();
+
+  /* ======================================================================
+     Übungen
+     ====================================================================== */
+  L.schrittAufgabe("#t16-u1", {
+    titel: "Aufgabe 1 · Anteilstest mit dem Rechner (im Stil von Aufgabe 9a)",
+    aufgabe: "<p>Laut einer Studie fahren 62 % der Studierenden in der Schweiz täglich mit dem öffentlichen Verkehr. Eine Fachhochschule vermutet, dass der Anteil bei ihren Studierenden höher ist. Sie befragt 480 zufällig ausgewählte Studierende; 318 davon fahren täglich mit dem ÖV. Führe einen geeigneten Test mit Signifikanzniveau 5 % durch. Gib an: (i) Hypothesensystem, (ii) Prüfung des Approximationskriteriums, (iii) verwendetes Verfahren, (iv) Ergebnis auf vier Nachkommastellen, (v) Entscheidung und Interpretation.</p>",
+    schritte: [
+      { html: T`(i) $H_0: p \le 0.62$, $\quad H_1: p \gt 0.62$`,
+        warum: "Die Vermutung «höher» ist das, was gezeigt werden soll: H1. H0 bekommt das Gleichheitszeichen. Rechtsseitiger Test." },
+      { html: T`(ii) $n\,p_0(1-p_0) = 480 \cdot 0.62 \cdot 0.38 = 113.088 \gt 9$ ✓`,
+        warum: "Mit p0 = 0.62 rechnen, nicht mit dem Stichprobenanteil. Das Kriterium ist klar erfüllt." },
+      { html: T`(iii) 1-Prop z Test, menu 6 · 7 · 5: $p_0 = 0.62$, $x = 318$, $n = 480$, prop $\gt p_0$`,
+        warum: "Getestet wird ein Anteil. Eingegeben wird die Anzahl Treffer x = 318, nicht der Anteil." },
+      { html: T`(iv) p-Wert $= 0.0275$ $\quad (z = 1.9183,\ \hat p = 0.6625)$`,
+        warum: "Der Rechner liefert den p-Wert. Auf vier Nachkommastellen: 0.0275." },
+      { html: T`(v) $0.0275 \lt 0.05 = \alpha \Rightarrow H_0$ wird verworfen.`,
+        warum: "Der Entscheid muss mit dem Ergebnis begründet sein, sonst gibt es keinen Punkt." },
+      { html: "Der Anteil der täglichen ÖV-Nutzer ist bei den Studierenden dieser Fachhochschule signifikant höher als 62 %.",
+        warum: "Interpretation in den Worten der Frage. Die Vermutung der Fachhochschule ist bestätigt." },
+      { html: T`Kontrolle von Hand: $c_o = 0.62 + 1.6449 \cdot \sqrt{\tfrac{0.62 \cdot 0.38}{480}} = 0.6564 \lt \bar p = 0.6625$`,
+        warum: "Der Stichprobenanteil liegt rechts der Ablehnungsgrenze. Gleicher Entscheid wie über den p-Wert." }
+    ]
+  });
+
+  L.zahlAufgabe("#t16-u2", {
+    titel: "Aufgabe 2 · Signifikanzniveau aus einer Entscheidungsregel (im Stil von Aufgabe 9b)",
+    frage: T`Gegeben ist $H_0: p \ge 0.70$ gegen $H_1: p \lt 0.70$. Bei einem Stichprobenumfang von 150 wird $H_0$ verworfen, wenn der Stichprobenanteil $\bar p$ unter 0.64 liegt. Berechne das Signifikanzniveau $\alpha$. Runde Zwischen- und Endergebnis auf vier Nachkommastellen.`,
+    antwort: 0.0543,
+    toleranz: 0.0006,
+    anzeige: "0.0543 (ungerundet gerechnet 0.0544)",
+    hinweise: [
+      T`$\alpha$ ist die Wahrscheinlichkeit, $H_0$ zu verwerfen, obwohl $H_0$ gilt. Rechne darum mit $p_0 = 0.70$.`,
+      T`Standardabweichung von $\bar P$ unter $H_0$: $\sqrt{0.70 \cdot 0.30 / 150}$.`,
+      T`$\alpha = P(\bar P \lt 0.64 \mid p = 0.70)$, auf dem TI mit normCdf.`
+    ],
+    loesungsweg: [
+      T`Kriterium: $150 \cdot 0.70 \cdot 0.30 = 31.5 \gt 9$ ✓`,
+      T`$\sigma_0 = \sqrt{\tfrac{0.70 \cdot 0.30}{150}} = 0.0374$`,
+      T`$z = \dfrac{0.64 - 0.70}{0.0374} = -1.6043$`,
+      T`$\alpha = P(\bar P \lt 0.64) = \Phi(-1.6043) = 0.0543$ (normCdf$(-\infty;\ 0.64;\ 0.70;\ 0.0374)$)`
+    ]
+  });
+
+  L.zahlAufgabe("#t16-u3", {
+    titel: "Aufgabe 3 · Fehler 2. Art (im Stil von Aufgabe 9b)",
+    frage: T`Gleicher Test wie in Aufgabe 2: $H_0: p \ge 0.70$, $n = 150$, $H_0$ wird verworfen, falls $\bar p \lt 0.64$. Angenommen, der wahre Anteil beträgt $p_1 = 0.60$. Wie gross ist die Wahrscheinlichkeit, $H_0$ <b>nicht</b> zu verwerfen? Vier Nachkommastellen.`,
+    antwort: 0.1587,
+    toleranz: 0.0005,
+    anzeige: "β ≈ 0.1587",
+    hinweise: [
+      T`$H_0$ nicht verwerfen heisst: $\bar p \ge 0.64$.`,
+      T`Jetzt gilt in Wahrheit $p_1 = 0.60$. Die Standardabweichung rechnest du mit $p_1$.`
+    ],
+    loesungsweg: [
+      T`$\sigma_1 = \sqrt{\tfrac{0.60 \cdot 0.40}{150}} = \sqrt{0.0016} = 0.04$ (mit $p_1$!)`,
+      T`$\beta = P(\bar P \ge 0.64 \mid p = 0.60) = 1 - \Phi\!\left(\tfrac{0.64 - 0.60}{0.04}\right) = 1 - \Phi(1)$`,
+      T`$\beta = 0.1587$ (normCdf$(0.64;\ \infty;\ 0.60;\ 0.04)$). Macht: $1 - \beta = 0.8413$.`
+    ]
+  });
+
+  L.zahlAufgabe("#t16-u4", {
+    titel: "Aufgabe 4 · t-Test von Hand: Ablehnungsgrenze",
+    frage: T`Ein Hersteller gibt für seinen E-Bike-Akku eine mittlere Reichweite von mindestens 80 km an. Ein Testmagazin misst 12 Akkus: $\bar x = 76.5$ km, $s = 5.2$ km. Die Reichweiten sind normalverteilt. Das Magazin will mit $\alpha = 5\,\%$ zeigen, dass die Angabe zu hoch ist. Berechne die Ablehnungsgrenze $c_u$ auf zwei Nachkommastellen.`,
+    antwort: 77.30,
+    toleranz: 0.006,
+    einheit: "km",
+    anzeige: "c<sub>u</sub> ≈ 77.30 km",
+    hinweise: [
+      T`$H_0: \mu \ge 80$, $H_1: \mu \lt 80$: linksseitig.`,
+      T`$\sigma$ ist unbekannt: t-Verteilung mit $12 - 1 = 11$ Freiheitsgraden, invt(0.95, 11).`
+    ],
+    loesungsweg: [
+      T`$t_{11;\,0.95} = $ invt$(0.95;\ 11) = 1.7959$`,
+      T`Standardfehler: $\tfrac{5.2}{\sqrt{12}} = 1.5011$`,
+      T`$c_u = 80 - 1.7959 \cdot 1.5011 = 77.30$`,
+      T`$\bar x = 76.5 \lt 77.30$: $H_0$ wird verworfen. Die mittlere Reichweite liegt signifikant unter 80 km.`,
+      T`Kontrolle mit dem t Test: $t = -2.3316$, p-Wert $= 0.0199 \lt 0.05$.`
+    ]
+  });
+
+  L.schrittAufgabe("#t16-u5", {
+    titel: "Aufgabe 5 · Zweiseitiger z-Test von Hand",
+    aufgabe: "<p>Eine Anlage füllt Müslipackungen mit einem Sollgewicht von 500 g ab. Die Standardabweichung der Anlage ist mit σ = 4 g bekannt. Eine Stichprobe von 25 Packungen ergibt x̄ = 501.8 g. Muss die Anlage neu eingestellt werden? Teste zweiseitig mit α = 5 %, von Hand mit Ablehnungsgrenzen.</p>",
+    schritte: [
+      { html: T`$H_0: \mu = 500$, $\quad H_1: \mu \ne 500$`,
+        warum: "Neu einstellen muss man bei Abweichungen nach oben und nach unten: zweiseitig." },
+      { html: T`$\alpha = 0.05 \Rightarrow z_{0.975} = 1.96$`,
+        warum: "Zweiseitig: je 2.5 % pro Seite, invNorm(0.975)." },
+      { html: T`Standardfehler $\tfrac{4}{\sqrt{25}} = 0.8$`,
+        warum: "σ ist bekannt, also Normalverteilung mit σ/√n." },
+      { html: T`$c_u = 500 - 1.96 \cdot 0.8 = 498.43$, $\quad c_o = 500 + 1.96 \cdot 0.8 = 501.57$`,
+        warum: "Nicht-Ablehnungsbereich [498.43; 501.57]." },
+      { html: T`$\bar x = 501.8 \gt c_o = 501.57$`,
+        warum: "Das Stichprobenmittel liegt rechts der oberen Grenze, im Ablehnungsbereich." },
+      { html: T`$H_0$ verworfen: Die Anlage füllt im Mittel signifikant vom Sollgewicht abweichend ab (zu viel). Neu einstellen.`,
+        warum: "Interpretation zur Frage. Kontrolle mit dem z Test: z = 2.25, p-Wert = 0.0244 < 0.05." }
+    ]
+  });
+
+  L.wahrFalsch("#t16-u6", {
+    titel: "Aufgabe 6 · Aussagen zum Testen",
+    aussagen: [
+      { html: T`Wird $H_0$ nicht verworfen, ist $H_0$ bewiesen.`, wahr: false,
+        erklaerung: T`Nicht verwerfen heisst nur: Die Daten reichen nicht für einen Widerspruch. $H_0$ lässt sich nie beweisen (Skript SS Kap. 6.1).` },
+      { html: T`Liegt die Testgrösse im Ablehnungsbereich, gilt $H_1$ als statistisch bewiesen, mit einer Irrtumswahrscheinlichkeit von höchstens $\alpha$.`, wahr: true,
+        erklaerung: T`Genau das ist der Widerspruchsbeweis. Das Restrisiko ist der Fehler 1. Art mit Wahrscheinlichkeit $\alpha$.` },
+      { html: "Bei ein und demselben Testentscheid kann man gleichzeitig einen Fehler 1. und einen Fehler 2. Art machen.", wahr: false,
+        erklaerung: T`Ein Fehler 1. Art ist nur beim Verwerfen möglich, ein Fehler 2. Art nur beim Nicht-Verwerfen. Ein Entscheid ist immer nur eines von beidem.` },
+      { html: T`Ist der p-Wert kleiner als $\alpha$, wird $H_0$ verworfen.`, wahr: true,
+        erklaerung: T`p-Wert $\lt \alpha$ heisst: Die Testgrösse liegt im Ablehnungsbereich.` },
+      { html: T`Verkleinert man $\alpha$ bei gleichem $n$, wird $\beta$ grösser.`, wahr: true,
+        erklaerung: T`Ein kleinerer Ablehnungsbereich macht den Nicht-Ablehnungsbereich grösser. Darum bleibt der Test öfter fälschlich bei $H_0$ (Folie 36).` },
+      { html: T`Der p-Wert ist die Wahrscheinlichkeit, dass $H_0$ wahr ist.`, wahr: false,
+        erklaerung: T`Der p-Wert wird unter der Annahme berechnet, dass $H_0$ wahr ist. Er misst, wie überraschend die Stichprobe dann wäre.` },
+      { html: T`Ein zweiseitiger Test mit $\alpha = 5\,\%$ verwendet das Quantil $z = 1.6449$.`, wahr: false,
+        erklaerung: T`Zweiseitig teilt sich $\alpha$ auf beide Seiten: $z_{0.975} = 1.96$. 1.6449 gehört zum einseitigen Test.` }
+    ]
+  });
+
+  L.auswahl("#t16-u7", {
+    frage: "<b>Aufgabe 7 · α wählen.</b> Ein Prüfinstitut testet Heizlüfter. H0 lautet: «Das Gerät kann überhitzen und einen Brand auslösen.» Nur wenn H0 verworfen wird, erhält das Gerät ein Sicherheitszeichen. Wie setzt du α?",
+    optionen: ["Gross, z. B. α = 10 %", "Klein, z. B. α = 0.1 %", "α spielt hier keine Rolle"],
+    richtig: 1,
+    erklaerung: T`Ein Fehler 1. Art hiesse: Ein gefährliches Gerät bekommt das Sicherheitszeichen. Diese Folge ist schwerwiegend, darum wählst du $\alpha$ klein (Skript SS Kap. 6.4.2, Punkt 3).`
+  });
+
+  L.sortierer("#t16-u8", {
+    kategorien: ["linksseitig", "zweiseitig", "rechtsseitig"],
+    elemente: [
+      { html: "«Ist der Anteil der Nutzer noch geringer als 30 %?»", kategorie: 0, erklaerung: T`«Geringer» soll gezeigt werden: $H_1: p \lt 0.30$.` },
+      { html: "«Hat sich die mittlere Wartezeit verändert?»", kategorie: 1, erklaerung: T`«Verändert» lässt beide Richtungen offen: $H_1: \mu \ne \mu_0$.` },
+      { html: "«Ist der Benzinverbrauch höher als angegeben?»", kategorie: 2, erklaerung: T`«Höher»: $H_1: \mu \gt \mu_0$.` },
+      { html: "«Weicht das Füllgewicht vom Sollwert 500 g ab?»", kategorie: 1, erklaerung: T`«Weicht ab» ohne Richtung: $H_1: \mu \ne 500$.` },
+      { html: "«Ist die Retourenquote gesunken?»", kategorie: 0, erklaerung: T`«Gesunken»: $H_1: p \lt p_0$.` },
+      { html: "«Sind mehr als 60 % der Mitglieder für das neue Angebot?»", kategorie: 2, erklaerung: T`«Mehr als»: $H_1: p \gt 0.60$.` }
+    ]
+  });
+
+  /* ======================================================================
+     Lösungsfilm
+     ====================================================================== */
+  const F = (zeilen) => '<div class="t16-ff">' + zeilen.map((z) => "<div>" + z + "</div>").join("") + "</div>";
+  const gH0 = T`$H_0: p \le 0.38$`;
+  const gH1 = T`$H_1: p \gt 0.38$`;
+  const gH = NR("(i)") + T`$H_0: p \le 0.38,\ \ H_1: p \gt 0.38$`;
+  const gK1 = NR("(ii)") + T`$n\,p_0(1-p_0) = 420 \cdot 0.38 \cdot 0.62$`;
+  const gK = NR("(ii)") + T`$n\,p_0(1-p_0) = 98.952 \gt 9$ ✓`;
+  const gV = NR("(iii)") + "1-Prop z Test, menu 6 · 7 · 5";
+  const gE = T`$p_0 = 0.38,\ x = 182,\ n = 420$, prop $\gt p_0$`;
+  const gP = T`$\hat p = \tfrac{182}{420} = 0.4333$`;
+  const gZ = T`$z = \frac{\hat p - 0.38}{\sqrt{0.38 \cdot 0.62 / 420}} = 2.2518$`;
+  const gPW = NR("(iv)") + T`p-Wert $= 0.0122$`;
+  const gEnt = NR("(v)") + T`$0.0122 \lt 0.05 = \alpha \Rightarrow H_0$ verworfen`;
+  const gInt = "Anteil in der Zielgruppe signifikant höher als 38 %";
+  const gKon = T`Gegenprobe: $c_o = 0.38 + 1.6449 \cdot 0.0237 = 0.4190 \lt 0.4333$`;
+
+  L.film("#t16-film", {
+    phasen: ["1 · Hypothesen", "2 · Kriterium", "3 · Verfahren", "4 · Ergebnis", "5 · Entscheid"],
+    texte: [
+      'Gemäss einer Studie hören <span data-ph="p0">38 % der Jugendlichen</span> in der Schweiz täglich Podcasts. Ein Podcast-Label <span data-ph="verm">vermutet, dass der Anteil in seiner Zielgruppe höher ist</span>. Bei einer Umfrage geben <span data-ph="x">182</span> von <span data-ph="n">420 befragten Jugendlichen</span> der Zielgruppe an, täglich Podcasts zu hören. Führe einen geeigneten Test mit <span data-ph="alpha">Signifikanzniveau 5 %</span> durch: <span data-ph="teile">(i) Hypothesensystem, (ii) Approximationskriterium, (iii) Verfahren, (iv) Ergebnis auf vier Nachkommastellen, (v) Entscheidung und Interpretation</span>.'
+    ],
+    woerterbuch: [
+      "$p$ Anteil aller Jugendlichen der Zielgruppe",
+      "$p_0 = 0.38$ Vergleichswert",
+      "$n = 420$ Befragte",
+      "$x = 182$ Treffer",
+      T`$\hat p = x/n$ Anteil in der Stichprobe`,
+      T`$\alpha = 0.05$ Irrtumsrisiko`
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Aufgabe", formel: "Lösung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: die Vermutung in H1 schreiben, das Kriterium prüfen, das Verfahren mit Menü nennen, den p-Wert ablesen, mit α vergleichen und in Worten entscheiden." },
+      { ph: 0, hl: ["teile"], f: "",
+        say: "Die Aufgabe verlangt fünf Felder, (i) bis (v). Jedes gibt Punkte. Du füllst sie der Reihe nach." },
+      { hl: ["verm"], dict: 1, dh: [0], f: F([NW(T`gesucht: Aussage über $p$`)]),
+        say: "Worum geht es? Um den Anteil p aller Jugendlichen der Zielgruppe. Die 420 Befragten sind nur die Stichprobe." },
+      { hl: ["p0"], dict: 2, dh: [1], f: F([T`gesucht: Aussage über $p$`, NW(T`$p_0 = 0.38$`)]),
+        say: "Der Vergleichswert aus der Studie ist 38 Prozent. Das ist p0, die Zahl, die in beide Hypothesen kommt." },
+      { hl: ["verm"], f: F([T`$p_0 = 0.38$`, NW(gH1)]),
+        say: "Das Label vermutet einen höheren Anteil. Was gezeigt werden soll, kommt in H1: p grösser als 0.38." },
+      { f: F([NW(gH0), gH1]),
+        say: "H0 ist das Gegenteil, mit Gleichheitszeichen: p kleiner oder gleich 0.38." },
+      { f: F([gH0, gH1, NW("rechtsseitiger Test")]),
+        say: "Nur Abweichungen nach oben zählen. Der Test ist rechtsseitig, der Ablehnungsbereich liegt rechts." },
+      { ph: 1, hl: ["n"], dict: 3, dh: [2], f: F([gH, NW(gK1)]),
+        say: "Feld (ii): Darfst du mit der Normalverteilung rechnen? Das Kriterium nimmt n und p0, nicht den Stichprobenanteil." },
+      { f: F([gH, NW(gK)]),
+        say: "Das ergibt 98.952. Das ist viel grösser als 9, die Normalverteilung ist erlaubt." },
+      { ph: 2, hl: ["x"], dict: 4, dh: [3], f: F([gH, gK, NW(gV)]),
+        say: "Feld (iii): Getestet wird ein Anteil. Auf dem TI-Nspire wählst du im Menü 6, 7, 5 den 1-Prop z Test." },
+      { f: F([gH, gK, gV, NW(gE)]),
+        say: "Eingabe: p0 ist 0.38. x ist die Anzahl Treffer, also 182, nicht der Anteil. n ist 420. Als Alternative wählst du «grösser als p0»." },
+      { ph: 3, dict: 5, dh: [4], f: F([gH, gK, gV, NW(gP)]),
+        say: "Der Rechner zeigt p-Dach, 182 durch 420, also 0.4333. Die Stichprobe liegt über 38 Prozent. Die Frage ist: weit genug darüber?" },
+      { f: F([gH, gK, gV, gP, NW(gZ)]),
+        say: "Die Teststatistik z misst den Abstand in Standardfehlern. Unter der Wurzel steht p0, weil du so rechnest, als ob H0 gälte. Mit dem ungerundeten p-Dach ist z gleich 2.2518." },
+      { f: F([gH, gK, gV, gZ, NW(gPW)]),
+        say: "Feld (iv): Der p-Wert ist 0.0122. So selten käme ein so hoher Stichprobenanteil vor, wenn in Wahrheit nur 38 Prozent Podcasts hörten." },
+      { ph: 4, hl: ["alpha"], dict: 6, dh: [5], f: F([gH, gK, gV, gPW, NW(T`$0.0122 \lt 0.05 = \alpha$`)]),
+        say: "Feld (v): Vergleich mit α. 0.0122 ist kleiner als 0.05." },
+      { f: F([gH, gK, gV, gPW, NW(gEnt)]),
+        say: "Also wird H0 verworfen. Die Stichprobe passt schlecht zur Behauptung, der Anteil sei höchstens 38 Prozent." },
+      { hl: ["verm"], f: F([gH, gK, gV, gPW, gEnt, NW(gInt)]),
+        say: "Interpretation in den Worten der Frage: Der Anteil ist in der Zielgruppe signifikant höher als 38 Prozent. Die Vermutung des Labels ist bestätigt." },
+      { f: F([gH, gK, gV, gPW, gEnt, gInt, NW(gKon)]),
+        say: "Gegenprobe von Hand: Die Ablehnungsgrenze liegt bei 0.4190. Der Stichprobenanteil 0.4333 liegt darüber, also im Ablehnungsbereich. Gleicher Entscheid." },
+      { hl: [], dh: [], f: F([gH, gK, gV, NW(gPW + T` $\ (z = 2.2518)$`), gEnt, gInt]),
+        say: "Das ist die vollständige Antwort mit allen fünf Feldern. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ======================================================================
+     Selbsttest
+     ====================================================================== */
+  L.selbsttest("#t16-selbsttest", {
+    fragen: [
+      { q: T`Was gehört in die Alternativhypothese $H_1$?`,
+        o: ["Was gezeigt werden soll", "Die Behauptung mit Gleichheitszeichen", "Der Wert aus der Stichprobe"], a: 0,
+        e: T`Ein Test ist ein Widerspruchsbeweis. Beweisbar ist nur $H_1$, darum steht dort die Vermutung.` },
+      { q: T`Ein Test verwirft $H_0$ nicht (p-Wert $= 0.21$). Was folgt daraus?`,
+        o: [T`$H_0$ ist bewiesen.`, T`$H_1$ ist widerlegt.`, T`Die Daten reichen nicht, um $H_0$ zu verwerfen; $H_0$ ist damit nicht bewiesen.`], a: 2,
+        e: "Stolperfalle: Nicht verwerfen ist kein Beweis, wie ein Freispruch mangels Beweisen." },
+      { q: "Welches Hypothesensystem ist korrekt formuliert?",
+        o: [T`$H_0: \bar x = 50,\ H_1: \bar x \ne 50$`, T`$H_0: \mu \le 50,\ H_1: \mu \gt 50$`, T`$H_0: \mu \gt 50,\ H_1: \mu \le 50$`], a: 1,
+        e: T`Stolperfalle: Hypothesen handeln von $\mu$, nicht von $\bar x$. Und das Gleichheitszeichen gehört in $H_0$.` },
+      { q: T`Zweiseitiger z-Test mit $\alpha = 5\,\%$. Welches Quantil bestimmt die Ablehnungsgrenzen?`,
+        o: ["1.96", "1.6449", "2.5758"], a: 0,
+        e: T`Je 2.5 % pro Seite: $z_{0.975} = 1.96$. 1.6449 gehört zum einseitigen Test, 2.5758 zu $\alpha = 1\,\%$ zweiseitig.` },
+      { q: "Ein p-Wert von 0.03 bedeutet …",
+        o: [T`… $H_0$ ist mit 3 % Wahrscheinlichkeit wahr.`, T`… wenn $H_0$ stimmt, kommt eine mindestens so extreme Stichprobe in 3 % der Fälle vor.`, "… der Test irrt sich mit 3 % Wahrscheinlichkeit."], a: 1,
+        e: T`Stolperfalle: Der p-Wert wird unter der Annahme «$H_0$ stimmt» berechnet. Er ist keine Wahrscheinlichkeit für $H_0$.` },
+      { q: "Was ist ein Fehler 2. Art?",
+        o: [T`$H_0$ verwerfen, obwohl $H_0$ wahr ist`, T`$H_1$ verwerfen, obwohl $H_1$ falsch ist`, T`$H_0$ nicht verwerfen, obwohl $H_0$ falsch ist`], a: 2,
+        e: T`Fehler 2. Art: an einer falschen $H_0$ festhalten. Wahrscheinlichkeit $\beta$.` },
+      { q: T`Wie kannst du $\alpha$ und $\beta$ gleichzeitig verkleinern?`,
+        o: [T`$\alpha$ verkleinern`, "Die Stichprobe vergrössern", "Den p-Wert halbieren"], a: 1,
+        e: T`Nur ein grösseres $n$ macht beide kleiner (Trennschärfe, Folien 36–37). Ein kleineres $\alpha$ allein macht $\beta$ grösser.` },
+      { q: "Beim Anteilstest steht unter der Wurzel des Standardfehlers …",
+        o: [T`$p_0(1-p_0)/n$`, T`$\bar p(1-\bar p)/n$`, T`$\alpha(1-\alpha)/n$`], a: 0,
+        e: T`Stolperfalle: Der Test rechnet unter $H_0$, also mit $p_0$. $\bar p$ unter der Wurzel gehört zum Konfidenzintervall.` },
+      { q: T`Mittelwert testen, $\sigma$ unbekannt. Welches Menü auf dem TI-Nspire?`,
+        o: ["6 · 7 · 1 z Test", "6 · 7 · 5 1-Prop z Test", "6 · 7 · 2 t Test"], a: 2,
+        e: T`Ohne $\sigma$ nimmst du $s$ und die t-Verteilung mit $n-1$ Freiheitsgraden: t Test.` },
+      { q: T`In der Prüfung steht «Signifikanzniveau 2 %». Was gilt?`,
+        o: [T`$\alpha = 0.02$`, T`$\alpha = 0.98$`, T`$1 - \alpha = 0.02$`], a: 0,
+        e: T`In der Modulschlussprüfung ist mit «Signifikanzniveau» die Irrtumswahrscheinlichkeit $\alpha$ gemeint. Kleine Zahlen sind immer $\alpha$.` }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

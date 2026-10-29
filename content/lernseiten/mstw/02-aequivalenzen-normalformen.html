@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modelle, Äquivalenzen und Normalformen · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/03-resolution" title="Klauseln und Resolutionskalkül">
+  <style>
+    /* Seiteneigene Stile der Station 02: nur Präfix t02-, nur Farben aus :root */
+    .t02-ziele ul{margin:0; padding-left:1.2em}
+    .t02-ziele li{margin-bottom:4px}
+    .t02-mark{background:var(--lit); border-radius:4px; box-shadow:0 0 0 2px var(--lit)}
+    .t02-verlauf{display:flex; flex-direction:column; gap:4px}
+    .t02-zeile{padding:2px 0; min-height:1.8em}
+    .t02-zeile.t02-alt{opacity:.72}
+    .t02-zeile.t02-jetzt{border-left:3px solid var(--accent); padding-left:10px}
+    .t02-regeln{display:flex; flex-wrap:wrap; gap:8px}
+    .t02-regeln .btn{flex-direction:column; align-items:flex-start; gap:0; line-height:1.25; padding:6px 12px}
+    .t02-regeln .btn small{color:var(--muted); font-size:.78rem}
+    .t02-fb{min-height:3.2em}
+    .t02-fb .t02-ja{color:var(--ok); font-weight:600}
+    .t02-fb .t02-nein{color:var(--bad); font-weight:600}
+    .t02-gen .wahrheitstabelle td.t02-term{text-align:left; font-size:.95rem; min-width:10em; white-space:nowrap}
+    .t02-gen .wahrheitstabelle td.t02-term.t02-leer{color:var(--muted)}
+    .t02-gen .wahrheitstabelle tr.t02-falsch td{background:var(--bad-bg)}
+    .t02-gen .wahrheitstabelle tr.t02-falsch td.erg::after{content:" ✗"; color:var(--bad)}
+    .t02-gen .wahrheitstabelle tr.t02-richtig td.erg::after{content:" ✓"; color:var(--ok)}
+    .t02-gen .wahrheitstabelle td.erg{white-space:nowrap}
+    @media (max-width:480px){
+      /* Handy: Klammer-Spalte kleiner, damit die Tafel ohne seitliches Scrollen passt */
+      .t02-gen .wahrheitstabelle td.t02-term{font-size:.8rem; min-width:0}
+      .t02-gen .wahrheitstabelle th, .t02-gen .wahrheitstabelle td{padding-left:6px; padding-right:6px}
+    }
+    .t02-ergebnis{font-size:1.05rem; line-height:2}
+    .t02-label{font-size:.78rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600}
+    .t02-tafel-ok{color:var(--ok); font-weight:600}
+    .t02-tafel-nein{color:var(--bad); font-weight:600}
+    .t02-filmzeilen{font-size:.8em; line-height:1.75}
+    .t02-filmzeilen > div{white-space:normal}
+    .t02-filmzeilen .t02-blass{opacity:.5}
+    .t02-regeltab td:first-child{min-width:9.5em}
+    .t02-regeltab .hint{display:block; margin-top:2px}
+    .t02-negtab td{vertical-align:top}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="02-aequivalenzen-normalformen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S1-V2 · Äquivalenzen und Normalformen</span>
+    <h1>Modelle, Äquivalenzen und Normalformen</h1>
+    <p class="lead">In der ersten Station hast du Formeln gebaut und mit Wahrheitstafeln ausgewertet. Jetzt lernst du, Formeln zu beurteilen (immer wahr, manchmal wahr, nie wahr), sie umzubauen, ohne ihre Bedeutung zu ändern, und sie in eine Standardform zu bringen. Genau das brauchst du in der Prüfung, um Aussagen sauber zu verneinen und Sachverhalte in Formeln zu übersetzen.</p>
+    <div class="card stack t02-ziele">
+      <p><b>Danach kannst du:</b></p>
+      <ul class="prose">
+        <li>Modell, erfüllbar, unerfüllbar, Tautologie und Folgerung unterscheiden und mit der Wahrheitstafel prüfen.</li>
+        <li>die fundamentalen Äquivalenzen (Satz 2.15) anwenden und jeden Umformungsschritt mit seiner Regel benennen.</li>
+        <li>Aussagen sauber verneinen, auch «wenn …, dann …», «nur wenn» und «entweder … oder» (Prüfung, Aufgabe 1a).</li>
+        <li>eine Formel mit dem Algorithmus in KNF bringen und KNF und DNF aus einer Wahrheitstafel ablesen.</li>
+        <li>einen Sachverhalt in eine aussagenlogische Formel übersetzen (Prüfung, Aufgabe 1b).</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#modell"><b>2</b>Modell</a>
+    <a href="#aequivalenzen"><b>3</b>Äquivalenzen</a>
+    <a href="#werkstatt"><b>4</b>Werkstatt</a>
+    <a href="#negieren"><b>5</b>Verneinen</a>
+    <a href="#normalformen"><b>6</b>KNF und DNF</a>
+    <a href="#generator"><b>7</b>Generator</a>
+    <a href="#modellieren"><b>8</b>Modellieren</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Vier Begriffe, die alles tragen</h2>
+    <p class="prose">Eine Formel ist ein Satz in einer exakten Kunstsprache. Bevor du sie umbaust, musst du wissen, wovon die Rede ist: von einzelnen Aussagen, von möglichen Szenarien, von Szenarien, die passen, und von Formeln, die dasselbe bedeuten.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Aussage = Schalter</span><span class="ex"><span class="p">A</span> = «Es regnet»</span><p>Ein Satz, der entweder wahr (1) oder falsch (0) ist, wie ein Lichtschalter: an oder aus. Einfache Aussagen heissen <b>Atome</b>. Mit ¬, ∧, ∨, ⇒, ⇔ baust du daraus Formeln.</p></div>
+      <div class="concept"><span class="tag">Belegung = ein Szenario</span><span class="ex"><span class="fn">α</span>(<span class="p">A</span>) = 1, <span class="fn">α</span>(<span class="p">B</span>) = 0</span><p>Legt für jedes Atom fest, ob es wahr ist, wie eine Schalterstellung im ganzen Haus. Bei \(n\) Atomen gibt es \(2^n\) Belegungen. Das sind die Zeilen der Wahrheitstafel.</p></div>
+      <div class="concept"><span class="tag">Modell = Szenario, das passt</span><span class="ex"><span class="fn">α</span> ⊨ <span class="v">F</span></span><p>Eine Belegung, unter der die ganze Formel wahr ist. Wie ein Stundenplan, der alle Wünsche erfüllt. Hat eine Formel gar kein Modell, heisst sie <b>unerfüllbar</b>.</p></div>
+      <div class="concept"><span class="tag">Äquivalenz = gleiche Wirkung</span><span class="ex"><span class="v">F</span> ≡ <span class="v">G</span></span><p>Zwei Formeln, die in jeder Zeile der Wahrheitstafel denselben Wert haben. Wie «halb voll» und «halb leer»: andere Worte, gleiche Lage. Darum darfst du die eine durch die andere ersetzen.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Modell oder nicht?</h3>
+      <p class="hint">Die Formel lautet \(F = (A \lor B) \land \neg C\). Setz die Werte ein: \(F\) ist wahr, wenn mindestens eines von \(A\), \(B\) wahr ist und \(C\) falsch ist.</p>
+      <div id="t02-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
+    <h2>Das Wörterbuch dieser Station</h2>
+    <p class="prose">Die Farben helfen beim Lesen: <span class="p">violett</span> sind konkrete Aussagen (Atome), <span class="v">blau</span> sind Platzhalter für beliebige Formeln, <span class="fn">grün</span> ist die Belegung. Junktoren und Zeichen wie ≡ stehen in normaler Schrift.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="p">A</span>, <span class="p">B</span>, <span class="p">C</span></td><td><span class="kind kind-p">Atom</span></td><td>eine einfache Aussage, wahr oder falsch, z. B. «Es regnet»</td></tr>
+          <tr><td><span class="v">F</span>, <span class="v">G</span>, <span class="v">H</span></td><td><span class="kind kind-v">Platzhalter</span></td><td>irgendeine Formel, auch eine lange. In den Regeln darfst du für <span class="v">F</span> alles einsetzen, z. B. \(A \land \neg B\).</td></tr>
+          <tr><td><span class="fn">α</span></td><td><span class="kind kind-fn">Belegung</span></td><td>eine Funktion, die jedem Atom 0 oder 1 zuordnet. \(\alpha(F)\) ist dann der Wahrheitswert der ganzen Formel.</td></tr>
+          <tr><td>¬, ∧, ∨</td><td><span class="kind kind-op">Junktor</span></td><td>nicht, und, oder (einschliessendes Oder: auch beides)</td></tr>
+          <tr><td>⇒, ⇔</td><td><span class="kind kind-op">Junktor</span></td><td>«wenn …, dann …» (Folgerung) und «genau dann, wenn» (Äquivalenz). Beides sind Abkürzungen, siehe unten.</td></tr>
+          <tr><td>≡</td><td><span class="kind kind-op">Vergleich</span></td><td>«ist äquivalent zu». Das ist kein Junktor, sondern eine Feststellung <i>über</i> zwei Formeln.</td></tr>
+          <tr><td><span class="fn">α</span> ⊨ <span class="v">F</span></td><td><span class="kind kind-op">Vergleich</span></td><td>«α ist ein Modell von <span class="v">F</span>», also \(\alpha(F) = 1\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Zur Erinnerung aus Station 1 die Wahrheitstafel der Junktoren. Einsen sind grün, Nullen grau.</p>
+    <div class="card tablebox"><div id="t02-tab-junktoren"></div></div>
+    <div class="board">
+      $$F \Rightarrow G \;:=\; \neg F \lor G \qquad\qquad F \Leftrightarrow G \;:=\; (F \land G) \lor (\neg F \land \neg G)$$
+    </div>
+    <p class="prose">So legt das Buch die beiden Pfeile fest (Notation 2.3 b und c). Der Folgepfeil ist also nur eine Kurzschrift für «nicht \(F\) oder \(G\)». Das ist der wichtigste Trick dieser Station: Jeder Pfeil lässt sich in ¬ und ∨ auflösen.</p>
+    <div class="note falle"><b>Falle:</b> ⇔ und ≡ sehen ähnlich aus, sind aber verschieden. \(A \Leftrightarrow B\) ist eine Formel, die je nach Belegung wahr oder falsch ist. \(F \equiv G\) ist eine Behauptung über zwei Formeln: «Sie haben in jeder Zeile denselben Wert.» Beim Umformen schreibst du zwischen die Zeilen immer ≡.</div>
+    <div class="note tipp"><b>Tipp zu Klammern:</b> Üblich ist, dass ¬ am stärksten bindet, dann ∧, dann ∨, dann ⇒ und ⇔. Die Folien setzen aber fast alle Klammern. Mach es in der Prüfung genauso: lieber eine Klammer zu viel als eine Formel, die man zweideutig lesen kann.</div>
+  </section>
+
+  <!-- ===== 2 · Modell, erfüllbar, Tautologie, Folgerung ===== -->
+  <section id="modell">
+    <span class="eyebrow">Schritt 2 · Def. 2.8, Satz 2.10, Bsp. 2.11</span>
+    <h2>Modell, erfüllbar, Tautologie</h2>
+    <p class="prose">Die Definition 2.8 (Kreuzer/Kühling S. 25) sortiert Formeln danach, in wie vielen Zeilen der Wahrheitstafel sie wahr sind. In eigenen Worten:</p>
+    <ul class="prose">
+      <li><b>passend (a):</b> Eine Belegung \(\alpha\) passt zu \(F\), wenn sie jedem Atom in \(F\) einen Wert gibt.</li>
+      <li><b>Modell (b):</b> \(\alpha\) ist ein Modell von \(F\), wenn \(\alpha(F) = 1\). Man schreibt \(\alpha \models F\).</li>
+      <li><b>Modell einer Menge (c):</b> \(\alpha\) ist Modell einer Formelmenge, wenn es <i>jede</i> Formel darin wahr macht.</li>
+      <li><b>erfüllbar / unerfüllbar (d):</b> mindestens ein Modell / kein einziges Modell.</li>
+      <li><b>Tautologie (e):</b> Jede passende Belegung ist ein Modell. Die Formel ist immer wahr. Man sagt auch «allgemein gültig».</li>
+    </ul>
+    <div class="grid2">
+      <div class="card stack"><h3>Drei Schubladen</h3>
+        <p><b>Tautologie:</b> alle Zeilen 1, z. B. \(A \lor \neg A\).</p>
+        <p><b>erfüllbar, keine Tautologie:</b> manche Zeilen 1, manche 0, z. B. \(A \Rightarrow B\).</p>
+        <p><b>unerfüllbar:</b> alle Zeilen 0, z. B. \(A \land \neg A\).</p>
+        <p class="hint">Jede Tautologie ist auch erfüllbar. «Erfüllbar» heisst nur: mindestens eine Zeile mit 1.</p>
+      </div>
+      <div class="card stack"><h3>Satz 2.10: der Spiegel</h3>
+        <p>\(F\) ist genau dann eine Tautologie, wenn \(\neg F\) unerfüllbar ist.</p>
+        <p class="hint">Warum: Ist \(F\) in jeder Zeile 1, ist \(\neg F\) in jeder Zeile 0. Diesen Satz brauchst du in S1-V3: Statt «\(F\) ist immer wahr» zeigst du «\(\neg F\) ist nie wahr».</p>
+      </div>
+    </div>
+    <h3>Folgerung</h3>
+    <p class="prose">Das Buch nennt die Formel \(F \Rightarrow G\) eine <b>Folgerung</b> (Notation 2.3 b). Sie kann je nach Belegung wahr oder falsch sein. Sagst du dagegen «\(G\) folgt aus \(F\)», meinst du mehr: Jedes Modell von \(F\) ist auch ein Modell von \(G\). Das ist genau dann der Fall, wenn \(F \Rightarrow G\) eine Tautologie ist (so nutzt es auch die Lösung zu Aufgabe 2.7). Ein Beispiel ist Bsp. 2.11: \((A \Rightarrow B) \Leftrightarrow (\neg B \Rightarrow \neg A)\) ist eine Tautologie. Das ist das Prinzip des indirekten Beweises (Kontraposition): Aus «wenn \(A\), dann \(B\)» folgt «wenn nicht \(B\), dann nicht \(A\)», und umgekehrt.</p>
+
+    <h3>Beispiel: ein Modell mit der Wahrheitstafel finden</h3>
+    <p class="prose">Folie und Buch zeigen das an den Philosophen Platon, Sokrates und Aristoteles (Bsp. 2.7 und 2.9). Hier dasselbe Muster in einem eigenen Beispiel. Fahre über ein unterstrichenes Satzstück: Der passende Teil der Formel leuchtet auf.</p>
+    <div id="t02-stepper-modell"></div>
+    <div class="card tablebox"><div id="t02-tab-training"></div></div>
+    <p class="hint">Gelb mit ✓: die beiden Modelle. Genau dieselbe Spaltenstruktur hat die Tafel in Bsp. 2.9; dort sind ebenfalls die Zeilen 100 und 101 die Modelle.</p>
+    <div class="card stack">
+      <h3>Kurz prüfen</h3>
+      <div id="t02-auswahl-modell"></div>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Fundamentale Äquivalenzen ===== -->
+  <section id="aequivalenzen">
+    <span class="eyebrow">Schritt 3 · Def. 2.12, Satz 2.15, Bsp. 2.16</span>
+    <h2>Die fundamentalen Äquivalenzen</h2>
+    <p class="prose">Zwei Formeln \(F\) und \(G\) sind <b>äquivalent</b>, \(F \equiv G\), wenn jede passende Belegung beiden denselben Wert gibt (Def. 2.12). Gleichwertig dazu: \(F \Leftrightarrow G\) ist eine Tautologie. Prüfen kannst du das immer mit einer Wahrheitstafel: Die Ergebnisspalten müssen gleich sein.</p>
+    <details class="sol"><summary>So beweist du De Morgan mit der Wahrheitstafel (Bsp. 2.13 b)</summary>
+      <div class="stack">
+        <div class="tablebox"><div id="t02-tab-demorgan"></div></div>
+        <p>Die Spalten \(\neg(F \land G)\) und \(\neg F \lor \neg G\) stimmen in allen vier Zeilen überein. Also gilt \(\neg(F \land G) \equiv \neg F \lor \neg G\).</p>
+      </div>
+    </details>
+    <p class="prose">Wahrheitstafeln werden bei vielen Atomen schnell lang (bei 5 Atomen 32 Zeilen). Darum arbeitet man mit Regeln, die einmal bewiesen sind und dann immer gelten. Satz 2.15 (Kreuzer/Kühling S. 26f.) listet sie auf. Für \(F\), \(G\), \(H\) darfst du beliebige Formeln einsetzen.</p>
+    <div class="card tablebox">
+      <table class="tabelle t02-regeltab">
+        <thead><tr><th>Regel</th><th>Äquivalenzen</th></tr></thead>
+        <tbody>
+          <tr><td><b>a) Idempotenz</b><span class="hint">Doppelt gesagt ist einmal gesagt.</span></td><td>\(F \land F \equiv F\)<br>\(F \lor F \equiv F\)</td></tr>
+          <tr><td><b>b) Kommutativität</b><span class="hint">Die Reihenfolge ist egal.</span></td><td>\(F \land G \equiv G \land F\)<br>\(F \lor G \equiv G \lor F\)</td></tr>
+          <tr><td><b>c) Assoziativität</b><span class="hint">Bei gleichem Junktor sind Klammern egal.</span></td><td>\((F \land G) \land H \equiv F \land (G \land H)\)<br>\((F \lor G) \lor H \equiv F \lor (G \lor H)\)</td></tr>
+          <tr><td><b>d) Absorption</b><span class="hint">Das Grössere schluckt das Kleinere.</span></td><td>\(F \land (F \lor G) \equiv F\)<br>\(F \lor (F \land G) \equiv F\)</td></tr>
+          <tr><td><b>e) Distributivität</b><span class="hint">Ausmultiplizieren wie \(a \cdot (b + c)\), hier in beide Richtungen.</span></td><td>\(F \land (G \lor H) \equiv (F \land G) \lor (F \land H)\)<br>\(F \lor (G \land H) \equiv (F \lor G) \land (F \lor H)\)</td></tr>
+          <tr><td><b>f) Doppelnegation</b><span class="hint">Nicht nicht heisst doch.</span></td><td>\(\neg\neg F \equiv F\)</td></tr>
+          <tr><td><b>g) De Morgan</b><span class="hint">¬ in die Klammer schieben: Der Junktor kippt, jedes Glied wird verneint.</span></td><td>\(\neg(F \land G) \equiv \neg F \lor \neg G\)<br>\(\neg(F \lor G) \equiv \neg F \land \neg G\)</td></tr>
+          <tr><td><b>h) Tautologieregeln</b><span class="hint">\(F\) immer wahr: bei ∨ gewinnt \(F\), bei ∧ zählt nur \(G\).</span></td><td>\(F\) Tautologie: \(F \lor G \equiv F\)<br>\(F\) Tautologie: \(F \land G \equiv G\)</td></tr>
+          <tr><td><b>i) Unerfüllbarkeitsregeln</b><span class="hint">\(F\) nie wahr: bei ∧ gewinnt \(F\), bei ∨ zählt nur \(G\).</span></td><td>\(F\) unerfüllbar: \(F \lor G \equiv G\)<br>\(F\) unerfüllbar: \(F \land G \equiv F\)</td></tr>
+          <tr><td><b>Folgerung auflösen</b><span class="hint">Notation 2.3 b</span></td><td>\(F \Rightarrow G \equiv \neg F \lor G\)</td></tr>
+          <tr><td><b>Äquivalenz auflösen</b><span class="hint">Notation 2.3 c und Aufgabe 2.5 c</span></td><td>\(F \Leftrightarrow G \equiv (F \land G) \lor (\neg F \land \neg G)\)<br>\(F \Leftrightarrow G \equiv (F \Rightarrow G) \land (G \Rightarrow F)\)</td></tr>
+          <tr><td><b>Kontraposition</b><span class="hint">Bsp. 2.11 und Aufgabe 2.5 a</span></td><td>\(F \Rightarrow G \equiv \neg G \Rightarrow \neg F\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Du darfst jede Teilformel mitten in einer grossen Formel durch eine äquivalente ersetzen. Das garantiert ein eigener Satz im Buch (das Übungsset S1 verweist dafür zusammen mit Satz 2.15 auf Satz 2.14). Schreib bei jedem Schritt die Regel über das ≡, zum Beispiel \(\overset{\text{2.15 g}}{\equiv}\). Kommutativität und Assoziativität darfst du stillschweigend nutzen; so machen es auch die Musterlösungen.</div>
+
+    <h3>Beispiel 2.16: «entweder … oder» umformen</h3>
+    <p class="prose">Behauptung: \(\neg F \Leftrightarrow G\) ist das exklusive Oder. Klick dich durch die Umformung. Jeder Schritt nennt die Regel.</p>
+    <div id="t02-stepper-xor"></div>
+  </section>
+
+  <!-- ===== 4 · Umformungs-Werkstatt ===== -->
+  <section id="werkstatt">
+    <span class="eyebrow">Schritt 4 · Ausprobieren</span>
+    <h2>Umformungs-Werkstatt</h2>
+    <p class="prose">Hier formst du selbst um. Die gelb markierte Stelle wird als Nächstes umgebaut. Wähle die Regel, die genau auf diese Stelle passt. Liegst du richtig, erscheint die neue Zeile mit der Regel über dem ≡. Am Schluss prüfst du mit der Wahrheitstafel, dass sich die Bedeutung nie geändert hat.</p>
+    <div class="card stack" id="t02-werkstatt">
+      <div class="stepbar"><h3>Aufgabe wählen</h3><span class="stepcount" id="t02-ws-stand" aria-live="polite"></span></div>
+      <div class="modes" role="group" aria-label="Aufgabe wählen" id="t02-ws-aufgaben"></div>
+      <p class="hint" id="t02-ws-ziel"></p>
+      <div class="board t02-verlauf" id="t02-ws-verlauf"></div>
+      <p class="t02-label" id="t02-ws-frage">Welche Regel passt auf die markierte Stelle?</p>
+      <div class="t02-regeln" role="group" aria-labelledby="t02-ws-frage" id="t02-ws-regeln"></div>
+      <p class="explain t02-fb" id="t02-ws-fb" aria-live="polite"></p>
+      <div class="row">
+        <button type="button" class="btn" id="t02-ws-tipp">Tipp</button>
+        <button type="button" class="btn on" id="t02-ws-mark" aria-pressed="true">Markierung zeigen</button>
+        <button type="button" class="btn" id="t02-ws-pruefen">Mit Wahrheitstafel prüfen</button>
+        <button type="button" class="btn" id="t02-ws-neu">Von vorn</button>
+      </div>
+      <div id="t02-ws-tafel" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Verneinen ===== -->
+  <section id="negieren">
+    <span class="eyebrow">Schritt 5 · Prüfung Aufgabe 1a</span>
+    <h2>Aussagen sauber verneinen</h2>
+    <p class="prose">In der Modulschlussprüfung musst du Sätze verneinen und als guten deutschen Satz aufschreiben. «Es stimmt nicht, dass …» vor den ganzen Satz zu stellen, gibt keine Punkte. Der sichere Weg führt über die Formel: übersetzen, mit ¬ davor umformen, bis ¬ nur noch direkt vor Atomen steht, zurückübersetzen.</p>
+    <div class="card tablebox">
+      <table class="tabelle t02-negtab">
+        <thead><tr><th>Aussage</th><th>Verneinung als Formel</th><th>Verneinung als Satz</th></tr></thead>
+        <tbody>
+          <tr><td>A und B<br>\(A \land B\)</td><td>\(\neg A \lor \neg B\)</td><td>nicht A oder nicht B (oder beides nicht)</td></tr>
+          <tr><td>A oder B<br>\(A \lor B\)</td><td>\(\neg A \land \neg B\)</td><td>weder A noch B</td></tr>
+          <tr><td>wenn A, dann B<br>\(A \Rightarrow B\)</td><td>\(A \land \neg B\)</td><td>A, und trotzdem nicht B</td></tr>
+          <tr><td>A nur, wenn B<br>\(A \Rightarrow B\)</td><td>\(A \land \neg B\)</td><td>nicht B, und trotzdem A</td></tr>
+          <tr><td>A genau dann, wenn B<br>\(A \Leftrightarrow B\)</td><td>\((A \land \neg B) \lor (\neg A \land B)\)</td><td>entweder A oder B</td></tr>
+          <tr><td>entweder A oder B<br>\(\neg A \Leftrightarrow B\)</td><td>\(A \Leftrightarrow B\)</td><td>beides oder keines von beiden</td></tr>
+          <tr><td>weder A noch B<br>\(\neg A \land \neg B\)</td><td>\(A \lor B\)</td><td>A oder B (mindestens eines)</td></tr>
+          <tr><td>alle X sind Y</td><td>\(\exists x\, (X(x) \land \neg Y(x))\)</td><td>es gibt ein X, das nicht Y ist</td></tr>
+          <tr><td>kein X ist Y</td><td>\(\exists x\, (X(x) \land Y(x))\)</td><td>es gibt ein X, das Y ist</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Die letzten zwei Zeilen greifen der Prädikatenlogik vor (Station 5). Die Prüfung mischt sie in Aufgabe 1a aber schon unter die anderen Sätze.</p>
+    <div class="note falle"><b>Falle «nur wenn»:</b> «Nur wenn es schneit, fahren wir in die Berge» heisst: Fahren wir, dann schneit es. Der Pfeil zeigt <i>auf</i> das, was nach «nur wenn» steht. Die Verneinung lautet: «Es schneit nicht, und wir fahren trotzdem.»</div>
+    <div class="note falle"><b>Falle «wenn … dann»:</b> Die Verneinung von «Wenn A, dann B» ist <b>kein</b> neuer Wenn-Satz. Sie beschreibt genau den einen Fall, in dem das Versprechen gebrochen wird: A tritt ein, B aber nicht.</div>
+    <h3>Ein Satz im Stil der Prüfung</h3>
+    <div id="t02-stepper-neg"></div>
+  </section>
+
+  <!-- ===== 6 · Normalformen ===== -->
+  <section id="normalformen">
+    <span class="eyebrow">Schritt 6 · Def. 2.17, Satz 2.19, Bsp. 2.20</span>
+    <h2>KNF und DNF</h2>
+    <p class="prose">Eine Normalform ist eine Standardschreibweise, wie ein Formular mit festen Feldern. Dann sehen alle Formeln gleich gebaut aus, und Computer (und du) können sie mechanisch weiterverarbeiten. Die Bausteine dafür (Def. 2.17, Kreuzer/Kühling S. 27f.):</p>
+    <ul class="prose">
+      <li><b>Literal:</b> ein Atom (positives Literal, z. B. \(A\)) oder ein verneintes Atom (negatives Literal, z. B. \(\neg A\)). Mehr nicht: \(\neg(A \land B)\) ist kein Literal.</li>
+      <li><b>KNF</b> (konjunktive Normalform): ein UND von ODER-Klammern aus Literalen. Wie eine Checkliste: Jede Zeile muss erfüllt sein. In S1-V3 heissen diese Klammern <i>Klauseln</i>.</li>
+      <li><b>DNF</b> (disjunktive Normalform): ein ODER von UND-Klammern aus Literalen. Wie eine Liste von Szenarien: Eines davon reicht.</li>
+    </ul>
+    <div class="board">
+      $$\text{KNF: } (L_{11} \lor \dots \lor L_{1m_1}) \land \dots \land (L_{n1} \lor \dots \lor L_{nm_n})$$
+      $$\text{DNF: } (L_{11} \land \dots \land L_{1m_1}) \lor \dots \lor (L_{n1} \land \dots \land L_{nm_n})$$
+    </div>
+    <p class="prose">Beispiel 2.18: \((\neg A \land B \land C) \lor (A \land \neg B \land C) \lor (A \land B \land \neg C)\) ist in DNF, \((A \lor \neg B \lor C) \land (\neg A \lor C) \land (\neg A \lor B)\) ist in KNF. Satz 2.19 garantiert: Zu <b>jeder</b> Formel gibt es eine äquivalente KNF und eine äquivalente DNF.</p>
+
+    <h3>Algorithmus zur Erzeugung einer KNF</h3>
+    <p class="prose">Die Nummerierung entspricht Folie und Buch (S. 28). In eigenen Worten:</p>
+    <ol class="prose" start="0">
+      <li><b>Pfeile weg:</b> Ersetze ⇒ und ⇔ durch ihre Definition (Notation 2.3).</li>
+      <li><b>Doppelte ¬ weg:</b> Ersetze \(\neg\neg G\) durch \(G\).</li>
+      <li><b>De Morgan für ∧:</b> Ersetze \(\neg(G \land H)\) durch \(\neg G \lor \neg H\). Entsteht dabei \(\neg\neg K\), wende Schritt 1 an.</li>
+      <li><b>De Morgan für ∨:</b> Ersetze \(\neg(G \lor H)\) durch \(\neg G \land \neg H\). Entsteht \(\neg\neg K\), wende Schritt 1 an.</li>
+      <li><b>Wiederholen,</b> bis ¬ nur noch direkt vor Atomen steht.</li>
+      <li><b>∨ nach innen (links):</b> Ersetze \(G \lor (H \land I)\) durch \((G \lor H) \land (G \lor I)\).</li>
+      <li><b>∨ nach innen (rechts):</b> Ersetze \((G \land H) \lor I\) durch \((G \lor I) \land (H \lor I)\).</li>
+      <li><b>Wiederholen,</b> bis kein ∧ mehr in einem ∨ steckt. Jetzt ist die Formel in KNF.</li>
+    </ol>
+    <div class="note"><b>DNF:</b> Dieselben Schritte 0 bis 4. In Schritt 5 und 6 verteilst du umgekehrt ∧ über ∨: \(G \land (H \lor I)\) wird \((G \land H) \lor (G \land I)\), und \((G \lor H) \land I\) wird \((G \land I) \lor (H \land I)\) (Lösung zu Aufgabe 2.6). Beispiel: \((A \lor B) \land \neg C \equiv (A \land \neg C) \lor (B \land \neg C)\).</div>
+
+    <h3>Beispiel 2.20 Schritt für Schritt</h3>
+    <div id="t02-stepper-knf"></div>
+    <div class="note tipp"><b>Abkürzung (eigene Ergänzung):</b> Der letzte Schritt der Folie geht über eine DNF und zurück. Schneller ist die Regel \(B \land (\neg B \lor X) \equiv B \land X\). Sie folgt direkt aus Distributivität und Unerfüllbarkeitsregel: \(B \land (\neg B \lor X) \equiv (B \land \neg B) \lor (B \land X) \equiv B \land X\). Mit \(X = A \lor C\) bist du in einem Schritt am Ziel. Beide Wege sind richtig.</div>
+    <div class="note"><b>Was KNF und DNF sofort verraten:</b> Enthält jede UND-Klammer einer DNF ein Paar \(A\) und \(\neg A\), ist die Formel <b>unerfüllbar</b> (Übungsset S1, Aufgabe 2b). Enthält jede ODER-Klammer einer KNF ein solches Paar, ist sie eine <b>Tautologie</b>.</div>
+
+    <h3>KNF und DNF direkt aus der Wahrheitstafel</h3>
+    <p class="prose">Es gibt einen zweiten Weg, der ohne Umformen auskommt. Er steht nicht auf den Folien von S1-V2, ist aber Standard und liefert eine äquivalente Normalform:</p>
+    <ul class="prose">
+      <li><b>DNF:</b> Nimm jede Zeile mit \(F = 1\). Bilde eine UND-Klammer: Atom mit Wert 1 bleibt, Atom mit Wert 0 wird verneint. Verbinde alle Klammern mit ∨. Jede Klammer ist genau in ihrer Zeile wahr.</li>
+      <li><b>KNF:</b> Nimm jede Zeile mit \(F = 0\). Bilde eine ODER-Klammer mit <i>umgekehrten</i> Vorzeichen: Atom mit Wert 1 wird verneint, Atom mit Wert 0 bleibt. Verbinde alle Klammern mit ∧. Jede Klammer ist genau in ihrer Zeile falsch.</li>
+    </ul>
+    <p class="prose">So entstandene Normalformen sind oft länger als nötig. Du kannst sie danach mit Satz 2.15 vereinfachen. Probier es im Generator aus.</p>
+  </section>
+
+  <!-- ===== 7 · Normalform-Generator ===== -->
+  <section id="generator">
+    <span class="eyebrow">Schritt 7 · Ausprobieren</span>
+    <h2>Normalform-Generator</h2>
+    <p class="prose">Klicke in der Spalte \(F\) auf eine Zahl, um sie zwischen 0 und 1 umzuschalten. Die Normalform entsteht live darunter. Fahre über eine Zeile oder tippe darauf: Die Klammer, die zu dieser Zeile gehört, leuchtet auf.</p>
+    <div class="card stack t02-gen" id="t02-generator" data-link-bereich>
+      <p class="t02-label" id="t02-gen-vl-lbl">Vorlage laden</p>
+      <div class="modes" role="group" aria-labelledby="t02-gen-vl-lbl" id="t02-gen-vorlagen"></div>
+      <p class="t02-label" id="t02-gen-art-lbl">Normalform</p>
+      <div class="modes" role="group" aria-labelledby="t02-gen-art-lbl">
+        <button type="button" class="btn on" id="t02-gen-dnf" aria-pressed="true">DNF aus den 1-Zeilen</button>
+        <button type="button" class="btn" id="t02-gen-knf" aria-pressed="false">KNF aus den 0-Zeilen</button>
+      </div>
+      <div class="tablebox"><table class="wahrheitstabelle" id="t02-gen-tab"></table></div>
+      <div class="board"><p class="t02-ergebnis" id="t02-gen-formel"></p></div>
+      <p class="info" id="t02-gen-info" aria-live="polite"></p>
+      <div class="card stack">
+        <h3>Selbst ausfüllen</h3>
+        <p class="prose">Hol dir eine Formel und setz die Spalte \(F\) von Hand. «Spalte prüfen» zeigt, welche Zeilen noch falsch sind.</p>
+        <div class="row">
+          <button type="button" class="btn" id="t02-gen-uebung">Neue Übungsformel</button>
+          <button type="button" class="btn primary" id="t02-gen-check">Spalte prüfen</button>
+        </div>
+        <p class="t02-ergebnis" id="t02-gen-ziel">Noch keine Übungsformel gewählt.</p>
+        <p class="rueckmeldung leer" id="t02-gen-fb" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Modellieren ===== -->
+  <section id="modellieren">
+    <span class="eyebrow">Schritt 8 · Prüfung Aufgabe 1b</span>
+    <h2>Sachverhalte aussagenlogisch modellieren</h2>
+    <p class="prose">Modellieren heisst: einen Text in eine Formel übersetzen. Das Vorgehen ist immer dasselbe (vgl. Bsp. 2.7):</p>
+    <ol class="prose">
+      <li><b>Abkürzungen festlegen:</b> Jede einfache Aussage, die wahr oder falsch sein kann, bekommt einen Buchstaben.</li>
+      <li><b>Satz für Satz übersetzen:</b> Achte auf die Signalwörter in der Tabelle unten.</li>
+      <li><b>Alles mit ∧ verbinden:</b> Alle Regeln gelten gleichzeitig.</li>
+    </ol>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Signalwort</th><th>Formel</th></tr></thead>
+        <tbody>
+          <tr><td>wenn A, dann B · falls A, B · sofern A, B</td><td>\(A \Rightarrow B\)</td></tr>
+          <tr><td>A nur (dann), wenn B · A nur, falls B</td><td>\(A \Rightarrow B\)</td></tr>
+          <tr><td>A genau dann, wenn B</td><td>\(A \Leftrightarrow B\)</td></tr>
+          <tr><td>A oder B (auch beides)</td><td>\(A \lor B\)</td></tr>
+          <tr><td>entweder A oder B (nicht beides)</td><td>\(\neg A \Leftrightarrow B\)</td></tr>
+          <tr><td>weder A noch B</td><td>\(\neg A \land \neg B\)</td></tr>
+          <tr><td>nicht beide · A und B vertragen sich nicht</td><td>\(\neg(A \land B)\)</td></tr>
+          <tr><td>A, aber B · A, obwohl B</td><td>\(A \land B\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Ein Sachverhalt im Stil der Prüfung</h3>
+    <div id="t02-stepper-openair"></div>
+    <details class="sol"><summary>Zusatz: Welche Abende sind überhaupt möglich?</summary>
+      <div class="stack">
+        <p>Die Prüfung verlangt nur die Formel. Mit einer Wahrheitstafel über \(H, G, T, S\) (16 Zeilen) findest du die Modelle von \(F\). Es sind genau drei:</p>
+        <ul>
+          <li>\(H = 0,\ G = 0,\ T = 0,\ S = 0\): Sie gehen nicht zur Hauptbühne und machen nichts davon.</li>
+          <li>\(H = 0,\ G = 1,\ T = 0,\ S = 0\): Sie kaufen ein Getränk, mehr nicht.</li>
+          <li>\(H = 1,\ G = 1,\ T = 1,\ S = 0\): Hauptbühne, Getränk, tanzen.</li>
+        </ul>
+        <p>Ein Shirt kaufen sie also nie. Eigene Lösung, nicht vom Dozenten bestätigt; mit einem Programm über alle 16 Belegungen nachgerechnet.</p>
+      </div>
+    </details>
+    <div class="note"><b>Zur Musterlösung der Prüfung:</b> Dort steht die dritte Regel ohne Klammern als \(L \Leftrightarrow B \land \neg S_2 \land S_1\). Gemeint ist \(L \Leftrightarrow (B \land \neg S_2 \land S_1)\), weil ∧ stärker bindet als ⇔. Setz die Klammern in deiner Lösung selbst, dann gibt es keine Diskussion.</div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst lösen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zuerst kurze Aufgaben, dann drei im Stil der Prüfung und des Übungssets. Einen Taschenrechner brauchst du hier nicht: Bewertet wird der Weg mit benannten Regeln.</p>
+    <p class="hint">Alle Aufgaben haben eigene Kontexte. Die Lösungen sind eigene Lösungen, nicht vom Dozenten bestätigt. Jede Umformung ist mit einem Programm über alle Belegungen nachgerechnet.</p>
+    <div id="t02-ue-auswahl"></div>
+    <div id="t02-ue-wf"></div>
+    <div class="card stack">
+      <h3>KNF, DNF, beides oder keines?</h3>
+      <p class="hint">Eine einzelne Klammer aus Literalen zählt als beides: \(A \land \neg B\) ist eine DNF mit einer UND-Klammer und eine KNF mit zwei Ein-Literal-Klammern.</p>
+      <div id="t02-ue-sortierer"></div>
+    </div>
+    <div id="t02-ue-zahl1"></div>
+    <div id="t02-ue-zahl2"></div>
+    <div id="t02-ue-neg"></div>
+    <div id="t02-ue-modell"></div>
+    <div id="t02-ue-dnf"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Die ganze Aufgabe am Stück gelöst</h2>
+    <p class="prose">Drück auf Play. Der Film löst eine Aufgabe im Stil von Aufgabe 1 des Übungssets S1 (eigener Kontext): einen Sachverhalt übersetzen und mit Satz 2.15 auf eine einfache Aussage bringen. Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Der Weg folgt dem Muster der Musterlösung zu Aufgabe 1 des Übungssets; jede Zeile ist mit einer Wahrheitstafel nachgerechnet.</p>
+    <div id="t02-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t02-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Modell</b> = Belegung mit \(\alpha(F) = 1\). <b>Erfüllbar:</b> mindestens ein Modell. <b>Unerfüllbar:</b> keines. <b>Tautologie:</b> jede Belegung ist Modell. Satz 2.10: \(F\) Tautologie \(\iff \neg F\) unerfüllbar.</li>
+      <li>\(F \equiv G\) heisst: gleicher Wert in jeder Zeile. Beim Umformen schreibst du die Regel über jedes ≡ (2.3 b, 2.15 g …).</li>
+      <li><b>Verneinen:</b> \(\neg(A \land B) \equiv \neg A \lor \neg B\), \(\neg(A \lor B) \equiv \neg A \land \neg B\), \(\neg(A \Rightarrow B) \equiv A \land \neg B\). «A nur, wenn B» ist \(A \Rightarrow B\).</li>
+      <li><b>KNF-Algorithmus:</b> 0) Pfeile weg, 1) ¬¬ weg, 2)–4) ¬ mit De Morgan nach innen, 5)–7) ∨ über ∧ verteilen. Für die DNF ∧ über ∨ verteilen.</li>
+      <li><b>Aus der Wahrheitstafel:</b> DNF = ODER der 1-Zeilen (Literale wie in der Zeile), KNF = UND der 0-Zeilen (Literale umgekehrt).</li>
+      <li><b>Modellieren:</b> Abkürzungen festlegen, jeden Satz einzeln übersetzen, alles mit ∧ verbinden. Klammern selbst setzen.</li>
+    </ul>
+    <div class="board">
+      $$F \Rightarrow G \equiv \neg F \lor G \qquad F \Leftrightarrow G \equiv (F \land G) \lor (\neg F \land \neg G)$$
+      $$\neg(F \land G) \equiv \neg F \lor \neg G \qquad \neg(F \lor G) \equiv \neg F \land \neg G \qquad \neg\neg F \equiv F$$
+      $$F \lor (G \land H) \equiv (F \lor G) \land (F \lor H) \qquad F \land (G \lor H) \equiv (F \land G) \lor (F \land H)$$
+    </div>
+    <footer>Lernhilfe zu MSTW S1-V2 (Folien Ott und Koch), Kreuzer/Kühling «Logik für Informatiker» S. 24–31, Lösungen S1-LB1, Übungsset S1 und Aufgabe 1 der exemplarischen Modulschlussprüfung. Definitionen in eigenen Worten, alle Beispiele mit eigenen Kontexten und nachgerechnet.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text.
+  const T = String.raw;
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* =========================================================
+     Kleiner Formel-Kern: ASCII-Notation → Auswertung und KaTeX
+     ~ nicht, & und, | oder, > folgt, = genau dann; [ … ] markiert eine Stelle
+     ========================================================= */
+  function ohneMarke(s) { return s.replace(/[\[\]]/g, ""); }
+  function kompakt(s) { return ohneMarke(s).replace(/\s+/g, ""); }
+
+  function zerlegen(text) {
+    const t = ohneMarke(text).match(/[A-Z]|[~&|>=()]/g) || [];
+    let i = 0;
+    const blick = () => t[i];
+    function nimm(x) {
+      const c = t[i];
+      if (x && c !== x) throw new Error(x + " erwartet in " + text);
+      i++;
+      return c;
+    }
+    function aeq() { let l = imp(); while (blick() === "=") { nimm(); l = ["=", l, imp()]; } return l; }
+    function imp() { const l = oder(); if (blick() === ">") { nimm(); return [">", l, imp()]; } return l; }
+    function oder() { let l = und(); while (blick() === "|") { nimm(); l = ["|", l, und()]; } return l; }
+    function und() { let l = neg(); while (blick() === "&") { nimm(); l = ["&", l, neg()]; } return l; }
+    function neg() {
+      if (blick() === "~") { nimm(); return ["~", neg()]; }
+      if (blick() === "(") { nimm("("); const e = aeq(); nimm(")"); return e; }
+      const c = nimm();
+      if (!/^[A-Z]$/.test(c || "")) throw new Error("Atom erwartet in " + text);
+      return c;
+    }
+    const e = aeq();
+    if (i !== t.length) throw new Error("Rest in " + text);
+    return e;
+  }
+  function wert(e, b) {
+    if (typeof e === "string") return b[e];
+    if (e[0] === "~") return !wert(e[1], b);
+    const x = wert(e[1], b), y = wert(e[2], b);
+    if (e[0] === "&") return x && y;
+    if (e[0] === "|") return x || y;
+    if (e[0] === ">") return !x || y;
+    return x === y;
+  }
+  function atomeVon() {
+    const s = Array.prototype.join.call(arguments, "");
+    return Array.from(new Set(ohneMarke(s).match(/[A-Z]/g) || [])).sort();
+  }
+  // Alle Belegungen in der Reihenfolge der Folien: 000, 001, …, 111
+  function belegungen(atome) {
+    const n = atome.length, liste = [];
+    for (let z = 0; z < (1 << n); z++) {
+      const b = {};
+      atome.forEach((a, k) => { b[a] = !!((z >> (n - 1 - k)) & 1); });
+      liste.push(b);
+    }
+    return liste;
+  }
+  function spalte(text, atome) {
+    const e = zerlegen(text);
+    return belegungen(atome).map((b) => wert(e, b));
+  }
+  function aequivalent(s1, s2) {
+    const at = atomeVon(s1, s2);
+    const a = spalte(s1, at), b = spalte(s2, at);
+    return a.every((x, k) => x === b[k]);
+  }
+  function tex(s) {
+    return s.replace(/\s+/g, " ").trim()
+      .replace(/\[/g, "\\htmlClass{t02-mark}{")
+      .replace(/\]/g, "}")
+      .replace(/~/g, "\\neg ")
+      .replace(/&/g, " \\land ")
+      .replace(/\|/g, " \\lor ")
+      .replace(/>/g, " \\Rightarrow ")
+      .replace(/=/g, " \\Leftrightarrow ");
+  }
+  const z01 = (w) => (w ? '<span class="w">1</span>' : '<span class="f">0</span>');
+
+  // Wahrheitstafel als HTML: spalten = [{ kopf: TeX, formel: ASCII, erg: true/false }]
+  function tafelBauen(ziel, atome, spalten, optionen) {
+    optionen = optionen || {};
+    const werte = spalten.map((s) => spalte(s.formel, atome));
+    const zeilen = belegungen(atome);
+    let h = '<table class="wahrheitstabelle"><thead><tr>';
+    atome.forEach((a) => { h += "<th>$" + a + "$</th>"; });
+    spalten.forEach((s) => { h += "<th" + (s.erg ? ' class="erg"' : "") + ">$" + s.kopf + "$</th>"; });
+    // Sichtbarer Kopf statt .sr-only: ein absolut positioniertes Element in .tablebox würde die Seite verbreitern
+    if (optionen.modelle) h += "<th>Modell?</th>";
+    h += "</tr></thead><tbody>";
+    zeilen.forEach((b, z) => {
+      const istModell = optionen.modelle && werte[werte.length - 1][z];
+      h += "<tr" + (istModell ? ' class="an"' : "") + ">";
+      atome.forEach((a) => { h += "<td>" + z01(b[a]) + "</td>"; });
+      spalten.forEach((s, k) => { h += "<td" + (s.erg ? ' class="erg"' : "") + ">" + z01(werte[k][z]) + "</td>"; });
+      if (optionen.modelle) h += "<td>" + (istModell ? "✓ Modell" : "") + "</td>";
+      h += "</tr>";
+    });
+    h += "</tbody></table>";
+    const el = document.getElementById(ziel);
+    el.innerHTML = h;
+    L.formeln(el);
+  }
+
+  /* ---------- Statische Tafeln (aus den Formeln berechnet) ---------- */
+  tafelBauen("t02-tab-junktoren", ["A", "B"], [
+    { kopf: T`\neg A`, formel: "~A" },
+    { kopf: T`A \land B`, formel: "A & B" },
+    { kopf: T`A \lor B`, formel: "A | B" },
+    { kopf: T`A \Rightarrow B`, formel: "A > B" },
+    { kopf: T`A \Leftrightarrow B`, formel: "A = B" }
+  ]);
+  tafelBauen("t02-tab-demorgan", ["F", "G"], [
+    { kopf: T`F \land G`, formel: "F & G" },
+    { kopf: T`\neg(F \land G)`, formel: "~(F & G)", erg: true },
+    { kopf: T`\neg F`, formel: "~F" },
+    { kopf: T`\neg G`, formel: "~G" },
+    { kopf: T`\neg F \lor \neg G`, formel: "~F | ~G", erg: true }
+  ]);
+  tafelBauen("t02-tab-training", ["L", "M", "K"], [
+    { kopf: T`L \Leftrightarrow \neg M`, formel: "L = ~M" },
+    { kopf: T`\neg M \lor K`, formel: "~M | K" },
+    { kopf: T`\neg K \lor L`, formel: "~K | L" },
+    { kopf: "F", formel: "(L = ~M) & (~M | K) & (~K | L)", erg: true }
+  ], { modelle: true });
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t02-sortierer", {
+    kategorien: ["Modell", "kein Modell"],
+    elemente: [
+      { html: T`$\alpha(A) = 1$, $\alpha(B) =0$, $\alpha(C) =0$`, kategorie: "Modell",
+        erklaerung: T`$A \lor B = 1$ (weil $A = 1$) und $\neg C = 1$. Beide Teile wahr, also $\alpha(F) = 1$.` },
+      { html: T`$\alpha(A) = 0$, $\alpha(B) =0$, $\alpha(C) =0$`, kategorie: "kein Modell",
+        erklaerung: T`$A \lor B = 0$: Weder $A$ noch $B$ ist wahr. Dann ist das ganze UND falsch.` },
+      { html: T`$\alpha(A) = 0$, $\alpha(B) =1$, $\alpha(C) =1$`, kategorie: "kein Modell",
+        erklaerung: T`$A \lor B = 1$, aber $\neg C = 0$, weil $C$ wahr ist.` },
+      { html: T`$\alpha(A) = 1$, $\alpha(B) =1$, $\alpha(C) =0$`, kategorie: "Modell",
+        erklaerung: T`Das Oder ist einschliessend: $A$ und $B$ dürfen beide wahr sein. $\neg C = 1$.` },
+      { html: T`$\alpha(A) = 0$, $\alpha(B) =1$, $\alpha(C) =0$`, kategorie: "Modell",
+        erklaerung: T`$B = 1$ reicht für $A \lor B$, und $C = 0$ macht $\neg C$ wahr.` },
+      { html: T`$\alpha(A) = 1$, $\alpha(B) =1$, $\alpha(C) =1$`, kategorie: "kein Modell",
+        erklaerung: T`$C = 1$ macht $\neg C$ falsch. Ein falsches Glied genügt, damit das UND falsch ist.` }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper Modell ---------- */
+  L.stepper("#t02-stepper-modell", {
+    titel: "Wer kommt ins Training?",
+    text: '<span data-link="r1">Lena kommt genau dann ins Training, wenn Mo nicht kommt.</span> <span data-link="r2">Wenn Mo kommt, dann kommt auch Kai.</span> <span data-link="r3">Kai kommt nur dann, wenn Lena kommt.</span> Finde alle Modelle.',
+    schritte: [
+      { html: T`$L$ = «Lena kommt», $\;M$ = «Mo kommt», $\;K$ = «Kai kommt»`,
+        warum: "Zuerst die Abkürzungen. Jede einfache Aussage, die wahr oder falsch sein kann, wird ein Atom." },
+      { html: T`$F_1 = \htmlData{link=r1}{L \Leftrightarrow \neg M}$`,
+        warum: "«genau dann, wenn» ist der Doppelpfeil. «Mo nicht» ist ¬M." },
+      { html: T`$F_1 = \htmlData{link=r1}{L \Leftrightarrow \neg M}, \quad F_2 = \htmlData{link=r2}{M \Rightarrow K} \overset{\text{2.3 b}}{\equiv} \neg M \lor K$`,
+        warum: "«Wenn …, dann …» ist der Folgepfeil. Für die Tafel löst du ihn gleich in ¬ und ∨ auf." },
+      { html: T`$F_3 = \htmlData{link=r3}{K \Rightarrow L} \overset{\text{2.3 b}}{\equiv} \neg K \lor L$`,
+        warum: "«K nur dann, wenn L»: Der Pfeil zeigt auf das, was nach «nur wenn» steht. Also K ⇒ L, nicht L ⇒ K." },
+      { html: T`$F = \htmlData{link=r1}{F_1} \land \htmlData{link=r2}{F_2} \land \htmlData{link=r3}{F_3}$`,
+        warum: "Alle drei Sätze gelten gleichzeitig. Darum verbindest du sie mit ∧." },
+      { html: T`$\alpha(L) = 1,\ \alpha(M) = 0,\ \alpha(K) \in \{0, 1\}$`,
+        warum: "Die Wahrheitstafel unten hat 8 Zeilen. F ist nur in den Zeilen 100 und 101 wahr. Das sind die zwei Modelle: Lena kommt, Mo nicht, bei Kai ist beides möglich. F ist also erfüllbar, aber keine Tautologie." }
+    ]
+  });
+
+  L.auswahl("#t02-auswahl-modell", {
+    frage: T`Was ist $(A \Rightarrow B) \lor (B \Rightarrow A)$?`,
+    optionen: ["eine Tautologie", "erfüllbar, aber keine Tautologie", "unerfüllbar"],
+    richtig: 0,
+    erklaerung: T`Auflösen: $(\neg A \lor B) \lor (\neg B \lor A)$. Darin stecken $A \lor \neg A$ und $B \lor \neg B$. Mindestens eines davon ist immer wahr, also ist die Formel in jeder Zeile 1. Überraschend, aber richtig: Von den beiden Pfeilen ist in jeder Zeile mindestens einer wahr. Ist $B$ wahr, stimmt $A \Rightarrow B$; ist $B$ falsch, stimmt $B \Rightarrow A$. Das heisst aber nicht, dass $B$ aus $A$ folgt (siehe «Folgerung» oben): Dafür müsste $A \Rightarrow B$ allein eine Tautologie sein.`
+  });
+
+  /* ---------- Schritt 3: Stepper Bsp. 2.16 ---------- */
+  L.stepper("#t02-stepper-xor", {
+    titel: "Beispiel 2.16",
+    text: 'Zeige: <span data-link="xor">«entweder F oder G, aber nicht beides»</span> ist äquivalent zu <span data-link="ziel">¬F ⇔ G</span>.',
+    schritte: [
+      { html: T`$\htmlData{link=xor}{(F \lor G) \land \neg(F \land G)}$`,
+        warum: "Zuerst «entweder … oder» wörtlich übersetzen: mindestens eines (F ∨ G) und nicht beide ¬(F ∧ G)." },
+      { html: T`$\htmlData{link=xor}{(F \lor G) \land \neg(F \land G)} \overset{\text{2.15 g}}{\equiv} (F \lor G) \land (\neg F \lor \neg G)$`,
+        warum: "De Morgan schiebt das ¬ in die Klammer. Aus ∧ wird ∨, jedes Glied wird verneint." },
+      { html: T`$\overset{\text{2.15 f}}{\equiv} (\neg\neg F \lor G) \land (\neg F \lor \neg G)$`,
+        warum: "Ein Trick: F durch ¬¬F ersetzen. Das ändert nichts, bereitet aber den nächsten Schritt vor." },
+      { html: T`$\overset{\text{2.3 b}}{\equiv} (\neg F \Rightarrow G) \land (G \Rightarrow \neg F)$`,
+        warum: "Notation 2.3 b rückwärts: ¬(¬F) ∨ G ist ¬F ⇒ G. Und ¬G ∨ ¬F (Reihenfolge egal) ist G ⇒ ¬F." },
+      { html: T`$\overset{\text{2.5 c}}{\equiv} \htmlData{link=ziel}{\neg F \Leftrightarrow G}$`,
+        warum: "Zwei Pfeile in beide Richtungen sind der Doppelpfeil (Aufgabe 2.5 c). Damit ist die Behauptung gezeigt." }
+    ]
+  });
+
+  /* =========================================================
+     Schritt 4: Umformungs-Werkstatt
+     ========================================================= */
+  const REGELN = {
+    imp: { name: "Folgerung auflösen", nr: "2.3 b", muster: T`einen Folgepfeil $F \Rightarrow G$` },
+    aeq: { name: "Äquivalenz auflösen", nr: "2.3 c", muster: T`einen Doppelpfeil $F \Leftrightarrow G$` },
+    dn: { name: "Doppelnegation", nr: "2.15 f", muster: T`zwei ¬ hintereinander: $\neg\neg F$` },
+    dm: { name: "De Morgan", nr: "2.15 g", muster: T`$\neg(F \land G)$ oder $\neg(F \lor G)$, also ein ¬ direkt vor einer Klammer` },
+    dist: { name: "Distributivität", nr: "2.15 e", muster: T`$F \land (G \lor H)$ oder $F \lor (G \land H)$, oder rückwärts zwei Klammern mit gemeinsamem Glied` },
+    abs: { name: "Absorption", nr: "2.15 d", muster: T`$F \land (F \lor G)$ oder $F \lor (F \land G)$` },
+    komm: { name: "Kommutativität", nr: "2.15 b", muster: T`$F \land G$ oder $F \lor G$`,
+      nichtZiel: "Sie vertauscht nur die Reihenfolge, die Form bleibt gleich. Du darfst sie stillschweigend nutzen, wie in den Musterlösungen. Gesucht ist eine Regel, die die markierte Stelle wirklich umbaut." },
+    idem: { name: "Idempotenz", nr: "2.15 a", muster: T`$F \land F$ oder $F \lor F$` },
+    taut: { name: "Tautologieregel", nr: "2.15 h", muster: T`ein Glied, das immer wahr ist, z. B. $B \lor \neg B$` },
+    unerf: { name: "Unerfüllbarkeitsregel", nr: "2.15 i", muster: T`ein Glied, das nie wahr ist, z. B. $B \land \neg B$` }
+  };
+  const AUFGABEN = [
+    { knopf: T`$\neg(A \Rightarrow B)$`, ziel: "Verneinte Folgerung auflösen, bis ¬ nur noch vor Atomen steht.", start: "~(A > B)",
+      schritte: [
+        { mark: "~([A > B])", regel: ["imp"], nach: "~(~A | B)", form: T`ein Folgepfeil $G \Rightarrow H$`,
+          warum: "Pfeile zuerst weg (Schritt 0 des Algorithmus). Mit Pfeilen kann De Morgan nichts anfangen." },
+        { mark: "[~(~A | B)]", regel: ["dm"], nach: "~~A & ~B", form: T`ein ¬ vor einer Oder-Klammer: $\neg(G \lor H)$`,
+          warum: "De Morgan schiebt das ¬ hinein. Aus ∨ wird ∧, jedes Glied wird verneint." },
+        { mark: "[~~A] & ~B", regel: ["dn"], nach: "A & ~B", form: T`zwei ¬ hintereinander: $\neg\neg G$`,
+          warum: "Zwei Verneinungen heben sich auf. Ergebnis: A ∧ ¬B, «A, und trotzdem nicht B». Das ist die Verneinung jedes Wenn-dann-Satzes." }
+      ] },
+    { knopf: "Absorption", ziel: "Vereinfache so weit wie möglich.", start: "~(~A & ~(A & B))",
+      schritte: [
+        { mark: "[~(~A & ~(A & B))]", regel: ["dm"], nach: "~~A | ~~(A & B)", form: T`ein ¬ vor einer Und-Klammer: $\neg(G \land H)$ mit $G = \neg A$`,
+          warum: "Das äussere ¬ wandert nach innen. Aus ∧ wird ∨." },
+        { mark: "[~~A] | [~~(A & B)]", regel: ["dn"], nach: "A | (A & B)", form: T`zweimal $\neg\neg G$`,
+          warum: "Beide doppelten Verneinungen fallen weg. Das darfst du in einem Schritt tun." },
+        { mark: "[A | (A & B)]", regel: ["abs"], nach: "A", form: T`$G \lor (G \land H)$: dasselbe $G$ steht aussen und innen`,
+          anders: { dist: T`Ausmultiplizieren ergäbe $(A \lor A) \land (A \lor B)$, also eine längere Formel. Gesucht ist die Regel, die $G \lor (G \land H)$ in einem Schritt auf $G$ kürzt.` },
+          warum: "Absorption: Ist A wahr, ist alles wahr. Ist A falsch, ist auch A ∧ B falsch. Der Wert hängt nur von A ab." }
+      ] },
+    { knopf: "Tautologieregel", ziel: "Vereinfache so weit wie möglich.", start: "(A & B) | (A & ~B)",
+      schritte: [
+        { mark: "[(A & B) | (A & ~B)]", regel: ["dist"], nach: "A & (B | ~B)", form: T`$(G \land H) \lor (G \land I)$: beide Klammern beginnen mit $A$`,
+          warum: "Distributivität rückwärts: A ausklammern, wie 3x + 3y = 3(x + y)." },
+        { mark: "[A & (B | ~B)]", regel: ["taut"], nach: "A", form: T`$A \land (B \lor \neg B)$, und $B \lor \neg B$ ist immer wahr`,
+          anders: { dist: T`Ausmultiplizieren ergäbe wieder $(A \land B) \lor (A \land \neg B)$, also den Start. Schau auf die Klammer $B \lor \neg B$: Sie ist immer wahr.` },
+          warum: "B ∨ ¬B ist eine Tautologie. Bei ∧ zählt dann nur das andere Glied (2.15 h). Ob B gilt, spielt keine Rolle." }
+      ] },
+    { knopf: T`KNF von $(A \Rightarrow B) \Rightarrow C$`, ziel: "Bringe die Formel in KNF.", start: "(A > B) > C",
+      schritte: [
+        { mark: "[(A > B) > C]", regel: ["imp"], nach: "~(A > B) | C", form: T`ein Folgepfeil $G \Rightarrow H$ mit $G = (A \Rightarrow B)$`,
+          warum: "Der äussere Pfeil zuerst: aus G ⇒ C wird ¬G ∨ C." },
+        { mark: "~([A > B]) | C", regel: ["imp"], nach: "~(~A | B) | C", form: T`noch ein Folgepfeil $G \Rightarrow H$`,
+          warum: "Auch der innere Pfeil muss weg." },
+        { mark: "[~(~A | B)] | C", regel: ["dm"], nach: "(~~A & ~B) | C", form: T`ein ¬ vor einer Oder-Klammer`,
+          warum: "De Morgan: ¬(¬A ∨ B) wird ¬¬A ∧ ¬B." },
+        { mark: "([~~A] & ~B) | C", regel: ["dn"], nach: "(A & ~B) | C", form: T`$\neg\neg G$`,
+          warum: "Doppelnegation weg. Jetzt steht ¬ nur noch vor Atomen. Das ist übrigens schon eine DNF." },
+        { mark: "[(A & ~B) | C]", regel: ["dist"], nach: "(A | C) & (~B | C)", form: T`$(G \land H) \lor I$: ein Und steckt in einem Oder`,
+          warum: "Schritt 6 des KNF-Algorithmus: (G ∧ H) ∨ I wird (G ∨ I) ∧ (H ∨ I). Jetzt ist die Formel in KNF." }
+      ] },
+    { knopf: T`$\neg(A \Leftrightarrow B)$`, ziel: "Verneinte Äquivalenz in KNF bringen.", start: "~(A = B)",
+      schritte: [
+        { mark: "~([A = B])", regel: ["aeq"], nach: "~((A & B) | (~A & ~B))", form: T`ein Doppelpfeil $G \Leftrightarrow H$`,
+          warum: "Notation 2.3 c: «beide wahr oder beide falsch»." },
+        { mark: "[~((A & B) | (~A & ~B))]", regel: ["dm"], nach: "~(A & B) & ~(~A & ~B)", form: T`ein ¬ vor einer Oder-Klammer`,
+          warum: "De Morgan auf das äussere ¬: aus ∨ wird ∧." },
+        { mark: "[~(A & B)] & ~(~A & ~B)", regel: ["dm"], nach: "(~A | ~B) & ~(~A & ~B)", form: T`ein ¬ vor einer Und-Klammer`,
+          warum: "Nochmals De Morgan, diesmal kippt ∧ zu ∨." },
+        { mark: "(~A | ~B) & [~(~A & ~B)]", regel: ["dm"], nach: "(~A | ~B) & (~~A | ~~B)", form: T`ein ¬ vor einer Und-Klammer`,
+          warum: "Und ein drittes Mal für die zweite Klammer." },
+        { mark: "(~A | ~B) & ([~~A] | [~~B])", regel: ["dn"], nach: "(~A | ~B) & (A | B)", form: T`zweimal $\neg\neg G$`,
+          warum: "Fertig, in KNF: mindestens eines (A ∨ B), aber nicht beide (¬A ∨ ¬B). Das ist «entweder A oder B»." }
+      ] }
+  ];
+
+  // Selbstkontrolle beim Laden: Jeder Schritt passt zum Vorgänger und ist äquivalent zum Start.
+  AUFGABEN.forEach((a, n) => {
+    let vorher = a.start;
+    a.schritte.forEach((s, k) => {
+      if (kompakt(s.mark) !== kompakt(vorher)) console.error("[t02] Werkstatt " + n + "/" + k + ": Markierung passt nicht zum Stand.");
+      if (!aequivalent(a.start, s.nach)) console.error("[t02] Werkstatt " + n + "/" + k + ": nicht äquivalent.");
+      s.regel.forEach((r) => { if (!REGELN[r]) console.error("[t02] Werkstatt: Regel fehlt " + r); });
+      vorher = s.nach;
+    });
+  });
+
+  const ws = {
+    aufgabe: 0, schritt: 0, markieren: true,
+    elAuf: document.getElementById("t02-ws-aufgaben"),
+    elZiel: document.getElementById("t02-ws-ziel"),
+    elVerlauf: document.getElementById("t02-ws-verlauf"),
+    elRegeln: document.getElementById("t02-ws-regeln"),
+    elFb: document.getElementById("t02-ws-fb"),
+    elStand: document.getElementById("t02-ws-stand"),
+    elTafel: document.getElementById("t02-ws-tafel"),
+    bMark: document.getElementById("t02-ws-mark")
+  };
+  const aufKnoepfe = AUFGABEN.map((a, n) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.innerHTML = a.knopf;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => wsStart(n));
+    ws.elAuf.appendChild(b);
+    return b;
+  });
+  Object.keys(REGELN).forEach((id) => {
+    const r = REGELN[id];
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.dataset.regel = id;
+    b.innerHTML = r.name + " <small>" + r.nr + "</small>";
+    b.addEventListener("click", () => wsWahl(id));
+    ws.elRegeln.appendChild(b);
+  });
+
+  function wsAktuell() {
+    const a = AUFGABEN[ws.aufgabe];
+    return ws.schritt === 0 ? a.start : a.schritte[ws.schritt - 1].nach;
+  }
+  function wsZeichnen() {
+    const a = AUFGABEN[ws.aufgabe];
+    const fertig = ws.schritt >= a.schritte.length;
+    let h = "";
+    const zeilen = [{ links: "", formel: a.start }].concat(a.schritte.slice(0, ws.schritt).map((s) => ({
+      links: T`\overset{\text{` + REGELN[s.regel[0]].nr + T`}}{\equiv}\;`, formel: s.nach
+    })));
+    zeilen.forEach((z, k) => {
+      const letzte = k === zeilen.length - 1;
+      let f = z.formel;
+      if (letzte && !fertig && ws.markieren) f = a.schritte[ws.schritt].mark;
+      h += '<div class="t02-zeile' + (letzte ? " t02-jetzt" : " t02-alt") + '">$' + z.links + tex(f) + "$</div>";
+    });
+    ws.elVerlauf.innerHTML = h;
+    ws.elZiel.textContent = a.ziel;
+    ws.elStand.textContent = fertig ? "fertig" : "Schritt " + (ws.schritt + 1) + " von " + a.schritte.length;
+    L.formeln(ws.elVerlauf);
+  }
+  function wsStart(n) {
+    ws.aufgabe = n;
+    ws.schritt = 0;
+    aufKnoepfe.forEach((b, k) => { b.classList.toggle("on", k === n); b.setAttribute("aria-pressed", k === n ? "true" : "false"); });
+    ws.elFb.innerHTML = "Wähle die Regel für die markierte Stelle.";
+    ws.elTafel.innerHTML = "";
+    wsZeichnen();
+  }
+  function wsWahl(id) {
+    const a = AUFGABEN[ws.aufgabe];
+    const r = REGELN[id];
+    if (ws.schritt >= a.schritte.length) {
+      ws.elFb.innerHTML = "Diese Aufgabe ist fertig. Prüfe das Ergebnis mit der Wahrheitstafel oder wähle oben eine neue Aufgabe.";
+      return;
+    }
+    const s = a.schritte[ws.schritt];
+    if (s.regel.indexOf(id) >= 0) {
+      ws.schritt++;
+      const fertig = ws.schritt >= a.schritte.length;
+      ws.elFb.innerHTML = '<span class="t02-ja">✓ Richtig: ' + r.name + " (" + r.nr + ").</span> " + s.warum +
+        (fertig ? " <b>Fertig.</b> Prüfe jetzt mit der Wahrheitstafel." : "");
+      ws.elTafel.innerHTML = "";
+      wsZeichnen();
+    } else {
+      // Regel wäre anwendbar, führt aber nicht weiter: eigene Begründung statt «passt nicht»
+      const anders = (s.anders && s.anders[id]) || r.nichtZiel;
+      ws.elFb.innerHTML = anders
+        ? '<span class="t02-nein">✗ ' + r.name + " (" + r.nr + ") bringt dich hier nicht weiter.</span> " + anders
+        : '<span class="t02-nein">✗ ' + r.name + " (" + r.nr + ") passt hier nicht.</span> Diese Regel braucht " +
+          r.muster + ". Die markierte Stelle ist " + s.form + ".";
+    }
+    L.formeln(ws.elFb);
+  }
+  document.getElementById("t02-ws-tipp").addEventListener("click", () => {
+    const a = AUFGABEN[ws.aufgabe];
+    if (ws.schritt >= a.schritte.length) {
+      ws.elFb.innerHTML = "Die Aufgabe ist gelöst. Prüfe mit der Wahrheitstafel.";
+    } else {
+      ws.elFb.innerHTML = "Tipp: Die markierte Stelle ist " + a.schritte[ws.schritt].form +
+        ". Suche in Notation 2.3 oder Satz 2.15 die Regel, bei der eine Seite genau so aussieht.";
+    }
+    L.formeln(ws.elFb);
+  });
+  ws.bMark.addEventListener("click", () => {
+    ws.markieren = !ws.markieren;
+    ws.bMark.classList.toggle("on", ws.markieren);
+    ws.bMark.setAttribute("aria-pressed", ws.markieren ? "true" : "false");
+    wsZeichnen();
+  });
+  document.getElementById("t02-ws-neu").addEventListener("click", () => wsStart(ws.aufgabe));
+  document.getElementById("t02-ws-pruefen").addEventListener("click", () => {
+    const a = AUFGABEN[ws.aufgabe];
+    const jetzt = wsAktuell();
+    const at = atomeVon(a.start);
+    const s1 = spalte(a.start, at), s2 = spalte(jetzt, at);
+    const gleich = s1.every((x, k) => x === s2[k]);
+    let h = '<div class="tablebox"><table class="wahrheitstabelle"><thead><tr>';
+    at.forEach((x) => { h += "<th>$" + x + "$</th>"; });
+    h += '<th class="erg">Start</th><th class="erg">jetzt</th><th>gleich?</th></tr></thead><tbody>';
+    belegungen(at).forEach((b, z) => {
+      h += "<tr>";
+      at.forEach((x) => { h += "<td>" + z01(b[x]) + "</td>"; });
+      h += '<td class="erg">' + z01(s1[z]) + '</td><td class="erg">' + z01(s2[z]) + "</td><td>" + (s1[z] === s2[z] ? "✓" : "✗") + "</td></tr>";
+    });
+    h += "</tbody></table></div>";
+    h += '<p class="' + (gleich ? "t02-tafel-ok" : "t02-tafel-nein") + '">' +
+      (gleich ? "✓ In allen " + s1.length + " Zeilen gleich: $" + tex(a.start) + T` \equiv ` + tex(jetzt) + "$."
+              : "✗ Nicht in allen Zeilen gleich.") + "</p>";
+    ws.elTafel.innerHTML = h;
+    L.formeln(ws.elTafel);
+  });
+  wsStart(0);
+
+  /* ---------- Schritt 5: Stepper Verneinen ---------- */
+  L.stepper("#t02-stepper-neg", {
+    titel: "Verneine",
+    text: '«<span data-link="s">Nur wenn es schneit</span>, <span data-link="lt">fahren Lea und Tim in die Berge</span>.»',
+    schritte: [
+      { html: T`$S$ = «Es schneit», $\;L$ = «Lea fährt in die Berge», $\;T$ = «Tim fährt in die Berge»`,
+        warum: "Abkürzungen festlegen. «Lea und Tim fahren» sind zwei Aussagen, verbunden mit ∧." },
+      { html: T`$\htmlData{link=lt}{(L \land T)} \Rightarrow \htmlData{link=s}{S}$`,
+        warum: "«Nur wenn S, dann X» heisst X ⇒ S. Der Pfeil zeigt auf das, was nach «nur wenn» steht." },
+      { html: T`$\neg\big(\htmlData{link=lt}{(L \land T)} \Rightarrow \htmlData{link=s}{S}\big)$`,
+        warum: "Verneinen heisst: ein ¬ vor die ganze Formel. Jetzt wird umgeformt, bis ¬ nur noch vor Atomen steht." },
+      { html: T`$\overset{\text{2.3 b}}{\equiv} \neg\big(\neg(L \land T) \lor S\big)$`,
+        warum: "Zuerst den Pfeil auflösen: G ⇒ H wird ¬G ∨ H." },
+      { html: T`$\overset{\text{2.15 g}}{\equiv} \neg\neg(L \land T) \land \neg S$`,
+        warum: "De Morgan: Das äussere ¬ wandert hinein, ∨ kippt zu ∧." },
+      { html: T`$\overset{\text{2.15 f}}{\equiv} \htmlData{link=lt}{(L \land T)} \land \htmlData{link=s}{\neg S}$`,
+        warum: "Doppelnegation weg. Die Formel sagt: L und T sind wahr, S aber nicht." },
+      { html: "«Es schneit nicht, und Lea und Tim fahren trotzdem in die Berge.»",
+        warum: "Zurück ins Deutsche. Das Wort «trotzdem» macht hörbar, dass die Bedingung gebrochen wird. Kein «nicht» vor dem ganzen Satz." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Stepper Bsp. 2.20 ---------- */
+  L.stepper("#t02-stepper-knf", {
+    titel: "Beispiel 2.20",
+    text: 'Bringe die Formel in KNF. Sie besteht aus <span data-link="t1">einer Äquivalenz A ⇔ (B ∧ ¬C)</span> und <span data-link="t2">einer Folgerung ¬B ⇒ A</span>.',
+    schritte: [
+      { html: T`$F = \big(\htmlData{link=t1}{(A \Leftrightarrow (B \land \neg C))} \land \htmlData{link=t2}{(\neg B \Rightarrow A)}\big)$`,
+        warum: "Zwei Teile, verbunden mit ∧. Der Algorithmus arbeitet von aussen nach innen: Pfeile, dann Verneinungen, dann Klammern." },
+      { html: T`$\overset{\text{0)}}{\equiv} \big(\htmlData{link=t1}{((A \land (B \land \neg C)) \lor (\neg A \land \neg(B \land \neg C)))} \land \htmlData{link=t2}{(\neg\neg B \lor A)}\big)$`,
+        warum: "Schritt 0: ⇔ nach Notation 2.3 c (beide wahr oder beide falsch), ⇒ nach 2.3 b (¬G ∨ H)." },
+      { html: T`$\overset{\text{1)}}{\equiv} \big(\htmlData{link=t1}{((A \land B \land \neg C) \lor (\neg A \land \neg(B \land \neg C)))} \land \htmlData{link=t2}{(B \lor A)}\big)$`,
+        warum: "Schritt 1 (2.15 f): ¬¬B wird B. Die innere Klammer bei A ∧ (B ∧ ¬C) fällt wegen Assoziativität weg." },
+      { html: T`$\overset{\text{2), 3)}}{\equiv} \big(((A \land B \land \neg C) \lor (\neg A \land (\neg B \lor \neg\neg C))) \land (B \lor A)\big)$`,
+        warum: "Schritte 2 und 3 (2.15 g): De Morgan auf ¬(B ∧ ¬C). Dabei entsteht ¬¬C." },
+      { html: T`$\overset{\text{1)}}{\equiv} \big(((A \land B \land \neg C) \lor (\neg A \land (\neg B \lor C))) \land (B \lor A)\big)$`,
+        warum: "Zurück zu Schritt 1: ¬¬C wird C. Jetzt steht ¬ nur noch vor Atomen (Schritt 4 erledigt)." },
+      { html: T`$\overset{\text{5)}}{\equiv} ((A \land B \land \neg C) \lor \neg A) \land ((A \land B \land \neg C) \lor (\neg B \lor C)) \land (B \lor A)$`,
+        warum: "Schritt 5 (2.15 e): G ∨ (H ∧ I) mit G = (A ∧ B ∧ ¬C), H = ¬A, I = (¬B ∨ C) wird (G ∨ H) ∧ (G ∨ I)." },
+      { html: T`$\begin{aligned}\overset{\text{6)}}{\equiv}\ & (A \lor \neg A) \land (B \lor \neg A) \land (\neg C \lor \neg A) \\ & \land (A \lor \neg B \lor C) \land (B \lor \neg B \lor C) \land (\neg C \lor \neg B \lor C) \land (B \lor A)\end{aligned}$`,
+        warum: "Schritt 6 (2.15 e): Jedes Literal der Und-Klammer A ∧ B ∧ ¬C bekommt den Rest des Oders angehängt. Das ist eine KNF, aber eine lange." },
+      { html: T`$\overset{\text{2.15 h}}{\equiv} (B \lor \neg A) \land (\neg C \lor \neg A) \land (A \lor \neg B \lor C) \land (B \lor A)$`,
+        warum: "Vereinfachen: (A ∨ ¬A), (B ∨ ¬B ∨ C) und (¬C ∨ ¬B ∨ C) sind immer wahr. Bei ∧ dürfen sie weg (Tautologieregel)." },
+      { html: T`$\overset{\text{2.15 e, i}}{\equiv} B \land (\neg C \lor \neg A) \land (A \lor \neg B \lor C)$`,
+        warum: "(B ∨ ¬A) ∧ (B ∨ A) ≡ B ∨ (¬A ∧ A) ≡ B. Erst B ausklammern, dann fällt das unerfüllbare ¬A ∧ A weg." },
+      { html: T`$\overset{\text{2.15}}{\equiv} B \land (\neg C \lor \neg A) \land (A \lor C)$`,
+        warum: "B ∧ (A ∨ ¬B ∨ C) ≡ (B ∧ A) ∨ (B ∧ ¬B) ∨ (B ∧ C) ≡ (B ∧ A) ∨ (B ∧ C) ≡ B ∧ (A ∨ C). Ergebnis: F ≡ B ∧ (¬C ∨ ¬A) ∧ (A ∨ C), eine kurze KNF." }
+    ]
+  });
+
+  /* =========================================================
+     Schritt 7: Normalform-Generator
+     ========================================================= */
+  const GA = ["A", "B", "C"];
+  const VORLAGEN = [
+    { knopf: T`$A \Rightarrow (B \land C)$`, formel: "A > (B & C)",
+      bemerkung: T`Vereinfacht reicht die KNF $(\neg A \lor B) \land (\neg A \lor C)$.` },
+    { knopf: "mindestens zwei", formel: "(A & B) | (A & C) | (B & C)",
+      bemerkung: T`«Mindestens zwei von drei». Die DNF aus der Tafel hat 4 Klammern, die Vorlage selbst zeigt: 3 reichen. Die kurze KNF ist gleich gebaut, nur mit vertauschten Junktoren: $(A \lor B) \land (A \lor C) \land (B \lor C)$.` },
+    { knopf: "entweder A oder B", formel: "~A = B",
+      bemerkung: T`$C$ spielt keine Rolle. Vereinfacht: $(A \land \neg B) \lor (\neg A \land B)$.` },
+    { knopf: "Bsp. 2.20", formel: "(A = (B & ~C)) & (~B > A)",
+      bemerkung: T`Vergleich: Die vereinfachte KNF aus Bsp. 2.20 ist $B \land (\neg C \lor \neg A) \land (A \lor C)$, mit nur 3 Klammern.` },
+    { knopf: "alles 0", formel: "A & ~A", bemerkung: "Alle Zeilen 0: eine unerfüllbare Formel." }
+  ];
+  const UEBUNGEN = ["(A | B) & ~C", "A = ~B", "(A > B) & (B > C)", "~(A & B) | C", "(A & ~B) | (B & C)", "~(A | B) > C"];
+  // Vorlagen und Bemerkungen kontrollieren (Bemerkungsformeln sind von Hand geschrieben)
+  if (!aequivalent("A > (B & C)", "(~A | B) & (~A | C)") || !aequivalent("~A = B", "(A & ~B) | (~A & B)") ||
+      !aequivalent("(A = (B & ~C)) & (~B > A)", "B & (~C | ~A) & (A | C)")) console.error("[t02] Generator-Bemerkung falsch.");
+
+  const gen = {
+    werte: new Array(8).fill(false), art: "dnf", vorlage: -1, uebung: -1,
+    tab: document.getElementById("t02-gen-tab"),
+    formel: document.getElementById("t02-gen-formel"),
+    info: document.getElementById("t02-gen-info"),
+    ziel: document.getElementById("t02-gen-ziel"),
+    fb: document.getElementById("t02-gen-fb"),
+    bDnf: document.getElementById("t02-gen-dnf"),
+    bKnf: document.getElementById("t02-gen-knf")
+  };
+  const genZeilen = belegungen(GA);
+  function genTerm(z) {
+    const b = genZeilen[z];
+    if (gen.art === "dnf") return "(" + GA.map((a) => (b[a] ? a : T`\neg ` + a)).join(T` \land `) + ")";
+    return "(" + GA.map((a) => (b[a] ? T`\neg ` + a : a)).join(T` \lor `) + ")";
+  }
+  function genZaehlt(z) { return gen.art === "dnf" ? gen.werte[z] : !gen.werte[z]; }
+
+  // Tabelle einmal aufbauen; danach nur Inhalte ändern (Fokus bleibt auf dem Knopf)
+  (function () {
+    let h = "<thead><tr>";
+    GA.forEach((a) => { h += "<th>$" + a + "$</th>"; });
+    h += '<th class="erg">$F$</th><th id="t02-gen-termkopf">UND-Klammer</th></tr></thead><tbody>';
+    genZeilen.forEach((b, z) => {
+      h += '<tr data-link="t02-z' + z + '">';
+      GA.forEach((a) => { h += "<td>" + z01(b[a]) + "</td>"; });
+      h += '<td class="erg"><button type="button" data-zeile="' + z + '">0</button></td><td class="t02-term"></td></tr>';
+    });
+    gen.tab.innerHTML = h + "</tbody>";
+    gen.tab.querySelectorAll("button[data-zeile]").forEach((b) => {
+      b.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const z = Number(b.dataset.zeile);
+        gen.werte[z] = !gen.werte[z];
+        gen.vorlage = -1;
+        genAktualisieren();
+      });
+    });
+  })();
+
+  function genAktualisieren() {
+    const zeilenEl = gen.tab.querySelectorAll("tbody tr");
+    const kopf = document.getElementById("t02-gen-termkopf");
+    kopf.textContent = gen.art === "dnf" ? "UND-Klammer (F = 1)" : "ODER-Klammer (F = 0)";
+    const teile = [];
+    zeilenEl.forEach((tr, z) => {
+      const knopf = tr.querySelector("button");
+      const w = gen.werte[z];
+      knopf.textContent = w ? "1" : "0";
+      knopf.className = w ? "w" : "f";
+      knopf.setAttribute("aria-label", "Zeile " + (z + 1) + ": F = " + (w ? "1" : "0") + ", umschalten");
+      tr.classList.remove("t02-falsch", "t02-richtig");
+      const zelle = tr.querySelector(".t02-term");
+      if (genZaehlt(z)) {
+        zelle.innerHTML = "$" + genTerm(z) + "$";
+        zelle.classList.remove("t02-leer");
+        teile.push(T`\htmlData{link=t02-z` + z + "}{" + genTerm(z) + "}");
+      } else {
+        zelle.textContent = "–";
+        zelle.classList.add("t02-leer");
+      }
+    });
+    const n1 = gen.werte.filter(Boolean).length;
+    let f;
+    if (gen.art === "dnf") {
+      f = teile.length ? "$F \\equiv " + teile.join(T` \lor `) + "$" : T`Keine Zeile mit $F = 1$: Es gibt keine UND-Klammer. Eine DNF für eine unerfüllbare Formel ist zum Beispiel $A \land \neg A$.`;
+    } else {
+      f = teile.length ? "$F \\equiv " + teile.join(T` \land `) + "$" : T`Keine Zeile mit $F = 0$: Es gibt keine ODER-Klammer. Eine KNF für eine Tautologie ist zum Beispiel $A \lor \neg A$.`;
+    }
+    gen.formel.innerHTML = f;
+    const art = n1 === 8 ? "eine Tautologie" : n1 === 0 ? "unerfüllbar" : "erfüllbar, aber keine Tautologie";
+    let info = "<b>" + n1 + (n1 === 1 ? " Modell" : " Modelle") + "</b>: F ist " + art + ". Die " +
+      (gen.art === "dnf" ? "DNF" : "KNF") + " hat " + teile.length + (teile.length === 1 ? " Klammer." : " Klammern.");
+    if (gen.vorlage >= 0) info += " Vorlage: $F = " + tex(VORLAGEN[gen.vorlage].formel) + "$. " + VORLAGEN[gen.vorlage].bemerkung;
+    gen.info.innerHTML = info;
+    L.formeln(document.getElementById("t02-generator"));
+  }
+  function genArt(art) {
+    gen.art = art;
+    gen.bDnf.classList.toggle("on", art === "dnf");
+    gen.bKnf.classList.toggle("on", art === "knf");
+    gen.bDnf.setAttribute("aria-pressed", art === "dnf" ? "true" : "false");
+    gen.bKnf.setAttribute("aria-pressed", art === "knf" ? "true" : "false");
+    genAktualisieren();
+  }
+  gen.bDnf.addEventListener("click", () => genArt("dnf"));
+  gen.bKnf.addEventListener("click", () => genArt("knf"));
+  VORLAGEN.forEach((v, n) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.innerHTML = v.knopf;
+    b.addEventListener("click", () => {
+      gen.werte = spalte(v.formel, GA);
+      gen.vorlage = n;
+      genAktualisieren();
+    });
+    document.getElementById("t02-gen-vorlagen").appendChild(b);
+  });
+  document.getElementById("t02-gen-uebung").addEventListener("click", () => {
+    let n;
+    do { n = Math.floor(Math.random() * UEBUNGEN.length); } while (n === gen.uebung && UEBUNGEN.length > 1);
+    gen.uebung = n;
+    gen.werte = new Array(8).fill(false);
+    gen.vorlage = -1;
+    gen.ziel.innerHTML = "Übungsformel: $F = " + tex(UEBUNGEN[n]) + "$. Alle Werte stehen auf 0. Setz die Spalte $F$.";
+    gen.fb.className = "rueckmeldung leer";
+    gen.fb.textContent = "";
+    genAktualisieren();
+  });
+  document.getElementById("t02-gen-check").addEventListener("click", () => {
+    if (gen.uebung < 0) {
+      gen.fb.className = "rueckmeldung bad";
+      gen.fb.textContent = "Wähle zuerst «Neue Übungsformel».";
+      return;
+    }
+    const soll = spalte(UEBUNGEN[gen.uebung], GA);
+    const falsch = [];
+    gen.tab.querySelectorAll("tbody tr").forEach((tr, z) => {
+      const ok = soll[z] === gen.werte[z];
+      tr.classList.toggle("t02-falsch", !ok);
+      tr.classList.toggle("t02-richtig", ok);
+      if (!ok) falsch.push(z + 1);
+    });
+    if (!falsch.length) {
+      gen.fb.className = "rueckmeldung ok";
+      gen.fb.textContent = "✓ Alle 8 Zeilen stimmen. Schau dir jetzt die DNF und die KNF an.";
+    } else {
+      gen.fb.className = "rueckmeldung bad";
+      gen.fb.textContent = "✗ " + falsch.length + (falsch.length === 1 ? " Zeile ist" : " Zeilen sind") + " noch falsch: Zeile " + falsch.join(", ") + " (gezählt von oben).";
+    }
+  });
+  genArt("dnf");
+
+  /* ---------- Schritt 8: Stepper Modellieren ---------- */
+  L.stepper("#t02-stepper-openair", {
+    titel: "Am Openair (im Stil von Aufgabe 1b)",
+    text: 'Drei Freundinnen besuchen ein Openair und vereinbaren: <span data-link="r1">Wenn sie zur Hauptbühne gehen, dann kaufen sie ein Getränk.</span> <span data-link="r2">Sie tanzen nur dann, wenn sie an der Hauptbühne sind und ein Getränk kaufen.</span> <span data-link="r3">Sie kaufen genau dann ein Festival-Shirt, wenn sie tanzen und kein Getränk kaufen.</span> <span data-link="r4">Sie tanzen oder, falls sie an der Hauptbühne sind, kaufen sie ein Shirt.</span> Übersetze in eine Formel.',
+    schritte: [
+      { html: T`$H$ = Hauptbühne, $\;G$ = Getränk, $\;T$ = tanzen, $\;S$ = Shirt`,
+        warum: "Abkürzungen festlegen. Vier einfache Aussagen, also vier Atome. «kein Getränk» ist kein eigenes Atom, sondern ¬G." },
+      { html: T`$F_1 = \htmlData{link=r1}{H \Rightarrow G}$`,
+        warum: "«Wenn …, dann …» wird zum Folgepfeil." },
+      { html: T`$F_2 = \htmlData{link=r2}{T \Rightarrow (H \land G)}$`,
+        warum: "«T nur dann, wenn X»: Der Pfeil zeigt auf die Bedingung X. Diese besteht aus zwei Teilen, also H ∧ G in Klammern." },
+      { html: T`$F_3 = \htmlData{link=r3}{S \Leftrightarrow (T \land \neg G)}$`,
+        warum: "«genau dann, wenn» wird zum Doppelpfeil. Die rechte Seite in Klammern setzen, damit klar ist, was zusammengehört." },
+      { html: T`$F_4 = \htmlData{link=r4}{T \lor (H \Rightarrow S)}$`,
+        warum: "Der Satz hat zwei Hälften, verbunden mit «oder». Die zweite Hälfte ist selbst ein Wenn-dann-Satz («falls H, S»)." },
+      { html: T`$F = \htmlData{link=r1}{(H \Rightarrow G)} \land \htmlData{link=r2}{(T \Rightarrow (H \land G))} \land \htmlData{link=r3}{(S \Leftrightarrow (T \land \neg G))} \land \htmlData{link=r4}{(T \lor (H \Rightarrow S))}$`,
+        warum: "Alle vier Vereinbarungen gelten gleichzeitig, also verbindest du sie mit ∧. Das ist die geforderte Formel (eigene Lösung, nicht vom Dozenten bestätigt)." }
+    ]
+  });
+
+  /* =========================================================
+     Schritt 9: Übungen
+     ========================================================= */
+  L.auswahl("#t02-ue-auswahl", {
+    frage: "Verneine: «Wenn Sara Zeit hat, kommt sie ans Konzert.»",
+    optionen: [
+      "Wenn Sara keine Zeit hat, kommt sie nicht ans Konzert.",
+      "Wenn Sara Zeit hat, kommt sie nicht ans Konzert.",
+      "Sara hat Zeit, und sie kommt trotzdem nicht ans Konzert.",
+      "Sara hat keine Zeit, und sie kommt trotzdem ans Konzert."
+    ],
+    richtig: 2,
+    erklaerung: T`$Z \Rightarrow K$ verneint ergibt $\neg(Z \Rightarrow K) \equiv Z \land \neg K$. Die Verneinung beschreibt den einzigen Fall, in dem das Versprechen gebrochen wird. Ein neuer Wenn-dann-Satz ist nie die Verneinung.`
+  });
+
+  L.wahrFalsch("#t02-ue-wf", {
+    titel: "Begriffe und Regeln",
+    aussagen: [
+      { html: "Jede Tautologie ist erfüllbar.", wahr: true,
+        erklaerung: "Eine Tautologie ist in jeder Zeile wahr, hat also sicher mindestens ein Modell." },
+      { html: T`Ist $F$ erfüllbar, dann ist $\neg F$ unerfüllbar.`, wahr: false,
+        erklaerung: T`Gegenbeispiel: $A$ ist erfüllbar, $\neg A$ auch. Das gilt nur für Tautologien (Satz 2.10).` },
+      { html: T`$F$ ist genau dann eine Tautologie, wenn $\neg F$ unerfüllbar ist.`, wahr: true,
+        erklaerung: "Das ist Satz 2.10." },
+      { html: T`$A \Rightarrow B \equiv B \Rightarrow A$`, wahr: false,
+        erklaerung: T`Das ist die Umkehrung. Bei $A = 1$, $B = 0$ ist links 0 und rechts 1. Äquivalent ist die Kontraposition $\neg B \Rightarrow \neg A$.` },
+      { html: T`$\neg(A \lor B) \equiv \neg A \land \neg B$`, wahr: true,
+        erklaerung: "De Morgan (2.15 g): «nicht (A oder B)» heisst «weder A noch B»." },
+      { html: T`$A \land (B \lor C)$ ist in DNF.`, wahr: false,
+        erklaerung: T`Hier steckt ein ∨ in einem ∧. Das ist eine KNF. Die DNF dazu lautet $(A \land B) \lor (A \land C)$.` },
+      { html: T`$F \equiv G$ gilt genau dann, wenn $F \Leftrightarrow G$ eine Tautologie ist.`, wahr: true,
+        erklaerung: "Das steht direkt nach Def. 2.12: gleicher Wert in jeder Zeile heisst, der Doppelpfeil ist überall wahr." }
+    ]
+  });
+
+  L.sortierer("#t02-ue-sortierer", {
+    kategorien: ["nur KNF", "nur DNF", "beides", "keines"],
+    elemente: [
+      { html: T`$(A \lor B) \land (\neg A \lor C)$`, kategorie: "nur KNF", erklaerung: "UND von ODER-Klammern." },
+      { html: T`$(A \land B) \lor (\neg A \land C)$`, kategorie: "nur DNF", erklaerung: "ODER von UND-Klammern." },
+      { html: T`$A \land \neg B \land C$`, kategorie: "beides", erklaerung: "Eine einzige UND-Klammer (DNF) und zugleich drei Ein-Literal-Klammern, mit ∧ verbunden (KNF)." },
+      { html: T`$\neg(A \land B)$`, kategorie: "keines", erklaerung: T`¬ steht vor einer Klammer, nicht vor einem Atom. Mit De Morgan wird daraus $\neg A \lor \neg B$, und das ist beides.` },
+      { html: T`$A \Rightarrow B$`, kategorie: "keines", erklaerung: "In Normalformen gibt es keine Pfeile. Erst auflösen: ¬A ∨ B." },
+      { html: T`$(A \lor (B \land C)) \land D$`, kategorie: "keines", erklaerung: "In der ersten Klammer steckt ein ∧ in einem ∨. Für eine KNF muss Schritt 5 noch verteilen." },
+      { html: T`$\neg A \lor B$`, kategorie: "beides", erklaerung: "Eine einzige ODER-Klammer (KNF) und zugleich zwei Ein-Literal-Konjunktionen, mit ∨ verbunden (DNF)." }
+    ]
+  });
+
+  L.zahlAufgabe("#t02-ue-zahl1", {
+    titel: "Modelle zählen",
+    frage: T`Wie viele Modelle hat $F = (A \lor B) \land (\neg A \lor C)$ über den Atomen $A$, $B$, $C$?`,
+    antwort: 4,
+    hinweise: [
+      T`Unterscheide zwei Fälle: $A = 0$ und $A = 1$.`,
+      T`Ist $A = 0$, ist $\neg A \lor C$ sicher wahr. Was braucht dann noch $A \lor B$?`
+    ],
+    loesungsweg: [
+      T`Fall $A = 0$: $\neg A \lor C = 1$. Für $A \lor B$ braucht es $B = 1$. $C$ ist frei: 2 Modelle (010, 011).`,
+      T`Fall $A = 1$: $A \lor B = 1$. Für $\neg A \lor C$ braucht es $C = 1$. $B$ ist frei: 2 Modelle (101, 111).`,
+      T`Zusammen $2 + 2 = 4$ Modelle von 8 Belegungen. $F$ ist erfüllbar, aber keine Tautologie.`
+    ]
+  });
+
+  L.zahlAufgabe("#t02-ue-zahl2", {
+    titel: "DNF aus der Wahrheitstafel",
+    frage: T`Du bildest die DNF von $F = A \Rightarrow (B \land C)$ aus der Wahrheitstafel über $A$, $B$, $C$. Wie viele UND-Klammern hat sie?`,
+    antwort: 5,
+    hinweise: [
+      "Eine UND-Klammer pro Zeile mit F = 1.",
+      T`Eine Folgerung ist nur falsch, wenn links 1 und rechts 0 steht.`
+    ],
+    loesungsweg: [
+      T`$F = 0$ genau dann, wenn $A = 1$ und $B \land C = 0$: Zeilen 100, 101, 110. Das sind 3 Zeilen.`,
+      T`Also ist $F$ in $8 - 3 = 5$ Zeilen wahr. Die DNF hat 5 UND-Klammern.`,
+      T`Die KNF aus der Tafel hätte nur 3 ODER-Klammern: $(\neg A \lor B \lor C) \land (\neg A \lor B \lor \neg C) \land (\neg A \lor \neg B \lor C)$. Probier es im Generator mit der Vorlage aus.`
+    ]
+  });
+
+  L.schrittAufgabe("#t02-ue-neg", {
+    titel: "Verneinungen (im Stil von Aufgabe 1a der Modulschlussprüfung)",
+    aufgabe: "<p>Verneine die Aussagen. Schreib jeweils einen korrekten, stilistisch guten deutschen Satz. Ein «nicht» vor der ganzen Aussage zählt nicht.</p>" +
+      "<ol type=\"i\"><li>Lara spielt Gitarre und Klavier.</li><li>Nur wenn das Wetter hält, wandern Noah und Elif auf den Säntis.</li>" +
+      "<li>Wenn Mia Pizza mit Ananas bestellt, isst Ben mit ihr.</li><li>Tom trinkt entweder Kaffee oder Tee.</li><li>Kein Pinguin kann fliegen.</li></ol>" +
+      "<p class=\"hint\">Eigene Lösung, nicht vom Dozenten bestätigt. Sie folgt dem Muster der Musterlösung zu Aufgabe 1a.</p>",
+    schritte: [
+      { html: T`i. $G \land K \;\rightsquigarrow\; \neg G \lor \neg K$<br>«Lara spielt nicht Gitarre oder nicht Klavier (oder beides nicht).»`,
+        warum: "De Morgan (2.15 g): Aus «und» wird «oder», jedes Glied wird verneint. Falsch wäre «Lara spielt weder Gitarre noch Klavier»: Das verneint zu viel." },
+      { html: T`ii. $(N \land E) \Rightarrow W \;\rightsquigarrow\; (N \land E) \land \neg W$<br>«Das Wetter hält nicht, und Noah und Elif wandern trotzdem auf den Säntis.»`,
+        warum: "«Nur wenn W» macht W zur Bedingung: (N ∧ E) ⇒ W. Die Verneinung einer Folgerung ist G ∧ ¬H (2.3 b, 2.15 g, f)." },
+      { html: T`iii. $P \Rightarrow B \;\rightsquigarrow\; P \land \neg B$<br>«Mia bestellt Pizza mit Ananas, und Ben isst trotzdem nicht mit ihr.»`,
+        warum: "Gleiches Muster wie ii: Die Bedingung tritt ein, die Folge aber nicht." },
+      { html: T`iv. $\neg K \Leftrightarrow T \;\rightsquigarrow\; K \Leftrightarrow T$<br>«Tom trinkt beides oder keines von beiden.»`,
+        warum: "Entweder-oder ist ¬K ⇔ T (Bsp. 2.16). Die Verneinung von «genau eines» ist «beide gleich»: beide wahr oder beide falsch. «Weder noch» allein wäre zu wenig." },
+      { html: T`v. $\neg\exists x\,(P(x) \land F(x)) \;\rightsquigarrow\; \exists x\,(P(x) \land F(x))$<br>«Es gibt einen Pinguin, der fliegen kann.»`,
+        warum: "Zwei Verneinungen heben sich auf. Aus «kein» wird «es gibt ein». Das Werkzeug dazu (Quantoren) kommt in Station 5." }
+    ]
+  });
+
+  L.schrittAufgabe("#t02-ue-modell", {
+    titel: "Release-Planung (im Stil von Aufgabe 1b der Modulschlussprüfung)",
+    aufgabe: "<p>Ein Entwicklungsteam legt für den Release einer App fest:</p><ul>" +
+      "<li>Wenn das Team testet (T), entdeckt es Fehler (E).</li>" +
+      "<li>Das Team veröffentlicht (V) nur dann, wenn es getestet und keine Fehler entdeckt hat.</li>" +
+      "<li>Das Team macht genau dann Überstunden (U), wenn es Fehler entdeckt und nicht veröffentlicht.</li>" +
+      "<li>Das Team veröffentlicht, oder es macht Überstunden, falls es getestet hat.</li></ul>" +
+      "<p>Übersetze den Sachverhalt in eine aussagenlogische Formel.</p>",
+    schritte: [
+      { html: T`$T$ = testet, $\;E$ = entdeckt Fehler, $\;V$ = veröffentlicht, $\;U$ = macht Überstunden`,
+        warum: "Die Atome sind in der Aufgabe schon vorgegeben. «keine Fehler entdeckt» ist ¬E, «nicht veröffentlicht» ist ¬V. Das Atom heisst bewusst nicht F: F ist schon der Name der ganzen Formel." },
+      { html: T`$F_1 = T \Rightarrow E$`, warum: "«Wenn …, dann …»." },
+      { html: T`$F_2 = V \Rightarrow (T \land \neg E)$`, warum: "«V nur dann, wenn X»: Pfeil von V zur Bedingung X = T ∧ ¬E." },
+      { html: T`$F_3 = U \Leftrightarrow (E \land \neg V)$`, warum: "«genau dann, wenn» ist der Doppelpfeil. Rechte Seite in Klammern." },
+      { html: T`$F_4 = V \lor (T \Rightarrow U)$`, warum: "Zwei Hälften mit «oder». Die zweite ist ein Wenn-dann-Satz: «falls T, dann U»." },
+      { html: T`$F = (T \Rightarrow E) \land (V \Rightarrow (T \land \neg E)) \land (U \Leftrightarrow (E \land \neg V)) \land (V \lor (T \Rightarrow U))$`,
+        warum: "Alle vier Regeln mit ∧ verbinden. Eigene Lösung, nicht vom Dozenten bestätigt, gleich aufgebaut wie die Musterlösung zu Aufgabe 1b. Zusatz: F hat genau drei Modelle, in keinem wird veröffentlicht. Wer testet, entdeckt laut Regel 1 immer Fehler." }
+    ]
+  });
+
+  L.schrittAufgabe("#t02-ue-dnf", {
+    titel: "DNF und Unerfüllbarkeit (im Stil von Aufgabe 2 des Übungssets S1)",
+    aufgabe: T`<p>Gegeben ist $F = (A \Rightarrow B) \land (B \Rightarrow C) \land A \land \neg C$.</p><ol type="a"><li>Bringe $F$ in disjunktive Normalform.</li><li>Zeige mit dem Ergebnis, dass $F$ unerfüllbar ist.</li><li>Was folgt daraus für die drei Aussagen $A \Rightarrow B$, $B \Rightarrow C$ und $A$?</li></ol>`,
+    schritte: [
+      { html: T`$F \overset{\text{2.3 b}}{\equiv} (\neg A \lor B) \land (\neg B \lor C) \land A \land \neg C$`,
+        warum: "Zuerst die Pfeile auflösen (Notation 2.3 b)." },
+      { html: T`$\overset{\text{2.15 b, c}}{\equiv} \big(A \land (\neg A \lor B)\big) \land \big(\neg C \land (\neg B \lor C)\big)$`,
+        warum: "Umordnen: A neben die Klammer mit ¬A, ¬C neben die Klammer mit C. So wird der nächste Schritt kurz." },
+      { html: T`$\overset{\text{2.15 e}}{\equiv} \big((A \land \neg A) \lor (A \land B)\big) \land \big((\neg C \land \neg B) \lor (\neg C \land C)\big)$`,
+        warum: "Distributivität: ∧ über ∨ verteilen (DNF-Richtung)." },
+      { html: T`$\overset{\text{2.15 i}}{\equiv} (A \land B) \land (\neg C \land \neg B) \overset{\text{2.15 b, c}}{\equiv} A \land B \land \neg B \land \neg C$`,
+        warum: "A ∧ ¬A und ¬C ∧ C sind unerfüllbar und fallen bei ∨ weg. Übrig bleibt eine einzige UND-Klammer aus Literalen: Das ist die DNF (Teil a)." },
+      { html: T`$B \land \neg B$ unerfüllbar $\;\Rightarrow\; F \overset{\text{2.15 i}}{\equiv} B \land \neg B$ unerfüllbar`,
+        warum: "Teil b: Die einzige UND-Klammer enthält B und ¬B. Sie kann nie wahr sein. Also hat F kein Modell." },
+      { html: T`$F = G \land \neg C$ mit $G = (A \Rightarrow B) \land (B \Rightarrow C) \land A$, und $\neg(G \Rightarrow C) \equiv G \land \neg C$`,
+        warum: "Teil c (eigene Zusatzfrage): F unerfüllbar heisst nach Satz 2.10, dass G ⇒ C eine Tautologie ist. Aus A ⇒ B, B ⇒ C und A folgt also C (von A über B zu C). Genau so beweist du in S1-V3 Folgerungen." }
+    ]
+  });
+
+  /* =========================================================
+     Lösungsfilm
+     ========================================================= */
+  const U = [
+    T`F = (W \Rightarrow S) \land \neg(S \land K) \land (K \Rightarrow W)`,
+    T`\overset{\text{2.3 b}}{\equiv} (\neg W \lor S) \land \neg(S \land K) \land (\neg K \lor W)`,
+    T`\overset{\text{2.15 g}}{\equiv} (\neg W \lor S) \land (\neg S \lor \neg K) \land (\neg K \lor W)`,
+    T`\overset{\text{2.15 b}}{\equiv} (\neg W \lor S) \land (\neg K \lor \neg S) \land (\neg K \lor W)`,
+    T`\overset{\text{2.15 e}}{\equiv} (\neg W \lor S) \land (\neg K \lor (\neg S \land W))`,
+    T`\overset{\text{2.15 b}}{\equiv} (\neg W \lor S) \land (\neg K \lor (W \land \neg S))`,
+    T`\overset{\text{2.15 f}}{\equiv} (\neg W \lor S) \land (\neg K \lor (\neg\neg W \land \neg S))`,
+    T`\overset{\text{2.15 g}}{\equiv} (\neg W \lor S) \land (\neg K \lor \neg(\neg W \lor S))`,
+    T`\equiv X \land (\neg K \lor \neg X) \quad \text{mit } X := \neg W \lor S`,
+    T`\overset{\text{2.15 e}}{\equiv} (X \land \neg K) \lor (X \land \neg X)`,
+    T`\overset{\text{2.15 i}}{\equiv} X \land \neg K`,
+    T`\equiv (\neg W \lor S) \land \neg K`,
+    T`\overset{\text{2.3 b}}{\equiv} (W \Rightarrow S) \land \neg K`
+  ];
+  // Formelstand: Startzeile blass, dazu die letzten zwei Zeilen; die neueste leuchtet
+  function stand(n, extra) {
+    let h = '<div class="t02-filmzeilen">';
+    if (n >= 3) h += '<div class="t02-blass">$' + U[0] + "$</div><div class=\"t02-blass\">⋮</div>";
+    const von = n >= 3 ? n - 1 : 0;
+    for (let k = von; k <= n; k++) {
+      const z = "$" + U[k] + "$";
+      h += "<div" + (k < n ? ' class="t02-blass"' : "") + ">" + (k === n && !extra ? NW(z) : z) + "</div>";
+    }
+    if (extra) h += "<div>" + NW(extra) + "</div>";
+    return h + "</div>";
+  }
+  // Übersetzungsphase: Regeln einzeln
+  const R1 = T`$F_1 = W \Rightarrow S$`, R2 = T`$F_2 = \neg(S \land K)$`, R3 = T`$F_3 = K \Rightarrow W$`;
+  const zeilenR = (arr) => '<div class="t02-filmzeilen">' + arr.map((x) => "<div>" + x + "</div>").join("") + "</div>";
+
+  L.film("#t02-film", {
+    phasen: ["1 · Atome", "2 · Übersetzen", "3 · Pfeile weg", "4 · Vereinfachen", "5 · Antwort"],
+    texte: [
+      'Für den Grillabend der WG gilt: <span data-ph="r1">Wenn die WG Würste kauft, kauft sie auch Senf.</span> <span data-ph="r2">Senf und Ketchup zusammen kauft sie nie.</span> <span data-ph="r3">Ketchup kauft sie nur, wenn sie auch Würste kauft.</span> <span data-ph="frage">Zeige mit Satz 2.15: Die Regeln sagen dasselbe wie «Wenn Würste, dann Senf, und nie Ketchup».</span>'
+    ],
+    woerterbuch: [
+      "$W$ WG kauft Würste",
+      "$S$ WG kauft Senf",
+      "$K$ WG kauft Ketchup",
+      T`$X$ Abkürzung für $\neg W \lor S$`
+    ],
+    beschriftung: { texte: "Die Aufgabe", formel: "Rechnung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Atome festlegen, jeden Satz einzeln übersetzen, alles mit ∧ verbinden, Pfeile auflösen, dann mit Satz 2.15 gezielt vereinfachen. Über jedes ≡ schreibst du die Regel." },
+      { ph: 0, hl: ["r1"], dict: 1, dh: [0],
+        say: "Zuerst die Atome. Jede einfache Aussage, die wahr oder falsch sein kann, bekommt einen Buchstaben. W heisst: Die WG kauft Würste." },
+      { ph: 0, hl: ["r1", "r2"], dict: 2, dh: [1],
+        say: "S heisst: Die WG kauft Senf." },
+      { ph: 0, hl: ["r2", "r3"], dict: 3, dh: [2],
+        say: "K heisst: Die WG kauft Ketchup. Mehr Atome braucht diese Aufgabe nicht." },
+      { ph: 1, hl: ["r1"], dh: [0, 1], f: zeilenR([NW(R1)]),
+        say: "Regel 1 ist ein «Wenn …, dann …». Das wird der Folgepfeil: W ⇒ S." },
+      { ph: 1, hl: ["r2"], dh: [1, 2], f: zeilenR([R1, NW(R2)]),
+        say: "Regel 2 verbietet, dass beides zusammen vorkommt. Also: nicht (S und K)." },
+      { ph: 1, hl: ["r3"], dh: [2, 0], f: zeilenR([R1, R2, NW(R3)]),
+        say: "Regel 3 enthält «nur, wenn». Der Pfeil zeigt auf das, was nach «nur wenn» steht: K ⇒ W. Nicht umgekehrt!" },
+      { ph: 1, f: stand(0),
+        say: "Alle Regeln gelten gleichzeitig. Darum verbindest du sie mit ∧. Das ist die Formel F, die den Sachverhalt beschreibt." },
+      { ph: 2, f: stand(1),
+        say: "Jetzt die Pfeile weg. Nach Notation 2.3 b ist G ⇒ H nur eine Abkürzung für ¬G ∨ H. Das wendest du auf F₁ und F₃ an." },
+      { ph: 2, f: stand(2),
+        say: "Das ¬ vor der Klammer schiebst du mit De Morgan hinein: Aus ∧ wird ∨, jedes Glied wird verneint." },
+      { ph: 2, f: stand(2, "Drei ODER-Klammern, mit ∧ verbunden: eine KNF."),
+        say: "Jetzt steht F in KNF. Das wäre schon die Antwort auf «Bringe F in KNF». Das Ziel ist aber eine kurze Aussage." },
+      { ph: 3, f: stand(3),
+        say: "Ziel: K soll allein stehen. Darum drehst du in der zweiten Klammer die Reihenfolge, damit ¬K vorne steht. Das ist Kommutativität." },
+      { ph: 3, f: stand(4),
+        say: "Die zweite und die dritte Klammer beginnen beide mit ¬K. Distributivität rückwärts: ¬K ausklammern." },
+      { ph: 3, f: stand(5),
+        say: "Kleine Vorbereitung: In der inneren Klammer die Reihenfolge drehen, W nach vorn." },
+      { ph: 3, f: stand(6),
+        say: "Ein Trick: W durch ¬¬W ersetzen. Das ist erlaubt, denn die Doppelnegation gilt in beide Richtungen." },
+      { ph: 3, f: stand(7),
+        say: "Jetzt De Morgan rückwärts: ¬¬W ∧ ¬S ist dasselbe wie ¬(¬W ∨ S). Schau genau hin: Da steht die erste Klammer wieder, nur verneint." },
+      { ph: 3, dict: 4, dh: [3], f: stand(8),
+        say: "Gib der Klammer ¬W ∨ S einen Namen: X. Dann sieht man die Struktur: X und (nicht K oder nicht X)." },
+      { ph: 3, dh: [3], f: stand(9),
+        say: "Distributivität: X verteilt sich auf beide Glieder der Oder-Klammer." },
+      { ph: 3, f: stand(10),
+        say: "X ∧ ¬X ist unerfüllbar: Nichts ist gleichzeitig wahr und falsch. Nach der Unerfüllbarkeitsregel fällt dieses Glied beim ∨ weg." },
+      { ph: 3, dh: [3], f: stand(11),
+        say: "Jetzt X wieder einsetzen: X steht für ¬W ∨ S." },
+      { ph: 4, f: stand(12),
+        say: "Und zurück zum Pfeil: ¬W ∨ S ist nach Notation 2.3 b genau W ⇒ S." },
+      { ph: 4, hl: ["frage"], dh: [0, 1, 2], f: stand(12, "«Wenn Würste, dann Senf, und nie Ketchup.»"),
+        say: "Auf Deutsch: Wenn die WG Würste kauft, dann auch Senf. Und Ketchup kauft sie nie. Das war zu zeigen. Den Ketchup kann sie sich sparen." },
+      { ph: 4, hl: ["frage"], f: stand(12, T`Kontrolle: $F$ hat genau 3 Modelle (WSK = 000, 010, 110), alle mit $K = 0$.`),
+        say: "Zur Kontrolle die Wahrheitstafel: F ist in genau drei Zeilen wahr, und in allen ist K falsch. Das passt. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* =========================================================
+     Selbsttest
+     ========================================================= */
+  L.selbsttest("#t02-selbsttest", {
+    fragen: [
+      { q: T`Was ist ein Modell einer Formel $F$?`,
+        o: [T`eine Formel, die zu $F$ äquivalent ist`, T`eine Belegung, unter der $F$ wahr ist`, T`eine Zeile der Wahrheitstafel, in der $F$ falsch ist`], a: 1,
+        e: T`Def. 2.8 b: $\alpha$ ist Modell von $F$, wenn $\alpha(F) = 1$.` },
+      { q: T`$F$ ist eine Tautologie genau dann, wenn …`,
+        o: [T`$F$ mindestens ein Modell hat.`, T`$\neg F$ unerfüllbar ist.`, T`$\neg F$ erfüllbar ist.`], a: 1,
+        e: "Satz 2.10. «Mindestens ein Modell» heisst nur erfüllbar." },
+      { q: T`Stolperfalle: Welche Formel ist die Verneinung von $A \Rightarrow B$?`,
+        o: [T`$\neg A \Rightarrow \neg B$`, T`$A \Rightarrow \neg B$`, T`$A \land \neg B$`], a: 2,
+        e: T`$\neg(A \Rightarrow B) \equiv \neg(\neg A \lor B) \equiv A \land \neg B$. Die beiden Pfeil-Formeln sind bei $A = 0$, $B = 0$ wahr, genau wie $A \Rightarrow B$. Eine Verneinung muss aber in jeder Zeile den umgekehrten Wert haben.` },
+      { q: T`Stolperfalle: «Nur wenn Ben Zeit hat ($Z$), spielt er Tennis ($T$).» Welche Formel passt?`,
+        o: [T`$Z \Rightarrow T$`, T`$T \Rightarrow Z$`, T`$Z \Leftrightarrow T$`], a: 1,
+        e: "Der Pfeil zeigt auf das, was nach «nur wenn» steht. Spielt Ben Tennis, dann hat er Zeit. Hat er Zeit, muss er aber nicht spielen." },
+      { q: "Welche Umformung ist eine Regel von De Morgan?",
+        o: [T`$\neg(A \lor B) \equiv \neg A \land \neg B$`, T`$\neg(A \lor B) \equiv \neg A \lor \neg B$`, T`$\neg(A \land B) \equiv \neg A \land \neg B$`], a: 0,
+        e: "Beim Hineinschieben des ¬ kippt der Junktor: ∨ wird ∧ und umgekehrt." },
+      { q: "Welche Formel ist in KNF?",
+        o: [T`$(A \lor \neg B) \land (\neg A \lor C)$`, T`$(A \land B) \lor C$`, T`$\neg(A \lor B) \land C$`], a: 0,
+        e: T`UND von ODER-Klammern aus Literalen. $(A \land B) \lor C$ ist eine DNF, und in $\neg(A \lor B)$ steht ¬ vor einer Klammer.` },
+      { q: T`In der Zeile $A = 1$, $B = 0$, $C = 1$ ist $F$ wahr. Welche UND-Klammer gehört dafür in die DNF?`,
+        o: [T`$A \land \neg B \land C$`, T`$\neg A \land B \land \neg C$`, T`$A \lor \neg B \lor C$`], a: 0,
+        e: "Die Klammer soll genau in dieser Zeile wahr sein: Atome mit 1 bleiben, Atome mit 0 werden verneint." },
+      { q: T`Stolperfalle: In der Zeile $A = 1$, $B = 0$, $C = 1$ ist $F$ falsch. Welche ODER-Klammer gehört dafür in die KNF?`,
+        o: [T`$A \lor \neg B \lor C$`, T`$\neg A \lor B \lor \neg C$`, T`$\neg A \land B \land \neg C$`], a: 1,
+        e: T`Die Klammer muss genau in dieser Zeile falsch sein. Darum drehst du alle Vorzeichen um: $\neg A \lor B \lor \neg C$ ist nur bei $A = 1$, $B = 0$, $C = 1$ falsch.` },
+      { q: "Stolperfalle: Verneine «Lina nimmt entweder den Bus oder das Velo.»",
+        o: ["Lina nimmt weder den Bus noch das Velo.", "Lina nimmt beides oder keines von beiden.", "Lina nimmt den Bus und das Velo."], a: 1,
+        e: T`Entweder-oder ist $\neg B \Leftrightarrow V$, die Verneinung ist $B \Leftrightarrow V$: beide gleich. «Weder noch» und «beides» decken je nur die Hälfte davon ab.` },
+      { q: T`Was ergibt $A \lor (A \land B)$?`,
+        o: [T`$A \land B$`, T`$A$`, T`$A \lor B$`], a: 1,
+        e: "Absorption (2.15 d): Ist A wahr, ist alles wahr; ist A falsch, ist auch A ∧ B falsch." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

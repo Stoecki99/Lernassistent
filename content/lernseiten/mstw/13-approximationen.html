@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Approximationen · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/14-stichproben" title="Stichproben und Stichprobenpläne">
+  <style>
+    /* Station 13: nur Klassen mit Präfix t13-, nur Farben aus :root */
+    .t13-ziele{margin:6px 0 0; padding-left:1.2em}
+    .t13-ziele li{margin-bottom:2px}
+    .t13-liste{margin:0; padding-left:1.2em}
+    .t13-liste li{margin-bottom:4px}
+    .t13-vorlagen .btn{font-size:.88rem}
+    .t13-kennwerte{font-size:1.1rem; line-height:1.5}
+    .t13-kennwerte span{white-space:nowrap; display:inline-block; margin-right:1.2em}
+    .t13-ampel{display:flex; align-items:center; gap:14px; background:var(--board); border-radius:12px; padding:10px 14px}
+    .t13-lampen{display:flex; flex-direction:column; gap:5px; padding:6px; border-radius:10px; background:var(--surface); border:1px solid var(--line); flex:0 0 auto}
+    .t13-lampe{display:block; width:18px; height:18px; border-radius:50%; background:var(--line); border:2px solid var(--line); opacity:.55}
+    .t13-lampe.t13-an{opacity:1}
+    .t13-lampe.t13-an[data-farbe="rot"]{background:var(--bad); border-color:var(--bad)}
+    .t13-lampe.t13-an[data-farbe="gelb"]{background:var(--lit); border-color:var(--free)}
+    .t13-lampe.t13-an[data-farbe="gruen"]{background:var(--ok); border-color:var(--ok)}
+    .t13-ampel-text{flex:1; min-width:0; font-size:.95rem}
+    .t13-ampel-text b.t13-rot{color:var(--bad)}
+    .t13-ampel-text b.t13-gelb{color:var(--free)}
+    .t13-ampel-text b.t13-gruen{color:var(--ok)}
+    .t13-ti{display:block; font-size:.85rem; color:var(--muted); overflow-wrap:anywhere}
+    .t13-tab td:first-child{min-width:8em}
+    .t13-tab td.zahl{white-space:nowrap}
+    .diagramm .t13-blass{opacity:.3}
+    .diagramm .t13-duenn{stroke-width:1.5}
+    .diagramm .t13-box{fill:var(--surface); stroke:var(--line); stroke-width:1.5}
+    .diagramm .t13-pfeil{stroke:var(--muted); stroke-width:1.6; fill:none}
+    .diagramm .t13-gestrichelt{stroke-dasharray:5 4}
+    .diagramm .t13-spitze{fill:var(--muted)}
+    .diagramm text.t13-knoten{fill:var(--ink); font-family:var(--f-math); font-size:17px}
+    .diagramm text.t13-satz{fill:var(--accent); font-size:11px}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="13-approximationen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V8 · Approximationen</span>
+    <h1>Approximationen: schwierige Verteilungen geschickt nähern</h1>
+    <p class="lead">Manche Wahrscheinlichkeiten lassen sich exakt kaum ausrechnen: Die Zahlen werden riesig, oder der Taschenrechner kennt die Verteilung gar nicht. Dann ersetzt du die exakte Verteilung durch eine einfachere, die fast gleich aussieht. Hier lernst du, wann das erlaubt ist, wie du die neuen Parameter bestimmst und warum beim Wechsel zur Normalverteilung jede Grenze um 0.5 wandert.</p>
+    <div class="note"><b>Lernziele.</b> Nach dieser Station kannst du
+      <ul class="t13-ziele">
+        <li>die exakte Verteilung einer Aufgabe bestimmen und die passende Näherung nach Satz 7.1 bis 7.3 wählen,</li>
+        <li>die Approximationskriterien mit Zahlen prüfen und hinschreiben,</li>
+        <li>Erwartungswert \(\mu\) und Standardabweichung \(\sigma\) der Näherung berechnen,</li>
+        <li>die Stetigkeitskorrektur richtig setzen und mit binomCdf, poissCdf und normCdf rechnen,</li>
+        <li>exakten Wert und Näherung vergleichen und den Fehler beurteilen.</li>
+      </ul>
+    </div>
+    <p class="hint">Grundlage: Skript Wahrscheinlichkeitstheorie Kap. 7.1–7.3, Folien Wahrscheinlichkeitstheorie (Folie 41 zentraler Grenzwertsatz, Folien 43–45 Approximationen), Lernblock 3 (Lösungen 7.110 und 7.111, Test zu Lernblock 2 und 3). Prüfungsbezug: Teile der Aufgaben 5 und 6 der exemplarischen Modulschlussprüfung.</p>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#bausteine"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#theorie"><b>2</b>Theorie</a>
+    <a href="#beispiele"><b>3</b>Schritt für Schritt</a>
+    <a href="#ausprobieren"><b>4</b>Ausprobieren</a>
+    <a href="#uebungen"><b>5</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="bausteine">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine, ohne die nichts geht</h2>
+    <p class="prose">Eine <b>Approximation</b> (Näherung) ersetzt eine Rechnung, die mühsam oder unmöglich ist, durch eine einfachere mit fast demselben Ergebnis. Damit du verstehst, wann und wie das geht, brauchst du fünf Begriffe.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Approximation = Näherung</span><span class="ex">H(1200; 150; 30) ≈ B(30; 0.125)</span><p>Wie die Luftlinie statt der Strassenkilometer: nicht exakt, aber schnell und nah genug. Für <span class="fn">P</span>(<span class="v">X</span> ≤ 3) gibt die exakte Rechnung 0.4716, die Näherung 0.4734 (Skript Aufgabe 7.107; der exakte Wert ist eine eigene Computerrechnung).</p></div>
+      <div class="concept"><span class="tag">Diskret = zählen, stetig = messen</span><span class="ex"><span class="fn">P</span>(<span class="v">X</span> = 3) &gt; 0, aber <span class="fn">P</span>(<span class="v">Y</span> = 3) = 0</span><p>Diskret heisst: Du zählst Stücke (0, 1, 2, …), jeder Wert hat seine eigene Wahrscheinlichkeit, wie Treppenstufen. Stetig heisst: Du misst (Gewicht, Zeit). Wahrscheinlichkeit ist dann eine Fläche unter einer Kurve, wie eine Rampe. Ein einzelner Punkt hat die Fläche 0.</p></div>
+      <div class="concept"><span class="tag">Mit oder ohne Zurücklegen</span><span class="ex">H(<span class="c">N</span>; <span class="c">M</span>; <span class="c">n</span>) ≈ B(<span class="c">n</span>; <span class="c">M</span>/<span class="c">N</span>)</span><p>Ziehst du ohne Zurücklegen, ändert sich die Trefferchance nach jedem Zug: Das ist die hypergeometrische Verteilung H. Ist der Topf riesig und die Stichprobe klein, merkt man das kaum. Ein Glas Wasser aus dem Zürichsee senkt den Seespiegel nicht. Dann rechnest du binomial (B).</p></div>
+      <div class="concept"><span class="tag">Faustregel = Kriterium</span><span class="ex"><span class="p"><span class="c">n</span><span class="c">p</span>(1 − <span class="c">p</span>) &gt; 9</span></span><p>Eine Bedingung, die sagt, ob die Näherung gut genug ist. Wie eine Ampel: Grün heisst «nähern erlaubt». In der Prüfung schreibst du jedes Kriterium mit Zahlen hin, das gibt Punkte.</p></div>
+      <div class="concept"><span class="tag">Stetigkeitskorrektur = ± 0.5</span><span class="ex"><span class="fn">P</span>(<span class="v">X</span> = 5) ≈ <span class="fn">P</span>(4.5 ≤ <span class="v">X</span> ≤ 5.5)</span><p>Beim Zählen steht jede ganze Zahl für einen Balken der Breite 1. Wie eine auf ganze Zentimeter gerundete Körpergrösse: «170 cm» meint alles von 169.5 bis 170.5 cm.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: zählen oder messen?</h3>
+      <p class="hint">Die Normalverteilung ist stetig. Nähert man mit ihr eine Zähl-Verteilung, braucht es später die Stetigkeitskorrektur.</p>
+      <div id="t13-sortierer-0"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
+    <h2>Das Wörterbuch dieses Kapitels</h2>
+    <p class="prose">Hier tauchen vier Verteilungen gleichzeitig auf. Leg dir deshalb zuerst fest, was jedes Zeichen bedeutet. Die Farbe zeigt die Art: Zufallsvariablen und Grenzen blau, feste Zahlen (Parameter) orange, Verteilungen und Funktionen grün, Aussagen violett.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="v">X</span></td><td><span class="kind kind-v">Variable</span></td><td>Zufallsvariable «Anzahl Treffer», zum Beispiel Anzahl defekter Teile. Sie nimmt nur ganze Zahlen an.</td></tr>
+          <tr><td><span class="v">k</span>, <span class="v">a</span>, <span class="v">b</span></td><td><span class="kind kind-v">Variable</span></td><td>ganze Zahlen: ein Wert von <span class="v">X</span> und die Grenzen in <span class="fn">P</span>(<span class="v">a</span> ≤ <span class="v">X</span> ≤ <span class="v">b</span>)</td></tr>
+          <tr><td><span class="c">n</span>, <span class="c">p</span></td><td><span class="kind kind-c">Konstante</span></td><td>Anzahl Versuche (Stichprobengrösse) und Trefferwahrscheinlichkeit pro Versuch</td></tr>
+          <tr><td><span class="c">N</span>, <span class="c">M</span></td><td><span class="kind kind-c">Konstante</span></td><td>Anzahl Dinge im ganzen Topf (Grundgesamtheit) und davon die Anzahl mit der gesuchten Eigenschaft</td></tr>
+          <tr><td><span class="c">μ</span>, <span class="c">σ</span></td><td><span class="kind kind-c">Konstante</span></td><td>Erwartungswert (Lage) und Standardabweichung (Streuung). <span class="c">σ</span> ist die Wurzel aus der Varianz.</td></tr>
+          <tr><td><span class="fn">B</span>(<span class="c">n</span>; <span class="c">p</span>)</td><td><span class="kind kind-fn">Verteilung</span></td><td>Binomialverteilung: <span class="c">n</span> Versuche, die Trefferchance <span class="c">p</span> bleibt immer gleich (mit Zurücklegen)</td></tr>
+          <tr><td><span class="fn">H</span>(<span class="c">N</span>; <span class="c">M</span>; <span class="c">n</span>)</td><td><span class="kind kind-fn">Verteilung</span></td><td>hypergeometrische Verteilung: <span class="c">n</span> Ziehungen ohne Zurücklegen</td></tr>
+          <tr><td><span class="fn">Ps</span>(<span class="c">μ</span>)</td><td><span class="kind kind-fn">Verteilung</span></td><td>Poissonverteilung: Anzahl Ereignisse pro Zeiteinheit, ohne feste Anzahl Versuche</td></tr>
+          <tr><td><span class="fn">N</span>(<span class="c">μ</span>; <span class="c">σ</span>)</td><td><span class="kind kind-fn">Verteilung</span></td><td>Normalverteilung, stetig, Glockenkurve. Das Skript schreibt als zweiten Parameter <span class="c">σ</span>, nicht <span class="c">σ</span>².</td></tr>
+          <tr><td><span class="p"><span class="c">n</span><span class="c">p</span>(1 − <span class="c">p</span>) &gt; 9</span></td><td><span class="kind kind-p">Aussage</span></td><td>Approximationskriterium: entweder wahr (Näherung erlaubt) oder falsch</td></tr>
+          <tr><td><span class="op">≈</span>, <span class="op">∼</span></td><td><span class="kind kind-op">Operator</span></td><td>«ungefähr gleich» (Ergebnis einer Näherung) und «ist verteilt nach»</td></tr>
+          <tr><td><span class="op">± 0.5</span></td><td><span class="kind kind-op">Operator</span></td><td>Stetigkeitskorrektur an den Grenzen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Achtung, doppeltes N:</b> In H(<span class="c">N</span>; <span class="c">M</span>; <span class="c">n</span>) ist <span class="c">N</span> eine Zahl, die Grösse des Topfs. In <span class="fn">N</span>(<span class="c">μ</span>; <span class="c">σ</span>) ist N der Name der Normalverteilung. Was in der Klammer steht, verrät dir, welches N gemeint ist.</div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle auf dem TI-Nspire (Skript Kap. 8). u und o sind die untere und obere Grenze.</caption>
+        <thead><tr><th>Verteilung</th><th>Befehl</th><th>Menü</th></tr></thead>
+        <tbody>
+          <tr><td>B(n; p)</td><td>binomCdf(n, p, u, o)</td><td>menu 5, 5, B</td></tr>
+          <tr><td>Ps(μ)</td><td>poissCdf(μ, u, o)</td><td>menu 5, 5, K</td></tr>
+          <tr><td>N(μ; σ)</td><td>normCdf(u, o, μ, σ)</td><td>menu 5, 5, 2</td></tr>
+          <tr><td>H(N; M; n)</td><td>nicht eingebaut (nur mit Zusatzprogramm wie FormulaPro)</td><td>–</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 2 · Theorie ===== -->
+  <section id="theorie">
+    <span class="eyebrow">Schritt 2 · Theorie nach Skript Kap. 7</span>
+    <h2>Wann darf ich nähern?</h2>
+
+    <h3>7.1 Warum die Binomialverteilung zur Glocke wird</h3>
+    <p class="prose">Zeichnest du die Wahrscheinlichkeiten \(P(X = k)\) einer Binomialverteilung als Balken (Histogramm), siehst du zwei Effekte. Das Skript zeigt sie in Kap. 7.1 an sechs Bildern:</p>
+    <ul class="prose t13-liste">
+      <li>Je näher \(p\) bei 0.5 liegt, desto symmetrischer wird das Histogramm. \(B(40;\ 0.1)\) ist schief, \(B(40;\ 0.5)\) sieht schon wie eine Glocke aus.</li>
+      <li>Je grösser \(n\) wird, desto glockenförmiger wird es, auch wenn \(p\) weit weg von 0.5 liegt. \(B(8;\ 0.1)\) ist sehr schief, \(B(100;\ 0.1)\) schon fast symmetrisch.</li>
+    </ul>
+    <p class="prose">Beides steckt in einer einzigen Zahl: der Varianz \(np(1-p)\) der Binomialverteilung. Ist sie grösser als 9, passt die Glockenkurve gut genug. Das ist die Faustregel des Skripts.</p>
+    <div class="note tipp"><b>Merkhilfe für die 9:</b> \(np(1-p) &gt; 9\) heisst \(\sigma &gt; 3\). Dann liegt der Bereich \(\mu \pm 3\sigma\), in dem fast die ganze Glocke steckt, sicher zwischen 0 und \(n\). Die Glocke wird also nicht an einer «Wand» abgeschnitten. (Eigene Merkhilfe, nicht aus dem Skript.)</div>
+    <p class="prose">Die zweite Erkenntnis aus Kap. 7.1: Für ein Intervall nahe beim Erwartungswert ist der relative Fehler klein. Relativer Fehler heisst: Abweichung der Näherung geteilt durch den exakten Wert, meist in Prozent. Liegt das Intervall weit weg von \(\mu\), am Rand der Verteilung, wird der relative Fehler immer grösser. Im Abschnitt «Ausprobieren» siehst du das selbst.</p>
+
+    <h3>Die Idee dahinter: der zentrale Grenzwertsatz</h3>
+    <p class="prose">Warum ausgerechnet eine Glocke? Eine binomialverteilte Zahl ist eine <b>Summe</b>. Jeder einzelne Versuch liefert 1 (Treffer) oder 0 (kein Treffer):</p>
+    <div class="board">$$X = X_1 + X_2 + \dots + X_n$$ <p class="hint">mit \(X_i = 1\) bei Treffer im \(i\)-ten Versuch, sonst \(X_i = 0\)</p></div>
+    <p class="prose">Die Folien (Folie 41) formulieren den <b>zentralen Grenzwertsatz</b> sinngemäss so: Addierst du sehr viele unabhängige Zufallsvariablen, von denen keine stark dominiert, ist die Summe näherungsweise normalverteilt. Bild dazu: Wirf 100 Münzen. Jede Münze ist ein kleiner Zufall. Die Anzahl Köpfe landet fast immer in der Mitte, extreme Ergebnisse sind selten. Genau so entsteht die Glocke. Dasselbe gilt für die Poissonverteilung mit grossem \(\mu\): \(Ps(12)\) ist zum Beispiel die Summe von zwölf unabhängigen \(Ps(1)\).</p>
+
+    <h3>7.2 Die Näherungen in der Übersicht</h3>
+    <p class="prose">Das Skript fasst die Näherungen in drei Sätzen zusammen, die Folien 44 und 45 zeigen dieselben Sätze. Die Landkarte zeigt, welche Verteilung in welche übergehen darf.</p>
+    <figure class="diagramm">
+      <svg viewBox="0 0 320 196" role="img" aria-labelledby="t13-karte-titel">
+        <title id="t13-karte-titel">Landkarte der Näherungen: H geht nach Satz 7.2 in B oder N über, B nach Satz 7.1 in N, Ps nach Satz 7.3 in N. B in Ps ist nur eine Lehrbuch-Regel.</title>
+        <defs>
+          <marker id="t13-spitze" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path class="t13-spitze" d="M0 0 L10 5 L0 10 z"/>
+          </marker>
+        </defs>
+        <path class="t13-pfeil" d="M40 68 C 40 14, 280 14, 280 66" marker-end="url(#t13-spitze)"/>
+        <text class="t13-satz" x="160" y="22" text-anchor="middle">Satz 7.2, Teil 2</text>
+        <line class="t13-pfeil" x1="72" y1="90" x2="126" y2="90" marker-end="url(#t13-spitze)"/>
+        <text class="t13-satz" x="99" y="82" text-anchor="middle">Satz 7.2</text>
+        <line class="t13-pfeil" x1="192" y1="90" x2="246" y2="90" marker-end="url(#t13-spitze)"/>
+        <text class="t13-satz" x="219" y="82" text-anchor="middle">Satz 7.1</text>
+        <line class="t13-pfeil" x1="194" y1="160" x2="270" y2="110" marker-end="url(#t13-spitze)"/>
+        <text class="t13-satz" x="246" y="152" text-anchor="start">Satz 7.3</text>
+        <line class="t13-pfeil t13-gestrichelt" x1="160" y1="108" x2="160" y2="142" marker-end="url(#t13-spitze)"/>
+        <text class="t13-satz" x="168" y="130" text-anchor="start">Lehrbuch</text>
+        <rect class="t13-box" x="8" y="72" width="64" height="36" rx="8"/>
+        <text class="t13-knoten" x="40" y="96" text-anchor="middle">H</text>
+        <rect class="t13-box" x="128" y="72" width="64" height="36" rx="8"/>
+        <text class="t13-knoten" x="160" y="96" text-anchor="middle">B</text>
+        <rect class="t13-box" x="248" y="72" width="64" height="36" rx="8"/>
+        <text class="t13-knoten" x="280" y="96" text-anchor="middle">N</text>
+        <rect class="t13-box" x="128" y="144" width="64" height="36" rx="8"/>
+        <text class="t13-knoten" x="160" y="168" text-anchor="middle">Ps</text>
+      </svg>
+      <figcaption>H = hypergeometrisch, B = binomial, N = normal, Ps = Poisson. Die gestrichelte Näherung B → Ps steht nicht im Skript.</figcaption>
+    </figure>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Approximationen nach Skript Kap. 7.2 (plus eine Ergänzung)</caption>
+        <thead><tr><th>Von → nach</th><th>Kriterium</th><th>Parameter der Näherung</th></tr></thead>
+        <tbody>
+          <tr><th>B → N<br><span class="hint">Satz 7.1</span></th><td>\(np(1-p) &gt; 9\)</td><td>\(\mu = np\), \(\sigma = \sqrt{np(1-p)}\)</td></tr>
+          <tr><th>H → B<br><span class="hint">Satz 7.2, Teil 1</span></th><td>\(0.1 &lt; \tfrac{M}{N} &lt; 0.9\), \(n &gt; 10\), \(\tfrac{n}{N} &lt; 0.05\)</td><td>\(n\) und \(p = \tfrac{M}{N}\)</td></tr>
+          <tr><th>H → N<br><span class="hint">Satz 7.2, Teil 2</span></th><td>\(0.1 &lt; \tfrac{M}{N} &lt; 0.9\), \(n &gt; 30\), \(\tfrac{n}{N} &lt; 0.05\)</td><td>\(\mu = n\tfrac{M}{N}\), \(\sigma = \sqrt{n\tfrac{M}{N}\left(1-\tfrac{M}{N}\right)}\)</td></tr>
+          <tr><th>Ps → N<br><span class="hint">Satz 7.3</span></th><td>\(\mu \ge 10\)</td><td>\(\mu\) und \(\sigma = \sqrt{\mu}\)</td></tr>
+          <tr><th>B → Ps<br><span class="hint">nicht im Skript</span></th><td>Lehrbuch-Faustregel: \(n \ge 50\) und \(p \le 0.1\) (es gibt strengere Varianten)</td><td>\(\mu = np\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Bemerkung 7.4: immer die Stetigkeitskorrektur</h3>
+    <p class="prose">Nähert man eine Zähl-Verteilung (B, H oder Ps) durch die stetige Normalverteilung, verlangt das Skript jedes Mal die <b>Stetigkeitskorrektur</b>. Der Grund: Bei der Zähl-Verteilung gehört zu jedem ganzen Wert \(k\) ein Balken der Breite 1, der von \(k - 0.5\) bis \(k + 0.5\) reicht. Die Normalverteilung misst Flächen. Damit der ganze Balken mitzählt, schiebst du jede Grenze um eine halbe Einheit nach aussen.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Stetigkeitskorrektur Schritt für Schritt (n = Anzahl Versuche)</caption>
+        <thead><tr><th>Gesucht</th><th>1. ganzzahlig mit ≤</th><th>2. mit Korrektur</th></tr></thead>
+        <tbody>
+          <tr><td>\(P(X = k)\)</td><td>\(P(k \le X \le k)\)</td><td>\(P(k - 0.5 \le X \le k + 0.5)\)</td></tr>
+          <tr><td>\(P(X \le k)\)</td><td>\(P(0 \le X \le k)\)</td><td>\(P(-0.5 \le X \le k + 0.5)\)</td></tr>
+          <tr><td>\(P(X &lt; k)\)</td><td>\(P(0 \le X \le k - 1)\)</td><td>\(P(-0.5 \le X \le k - 0.5)\)</td></tr>
+          <tr><td>\(P(X \ge k)\)</td><td>\(P(k \le X \le n)\)</td><td>\(P(k - 0.5 \le X \le n + 0.5)\)</td></tr>
+          <tr><td>\(P(X &gt; k)\)</td><td>\(P(k + 1 \le X \le n)\)</td><td>\(P(k + 0.5 \le X \le n + 0.5)\)</td></tr>
+          <tr><td>\(P(a \le X \le b)\)</td><td>schon fertig</td><td>\(P(a - 0.5 \le X \le b + 0.5)\)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Zweistufig denken:</b> Schreib zuerst «&lt;» und «&gt;» in «≤» und «≥» mit ganzen Zahlen um, zum Beispiel \(P(X &lt; 7) = P(X \le 6)\). Erst dann verschiebst du die Grenzen um 0.5 nach aussen. So korrigierst du nie in die falsche Richtung. Bei Poisson gibt es keine obere Grenze \(n\): Dort nimmst du \(\infty\).</div>
+    <div class="note"><b>Untere Grenze −0.5 oder −∞?</b> Skript und Lösungen setzen als untere Grenze \(-0.5\), weil \(X\) nicht negativ sein kann. In Aufgabe 7.110 steht \(P(X &lt; 7) \approx P(-0.5 \le X \le 6.5)\). Viele Lehrbücher nehmen stattdessen \(-\infty\). Der Unterschied ist meist winzig, hier 0.0560 gegenüber 0.0562. Rechne wie das Skript.</div>
+    <div class="note tipp"><b>Dieselbe Idee, andere Richtung:</b> Im Test zu Lernblock 2 und 3 (Aufgabe 3a) misst eine Maschine Gewicht statt Stückzahl. «Genau 55 Bonbons» heisst dort: Das Gewicht liegt zwischen dem Wert für 54.5 und dem für 55.5 Bonbons. Bei 1.74 g pro Bonbon und \(X \sim N(95.7;\ 1.06)\) rechnest du normCdf(94.83, 96.57, 95.7, 1.06) \(\approx 0.5882\). Auch hier steht eine ganze Zahl für einen Bereich der Breite 1.</div>
+    <div class="note falle"><b>Keine Korrektur zwischen zwei Zähl-Verteilungen:</b> Bei H → B und bei B → Ps bleibt alles ganzzahlig. Dort verschiebst du keine Grenze.</div>
+    <div class="card stack">
+      <h3>Kurz prüfen</h3>
+      <div id="t13-frage-sk"></div>
+    </div>
+
+    <h3>7.3 Vorgehen bei jeder Approximationsaufgabe</h3>
+    <p class="prose">Die Aufgaben in Kap. 7.3 haben immer dasselbe Raster. Halte dich an diese vier Felder, dann vergisst du nichts:</p>
+    <ol class="prose t13-liste">
+      <li><b>Ursprüngliche Verteilung und Parameter.</b> Ziehen ohne Zurücklegen → \(H(N;\ M;\ n)\). Feste Anzahl Versuche mit gleichbleibender Chance → \(B(n;\ p)\). Ereignisse pro Zeiteinheit ohne feste Anzahl Versuche → \(Ps(\mu)\).</li>
+      <li><b>Approximierte Verteilung und Parameter.</b> Passenden Satz wählen, \(\mu\) und \(\sigma\) (oder \(n\) und \(p\)) ausrechnen.</li>
+      <li><b>Prüfung der Approximation.</b> Jedes Kriterium mit Zahlen hinschreiben und abhaken. Ist eines verletzt, rechnest du exakt. Beispiel Aufgabe 7.108: \(B(10;\ 0.1)\) wird nicht genähert, \(P(X = 2) = 0.1937\).</li>
+      <li><b>Berechnung der Wahrscheinlichkeit.</b> Grenzen ganzzahlig machen, bei der Normalverteilung die Stetigkeitskorrektur setzen, TI-Befehl eingeben, Ergebnis in einem Satz beantworten.</li>
+    </ol>
+    <div class="note"><b>Warum überhaupt nähern?</b> Erstens kennt der TI-Nspire die hypergeometrische Verteilung nicht, und bei grossen \(N\), \(M\), \(n\) sprengen die Binomialkoeffizienten jeden Rechner (Skript Bem. 5.24). Zweitens ist die Normalverteilung in der schliessenden Statistik das Werkzeug für Konfidenzintervalle und Tests. Dort brauchst du das Kriterium \(np(1-p) &gt; 9\) wieder, zum Beispiel in Aufgabe 9 der exemplarischen Prüfung.</div>
+    <details class="sol"><summary>Wo Skript, Folien und Lösungen von der Lehrbuchlösung abweichen</summary>
+      <div class="stack">
+        <p><b>Satz 7.2, Teil 2</b> nimmt für \(\sigma\) keinen Endlichkeitsfaktor. Lehrbücher und das Stützkurs-Aufgabenskript (Aufgabe 48) multiplizieren zusätzlich mit \(\sqrt{(N-n)/(N-1)}\). Weil Satz 7.2 ohnehin \(n/N &lt; 0.05\) verlangt, liegt dieser Faktor fast bei 1. Rechne in der Prüfung wie Satz 7.2.</p>
+        <p><b>Aufgabe 7.106</b> nähert \(B(18;\ 0.6)\), obwohl \(np(1-p) = 4.32\) das Kriterium verletzt. Das Skript will dort nur zeigen, wie viel die Stetigkeitskorrektur ausmacht. Die Lösung nennt 0.8978 mit und 0.845 ohne Korrektur, gerechnet mit z-Werten, die auf zwei Stellen gerundet sind. Mit dem TI erhältst du 0.8976 und 0.8446.</p>
+        <p><b>Binomial → Poisson</b> steht nicht im Skript. Es nennt die Poissonverteilung nur die «Verteilung der seltenen Ereignisse» (Bem. 5.26). Sind \(n\) und \(p\) gegeben, rechnet die Musterlösung exakt binomial: In Aufgabe 5b der exemplarischen Prüfung ist \(X \sim B(100;\ \tfrac{1}{50})\) und \(P(X = 0) = 0.1326\). Die Poisson-Näherung gäbe 0.1353.</p>
+        <p><b>Aufgabe 6b</b> der exemplarischen Prüfung: Die Musterlösung nähert die hypergeometrische Verteilung mit \(N = 750\hk000\), \(M = 150\hk000\) und \(n = 10\hk000\) durch \(B(10\hk000;\ 0.2)\) und rechnet mit binomCdf: 0.1557. Die Normalverteilung nennt sie als Alternative. Mit Stetigkeitskorrektur (untere Grenze 2'040.5) gibt diese 0.1556. Ohne Korrektur hängt das Ergebnis davon ab, welche Grenze du eintippst: mit 2'040 kämen 0.1587 heraus, mit 2'041 nur 0.1527.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 3 · Kernbeispiele mit Stepper ===== -->
+  <section id="beispiele">
+    <span class="eyebrow">Schritt 3 · Schritt für Schritt</span>
+    <h2>Fünf Kernbeispiele</h2>
+    <p class="prose">Jedes Beispiel folgt dem Raster aus Kap. 7.3. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Stück im Aufgabentext oder tippe darauf: Der passende Teil der Rechnung leuchtet auf, und umgekehrt.</p>
+    <p class="hint">Die exakten Vergleichswerte zu den hypergeometrischen Beispielen (Beispiele 2 und 3) sind eigene Rechnungen mit dem Computer. Der TI-Nspire kann sie ohne Zusatzprogramm nicht liefern.</p>
+    <div id="t13-stepper-1"></div>
+    <div id="t13-stepper-2"></div>
+    <div id="t13-stepper-3"></div>
+    <div id="t13-stepper-4"></div>
+    <div id="t13-stepper-5"></div>
+  </section>
+
+  <!-- ===== 4 · Themeneigene Interaktion ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 4 · Ausprobieren</span>
+    <h2>Exakt gegen genähert</h2>
+    <p class="prose">Die Balken zeigen die exakte Binomialverteilung \(B(n;\ p)\). Darüber liegt wahlweise die Glockenkurve der Normalverteilung oder die Poissonverteilung. Mit \(a\) und \(b\) wählst du das Intervall \(P(a \le X \le b)\). Die Ampel prüft das Kriterium, die Tabelle vergleicht den exakten Wert mit der Näherung.</p>
+    <div class="card rechner" id="t13-rechner">
+      <div class="modes" role="group" aria-label="Art der Näherung">
+        <button type="button" class="btn on" aria-pressed="true" data-t13-modus="normal">Normal-Näherung</button>
+        <button type="button" class="btn" aria-pressed="false" data-t13-modus="poisson">Poisson-Näherung</button>
+      </div>
+      <div class="row t13-vorlagen" role="group" aria-label="Beispiel laden">
+        <span class="hint">Beispiel laden:</span>
+        <button type="button" class="btn" data-t13-vorlage="0">Skript 7.105</button>
+        <button type="button" class="btn" data-t13-vorlage="1">Skript 7.106</button>
+        <button type="button" class="btn" data-t13-vorlage="2">Am Rand</button>
+        <button type="button" class="btn" data-t13-vorlage="3">Seltene Ereignisse</button>
+      </div>
+      <div class="regler">
+        <label for="t13-n">Versuche n</label>
+        <input type="range" id="t13-n" min="5" max="200" step="1" value="40">
+        <output for="t13-n" id="t13-n-wert">40</output>
+      </div>
+      <div class="regler">
+        <label for="t13-p">Trefferchance p</label>
+        <input type="range" id="t13-p" min="0.01" max="0.99" step="0.01" value="0.55">
+        <output for="t13-p" id="t13-p-wert">0.55</output>
+      </div>
+      <div class="regler">
+        <label for="t13-a">Untergrenze a</label>
+        <input type="range" id="t13-a" min="0" max="40" step="1" value="15">
+        <output for="t13-a" id="t13-a-wert">15</output>
+      </div>
+      <div class="regler">
+        <label for="t13-b">Obergrenze b</label>
+        <input type="range" id="t13-b" min="0" max="40" step="1" value="24">
+        <output for="t13-b" id="t13-b-wert">24</output>
+      </div>
+      <div class="row">
+        <button type="button" class="btn on" id="t13-sk" aria-pressed="true">Stetigkeitskorrektur: an</button>
+        <span class="hint" id="t13-sk-hinweis">wirkt auf Fläche und Grenzen der Normalkurve</span>
+      </div>
+      <div class="t13-ampel">
+        <div class="t13-lampen" aria-hidden="true">
+          <span class="t13-lampe" data-farbe="rot"></span>
+          <span class="t13-lampe" data-farbe="gelb"></span>
+          <span class="t13-lampe" data-farbe="gruen"></span>
+        </div>
+        <p class="t13-ampel-text" id="t13-ampel-text" aria-live="polite"></p>
+      </div>
+      <div class="rechner-ergebnis t13-kennwerte" id="t13-kennwerte"></div>
+      <figure class="diagramm">
+        <svg id="t13-svg" viewBox="0 0 320 206" role="img" aria-labelledby="t13-svg-titel">
+          <title id="t13-svg-titel">Balkendiagramm der Binomialverteilung mit Näherung</title>
+        </svg>
+        <figcaption>Jeder Balken ist eine Einheit breit und reicht von k − 0.5 bis k + 0.5. Seine Fläche ist \(P(X = k)\). Kräftige Balken liegen im Intervall von a bis b.</figcaption>
+      </figure>
+      <div class="legend">
+        <span style="--sw:var(--s1)">Balken: exakt B(n; p)</span>
+        <span style="--sw:var(--s2)">Kurve und Fläche: Normal-Näherung</span>
+        <span style="--sw:var(--s3)">Punkte: Poisson-Näherung</span>
+        <span style="--sw:var(--bad)">gestrichelt: Grenzen der Fläche</span>
+      </div>
+      <div class="tablebox">
+        <table class="tabelle t13-tab">
+          <caption id="t13-tab-titel">exakt und genähert</caption>
+          <thead><tr><th>Rechnung · TI-Befehl</th><th class="zahl">Wert · Abweichung</th></tr></thead>
+          <tbody id="t13-tab-inhalt"></tbody>
+        </table>
+      </div>
+      <p class="hint" id="t13-fazit" aria-live="polite"></p>
+    </div>
+    <div class="note tipp"><b>Probier das aus:</b>
+      <ul class="t13-liste">
+        <li>Lade «Skript 7.106» und schalte die Stetigkeitskorrektur aus und wieder ein. Ohne Korrektur fehlt an beiden Enden je ein halber Balken: Die Näherung fällt von 0.8976 auf 0.8446.</li>
+        <li>Lade «Skript 7.105», stell \(p = 0.10\) ein und schieb \(n\) langsam hoch. Ab \(n = 101\) gilt \(np(1-p) &gt; 9\), die Ampel springt von Rot auf Grün. Liegt dein Intervall weit weg von \(\mu\), zeigt sie stattdessen Gelb.</li>
+        <li>Lade «Am Rand»: Das Kriterium ist erfüllt, trotzdem liegt die Näherung relativ fast 40 % daneben. Das ist Punkt 2 aus Kap. 7.1.</li>
+        <li>Lade «Seltene Ereignisse», zieh \(p\) auf 0.40 und setz \(a = 35\), \(b = 45\): Die Poisson-Punkte sind viel breiter gestreut als die Balken. Poisson nimmt die Varianz \(\mu = 40\) an, die Binomialverteilung hat nur \(np(1-p) = 24\). Exakt 0.7386, Poisson 0.6158.</li>
+        <li>Setz \(a = b\) und schalte die Korrektur aus: Die Normalverteilung liefert für einen einzelnen Wert 0, weil eine Linie keine Fläche hat.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 5 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zuerst wählst du die passende Näherung, dann rechnest du. Die Übungen 4, 6 und 8 sind im Stil der Modulschlussprüfung. Rechne mit dem TI und runde auf vier Nachkommastellen.</p>
+    <p class="hint">Übungen 2 bis 8: eigene Aufgaben mit eigenen Zahlen, Lösungen selbst gerechnet und nachgeprüft, nicht vom Dozenten bestätigt.</p>
+    <div class="card stack">
+      <h3>Übung 1 · Welche Näherung erlaubt das Skript?</h3>
+      <p class="hint">Prüfe jedes Kriterium mit Zahlen. Wähle «keine», wenn kein Satz passt. Dann rechnest du exakt.</p>
+      <div id="t13-sortierer-1"></div>
+    </div>
+    <div id="t13-uebung-2"></div>
+    <div id="t13-uebung-3"></div>
+    <div id="t13-uebung-4"></div>
+    <div id="t13-uebung-5"></div>
+    <div id="t13-uebung-6"></div>
+    <div id="t13-uebung-7"></div>
+    <div class="card stack">
+      <h3>Übung 8 · Die Falle aus Aufgabe 5b</h3>
+      <div id="t13-uebung-8"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Prüfungsaufgabe am Stück</h2>
+    <p class="prose">Die Aufgabe ist im Stil von Aufgabe 6b der exemplarischen Modulschlussprüfung gebaut, mit eigenen Zahlen. Drück auf Play. Der farbige Balken zeigt, wann der nächste Schritt kommt. Gelb leuchtet immer, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <p class="hint">Eigene Lösung nach dem Vorgehen der Musterlösung zu Aufgabe 6b, nicht vom Dozenten bestätigt.</p>
+    <div id="t13-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je eine Antwort ist richtig. Vier davon zielen auf typische Stolperfallen.</p>
+    <div id="t13-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Approximieren</b> heisst: eine mühsame exakte Verteilung durch eine einfachere ersetzen, sobald das Kriterium erfüllt ist. Das Kriterium schreibst du immer mit Zahlen hin.</li>
+      <li><b>B → N</b> (Satz 7.1): \(np(1-p) &gt; 9\), dann \(\mu = np\) und \(\sigma = \sqrt{np(1-p)}\). In normCdf gehört \(\sigma\), nicht die Varianz.</li>
+      <li><b>H → B</b> (Satz 7.2): \(0.1 &lt; \tfrac{M}{N} &lt; 0.9\), \(n &gt; 10\), \(\tfrac{n}{N} &lt; 0.05\), dann \(p = \tfrac{M}{N}\). Für <b>H → N</b> muss zusätzlich \(n &gt; 30\) sein.</li>
+      <li><b>Ps → N</b> (Satz 7.3): \(\mu \ge 10\), dann \(\sigma = \sqrt{\mu}\). <b>B → Ps</b> ist nur eine Lehrbuch-Regel. Sind \(n\) und \(p\) gegeben, rechnest du exakt binomial.</li>
+      <li><b>Stetigkeitskorrektur</b> (Bem. 7.4) bei jedem Wechsel zur Normalverteilung: erst ganzzahlig mit ≤ schreiben, dann jede Grenze um 0.5 nach aussen.</li>
+      <li><b>Fehler:</b> nahe bei \(\mu\) klein, am Rand relativ gross. Die Glocke entsteht, weil \(X\) eine Summe vieler kleiner Zufälle ist (zentraler Grenzwertsatz).</li>
+    </ul>
+    <div class="board">
+      $$\begin{aligned} &B(n;\,p) \\ &\approx N\big(np;\ \sqrt{np(1-p)}\big) \end{aligned}$$
+      $$H(N;\,M;\,n) \approx B\big(n;\ \tfrac{M}{N}\big)$$
+      $$Ps(\mu) \approx N\big(\mu;\ \sqrt{\mu}\big)$$
+      $$\begin{aligned} &P(a \le X \le b) \\ &\approx P(a{-}0.5 \le X \le b{+}0.5) \end{aligned}$$
+    </div>
+    <footer class="hint">Quellen: Skript Wahrscheinlichkeitstheorie (2018, Stand August 2020), Kap. 5.3–5.4, 7.1–7.3 und 8; Folien Wahrscheinlichkeitstheorie, Abschnitt Approximationen und zentraler Grenzwertsatz; Lernblock 3, Lösungen zu 7.110 und 7.111 sowie Test zu Lernblock 2 und 3 mit Lösungen; Aufgabenskript Stützkurs MSTB, Aufgabe 48; exemplarische Modulschlussprüfung, Aufgaben 5 und 6 mit Lösungen. Alle Zahlen auf dieser Seite sind nachgerechnet. Exakte hypergeometrische Werte sind eigene Computerrechnungen.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text verwenden.
+  const T = String.raw;
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const BR = "<br>";
+  // Hochkomma als Tausendertrenner in Formeln (ein «'» wäre in KaTeX ein Ableitungsstrich)
+  L.makros["\\hk"] = "{\\text{'}}";
+
+  /* ---------- Schritt 0: Sortierer zählen oder messen ---------- */
+  L.sortierer("#t13-sortierer-0", {
+    kategorien: ["diskret (zählen)", "stetig (messen)"],
+    elemente: [
+      { html: "Anzahl defekter Teile in einer Lieferung", kategorie: 0,
+        erklaerung: "Du zählst Stücke: 0, 1, 2, … Typisch binomial oder hypergeometrisch." },
+      { html: "Füllgewicht einer Bonbontüte in Gramm", kategorie: 1,
+        erklaerung: "Ein Gewicht wird gemessen und kann jeden Zwischenwert annehmen." },
+      { html: "Anzahl Anrufe pro Stunde bei einer Hotline", kategorie: 0,
+        erklaerung: "Ereignisse pro Zeiteinheit werden gezählt. Typisch Poisson." },
+      { html: "Wartezeit an der Kasse in Minuten", kategorie: 1,
+        erklaerung: "Zeit ist eine Messgrösse, also stetig." },
+      { html: "Jahresrendite einer Aktie in Prozent", kategorie: 1,
+        erklaerung: "Renditen werden im Modul als normalverteilt behandelt, wie in Aufgabe 6a der Prüfung." },
+      { html: "Anzahl Tore in einem Fussballspiel", kategorie: 0,
+        erklaerung: "Tore zählt man. In Aufgabe 5a der Prüfung ist das poissonverteilt." }
+    ]
+  });
+
+  /* ---------- Theorie: Kontrollfrage zur Stetigkeitskorrektur ---------- */
+  L.auswahl("#t13-frage-sk", {
+    frage: T`Du näherst $P(X > 37)$ mit der Normalverteilung. Welche untere Grenze gibst du in normCdf ein?`,
+    optionen: ["$36.5$", "$37$", "$37.5$", "$38.5$"],
+    richtig: 2,
+    erklaerung: T`Zuerst ganzzahlig: $P(X > 37) = P(X \ge 38)$. Der Balken für 38 beginnt bei $37.5$. Die $36.5$ wäre richtig für $P(X \ge 37)$.`
+  });
+
+  /* ---------- Schritt 3: Stepper ---------- */
+  // Formelstand wächst Zeile für Zeile; die neueste Zeile leuchtet kurz auf.
+  function aufbau(zeilen) {
+    return zeilen.map((z, i) => ({
+      html: zeilen.slice(0, i + 1).map((x, k) => (k === i ? NW(x.f) : x.f)).join(BR),
+      warum: z.w
+    }));
+  }
+
+  L.stepper("#t13-stepper-1", {
+    titel: "Beispiel 1 · Binomial → Normal (Skript Aufgabe 7.105)",
+    text: 'X ist <span data-link="a-b">binomialverteilt mit n = 40 und p = 0.55</span>. Berechne <span data-link="a-p">P(15 ≤ X ≤ 24)</span> mit der <span data-link="a-n">Normalverteilung</span>.',
+    schritte: aufbau([
+      { f: T`$\htmlData{link=a-b}{X \sim B(40;\ 0.55)}$`,
+        w: "Ursprüngliche Verteilung: feste Anzahl Versuche (40), gleichbleibende Trefferchance (0.55). Das ist binomial." },
+      { f: T`$np(1-p) = 40 \cdot 0.55 \cdot 0.45 = 9.9 > 9\ \checkmark$`,
+        w: "Prüfung der Approximation nach Satz 7.1. 9.9 ist knapp, aber grösser als 9. Die Näherung ist erlaubt." },
+      { f: T`$\htmlData{link=a-n}{X \approx N(\mu;\ \sigma)}$ mit $\mu = np = 22$`,
+        w: "Approximierte Verteilung: Der Erwartungswert bleibt n mal p." },
+      { f: T`$\sigma = \sqrt{9.9} \approx 3.1464$`,
+        w: T`Für $\sigma$ ziehst du die Wurzel aus der Varianz. In normCdf gehört $\sigma = 3.1464$, nicht $9.9$.` },
+      { f: T`$\htmlData{link=a-p}{P(15 \le X \le 24)} \approx P(14.5 \le X \le 24.5)$`,
+        w: "Stetigkeitskorrektur: Der Balken für 15 beginnt bei 14.5, der Balken für 24 endet bei 24.5." },
+      { f: T`normCdf(14.5, 24.5, 22, 3.1464) $\approx 0.7780$`,
+        w: "Berechnung mit dem TI (menu 5, 5, 2). Das Skript nennt dasselbe Ergebnis: 0.7780." },
+      { f: T`exakt: binomCdf(40, 0.55, 15, 24) $\approx 0.7772$`,
+        w: T`Vergleich: Die Näherung liegt nur 0.0008 daneben. Das Intervall liegt um $\mu = 22$ herum, dort ist der Fehler klein.` }
+    ])
+  });
+
+  L.stepper("#t13-stepper-2", {
+    titel: "Beispiel 2 · Hypergeometrisch → Binomial (Skript Aufgabe 7.107)",
+    text: 'Acht gleiche Automaten produzieren zusammen <span data-link="b-N">1200 Teile</span>. <span data-link="b-M">Ein Automat war falsch eingestellt</span>, seine Teile sind Ausschuss. <span data-link="b-n">30 Teile</span> sind schon verbaut. Wie gross ist die Wahrscheinlichkeit, dass darunter <span data-link="b-p">höchstens 3 unbrauchbare</span> sind?',
+    schritte: aufbau([
+      { f: T`$\htmlData{link=b-N}{N = 1200}$, $\htmlData{link=b-M}{M = \tfrac{1200}{8} = 150}$, $\htmlData{link=b-n}{n = 30}$`,
+        w: "Jeder Automat liefert gleich viel. Also ist ein Achtel der Teile Ausschuss: M = 150." },
+      { f: T`$X \sim H(1200;\ 150;\ 30)$`,
+        w: "Ursprüngliche Verteilung: Die verbauten Teile sind ohne Zurücklegen gezogen, also hypergeometrisch. Der TI kennt diese Verteilung nicht." },
+      { f: T`$\tfrac{M}{N} = 0.125$, $\ 0.1 < 0.125 < 0.9\ \checkmark$`,
+        w: "Kriterium 1 aus Satz 7.2: Der Ausschussanteil liegt zwischen 10 % und 90 %." },
+      { f: T`$n = 30 > 10\ \checkmark,\ \ \tfrac{n}{N} = 0.025 < 0.05\ \checkmark$`,
+        w: "Kriterien 2 und 3: Die Stichprobe ist gross genug und klein im Vergleich zum Topf. Dann ändert das Weglegen die Trefferchance kaum." },
+      { f: T`$X \approx B(30;\ 0.125)$`,
+        w: "Approximierte Verteilung: binomial mit p = M/N. Für die Normalverteilung müsste n grösser als 30 sein. 30 ist nicht grösser als 30, also bleibt es bei B." },
+      { f: T`$\htmlData{link=b-p}{P(X \le 3)} =$ binomCdf(30, 0.125, 0, 3)`,
+        w: "Keine Stetigkeitskorrektur: B ist wie H eine Zähl-Verteilung. «Höchstens 3» heisst von 0 bis 3." },
+      { f: T`$\approx 0.4734 \quad (\text{exakt mit } H: 0.4716)$`,
+        w: "Ergebnis wie in der Skript-Lösung. Die exakte hypergeometrische Rechnung gibt 0.4716, die Näherung liegt 0.0018 daneben." }
+    ])
+  });
+
+  L.stepper("#t13-stepper-3", {
+    titel: "Beispiel 3 · Hypergeometrisch → Normal (Skript Aufgabe 7.111, Lösung Lernblock 3)",
+    text: 'Von <span data-link="e-N">75\'000 produzierten Werkstücken</span> sind erfahrungsgemäss <span data-link="e-M">10\'000 fehlerhaft</span>. Eine Kundin übernimmt <span data-link="e-n">500 Stück unsortiert</span>. Wie gross ist die Wahrscheinlichkeit, dass sie <span data-link="e-p">weniger als 50 defekte Stücke</span> erhält?',
+    schritte: aufbau([
+      { f: T`$\htmlData{link=e-N}{N = 75\hk000}$, $\htmlData{link=e-M}{M = 10\hk000}$, $\htmlData{link=e-n}{n = 500}$`,
+        w: "Die Kundin erhält 500 verschiedene Stücke aus dem Lager. Kein Stück kommt zweimal vor: Ziehen ohne Zurücklegen." },
+      { f: T`$X \sim H(75\hk000;\ 10\hk000;\ 500)$`,
+        w: "Ursprüngliche Verteilung: hypergeometrisch. Die Binomialkoeffizienten wären riesig, darum rechnet auch die Lösung zu Lernblock 3 nicht exakt." },
+      { f: T`$\tfrac{M}{N} = 0.1333$, $\ 0.1 < 0.1333 < 0.9\ \checkmark$`,
+        w: "Kriterium 1 aus Satz 7.2: Der Fehleranteil liegt zwischen 10 % und 90 %." },
+      { f: T`$n = 500 > 30\ \checkmark,\ \ \tfrac{n}{N} = 0.0067 < 0.05\ \checkmark$`,
+        w: "Für die Normalverteilung (Satz 7.2, Teil 2) muss n grösser als 30 sein, nicht nur grösser als 10. Der Auswahlsatz n/N ist winzig." },
+      { f: T`$\mu = n \cdot \tfrac{M}{N} = 66.6667$`,
+        w: "Approximierte Verteilung: Normalverteilung. Der Erwartungswert ist die Stichprobengrösse mal der Fehleranteil." },
+      { f: T`$\sigma = \sqrt{500 \cdot 0.1333 \cdot 0.8667} \approx 7.6012$`,
+        w: "Gleiche Formel wie bei der Binomialverteilung, mit p = M/N. Satz 7.2 rechnet ohne Endlichkeitsfaktor." },
+      { f: T`$\htmlData{link=e-p}{P(X < 50)} = P(X \le 49)$`,
+        w: "Zuerst ganzzahlig: «weniger als 50» heisst höchstens 49." },
+      { f: T`$\approx P(-0.5 \le X \le 49.5)$`,
+        w: "Stetigkeitskorrektur, weil H eine Zähl-Verteilung ist und N stetig. So steht es in der Lösung zu Lernblock 3." },
+      { f: T`normCdf(−0.5, 49.5, 66.6667, 7.6012) $\approx 0.0120$`,
+        w: "Berechnung mit dem TI. Die Lösung nennt 0.01196." },
+      { f: T`$\text{exakt mit } H\text{: } 0.0096$`,
+        w: "Vergleich (eigene Rechnung mit dem Computer): Die Näherung liegt 0.0024 daneben, relativ rund 25 %. Die Grenze 49.5 liegt mehr als 2σ unter μ, also am Rand der Verteilung (Skript Kap. 7.1, Punkt 2)." }
+    ])
+  });
+
+  L.stepper("#t13-stepper-4", {
+    titel: "Beispiel 4 · Poisson → Normal (Skript Aufgabe 7.110)",
+    text: 'Ein Kopiergerät hat <span data-link="c-mu">im Mittel 12 Papierstaus pro Tag</span>. Berechne mit einer Approximation die Wahrscheinlichkeit für <span data-link="c-p">weniger als 7 Staus</span> an einem Tag.',
+    schritte: aufbau([
+      { f: T`$\htmlData{link=c-mu}{X \sim Ps(12)}$`,
+        w: "Ursprüngliche Verteilung: Ereignisse pro Zeiteinheit, keine feste Anzahl Versuche. Das ist Poisson mit μ = 12." },
+      { f: T`$\mu = 12 \ge 10\ \checkmark$`,
+        w: "Prüfung der Approximation nach Satz 7.3: μ muss mindestens 10 sein." },
+      { f: T`$X \approx N(12;\ \sqrt{12}) = N(12;\ 3.4641)$`,
+        w: T`Bei Poisson sind Erwartungswert und Varianz beide gleich $\mu$. Darum ist $\sigma = \sqrt{\mu}$ und nicht $\mu$.` },
+      { f: T`$\htmlData{link=c-p}{P(X < 7)} = P(X \le 6)$`,
+        w: "Zuerst «weniger als 7» in eine Aussage mit ≤ umschreiben. 6 ist der grösste erlaubte Wert." },
+      { f: T`$\approx P(-0.5 \le X \le 6.5)$`,
+        w: "Stetigkeitskorrektur: Der Balken für 6 endet bei 6.5, der Balken für 0 beginnt bei −0.5. So steht es in der Lösung zu 7.110." },
+      { f: T`$=$ normCdf(−0.5, 6.5, 12, 3.4641) $\approx 0.0560$`,
+        w: "Berechnung mit dem TI. Das ist das Ergebnis der Musterlösung." },
+      { f: T`exakt: poissCdf(12, 0, 6) $\approx 0.0458$`,
+        w: T`Vergleich: Die Näherung liegt 0.0102 daneben, relativ gut 22 %. Das Intervall liegt im linken Rand, weit weg von $\mu = 12$ (Skript Kap. 7.1, Punkt 2). Ohne Auftrag zur Approximation rechnest du hier besser exakt.` }
+    ])
+  });
+
+  L.stepper("#t13-stepper-5", {
+    titel: "Beispiel 5 · Binomial → Poisson (eigenes Beispiel, Lehrbuch-Regel)",
+    text: 'Eine Druckerei weiss: <span data-link="d-p">1 % der Flyer sind fehlbedruckt</span>. Du prüfst <span data-link="d-n">300 Flyer</span>. Wie gross ist die Wahrscheinlichkeit für <span data-link="d-k">höchstens 2 Fehldrucke</span>?',
+    schritte: aufbau([
+      { f: T`$X \sim B(\htmlData{link=d-n}{300};\ \htmlData{link=d-p}{0.01})$`,
+        w: "Ursprüngliche Verteilung: 300 Versuche mit derselben kleinen Fehlerchance, also binomial." },
+      { f: T`$np(1-p) = 2.97 < 9$: keine Normal-Näherung`,
+        w: "Die Glocke passt nicht: Die Varianz ist viel zu klein, das Histogramm ist stark schief." },
+      { f: T`$n = 300 \ge 50\ \checkmark,\ \ p = 0.01 \le 0.1\ \checkmark$`,
+        w: "Lehrbuch-Faustregel für Poisson: viele Versuche, kleine Trefferchance. Diese Regel steht nicht im Skript." },
+      { f: T`$X \approx Ps(\mu)$ mit $\mu = np = 3$`,
+        w: "Die Poissonverteilung braucht nur den Erwartungswert. Seltene Ereignisse bei vielen Versuchen verhalten sich fast wie Poisson." },
+      { f: T`$\htmlData{link=d-k}{P(X \le 2)} \approx$ poissCdf(3, 0, 2) $\approx 0.4232$`,
+        w: "Keine Stetigkeitskorrektur: Auch Poisson ist eine Zähl-Verteilung." },
+      { f: T`exakt: binomCdf(300, 0.01, 0, 2) $\approx 0.4221$`,
+        w: "Die Näherung liegt nur 0.0011 daneben. In der Prüfung rechnest du trotzdem exakt mit binomCdf, sobald n und p gegeben sind. So macht es die Musterlösung zu Aufgabe 5b." }
+    ])
+  });
+
+  /* ---------- Schritt 4: Approximations-Vergleich ---------- */
+  (function vergleich() {
+    const NS = "http://www.w3.org/2000/svg";
+    const $ = (id) => document.getElementById(id);
+    const rN = $("t13-n"), rP = $("t13-p"), rA = $("t13-a"), rB = $("t13-b");
+    const oN = $("t13-n-wert"), oP = $("t13-p-wert"), oA = $("t13-a-wert"), oB = $("t13-b-wert");
+    const bSK = $("t13-sk"), skHinweis = $("t13-sk-hinweis");
+    const ampelText = $("t13-ampel-text");
+    const lampen = Array.prototype.slice.call(document.querySelectorAll(".t13-lampe"));
+    const kennwerte = $("t13-kennwerte");
+    const svg = $("t13-svg"), svgTitel = $("t13-svg-titel");
+    const tabTitel = $("t13-tab-titel"), tabInhalt = $("t13-tab-inhalt");
+    const fazit = $("t13-fazit");
+    const modusKnoepfe = Array.prototype.slice.call(document.querySelectorAll("[data-t13-modus]"));
+    const vorlagen = [
+      { modus: "normal", n: 40, p: 0.55, a: 15, b: 24 },
+      { modus: "normal", n: 18, p: 0.6, a: 6, b: 13 },
+      { modus: "normal", n: 150, p: 0.08, a: 21, b: 150 },
+      { modus: "poisson", n: 100, p: 0.02, a: 0, b: 0 }
+    ];
+    const z = { modus: "normal", n: 40, p: 0.55, a: 15, b: 24, sk: true };
+
+    // ln(k!) für k = 0 … 200
+    const lnFak = [0];
+    for (let k = 1; k <= 200; k++) lnFak[k] = lnFak[k - 1] + Math.log(k);
+    function binom(n, p, k) {
+      return Math.exp(lnFak[n] - lnFak[k] - lnFak[n - k] + k * Math.log(p) + (n - k) * Math.log(1 - p));
+    }
+    function poisson(mu, k) {
+      return Math.exp(k * Math.log(mu) - mu - lnFak[k]);
+    }
+    // erfc nach Numerical Recipes (relativer Fehler < 1.2e-7), genau genug auch in den Rändern
+    function erfc(x) {
+      const t = 1 / (1 + 0.5 * Math.abs(x));
+      const r = t * Math.exp(-x * x - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
+        t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+      return x >= 0 ? r : 2 - r;
+    }
+    const unten = (zw) => 0.5 * erfc(-zw / Math.SQRT2); // P(Z ≤ z)
+    const oben = (zw) => 0.5 * erfc(zw / Math.SQRT2);   // P(Z ≥ z)
+    function normFlaeche(lo, hi, mu, s) {
+      if (hi <= lo) return 0;
+      const zl = (lo - mu) / s, zh = (hi - mu) / s;
+      return zl > 0 ? oben(zl) - oben(zh) : unten(zh) - unten(zl);
+    }
+    function dichte(x, mu, s) {
+      const u = (x - mu) / s;
+      return Math.exp(-0.5 * u * u) / (s * Math.sqrt(2 * Math.PI));
+    }
+    // Zahlen für die Anzeige: Dezimalpunkt, sehr kleine Werte als Zehnerpotenz
+    function fmt(x) {
+      if (x === 0) return "0";
+      if (Math.abs(x) >= 0.0001) return x.toFixed(4);
+      const e = Math.floor(Math.log10(Math.abs(x)));
+      return (x / Math.pow(10, e)).toFixed(2) + " · 10<sup>" + String(e).replace("-", "−") + "</sup>";
+    }
+    function fmtVz(x) {
+      return (x > 0 ? "+" : x < 0 ? "−" : "±") + fmt(Math.abs(x));
+    }
+    const zt = (x, st) => L.zahlText(x, st === undefined ? 4 : st);
+    const pText = () => z.p.toFixed(2);
+
+    function el(tag, attr, text) {
+      const e = document.createElementNS(NS, tag);
+      Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+      if (text !== undefined) e.textContent = text;
+      svg.appendChild(e);
+      return e;
+    }
+    function schoen(x) {
+      const e = Math.floor(Math.log10(x)), f = x / Math.pow(10, e);
+      return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * Math.pow(10, e);
+    }
+
+    function zeichnen(mu, s, werte) {
+      while (svg.lastChild && svg.lastChild !== svgTitel) svg.removeChild(svg.lastChild);
+      const X0 = 38, X1 = 312, YT = 14, Y0 = 178;
+      const n = z.n, p = z.p, normal = z.modus === "normal";
+      const sPois = Math.sqrt(n * p);
+      const breite = Math.max(s, normal ? 0 : sPois);
+      let kmin = 0, kmax = n;
+      if (n > 40) {
+        kmin = Math.max(0, Math.floor(mu - 4.5 * breite));
+        kmax = Math.min(n, Math.ceil(mu + 4.5 * breite));
+        while (kmax - kmin < 14) {
+          if (kmin > 0) kmin--;
+          if (kmax < n) kmax++;
+        }
+      }
+      const spanne = kmax - kmin + 1;
+      const xs = (x) => X0 + (x - (kmin - 0.5)) / spanne * (X1 - X0);
+      let yMax = 0;
+      for (let k = kmin; k <= kmax; k++) {
+        yMax = Math.max(yMax, binom(n, p, k));
+        if (!normal) yMax = Math.max(yMax, poisson(mu, k));
+      }
+      if (normal) yMax = Math.max(yMax, dichte(mu, mu, s));
+      yMax *= 1.08;
+      const ys = (y) => Y0 - Math.min(y, yMax) / yMax * (Y0 - YT);
+
+      // Gitter und y-Achse
+      const schritt = schoen(yMax / 3);
+      for (let t = schritt; t <= yMax; t += schritt) {
+        el("line", { class: "gitter", x1: X0, y1: ys(t), x2: X1, y2: ys(t) });
+        el("text", { x: X0 - 5, y: ys(t) + 4, "text-anchor": "end" }, L.zahlText(t, 3));
+      }
+      el("text", { x: X0 - 5, y: Y0 + 4, "text-anchor": "end" }, "0");
+
+      // Balken der exakten Binomialverteilung
+      const bw = (X1 - X0) / spanne;
+      const luecke = bw > 4 ? 0.6 : 0;
+      for (let k = kmin; k <= kmax; k++) {
+        const h = binom(n, p, k);
+        const drin = k >= z.a && k <= z.b;
+        el("rect", {
+          class: "balken s1" + (drin ? "" : " t13-blass"),
+          x: xs(k - 0.5) + luecke, y: ys(h), width: Math.max(bw - 2 * luecke, 0.5), height: Math.max(Y0 - ys(h), 0)
+        });
+      }
+
+      if (normal) {
+        // Fläche unter der Normalkurve zwischen den (korrigierten) Grenzen
+        const lo = Math.max(werte.lo, kmin - 0.5), hi = Math.min(werte.hi, kmax + 0.5);
+        if (hi > lo) {
+          let d = "M" + xs(lo).toFixed(2) + " " + Y0;
+          const m = 60;
+          for (let i = 0; i <= m; i++) {
+            const x = lo + (hi - lo) * i / m;
+            d += " L" + xs(x).toFixed(2) + " " + ys(dichte(x, mu, s)).toFixed(2);
+          }
+          d += " L" + xs(hi).toFixed(2) + " " + Y0 + " Z";
+          el("path", { class: "flaeche s2", d: d });
+        }
+        let d = "";
+        const m = 160;
+        for (let i = 0; i <= m; i++) {
+          const x = kmin - 0.5 + spanne * i / m;
+          d += (i ? " L" : "M") + xs(x).toFixed(2) + " " + ys(dichte(x, mu, s)).toFixed(2);
+        }
+        el("path", { class: "kurve s2", d: d });
+        [werte.lo, werte.hi].forEach((g) => {
+          if (g >= kmin - 0.5 && g <= kmax + 0.5) el("line", { class: "markierung", x1: xs(g), y1: YT, x2: xs(g), y2: Y0 });
+        });
+      } else {
+        // Poisson-Punkte, verbunden durch eine dünne Linie
+        let d = "";
+        for (let k = kmin; k <= kmax; k++) d += (k === kmin ? "M" : " L") + xs(k).toFixed(2) + " " + ys(poisson(mu, k)).toFixed(2);
+        el("path", { class: "kurve s3 t13-duenn", d: d });
+        for (let k = kmin; k <= kmax; k++) {
+          el("circle", { class: "punkt s3", cx: xs(k), cy: ys(poisson(mu, k)), r: bw >= 5 ? 3 : 2 });
+        }
+      }
+
+      // x-Achse mit Beschriftung und μ-Marke
+      el("line", { class: "achse", x1: X0, y1: Y0, x2: X1, y2: Y0 });
+      const st = [1, 2, 5, 10, 20, 25, 50].find((w) => spanne / w <= 8) || 50;
+      for (let k = Math.ceil(kmin / st) * st; k <= kmax; k += st) {
+        el("line", { class: "achse", x1: xs(k), y1: Y0, x2: xs(k), y2: Y0 + 4 });
+        el("text", { x: xs(k), y: Y0 + 17, "text-anchor": "middle" }, String(k));
+      }
+      el("text", { x: xs(mu), y: Y0 + 28, "text-anchor": "middle", class: "beschriftung" }, "μ");
+      el("line", { class: "achse", x1: xs(mu), y1: Y0, x2: xs(mu), y2: Y0 + 19 });
+      if (z.b > kmax) el("text", { x: X1, y: YT - 2, "text-anchor": "end" }, "Intervall reicht bis " + z.b + " →");
+      if (z.a < kmin) el("text", { x: X0, y: YT - 2, "text-anchor": "start" }, "← Intervall ab " + z.a);
+      svgTitel.textContent = "Balkendiagramm von B(" + n + "; " + pText() + ") von " + kmin + " bis " + kmax +
+        (normal ? ", darüber die Normalkurve N(" + zt(mu) + "; " + zt(s) + ")" : ", darüber die Poissonverteilung Ps(" + zt(mu) + ")") +
+        ", Intervall von " + z.a + " bis " + z.b + ".";
+    }
+
+    function ampel(farbe, html) {
+      lampen.forEach((l) => l.classList.toggle("t13-an", l.dataset.farbe === farbe));
+      ampelText.innerHTML = html;
+    }
+
+    function zeile(titel, ti, wert, abw) {
+      return "<tr><td><b>" + titel + "</b><span class=\"t13-ti\">" + ti + "</span></td><td class=\"zahl\">" + wert +
+        "<span class=\"t13-ti\">" + abw + "</span></td></tr>";
+    }
+    function abweichung(naeh, exakt) {
+      const d = naeh - exakt;
+      const rel = exakt > 1e-12 ? " (" + (d >= 0 ? "+" : "−") + Math.abs(d / exakt * 100).toFixed(1) + " %)" : "";
+      return fmtVz(d) + rel;
+    }
+
+    function rechnen() {
+      const n = z.n, p = z.p, a = z.a, b = z.b, normal = z.modus === "normal";
+      const mu = n * p, varianz = n * p * (1 - p), s = Math.sqrt(varianz);
+      let exakt = 0;
+      for (let k = a; k <= b; k++) exakt += binom(n, p, k);
+
+      oN.textContent = String(n);
+      oP.textContent = pText();
+      oA.textContent = String(a);
+      oB.textContent = String(b);
+      tabTitel.textContent = "P(" + a + " ≤ X ≤ " + b + "): exakt und genähert";
+      bSK.disabled = !normal;
+      skHinweis.textContent = normal ? "wirkt auf Fläche und Grenzen der Normalkurve" : "bei Poisson nicht nötig: beide Verteilungen zählen";
+
+      let lo = a, hi = b;
+      if (normal) {
+        lo = z.sk ? a - 0.5 : a;
+        hi = z.sk ? b + 0.5 : b;
+        kennwerte.innerHTML = "<span>μ = np = " + zt(mu) + "</span> <span>σ = √(np(1 − p)) = " + zt(s) + "</span>";
+        const mit = normFlaeche(a - 0.5, b + 0.5, mu, s);
+        const ohne = normFlaeche(a, b, mu, s);
+        tabInhalt.innerHTML =
+          zeile("Exakt: B(" + n + "; " + pText() + ")", "binomCdf(" + n + ", " + pText() + ", " + a + ", " + b + ")", fmt(exakt), "Referenz") +
+          zeile("Normal mit Korrektur", "normCdf(" + (a - 0.5) + ", " + (b + 0.5) + ", " + zt(mu) + ", " + zt(s) + ")", fmt(mit), abweichung(mit, exakt)) +
+          zeile("Normal ohne Korrektur", "normCdf(" + a + ", " + b + ", " + zt(mu) + ", " + zt(s) + ")", fmt(ohne), abweichung(ohne, exakt));
+        fazit.innerHTML = "Mit Korrektur weicht die Näherung um " + fmt(Math.abs(mit - exakt)) + " vom exakten Wert ab, ohne Korrektur um " +
+          fmt(Math.abs(ohne - exakt)) + ".";
+        const kriterium = "np(1 − p) = " + zt(varianz, 2);
+        if (varianz <= 9) {
+          ampel("rot", '<b class="t13-rot">Rot:</b> ' + kriterium + " ≤ 9. Satz 7.1 erlaubt die Normal-Näherung nicht. Rechne exakt mit binomCdf.");
+        } else if (a > mu + 2 * s || b < mu - 2 * s) {
+          ampel("gelb", '<b class="t13-gelb">Gelb:</b> ' + kriterium + " &gt; 9, das Kriterium ist erfüllt. Aber dein Intervall liegt am Rand, mehr als 2σ von μ entfernt. Dort ist der relative Fehler gross (Skript Kap. 7.1, Punkt 2). Die 2σ-Grenze ist eine Faustregel dieser Seite.");
+        } else {
+          ampel("gruen", '<b class="t13-gruen">Grün:</b> ' + kriterium + " &gt; 9. Satz 7.1 erlaubt die Normal-Näherung.");
+        }
+      } else {
+        kennwerte.innerHTML = "<span>μ = np = " + zt(mu) + "</span> <span>Poisson: σ = √μ = " + zt(Math.sqrt(mu)) + "</span>";
+        let pois = 0;
+        for (let k = a; k <= b; k++) pois += poisson(mu, k);
+        tabInhalt.innerHTML =
+          zeile("Exakt: B(" + n + "; " + pText() + ")", "binomCdf(" + n + ", " + pText() + ", " + a + ", " + b + ")", fmt(exakt), "Referenz") +
+          zeile("Poisson: Ps(" + zt(mu) + ")", "poissCdf(" + zt(mu) + ", " + a + ", " + b + ")", fmt(pois), abweichung(pois, exakt));
+        fazit.innerHTML = "Die Poisson-Näherung weicht um " + fmt(Math.abs(pois - exakt)) + " vom exakten Wert ab.";
+        const kriterium = "n = " + n + (n >= 50 ? " ≥ 50" : " &lt; 50") + " und p = " + pText() + (p <= 0.1 ? " ≤ 0.1" : " &gt; 0.1");
+        if (n >= 50 && p <= 0.1) {
+          ampel("gruen", '<b class="t13-gruen">Grün:</b> ' + kriterium + ". Die Lehrbuch-Faustregel für die Poisson-Näherung ist erfüllt (nicht im Skript).");
+        } else {
+          ampel("rot", '<b class="t13-rot">Rot:</b> ' + kriterium + ". Die Lehrbuch-Faustregel verlangt n ≥ 50 und p ≤ 0.1. Rechne exakt mit binomCdf.");
+        }
+      }
+      zeichnen(mu, s, { lo: lo, hi: hi });
+    }
+
+    function grenzenAnpassen() {
+      rA.max = String(z.n);
+      rB.max = String(z.n);
+      z.a = Math.min(z.a, z.n);
+      z.b = Math.min(z.b, z.n);
+      if (z.a > z.b) z.a = z.b;
+      rA.value = String(z.a);
+      rB.value = String(z.b);
+    }
+    function modusSetzen(m) {
+      z.modus = m;
+      modusKnoepfe.forEach((k) => {
+        const an = k.dataset.t13Modus === m;
+        k.classList.toggle("on", an);
+        k.setAttribute("aria-pressed", an ? "true" : "false");
+      });
+    }
+    function skSetzen(an) {
+      z.sk = an;
+      bSK.classList.toggle("on", an);
+      bSK.setAttribute("aria-pressed", an ? "true" : "false");
+      bSK.textContent = "Stetigkeitskorrektur: " + (an ? "an" : "aus");
+    }
+
+    rN.addEventListener("input", () => { z.n = Number(rN.value); grenzenAnpassen(); rechnen(); });
+    rP.addEventListener("input", () => { z.p = Math.round(Number(rP.value) * 100) / 100; rechnen(); });
+    rA.addEventListener("input", () => {
+      z.a = Number(rA.value);
+      if (z.a > z.b) { z.b = z.a; rB.value = String(z.b); }
+      rechnen();
+    });
+    rB.addEventListener("input", () => {
+      z.b = Number(rB.value);
+      if (z.b < z.a) { z.a = z.b; rA.value = String(z.a); }
+      rechnen();
+    });
+    bSK.addEventListener("click", () => { skSetzen(!z.sk); rechnen(); });
+    modusKnoepfe.forEach((k) => k.addEventListener("click", () => { modusSetzen(k.dataset.t13Modus); rechnen(); }));
+    Array.prototype.slice.call(document.querySelectorAll("[data-t13-vorlage]")).forEach((k) => {
+      k.addEventListener("click", () => {
+        const v = vorlagen[Number(k.dataset.t13Vorlage)];
+        z.n = v.n; z.p = v.p; z.a = v.a; z.b = v.b;
+        rN.value = String(v.n);
+        rP.value = String(v.p);
+        grenzenAnpassen();
+        modusSetzen(v.modus);
+        skSetzen(true);
+        rechnen();
+      });
+    });
+    grenzenAnpassen();
+    rechnen();
+  })();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t13-sortierer-1", {
+    kategorien: ["H → B", "B → N", "Ps → N", "keine"],
+    elemente: [
+      { html: T`$H(20\hk000;\ 5\hk000;\ 25)$`, kategorie: 0,
+        erklaerung: T`$\tfrac{M}{N} = 0.25$ ✓, $n = 25 > 10$ ✓, $\tfrac{n}{N} = 0.00125 < 0.05$ ✓. Für die Normalverteilung fehlt $n > 30$.` },
+      { html: T`$B(300;\ 0.4)$`, kategorie: 1,
+        erklaerung: T`$np(1-p) = 300 \cdot 0.4 \cdot 0.6 = 72 > 9$ ✓ (Satz 7.1).` },
+      { html: T`$Ps(25)$`, kategorie: 2,
+        erklaerung: T`$\mu = 25 \ge 10$ ✓ (Satz 7.3), dann $\sigma = \sqrt{25} = 5$.` },
+      { html: T`$B(12;\ 0.3)$`, kategorie: 3,
+        erklaerung: T`$np(1-p) = 2.52 \le 9$. Exakt rechnen: binomCdf(12, 0.3, …).` },
+      { html: T`$Ps(3.5)$`, kategorie: 3,
+        erklaerung: T`$\mu = 3.5 < 10$. Exakt rechnen: poissCdf(3.5, …).` },
+      { html: T`$H(60;\ 20;\ 8)$`, kategorie: 3,
+        erklaerung: T`$\tfrac{n}{N} = \tfrac{8}{60} \approx 0.133 > 0.05$: Die Stichprobe ist zu gross im Vergleich zum Topf. Zudem ist $n = 8$ nicht grösser als 10. Exakt mit der Formel der hypergeometrischen Verteilung rechnen.` }
+    ]
+  });
+
+  L.zahlAufgabe("#t13-uebung-2", {
+    titel: "Übung 2 · Grenze mit Stetigkeitskorrektur",
+    frage: T`$X \sim B(200;\ 0.3)$. Du willst $P(X < 52)$ mit der Normalverteilung nähern. Welche <b>obere Grenze</b> gibst du in normCdf ein?`,
+    antwort: 51.5,
+    toleranz: 0.0001,
+    anzeige: "51.5",
+    hinweise: [
+      T`Schreib $X < 52$ zuerst als $X \le \dots$ mit einer ganzen Zahl.`,
+      "Der Balken des grössten erlaubten Werts endet eine halbe Einheit weiter rechts."
+    ],
+    loesungsweg: [
+      T`Kriterium: $np(1-p) = 200 \cdot 0.3 \cdot 0.7 = 42 > 9$ ✓, also $\mu = 60$, $\sigma = \sqrt{42} \approx 6.4807$.`,
+      T`$P(X < 52) = P(X \le 51)$`,
+      T`Der Balken für 51 reicht bis $51.5$: $P(X \le 51) \approx P(-0.5 \le X \le 51.5)$.`,
+      T`normCdf(−0.5, 51.5, 60, 6.4807) $\approx 0.0948$ (exakt mit binomCdf: $0.0934$).`
+    ]
+  });
+
+  L.wahrFalsch("#t13-uebung-3", {
+    titel: "Übung 3 · Kriterien und Korrektur",
+    aussagen: [
+      { html: T`$B(36;\ 0.5)$ erfüllt das Kriterium aus Satz 7.1.`, wahr: false,
+        erklaerung: T`$36 \cdot 0.5 \cdot 0.5 = 9$. Verlangt ist $> 9$, also echt grösser. Genau 9 reicht nicht.` },
+      { html: T`Die Binomialverteilung mit $n = 400$ und $p = 0.03$ darf man nach Satz 7.1 durch die Normalverteilung mit $\mu = 12$ und $\sigma = 3.41$ nähern.`, wahr: true,
+        erklaerung: T`$np(1-p) = 11.64 > 9$, $\mu = 12$, $\sigma = \sqrt{11.64} \approx 3.41$.` },
+      { html: T`Bei der Näherung $Ps(25) \to N$ ist $\sigma = 25$.`, wahr: false,
+        erklaerung: T`$\sigma = \sqrt{\mu} = \sqrt{25} = 5$. Die 25 ist die Varianz.` },
+      { html: T`Eine hypergeometrische Verteilung mit $N = 5\hk000$, $M = 1\hk000$ und $n = 400$ darf man durch die Binomialverteilung mit $n = 400$ und $p = 0.2$ nähern.`, wahr: false,
+        erklaerung: T`$\tfrac{n}{N} = \tfrac{400}{5\hk000} = 0.08$ ist nicht kleiner als 0.05. Die Stichprobe verändert den Topf zu stark.` },
+      { html: T`Mit Stetigkeitskorrektur wird $P(X \ge 30)$ zu $P(X \ge 29.5)$.`, wahr: true,
+        erklaerung: "Der Balken für 30 beginnt bei 29.5. Er soll ganz mitzählen." },
+      { html: T`Bei der Näherung $H \to B$ braucht es eine Stetigkeitskorrektur.`, wahr: false,
+        erklaerung: "H und B sind beide Zähl-Verteilungen. Die Korrektur braucht es nur beim Wechsel zur stetigen Normalverteilung." }
+    ]
+  });
+
+  L.zahlAufgabe("#t13-uebung-4", {
+    titel: "Übung 4 · Falsche Etiketten (im Stil von Aufgabe 6b der exemplarischen Modulschlussprüfung)",
+    frage: "Eine Mineralquelle füllt an einem Tag auf vier gleichen Anlagen 600'000 Flaschen ab. Bei einer Anlage war die Etikettiermaschine falsch eingestellt: Ein Viertel aller Flaschen hat ein falsches Etikett. Alle Flaschen werden gemischt gelagert. Ein Getränkehändler hat bereits 8'000 Flaschen abgeholt. Untersucht wird X = Anzahl falsch etikettierter Flaschen in seiner Lieferung. Wie gross ist die Wahrscheinlichkeit, dass er mehr als 2'050 falsch etikettierte Flaschen erhalten hat? Vier Nachkommastellen.",
+    antwort: [0.0964, 0.0961, 0.0949],
+    toleranz: 0.0004,
+    anzeige: "mit B(8'000; 0.25): 0.0964 · mit der Normalverteilung und Korrektur: 0.0961 · exakt mit H (nur per Computer): 0.0949",
+    hinweise: [
+      "Die Flaschen werden ohne Zurücklegen gezogen. Welche Verteilung ist exakt, und kann der TI sie rechnen?",
+      "Prüfe die drei Kriterien aus Satz 7.2 mit Zahlen.",
+      "«Mehr als 2'050» heisst: ab 2'051."
+    ],
+    loesungsweg: [
+      T`Exakt hypergeometrisch: $N = 600\hk000$, $M = \tfrac{600\hk000}{4} = 150\hk000$, $n = 8\hk000$, also $X \sim H(N;\ M;\ n)$. Der TI kann H nicht rechnen.`,
+      T`Kriterien Satz 7.2: $\tfrac{M}{N} = 0.25$ liegt zwischen 0.1 und 0.9 ✓, $n = 8\hk000 > 10$ ✓, $\tfrac{n}{N} = 0.0133 < 0.05$ ✓.`,
+      T`Näherung wie in der Musterlösung zu 6b: $X \approx B(8\hk000;\ 0.25)$.`,
+      T`$P(X > 2\hk050) = P(2\hk051 \le X \le 8\hk000)$ = binomCdf(8000, 0.25, 2051, 8000) $\approx 0.0964$.`,
+      T`Alternative mit der Normalverteilung ($n > 30$, $np(1-p) = 1\hk500 > 9$): $\mu = 2\hk000$, $\sigma = \sqrt{1\hk500} \approx 38.7298$, normCdf(2050.5, ∞, 2000, 38.7298) $\approx 0.0961$.`,
+      T`Vergleich (eigene Rechnung mit dem Computer): Exakt mit $H$ ergibt sich $0.0949$. Beide Näherungen liegen gut 0.001 darüber, weil «mit Zurücklegen» etwas mehr streut als «ohne Zurücklegen».`
+    ]
+  });
+
+  L.zahlAufgabe("#t13-uebung-5", {
+    titel: "Übung 5 · Pannendienst (im Stil von Skript Aufgabe 7.110)",
+    frage: "Ein Pannendienst erhält an Samstagen im Mittel 18 Anrufe pro Stunde. Berechne mit einer Approximation die Wahrscheinlichkeit, dass in einer Stunde höchstens 12 Anrufe eingehen. Vier Nachkommastellen.",
+    antwort: 0.0974,
+    toleranz: 0.0005,
+    anzeige: "normCdf(−0.5, 12.5, 18, 4.2426) ≈ 0.0974",
+    hinweise: [
+      "Ereignisse pro Zeiteinheit, keine feste Anzahl Versuche: Welche Verteilung ist das?",
+      T`Satz 7.3: Ab $\mu \ge 10$ darfst du die Normalverteilung nehmen, mit $\sigma = \sqrt{\mu}$.`,
+      "Stetigkeitskorrektur: Der Balken für 12 endet bei 12.5."
+    ],
+    loesungsweg: [
+      T`$X \sim Ps(18)$, $X$ = Anzahl Anrufe pro Stunde.`,
+      T`Kriterium Satz 7.3: $\mu = 18 \ge 10$ ✓, also $X \approx N(18;\ \sqrt{18}) = N(18;\ 4.2426)$.`,
+      T`$P(X \le 12) \approx P(-0.5 \le X \le 12.5)$`,
+      T`normCdf(−0.5, 12.5, 18, 4.2426) $\approx 0.0974$`,
+      T`Kontrolle exakt: poissCdf(18, 0, 12) $\approx 0.0917$. Das Intervall liegt am Rand, darum liegt die Näherung relativ gut 6 % daneben.`
+    ]
+  });
+
+  L.schrittAufgabe("#t13-uebung-6", {
+    titel: "Übung 6 · Kreditkarte im Onlineshop (im Stil der Modulschlussprüfung)",
+    aufgabe: "<p>In einem grossen Onlineshop bezahlen 35 % der Kundinnen und Kunden mit Kreditkarte. Du ziehst 120 Bestellungen zufällig. Berechne mit der Normalverteilung die Wahrscheinlichkeit, dass zwischen 38 und 50 Bestellungen (beide eingeschlossen) mit Kreditkarte bezahlt wurden. Vergleiche mit dem exakten Wert. Schreib zuerst alle vier Felder des Rasters auf, dann deck die Schritte auf.</p>",
+    schritte: [
+      { html: T`$X \sim B(120;\ 0.35)$`,
+        warum: "Ursprüngliche Verteilung: 120 Versuche, Chance 0.35. Der Shop ist so gross, dass das Ziehen ohne Zurücklegen keine Rolle spielt." },
+      { html: T`$np(1-p) = 120 \cdot 0.35 \cdot 0.65 = 27.3 > 9\ \checkmark$`,
+        warum: "Prüfung der Approximation nach Satz 7.1, mit Zahlen hingeschrieben." },
+      { html: T`$\mu = 42,\ \ \sigma = \sqrt{27.3} \approx 5.2249$`,
+        warum: T`Approximierte Verteilung: $N(42;\ 5.2249)$.` },
+      { html: T`$P(38 \le X \le 50) \approx P(37.5 \le X \le 50.5)$`,
+        warum: "Stetigkeitskorrektur: beide Grenzen um 0.5 nach aussen." },
+      { html: T`normCdf(37.5, 50.5, 42, 5.2249) $\approx 0.7536$`,
+        warum: "Berechnung mit dem TI. Antwort: Mit rund 75 % Wahrscheinlichkeit bezahlen zwischen 38 und 50 Bestellungen mit Kreditkarte." },
+      { html: T`exakt: binomCdf(120, 0.35, 38, 50) $\approx 0.7514$`,
+        warum: "Vergleich: Mit Korrektur liegt die Näherung nur 0.0022 daneben. Ohne Korrektur (normCdf(38, 50, 42, 5.2249) ≈ 0.7152) wären es 0.0362, also rund 16-mal so viel." }
+    ]
+  });
+
+  L.zahlAufgabe("#t13-uebung-7", {
+    titel: "Übung 7 · Verlorene Pakete (Binomial → Poisson)",
+    frage: "Ein Versanddienst verliert im Mittel jedes 400. Paket. Ein Händler verschickt 800 Pakete. Berechne mit der Poisson-Näherung die Wahrscheinlichkeit, dass höchstens 1 Paket verloren geht. Vier Nachkommastellen.",
+    antwort: 0.4060,
+    toleranz: 0.0005,
+    anzeige: "poissCdf(2, 0, 1) ≈ 0.4060 (exakt mit binomCdf: 0.4057)",
+    hinweise: [
+      T`Exakt ist $X \sim B(800;\ \tfrac{1}{400})$. Wie gross ist $\mu = np$?`,
+      "Keine Stetigkeitskorrektur: Poisson zählt auch."
+    ],
+    loesungsweg: [
+      T`$X \sim B(800;\ 0.0025)$. $np(1-p) = 1.995 < 9$: keine Normal-Näherung.`,
+      T`Lehrbuch-Regel: $n = 800 \ge 50$ ✓, $p = 0.0025 \le 0.1$ ✓, also $X \approx Ps(2)$ mit $\mu = 800 \cdot 0.0025 = 2$.`,
+      T`$P(X \le 1) \approx$ poissCdf(2, 0, 1) $= e^{-2}(1 + 2) \approx 0.4060$`,
+      T`Kontrolle exakt: binomCdf(800, 0.0025, 0, 1) $\approx 0.4057$. In der Prüfung reicht diese exakte Rechnung.`
+    ]
+  });
+
+  L.auswahl("#t13-uebung-8", {
+    frage: "Im Mittel kommt jede 40. Lieferung eines Händlers zu spät. Untersucht werden 80 Lieferungen, X = Anzahl verspäteter Lieferungen. Welche Verteilung beschreibt X <b>exakt</b>?",
+    optionen: [
+      T`$Ps(2)$, weil «im Mittel» ein Erwartungswert ist`,
+      T`$B(80;\ 0.025)$`,
+      T`$N(2;\ 1.4)$, weil 80 eine grosse Zahl ist`,
+      T`$H(80;\ 2;\ 40)$`
+    ],
+    richtig: 1,
+    erklaerung: T`Es gibt eine feste Anzahl Versuche (80) und eine feste Chance $\tfrac{1}{40} = 0.025$. Das ist binomial: $P(X = 0)$ = binomCdf(80, 0.025, 0, 0) $\approx 0.1319$. $Ps(2)$ wäre nur eine Näherung (0.1353). Genau diese Falle steckt in Aufgabe 5b der Prüfung.`
+  });
+
+  /* ---------- Lösungsfilm (im Stil von Aufgabe 6b) ---------- */
+  const fX = "$X$ = Anzahl ungesalzene";
+  const fN = T`$N = 480\hk000$`;
+  const fM = T`$M = 480\hk000 : 8 = 60\hk000$`;
+  const fn = T`$n = 12\hk000$`;
+  const fH = T`$X \sim H(480\hk000;$` + BR + T`$\quad 60\hk000;\ 12\hk000)$`;
+  const fp = T`$p = \tfrac{M}{N} = 0.125$`;
+  const fk1 = T`$0.1 < 0.125 < 0.9\ \checkmark$`;
+  const fk2 = T`$n = 12\hk000 > 10\ \checkmark$`;
+  const fk3 = T`$\tfrac{n}{N} = 0.025 < 0.05\ \checkmark$`;
+  const fB = T`$X \approx B(12\hk000;\ 0.125)$`;
+  const fP1 = T`$P(X > 1\hk560)$`;
+  const fP2 = T`$= P(1\hk561 \le X \le 12\hk000)$`;
+  const fTI1 = T`$\text{binomCdf}(12000,\ 0.125,$` + BR + T`$\quad 1561,\ 12000)$`;
+  const fR1 = T`$\approx 0.0481$`;
+  const fErgB = T`$\text{mit } B\text{: } 0.0481$`;
+  const fmu = T`$\mu = np = 1\hk500$`;
+  const fs1 = T`$\sigma = \sqrt{12\hk000 \cdot 0.125 \cdot 0.875}$`;
+  const fs2 = T`$\sigma = \sqrt{1\hk312.5} \approx 36.2284$`;
+  const fSK = T`$P(X \ge 1\hk561)$` + BR + T`$\approx P(X \ge 1\hk560.5)$`;
+  const fTI2 = T`$\text{normCdf}(1560.5,\ \infty,$` + BR + T`$\quad 1500,\ 36.2284)$`;
+  const fR2 = T`$\approx 0.0475$`;
+  const j = (...t) => t.join(BR);
+
+  L.film("#t13-film", {
+    phasen: ["1 · Verteilung", "2 · Kriterien", "3 · Näherung", "4 · Grenzen", "5 · Rechnen", "6 · Kontrolle"],
+    texte: [
+      T`Eine Grossbäckerei backt an einem Tag auf <span data-ph="linien">acht gleichen Linien</span> insgesamt <span data-ph="N">480'000 Brötchen</span>. Auf <span data-ph="M">einer Linie fiel die Salzdosierung aus</span>. Alle Brötchen werden gemischt. Ein Grossverteiler hat bereits <span data-ph="n">12'000 Brötchen</span> abgeholt. Untersucht wird <span data-ph="X">X = Anzahl ungesalzener Brötchen in der Lieferung</span>. Wie gross ist die Wahrscheinlichkeit, dass er <span data-ph="ges">mehr als 1'560 ungesalzene Brötchen</span> erhalten hat?`
+    ],
+    woerterbuch: [
+      "$X$ ungesalzene in der Lieferung",
+      "$N$ alle Brötchen",
+      "$M$ ungesalzene insgesamt",
+      "$n$ Grösse der Lieferung",
+      T`$p = \tfrac{M}{N}$ Anteil ungesalzen`,
+      T`$\mu,\ \sigma$ Lage und Streuung`
+    ],
+    beschriftung: { texte: "Die Aufgabe", formel: "Rechnung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: exakte Verteilung bestimmen, Kriterien mit Zahlen prüfen, Näherung hinschreiben, Grenzen ganzzahlig machen, mit dem Taschenrechner rechnen und kontrollieren." },
+      { ph: 0, hl: ["X"], dict: 1, dh: [0], f: NW(fX),
+        say: "Zuerst die Zufallsvariable. Sie zählt Brötchen, ist also diskret: 0, 1, 2 und so weiter." },
+      { ph: 0, hl: ["N"], dict: 2, dh: [1], f: j(fX, NW(fN)),
+        say: "Der ganze Topf sind alle Brötchen des Tages. Das ist N." },
+      { ph: 0, hl: ["linien", "M"], dict: 3, dh: [2], f: j(fX, fN, NW(fM)),
+        say: "Acht gleiche Linien liefern gleich viel. Eine davon war defekt, also ist ein Achtel ungesalzen: M ist 60'000." },
+      { ph: 0, hl: ["n"], dict: 4, dh: [3], f: j(fX, fN, fM, NW(fn)),
+        say: "Die Lieferung ist die Stichprobe: n ist 12'000 Brötchen, gezogen ohne Zurücklegen." },
+      { ph: 0, f: NW(fH),
+        say: "Ohne Zurücklegen heisst hypergeometrisch. Diese Verteilung ist exakt, aber der TI kennt sie nicht, und die Binomialkoeffizienten wären riesig." },
+      { ph: 1, dict: 5, dh: [4], f: j(fH, NW(fp)),
+        say: "Jetzt die Kriterien aus Satz 7.2. Zuerst der Anteil: 60'000 von 480'000 sind 0.125." },
+      { ph: 1, dh: [4], f: j(fH, fp, NW(fk1)),
+        say: "Der Anteil liegt zwischen 10 und 90 Prozent. Das erste Kriterium ist erfüllt." },
+      { ph: 1, hl: ["n"], dh: [3], f: j(fH, fp, fk1, NW(fk2)),
+        say: "Die Stichprobe ist gross genug. Für die Binomial-Näherung verlangt das Skript n grösser als 10." },
+      { ph: 1, hl: ["n", "N"], dh: [1, 3], f: j(fH, fp, fk1, fk2, NW(fk3)),
+        say: "Die Lieferung macht nur 2.5 Prozent des Topfs aus. Darum ändert das Herausnehmen die Chance kaum. Alle drei Kriterien sind erfüllt." },
+      { ph: 2, f: j(fH, NW(fB)),
+        say: "Damit darfst du binomial rechnen: n bleibt 12'000, p ist der Anteil 0.125. So geht auch die Musterlösung zu Aufgabe 6b vor." },
+      { ph: 3, hl: ["ges"], f: j(fB, NW(fP1)),
+        say: "Jetzt die gesuchte Wahrscheinlichkeit. «Mehr als 1'560» schliesst die 1'560 selbst aus." },
+      { ph: 3, hl: ["ges"], f: j(fB, fP1, NW(fP2)),
+        say: "Also beginnst du bei 1'561. Nach oben ist die Grenze die ganze Lieferung, 12'000. Keine Korrektur, denn B zählt wie H." },
+      { ph: 4, f: j(fB, fP1, fP2, NW(fTI1)),
+        say: "Mit dem TI: menu 5, 5, B. Eingabe: n, p, untere und obere Grenze." },
+      { ph: 4, f: j(fB, fP1, fP2, fTI1, NW(fR1)),
+        say: "Ergebnis: rund 4.8 Prozent. Damit ist die Aufgabe eigentlich gelöst." },
+      { ph: 5, dict: 6, dh: [5], f: j(fErgB, NW(fmu)),
+        say: "Zur Kontrolle rechnest du mit der Normalverteilung. Satz 7.2, Teil 2 erlaubt sie, weil n grösser als 30 ist. Der Erwartungswert ist n mal p, also 1'500." },
+      { ph: 5, dh: [5], f: j(fErgB, fmu, NW(fs1)),
+        say: "Die Standardabweichung ist die Wurzel aus n mal p mal eins minus p." },
+      { ph: 5, dh: [5], f: j(fErgB, fmu, NW(fs2)),
+        say: "Unter der Wurzel steht 1'312.5. Die Wurzel daraus ist rund 36.23." },
+      { ph: 5, hl: ["ges"], f: j(fErgB, fmu, fs2, NW(fSK)),
+        say: "Jetzt braucht es die Stetigkeitskorrektur: Der Balken für 1'561 beginnt bei 1'560.5. Diese Grenze gibst du ein." },
+      { ph: 5, f: j(fErgB, fmu, fs2, fSK, NW(fTI2)),
+        say: "Mit dem TI: menu 5, 5, 2. Obere Grenze unendlich, dann Mittelwert und Standardabweichung." },
+      { ph: 5, f: j(fErgB, fmu, fs2, fSK, fTI2, NW(fR2)),
+        say: "Die Normal-Näherung gibt 0.0475. Sie liegt nur 0.0006 neben dem Binomialwert. Das bestätigt die Rechnung." },
+      { ph: 5, f: j(fErgB, T`$\text{mit } N\text{: } 0.0475$`, NW(T`$\text{exakt mit } H\text{: } 0.0460$`)),
+        say: "Und der exakte Wert? Ein Computer liefert mit der hypergeometrischen Verteilung 0.0460. Die Näherungen liegen 0.0015 bis 0.0021 darüber, weil Ziehen mit Zurücklegen etwas mehr streut. Für die Prüfung zählt der Weg über Satz 7.2." },
+      { ph: 5, hl: ["ges"], f: j(NW(T`$P(X > 1\hk560) \approx 0.0481$`), T`$\text{Kontrolle mit } N\text{: } 0.0475$`),
+        say: "Antwortsatz: Mit rund 4.8 Prozent Wahrscheinlichkeit hat der Grossverteiler mehr als 1'560 ungesalzene Brötchen erhalten. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t13-selbsttest", {
+    fragen: [
+      { q: T`Welches Kriterium verlangt das Skript, damit du $B(n;\ p)$ durch die Normalverteilung nähern darfst?`,
+        o: [T`$np > 5$`, T`$np(1-p) > 9$`, T`$n > 30$`, T`$p < 0.1$`], a: 1,
+        e: T`Satz 7.1: $np(1-p) > 9$. Das ist die Varianz der Binomialverteilung. Andere Bücher haben andere Regeln, in der Prüfung gilt die des Skripts.` },
+      { q: T`Stolperfalle: $X \sim B(64;\ 0.5)$ wird durch $N(\mu;\ \sigma)$ genähert. Was gibst du in normCdf als $\sigma$ ein?`,
+        o: ["$16$", "$4$", "$32$", "$0.5$"], a: 1,
+        e: T`$\sigma = \sqrt{np(1-p)} = \sqrt{16} = 4$. Die 16 ist die Varianz. Wer sie eintippt, rechnet mit einer viel zu breiten Glocke.` },
+      { q: T`Stolperfalle: Du näherst $P(X > 20)$ mit der Normalverteilung. Welche untere Grenze ist richtig?`,
+        o: ["$19.5$", "$20$", "$20.5$", "$21.5$"], a: 2,
+        e: T`$P(X > 20) = P(X \ge 21)$, und der Balken für 21 beginnt bei $20.5$. Die $19.5$ wäre richtig für $P(X \ge 20)$.` },
+      { q: T`$Ps(20)$ wird durch die Normalverteilung genähert. Welche Eingabe berechnet $P(X < 15)$?`,
+        o: [T`normCdf(−0.5, 15.5, 20, 20)`, T`normCdf(−0.5, 14.5, 20, $\sqrt{20}$)`, T`normCdf(−0.5, 15, 20, $\sqrt{20}$)`, T`poissCdf(20, 0, 15)`], a: 1,
+        e: T`$P(X < 15) = P(X \le 14)$, der Balken für 14 endet bei $14.5$, und $\sigma = \sqrt{20} \approx 4.4721$. Ergebnis $\approx 0.1094$. poissCdf(20, 0, 15) wäre exakt, aber für $P(X \le 15)$, also einen Wert zu viel.` },
+      { q: T`Welche Bedingung gehört <b>nicht</b> zu Satz 7.2, Teil 1 ($H \to B$)?`,
+        o: [T`$0.1 < \tfrac{M}{N} < 0.9$`, T`$n > 10$`, T`$\tfrac{n}{N} < 0.05$`, T`$np(1-p) > 9$`], a: 3,
+        e: T`$np(1-p) > 9$ ist das Kriterium für $B \to N$ (Satz 7.1). Für $H \to B$ zählen Anteil, Stichprobengrösse und Auswahlsatz $\tfrac{n}{N}$.` },
+      { q: T`Stolperfalle: In einer Aufgabe stehen $n = 200$ und $E(X) = 4$. Welche Verteilung liegt vor?`,
+        o: ["Poisson, weil ein Erwartungswert gegeben ist", T`Binomial mit $p = \tfrac{E(X)}{n} = 0.02$`, "Normal, weil n gross ist", "Hypergeometrisch"], a: 1,
+        e: T`Ein gegebener Erwartungswert heisst noch nicht Poisson (Skript Bem. 5.26). Gibt es eine feste Anzahl Versuche, ist es binomial mit $p = \tfrac{\mu}{n}$. Poisson wäre hier höchstens eine Näherung.` },
+      { q: T`Warum wird $B(n;\ p)$ für grosses $n$ glockenförmig?`,
+        o: [T`Weil $p$ dann automatisch 0.5 wird`, T`Weil $X$ eine Summe vieler unabhängiger 0/1-Zufallsvariablen ist (zentraler Grenzwertsatz)`, "Weil die Binomialkoeffizienten kleiner werden", "Weil ohne Zurücklegen gezogen wird"], a: 1,
+        e: T`$X = X_1 + \dots + X_n$ mit $X_i \in \{0, 1\}$. Viele unabhängige, gleich kleine Zufälle addiert ergeben eine Glocke. Das ist die Idee des zentralen Grenzwertsatzes.` },
+      { q: T`Ab welchem $\mu$ erlaubt das Skript, $Ps(\mu)$ durch die Normalverteilung zu nähern?`,
+        o: [T`$\mu \ge 5$`, T`$\mu \ge 10$`, T`$\mu > 30$`, T`$\mu \le 10$`], a: 1,
+        e: T`Satz 7.3: $\mu \ge 10$, dann $N(\mu;\ \sqrt{\mu})$. Darunter rechnest du exakt mit poissCdf.` },
+      { q: "Stolperfalle: Das Kriterium ist erfüllt. Wo ist der relative Fehler der Normal-Näherung trotzdem gross?",
+        o: ["In einem Intervall um den Erwartungswert", "Weit weg vom Erwartungswert, am Rand der Verteilung", T`Nur wenn $p = 0.5$`, "Nirgends, das Kriterium garantiert kleine Fehler"], a: 1,
+        e: "Skript Kap. 7.1, Punkt 2. Beispiel Aufgabe 7.112: exakt 0.0133, genähert 0.0091, relativer Fehler 31.8 %." },
+      { q: T`Was ändert sich inhaltlich, wenn du $H(N;\ M;\ n)$ durch $B(n;\ \tfrac{M}{N})$ ersetzt?`,
+        o: [T`Aus «ohne Zurücklegen» wird «mit Zurücklegen»: Die Trefferchance bleibt konstant $\tfrac{M}{N}$.`, "Aus diskret wird stetig.", T`$n$ wird durch $N$ ersetzt.`, "Es braucht zusätzlich eine Stetigkeitskorrektur."], a: 0,
+        e: T`Ziehen ohne Zurücklegen wird durch Ziehen mit Zurücklegen angenähert (Skript nach Bem. 7.4). Das ist harmlos, solange die Stichprobe klein ist im Vergleich zum Topf: $\tfrac{n}{N} < 0.05$.` }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

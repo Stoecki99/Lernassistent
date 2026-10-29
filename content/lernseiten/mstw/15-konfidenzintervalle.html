@@ -1,0 +1,1405 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Konfidenzintervalle · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/16-statistische-tests" title="Statistische Tests">
+  <style>
+    /* Station 15: nur Klassen mit Präfix t15-, nur Farben aus :root */
+    .t15-ziele{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
+    .t15-ziele li::marker{color:var(--accent)}
+    .t15-vorgehen{margin:0; padding-left:1.4em; display:flex; flex-direction:column; gap:6px}
+    .t15-vorgehen li::marker{color:var(--accent); font-weight:700}
+    .t15-zeile{display:block}
+    .t15-zeile + .t15-zeile{margin-top:4px}
+    /* Filmzeilen dürfen umbrechen (der Formelbereich des Films setzt sonst nowrap) */
+    .t15-film-f{font-size:.82em; display:flex; flex-direction:column; gap:2px; white-space:normal}
+    .t15-film-f > div{min-width:0}
+    /* Tafeln mit Text- und Formelzeilen: etwas Abstand zwischen den Zeilen */
+    .t15-tafel{display:flex; flex-direction:column; gap:10px}
+    .t15-tafel > p{margin:0}
+    .t15-sim .t15-treffer{stroke:var(--s1); stroke-width:3; stroke-linecap:round}
+    .t15-sim .t15-daneben{stroke:var(--bad); stroke-width:3; stroke-dasharray:4 3}
+    .t15-sim .t15-mitte{fill:var(--ink)}
+    .t15-sim .t15-mu{stroke:var(--ink); stroke-width:1.5}
+    .t15-sim .t15-soll{fill:var(--accent); fill-opacity:.22; stroke:var(--accent); stroke-width:1.5}
+    .t15-zaehler{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(130px,100%),1fr)); gap:8px}
+    .t15-zahl{background:var(--board); border-radius:10px; padding:8px 12px; min-width:0}
+    .t15-zahl b{display:block; font-family:var(--f-math); font-size:1.35rem; font-variant-numeric:tabular-nums}
+    .t15-zahl span{font-size:.82rem; color:var(--muted)}
+    .t15-legende{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.88rem; color:var(--muted)}
+    .t15-legende svg{width:28px; height:10px; vertical-align:middle; margin-right:4px}
+    .t15-rechner [hidden]{display:none !important}
+    .t15-felder{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(140px,100%),1fr)); gap:10px 14px}
+    .t15-feld{display:flex; flex-direction:column; gap:4px; min-width:0}
+    .t15-feld label{font-weight:600; font-size:.92rem}
+    .t15-eingabe, .t15-liste{font:inherit; font-family:var(--f-math); font-size:1.08rem; width:100%; min-height:42px; padding:6px 10px;
+      border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink)}
+    .t15-liste{min-height:64px; resize:vertical}
+    .t15-eingabe:hover, .t15-liste:hover{border-color:var(--accent)}
+    .t15-eingabe:focus-visible, .t15-liste:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
+    .t15-check{display:flex; gap:8px; align-items:center; font-weight:600; font-size:.95rem}
+    .t15-check input{width:20px; height:20px; accent-color:var(--accent)}
+    .t15-weg{margin:0; padding-left:1.4em; display:flex; flex-direction:column; gap:12px}
+    .t15-weg li::marker{color:var(--accent); font-weight:700}
+    .t15-weg .t15-wt{display:block; font-weight:600; margin-bottom:2px}
+    .t15-weg .board{margin-top:6px}
+    .t15-ti{font-family:var(--f-body); font-weight:600; background:var(--board); border:1px solid var(--line); border-radius:6px; padding:1px 6px; white-space:nowrap}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="15-konfidenzintervalle">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V10–V12 · Konfidenzintervalle</span>
+    <h1>Konfidenzintervalle</h1>
+    <p class="lead">Sechs Kunden antworten, aber du willst etwas über alle 80 wissen. Ein Konfidenzintervall gibt dafür nicht nur eine Zahl an, sondern einen Bereich, der den unbekannten Wert der Grundgesamtheit mit vorgegebener Sicherheit einschliesst. Nach dieser Station rechnest du jedes Intervall der Prüfung von Hand und mit dem TI-Nspire und kannst es richtig deuten.</p>
+    <div class="card stack">
+      <b>Danach kannst du</b>
+      <ul class="t15-ziele prose">
+        <li>Punkt- und Intervallschätzung unterscheiden und das Konfidenzniveau \(1-\alpha\) richtig deuten,</li>
+        <li>entscheiden, ob \(z\) oder \(t\) (mit wie vielen Freiheitsgraden) ins Intervall gehört,</li>
+        <li>Intervalle für \(\mu\), für \(\mu_1-\mu_2\) (unabhängig und abhängig) und für einen Anteil \(p\) von Hand rechnen,</li>
+        <li>den Korrekturfaktor für kleine Grundgesamtheiten erkennen und einrechnen,</li>
+        <li>den notwendigen Stichprobenumfang bestimmen,</li>
+        <li>alles mit <span class="t15-ti">zInterval</span>, <span class="t15-ti">tInterval</span>, <span class="t15-ti">2-SampTInt</span> und <span class="t15-ti">1-PropZInt</span> kontrollieren.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#mittelwert"><b>2</b>Mittelwert</a>
+    <a href="#differenz"><b>3</b>Differenzen</a>
+    <a href="#anteil"><b>4</b>Anteil und n</a>
+    <a href="#simulator"><b>5</b>Simulator</a>
+    <a href="#rechner"><b>6</b>Rechner</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine, ohne die nichts geht</h2>
+    <p class="prose">In der schliessenden Statistik schliesst du von wenigen Beobachtungen auf viele. Das Skript nennt diese Richtung <b>Repräsentationsschluss</b> (Def. 3.1): von der Stichprobe auf die Grundgesamtheit. Bevor du rechnest, brauchst du fünf Begriffe.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Grundgesamtheit und Stichprobe</span><span class="ex"><span class="c">N</span> = 80, <span class="v">n</span> = 6</span><p>Die <b>Grundgesamtheit</b> sind alle, über die du etwas wissen willst (Umfang \(N\)). Die <b>Stichprobe</b> ist der Teil, den du wirklich befragst (Umfang \(n\)). Wie beim Suppe-Probieren: Ein Löffel verrät den ganzen Topf, wenn du vorher umrührst. Umrühren heisst hier: zufällig auswählen.</p></div>
+      <div class="concept"><span class="tag">Parameter und Schätzwert</span><span class="ex"><span class="c">μ</span> ≈ <span class="v">x̄</span> = 4.5</span><p>Ein <b>Parameter</b> (\(\mu, \sigma, p\)) beschreibt die Grundgesamtheit. Er ist fest, aber unbekannt. Ein <b>Schätzwert</b> (\(\bar x, s, \bar p\)) kommt aus der Stichprobe und ändert sich mit jeder neuen Stichprobe. Wie dein wahres Körpergewicht und die Anzeige einer wackligen Waage: Das Gewicht ist fest, die Anzeige schwankt bei jedem Wägen ein wenig. Eine einzelne Zahl als Schätzung heisst <b>Punktschätzung</b>.</p></div>
+      <div class="concept"><span class="tag">Streuung des Mittelwerts</span><span class="ex"><span class="c">σ</span>/√<span class="v">n</span> = 10/√25 = 2</span><p>Ein einzelner Wert streut um \(\sigma\). Der Mittelwert aus \(n\) Werten streut viel weniger, nämlich um \(\sigma/\sqrt n\). Ein Würfelwurf springt zwischen 1 und 6, der Durchschnitt aus 100 Würfen bleibt nahe bei 3.5.</p></div>
+      <div class="concept"><span class="tag">Quantil z oder t</span><span class="ex">0.95 → <span class="fn">z</span> = 1.96</span><p>Das <b>Quantil</b> sagt, wie viele Streuungseinheiten du nach links und rechts gehen musst, damit die gewünschte Wahrscheinlichkeit dazwischen liegt. Wie die Grenzen auf einer Rangliste: Wer ausserhalb liegt, gehört zu den 2.5 % Schnellsten oder den 2.5 % Langsamsten. Für 95 % liegen diese Grenzen bei der Normalverteilung bei −1.96 und 1.96.</p></div>
+      <div class="concept"><span class="tag">Konfidenzniveau 1 − α</span><span class="ex">1 − <span class="c">α</span> = 0.95</span><p>Stell dir das Intervall als <b>Netz</b> vor, das du nach einem Fisch (\(\mu\)) auswirfst. Das Niveau sagt, wie oft dein Verfahren den Fisch fängt. Ein breiteres Netz trifft öfter, sagt aber weniger genau, wo der Fisch ist. \(\alpha\) heisst <b>Irrtumswahrscheinlichkeit</b>.</p></div>
+    </div>
+    <div class="note"><b>Warum ein Intervall?</b> Eine Punktschätzung wie «\(\bar x = 4.5\)» sagt nichts darüber, wie genau sie ist. Das Skript nennt Punktschätzungen darum ohne Genauigkeitsangabe fast wertlos (Skript SS Kap. 5.1). Das Intervall liefert die Genauigkeit gleich mit.</div>
+    <div class="card stack">
+      <h3>Kurz üben: Grundgesamtheit oder Stichprobe?</h3>
+      <p class="hint">Faustregel: Griechische Buchstaben und das grosse \(N\) gehören zur Grundgesamtheit, Buchstaben mit Strich sowie \(s\) und \(n\) zur Stichprobe. Achtung beim Anteil: \(p\) ohne Strich ist der Anteil in der Grundgesamtheit, \(\bar p\) der Anteil in der Stichprobe.</p>
+      <div id="sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
+    <h2>Das Wörterbuch dieser Station</h2>
+    <p class="prose">Die Farbe zeigt, woher ein Symbol stammt: <span class="c">orange</span> aus der Grundgesamtheit (fest, meist unbekannt), <span class="v">blau</span> aus der Stichprobe (zufällig), <span class="fn">grün</span> ein Quantil aus einer Verteilung.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="c">N</span></td><td><span class="kind kind-c">Grundgesamtheit</span></td><td>Umfang der Grundgesamtheit</td></tr>
+          <tr><td><span class="c">μ</span>, <span class="c">σ</span></td><td><span class="kind kind-c">Grundgesamtheit</span></td><td>Mittelwert und Standardabweichung aller Elemente. \(\mu\) ist gesucht, \(\sigma\) meist unbekannt.</td></tr>
+          <tr><td><span class="c">p</span></td><td><span class="kind kind-c">Grundgesamtheit</span></td><td>Anteil der Elemente mit einer Eigenschaft (z. B. Bekanntheitsgrad)</td></tr>
+          <tr><td><span class="v">n</span></td><td><span class="kind kind-v">Stichprobe</span></td><td>Stichprobenumfang</td></tr>
+          <tr><td><span class="v">x̄</span></td><td><span class="kind kind-v">Stichprobe</span></td><td>Stichprobenmittelwert, Punktschätzung für \(\mu\)</td></tr>
+          <tr><td><span class="v">s</span></td><td><span class="kind kind-v">Stichprobe</span></td><td>Stichproben-Standardabweichung, gerechnet mit \(n-1\) im Nenner (TI: <span class="t15-ti">sx</span>)</td></tr>
+          <tr><td><span class="v">p̄</span> = <span class="v">k</span>/<span class="v">n</span></td><td><span class="kind kind-v">Stichprobe</span></td><td>Anteil in der Stichprobe: \(k\) Treffer von \(n\)</td></tr>
+          <tr><td>1 − <span class="c">α</span></td><td><span class="kind kind-op">Vorgabe</span></td><td>Vertrauens- oder Konfidenzniveau, meist 0.90, 0.95 oder 0.99; \(\alpha\) ist die Irrtumswahrscheinlichkeit</td></tr>
+          <tr><td><span class="fn">z</span></td><td><span class="kind kind-fn">Quantil</span></td><td>Quantil der Standardnormalverteilung: \(z = \text{invNorm}(1-\tfrac{\alpha}{2})\)</td></tr>
+          <tr><td><span class="fn">t</span><sub>FG</sub></td><td><span class="kind kind-fn">Quantil</span></td><td>Quantil der t-Verteilung: \(t = \operatorname{invt}(1-\tfrac{\alpha}{2},\ \text{FG})\)</td></tr>
+          <tr><td>FG</td><td><span class="kind kind-op">Zahl</span></td><td>Freiheitsgrade, beim Mittelwert \(n-1\)</td></tr>
+          <tr><td>Δμ, Δp</td><td><span class="kind kind-v">Ergebnis</span></td><td>Schätzfehler = halbe Intervalllänge (Bem. 5.8, Bem. 5.22)</td></tr>
+          <tr><td>[<span class="v">A</span>; <span class="v">B</span>]</td><td><span class="kind kind-v">Ergebnis</span></td><td>Vertrauensgrenzen: untere Grenze \(A\), obere Grenze \(B\). Sie hängen von der Stichprobe ab und sind darum zufällig.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Gute Schätzfunktionen (Def. 2.33)</h3>
+    <p class="prose">Weil die Stichprobe zufällig ist, ist auch \(\bar X\) eine Zufallsvariable. Das Skript nennt sie <b>Schätzfunktion</b> (Kap. 2.4). Denk an Pfeile auf eine Zielscheibe, deren Mitte der wahre Wert ist:</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">erwartungstreu</span><p>Im Mittel trifft die Schätzfunktion die Mitte. Kein systematischer Fehler. \(\bar X\) ist erwartungstreu für \(\mu\), \(s^2\) mit \(n-1\) für \(\sigma^2\).</p></div>
+      <div class="concept"><span class="tag">konsistent</span><p>Mit grösserem \(n\) liegen die Pfeile immer enger um die Mitte. Die Varianz geht gegen 0.</p></div>
+      <div class="concept"><span class="tag">effizient</span><p>Unter allen erwartungstreuen Schätzfunktionen streut sie am wenigsten. \(\bar X\) ist effizienter als der Median.</p></div>
+    </div>
+    <p class="prose">Wie stark \(\bar X\) streut, sagen Satz 2.26 und 2.27. Satz 2.29 ergänzt: \(\bar X\) ist normalverteilt, wenn \(X\) normalverteilt ist, und sonst näherungsweise ab \(n &gt; 30\) (zentraler Grenzwertsatz).</p>
+    <div class="board t15-tafel">
+      <p>Mit Zurücklegen oder \(\tfrac{n}{N} \le 0.05\) (Satz 2.26):</p>
+      $$\sigma_{\bar x} = \frac{\htmlClass{c}{\sigma}}{\sqrt{\htmlClass{v}{n}}}$$
+      <p>Ohne Zurücklegen (Satz 2.27):</p>
+      $$\sigma_{\bar x} = \frac{\htmlClass{c}{\sigma}}{\sqrt{\htmlClass{v}{n}}}\cdot\sqrt{\frac{\htmlClass{c}{N}-\htmlClass{v}{n}}{\htmlClass{c}{N}-1}}$$
+    </div>
+  </section>
+
+  <!-- ===== 2 · Mittelwert ===== -->
+  <section id="mittelwert">
+    <span class="eyebrow">Schritt 2 · Skript SS Kap. 5.2 und 5.3</span>
+    <h2>Das Konfidenzintervall für den Mittelwert μ</h2>
+    <p class="prose">Ein <b>Vertrauens- oder Konfidenzintervall</b> \([A;\,B]\) ist ein Bereich, der den unbekannten Parameter mit der vorgegebenen Wahrscheinlichkeit \(1-\alpha\) enthält (Def. 5.1, eigene Worte). Beide Namen bedeuten dasselbe (Bem. 5.2). Für den Mittelwert lautet die Formel (Satz 5.3):</p>
+    <div class="board t15-tafel">
+      <p>\(\displaystyle \htmlClass{v}{\bar x} - \htmlClass{fn}{z}\cdot\frac{\htmlClass{c}{\sigma}}{\sqrt{\htmlClass{v}{n}}} \;\le\; \htmlClass{c}{\mu} \;\le\; \htmlClass{v}{\bar x} + \htmlClass{fn}{z}\cdot\frac{\htmlClass{c}{\sigma}}{\sqrt{\htmlClass{v}{n}}}\)</p>
+      <p>\(\sigma\) unbekannt (Bem. 5.4): \(s\) statt \(\sigma\) und \(t_{n-1}\) statt \(z\):</p>
+      <p>\(\displaystyle \htmlClass{v}{\bar x} - \htmlClass{fn}{t_{n-1}}\cdot\frac{\htmlClass{v}{s}}{\sqrt{\htmlClass{v}{n}}} \;\le\; \htmlClass{c}{\mu} \;\le\; \htmlClass{v}{\bar x} + \htmlClass{fn}{t_{n-1}}\cdot\frac{\htmlClass{v}{s}}{\sqrt{\htmlClass{v}{n}}}\)</p>
+    </div>
+    <p class="prose">Lies die Formel so: Mitte \(\bar x\), plus und minus den <b>Schätzfehler</b> \(\Delta\mu = z\cdot\sigma/\sqrt n\). Der Schätzfehler ist die halbe Intervalllänge (Bem. 5.8).</p>
+    <details class="sol"><summary>Woher kommt die Formel?</summary>
+      <div class="stack">
+        <p>Nach Satz 2.26 und 2.29 ist \(\bar X \sim N\!\left(\mu;\ \tfrac{\sigma}{\sqrt n}\right)\). Standardisiert ist \(Z = \dfrac{\bar X - \mu}{\sigma/\sqrt n}\) standardnormalverteilt.</p>
+        <p>Du wählst \(z\) so, dass \(P(-z \le Z \le z) = 1-\alpha\). Für \(1-\alpha = 0.95\) bleiben links und rechts je 2.5 %, also \(z = \text{invNorm}(0.975) = 1.96\).</p>
+        <p>Jetzt löst du \(-z \le \dfrac{\bar X - \mu}{\sigma/\sqrt n} \le z\) nach \(\mu\) auf: mit \(\sigma/\sqrt n\) multiplizieren, \(\bar X\) abziehen, mit \(-1\) multiplizieren (Ungleichungen drehen). Heraus kommt \(\bar X - z\,\tfrac{\sigma}{\sqrt n} \le \mu \le \bar X + z\,\tfrac{\sigma}{\sqrt n}\).</p>
+      </div>
+    </details>
+
+    <h3>z oder t? Der Wegweiser (Folie 27, Skript S. 35)</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Welches Quantil gehört ins Intervall für μ?</caption>
+        <thead><tr><th>Situation</th><th>σ</th><th>Quantil</th></tr></thead>
+        <tbody>
+          <tr><td>\(X\) normalverteilt</td><td>bekannt</td><td>\(z\)</td></tr>
+          <tr><td>\(X\) beliebig verteilt, \(n &gt; 30\)</td><td>bekannt</td><td>\(z\)</td></tr>
+          <tr><td>\(X\) beliebig verteilt, \(n \le 30\)</td><td>bekannt</td><td>\(t_{n-1}\)</td></tr>
+          <tr class="an"><td>\(X\) normalverteilt</td><td>unbekannt, durch \(s\) geschätzt</td><td>\(t_{n-1}\)</td></tr>
+          <tr class="an"><td>\(X\) beliebig, keine Ausreisser (jedes \(n\))</td><td>unbekannt</td><td>\(t_{n-1}\)</td></tr>
+          <tr><td>\(X\) beliebig, mit Ausreissern, \(n \le 30\)</td><td>unbekannt</td><td>kein Intervall für \(\mu\), z. B. eines für den Median</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Faustregel für die Prüfung:</b> Ist \(\sigma\) gegeben und \(X\) normalverteilt (oder \(n &gt; 30\)), nimm \(z\). Musst du die Streuung aus den Daten schätzen (\(s\)), nimm \(t\) mit \(n-1\) Freiheitsgraden. Das Quantil gehört immer zu \(1-\tfrac{\alpha}{2}\), weil das Intervall auf beiden Seiten offen für Irrtum ist.</div>
+    <div class="note"><b>Freiheitsgrade:</b> Steht \(\bar x\) fest, können nur noch \(n-1\) Werte frei variieren, der letzte ergibt sich. Darum FG \(= n-1\). Wenige FG heisst: \(s\) ist selbst unsicher, die t-Verteilung ist breiter und \(t\) grösser als \(z\). Mit vielen FG nähert sich \(t\) dem \(z\).</div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>95 %-Quantile: t wird mit mehr Freiheitsgraden kleiner und nähert sich z = 1.96</caption>
+        <thead><tr><th>FG</th><th class="zahl">4</th><th class="zahl">9</th><th class="zahl">29</th><th class="zahl">99</th><th class="zahl">∞ (z)</th></tr></thead>
+        <tbody><tr><th>\(\operatorname{invt}(0.975, \text{FG})\)</th><td class="zahl">2.7764</td><td class="zahl">2.2622</td><td class="zahl">2.0452</td><td class="zahl">1.9842</td><td class="zahl">1.9600</td></tr></tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Folie und Lehrbuch:</b> Zwei Zeilen der Tabelle weichen vom Üblichen ab. (1) Ist \(\sigma\) unbekannt und \(n\) gross, rechnen viele Lehrbücher mit \(z\), und auch das Excel-Beispiel des Lernblocks nimmt ab \(n = 30\) den z-Wert. Der Unterschied ist klein (bei \(n = 100\): 1.9842 statt 1.96). (2) Bei bekanntem \(\sigma\), beliebig verteiltem \(X\) und \(n \le 30\) verlangt die Tabelle \(t_{n-1}\), obwohl es dafür im Lehrbuch kein exaktes Verfahren gibt. In der Prüfung gilt die Tabelle der Folie.</div>
+
+    <h3>Vorgehen in vier Schritten (Skript Bsp. 5.5 und 5.6)</h3>
+    <ol class="t15-vorgehen prose">
+      <li><b>Vertrauensniveau</b> \(1-\alpha\) festlegen, \(\tfrac{\alpha}{2}\) bestimmen.</li>
+      <li><b>Quantil</b> bestimmen: \(z = \text{invNorm}(1-\tfrac{\alpha}{2})\) oder \(t = \operatorname{invt}(1-\tfrac{\alpha}{2},\ n-1)\).</li>
+      <li><b>Kennzahlen</b> \(\bar x\) (und \(s\)) aus den Daten berechnen, falls nicht gegeben.</li>
+      <li><b>Intervall</b> nach der Formel berechnen, dann in einem Satz deuten.</li>
+    </ol>
+    <p class="prose">Klick dich durch die zwei Kernbeispiele. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="stepper-z"></div>
+    <div id="stepper-t"></div>
+
+    <h3>Was heisst «95 %» genau?</h3>
+    <div class="note"><b>So schreibst du es in der Prüfung (wie im Skript):</b> «Mit 95 % Wahrscheinlichkeit liegt der Mittelwert \(\mu\) aller … im Intervall \([A;\,B]\).»</div>
+    <div class="note falle"><b>Was dahinter steckt (Lehrbuch):</b> \(\mu\) ist eine feste Zahl, zufällig ist das Intervall. Die 95 % beschreiben das <b>Verfahren</b>: Ziehst du immer wieder neue Stichproben und berechnest jedes Mal ein Intervall, enthalten auf lange Sicht rund 95 % dieser Intervalle das wahre \(\mu\). Ein einzelnes, schon berechnetes Intervall enthält \(\mu\) oder eben nicht. Auch Bem. 5.2 im Skript hält fest: Ob und wo genau \(\mu\) im berechneten Intervall liegt, lässt sich nicht sagen. Im <a href="#simulator">Simulator</a> siehst du die 95 % entstehen.</div>
+
+    <h3>Was macht das Intervall breiter oder schmaler? (Folie 28)</h3>
+    <ul class="t15-ziele prose">
+      <li><b>\(\sigma\) grösser</b> (Daten streuen stärker) → Intervall breiter.</li>
+      <li><b>\(1-\alpha\) grösser</b> (mehr Sicherheit) → \(z\) bzw. \(t\) grösser → Intervall breiter.</li>
+      <li><b>\(n\) grösser</b> → Intervall schmaler, aber nur mit \(\sqrt n\): Für die halbe Länge brauchst du das <b>vierfache</b> \(n\), für einen Viertel das 16-fache.</li>
+    </ul>
+    <div class="note tipp"><b>Taschenrechner (Skript Kap. 7.2):</b> In der Rechner-App <span class="t15-ti">menu</span> → 6 Statistik → 6 Konfidenzintervalle → 1 <span class="t15-ti">zInterval</span> (σ bekannt) oder 2 <span class="t15-ti">tInterval</span> (σ unbekannt). «Data» nimmt eine Liste, «Stats» nimmt \(\bar x\), \(s\) und \(n\). Die Ausgabe heisst CLower und CUpper.</div>
+  </section>
+
+  <!-- ===== 3 · Differenzen ===== -->
+  <section id="differenz">
+    <span class="eyebrow">Schritt 3 · Skript SS Kap. 5.4</span>
+    <h2>Intervalle für die Differenz zweier Mittelwerte</h2>
+    <p class="prose">Unterscheiden sich zwei Gruppen wirklich, oder nur zufällig in der Stichprobe? Dafür rechnest du ein Intervall für \(\mu_1-\mu_2\). Zuerst klärst du, wie die beiden Stichproben entstanden sind (Def. 5.9):</p>
+    <div class="grid2">
+      <div class="concept"><span class="tag">unabhängig</span><span class="ex">zwei getrennte Ziehungen</span><p>Verschiedene Personen in den Gruppen, Umfänge \(n_1\) und \(n_2\) dürfen verschieden sein. Beispiel: Kunden von Filiale A und Kunden von Filiale B.</p></div>
+      <div class="concept"><span class="tag">abhängig (gepaart)</span><span class="ex">dieselben Personen zweimal</span><p>Jede Person liefert zwei Messwerte, etwa vorher und nachher. Wie zwei Fotos derselben Person. Darum gilt zwingend \(n_1 = n_2\).</p></div>
+    </div>
+
+    <h3>Fall 1: unabhängige Stichproben (Satz 5.14)</h3>
+    <p class="prose">Du fasst die beiden Streuungen zu einer gemeinsamen, <b>gepoolten</b> Standardabweichung \(\hat\sigma_D\) zusammen. Jede Gruppe zählt mit ihren Freiheitsgraden.</p>
+    <div class="board t15-tafel">
+      $$\text{FG} = n_1+n_2-2$$
+      $$\hat\sigma_D = \sqrt{\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1+n_2-2}}$$
+      <p>\(\displaystyle (\bar x_1-\bar x_2) \pm t_{\text{FG}}\cdot\hat\sigma_D\cdot\sqrt{\frac{1}{n_1}+\frac{1}{n_2}}\)</p>
+    </div>
+    <div id="stepper-unabh"></div>
+
+    <h3>Fall 2: abhängige Stichproben</h3>
+    <p class="prose">Hier bildest du zuerst pro Person die Differenz \(d_i\). Danach hast du nur noch <b>eine</b> Liste und rechnest wie beim Mittelwert mit \(t_{n-1}\):</p>
+    <div class="board t15-tafel">
+      $$\bar d \pm t_{n-1}\cdot\frac{s_d}{\sqrt n}$$
+      <p>mit \(n = n_1 = n_2\)</p>
+    </div>
+    <div id="stepper-abh"></div>
+
+    <h3>Deuten: Liegt die Null drin? (Bem. 5.18, Folie 29)</h3>
+    <ul class="t15-ziele prose">
+      <li><b>0 liegt im Intervall:</b> Die Differenz kann auch null sein. Es gibt keinen signifikanten Unterschied. Das heisst nicht, dass die Mittelwerte gleich sind, es ist nur nicht nachgewiesen.</li>
+      <li><b>0 liegt nicht im Intervall:</b> Der Unterschied ist <b>signifikant</b>. Liegt das ganze Intervall über 0, ist Gruppe 1 im Mittel grösser.</li>
+    </ul>
+    <div class="note falle"><b>Folie und Lehrbuch:</b> Die Folie nennt bei «0 liegt nicht im Intervall» die halbe Irrtumswahrscheinlichkeit \(\tfrac{\alpha}{2}\). Das Skript begründet es in Bem. 5.18: Für die gerichtete Aussage «Gruppe 1 ist grösser» zählt nur eine Seite des Intervalls. Lehrbücher unterscheiden genauer: Die ungerichtete Aussage «es gibt einen Unterschied» hat die Irrtumswahrscheinlichkeit \(\alpha\) (zweiseitig), erst die gerichtete Aussage \(\tfrac{\alpha}{2}\) (einseitig). Für die Prüfung gilt die Folie: Schreib bei einer gerichteten Aussage \(\tfrac{\alpha}{2}\) dazu. Den genauen Weg über Hypothesen lernst du in der Station «Statistische Tests».</div>
+    <div class="note tipp"><b>Taschenrechner:</b> unabhängig: <span class="t15-ti">menu</span> 6 · 6 · 4 <span class="t15-ti">2-SampTInt</span> mit «Pooled: Ja» (so rechnet das Skript). Abhängig: zuerst die Differenzen als Liste, dann 6 · 6 · 2 <span class="t15-ti">tInterval</span> mit «Data».</div>
+  </section>
+
+  <!-- ===== 4 · Anteil, Korrekturfaktor, Stichprobenumfang ===== -->
+  <section id="anteil">
+    <span class="eyebrow">Schritt 4 · Skript SS Kap. 5.6, 5.8 und 5.9</span>
+    <h2>Anteilswerte, kleine Grundgesamtheiten und der nötige Stichprobenumfang</h2>
+
+    <h3>Intervall für einen Anteil (Satz 5.21)</h3>
+    <p class="prose">Manchmal zählst du nur Ja und Nein, zum Beispiel «kennt die Marke». Dann schätzt du den Anteil \(p\) mit \(\bar p = k/n\). Die Binomialverteilung wird durch die Normalverteilung angenähert, darum steht hier immer \(z\):</p>
+    <div class="board t15-tafel">
+      $$\htmlClass{v}{\bar p} \pm \htmlClass{fn}{z}\cdot\sqrt{\frac{\htmlClass{v}{\bar p}\,(1-\htmlClass{v}{\bar p})}{\htmlClass{v}{n}}}$$
+      <p>gültig, falls \(n\cdot\bar p\,(1-\bar p) &gt; 9\)</p>
+    </div>
+    <div class="note falle"><b>Falle:</b> Prüf das Kriterium \(n\,\bar p\,(1-\bar p) &gt; 9\) immer zuerst und schreib es hin. Ist es verletzt, darfst du nicht mit der Normalverteilung rechnen (Bem. 5.23).</div>
+    <div id="stepper-anteil"></div>
+    <div class="note tipp"><b>Taschenrechner:</b> <span class="t15-ti">menu</span> 6 · 6 · 5 <span class="t15-ti">1-PropZInt</span>. Eingabe: Anzahl Treffer \(x = k\), Umfang \(n\), C Level \(1-\alpha\).</div>
+
+    <h3>Korrekturfaktor für endliche Grundgesamtheiten (Satz 5.29, Folie 33)</h3>
+    <p class="prose">Bei Befragungen ziehst du ohne Zurücklegen: Niemand wird zweimal befragt. Ist die Stichprobe zudem ein grosser Teil der Grundgesamtheit, weisst du mehr, als die bisherigen Formeln annehmen, und das Intervall darf schmaler werden. Ist \(\tfrac{n}{N} &gt; 0.05\), multiplizierst du den Schätzfehler mit</p>
+    <div class="board t15-tafel">
+      $$\sqrt{\frac{N-n}{N-1}}$$
+      <p>also zum Beispiel</p>
+      $$\bar x \pm t_{n-1}\cdot\frac{s}{\sqrt n}\cdot\sqrt{\frac{N-n}{N-1}}$$
+    </div>
+    <div class="note"><b>Merke:</b> Der Faktor ist kleiner als 1, das Intervall wird also schmaler. Laut Folie ist es nie falsch, ihn bei bekanntem \(N\) einzurechnen, ab \(\tfrac{n}{N} &gt; 0.05\) ist er Pflicht. Der Taschenrechner kennt ihn nicht: Du rechnest ihn von Hand ein.</div>
+    <div id="stepper-korr"></div>
+
+    <h3>Wie gross muss die Stichprobe sein? (Kap. 5.9)</h3>
+    <p class="prose">Gibst du den Schätzfehler vor, löst du dessen Formel nach \(n\) auf:</p>
+    <div class="board">
+      $$\text{Mittelwert:}\quad n \ge \frac{z^2\cdot\sigma^2}{(\Delta\mu)^2}$$
+      $$\text{Anteil:}\quad n \ge \frac{z^2\cdot p\,(1-p)}{(\Delta p)^2}$$
+    </div>
+    <ul class="t15-ziele prose">
+      <li>Hier steht immer \(z\), auch bei kleinem \(n\) (Bem. 5.31).</li>
+      <li>\(\sigma\) kennst du vorher nicht: Nimm eine Schätzung, etwa aus einer früheren Erhebung.</li>
+      <li>\(p\) unbekannt: Setz \(p = 0.5\). Dann ist \(p\,(1-p) = 0.25\) maximal, das ist der ungünstigste Fall (Bem. 5.32).</li>
+      <li>Immer <b>aufrunden</b>, auch bei 1067.11. Bei kleiner Grundgesamtheit den Korrekturfaktor dazunehmen und mit <span class="t15-ti">solve</span> nach \(n\) lösen (Bem. 5.33).</li>
+    </ul>
+    <div id="stepper-n"></div>
+
+    <details class="sol"><summary>Zusatz: Intervall für den gewichteten Mittelwert (Skript Kap. 5.5, Folie 30)</summary>
+      <div class="stack">
+        <p>Bei einer <b>geschichteten Stichprobe</b> (Station «Stichproben») kennst du die Anteile \(w_i = N_i/N\) der Schichten in der Grundgesamtheit. Den Mittelwert aller schätzt du dann mit dem <b>gewichteten Mittelwert</b> GMW. Satz 5.19 liefert dafür ein Intervall mit \(z\):</p>
+        <div class="board t15-tafel">
+          $$\text{GMW} = \sum_i w_i\,\bar x_i$$
+          $$\sigma_{\text{GMW}}^2 = \sum_i w_i^2\,\frac{s_i^2}{n_i}\,\frac{N_i-n_i}{N_i}$$
+          <p>\(\displaystyle \text{GMW} - z\cdot\sigma_{\text{GMW}} \;\le\; \mu \;\le\; \text{GMW} + z\cdot\sigma_{\text{GMW}}\)</p>
+        </div>
+        <p>Beispiel mit eigenen Zahlen (eigene Lösung, nicht vom Dozenten bestätigt): Schicht 1 mit \(N_1 = 3000\), \(n_1 = 60\), \(\bar x_1 = 42\), \(s_1 = 8\). Schicht 2 mit \(N_2 = 7000\), \(n_2 = 90\), \(\bar x_2 = 55\), \(s_2 = 12\). Also \(w_1 = 0.3\), \(w_2 = 0.7\), 95 %.</p>
+        <div class="board t15-tafel">
+          <p>\(\displaystyle \text{GMW} = 0.3\cdot 42 + 0.7\cdot 55 = 51.1\)</p>
+          <p>\(\displaystyle \sigma_{\text{GMW}}^2 = 0.09\cdot\tfrac{64}{60}\cdot\tfrac{2940}{3000} + 0.49\cdot\tfrac{144}{90}\cdot\tfrac{6910}{7000} = 0.0941 + 0.7739 = 0.868\)</p>
+          <p>\(\displaystyle \sigma_{\text{GMW}} = \sqrt{0.868} = 0.9317\)</p>
+          <p>\(\displaystyle 51.1 \pm 1.96\cdot 0.9317 = [49.2739;\ 52.9261]\)</p>
+        </div>
+        <p class="hint">Der Bruch \(\tfrac{N_i-n_i}{N_i}\) ist hier schon eingebaut. Darum brauchst du beim gewichteten Mittelwert keinen zusätzlichen Korrekturfaktor. Das Skript hat in Kap. 5.7 noch ein Intervall für die Varianz (mit der Chi-Quadrat-Verteilung). Beides ist kein Schwerpunkt dieser Station.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Simulator ===== -->
+  <section id="simulator">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Intervall-Simulator: Wie oft trifft das Netz?</h2>
+    <p class="prose">Hier kennst du ausnahmsweise die Wahrheit: Die Grundgesamtheit ist normalverteilt mit \(\mu = 100\). Jeder Klick zieht neue Stichproben und berechnet daraus je ein Intervall. Jede Zeile im Bild ist ein Intervall, das neuste steht oben. Beobachte, wie oft die senkrechte Linie \(\mu\) getroffen wird.</p>
+    <div class="card rechner t15-sim">
+      <div class="modes" role="group" aria-label="Rechenweg im Simulator" id="t15-sim-modus">
+        <button type="button" class="btn on" aria-pressed="true" data-modus="z">σ bekannt · z</button>
+        <button type="button" class="btn" aria-pressed="false" data-modus="t">σ geschätzt · t mit s</button>
+        <button type="button" class="btn" aria-pressed="false" data-modus="falsch">Falle: z mit s</button>
+      </div>
+      <div class="regler">
+        <label for="t15-sim-n">Stichprobenumfang n</label>
+        <input type="range" id="t15-sim-n" min="4" max="100" step="1" value="10">
+        <output for="t15-sim-n" id="t15-sim-n-wert">10</output>
+      </div>
+      <div class="regler">
+        <label for="t15-sim-s">Streuung σ</label>
+        <input type="range" id="t15-sim-s" min="5" max="30" step="1" value="15">
+        <output for="t15-sim-s" id="t15-sim-s-wert">15</output>
+      </div>
+      <div class="regler">
+        <label for="t15-sim-a">Niveau 1 − α</label>
+        <input type="range" id="t15-sim-a" min="0.8" max="0.99" step="0.01" value="0.95">
+        <output for="t15-sim-a" id="t15-sim-a-wert">0.95</output>
+      </div>
+      <div class="rechner-ergebnis" id="t15-sim-formel" aria-live="polite"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t15-sim-1">1 Stichprobe</button>
+        <button type="button" class="btn" id="t15-sim-20">20 Stichproben</button>
+        <button type="button" class="btn" id="t15-sim-100">100 Stichproben</button>
+        <button type="button" class="btn" id="t15-sim-reset">Zurücksetzen</button>
+      </div>
+      <figure class="diagramm">
+        <svg id="t15-sim-svg" viewBox="0 0 320 266" role="img" aria-labelledby="t15-sim-titel">
+          <title id="t15-sim-titel">Die zuletzt gezogenen Konfidenzintervalle als waagrechte Linien, senkrecht die Lage des wahren Mittelwerts μ</title>
+        </svg>
+        <figcaption>
+          <span class="t15-legende">
+            <span><svg viewBox="0 0 28 10" aria-hidden="true"><line class="t15-treffer" x1="2" y1="5" x2="26" y2="5"/></svg>enthält μ (durchgezogen)</span>
+            <span><svg viewBox="0 0 28 10" aria-hidden="true"><line class="t15-daneben" x1="2" y1="5" x2="26" y2="5"/></svg>verfehlt μ (gestrichelt)</span>
+            <span><svg viewBox="0 0 28 10" aria-hidden="true"><rect class="t15-soll" x="2" y="1" width="24" height="8"/></svg>Breite 2Δ bei s = σ</span>
+          </span>
+        </figcaption>
+      </figure>
+      <div class="t15-zaehler" aria-live="polite" id="t15-sim-zaehler"></div>
+      <p class="hint" id="t15-sim-letzte" aria-live="polite"></p>
+      <p class="explain" id="t15-sim-info" aria-live="polite"></p>
+    </div>
+    <div class="note tipp"><b>Probier das:</b> (1) Zieh 100 Stichproben mit «σ bekannt». Die Quote landet nahe bei 95 %. (2) Schieb \(n\) von 10 auf 40: Die Intervalle werden halb so breit. (3) Wechsle auf «Falle: z mit s», stell \(n\) auf 5 und zieh mehrmals 100: Die Quote fällt auf rund 88 %. Genau deshalb braucht es bei geschätztem \(\sigma\) die t-Verteilung.</div>
+  </section>
+
+  <!-- ===== 6 · Rechner ===== -->
+  <section id="rechner">
+    <span class="eyebrow">Schritt 6 · Eigene Zahlen</span>
+    <h2>Rechner mit vollständigem Lösungsweg</h2>
+    <p class="prose">Gib deine Daten ein und lass dir den Lösungsweg so zeigen, wie er in der Prüfung stehen soll: Schritt für Schritt, mit Formel, eingesetzten Zahlen und Antwortsatz. Gerechnet wird wie auf dem TI mit vollen Stellen, angezeigt auf vier Nachkommastellen. Rechnest du von Hand mit z = 1.96, kann die vierte Nachkommastelle um 1 abweichen.</p>
+    <form class="card stack t15-rechner" id="t15-r-form" novalidate>
+      <div class="modes" role="group" aria-label="Art des Intervalls" id="t15-r-art">
+        <button type="button" class="btn on" aria-pressed="true" data-art="mittel">Mittelwert μ</button>
+        <button type="button" class="btn" aria-pressed="false" data-art="anteil">Anteil p</button>
+        <button type="button" class="btn" aria-pressed="false" data-art="diff">Differenz μ₁ − μ₂ (unabhängig)</button>
+      </div>
+
+      <!-- Mittelwert -->
+      <div class="stack" id="t15-r-mittel">
+        <div class="modes" role="group" aria-label="Eingabeart Mittelwert" id="t15-r-m-ein">
+          <button type="button" class="btn on" aria-pressed="true" data-ein="liste">Urliste</button>
+          <button type="button" class="btn" aria-pressed="false" data-ein="kenn">Kennzahlen x̄, s, n</button>
+        </div>
+        <div class="t15-feld" id="t15-r-m-listebox">
+          <label for="t15-r-m-liste">Werte (mit Leerschlag oder Semikolon trennen)</label>
+          <textarea id="t15-r-m-liste" class="t15-liste" spellcheck="false">4 5 3 5 6 4</textarea>
+        </div>
+        <div class="t15-felder" id="t15-r-m-kennbox" hidden>
+          <div class="t15-feld"><label for="t15-r-m-xq">Mittelwert x̄</label><input id="t15-r-m-xq" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off"></div>
+          <div class="t15-feld"><label for="t15-r-m-s">Std.-abw. s</label><input id="t15-r-m-s" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off"></div>
+          <div class="t15-feld"><label for="t15-r-m-n">Umfang n</label><input id="t15-r-m-n" class="t15-eingabe" type="text" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <label class="t15-check"><input type="checkbox" id="t15-r-m-sigbek"> σ der Grundgesamtheit ist bekannt</label>
+        <div class="t15-felder" id="t15-r-m-sigbox" hidden>
+          <div class="t15-feld"><label for="t15-r-m-sig">σ (bekannt)</label><input id="t15-r-m-sig" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off"></div>
+        </div>
+      </div>
+
+      <!-- Anteil -->
+      <div class="t15-felder" id="t15-r-anteil" hidden>
+        <div class="t15-feld"><label for="t15-r-a-k">Treffer k</label><input id="t15-r-a-k" class="t15-eingabe" type="text" inputmode="numeric" autocomplete="off" value="222"></div>
+        <div class="t15-feld"><label for="t15-r-a-n">Umfang n</label><input id="t15-r-a-n" class="t15-eingabe" type="text" inputmode="numeric" autocomplete="off" value="600"></div>
+      </div>
+
+      <!-- Differenz -->
+      <div class="stack" id="t15-r-diff" hidden>
+        <div class="modes" role="group" aria-label="Eingabeart Differenz" id="t15-r-d-ein">
+          <button type="button" class="btn on" aria-pressed="true" data-ein="liste">Urlisten</button>
+          <button type="button" class="btn" aria-pressed="false" data-ein="kenn">Kennzahlen</button>
+        </div>
+        <div class="t15-felder" id="t15-r-d-listebox">
+          <div class="t15-feld"><label for="t15-r-d-l1">Gruppe 1</label><textarea id="t15-r-d-l1" class="t15-liste" spellcheck="false">4.5 5.5 6.0 5.0 5.5 4.5 5.0</textarea></div>
+          <div class="t15-feld"><label for="t15-r-d-l2">Gruppe 2</label><textarea id="t15-r-d-l2" class="t15-liste" spellcheck="false">4.0 3.5 5.0 4.5 4.0</textarea></div>
+        </div>
+        <div class="t15-felder" id="t15-r-d-kennbox" hidden>
+          <div class="t15-feld"><label for="t15-r-d-x1">x̄₁</label><input id="t15-r-d-x1" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off"></div>
+          <div class="t15-feld"><label for="t15-r-d-s1">s₁</label><input id="t15-r-d-s1" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off"></div>
+          <div class="t15-feld"><label for="t15-r-d-n1">n₁</label><input id="t15-r-d-n1" class="t15-eingabe" type="text" inputmode="numeric" autocomplete="off"></div>
+          <div class="t15-feld"><label for="t15-r-d-x2">x̄₂</label><input id="t15-r-d-x2" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off"></div>
+          <div class="t15-feld"><label for="t15-r-d-s2">s₂</label><input id="t15-r-d-s2" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off"></div>
+          <div class="t15-feld"><label for="t15-r-d-n2">n₂</label><input id="t15-r-d-n2" class="t15-eingabe" type="text" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <p class="hint">Abhängige Stichproben: Bilde zuerst die Differenzen \(d_i\) und rechne sie als Urliste unter «Mittelwert μ».</p>
+      </div>
+
+      <div class="t15-felder">
+        <div class="t15-feld"><label for="t15-r-niv">Niveau 1 − α</label><input id="t15-r-niv" class="t15-eingabe" type="text" inputmode="decimal" autocomplete="off" value="0.95"></div>
+        <div class="t15-feld" id="t15-r-nbox"><label for="t15-r-N">N (leer = unbekannt)</label><input id="t15-r-N" class="t15-eingabe" type="text" inputmode="numeric" autocomplete="off" value="80"></div>
+      </div>
+      <div class="row">
+        <button type="submit" class="btn primary">Lösungsweg zeigen</button>
+        <button type="button" class="btn" id="t15-r-bsp">Beispiel laden</button>
+      </div>
+      <p class="rueckmeldung leer" id="t15-r-fb" aria-live="polite"></p>
+      <ol class="t15-weg" id="t15-r-weg" aria-live="polite"></ol>
+    </form>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Rechne zuerst selbst, dann prüfen. Aufgabe 4 und 5 sind im Stil von Aufgabe 7 der exemplarischen Modulschlussprüfung gebaut, mit eigenen Zahlen. Alle Lösungen auf dieser Seite sind <b>eigene Lösungen, nicht vom Dozenten bestätigt</b>. Sie folgen dem Weg der Musterlösung zu Aufgabe 7, und jede Zahl ist unabhängig nachgerechnet.</p>
+    <div id="ue-1"></div>
+    <div id="ue-2"></div>
+    <div id="ue-3"></div>
+    <div id="ue-4"></div>
+    <div id="ue-5"></div>
+    <div id="ue-6"></div>
+    <div id="ue-7"></div>
+    <div id="ue-8"></div>
+    <div id="ue-9"></div>
+    <div id="ue-10"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Prüfungsaufgabe am Stück gelöst</h2>
+    <p class="prose">Der Film löst eine Aufgabe im Stil von Aufgabe 7 der exemplarischen Modulschlussprüfung: Teil a von Hand mit Korrekturfaktor, Teil b mit dem Taschenrechner. Drück auf Play. Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="film-1"></div>
+    <details class="sol"><summary>Lösung kompakt (eigene Lösung, nicht vom Dozenten bestätigt)</summary>
+      <div class="stack">
+        <p><b>a)</b> \(\bar x = 4.5\), \(s = 1.0488\), \(t_5 = \operatorname{invt}(0.975, 5) = 2.5706\), \(\tfrac{n}{N} = 0.075 &gt; 0.05\) → Korrekturfaktor \(0.9678\), \(\Delta\mu = 1.0653\). 95 %-Konfidenzintervall: \([3.4347;\ 5.5653]\).</p>
+        <p><b>b)</b> Zwei unabhängige Stichproben, <span class="t15-ti">2-SampTInt</span> mit «Pooled: Ja», \(1-\alpha = 0.90\): \([0.3465;\ 1.5392]\). Die 0 liegt nicht im Intervall: Zürich wird signifikant besser bewertet als Winterthur.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Vorgehen:</b> Niveau \(1-\alpha\) → Quantil zu \(1-\tfrac{\alpha}{2}\) → \(\bar x\) und \(s\) → \(\tfrac{n}{N}\) prüfen → Intervall → Antwortsatz.</li>
+      <li><b>z oder t:</b> \(\sigma\) gegeben (und \(X\) normalverteilt oder \(n &gt; 30\)) → \(z\). Streuung aus den Daten geschätzt (\(s\), mit \(n-1\)) → \(t\) mit \(n-1\) Freiheitsgraden. Anteile immer mit \(z\).</li>
+      <li><b>Breite:</b> mehr Sicherheit oder mehr Streuung → breiter. Mehr \(n\) → schmaler, aber nur mit \(\sqrt n\): halbe Länge braucht vierfaches \(n\).</li>
+      <li><b>Differenzen:</b> unabhängig → gepoolt mit FG \(n_1+n_2-2\); abhängig → zuerst Paardifferenzen. Liegt 0 nicht im Intervall, ist der Unterschied signifikant.</li>
+      <li><b>Deutung:</b> In der Prüfung «Mit 95 % Wahrscheinlichkeit liegt \(\mu\) im Intervall …». Gemeint ist: Das Verfahren trifft in 95 % der Fälle.</li>
+      <li><b>Von Hand:</b> Den Korrekturfaktor \(\sqrt{\tfrac{N-n}{N-1}}\) bei \(\tfrac{n}{N} &gt; 0.05\) und das Aufrunden beim Stichprobenumfang macht der Taschenrechner nicht für dich.</li>
+    </ul>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Formeln und Taschenrechner-Befehle</caption>
+        <thead><tr><th>Intervall für</th><th>Formel</th><th>TI-Nspire</th></tr></thead>
+        <tbody>
+          <tr><td>\(\mu\), \(\sigma\) bekannt</td><td>\(\bar x \pm z\cdot\dfrac{\sigma}{\sqrt n}\)</td><td>6 · 6 · 1 zInterval</td></tr>
+          <tr><td>\(\mu\), \(\sigma\) unbekannt</td><td>\(\bar x \pm t_{n-1}\cdot\dfrac{s}{\sqrt n}\)</td><td>6 · 6 · 2 tInterval</td></tr>
+          <tr><td>\(\mu_1-\mu_2\), unabhängig</td><td>\((\bar x_1-\bar x_2) \pm t_{n_1+n_2-2}\cdot\hat\sigma_D\sqrt{\tfrac{1}{n_1}+\tfrac{1}{n_2}}\)</td><td>6 · 6 · 4 2-SampTInt, Pooled: Ja</td></tr>
+          <tr><td>\(\mu_1-\mu_2\), abhängig</td><td>\(\bar d \pm t_{n-1}\cdot\dfrac{s_d}{\sqrt n}\)</td><td>tInterval auf die Differenzen</td></tr>
+          <tr><td>Anteil \(p\)</td><td>\(\bar p \pm z\sqrt{\dfrac{\bar p(1-\bar p)}{n}}\), falls \(n\bar p(1-\bar p) &gt; 9\)</td><td>6 · 6 · 5 1-PropZInt</td></tr>
+          <tr><td>Korrektur</td><td>Schätzfehler \(\cdot\sqrt{\tfrac{N-n}{N-1}}\), falls \(\tfrac{n}{N} &gt; 0.05\)</td><td>von Hand</td></tr>
+          <tr><td>Umfang \(n\)</td><td>\(n \ge \dfrac{z^2\sigma^2}{(\Delta\mu)^2}\) bzw. \(n \ge \dfrac{z^2 p(1-p)}{(\Delta p)^2}\), aufrunden</td><td>solve</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <footer>Quellen: Folien «Schliessende Statistik» (Folien 14–17, 20 und 23–33), Skript «Einführung in die Schliessende Statistik» Kap. 2.4, 5.1–5.9 und 7.2, Lernblock S2-LB5 «Zusatzaufgaben Vertrauensintervalle», exemplarische Modulschlussprüfung Aufgabe 7 mit Lösung. Alle Beispiele und Aufgaben auf dieser Seite verwenden eigene Zahlen und Kontexte.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text verwenden.
+  const T = String.raw;
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ===================== Verteilungsfunktionen ===================== */
+  // Geprüft gegen die Tabellenwerte aus Skript und Zusatzaufgaben (z. B. invt(0.95, 4) = 2.1318)
+  function erfc(x) {
+    const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+    const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
+      t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 +
+      t * (-0.82215223 + t * 0.17087277)))))))));
+    return x >= 0 ? r : 2 - r;
+  }
+  function normCdf(x) { return 0.5 * erfc(-x / Math.SQRT2); }
+  function invNorm(p) {
+    // Näherung nach Acklam, danach zwei Newton-Schritte
+    const a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.383577518672690e2, -3.066479806614716e1, 2.506628277459239];
+    const b = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1, -1.328068155288572e1];
+    const c = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+    const d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416];
+    const pl = 0.02425;
+    let x;
+    if (p < pl) {
+      const q = Math.sqrt(-2 * Math.log(p));
+      x = (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    } else if (p <= 1 - pl) {
+      const q = p - 0.5, r = q * q;
+      x = (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+    } else {
+      const q = Math.sqrt(-2 * Math.log(1 - p));
+      x = -(((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1);
+    }
+    for (let i = 0; i < 2; i++) {
+      const e = normCdf(x) - p;
+      x -= e * Math.sqrt(2 * Math.PI) * Math.exp(x * x / 2);
+    }
+    return x;
+  }
+  function lnGamma(x) {
+    const g = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+    let y = x, tmp = x + 5.5;
+    tmp -= (x + 0.5) * Math.log(tmp);
+    let ser = 1.000000000190015;
+    for (let j = 0; j < 6; j++) ser += g[j] / ++y;
+    return -tmp + Math.log(2.5066282746310005 * ser / x);
+  }
+  function betacf(a, b, x) {
+    const FPMIN = 1e-300;
+    const qab = a + b, qap = a + 1, qam = a - 1;
+    let c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) d = FPMIN;
+    d = 1 / d;
+    let h = d;
+    for (let m = 1; m <= 300; m++) {
+      const m2 = 2 * m;
+      let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+      d = 1 / d;
+      const del = d * c;
+      h *= del;
+      if (Math.abs(del - 1) < 3e-14) break;
+    }
+    return h;
+  }
+  function betai(a, b, x) {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    const bt = Math.exp(lnGamma(a + b) - lnGamma(a) - lnGamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a : 1 - bt * betacf(b, a, 1 - x) / b;
+  }
+  function tCdf(t, df) {
+    const p = 0.5 * betai(df / 2, 0.5, df / (df + t * t));
+    return t >= 0 ? 1 - p : p;
+  }
+  function invT(p, df) {
+    let lo = -1000, hi = 1000;
+    for (let i = 0; i < 200; i++) {
+      const mid = (lo + hi) / 2;
+      if (tCdf(mid, df) < p) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  /* ===================== Hilfen ===================== */
+  // Zahl für Formeln: höchstens k Nachkommastellen, Dezimalpunkt, normales Minus
+  function fz(w, k) {
+    if (!Number.isFinite(w)) return "?";
+    const s = Number(w.toFixed(k === undefined ? 4 : k));
+    return (Object.is(s, -0) ? 0 : s).toString();
+  }
+  const mittel = (a) => a.reduce((s, x) => s + x, 0) / a.length;
+  const qsumme = (a) => { const m = mittel(a); return a.reduce((s, x) => s + (x - m) * (x - m), 0); };
+  // Kumulativer Stepper: alle bisherigen Zeilen bleiben stehen, die neue leuchtet kurz auf
+  function kumuliert(zeilen) {
+    return zeilen.map((z, k) => ({
+      html: zeilen.slice(0, k + 1).map((x, i) => '<span class="t15-zeile">' + (i === k ? NW(x.f) : x.f) + "</span>").join(""),
+      warum: z.warum
+    }));
+  }
+
+  /* ===================== Sortierer ===================== */
+  L.sortierer("#sortierer", {
+    kategorien: ["Grundgesamtheit", "Stichprobe"],
+    elemente: [
+      { html: T`$\mu$`, kategorie: "Grundgesamtheit", erklaerung: T`$\mu$ ist der Mittelwert aller Elemente. Fest, aber unbekannt.` },
+      { html: T`$\bar x = 4.5$`, kategorie: "Stichprobe", erklaerung: T`$\bar x$ berechnest du aus den befragten Personen. Eine neue Stichprobe gibt ein anderes $\bar x$.` },
+      { html: T`$\sigma$`, kategorie: "Grundgesamtheit", erklaerung: T`$\sigma$ ist die Streuung aller Elemente. Meist kennst du sie nicht.` },
+      { html: T`$s = 1.05$`, kategorie: "Stichprobe", erklaerung: T`$s$ schätzt $\sigma$ aus der Stichprobe, gerechnet mit $n-1$.` },
+      { html: T`$N = 80$`, kategorie: "Grundgesamtheit", erklaerung: "N ist der Umfang der Grundgesamtheit, hier alle 80 Kunden." },
+      { html: T`$n = 6$`, kategorie: "Stichprobe", erklaerung: "n ist der Stichprobenumfang, hier die 6 befragten Kunden." },
+      { html: T`$\bar p = 0.37$`, kategorie: "Stichprobe", erklaerung: T`$\bar p = k/n$ ist der Anteil in der Stichprobe.` },
+      { html: T`$p$`, kategorie: "Grundgesamtheit", erklaerung: "p ist der wahre Anteil in der Grundgesamtheit. Ihn willst du mit dem Intervall eingrenzen." }
+    ]
+  });
+
+  /* ===================== Stepper Kapitel 5.3 ===================== */
+  L.stepper("#stepper-z", {
+    titel: "Beispiel 1 · σ bekannt (z-Intervall)",
+    text: 'Ein Kaffeeautomat soll 200 ml abfüllen. Die Füllmenge ist normalverteilt, der Hersteller nennt die <span data-link="sig">Standardabweichung σ = 4 ml</span>. Du misst <span data-link="n">36 Becher</span> und erhältst im <span data-link="xq">Mittel 198.4 ml</span>. Berechne das <span data-link="niv">95 %-Konfidenzintervall</span> für die <span data-link="mu">mittlere Füllmenge aller Becher</span>.',
+    schritte: kumuliert([
+      { f: T`$\htmlData{link=niv}{1-\alpha = 0.95} \;\Rightarrow\; \tfrac{\alpha}{2} = 0.025$`,
+        warum: "1. Schritt: Vertrauensniveau festlegen. Die 5 % Irrtum verteilen sich auf beide Ränder, je 2.5 %." },
+      { f: T`$\htmlData{link=sig}{\sigma\text{ bekannt}} \Rightarrow z = \text{invNorm}(0.975) = 1.96$`,
+        warum: "2. Schritt: σ ist gegeben, also Normalverteilung und z-Wert. Links von z liegen 97.5 % der Fläche." },
+      { f: T`$\htmlData{link=xq}{\bar x = 198.4},\ \ \htmlData{link=sig}{\sigma = 4},\ \ \htmlData{link=n}{n = 36}$`,
+        warum: "3. Schritt: Kennzahlen bereitstellen. Hier sind sie schon gegeben." },
+      { f: T`$\dfrac{\htmlData{link=sig}{\sigma}}{\sqrt{\htmlData{link=n}{n}}} = \dfrac{4}{\sqrt{36}} = 0.6667$`,
+        warum: "Der Mittelwert aus 36 Bechern streut viel weniger als ein einzelner Becher, nämlich um σ/√n (Satz 2.26)." },
+      { f: T`$\Delta\mu = z\cdot\dfrac{\sigma}{\sqrt n} = 1.96 \cdot 0.6667 = 1.3067$`,
+        warum: "Der Schätzfehler ist die halbe Intervalllänge (Bem. 5.8)." },
+      { f: T`$\htmlData{link=mu}{\mu} \in [\htmlData{link=xq}{198.4} - 1.3067;\ \htmlData{link=xq}{198.4} + 1.3067] = [197.0933;\ 199.7067]$`,
+        warum: "4. Schritt: Mitte minus und plus Schätzfehler. TI-Kontrolle: zInterval mit σ = 4, x̄ = 198.4, n = 36, C Level 0.95 liefert [197.0934; 199.7066]. Die letzte Stelle weicht ab, weil der Rechner mit z = 1.959964 statt 1.96 rechnet." },
+      { f: T`$200 \notin [197.0933;\ 199.7067]$`,
+        warum: "Deutung: Mit 95 % Wahrscheinlichkeit liegt die mittlere Füllmenge aller Becher zwischen 197.09 und 199.71 ml. Der Sollwert 200 ml liegt nicht drin, ein deutlicher Hinweis, dass der Automat im Mittel zu wenig abfüllt." }
+    ])
+  });
+
+  L.stepper("#stepper-t", {
+    titel: "Beispiel 2 · σ unbekannt (t-Intervall aus einer Urliste)",
+    text: 'Du misst an <span data-link="n">8 zufälligen Tagen</span> die Wartezeit am Ausleihschalter der Bibliothek in Minuten: <span data-link="daten">4.2, 6.1, 5.0, 3.8, 7.2, 5.5, 4.9, 6.3</span>. Die Wartezeiten sind normalverteilt, ihre <span data-link="sig">Standardabweichung kennt niemand</span>. Gesucht ist ein <span data-link="niv">90 %-Konfidenzintervall</span> für die <span data-link="mu">mittlere Wartezeit</span>.',
+    schritte: kumuliert([
+      { f: T`$\htmlData{link=niv}{1-\alpha = 0.90} \;\Rightarrow\; \tfrac{\alpha}{2} = 0.05$`,
+        warum: "1. Schritt: Niveau 0.90, also 5 % Irrtum auf jeder Seite." },
+      { f: T`$\htmlData{link=sig}{\sigma\text{ unbekannt}} \Rightarrow t,\ \ \text{FG} = \htmlData{link=n}{n} - 1 = 7$`,
+        warum: "2. Schritt: σ muss aus den Daten geschätzt werden. Darum t-Verteilung mit n − 1 Freiheitsgraden (Bem. 5.4)." },
+      { f: T`$t_{7} = \operatorname{invt}(0.95,\ 7) = 1.8946$`,
+        warum: "Das Quantil gehört zu 1 − α/2 = 0.95, nicht zu 0.90." },
+      { f: T`$\htmlData{link=daten}{\bar x} = \dfrac{43}{8} = 5.375$`,
+        warum: "3. Schritt: Mittelwert. Die acht Werte ergeben zusammen 43." },
+      { f: T`$\htmlData{link=daten}{s} = \sqrt{\dfrac{\sum (x_i-\bar x)^2}{n-1}} = \sqrt{\dfrac{8.955}{7}} = 1.1311$`,
+        warum: "Standardabweichung mit n − 1 im Nenner. Auf dem TI ist das sx, nicht σx." },
+      { f: T`$\Delta\mu = 1.8946\cdot\dfrac{1.1311}{\sqrt 8} = 0.7576$`,
+        warum: "Schätzfehler: Quantil mal Standardfehler s/√n." },
+      { f: T`$\htmlData{link=mu}{\mu} \in [5.375 - 0.7576;\ 5.375 + 0.7576] = [4.6174;\ 6.1326]$`,
+        warum: "4. Schritt und Deutung: Mit 90 % Wahrscheinlichkeit liegt die mittlere Wartezeit zwischen 4.62 und 6.13 Minuten. TI: tInterval, «Data», Liste eingeben, C Level 0.9." }
+    ])
+  });
+
+  /* ===================== Stepper Kapitel 5.4 ===================== */
+  L.stepper("#stepper-unabh", {
+    titel: "Beispiel 3 · zwei unabhängige Gruppen",
+    text: 'Eine Umfrage vergleicht die wöchentliche Lernzeit. <span data-link="g1">12 Teilzeit-Studierende: x̄₁ = 6.4 h, s₁ = 1.8 h</span>. <span data-link="g2">10 Vollzeit-Studierende: x̄₂ = 4.9 h, s₂ = 2.1 h</span>. Berechne ein <span data-link="niv">95 %-Konfidenzintervall</span> für die <span data-link="d">Differenz μ₁ − μ₂</span>. Unterscheiden sich die Gruppen signifikant?',
+    schritte: kumuliert([
+      { f: T`$\htmlData{link=niv}{1-\alpha = 0.95}$`,
+        warum: "1. Schritt: Vertrauensniveau." },
+      { f: T`$\text{FG} = \htmlData{link=g1}{12} + \htmlData{link=g2}{10} - 2 = 20$`,
+        warum: "2. Schritt: Verschiedene Personen in den Gruppen, also unabhängig. Freiheitsgrade n₁ + n₂ − 2." },
+      { f: T`$t_{20} = \operatorname{invt}(0.975,\ 20) = 2.0860$`,
+        warum: "3. Schritt: t-Wert zu 1 − α/2." },
+      { f: T`$\htmlData{link=d}{\bar d} = \htmlData{link=g1}{6.4} - \htmlData{link=g2}{4.9} = 1.5$`,
+        warum: "Die Differenz der Stichprobenmittelwerte ist die Mitte des Intervalls." },
+      { f: T`$\hat\sigma_D = \sqrt{\dfrac{11\cdot \htmlData{link=g1}{1.8}^2 + 9\cdot \htmlData{link=g2}{2.1}^2}{20}} = \sqrt{3.7665} = 1.9407$`,
+        warum: "Gepoolte Standardabweichung: Jede Gruppe zählt mit ihren Freiheitsgraden n − 1 (Satz 5.14)." },
+      { f: T`$\Delta = 2.0860\cdot 1.9407\cdot\sqrt{\tfrac{1}{12}+\tfrac{1}{10}} = 1.7334$`,
+        warum: "4. Schritt: Schätzfehler. Die Wurzel berücksichtigt beide Stichprobenumfänge." },
+      { f: T`$\htmlData{link=d}{\mu_1-\mu_2} \in [1.5 - 1.7334;\ 1.5 + 1.7334] = [-0.2334;\ 3.2334]$`,
+        warum: "Das Intervall für die Differenz." },
+      { f: T`$0 \in [-0.2334;\ 3.2334]$`,
+        warum: "Deutung: Die 0 liegt im Intervall. Die Differenz von 1.5 h kann Zufall sein, es gibt keinen signifikanten Unterschied. TI: 2-SampTInt, «Stats», Pooled: Ja." }
+    ])
+  });
+
+  L.stepper("#stepper-abh", {
+    titel: "Beispiel 4 · dieselben Personen vorher und nachher",
+    text: '<span data-link="pers">Sechs Mitarbeitende</span> schreiben vor und nach einem Kurs je eine Seite. Gezählt werden die Tippfehler: <span data-link="vor">vorher 7, 5, 9, 6, 8, 4</span>, <span data-link="nach">nachher 5, 4, 6, 6, 5, 3</span>. Berechne ein <span data-link="niv">95 %-Konfidenzintervall</span> für die <span data-link="d">mittlere Abnahme der Fehler</span>.',
+    schritte: kumuliert([
+      { f: T`$d_i = \htmlData{link=vor}{\text{vorher}} - \htmlData{link=nach}{\text{nachher}}:\ \ 2,\ 1,\ 3,\ 0,\ 3,\ 1$`,
+        warum: "Dieselben Personen zweimal gemessen: abhängige Stichprobe. Darum zuerst pro Person die Differenz bilden." },
+      { f: T`$\htmlData{link=niv}{1-\alpha = 0.95},\ \ \text{FG} = \htmlData{link=pers}{6} - 1 = 5,\ \ t_5 = \operatorname{invt}(0.975,\ 5) = 2.5706$`,
+        warum: "Ab jetzt ist es ein gewöhnliches t-Intervall für eine einzige Liste mit n = 6." },
+      { f: T`$\htmlData{link=d}{\bar d} = \dfrac{10}{6} = 1.6667,\ \ s_d = \sqrt{\dfrac{7.3333}{5}} = 1.2111$`,
+        warum: "Mittelwert und Standardabweichung der Differenzen." },
+      { f: T`$\Delta = 2.5706\cdot\dfrac{1.2111}{\sqrt 6} = 1.2709$`,
+        warum: "Schätzfehler wie beim Mittelwert." },
+      { f: T`$\htmlData{link=d}{\mu_1-\mu_2} \in [0.3957;\ 2.9376],\ \ 0 \notin$`,
+        warum: "Deutung: Die 0 liegt nicht im Intervall. Die Fehler nehmen signifikant ab, im Mittel um 0.40 bis 2.94 pro Seite. TI: Differenzen als Liste, dann tInterval mit «Data»." }
+    ])
+  });
+
+  /* ===================== Stepper Kapitel 5.6, 5.8, 5.9 ===================== */
+  L.stepper("#stepper-anteil", {
+    titel: "Beispiel 5 · Anteil (Skript-Schritte wie Bsp. 5.24)",
+    text: 'In einer Zufallsstichprobe von <span data-link="n">600 Pendelnden</span> fahren <span data-link="k">222 täglich mit dem Zug</span>. Berechne ein <span data-link="niv">95 %-Konfidenzintervall</span> für den <span data-link="p">Anteil aller Pendelnden, die täglich Zug fahren</span>.',
+    schritte: kumuliert([
+      { f: T`$\htmlData{link=niv}{1-\alpha = 0.95}$`,
+        warum: "1. Schritt: Vertrauensniveau." },
+      { f: T`$\bar p = \dfrac{\htmlData{link=k}{222}}{\htmlData{link=n}{600}} = 0.37$`,
+        warum: "2. Schritt: Anteil in der Stichprobe." },
+      { f: T`$\htmlData{link=n}{600}\cdot 0.37\cdot 0.63 = 139.86 > 9$`,
+        warum: "3. Schritt: Approximationskriterium. Erfüllt, also darfst du mit der Normalverteilung rechnen." },
+      { f: T`$z = \text{invNorm}(0.975) = 1.96$`,
+        warum: "4. Schritt: Bei Anteilen immer z." },
+      { f: T`$\Delta p = 1.96\cdot\sqrt{\dfrac{0.37\cdot 0.63}{600}} = 1.96\cdot 0.019710 = 0.0386$`,
+        warum: "Schätzfehler für den Anteil (Bem. 5.22)." },
+      { f: T`$\htmlData{link=p}{p} \in [0.37 - 0.0386;\ 0.37 + 0.0386] = [0.3314;\ 0.4086]$`,
+        warum: "5. Schritt und Deutung: Mit 95 % Wahrscheinlichkeit fahren zwischen 33.1 % und 40.9 % aller Pendelnden täglich Zug. TI: 1-PropZInt mit x = 222, n = 600." }
+    ])
+  });
+
+  L.stepper("#stepper-korr", {
+    titel: "Beispiel 6 · dieselbe Umfrage, aber kleine Grundgesamtheit",
+    text: 'Die 600 Pendelnden aus Beispiel 5 stammen aus einer Gemeinde mit <span data-link="N">insgesamt 4000 Pendelnden</span>. Wie lautet das 95 %-Konfidenzintervall jetzt?',
+    schritte: kumuliert([
+      { f: T`$\dfrac{n}{\htmlData{link=N}{N}} = \dfrac{600}{\htmlData{link=N}{4000}} = 0.15 > 0.05$`,
+        warum: "Prüfen: Die Stichprobe umfasst 15 % der Grundgesamtheit, mehr als 5 %. Der Korrekturfaktor ist Pflicht (Satz 5.29)." },
+      { f: T`$\sqrt{\dfrac{N-n}{N-1}} = \sqrt{\dfrac{3400}{3999}} = 0.92207$`,
+        warum: "Der Faktor ist kleiner als 1." },
+      { f: T`$\Delta p = 0.038632\cdot 0.92207 = 0.0356$`,
+        warum: "Den Schätzfehler aus Beispiel 5 mit dem Faktor multiplizieren." },
+      { f: T`$p \in [0.37 - 0.0356;\ 0.37 + 0.0356] = [0.3344;\ 0.4056]$`,
+        warum: "Das Intervall ist schmaler als ohne Korrektur ([0.3314; 0.4086]). Der Taschenrechner liefert nur das unkorrigierte Intervall." }
+    ])
+  });
+
+  L.stepper("#stepper-n", {
+    titel: "Beispiel 7 · notwendiger Stichprobenumfang",
+    text: 'Vor einer Abstimmung willst du den <span data-link="p">Ja-Anteil</span> mit einem <span data-link="dp">Schätzfehler von höchstens 3 Prozentpunkten</span> bei <span data-link="niv">95 % Vertrauensniveau</span> schätzen. Über den Ja-Anteil weisst du <span data-link="p0">noch nichts</span>. Wie viele Personen musst du mindestens befragen?',
+    schritte: kumuliert([
+      { f: T`$\htmlData{link=dp}{\Delta p} = z\cdot\sqrt{\dfrac{\htmlData{link=p}{p}\,(1-\htmlData{link=p}{p})}{n}} \;\Rightarrow\; n \ge \dfrac{z^2\cdot \htmlData{link=p}{p}\,(1-\htmlData{link=p}{p})}{(\Delta p)^2}$`,
+        warum: "Schätzfehler-Formel nach n auflösen: quadrieren, mit n multiplizieren, durch (Δp)² teilen." },
+      { f: T`$\htmlData{link=niv}{z = 1.96}$`,
+        warum: "Für die Planung immer z, nie t (Bem. 5.31)." },
+      { f: T`$\htmlData{link=p0}{p = 0.5} \Rightarrow p\,(1-p) = 0.25$`,
+        warum: "p ist unbekannt. Mit 0.5 rechnest du den ungünstigsten Fall, dann reicht n auf jeden Fall (Bem. 5.32)." },
+      { f: T`$n \ge \dfrac{1.96^2\cdot 0.25}{\htmlData{link=dp}{0.03}^2} = 1067.11$`,
+        warum: "Einsetzen. Schätzfehler als Dezimalzahl: 3 Prozentpunkte sind 0.03." },
+      { f: T`$n = 1068$`,
+        warum: "Immer aufrunden, sonst wird der Schätzfehler knapp überschritten. TI: solve(0.03 = 1.96·√(0.25/n), n)." }
+    ])
+  });
+
+  /* ===================== Simulator ===================== */
+  (function simulator() {
+    const MU = 100, ZEILEN = 40;
+    const svg = document.getElementById("t15-sim-svg");
+    const NS = "http://www.w3.org/2000/svg";
+    const rn = document.getElementById("t15-sim-n"), rs = document.getElementById("t15-sim-s"), ra = document.getElementById("t15-sim-a");
+    const on = document.getElementById("t15-sim-n-wert"), os = document.getElementById("t15-sim-s-wert"), oa = document.getElementById("t15-sim-a-wert");
+    const formel = document.getElementById("t15-sim-formel");
+    const zaehler = document.getElementById("t15-sim-zaehler");
+    const letzte = document.getElementById("t15-sim-letzte");
+    const info = document.getElementById("t15-sim-info");
+    const modusKnoepfe = Array.from(document.querySelectorAll("#t15-sim-modus .btn"));
+    let modus = "z", liste = [], gezogen = 0, treffer = 0, zuletzt = null;
+
+    function el(tag, attr, text) {
+      const e = document.createElementNS(NS, tag);
+      Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+    // Feste Ebenen: Hintergrund (Achse, μ, Breite) und Intervalle
+    const ebeneFest = el("g", {}), ebeneIv = el("g", {});
+    svg.append(ebeneFest, ebeneIv);
+    const X0 = 10, X1 = 310, YTOP = 38, DY = 5.1, YACHSE = 246;
+
+    function normal() {
+      let u = 0, v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+    function einstellung() { return { n: Number(rn.value), sig: Number(rs.value), niv: Number(ra.value) }; }
+    function quantil(e) { return modus === "t" ? invT(1 - (1 - e.niv) / 2, e.n - 1) : invNorm(1 - (1 - e.niv) / 2); }
+    function xPos(w, sig) {
+      const R = 3 * sig;
+      return Math.max(X0, Math.min(X1, (X0 + X1) / 2 + (w - MU) / R * (X1 - X0) / 2));
+    }
+
+    function zeichneFest() {
+      const e = einstellung(), q = quantil(e), d = q * e.sig / Math.sqrt(e.n);
+      ebeneFest.textContent = "";
+      const xm = xPos(MU, e.sig);
+      ebeneFest.appendChild(el("rect", { class: "t15-soll", x: xPos(MU - d, e.sig), y: 16, width: Math.max(1, xPos(MU + d, e.sig) - xPos(MU - d, e.sig)), height: 10, rx: 3 }));
+      ebeneFest.appendChild(el("text", { x: xm, y: 11, "text-anchor": "middle" }, "2Δ = " + fz(2 * d, 2) + (modus === "z" ? "" : " (bei s = σ)")));
+      ebeneFest.appendChild(el("line", { class: "achse", x1: X0, y1: YACHSE, x2: X1, y2: YACHSE }));
+      ebeneFest.appendChild(el("line", { class: "t15-mu", x1: xm, y1: 30, x2: xm, y2: YACHSE + 4 }));
+      [[MU - 3 * e.sig, "start"], [MU, "middle"], [MU + 3 * e.sig, "end"]].forEach(([w, anker]) => {
+        ebeneFest.appendChild(el("text", { x: xPos(w, e.sig), y: YACHSE + 16, "text-anchor": anker }, w === MU ? "μ = 100" : String(w)));
+      });
+    }
+    function zeichneIntervalle() {
+      const sig = einstellung().sig;
+      ebeneIv.textContent = "";
+      liste.forEach((iv, i) => {
+        const y = YTOP + i * DY;
+        ebeneIv.appendChild(el("line", { class: iv.hit ? "t15-treffer" : "t15-daneben", x1: xPos(iv.A, sig), y1: y, x2: xPos(iv.B, sig), y2: y }));
+        ebeneIv.appendChild(el("circle", { class: "t15-mitte", cx: xPos(iv.xq, sig), cy: y, r: 1.4 }));
+      });
+    }
+    function anzeigen() {
+      const e = einstellung(), q = quantil(e);
+      const quote = gezogen ? (100 * treffer / gezogen) : NaN;
+      zaehler.innerHTML =
+        '<div class="t15-zahl"><b>' + gezogen + "</b><span>Intervalle gezogen</span></div>" +
+        '<div class="t15-zahl"><b>' + treffer + "</b><span>enthalten μ</span></div>" +
+        '<div class="t15-zahl"><b>' + (gezogen ? L.zahlText(quote, 1) + " %" : "–") + "</b><span>Trefferquote</span></div>" +
+        '<div class="t15-zahl"><b>' + L.zahlText(100 * e.niv, 0) + " %</b><span>Soll: 1 − α</span></div>";
+      if (zuletzt) {
+        letzte.textContent = "Letzte Stichprobe: x̄ = " + L.zahlText(zuletzt.xq, 2) + ", s = " + L.zahlText(zuletzt.s, 2) +
+          " → Intervall [" + L.zahlText(zuletzt.A, 2) + "; " + L.zahlText(zuletzt.B, 2) + "] " + (zuletzt.hit ? "✓ enthält μ = 100" : "✗ verfehlt μ = 100");
+      } else {
+        letzte.textContent = "Noch keine Stichprobe gezogen.";
+      }
+      const qName = modus === "t" ? T`t_{` + (e.n - 1) + "}" : "z";
+      const streu = modus === "z" ? String(e.sig) : "s";
+      formel.innerHTML = T`$\Delta = ` + qName + T`\cdot\dfrac{` + (modus === "z" ? T`\sigma` : "s") + T`}{\sqrt{n}} = ` + fz(q) + T`\cdot\dfrac{` + streu + T`}{\sqrt{` + e.n + "}}" +
+        (modus === "z" ? " = " + fz(q * e.sig / Math.sqrt(e.n)) : "") + "$";
+      L.formeln(formel);
+      const niv = L.zahlText(100 * e.niv, 0) + " %";
+      if (modus === "z") {
+        info.textContent = "σ ist bekannt. Alle Intervalle sind gleich breit, nur die Mitte x̄ springt von Stichprobe zu Stichprobe. Auf lange Sicht enthalten etwa " + niv + " der Intervalle μ.";
+      } else if (modus === "t") {
+        info.textContent = "σ wird durch s geschätzt. Weil s mitschwankt, ist jedes Intervall anders breit. Der grössere t-Wert gleicht diese zusätzliche Unsicherheit aus: Die Trefferquote bleibt bei etwa " + niv + ".";
+      } else {
+        info.textContent = "Falle: s eingesetzt, aber mit z gerechnet. Die Intervalle sind im Mittel zu schmal. Bei kleinem n liegt die Trefferquote deutlich unter " + niv + ". Stell n auf 5 und zieh 100 Stichproben.";
+      }
+    }
+    function zuruecksetzen() {
+      liste = []; gezogen = 0; treffer = 0; zuletzt = null;
+      zeichneFest(); zeichneIntervalle(); anzeigen();
+    }
+    function ziehen(anzahl) {
+      const e = einstellung(), q = quantil(e);
+      for (let k = 0; k < anzahl; k++) {
+        const xs = [];
+        for (let i = 0; i < e.n; i++) xs.push(MU + e.sig * normal());
+        const xq = mittel(xs), s = Math.sqrt(qsumme(xs) / (e.n - 1));
+        const d = q * (modus === "z" ? e.sig : s) / Math.sqrt(e.n);
+        const iv = { xq: xq, s: s, A: xq - d, B: xq + d };
+        iv.hit = iv.A <= MU && MU <= iv.B;
+        gezogen++; if (iv.hit) treffer++;
+        liste.unshift(iv);
+        if (liste.length > ZEILEN) liste.pop();
+        zuletzt = iv;
+      }
+      zeichneIntervalle(); anzeigen();
+    }
+    [[rn, on, 0], [rs, os, 0], [ra, oa, 2]].forEach(([r, o, st]) => {
+      r.addEventListener("input", () => { o.textContent = Number(r.value).toFixed(st); zuruecksetzen(); });
+    });
+    modusKnoepfe.forEach((b) => b.addEventListener("click", () => {
+      modus = b.dataset.modus;
+      modusKnoepfe.forEach((x) => { const an = x === b; x.classList.toggle("on", an); x.setAttribute("aria-pressed", an ? "true" : "false"); });
+      zuruecksetzen();
+    }));
+    document.getElementById("t15-sim-1").addEventListener("click", () => ziehen(1));
+    document.getElementById("t15-sim-20").addEventListener("click", () => ziehen(20));
+    document.getElementById("t15-sim-100").addEventListener("click", () => ziehen(100));
+    document.getElementById("t15-sim-reset").addEventListener("click", zuruecksetzen);
+    zuruecksetzen();
+  })();
+
+  /* ===================== Rechner mit Lösungsweg ===================== */
+  (function rechner() {
+    const $ = (id) => document.getElementById(id);
+    const form = $("t15-r-form"), fb = $("t15-r-fb"), weg = $("t15-r-weg");
+    let art = "mittel", einM = "liste", einD = "liste";
+
+    function gruppe(selektor, rueckruf) {
+      const knoepfe = Array.from(document.querySelectorAll(selektor + " .btn"));
+      knoepfe.forEach((b) => b.addEventListener("click", () => {
+        knoepfe.forEach((x) => { const an = x === b; x.classList.toggle("on", an); x.setAttribute("aria-pressed", an ? "true" : "false"); });
+        rueckruf(b);
+      }));
+    }
+    function sichtbarkeit() {
+      $("t15-r-mittel").hidden = art !== "mittel";
+      $("t15-r-anteil").hidden = art !== "anteil";
+      $("t15-r-diff").hidden = art !== "diff";
+      $("t15-r-nbox").hidden = art === "diff";
+      $("t15-r-m-listebox").hidden = einM !== "liste";
+      $("t15-r-m-kennbox").hidden = einM !== "kenn";
+      $("t15-r-m-sigbox").hidden = !$("t15-r-m-sigbek").checked;
+      $("t15-r-d-listebox").hidden = einD !== "liste";
+      $("t15-r-d-kennbox").hidden = einD !== "kenn";
+    }
+    gruppe("#t15-r-art", (b) => { art = b.dataset.art; sichtbarkeit(); leeren(); });
+    gruppe("#t15-r-m-ein", (b) => { einM = b.dataset.ein; sichtbarkeit(); });
+    gruppe("#t15-r-d-ein", (b) => { einD = b.dataset.ein; sichtbarkeit(); });
+    $("t15-r-m-sigbek").addEventListener("change", sichtbarkeit);
+
+    function leeren() { weg.innerHTML = ""; fb.className = "rueckmeldung leer"; fb.textContent = "Drück auf «Lösungsweg zeigen» oder lade ein Beispiel."; }
+    function fehler(text) { weg.innerHTML = ""; fb.className = "rueckmeldung bad"; fb.textContent = "✗ " + text; }
+    function zahl(id) { return L.zahlLesen($(id).value); }
+    function listeLesen(id) {
+      const t = $(id).value.trim();
+      if (!t) return null;
+      const werte = t.split(/[\s;]+/).filter(Boolean).map(L.zahlLesen);
+      return werte.some((w) => !Number.isFinite(w)) ? NaN : werte;
+    }
+    function niveauLesen() {
+      let v = zahl("t15-r-niv");
+      if (v > 1 && v < 100) v = v / 100;
+      return v > 0 && v < 1 ? v : NaN;
+    }
+    function NLesen() {
+      const t = $("t15-r-N").value.trim();
+      if (!t) return null;
+      const v = L.zahlLesen(t);
+      return Number.isInteger(v) && v > 0 ? v : NaN;
+    }
+    function schritt(titel, html) { return '<li><span class="t15-wt">' + titel + "</span>" + html + "</li>"; }
+    // Inline-Formel mit \displaystyle: KaTeX darf nach «=» und «+» umbrechen, das passt auch auf schmale Schirme
+    function tafel(tex) { return '<div class="board">' + T`$\displaystyle ` + tex + "$</div>"; }
+    function ausgeben(teile) {
+      fb.className = "rueckmeldung ok";
+      fb.textContent = "✓ Lösungsweg berechnet.";
+      weg.innerHTML = teile.join("");
+      L.formeln(weg);
+    }
+    function niveauSchritt(niv) {
+      return schritt("Schritt 1 · Vertrauensniveau", "<p>" + T`$1-\alpha = ` + fz(niv) + T`$, also $\alpha = ` + fz(1 - niv) + T`$ und $1-\tfrac{\alpha}{2} = ` + fz(1 - (1 - niv) / 2) + "$.</p>");
+    }
+    // Korrekturfaktor prüfen; liefert Faktor und Text
+    function korrektur(n, N) {
+      if (N === null) return { k: 1, html: "<p>N ist nicht angegeben: Die Grundgesamtheit gilt als sehr gross, kein Korrekturfaktor.</p>" };
+      const q = n / N, k = Math.sqrt((N - n) / (N - 1));
+      if (q > 0.05) {
+        return { k: k, html: "<p>" + T`$\dfrac{n}{N} = \dfrac{` + n + "}{" + N + "} = " + fz(q) + T` > 0.05$` + " → Korrekturfaktor ist Pflicht (Satz 5.29):</p>" +
+          tafel(T`\sqrt{\frac{N-n}{N-1}} = \sqrt{\frac{` + (N - n) + "}{" + (N - 1) + "}} = " + fz(k)) };
+      }
+      return { k: 1, html: "<p>" + T`$\dfrac{n}{N} = ` + fz(q) + T` \le 0.05$` + " → kein Korrekturfaktor nötig. Einrechnen wäre laut Folie aber nicht falsch.</p>" };
+    }
+
+    function rechneMittel() {
+      const niv = niveauLesen();
+      if (!Number.isFinite(niv)) return fehler("Das Niveau 1 − α muss zwischen 0 und 1 liegen, zum Beispiel 0.95.");
+      const N = NLesen();
+      if (Number.isNaN(N)) return fehler("N muss eine ganze Zahl sein oder leer bleiben.");
+      let xq, s, n, daten = null;
+      if (einM === "liste") {
+        daten = listeLesen("t15-r-m-liste");
+        if (!daten || Number.isNaN(daten)) return fehler("Die Urliste enthält keine lesbaren Zahlen. Trenne die Werte mit Leerschlag oder Semikolon.");
+        if (daten.length < 2) return fehler("Für eine Standardabweichung braucht es mindestens zwei Werte.");
+        n = daten.length; xq = mittel(daten); s = Math.sqrt(qsumme(daten) / (n - 1));
+      } else {
+        xq = zahl("t15-r-m-xq"); s = zahl("t15-r-m-s"); n = zahl("t15-r-m-n");
+        // Bei bekanntem σ braucht es s nicht
+        if (![xq, n].every(Number.isFinite) || (!$("t15-r-m-sigbek").checked && !Number.isFinite(s))) {
+          return fehler($("t15-r-m-sigbek").checked ? "Bitte x̄ und n ausfüllen." : "Bitte x̄, s und n ausfüllen.");
+        }
+        if (!Number.isInteger(n) || n < 2) return fehler("n muss eine ganze Zahl ab 2 sein.");
+        if (s < 0) return fehler("s darf nicht negativ sein.");
+      }
+      if (N !== null && N < n) return fehler("N muss mindestens so gross sein wie n.");
+      const sigBek = $("t15-r-m-sigbek").checked;
+      let sig = NaN;
+      if (sigBek) {
+        sig = zahl("t15-r-m-sig");
+        if (!Number.isFinite(sig) || sig <= 0) return fehler("Bitte σ als positive Zahl eingeben oder das Häkchen entfernen.");
+      }
+      const p2 = 1 - (1 - niv) / 2;
+      const q = sigBek ? invNorm(p2) : invT(p2, n - 1);
+      const streu = sigBek ? sig : s;
+      const teile = [niveauSchritt(niv)];
+      if (sigBek) {
+        teile.push(schritt("Schritt 2 · Quantil", "<p>σ ist bekannt → Normalverteilung:</p>" + tafel(T`z = \text{invNorm}(` + fz(p2) + ") = " + fz(q)) +
+          (n <= 30 ? '<p class="hint">Ist X nicht normalverteilt und n ≤ 30, verlangt die Folientabelle auch bei bekanntem σ den Wert t mit n − 1 FG.</p>' : "")));
+      } else {
+        teile.push(schritt("Schritt 2 · Quantil", "<p>σ ist unbekannt und wird durch s geschätzt → t-Verteilung mit FG = n − 1 = " + (n - 1) + ":</p>" +
+          tafel(T`t_{` + (n - 1) + T`} = \operatorname{invt}(` + fz(p2) + ",\\ " + (n - 1) + ") = " + fz(q)) +
+          (n <= 30 ? '<p class="hint">Gilt bei n ≤ 30 nur ohne Ausreisser (Folie 27).</p>' : "")));
+      }
+      if (daten) {
+        const summe = daten.reduce((a, b) => a + b, 0);
+        teile.push(schritt("Schritt 3 · Kennzahlen aus der Urliste",
+          tafel(T`\bar x = \frac{\sum x_i}{n} = \frac{` + fz(summe) + "}{" + n + "} = " + fz(xq)) +
+          tafel(T`s = \sqrt{\frac{\sum (x_i-\bar x)^2}{n-1}} = \sqrt{\frac{` + fz(qsumme(daten)) + "}{" + (n - 1) + "}} = " + fz(s)) +
+          (sigBek ? "<p>s brauchst du hier nicht, weil σ bekannt ist.</p>" : "<p>Auf dem TI ist das sx, nicht σx.</p>")));
+      } else {
+        teile.push(schritt("Schritt 3 · Kennzahlen", "<p>" + T`$\bar x = ` + fz(xq) + (sigBek ? "" : T`,\ s = ` + fz(s)) + T`,\ n = ` + n + "$ sind gegeben.</p>"));
+      }
+      const kor = korrektur(n, N);
+      teile.push(schritt("Prüfen · Endliche Grundgesamtheit", kor.html));
+      const se = streu / Math.sqrt(n), d0 = q * se, d = d0 * kor.k, A = xq - d, B = xq + d;
+      const qTex = sigBek ? "z" : T`t_{` + (n - 1) + "}";
+      const sTex = sigBek ? T`\sigma` : "s";
+      const korTex = kor.k < 1 ? T`\cdot\sqrt{\frac{N-n}{N-1}}` : "";
+      const korZahl = kor.k < 1 ? T`\cdot ` + fz(kor.k) : "";
+      teile.push(schritt("Schritt 4 · Intervall",
+        tafel(T`\bar x \pm ` + qTex + T`\cdot\frac{` + sTex + T`}{\sqrt n}` + korTex) +
+        tafel(T`\Delta\mu = ` + fz(q) + T`\cdot\frac{` + fz(streu) + T`}{\sqrt{` + n + "}}" + korZahl + " = " + fz(d)) +
+        tafel(T`[\,` + fz(xq) + " - " + fz(d) + T`;\ ` + fz(xq) + " + " + fz(d) + T`\,] = [\,` + fz(A) + T`;\ ` + fz(B) + T`\,]`)));
+      teile.push(schritt("Deutung", "<p>«Mit " + L.zahlText(100 * niv, 2) + " % Wahrscheinlichkeit liegt der Mittelwert μ der Grundgesamtheit im Intervall [" + fz(A) + "; " + fz(B) + "].»</p>"));
+      teile.push(schritt("Taschenrechner-Kontrolle", "<p><span class=\"t15-ti\">menu</span> 6 · 6 · " + (sigBek ? "1 <span class=\"t15-ti\">zInterval</span>" : "2 <span class=\"t15-ti\">tInterval</span>") +
+        " mit «" + (daten ? "Data" : "Stats") + "» liefert [" + fz(xq - d0) + "; " + fz(xq + d0) + "]" +
+        (kor.k < 1 ? ". Das ist das Intervall <b>ohne</b> Korrekturfaktor, den rechnest du von Hand ein." : ".") + "</p>"));
+      ausgeben(teile);
+    }
+
+    function rechneAnteil() {
+      const niv = niveauLesen();
+      if (!Number.isFinite(niv)) return fehler("Das Niveau 1 − α muss zwischen 0 und 1 liegen, zum Beispiel 0.95.");
+      const N = NLesen();
+      if (Number.isNaN(N)) return fehler("N muss eine ganze Zahl sein oder leer bleiben.");
+      const k = zahl("t15-r-a-k"), n = zahl("t15-r-a-n");
+      if (!Number.isInteger(k) || !Number.isInteger(n) || n < 1 || k < 0 || k > n) return fehler("k und n müssen ganze Zahlen sein, mit 0 ≤ k ≤ n.");
+      if (N !== null && N < n) return fehler("N muss mindestens so gross sein wie n.");
+      const p = k / n, krit = n * p * (1 - p), p2 = 1 - (1 - niv) / 2, z = invNorm(p2), se = Math.sqrt(p * (1 - p) / n);
+      const teile = [niveauSchritt(niv)];
+      teile.push(schritt("Schritt 2 · Anteil in der Stichprobe", tafel(T`\bar p = \frac{k}{n} = \frac{` + k + "}{" + n + "} = " + fz(p))));
+      teile.push(schritt("Schritt 3 · Approximationskriterium", tafel("n\\cdot\\bar p\\,(1-\\bar p) = " + n + T`\cdot ` + fz(p) + T`\cdot ` + fz(1 - p) + " = " + fz(krit, 2) + (krit > 9 ? " > 9" : T` \le 9`)) +
+        (krit > 9 ? "<p>Erfüllt: Die Normalverteilung darf verwendet werden.</p>" : '<p class="rueckmeldung bad">✗ Nicht erfüllt. Mit der Normalverteilung zu rechnen ist nicht zulässig (Bem. 5.23). Die Rechnung unten dient nur zur Orientierung.</p>')));
+      teile.push(schritt("Schritt 4 · Quantil", tafel(T`z = \text{invNorm}(` + fz(p2) + ") = " + fz(z))));
+      const kor = korrektur(n, N);
+      teile.push(schritt("Prüfen · Endliche Grundgesamtheit", kor.html));
+      const d0 = z * se, d = d0 * kor.k, A = p - d, B = p + d;
+      teile.push(schritt("Schritt 5 · Intervall",
+        tafel(T`\bar p \pm z\cdot\sqrt{\frac{\bar p\,(1-\bar p)}{n}}` + (kor.k < 1 ? T`\cdot\sqrt{\frac{N-n}{N-1}}` : "")) +
+        tafel(T`\Delta p = ` + fz(z) + T`\cdot\sqrt{\frac{` + fz(p) + T`\cdot ` + fz(1 - p) + "}{" + n + "}}" + (kor.k < 1 ? T`\cdot ` + fz(kor.k) : "") + " = " + fz(d, 6)) +
+        tafel(T`[\,` + fz(p) + " - " + fz(d) + T`;\ ` + fz(p) + " + " + fz(d) + T`\,] = [\,` + fz(A) + T`;\ ` + fz(B) + T`\,]`)));
+      teile.push(schritt("Deutung", "<p>«Mit " + L.zahlText(100 * niv, 2) + " % Wahrscheinlichkeit liegt der Anteil p in der Grundgesamtheit zwischen " + L.zahlText(100 * A, 2) + " % und " + L.zahlText(100 * B, 2) + " %.»</p>"));
+      teile.push(schritt("Taschenrechner-Kontrolle", "<p><span class=\"t15-ti\">menu</span> 6 · 6 · 5 <span class=\"t15-ti\">1-PropZInt</span> mit x = " + k + ", n = " + n + " liefert [" + fz(p - d0) + "; " + fz(p + d0) + "]" +
+        (kor.k < 1 ? ", also ohne Korrekturfaktor." : ".") + "</p>"));
+      ausgeben(teile);
+    }
+
+    function rechneDiff() {
+      const niv = niveauLesen();
+      if (!Number.isFinite(niv)) return fehler("Das Niveau 1 − α muss zwischen 0 und 1 liegen, zum Beispiel 0.90.");
+      let x1, s1, n1, x2, s2, n2, listen = false;
+      if (einD === "liste") {
+        const a = listeLesen("t15-r-d-l1"), b = listeLesen("t15-r-d-l2");
+        if (!a || !b || Number.isNaN(a) || Number.isNaN(b)) return fehler("Beide Urlisten brauchen lesbare Zahlen, getrennt mit Leerschlag oder Semikolon.");
+        if (a.length < 2 || b.length < 2) return fehler("Jede Gruppe braucht mindestens zwei Werte.");
+        n1 = a.length; x1 = mittel(a); s1 = Math.sqrt(qsumme(a) / (n1 - 1));
+        n2 = b.length; x2 = mittel(b); s2 = Math.sqrt(qsumme(b) / (n2 - 1));
+        listen = true;
+      } else {
+        x1 = zahl("t15-r-d-x1"); s1 = zahl("t15-r-d-s1"); n1 = zahl("t15-r-d-n1");
+        x2 = zahl("t15-r-d-x2"); s2 = zahl("t15-r-d-s2"); n2 = zahl("t15-r-d-n2");
+        if (![x1, s1, n1, x2, s2, n2].every(Number.isFinite)) return fehler("Bitte alle sechs Kennzahlen ausfüllen.");
+        if (!Number.isInteger(n1) || !Number.isInteger(n2) || n1 < 2 || n2 < 2) return fehler("n₁ und n₂ müssen ganze Zahlen ab 2 sein.");
+      }
+      const fg = n1 + n2 - 2, p2 = 1 - (1 - niv) / 2, t = invT(p2, fg);
+      const sp2 = ((n1 - 1) * s1 * s1 + (n2 - 1) * s2 * s2) / fg, sp = Math.sqrt(sp2), w = Math.sqrt(1 / n1 + 1 / n2);
+      const d = x1 - x2, h = t * sp * w, A = d - h, B = d + h;
+      const teile = [niveauSchritt(niv)];
+      teile.push(schritt("Schritt 2 · Freiheitsgrade", "<p>Verschiedene Personen in den Gruppen → unabhängige Stichproben.</p>" + tafel(T`\text{FG} = n_1 + n_2 - 2 = ` + n1 + " + " + n2 + " - 2 = " + fg)));
+      teile.push(schritt("Schritt 3 · Quantil", tafel(T`t_{` + fg + T`} = \operatorname{invt}(` + fz(p2) + ",\\ " + fg + ") = " + fz(t))));
+      teile.push(schritt("Schritt 4 · Kennzahlen",
+        (listen ? "<p>Aus den Urlisten (s mit n − 1):</p>" : "") +
+        tafel(T`\bar x_1 = ` + fz(x1) + T`,\ s_1 = ` + fz(s1) + T`,\ n_1 = ` + n1 + T`\qquad \bar x_2 = ` + fz(x2) + T`,\ s_2 = ` + fz(s2) + T`,\ n_2 = ` + n2) +
+        tafel(T`\bar d = \bar x_1 - \bar x_2 = ` + fz(d)) +
+        tafel(T`\hat\sigma_D^2 = \frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1+n_2-2}`) +
+        tafel(T`(n_1-1)s_1^2 + (n_2-1)s_2^2 = ` + (n1 - 1) + T`\cdot ` + fz(s1) + "^2 + " + (n2 - 1) + T`\cdot ` + fz(s2) + "^2 = " + fz(sp2 * fg)) +
+        tafel(T`\hat\sigma_D^2 = \frac{` + fz(sp2 * fg) + "}{" + fg + "} = " + fz(sp2)) +
+        tafel(T`\hat\sigma_D = \sqrt{` + fz(sp2) + "} = " + fz(sp))));
+      teile.push(schritt("Schritt 5 · Intervall",
+        tafel(T`\Delta = t\cdot\hat\sigma_D\cdot\sqrt{\tfrac{1}{n_1}+\tfrac{1}{n_2}} = ` + fz(t) + T`\cdot ` + fz(sp) + T`\cdot ` + fz(w) + " = " + fz(h)) +
+        tafel(T`\mu_1-\mu_2 \in [\,` + fz(d) + " - " + fz(h) + T`;\ ` + fz(d) + " + " + fz(h) + T`\,] = [\,` + fz(A) + T`;\ ` + fz(B) + T`\,]`)));
+      const nullDrin = A <= 0 && 0 <= B;
+      teile.push(schritt("Deutung (Bem. 5.18)", nullDrin
+        ? "<p>Die 0 liegt im Intervall. Der Unterschied der Stichproben kann Zufall sein: <b>kein signifikanter Unterschied</b>.</p>"
+        : "<p>Die 0 liegt nicht im Intervall: <b>signifikanter Unterschied</b>. Gruppe " + (A > 0 ? "1" : "2") + " hat im Mittel den grösseren Wert.</p>"));
+      teile.push(schritt("Taschenrechner-Kontrolle", "<p><span class=\"t15-ti\">menu</span> 6 · 6 · 4 <span class=\"t15-ti\">2-SampTInt</span> mit «" + (listen ? "Data" : "Stats") + "» und «Pooled: Ja» liefert [" + fz(A) + "; " + fz(B) + "].</p>"));
+      ausgeben(teile);
+    }
+
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      if (art === "mittel") rechneMittel();
+      else if (art === "anteil") rechneAnteil();
+      else rechneDiff();
+    });
+    $("t15-r-bsp").addEventListener("click", () => {
+      if (art === "mittel") {
+        einM = "liste";
+        document.querySelectorAll("#t15-r-m-ein .btn").forEach((x) => { const an = x.dataset.ein === "liste"; x.classList.toggle("on", an); x.setAttribute("aria-pressed", an ? "true" : "false"); });
+        $("t15-r-m-liste").value = "4 5 3 5 6 4"; $("t15-r-m-sigbek").checked = false; $("t15-r-niv").value = "0.95"; $("t15-r-N").value = "80";
+        sichtbarkeit(); rechneMittel();
+      } else if (art === "anteil") {
+        $("t15-r-a-k").value = "222"; $("t15-r-a-n").value = "600"; $("t15-r-niv").value = "0.95"; $("t15-r-N").value = "";
+        rechneAnteil();
+      } else {
+        einD = "liste";
+        document.querySelectorAll("#t15-r-d-ein .btn").forEach((x) => { const an = x.dataset.ein === "liste"; x.classList.toggle("on", an); x.setAttribute("aria-pressed", an ? "true" : "false"); });
+        $("t15-r-d-l1").value = "4.5 5.5 6.0 5.0 5.5 4.5 5.0"; $("t15-r-d-l2").value = "4.0 3.5 5.0 4.5 4.0"; $("t15-r-niv").value = "0.90";
+        sichtbarkeit(); rechneDiff();
+      }
+    });
+    sichtbarkeit();
+    rechneMittel();
+  })();
+
+  /* ===================== Übungen ===================== */
+  L.auswahl("#ue-1", {
+    frage: "<b>Aufgabe 1 · z oder t?</b> Ein Callcenter misst bei 50 zufällig gewählten Anrufen die Gesprächsdauer. Die Standardabweichung aller Gespräche kennt niemand. Die Dauer ist nicht normalverteilt, hat aber keine Ausreisser. Welches Quantil gehört in ein 95 %-Konfidenzintervall?",
+    optionen: [T`$z = \text{invNorm}(0.975)$, weil $n > 30$`, T`$t = \operatorname{invt}(0.975,\ 49)$`, T`$t = \operatorname{invt}(0.975,\ 50)$`, T`$t = \operatorname{invt}(0.95,\ 49)$`],
+    richtig: 1,
+    erklaerung: T`σ ist unbekannt, also schätzt du mit $s$. Die Folientabelle verlangt dann $t_{n-1}$, auch für $n > 30$: $\operatorname{invt}(0.975,\ 49) = 2.0096$. Das Quantil gehört zu $1-\tfrac{\alpha}{2} = 0.975$, die Freiheitsgrade sind $n - 1 = 49$.`
+  });
+
+  L.zahlAufgabe("#ue-2", {
+    titel: "Aufgabe 2 · z-Intervall",
+    frage: "Eine Maschine füllt Müesli ab. Das Füllgewicht ist normalverteilt mit σ = 12 g (Herstellerangabe). 25 zufällig gewählte Packungen wiegen im Mittel 497.6 g. Berechne die <b>untere Grenze A</b> des 99 %-Konfidenzintervalls für das mittlere Füllgewicht. Auf zwei Nachkommastellen.",
+    antwort: 491.418, toleranz: 0.006, einheit: "g", anzeige: "A ≈ 491.42 g",
+    hinweise: [
+      "σ ist bekannt und das Gewicht normalverteilt: z-Wert.",
+      T`$z = \text{invNorm}(0.995)$, weil bei 99 % auf jeder Seite 0.5 % übrig bleiben.`,
+      T`$A = \bar x - z\cdot\dfrac{\sigma}{\sqrt n}$`
+    ],
+    loesungsweg: [
+      T`$1-\alpha = 0.99 \Rightarrow z = \text{invNorm}(0.995) = 2.5758$`,
+      T`$\dfrac{\sigma}{\sqrt n} = \dfrac{12}{\sqrt{25}} = 2.4$`,
+      T`$\Delta\mu = 2.5758\cdot 2.4 = 6.1819$`,
+      T`$[497.6 - 6.1819;\ 497.6 + 6.1819] = [491.4181;\ 503.7819]$, also $A \approx 491.42$ g. TI: zInterval mit σ = 12, x̄ = 497.6, n = 25, C Level 0.99 liefert mit vollen Stellen [491.4180; 503.7820].`
+    ]
+  });
+
+  L.zahlAufgabe("#ue-3", {
+    titel: "Aufgabe 3 · Anteil",
+    frage: "Von 450 zufällig befragten Studierenden nutzen 117 jede Woche ein KI-Werkzeug zum Lernen. Berechne die <b>obere Grenze B</b> des 90 %-Konfidenzintervalls für den Anteil aller Studierenden. Auf vier Nachkommastellen (als Dezimalzahl).",
+    antwort: 0.29401, toleranz: 0.0005, anzeige: "B ≈ 0.2940",
+    hinweise: [
+      T`Zuerst $\bar p = k/n$ und das Kriterium $n\,\bar p\,(1-\bar p) > 9$ prüfen.`,
+      T`$z = \text{invNorm}(0.95) = 1.6449$`
+    ],
+    loesungsweg: [
+      T`$\bar p = \dfrac{117}{450} = 0.26$`,
+      T`$450\cdot 0.26\cdot 0.74 = 86.58 > 9$: Normalverteilung zulässig.`,
+      T`$\Delta p = 1.6449\cdot\sqrt{\dfrac{0.26\cdot 0.74}{450}} = 1.6449\cdot 0.020677 = 0.0340$`,
+      T`$[0.26 - 0.0340;\ 0.26 + 0.0340] = [0.2260;\ 0.2940]$. TI: 1-PropZInt mit x = 117, n = 450, C Level 0.9.`
+    ]
+  });
+
+  L.schrittAufgabe("#ue-4", {
+    titel: "Aufgabe 4 · Handrechnung mit kleiner Grundgesamtheit (Prüfungsstil)",
+    aufgabe: "<p><b>Im Stil von Aufgabe 7a der exemplarischen Modulschlussprüfung.</b> Ein Coworking-Space hat 54 Mitglieder. Sechs zufällig ausgewählte Mitglieder bewerten das WLAN auf einer Skala von 1 (sehr schlecht) bis 6 (sehr gut): 3, 5, 4, 4, 2, 5.</p><p>Berechne das Konfidenzintervall für die mittlere Bewertung aller Mitglieder mit \\(1-\\alpha = 0.90\\). Schreib den vollständigen Lösungsweg von Hand auf.</p>",
+    schritte: [
+      { html: T`$N = 54,\ \ n = 6,\ \ 1-\alpha = 0.90 \Rightarrow 1-\tfrac{\alpha}{2} = 0.95$`,
+        warum: "Daten ordnen: Grundgesamtheit, Stichprobe, Niveau." },
+      { html: T`$\bar x = \dfrac{3+5+4+4+2+5}{6} = \dfrac{23}{6} = 3.8333$`,
+        warum: "Mittelwert der Urliste." },
+      { html: T`$s = \sqrt{\dfrac{\sum (x_i-\bar x)^2}{n-1}} = \sqrt{\dfrac{6.8333}{5}} = 1.1690$`,
+        warum: "Standardabweichung mit n − 1. Auf dem TI: sx." },
+      { html: T`$\sigma$ unbekannt $\Rightarrow t_5 = \operatorname{invt}(0.95,\ 5) = 2.0150$`,
+        warum: "σ wird geschätzt, also t mit FG = n − 1 = 5. Quantil zu 0.95, nicht zu 0.90." },
+      { html: T`$\dfrac{n}{N} = \dfrac{6}{54} = 0.1111 > 0.05 \Rightarrow \sqrt{\dfrac{N-n}{N-1}} = \sqrt{\dfrac{48}{53}} = 0.9517$`,
+        warum: "Die Stichprobe ist mehr als 5 % der Grundgesamtheit: Korrekturfaktor einrechnen." },
+      { html: T`$\Delta\mu = 2.0150\cdot\dfrac{1.1690}{\sqrt 6}\cdot 0.9517 = 0.9152$`,
+        warum: "Formel zuerst hinschreiben, dann einsetzen: Quantil mal s/√n mal Korrekturfaktor." },
+      { html: T`$\mu \in [3.8333 - 0.9152;\ 3.8333 + 0.9152] = [2.9181;\ 4.7485]$`,
+        warum: "Deutung: Mit 90 % Wahrscheinlichkeit liegt die mittlere WLAN-Bewertung aller 54 Mitglieder zwischen 2.92 und 4.75. Ohne Korrekturfaktor (TI tInterval) wäre es [2.8716; 4.7950]." }
+    ]
+  });
+
+  L.schrittAufgabe("#ue-5", {
+    titel: "Aufgabe 5 · Zwei Gruppen mit dem Taschenrechner (Prüfungsstil)",
+    aufgabe: "<p><b>Im Stil von Aufgabe 7b der exemplarischen Modulschlussprüfung.</b> In einem Pretest bewerten Kundinnen und Kunden zweier Hotline-Standorte die Freundlichkeit (Note 1 bis 6). Standort Nord: 4.5, 5.0, 4.0, 5.5, 4.5, 5.0. Standort Süd: 4.0, 4.5, 3.5, 5.0, 4.5.</p><p>Ist der Unterschied zufällig, oder liegt ein signifikanter Unterschied vor? Irrtumswahrscheinlichkeit 10 %. Gib das Verfahren, das Ergebnis auf vier Nachkommastellen und den Entscheid in Worten an.</p>",
+    schritte: [
+      { html: "Verfahren: Konfidenzintervall für $\\mu_1-\\mu_2$, unabhängige Stichproben, t-Verteilung, gepoolt. TI: 6 · 6 · 4 <span class=\"t15-ti\">2-SampTInt</span>, «Data», Pooled: Ja, C Level 0.9.",
+        warum: "Verschiedene Kunden an den beiden Standorten: unabhängig. σ unbekannt: t. Das Skript poolt die Varianzen." },
+      { html: T`$\bar x_1 = 4.75,\ s_1 = 0.5244,\ n_1 = 6;\ \ \bar x_2 = 4.3,\ s_2 = 0.5701,\ n_2 = 5$`,
+        warum: "Diese Kennzahlen zeigt der Taschenrechner mit an. Gut zur Kontrolle der Eingabe." },
+      { html: T`$\text{FG} = 9,\ \ t_9 = \operatorname{invt}(0.95,\ 9) = 1.8331,\ \ \hat\sigma_D = 0.5452$`,
+        warum: "Von Hand: FG = 6 + 5 − 2, gepoolte Standardabweichung aus beiden Gruppen." },
+      { html: T`$0.45 \pm 1.8331\cdot 0.5452\cdot\sqrt{\tfrac16+\tfrac15} = [-0.1552;\ 1.0552]$`,
+        warum: "Ergebnis auf vier Nachkommastellen." },
+      { html: T`$0 \in [-0.1552;\ 1.0552]$ → kein signifikanter Unterschied`,
+        warum: "Entscheid: Die 0 liegt im Intervall. Der Unterschied der Mittelwerte (0.45) kann zufällig sein. Ein signifikanter Unterschied ist nicht nachgewiesen. Alternative: 2-SampTTest zweiseitig, p = 0.2060 > 0.10." }
+    ]
+  });
+
+  L.zahlAufgabe("#ue-6", {
+    titel: "Aufgabe 6 · abhängige Stichproben",
+    frage: "Acht Mitarbeitende messen ihre Tippgeschwindigkeit in Wörtern pro Minute vor und nach einem Kurs. Vorher: 52, 47, 60, 55, 49, 58, 51, 62. Nachher: 56, 50, 61, 60, 52, 63, 53, 64. Berechne die <b>untere Grenze</b> des 95 %-Konfidenzintervalls für die mittlere Zunahme (nachher − vorher). Auf vier Nachkommastellen.",
+    antwort: 1.9063, toleranz: 0.0006, anzeige: "A ≈ 1.9063",
+    hinweise: [
+      "Dieselben Personen zweimal gemessen: zuerst die Differenzen nachher − vorher bilden.",
+      T`Danach ein t-Intervall mit FG $= 8 - 1 = 7$: $t_7 = \operatorname{invt}(0.975,\ 7) = 2.3646$.`
+    ],
+    loesungsweg: [
+      T`$d_i$: 4, 3, 1, 5, 3, 5, 2, 2`,
+      T`$\bar d = \dfrac{25}{8} = 3.125,\ \ s_d = \sqrt{\dfrac{14.875}{7}} = 1.4577$`,
+      T`$\Delta = 2.3646\cdot\dfrac{1.4577}{\sqrt 8} = 1.2187$`,
+      T`$[3.125 - 1.2187;\ 3.125 + 1.2187] = [1.9063;\ 4.3437]$. Die 0 liegt nicht drin: Der Kurs bringt eine signifikante Zunahme. TI: Differenzen als Liste, tInterval mit «Data».`
+    ]
+  });
+
+  L.zahlAufgabe("#ue-7", {
+    titel: "Aufgabe 7 · notwendiger Stichprobenumfang",
+    frage: "Du willst die mittlere Pendeldistanz von Angestellten schätzen. Eine Pilotstudie ergab s = 12 km. Der Schätzfehler soll bei 95 % Vertrauensniveau höchstens 1.5 km betragen. Wie viele Personen musst du mindestens befragen?",
+    antwort: 246, einheit: "Personen", anzeige: "n = 246",
+    hinweise: [
+      T`$n \ge \dfrac{z^2\cdot\sigma^2}{(\Delta\mu)^2}$ mit $z = 1.96$. Für σ setzt du die Schätzung aus der Pilotstudie ein.`,
+      "Das Ergebnis ist keine ganze Zahl: Was musst du tun?"
+    ],
+    loesungsweg: [
+      T`$n \ge \dfrac{1.96^2\cdot 12^2}{1.5^2} = \dfrac{3.8416\cdot 144}{2.25} = 245.86$`,
+      "Immer aufrunden: n = 246. Mit 245 Personen wäre der Schätzfehler knapp grösser als 1.5 km.",
+      "TI-Kontrolle: solve(1.5 = 1.96·12/√(n), n) liefert n = 245.86."
+    ]
+  });
+
+  L.wahrFalsch("#ue-8", {
+    titel: "Aufgabe 8 · wahr oder falsch?",
+    aussagen: [
+      { html: "Ein 99 %-Konfidenzintervall ist bei denselben Daten breiter als ein 95 %-Konfidenzintervall.", wahr: true,
+        erklaerung: "Mehr Sicherheit braucht ein grösseres Quantil (2.5758 statt 1.96), also ein breiteres Netz." },
+      { html: T`Ist $\sigma$ unbekannt und $n = 200$, verlangt die Folientabelle die t-Verteilung.`, wahr: true,
+        erklaerung: "Bei geschätztem σ gilt laut Folie immer t mit n − 1 FG. Der Wert liegt bei n = 200 aber sehr nahe bei z." },
+      { html: T`Liegt die 0 im Konfidenzintervall für $\mu_1-\mu_2$, ist bewiesen, dass $\mu_1 = \mu_2$.`, wahr: false,
+        erklaerung: "Es ist nur kein Unterschied nachgewiesen. Gleichheit beweisen kann ein Intervall nicht." },
+      { html: T`Ein Intervall für einen Anteil darfst du mit der Normalverteilung rechnen, wenn $n\,\bar p\,(1-\bar p) > 9$.`, wahr: true,
+        erklaerung: "Das ist das Approximationskriterium aus Satz 5.21." },
+      { html: T`Der Korrekturfaktor $\sqrt{\tfrac{N-n}{N-1}}$ macht das Intervall breiter.`, wahr: false,
+        erklaerung: "Der Faktor ist kleiner als 1. Er macht das Intervall schmaler, weil du einen grossen Teil der Grundgesamtheit kennst." },
+      { html: "Der Befehl tInterval auf dem TI-Nspire rechnet den Korrekturfaktor für endliche Grundgesamtheiten automatisch ein.", wahr: false,
+        erklaerung: "Der Taschenrechner kennt N nicht. Den Faktor multiplizierst du von Hand an den Schätzfehler." }
+    ]
+  });
+
+  L.zahlAufgabe("#ue-9", {
+    titel: "Aufgabe 9 · rückwärts gedacht",
+    frage: "Ein Bericht nennt für die mittlere Wartezeit an einer Hotline das Konfidenzintervall [62.4; 65.6] Sekunden. Bekannt sind σ = 8 s und n = 64. Zu welchem Vertrauensniveau 1 − α gehört dieses Intervall? Auf vier Nachkommastellen.",
+    antwort: 0.89040, toleranz: 0.0005, anzeige: "1 − α ≈ 0.8904",
+    hinweise: [
+      "Die halbe Intervalllänge ist der Schätzfehler Δμ.",
+      T`Aus $\Delta\mu = z\cdot\dfrac{\sigma}{\sqrt n}$ folgt $z$. Dann ist $1-\alpha$ die Fläche zwischen $-z$ und $z$.`
+    ],
+    loesungsweg: [
+      T`$\Delta\mu = \dfrac{65.6 - 62.4}{2} = 1.6$`,
+      T`$z\cdot\dfrac{8}{\sqrt{64}} = 1.6 \Rightarrow z = 1.6$`,
+      T`TI: normCdf(−1.6, 1.6, 0, 1) liefert $1-\alpha = 0.8904$, also rund ein 89 %-Intervall.`
+    ]
+  });
+
+  L.zahlAufgabe("#ue-10", {
+    titel: "Aufgabe 10 · Was 90 % wirklich heisst",
+    frage: "Vier Marktforschungsteams ziehen unabhängig voneinander je eine eigene Stichprobe und berechnen je ein 90 %-Konfidenzintervall für dieselbe mittlere Ausgabe μ. Wie gross ist die Wahrscheinlichkeit, dass <b>mindestens eines</b> der vier Intervalle μ nicht enthält? Auf vier Nachkommastellen. (Im Stil von Übung 5b der Zusatzaufgaben im Lernblock.)",
+    antwort: 0.3439, toleranz: 0.0005, anzeige: "1 − 0.9⁴ = 0.3439",
+    hinweise: [
+      "Das Niveau 0.90 ist die Trefferquote des Verfahrens: Jedes Intervall enthält μ mit Wahrscheinlichkeit 0.9.",
+      "«Mindestens eines verfehlt» ist das Gegenereignis von «alle vier treffen»."
+    ],
+    loesungsweg: [
+      T`$P(\text{ein Intervall trifft}) = 1-\alpha = 0.9$`,
+      T`$P(\text{alle vier treffen}) = 0.9^4 = 0.6561$, weil die Stichproben unabhängig sind.`,
+      T`$P(\text{mindestens eines verfehlt}) = 1 - 0.6561 = 0.3439$`,
+      "Gut ein Drittel: Auch ein sauber gerechnetes 90 %-Intervall liegt jedes zehnte Mal daneben. TI-Kontrolle: binomCdf(4, 0.1, 1, 4) = 0.3439."
+    ]
+  });
+
+  /* ===================== Lösungsfilm ===================== */
+  // Formelbereich: mehrere kurze Zeilen; neue Teile mit NW markieren
+  const F = (zeilen) => '<div class="t15-film-f">' + zeilen.map((z) => "<div>" + z + "</div>").join("") + "</div>";
+  const gA = T`$N = 80,\ n = 6$`;
+  const gD = T`$x_i:\ 4,\ 5,\ 3,\ 5,\ 6,\ 4$`;
+  const gNiv = T`$1-\alpha = 0.95,\ \tfrac{\alpha}{2} = 0.025$`;
+  const gT = T`$t_5 = \operatorname{invt}(0.975,\ 5) = 2.5706$`;
+  const gX = T`$\bar x = 4.5$`;
+  const gS = T`$s = 1.0488$`;
+  const gK = T`$\tfrac{n}{N} = 0.075 > 0.05,\ \ \sqrt{\tfrac{74}{79}} = 0.9678$`;
+  L.film("#film-1", {
+    phasen: ["1 · Daten", "2 · Niveau und Quantil", "3 · Kennzahlen", "4 · Korrektur", "5 · Intervall", "6 · Teil b"],
+    texte: [
+      'a) Ein Velokurier hat <span data-ph="N">80 Geschäftskunden</span>. <span data-ph="n">Sechs davon</span> bewerten die Pünktlichkeit auf einer Skala von 1 bis 6: <span data-ph="daten">4, 5, 3, 5, 6, 4</span>. Berechne das <span data-ph="niv">95 %-Konfidenzintervall</span> für die <span data-ph="mu">mittlere Bewertung aller Geschäftskunden</span>. Vollständiger Lösungsweg von Hand.',
+      'b) Pretest in zwei Filialen, gleiche Skala. <span data-ph="zh">Zürich: 4.5, 5.5, 6.0, 5.0, 5.5, 4.5, 5.0</span>. <span data-ph="wt">Winterthur: 4.0, 3.5, 5.0, 4.5, 4.0</span>. Ist der Unterschied zufällig oder <span data-ph="sig">signifikant</span>? Irrtumswahrscheinlichkeit <span data-ph="alpha">10 %</span>, mit dem Taschenrechner.'
+    ],
+    woerterbuch: [
+      "$N = 80$ alle Kunden",
+      "$n = 6$ befragt",
+      T`$1-\alpha = 0.95$ Niveau`,
+      "$t_5$ Quantil mit FG 5",
+      T`$\bar x$ Mittel der 6`,
+      "$s$ Std.-abw. mit $n-1$",
+      T`$\sqrt{\tfrac{N-n}{N-1}}$ Korrektur`,
+      T`$\mu_1-\mu_2$ Differenz`
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Teil", formel: "Rechnung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Niveau festlegen, z oder t wählen, x̄ und s berechnen, prüfen ob n durch N grösser als 0.05 ist, dann das Intervall rechnen und in einem Satz deuten." },
+      { ph: 0, sent: 0, hl: ["N", "n"], dict: 2, dh: [0, 1], f: F([NW(gA)]),
+        say: "Zuerst die Daten ordnen. 80 Kunden insgesamt sind die Grundgesamtheit. Die 6 Befragten sind die Stichprobe." },
+      { hl: ["daten"], f: F([gA, NW(gD)]),
+        say: "Die sechs Antworten sind eine Urliste. Daraus berechnest du gleich Mittelwert und Standardabweichung." },
+      { hl: ["mu"], f: F([gA, gD, NW(T`gesucht: Intervall für $\mu$`)]),
+        say: "Gesucht ist ein Bereich für μ, den Mittelwert aller 80 Kunden. Den kennt niemand, sonst bräuchte es keine Stichprobe." },
+      { ph: 1, hl: ["niv"], dict: 3, dh: [2], f: F([gA, NW(gNiv)]),
+        say: "1. Schritt: Das Niveau ist 0.95. Die 5 Prozent Irrtum verteilen sich auf beide Seiten, je 2.5 Prozent." },
+      { f: F([gA, gNiv, NW(T`$\sigma$ unbekannt $\Rightarrow$ t-Verteilung`)]),
+        say: "2. Schritt: z oder t? Die Standardabweichung aller Kunden ist nicht gegeben. Du schätzt sie mit s und nimmst die t-Verteilung." },
+      { dict: 4, dh: [3], f: F([gA, gNiv, T`$\sigma$ unbekannt $\Rightarrow$ t-Verteilung`, NW(T`$\text{FG} = n - 1 = 5$`)]),
+        say: "Die t-Verteilung braucht Freiheitsgrade: n minus 1, also 5." },
+      { f: F([gA, gNiv, NW(gT)]),
+        say: "Das Quantil holst du mit invt. Achtung: Fläche links 0.975, nicht 0.95. Ergebnis 2.5706." },
+      { ph: 2, hl: ["daten"], dict: 5, dh: [4], f: F([gT, NW(T`$\bar x = \tfrac{4+5+3+5+6+4}{6} = \tfrac{27}{6} = 4.5$`)]),
+        say: "3. Schritt: der Mittelwert. Die Summe 27 geteilt durch 6 ergibt 4.5." },
+      { f: F([gT, gX, NW(T`$\sum (x_i-\bar x)^2 = 0.25+0.25+2.25+0.25+2.25+0.25 = 5.5$`)]),
+        say: "Für s brauchst du die Abweichungen vom Mittelwert, quadriert und addiert. Das ergibt 5.5." },
+      { dict: 6, dh: [5], f: F([gT, gX, NW(T`$s = \sqrt{\tfrac{5.5}{6-1}} = \sqrt{1.1} = 1.0488$`)]),
+        say: "Durch n minus 1 teilen, nicht durch n. Dann die Wurzel: s ist 1.0488. Auf dem Taschenrechner ist das sx, nicht σx." },
+      { ph: 3, hl: ["N", "n"], f: F([gT, gX, gS, NW(T`$\tfrac{n}{N} = \tfrac{6}{80} = 0.075 > 0.05$`)]),
+        say: "Jetzt die Frage, die viele vergessen: Ist die Stichprobe im Verhältnis gross? 6 von 80 sind 7.5 Prozent, mehr als 5 Prozent." },
+      { dict: 7, dh: [6], f: F([gT, gX, gS, T`$\tfrac{n}{N} = \tfrac{6}{80} = 0.075 > 0.05$`, NW(T`$\sqrt{\tfrac{N-n}{N-1}} = \sqrt{\tfrac{74}{79}} = 0.9678$`)]),
+        say: "Darum brauchst du den Korrekturfaktor für endliche Grundgesamtheiten. Er ist kleiner als 1 und macht das Intervall etwas schmaler." },
+      { ph: 4, f: F([gT, gX, gS, gK, NW(T`$\bar x \pm t_5\cdot\tfrac{s}{\sqrt n}\cdot\sqrt{\tfrac{N-n}{N-1}}$`)]),
+        say: "4. Schritt: Schreib zuerst die Formel hin, bevor du einsetzt. Das gibt in der Prüfung Punkte, auch wenn du dich später verrechnest." },
+      { f: F([gK, T`$\bar x \pm t_5\cdot\tfrac{s}{\sqrt n}\cdot\sqrt{\tfrac{N-n}{N-1}}$`, NW(T`$4.5 \pm 2.5706\cdot\tfrac{1.0488}{\sqrt 6}\cdot 0.9678$`)]),
+        say: "Jetzt einsetzen: Mittelwert, Quantil, s, Wurzel aus 6 und der Korrekturfaktor." },
+      { f: F([T`$4.5 \pm 2.5706\cdot\tfrac{1.0488}{\sqrt 6}\cdot 0.9678$`, NW(T`$\tfrac{1.0488}{\sqrt 6} = 0.4282$`)]),
+        say: "Zuerst der Standardfehler: s geteilt durch die Wurzel aus 6 ergibt 0.4282." },
+      { f: F([T`$4.5 \pm 2.5706\cdot\tfrac{1.0488}{\sqrt 6}\cdot 0.9678$`, T`$\tfrac{1.0488}{\sqrt 6} = 0.4282$`, NW(T`$\Delta\mu = 2.5706\cdot 0.4282\cdot 0.9678 = 1.0653$`)]),
+        say: "Mal Quantil und Korrekturfaktor: Der Schätzfehler beträgt 1.0653. Das ist die halbe Intervalllänge." },
+      { f: F([T`$\Delta\mu = 1.0653$`, NW(T`$[4.5 - 1.0653;\ 4.5 + 1.0653] = [3.4347;\ 5.5653]$`)]),
+        say: "Abziehen und addieren: Das Intervall reicht von 3.4347 bis 5.5653." },
+      { hl: ["mu"], f: F([T`$\mu \in [3.4347;\ 5.5653]$`, NW("Mit 95 % liegt μ zwischen 3.43 und 5.57.")]),
+        say: "Antwortsatz: Mit 95 Prozent Wahrscheinlichkeit liegt die mittlere Bewertung aller 80 Geschäftskunden zwischen 3.43 und 5.57." },
+      { f: F([T`$\mu \in [3.4347;\ 5.5653]$`, NW("TI tInterval: [3.3993; 5.6007] ohne Korrektur")]),
+        say: "Kontrolle mit dem Taschenrechner: tInterval liefert 3.3993 bis 5.6007. Das ist das Intervall ohne Korrekturfaktor. Den Faktor rechnest du von Hand ein." },
+      { ph: 5, sent: 1, hl: ["zh", "wt"], dict: 8, dh: [7], f: F([NW("verschiedene Kunden → unabhängig")]),
+        say: "Teil b: zwei Filialen, verschiedene Kunden. Das sind unabhängige Stichproben. Gesucht ist ein Intervall für die Differenz μ1 minus μ2." },
+      { hl: ["alpha"], f: F(["verschiedene Kunden → unabhängig", NW(T`$1-\alpha = 0.90$, 2-SampTInt, Pooled: Ja`)]),
+        say: "10 Prozent Irrtum heisst Niveau 0.90. Auf dem Rechner: Menü 6, 6, 4, das t-Intervall für zwei Stichproben, gepoolt Ja, wie im Skript." },
+      { f: F([T`$1-\alpha = 0.90$, 2-SampTInt, Pooled: Ja`, NW(T`$\bar x_1 = 5.1429,\ \bar x_2 = 4.2,\ \bar x_1-\bar x_2 = 0.9429$`)]),
+        say: "Der Rechner zeigt neben dem Intervall auch die Mittelwerte: Zürich 5.1429, Winterthur 4.2. Die Differenz ist 0.9429." },
+      { f: F([T`$\bar x_1-\bar x_2 = 0.9429$`, NW(T`$\text{FG} = 7 + 5 - 2 = 10,\ \ t_{10} = 1.8125$`)]),
+        say: "Freiheitsgrade: 7 plus 5 minus 2 ergibt 10. Das Quantil ist 1.8125." },
+      { f: F([T`$\bar x_1-\bar x_2 = 0.9429,\ \ t_{10} = 1.8125$`, NW(T`$\mu_1-\mu_2 \in [0.3465;\ 1.5392]$`)]),
+        say: "Das Ergebnis auf vier Nachkommastellen: 0.3465 bis 1.5392." },
+      { hl: ["sig"], f: F([T`$\mu_1-\mu_2 \in [0.3465;\ 1.5392]$`, NW(T`$0 \notin$ Intervall $\Rightarrow$ signifikant`)]),
+        say: "Entscheid: Die 0 liegt nicht im Intervall. Der Unterschied ist signifikant, Zürich wird besser bewertet als Winterthur. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ===================== Selbsttest ===================== */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Zwei Filialen, verschiedene Kunden, σ unbekannt. Welcher TI-Befehl passt für das Intervall der Differenz?",
+        o: ["zInterval", "tInterval je einzeln auf beide Listen", "2-SampTInt mit «Pooled: Ja»", "1-PropZInt"], a: 2,
+        e: "Unabhängige Stichproben und geschätzte Streuung: zwei Stichproben t-Intervall, Menü 6 · 6 · 4. Das Skript poolt die Varianzen." },
+      { q: T`Ein 95 %-Konfidenzintervall für $\mu$ lautet $[3.4;\ 5.6]$. Was steckt genau hinter den 95 %?`,
+        o: ["95 % der befragten Personen haben einen Wert zwischen 3.4 und 5.6.",
+          T`$\mu$ schwankt und liegt 95 % der Zeit zwischen 3.4 und 5.6.`,
+          T`Von vielen so berechneten Intervallen enthalten rund 95 % das wahre $\mu$.`,
+          T`Mit 95 % Wahrscheinlichkeit liegt $\bar x$ im Intervall.`], a: 2,
+        e: T`$\mu$ ist fest, das Intervall ist zufällig. Die 95 % sind die Trefferquote des Verfahrens, wie im Simulator. In der Prüfung schreibst du trotzdem den Satz aus dem Skript: «Mit 95 % Wahrscheinlichkeit liegt $\mu$ im Intervall …». $\bar x$ liegt übrigens immer genau in der Mitte.` },
+      { q: T`<b>Stolperfalle:</b> 90 %-Konfidenzintervall, $n = 10$, $\sigma$ unbekannt. Welches Quantil?`,
+        o: [T`$\operatorname{invt}(0.90,\ 9) = 1.3830$`, T`$\operatorname{invt}(0.95,\ 9) = 1.8331$`, T`$\operatorname{invt}(0.95,\ 10) = 1.8125$`, T`$\text{invNorm}(0.95) = 1.6449$`], a: 1,
+        e: T`Das Quantil gehört zu $1-\tfrac{\alpha}{2} = 0.95$, nicht zu $0.90$. Die Freiheitsgrade sind $n-1 = 9$. Und weil $\sigma$ geschätzt wird, ist es $t$, nicht $z$.` },
+      { q: T`<b>Stolperfalle:</b> Die Daten sind 2, 4, 6. Welche Standardabweichung gehört in die Formel des t-Intervalls?`,
+        o: [T`$s = 2$ (mit $n-1$ im Nenner)`, T`$\sigma_x = 1.633$ (mit $n$ im Nenner)`, "die Spannweite 4", "die Varianz 4"], a: 0,
+        e: T`$\sum (x_i-\bar x)^2 = 8$, geteilt durch $n-1 = 2$ ergibt $s^2 = 4$, also $s = 2$. Der TI zeigt beides: sx ist richtig, σx ist falsch.` },
+      { q: "Du willst bei gleichem Niveau ein halb so langes Intervall. Wie musst du n ändern?",
+        o: ["verdoppeln", "vervierfachen", "halbieren", "verachtfachen"], a: 1,
+        e: T`Die Länge schrumpft nur mit $\sqrt n$. Aus $\sqrt{4n} = 2\sqrt n$ folgt: vierfaches $n$ gibt halbe Länge.` },
+      { q: T`Was passiert mit dem Intervall, wenn du $1-\alpha$ von 95 % auf 99 % erhöhst und sonst nichts änderst?`,
+        o: ["Es wird schmaler.", "Es wird breiter.", "Es bleibt gleich breit.", "Es verschiebt sich nach rechts."], a: 1,
+        e: "Mehr Sicherheit braucht ein grösseres Quantil (2.5758 statt 1.96). Die Mitte bleibt, das Intervall wird breiter." },
+      { q: T`Wann musst du den Korrekturfaktor $\sqrt{\tfrac{N-n}{N-1}}$ einrechnen?`,
+        o: ["immer, wenn du mit t rechnest", T`wenn $n > 30$`, T`wenn $\tfrac{n}{N} > 0.05$`, T`wenn $\sigma$ bekannt ist`], a: 2,
+        e: "Satz 5.29: Ist die Stichprobe mehr als 5 % der Grundgesamtheit, wird der Schätzfehler mit dem Faktor multipliziert." },
+      { q: "Vor und nach einem Training wird bei denselben 12 Personen gemessen. Wie rechnest du das Intervall?",
+        o: ["wie zwei unabhängige Gruppen, gepoolt", "Differenzen bilden, dann t-Intervall mit FG = 11", "Differenzen bilden, dann z-Intervall", "Intervall für einen Anteil"], a: 1,
+        e: "Dieselben Personen: abhängige Stichprobe. Paardifferenzen bilden und wie beim Mittelwert mit t und n − 1 Freiheitsgraden rechnen." },
+      { q: T`Ein 95 %-Intervall für $\mu_1-\mu_2$ lautet $[-0.23;\ 3.23]$. Was folgt daraus?`,
+        o: ["Der Unterschied ist signifikant.", "Gruppe 1 ist sicher besser.", "Es gibt keinen signifikanten Unterschied.", T`Es ist bewiesen, dass $\mu_1 = \mu_2$.`], a: 2,
+        e: "Die 0 liegt im Intervall, die Differenz kann also null sein. Nicht signifikant heisst aber nicht «gleich bewiesen»." },
+      { q: T`Der Schätzfehler für einen Anteil soll bei 95 % höchstens $\Delta p = 0.04$ sein, $p$ ist unbekannt. Welche Rechnung stimmt?`,
+        o: [T`$n \ge \tfrac{1.96^2\cdot 0.25}{0.04^2} = 600.25$, also $n = 601$`, T`$n \ge \tfrac{1.96^2\cdot 0.25}{0.04^2} = 600.25$, also $n = 600$`, T`$n \ge \tfrac{1.96\cdot 0.5}{0.04} = 24.5$, also $n = 25$`, T`$n \ge \tfrac{1.6449^2\cdot 0.25}{0.04^2} = 422.8$, also $n = 423$`], a: 0,
+        e: T`Mit $p = 0.5$ (ungünstigster Fall) und $z = 1.96$ kommt 600.25 heraus. Immer aufrunden: 601. Abrunden würde den Schätzfehler knapp überschreiten.` }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

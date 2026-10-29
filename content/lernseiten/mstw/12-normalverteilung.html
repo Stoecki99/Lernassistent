@@ -1,0 +1,1243 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Normalverteilung · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/13-approximationen" title="Approximationen">
+  <style>
+    /* Seiteneigene Stile der Station 12: nur Klassen mit Präfix t12-, nur Farben aus :root */
+    .t12-ziele{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
+    .t12-ziele li::marker{color:var(--accent)}
+    .t12-quelle{font-size:.85rem; color:var(--muted)}
+    /* Zeilen in Stepper, Schritt-Aufgaben und Film */
+    .t12-fz{white-space:normal}
+    @media (max-width:520px){ .formula .t12-fz, .fstage .t12-fz{font-size:.88em} }
+    .t12-fz + .t12-fz{margin-top:2px}
+    .t12-erledigt{color:var(--muted); font-size:.8em}
+    /* Kleine Skizzen der Glockenkurve */
+    .t12-mini{max-width:280px; margin:4px 0}
+    .t12-mini svg{overflow:visible}
+    .diagramm text.t12-ftext{fill:var(--ink); font-weight:600}
+    .diagramm text.t12-wert{fill:var(--accent); font-weight:600}
+    .diagramm .t12-mitte{stroke:var(--muted); stroke-width:1; stroke-dasharray:2 3}
+    .t12-karte .t12-mini{max-width:none}
+    /* Labor */
+    .t12-gruppe{display:flex; flex-direction:column; gap:6px}
+    .t12-gtitel{font-size:.75rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600}
+    .t12-gtitel .t12-klein{text-transform:none}
+    .t12-labor .modes .btn{font-size:.9rem; padding:6px 11px}
+    .t12-bild{position:relative}
+    #t12-svg{touch-action:pan-y; -webkit-user-select:none; user-select:none; cursor:ew-resize}
+    .t12-griff{fill:var(--accent); stroke:var(--surface); stroke-width:2}
+    .t12-ergebnis{background:var(--board); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t12-haupt{font-family:var(--f-math); font-size:clamp(1.08rem, 4.2vw, 1.35rem); line-height:1.5; font-variant-numeric:tabular-nums}
+    .t12-haupt b{color:var(--accent)}
+    .t12-stueck{white-space:nowrap}
+    .t12-ti{font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.88rem; color:var(--ink); overflow-wrap:anywhere}
+    .t12-deutung{font-size:.95rem; color:var(--muted)}
+    .regler .t12-feld{width:8ch; min-height:36px; padding:4px 8px; font-size:1rem; text-align:right}
+    .t12-ti-box{font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.9rem; background:var(--board); border-radius:8px; padding:2px 6px; white-space:nowrap}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="12-normalverteilung">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V7 · Normalverteilung</span>
+    <h1>Normalverteilung</h1>
+    <p class="lead">Füllmengen, Lieferzeiten und Renditen werden gemessen, nicht gezählt. Ihr wichtigstes Modell ist die Normalverteilung, die Gauss’sche Glockenkurve. Hier lernst du, Wahrscheinlichkeiten als Flächen zu lesen, zu einer Wahrscheinlichkeit die passende Grenze zu finden und einen unbekannten Mittelwert oder eine unbekannte Standardabweichung über den z-Wert zu bestimmen. Am Schluss löst du eine Prüfungsaufgabe zu Rendite und Value-at-Risk.</p>
+    <div class="card stack">
+      <span class="eyebrow">Danach kannst du</span>
+      <ul class="prose t12-ziele">
+        <li>erklären, warum bei gemessenen Grössen Wahrscheinlichkeiten Flächen sind,</li>
+        <li>an der Glockenkurve ablesen, was \(\mu\) und \(\sigma\) bewirken, und die σ-Regeln anwenden,</li>
+        <li>einen Wert mit \(z = \frac{x-\mu}{\sigma}\) standardisieren und zurückrechnen,</li>
+        <li>\(P(X \le x)\), \(P(a \le X \le b)\) und \(P(X \ge x)\) mit <span class="t12-ti-box">normCdf</span> berechnen,</li>
+        <li>Grenzen und den Value-at-Risk mit <span class="t12-ti-box">invNorm</span> bestimmen,</li>
+        <li>einen gesuchten Mittelwert oder eine gesuchte Standardabweichung über \(z\) finden.</li>
+      </ul>
+    </div>
+    <div class="note"><b>Prüfungsbezug:</b> Aufgabe 6a der exemplarischen Modulschlussprüfung fragt genau diese drei Dinge: eine Wahrscheinlichkeit, einen Value-at-Risk und eine höchstens zulässige Standardabweichung. In der Musterlösung gibt es Teilpunkte für das hingeschriebene Modell \(N(\mu;\ \sigma)\), den Rechenweg und das Ergebnis. Der Teil 6b (eine Verteilung durch eine einfachere annähern: dort die hypergeometrische durch die Binomialverteilung, allenfalls weiter durch die Normalverteilung) folgt in der nächsten Station.</div>
+    <p class="t12-quelle">Grundlage: Skript Wahrscheinlichkeitstheorie (WT) Kap. 4.3, 6.1–6.5 und 8.2, Folien Wahrscheinlichkeitstheorie «Normalverteilung» bis «Standardnormalverteilung», Lernblock S2-LB3 (Lösungen 6.101–6.103, Test LB2+3), exemplarische Modulschlussprüfung Aufgabe 6.</p>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#glocke"><b>2</b>Glockenkurve</a>
+    <a href="#standardisieren"><b>3</b>Standardisieren</a>
+    <a href="#flaechen"><b>4</b>Flächen</a>
+    <a href="#rueckwaerts"><b>5</b>Rückwärts</a>
+    <a href="#labor"><b>6</b>Labor</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Begriffe, ohne die nichts geht</h2>
+    <p class="prose">Bisher hast du Zufallsvariablen gezählt: Anzahl Tore, Anzahl defekte Teile. Jetzt wird gemessen: Gewicht, Zeit, Rendite. Zwischen zwei Messwerten liegen unendlich viele weitere. Das ändert, wie man Wahrscheinlichkeiten rechnet.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Stetige Zufallsvariable = gemessen</span><span class="ex">\(X\) = Füllmenge in g</span><p>Ein Zählwerk springt von 1 auf 2, ein Messband läuft durch. Eine stetige Zufallsvariable kann jeden Wert in einem Intervall annehmen (Skript WT Def. 4.18). Folge: Ein einzelner exakter Wert hat die Wahrscheinlichkeit 0, also \(P(X = 500) = 0\).</p></div>
+      <div class="concept"><span class="tag">Dichte f(x) = wie dicht die Werte liegen</span><span class="ex">\(f(x) \ge 0\), Fläche total 1</span><p>Stell dir einen Haufen aus genau 1 kg Sand vor. Wo er hoch ist, liegt viel Sand. Die Höhe allein ist noch keine Wahrscheinlichkeit, erst die Sandmenge zwischen zwei Pfählen (Def. 4.20). Darum darf \(f(x)\) sogar grösser als 1 sein.</p></div>
+      <div class="concept"><span class="tag">Wahrscheinlichkeit = Fläche</span><span class="ex">\(P(a \le X \le b)\) = Fläche von \(a\) bis \(b\)</span><p>Wie beim Histogramm aus der Beschreibenden Statistik: Dort waren relative Häufigkeiten die Flächen der Balken. Hier ist es die Fläche unter der Dichte (Bem. 4.27, Satz 4.22).</p></div>
+      <div class="concept"><span class="tag">Verteilungsfunktion = Fläche links</span><span class="ex">\(F(495) = P(X \le 495)\)</span><p>\(F(x)\) beantwortet «Wie viel liegt höchstens bei \(x\)?». Beispiel: \(F(495) \approx 0.12\) heisst, rund 12 % der Packungen wiegen höchstens 495 g (Def. 4.23).</p></div>
+      <div class="concept"><span class="tag">Quantil = Grenze zu einer Fläche</span><span class="ex">3 % → 490.7 g</span><p>Die Umkehrfrage. Nicht «Wie viel liegt links von 495 g?», sondern «Wo liegt die Grenze, links von der genau 3 % liegen?». Wie bei der Körpergrösse: «90 % sind kleiner als 187 cm». Bei Renditen heisst die Grenze, unter der nur 5 % liegen, <b>5%-Value-at-Risk</b>: So tief oder tiefer fällt die Rendite nur in 5 % der Jahre.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Fläche oder Grenze gesucht?</h3>
+      <p class="hint">Diese Unterscheidung entscheidet später, welchen Taschenrechnerbefehl du brauchst. Frag dich: Ist eine Wahrscheinlichkeit gesucht oder ein Messwert?</p>
+      <div id="t12-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
+    <h2>Das Wörterbuch der Normalverteilung</h2>
+    <p class="prose">Die Farbe zeigt die Art: Zufallsvariablen blau, feste Zahlen und Parameter orange, Funktionen grün.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td><span class="v">X</span></td><td><span class="kind kind-v">Zufallsvariable</span></td><td>die gemessene Grösse, z.&nbsp;B. Füllmenge in g oder Jahresrendite in %</td></tr>
+          <tr><td><span class="c">x</span>, <span class="c">a</span>, <span class="c">b</span></td><td><span class="kind kind-c">feste Zahl</span></td><td>konkrete Grenzen auf der x-Achse, z.&nbsp;B. 495 g</td></tr>
+          <tr><td><span class="c">μ</span></td><td><span class="kind kind-c">Parameter</span></td><td>Erwartungswert: Mitte und höchster Punkt der Glocke</td></tr>
+          <tr><td><span class="c">σ</span></td><td><span class="kind kind-c">Parameter</span></td><td>Standardabweichung: Breite der Glocke, Wendepunkte bei μ ± σ</td></tr>
+          <tr><td><span class="op">∼</span> N(<span class="c">μ</span>; <span class="c">σ</span>)</td><td><span class="kind kind-op">Schreibweise</span></td><td>«ist normalverteilt mit Mittelwert μ und Standardabweichung σ», z.&nbsp;B. <span class="v">X</span> ∼ N(502; 6)</td></tr>
+          <tr><td><span class="fn">f</span>(<span class="c">x</span>)</td><td><span class="kind kind-fn">Funktion</span></td><td>Dichtefunktion: Höhe der Glocke an der Stelle x</td></tr>
+          <tr><td><span class="fn">F</span>(<span class="c">x</span>)</td><td><span class="kind kind-fn">Funktion</span></td><td>Verteilungsfunktion: Fläche links von x, also P(X ≤ x)</td></tr>
+          <tr><td><span class="v">Z</span>, <span class="c">z</span></td><td><span class="kind kind-v">Zufallsvariable</span></td><td>Z ∼ N(0; 1) heisst standardnormalverteilt; der Standardwert z sagt, wie viele σ ein Wert von μ entfernt ist</td></tr>
+          <tr><td><span class="fn">normCdf</span>(u, o, μ, σ)</td><td><span class="kind kind-fn">TI-Nspire</span></td><td>Fläche zwischen unterer Grenze u und oberer Grenze o; menu 5-5-2 «Normal Cdf»</td></tr>
+          <tr><td><span class="fn">invNorm</span>(w, μ, σ)</td><td><span class="kind kind-fn">TI-Nspire</span></td><td>Grenze x, links von der die Fläche w liegt; menu 5-5-3 «Inverse Normal»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> In \(N(502;\ 6)\) ist die zweite Zahl die <b>Standardabweichung</b> σ, nicht die Varianz σ². So schreiben es Skript, Folien und Taschenrechner. Manche Bücher schreiben \(N(\mu, \sigma^2)\); dort stünde für dieselbe Verteilung \(N(502, 36)\). Prüf bei fremden Aufgaben immer, welche Schreibweise gilt.</div>
+  </section>
+
+  <!-- ===== 2 · Glockenkurve ===== -->
+  <section id="glocke">
+    <span class="eyebrow">Schritt 2 · Skript WT Kap. 6.2 und 6.3</span>
+    <h2>Die Glockenkurve und ihre zwei Parameter</h2>
+    <p class="prose">Nach Def. 6.1 heisst eine stetige Zufallsvariable mit Werten in ganz \(\R\) normalverteilt mit den Parametern \(\mu\) und \(\sigma > 0\), wenn ihre Dichte diese Form hat. Fahre über die unterstrichenen Erklärungen: Der passende Teil der Formel leuchtet auf.</p>
+    <div class="stack" data-link-bereich>
+      <div class="board">
+        $$\htmlClass{fn}{f}(x) = \htmlData{link=t12-vor}{\frac{1}{\htmlClass{c}{\sigma}\sqrt{2\pi}}} \cdot \htmlData{link=t12-exp}{e^{-\frac{1}{2}\left(\htmlData{link=t12-abst}{\frac{x-\htmlClass{c}{\mu}}{\htmlClass{c}{\sigma}}}\right)^{2}}}$$
+      </div>
+      <ul class="prose t12-ziele">
+        <li><span data-link="t12-abst">Der Bruch \((x-\mu)/\sigma\)</span> misst den Abstand von \(x\) zum Mittelwert in Standardabweichungen. Das ist schon der z-Wert aus Schritt 3.</li>
+        <li><span data-link="t12-exp">Die e-Funktion mit dem Quadrat im Exponenten</span> wird schnell klein, je weiter \(x\) von \(\mu\) weg liegt. Wegen des Quadrats fällt sie links und rechts gleich ab: Die Kurve ist symmetrisch.</li>
+        <li><span data-link="t12-vor">Der Vorfaktor \(1/(\sigma\sqrt{2\pi})\)</span> sorgt dafür, dass die Gesamtfläche genau 1 ist. Grosses \(\sigma\) heisst kleiner Vorfaktor, also eine flachere Glocke.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Tipp:</b> Diese Formel musst du nie von Hand integrieren. Die Flächen rechnet der Taschenrechner. Wichtig ist, was \(\mu\) und \(\sigma\) mit der Kurve machen: \(\mu\) verschiebt die Glocke nach links oder rechts, \(\sigma\) macht sie breiter und flacher oder schmaler und höher. Probier es im <a href="#labor">Labor</a> aus.</div>
+
+    <h3>Satz 6.2 in eigenen Worten</h3>
+    <ol class="prose t12-ziele">
+      <li>Dichte und Verteilungsfunktion sind stetig, die Dichte ist symmetrisch um \(\mu\).</li>
+      <li>Der Erwartungswert ist \(\mu\), die Standardabweichung ist \(\sigma\).</li>
+      <li>Der höchste Punkt der Dichte liegt bei \(x = \mu\).</li>
+      <li>Die Wendepunkte liegen bei \(\mu - \sigma\) und \(\mu + \sigma\). Dort wechselt die Kurve ihre Krümmung: Zwischen den beiden Wendepunkten ist sie nach unten gewölbt (wie eine Kuppe), ausserhalb nach oben gewölbt (wie eine Schale).</li>
+      <li>Für symmetrische Grenzen \(\mu \pm k\sigma\) ist die Fläche dazwischen bei <b>jeder</b> Normalverteilung gleich gross (Tabelle unten).</li>
+      <li>Die Summe zweier unabhängiger normalverteilter Grössen ist wieder normalverteilt (reproduktiv). Details im Aufklapper unten.</li>
+    </ol>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>σ-Regeln: Fläche zwischen μ − kσ und μ + kσ (Skript WT Satz 6.2, Nr. 5, und Tabelle direkt danach)</caption>
+        <thead><tr><th>Intervall</th><th class="zahl">Fläche</th><th>Merkhilfe</th></tr></thead>
+        <tbody>
+          <tr><td>\(\mu \pm 1\sigma\)</td><td class="zahl">0.6827</td><td>gut zwei Drittel</td></tr>
+          <tr><td>\(\mu \pm 2\sigma\)</td><td class="zahl">0.9545</td><td>fast alles</td></tr>
+          <tr><td>\(\mu \pm 3\sigma\)</td><td class="zahl">0.9973</td><td>praktisch alles</td></tr>
+          <tr class="an"><td>\(\mu \pm 1.645\sigma\)</td><td class="zahl">0.90</td><td>wichtig für Statistik</td></tr>
+          <tr class="an"><td>\(\mu \pm 1.960\sigma\)</td><td class="zahl">0.95</td><td>wichtig für Statistik</td></tr>
+          <tr class="an"><td>\(\mu \pm 2.576\sigma\)</td><td class="zahl">0.99</td><td>wichtig für Statistik</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Die Folie «Normalverteilung (2)» rundet die ersten drei Werte auf 0.683, 0.955 und 0.997. Im Volksmund heisst das die 68-95-99.7-Regel. Die hervorgehobenen Zeilen brauchst du in der Schliessenden Statistik wieder.</p>
+
+    <h3>Warum gerade diese Kurve? Satz 6.3</h3>
+    <p class="prose">Der Zentrale Grenzwertsatz sagt sinngemäss: Addierst du viele unabhängige Zufallsgrössen, von denen keine dominiert, ist die Summe näherungsweise normalverteilt, egal wie die einzelnen Grössen verteilt sind. Die Füllmenge einer Packung hängt von vielen kleinen Einflüssen ab (Körnung, Reste im Stutzen, Temperatur). Darum passt die Glocke dort oft gut.</p>
+    <div class="note falle"><b>Falle bei Renditen (Bem. 6.9):</b> Echte Aktienrenditen sind nicht ganz normalverteilt. Sehr grosse Gewinne und Verluste kommen häufiger vor, als die Glocke vorhersagt («dicke Ränder»). Wer trotzdem mit der Normalverteilung rechnet, unterschätzt das Risiko, besonders beim Value-at-Risk. In der Prüfung rechnest du trotzdem mit der Normalverteilung, wenn die Aufgabe «näherungsweise normalverteilt» sagt.</div>
+    <details class="sol"><summary>Summe zweier normalverteilter Grössen (Satz 6.2, Nr. 6)</summary>
+      <div class="stack">
+        <p>Sind \(X_1 \sim N(\mu_1;\ \sigma_1)\) und \(X_2 \sim N(\mu_2;\ \sigma_2)\) unabhängig, dann ist \(X_1 + X_2\) normalverteilt. Die Mittelwerte addieren sich, und die <b>Varianzen</b> addieren sich:</p>
+        <div class="board">$$X_1 + X_2 \sim N\!\left(\mu_1 + \mu_2;\ \sqrt{\sigma_1^2 + \sigma_2^2}\right)$$</div>
+        <p>Weil die Schreibweise \(N(\mu;\ \sigma)\) die Standardabweichung erwartet, ziehst du am Schluss die Wurzel. Beispiel: Müesli \(N(502;\ 6)\) plus Verpackung \(N(18;\ 2)\) ergibt \(N(520;\ \sqrt{36 + 4}) = N(520;\ 6.32)\), nicht \(N(520;\ 8)\).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 3 · Standardisieren ===== -->
+  <section id="standardisieren">
+    <span class="eyebrow">Schritt 3 · Skript WT Kap. 6.4</span>
+    <h2>Standardisieren: alles auf eine Glocke</h2>
+    <p class="prose">Alle Normalverteilungen sind dieselbe Glocke, nur verschoben und gestreckt. Die eine Glocke mit \(\mu = 0\) und \(\sigma = 1\) heisst <b>Standardnormalverteilung</b>, kurz \(Z \sim N(0;\ 1)\) (Def. 6.6). Nach Satz 6.7 machst du aus jedem \(X \sim N(\mu;\ \sigma)\) ein standardnormalverteiltes \(Z\):</p>
+    <div class="board">
+      $$\htmlClass{v}{Z} = \frac{\htmlClass{v}{X} - \htmlClass{c}{\mu}}{\htmlClass{c}{\sigma}}$$
+      $$\text{umgekehrt: } x = \htmlClass{c}{\mu} + z \cdot \htmlClass{c}{\sigma}$$
+    </div>
+    <p class="prose">Der <b>Standardwert</b> \(z\) beantwortet: Wie viele Standardabweichungen liegt ein Wert über (\(z > 0\)) oder unter (\(z < 0\)) dem Mittelwert? Das ist wie beim Vergleich zweier Prüfungen mit verschiedenen Skalen: Eine 82 ist nur dann stark, wenn sie weit über dem Durchschnitt liegt, gemessen an der üblichen Streuung.</p>
+    <div id="t12-stepper-z"></div>
+    <div class="note"><b>Wozu braucht man z heute noch?</b> Früher las man Flächen aus Tabellen der Standardnormalverteilung ab: \(P(a \le X \le b) = F(z_2) - F(z_1)\). Heute rechnet der TI direkt mit \(\mu\) und \(\sigma\). Aber sobald \(\mu\) oder \(\sigma\) <b>gesucht</b> ist, helfen die Rechnerbefehle allein nicht mehr. Dann führt der Weg über \(z\) (Skript S. 84). Wie das geht, zeigt <a href="#rueckwaerts">Schritt 5</a>.</div>
+    <div class="note falle"><b>Druckfehler im Skript (Kap. 8.2):</b> Dort steht, für die Standardnormalverteilung gebe man «µ = 1 und σ = 0» ein. Richtig ist <b>μ = 0 und σ = 1</b>. Das Beispiel direkt daneben rechnet auch so: \(F(-0.8) = \operatorname{normCdf}(-\infty,\ -0.8,\ 0,\ 1) = 0.2119\).</div>
+  </section>
+
+  <!-- ===== 4 · Flächen ===== -->
+  <section id="flaechen">
+    <span class="eyebrow">Schritt 4 · Wahrscheinlichkeiten berechnen</span>
+    <h2>Drei Fragetypen, drei Flächen</h2>
+    <p class="prose">Jede Wahrscheinlichkeitsfrage zur Normalverteilung ist eine von drei Flächen. Übersetze zuerst die Worte in ein Zeichen (≤ oder ≥), mach eine kleine Skizze, dann tippst du in den Rechner.</p>
+    <div class="grid4" id="t12-karten"></div>
+    <div class="note"><b>Auf dem TI-Nspire:</b> menu 5-5-2 «Normal Cdf» mit unterer Grenze, oberer Grenze, μ und σ, kurz <span class="t12-ti-box">normCdf(u, o, μ, σ)</span>. Für eine offene Seite nimmst du \(-\infty\) oder \(\infty\) (oder eine riesige Zahl wie −1E99 und 1E99, das Ergebnis ist dasselbe).</div>
+    <div class="note tipp"><b>≤ oder &lt;? Egal.</b> Bei einer stetigen Zufallsvariable ist \(P(X = x) = 0\). Darum gilt \(P(X &lt; 495) = P(X \le 495)\). Das Skript sagt es so: Auch für \(P(X &lt; 0)\) bleibt 0 die obere Grenze (Kap. 8.2).</div>
+    <div class="note falle"><b>Falle «gezählte Grössen»:</b> Werden ganze Zahlen wie belegte Hotelzimmer mit der Normalverteilung angenähert, braucht es eine Stetigkeitskorrektur von ±0.5 (Lernblock-Lösung zu Aufgabe 6.103). Das ist Thema der nächsten Station. Bei echten Messgrössen wie Gramm oder Prozent gibt es keine Korrektur.</div>
+    <div id="t12-stepper-flaeche"></div>
+  </section>
+
+  <!-- ===== 5 · Rückwärts ===== -->
+  <section id="rueckwaerts">
+    <span class="eyebrow">Schritt 5 · Umkehrfragen</span>
+    <h2>Rückwärts: Grenze, Mittelwert oder Streuung gesucht</h2>
+    <p class="prose">Jetzt ist die Fläche gegeben und etwas anderes gesucht. Es gibt zwei Fälle.</p>
+    <h3>Fall A: Die Grenze ist gesucht (Quantil)</h3>
+    <p class="prose">Dafür hat der TI-Nspire <span class="t12-ti-box">invNorm(w, μ, σ)</span> (menu 5-5-3 «Inverse Normal»). Die wichtigste Regel aus Skript Kap. 8.2 und der Lernblock-Lösung: <b>w ist immer die Fläche links</b> der gesuchten Grenze, also von \(-\infty\) bis \(x_0\). Übersetze die Aufgabe deshalb zuerst in eine Fläche links.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Von der Formulierung zur Eingabe in invNorm</caption>
+        <thead><tr><th>Formulierung</th><th class="zahl">Fläche links</th><th>Eingabe</th></tr></thead>
+        <tbody>
+          <tr><td>«Unter dieser Grenze liegen 3 %»</td><td class="zahl">0.03</td><td>invNorm(0.03, μ, σ)</td></tr>
+          <tr><td>«Wird mit 97 % überschritten»</td><td class="zahl">0.03</td><td>invNorm(0.03, μ, σ)</td></tr>
+          <tr><td>«Wird mit 95 % nicht unterschritten» (5%-Value-at-Risk)</td><td class="zahl">0.05</td><td>invNorm(0.05, μ, σ)</td></tr>
+          <tr><td>«Wird mit 75 % mindestens erreicht»</td><td class="zahl">0.25</td><td>invNorm(0.25, μ, σ)</td></tr>
+          <tr><td>«Die besten 10 % liegen darüber»</td><td class="zahl">0.90</td><td>invNorm(0.90, μ, σ)</td></tr>
+          <tr><td>«Symmetrisch um μ liegen 90 %»</td><td class="zahl">0.05 und 0.95</td><td>zwei Aufrufe</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="t12-stepper-quantil"></div>
+
+    <h3>Fall B: μ oder σ ist gesucht</h3>
+    <p class="prose">normCdf und invNorm brauchen \(\mu\) und \(\sigma\) als Eingabe. Fehlt eine davon, rechnest du über die Standardnormalverteilung. Dort sind \(\mu = 0\) und \(\sigma = 1\) immer bekannt (Skript S. 84; Musterbeispiel laut Lernblock: Aufgabe 6.98c). Das Rezept hat drei Schritte:</p>
+    <ol class="prose t12-ziele">
+      <li><b>Skizze</b> und Fläche links der bekannten Grenze \(x\) bestimmen.</li>
+      <li><b>z-Wert</b> zur selben Fläche: \(z = \operatorname{invNorm}(\text{Fläche links},\ 0,\ 1)\).</li>
+      <li><b>Umrechnungsformel</b> \(z = \frac{x-\mu}{\sigma}\) nach der Unbekannten auflösen.</li>
+    </ol>
+    <div id="t12-stepper-sigma"></div>
+    <p class="hint">Im Skript stehen bei Beispiel 6.8 nur die Aufgabe und der Lösungsweg in Worten (über \(z_1\) und \(z_2\)); Skizzen und Rechnung sind Lücken zum Ausfüllen in der Vorlesung. Die Zahlen oben sind eine eigene Lösung auf diesem Weg, mit der Probe bestätigt, aber nicht vom Dozenten bestätigt.</p>
+  </section>
+
+  <!-- ===== 6 · Labor ===== -->
+  <section id="labor">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Das Glockenkurven-Labor</h2>
+    <p class="prose">Hier siehst du, was die Formeln tun. Zieh die roten Grenzen mit Maus oder Finger direkt in der Grafik oder benutze die Regler darunter. Oben wählst du, was gegeben ist: Grenzen (dann rechnet das Labor die Wahrscheinlichkeit) oder eine Wahrscheinlichkeit (dann sucht es die Grenze). Mit «z-Werte» standardisierst du die Glocke und siehst, dass die Fläche gleich bleibt.</p>
+    <div class="card stack t12-labor">
+      <div class="t12-gruppe">
+        <span class="t12-gtitel" id="t12-l-bsp">Beispiel</span>
+        <div class="modes" role="group" aria-labelledby="t12-l-bsp">
+          <button type="button" class="btn" data-preset="muesli">Müesli-Packung (g)</button>
+          <button type="button" class="btn" data-preset="rendite">Fondsrendite (%)</button>
+        </div>
+      </div>
+      <div class="t12-gruppe">
+        <span class="t12-gtitel" id="t12-l-modus">Was ist gegeben?</span>
+        <div class="modes" role="group" aria-labelledby="t12-l-modus">
+          <button type="button" class="btn" data-modus="flaeche">Grenzen → Wahrscheinlichkeit</button>
+          <button type="button" class="btn" data-modus="quantil">Wahrscheinlichkeit → Grenze</button>
+        </div>
+      </div>
+      <div class="t12-gruppe">
+        <span class="t12-gtitel" id="t12-l-art">Welche Fläche?</span>
+        <div class="modes" role="group" aria-labelledby="t12-l-art">
+          <button type="button" class="btn" data-art="links">links</button>
+          <button type="button" class="btn" data-art="zwischen">zwischen</button>
+          <button type="button" class="btn" data-art="rechts">rechts</button>
+        </div>
+      </div>
+      <div class="t12-gruppe">
+        <span class="t12-gtitel" id="t12-l-achse">Achse</span>
+        <div class="modes" role="group" aria-labelledby="t12-l-achse">
+          <button type="button" class="btn" data-achse="x">x-Werte · N(μ; σ)</button>
+          <button type="button" class="btn" data-achse="z">z-Werte · N(0; 1)</button>
+        </div>
+      </div>
+      <figure class="diagramm t12-bild">
+        <svg id="t12-svg" viewBox="0 0 340 214" role="img" aria-labelledby="t12-svg-titel">
+          <title id="t12-svg-titel">Glockenkurve mit schattierter Fläche zwischen den gewählten Grenzen</title>
+          <defs><clipPath id="t12-clip"><rect x="12" y="0" width="316" height="173"></rect></clipPath></defs>
+          <line class="gitter" id="t12-mu-linie" x1="0" y1="172" x2="0" y2="40"></line>
+          <text id="t12-mu-text" text-anchor="middle" x="0" y="36">μ</text>
+          <g clip-path="url(#t12-clip)">
+            <path class="flaeche s1" id="t12-flaeche" d=""></path>
+            <path class="kurve s1" id="t12-kurve" d=""></path>
+          </g>
+          <line class="achse" x1="12" y1="172" x2="328" y2="172"></line>
+          <g id="t12-ticks"></g>
+          <text class="t12-ftext" id="t12-ftext" text-anchor="middle" x="0" y="160"></text>
+          <g id="t12-grenzen"></g>
+          <text id="t12-achsentitel" x="328" y="210" text-anchor="end"></text>
+        </svg>
+        <figcaption>Blau: Dichte und schattierte Fläche. Rot gestrichelt: Grenzen (ziehbar, runde Griffe). Dünne graue Linie: der Mittelwert μ.</figcaption>
+      </figure>
+      <div class="t12-ergebnis" aria-live="polite">
+        <div class="t12-haupt" id="t12-haupt"></div>
+        <div class="t12-ti" id="t12-ti"></div>
+        <div class="t12-deutung" id="t12-deutung"></div>
+      </div>
+      <div class="rechner">
+        <p class="hint">Ziehen oder eintippen: Jedes Feld rechts nimmt eine Zahl an (Enter oder Feld verlassen). Die Wahrscheinlichkeit darfst du auch in Prozent schreiben, z.&nbsp;B. «5 %». Werte ausserhalb des Reglerbereichs setzt das Labor auf den Rand.</p>
+        <div class="regler">
+          <label for="t12-mu">Mittelwert μ</label>
+          <input type="range" id="t12-mu" min="490" max="514" step="0.1" value="502">
+          <input type="text" inputmode="decimal" autocomplete="off" class="zahl-feld t12-feld" id="t12-mu-wert" aria-label="Mittelwert μ eintippen" value="502">
+        </div>
+        <div class="regler">
+          <label for="t12-sigma">Standardabw. σ</label>
+          <input type="range" id="t12-sigma" min="3" max="12" step="0.1" value="6">
+          <input type="text" inputmode="decimal" autocomplete="off" class="zahl-feld t12-feld" id="t12-sigma-wert" aria-label="Standardabweichung σ eintippen" value="6">
+        </div>
+        <div class="regler" id="t12-zeile-a">
+          <label for="t12-a">untere Grenze a</label>
+          <input type="range" id="t12-a" min="472" max="532" step="0.1" value="498">
+          <input type="text" inputmode="decimal" autocomplete="off" class="zahl-feld t12-feld" id="t12-a-wert" aria-label="untere Grenze a eintippen" value="498">
+        </div>
+        <div class="regler" id="t12-zeile-b">
+          <label for="t12-b">obere Grenze b</label>
+          <input type="range" id="t12-b" min="472" max="532" step="0.1" value="510">
+          <input type="text" inputmode="decimal" autocomplete="off" class="zahl-feld t12-feld" id="t12-b-wert" aria-label="obere Grenze b eintippen" value="510">
+        </div>
+        <div class="regler" id="t12-zeile-p" hidden>
+          <label for="t12-p">Wahrscheinlichkeit p</label>
+          <input type="range" id="t12-p" min="0.005" max="0.995" step="0.005" value="0.9">
+          <input type="text" inputmode="decimal" autocomplete="off" class="zahl-feld t12-feld" id="t12-p-wert" aria-label="Wahrscheinlichkeit p eintippen" value="0.9">
+        </div>
+      </div>
+      <div class="t12-gruppe">
+        <span class="t12-gtitel" id="t12-l-regel"><span class="t12-klein">σ</span>-Regel zeigen</span>
+        <div class="modes" role="group" aria-labelledby="t12-l-regel">
+          <button type="button" class="btn" data-k="1">μ ± 1σ</button>
+          <button type="button" class="btn" data-k="2">μ ± 2σ</button>
+          <button type="button" class="btn" data-k="3">μ ± 3σ</button>
+          <button type="button" class="btn" data-k="1.96">μ ± 1.96σ</button>
+        </div>
+      </div>
+    </div>
+    <h3>Fünf Aufträge fürs Labor</h3>
+    <details class="sol"><summary>1 · Müesli, zwischen 498 g und 510 g: Stell σ von 6 auf 3. Wird die Wahrscheinlichkeit grösser oder kleiner?</summary>
+      <div class="stack"><p>Grösser: von 0.6563 auf 0.9050. Mit kleinerem σ wird die Glocke schmaler und höher. Mehr Fläche drängt sich um μ = 502, also auch zwischen 498 und 510. Die Gesamtfläche bleibt 1.</p></div>
+    </details>
+    <details class="sol"><summary>2 · Schalte auf «z-Werte». Was ändert sich, was bleibt gleich?</summary>
+      <div class="stack"><p>Die Glocke wird verschoben (μ wandert auf 0) und gestaucht oder gestreckt (σ wird 1). Die Grenzen werden zu z-Werten, z.&nbsp;B. 498 → \(z = (498-502)/6 = -0.6667\). Die <b>Fläche bleibt genau gleich</b>. Darum durfte man früher mit einer einzigen Tabelle für \(Z\) alle Normalverteilungen rechnen.</p></div>
+    </details>
+    <details class="sol"><summary>3 · Drück «μ ± 1σ» bei der Müesli-Packung und dann bei der Fondsrendite. Vergleiche.</summary>
+      <div class="stack"><p>Beide Male 0.6827. Das ist Satz 6.2, Nr. 5: Die Fläche in \(\mu \pm k\sigma\) hängt nur von \(k\) ab, nicht von \(\mu\) und \(\sigma\). Mit «μ ± 1.96σ» bekommst du 0.95.</p></div>
+    </details>
+    <details class="sol"><summary>4 · Fondsrendite, «Wahrscheinlichkeit → Grenze», Fläche links, p = 0.05. Welche Rendite erscheint?</summary>
+      <div class="stack"><p>\(x_0 \approx -9.53\) %. Das ist der 5%-Value-at-Risk aus dem Lösungsfilm. Wechsle danach auf «Grenzen → Wahrscheinlichkeit», Fläche rechts, a = 2, und schieb σ nach unten: Zwischen σ = 4.3 und σ = 4.2 steigt \(P(X \ge 2)\) über 0.80. Genau das rechnet Teil (iii) des Films aus (σ ≤ 4.28 %).</p></div>
+    </details>
+    <details class="sol"><summary>5 · Nach Übung 8: Kontrolliere deinen Value-at-Risk. Fondsrendite, tippe μ = 7.5 und σ = 16 ein, «Wahrscheinlichkeit → Grenze», Fläche links, p = 1 %.</summary>
+      <div class="stack"><p>Das Labor zeigt \(x_0 \approx -29.72\) % und dieselbe Eingabe wie auf dem Rechner: invNorm(0.01, 7.5, 16). Schalte auf «z-Werte»: Zur Fläche 0.01 gehört \(z \approx -2.3263\), und \(7.5 + (-2.3263) \cdot 16 \approx -29.72\).</p></div>
+    </details>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Nimm deinen TI-Nspire dazu. Rechne zuerst selbst, dann vergleiche. Die Übungen 8 und 9 sind im Stil von Aufgabe 6a der exemplarischen Modulschlussprüfung.</p>
+    <p class="hint">Alle Übungen sind eigene Aufgaben mit eigenen Zahlen im Stil der Unterlagen. Die Lösungen sind selbst gerechnet und mit Python nachgeprüft, aber nicht vom Dozenten bestätigt.</p>
+    <div id="t12-u1"></div>
+    <div id="t12-u2"></div>
+    <div id="t12-u3"></div>
+    <div id="t12-u4"></div>
+    <div id="t12-u5"></div>
+    <div id="t12-u6"></div>
+    <div id="t12-u7"></div>
+    <div id="t12-u8"></div>
+    <div id="t12-u9"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Rendite und Value-at-Risk am Stück gelöst</h2>
+    <p class="prose">Eine Aufgabe im Stil von Aufgabe 6a der exemplarischen Modulschlussprüfung, mit eigenen Zahlen. Drück auf Play. Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist selbst gerechnet (nicht vom Dozenten bestätigt) und folgt dem Weg der Musterlösung.</p>
+    <div id="t12-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je eine richtige Antwort. Vier davon sind typische Stolperfallen.</p>
+    <div id="t12-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Stetig</b> heisst: Wahrscheinlichkeit = Fläche unter der Dichte. Ein einzelner Wert hat \(P(X = x) = 0\), darum sind ≤ und &lt; dasselbe.</li>
+      <li>\(X \sim N(\mu;\ \sigma)\): \(\mu\) verschiebt die Glocke, \(\sigma\) macht sie breiter und flacher. Die zweite Zahl ist \(\sigma\), nicht \(\sigma^2\).</li>
+      <li><b>Fläche gesucht</b> → normCdf(u, o, μ, σ), offene Seite mit \(\pm\infty\).</li>
+      <li><b>Grenze gesucht</b> → invNorm(Fläche links, μ, σ). Immer zuerst die Fläche links bestimmen, z.&nbsp;B. «mit 95 % nicht unterschritten» → 0.05.</li>
+      <li><b>μ oder σ gesucht</b> → \(z = \operatorname{invNorm}(w,\ 0,\ 1)\) mit \(w\) = Fläche links, dann \(z = \frac{x-\mu}{\sigma}\) auflösen.</li>
+      <li><b>σ-Regeln:</b> \(\mu \pm 1\sigma\): 68.27 %, \(\pm 2\sigma\): 95.45 %, \(\pm 3\sigma\): 99.73 %; \(\pm 1.645\sigma\): 90 %, \(\pm 1.960\sigma\): 95 %, \(\pm 2.576\sigma\): 99 %.</li>
+    </ul>
+    <div class="board">
+      $$z = \frac{x - \mu}{\sigma} \qquad x = \mu + z\sigma$$
+      $$P(X \le b) = F(b)$$
+      $$P(a \le X \le b) = F(b) - F(a)$$
+      $$P(X \ge a) = 1 - F(a)$$
+    </div>
+    <footer>Quellen: Skript Wahrscheinlichkeitstheorie (WT) Def. 4.18–4.23, Kap. 6.1–6.5 (Def. 6.1, Satz 6.2, Satz 6.3, Def. 6.6, Satz 6.7, Bsp. 6.8, Bem. 6.9, Aufgaben 6.96–6.104), Kap. 8.2; Folien Wahrscheinlichkeitstheorie «Normalverteilung» (1)–(3) und «Standardnormalverteilung»; Lernblock S2-LB3 (Lösungen 6.101–6.103, Test LB2+3 Aufgabe 3); exemplarische Modulschlussprüfung Aufgabe 6. Alle Beispiele mit eigenen Zahlen und in eigenen Worten. Die Lösungen der eigenen Beispiele, Übungen und des Lösungsfilms sind selbst gerechnet und mit Python nachgeprüft, aber nicht vom Dozenten bestätigt.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «${» im Text (Interpolation).
+  const T = String.raw;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const Z = (s) => '<div class="t12-fz">' + s + "</div>";            // eine Zeile in Stepper und Film
+  const ZE = (s) => '<div class="t12-fz t12-erledigt">' + s + "</div>"; // erledigte Zeile (grau)
+  const zt = (w, st) => L.zahlText(w, st);
+
+  // Makros für Farbcode und Taschenrechnerbefehle (vor der ersten Formel setzen)
+  Object.assign(L.makros, {
+    "\\vX": "\\htmlClass{v}{X}",
+    "\\vZ": "\\htmlClass{v}{Z}",
+    "\\cmu": "\\htmlClass{c}{\\mu}",
+    "\\csig": "\\htmlClass{c}{\\sigma}",
+    "\\fP": "\\htmlClass{fn}{P}",
+    "\\fF": "\\htmlClass{fn}{F}",
+    "\\normCdf": "\\operatorname{normCdf}",
+    "\\invNorm": "\\operatorname{invNorm}"
+  });
+
+  /* ---------- Numerik: Dichte, Verteilungsfunktion, Quantil der Standardnormalverteilung ---------- */
+  const WURZEL2PI = Math.sqrt(2 * Math.PI);
+  function phi(z) { return Math.exp(-0.5 * z * z) / WURZEL2PI; }
+  // erfc nach Numerical Recipes (relativer Fehler unter 1.2e-7), reicht für vier Stellen
+  function erfc(x) {
+    const z = Math.abs(x), t = 1 / (1 + 0.5 * z);
+    const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 +
+      t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+    return x >= 0 ? r : 2 - r;
+  }
+  function Phi(z) {
+    if (z === Infinity) return 1;
+    if (z === -Infinity) return 0;
+    return 0.5 * erfc(-z / Math.SQRT2);
+  }
+  // Quantil nach Acklam, mit einem Halley-Schritt verfeinert
+  const QA = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02, 1.383577518672690e+02, -3.066479806614716e+01, 2.506628277459239e+00];
+  const QB = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02, 6.680131188771972e+01, -1.328068155288572e+01];
+  const QC = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00, -2.549732539343734e+00, 4.374664141464968e+00, 2.938163982698783e+00];
+  const QD = [7.784695709041462e-03, 3.224671290700398e-01, 2.445134137142996e+00, 3.754408661907416e+00];
+  function invPhi(p) {
+    if (p <= 0) return -Infinity;
+    if (p >= 1) return Infinity;
+    let x, q, r;
+    if (p < 0.02425) {
+      q = Math.sqrt(-2 * Math.log(p));
+      x = (((((QC[0] * q + QC[1]) * q + QC[2]) * q + QC[3]) * q + QC[4]) * q + QC[5]) / ((((QD[0] * q + QD[1]) * q + QD[2]) * q + QD[3]) * q + 1);
+    } else if (p <= 1 - 0.02425) {
+      q = p - 0.5; r = q * q;
+      x = (((((QA[0] * r + QA[1]) * r + QA[2]) * r + QA[3]) * r + QA[4]) * r + QA[5]) * q / (((((QB[0] * r + QB[1]) * r + QB[2]) * r + QB[3]) * r + QB[4]) * r + 1);
+    } else {
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      x = -(((((QC[0] * q + QC[1]) * q + QC[2]) * q + QC[3]) * q + QC[4]) * q + QC[5]) / ((((QD[0] * q + QD[1]) * q + QD[2]) * q + QD[3]) * q + 1);
+    }
+    const e = Phi(x) - p, u = e * WURZEL2PI * Math.exp(x * x / 2);
+    return x - u / (1 + x * u / 2);
+  }
+
+  /* ---------- Kleine Skizzen der Glockenkurve (SVG als Text, Farben nur über Klassen) ---------- */
+  // o.flaechen: [{ von, bis, reihe }] in z-Einheiten (±Infinity erlaubt), reihe "s1" oder "s2"
+  // o.grenzen: [{ z, text }] gestrichelte Grenzen mit Beschriftung unter der Achse
+  // o.texte: [{ z, text, y }] Beschriftungen der Flächen (y optional)
+  // o.mitte: Beschriftung von μ (Standard «μ»), o.titel: Text für Screenreader
+  function skizze(o) {
+    const X0 = 8, W = 224, Y0 = 70, H = 56, ZM = 3.3;
+    const sx = (z) => X0 + (Math.max(-ZM, Math.min(ZM, z)) + ZM) / (2 * ZM) * W;
+    const sy = (z) => Y0 - phi(z) / phi(0) * H;
+    const f1 = (v) => v.toFixed(1);
+    function linie(von, bis, n) {
+      const a = Math.max(-ZM, von), b = Math.min(ZM, bis), pts = [];
+      for (let i = 0; i <= n; i++) {
+        const z = a + (b - a) * i / n;
+        pts.push(f1(sx(z)) + "," + f1(sy(z)));
+      }
+      return pts;
+    }
+    let s = '<figure class="diagramm t12-mini"><svg viewBox="0 0 240 100" role="img"><title>' + (o.titel || "Skizze der Glockenkurve") + "</title>";
+    (o.flaechen || []).forEach((fl) => {
+      const a = Math.max(-ZM, fl.von), b = Math.min(ZM, fl.bis);
+      if (b <= a) return;
+      s += '<path class="flaeche ' + (fl.reihe || "s1") + '" d="M' + f1(sx(a)) + "," + Y0 + " L" + linie(a, b, 60).join(" L") + " L" + f1(sx(b)) + "," + Y0 + ' Z"></path>';
+    });
+    s += '<path class="kurve s1" d="M' + linie(-ZM, ZM, 120).join(" L") + '"></path>';
+    s += '<line class="achse" x1="' + X0 + '" y1="' + Y0 + '" x2="' + (X0 + W) + '" y2="' + Y0 + '"></line>';
+    s += '<line class="t12-mitte" x1="' + f1(sx(0)) + '" y1="' + Y0 + '" x2="' + f1(sx(0)) + '" y2="' + (Y0 - H - 2) + '"></line>';
+    s += '<text x="' + f1(sx(0)) + '" y="97" text-anchor="middle">' + (o.mitte || "μ") + "</text>";
+    (o.grenzen || []).forEach((g) => {
+      const x = f1(sx(g.z));
+      s += '<line class="markierung" x1="' + x + '" y1="' + Y0 + '" x2="' + x + '" y2="' + (Y0 - H - 4) + '"></line>';
+      s += '<text class="t12-wert" x="' + x + '" y="84" text-anchor="middle">' + g.text + "</text>";
+    });
+    (o.texte || []).forEach((t) => {
+      const y = t.y !== undefined ? t.y : Y0 - 8;
+      s += '<text class="t12-ftext" x="' + f1(sx(t.z)) + '" y="' + y + '" text-anchor="middle">' + t.text + "</text>";
+    });
+    return s + "</svg></figure>";
+  }
+
+  /* ---------- 0 · Sortierer: Fläche oder Grenze? ---------- */
+  L.sortierer("#t12-sortierer", {
+    kategorien: ["Fläche gesucht", "Grenze gesucht"],
+    elemente: [
+      { html: "Mit welcher Wahrscheinlichkeit wiegt eine Packung weniger als 495 g?", kategorie: "Fläche gesucht",
+        erklaerung: "Gesucht ist eine Wahrscheinlichkeit, also die Fläche links von 495 g." },
+      { html: "Welches Gewicht wird von 97 % der Packungen überschritten?", kategorie: "Grenze gesucht",
+        erklaerung: "Die 97 % sind gegeben. Gesucht ist ein Gewicht, also eine Grenze auf der x-Achse." },
+      { html: "Wie viel Prozent der Jahresrenditen liegen zwischen 0 % und 10 %?", kategorie: "Fläche gesucht",
+        erklaerung: "Beide Grenzen sind bekannt. Gesucht ist der Anteil, also die Fläche dazwischen. Die Prozentzeichen bei den Grenzen sind hier Messwerte, keine Wahrscheinlichkeiten." },
+      { html: "Welche Rendite wird mit 95 % Wahrscheinlichkeit nicht unterschritten?", kategorie: "Grenze gesucht",
+        erklaerung: "Die Wahrscheinlichkeit 95 % ist gegeben, die Rendite gesucht. Das ist der Value-at-Risk, eine Grenze." },
+      { html: "Mit welcher Wahrscheinlichkeit dauert eine Lieferung länger als 40 Minuten?", kategorie: "Fläche gesucht",
+        erklaerung: "Die Grenze 40 Minuten ist bekannt. Gesucht ist die Fläche rechts davon." },
+      { html: "Ab welcher Punktzahl gehört man zu den besten 10 %?", kategorie: "Grenze gesucht",
+        erklaerung: "Der Anteil 10 % ist gegeben, die Punktzahl gesucht. Links dieser Grenze liegen 90 %." }
+    ]
+  });
+
+  /* ---------- 3 · Stepper: Standardisieren ---------- */
+  const zA = [
+    Z(T`$\vX \sim N(\htmlData{link=t12a-mu}{64};\ \htmlData{link=t12a-sig}{12})$`),
+    Z(T`$z = \dfrac{x - \cmu}{\csig}$`),
+    Z(T`$z = \dfrac{\htmlData{link=t12a-x}{82} - \htmlData{link=t12a-mu}{64}}{\htmlData{link=t12a-sig}{12}}$`),
+    Z(T`$z = \dfrac{18}{12} = 1.5$`),
+    Z(T`$x = \cmu + z \cdot \csig$`),
+    Z(T`$x = \htmlData{link=t12a-mu}{64} + (\htmlData{link=t12a-zr}{-0.75}) \cdot \htmlData{link=t12a-sig}{12} = 55$`)
+  ];
+  const stapel = (zeilen, n) => zeilen.slice(0, n).join("") + NW(zeilen[n]);
+  L.stepper("#t12-stepper-z", {
+    titel: "Beispiel: Punkte standardisieren (im Stil von Aufgabe 6.99/6.100)",
+    text: 'Im MSTW-Vortest erreichen alle im <span data-link="t12a-mu">Mittel 64 Punkte</span>, bei einer <span data-link="t12a-sig">Standardabweichung von 12 Punkten</span>. Lea hat <span data-link="t12a-x">82 Punkte</span>. Wie viele Standardabweichungen liegt sie über dem Mittel? Und welche Punktzahl gehört zum <span data-link="t12a-zr">Standardwert −0.75</span>?',
+    schritte: [
+      { html: NW(zA[0]), warum: "Zuerst das Modell: Der Mittelwert wird zu μ, die Standardabweichung zu σ." },
+      { html: stapel(zA, 1), warum: "Die Umrechnungsformel aus Satz 6.7. Im Zähler steht der Abstand zum Mittelwert, der Nenner misst diesen Abstand in Standardabweichungen." },
+      { html: stapel(zA, 2), warum: "Leas Punktzahl ist das x. Einsetzen." },
+      { html: stapel(zA, 3), warum: "Lea liegt 1.5 Standardabweichungen über dem Mittel. Ein positives z heisst: über μ." },
+      { html: stapel(zA, 4), warum: "Für den Rückweg löst du die Formel nach x auf: beide Seiten mal σ, dann μ addieren." },
+      { html: stapel(zA, 5), warum: "Ein negatives z liegt unter μ: 0.75 · 12 = 9 Punkte unter dem Mittel, also 55 Punkte." }
+    ]
+  });
+
+  /* ---------- 4 · Drei Fragetypen als Karten mit Skizze ---------- */
+  const karten = [
+    { tag: "Fläche links · «höchstens», «weniger als»", sk: skizze({ titel: "Fläche links der Grenze b", flaechen: [{ von: -Infinity, bis: 0.8 }], grenzen: [{ z: 0.8, text: "b" }] }),
+      formel: T`$P(X \le b) = F(b)$`, ti: "normCdf(−∞, b, μ, σ)" },
+    { tag: "Fläche zwischen · «zwischen», «von … bis»", sk: skizze({ titel: "Fläche zwischen a und b", flaechen: [{ von: -1, bis: 1.2 }], grenzen: [{ z: -1, text: "a" }, { z: 1.2, text: "b" }] }),
+      formel: T`$P(a \le X \le b) = F(b) - F(a)$`, ti: "normCdf(a, b, μ, σ)" },
+    { tag: "Fläche rechts · «mindestens», «mehr als»", sk: skizze({ titel: "Fläche rechts der Grenze a", flaechen: [{ von: -0.6, bis: Infinity }], grenzen: [{ z: -0.6, text: "a" }] }),
+      formel: T`$P(X \ge a) = 1 - F(a)$`, ti: "normCdf(a, ∞, μ, σ)" }
+  ];
+  document.getElementById("t12-karten").innerHTML = karten.map((k) =>
+    '<div class="concept t12-karte"><span class="tag">' + k.tag + "</span>" + k.sk +
+    '<span class="ex">' + k.formel + '</span><p><span class="t12-ti-box">' + k.ti + "</span></p></div>").join("");
+
+  /* ---------- 4 · Stepper: Müesli-Packungen ---------- */
+  const zB = [
+    Z(T`$\vX \sim N(\htmlData{link=t12b-mu}{502};\ \htmlData{link=t12b-sig}{6})$`),
+    Z(T`$\htmlData{link=t12b-a}{(a)\ \fP(\vX \le 495)} = \normCdf(-\infty,\ 495,\ 502,\ 6)$`),
+    Z(T`$(a)\ \approx 0.1217$`),
+    Z(T`$\htmlData{link=t12b-b}{(b)\ \fP(\vX \ge 500)} = \normCdf(500,\ \infty,\ 502,\ 6) \approx 0.6306$`),
+    Z(T`$\htmlData{link=t12b-c}{(c)\ \fP(498 \le \vX \le 510)} = \normCdf(498,\ 510,\ 502,\ 6) \approx 0.6563$`),
+    Z(T`$\text{Kontrolle: } \fP(-0.6667 \le \vZ \le 1.3333) = 0.9088 - 0.2525 = 0.6563$`)
+  ];
+  L.stepper("#t12-stepper-flaeche", {
+    titel: "Beispiel: Müeslipackungen (im Stil von Aufgabe 6.96)",
+    text: 'Eine Anlage füllt Müeslipackungen. Die Füllmenge ist normalverteilt mit <span data-link="t12b-mu">Mittelwert 502 g</span> und <span data-link="t12b-sig">Standardabweichung 6 g</span>. Wie gross ist die Wahrscheinlichkeit, dass eine Packung <span data-link="t12b-a">(a) höchstens 495 g</span>, <span data-link="t12b-b">(b) mindestens 500 g</span>, <span data-link="t12b-c">(c) zwischen 498 g und 510 g</span> wiegt?',
+    schritte: [
+      { html: NW(zB[0]), warum: "Modell hinschreiben. In der Prüfung gibt das bereits einen Teilpunkt." },
+      { html: stapel(zB, 1), warum: "«Höchstens» heisst ≤, also die Fläche links von 495. Auf dem TI: menu 5-5-2, untere Grenze −∞, obere Grenze 495, dann μ und σ." },
+      { html: stapel(zB, 2), warum: "Rund 12 % der Packungen wiegen höchstens 495 g. Plausibel: 495 liegt links vom Mittelwert, die Fläche muss kleiner als 0.5 sein." },
+      { html: stapel(zB, 3), warum: "«Mindestens» heisst ≥, also die Fläche rechts: untere Grenze 500, obere ∞. Gleich gut geht 1 − normCdf(−∞, 500, 502, 6)." },
+      { html: stapel(zB, 4), warum: "Zwischen zwei Grenzen: beide eintragen. Der Rechner zieht die Fläche bis 498 von der Fläche bis 510 ab." },
+      { html: stapel(zB, 5), warum: "Kontrolle über die Standardnormalverteilung wie früher mit Tabelle: beide Grenzen standardisieren, (498 − 502)/6 und (510 − 502)/6, dann F(z₂) − F(z₁). Gleiches Ergebnis, weil Standardisieren die Fläche nicht ändert." }
+    ]
+  });
+
+  /* ---------- 5 · Stepper: Quantile ---------- */
+  const zC = [
+    Z(T`$\htmlData{link=t12c-a}{(a)\ \fP(\vX \le x_0) = 0.03}$`),
+    Z(T`$x_0 = \invNorm(0.03,\ \htmlData{link=t12c-mu}{502},\ \htmlData{link=t12c-sig}{6}) \approx 490.72\ \text{g}$`),
+    Z(T`$\htmlData{link=t12c-b}{(b)}\ \text{aussen } 0.10 \Rightarrow \fP(\vX \le x_1) = 0.05,\ \ \fP(\vX \le x_2) = 0.95$`) +
+      skizze({ titel: "Symmetrisches Intervall: 90 Prozent in der Mitte, je 5 Prozent aussen", flaechen: [{ von: -1.645, bis: 1.645 }, { von: -Infinity, bis: -1.645, reihe: "s2" }, { von: 1.645, bis: Infinity, reihe: "s2" }],
+        grenzen: [{ z: -1.645, text: "x₁" }, { z: 1.645, text: "x₂" }], texte: [{ z: 0, text: "0.90", y: 52 }, { z: -2.5, text: "0.05", y: 52 }, { z: 2.5, text: "0.05", y: 52 }] }),
+    Z(T`$x_1 = \invNorm(0.05,\ 502,\ 6) \approx 492.13\ \text{g}$`),
+    Z(T`$x_2 = \invNorm(0.95,\ 502,\ 6) \approx 511.87\ \text{g}$`),
+    Z(T`$\text{Kontrolle: } 502 \pm 1.645 \cdot 6 = 502 \pm 9.87$`)
+  ];
+  L.stepper("#t12-stepper-quantil", {
+    titel: "Beispiel: Grenzen bei den Müeslipackungen",
+    text: 'Gleiche Anlage, <span data-link="t12c-mu">μ = 502 g</span>, <span data-link="t12c-sig">σ = 6 g</span>. <span data-link="t12c-a">(a) Unter welchem Gewicht liegen nur 3 % der Packungen?</span> <span data-link="t12c-b">(b) Zwischen welchen zwei Grenzen, symmetrisch um μ, liegen 90 % der Packungen?</span>',
+    schritte: [
+      { html: NW(zC[0]), warum: "«Darunter liegen 3 %» ist schon die Fläche links. Gesucht ist die Grenze x₀, also invNorm." },
+      { html: stapel(zC, 1), warum: "TI: menu 5-5-3 «Inverse Normal», Fläche 0.03, μ = 502, σ = 6. Nur 3 % der Packungen wiegen weniger als 490.72 g." },
+      { html: stapel(zC, 2), warum: "90 % in der Mitte heisst 10 % aussen. Wegen der Symmetrie je 5 % links und rechts. invNorm braucht für jede Grenze die Fläche links von ihr." },
+      { html: stapel(zC, 3), warum: "Untere Grenze: Links von x₁ liegen 0.05." },
+      { html: stapel(zC, 4), warum: "Obere Grenze: Links von x₂ liegen 0.05 + 0.90 = 0.95. Hier nicht 0.90 eingeben, das ist ein typischer Fehler." },
+      { html: stapel(zC, 5), warum: "Probe mit Satz 6.2: In μ ± 1.645σ liegen 90 %. 502 − 9.87 = 492.13 und 502 + 9.87 = 511.87." }
+    ]
+  });
+
+  /* ---------- 5 · Stepper: Beispiel 6.8, σ gesucht ---------- */
+  const zD = [
+    Z(T`$\htmlData{link=t12d-sym}{\cmu = \dfrac{-3 + 11}{2} = 4}$`),
+    Z(T`$\htmlData{link=t12d-p}{\fP(-3 \le \vX \le 11) = 0.8} \Rightarrow \fP(\vX \le 11) = 0.9$`) +
+      skizze({ titel: "80 Prozent in der Mitte zwischen −3 und 11, je 10 Prozent aussen", flaechen: [{ von: -1.2816, bis: 1.2816 }, { von: -Infinity, bis: -1.2816, reihe: "s2" }, { von: 1.2816, bis: Infinity, reihe: "s2" }],
+        grenzen: [{ z: -1.2816, text: "−3" }, { z: 1.2816, text: "11" }], texte: [{ z: 0, text: "0.8", y: 52 }, { z: -2.4, text: "0.1", y: 52 }, { z: 2.4, text: "0.1", y: 52 }], mitte: "μ = 4" }),
+    Z(T`$z_2 = \invNorm(0.9,\ 0,\ 1) \approx 1.2816$`),
+    Z(T`$\dfrac{11 - 4}{\htmlData{link=t12d-sig}{\csig}} = 1.2816$`),
+    Z(T`$\htmlData{link=t12d-sig}{\csig} = \dfrac{7}{1.2816} \approx 5.462$`),
+    Z(T`$\text{Probe: } \normCdf(-3,\ 11,\ 4,\ 5.462) \approx 0.8$`)
+  ];
+  L.stepper("#t12-stepper-sigma", {
+    titel: "Beispiel 6.8 (Skript WT): σ gesucht",
+    text: 'Für eine normalverteilte Zufallsvariable X ist <span data-link="t12d-sig">σ</span> so zu bestimmen, dass <span data-link="t12d-p">P(−3 ≤ X ≤ 11) = 0.8</span> gilt. Dabei ist <span data-link="t12d-sym">das Intervall [−3; 11] symmetrisch um μ</span>.',
+    schritte: [
+      { html: NW(zD[0]), warum: "Symmetrisch um μ heisst: μ liegt genau in der Mitte des Intervalls." },
+      { html: stapel(zD, 1), warum: "Skizze: 0.8 in der Mitte, also 0.2 aussen, je 0.1 links und rechts. Links von 11 liegen 0.1 + 0.8 = 0.9." },
+      { html: stapel(zD, 2), warum: "Ohne σ kannst du für X nichts eintippen. Bei Z sind μ = 0 und σ = 1 bekannt. Zur gleichen Fläche 0.9 gehört z₂ ≈ 1.2816." },
+      { html: stapel(zD, 3), warum: "Gleiche Fläche heisst: z₂ und x₂ = 11 entsprechen sich. In z = (x − μ)/σ einsetzen. Einzige Unbekannte ist σ." },
+      { html: stapel(zD, 4), warum: "Mit σ multiplizieren und durch 1.2816 teilen." },
+      { html: stapel(zD, 5), warum: "Probe mit dem Rechner: Die Fläche zwischen −3 und 11 ist mit σ = 5.462 tatsächlich 0.8." }
+    ]
+  });
+
+  /* ---------- 6 · Glockenkurven-Labor ---------- */
+  const PRESETS = {
+    muesli: { einheit: "g", xmin: 472, xmax: 532, tick: 10, stellen: 2,
+      mu: [490, 514, 502], sigma: [3, 12, 6],
+      flaeche: { art: "zwischen", a: 498, b: 510 }, quantil: { art: "links", p: 0.03 },
+      wort: "Füllmenge" },
+    rendite: { einheit: "%", xmin: -32, xmax: 44, tick: 10, stellen: 2,
+      mu: [-5, 15, 5.6], sigma: [4, 16, 9.2],
+      flaeche: { art: "rechts", a: 2, b: 20 }, quantil: { art: "links", p: 0.05 },
+      wort: "Rendite" }
+  };
+  const X0 = 12, W = 316, Y0 = 172, H = 132, ZMIN = -3.6, ZMAX = 3.6, YMAXZ = phi(0) * 1.12;
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (id) => document.getElementById(id);
+  const svg = $("t12-svg");
+  const el = {
+    kurve: $("t12-kurve"), flaeche: $("t12-flaeche"), ticks: $("t12-ticks"), grenzen: $("t12-grenzen"),
+    muLinie: $("t12-mu-linie"), muText: $("t12-mu-text"), ftext: $("t12-ftext"), achsentitel: $("t12-achsentitel"),
+    haupt: $("t12-haupt"), ti: $("t12-ti"), deutung: $("t12-deutung"),
+    mu: $("t12-mu"), sigma: $("t12-sigma"), a: $("t12-a"), b: $("t12-b"), p: $("t12-p"),
+    muW: $("t12-mu-wert"), sigmaW: $("t12-sigma-wert"), aW: $("t12-a-wert"), bW: $("t12-b-wert"), pW: $("t12-p-wert"),
+    zeileA: $("t12-zeile-a"), zeileB: $("t12-zeile-b"), zeileP: $("t12-zeile-p")
+  };
+  const lab = { preset: "muesli", modus: "flaeche", art: "zwischen", achse: "x", t: 0, mu: 502, sigma: 6, a: 498, b: 510, p: 0.03 };
+  let P = PRESETS.muesli;
+  const reduziert = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const f2 = (v) => v.toFixed(2);
+
+  function svgEl(tag, attr, text) {
+    const e = document.createElementNS(NS, tag);
+    Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  // Datenwert x → Bildschirm, je nach Übergang t (0 = x-Achse, 1 = z-Achse)
+  const yMaxX = () => phi(0) / P.sigma[0] * 1.08;
+  function px(x) {
+    const ax = X0 + (x - P.xmin) / (P.xmax - P.xmin) * W;
+    const az = X0 + ((x - lab.mu) / lab.sigma - ZMIN) / (ZMAX - ZMIN) * W;
+    return ax + (az - ax) * lab.t;
+  }
+  function py(x) {
+    const z = (x - lab.mu) / lab.sigma;
+    const hx = phi(z) / lab.sigma / yMaxX(), hz = phi(z) / YMAXZ;
+    return Y0 - H * Math.min(1.05, hx + (hz - hx) * lab.t);
+  }
+  function xAusPx(sx) {
+    const u = (sx - X0) / W;
+    if (lab.t >= 0.5) return lab.mu + lab.sigma * (ZMIN + u * (ZMAX - ZMIN));
+    return P.xmin + u * (P.xmax - P.xmin);
+  }
+  function zGitter() {
+    const lo = Math.min(-6, (P.xmin - lab.mu) / lab.sigma - 0.5), hi = Math.max(6, (P.xmax - lab.mu) / lab.sigma + 0.5);
+    const g = [];
+    for (let z = lo; z < -5; z += 0.5) g.push(z);
+    for (let i = 0; i <= 200; i++) g.push(-5 + i * 0.05);
+    for (let z = 5.5; z <= hi; z += 0.5) g.push(z);
+    g.push(hi);
+    return g;
+  }
+  // Aktuelle Grenzen (lo, hi) in x; ±Infinity für offene Seiten
+  function grenzen() {
+    const m = lab.mu, s = lab.sigma;
+    if (lab.modus === "flaeche") {
+      if (lab.art === "links") return { lo: -Infinity, hi: lab.b };
+      if (lab.art === "rechts") return { lo: lab.a, hi: Infinity };
+      return { lo: lab.a, hi: lab.b };
+    }
+    if (lab.art === "links") return { lo: -Infinity, hi: m + s * invPhi(lab.p) };
+    if (lab.art === "rechts") return { lo: m + s * invPhi(1 - lab.p), hi: Infinity };
+    return { lo: m + s * invPhi((1 - lab.p) / 2), hi: m + s * invPhi((1 + lab.p) / 2) };
+  }
+  const flaecheVon = (g) => Phi((g.hi - lab.mu) / lab.sigma) - Phi((g.lo - lab.mu) / lab.sigma);
+
+  function zeichnen() {
+    const g = grenzen(), gitter = zGitter();
+    const punkte = gitter.map((z) => { const x = lab.mu + z * lab.sigma; return f2(px(x)) + "," + f2(py(x)); });
+    el.kurve.setAttribute("d", "M" + punkte.join(" L"));
+    // Fläche zwischen lo und hi
+    const xs = gitter.map((z) => lab.mu + z * lab.sigma);
+    const lo = Number.isFinite(g.lo) ? g.lo : xs[0], hi = Number.isFinite(g.hi) ? g.hi : xs[xs.length - 1];
+    const innen = [lo].concat(xs.filter((x) => x > lo && x < hi), [hi]);
+    el.flaeche.setAttribute("d", "M" + f2(px(lo)) + "," + Y0 + " L" + innen.map((x) => f2(px(x)) + "," + f2(py(x))).join(" L") + " L" + f2(px(hi)) + "," + Y0 + " Z");
+    // Mittelwert-Linie
+    const mx = f2(px(lab.mu));
+    el.muLinie.setAttribute("x1", mx); el.muLinie.setAttribute("x2", mx);
+    el.muText.setAttribute("x", mx);
+    // Grenzen mit Griffen und Werten
+    el.grenzen.textContent = "";
+    const sichtbar = [];
+    if (Number.isFinite(g.lo)) sichtbar.push({ x: g.lo, seite: Number.isFinite(g.hi) ? "end" : "middle" });
+    if (Number.isFinite(g.hi)) sichtbar.push({ x: g.hi, seite: Number.isFinite(g.lo) ? "start" : "middle" });
+    sichtbar.forEach((s) => {
+      const x = Math.max(X0, Math.min(X0 + W, px(s.x)));
+      el.grenzen.appendChild(svgEl("line", { class: "markierung", x1: f2(x), y1: Y0, x2: f2(x), y2: 30 }));
+      el.grenzen.appendChild(svgEl("circle", { class: "t12-griff", cx: f2(x), cy: Y0, r: 8 }));
+      const wert = lab.t >= 0.5 ? "z = " + zt((s.x - lab.mu) / lab.sigma, 2) : zt(s.x, P.stellen);
+      const tx = s.seite === "end" ? x - 4 : s.seite === "start" ? x + 4 : x;
+      const anker = s.seite === "middle" ? (x < X0 + 40 ? "start" : x > X0 + W - 40 ? "end" : "middle") : s.seite;
+      el.grenzen.appendChild(svgEl("text", { class: "t12-wert", x: f2(tx), y: 22, "text-anchor": anker }, wert));
+    });
+    // Prozentangabe in der Fläche
+    const w = flaecheVon(g);
+    const links = Math.max(X0, Number.isFinite(g.lo) ? px(g.lo) : X0), rechts = Math.min(X0 + W, Number.isFinite(g.hi) ? px(g.hi) : X0 + W);
+    let mitte = (links + rechts) / 2;
+    if (!Number.isFinite(g.lo) && Number.isFinite(g.hi)) mitte = Math.max(X0 + 28, rechts - 30);
+    if (Number.isFinite(g.lo) && !Number.isFinite(g.hi)) mitte = Math.min(X0 + W - 28, links + 30);
+    el.ftext.setAttribute("x", f2(Math.max(X0 + 28, Math.min(X0 + W - 28, mitte))));
+    el.ftext.textContent = zt(w * 100, 2) + " %";
+    // Achsenbeschriftung nur im Ruhezustand
+    el.ticks.textContent = "";
+    if (lab.t === 0 || lab.t === 1) {
+      const werte = [];
+      if (lab.t === 0) for (let v = Math.ceil(P.xmin / P.tick) * P.tick; v <= P.xmax; v += P.tick) werte.push(v);
+      else for (let v = -3; v <= 3; v++) werte.push(v);
+      werte.forEach((v) => {
+        const x = lab.t === 0 ? px(v) : X0 + (v - ZMIN) / (ZMAX - ZMIN) * W;
+        el.ticks.appendChild(svgEl("line", { class: "achse", x1: f2(x), y1: Y0, x2: f2(x), y2: Y0 + 4 }));
+        el.ticks.appendChild(svgEl("text", { x: f2(x), y: Y0 + 19, "text-anchor": "middle" }, zt(v, 2)));
+      });
+      el.achsentitel.textContent = lab.t === 0 ? "x in " + P.einheit : "z (Standardwerte)";
+    } else el.achsentitel.textContent = "";
+  }
+
+  // Ergebnis als Text mit Farbcode (ohne KaTeX, damit es beim Ziehen flüssig bleibt)
+  const vX = '<span class="v">X</span>', vZ = '<span class="v">Z</span>', fP = '<span class="fn">P</span>';
+  const st = (s) => '<span class="t12-stueck">' + s + "</span>";
+  function ergebnisZeigen() {
+    const g = grenzen(), w = flaecheVon(g), m = lab.mu, s = lab.sigma, e = P.einheit;
+    const xs = (v) => zt(v, P.stellen), zs = (v) => zt(v, 4), ws = (v) => zt(v, 4);
+    const ms = zt(m, 2) + ", " + zt(s, 2);
+    const za = (g.lo - m) / s, zb = (g.hi - m) / s;
+    let haupt = "", ti = "", deutung = "";
+    if (lab.modus === "flaeche") {
+      const proz = zt(w * 100, 2) + " %";
+      if (lab.achse === "x") {
+        if (lab.art === "links") { haupt = st(fP + "(" + vX + " ≤ " + xs(g.hi) + ")") + " " + st("= <b>" + ws(w) + "</b>"); ti = "normCdf(−∞, " + xs(g.hi) + ", " + ms + ") = " + ws(w); deutung = "Mit " + proz + " Wahrscheinlichkeit ist die " + P.wort + " höchstens " + xs(g.hi) + " " + e + "."; }
+        else if (lab.art === "rechts") { haupt = st(fP + "(" + vX + " ≥ " + xs(g.lo) + ")") + " " + st("= <b>" + ws(w) + "</b>"); ti = "normCdf(" + xs(g.lo) + ", ∞, " + ms + ") = " + ws(w); deutung = "Mit " + proz + " Wahrscheinlichkeit ist die " + P.wort + " mindestens " + xs(g.lo) + " " + e + "."; }
+        else { haupt = st(fP + "(" + xs(g.lo) + " ≤ " + vX + " ≤ " + xs(g.hi) + ")") + " " + st("= <b>" + ws(w) + "</b>"); ti = "normCdf(" + xs(g.lo) + ", " + xs(g.hi) + ", " + ms + ") = " + ws(w); deutung = "Mit " + proz + " Wahrscheinlichkeit liegt die " + P.wort + " zwischen " + xs(g.lo) + " " + e + " und " + xs(g.hi) + " " + e + "."; }
+      } else {
+        const zl = "z₁ = (" + xs(g.lo) + " − " + zt(m, 2) + ") / " + zt(s, 2) + " = " + zs(za);
+        const zr = "z₂ = (" + xs(g.hi) + " − " + zt(m, 2) + ") / " + zt(s, 2) + " = " + zs(zb);
+        if (lab.art === "links") { haupt = st(fP + "(" + vZ + " ≤ " + zs(zb) + ")") + " " + st("= <b>" + ws(w) + "</b>"); ti = zr.replace("z₂", "z") + " → normCdf(−∞, " + zs(zb) + ", 0, 1)"; }
+        else if (lab.art === "rechts") { haupt = st(fP + "(" + vZ + " ≥ " + zs(za) + ")") + " " + st("= <b>" + ws(w) + "</b>"); ti = zl.replace("z₁", "z") + " → normCdf(" + zs(za) + ", ∞, 0, 1)"; }
+        else { haupt = st(fP + "(" + zs(za) + " ≤ " + vZ + " ≤ " + zs(zb) + ")") + " " + st("= <b>" + ws(w) + "</b>"); ti = zl + " · " + zr + " → normCdf(" + zs(za) + ", " + zs(zb) + ", 0, 1)"; }
+        deutung = "Gleiche Fläche wie bei den x-Werten. Standardisieren verschiebt und staucht die Glocke, an der Fläche ändert sich nichts.";
+      }
+    } else {
+      const p = lab.p, ps = zt(p, 3);
+      if (lab.achse === "x") {
+        if (lab.art === "links") {
+          haupt = st(fP + "(" + vX + " ≤ x₀) = " + ps) + " " + st("⇒ x₀ = <b>" + xs(g.hi) + "</b>");
+          ti = "invNorm(" + ps + ", " + ms + ") = " + xs(g.hi);
+          deutung = "Links von " + xs(g.hi) + " " + e + " liegt die Fläche " + ps + ".";
+          if (lab.preset === "rendite") deutung += " Bei einer Rendite heisst diese Grenze " + zt(p * 100, 1) + "%-Value-at-Risk: Sie wird mit " + zt((1 - p) * 100, 1) + " % Wahrscheinlichkeit nicht unterschritten.";
+        } else if (lab.art === "rechts") {
+          haupt = st(fP + "(" + vX + " ≥ x₀) = " + ps) + " " + st("⇒ x₀ = <b>" + xs(g.lo) + "</b>");
+          ti = "Fläche links: 1 − " + ps + " = " + zt(1 - p, 3) + " → invNorm(" + zt(1 - p, 3) + ", " + ms + ") = " + xs(g.lo);
+          deutung = "invNorm will immer die Fläche links. Darum rechnest du zuerst 1 − " + ps + ".";
+        } else {
+          haupt = st(fP + "(x₁ ≤ " + vX + " ≤ x₂) = " + ps) + " " + st("⇒ x₁ = <b>" + xs(g.lo) + "</b>,") + " " + st("x₂ = <b>" + xs(g.hi) + "</b>");
+          ti = "invNorm(" + zt((1 - p) / 2, 4) + ", " + ms + ") = " + xs(g.lo) + " · invNorm(" + zt((1 + p) / 2, 4) + ", " + ms + ") = " + xs(g.hi);
+          deutung = "Symmetrisch um μ: Aussen bleiben " + zt(1 - p, 3) + ", je die Hälfte links und rechts. Für x₂ ist die Fläche links " + zt((1 + p) / 2, 4) + ".";
+        }
+      } else {
+        if (lab.art === "zwischen") {
+          haupt = st("z₁ = <b>" + zs(za) + "</b>,") + " " + st("z₂ = <b>" + zs(zb) + "</b>");
+          ti = "z = invNorm(" + zt((1 + p) / 2, 4) + ", 0, 1) = " + zs(zb) + " → x = μ ± z · σ = " + zt(m, 2) + " ± " + zs(zb) + " · " + zt(s, 2);
+        } else {
+          const fl = lab.art === "links" ? p : 1 - p, zz = lab.art === "links" ? zb : za, xx = lab.art === "links" ? g.hi : g.lo;
+          haupt = st("z = invNorm(" + zt(fl, 3) + ", 0, 1)") + " " + st("= <b>" + zs(zz) + "</b>");
+          ti = "x₀ = μ + z · σ = " + zt(m, 2) + " + (" + zs(zz) + ") · " + zt(s, 2) + " = " + xs(xx);
+        }
+        deutung = "Der z-Wert hängt nur von der Fläche ab, nicht von μ und σ. Mit x = μ + z · σ kommst du zurück auf die x-Achse. So löst du Aufgaben, in denen μ oder σ gesucht ist.";
+      }
+    }
+    el.haupt.innerHTML = haupt;
+    el.ti.textContent = ti;
+    el.deutung.textContent = deutung;
+  }
+
+  function knopfGruppe(attr, wert) {
+    document.querySelectorAll(".t12-labor [" + attr + "]").forEach((b) => {
+      const an = b.getAttribute(attr) === wert;
+      b.classList.toggle("on", an);
+      b.setAttribute("aria-pressed", an ? "true" : "false");
+    });
+  }
+  function reglerSetzen(r, feld, v, stellen) {
+    r.value = String(v);
+    // Ein Feld, in dem gerade getippt wird, nicht überschreiben
+    if (document.activeElement !== feld) {
+      feld.value = zt(v, stellen);
+      feld.removeAttribute("aria-invalid");
+    }
+  }
+  function steuerungZeigen() {
+    knopfGruppe("data-preset", lab.preset);
+    knopfGruppe("data-modus", lab.modus);
+    knopfGruppe("data-art", lab.art);
+    knopfGruppe("data-achse", lab.achse);
+    const arten = document.querySelectorAll(".t12-labor [data-art]");
+    const beschr = lab.modus === "flaeche"
+      ? { links: "links: P(X ≤ b)", zwischen: "zwischen: P(a ≤ X ≤ b)", rechts: "rechts: P(X ≥ a)" }
+      : { links: "links: P(X ≤ x₀) = p", zwischen: "symmetrisch um μ", rechts: "rechts: P(X ≥ x₀) = p" };
+    arten.forEach((b) => { b.textContent = beschr[b.getAttribute("data-art")]; });
+    const fl = lab.modus === "flaeche";
+    el.zeileA.hidden = !(fl && lab.art !== "links");
+    el.zeileB.hidden = !(fl && lab.art !== "rechts");
+    el.zeileP.hidden = fl;
+    reglerSetzen(el.mu, el.muW, lab.mu, 2);
+    reglerSetzen(el.sigma, el.sigmaW, lab.sigma, 2);
+    reglerSetzen(el.a, el.aW, lab.a, 2);
+    reglerSetzen(el.b, el.bW, lab.b, 2);
+    reglerSetzen(el.p, el.pW, lab.p, 3);
+  }
+  function alles() { steuerungZeigen(); zeichnen(); ergebnisZeigen(); }
+
+  function presetLaden(name) {
+    lab.preset = name;
+    P = PRESETS[name];
+    lab.mu = P.mu[2]; lab.sigma = P.sigma[2];
+    lab.a = P.flaeche.a; lab.b = P.flaeche.b; lab.p = P.quantil.p;
+    lab.art = P[lab.modus].art;
+    el.mu.min = P.mu[0]; el.mu.max = P.mu[1];
+    el.sigma.min = P.sigma[0]; el.sigma.max = P.sigma[1];
+    [el.a, el.b].forEach((r) => { r.min = P.xmin; r.max = P.xmax; });
+    if (lab.achse === "z") { lab.achse = "x"; lab.t = 0; }
+    alles();
+  }
+
+  let animation = null;
+  function achseSetzen(ziel) {
+    if (lab.achse === ziel) return;
+    lab.achse = ziel;
+    steuerungZeigen();
+    ergebnisZeigen();
+    const start = lab.t, ende = ziel === "z" ? 1 : 0;
+    cancelAnimationFrame(animation);
+    if (reduziert()) { lab.t = ende; zeichnen(); return; }
+    const t0 = performance.now(), dauer = 800;
+    function schritt(jetzt) {
+      const u = Math.min(1, (jetzt - t0) / dauer);
+      const glatt = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      lab.t = u >= 1 ? ende : start + (ende - start) * glatt;
+      zeichnen();
+      if (u < 1) animation = requestAnimationFrame(schritt);
+    }
+    animation = requestAnimationFrame(schritt);
+  }
+
+  document.querySelectorAll(".t12-labor [data-preset]").forEach((b) => b.addEventListener("click", () => presetLaden(b.getAttribute("data-preset"))));
+  document.querySelectorAll(".t12-labor [data-modus]").forEach((b) => b.addEventListener("click", () => {
+    lab.modus = b.getAttribute("data-modus");
+    alles();
+  }));
+  document.querySelectorAll(".t12-labor [data-art]").forEach((b) => b.addEventListener("click", () => {
+    lab.art = b.getAttribute("data-art");
+    alles();
+  }));
+  document.querySelectorAll(".t12-labor [data-achse]").forEach((b) => b.addEventListener("click", () => achseSetzen(b.getAttribute("data-achse"))));
+  document.querySelectorAll(".t12-labor [data-k]").forEach((b) => b.addEventListener("click", () => {
+    const k = Number(b.getAttribute("data-k"));
+    lab.modus = "flaeche"; lab.art = "zwischen";
+    lab.a = lab.mu - k * lab.sigma; lab.b = lab.mu + k * lab.sigma;
+    alles();
+  }));
+  el.mu.addEventListener("input", () => { lab.mu = Number(el.mu.value); alles(); });
+  el.sigma.addEventListener("input", () => { lab.sigma = Number(el.sigma.value); alles(); });
+  el.a.addEventListener("input", () => {
+    lab.a = Number(el.a.value);
+    if (lab.art === "zwischen" && lab.a > lab.b) lab.b = lab.a;
+    alles();
+  });
+  el.b.addEventListener("input", () => {
+    lab.b = Number(el.b.value);
+    if (lab.art === "zwischen" && lab.b < lab.a) lab.a = lab.b;
+    alles();
+  });
+  el.p.addEventListener("input", () => { lab.p = Number(el.p.value); alles(); });
+
+  // Eingetippte Werte übernehmen (Enter oder Feld verlassen), auf den Bereich des Reglers begrenzen
+  function feldAnbinden(feld, regler, schluessel, istP) {
+    feld.addEventListener("change", () => {
+      let v = L.zahlLesen(feld.value);
+      if (istP && Number.isFinite(v) && (feld.value.indexOf("%") >= 0 || (v >= 1 && v < 100))) v = v / 100;
+      if (!Number.isFinite(v)) { feld.setAttribute("aria-invalid", "true"); return; }
+      const min = istP ? 0.001 : Number(regler.min), max = istP ? 0.999 : Number(regler.max);
+      v = Math.max(min, Math.min(max, v));
+      lab[schluessel] = v;
+      if (lab.art === "zwischen" && lab.a > lab.b) {
+        if (schluessel === "a") lab.b = lab.a; else if (schluessel === "b") lab.a = lab.b;
+      }
+      feld.removeAttribute("aria-invalid");
+      feld.value = zt(v, istP ? 3 : 2);
+      alles();
+    });
+  }
+  feldAnbinden(el.muW, el.mu, "mu", false);
+  feldAnbinden(el.sigmaW, el.sigma, "sigma", false);
+  feldAnbinden(el.aW, el.a, "a", false);
+  feldAnbinden(el.bW, el.b, "b", false);
+  feldAnbinden(el.pW, el.p, "p", true);
+
+  // Grenzen in der Grafik ziehen (Maus, Stift, Finger). Senkrechtes Wischen scrollt weiter die Seite.
+  let zug = null;
+  function xAusEreignis(e) {
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const m = svg.getScreenCTM();
+    if (!m) return null;
+    return xAusPx(pt.matrixTransform(m.inverse()).x);
+  }
+  const runden = (v, schritt) => Math.round(v / schritt) * schritt;
+  function verschieben(x) {
+    if (x === null || !Number.isFinite(x)) return;
+    if (lab.modus === "flaeche") {
+      x = Math.max(P.xmin, Math.min(P.xmax, runden(x, 0.1)));
+      let griff = zug.griff;
+      if (griff === "a") lab.a = x; else lab.b = x;
+      if (lab.art === "zwischen" && lab.a > lab.b) {
+        const h = lab.a; lab.a = lab.b; lab.b = h;
+        zug.griff = griff === "a" ? "b" : "a";
+      }
+    } else {
+      const z = (x - lab.mu) / lab.sigma;
+      let p = lab.art === "links" ? Phi(z) : lab.art === "rechts" ? 1 - Phi(z) : 2 * Phi(Math.abs(z)) - 1;
+      lab.p = Math.max(0.005, Math.min(0.995, runden(p, 0.005)));
+    }
+    alles();
+  }
+  svg.addEventListener("pointerdown", (e) => {
+    if (lab.t !== 0 && lab.t !== 1) return;
+    const x = xAusEreignis(e);
+    if (x === null) return;
+    let griff = "q";
+    if (lab.modus === "flaeche") {
+      if (lab.art === "links") griff = "b";
+      else if (lab.art === "rechts") griff = "a";
+      else griff = Math.abs(x - lab.a) <= Math.abs(x - lab.b) ? "a" : "b";
+    }
+    zug = { griff: griff, startX: e.clientX, aktiv: e.pointerType === "mouse", id: e.pointerId };
+    try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ohne Capture weiter */ }
+    if (zug.aktiv) verschieben(x);
+  });
+  svg.addEventListener("pointermove", (e) => {
+    if (!zug || e.pointerId !== zug.id) return;
+    if (!zug.aktiv && Math.abs(e.clientX - zug.startX) > 6) zug.aktiv = true;
+    if (zug.aktiv) { e.preventDefault(); verschieben(xAusEreignis(e)); }
+  });
+  svg.addEventListener("pointerup", (e) => {
+    if (!zug) return;
+    if (!zug.aktiv) verschieben(xAusEreignis(e)); // Antippen setzt die Grenze
+    zug = null;
+  });
+  svg.addEventListener("pointercancel", () => { zug = null; });
+
+  presetLaden("muesli");
+
+  /* ---------- 7 · Übungen ---------- */
+  L.zahlAufgabe("#t12-u1", {
+    titel: "Übung 1 · Standardwert berechnen",
+    frage: "<p>Die Lieferzeit eines Pizzakuriers ist normalverteilt mit μ = 32 Minuten und σ = 5 Minuten. Eine Pizza kommt nach 24 Minuten an. Welcher Standardwert z gehört dazu? Auf zwei Stellen.</p>",
+    antwort: -1.6, toleranz: 0.005, anzeige: "z = −1.6",
+    hinweise: [T`Formel aus Satz 6.7: $z = \frac{x - \mu}{\sigma}$.`, "Die Pizza ist schneller als im Mittel. Das Vorzeichen muss negativ sein."],
+    loesungsweg: [
+      T`$X \sim N(32;\ 5)$, $x = 24$`,
+      T`$z = \dfrac{24 - 32}{5} = \dfrac{-8}{5} = -1.6$`,
+      "Die Lieferung liegt 1.6 Standardabweichungen unter dem Mittelwert."
+    ]
+  });
+
+  L.zahlAufgabe("#t12-u2", {
+    titel: "Übung 2 · Fläche zwischen zwei Grenzen",
+    frage: "<p>Die Akku-Laufzeit eines Notebook-Modells ist normalverteilt mit μ = 18.5 h und σ = 2.2 h. Wie gross ist die Wahrscheinlichkeit, dass ein Akku zwischen 16 h und 20 h durchhält? Auf vier Stellen.</p>",
+    antwort: 0.6244, toleranz: 0.0005, anzeige: "≈ 0.6244",
+    hinweise: ["«Zwischen» heisst: beide Grenzen in normCdf eintragen.", "TI: menu 5-5-2, untere Grenze 16, obere Grenze 20, μ = 18.5, σ = 2.2."],
+    loesungsweg: [
+      T`$X \sim N(18.5;\ 2.2)$`,
+      T`$P(16 \le X \le 20) =$ <span class="t12-ti-box">normCdf(16, 20, 18.5, 2.2)</span> $\approx 0.6244$`,
+      T`Kontrolle über $Z$: $z_1 = \frac{16 - 18.5}{2.2} \approx -1.1364$, $z_2 = \frac{20 - 18.5}{2.2} \approx 0.6818$, $F(z_2) - F(z_1) \approx 0.7523 - 0.1279 = 0.6244$`
+    ]
+  });
+
+  L.zahlAufgabe("#t12-u3", {
+    titel: "Übung 3 · Zwei Lösungen (im Stil von Aufgabe 6.102)",
+    frage: "<p>Unter der Standardnormalverteilung ist die Fläche zwischen 0 und z genau 0.35 gross. Welcher Wert z passt? Es gibt zwei Lösungen. Gib eine davon auf vier Stellen ein, die andere findest du im Lösungsweg.</p>",
+    antwort: [1.0364, -1.0364], toleranz: 0.0005, anzeige: "z₁ ≈ 1.0364 oder z₂ ≈ −1.0364",
+    hinweise: ["Mach eine Skizze. Die Fläche kann rechts von 0 liegen (von 0 bis z) oder links von 0 (von z bis 0).", "invNorm braucht die Fläche links von z. Links von 0 liegt schon 0.5."],
+    loesungsweg: [
+      "Skizze: Die Fläche 0.35 kann rechts von 0 liegen (blau) oder links von 0 (orange)." +
+      skizze({ titel: "Fläche 0.35 rechts oder links von 0", flaechen: [{ von: 0, bis: 1.0364 }, { von: -1.0364, bis: 0, reihe: "s2" }],
+        grenzen: [{ z: -1.0364, text: "z₂" }, { z: 1.0364, text: "z₁" }], texte: [{ z: 0.5, text: "0.35", y: 52 }, { z: -0.5, text: "0.35", y: 52 }], mitte: "0" }),
+      T`Fall 1, $z$ rechts von 0: Fläche links von $z$ ist $0.5 + 0.35 = 0.85$, also $z_1 = \invNorm(0.85,\ 0,\ 1) \approx 1.0364$`,
+      T`Fall 2, $z$ links von 0: Fläche links von $z$ ist $0.5 - 0.35 = 0.15$, also $z_2 = \invNorm(0.15,\ 0,\ 1) \approx -1.0364$`,
+      "Wegen der Symmetrie gilt z₂ = −z₁. Die Lernblock-Lösung zu Aufgabe 6.102 hält fest: Es gibt jeweils zwei Lösungen. Mit einer Skizze übersiehst du die zweite nicht."
+    ]
+  });
+
+  L.wahrFalsch("#t12-u4", {
+    titel: "Übung 4 · Eigenschaften der Glockenkurve",
+    aussagen: [
+      { html: T`Die Dichte $f(x)$ hat ihr Maximum bei $x = \mu$.`, wahr: true, erklaerung: "Satz 6.2, Nr. 3: Der höchste Punkt liegt beim Mittelwert." },
+      { html: T`Die Wendepunkte der Dichte liegen bei $\mu \pm 2\sigma$.`, wahr: false, erklaerung: T`Satz 6.2, Nr. 4: Sie liegen bei $\mu - \sigma$ und $\mu + \sigma$.` },
+      { html: T`$f(\mu)$ ist die Wahrscheinlichkeit, genau den Wert $\mu$ zu messen.`, wahr: false, erklaerung: T`$f(\mu)$ ist nur eine Höhe. Bei einer stetigen Zufallsvariable ist $P(X = \mu) = 0$.` },
+      { html: T`Weil $f(x)$ eine Dichte ist, gilt immer $f(x) \le 1$.`, wahr: false, erklaerung: T`Nur die Gesamtfläche muss 1 sein, nicht die Höhe. Eine sehr schmale Glocke ist hoch: Bei $\sigma = 0.2$ ist $f(\mu) = \frac{1}{0.2\sqrt{2\pi}} \approx 1.99$. Die Folie «Stetige Verteilung» sagt es ausdrücklich: Werte über 1 sind möglich.` },
+      { html: T`Bei jeder Normalverteilung liegen rund 95 % der Fläche in $\mu \pm 1.96\sigma$.`, wahr: true, erklaerung: "Die σ-Regeln gelten für jede Normalverteilung, egal welche μ und σ." },
+      { html: T`Für eine normalverteilte Zufallsvariable gilt $P(X \ge 7) = 1 - P(X \le 7)$.`, wahr: true, erklaerung: T`Gegenwahrscheinlichkeit. Weil $P(X = 7) = 0$, spielt es keine Rolle, ob die 7 dazugehört.` },
+      { html: '<span class="t12-ti-box">invNorm(0.9, μ, σ)</span> liefert die Grenze, rechts von der 90 % der Fläche liegen.', wahr: false, erklaerung: "invNorm arbeitet immer mit der Fläche links. Links dieser Grenze liegen 90 %, rechts nur 10 %." }
+    ]
+  });
+
+  L.auswahl("#t12-u5", {
+    frage: "<b>Übung 5 · Befehl wählen.</b> Füllmenge X ∼ N(502; 6). Welches Gewicht wird von 90 % der Packungen mindestens erreicht?",
+    optionen: ['<span class="t12-ti-box">normCdf(−∞, 0.9, 502, 6)</span>', '<span class="t12-ti-box">invNorm(0.9, 502, 6)</span>', '<span class="t12-ti-box">invNorm(0.1, 502, 6)</span>', '<span class="t12-ti-box">normCdf(0.1, ∞, 502, 6)</span>'],
+    richtig: 2,
+    erklaerung: T`Gesucht ist eine Grenze, also invNorm. «Von 90 % mindestens erreicht» heisst: Darunter liegen nur 10 %. Fläche links 0.1, also $\invNorm(0.1,\ 502,\ 6) \approx 494.31$ g. normCdf wäre falsch, weil es eine Fläche liefert und keine Grenze.`
+  });
+
+  L.auswahl("#t12-u6", {
+    frage: "<b>Übung 6 · Symmetrisches Intervall.</b> Du suchst zwei Grenzen symmetrisch um μ, zwischen denen 95 % der Werte liegen. Welche Flächen gibst du invNorm?",
+    optionen: ["0.95 für beide Grenzen", "0.05 und 0.95", "0.025 und 0.975", "0.475 und 0.525"],
+    richtig: 2,
+    erklaerung: "Aussen bleiben 5 %, je 2.5 % links und rechts. Links der unteren Grenze liegen 0.025, links der oberen 0.025 + 0.95 = 0.975. Das ergibt μ ± 1.96σ."
+  });
+
+  L.zahlAufgabe("#t12-u7", {
+    titel: "Übung 7 · Mittelwert einstellen",
+    frage: "<p>Eine Anlage füllt Kaffeebohnen ab, Nennfüllmenge 500 g. Die Füllmenge ist normalverteilt mit σ = 4 g. Auf welchen Mittelwert μ musst du die Anlage einstellen, damit nur 2 % der Packungen weniger als 500 g enthalten? Auf zwei Stellen.</p>",
+    antwort: 508.21, toleranz: 0.015, einheit: "g", anzeige: "μ ≈ 508.21 g",
+    hinweise: ["μ ist gesucht. Also führt der Weg über die Standardnormalverteilung.", "Links von 500 g sollen 2 % liegen: z = invNorm(0.02, 0, 1).", T`Dann $z = \frac{500 - \mu}{4}$ nach $\mu$ auflösen.`],
+    loesungsweg: [
+      T`$X \sim N(\mu;\ 4)$, Bedingung $P(X \le 500) = 0.02$`,
+      T`$z = \invNorm(0.02,\ 0,\ 1) \approx -2.0537$`,
+      T`$-2.0537 = \dfrac{500 - \mu}{4} \;\Rightarrow\; \mu = 500 + 2.0537 \cdot 4 \approx 508.21\ \text{g}$`,
+      T`Probe: <span class="t12-ti-box">normCdf(−∞, 500, 508.21, 4)</span> $\approx 0.02$. Die Anlage füllt im Mittel gut 8 g mehr ein als angeschrieben.`
+    ]
+  });
+
+  L.zahlAufgabe("#t12-u8", {
+    titel: "Übung 8 · Value-at-Risk (im Stil von Aufgabe 6a der Modulschlussprüfung)",
+    frage: "<p>Die jährliche Rendite der Aktie «Seewerk AG» ist näherungsweise normalverteilt mit Mittelwert 7.5 % und Standardabweichung 16 %. Berechne den 1%-Value-at-Risk, also die Rendite, die mit 99 % Wahrscheinlichkeit nicht unterschritten wird. In Prozent auf zwei Stellen.</p>",
+    antwort: -29.72, toleranz: 0.015, einheit: "%", anzeige: "x₀ ≈ −29.72 %",
+    hinweise: ["Gesucht ist eine Grenze, also invNorm.", "«Mit 99 % nicht unterschritten» heisst: Links der Grenze liegt 1 %."],
+    loesungsweg: [
+      T`$X$ = Jahresrendite in %, $X \sim N(7.5;\ 16)$`,
+      T`$P(X \ge x_0) = 0.99 \iff P(X \le x_0) = 0.01$`,
+      T`$x_0 = \invNorm(0.01,\ 7.5,\ 16)$ $\approx -29.72\ \%$`,
+      T`Kontrolle: $7.5 - 2.3263 \cdot 16 \approx -29.72$. In einem von hundert Jahren verliert die Aktie mehr als 29.72 %.`
+    ]
+  });
+
+  L.schrittAufgabe("#t12-u9", {
+    titel: "Übung 9 · Höchstens zulässige Standardabweichung (im Stil von Aufgabe 6a der Modulschlussprüfung)",
+    aufgabe: "<p>Ein Obligationenfonds hat eine näherungsweise normalverteilte Jahresrendite mit Mittelwert 3.1 %. Wie gross darf die Standardabweichung höchstens sein, damit der Fonds mit mindestens 90 % Wahrscheinlichkeit keinen Verlust macht, also mindestens 0 % Rendite erzielt?</p>",
+    schritte: [
+      { html: T`$X \sim N(3.1;\ \sigma)$, Bedingung $P(X \ge 0) \ge 0.90$`, warum: "Modell mit unbekanntem σ hinschreiben. «Kein Verlust» heisst Rendite mindestens 0." },
+      { html: T`Grenzfall: $P(X \ge 0) = 0.90 \iff P(X \le 0) = 0.10$` + skizze({ titel: "Rechts von 0 liegen 90 Prozent, links 10 Prozent", flaechen: [{ von: -1.2816, bis: Infinity }, { von: -Infinity, bis: -1.2816, reihe: "s2" }], grenzen: [{ z: -1.2816, text: "0" }], texte: [{ z: 0.4, text: "0.90", y: 52 }, { z: -2.3, text: "0.10", y: 52 }], mitte: "μ = 3.1" }),
+        warum: "Skizze: Die 0 liegt links von μ. Links davon dürfen höchstens 10 % liegen." },
+      { html: T`$z = \invNorm(0.10,\ 0,\ 1) \approx -1.2816$`, warum: "σ ist unbekannt, also über die Standardnormalverteilung. Zur Fläche links 0.10 gehört z ≈ −1.2816." },
+      { html: T`$-1.2816 = \dfrac{0 - 3.1}{\sigma}$`, warum: "Umrechnungsformel mit der Grenze x = 0." },
+      { html: T`$\sigma = \dfrac{-3.1}{-1.2816} \approx 2.419\ \%$`, warum: "Nach σ auflösen." },
+      { html: T`$\sigma \le 2.42\ \%$, Probe: $\normCdf(0,\ \infty,\ 3.1,\ 2.419) \approx 0.90$`, warum: "Kleineres σ heisst schmalere Glocke, also noch weniger Fläche links von 0. Darum ist 2.42 % die Obergrenze." }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const MOD = Z(T`$\vX \sim N(5.6;\ 9.2)$`);
+  const skI = skizze({ titel: "Gesucht: Fläche rechts von 2", flaechen: [{ von: -0.3913, bis: Infinity }], grenzen: [{ z: -0.3913, text: "2" }], texte: [{ z: 1.1, text: "?", y: 52 }], mitte: "" });
+  const skII = skizze({ titel: "Links von x0 liegen 5 Prozent, rechts 95 Prozent", flaechen: [{ von: -1.6449, bis: Infinity }, { von: -Infinity, bis: -1.6449, reihe: "s2" }], grenzen: [{ z: -1.6449, text: "x₀ = ?" }], texte: [{ z: 0.2, text: "0.95", y: 52 }, { z: -2.5, text: "0.05", y: 52 }], mitte: "μ = 5.6" });
+  const skIII = skizze({ titel: "Rechts von 2 sollen 80 Prozent liegen, links 20 Prozent", flaechen: [{ von: -0.8416, bis: Infinity }, { von: -Infinity, bis: -0.8416, reihe: "s2" }], grenzen: [{ z: -0.8416, text: "2" }], texte: [{ z: 0.6, text: "0.80", y: 52 }, { z: -2.2, text: "0.20", y: 52 }], mitte: "μ = 5.6" });
+  const I = [
+    Z(T`$\text{(i)}\ \ \fP(\vX \ge 2)$`),
+    skI,
+    Z(T`$= \normCdf(2,\ \infty,\ 5.6,\ 9.2)$`),
+    Z(T`$\approx 0.6522$`),
+    Z(T`$\text{Kontrolle: } 1 - \normCdf(-\infty,\ 2,\ 5.6,\ 9.2) \approx 0.6522$`)
+  ];
+  const II = [
+    Z(T`$\text{(ii)}\ \ \fP(\vX \ge x_0) = 0.95$`),
+    skII,
+    Z(T`$\iff \fP(\vX \le x_0) = 0.05$`),
+    Z(T`$x_0 = \invNorm(0.05,\ 5.6,\ 9.2)$`),
+    Z(T`$x_0 \approx -9.53\ \%$`),
+    Z(T`$\text{Kontrolle: } 5.6 - 1.645 \cdot 9.2 \approx -9.53$`)
+  ];
+  const III = [
+    Z(T`$\text{(iii)}\ \ \vX \sim N(5.6;\ \csig),\ \ \fP(\vX \ge 2) \ge 0.80$`),
+    skIII,
+    Z(T`$\text{Grenzfall: } \fP(\vX \le 2) = 0.20$`),
+    Z(T`$z = \invNorm(0.20,\ 0,\ 1) \approx -0.8416$`),
+    Z(T`$-0.8416 = \dfrac{2 - 5.6}{\csig}$`),
+    Z(T`$\csig = \dfrac{-3.6}{-0.8416} \approx 4.2775$`),
+    Z(T`$\csig \le 4.28\ \%$`),
+    Z(T`$\text{Probe: } \normCdf(2,\ \infty,\ 5.6,\ 4.2775) \approx 0.80$`)
+  ];
+  const ERG_I = ZE(T`$\text{(i)}\ \fP(\vX \ge 2) \approx 0.6522$`);
+  const ERG_II = ZE(T`$\text{(ii)}\ x_0 \approx -9.53\ \%$`);
+  // Zeilen eines Teils bis n zeigen, die neueste gelb markiert
+  const teil = (zeilen, n) => zeilen.slice(0, n).join("") + NW(zeilen[n]);
+
+  L.film("#t12-film", {
+    phasen: ["1 · Modell", "2 · Wahrscheinlichkeit", "3 · Value-at-Risk", "4 · σ gesucht"],
+    texte: [
+      'Die Jahresrendite des Fonds «Alpenrent» ist näherungsweise normalverteilt mit <span data-ph="mu">Mittelwert 5.6 %</span> und <span data-ph="sig">Standardabweichung 9.2 %</span>.',
+      '<span data-ph="i">(i) Mit welcher Wahrscheinlichkeit erzielt der Fonds mindestens 2 % Rendite?</span>',
+      '<span data-ph="ii">(ii) Berechne den 5%-Value-at-Risk, also die Rendite, die mit 95 % Wahrscheinlichkeit nicht unterschritten wird.</span>',
+      '<span data-ph="iii">(iii) Wie gross darf die Standardabweichung (bei gleichem Mittelwert) höchstens sein, damit der Fonds mit mindestens 80 % Wahrscheinlichkeit mindestens 2 % erzielt?</span>'
+    ],
+    woerterbuch: [
+      "$X$ Jahresrendite in %",
+      T`$\mu = 5.6$`,
+      T`$\sigma = 9.2$`,
+      "normCdf: Fläche gesucht",
+      "invNorm: Grenze gesucht, Fläche links",
+      T`$z = \frac{x - \mu}{\sigma}$`
+    ],
+    beschriftung: { texte: "Die Aufgabe", woerterbuch: "Gegeben und Werkzeuge", formel: "Lösung auf dem Papier" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Modell X ∼ N(μ; σ) hinschreiben. Skizze machen: Welche Fläche ist gefragt, welche gegeben? Dann: Fläche gesucht → normCdf. Grenze gesucht → invNorm mit der Fläche links. μ oder σ gesucht → über z rückwärts." },
+      { ph: 0, dict: 1, dh: [0], f: NW(Z(T`$\vX = \text{Jahresrendite in } \%$`)),
+        say: "Zuerst benennst du die Zufallsvariable: X ist die Jahresrendite in Prozent. Du rechnest direkt mit den Prozentzahlen, also mit 5.6 statt 0.056." },
+      { ph: 0, hl: ["mu", "sig"], dict: 3, dh: [1, 2], f: NW(MOD),
+        say: "Mittelwert 5.6 wird zu μ, Standardabweichung 9.2 zu σ. Das Modell X ∼ N(5.6; 9.2) gehört aufs Papier. Dafür gibt es in der Prüfung einen Teilpunkt." },
+      { ph: 1, hl: ["i"], dh: [], f: MOD + teil(I, 0),
+        say: "Teil (i): «Mindestens 2 %» heisst X ≥ 2. Gesucht ist eine Wahrscheinlichkeit, also eine Fläche." },
+      { ph: 1, hl: ["i"], f: MOD + teil(I, 1),
+        say: "Skizze: Die 2 liegt links vom Mittelwert 5.6. Gesucht ist die Fläche rechts von 2. Sie muss also grösser als 0.5 sein." },
+      { ph: 1, hl: ["i"], dict: 4, dh: [3], f: MOD + teil(I, 2),
+        say: "Fläche gesucht heisst normCdf, auf dem TI-Nspire menu 5-5-2. Untere Grenze 2, obere Grenze unendlich, dann μ und σ." },
+      { ph: 1, hl: ["i"], dh: [3], f: MOD + teil(I, 3),
+        say: "Der Rechner liefert 0.6522. Mit rund 65 % Wahrscheinlichkeit erzielt der Fonds mindestens 2 %. Passt zur Skizze: mehr als die Hälfte." },
+      { ph: 1, hl: ["i"], f: MOD + teil(I, 4),
+        say: "Gleiches Ergebnis über die Gegenwahrscheinlichkeit: 1 minus die Fläche links von 2. Beide Wege sind gleichwertig." },
+      { ph: 2, hl: ["ii"], f: MOD + ERG_I + teil(II, 0),
+        say: "Teil (ii): Jetzt ist die Wahrscheinlichkeit gegeben und eine Grenze x₀ gesucht. «Mit 95 % nicht unterschritten» heisst: X ist mit 95 % mindestens x₀." },
+      { ph: 2, hl: ["ii"], f: MOD + ERG_I + teil(II, 1),
+        say: "Skizze: Rechts von x₀ liegen 95 %, links davon nur 5 %. Das ist der schlechte Rand, die Jahre mit grossen Verlusten." },
+      { ph: 2, hl: ["ii"], f: MOD + ERG_I + teil(II, 2),
+        say: "invNorm braucht immer die Fläche links der gesuchten Grenze. Darum übersetzt du: P(X ≤ x₀) = 0.05." },
+      { ph: 2, hl: ["ii"], dict: 5, dh: [4], f: MOD + ERG_I + teil(II, 3),
+        say: "Grenze gesucht heisst invNorm, menu 5-5-3. Fläche 0.05, μ = 5.6, σ = 9.2." },
+      { ph: 2, hl: ["ii"], dh: [4], f: MOD + ERG_I + teil(II, 4),
+        say: "Ergebnis: x₀ ≈ −9.53 %. In 5 % der Jahre verliert der Fonds mehr als 9.53 %. Das ist der 5%-Value-at-Risk." },
+      { ph: 2, hl: ["ii"], f: MOD + ERG_I + teil(II, 5),
+        say: "Kontrolle mit Satz 6.2: Links von μ − 1.645σ liegen 5 %. 5.6 − 1.645 · 9.2 ergibt ebenfalls rund −9.53." },
+      { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 0),
+        say: "Teil (iii): Jetzt ist σ unbekannt. normCdf und invNorm brauchen aber σ als Eingabe. Direkt mit dem Rechner geht es also nicht." },
+      { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 1),
+        say: "Skizze für den Grenzfall: Rechts von 2 sollen genau 80 % liegen, links davon 20 %." },
+      { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 2),
+        say: "Wieder zuerst die Fläche links der bekannten Grenze bestimmen: P(X ≤ 2) = 0.20." },
+      { ph: 3, hl: ["iii"], dict: 6, dh: [5], f: ERG_I + ERG_II + teil(III, 3),
+        say: "Trick aus Skript Kap. 6.4: Wechsel zur Standardnormalverteilung. Dort sind μ = 0 und σ = 1 bekannt. invNorm(0.20, 0, 1) ergibt z ≈ −0.8416." },
+      { ph: 3, hl: ["iii"], dh: [5], f: ERG_I + ERG_II + teil(III, 4),
+        say: "Gleiche Fläche, also gehört z = −0.8416 zur Grenze x = 2. Einsetzen in z = (x − μ)/σ. Einzige Unbekannte ist σ." },
+      { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 5),
+        say: "Nach σ auflösen: σ = (2 − 5.6) / (−0.8416) ≈ 4.2775. Die beiden Minus heben sich auf." },
+      { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 6),
+        say: "Warum «höchstens»? Ein kleineres σ macht die Glocke schmaler. Dann liegt noch mehr Fläche rechts von 2. Also muss σ ≤ 4.28 % sein." },
+      { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 7),
+        say: "Probe mit dem Rechner: normCdf(2, ∞, 5.6, 4.2775) ergibt 0.80. Stimmt." },
+      { ph: 3, hl: [], dh: [], f: MOD + NW(Z(T`$\text{(i)}\ \fP(\vX \ge 2) \approx 0.6522$`) + Z(T`$\text{(ii)}\ x_0 \approx -9.53\ \%$`) + Z(T`$\text{(iii)}\ \csig \le 4.28\ \%$`)),
+        say: "Fertig. (i) 0.6522, (ii) −9.53 %, (iii) σ höchstens 4.28 %. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t12-selbsttest", {
+    fragen: [
+      { q: T`Was bedeutet die 6 in $X \sim N(502;\ 6)$?`,
+        o: [T`die Varianz $\sigma^2$`, T`die Standardabweichung $\sigma$`, T`den Mittelwert $\mu$`, "die Anzahl Messungen"], a: 1,
+        e: T`Stolperfalle: Skript, Folien und TI schreiben $N(\mu;\ \sigma)$ mit der Standardabweichung. Manche Bücher schreiben $N(\mu, \sigma^2)$; dann stünde dort 36.` },
+      { q: T`$X$ ist normalverteilt. Wie gross ist $P(X = 500)$?`,
+        o: ["genau 0", T`$f(500)$`, "etwa 0.5", T`hängt von $\sigma$ ab`], a: 0,
+        e: T`Stolperfalle: Ein einzelner Wert hat keine Fläche. $f(500)$ ist eine Höhe, keine Wahrscheinlichkeit.` },
+      { q: T`Welche Aussage über $P(X < 7)$ und $P(X \le 7)$ stimmt bei einer Normalverteilung?`,
+        o: [T`$P(X < 7)$ ist um $f(7)$ kleiner`, "Beide sind gleich gross", T`$P(X < 7) = 1 - P(X \le 7)$`], a: 1,
+        e: T`Weil $P(X = 7) = 0$, ändert das Gleichheitszeichen nichts. Bei diskreten Verteilungen wie der Binomialverteilung wäre das anders.` },
+      { q: T`$\sigma$ wird verdoppelt, $\mu$ bleibt. Was passiert mit der Glocke?`,
+        o: ["Sie wird doppelt so hoch", "Sie wird breiter und flacher, die Gesamtfläche bleibt 1", "Sie verschiebt sich nach rechts", "Die Gesamtfläche verdoppelt sich"], a: 1,
+        e: T`$\sigma$ steuert die Breite. Der Vorfaktor $1/(\sigma\sqrt{2\pi})$ halbiert die Höhe, damit die Fläche 1 bleibt.` },
+      { q: T`Was sagt der Standardwert $z = -2$?`,
+        o: [T`Der Wert liegt 2 Einheiten unter $\mu$`, T`Der Wert liegt 2 Standardabweichungen unter $\mu$`, "Die Wahrscheinlichkeit ist −2", "Der Wert ist ungültig"], a: 1,
+        e: T`$z = \frac{x - \mu}{\sigma}$ misst den Abstand in Standardabweichungen. Negativ heisst: unter dem Mittelwert.` },
+      { q: "Gesucht ist die Rendite, die mit 95 % Wahrscheinlichkeit nicht unterschritten wird (5%-Value-at-Risk). Welche Eingabe stimmt?",
+        o: ['<span class="t12-ti-box">invNorm(0.95, μ, σ)</span>', '<span class="t12-ti-box">invNorm(0.05, μ, σ)</span>', '<span class="t12-ti-box">normCdf(−∞, 0.95, μ, σ)</span>', '<span class="t12-ti-box">1 − invNorm(0.95, μ, σ)</span>'], a: 1,
+        e: "Stolperfalle: invNorm will die Fläche links der Grenze. «Mit 95 % nicht unterschritten» heisst: Links liegen 5 %." },
+      { q: T`Wie viel Prozent der Werte liegen ungefähr im Bereich $\mu \pm 2\sigma$?`,
+        o: ["68 %", "90 %", "95 %", "99.7 %"], a: 2,
+        e: T`Satz 6.2: 0.9545. Genau 95 % liegen in $\mu \pm 1.96\sigma$.` },
+      { q: T`$\mu$ ist bekannt, $\sigma$ ist gesucht. Wie gehst du vor?`,
+        o: [T`normCdf mit $\sigma = 1$ eingeben`, T`$z = \invNorm(w,\ 0,\ 1)$ bestimmen ($w$ = Fläche links), dann $z = \frac{x-\mu}{\sigma}$ nach $\sigma$ auflösen`, T`$\invNorm(p,\ \mu,\ 0)$ verwenden`, "Das geht nur mit einer Tabelle"], a: 1,
+        e: "Die Rechnerbefehle brauchen σ. Über die Standardnormalverteilung mit μ = 0 und σ = 1 bekommst du z, dann löst du die Umrechnungsformel auf (Skript S. 84, Bsp. 6.8)." },
+      { q: "Das Skript nennt in Kap. 8.2 für die Standardnormalverteilung die Eingabe «µ = 1 und σ = 0». Was gibst du auf dem TI ein?",
+        o: ["μ = 1, σ = 0", "μ = 0, σ = 1", "μ = 1, σ = 1", "μ = 0, σ = 0"], a: 1,
+        e: "Stolperfalle: Das ist ein Druckfehler. Das Beispiel daneben rechnet normCdf(−∞, −0.8, 0, 1) = 0.2119, also mit μ = 0 und σ = 1. Mit σ = 0 gäbe es gar keine Glocke." },
+      { q: "Warum warnt das Skript (Bem. 6.9) vor der Normalverteilung bei Aktienrenditen?",
+        o: ["Renditen sind immer positiv", "Extreme Renditen kommen in Wirklichkeit häufiger vor; der Value-at-Risk unterschätzt dann das Risiko", "Renditen sind diskret", "Die Normalverteilung hat keinen Mittelwert"], a: 1,
+        e: "Echte Renditen haben dicke Ränder. Grosse Verluste sind häufiger, als die Glocke sagt. Darum ist ein mit der Normalverteilung berechneter Value-at-Risk eher zu optimistisch." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

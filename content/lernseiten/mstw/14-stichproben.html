@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stichproben und Stichprobenpläne · MSTW</title>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/15-konfidenzintervalle" title="Konfidenzintervalle">
+  <style>
+    /* Seiteneigene Stile der Station 14 · nur Präfix t14-, nur Farben aus :root */
+    .t14-ziele{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
+    .t14-ziele li::marker{color:var(--accent)}
+
+    /* Verschachtelte Mengen: Grundgesamtheit ⊇ Brutto ⊇ Netto */
+    .t14-schachtel{border:2px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; background:var(--surface); min-width:0}
+    .t14-schachtel .t14-schachtel{background:var(--board)}
+    .t14-schachtel .t14-schachtel .t14-schachtel{background:var(--accent-soft); border-color:var(--accent)}
+    .t14-sch-kopf{display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:.95rem}
+    .t14-sch-kopf b{font-family:var(--f-display)}
+    .t14-sch-kopf span{font-family:var(--f-math); color:var(--muted)}
+
+    /* Zeilen auf Tafeln (Stepper, Film) */
+    .t14-z{font-size:1.05rem; line-height:1.75; white-space:normal}
+    .t14-z + .t14-z{margin-top:2px}
+    .t14-ok{color:var(--ok); font-weight:700}
+    .t14-bad{color:var(--bad); font-weight:700}
+
+    /* Zielscheibe (eigene Zeichnung zu Bsp. 2.16) */
+    .t14-ring{fill:none; stroke:var(--muted); stroke-width:1.2; stroke-opacity:.6}
+    .t14-ring-innen{fill:var(--accent-soft); stroke:var(--muted); stroke-width:1.2; stroke-opacity:.6}
+    .t14-mitte{fill:none; stroke:var(--accent); stroke-width:2.5}
+    .t14-treffer{fill:var(--var); stroke:var(--surface); stroke-width:1}
+    .diagramm .t14-ziel-titel{fill:var(--ink); font-weight:600}
+
+    /* Simulator */
+    .t14-p{fill:currentColor; fill-opacity:.22; stroke:none; transition:fill-opacity .2s}
+    .t14-g0{color:var(--s1)} .t14-g1{color:var(--s2)} .t14-g2{color:var(--s3)}
+    #t14-pop.t14-leer .t14-p{fill-opacity:.85}
+    .t14-p.gezogen{fill-opacity:1; stroke:var(--ink); stroke-width:.9}
+    .t14-p.ausfall{fill:var(--surface); fill-opacity:1; stroke:currentColor; stroke-width:1.5}
+    .t14-klumpen{fill:none; stroke:var(--muted); stroke-opacity:.45; stroke-width:1; stroke-dasharray:3 3}
+    .t14-klumpen.an{stroke:var(--accent); stroke-opacity:1; stroke-width:2; stroke-dasharray:none; fill:var(--accent-soft); fill-opacity:.55}
+    .diagramm .t14-bhf rect{fill:var(--surface); stroke:var(--ink); stroke-width:1.3}
+    .diagramm .t14-bhf text{fill:var(--ink); font-weight:700; font-size:10px}
+    .diagramm .t14-bhf.an rect{stroke:var(--accent); stroke-width:2.5}
+    .diagramm svg.t14-icon{display:inline-block; width:14px; height:14px; vertical-align:-2px; overflow:visible}
+    .t14-legende{display:flex; flex-wrap:wrap; gap:4px 14px}
+    .t14-werte{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(140px,100%),1fr)); gap:8px}
+    .t14-wert{background:var(--board); border-radius:10px; padding:8px 12px; min-width:0}
+    .t14-wert span{display:block; font-size:.8rem; color:var(--muted)}
+    .t14-wert b{font-family:var(--f-math); font-size:1.2rem; font-variant-numeric:tabular-nums}
+    .t14-zbg{fill:var(--board)}
+    .t14-sp{fill:var(--var); fill-opacity:.45}
+    .t14-smittel{stroke:var(--ink); stroke-width:2.5}
+    .t14-info{min-height:4.6em}
+
+    /* Rücklauf-Rechner */
+    .t14-rr-feld{display:flex; flex-direction:column; gap:4px; min-width:0}
+    .t14-rr-feld label{font-weight:600; font-size:.95rem}
+    .t14-rr-feld select{max-width:100%}
+    .t14-rr-var{margin:0; min-width:0}
+    .t14-rr-var legend{font-family:var(--f-display); font-weight:700; font-size:1.05rem; padding:0 6px}
+    .t14-check{display:flex; gap:8px; align-items:center; font-size:.95rem; cursor:pointer}
+    .t14-check input{accent-color:var(--accent); width:20px; height:20px; margin:0}
+    .t14-rr-aus{display:flex; flex-direction:column; gap:6px; font-size:.95rem}
+    .t14-rr-aus ul{margin:0; padding-left:1.2em}
+    .t14-urteil{display:inline-flex; gap:6px; align-items:center; font-weight:700; padding:3px 10px; border-radius:999px; border:1px solid currentColor; width:fit-content; max-width:100%}
+    .t14-u0{color:var(--ok); background:var(--ok-bg)}
+    .t14-u1{color:var(--accent); background:var(--accent-soft)}
+    .t14-u2{color:var(--free); background:var(--free-bg)}
+    .t14-u3{color:var(--bad); background:var(--bad-bg)}
+    .t14-zahlen{font-family:var(--f-math); font-variant-numeric:tabular-nums}
+  </style>
+</head>
+<body data-fach="mstw" data-thema="14-stichproben">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">MSTW · S2-V9 + LB4 · Stichproben</span>
+    <h1>Stichproben und Stichprobenpläne</h1>
+    <p class="lead">Du willst wissen, was 12'000 Kundinnen und Kunden denken, kannst aber nicht alle fragen. Also fragst du einen Teil und musst danach beurteilen, ob du diesem Teil trauen darfst. Nach dieser Station ziehst du eine saubere Zufallsstichprobe, rechnest von der Brutto- zur Nettostichprobe und sagst begründet, ob ein Resultat gültig (valide) und zuverlässig (reliabel) ist.</p>
+    <div class="card stack">
+      <span class="eyebrow">Lernziele · Danach kannst du</span>
+      <ul class="t14-ziele prose">
+        <li>Grundgesamtheit, Brutto- und Nettostichprobe auseinanderhalten und die Rücklaufquote berechnen.</li>
+        <li>Einfache Zufallsstichprobe, geschichtete Stichprobe, Klumpenstichprobe und Quotenverfahren erkennen und eine Zufallsstichprobe in Excel ziehen.</li>
+        <li>Validität und Reliabilität trennen: Die Validität hängt an Zufall und Rücklaufquote, die Reliabilität am Umfang der Nettostichprobe.</li>
+        <li>Ungleichen Rücklauf mit einem gewichteten Mittelwert korrigieren.</li>
+        <li>Einen Stichprobenplan für eine Marktforschung aufstellen.</li>
+        <li>Wahr/Falsch-Aussagen wie in Aufgabe 8a der Modulschlussprüfung sicher beurteilen.</li>
+      </ul>
+    </div>
+    <p class="note"><b>Grundlage:</b> Skript «Einführung in die Schliessende Statistik» (hier: Skript SS) Kap. 1 bis 2.3, Folien Schliessende Statistik 3–13 und 19 und die Unterlagen von Lernblock 4. <b>Prüfungsbezug:</b> Aufgabe 8a (Varianten zur Nettostichprobe, Wahr/Falsch) und 8b der exemplarischen Modulschlussprüfung.</p>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#bausteine"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#verfahren"><b>2</b>Auswahlverfahren</a>
+    <a href="#guete"><b>3</b>Gütekriterien</a>
+    <a href="#gewichtung"><b>4</b>Gewichten</a>
+    <a href="#plan"><b>5</b>Stichprobenplan</a>
+    <a href="#simulator"><b>6</b>Simulator</a>
+    <a href="#ruecklauf"><b>7</b>Rücklauf-Rechner</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="bausteine">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Begriffe, ohne die nichts geht</h2>
+    <p class="prose">Statistik über viele Menschen funktioniert wie Suppe probieren: Du kostest einen Löffel und schliesst auf den ganzen Topf. Das klappt nur, wenn der Löffel fair gefüllt ist. Die fünf Begriffe unten beschreiben genau diese Situation.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Grundgesamtheit = der ganze Topf</span><span class="ex"><span class="c">N</span> = 15'000</span><p>Alle Personen oder Dinge, über die du eine Aussage machen willst. Ihre Anzahl heisst <span class="c">N</span>. Beispiel: alle 15'000 Mitglieder eines Sportverbands.</p></div>
+      <div class="concept"><span class="tag">Stichprobe = der Löffel</span><span class="ex"><span class="c">n</span> = 600</span><p>Der Teil der Grundgesamtheit, den du wirklich befragst oder misst. Seine Anzahl heisst <span class="c">n</span>. Beispiel: 600 ausgeloste Mitglieder.</p></div>
+      <div class="concept"><span class="tag">Zufallsauswahl = vorher umrühren</span><span class="ex">Los aus der Liste</span><p>Ein Zufallsexperiment entscheidet, wer in die Stichprobe kommt. So drängt sich niemand vor, und niemand wird vergessen. Beispiel: Excel lost 600 Nummern aus der Mitgliederliste.</p></div>
+      <div class="concept"><span class="tag">Brutto und Netto = eingeladen und gekommen</span><span class="ex">600 → 252</span><p>Brutto sind alle, die du anschreibst. Netto sind alle, deren Antwort du auswerten kannst. Beispiel: 252 von 600 antworten, die Rücklaufquote beträgt 42 %.</p></div>
+      <div class="concept"><span class="tag">Valide und reliabel = Mitte und eng</span><span class="ex">Bias = systematisch daneben</span><p>Valide heisst: Das Resultat trifft im Mittel den wahren Wert. Reliabel heisst: Eine Wiederholung liefert fast dasselbe. Pfeile können eng beieinander und trotzdem alle daneben stecken.</p></div>
+    </div>
+
+    <div class="t14-schachtel" aria-label="Grundgesamtheit enthält Bruttostichprobe, diese enthält Nettostichprobe">
+      <div class="t14-sch-kopf"><b>Grundgesamtheit</b><span>N = 15'000</span></div>
+      <div class="t14-schachtel">
+        <div class="t14-sch-kopf"><b>Bruttostichprobe (angeschrieben)</b><span>n<sub>B</sub> = 600</span></div>
+        <div class="t14-schachtel">
+          <div class="t14-sch-kopf"><b>Nettostichprobe (auswertbar)</b><span>n<sub>N</sub> = 252</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note"><b>Merke:</b> Die Nettostichprobe steckt in der Bruttostichprobe, diese in der Grundgesamtheit. Rechnen kannst du nur mit der Nettostichprobe. Alle anderen Grössen beschreiben, wie du zu ihr gekommen bist.</p>
+
+    <div class="card stack">
+      <h3>Kurz üben: Wohin gehört was?</h3>
+      <p class="hint">Ein Sportverband mit 15'000 Mitgliedern lost 600 Mitglieder aus und schickt ihnen einen Fragebogen. 252 Fragebogen kommen ausgefüllt zurück.</p>
+      <div id="t14-sort-begriffe"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Zeichen und Begriffe festlegen</span>
+    <h2>Das Wörterbuch dieser Station</h2>
+    <p class="prose">Skript und Prüfung kürzen die Grössen mit Buchstaben ab. Grosse Buchstaben gehören zur Grundgesamtheit, kleine zur Stichprobe. Die Farbe zeigt die Art: Feste Zahlen sind orange (Konstanten). Grössen, die erst nach der zufälligen Auswahl und der Befragung feststehen, sind blau (Variablen). Daraus berechnete Kennzahlen sind grün.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th>Zeichen</th><th>Art</th><th>Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>\(\htmlClass{c}{N}\)</td><td><span class="kind kind-c">Konstante</span></td><td>Umfang der Grundgesamtheit (Skript SS Def. 2.1)</td></tr>
+          <tr><td>\(\htmlClass{c}{n_B}\)</td><td><span class="kind kind-c">Konstante</span></td><td>Umfang der Bruttostichprobe: so viele werden gezogen und angeschrieben. Der Stichprobenplan legt ihn fest (Def. 2.18).</td></tr>
+          <tr><td>\(\htmlClass{v}{n_N}\)</td><td><span class="kind kind-v">Variable</span></td><td>Umfang der Nettostichprobe: so viele Antworten sind auswertbar. Erst nach der Befragung bekannt (Def. 2.18). Im Skript meist einfach \(n\).</td></tr>
+          <tr><td>\(\htmlClass{fn}{r} = \dfrac{n_N}{n_B}\)</td><td><span class="kind kind-fn">Kennzahl</span></td><td>Rücklaufquote (Response-Quote): Anteil der Bruttostichprobe, der auswertbar antwortet</td></tr>
+          <tr><td>\(1 - \htmlClass{fn}{r}\)</td><td><span class="kind kind-fn">Kennzahl</span></td><td>Nonresponse-Quote: Anteil, der nicht antwortet</td></tr>
+          <tr><td>\(\htmlClass{c}{\mu}\)</td><td><span class="kind kind-c">Konstante</span></td><td>wahrer Mittelwert der Grundgesamtheit. Fest, aber unbekannt: Ihn willst du schätzen.</td></tr>
+          <tr><td>\(\htmlClass{v}{\bar x}\)</td><td><span class="kind kind-v">Variable</span></td><td>Mittelwert der Nettostichprobe, deine Schätzung für \(\mu\). Jede neue Stichprobe liefert einen anderen Wert.</td></tr>
+          <tr><td>\(\htmlClass{c}{N_i},\ \htmlClass{v}{n_i},\ \htmlClass{v}{\bar x_i}\)</td><td><span class="kind kind-v">je Schicht</span></td><td>Schicht \(i\): Umfang in der Grundgesamtheit, Umfang in der Nettostichprobe, Mittelwert der Schicht</td></tr>
+          <tr><td>\(\htmlClass{fn}{w_i} = \dfrac{N_i}{N}\)</td><td><span class="kind kind-fn">Kennzahl</span></td><td>Gewicht der Schicht \(i\) = ihr Anteil an der Grundgesamtheit</td></tr>
+          <tr><td>\(\htmlClass{fn}{\bar x_w}\)</td><td><span class="kind kind-fn">Kennzahl</span></td><td>gewichteter Mittelwert \(\sum w_i\,\bar x_i\) (Skript SS Bsp. 2.23, im LB4-Zusatzblatt «GWM»)</td></tr>
+          <tr><td>\(\dfrac{n}{N} \lt 0.05\)</td><td><span class="kind kind-op">Faustregel</span></td><td>Ziehen ohne Zurücklegen gilt dann näherungsweise als einfache Zufallsstichprobe (Bem. 2.8)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Begriffe in eigenen Worten, mit Fundstelle im Skript SS</caption>
+        <thead><tr><th>Begriff</th><th>Bedeutung</th><th>Quelle</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Vollerhebung</th><td>Alle Elemente der Grundgesamtheit werden erfasst.</td><td>S. 9</td></tr>
+          <tr><th scope="row">Teilerhebung</th><td>Nur eine Stichprobe wird erfasst (Stichprobenerhebung).</td><td>S. 9</td></tr>
+          <tr><th scope="row">Stichprobenplan</th><td>Beschreibung, wie die Stichprobe gezogen wird.</td><td>Bem. 2.6</td></tr>
+          <tr><th scope="row">Schichtmerkmal</th><td>Merkmal, das die Schichten festlegt, z. B. Geschlecht, Altersklasse, Branche.</td><td>Def. 2.9</td></tr>
+          <tr><th scope="row">Validität</th><td>Gültigkeit: Gemessen wird, was gemessen werden soll. Das Resultat trifft im Mittel den wahren Wert.</td><td>Def. 2.13</td></tr>
+          <tr><th scope="row">Reliabilität</th><td>Zuverlässigkeit: Unter gleichen Bedingungen wiederholt, kommt fast dasselbe heraus.</td><td>Def. 2.14</td></tr>
+          <tr><th scope="row">Bias</th><td>Systematischer Fehler. Ein Resultat mit Bias ist schlecht valide.</td><td>Bem. 2.17</td></tr>
+          <tr><th scope="row">Nonresponse</th><td>Ausfall, weil Angeschriebene nicht antworten.</td><td>Def. 2.18</td></tr>
+          <tr><th scope="row">Selbstselektion</th><td>Die Teilnehmenden wählen sich selbst aus, z. B. über einen offenen Umfrage-Link.</td><td>ergänzend</td></tr>
+          <tr><th scope="row">Repräsentativität</th><td>Missverständlicher Begriff. Das Skript spricht lieber von Validität.</td><td>Bem. 2.20</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 2 · Auswahlverfahren ===== -->
+  <section id="verfahren">
+    <span class="eyebrow">Schritt 2 · Stichprobenpläne (Skript SS 2.1)</span>
+    <h2>Wie kommt jemand in die Stichprobe?</h2>
+    <h3>Vollerhebung oder Teilerhebung?</h3>
+    <p class="prose">Kannst du alle befragen, ist die Vollerhebung die beste Variante. Ein Unternehmen mit 60 A-Kunden fragt am besten alle. Meist geht das aber nicht: Die Grundgesamtheit ist riesig, die Befragung kostet Zeit und Geld, oder die Untersuchung zerstört das Produkt (Verkostung, Belastungstest). Dann ziehst du eine Stichprobe. Eine kleine, sorgfältig durchgeführte Befragung kann sogar genauer sein als eine grosse, hastige.</p>
+    <div class="note falle"><b>Falle:</b> Auch eine geplante Vollerhebung endet oft als Stichprobe, weil nicht alle antworten. Diese «unvollständige Vollerhebung» ist eine Stichprobe, aber <b>keine Zufallsstichprobe</b>: Wer antwortet, entscheidet die Person selbst und nicht der Zufall (Skript SS S. 10).</div>
+
+    <h3>Drei Definitionen aus dem Skript</h3>
+    <div class="board stack">
+      <p><b>Zufallsstichprobe (Def. 2.5):</b> Die Auswahl ist ein Zufallsexperiment. Für jedes Element der Grundgesamtheit lässt sich angeben, mit welcher Wahrscheinlichkeit es in die Stichprobe kommt.</p>
+      <p><b>Einfache Zufallsstichprobe (Def. 2.7):</b> Diese Wahrscheinlichkeit ist für alle Elemente gleich gross.</p>
+      <p><b>Geschichtete Stichprobe (Def. 2.9):</b> Die Grundgesamtheit zerfällt in vorher bekannte Schichten. Aus jeder Schicht wird separat eine einfache Zufallsstichprobe gezogen.</p>
+    </div>
+    <div class="note falle"><b>Falle:</b> «Zufallsstichprobe» heisst <b>nicht</b> automatisch «alle haben dieselbe Chance». Das verlangt erst die einfache Zufallsstichprobe. Bei einer geschichteten Stichprobe mit überproportional gezogener kleiner Schicht sind die Chancen verschieden, aber angebbar. Genau diese Verwechslung prüft Aufgabe 8b der exemplarischen Modulschlussprüfung.</div>
+    <p class="prose">Bei einer Befragung ziehst du ohne Zurücklegen, denn niemand soll zweimal befragt werden. Das Skript sagt dazu (Bem. 2.8): Ohne Zurücklegen entsteht streng genommen keine einfache Zufallsstichprobe, weil sich die Chance von Zug zu Zug ändert (zuerst \(\tfrac{1}{N}\), dann \(\tfrac{1}{N-1}\) usw.). Ist die Stichprobe im Vergleich zur Grundgesamtheit klein, spielt das keine Rolle:</p>
+    <div class="board">$$\frac{n}{N} \lt 0.05 \quad\Rightarrow\quad \text{ohne Zurücklegen} \approx \text{einfache Zufallsstichprobe}$$</div>
+    <p class="prose">Beispiel: 600 aus 15'000 Mitgliedern ergibt \(\tfrac{600}{15\ts000} = 0.04 \lt 0.05\). Die Stichprobe gilt als näherungsweise einfach. Das ist dieselbe Regel wie bei der Näherung der hypergeometrischen Verteilung durch die Binomialverteilung.</p>
+    <div class="note"><b>Folie und Lehrbuch:</b> Viele Lehrbücher nennen auch das Ziehen ohne Zurücklegen eine einfache Zufallsstichprobe, weil am Ende jedes Element dieselbe Gesamtchance \(\tfrac{n}{N}\) hat. Das Skript schaut dagegen auf die einzelnen Züge. Für die Prüfung gilt die Sicht des Skripts: ohne Zurücklegen nur näherungsweise einfach, und zwar bei \(\tfrac{n}{N} \lt 0.05\).</div>
+
+    <h3>Die Verfahren im Überblick</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Verfahren</th><th>So wird ausgewählt</th><th>Zufall?</th><th>Stärke und Haken</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Einfache Zufalls&shy;stichprobe</th><td>Aus der vollständigen Liste der Grundgesamtheit werden \(n\) Elemente ausgelost.</td><td>ja, alle gleich</td><td>Standardverfahren. Braucht eine vollständige, aktuelle Liste.</td></tr>
+          <tr><th scope="row">Geschichtete Stichprobe</th><td>Liste nach einem bekannten Merkmal in Schichten teilen, in jeder Schicht einfache Zufallsstichprobe.</td><td>ja</td><td>Resultate für jede Schicht und für alle (Bem. 2.10), genauere Schätzung. Das Schichtmerkmal muss für alle bekannt sein.</td></tr>
+          <tr><th scope="row">Klumpen&shy;stichprobe *</th><td>Die Grundgesamtheit besteht aus natürlichen Gruppen (Filialen, Schulklassen, Gemeinden). Einige Gruppen werden ausgelost, darin werden alle befragt.</td><td>ja, auf Ebene der Gruppen</td><td>Günstig, wenn es keine Personenliste gibt. Ungenau, wenn sich die Gruppen stark unterscheiden.</td></tr>
+          <tr><th scope="row">Quoten&shy;verfahren *</th><td>Vorgegeben ist, wie viele Personen mit welchen Merkmalen befragt werden (z. B. 50 % Frauen). Wen genau, entscheidet die interviewende Person.</td><td>nein</td><td>Schnell und billig. Die Chance der einzelnen Person ist nicht angebbar, darum keine Zufallsstichprobe. Bias durch «leicht erreichbare» Personen.</td></tr>
+          <tr><th scope="row">Selbstselektion, willkürliche Auswahl</th><td>Wer sich meldet oder wer gerade da ist, z. B. offener Online-Link, Befragung vor einem Laden.</td><td>nein</td><td>Bequem, aber nicht hochrechenbar. Es antworten vor allem Interessierte.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">* Klumpenstichprobe und Quotenverfahren kommen im Skript SS nicht vor. Sie gehören zum Grundwissen der Marktforschung und helfen dir, fremde Stichprobenpläne einzuordnen.</p>
+    <div class="note tipp"><b>Eselsbrücke:</b> Geschichtet: aus <b>jeder</b> Schicht <b>ein paar</b>. Klumpen: aus <b>ein paar</b> Klumpen <b>alle</b>.</div>
+
+    <h3>Zufallsstichprobe in Excel (LB4)</h3>
+    <ol class="prose">
+      <li>Hinter jeden Namen der Adressliste eine Zufallszahl setzen: <code>=ZUFALLSZAHL()</code> (englisch <code>RAND()</code>).</li>
+      <li>Die Spalte kopieren und über «Inhalte einfügen → Werte» wieder einfügen.</li>
+      <li>Die Zeilen nach dieser Spalte sortieren, zum Beispiel aufsteigend.</li>
+      <li>Die ersten \(n\) Namen bilden die Stichprobe, zum Beispiel die ersten 100.</li>
+    </ol>
+    <p class="prose">Im LB4-Beispiel «Einkommen» erzeugt Excel 100 Einkommen aus einer normalverteilten Grundgesamtheit mit \(\mu = 90\ts000\) CHF und \(\sigma = 15\ts000\) CHF, und zwar mit <code>=NORM.INV(ZUFALLSZAHL();90000;15000)</code> in jeder Zeile. <code>=MITTELWERT(B:B)</code> liefert den Stichprobenmittelwert. Jedes Neuberechnen (Taste F9) liefert eine neue Stichprobe. Der Stichprobenmittelwert landet jedes Mal woanders, meist nur wenige Tausend Franken neben 90'000. Genau das machst du unten im Simulator sichtbar.</p>
+    <p class="hint">Auf dem TI-Nspire liefert <code>randInt(1, N, n)</code> \(n\) Zufallsnummern zwischen 1 und \(N\). Dabei kann eine Nummer doppelt vorkommen (Ziehen mit Zurücklegen). Streiche doppelte Nummern und ziehe nach. Ohne Zurücklegen zieht <code>randSamp(liste, n, 1)</code> aus einer Liste von Nummern; die 1 am Schluss verbietet Wiederholungen.</p>
+    <div id="t14-frage-excel"></div>
+  </section>
+
+  <!-- ===== 3 · Gütekriterien ===== -->
+  <section id="guete">
+    <span class="eyebrow">Schritt 3 · Gütekriterien (Skript SS 2.2 und 2.3)</span>
+    <h2>Valide und reliabel: zwei verschiedene Fragen</h2>
+    <p class="prose"><b>Validität</b> (Def. 2.13) fragt: Misst du wirklich, was du messen willst? Ein valides Resultat trifft im Mittel den wahren Wert. <b>Reliabilität</b> (Def. 2.14) fragt: Bekommst du unter gleichen Bedingungen wieder fast dasselbe? Ein reliables Resultat schwankt wenig. Ein Resultat mit systematischem Fehler (Bias) ist nicht valide (Bem. 2.17). Stell dir Pfeile auf einer Zielscheibe vor: Die Mitte ist der wahre Wert, jeder Pfeil ein Messresultat.</p>
+    <figure class="diagramm">
+      <svg id="t14-ziel" viewBox="0 0 320 250" role="img" aria-labelledby="t14-ziel-titel">
+        <title id="t14-ziel-titel">Vier Zielscheiben: 1 Treffer eng um die Mitte, 2 eng beieinander, aber neben der Mitte, 3 breit gestreut um die Mitte, 4 breit gestreut neben der Mitte</title>
+      </svg>
+      <figcaption>Eigene Darstellung zu Skript SS Bsp. 2.16. Ring in Akzentfarbe: wahrer Wert. Blaue Punkte: Messresultate. In den Situationen 2 und 4 steckt ein Bias.</figcaption>
+    </figure>
+    <div id="t14-frage-ziel"></div>
+
+    <h3>Brutto, Netto, Rücklauf</h3>
+    <p class="prose">Bei einer Vollerhebung mit 100 % Rücklauf ist das Resultat maximal valide und reliabel: Es beruht auf allen, und eine Wiederholung liefert haargenau dasselbe (Skript SS 2.3.1). Bei Stichproben brauchst du drei Begriffe (Def. 2.18): Die gezogene Teilmenge heisst <b>Bruttostichprobe</b>. Der tatsächlich auswertbare Teil davon heisst <b>Nettostichprobe</b>. Ihr Verhältnis ist die <b>Rücklaufquote</b>.</p>
+    <div class="board">$$\htmlClass{fn}{r} = \frac{\htmlClass{v}{n_N}}{\htmlClass{c}{n_B}} \qquad\qquad \text{Nonresponse-Quote} = 1 - \htmlClass{fn}{r}$$</div>
+    <p class="prose">Aus mathematischer Sicht sind Hochrechnungen nur dann gültig, wenn alle drei Bedingungen erfüllt sind (Skript SS S. 14):</p>
+    <ol class="prose">
+      <li>Die Grundgesamtheit ist klar abgegrenzt: inhaltlich (wer?), geografisch (wo?) und zeitlich (wann?).</li>
+      <li>Die Stichprobe ist rein zufällig gezogen, zum Beispiel mit Zufallszahlen.</li>
+      <li>Die Nettostichprobe ist gleich der Bruttostichprobe, also 100 % Rücklauf.</li>
+    </ol>
+    <p class="prose">Warum schadet ein unvollständiger Rücklauf? Wer antwortet und wer nicht, entscheidet nicht der Zufall. Vielleicht antworten vor allem Leute mit viel Zeit, und die denken anders als Leute mit wenig Zeit. Das erzeugt einen Bias, den du nicht kennst. Je tiefer die Rücklaufquote, desto weniger gültig ist die Hochrechnung.</p>
+    <p class="prose">Die <b>Reliabilität</b> ist aus mathematischer Sicht vor allem eine Frage des Umfangs der Nettostichprobe: Mehr auswertbare Antworten, kleinerer Zufallsfehler. Am Grenzfall Netto = Brutto = Grundgesamtheit gibt es gar keine Streuung mehr.</p>
+
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Gültigkeit von Stichprobenresultaten einschätzen (Skala nach Skript SS S. 15, FHS-intern festgelegt, Bem. 2.19)</caption>
+        <thead><tr><th>Formulierung im Bericht</th><th>Bedingungen (in eigenen Worten)</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Die Gültigkeit kann <b>angenommen</b> werden.</th><td>Grundgesamtheit sauber abgegrenzt, Stichprobe rein zufällig, Rücklauf hoch (je nach Umfrage ab etwa 40 bis 60 %).</td></tr>
+          <tr><th scope="row">Die Gültigkeit kann <b>vermutet</b> werden.</th><td>Grundgesamtheit sauber abgegrenzt, Stichprobe zufällig oder bewusst so gewählt, dass der Zufall gewahrt bleibt, Rücklauf gut (ab etwa 30 %).</td></tr>
+          <tr><th scope="row">Die Gültigkeit muss <b>angezweifelt</b> werden.</th><td>Grundgesamtheit nur ungefähr abgegrenzt und/oder Stichprobe teilweise bewusst gewählt und/oder Rücklauf knapp (etwa 20 bis 30 %).</td></tr>
+          <tr><th scope="row">Die Gültigkeit ist <b>nicht gegeben</b>.</th><td>Grundgesamtheit nicht klar definiert und/oder Stichprobe vollständig bewusst gewählt und/oder Rücklauf ungenügend (unter 20 %).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Wegen «und/oder» entscheidet das schwächste der drei Kriterien. Die Prozentgrenzen sind mit «ca.» formuliert; Grenzfälle begründest du in Worten. Die Folien (Folie 13) nennen die dritte Stufe «muss in Frage gestellt werden» statt «angezweifelt»; gemeint ist dasselbe.</p>
+    <div class="note falle"><b>Falle:</b> Für die Validität zählt nicht die absolute Zahl der auswertbaren Fragebogen, sondern die <b>Rücklaufquote in Prozent</b> (Skript SS S. 16). Eine grosse Nettostichprobe mit schlechtem Rücklauf ist reliabel, aber nicht valide: eng gruppiert und daneben.</div>
+    <div class="note"><b>So liest die Musterlösung «angezweifelt»:</b> In Aufgabe 8a der exemplarischen Modulschlussprüfung hat Variante A rund 10 % Rücklauf, Variante B 20 %. Die Aussage, beide Varianten seien nicht optimal, weil die Gültigkeit jeweils angezweifelt werden müsse, gilt dort als <b>wahr</b>, obwohl A nach der Skala sogar «nicht gegeben» wäre. Die Musterlösung enthält nur die Kreuze, keine Begründung. Eigene Deutung: «Angezweifelt» ist dort im weiten Sinn gemeint, also bei keiner Variante lässt sich die Gültigkeit annehmen. Prüfe darum zuerst die Richtung (bestehen bei beiden Zweifel?) und erst dann die feine Stufe. Liegt eine Variante bei 40 % und mehr und ist zufällig gezogen, ist eine solche Aussage falsch.</div>
+
+    <h3>Zwei Varianten vergleichen</h3>
+    <p class="prose">Im Stil von Aufgabe 2.2 im Skript SS (eigene Zahlen). Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil auf der Tafel leuchtet auf, und umgekehrt.</p>
+    <div id="t14-stepper-guete"></div>
+
+    <h3>Typische Verzerrungen</h3>
+    <div class="grid2">
+      <div class="card stack"><h3>Nonresponse</h3><p>Ein Teil der Bruttostichprobe antwortet nicht, und die Antwortenden unterscheiden sich von den Schweigenden. Gegenmittel: nachfassen, Anonymität zusichern, Fragebogen kurz halten.</p></div>
+      <div class="card stack"><h3>Selbstselektion</h3><p>Die Teilnehmenden wählen sich selbst aus, etwa über einen offenen Online-Link. Es melden sich vor allem Begeisterte oder Verärgerte. Ergebnisse lassen sich nicht hochrechnen.</p></div>
+      <div class="card stack"><h3>Falsche Auswahlgrundlage</h3><p>Befragt wird nicht die ganze Grundgesamtheit (Bsp. 2.22): nur St. Gallen für die Deutschschweiz, nur Dienstagmorgen für ein Einkaufszentrum, nur Betriebsökonomie-Studierende für alle Absolventen.</p></div>
+      <div class="card stack"><h3>Bewusste Auswahl</h3><p>Adressen, die der Auftraggeber «nach eigener Auswahl» liefert, oder eingekaufte Listen. Die Chance jeder Person ist dann nicht angebbar.</p></div>
+    </div>
+    <div class="note"><b>Repräsentativ?</b> Das Wort ist missverständlich (Bem. 2.20). Manche meinen damit «valide», andere «ein verkleinertes Abbild der Grundgesamtheit». Eine Zufallsstichprobe ist aber gerade <b>kein</b> massgeschneidertes Abbild: Wer hineinkommt, bestimmt allein der Zufall, und genau dieser Zufall macht die Wahrscheinlichkeitsrechnung gültig. Soll die Stichprobe ein oder zwei Merkmale wie die Grundgesamtheit verteilen, ziehst du eine geschichtete Stichprobe.</div>
+  </section>
+
+  <!-- ===== 4 · Gewichten ===== -->
+  <section id="gewichtung">
+    <span class="eyebrow">Schritt 4 · Geschichtete und gewichtete Stichproben (Skript SS 2.3.3)</span>
+    <h2>Ungleicher Rücklauf? Gewichten!</h2>
+    <p class="prose">Bei einer geschichteten Stichprobe wählst du die Bruttoumfänge meist proportional zu den Schichten in der Grundgesamtheit. Dann antworten die Schichten aber unterschiedlich gut, zum Beispiel 64 % in Schicht 1 und 33 % in Schicht 2. In der Nettostichprobe ist Schicht 1 damit über-, Schicht 2 untervertreten. Weil du die richtigen Anteile aus der Grundgesamtheit kennst, korrigierst du das nachträglich: Jeder Schichtmittelwert zählt so viel, wie seine Schicht in der Grundgesamtheit ausmacht.</p>
+    <div class="board">$$\htmlClass{fn}{\bar x_w} = \sum_{i} \frac{\htmlClass{c}{N_i}}{\htmlClass{c}{N}}\,\htmlClass{v}{\bar x_i} = w_1\,\bar x_1 + w_2\,\bar x_2 + \dots$$</div>
+    <p class="prose">Im Skript (Bsp. 2.23) ergibt die Befragung von Studierenden ungewichtet 2083 CHF Konsumausgaben pro Monat, gewichtet nach Region aber 2224 CHF. Die gewichtete Zahl ist die bessere Schätzung. Dasselbe Vorgehen erlaubt auch, eine sehr kleine Schicht bewusst überproportional zu ziehen, damit sie genügend Antworten liefert. Für das Gesamtergebnis gewichtest du dann wieder mit den Anteilen der Grundgesamtheit.</p>
+    <div id="t14-stepper-gewicht"></div>
+    <div class="note falle"><b>Falle:</b> Die Gewichtung verbessert die Gültigkeit nur bezüglich des Schichtmerkmals. Hängt die Bereitschaft zu antworten auch von anderen Dingen ab, bleibt ein Bias. Maximal valide ist das Resultat nur bei 100 % Rücklauf.</div>
+    <details class="sol"><summary>Fakultativ: Warum ist die geschichtete Stichprobe genauer? (LB4-Zusatzblatt)</summary>
+      <div class="stack">
+        <p>Die Streuung einer Grundgesamtheit lässt sich aufteilen: Streuung <b>innerhalb</b> der Schichten (SSW) und Streuung <b>zwischen</b> den Schichtmittelwerten (SSB). Bei der einfachen Zufallsstichprobe steckt beides im Schätzfehler. Bei der geschichteten Stichprobe nur die Streuung innerhalb der Schichten, denn die Schichtanteile sind fest vorgegeben.</p>
+        <div class="board">$$\frac{\operatorname{Var}(\bar x_{\text{geschichtet}})}{\operatorname{Var}(\bar x_{\text{einfach}})} = \frac{SSW}{SSW + SSB}$$</div>
+        <p>Unterscheiden sich die Schichtmittelwerte, ist die geschichtete Schätzung also effizienter. Im Extremfall (alle Elemente einer Schicht gleich) ist sie sogar exakt. Im Simulator unten siehst du das als deutlich schmalere Punktwolke.</p>
+        <p class="note"><b>Validität oder Reliabilität?</b> Die Musterlösung zu Aufgabe 8b der exemplarischen Modulschlussprüfung wertet «Eine geschichtete Stichprobe kann häufig die Validität steigern» als richtig (Skript 2.3.3: richtige Verteilung des Schichtmerkmals). Das Aufgabenskript (Aufgabe 52a) wertet «… die Reliabilität erhöhen» als richtig (kleinere Streuung). Beides stimmt. Falsch sind dagegen Aussagen, die Schichtung an gleich grosse Schichten oder an eine streng proportionale Aufteilung knüpfen.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Stichprobenplan ===== -->
+  <section id="plan">
+    <span class="eyebrow">Schritt 5 · Stichprobenplan in der Marktforschung (Skript SS 1.1, 2.1, LB4)</span>
+    <h2>Vom Auftrag zum Stichprobenplan</h2>
+    <p class="prose">Am Anfang steht die <b>Auftragsdefinition</b>. Im LB4-Beispiel will eine Firma wissen, welches Marktpotenzial eine Dienstleistung für die Planung von Immobiliensanierungen hat, welche Bedürfnisse mögliche Zielgruppen haben und wie bekannt die Marke ist. Das Marktgebiet: höchstens 45 Minuten Fahrzeit um eine Stadt. Schon hier steckt die erste Statistikfrage: Wer genau gehört zur Zielgruppe? Was die Marktforschung «Zielgruppe» nennt, heisst in der Statistik Grundgesamtheit (Bem. 2.2).</p>
+    <div class="card stack">
+      <h3>Stichprobenplan in sechs Schritten</h3>
+      <ol class="prose">
+        <li><b>Ziele klären:</b> Welche Fragen soll die Erhebung beantworten? Für welche Gruppen braucht der Auftraggeber eigene Resultate?</li>
+        <li><b>Grundgesamtheit abgrenzen:</b> inhaltlich, geografisch, zeitlich. \(N\) schätzen und eine aktuelle Adressliste beschaffen. Lieber eingrenzen als erweitern.</li>
+        <li><b>Voll- oder Teilerhebung:</b> Bei kleiner Grundgesamtheit (60 A-Kunden, rund 100 Anbieter) lieber alle befragen.</li>
+        <li><b>Auswahlverfahren:</b> einfache oder geschichtete Zufallsstichprobe, Schichtmerkmal und Umfang je Schicht.</li>
+        <li><b>Bruttoumfang berechnen:</b> aus dem gewünschten Netto und der erwarteten Rücklaufquote, \(n_B = \left\lceil \tfrac{n_N}{r} \right\rceil\) (aufrunden).</li>
+        <li><b>Methode und Rücklauf:</b> telefonisch, schriftlich oder online; Nachfassaktionen planen. Alles im Bericht dokumentieren und bei jeder Auswertung \(n\) angeben.</li>
+      </ol>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Fallbeispiel aus LB4: Marktabklärung «Qualitätsmanagement für Dienstleistungsbetriebe in der Ostschweiz» (zusammengefasst)</caption>
+        <tbody>
+          <tr><th scope="row">Ziel</th><td>Bedürfnisse der Dienstleistungsbetriebe und Angebote der Beratungsfirmen für Qualitätsmanagement erfragen, vor allem bei KMU (kleinen und mittleren Unternehmen).</td></tr>
+          <tr><th scope="row">Grundgesamtheit 1</th><td>Dienstleistungsbetriebe mit 4 bis 200 Mitarbeitenden in den Kantonen SG, AR, AI und TG. Kleinstbetriebe sind zahlreich, aber nicht von Interesse und darum bewusst ausgeschlossen.</td></tr>
+          <tr><th scope="row">Plan 1</th><td>Geschichtete Stichprobe, Schichten nach Teilbranche (NOGA-Code: Branchencode des Bundesamts für Statistik BFS, Skript SS Bsp. 2.12), proportionale Aufteilung, Zufallsstichprobe je Schicht durch das BFS. Mindestens 60 je Schicht, weil jede Schicht mindestens 30 auswertbare Fragebogen liefern soll und etwa 50 % Rücklauf erwartet werden: \(\tfrac{30}{0.5} = 60\).</td></tr>
+          <tr><th scope="row">Methode</th><td>Schriftlich, weil der Umfang gross ist und eine telefonische Befragung zu teuer wäre.</td></tr>
+          <tr><th scope="row">Rücklauf fördern</th><td>Hinweis auf die Förderung des Projekts, Anonymität zusichern, Erinnerung mit Dank an alle, zweite Nachfassaktion an alle, die nicht geantwortet haben, Zusammenfassung der Resultate für Teilnehmende. Ziel: 50 %.</td></tr>
+          <tr><th scope="row">Grundgesamtheit 2</th><td>Beratungsfirmen für Qualitätsmanagement. Dafür gibt es keine Liste des BFS. Darum eigene Adressliste aus Branchenverbänden, Telefonverzeichnis und Nachfragen bei der ersten Befragung.</td></tr>
+          <tr><th scope="row">Plan 2</th><td>Geplant war eine einfache Zufallsstichprobe aus der eigenen Liste. Durchgeführt wurde eine Vollerhebung, weil die Liste nur rund 100 Adressen umfasste. Ziel: 50 % Rücklauf.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Wie ist die Grundgesamtheit abgegrenzt?</h3>
+      <p class="hint">Jede Angabe grenzt die Grundgesamtheit in genau einer Richtung ab.</p>
+      <div id="t14-sort-abgrenzung"></div>
+    </div>
+
+    <h3>Fallbeispiel aus LB4: ein Bad plant ein Wellness-Zentrum</h3>
+    <p class="prose">Im zweiten Fallbeispiel von LB4 (Projekt PRP1) will ein Bad einer Region ein Wellness-Zentrum aufbauen. Die Projektgruppe soll drei Dinge klären: die Bedürfnisse der Zielgruppen, ihr Marktpotenzial und die Abgrenzung gegenüber den Bädern der Konkurrenz. Für die <b>Bedürfnisanalyse</b> gibt es vier Zielgruppen: Schulen, Bevölkerung, Hotellerie und Fachleute. Für die <b>Konkurrenzanalyse</b> zwei: Hallenbäder und Wellness-Anbieter. Der Auftrag: jede Grundgesamtheit beschreiben, einen Stichprobenplan samt Befragungsmethode angeben und sagen, wie du eine möglichst grosse Nettostichprobe erreichst.</p>
+    <div class="note"><b>Der Kern:</b> Jede Zielgruppe ist eine eigene Grundgesamtheit mit eigenem Plan. Kleine Gruppen befragst du vollständig, grosse ziehst du zufällig, und Gespräche mit ausgewählten Fachleuten liefern Einschätzungen, aber keine Hochrechnung.</div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Plan passt zu welcher Zielgruppe?</h3>
+      <p class="hint">Die Zahlen sind erfunden. Eigene Lösung, nicht vom Dozenten bestätigt: Der Lösungsvorschlag von LB4 liegt nicht vor.</p>
+      <div id="t14-sort-prp1"></div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Simulator ===== -->
+  <section id="simulator">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Stichproben-Simulator: Wer trifft die Mitte?</h2>
+    <p class="prose">Unten siehst du eine kleine Grundgesamtheit: 400 Personen einer Region, jedes Zeichen ist eine Person. Gesucht sind ihre mittleren Ausgaben für Sport pro Monat. Weil das eine Simulation ist, kennst du ausnahmsweise den wahren Wert \(\mu\). Wähle ein Verfahren, zieh eine Stichprobe und vergleiche die Schätzung mit \(\mu\). Zieh danach 100-mal: So siehst du, ob ein Verfahren im Mittel trifft (valide) und wie stark es streut (reliabel).</p>
+    <div class="card stack">
+      <div class="modes" role="group" aria-label="Auswahlverfahren" id="t14-sim-verfahren"></div>
+      <div class="regler">
+        <label for="t14-sim-n" id="t14-sim-n-label">Stichprobe n</label>
+        <input type="range" id="t14-sim-n" min="20" max="100" step="20" value="40">
+        <output for="t14-sim-n" id="t14-sim-n-wert">40</output>
+      </div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t14-sim-1">1× ziehen</button>
+        <button type="button" class="btn" id="t14-sim-100">100× ziehen</button>
+        <button type="button" class="btn" id="t14-sim-reset">Zurücksetzen</button>
+      </div>
+      <p class="note t14-info" id="t14-sim-info" aria-live="polite"></p>
+      <figure class="diagramm">
+        <svg id="t14-pop" class="t14-leer" viewBox="0 0 320 252" role="img" aria-labelledby="t14-pop-titel">
+          <title id="t14-pop-titel">Grundgesamtheit aus 400 Personen in 20 Quartieren. Links liegt das Zentrum mit dem Bahnhof, rechts das Land.</title>
+        </svg>
+        <figcaption class="stack">
+          <span class="t14-legende">
+            <span><svg class="t14-icon" viewBox="0 0 12 12" aria-hidden="true"><circle class="t14-p gezogen t14-g0" cx="6" cy="6" r="4"/></svg> unter 30</span>
+            <span><svg class="t14-icon" viewBox="0 0 12 12" aria-hidden="true"><rect class="t14-p gezogen t14-g1" x="2.4" y="2.4" width="7.2" height="7.2"/></svg> 30 bis 59</span>
+            <span><svg class="t14-icon" viewBox="0 0 12 12" aria-hidden="true"><polygon class="t14-p gezogen t14-g2" points="6,1.5 10.5,10 1.5,10"/></svg> 60 und älter</span>
+          </span>
+          <span>Kräftig mit Rand: in der Stichprobe und ausgewertet. Leer mit Rand: angeschrieben, keine Antwort. Blass: nicht gezogen. Gestrichelte Felder: 20 Quartiere. B: Bahnhof.</span>
+        </figcaption>
+      </figure>
+      <div class="t14-werte" id="t14-sim-werte" aria-live="polite"></div>
+      <p class="hint" id="t14-sim-zus"></p>
+    </div>
+    <div class="card stack">
+      <h3>Viele Ziehungen: Verzerrung und Streuung</h3>
+      <p class="hint">Jeder Punkt ist die Schätzung aus einer Stichprobe. Die rote gestrichelte Linie ist der wahre Wert \(\mu\), der dicke senkrechte Strich das Mittel aller Schätzungen eines Verfahrens. Liegt der Strich auf der Linie, trifft das Verfahren im Mittel (valide). Je schmaler die Wolke, desto reliabler.</p>
+      <figure class="diagramm">
+        <svg id="t14-strip" viewBox="0 0 320 222" role="img" aria-labelledby="t14-strip-titel">
+          <title id="t14-strip-titel">Schätzungen je Verfahren im Vergleich zum wahren Mittelwert</title>
+        </svg>
+      </figure>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Auswertung aller bisherigen Ziehungen (Werte in CHF)</caption>
+          <thead><tr><th>Verfahren</th><th class="zahl">Ziehungen</th><th class="zahl">Mittel</th><th class="zahl">Verzerrung</th><th class="zahl">Streuung</th></tr></thead>
+          <tbody id="t14-sim-tab"></tbody>
+        </table>
+      </div>
+    </div>
+    <details class="sol"><summary>Was du sehen solltest</summary>
+      <div class="stack">
+        <p><b>Einfach, geschichtet, Klumpen:</b> Die Schätzungen liegen im Mittel auf \(\mu\). Alle drei sind Zufallsstichproben und darum valide. Die Streuung ist aber verschieden: Geschichtet ist am engsten, weil jede Altersgruppe im richtigen Anteil vertreten ist. Klumpen streut am stärksten, weil die Personen eines Quartiers einander ähnlich sind (im Zentrum wohnen mehr Junge).</p>
+        <p><b>Quote und Selbstselektion:</b> Alle Schätzungen liegen auf derselben Seite von \(\mu\). Das ist ein Bias, Situation 2 auf der Zielscheibe. Ein grösseres \(n\) macht die Wolke schmaler, beseitigt den Bias aber nicht: Auch bei \(n = 100\) liegen fast alle Schätzungen über \(\mu\). Beim Quotenverfahren schrumpft er etwas, weil die Interviewerin dann auch Leute weiter weg vom Bahnhof ansprechen muss.</p>
+        <p><b>Nonresponse:</b> Ungewichtet liegt die Schätzung deutlich zu tief, weil die jungen Sportlichen kaum antworten. Gewichtet nach Altersgruppe trifft sie wieder die Mitte. Das klappt hier nur, weil der Rücklauf allein vom Alter abhängt. In der Wirklichkeit weisst du das nie sicher.</p>
+        <p class="hint">Die Zahlen sind erfunden. Die Grundgesamtheit ist bei jedem Laden dieselbe, die Ziehungen sind echt zufällig.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 7 · Rücklauf-Rechner ===== -->
+  <section id="ruecklauf">
+    <span class="eyebrow">Schritt 7 · Ausprobieren</span>
+    <h2>Rücklauf-Rechner: von Brutto zu Netto</h2>
+    <p class="prose">So sehen Aufgaben wie 8a der Prüfung aus: eine Grundgesamtheit, zwei Varianten. Stell die Werte ein. Der Rechner bestimmt Netto und Nonresponse, stuft die Gültigkeit nach der Skala im Skript ein und zeigt einen Richtwert für den Zufallsfehler.</p>
+    <div class="card stack">
+      <div class="row" role="group" aria-label="Beispiele laden">
+        <button type="button" class="btn" id="t14-rr-p1">Beispiel aus dem Lösungsfilm</button>
+        <button type="button" class="btn" id="t14-rr-p2">B fasst stärker nach</button>
+        <button type="button" class="btn" id="t14-rr-p3">B mit Quotenverfahren</button>
+      </div>
+      <div class="grid2">
+        <div class="t14-rr-feld"><label for="t14-rr-N">Grundgesamtheit N</label><input class="zahl-feld" id="t14-rr-N" type="number" min="10" step="1" inputmode="numeric" value="12000"></div>
+        <div class="t14-rr-feld"><label for="t14-rr-gg">Abgrenzung der Grundgesamtheit</label>
+          <select class="btn" id="t14-rr-gg">
+            <option value="0">klar abgegrenzt</option>
+            <option value="2">nur ungefähr abgegrenzt</option>
+            <option value="3">nicht klar definiert</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2">
+        <fieldset class="card stack t14-rr-var">
+          <legend>Variante A</legend>
+          <label class="t14-check"><input type="checkbox" id="t14-rr-a-voll" checked> Vollerhebung (alle anschreiben)</label>
+          <div class="t14-rr-feld"><label for="t14-rr-a-nb">Bruttostichprobe n<sub>B</sub></label><input class="zahl-feld" id="t14-rr-a-nb" type="number" min="1" step="1" inputmode="numeric" value="12000"></div>
+          <div class="regler"><label for="t14-rr-a-r">Rücklaufquote</label><input type="range" id="t14-rr-a-r" min="1" max="100" step="1" value="8"><output for="t14-rr-a-r" id="t14-rr-a-r-wert">8 %</output></div>
+          <div class="t14-rr-feld"><label for="t14-rr-a-auswahl">Auswahl der Bruttostichprobe</label>
+            <select class="btn" id="t14-rr-a-auswahl">
+              <option value="0">rein zufällig (Zufallszahlen)</option>
+              <option value="1">bewusst, Zufall aber gewahrt</option>
+              <option value="2">teilweise bewusst ausgewählt</option>
+              <option value="3">vollständig bewusst (Quote, Selbstselektion, Liste des Kunden)</option>
+            </select>
+          </div>
+          <div class="t14-rr-aus" id="t14-rr-a-aus" aria-live="polite"></div>
+        </fieldset>
+        <fieldset class="card stack t14-rr-var">
+          <legend>Variante B</legend>
+          <label class="t14-check"><input type="checkbox" id="t14-rr-b-voll"> Vollerhebung (alle anschreiben)</label>
+          <div class="t14-rr-feld"><label for="t14-rr-b-nb">Bruttostichprobe n<sub>B</sub></label><input class="zahl-feld" id="t14-rr-b-nb" type="number" min="1" step="1" inputmode="numeric" value="1600"></div>
+          <div class="regler"><label for="t14-rr-b-r">Rücklaufquote</label><input type="range" id="t14-rr-b-r" min="1" max="100" step="1" value="35"><output for="t14-rr-b-r" id="t14-rr-b-r-wert">35 %</output></div>
+          <div class="t14-rr-feld"><label for="t14-rr-b-auswahl">Auswahl der Bruttostichprobe</label>
+            <select class="btn" id="t14-rr-b-auswahl">
+              <option value="0">rein zufällig (Zufallszahlen)</option>
+              <option value="1">bewusst, Zufall aber gewahrt</option>
+              <option value="2">teilweise bewusst ausgewählt</option>
+              <option value="3">vollständig bewusst (Quote, Selbstselektion, Liste des Kunden)</option>
+            </select>
+          </div>
+          <div class="t14-rr-aus" id="t14-rr-b-aus" aria-live="polite"></div>
+        </fieldset>
+      </div>
+      <div class="note" id="t14-rr-vergleich" aria-live="polite"></div>
+      <p class="hint">Der Zufallsfehler ist eine Vorschau auf Station 15: halbe Breite eines 95-%-Vertrauensintervalls für einen Anteil um 50 %, \(\pm 1.96 \sqrt{0.25 / n_N} \cdot \sqrt{(N - n_N)/(N - 1)}\). Er misst nur die zufällige Streuung (Reliabilität). Einen Bias durch Nonresponse misst er nicht. Die Skala zur Gültigkeit ist mit «ca.» formuliert; der Rechner wendet die Grenzen 20 %, 30 % und 40 % streng an.</p>
+    </div>
+    <div class="card stack">
+      <h3>Rückwärts: Wie viele musst du anschreiben?</h3>
+      <div class="grid2">
+        <div class="t14-rr-feld"><label for="t14-rw-ziel">Gewünschte Nettostichprobe je Schicht</label><input class="zahl-feld" id="t14-rw-ziel" type="number" min="1" step="1" inputmode="numeric" value="30"></div>
+        <div class="t14-rr-feld"><label for="t14-rw-k">Anzahl Schichten</label><input class="zahl-feld" id="t14-rw-k" type="number" min="1" max="50" step="1" inputmode="numeric" value="1"></div>
+      </div>
+      <div class="regler"><label for="t14-rw-r">Erwartete Rücklaufquote</label><input type="range" id="t14-rw-r" min="5" max="100" step="1" value="50"><output for="t14-rw-r" id="t14-rw-r-wert">50 %</output></div>
+      <div class="rechner-ergebnis" id="t14-rw-erg" aria-live="polite"></div>
+      <p class="hint">Mit 30 Antworten je Schicht und 50 % Rücklauf erhältst du die 60 je Schicht aus dem LB4-Fallbeispiel.</p>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst lösen</span>
+    <h2>Übungen</h2>
+    <p class="prose">Übung 3 und 4 sind im Stil von Aufgabe 8a und 8b der exemplarischen Modulschlussprüfung gebaut, Übung 8 im Stil von Aufgabe 51 im Aufgabenskript, alle mit eigenen Zahlen. Ein Taschenrechner ist hier kaum nötig: Es geht ums Dividieren und ums saubere Begründen.</p>
+    <div id="t14-ue-ruecklauf"></div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 2</span><h3>Welches Verfahren ist das?</h3></div>
+      <div id="t14-ue-sort"></div>
+    </div>
+    <div id="t14-ue-wf"></div>
+    <div id="t14-ue-auswahl"></div>
+    <div id="t14-ue-gewicht"></div>
+    <div id="t14-ue-brutto"></div>
+    <div id="t14-ue-plan"></div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 8</span><h3>Gültigkeit einstufen (im Stil von Aufgabe 51 im Aufgabenskript Stützkurs)</h3></div>
+      <p class="hint">Wähle pro Fall die Formulierung aus der Skala im Skript SS (S. 15). Prüfe alle drei Kriterien: Grundgesamtheit, Auswahl, Rücklaufquote.</p>
+      <div id="t14-ue-skala-1"></div>
+      <div id="t14-ue-skala-2"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Prüfungsaufgabe am Stück gelöst</h2>
+    <p class="prose">Eine Aufgabe im Stil von 8a der exemplarischen Modulschlussprüfung, mit eigenen Zahlen. Drück auf Play. Der farbige Balken zeigt, wann der nächste Schritt kommt. Gelb leuchtet, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t14-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t14-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Grundgesamtheit ⊇ Brutto ⊇ Netto:</b> \(N \ge n_B \ge n_N\). Rechnen kannst du nur mit der Nettostichprobe.</li>
+      <li><b>Zufallsstichprobe:</b> Die Chance jedes Elements ist angebbar. <b>Einfache</b> Zufallsstichprobe: Sie ist für alle gleich. Quotenverfahren und Selbstselektion sind keine Zufallsstichproben.</li>
+      <li><b>Validität</b> hängt an klarer Grundgesamtheit, Zufallsauswahl und Rücklaufquote. Unter 20 % Rücklauf ist die Gültigkeit nicht gegeben, auch bei einer Vollerhebung.</li>
+      <li><b>Reliabilität</b> hängt am Umfang der Nettostichprobe. Mehr Fragebogen bei gleicher Quote machen ein Resultat reliabler, aber nicht valider.</li>
+      <li><b>Geschichtet:</b> aus jeder Schicht ein paar, <b>Klumpen:</b> aus ein paar Klumpen alle. Ungleichen Rücklauf korrigierst du mit den Anteilen der Grundgesamtheit.</li>
+      <li><b>Stichprobenplan:</b> Ziel, Grundgesamtheit abgrenzen, Verfahren wählen, \(n_B\) aus \(n_N\) und \(r\) berechnen, nachfassen, dokumentieren.</li>
+    </ul>
+    <div class="board stack">
+      <div>$$r = \frac{n_N}{n_B} \qquad 1 - r = \text{Nonresponse-Quote}$$</div>
+      <div>$$n_B = \left\lceil \frac{n_N}{r} \right\rceil \qquad \bar x_w = \sum_i \frac{N_i}{N}\,\bar x_i$$</div>
+      <div>$$\frac{n}{N} \lt 0.05 \;\Rightarrow\; \text{ohne Zurücklegen} \approx \text{einfach}$$</div>
+    </div>
+    <footer>Quellen: Skript «Einführung in die Schliessende Statistik» Kap. 1 bis 2.3 (Def. 2.1, 2.5, 2.7, 2.9, 2.13, 2.14, 2.18; Bem. 2.8, 2.17, 2.19, 2.20; Bsp. 2.16, 2.22, 2.23; Aufgabe 2.2), Folien Schliessende Statistik 3–13 und 19, Lernblock 4 (Auftragsdefinition, Stichprobenplan QM, geschichtete Stichproben, Zufallsstichprobe in Excel, Fallbeispiel PRP1, Einkommen), Aufgabenskript Stützkurs MSTB Aufgaben 51 und 52, exemplarische Modulschlussprüfung Aufgabe 8a und 8b mit Musterlösung. Klumpenstichprobe und Quotenverfahren ergänzen das Skript. Alle Zahlenbeispiele sind eigene Beispiele; Übung 7 und die Zuordnung zum Fallbeispiel PRP1 sind eigene Lösungen, nicht vom Dozenten bestätigt.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Nie «$» direkt vor «{» im Text verwenden.
+  const T = String.raw;
+  const L = window.Lernpfad;
+  // Tausender-Hochkomma in Formeln: 12\ts000 ergibt 12'000
+  L.makros["\\ts"] = "\\text{'}";
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const Z = (s) => '<div class="t14-z">' + s + "</div>";
+  // Tafel aus Zeilen; die Zeile mit Index «neu» leuchtet als neu auf
+  const tafel = (zeilen, neu) => zeilen.map((z, k) => Z(k === neu ? NW(z) : z)).join("");
+  // Stepper-Schritte, die eine Tafel Zeile für Zeile aufbauen
+  const aufbau = (zeilen, warum) => zeilen.map((_, k) => ({ html: tafel(zeilen.slice(0, k + 1), k), warum: warum[k] }));
+  const el = (id) => document.getElementById(id);
+  const minus = (s) => String(s).replace("-", "−");
+  const chf = (v) => minus(v.toFixed(2));
+  const mitVorzeichen = (v) => (v > 0 ? "+" : v < 0 ? "−" : "±") + Math.abs(v).toFixed(2);
+  // Ganze Zahl mit Hochkomma ab 10'000 (wie im Baukasten)
+  const gz = (v) => L.zahlText(Math.round(v), 0);
+  const prozent = (v, st) => L.zahlText(v * 100, st === undefined ? 1 : st) + " %";
+
+  /* ---------- 0 · Sortierer Grundbegriffe ---------- */
+  L.sortierer("#t14-sort-begriffe", {
+    kategorien: ["Grundgesamtheit", "Bruttostichprobe", "Nettostichprobe"],
+    elemente: [
+      { html: "alle 15'000 Mitglieder des Verbands", kategorie: "Grundgesamtheit", erklaerung: "Über sie will der Verband eine Aussage machen. N = 15'000." },
+      { html: "die 600 ausgelosten Mitglieder", kategorie: "Bruttostichprobe", erklaerung: "Sie wurden gezogen und angeschrieben: n<sub>B</sub> = 600." },
+      { html: "die 252 ausgefüllten Fragebogen", kategorie: "Nettostichprobe", erklaerung: "Nur diese Antworten kannst du auswerten: n<sub>N</sub> = 252." },
+      { html: "Mitglieder, die den Fragebogen erhalten, aber nie antworten", kategorie: "Bruttostichprobe", erklaerung: "Sie gehören zur Bruttostichprobe, nicht zur Nettostichprobe. Ihr Anteil 348 / 600 = 58 % ist die Nonresponse-Quote." },
+      { html: "alle, über die der Verband am Schluss eine Aussage machen will", kategorie: "Grundgesamtheit", erklaerung: "Genau so definiert das Skript die Grundgesamtheit (Def. 2.1)." },
+      { html: "die Antworten, mit denen du Mittelwerte berechnest", kategorie: "Nettostichprobe", erklaerung: "Gerechnet wird immer mit der auswertbaren Nettostichprobe." }
+    ]
+  });
+
+  /* ---------- 2 · Frage zu Excel ---------- */
+  L.auswahl("#t14-frage-excel", {
+    frage: "Warum fügst du die Zufallszahlen als Werte ein, bevor du sortierst?",
+    optionen: [
+      "Damit Excel schneller rechnet.",
+      "ZUFALLSZAHL() würfelt bei jeder Änderung neu. Ohne «Werte einfügen» ändern sich die Zahlen beim Sortieren wieder, und die Stichprobe ist nicht nachvollziehbar.",
+      "Weil Excel Spalten mit Formeln nicht sortieren kann."
+    ],
+    richtig: 1,
+    erklaerung: "Die Funktion ZUFALLSZAHL() wird bei jeder Neuberechnung neu ausgewertet. Erst als feste Werte bleibt die Auslosung stehen und lässt sich dokumentieren."
+  });
+
+  /* ---------- 3 · Zielscheibe (eigene Zeichnung) ---------- */
+  (function zielscheibe() {
+    const svg = el("t14-ziel");
+    const NS = "http://www.w3.org/2000/svg";
+    const neu = (tag, attr) => { const e = document.createElementNS(NS, tag); Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k])); svg.appendChild(e); return e; };
+    const eng = [[-4, -3], [3, -5], [5, 2], [-2, 5], [0, 0], [-6, 1], [2, 4], [6, -2]];
+    const breit = [[-24, -10], [15, -22], [25, 8], [-10, 24], [3, -5], [-25, 12], [19, 20], [-5, -25]];
+    const bias = [17, -13];
+    const felder = [
+      { cx: 80, cy: 58, pkt: eng, ver: [0, 0], titel: "1: valide und reliabel" },
+      { cx: 240, cy: 58, pkt: eng, ver: bias, titel: "2: reliabel, Bias" },
+      { cx: 80, cy: 178, pkt: breit, ver: [0, 0], titel: "3: valide, streut" },
+      { cx: 240, cy: 178, pkt: breit, ver: bias, titel: "4: Bias und streut" }
+    ];
+    felder.forEach((f) => {
+      neu("circle", { class: "t14-ring", cx: f.cx, cy: f.cy, r: 44 });
+      neu("circle", { class: "t14-ring", cx: f.cx, cy: f.cy, r: 30 });
+      neu("circle", { class: "t14-ring-innen", cx: f.cx, cy: f.cy, r: 16 });
+      neu("circle", { class: "t14-mitte", cx: f.cx, cy: f.cy, r: 4 });
+      f.pkt.forEach((p) => neu("circle", { class: "t14-treffer", cx: f.cx + f.ver[0] + p[0], cy: f.cy + f.ver[1] + p[1], r: 3.4 }));
+      const t = neu("text", { class: "t14-ziel-titel", x: f.cx, y: f.cy + 60, "text-anchor": "middle" });
+      t.textContent = f.titel;
+    });
+  })();
+
+  L.auswahl("#t14-frage-ziel", {
+    frage: "Eine Online-Umfrage mit sehr vielen, aber selbst ausgewählten Antworten liefert bei jeder Wiederholung fast dasselbe Ergebnis. Es liegt aber deutlich neben dem wahren Wert. Welche Situation ist das?",
+    optionen: ["Situation 1: valide und reliabel", "Situation 2: reliabel, aber Bias", "Situation 3: valide, aber streut", "Situation 4: Bias und streut"],
+    richtig: 1,
+    erklaerung: "Viele Antworten machen das Ergebnis stabil (reliabel). Die Selbstselektion verschiebt es aber systematisch: ein Bias, also nicht valide."
+  });
+
+  /* ---------- 3 · Stepper: zwei Varianten vergleichen ---------- */
+  L.stepper("#t14-stepper-guete", {
+    titel: "Variante A oder B?",
+    text: T`<b>Variante A:</b> Ein Verein verschickt <span data-link="bA">1500 Fragebogen</span> an zufällig ausgeloste Mitglieder und erhält <span data-link="nA">270 auswertbare</span> zurück. <b>Variante B:</b> Er verschickt nur <span data-link="bB">360 Fragebogen</span>, fasst zweimal nach und erhält <span data-link="nB">216 auswertbare</span> zurück. Welche Variante ist <span data-link="val">valider</span>, welche <span data-link="rel">reliabler</span>?`,
+    schritte: aufbau([
+      T`A: <span data-link="bA">$n_B = 1500$</span>, <span data-link="nA">$n_N = 270$</span>`,
+      T`B: <span data-link="bB">$n_B = 360$</span>, <span data-link="nB">$n_N = 216$</span>`,
+      T`$r_A = \dfrac{\htmlData{link=nA}{270}}{\htmlData{link=bA}{1500}} = 0.18 = 18\,\%$`,
+      T`$r_B = \dfrac{\htmlData{link=nB}{216}}{\htmlData{link=bB}{360}} = 0.60 = 60\,\%$`,
+      T`<span data-link="val">Validität:</span> B (60 %) besser als A (18 %)`,
+      T`<span data-link="rel">Reliabilität:</span> A (270) etwas besser als B (216)`,
+      T`Entscheid: <b>Variante B</b>`
+    ], [
+      "Zuerst schreibst du für Variante A Brutto und Netto heraus. Brutto ist, was verschickt wird. Netto ist, was auswertbar zurückkommt.",
+      "Dasselbe für Variante B. Fahre über die unterstrichenen Stellen: Text und Tafel leuchten zusammen auf.",
+      "Rücklaufquote = Netto durch Brutto (Def. 2.18). Bei A kommen nur 18 % zurück.",
+      "Bei B kommen dank zweimaligem Nachfassen 60 % zurück.",
+      "Die Validität hängt an der Rücklaufquote, nicht an der Zahl der Antworten. A liegt unter 20 %: Die Gültigkeit ist nicht gegeben. B ist zufällig gezogen und hat einen hohen Rücklauf: Die Gültigkeit kann angenommen werden.",
+      "Die Reliabilität hängt am Umfang der Nettostichprobe. A hat 270, B 216 auswertbare Fragebogen. A schwankt darum etwas weniger, aber womöglich um einen falschen Wert.",
+      "Laut Skript kommt die Validität zuerst. Die etwas kleinere Reliabilität von B zeigt sich später nur in einer etwas breiteren Genauigkeitsangabe. Wer B reliabler machen will, verschickt mehr Fragebogen und fasst wieder nach. Eigene Lösung nach den Regeln im Skript SS S. 14–16."
+    ])
+  });
+
+  /* ---------- 4 · Stepper: gewichteter Mittelwert ---------- */
+  L.stepper("#t14-stepper-gewicht", {
+    titel: "Ausgaben im Sportclub schätzen",
+    text: T`Ein Sportclub mit <span data-link="N">6000 Mitgliedern</span> schätzt die mittleren Ausgaben für Sport pro Monat. Er schichtet nach Alter: <span data-link="Ni">3000 unter 30, 2100 zwischen 30 und 59, 900 ab 60</span>. Er zieht proportional <span data-link="b">200, 140 und 60</span> Mitglieder. Zurück kommen <span data-link="n">50, 70 und 42 Antworten</span> mit den <span data-link="x">Mittelwerten 120, 260 und 210 CHF</span>.`,
+    schritte: aufbau([
+      T`Rücklauf: $\tfrac{\htmlData{link=n}{50}}{\htmlData{link=b}{200}} = 25\,\%$, $\tfrac{\htmlData{link=n}{70}}{\htmlData{link=b}{140}} = 50\,\%$, $\tfrac{\htmlData{link=n}{42}}{\htmlData{link=b}{60}} = 70\,\%$`,
+      T`Anteile netto: $0.31,\ 0.43,\ 0.26$ statt $0.50,\ 0.35,\ 0.15$`,
+      T`ungewichtet: $\bar x = \dfrac{50 \cdot 120 + 70 \cdot 260 + 42 \cdot 210}{162} \approx 203.83$ CHF`,
+      T`Gewichte: $w_1 = \dfrac{\htmlData{link=Ni}{3000}}{\htmlData{link=N}{6000}} = 0.50,\ w_2 = 0.35,\ w_3 = 0.15$`,
+      T`$\bar x_w = 0.50 \cdot \htmlData{link=x}{120} + 0.35 \cdot \htmlData{link=x}{260} + 0.15 \cdot \htmlData{link=x}{210} = 182.50$ CHF`,
+      T`Total: $\htmlData{link=N}{6000} \cdot 182.50 = 1\ts095\ts000$ CHF pro Monat`
+    ], [
+      "Rücklauf je Schicht: Netto durch Brutto. Die Jungen antworten nur zu 25 %, die Älteren zu 70 %.",
+      "In der Nettostichprobe (162 Antworten) stimmen die Anteile nicht mehr: 50/162 ≈ 0.31 statt 0.50 Junge. Die Jungen sind untervertreten.",
+      "Der gewöhnliche Mittelwert zählt jede Antwort gleich (33'020 / 162). Die Jungen mit den tiefsten Ausgaben zählen damit zu wenig, der Wert ist zu hoch.",
+      "Die richtigen Gewichte kennst du aus der Grundgesamtheit: Anteil jeder Schicht an allen Mitgliedern.",
+      "Jeder Schichtmittelwert zählt so viel, wie seine Schicht in der Grundgesamtheit ausmacht: 60 + 91 + 31.5 = 182.50 CHF. Das ist die bessere Punktschätzung.",
+      "Für die Gesamtsumme multiplizierst du mit N. Vorsicht: Insgesamt antworten nur 162 von 400, also 40.5 %. Die Gewichtung korrigiert nur das Schichtmerkmal Alter."
+    ])
+  });
+
+  /* ---------- 5 · Sortierer Abgrenzung ---------- */
+  L.sortierer("#t14-sort-abgrenzung", {
+    kategorien: ["inhaltlich", "geografisch", "zeitlich"],
+    elemente: [
+      { html: "Privatpersonen, die eine Liegenschaft besitzen", kategorie: "inhaltlich", erklaerung: "Legt fest, wer dazugehört." },
+      { html: "Wohnsitz höchstens 45 Minuten Fahrzeit von der Stadt entfernt", kategorie: "geografisch", erklaerung: "Legt das Marktgebiet fest, wie in der Auftragsdefinition aus LB4." },
+      { html: "Stand der Adressliste am 1. März", kategorie: "zeitlich", erklaerung: "Ein Stichtag legt fest, wann jemand dazugehören muss." },
+      { html: "Betriebe mit 4 bis 200 Mitarbeitenden", kategorie: "inhaltlich", erklaerung: "Eine Eigenschaft der Betriebe, wie im Fallbeispiel QM." },
+      { html: "Kantone SG, AR, AI und TG", kategorie: "geografisch", erklaerung: "Ein Gebiet, wie im Fallbeispiel QM." },
+      { html: "Befragungszeitraum vom 10. bis 30. März", kategorie: "zeitlich", erklaerung: "Ein Zeitraum für die Erhebung." }
+    ]
+  });
+
+  /* ---------- 5 · Sortierer Fallbeispiel PRP1 (eigene Lösung) ---------- */
+  L.sortierer("#t14-sort-prp1", {
+    kategorien: ["Vollerhebung", "Zufallsstichprobe (geschichtet)", "bewusste Auswahl, nicht hochrechenbar"],
+    elemente: [
+      { html: "Schulen der Region: 38 Schulen, Liste beim Kanton", kategorie: 0,
+        erklaerung: "Kleine Grundgesamtheit mit vollständiger Liste: alle anschreiben, wie bei den 60 A-Kunden im Skript. Nachfassen, damit der Rücklauf hoch wird." },
+      { html: "Bevölkerung der Region: 85'000 Personen, Einwohnerregister mit Gemeinde und Alter", kategorie: 1,
+        erklaerung: "Zu gross für eine Vollerhebung. Gemeinde oder Altersklasse steht im Register für alle: Daraus wird das Schichtmerkmal, in jeder Schicht wird zufällig gezogen." },
+      { html: "Hotels der Region: 24 Betriebe", kategorie: 0,
+        erklaerung: "Sehr kleine Grundgesamtheit: alle befragen. Bei 24 Betrieben ist der Aufwand für eine telefonische oder persönliche Befragung vertretbar, sofern der Fragekatalog kurz ist (Skript SS S. 16)." },
+      { html: "Fachleute aus Tourismus und Gesundheit, die die Projektgruppe persönlich kennt", kategorie: 2,
+        erklaerung: "Bewusst ausgewählte Gesprächspartner. Ihre Einschätzungen sind wertvoll, lassen sich aber nicht auf eine Grundgesamtheit hochrechnen." },
+      { html: "Hallenbäder im Umkreis von 45 Minuten Fahrzeit: 9 Anlagen", kategorie: 0,
+        erklaerung: "Wenige Konkurrenten: alle erfassen, etwa über Website, Preislisten und einen Besuch." },
+      { html: "Gäste, die an einem Samstag ins bestehende Bad kommen", kategorie: 2,
+        erklaerung: "Nur ein Tag und nur Leute, die schon kommen: keine Zufallsstichprobe der Bevölkerung, ähnlich wie die Dienstagmorgen-Befragung in Bsp. 2.22." }
+    ]
+  });
+
+  /* ---------- 6 · Stichproben-Simulator ---------- */
+  (function simulator() {
+    const NS = "http://www.w3.org/2000/svg";
+    function sv(tag, attr, parent) {
+      const e = document.createElementNS(NS, tag);
+      Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+      if (parent) parent.appendChild(e);
+      return e;
+    }
+    // Grundgesamtheit mit festem Startwert: alle sehen dieselbe Region
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    const zr = mulberry32(1414);
+    function normal(r) { let u = 0; while (u === 0) u = r(); const v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+    const GRUPPEN = [{ name: "unter 30", mu: 110 }, { name: "30 bis 59", mu: 75 }, { name: "60+", mu: 35 }];
+    const pop = [];
+    for (let y = 0; y < 20; y++) {
+      for (let x = 0; x < 20; x++) {
+        const t = x / 19;
+        const pj = 0.62 - 0.44 * t, pa = 0.10 + 0.40 * t, u = zr();
+        const g = u < pj ? 0 : (u < pj + (1 - pj - pa) ? 1 : 2);
+        const stadt = 36 * (1 - t) - 18; // im Zentrum (links) wird mehr ausgegeben
+        const wert = Math.max(5, Math.round(GRUPPEN[g].mu + stadt + normal(zr) * 14));
+        pop.push({ x: x, y: y, g: g, wert: wert, klumpen: Math.floor(x / 5) + 4 * Math.floor(y / 4) });
+      }
+    }
+    const N = pop.length;
+    const mittel = (a) => a.reduce((s, p) => s + p.wert, 0) / a.length;
+    const MU = mittel(pop);
+    const NG = [0, 1, 2].map((g) => pop.filter((p) => p.g === g).length);
+    const BHF = { x: 1.5, y: 9.5 };
+    const RUECKLAUF = [0.15, 0.40, 0.75];
+    const px = (x) => 14 + x * 15.37, py = (y) => 14 + y * 11.2;
+
+    const VERFAHREN = [
+      { id: "einfach", name: "einfach", lang: "Einfache Zufallsstichprobe",
+        info: "<b>Einfache Zufallsstichprobe:</b> Aus der Liste aller 400 Personen werden n ausgelost. Alle haben dieselbe Chance." },
+      { id: "geschichtet", name: "geschichtet", lang: "Geschichtete Stichprobe",
+        info: "<b>Geschichtete Stichprobe:</b> Die Liste wird nach Altersgruppe getrennt. In jeder Gruppe wird ausgelost, proportional zu ihrem Anteil. Die Schätzung gewichtet die Gruppenmittelwerte mit diesen Anteilen." },
+      { id: "klumpen", name: "Klumpen", lang: "Klumpenstichprobe",
+        info: "<b>Klumpenstichprobe:</b> Die Region besteht aus 20 Quartieren mit je 20 Personen. Es werden n/20 Quartiere ausgelost, dort werden alle befragt." },
+      { id: "quote", name: "Quote", lang: "Quotenverfahren",
+        info: "<b>Quotenverfahren:</b> Die Quoten stimmen: gleiche Altersverteilung wie in der Grundgesamtheit. Die Interviewerin steht aber am Bahnhof B und befragt, wer gerade vorbeikommt." },
+      { id: "selbst", name: "Selbstselektion", lang: "Selbstselektion",
+        info: "<b>Selbstselektion:</b> Ein Link zur Online-Umfrage hängt im Sportgeschäft. Wer viel für Sport ausgibt, sieht ihn eher und macht eher mit. Ausgewertet werden die ersten n Antworten." },
+      { id: "nonresp", name: "Nonresponse", lang: "Zufall mit Nonresponse",
+        info: "<b>Zufallsstichprobe mit Nonresponse:</b> n Personen werden ausgelost und angeschrieben (Brutto). Es antworten 75&nbsp;% der Personen ab 60, 40&nbsp;% der 30- bis 59-Jährigen und nur 15&nbsp;% der unter 30-Jährigen." }
+    ];
+    const ZEILEN = [
+      { id: "einfach", name: "einfach" }, { id: "geschichtet", name: "geschichtet" }, { id: "klumpen", name: "Klumpen" },
+      { id: "quote", name: "Quote" }, { id: "selbst", name: "Selbstselektion" },
+      { id: "nonresp", name: "Nonresponse" }, { id: "nonrespGew", name: "… gewichtet" }
+    ];
+    const ergebnisse = {};
+    ZEILEN.forEach((z) => { ergebnisse[z.id] = []; });
+
+    // Zeichnen: Quartiere, Bahnhof, Personen
+    const svg = el("t14-pop");
+    const klumpenRect = [];
+    for (let k = 0; k < 20; k++) {
+      const bx = k % 4, by = Math.floor(k / 4);
+      klumpenRect.push(sv("rect", { class: "t14-klumpen", x: px(5 * bx) - 7.2, y: py(4 * by) - 5.4, width: px(5 * bx + 4) - px(5 * bx) + 14.4, height: py(4 * by + 3) - py(4 * by) + 10.8, rx: 4 }, svg));
+    }
+    const formen = pop.map((p) => {
+      const cx = px(p.x), cy = py(p.y);
+      let e;
+      if (p.g === 0) e = sv("circle", { cx: cx, cy: cy, r: 3.4 }, svg);
+      else if (p.g === 1) e = sv("rect", { x: cx - 3.1, y: cy - 3.1, width: 6.2, height: 6.2 }, svg);
+      else e = sv("polygon", { points: [cx, cy - 4, cx + 3.9, cy + 3.2, cx - 3.9, cy + 3.2].join(" ") }, svg);
+      e.setAttribute("class", "t14-p t14-g" + p.g);
+      return e;
+    });
+    const bhf = sv("g", { class: "t14-bhf" }, svg);
+    sv("rect", { x: px(BHF.x) - 7, y: py(BHF.y) - 7, width: 14, height: 14, rx: 3 }, bhf);
+    sv("text", { x: px(BHF.x), y: py(BHF.y) + 3.6, "text-anchor": "middle" }, bhf).textContent = "B";
+    sv("text", { x: 14, y: 247 }, svg).textContent = "← Zentrum";
+    sv("text", { x: 306, y: 247, "text-anchor": "end" }, svg).textContent = "Land →";
+
+    // Zufallshilfen
+    function ziehe(arr, k) {
+      const a = arr.slice();
+      for (let i = 0; i < k && i < a.length; i++) {
+        const j = i + Math.floor(Math.random() * (a.length - i));
+        const h = a[i]; a[i] = a[j]; a[j] = h;
+      }
+      return a.slice(0, k);
+    }
+    function quoten(n) {
+      const roh = NG.map((v) => (n * v) / N);
+      const q = roh.map(Math.floor);
+      let rest = n - q.reduce((a, b) => a + b, 0);
+      roh.map((v, i) => [v - Math.floor(v), i]).sort((a, b) => b[0] - a[0]).forEach((e) => { if (rest > 0) { q[e[1]]++; rest--; } });
+      return q;
+    }
+    function gewichtet(a) {
+      let s = 0;
+      for (let g = 0; g < 3; g++) {
+        const t = a.filter((p) => p.g === g);
+        if (!t.length) return NaN;
+        s += (NG[g] / N) * mittel(t);
+      }
+      return s;
+    }
+    const idx = pop.map((_, i) => i);
+    const proGruppe = [0, 1, 2].map((g) => idx.filter((i) => pop[i].g === g));
+    const nachBhf = proGruppe.map((liste) => liste.slice().sort((a, b) =>
+      Math.hypot(pop[a].x - BHF.x, pop[a].y - BHF.y) - Math.hypot(pop[b].x - BHF.x, pop[b].y - BHF.y)));
+
+    // Eine Stichprobe ziehen: Indizes der Antwortenden, der Ausfälle, gezogene Quartiere, Schätzungen
+    function stichprobe(v, n) {
+      let antw = [], ausfall = [], kl = [], est, gew;
+      if (v === "einfach") {
+        antw = ziehe(idx, n);
+      } else if (v === "geschichtet") {
+        const q = quoten(n);
+        for (let g = 0; g < 3; g++) antw = antw.concat(ziehe(proGruppe[g], q[g]));
+        est = gewichtet(antw.map((i) => pop[i]));
+      } else if (v === "klumpen") {
+        kl = ziehe(Array.from({ length: 20 }, (_, k) => k), n / 20);
+        antw = idx.filter((i) => kl.indexOf(pop[i].klumpen) >= 0);
+      } else if (v === "quote") {
+        const q = quoten(n);
+        for (let g = 0; g < 3; g++) antw = antw.concat(ziehe(nachBhf[g].slice(0, Math.max(2 * q[g], q[g] + 3)), q[g]));
+      } else if (v === "selbst") {
+        let rest = idx.slice();
+        for (let k = 0; k < n; k++) {
+          const w = rest.map((i) => pop[i].wert * pop[i].wert);
+          let u = Math.random() * w.reduce((a, b) => a + b, 0), j = 0;
+          while (j < w.length - 1 && u > w[j]) { u -= w[j]; j++; }
+          antw.push(rest[j]);
+          rest.splice(j, 1);
+        }
+      } else {
+        ziehe(idx, n).forEach((i) => { (Math.random() < RUECKLAUF[pop[i].g] ? antw : ausfall).push(i); });
+        gew = antw.length ? gewichtet(antw.map((i) => pop[i])) : NaN;
+      }
+      if (est === undefined) est = antw.length ? mittel(antw.map((i) => pop[i])) : NaN;
+      return { antw: antw, ausfall: ausfall, kl: kl, est: est, gew: gew, brutto: antw.length + ausfall.length };
+    }
+
+    // Bedienung
+    let akt = "einfach";
+    const knopfBox = el("t14-sim-verfahren");
+    const knoepfe = VERFAHREN.map((v) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn";
+      b.textContent = v.name;
+      b.addEventListener("click", () => waehle(v.id));
+      knopfBox.appendChild(b);
+      return b;
+    });
+    const regler = el("t14-sim-n"), reglerWert = el("t14-sim-n-wert"), reglerLabel = el("t14-sim-n-label");
+    const info = el("t14-sim-info"), werte = el("t14-sim-werte"), zus = el("t14-sim-zus");
+
+    function grundzustand() {
+      svg.classList.add("t14-leer");
+      formen.forEach((f) => f.classList.remove("gezogen", "ausfall"));
+      klumpenRect.forEach((r) => r.classList.remove("an"));
+      werte.innerHTML = '<div class="t14-wert"><span>wahrer Mittelwert μ</span><b>' + chf(MU) + " CHF</b></div>" +
+        '<div class="t14-wert"><span>Grundgesamtheit N</span><b>' + N + "</b></div>";
+      zus.textContent = "Grundgesamtheit: " + GRUPPEN.map((g, k) => g.name + " " + NG[k] + " (" + prozent(NG[k] / N) + ")").join(", ") +
+        ". Zieh eine Stichprobe, um sie mit dem wahren Wert zu vergleichen.";
+    }
+    function waehle(id) {
+      akt = id;
+      const v = VERFAHREN.find((x) => x.id === id);
+      knoepfe.forEach((b, k) => { const an = VERFAHREN[k].id === id; b.classList.toggle("on", an); b.setAttribute("aria-pressed", an ? "true" : "false"); });
+      info.innerHTML = v.info;
+      reglerLabel.innerHTML = id === "nonresp" ? "Brutto n<sub>B</sub>" : "Stichprobe n";
+      bhf.classList.toggle("an", id === "quote");
+      grundzustand();
+    }
+    function anteileText(a) {
+      return GRUPPEN.map((g, k) => g.name + " " + prozent(a.filter((i) => pop[i].g === k).length / a.length, 0) + " (GG " + prozent(NG[k] / N, 0) + ")").join(" · ");
+    }
+    function anzeigen(r, n) {
+      svg.classList.remove("t14-leer");
+      const inStp = new Set(r.antw), aus = new Set(r.ausfall);
+      formen.forEach((f, i) => { f.classList.toggle("gezogen", inStp.has(i)); f.classList.toggle("ausfall", aus.has(i)); });
+      klumpenRect.forEach((rect, k) => rect.classList.toggle("an", r.kl.indexOf(k) >= 0));
+      const kasten = (t, w) => '<div class="t14-wert"><span>' + t + "</span><b>" + w + "</b></div>";
+      let h = "";
+      if (akt === "nonresp") h += kasten("Brutto → Netto", n + " → " + r.antw.length);
+      else h += kasten("Stichprobe n", String(r.antw.length));
+      if (isFinite(r.est)) {
+        h += kasten("Schätzung x̄", chf(r.est) + " CHF") + kasten("wahrer Wert μ", chf(MU) + " CHF") + kasten("Schätzfehler", mitVorzeichen(r.est - MU) + " CHF");
+      } else {
+        h += kasten("Schätzung", "keine Antwort");
+      }
+      if (akt === "nonresp") {
+        h += kasten("gewichtet x̄<sub>w</sub>", isFinite(r.gew) ? chf(r.gew) + " CHF (" + mitVorzeichen(r.gew - MU) + ")" : "nicht möglich");
+      }
+      werte.innerHTML = h;
+      if (!r.antw.length) zus.textContent = "Niemand hat geantwortet. Erhöhe den Bruttoumfang.";
+      else zus.textContent = "Zusammensetzung der ausgewerteten Stichprobe: " + anteileText(r.antw) +
+        (akt === "nonresp" && !isFinite(r.gew) ? ". Gewichten geht nicht, weil eine Altersgruppe ganz fehlt." : ".");
+    }
+    function einmal(n, zeigen) {
+      const r = stichprobe(akt, n);
+      if (isFinite(r.est)) ergebnisse[akt].push(r.est);
+      if (akt === "nonresp" && isFinite(r.gew)) ergebnisse.nonrespGew.push(r.gew);
+      if (zeigen) anzeigen(r, n);
+    }
+
+    // Streifendiagramm aller Schätzungen
+    const strip = el("t14-strip");
+    const stripTitel = strip.querySelector("title");
+    const tab = el("t14-sim-tab");
+    const LO = 20, HI = 140, X0 = 104, X1 = 312, OBEN = 22, ZH = 24;
+    const sx = (v) => X0 + ((Math.min(HI, Math.max(LO, v)) - LO) / (HI - LO)) * (X1 - X0);
+    function kennzahlen(a) {
+      if (!a.length) return null;
+      const m = a.reduce((s, v) => s + v, 0) / a.length;
+      const sd = a.length > 1 ? Math.sqrt(a.reduce((s, v) => s + (v - m) * (v - m), 0) / (a.length - 1)) : NaN;
+      return { m: m, sd: sd };
+    }
+    function auswerten() {
+      strip.innerHTML = "";
+      strip.appendChild(stripTitel);
+      ZEILEN.forEach((z, k) => {
+        const y = OBEN + k * ZH;
+        sv("rect", { class: "t14-zbg", x: X0, y: y + 2, width: X1 - X0, height: ZH - 4, rx: 4 }, strip);
+        sv("text", { x: X0 - 6, y: y + ZH / 2 + 4, "text-anchor": "end" }, strip).textContent = z.name;
+        const a = ergebnisse[z.id];
+        const start = Math.max(0, a.length - 300);
+        for (let i = start; i < a.length; i++) {
+          sv("circle", { class: "t14-sp", cx: sx(a[i]).toFixed(1), cy: (y + ZH / 2 + ((i * 7) % 11) - 5).toFixed(1), r: 2.2 }, strip);
+        }
+        const kz = kennzahlen(a);
+        if (kz && a.length > 1) sv("line", { class: "t14-smittel", x1: sx(kz.m), x2: sx(kz.m), y1: y + 3, y2: y + ZH - 3 }, strip);
+      });
+      const unten = OBEN + ZEILEN.length * ZH;
+      sv("line", { class: "achse", x1: X0, x2: X1, y1: unten + 2, y2: unten + 2 }, strip);
+      [20, 50, 80, 110, 140].forEach((t) => {
+        sv("line", { class: "achse", x1: sx(t), x2: sx(t), y1: unten + 2, y2: unten + 6 }, strip);
+        sv("text", { x: sx(t), y: unten + 18, "text-anchor": "middle" }, strip).textContent = String(t);
+      });
+      sv("line", { class: "markierung", x1: sx(MU), x2: sx(MU), y1: OBEN - 4, y2: unten + 2 }, strip);
+      sv("text", { x: sx(MU), y: OBEN - 8, "text-anchor": "middle" }, strip).textContent = "μ = " + chf(MU);
+
+      tab.innerHTML = ZEILEN.map((z) => {
+        const a = ergebnisse[z.id], kz = kennzahlen(a);
+        const zelle = (t) => '<td class="zahl">' + t + "</td>";
+        return "<tr><th scope=\"row\">" + (z.id === "nonrespGew" ? "Nonresponse, gewichtet" : z.name) + "</th>" + zelle(a.length) +
+          zelle(kz ? chf(kz.m) : "–") + zelle(kz ? mitVorzeichen(kz.m - MU) : "–") + zelle(kz && isFinite(kz.sd) ? kz.sd.toFixed(2) : "–") + "</tr>";
+      }).join("");
+    }
+
+    regler.addEventListener("input", () => { reglerWert.textContent = regler.value; });
+    el("t14-sim-1").addEventListener("click", () => { einmal(Number(regler.value), true); auswerten(); });
+    el("t14-sim-100").addEventListener("click", () => {
+      const n = Number(regler.value);
+      for (let k = 0; k < 99; k++) einmal(n, false);
+      einmal(n, true);
+      auswerten();
+    });
+    el("t14-sim-reset").addEventListener("click", () => {
+      ZEILEN.forEach((z) => { ergebnisse[z.id] = []; });
+      grundzustand();
+      auswerten();
+    });
+    waehle("einfach");
+    auswerten();
+  })();
+
+  /* ---------- 7 · Rücklauf-Rechner ---------- */
+  (function ruecklaufRechner() {
+    const URTEIL = [
+      { text: "Gültigkeit kann angenommen werden", marke: "✓" },
+      { text: "Gültigkeit kann vermutet werden", marke: "~" },
+      { text: "Gültigkeit muss angezweifelt werden", marke: "!" },
+      { text: "Gültigkeit ist nicht gegeben", marke: "✗" }
+    ];
+    const AUSWAHL = ["rein zufällig", "bewusst, Zufall gewahrt", "teilweise bewusst", "vollständig bewusst"];
+    const GG = { 0: "klar abgegrenzt", 2: "nur ungefähr abgegrenzt", 3: "nicht klar definiert" };
+    const fN = el("t14-rr-N"), fGG = el("t14-rr-gg"), vergleich = el("t14-rr-vergleich");
+    const VAR = ["a", "b"].map((k) => ({
+      name: k.toUpperCase(),
+      voll: el("t14-rr-" + k + "-voll"), nb: el("t14-rr-" + k + "-nb"), r: el("t14-rr-" + k + "-r"),
+      rWert: el("t14-rr-" + k + "-r-wert"), auswahl: el("t14-rr-" + k + "-auswahl"), aus: el("t14-rr-" + k + "-aus")
+    }));
+    function ganz(input, min, max, ersatz) {
+      let v = Math.round(L.zahlLesen(String(input.value)));
+      if (!isFinite(v)) v = ersatz;
+      return Math.min(max, Math.max(min, v));
+    }
+    function stufeRuecklauf(r) { return r >= 0.40 ? 0 : r >= 0.30 ? 1 : r >= 0.20 ? 2 : 3; }
+
+    function variante(v, N, lvG) {
+      const voll = v.voll.checked;
+      if (voll) v.nb.value = String(N);
+      v.nb.disabled = voll;
+      v.auswahl.disabled = voll;
+      const nB = voll ? N : ganz(v.nb, 1, N, Math.min(N, 1000));
+      const r = Number(v.r.value) / 100;
+      v.rWert.textContent = v.r.value + " %";
+      const nN = Math.round(nB * r);
+      const lvR = stufeRuecklauf(r);
+      const lvA = voll ? 0 : Number(v.auswahl.value);
+      const stufe = Math.max(lvR, lvA, lvG);
+      const fehler = nN >= 1 && N > 1 ? 1.96 * Math.sqrt(0.25 / nN) * Math.sqrt(Math.max(0, N - nN) / (N - 1)) : NaN;
+      const gruende = [
+        "Rücklauf " + v.r.value + " %: " + (lvR === 3 ? "unter 20 %" : lvR === 2 ? "knapp (20 bis 30 %)" : lvR === 1 ? "gut (ab 30 %)" : "hoch (ab 40 %)") + (lvR === stufe && stufe > 0 ? " ← entscheidet" : ""),
+        voll ? "Vollerhebung: alle angeschrieben. Die Nettostichprobe ist trotzdem keine Zufallsstichprobe, sobald der Rücklauf unter 100 % liegt."
+             : "Auswahl: " + AUSWAHL[lvA] + (lvA === stufe && stufe > lvR ? " ← entscheidet" : ""),
+        "Grundgesamtheit: " + GG[lvG] + (lvG === stufe && stufe > Math.max(lvR, lvA) ? " ← entscheidet" : "")
+      ];
+      let h = '<span class="t14-zahlen">n<sub>N</sub> = ' + gz(nB) + " · " + v.r.value + " % ≈ <b>" + gz(nN) + "</b></span>";
+      h += "<span>Nonresponse-Quote: " + (100 - Number(v.r.value)) + " % (" + gz(nB - nN) + " ohne Antwort)</span>";
+      if (!voll) h += "<span>n<sub>B</sub>/N = " + L.zahlText(nB / N, 3) + (nB / N < 0.05 ? " &lt; 0.05: näherungsweise einfache Zufallsstichprobe" : " ≥ 0.05: nicht mehr näherungsweise einfach, später mit Korrekturfaktor rechnen (Satz 2.27)") + "</span>";
+      h += '<span class="t14-urteil t14-u' + stufe + '"><span aria-hidden="true">' + URTEIL[stufe].marke + "</span> " + URTEIL[stufe].text + "</span>";
+      h += "<ul>" + gruende.map((g) => "<li>" + g + "</li>").join("") + "</ul>";
+      h += "<span>Zufallsfehler (Richtwert): " + (isFinite(fehler) ? "± " + L.zahlText(fehler * 100, 1) + " Prozentpunkte" : "–") + "</span>";
+      v.aus.innerHTML = h;
+      return { name: v.name, nN: nN, r: r, stufe: stufe };
+    }
+    function rechnen() {
+      const N = ganz(fN, 10, 10000000, 12000);
+      const lvG = Number(fGG.value);
+      const e = VAR.map((v) => variante(v, N, lvG));
+      const [a, b] = e;
+      let val, valName = null;
+      if (a.stufe !== b.stufe) { valName = a.stufe < b.stufe ? a.name : b.name; val = "<b>Valider:</b> Variante " + valName + " (" + URTEIL[Math.min(a.stufe, b.stufe)].text + ")."; }
+      else if (a.stufe === 3) val = "<b>Validität:</b> Bei beiden Varianten ist die Gültigkeit nicht gegeben. Das schwächste Kriterium entscheidet, egal wie viele Antworten zurückkommen.";
+      else if (a.r !== b.r) { valName = a.r > b.r ? a.name : b.name; val = "<b>Validität:</b> gleiche Stufe; Variante " + valName + " liegt mit dem höheren Rücklauf näher am Ideal."; }
+      else val = "<b>Validität:</b> gleich eingestuft.";
+      let rel, relName = null;
+      if (a.nN !== b.nN) { relName = a.nN > b.nN ? a.name : b.name; rel = "<b>Reliabler:</b> Variante " + relName + " (" + gz(Math.max(a.nN, b.nN)) + " statt " + gz(Math.min(a.nN, b.nN)) + " auswertbare Antworten)."; }
+      else rel = "<b>Reliabilität:</b> gleich, gleich viele auswertbare Antworten.";
+      // Schlusssatz nur, wenn er zu den eingestellten Werten passt
+      let schluss = "";
+      if (valName && relName && valName !== relName) schluss = " Validität und Reliabilität zeigen hier auf verschiedene Varianten.";
+      else if (valName && valName === relName) schluss = " Hier ist dieselbe Variante valider und reliabler.";
+      vergleich.innerHTML = val + " " + rel + schluss;
+    }
+    [fN, fGG].forEach((f) => { f.addEventListener("input", rechnen); f.addEventListener("change", rechnen); });
+    VAR.forEach((v) => [v.voll, v.nb, v.r, v.auswahl].forEach((f) => { f.addEventListener("input", rechnen); f.addEventListener("change", rechnen); }));
+
+    function setzen(werte) {
+      fN.value = String(werte.N);
+      fGG.value = "0";
+      werte.v.forEach((w, k) => {
+        const v = VAR[k];
+        v.voll.checked = w.voll;
+        v.nb.value = String(w.voll ? werte.N : w.nb);
+        v.r.value = String(w.r);
+        v.auswahl.value = String(w.auswahl);
+      });
+      rechnen();
+    }
+    const FILM = { N: 12000, v: [{ voll: true, nb: 12000, r: 8, auswahl: 0 }, { voll: false, nb: 1600, r: 35, auswahl: 0 }] };
+    el("t14-rr-p1").addEventListener("click", () => setzen(FILM));
+    el("t14-rr-p2").addEventListener("click", () => setzen({ N: 12000, v: [FILM.v[0], { voll: false, nb: 1600, r: 55, auswahl: 0 }] }));
+    el("t14-rr-p3").addEventListener("click", () => setzen({ N: 12000, v: [FILM.v[0], { voll: false, nb: 1600, r: 35, auswahl: 3 }] }));
+    rechnen();
+
+    // Rückwärts: nötige Bruttostichprobe
+    const fZiel = el("t14-rw-ziel"), fK = el("t14-rw-k"), fR = el("t14-rw-r"), fRW = el("t14-rw-r-wert"), erg = el("t14-rw-erg");
+    function rueckwaerts() {
+      const ziel = ganz(fZiel, 1, 100000, 30), k = ganz(fK, 1, 50, 1), p = Number(fR.value);
+      fRW.textContent = p + " %";
+      const nb = Math.ceil((ziel * 100) / p); // ganzzahlig rechnen, keine Rundungsfehler
+      erg.innerHTML = T`$n_B = \left\lceil \dfrac{` + ziel + "}{" + L.zahlText(p / 100, 2) + T`} \right\rceil = ` + nb + "$" +
+        (k > 1 ? T` je Schicht, total $` + k + T` \cdot ` + nb + " = " + (k * nb) + "$" : "");
+      L.formeln(erg);
+    }
+    [fZiel, fK, fR].forEach((f) => f.addEventListener("input", rueckwaerts));
+    rueckwaerts();
+  })();
+
+  /* ---------- 8 · Übungen ---------- */
+  L.zahlAufgabe("#t14-ue-ruecklauf", {
+    titel: "Übung 1 · Rücklaufquote",
+    frage: "Eine Krankenkasse verschickt 3200 Fragebogen an zufällig ausgeloste Versicherte. 736 kommen auswertbar zurück. Wie gross ist die Rücklaufquote? Gib sie als Dezimalzahl (z. B. 0.45) oder in Prozent mit Prozentzeichen (45 %) an.",
+    antwort: 0.23,
+    toleranz: 0.0005,
+    anzeige: "0.23 = 23 %",
+    hinweise: [
+      "Rücklaufquote = Netto durch Brutto.",
+      "Brutto sind die 3200 verschickten Fragebogen, Netto die 736 auswertbaren."
+    ],
+    loesungsweg: [
+      T`$n_B = 3200$, $n_N = 736$`,
+      T`$r = \dfrac{n_N}{n_B} = \dfrac{736}{3200} = 0.23 = 23\,\%$`,
+      "Einordnung: Zufällig gezogen, aber Rücklauf nur knapp zwischen 20 und 30 %: Die Gültigkeit muss angezweifelt werden."
+    ]
+  });
+
+  L.sortierer("#t14-ue-sort", {
+    kategorien: ["einfache Zufallsstichprobe", "geschichtete Stichprobe", "Klumpenstichprobe", "keine Zufallsstichprobe"],
+    elemente: [
+      { html: "Aus der Kundendatei mit 12'000 Nummern zieht Excel 300 Nummern per Zufallszahl.", kategorie: 0,
+        erklaerung: "Jede Nummer hat dieselbe Chance. 300/12'000 = 0.025 < 0.05: auch ohne Zurücklegen näherungsweise einfach." },
+      { html: "Die Kundendatei wird nach Region getrennt. Aus jeder Region wird zufällig so viel gezogen, wie ihrem Anteil entspricht.", kategorie: 1,
+        erklaerung: "Region ist das Schichtmerkmal, in jeder Schicht wird zufällig gezogen (Def. 2.9)." },
+      { html: "Von 60 Filialen werden 6 ausgelost. Dort werden alle Mitarbeitenden befragt.", kategorie: 2,
+        erklaerung: "Ausgelost werden ganze Gruppen, darin alle: Klumpenstichprobe." },
+      { html: "Interviewer sollen je 50 Frauen und Männer befragen und sprechen dafür Passanten am Bahnhof an.", kategorie: 3,
+        erklaerung: "Quotenverfahren: Die Interviewer wählen selbst. Die Chance der einzelnen Person ist nicht angebbar." },
+      { html: "Auf der Website steht ein Link zur Umfrage. Wer will, macht mit.", kategorie: 3,
+        erklaerung: "Selbstselektion: Es antworten vor allem Interessierte." },
+      { html: "Das BFS zieht aus jeder Teilbranche (NOGA-Code) eine Zufallsstichprobe.", kategorie: 1,
+        erklaerung: "Teilbranche ist das Schichtmerkmal, wie im Fallbeispiel QM aus LB4." },
+      { html: "Eine Schule lost 4 von 40 Klassen aus und befragt alle Lernenden dieser Klassen.", kategorie: 2,
+        erklaerung: "Klassen sind natürliche Gruppen. Aus wenigen Klumpen werden alle befragt." },
+      { html: "Aus einem Lostopf mit den Nummern aller 2000 Mitglieder werden 80 Lose ohne Zurücklegen gezogen.", kategorie: 0,
+        erklaerung: "Ohne Zurücklegen, aber 80/2000 = 0.04 < 0.05: nach Skript näherungsweise eine einfache Zufallsstichprobe." }
+    ]
+  });
+
+  L.wahrFalsch("#t14-ue-wf", {
+    titel: "Übung 3 · Zwei Varianten (im Stil von Aufgabe 8a der exemplarischen Modulschlussprüfung)",
+    aussagen: [
+      { html: "Grundgesamtheit: 18'000 Mitglieder einer Genossenschaft. <b>Variante A:</b> Vollerhebung, erwarteter Rücklauf 12 %. <b>Variante B:</b> Zufallsauswahl von 1500 Mitgliedern, mit Nachfassaktion erwarteter Rücklauf 40 %.<br><br>(1) Variante B liefert die valideren Resultate.", wahr: true,
+        erklaerung: "B ist zufällig gezogen und erreicht 40 %, A nur 12 %. Die Validität hängt an der Rücklaufquote." },
+      { html: "(2) Variante A liefert die reliableren Resultate.", wahr: true,
+        erklaerung: "A: 0.12 · 18'000 = 2160 auswertbare Fragebogen, B: 0.40 · 1500 = 600. Mehr Netto heisst reliabler, aber nicht valider." },
+      { html: "(3) Weil Variante A mehr auswertbare Fragebogen liefert, ist sie auch valider als B.", wahr: false,
+        erklaerung: "Für die Validität zählt die Quote in Prozent, nicht die absolute Zahl (Skript SS S. 16)." },
+      { html: "(4) Steigt der Rücklauf in Variante A auf 15 %, ist die Gültigkeit von A gegeben.", wahr: false,
+        erklaerung: "Auch 15 % liegen unter 20 %. Nach der Skala ist die Gültigkeit dann nicht gegeben. A hätte 2700 Antworten, wäre also nur reliabler." },
+      { html: "(5) Weil in Variante A alle angeschrieben werden, braucht man für A keine Methoden der schliessenden Statistik.", wahr: false,
+        erklaerung: "Ausgewertet wird nur die Nettostichprobe. Eine unvollständige Vollerhebung ist eine Stichprobe, und zwar keine Zufallsstichprobe (Skript SS S. 10). Nur mit 100 % Rücklauf genügt beschreibende Statistik." },
+      { html: "(6) Beide Varianten sind nicht optimal, weil bei beiden die Gültigkeit angezweifelt werden muss.", wahr: false,
+        erklaerung: "Für A stimmt das (12 %). B ist aber zufällig gezogen und erreicht 40 %: Die Gültigkeit kann vermutet oder sogar angenommen werden. In Aufgabe 8a der Prüfung war eine ähnliche Aussage wahr, weil dort beide Varianten höchstens 20 % erreichten." }
+    ]
+  });
+
+  L.auswahl("#t14-ue-auswahl", {
+    frage: "<b>Übung 4 · Genau eine Aussage ist korrekt</b> (im Stil von Aufgabe 8b der exemplarischen Modulschlussprüfung). Welche?",
+    optionen: [
+      "(1) Eine Zufallsstichprobe liegt nur vor, wenn jedes Element der Grundgesamtheit dieselbe Chance hat, gezogen zu werden.",
+      "(2) Eine geschichtete Stichprobe setzt voraus, dass alle Schichten in der Grundgesamtheit gleich viele Elemente haben.",
+      "(3) In einer geschichteten Stichprobe darf eine sehr kleine Schicht überproportional gross gezogen werden. Das Gesamtergebnis wird dann mit den Anteilen der Grundgesamtheit gewichtet.",
+      "(4) Ein grösserer Umfang der Nettostichprobe erhöht bei gleicher Rücklaufquote die Validität der Resultate.",
+      "Keine der Aussagen (1) bis (4) ist korrekt."
+    ],
+    richtig: 2,
+    erklaerung: "(3) stimmt, so steht es im Skript SS 2.3.3. (1) beschreibt die einfache Zufallsstichprobe; für eine Zufallsstichprobe genügt, dass die Chance angebbar ist (Def. 2.5 und 2.7). (2) Schichten dürfen verschieden gross sein. (4) Bei gleicher Quote erhöht ein grösserer Umfang nur die Reliabilität, nicht die Validität (Skript SS S. 16)."
+  });
+
+  L.zahlAufgabe("#t14-ue-gewicht", {
+    titel: "Übung 5 · Gewichteter Mittelwert",
+    frage: "Eine Bank misst die Zufriedenheit auf einer Skala von 1 bis 10. In der Grundgesamtheit sind 80 % Privatkunden und 20 % Firmenkunden. Netto antworten 120 Privatkunden (Mittelwert 7.2) und 80 Firmenkunden (Mittelwert 5.9). Wie gross ist die beste Schätzung für die mittlere Zufriedenheit aller Kunden? Auf zwei Nachkommastellen.",
+    antwort: 6.94,
+    toleranz: 0.005,
+    anzeige: "6.94",
+    hinweise: [
+      "Die Firmenkunden sind in der Nettostichprobe übervertreten: 80 von 200 = 40 % statt 20 %.",
+      "Gewichte jeden Schichtmittelwert mit dem Anteil der Schicht in der Grundgesamtheit."
+    ],
+    loesungsweg: [
+      T`Ungewichtet (falsch): $\dfrac{120 \cdot 7.2 + 80 \cdot 5.9}{200} = 6.68$`,
+      T`Gewichte aus der Grundgesamtheit: $w_1 = 0.80$, $w_2 = 0.20$`,
+      T`$\bar x_w = 0.80 \cdot 7.2 + 0.20 \cdot 5.9 = 5.76 + 1.18 = 6.94$`
+    ]
+  });
+
+  L.zahlAufgabe("#t14-ue-brutto", {
+    titel: "Übung 6 · Wie viele Fragebogen verschicken?",
+    frage: "Eine Studie hat drei Schichten. Jede Schicht soll mindestens 30 auswertbare Fragebogen liefern. Erwartet wird ein Rücklauf von 40 % in Schicht 1 und 2 und von 25 % in Schicht 3. Wie viele Fragebogen musst du insgesamt mindestens verschicken?",
+    antwort: 270,
+    anzeige: "75 + 75 + 120 = 270",
+    hinweise: [
+      T`Rechne für jede Schicht einzeln: $n_B = \tfrac{n_N}{r}$, aufrunden.`,
+      "Die Schicht mit dem schlechtesten Rücklauf braucht am meisten Fragebogen."
+    ],
+    loesungsweg: [
+      T`Schicht 1 und 2: $n_B = \dfrac{30}{0.40} = 75$`,
+      T`Schicht 3: $n_B = \dfrac{30}{0.25} = 120$`,
+      T`Total: $75 + 75 + 120 = 270$ Fragebogen`
+    ]
+  });
+
+  L.schrittAufgabe("#t14-ue-plan", {
+    titel: "Übung 7 · Stichprobenplan aufstellen (eigene Lösung, nicht vom Dozenten bestätigt)",
+    aufgabe: "<p>Eine Bergbahn will wissen, wie zufrieden die Besitzerinnen und Besitzer eines Saisonabos 2025/26 sind. Die Abo-Datenbank enthält 9600 Personen: 6240 Erwachsene, 2400 Jugendliche und 960 Senioren. Das Budget reicht für 1000 schriftliche Fragebogen. Der Auftraggeber will Resultate für jede Alterskategorie, mit je mindestens 40 auswertbaren Antworten. Erfahrungsgemäss antworten Erwachsene zu 40 %, Jugendliche zu 30 % und Senioren zu 50 %. Stelle einen Stichprobenplan auf.</p>",
+    schritte: [
+      { html: T`Grundgesamtheit: alle Personen mit Saisonabo 2025/26 dieser Bergbahn, Stand der Abo-Datenbank am Stichtag. $N = 9600$.`,
+        warum: "Inhaltlich (Abo-Besitz) und zeitlich (Saison, Stichtag) klar abgegrenzt. Die Datenbank ist eine vollständige, aktuelle Liste: die beste Grundlage für eine Zufallsauswahl." },
+      { html: T`Teilerhebung mit $n_B = 1000$, geschichtet nach Alterskategorie.`,
+        warum: "Alle 9600 anzuschreiben, sprengt das Budget. Die Alterskategorie steht für alle in der Datenbank, und der Auftraggeber will Resultate je Kategorie (Bem. 2.10)." },
+      { html: T`Proportional: $1000 \cdot 0.65 = 650$, $\ 1000 \cdot 0.25 = 250$, $\ 1000 \cdot 0.10 = 100$`,
+        warum: "Die Anteile stammen aus der Grundgesamtheit: 6240/9600 = 0.65, 2400/9600 = 0.25, 960/9600 = 0.10." },
+      { html: T`Erwartetes Netto: $650 \cdot 0.40 = 260$, $\ 250 \cdot 0.30 = 75$, $\ 100 \cdot 0.50 = 50$, alle $\ge 40$`,
+        warum: "Prüfen, ob jede Schicht genügend Antworten liefert. Wäre eine Schicht zu klein, würdest du sie überproportional ziehen und später gewichten." },
+      { html: "Ziehung: in jeder Schicht eine einfache Zufallsstichprobe mit Excel (Zufallszahl, als Werte einfügen, sortieren, die ersten 650, 250 bzw. 100).",
+        warum: "So hat innerhalb jeder Schicht jede Person dieselbe Chance." },
+      { html: "Rücklauf fördern: Ankündigung, Anonymität zusichern, Erinnerung an alle, zweite Nachfassaktion an alle ohne Antwort, Resultate für Teilnehmende.",
+        warum: "Die Rücklaufquote entscheidet über die Validität. Erwartet sind 385 von 1000, also 38.5 %: Die Gültigkeit kann vermutet werden. Mehr Nachfassen hebt sie Richtung «angenommen»." },
+      { html: T`Auswertung: $\bar x_w = 0.65\,\bar x_1 + 0.25\,\bar x_2 + 0.10\,\bar x_3$; Rücklauf je Schicht und $n$ bei jeder Auswertung dokumentieren.`,
+        warum: "Weil die Schichten unterschiedlich gut antworten, gewichtest du mit den Anteilen der Grundgesamtheit (Skript SS 2.3.3)." }
+    ]
+  });
+
+  /* ---------- Übung 8 · Gültigkeit einstufen (Stil Aufgabe 51 Aufgabenskript) ---------- */
+  const SKALA = [
+    "Die Gültigkeit kann angenommen werden.",
+    "Die Gültigkeit kann vermutet werden.",
+    "Die Gültigkeit muss angezweifelt werden.",
+    "Die Gültigkeit ist nicht gegeben."
+  ];
+  L.auswahl("#t14-ue-skala-1", {
+    frage: "<b>Fall a)</b> Ein Branchenverband zählt 80 Mitgliedfirmen. Sie bilden die Grundgesamtheit. Per Zufallsauswahl ziehst du 40 Firmen. Nach einer Nachfassaktion sind 22 Fragebogen auswertbar.",
+    optionen: SKALA,
+    richtig: 0,
+    erklaerung: "Grundgesamtheit klar abgegrenzt (die 80 Mitglieder), rein zufällig gezogen, Rücklauf 22 / 40 = 55 %: hoch. Die Gültigkeit kann angenommen werden. Dass nur 22 Fragebogen auswertbar sind, schwächt die Reliabilität, nicht die Validität. So stuft auch die Musterlösung von Aufgabe 51a einen ähnlichen Fall ein."
+  });
+  L.auswahl("#t14-ue-skala-2", {
+    frage: "<b>Fall b)</b> Ein Fitnesscenter will wissen, wie zufrieden alle 2400 Abonnentinnen und Abonnenten sind. Befragt werden die 100, die laut Eingangskontrolle am häufigsten trainieren. 70 davon antworten.",
+    optionen: SKALA,
+    richtig: 3,
+    erklaerung: "Der Rücklauf von 70 % ist hoch, aber die Auswahl ist vollständig bewusst: Wer oft trainiert, ist vermutlich zufriedener als der Durchschnitt. Wegen «und/oder» entscheidet das schwächste Kriterium: Die Gültigkeit ist nicht gegeben. Ein hoher Rücklauf rettet keine bewusste Auswahl. Ähnlich Aufgabe 51b (Liste der bestbewerteten Nationalräte)."
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const P1 = [
+    T`A: $n_B = N = 12\ts000$ (Vollerhebung)`,
+    T`A: $r_A = 8\,\%$`,
+    T`A: $n_N = 0.08 \cdot 12\ts000 = 960$`,
+    T`B: $n_B = 1600$ (Zufallsauswahl)`,
+    T`B: $r_B = 35\,\%$`,
+    T`B: $n_N = 0.35 \cdot 1600 = 560$`
+  ];
+  const P2 = [
+    "Validität hängt an: Zufall und Rücklaufquote",
+    T`A: $8\,\% \lt 20\,\%$ → Gültigkeit <span class="t14-bad">nicht gegeben</span>`,
+    T`B: zufällig, $35\,\%$ → Gültigkeit <span class="t14-ok">kann vermutet werden</span>`,
+    "⇒ B ist valider als A"
+  ];
+  const P3 = [
+    T`Reliabilität hängt an: Umfang $n_N$`,
+    T`A: $960 \gt$ B: $560$`,
+    "⇒ A ist reliabler als B"
+  ];
+  const P4a = [
+    T`(1) B valider als A → <span class="t14-ok">wahr</span>`,
+    T`(2) $960 \ne 560$ → <span class="t14-bad">falsch</span>`,
+    T`(3) A mit 10 %: $0.10 \cdot 12\ts000 = 1200$`,
+    T`(3) 1200 Antworten, aber $10\,\% \lt 20\,\%$ → <span class="t14-bad">falsch</span>`,
+    "(4) Netto A: wer selbst antwortet → keine Zufallsstichprobe",
+    T`(4) → <span class="t14-ok">wahr</span>`,
+    "<b>Lösung: wahr · falsch · falsch · wahr</b>"
+  ];
+  // Phase 4: Zeilen (3) und (4) werden jeweils durch ihr Urteil ersetzt
+  const p4 = (liste, neu) => tafel(liste.map((i) => P4a[i]), neu);
+  L.film("#t14-film", {
+    phasen: ["1 · Zahlen", "2 · Validität", "3 · Reliabilität", "4 · Aussagen"],
+    texte: [
+      T`Ein Verband mit <span data-ph="N">12'000 Mitgliedern</span> plant eine Befragung. <b>Variante A:</b> <span data-ph="aV">Vollerhebung</span>, erwarteter <span data-ph="aR">Rücklauf 8 %</span>. <b>Variante B:</b> Zufallsauswahl einer <span data-ph="bB">Bruttostichprobe von 1600</span> Mitgliedern, mit Erinnerung und Nachfassaktion erwarteter <span data-ph="bR">Rücklauf 35 %</span>. Kreuze wahr oder falsch an.`,
+      T`<span data-ph="s1">(1) Variante B ist valider als Variante A.</span> <span data-ph="s2">(2) Die Reliabilität ist in beiden Varianten gleich, weil dieselbe Grundgesamtheit befragt wird.</span> <span data-ph="s3">(3) Steigt der Rücklauf in A auf 10 %, ist A valider als B, weil A dann mehr als doppelt so viele auswertbare Fragebogen hat.</span> <span data-ph="s4">(4) Variante A ist eine Vollerhebung, ihre Nettostichprobe ist aber keine Zufallsstichprobe.</span>`
+    ],
+    woerterbuch: [
+      T`A: $n_N = 960$, $r = 8\,\%$`,
+      T`B: $n_N = 560$, $r = 35\,\%$`,
+      "Validität ↔ Rücklaufquote",
+      T`Reliabilität ↔ $n_N$`
+    ],
+    beschriftung: { texte: "Die Aufgabe", woerterbuch: "Fakten", formel: "Tafel" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Erstens rechnest du für jede Variante Brutto, Netto und Rücklaufquote aus. Zweitens stufst du die Validität über die Rücklaufquote ein. Drittens vergleichst du die Reliabilität über den Umfang der Nettostichprobe. Erst dann prüfst du die Aussagen, eine nach der anderen." },
+      { ph: 0, hl: ["N", "aV"], f: tafel(P1.slice(0, 1), 0),
+        say: "Variante A ist eine Vollerhebung. Alle 12'000 Mitglieder bekommen den Fragebogen. Die Bruttostichprobe ist also die ganze Grundgesamtheit." },
+      { ph: 0, hl: ["aR"], f: tafel(P1.slice(0, 2), 1),
+        say: "Erwartet werden nur 8 Prozent Rücklauf." },
+      { ph: 0, hl: ["aR"], dict: 1, dh: [0], f: tafel(P1.slice(0, 3), 2),
+        say: "Netto ist Rücklaufquote mal Brutto: 0.08 mal 12'000 ergibt 960 auswertbare Fragebogen." },
+      { ph: 0, hl: ["bB"], f: tafel(P1.slice(0, 4), 3),
+        say: "Variante B lost 1600 Mitglieder aus. Das ist ihre Bruttostichprobe." },
+      { ph: 0, hl: ["bR"], f: tafel(P1.slice(0, 5), 4),
+        say: "Mit Erinnerung und Nachfassaktion rechnet B mit 35 Prozent Rücklauf." },
+      { ph: 0, hl: ["bR"], dict: 2, dh: [1], f: tafel(P1, 5),
+        say: "0.35 mal 1600 ergibt 560 auswertbare Fragebogen. A hat also deutlich mehr Antworten als B. Die Fakten stehen jetzt oben, die Tafel wird frei." },
+      { ph: 1, dict: 3, dh: [2], f: tafel(P2.slice(0, 1), 0),
+        say: "Jetzt die Validität. Sie fragt: Trifft das Resultat im Mittel den wahren Wert? Mathematisch hängt sie davon ab, ob zufällig gezogen wurde und wie hoch die Rücklaufquote ist. Die Zahl der Antworten spielt dafür keine Rolle." },
+      { ph: 1, hl: ["aR"], dh: [0, 2], f: tafel(P2.slice(0, 2), 1),
+        say: "A liegt mit 8 Prozent weit unter 20 Prozent. Nach der Skala im Skript ist die Gültigkeit nicht gegeben. Wer antwortet, hat sich selbst ausgewählt." },
+      { ph: 1, hl: ["bR"], dh: [1, 2], f: tafel(P2.slice(0, 3), 2),
+        say: "B wurde zufällig gezogen und erreicht 35 Prozent. Das ist ein guter Rücklauf: Die Gültigkeit kann vermutet werden." },
+      { ph: 1, dh: [2], f: tafel(P2, 3),
+        say: "Also ist Variante B valider als A, obwohl sie weniger Antworten liefert." },
+      { ph: 2, dict: 4, dh: [3], f: tafel(P3.slice(0, 1), 0),
+        say: "Die Reliabilität fragt: Kommt bei einer Wiederholung fast dasselbe heraus? Das hängt am Umfang der Nettostichprobe. Je mehr auswertbare Fragebogen, desto kleiner der Zufallsfehler." },
+      { ph: 2, dh: [0, 1, 3], f: tafel(P3.slice(0, 2), 1),
+        say: "A hat 960, B nur 560 auswertbare Fragebogen." },
+      { ph: 2, dh: [3], f: tafel(P3, 2),
+        say: "A ist darum reliabler: stabiler, aber womöglich stabil daneben." },
+      { ph: 3, hl: ["s1"], dh: [2], f: p4([0], 0),
+        say: "Aussage 1 behauptet, B sei valider als A. Das haben wir gezeigt: 35 Prozent gegen 8 Prozent Rücklauf. Aussage 1 ist wahr." },
+      { ph: 3, hl: ["s2"], dh: [3], f: p4([0], -1),
+        say: "Aussage 2 behauptet, beide Varianten seien gleich reliabel, weil dieselbe Grundgesamtheit befragt wird." },
+      { ph: 3, hl: ["s2"], dh: [0, 1, 3], f: p4([0, 1], 1),
+        say: "Die Reliabilität hängt aber an der Nettostichprobe, nicht an der Grundgesamtheit. 960 und 560 sind verschieden. Aussage 2 ist falsch." },
+      { ph: 3, hl: ["s3"], f: p4([0, 1, 2], 2),
+        say: "Aussage 3 spielt mit einem höheren Rücklauf in A. Mit 10 Prozent hätte A 1200 auswertbare Fragebogen, mehr als doppelt so viele wie B." },
+      { ph: 3, hl: ["s3"], dh: [2], f: p4([0, 1, 3], 2),
+        say: "Mehr Antworten erhöhen aber nur die Reliabilität. Für die Validität zählt die Quote, und 10 Prozent liegen immer noch unter 20 Prozent. Aussage 3 ist falsch. Genau diese Falle steckt oft in Prüfungsaufgaben." },
+      { ph: 3, hl: ["s4"], f: p4([0, 1, 3], -1),
+        say: "Aussage 4 sagt: A ist zwar eine Vollerhebung, die Nettostichprobe ist aber keine Zufallsstichprobe." },
+      { ph: 3, hl: ["s4"], f: p4([0, 1, 3, 4], 3),
+        say: "Ob jemand antwortet, entscheidet nicht der Zufall, sondern die Person selbst. Eine unvollständige Vollerhebung ist eine Stichprobe, aber keine Zufallsstichprobe." },
+      { ph: 3, hl: ["s4"], f: p4([0, 1, 3, 5], 3),
+        say: "Aussage 4 ist also wahr." },
+      { ph: 3, hl: [], dh: [2, 3], f: p4([0, 1, 3, 5, 6], 4),
+        say: "Die Lösung lautet: wahr, falsch, falsch, wahr. Merke dir die Trennung: Die Rücklaufquote steuert die Validität, der Nettoumfang die Reliabilität. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t14-selbsttest", {
+    fragen: [
+      { q: "Du verschickst 900 Fragebogen, 270 kommen auswertbar zurück. Wie gross ist die Rücklaufquote?",
+        o: ["30 %", "70 %", "rund 3.3 %"], a: 0,
+        e: "r = 270 / 900 = 0.30. 70 % ist die Nonresponse-Quote, 3.3 rechnet verkehrt herum (900 / 270)." },
+      { q: "Stolperfalle: Ein Institut verschickt 4000 statt 2000 Fragebogen. Der Rücklauf bleibt bei 15 %. Was verbessert sich?",
+        o: ["Validität und Reliabilität", "Nur die Reliabilität", "Nur die Validität"], a: 1,
+        e: "600 statt 300 Antworten senken den Zufallsfehler. Die Quote bleibt aber bei 15 % unter 20 %: Die Gültigkeit ist weiterhin nicht gegeben." },
+      { q: "Stolperfalle: Was verlangt eine Zufallsstichprobe nach Def. 2.5?",
+        o: ["Alle Elemente haben dieselbe Chance, gezogen zu werden.", "Für jedes Element lässt sich die Chance, gezogen zu werden, angeben.", "Jedes Element der Grundgesamtheit kommt in die Stichprobe."], a: 1,
+        e: "Gleiche Chancen verlangt erst die einfache Zufallsstichprobe (Def. 2.7). Die dritte Antwort beschreibt eine Vollerhebung." },
+      { q: "Wovon hängt die Reliabilität aus mathematischer Sicht vor allem ab?",
+        o: ["von der Rücklaufquote", "vom Umfang der Nettostichprobe", "vom Umfang der Grundgesamtheit"], a: 1,
+        e: "Mehr auswertbare Antworten, kleinere Streuung (Skript SS S. 13). Die Rücklaufquote betrifft die Validität." },
+      { q: "Interviewer müssen 40 Frauen und 60 Männer befragen und wählen die Personen selbst aus. Was gilt?",
+        o: ["Das ist eine geschichtete Zufallsstichprobe.", "Das ist keine Zufallsstichprobe, weil die Chance der einzelnen Person nicht angebbar ist.", "Das ist eine Klumpenstichprobe."], a: 1,
+        e: "Quotenverfahren: Die Quoten gleichen einer Schichtung, aber innerhalb der Quote wählt der Mensch, nicht der Zufall." },
+      { q: "Eine Bank lost 8 ihrer 80 Filialen aus und befragt dort alle Mitarbeitenden. Welches Verfahren ist das?",
+        o: ["geschichtete Stichprobe", "Klumpenstichprobe", "Quotenverfahren"], a: 1,
+        e: "Ausgelost werden ganze Gruppen, darin werden alle befragt. Bei der Schichtung würde aus jeder Filiale ein Teil gezogen." },
+      { q: "In einer geschichteten Stichprobe antworten Frauen zu 60 %, Männer zu 30 %. Was ist die beste Schätzung für den Mittelwert der Grundgesamtheit?",
+        o: ["der Mittelwert aller Antworten", "die Schichtmittelwerte, gewichtet mit den Anteilen der Schichten in der Grundgesamtheit", "die Schichtmittelwerte, gewichtet mit den Anteilen in der Nettostichprobe"], a: 1,
+        e: "Die Nettostichprobe hat wegen des ungleichen Rücklaufs falsche Anteile. Mit den Netto-Anteilen zu gewichten, ergibt genau den gewöhnlichen Mittelwert, also denselben Fehler (Skript SS 2.3.3)." },
+      { q: "Stolperfalle: Ein Verband schreibt alle 3000 Mitglieder an, 360 antworten. Wie ist die Gültigkeit einzustufen?",
+        o: ["Kann angenommen werden, weil alle angeschrieben wurden.", "Ist nicht gegeben: Der Rücklauf beträgt 12 %, und wer antwortet, wählt sich selbst aus.", "Kann vermutet werden, weil 360 Antworten viel sind."], a: 1,
+        e: "360 / 3000 = 0.12. Eine unvollständige Vollerhebung ist keine Zufallsstichprobe, und unter 20 % Rücklauf ist die Gültigkeit nicht gegeben." },
+      { q: "Aus einer Liste mit 40'000 Adressen ziehst du ohne Zurücklegen 800. Gilt die Stichprobe nach Skript als näherungsweise einfache Zufallsstichprobe?",
+        o: ["Ja, weil n/N = 0.02 < 0.05.", "Nein, ohne Zurücklegen nie.", "Nur wenn n grösser als 30 ist."], a: 0,
+        e: "800 / 40'000 = 0.02 < 0.05 (Bem. 2.8). Die Regel n > 30 gehört zum zentralen Grenzwertsatz, nicht hierher." },
+      { q: "Warum spricht das Skript lieber von «valide» als von «repräsentativ»?",
+        o: ["Weil «repräsentativ» missverständlich ist: Eine Zufallsstichprobe ist kein verkleinertes Abbild der Grundgesamtheit, gültig macht sie der Zufall.", "Weil nur Vollerhebungen repräsentativ sein können.", "Weil «repräsentativ» nur für geschichtete Stichproben verwendet werden darf."], a: 0,
+        e: "Bem. 2.20: Das Wort wird mal als «valide», mal als «Abbild» verstanden. Für die Wahrscheinlichkeitsrechnung zählt die zufällige Auswahl." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

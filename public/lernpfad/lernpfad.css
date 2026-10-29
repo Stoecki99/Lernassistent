@@ -1,0 +1,404 @@
+/* ==========================================================================
+   Lernpfad-Baukasten · lernpfad.css
+   Gemeinsames Design aller Themenseiten (Vorbild: psycho-logisches.html).
+   Doku mit allen Klassen: docs/lernpfad-baukasten.md
+   Regel: Farben nur über die Tokens in :root, nie fest im Code.
+   ========================================================================== */
+@import url("fonts.css");
+
+/* ---------- 1. Design-Tokens (hell) ---------- */
+:root{
+  --bg:#f7f6f9; --surface:#ffffff; --board:#f1eef4; --ink:#1d1720; --muted:#625a68; --line:#e2dce7;
+  --accent:#7a1f5c; --accent-soft:#f3e3ee;
+  /* Farbcode der Symbole */
+  --var:#1d5fc2; --fn:#0d7a63; --const:#b04a08; --pred:#6b2bd1;
+  /* Hervorhebung, Zustände */
+  --lit:#ffe58a; --free:#9a2c00; --free-bg:#ffd9c7;
+  --ok:#16794a; --ok-bg:#dcf3e6; --bad:#b42318; --bad-bg:#fde4e1;
+  /* Diagramm-Reihen (SVG, Balken, Legenden) */
+  --s1:var(--var); --s2:var(--const); --s3:var(--fn); --s4:var(--pred); --s5:var(--accent);
+  /* Schriften */
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --f-math:"STIX Two Text", "Cambria Math", "Times New Roman", serif;
+  color-scheme:light;
+}
+/* Dunkel: automatisch nach Systemeinstellung, ausser der Umschalter steht auf «hell» */
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#131016; --surface:#1c1820; --board:#231e28; --ink:#efe9f2; --muted:#a99fb0; --line:#322b38;
+  --accent:#e683c0; --accent-soft:#3a2033;
+  --var:#86b4ff; --fn:#4fd3b4; --const:#f6a45e; --pred:#bba0ff;
+  --lit:#6b5a12; --free:#ffb08a; --free-bg:#4a2416; --ok:#6fdc9e; --ok-bg:#163826; --bad:#ff9b8f; --bad-bg:#45191a;
+  color-scheme:dark }}
+/* Dunkel: fest gewählt über den Umschalter */
+:root[data-theme="dark"]{
+  --bg:#131016; --surface:#1c1820; --board:#231e28; --ink:#efe9f2; --muted:#a99fb0; --line:#322b38;
+  --accent:#e683c0; --accent-soft:#3a2033;
+  --var:#86b4ff; --fn:#4fd3b4; --const:#f6a45e; --pred:#bba0ff;
+  --lit:#6b5a12; --free:#ffb08a; --free-bg:#4a2416; --ok:#6fdc9e; --ok-bg:#163826; --bad:#ff9b8f; --bad-bg:#45191a;
+  color-scheme:dark }
+
+/* ---------- 2. Grundlayout ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; text-size-adjust:100%; scroll-behavior:smooth}
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:17px; line-height:1.6;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
+  overflow-wrap:break-word}
+body::before{content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:10; background:var(--bg)}
+.wrap{max-width:860px; margin:0 auto; padding-block:20px 80px}
+h1,h2,h3{font-family:var(--f-display); text-wrap:balance; line-height:1.15; margin:0; hyphens:auto}
+h1{font-size:clamp(1.9rem, 5vw, 2.8rem); font-weight:700}
+h2{font-size:clamp(1.4rem, 3.5vw, 1.85rem); font-weight:700}
+h3{font-size:1.12rem; font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+img{max-width:100%; height:auto}
+.eyebrow{font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); font-weight:600}
+.lead{color:var(--muted); max-width:62ch}
+.stack{display:flex; flex-direction:column; gap:14px}
+.row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+section{display:flex; flex-direction:column; gap:18px; padding-block:40px 8px; scroll-margin-top:70px}
+.prose{max-width:66ch; hyphens:auto}
+.hint{font-size:.9rem; color:var(--muted)}
+.tablebox{overflow-x:auto; max-width:100%}
+.grid2{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(280px,100%),1fr)); gap:12px}
+/* hidden-Attribut gilt immer, auch bei Klassen mit display:flex/grid */
+[hidden]{display:none!important}
+.sr-only{position:absolute!important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+
+/* Sichtbare Fokusringe für alles, was man mit der Tastatur erreicht */
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+/* ---------- 3. Kopfleiste (wird von lernpfad.js eingefügt) ---------- */
+.kopfleiste{max-width:860px; margin:0 auto; padding-top:14px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px}
+.kopf-zurueck{color:var(--accent); text-decoration:none; font-weight:600; font-size:.95rem; padding:6px 4px; border-radius:6px}
+.kopf-zurueck:hover{text-decoration:underline; text-underline-offset:3px}
+.theme-wahl{display:inline-flex; gap:2px; border:1px solid var(--line); border-radius:999px; background:var(--surface); padding:2px}
+.theme-wahl button{border:0; background:transparent; color:var(--muted); padding:4px 10px; border-radius:999px; font-size:.85rem; min-height:34px; min-width:34px; line-height:1}
+.theme-wahl button:hover{color:var(--accent)}
+.theme-wahl button[aria-pressed="true"]{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.theme-wahl .kopf-txt{margin-left:4px}
+@media (max-width:440px){
+  .theme-wahl .kopf-txt{position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap}
+}
+
+/* ---------- 4. Abschnitts-Navigation ---------- */
+nav.steps{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--bg); border-bottom:1px solid var(--line);
+  display:flex; gap:6px; overflow-x:auto; padding-block:10px; margin-top:20px; scrollbar-width:thin}
+nav.steps a{flex:0 0 auto; text-decoration:none; color:var(--muted); font-size:.9rem; padding:5px 11px; border-radius:999px; border:1px solid var(--line); background:var(--surface)}
+nav.steps a:hover, nav.steps a:focus-visible{color:var(--accent); border-color:var(--accent)}
+nav.steps a:focus-visible{outline-offset:-2px}
+nav.steps a b{color:var(--accent); margin-right:4px}
+nav.steps a.aktiv{background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600}
+
+/* ---------- 5. Formeln und Farbcode der Symbole ---------- */
+.m{font-family:var(--f-math); font-size:1.3rem; line-height:1.9}
+.v{color:var(--var); font-style:italic}      /* Variable */
+.fn{color:var(--fn); font-style:italic}      /* Funktion */
+.c{color:var(--const); font-style:italic}    /* Konstante */
+.p{color:var(--pred); font-style:italic}     /* Prädikat */
+.q{font-weight:600}                          /* Quantor */
+.op{padding:0 .28em}                         /* Operator / Junktor */
+[data-link]{cursor:pointer; border-radius:4px; transition:background-color .15s, box-shadow .15s}
+.lit{background:var(--lit)!important; box-shadow:0 0 0 2px var(--lit)}
+.ph, .sentence [data-link]{border-bottom:2px dotted var(--accent); padding:1px 2px}
+.sentence{font-size:1.12rem; line-height:1.9}
+
+/* KaTeX passend zur Textschrift */
+.katex{font-size:1.1em}
+.m .katex{font-size:.92em}
+.katex-display{margin:.5em 0; overflow-x:auto; overflow-y:hidden; padding-block:2px}
+/* Von lernpfad.js gesetzt: Inline-Formel breiter als ihr Absatz → scrollt in sich */
+.katex.katex-breit{display:inline-block; max-width:100%; overflow-x:auto; overflow-y:hidden; vertical-align:middle; padding-block:3px}
+.board > .katex-display:first-child, .board > p > .katex-display:first-child{margin-top:0}
+.board > .katex-display:last-child, .board > p > .katex-display:last-child{margin-bottom:0}
+
+/* ---------- 6. Flächen: Tafel, Karte, Hinweis, Lösung ---------- */
+.board{background:var(--board); border-radius:14px; padding:18px 20px; overflow-x:auto}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 20px; min-width:0}
+.note{background:var(--accent-soft); border-radius:10px; padding:12px 14px; font-size:.95rem}
+.note b{color:var(--accent)}
+.note.tipp{background:var(--ok-bg)}
+.note.tipp b{color:var(--ok)}
+.note.falle{background:var(--bad-bg)}
+.note.falle b{color:var(--bad)}
+details.sol{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 16px}
+details.sol summary{cursor:pointer; font-weight:600; color:var(--accent); border-radius:4px}
+details.sol[open] summary{margin-bottom:10px}
+
+/* ---------- 7. Knöpfe ---------- */
+button{font:inherit; cursor:pointer}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border:1px solid var(--line); background:var(--surface); color:var(--ink);
+  padding:7px 14px; border-radius:9px; font-size:.95rem; line-height:1.3; min-height:38px; text-decoration:none; font-family:inherit}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.btn.primary{background:var(--accent); color:var(--surface); border-color:var(--accent)}
+.btn[disabled]{opacity:.4; cursor:default}
+.btn[disabled]:hover{border-color:var(--line)}
+.btn.primary[disabled]:hover{border-color:var(--accent)}
+.btn.on{background:var(--accent-soft); border-color:var(--accent); color:var(--accent); font-weight:600}
+select.btn{padding:6px 8px}
+
+/* ---------- 8. Konzeptkarten ---------- */
+.grid4{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(190px,100%),1fr)); gap:12px}
+.concept{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:6px; min-width:0}
+.concept .tag{font-size:.75rem; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); font-weight:600}
+.concept .ex{font-family:var(--f-math); font-size:1.15rem}
+.concept p{font-size:.95rem; color:var(--muted)}
+
+/* ---------- 9. Sortierer ---------- */
+.sort{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(230px,100%),1fr)); gap:10px}
+.sort-item{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 10px; min-width:0}
+.sort-inhalt{min-width:0}
+.sort-item .m{font-size:1.15rem; line-height:1.4}
+.sort-item .row{gap:6px}
+.sort-item .btn{padding:4px 10px; font-size:.85rem; min-height:34px}
+.sort-item.right{border-color:var(--ok); background:var(--ok-bg)}
+.sort-item.wrong{border-color:var(--bad); background:var(--bad-bg)}
+.marke{font-weight:700}
+.right > .marke, .right .marke{color:var(--ok)}
+.wrong > .marke, .wrong .marke{color:var(--bad)}
+.fb{font-size:.92rem; color:var(--muted); min-height:1.4em}
+.sort-stand{font-size:.85rem; color:var(--muted); font-variant-numeric:tabular-nums}
+
+/* ---------- 10. Symboltabelle mit Art-Badges ---------- */
+.symtab{width:100%; border-collapse:collapse; font-size:.98rem}
+.symtab th{text-align:left; font-size:.75rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600; padding:6px 10px; border-bottom:1px solid var(--line)}
+.symtab td{padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:top}
+.symtab td:first-child{font-family:var(--f-math); font-size:1.2rem; white-space:nowrap}
+.kind{display:inline-block; font-size:.78rem; padding:1px 8px; border-radius:999px; border:1px solid currentColor; white-space:nowrap}
+.kind-v{color:var(--var)} .kind-c{color:var(--const)} .kind-fn{color:var(--fn)} .kind-p{color:var(--pred)}
+.kind-q{color:var(--ink)} .kind-op{color:var(--muted)}
+
+/* Allgemeine Zahlentabelle (Wertetabellen, Verteilungen, Testschema) */
+.tabelle{width:100%; border-collapse:collapse; font-size:.98rem; font-variant-numeric:tabular-nums}
+.tabelle caption{caption-side:top; text-align:left; font-size:.88rem; color:var(--muted); padding-bottom:6px}
+.tabelle th{text-align:left; font-size:.75rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600; padding:6px 10px; border-bottom:1px solid var(--line)}
+.tabelle td{padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top}
+.tabelle tbody th{text-transform:none; letter-spacing:0; font-size:.98rem; color:var(--ink)}
+.tabelle .zahl{text-align:right; white-space:nowrap}
+.tabelle tr.an td, .tabelle tr.an th{background:var(--lit)}
+
+/* ---------- 11. Satzkarten mit Stepper ---------- */
+.stepbar{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+.stepcount{font-size:.85rem; color:var(--muted); font-variant-numeric:tabular-nums}
+.explain{border-left:3px solid var(--accent); padding-left:12px; color:var(--ink)}
+.formula{min-height:1.9em}
+
+/* Formel Stück für Stück zusammensetzen */
+.piece{display:inline-block; transition:opacity .4s, transform .4s}
+.piece.hidden{opacity:0; transform:translateY(6px)}
+.brk{color:var(--accent); font-weight:600; display:inline-block; max-width:2em; overflow:hidden; vertical-align:bottom; transition:max-width .35s, opacity .35s}
+.nobrk .brk{max-width:0; opacity:0}
+
+/* Ansichten umschalten, Legende, Infofeld */
+.modes{display:flex; flex-wrap:wrap; gap:8px}
+.legend{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:.88rem; color:var(--muted)}
+.legend span::before{content:""; display:inline-block; width:.8em; height:.8em; border-radius:3px; margin-right:6px; vertical-align:-1px; background:var(--sw, var(--accent))}
+.info{min-height:3.2em}
+/* Formelteile markieren und Teilformeln wählen (Analyse-Brille des Vorbilds) */
+.sel{background:var(--lit); border-radius:5px; box-shadow:0 0 0 3px var(--lit)}
+.sublist{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr)); gap:8px}
+.subbtn{text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px 12px; color:var(--ink); display:flex; justify-content:space-between; gap:10px; align-items:center; min-width:0}
+.subbtn:hover{border-color:var(--accent)}
+.subbtn .m{font-size:1.05rem; line-height:1.4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.subbtn .fv{font-size:.82rem; color:var(--muted); white-space:nowrap}
+.subbtn.on, .subbtn[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.subbtn.on .fv, .subbtn[aria-pressed="true"] .fv{color:var(--accent); font-weight:600}
+
+/* ---------- 12. Selbsttest und Einzelfrage ---------- */
+.qcard{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; min-width:0}
+.qopts{display:flex; flex-direction:column; gap:6px}
+.qopt{text-align:left; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:8px 12px; color:var(--ink); min-height:40px}
+.qopt:hover{border-color:var(--accent)}
+.qopt[aria-disabled="true"]{cursor:default}
+.qopt[aria-disabled="true"]:hover{border-color:var(--line)}
+.qopt.right{background:var(--ok-bg); border-color:var(--ok)}
+.qopt.wrong{background:var(--bad-bg); border-color:var(--bad)}
+.qopt.right:hover{border-color:var(--ok)}
+.qopt.wrong:hover{border-color:var(--bad)}
+.qex{font-size:.94rem; color:var(--muted)}
+.score{font-family:var(--f-display); font-size:1.2rem; font-variant-numeric:tabular-nums}
+
+/* ---------- 13. Lösungsfilm ---------- */
+.film{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden}
+.film-top{display:flex; flex-wrap:wrap; gap:6px; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--board)}
+.phase{font-size:.8rem; padding:3px 10px; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:var(--surface); transition:all .3s}
+.phase.past{color:var(--accent); border-color:var(--accent)}
+.phase.cur{background:var(--accent); border-color:var(--accent); color:var(--surface); font-weight:600}
+.stage{padding:18px 20px; display:grid; gap:16px; min-width:0}
+.stage > *{min-width:0}
+.slabel{font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:4px}
+.sents p{font-size:1rem; line-height:1.75; margin-bottom:4px}
+.sents.single p{font-size:1.12rem}
+.sents [data-ph]{border-radius:4px; transition:background-color .3s, box-shadow .3s}
+.sents .ph-on{background:var(--lit); box-shadow:0 0 0 2px var(--lit)}
+.dict{display:flex; flex-wrap:wrap; gap:8px; min-height:2.2em}
+.chip{border:1px solid var(--line); border-radius:8px; padding:3px 10px; font-size:.9rem; background:var(--bg); transition:border-color .3s, background-color .3s; min-width:0}
+.chip .m{font-size:1.05rem; line-height:1.4; margin-right:4px}
+.chip.new{animation:pop .6s ease-out}
+.chip.use{border-color:var(--accent); background:var(--accent-soft)}
+.dict-empty{font-size:.9rem; color:var(--muted); font-style:italic}
+.fstage{background:var(--board); border-radius:12px; padding:14px 16px; min-height:4.2em; overflow-x:auto}
+.fstage .m{font-size:1.4rem; white-space:nowrap; line-height:1.8}
+.fstage .platzhalter{font-family:var(--f-body); font-size:.95rem; color:var(--muted); white-space:normal}
+.nw{display:inline-block; animation:pop .5s ease-out, glow 3s ease-out; border-radius:4px}
+.hl-term{box-shadow:inset 0 -3px 0 var(--fn); background:rgba(127,127,127,.14); border-radius:3px}
+.hl-free{background:var(--free-bg); color:var(--free); font-style:italic; font-weight:600; border-radius:4px; padding:0 2px}
+.dimv{opacity:.45; text-decoration:underline dotted}
+.strike{text-decoration:line-through; text-decoration-color:var(--bad); text-decoration-thickness:2px; opacity:.55}
+.say{font-size:1.12rem; line-height:1.6; min-height:5.2em; border-left:3px solid var(--accent); padding-left:14px}
+.tbar{height:4px; background:var(--line); position:relative; overflow:hidden}
+.tbar i{position:absolute; inset:0 auto 0 0; width:0; background:var(--accent)}
+.tbar i.run{animation:fill linear forwards}
+@keyframes fill{from{width:0}to{width:100%}}
+.film-ctl{display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:12px 16px; border-top:1px solid var(--line)}
+.film-ctl .btn{min-width:44px}
+.film-ctl .film-play{min-width:110px}
+.prog{flex:1 1 160px; display:flex; align-items:center; gap:10px; min-width:0}
+.prog input{flex:1; accent-color:var(--accent); min-width:0}
+.prog span{font-size:.85rem; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
+@keyframes pop{0%{opacity:0; transform:translateY(6px) scale(.96)}100%{opacity:1; transform:none}}
+@keyframes glow{0%,60%{background-color:var(--lit)}100%{background-color:transparent}}
+
+/* ---------- 14. Übungsbausteine ---------- */
+.uebung-kopf{display:flex; flex-direction:column; gap:2px}
+.rueckmeldung{min-height:1.5em; font-weight:600}
+.rueckmeldung.ok{color:var(--ok)}
+.rueckmeldung.bad{color:var(--bad)}
+.rueckmeldung.leer{color:var(--muted); font-weight:400}
+
+/* Zahleneingabe */
+.za-form{gap:8px 10px}
+.za-form label{font-weight:600; font-size:.95rem}
+.zahl-feld{font:inherit; font-family:var(--f-math); font-size:1.15rem; width:11ch; max-width:100%; min-height:42px; padding:6px 10px;
+  border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); font-variant-numeric:tabular-nums}
+.zahl-feld:hover{border-color:var(--accent)}
+.zahl-feld:focus-visible{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent)}
+.zahl-feld[aria-invalid="true"]{border-color:var(--bad); background:var(--bad-bg)}
+.zahl-feld.richtig{border-color:var(--ok); background:var(--ok-bg)}
+.einheit{font-family:var(--f-math); font-size:1.1rem; color:var(--muted)}
+.tipps, .loesungsweg{margin:0; padding-left:1.4em; display:flex; flex-direction:column; gap:8px}
+.tipps:empty, .loesungsweg:empty{display:none}
+.tipps li::marker{color:var(--accent)}
+.loesungsweg li{padding-left:4px}
+.loesungsweg li::marker{color:var(--accent); font-weight:600}
+
+/* Wahr/Falsch mit Kreuzen wie in der Prüfung */
+.wf{display:flex; flex-direction:column; border-top:1px solid var(--line)}
+.wf-kopf, .wf-zeile{display:grid; grid-template-columns:minmax(0,1fr) 3.4em 3.4em; gap:4px 8px; align-items:center}
+.wf-kopf{font-size:.75rem; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); font-weight:600; padding:6px 8px; border-bottom:1px solid var(--line)}
+.wf-kopf span:not(:first-child){text-align:center}
+.wf-zeile{padding:10px 8px; border-bottom:1px solid var(--line); border-radius:6px}
+.wf-aussage{min-width:0}
+.wf-wahl{display:flex; justify-content:center; align-items:center; position:relative; min-height:44px; cursor:pointer}
+.wf-wahl input{position:absolute; opacity:0; width:1px; height:1px; margin:0}
+.kreuz{width:28px; height:28px; border:2px solid var(--muted); border-radius:5px; background:var(--surface); display:inline-flex; align-items:center; justify-content:center;
+  font-size:1.2rem; font-weight:700; line-height:1; color:var(--ink)}
+.wf-wahl:hover .kreuz{border-color:var(--accent)}
+.wf-wahl input:checked + .kreuz::after{content:"✕"}
+.wf-wahl input:focus-visible + .kreuz{outline:2px solid var(--accent); outline-offset:2px}
+.wf-zeile.right{background:var(--ok-bg)}
+.wf-zeile.wrong{background:var(--bad-bg)}
+.wf-erkl{grid-column:1 / -1; font-size:.93rem; color:var(--ink)}
+.wf-erkl .marke{margin-right:4px}
+
+/* Schritt-Aufgabe */
+.sa-schritte{margin:0; padding-left:1.5em; display:flex; flex-direction:column; gap:14px}
+.sa-schritte:empty{display:none}
+.sa-schritte li{display:flex; flex-direction:column; gap:8px; padding-left:4px}
+.sa-schritte li::marker{color:var(--accent); font-weight:700; font-family:var(--f-display)}
+.sa-inhalt{padding:12px 16px}
+
+/* ---------- 15. Abschluss-Box (wird von lernpfad.js eingefügt) ---------- */
+.abschluss .card{border-color:var(--accent); border-width:2px}
+.abschluss-fb:empty{min-height:0; margin-top:-14px} /* leer: keine Lücke, Live-Region bleibt im Baum */
+.abschluss-stand{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center}
+.status{display:inline-flex; align-items:center; gap:4px; font-size:.85rem; font-weight:600; padding:2px 10px; border-radius:999px; border:1px solid currentColor}
+.status.offen{color:var(--muted)}
+.status.begonnen{color:var(--accent); background:var(--accent-soft)}
+.status.erledigt{color:var(--ok); background:var(--ok-bg)}
+
+/* ---------- 16. Hilfsklassen für themeneigene Interaktionen ---------- */
+
+/* Baumdiagramm als verschachtelte Liste (passt auch auf 320 px) */
+.baum, .baum ul{list-style:none; margin:0; padding:0}
+.baum ul{margin-left:14px; padding-left:18px; border-left:2px solid var(--line)}
+.baum li{position:relative; padding:4px 0}
+.baum ul > li::before{content:""; position:absolute; left:-18px; top:1.15em; width:14px; border-top:2px solid var(--line)}
+.baum-knoten{display:inline-flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:3px 10px}
+.baum-p{font-family:var(--f-math); color:var(--accent); font-variant-numeric:tabular-nums}
+.baum-ende{font-family:var(--f-math); color:var(--muted); font-variant-numeric:tabular-nums}
+.baum-ende::before{content:"→ "}
+.baum .an > .baum-knoten{background:var(--lit); border-color:var(--accent)}
+.baum .an > ul{border-left-color:var(--accent)}
+.baum ul > li.an::before{border-top-color:var(--accent)}
+
+/* Vierfeldertafel / Kontingenztafel */
+.vierfelder{border-collapse:collapse; font-variant-numeric:tabular-nums; min-width:min(100%, 320px)}
+.vierfelder th, .vierfelder td{border:1px solid var(--line); padding:8px 12px; text-align:center; background:var(--surface)}
+.vierfelder thead th, .vierfelder tbody th{background:var(--board); font-weight:600; font-size:.92rem}
+.vierfelder .summe{font-weight:700; color:var(--muted); background:var(--board)}
+.vierfelder .leer{color:var(--muted)}
+.vierfelder .an{background:var(--lit); box-shadow:inset 0 0 0 2px var(--accent)}
+.vf-feld{font:inherit; font-variant-numeric:tabular-nums; width:6ch; max-width:100%; text-align:center; padding:4px 6px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink)}
+.vf-feld.richtig{border-color:var(--ok); background:var(--ok-bg)}
+.vf-feld.falsch{border-color:var(--bad); background:var(--bad-bg)}
+
+/* Wahrheitstabelle */
+.wahrheitstabelle{border-collapse:collapse; font-family:var(--f-math); font-size:1.08rem; text-align:center; font-variant-numeric:tabular-nums}
+.wahrheitstabelle th, .wahrheitstabelle td{padding:6px 12px; border-bottom:1px solid var(--line)}
+.wahrheitstabelle th{font-weight:600; border-bottom:2px solid var(--ink)}
+.wahrheitstabelle .erg{border-left:2px solid var(--ink); font-weight:600}
+.wahrheitstabelle .w{color:var(--ok)}
+.wahrheitstabelle .f{color:var(--muted)}
+.wahrheitstabelle tr.an td{background:var(--lit)}
+.wahrheitstabelle button{font:inherit; min-width:2.4em; min-height:34px; border:1px solid var(--line); border-radius:6px; background:var(--surface); color:var(--ink)}
+.wahrheitstabelle button:hover{border-color:var(--accent)}
+
+/* Rechner mit Schieberegler */
+.rechner{display:flex; flex-direction:column; gap:12px}
+.regler{display:grid; grid-template-columns:minmax(0,9em) minmax(0,1fr) auto; gap:6px 12px; align-items:center}
+.regler label{font-weight:600; font-size:.95rem}
+.regler input[type="range"]{width:100%; accent-color:var(--accent); min-width:0}
+.regler output{font-family:var(--f-math); font-size:1.1rem; font-variant-numeric:tabular-nums; min-width:4ch; text-align:right}
+.rechner-ergebnis{font-family:var(--f-math); font-size:1.5rem; font-variant-numeric:tabular-nums; background:var(--board); border-radius:12px; padding:12px 16px; overflow-x:auto}
+@media (max-width:480px){
+  .regler{grid-template-columns:minmax(0,1fr) auto}
+  .regler input[type="range"]{grid-column:1 / -1; grid-row:2}
+}
+
+/* Einfache SVG-Diagramme: Farben immer über Klassen, nie als feste Attribute */
+.diagramm{margin:0; display:flex; flex-direction:column; gap:8px; color:var(--s1)}
+.diagramm svg{display:block; width:100%; height:auto; max-width:100%; overflow:visible}
+.diagramm figcaption{font-size:.88rem; color:var(--muted)}
+.diagramm .achse{stroke:var(--muted); stroke-width:1.5; fill:none}
+.diagramm .gitter{stroke:var(--line); stroke-width:1; fill:none}
+.diagramm .kurve{stroke:currentColor; stroke-width:2.5; fill:none; stroke-linejoin:round; stroke-linecap:round}
+.diagramm .flaeche{fill:currentColor; fill-opacity:.18; stroke:none}
+.diagramm .balken{fill:currentColor}
+.diagramm .punkt{fill:currentColor; stroke:var(--surface); stroke-width:1.5}
+.diagramm .markierung{stroke:var(--bad); stroke-width:2; stroke-dasharray:5 4; fill:none}
+.diagramm text, .diagramm .beschriftung{fill:var(--muted); font-family:var(--f-body); font-size:12px}
+.diagramm .s1{color:var(--s1)} .diagramm .s2{color:var(--s2)} .diagramm .s3{color:var(--s3)}
+.diagramm .s4{color:var(--s4)} .diagramm .s5{color:var(--s5)}
+.diagramm .an{color:var(--accent)}
+
+/* ---------- 17. Zusammenfassung, Fusszeile ---------- */
+.summary li{margin-bottom:6px}
+footer{margin-top:40px; font-size:.85rem; color:var(--muted)}
+
+/* ---------- 18. Bewegung reduzieren ---------- */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *, *::before, *::after{transition:none!important}
+  .chip.new{animation:none!important}
+  .nw{animation:none!important; background:var(--lit)}
+  .piece.hidden{transform:none}
+}
+
+/* ---------- 19. Druck ---------- */
+@media print{
+  .kopfleiste, nav.steps, .film-ctl, .tbar, .abschluss{display:none!important}
+  body{background:#fff}
+}
