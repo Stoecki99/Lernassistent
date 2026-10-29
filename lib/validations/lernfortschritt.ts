@@ -69,7 +69,7 @@ export type FortschrittEingabe = z.output<typeof fortschrittEingabeSchema>
 export function fortschrittSchreibdaten(eingabe: FortschrittEingabe) {
   const quiz = eingabe.quiz ? { quizRichtig: eingabe.quiz.richtig, quizGesamt: eingabe.quiz.gesamt } : {}
   return {
-    create: { status: eingabe.status as LernStatus, ...quiz },
-    update: { ...(eingabe.status === "erledigt" ? { status: "erledigt" as LernStatus } : {}), ...quiz },
+    create: { status: eingabe.status, ...quiz },
+    update: { ...(eingabe.status === "erledigt" ? { status: eingabe.status } : {}), ...quiz },
   }
 }

@@ -91,7 +91,8 @@ export default async function LernpfadPage({ params }: LernpfadPageProps) {
   // Auch hier pruefen: Layouts laufen bei Navigation innerhalb der App nicht neu.
   const user = await getCurrentUser()
 
-  if (!user) {
+  // user.id statt nur user: die Prisma-Abfrage unten braucht eine gueltige Konto-ID
+  if (!user?.id) {
     redirect("/login")
   }
 

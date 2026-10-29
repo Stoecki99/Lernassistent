@@ -9,7 +9,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
-import { fachSchema, type Fach } from "@/lib/validations/lernseite"
+import { fachSchema, type Fach, type Station } from "@/lib/validations/lernseite"
 import { STANDARD_BASIS, FACH_SLUG, THEMA_SLUG, unterordner, lese, themaDatei } from "@/lib/lernseiten"
 
 export interface PruefErgebnis {
@@ -35,6 +35,20 @@ export function appSeiten(appPfad = path.join(process.cwd(), "app")): string[] {
   return namen
     .filter((name) => !name.startsWith("[") && !name.startsWith("_"))
     .map((name) => name.toLowerCase())
+}
+
+/** Namen auf oberster Ebene von public/ (Ordner und Dateien), z. B. «lernpfad». */
+export function publicNamen(publicPfad = path.join(process.cwd(), "public")): string[] {
+  if (!fs.existsSync(publicPfad)) return []
+  return fs.readdirSync(publicPfad).map((name) => name.toLowerCase())
+}
+
+/**
+ * Namen, die kein Fachordner tragen darf: Die Kurzlinks /<fach> und /<fach>/… (next.config.js)
+ * wuerden App-Seiten, Dateien aus public/ (z. B. /lernpfad/lernpfad.css) und /_next verdecken.
+ */
+export function reservierteNamen(): string[] {
+  return [...new Set([...appSeiten(), ...publicNamen(), "_next"])]
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +117,212 @@ function externeRessourcen(html: string): string[] {
   return fehler
 }
 
+// ---------------------------------------------------------------------------
+// Inline-Scripts: externe Adressen in Aufrufen, die etwas laden
+// ---------------------------------------------------------------------------
+
+/** Beginnt ein «/» nach diesem Zeichen bzw. Wort eine Regex (und keine Division)? */
+function regexMoeglich(letztes: string, bisher: string): boolean {
+  if (letztes === "" || "(,=:[!&|?{};+-*%~^<>".includes(letztes)) return true
+  return /(?:^|[^\w$])(?:return|typeof|case|do|else|in|of|delete|void|throw|new|instanceof|yield|await)$/.test(
+    bisher.slice(-40).trimEnd(),
+  )
+}
+
+/**
+ * Entfernt JavaScript-Kommentare und laesst Strings, Template-Strings (auch verschachtelt
+ * ueber ${…}) und Regex-Literale stehen. Bewusst einfach, reicht fuer die Pruefung:
+ * eine Adresse in einem Kommentar soll nicht als Ladeaufruf gelten.
+ */
+export function ohneJsKommentare(code: string): string {
+  let aus = ""
+  let i = 0
+  // Letztes Zeichen ausserhalb von Leerraum und Kommentaren: entscheidet, ob «/» eine Regex beginnt
+  let letztes = ""
+  // Klammertiefe je offenem ${…} in einem Template-String
+  const tiefen: number[] = []
+  let imTemplate = false
+
+  while (i < code.length) {
+    const z = code[i]
+    if (imTemplate) {
+      if (z === "\\") {
+        aus += code.slice(i, i + 2)
+        i += 2
+      } else if (z === "`") {
+        aus += z
+        i++
+        imTemplate = false
+        letztes = z
+      } else if (z === "$" && code[i + 1] === "{") {
+        aus += "${"
+        i += 2
+        tiefen.push(0)
+        imTemplate = false
+        letztes = "{"
+      } else {
+        aus += z
+        i++
+      }
+      continue
+    }
+
+    const n = code[i + 1]
+    if (z === "/" && n === "/") {
+      const ende = code.indexOf("\n", i)
+      i = ende === -1 ? code.length : ende
+      continue
+    }
+    if (z === "/" && n === "*") {
+      const ende = code.indexOf("*/", i + 2)
+      i = ende === -1 ? code.length : ende + 2
+      aus += " "
+      continue
+    }
+    if (z === "`") {
+      aus += z
+      i++
+      imTemplate = true
+      continue
+    }
+    if (z === '"' || z === "'") {
+      let j = i + 1
+      while (j < code.length && code[j] !== z && code[j] !== "\n") j += code[j] === "\\" ? 2 : 1
+      aus += code.slice(i, j + 1)
+      i = j + 1
+      letztes = z
+      continue
+    }
+    if (z === "}" && tiefen.length > 0) {
+      if (tiefen[tiefen.length - 1] === 0) {
+        tiefen.pop()
+        aus += z
+        i++
+        imTemplate = true
+        continue
+      }
+      tiefen[tiefen.length - 1]--
+    } else if (z === "{" && tiefen.length > 0) {
+      tiefen[tiefen.length - 1]++
+    }
+    if (z === "/" && regexMoeglich(letztes, aus)) {
+      // Regex-Literal bis zum unmaskierten «/» ausserhalb einer Zeichenklasse
+      let j = i + 1
+      let klasse = false
+      while (j < code.length && code[j] !== "\n") {
+        const c = code[j]
+        if (c === "\\") {
+          j += 2
+          continue
+        }
+        if (c === "[") klasse = true
+        else if (c === "]") klasse = false
+        else if (c === "/" && !klasse) break
+        j++
+      }
+      aus += code.slice(i, j + 1)
+      i = j + 1
+      letztes = "/"
+      continue
+    }
+    aus += z
+    if (!/\s/.test(z)) letztes = z
+    i++
+  }
+  return aus
+}
+
+// Adresse auf einem anderen Server direkt nach dem Anfuehrungszeichen: https://host…, wss://host…, //host…
+const EXTERNE_ADRESSE = String.raw`["'\x60]\s*((?:[a-z][a-z0-9+.-]*:)?\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*[^"'\x60\s]*)`
+
+// Aufrufe, die beim Ausfuehren etwas nachladen. Nicht dabei: href (Links auf Quellen sind erlaubt),
+// createElementNS("http://www.w3.org/2000/svg", …) und Adressen in gewoehnlichem Text.
+const LADE_AUFRUF = new RegExp(
+  String.raw`(?:\bfetch\s*\(|\bimport\s*\(|\b(?:import|from)\s+|\.src\s*=|\bsrc\s*:|` +
+    String.raw`\.setAttribute(?:NS)?\s*\([^()]*?["'](?:src|srcset|poster|data|xlink:href)["']\s*,|` +
+    String.raw`\bnew\s+(?:Worker|SharedWorker|WebSocket|EventSource|Audio)\s*\(|` +
+    String.raw`\.open\s*\(\s*["'][a-z]+["']\s*,|\b(?:sendBeacon|importScripts)\s*\()\s*` +
+    EXTERNE_ADRESSE,
+  "gi",
+)
+// CSS in Strings, z. B. el.style.background = "url(https://…)". Klein geschrieben, damit new URL(…) nicht zaehlt.
+const CSS_URL = /\burl\(\s*["']?\s*((?:[a-zA-Z][a-zA-Z0-9+.-]*:)?\/\/[a-zA-Z0-9-]+[^"')\s]*)/g
+
+/** Externe Adressen in Inline-Scripts (ohne src), die geladen wuerden. */
+function externeSkriptAdressen(html: string): string[] {
+  const fehler: string[] = []
+  for (const treffer of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)) {
+    if (attribut(`<script${treffer[1]}>`, "src") !== null) continue
+    const code = ohneJsKommentare(treffer[2])
+    for (const t of code.matchAll(LADE_AUFRUF)) {
+      fehler.push(`externe Adresse in einem Inline-Script (${kurz(t[0].replace(/\s+/g, " "))}).`)
+    }
+    for (const t of code.matchAll(CSS_URL)) {
+      fehler.push(`externe Adresse in einem Inline-Script (${kurz(t[0])}).`)
+    }
+  }
+  return fehler
+}
+
+/** Schluessel des Farbschemas, muss zu lernpfad.js und ThemaWahl.tsx passen. */
+const THEMA_SCHLUESSEL = "lernpfad-theme"
+
+/** true, wenn vor <body> ein Inline-Script das gespeicherte Farbschema setzt. */
+function hatThemaStart(html: string, bodyIndex: number): boolean {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)].some(
+    (t) =>
+      (t.index ?? 0) < bodyIndex &&
+      attribut(`<script${t[1]}>`, "src") === null &&
+      t[2].includes(THEMA_SCHLUESSEL) &&
+      t[2].includes("data-theme"),
+  )
+}
+
+/** Wandelt die gaengigen Zeichenreferenzen in Attributwerten zurueck (fuer den Titel-Vergleich). */
+function entitaetenAufloesen(wert: string): string {
+  return wert
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+}
+
+/**
+ * Prueft <link rel="next"> gegen den Pfad: Er zeigt auf die naechste Station laut fach.json,
+ * `title` ist deren Titel. Die letzte Station (naechste = null) hat keinen.
+ */
+export function pruefeNaechsteStation(html: string, fach: string, naechste: Station | null): string[] {
+  const quelle = html.replace(/<!--[\s\S]*?-->/g, "")
+  const links = startTags(quelle, "link").filter(({ tag }) =>
+    (attribut(tag, "rel") ?? "").toLowerCase().split(/\s+/).includes("next"),
+  )
+
+  if (!naechste) {
+    return links.length > 0 ? ['<link rel="next"> gehört nicht auf die letzte Station (weglassen).'] : []
+  }
+
+  const href = `/lernseiten/${fach}/${naechste.slug}`
+  if (links.length === 0) {
+    return [`<link rel="next" href="${href}" title="${naechste.titel}"> fehlt.`]
+  }
+  if (links.length > 1) {
+    return ['<link rel="next"> steht mehrfach in der Seite.']
+  }
+
+  const fehler: string[] = []
+  const tag = links[0].tag
+  const istHref = attribut(tag, "href")
+  if (istHref !== href) {
+    fehler.push(`<link rel="next"> zeigt auf «${kurz(istHref ?? "nichts")}», erwartet ${href}.`)
+  }
+  const titel = attribut(tag, "title")
+  if (titel === null || entitaetenAufloesen(titel) !== naechste.titel) {
+    fehler.push(`<link rel="next"> braucht title="${naechste.titel}" (gefunden: ${titel === null ? "nichts" : `«${kurz(titel)}»`}).`)
+  }
+  return fehler
+}
+
 /**
  * Prueft das Pflicht-Geruest einer Themenseite und meldet externe Ressourcen.
  * `fach` und `slug` muessen mit data-fach und data-thema im <body> uebereinstimmen.
@@ -131,6 +351,11 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
   const titel = quelle.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i)
   if (!titel || !titel[1].trim()) {
     fehler.push("<title> fehlt oder ist leer.")
+  }
+
+  const bodyIndex = startTags(quelle, "body")[0]?.index ?? quelle.length
+  if (!hatThemaStart(quelle, bodyIndex)) {
+    fehler.push(`Theme-Startskript im <head> fehlt (setzt data-theme aus «${THEMA_SCHLUESSEL}», siehe _vorlage.html).`)
   }
 
   const stylesheet = startTags(quelle, "link").some(
@@ -166,6 +391,7 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
   }
 
   fehler.push(...externeRessourcen(quelle))
+  fehler.push(...externeSkriptAdressen(quelle))
   return fehler
 }
 
@@ -179,9 +405,9 @@ function ignoriert(name: string): boolean {
 
 /**
  * Prueft alle Faecher unter `basis`.
- * `reserviert`: Namen von App-Seiten, die nicht als Fachordner verwendet werden duerfen.
+ * `reserviert`: Namen, die nicht als Fachordner verwendet werden duerfen (siehe reservierteNamen).
  */
-export function pruefeAlleInhalte(basis = STANDARD_BASIS, reserviert: string[] = appSeiten()): PruefErgebnis {
+export function pruefeAlleInhalte(basis = STANDARD_BASIS, reserviert: string[] = reservierteNamen()): PruefErgebnis {
   const fehler: string[] = []
   const hinweise: string[] = []
 
@@ -192,7 +418,9 @@ export function pruefeAlleInhalte(basis = STANDARD_BASIS, reserviert: string[] =
       continue
     }
     if (reserviert.includes(ordner)) {
-      fehler.push(`${ordner}: Fachordner heisst wie eine App-Seite (/${ordner}).`)
+      fehler.push(
+        `${ordner}: Fachordner heisst wie eine App-Seite oder ein Eintrag in public/ (/${ordner}); der Kurzlink würde sie verdecken.`,
+      )
     }
 
     const fachOrdner = path.join(basis, ordner)
@@ -227,7 +455,12 @@ export function pruefeAlleInhalte(basis = STANDARD_BASIS, reserviert: string[] =
       }
 
       const html = fs.readFileSync(path.join(fachOrdner, name), "utf8")
-      for (const meldung of pruefeThemaHtml(html, ordner, slug)) {
+      const meldungen = pruefeThemaHtml(html, ordner, slug)
+      const position = fach.pfad.findIndex((station) => station.slug === slug)
+      if (position >= 0) {
+        meldungen.push(...pruefeNaechsteStation(html, ordner, fach.pfad[position + 1] ?? null))
+      }
+      for (const meldung of meldungen) {
         fehler.push(`${anzeige}: ${meldung}`)
       }
     }

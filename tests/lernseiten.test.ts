@@ -12,7 +12,15 @@ import os from "node:os"
 import path from "node:path"
 import { fachSchema } from "@/lib/validations/lernseite"
 import { ladeFaecher, ladeFach, ladeThemaHtml } from "@/lib/lernseiten"
-import { pruefeAlleInhalte, pruefeThemaHtml, appSeiten } from "@/lib/lernseiten-pruefung"
+import {
+  pruefeAlleInhalte,
+  pruefeThemaHtml,
+  pruefeNaechsteStation,
+  ohneJsKommentare,
+  appSeiten,
+  publicNamen,
+  reservierteNamen,
+} from "@/lib/lernseiten-pruefung"
 
 // ---------------------------------------------------------------------------
 // Testdaten
@@ -41,12 +49,19 @@ function fach(kuerzel = "TEST", pfad = [station("01-erstes"), station("02-zweite
 interface SeitenOptionen {
   doctype?: string
   lang?: string
+  theme?: string
   kopf?: string
   css?: string
   bodyAttribute?: string
   inhalt?: string
   js?: string
+  skript?: string
 }
+
+/** Theme-Startskript wie in content/lernseiten/mstw/_vorlage.html */
+const THEMA_START =
+  '<script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;' +
+  'if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>'
 
 /** Gueltige Themenseite nach Pflicht-Geruest; einzelne Teile lassen sich ersetzen. */
 function seite(fachSlug: string, slug: string, o: SeitenOptionen = {}) {
@@ -56,16 +71,23 @@ function seite(fachSlug: string, slug: string, o: SeitenOptionen = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Titel ${slug}</title>
+${o.theme ?? THEMA_START}
 ${o.css ?? '<link rel="stylesheet" href="/lernpfad/lernpfad.css">'}
 ${o.kopf ?? ""}
 </head>
 <body ${o.bodyAttribute ?? `data-fach="${fachSlug}" data-thema="${slug}"`}>
 <main><h1>Titel</h1>${o.inhalt ?? ""}</main>
 ${o.js ?? '<script src="/lernpfad/lernpfad.js"></script>'}
-<script>document.title = document.title</script>
+<script>${o.skript ?? "document.title = document.title"}</script>
 </body>
 </html>
 `
+}
+
+/** <link rel="next"> auf die Station nach `slug` im Testfach (leer bei der letzten). */
+function naechsterLink(slug: string, pfad = fach().pfad) {
+  const naechste = pfad[pfad.findIndex((s) => s.slug === slug) + 1]
+  return naechste ? `<link rel="next" href="/lernseiten/test/${naechste.slug}" title="${naechste.titel}">` : ""
 }
 
 let basis: string
@@ -79,7 +101,7 @@ function schreibe(datei: string, inhalt: unknown) {
 /** Fach «test» mit fach.json und Themenseiten fuer die genannten Slugs. */
 function testfach(slugs = ["01-erstes", "02-zweites"]) {
   schreibe("test/fach.json", fach())
-  for (const slug of slugs) schreibe(`test/${slug}.html`, seite("test", slug))
+  for (const slug of slugs) schreibe(`test/${slug}.html`, seite("test", slug, { kopf: naechsterLink(slug) }))
 }
 
 function fehlerText(ergebnis = pruefeAlleInhalte(basis, [])) {
@@ -171,7 +193,7 @@ describe("Loader", () => {
 
   test("liefert das HTML einer Station", () => {
     testfach()
-    assert.equal(ladeThemaHtml("test", "01-erstes", basis), seite("test", "01-erstes"))
+    assert.equal(ladeThemaHtml("test", "01-erstes", basis), seite("test", "01-erstes", { kopf: naechsterLink("01-erstes") }))
   })
 
   test("unbekanntes Fach, unbekannte Station oder fehlende Datei ergeben null", () => {
@@ -277,6 +299,14 @@ describe("Pflicht-Geruest einer Themenseite", () => {
     assert.match(fehler, /Ende von <body>/)
   })
 
+  test("Theme-Startskript gehoert in den <head>", () => {
+    assert.match(pruefe({ theme: "" }), /Theme-Startskript/)
+    // im <body> zu spaet (Flackern), mit src kein Inline-Script, auskommentiert zaehlt nicht
+    assert.match(pruefe({ theme: "", inhalt: THEMA_START }), /Theme-Startskript/)
+    assert.match(pruefe({ theme: '<script src="/lernpfad/theme.js">/* lernpfad-theme data-theme */</script>' }), /Theme-Startskript/)
+    assert.match(pruefe({ theme: `<!-- ${THEMA_START} -->` }), /Theme-Startskript/)
+  })
+
   test("data-fach und data-thema muessen zum Dateinamen passen", () => {
     assert.match(pruefe({ bodyAttribute: 'data-fach="test" data-thema="02-zweites"' }), /data-thema="01-erstes"/)
     assert.match(pruefe({ bodyAttribute: 'data-fach="mstw" data-thema="01-erstes"' }), /data-fach="test"/)
@@ -304,6 +334,52 @@ describe("Pflicht-Geruest einer Themenseite", () => {
     }
   })
 
+  test("meldet externe Adressen in Inline-Scripts", () => {
+    const faelle = [
+      'fetch("https://api.example.com/daten")',
+      "fetch( 'http://example.com/x' ).then((r) => r.json())",
+      "import('//cdn.example.com/modul.js')",
+      'import confetti from "https://cdn.example.com/confetti.mjs"',
+      'const s = document.createElement("script"); s.src = "https://cdn.example.com/x.js"',
+      'bild.setAttribute("src", "//bilder.example.com/a.png")',
+      'const ws = new WebSocket("wss://live.example.com/kanal")',
+      'xhr.open("GET", "https://example.com/daten.json")',
+      "navigator.sendBeacon(`https://log.example.com/`, daten)",
+      'el.style.backgroundImage = "url(https://example.com/x.png)"',
+      // nach einem Regex-Literal mit Anfuehrungszeichen weiterhin erkannt
+      "const r = /[\"']/g; fetch('https://example.com/a')",
+      // in einem Template-String mit verschachteltem Template
+      "const t = `${a ? `x` : `y`}`; fetch(`https://example.com/${t}`)",
+    ]
+    for (const skript of faelle) {
+      assert.match(pruefe({ skript }), /externe Adresse in einem Inline-Script/, skript)
+    }
+  })
+
+  test("Adressen in Kommentaren, Texten und Namensraeumen sind keine Ladeaufrufe", () => {
+    const skript = [
+      '// fetch("https://example.com/alt") — frueher so geladen',
+      "/* import('https://cdn.example.com/x.js') */",
+      'const NS = "http://www.w3.org/2000/svg";',
+      'const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");',
+      'hinweis.textContent = "Mehr dazu unter https://www.ost.ch (Quelle)";',
+      'link.href = "https://www.ost.ch/de/studium";',
+      "const pfad = 'a' + '//' + 'b'; // Text, keine Adresse",
+      "const u = new URL('https://example.com/a');",
+      "fetch('/api/lernfortschritt?fach=mstw')",
+      "const halb = breite / 2; const r = /\\/\\/x/.test(halb); // fetch('https://x.example.com')",
+    ].join("\n")
+    assert.equal(pruefe({ skript }), "")
+  })
+
+  test("Kommentar-Entferner laesst Strings, Templates und Regex stehen", () => {
+    assert.equal(ohneJsKommentare('a = "https://x.y"; // weg'), 'a = "https://x.y"; ')
+    assert.equal(ohneJsKommentare("a /* weg */ + b"), "a   + b")
+    assert.equal(ohneJsKommentare("t = `//${x /* weg */}//`"), "t = `//${x  }//`")
+    assert.equal(ohneJsKommentare("r = /\\/\\//g // weg"), "r = /\\/\\//g ")
+    assert.equal(ohneJsKommentare("q = a / b // weg"), "q = a / b ")
+  })
+
   test("Links, eigene Pfade und data-URIs sind erlaubt", () => {
     const fehler = pruefe({
       kopf: "<style>@font-face { src: url(/lernpfad/fonts/x.woff2) } .a { background: url(data:image/png;base64,AA==) }</style>",
@@ -312,6 +388,48 @@ describe("Pflicht-Geruest einer Themenseite", () => {
         '<img src="/lernpfad/bild.svg" alt=""><svg><use href="#symbol"/></svg>',
     })
     assert.equal(fehler, "")
+  })
+})
+
+describe("<link rel=\"next\"> passt zum Pfad", () => {
+  const pfad = fach().pfad
+  const pruefe = (slug: string, kopf: string) =>
+    pruefeNaechsteStation(seite("test", slug, { kopf }), "test", pfad[pfad.findIndex((s) => s.slug === slug) + 1] ?? null)
+
+  test("richtiger Link ergibt keine Fehler, letzte Station ohne Link auch nicht", () => {
+    assert.deepEqual(pruefe("01-erstes", naechsterLink("01-erstes")), [])
+    assert.deepEqual(pruefe("03-drittes", ""), [])
+  })
+
+  test("Reihenfolge der Attribute und Zeichenreferenzen im Titel sind egal", () => {
+    const anders = fach("TEST", [station("01-a"), { ...station("02-b"), titel: "Bäume & Tafeln" }])
+    const html = seite("test", "01-a", { kopf: '<link title="Bäume &amp; Tafeln" href="/lernseiten/test/02-b" rel="next">' })
+    assert.deepEqual(pruefeNaechsteStation(html, "test", anders.pfad[1]), [])
+  })
+
+  test("meldet fehlenden, falschen, doppelten oder auskommentierten Link", () => {
+    assert.match(pruefe("01-erstes", "").join("\n"), /<link rel="next" href="\/lernseiten\/test\/02-zweites" title="Titel 02-zweites"> fehlt/)
+    assert.match(
+      pruefe("01-erstes", '<link rel="next" href="/lernseiten/test/03-drittes" title="Titel 02-zweites">').join("\n"),
+      /zeigt auf «\/lernseiten\/test\/03-drittes», erwartet \/lernseiten\/test\/02-zweites/,
+    )
+    assert.match(
+      pruefe("01-erstes", '<link rel="next" href="/lernseiten/test/02-zweites" title="Zweites">').join("\n"),
+      /title="Titel 02-zweites"/,
+    )
+    assert.match(pruefe("01-erstes", '<link rel="next" href="/lernseiten/test/02-zweites">').join("\n"), /gefunden: nichts/)
+    assert.match(pruefe("01-erstes", naechsterLink("01-erstes").repeat(2)).join("\n"), /mehrfach/)
+    assert.match(pruefe("01-erstes", `<!-- ${naechsterLink("01-erstes")} -->`).join("\n"), /fehlt/)
+  })
+
+  test("letzte Station: kein Link (auch nicht zum Lernpfad)", () => {
+    assert.match(pruefe("03-drittes", '<link rel="next" href="/lernseiten/test" title="Lernpfad">').join("\n"), /letzte Station/)
+  })
+
+  test("Gesamtpruefung meldet falschen Link mit Dateiname", () => {
+    testfach(["01-erstes"])
+    schreibe("test/02-zweites.html", seite("test", "02-zweites", { kopf: naechsterLink("01-erstes") }))
+    assert.match(fehlerText(), /test\/02-zweites\.html: <link rel="next"> zeigt auf «\/lernseiten\/test\/02-zweites»/)
   })
 })
 
@@ -395,6 +513,19 @@ describe("Gesamtpruefung", () => {
     }
     assert.deepEqual(appSeiten(app).sort(), ["api", "decks", "lernseiten"])
   })
+
+  test("Namen aus public/ (Ordner und Dateien) zaehlen mit", () => {
+    const oeffentlich = path.join(basis, "public")
+    fs.mkdirSync(path.join(oeffentlich, "Lernpfad"), { recursive: true })
+    fs.writeFileSync(path.join(oeffentlich, "robots.txt"), "")
+    assert.deepEqual(publicNamen(oeffentlich).sort(), ["lernpfad", "robots.txt"])
+    assert.deepEqual(publicNamen(path.join(basis, "gibtsnicht")), [])
+  })
+
+  test("meldet Fachordner, der wie ein Eintrag in public/ heisst", () => {
+    schreibe("lernpfad/fach.json", fach("LERNPFAD"))
+    assert.match(fehlerText(pruefeAlleInhalte(basis, ["lernpfad", "_next"])), /lernpfad: .*public\//)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -417,7 +548,11 @@ describe("MSTW fach.json im Repo", () => {
     assert.equal(ergebnis.pfad[17].sektion, "abschluss")
   })
 
-  test("Fachordner kollidiert nicht mit App-Seiten", () => {
-    assert.equal(appSeiten().includes("mstw"), false)
+  test("Fachordner kollidiert nicht mit App-Seiten, public/ oder _next", () => {
+    const reserviert = reservierteNamen()
+    for (const name of ["lernpfad", "_next", "api", "lernseiten"]) {
+      assert.ok(reserviert.includes(name), name)
+    }
+    assert.equal(reserviert.includes("mstw"), false)
   })
 })

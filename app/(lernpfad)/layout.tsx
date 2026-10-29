@@ -18,7 +18,7 @@ export default async function LernpfadLayout({
 }) {
   const user = await getCurrentUser()
 
-  if (!user) {
+  if (!user?.id) {
     redirect("/login")
   }
 

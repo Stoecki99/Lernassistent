@@ -15,9 +15,26 @@ interface RouteParams {
   params: Promise<{ fach: string; thema: string }>
 }
 
+// Nur Quellen der eigenen Origin: Baukasten, KaTeX, Schriften und Fortschritts-API liegen unter
+// derselben Adresse. 'unsafe-inline' fuer die seiteneigenen Scripts/Styles und die Inline-Styles von KaTeX.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ")
+
 const HTML_HEADER = {
   "Content-Type": "text/html; charset=utf-8",
-  "Cache-Control": "private, no-cache",
+  // no-store: Lerninhalte hinter dem Login landen nicht im Browser-Cache (auch nicht nach dem Abmelden)
+  "Cache-Control": "private, no-store",
+  "Content-Security-Policy": CSP,
   "X-Robots-Tag": "noindex",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",

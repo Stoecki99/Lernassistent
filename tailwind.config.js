@@ -33,7 +33,8 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["Nunito", "system-ui", "-apple-system", "sans-serif"],
+        // Gleiche Reihenfolge wie --font-sans in app/globals.css (massgebend fuer Tailwind 4)
+        sans: ["var(--font-nunito-ext)", "var(--font-nunito)", "system-ui", "-apple-system", "sans-serif"],
       },
       borderRadius: {
         "2xl": "1rem",

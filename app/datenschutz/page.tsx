@@ -128,7 +128,8 @@ export default function DatenschutzPage() {
                 Marketing-Tools ein. Es gibt kein Google Analytics, keine
                 Werbe-Cookies und kein Nutzertracking. Es werden nur technisch
                 notwendige Cookies für die Session-Verwaltung (Login)
-                verwendet.
+                verwendet. Schriften werden vom eigenen Server geladen, es
+                findet keine Übermittlung an Google statt.
               </p>
             </section>
 
@@ -310,7 +311,7 @@ export default function DatenschutzPage() {
                 anzupassen. Die aktuelle Fassung ist stets auf dieser Seite
                 abrufbar.
               </p>
-              <p className="text-gray-500 text-sm mt-4">Stand: April 2026</p>
+              <p className="text-gray-500 text-sm mt-4">Stand: Oktober 2026</p>
             </section>
           </div>
         </div>

@@ -156,31 +156,37 @@
       });
     },
     melden(daten) {
-      daten = daten || {};
-      const { fach, thema } = kontext();
-      if (!fach || !thema || typeof fetch !== "function") return Promise.resolve(false);
-      let status = daten.status === "erledigt" ? "erledigt" : "begonnen";
-      if (bekannterStatus === "erledigt") status = "erledigt"; // nie zurückstufen
-      const nutzlast = { fach: fach, thema: thema, status: status };
-      const r = daten.quizRichtig, g = daten.quizGesamt;
-      if (Number.isInteger(r) && Number.isInteger(g) && g > 0 && r >= 0 && r <= g) {
-        nutzlast.quizRichtig = r;
-        nutzlast.quizGesamt = g;
-      }
-      return fetch("/api/lernfortschritt", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(nutzlast),
-      })
-        .then((res) => {
-          if (res.ok) bekannterStatus = status === "erledigt" ? "erledigt" : bekannterStatus || "begonnen";
-          // Antwort lesen, sonst bleibt die Anfrage im Browser offen (Verbindung, networkidle)
-          return res.text().catch(() => "").then(() => res.ok);
-        })
-        .catch(() => false);
+      return fortschrittSenden(daten).then((antwort) => antwort.ok);
     },
   };
+
+  // Wie fortschritt.melden, liefert aber { ok, httpStatus }. httpStatus 0 = keine Anfrage
+  // (kein Kontext, offline). Die Abschluss-Box braucht den Status, um bei 401 «Neu anmelden» zu zeigen.
+  function fortschrittSenden(daten) {
+    daten = daten || {};
+    const { fach, thema } = kontext();
+    if (!fach || !thema || typeof fetch !== "function") return Promise.resolve({ ok: false, httpStatus: 0 });
+    let status = daten.status === "erledigt" ? "erledigt" : "begonnen";
+    if (bekannterStatus === "erledigt") status = "erledigt"; // nie zurückstufen
+    const nutzlast = { fach: fach, thema: thema, status: status };
+    const r = daten.quizRichtig, g = daten.quizGesamt;
+    if (Number.isInteger(r) && Number.isInteger(g) && g > 0 && r >= 0 && r <= g) {
+      nutzlast.quizRichtig = r;
+      nutzlast.quizGesamt = g;
+    }
+    return fetch("/api/lernfortschritt", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(nutzlast),
+    })
+      .then((res) => {
+        if (res.ok) bekannterStatus = status === "erledigt" ? "erledigt" : bekannterStatus || "begonnen";
+        // Antwort lesen, sonst bleibt die Anfrage im Browser offen (Verbindung, networkidle)
+        return res.text().catch(() => "").then(() => ({ ok: res.ok, httpStatus: res.status }));
+      })
+      .catch(() => ({ ok: false, httpStatus: 0 }));
+  }
 
   // Beim Laden einmal: Stand holen und «begonnen» melden (ausser schon erledigt).
   // Ergebnis: { eintrag, gespeichert } — gespeichert=false heisst: nicht eingeloggt, offline oder Vorschau ohne API.
@@ -234,9 +240,11 @@
         el.addEventListener("blur", () => linkAus(bereichVon(el)));
         el.addEventListener("click", () => linkAn(el));
       }
-      // Tabindex nur, wenn es tatsächlich ein Gegenstück gibt
+      // Tabindex nur, wenn es tatsächlich ein Gegenstück gibt und Screenreader das Element sehen.
+      // KaTeX legt \htmlData{link=…} in .katex-html mit aria-hidden="true" ab: ein Tabstopp dort
+      // wäre stumm. Hover und Antippen bleiben, per Tastatur leuchtet das Gegenstück im Text auf.
       if (!el.matches("a[href],button,input,select,textarea")) {
-        if (partnerVon(el).length > 1) el.tabIndex = 0;
+        if (partnerVon(el).length > 1 && !el.closest('[aria-hidden="true"]')) el.tabIndex = 0;
         else el.removeAttribute("tabindex");
       }
     });
@@ -671,14 +679,14 @@
         ? '<span aria-hidden="true">❚❚</span> Pause'
         : i === S.length - 1
           ? '<span aria-hidden="true">↺</span> Nochmals'
-          : '<span aria-hidden="true">▶</span> Play';
+          : '<span aria-hidden="true">▶</span> Abspielen';
       planen();
     }
 
     bPlay.addEventListener("click", () => {
       if (spielt) { setzeSpielt(false); return; }
       if (i === S.length - 1) { i = 0; prevDict = 0; }
-      else if (i === 0) { i = 1; } // Play startet sofort beim ersten Inhaltsschritt
+      else if (i === 0) { i = 1; } // Abspielen startet sofort beim ersten Inhaltsschritt
       zeigen();
       setzeSpielt(true);
     });
@@ -789,11 +797,20 @@
             ansage.textContent = "Frage " + (i + 1) + ": " + (ok ? "richtig. " : "nicht ganz. ") + "Stand " + richtig + " von " + fragen.length + ".";
             formeln(karte);
             if (fertig === fragen.length) {
-              fortschritt.melden({ status: "begonnen", quizRichtig: richtig, quizGesamt: fragen.length });
-              el.dispatchEvent(new CustomEvent("lernpfad:selbsttest", {
-                bubbles: true,
-                detail: { richtig: richtig, gesamt: fragen.length },
-              }));
+              const ergebnis = { richtig: richtig, gesamt: fragen.length };
+              // Ereignis erst nach dem Speichern: detail.gespeichert sagt der Abschluss-Box, ob es geklappt hat
+              fortschrittSenden({ status: "begonnen", quizRichtig: ergebnis.richtig, quizGesamt: ergebnis.gesamt })
+                .then((antwort) => {
+                  el.dispatchEvent(new CustomEvent("lernpfad:selbsttest", {
+                    bubbles: true,
+                    detail: {
+                      richtig: ergebnis.richtig,
+                      gesamt: ergebnis.gesamt,
+                      gespeichert: antwort.ok,
+                      httpStatus: antwort.httpStatus,
+                    },
+                  }));
+                });
             }
           });
           ops.appendChild(b);
@@ -1282,7 +1299,10 @@
       '<h2 id="lp-abschluss-titel">Thema abschliessen</h2>' +
       '<p class="abschluss-stand"><span>Stand:</span><span class="status offen">wird geladen …</span><span class="abschluss-quiz hint"></span></p>' +
       '<p class="hint">Markier das Thema als erledigt, wenn du den Selbsttest gemacht hast und die Beispiele ohne Hilfe lösen kannst.</p>' +
-      '<div class="row"><button type="button" class="btn primary abschluss-knopf"><span aria-hidden="true">✓</span> Thema als erledigt markieren</button></div>' +
+      '<div class="row"><button type="button" class="btn primary abschluss-knopf"><span aria-hidden="true">✓</span> Thema als erledigt markieren</button>' +
+      '<button type="button" class="btn abschluss-erneut" hidden><span aria-hidden="true">↻</span> Erneut speichern</button>' +
+      // Neuer Tab: das ungespeicherte Ergebnis bleibt hier stehen und lässt sich danach speichern
+      '<a class="btn abschluss-login" href="/login" target="_blank" rel="noopener" hidden>Neu anmelden (neuer Tab)</a></div>' +
       '<p class="fb abschluss-fb" aria-live="polite"></p>' +
       '<div class="row abschluss-links"></div>' +
       "</div>";
@@ -1302,19 +1322,45 @@
     const statusEl = $(".status", sec);
     const quizEl = $(".abschluss-quiz", sec);
     const bErledigt = $(".abschluss-knopf", sec);
+    const bErneut = $(".abschluss-erneut", sec);
+    const loginLink = $(".abschluss-login", sec);
     const fb = $(".abschluss-fb", sec);
-    const zustand = { status: null, quizRichtig: null, quizGesamt: null, gespeichert: true };
+    // quizGespeichert: false, solange das letzte Selbsttest-Ergebnis nicht bei der API angekommen ist.
+    // anmelden: die letzte Meldung scheiterte mit 401 (Sitzung abgelaufen).
+    const zustand = { status: null, quizRichtig: null, quizGesamt: null, gespeichert: true, quizGespeichert: true, anmelden: false };
 
     function zeigen() {
       const s = zustand.status;
       statusEl.className = "status " + (s || "offen");
       statusEl.textContent = s === "erledigt" ? "✓ Erledigt" : s === "begonnen" ? "◐ Begonnen" : zustand.gespeichert ? "○ Noch nicht begonnen" : "○ Nicht gespeichert";
-      quizEl.textContent = Number.isInteger(zustand.quizGesamt) && zustand.quizGesamt > 0
-        ? "Selbsttest: " + zustand.quizRichtig + " / " + zustand.quizGesamt + " richtig"
+      const quizDa = Number.isInteger(zustand.quizGesamt) && zustand.quizGesamt > 0;
+      quizEl.textContent = quizDa
+        ? "Selbsttest: " + zustand.quizRichtig + " / " + zustand.quizGesamt + " richtig" + (zustand.quizGespeichert ? "" : " · nicht gespeichert")
         : "";
       if (s === "erledigt") {
         bErledigt.innerHTML = '<span aria-hidden="true">✓</span> Thema erledigt';
         setzeAktiv(bErledigt, false, [$("a.btn.primary", links), zurueck]);
+      }
+      const erneutZeigen = quizDa && !zustand.quizGespeichert;
+      // Fokus nicht verlieren, wenn «Erneut speichern» nach Erfolg verschwindet
+      if (!erneutZeigen && document.activeElement === bErneut) (bErledigt.disabled ? zurueck : bErledigt).focus();
+      bErneut.hidden = !erneutZeigen;
+      loginLink.hidden = !zustand.anmelden;
+    }
+
+    // Antwort auf eine Meldung des Selbsttest-Ergebnisses verarbeiten (Selbsttest und «Erneut speichern»)
+    function quizGemeldet(antwort) {
+      const warFehler = !zustand.quizGespeichert;
+      zustand.quizGespeichert = antwort.ok;
+      zustand.anmelden = antwort.httpStatus === 401;
+      if (antwort.ok) {
+        zustand.gespeichert = true;
+        if (!zustand.status) zustand.status = "begonnen";
+        if (warFehler) fb.textContent = "✓ Selbsttest-Ergebnis gespeichert.";
+      } else if (zustand.anmelden) {
+        fb.textContent = "✗ Selbsttest-Ergebnis nicht gespeichert: Deine Anmeldung ist abgelaufen. Melde dich im neuen Tab neu an und klick dann auf «Erneut speichern».";
+      } else {
+        fb.textContent = "✗ Selbsttest-Ergebnis nicht gespeichert. Prüf deine Verbindung und klick auf «Erneut speichern».";
       }
     }
 
@@ -1337,22 +1383,41 @@
     });
 
     document.addEventListener("lernpfad:selbsttest", (ev) => {
-      zustand.quizRichtig = ev.detail.richtig;
-      zustand.quizGesamt = ev.detail.gesamt;
+      const d = ev.detail || {};
+      zustand.quizRichtig = d.richtig;
+      zustand.quizGesamt = d.gesamt;
+      // Ohne Angabe (eigenes Ereignis einer Seite) gilt das Ergebnis als gespeichert
+      quizGemeldet({ ok: d.gespeichert !== false, httpStatus: d.httpStatus || 0 });
       zeigen();
+    });
+
+    bErneut.addEventListener("click", () => {
+      if (bErneut.getAttribute("aria-busy")) return;
+      bErneut.setAttribute("aria-busy", "true");
+      fortschrittSenden({ status: "begonnen", quizRichtig: zustand.quizRichtig, quizGesamt: zustand.quizGesamt })
+        .then((antwort) => {
+          bErneut.removeAttribute("aria-busy");
+          quizGemeldet(antwort);
+          zeigen();
+        });
     });
 
     bErledigt.addEventListener("click", () => {
       if (zustand.status === "erledigt") return;
       bErledigt.setAttribute("aria-busy", "true");
-      fortschritt
-        .melden({ status: "erledigt", quizRichtig: zustand.quizRichtig, quizGesamt: zustand.quizGesamt })
-        .then((ok) => {
+      const mitQuiz = Number.isInteger(zustand.quizGesamt) && zustand.quizGesamt > 0;
+      fortschrittSenden({ status: "erledigt", quizRichtig: zustand.quizRichtig, quizGesamt: zustand.quizGesamt })
+        .then((antwort) => {
           bErledigt.removeAttribute("aria-busy");
-          if (ok) {
+          zustand.anmelden = antwort.httpStatus === 401;
+          if (antwort.ok) {
             zustand.status = "erledigt";
             zustand.gespeichert = true;
+            // Die Meldung enthielt die Selbsttest-Werte: ein offenes Ergebnis ist damit gespeichert
+            if (mitQuiz) zustand.quizGespeichert = true;
             fb.textContent = "✓ Gespeichert. Das Thema ist erledigt.";
+          } else if (zustand.anmelden) {
+            fb.textContent = "✗ Konnte nicht gespeichert werden: Deine Anmeldung ist abgelaufen. Melde dich im neuen Tab neu an und versuch es dann nochmals.";
           } else {
             fb.textContent = "✗ Konnte nicht gespeichert werden. Bist du eingeloggt? Versuch es später nochmals.";
           }
