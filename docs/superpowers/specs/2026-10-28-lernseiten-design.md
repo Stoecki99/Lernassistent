@@ -1,5 +1,7 @@
 # Lernseiten — Design
 
+> **Abgelöst durch den Lernpfad** (`docs/lernpfad-format.md`, `docs/lernpfad-baukasten.md`), Stand 2026-10-29. Dieses Dokument beschreibt das frühere JSON/React-System und gilt nicht mehr.
+
 **Datum:** 2026-10-28 · **Status:** freigegeben (Jan, 28.10.2026)
 
 ## Ziel

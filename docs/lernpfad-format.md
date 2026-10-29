@@ -25,7 +25,7 @@ content/lernseiten/
     _vorlage.html                               # «_» am Anfang: keine Station, wird ignoriert
 ```
 
-- Fachordner: nur `a-z` und `0-9`. Er darf nicht wie eine App-Seite heissen (`chat`, `decks`, `api` …).
+- Fachordner: nur `a-z` und `0-9`. Er darf nicht wie eine App-Seite (`chat`, `decks`, `api` …) oder ein Eintrag auf oberster Ebene von `public/` (`lernpfad`) heissen, auch `_next` ist reserviert. Sonst verdeckt der Kurzlink `/<fach>/…` diese Adressen.
 - Themenseite: `<slug>.html`, der Slug steht im Pfad von `fach.json`.
 - Dateien und Ordner mit `_` oder `.` am Anfang ignoriert die App. Andere Dateien im Fachordner liefert sie nicht aus; die Prüfung erwähnt sie als Hinweis.
 
@@ -95,7 +95,9 @@ Loader (`lib/lernseiten.ts`, nur serverseitig):
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Laplace und bedingte Wahrscheinlichkeit · MSTW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
   <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/mstw/09-kombinatorik" title="Kombinatorik">
 </head>
 <body data-fach="mstw" data-thema="08-laplace-bedingte-wahrscheinlichkeit">
   …
@@ -108,6 +110,8 @@ Loader (`lib/lernseiten.ts`, nur serverseitig):
 ```
 
 - `data-fach` = Fachordner, `data-thema` = Dateiname ohne `.html`.
+- Theme-Startskript im `<head>` (Zeile unverändert aus `_vorlage.html` übernehmen): setzt das gespeicherte Farbschema (`localStorage` «lernpfad-theme», Werte `hell`/`dunkel`) als `html[data-theme]`, bevor die Seite gezeichnet wird. Ohne das Script flackert der Dunkelmodus beim Laden. Gesperrter Speicher bricht nichts (try/catch).
+- `<link rel="next">`: nächste Station laut `pfad` in `fach.json`, `href="/lernseiten/<fach>/<slug>"`, `title` = deren Titel. Bei der letzten Station weglassen.
 - `lernpfad.js` steht am Ende von `<body>`, danach das seiteneigene Script.
 - Keine externen Ressourcen: kein CDN, keine Google Fonts, keine externen Bilder, Videos oder iframes. Alles kommt aus `/lernpfad/` oder steht in der Seite (Inline-SVG, `data:`-URI). Links (`<a href="https://…">`) auf Quellen sind erlaubt.
 - Ausgangspunkt für neue Seiten: `content/lernseiten/mstw/_vorlage.html`.
@@ -119,10 +123,12 @@ Loader (`lib/lernseiten.ts`, nur serverseitig):
 **Fehler** (Abbruch):
 
 - `fach.json` fehlt, ist kein gültiges JSON oder verletzt das Schema (inkl. doppelte Slugs, unbekannte Sektion)
-- Fachordner mit ungültigem Namen, Kürzel passt nicht zum Ordner, Ordner heisst wie eine App-Seite
+- Fachordner mit ungültigem Namen, Kürzel passt nicht zum Ordner, Ordner heisst wie eine App-Seite, ein Eintrag in `public/` oder `_next`
 - HTML-Datei, deren Name nicht `NN-name.html` ist oder die nicht im Pfad steht
-- Pflicht-Gerüst unvollständig: `<!doctype html>`, `lang="de-CH"`, `charset="utf-8"`, viewport, `<title>`, `lernpfad.css`, `lernpfad.js` (am Ende von `<body>`), `data-fach` und `data-thema` passend zum Dateinamen
+- Pflicht-Gerüst unvollständig: `<!doctype html>`, `lang="de-CH"`, `charset="utf-8"`, viewport, `<title>`, Theme-Startskript im `<head>` (Inline-Script mit «lernpfad-theme» und `data-theme`), `lernpfad.css`, `lernpfad.js` (am Ende von `<body>`), `data-fach` und `data-thema` passend zum Dateinamen
+- `<link rel="next">` passt nicht zum Pfad: fehlt, steht mehrfach, `href` zeigt nicht auf die nächste Station oder `title` ist nicht deren Titel; bei der letzten Station steht einer (auch einer zum Lernpfad)
 - externe Ressource in `src`, `href`, `srcset`, `poster` oder `data` von `script`, `link`, `img`, `iframe`, `source`, `video`, `audio`, `embed`, `object`, `track`, `base`, SVG-`image`/`use` sowie `url(…)` und `@import` in CSS
+- externe Adresse (`https://…`, `wss://…`, `//host…`) in einem Inline-Script als Argument von `fetch`, `import`/`from`, `.src =`, `src:`, `setAttribute("src"|"srcset"|"poster"|"data"|"xlink:href", …)`, `new Worker`/`WebSocket`/`EventSource`/`Audio`, `XMLHttpRequest.open`, `sendBeacon`, `importScripts` oder in `url(…)`. Kommentare im Script zählen nicht. Nicht gemeldet werden Adressen in gewöhnlichem Text, Links (`href`) und Namensräume wie `createElementNS("http://www.w3.org/2000/svg", …)`.
 
 **Hinweise** (kein Abbruch, im Bericht aufgeführt):
 
@@ -142,10 +148,15 @@ Route-Handler `app/(lernpfad)/lernseiten/[fach]/[thema]/route.ts`:
 | Header | Wert |
 |--------|------|
 | `Content-Type` | `text/html; charset=utf-8` |
-| `Cache-Control` | `private, no-cache` |
+| `Cache-Control` | `private, no-store` |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'` |
 | `X-Robots-Tag` | `noindex` |
 | `X-Content-Type-Options` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
+
+- `no-store`: Lerninhalte hinter dem Login landen nicht im Browser-Cache, auch nicht nach dem Abmelden oder auf geteilten Geräten.
+- CSP: Alles kommt von derselben Origin (Baukasten und KaTeX aus `/lernpfad/`, Schriften, Fortschritts-API). `'unsafe-inline'` ist nötig für das Theme-Startskript, die seiteneigenen Scripts und `<style>`-Blöcke sowie die Inline-Styles von KaTeX. `data:` für Bilder erlaubt Inline-Grafiken als `data:`-URI. Eine Seite, die etwas von einem fremden Server laden will, scheitert im Browser (Fehler in der Konsole), auch wenn die Prüfung es übersehen hätte.
+- Die Header gelten auch für die 404- und 500-Seite des Handlers.
 
 Die Dateien `public/lernpfad/*` liefert Next als statische Dateien aus. `content/` kopiert das Dockerfile ins Image.
 

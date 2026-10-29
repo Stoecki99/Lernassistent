@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-10-28 (Lernseiten)
+**Zuletzt aktualisiert:** 2026-10-29 (Lernpfad MSTW live, Review-Korrekturen)
 
 ---
 
@@ -20,7 +20,7 @@
 | 10. Statistiken & Gamification | Fertig | Badges, Punkte, Streak, WochenChart |
 | 11. Deployment | Fertig | Dockerfile, Docker Compose, Caddy |
 | 12. Polish | Fertig | Skeletons, Error States, A11y, SEO |
-| 13. Lernseiten | Fertig (lokal, Branch `feat/lernseiten`) | Reiter Lernseiten, interaktive Themenseiten pro Fach, erstes Fach MSTW |
+| 13. Lernpfad | Live seit 29.10.2026 | Reiter Lernseiten, Lernpfad MSTW mit 18 Stationen (fertige HTML-Seiten aus dem Baukasten `public/lernpfad/`), Fortschritt im Konto |
 
 ## Security-Fixes (alle angewendet)
 
@@ -42,8 +42,8 @@
 | Komponente | Status | Details |
 |-----------|--------|---------|
 | GitHub Repo | Laeuft | https://github.com/Stoecki99/Lernassistent (public) |
-| GitHub Actions CI/CD | Aktiv | Automatisch bei git push: Build, Migration, Deploy |
-| VPS Docker | Laeuft | App-Image gebaut, Container laufen |
+| GitHub Actions CI/CD | Aktiv | Automatisch bei git push: Image bauen und nach GHCR pushen, auf dem VPS pullen, Migration, Deploy |
+| VPS Docker | Laeuft | Seit 2026-10-28 zieht der VPS das Image `ghcr.io/stoecki99/lernassistent:latest` (kein Build mehr auf dem VPS, GHCR-Login nötig), Container laufen |
 | PostgreSQL | Laeuft | Container healthy, Migration angewendet |
 | Caddy Reverse Proxy | Laeuft | In ~/stack/, lernen.jan-stocker.cloud konfiguriert |
 | CV-Website | Laeuft | jan-stocker.cloud, NICHT ANFASSEN |
@@ -51,18 +51,43 @@
 | Badge-Seed | Erledigt | Alle Badges geseeded |
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
 
+## Offene Punkte (Stand 2026-10-29)
+
+- **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
+- **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
+- **Doppelte Statistik-Funktionen:** mehrere Themenseiten bringen eigene Fassungen von `erfc`, `invPhi`, `lnGamma`, `tCdf` u. a. mit. Kandidat für den Baukasten.
+- **Kein langes Caching für Schriften und KaTeX:** `/lernpfad/*` kommt mit `max-age=0` (Revalidierung per ETag). Pauschal `immutable` geht nicht, weil die Dateien keine Hash-Namen haben.
+- **Redundanter Index im Modell `Lernfortschritt`:** `@@index([userId, fach])` ist durch `@@unique([userId, fach, thema])` abgedeckt.
+- **npm audit:** offene Meldungen u. a. für `next` 14.2 und `next-auth` (Update auf neue Hauptversionen nötig), dazu weitere Pakete.
+- **Alte Migrationen auf frischer Datenbank:** `prisma migrate deploy` scheitert (`20260405_add_contact_email` sortiert vor `20260405_add_contact_messages`). Produktion nicht betroffen, lokal `prisma db push` verwenden.
+
 ## Changelog
+
+### 2026-10-29
+
+- **feat: Lernpfad MSTW live** (Commit b3baed9) — Baukasten `public/lernpfad/` (CSS, JavaScript, selbst gehostete Schriften, KaTeX), 18 Stationen von Aussagenlogik bis Prüfungstraining als fertige HTML-Dateien in `content/lernseiten/mstw/`, Lernpfad-Seite `/lernseiten/mstw` mit Fortschritt im Konto (Tabelle `Lernfortschritt`, Migration `20261028160000_add_lernfortschritt`, API `GET/POST /api/lernfortschritt`), Themenseiten nur eingeloggt (Route-Handler). Format: `docs/lernpfad-format.md`, Baukasten: `docs/lernpfad-baukasten.md`
+- **refactor: altes Lernseiten-System abgebaut** — JSON-Inhalte (`seite.json`, `film.json`, `quiz.json`, `spick.json`), React-Komponenten (Bausteine, Lösungsfilm, Stepper, Selbsttest, Spickzettel …), `lib/lernseiten-film.ts`, `docs/lernseiten-format.md` und die Pakete `remark-math`, `rehype-katex`, `rehype-raw`, `rehype-sanitize` entfernt
+- **test: Integrationstest im Browser bestanden**
+- **fix: Review-Korrekturen** (Code-Review des Lernpfads):
+  - DSG: Nunito kommt nicht mehr von Google Fonts, sondern vom eigenen Server (`next/font/local`, Dateien und OFL in `app/fonts/`). Dabei die Tailwind-Variable auf `--font-sans` korrigiert: mit dem alten Namen `--font-family-sans` wurde Nunito geladen, aber nie angewendet, die App lief in der Systemschrift. Datenschutzerklärung um einen Satz zu den Schriften ergänzt
+  - Barrierefreiheit: keine Tabstopps mehr in `aria-hidden` (Formelteile aus `\htmlData`)
+  - Selbsttest: Speichererfolg im Ereignis (`detail.gespeichert`, `detail.httpStatus`); die Abschluss-Box zeigt «nicht gespeichert» mit «Erneut speichern», bei 401 zusätzlich «Neu anmelden»
+  - Themenseiten: `Cache-Control: private, no-store` und Content-Security-Policy (nur eigene Origin)
+  - Theme-Startskript im `<head>` der Vorlage und aller 18 Themenseiten (kein Flackern im Dunkelmodus), `suppressHydrationWarning` am `<html>`
+  - Inhaltsprüfung: `<link rel="next">` gegen `fach.json`, externe Adressen in Inline-Scripts, Fachordner zusätzlich gegen `public/` und `_next`, Theme-Startskript als Pflicht
+  - Kleinigkeiten: Absicherung `user?.id` im Lernpfad, «Abspielen» statt «Play», überflüssige Typumwandlungen entfernt, Ausnahme für `dangerouslySetInnerHTML` (ThemaWahl) in CLAUDE.md
+- **docs:** DEPLOYMENT.md auf GHCR-Pull umgestellt (gilt seit 2026-10-28), alte Lernseiten-Spezifikation als abgelöst markiert
 
 ### 2026-10-28
 
 - **chore: Git wiederhergestellt** — Lokale Kopie nach Umzug (OneDrive → `C:\Dev\Lernassistent`) war ohne `.git`; seit April ungepushte Änderungen (Copyright-Köpfe, LICENSE, Nutzungsbedingungen) als eigener Commit erfasst
-- **feat: Lernseiten** — Neuer Reiter unter Decks, `/lernseiten` (Fächer), `/lernseiten/[fach]` (Themen nach Sektion + Spickzettel), `/lernseiten/[fach]/[thema]` (Bausteine, Lösungsschritte mit Stepper und Zuordnung, Analyse, Lösungsfilm, Selbsttest, Merksätze); Kurzlinks `/MSTW`, `/mstw`
-- **feat: Inhaltsformat** — JSON unter `content/lernseiten/`, Zod-Prüfung, `npm run lernseiten:pruefen` (läuft auch im Docker-Build), Format in `docs/lernseiten-format.md`
-- **feat: MSTW 04** — Erstes Thema «Prädikatenlogik: Sätze modellieren» (S1-V4&5, Bsp. 4.3, 4.6)
-- **chore: Pakete** — `remark-math`, `rehype-katex`, `katex`, `rehype-raw`, `rehype-sanitize`; dev: `tsx` (Tests: `npm test`)
+- **feat: Lernseiten** — Neuer Reiter unter Decks, `/lernseiten` (Fächer), `/lernseiten/[fach]` (Themen nach Sektion + Spickzettel), `/lernseiten/[fach]/[thema]` (Bausteine, Lösungsschritte mit Stepper und Zuordnung, Analyse, Lösungsfilm, Selbsttest, Merksätze); Kurzlinks `/MSTW`, `/mstw`. *Am 29.10. durch den Lernpfad ersetzt (Adressen und Kurzlinks bleiben).*
+- **feat: Inhaltsformat** — ~~JSON unter `content/lernseiten/`, Format in `docs/lernseiten-format.md`~~ *Abgelöst am 29.10.: Themenseiten sind fertige HTML-Dateien, `fach.json` hält den Pfad, Format in `docs/lernpfad-format.md`.* `npm run lernseiten:pruefen` (läuft auch im Docker-Build) gibt es weiterhin.
+- **feat: MSTW 04** — Erstes Thema «Prädikatenlogik: Sätze modellieren» (S1-V4&5, Bsp. 4.3, 4.6), heute Station 06
+- **chore: Pakete** — `katex`; dev: `tsx` (Tests: `npm test`). *`remark-math`, `rehype-katex`, `rehype-raw` und `rehype-sanitize` am 29.10. wieder entfernt.*
 - **Review (review-orchestrator):** keine kritischen/hohen Befunde; eingearbeitet: Absturzgefahr `CSS.escape` beim Server-Rendering, `LernInhalt` ohne `"use client"` (Fachseite 267 → 96 kB JS), abschliessende Tag-Liste im HTML-Filter, Fokus-Führung und Live-Regionen (Übung, Stepper, Film, Selbsttest), Prüfmodul getrennt (kein `app/` im Image), Metadaten erst nach Login
 - **Fachprüfung MSTW 04:** Endformeln bestätigt; 13 Befunde (1 fachlicher Fehler in Quizfrage 8) eingearbeitet
-- **Bekannt:** KaTeX-Advisory GHSA-238p-pmpm-9mq7 (low, nur mit vorhandener Prototype-Pollution ausnutzbar; Fix erst in KaTeX 0.19, `rehype-katex` verlangt ^0.16). Mobile-Leiste hat 7 Einträge mit 10-px-Beschriftung (bei 320 px knapp, kein Überlauf)
+- **Bekannt:** KaTeX-Advisory GHSA-238p-pmpm-9mq7 (low, nur mit vorhandener Prototype-Pollution ausnutzbar; Fix erst in KaTeX 0.19; seit 29.10. ohne `rehype-katex`, Stand siehe «Offene Punkte»). Mobile-Leiste hat 7 Einträge mit 10-px-Beschriftung (bei 320 px knapp, kein Überlauf)
 - **Bekannt:** `prisma migrate deploy` scheitert auf einer frischen Datenbank (`20260405_add_contact_email` sortiert vor `20260405_add_contact_messages`); Produktion nicht betroffen
 
 ### 2026-04-06

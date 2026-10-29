@@ -44,6 +44,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Laplace, Ereignisbäume und bedingte Wahrscheinlichkeit · MSTW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
   <link rel="stylesheet" href="/lernpfad/lernpfad.css">
   <link rel="next" href="/lernseiten/mstw/09-kombinatorik" title="Kombinatorik">
   <style>/* optional: nur Klassen mit Themen-Präfix, z. B. .t08-… */</style>
@@ -71,7 +72,8 @@ Regeln:
 
 - `data-fach` = Fachordner (`mstw`), `data-thema` = Dateiname ohne `.html` (der Slug aus `fach.json`).
 - `<title>`: Titel der Station aus `fach.json`, dann ` · MSTW`.
-- `<link rel="next">`: nächste Station laut `pfad` in `fach.json`, `title` = deren Titel. Daraus baut die Abschluss-Box den Knopf «Nächste Station». Bei der letzten Station weglassen.
+- Theme-Startskript: die `<script>`-Zeile im `<head>` unverändert aus `_vorlage.html` übernehmen. Sie setzt das gespeicherte Farbschema (`html[data-theme]`), bevor die Seite gezeichnet wird; ohne sie flackert der Dunkelmodus beim Laden. Gesperrter Speicher bricht nichts. Die Prüfung verlangt sie.
+- `<link rel="next">`: nächste Station laut `pfad` in `fach.json`, `title` = deren Titel. Daraus baut die Abschluss-Box den Knopf «Nächste Station». Bei der letzten Station weglassen. Die Prüfung vergleicht `href` und `title` mit `fach.json`.
 - `lernpfad.js` steht am Ende von `<body>`, **danach** das seiteneigene Script. Vorher gibt es `window.Lernpfad` noch nicht.
 - Inhalt in `<main class="wrap">`. Kopfleiste (oben) und Abschluss-Box (unten) fügt `lernpfad.js` selbst ein. Schreib sie nicht selbst.
 - **Keine externen Ressourcen:** kein CDN, keine Google Fonts, keine externen Bilder, Videos, iframes oder `@import`. Grafiken als Inline-SVG. Links (`<a href="https://…">`) auf Quellen sind erlaubt. `npm run lernseiten:pruefen` bricht sonst ab.
@@ -344,7 +346,7 @@ Alle Bausteine nehmen als erstes Argument ein Element oder einen CSS-Selektor (`
 
 Ohne Aufruf, sobald das DOM bereit ist:
 
-- Kopfleiste oben einfügen: «← Lernpfad MSTW» nach `/lernseiten/<fach>`, Umschalter Hell / Dunkel / Auto (gespeichert in `localStorage`, funktioniert auch bei gesperrtem Speicher).
+- Kopfleiste oben einfügen: «← Lernpfad MSTW» nach `/lernseiten/<fach>`, Umschalter Hell / Dunkel / Auto (gespeichert in `localStorage`, funktioniert auch bei gesperrtem Speicher). Das gespeicherte Schema setzt schon das Theme-Startskript im `<head>`, `lernpfad.js` übernimmt es.
 - Aktiven Abschnitt in `nav.steps` markieren (`.aktiv`, `aria-current`).
 - Formeln setzen, alle `[data-link]` verknüpfen.
 - Fortschritt «begonnen» melden (ausser schon erledigt).
@@ -361,7 +363,7 @@ Lernpfad.formeln(el);
 
 ### 9.3 `Lernpfad.verknuepfen(root)`
 
-Aktiviert Verknüpfungen: Alle Elemente mit gleichem `data-link` im selben Bereich leuchten zusammen auf (Hover, Fokus, Antippen). Bereich = nächstes Element mit `data-link-bereich`, sonst die `section`. `tabindex="0"` bekommen nur Elemente, die ein Gegenstück haben. `formeln()` ruft das selbst auf.
+Aktiviert Verknüpfungen: Alle Elemente mit gleichem `data-link` im selben Bereich leuchten zusammen auf (Hover, Fokus, Antippen). Bereich = nächstes Element mit `data-link-bereich`, sonst die `section`. `tabindex="0"` bekommen nur Elemente, die ein Gegenstück haben und nicht in `aria-hidden="true"` liegen. Formelteile aus `\htmlData{link=…}` setzt KaTeX in den versteckten Teil (`.katex-html`): Sie bekommen keinen Tabstopp, leuchten aber bei Hover und Antippen und wenn ihr Gegenstück im Text den Fokus hat. Verknüpfe darum jedes Formelteil mit einem Gegenstück im Text. `formeln()` ruft das selbst auf.
 
 ```html
 <div data-link-bereich>
@@ -442,7 +444,7 @@ Felder einer Szene:
 | `say` | Erzähltext (HTML, `aria-live`) | nein |
 | `end` | `true`: Ende-Link zum Selbsttest zeigen (sonst bei der letzten Szene) | nein |
 
-Verhalten: Fehlende `ph`, `sent`, `dict`, `f` erben vom Vorgänger (Startwerte `-1`, `"all"`, `0`, `""`). Play startet sofort beim ersten Inhaltsschritt (Szene 0 ist die Einleitung). Der Balken zeigt die Restzeit. Dauer pro Szene = max(3.5 s; Zeichen von `say` × 45 ms) / Tempo. Steuerung: Zurück, Play/Pause, Vor, Schieber, Tempo (langsam 0.7, normal 1, schnell 1.5). Am Ende «↺ Nochmals». Rückgabe: `{ abspielen(), pause(), gehe(n) }`.
+Verhalten: Fehlende `ph`, `sent`, `dict`, `f` erben vom Vorgänger (Startwerte `-1`, `"all"`, `0`, `""`). «Abspielen» startet sofort beim ersten Inhaltsschritt (Szene 0 ist die Einleitung). Der Balken zeigt die Restzeit. Dauer pro Szene = max(3.5 s; Zeichen von `say` × 45 ms) / Tempo. Steuerung: Zurück, Abspielen/Pause, Vor, Schieber, Tempo (langsam 0.7, normal 1, schnell 1.5). Am Ende «↺ Nochmals». Rückgabe: `{ abspielen(), pause(), gehe(n) }`.
 
 ```js
 const T = String.raw, NW = (s) => '<span class="nw">' + s + "</span>";
@@ -469,7 +471,9 @@ Alle Fragen sichtbar wie im Vorbild, je eine Antwort, sofort ✓/✗ mit Erklär
 |------|-----|---------|-----------|
 | `fragen` | Objekt[] | ja | `{ q, o, a, e }`: Frage (HTML), Optionen (HTML[]), Index der richtigen Option ab 0, Erklärung |
 
-Rückgabe: `{ neuStarten() }`. Ereignis `lernpfad:selbsttest` mit `detail: { richtig, gesamt }`. Pro Seite genau ein Selbsttest in `<section id="test">`.
+Rückgabe: `{ neuStarten() }`. Pro Seite genau ein Selbsttest in `<section id="test">`.
+
+Ereignis `lernpfad:selbsttest` (bubbelt) mit `detail: { richtig, gesamt, gespeichert, httpStatus }`. Es kommt, sobald die Fortschritts-API geantwortet hat: `gespeichert` ist `true`, wenn das Ergebnis gespeichert ist; `httpStatus` ist der Status der Antwort (`401` = Anmeldung abgelaufen, `0` = keine Antwort, z. B. offline). Die Abschluss-Box reagiert selbst darauf (siehe [Abschnitt 10](#10-fortschritt-und-abschluss-box)).
 
 ```js
 Lernpfad.selbsttest("#selbsttest", {
@@ -589,9 +593,17 @@ Lernpfad.auswahl("#frage-1", {
 | `Lernpfad.fortschritt.laden()` | Promise mit dem Array `[{ thema, status, quizRichtig, quizGesamt, aktualisiert }]` des Fachs; bei Fehlern `[]` |
 | `Lernpfad.fortschritt.melden({ status, quizRichtig, quizGesamt })` | Promise `true`/`false`. `status`: `"begonnen"` oder `"erledigt"`. Quiz-Werte nur zusammen. «erledigt» wird nie zurückgestuft. |
 
-Fehler (401, offline, Vorschau) fängt der Baukasten still ab. Die Seite bricht nie. Du musst in der Regel nichts selbst melden: Laden meldet «begonnen», der Selbsttest meldet sein Ergebnis, die Abschluss-Box meldet «erledigt».
+Fehler (401, offline, Vorschau) fängt der Baukasten ab, die Seite bricht nie. Du musst in der Regel nichts selbst melden: Laden meldet «begonnen», der Selbsttest meldet sein Ergebnis, die Abschluss-Box meldet «erledigt».
 
 Die Abschluss-Box zeigt den Stand (offen, begonnen, erledigt, Selbsttest-Ergebnis), den Knopf «Thema als erledigt markieren», «← Zurück zum Lernpfad» und, falls `<link rel="next">` gesetzt ist, «Nächste Station: … →».
+
+Scheitert das Speichern, sagt die Box es sichtbar (Meldung in einer Live-Region):
+
+| Fall | Anzeige |
+|------|---------|
+| Selbsttest-Ergebnis nicht gespeichert | «Selbsttest: x / y richtig · nicht gespeichert» und Knopf «↻ Erneut speichern» (sendet das Ergebnis nochmals) |
+| Antwort 401 (Anmeldung abgelaufen) | zusätzlich Link «Neu anmelden (neuer Tab)» auf `/login`. Im neuen Tab bleibt das Ergebnis auf der Seite stehen; nach dem Anmelden «Erneut speichern» klicken. |
+| «Erledigt» nicht gespeichert | Fehlermeldung, der Knopf bleibt aktiv; bei 401 ebenfalls «Neu anmelden». Gelingt «erledigt», ist ein offenes Selbsttest-Ergebnis mitgespeichert. |
 
 ## 11. Themeneigene Interaktionen
 
@@ -603,7 +615,7 @@ Für Dinge, die der Baukasten nicht hat (Baum zum Durchklicken, Vierfeldertafel 
 4. **Nur Farben aus `:root`** (`var(--accent)`, `var(--ok)`, `var(--s2)` …), keine festen Farben, kein `fill="#…"`. Dann funktionieren hell und dunkel ohne Zusatzarbeit.
 5. **Zuerst Hilfsklassen nutzen** ([8.11](#811-hilfsklassen-für-themeneigene-interaktionen)): `.baum`, `.vierfelder`, `.wahrheitstabelle`, `.tabelle`, `.rechner`/`.regler`, `.diagramm`.
 6. **Nach dynamischem Inhalt** `Lernpfad.formeln(element)` aufrufen (setzt Formeln und Verknüpfungen).
-7. **Keine Bibliotheken, keine externen Ressourcen**, kein `fetch` ausser über `Lernpfad.fortschritt`. Kein `localStorage` für Lerninhalte.
+7. **Keine Bibliotheken, keine externen Ressourcen**, kein `fetch` ausser über `Lernpfad.fortschritt`. Kein `localStorage` für Lerninhalte. Die Prüfung meldet externe Adressen in Inline-Scripts (`fetch`, `import`, `.src` …), und die Content-Security-Policy der Themenseiten blockiert fremde Server im Browser.
 8. **Breite:** alles muss bei 320 px ohne seitliches Scrollen funktionieren. Breite Tabellen in `.tablebox`, breite Formeln auf `.board`, SVG mit `viewBox` (skaliert mit).
 9. **Bewegung:** Animationen nur mit `transition`/`animation` in CSS. `lernpfad.css` schaltet sie bei «Bewegung reduzieren» ab; eigene JS-Animationen prüfen `matchMedia("(prefers-reduced-motion: reduce)")`.
 10. **Bedienung:** echte `<button type="button">`, `<input>`, `<label for>`; Zustände mit `aria-pressed` oder `aria-expanded`; Rückmeldungen in einem Element mit `aria-live="polite"`.
@@ -638,8 +650,8 @@ Die Bausteine erfüllen das bereits. Für eigenen Inhalt gilt dasselbe:
 ## 13. Prüfliste vor der Abgabe
 
 - [ ] Datei heisst `content/lernseiten/mstw/<slug>.html`, Slug wie in `fach.json`.
-- [ ] Pflicht-Gerüst vollständig: doctype, `lang="de-CH"`, charset, viewport, `<title>`, `lernpfad.css`, `data-fach="mstw"`, `data-thema="<slug>"`, `lernpfad.js` am Ende von `<body>`, danach das eigene Script.
-- [ ] `<link rel="next">` zeigt auf die nächste Station aus `fach.json` (bei der letzten Station weggelassen).
+- [ ] Pflicht-Gerüst vollständig: doctype, `lang="de-CH"`, charset, viewport, `<title>`, Theme-Startskript im `<head>`, `lernpfad.css`, `data-fach="mstw"`, `data-thema="<slug>"`, `lernpfad.js` am Ende von `<body>`, danach das eigene Script.
+- [ ] `<link rel="next">` zeigt auf die nächste Station aus `fach.json`, `title` = deren Titel (bei der letzten Station weggelassen).
 - [ ] Keine externen Ressourcen, keine Folien-Screenshots, keine wörtlichen Folientexte.
 - [ ] `npm run lernseiten:pruefen` meldet für die Seite keine Fehler.
 - [ ] Vorschau (`node scripts/lernpfad-vorschau.mjs --port <port>`): keine Fehler in der Konsole, keine `[Lernpfad]`-Meldungen.

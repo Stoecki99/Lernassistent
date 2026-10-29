@@ -66,6 +66,7 @@ KI-gestützte Lernplattform für Studierende. Karteikarten mit Spaced Repetition
 - CORS nur für eigene Domain erlauben
 - Kein `$queryRaw` ohne Parametervalidierung — Prisma-Standard-Methoden bevorzugen
 - Kein `dangerouslySetInnerHTML` ohne explizite Sanitization
+  - Ausnahme: `components/features/lernseiten/ThemaWahl.tsx` (`ThemaStart`) setzt eine feste Konstante (Theme-Startskript ohne Benutzereingaben) per `dangerouslySetInnerHTML`. Keine weiteren Ausnahmen ohne Rücksprache.
 - Passwort-Hash in `select`-Statements immer explizit ausschliessen
 
 ### Pflicht-Env-Variablen
