@@ -5,6 +5,7 @@
 // Badge-Vergabe-Logik: Prueft Bedingungen und vergibt neue Badges.
 
 import { prisma } from "@/lib/prisma"
+import { achievementStats } from "@/lib/leitstand"
 
 interface AwardedBadge {
   name: string
@@ -81,10 +82,12 @@ interface UserBadgeStats {
   totalCardsCreated: number
   totalQuizzes: number
   hasPerfectQuiz: boolean
+  /** Leitstand: achievements aller abgeschlossenen Läufe mit neuem Startwert (Spezifikation 4.7) */
+  leitstandAchievements: Set<string>
 }
 
 async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
-  const [user, totalReviews, totalCardsCreated, quizStats] = await Promise.all([
+  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { streak: true },
@@ -99,6 +102,10 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
       where: { userId },
       select: { totalQuestions: true, correctAnswers: true },
     }),
+    prisma.simulationRun.findMany({
+      where: { userId, status: "abgeschlossen", seedReused: false },
+      select: { status: true, seedReused: true, scoreDetail: true },
+    }),
   ])
 
   const totalQuizzes = quizStats.length
@@ -112,6 +119,7 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
     totalCardsCreated,
     totalQuizzes,
     hasPerfectQuiz,
+    leitstandAchievements: achievementStats(simulationRuns),
   }
 }
 
@@ -133,6 +141,16 @@ function evaluateCondition(condition: string, stats: UserBadgeStats): boolean {
       return stats.hasPerfectQuiz
     case "cards_studied_500":
       return stats.totalReviews >= 500
+    // Leitstand (3.13): der Rechenkern liefert die erfuellten Bedingungen je Lauf
+    case "leitstand_einfuehrung":
+    case "leitstand_ernstfall":
+    case "leitstand_drei_sterne":
+    case "leitstand_punktlandung":
+    case "leitstand_klartext":
+    case "leitstand_teamgeist":
+    case "leitstand_risikoprofi":
+    case "leitstand_null_fehler":
+      return stats.leitstandAchievements.has(condition)
     default:
       return false
   }

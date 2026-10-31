@@ -110,11 +110,18 @@ export function scoreState(state: SimState, scenario: Scenario): RunResult {
   const endDay = endDayDone ?? state.tick / 2
 
   let r = restmaengel(state)
+  // Anteil des erledigten Planaufwands; bei Abbruch skaliert er die Kostenpunkte (3.13, Ergänzung vom 31.10.2026)
+  let erledigtAnteil = 1
   if (aborted) {
     // Abbruch: +1 Restmangel je 8 h Restaufwand (3.13)
     let rest = 0
-    for (const id of ctx.taskIds) rest += state.tasks[id].remaining
+    let plan = 0
+    for (const id of ctx.taskIds) {
+      rest += state.tasks[id].remaining
+      plan += ctx.tasks[id].effortHours
+    }
     r += rest / 8
+    erledigtAnteil = plan > 0 ? clamp(1 - rest / plan, 0, 1) : 0
   }
   const si = currentSi(state, ctx)
   const meanMot = mean(state.history.map((h) => h.motivation), 100)
@@ -125,7 +132,8 @@ export function scoreState(state: SimState, scenario: Scenario): RunResult {
     scoreTermin(endDay, scenario.calendar.targetDay, { intro, aborted, shifted: state.flags.terminVerschoben === true }),
   )
   const kosten = round(
-    scoreKosten(state.finance.ac, state.finance.budget - state.finance.budgetSupplements, state.finance.budgetSupplements),
+    scoreKosten(state.finance.ac, state.finance.budget - state.finance.budgetSupplements, state.finance.budgetSupplements) *
+      erledigtAnteil,
   )
   const qualitaet = round(scoreQualitaet(r))
   const stakeholder = round(scoreStakeholder(si, aborted))

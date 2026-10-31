@@ -5,8 +5,10 @@
 // Öffentliche Schnittstelle des Rechenkerns (Spezifikation 4.3). Nur diese Datei importieren.
 
 import { getCtx } from "./context"
-import { fitDetail } from "./work"
-import type { PersonId, Scenario, SimState, TaskId } from "./types"
+import { fitDetail, isWorkable } from "./work"
+import { evalCondition, newMemo } from "./events"
+import { changeRequestAvailable } from "./report"
+import type { Condition, PersonId, Scenario, SimState, TaskId } from "./types"
 
 export { ENGINE_VERSION, DEFAULT_PARAMS, resolveParams } from "./params"
 export { SimError, type SimErrorCode } from "./errors"
@@ -19,7 +21,7 @@ export { nextRandom } from "./rng"
 export { dayOf, weekOf, weekdayOf, halfOf, tauAfter, tickOf, formatTick, formatTickShort } from "./calendar"
 export { loadScenario, SCENARIO_IDS } from "./scenarios"
 export type * from "./types"
-export { AREAS } from "./types"
+export { AREAS, COST_CATEGORIES, HOUR_CATEGORIES } from "./types"
 
 /**
  * Passung einer Person auf einem Vorgang (3.4) mit dem aktuellen Profil.
@@ -32,4 +34,21 @@ export function fitFor(state: SimState, scenario: Scenario, personId: PersonId, 
   if (!person || !task) return 0
   const colleagues = team.filter((id) => id !== personId && state.people[id]).map((id) => state.people[id].profile)
   return fitDetail(person.profile, task.profile, colleagues, ctx.params).fit
+}
+
+// ---------- Ergänzung AP4 (Oberfläche): reine Lesehilfen, ändern den Zustand nicht ----------
+
+/** Bedingung auswerten (4.3 Condition), z. B. für eingeblendete Hinweise mit `{ state: … }`. */
+export function evaluateCondition(state: SimState, scenario: Scenario, condition: Condition): boolean {
+  return evalCondition(state, getCtx(scenario), condition, newMemo())
+}
+
+/** Ist ein Änderungsantrag im Statusbericht wählbar (2.9, 3.11)? */
+export function isChangeRequestAvailable(state: SimState, scenario: Scenario, crId: string): boolean {
+  return changeRequestAvailable(state, getCtx(scenario), crId)
+}
+
+/** Ist ein Vorgang im aktuellen Takt bearbeitbar (3.2: Vorgänger fertig, nicht blockiert, Phasentor)? */
+export function isTaskWorkable(state: SimState, scenario: Scenario, taskId: TaskId): boolean {
+  return isWorkable(state, getCtx(scenario), taskId, state.tick)
 }

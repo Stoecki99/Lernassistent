@@ -35,7 +35,7 @@ SimulTrain® ist ein geschütztes Produkt der STS SA. Das Repo ist öffentlich. 
 | Frei erfundene Figuren (Schweizer Namen, gemischt), fiktive Gemeinde Wolkenried | Reale Organisationen, Firmen, Produkte, Personen |
 | Eigene Wörter für alle Texte | Wörtliche oder sinngemässe Übernahme von Ereignissen aus dem Vorbild |
 
-Ein Test (Abschnitt 5.6) prüft die Szenario-Dateien auf eine Sperrliste (Figurennamen und Begriffe des Vorbilds). Der Szenario-Autor prüft zusätzlich, dass fiktive Firmennamen («Sorbus Informatik AG», «Wolkenrieder Bote», «Architekturforum Wolkenried», «Gemeinde Seeweid») nicht real existierenden Organisationen gleichen; sonst umbenennen.
+Ein Test (Abschnitt 5.6) prüft die Szenario-Dateien auf eine Sperrliste (Figurennamen und Begriffe des Vorbilds). Der Szenario-Autor prüft zusätzlich, dass fiktive Firmennamen («Lärchwerk Informatik AG», «Wolkenrieder Bote», «Architekturforum Wolkenried», «Gemeinde Seeweid») nicht real existierenden Organisationen gleichen; sonst umbenennen.
 
 ### 1.3 Lernziele
 
@@ -104,7 +104,7 @@ Der Gemeinderat hat das Projekt **«Onlineschalter Baugesuch»** beschlossen:
 | Zirkulation | Digitale Weiterleitung an die Fachstellen mit Fristen und Stellungnahmen |
 | Gebühren | Gebührenberechnung nach Tarif, Bezahlung online oder per QR-Rechnung |
 
-Die Plattform liefert die fiktive **Sorbus Informatik AG** als Standardprodukt, das konfiguriert und an die vorhandene Bauverwaltungssoftware angebunden wird (Werkvertrag, Festpreis für die Plattform, Stundensätze für Anpassungen; im Leitstand zählen nur die Stunden).
+Die Plattform liefert die fiktive **Lärchwerk Informatik AG** als Standardprodukt, das konfiguriert und an die vorhandene Bauverwaltungssoftware angebunden wird (Werkvertrag, Festpreis für die Plattform, Stundensätze für Anpassungen; im Leitstand zählen nur die Stunden).
 
 ### 2.2 HERMES-Einordnung
 
@@ -128,7 +128,7 @@ Die Plattform liefert die fiktive **Sorbus Informatik AG** als Standardprodukt, 
 | Ebene | Rolle | Besetzt durch |
 |---|---|---|
 | Steuerung | Auftraggeberin, Vorsitz Projektausschuss | Franziska Bühlmann, Gemeinderätin Ressort Bau und Planung |
-| Steuerung | Projektausschuss (Lenkungsausschuss) | Bühlmann (Vorsitz), Claudia Wyss, Beat Imhof, Peter Schuler; Daniel Frei beratend |
+| Steuerung | Projektausschuss (Lenkungsausschuss) | Bühlmann (Vorsitz), Claudia Wyss, Beat Imhof, Silvan Schuler; Daniel Frei beratend |
 | Steuerung | Phasenfreigabe, Budgetnachtrag, Änderungsanträge über CHF 5'000 | Gemeinderat (Gesamtbehörde) |
 | Führung | Projektleitung | **die Spielerin oder der Spieler** (neu in der Gemeinde, Stelle «Projekte und Digitalisierung», direkt der Gemeindeschreiberin unterstellt) |
 | Führung | Begleitung | Mia Baumann, Coach (gibt die Rückmeldungen zu Entscheiden) |
@@ -144,9 +144,9 @@ Die Plattform liefert die fiktive **Sorbus Informatik AG** als Standardprodukt, 
 | S03 | Gemeinderat (Gesamtbehörde) | 5 | 2 | 10 | 65 | Verlässliche Berichte, Budget einhalten |
 | S04 | Claudia Wyss, Gemeindeschreiberin, Vorgesetzte der Projektleitung | 4 | 3 | 12 | 70 | Ordnung, Personalrecht, keine Eskalationen |
 | S05 | Beat Imhof, Bauverwalter, Linienvorgesetzter von Martin und Thomas | 4 | 4 | 16 | 60 | Tagesgeschäft läuft, sein Amt wird entlastet |
-| S06 | Peter Schuler, Leiter Zentrale Dienste, Linienvorgesetzter von Jasmin | 3 | 3 | 9 | 70 | Stabiler Betrieb, eigene Projekte nicht gefährden |
-| S07 | Monika Steiner, Leiterin Finanzen, Linienvorgesetzte von Reto | 3 | 2 | 6 | 70 | Saubere Gebührenabrechnung, Monatsabschluss |
-| S08 | Daniel Frei, Kundenverantwortlicher Sorbus Informatik AG | 3 | 4 | 12 | 75 | Marge, Referenzkunde, klare Aufträge |
+| S06 | Silvan Schuler, Leiter Zentrale Dienste, Linienvorgesetzter von Jasmin | 3 | 3 | 9 | 70 | Stabiler Betrieb, eigene Projekte nicht gefährden |
+| S07 | Monika Steiner, Leiterin Finanzen, Linienvorgesetzte von Urs | 3 | 2 | 6 | 70 | Saubere Gebührenabrechnung, Monatsabschluss |
+| S08 | Daniel Frei, Kundenverantwortlicher Lärchwerk Informatik AG | 3 | 4 | 12 | 75 | Marge, Referenzkunde, klare Aufträge |
 | S09 | Architekturforum Wolkenried (Verein der Planungsbüros) | 3 | 5 | 15 | 55 | Einfache Eingabe, schnelle Bewilligung |
 | S10 | Bevölkerung (Bauwillige) | 2 | 3 | 6 | 60 | Verständlich, auch ohne Computer möglich |
 | S11 | Fachstellen (Feuerpolizei, Umwelt, Tiefbau, kantonale Stellen) | 3 | 3 | 9 | 60 | Wenig Mehraufwand, verlässliche Fristen |
@@ -224,11 +224,11 @@ Fast kritisch: V05 (Schnittstelle, 1 Tag Puffer, grösstes Risiko) und V15 (Schu
 
 | Besetzung | Ende | Kosten AC | CPI |
 |---|---|---|---|
-| Musterplan, reichlich besetzt (Anhang 8.2) | Tag 33.5 | CHF 166'700 | 0.97 |
-| Schlanker Plan, gute Passung, wenige Personen | Tag 40.0 | CHF 155'500 | 1.04 |
-| Naiv: geplante Anzahl Personen, ohne Pensum und Konflikte zu beachten | Tag 51 | CHF 158'000 | 1.03 |
+| Musterplan, reichlich besetzt (Anhang 8.2, Stand AP5) | Tag 35.0 | CHF 133'900 | 1.21 |
+| Besetzung des Roboters «naiv» (5.4, Stand AP5) | Tag 38.0 | CHF 138'500 | 1.17 |
+| Naiv wörtlich: geplante Anzahl Personen, ohne Pensum und Überschneidungen zu beachten | Tag 52.0 | CHF 138'100 | 1.17 |
 
-Mit Ereignissen, Lernkurve, Motivation und Korrekturzeit kommen erfahrungsgemäss 2–5 Tage dazu. Eine gute Strategie landet damit bei Tag 37–40 und CPI 0.93–1.00 (**knapp machbar**), eine naive deutlich darüber. AP5 bestätigt das mit den Strategie-Robotern.
+Nachgerechnet mit dem Rechenkern (AP5, `ENGINE_VERSION` 2, Sätze aus 2.5). Die Plansätze enthalten Einarbeitung und Abstimmung, darum liegt der CPI ohne Störungen deutlich über 1. Mit Ereignissen, Lernkurve, Motivation, Reviews, Massnahmen und Korrekturzeit kommen rund 4–5 Tage und gut 20 % Kosten dazu: Der Roboter «gut» landet im Median bei Tag 39.5 und CPI 0.93 (**knapp machbar**), der Roboter «naiv» bei Tag 47 (Abstimmungsbericht AP5, 5.4). Die früheren Werte dieser Tabelle (Tag 33.5 / 40.0 / 51) liessen sich nicht nachrechnen; Ursachen im Abstimmungsbericht.
 
 **Planwert-Kurve (PV kumuliert, Frühtermine, linear über die Dauer):**
 
@@ -240,23 +240,23 @@ Diese Werte sind Referenzwerte für die Tests (Abschnitt 5.2).
 
 ### 2.5 Team
 
-Profil in der Reihenfolge BAU, ENT, DAT, UX, KOM. Stundensatz zu Vollkosten (intern) bzw. Verrechnungssatz (Lieferant, Beratung). Überstunden-Toleranz: wie viele Tage am Stück Überstunden ohne Motivationsverlust (`tief` 2, `mittel` 5, `hoch` 8).
+Profil in der Reihenfolge BAU, ENT, DAT, UX, KOM. Stundensatz zu Vollkosten (intern) bzw. Verrechnungssatz (Lieferant, Beratung); AP5 hat alle Sätze um 15 % gesenkt (auf 5 gerundet), weil die Plansätze aus 2.4 Einarbeitung und Abstimmung bereits enthalten. Überstunden-Toleranz: wie viele Tage am Stück Überstunden ohne Motivationsverlust (`tief` 2, `mittel` 5, `hoch` 8).
 
 | ID | Name, Alter | Rolle | Herkunft (Vorgesetzte) | Pensum | Satz CHF | BAU | ENT | DAT | UX | KOM | Start-Motivation | Bedürfnisse | Eigenschaften | Überstunden |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| P01 | Seraina Caflisch, 44 | Fachverantwortliche Baugesuche | Kernteam | 100 % | 115 | 6 | 0 | 2 | 3 | 4 | 100 | Anerkennung, Sicherheit | – | mittel |
-| P02 | Luca Bernasconi, 36 | Informatikverantwortlicher der Gemeinde | Kernteam | 100 % | 125 | 2 | 3 | 5 | 2 | 2 | 95 | Autonomie, Entwicklung | – | hoch |
-| P03 | Aylin Demir, 31 | Organisationsentwicklerin Gemeindekanzlei | Kernteam | 80 % | 110 | 3 | 1 | 3 | 4 | 3 | 105 | Zugehörigkeit, Entwicklung | verzettelt | mittel |
-| P04 | Martin Zgraggen, 61 | Sachbearbeiter Baugesuche | Linie Bauamt (Beat Imhof) | 60 % | 95 | 5 | 0 | 1 | 1 | 2 | 85 | Klarheit, Sicherheit | gründlich | tief |
-| P05 | Thomas Kälin, 50 | Bauinspektor | Linie Bauamt (Beat Imhof) | 40 % | 120 | 6 | 0 | 1 | 0 | 3 | 90 | Anerkennung, Autonomie | – | tief |
-| P06 | Nadia Rossi, 39 | Kommunikationsverantwortliche | Linie Kanzlei (Claudia Wyss) | 50 % | 105 | 1 | 0 | 0 | 3 | 6 | 100 | Anerkennung, Zugehörigkeit | schnell | mittel |
-| P07 | Jasmin Huber, 24 | Applikationsbetreuerin | Linie Informatik (Peter Schuler) | 60 % | 90 | 1 | 3 | 3 | 4 | 2 | 105 | Entwicklung, Anerkennung | lernt schnell | hoch |
-| P08 | Reto Ammann, 47 | Fachspezialist Gebühren und Debitoren | Linie Finanzen (Monika Steiner) | 40 % (Tag 18–20 und 38–40: 20 %) | 100 | 3 | 0 | 4 | 0 | 2 | 90 | Klarheit, Sicherheit | gründlich | tief |
-| P09 | Marco Pfister, 42 | Leitender Entwickler | Lieferant Sorbus (Daniel Frei) | 100 % | 185 | 2 | 6 | 4 | 2 | 2 | 95 | Autonomie, Anerkennung | schnell | hoch |
-| P10 | Elena Kovačević, 33 | Schnittstellenentwicklerin | Lieferant Sorbus (Daniel Frei) | 100 % | 175 | 0 | 5 | 6 | 1 | 1 | 100 | Klarheit, Autonomie | gründlich | mittel |
-| P11 | Jonas Brunner, 29 | Gestalter Benutzerführung | Lieferant Sorbus (Daniel Frei) | 80 % | 160 | 1 | 3 | 0 | 6 | 3 | 100 | Entwicklung, Zugehörigkeit | – | mittel |
-| P12 | Sabine Wäfler, 53 | Beraterin Datenschutz und Informationssicherheit | Beratung (eigenes Büro) | 40 % | 190 | 2 | 1 | 5 | 1 | 4 | 95 | Autonomie, Anerkennung | gründlich | tief |
-| P13 | Ramon Gisler, 27 | Entwickler (nur über Ereignis E08) | Lieferant Sorbus (Daniel Frei) | 100 % | 180 | 1 | 5 | 4 | 1 | 0 | 95 | Entwicklung | schnell | hoch |
+| P01 | Seraina Caflisch, 44 | Fachverantwortliche Baugesuche | Kernteam | 100 % | 100 | 6 | 0 | 2 | 3 | 4 | 100 | Anerkennung, Sicherheit | – | mittel |
+| P02 | Luca Bernasconi, 36 | Informatikverantwortlicher der Gemeinde | Kernteam | 100 % | 105 | 2 | 3 | 5 | 2 | 2 | 95 | Autonomie, Entwicklung | – | hoch |
+| P03 | Aylin Demir, 31 | Organisationsentwicklerin Gemeindekanzlei | Kernteam | 80 % | 95 | 3 | 1 | 3 | 4 | 3 | 105 | Zugehörigkeit, Entwicklung | verzettelt | mittel |
+| P04 | Martin Zgraggen, 61 | Sachbearbeiter Baugesuche | Linie Bauamt (Beat Imhof) | 60 % | 80 | 5 | 0 | 1 | 1 | 2 | 85 | Klarheit, Sicherheit | gründlich | tief |
+| P05 | Thomas Kälin, 50 | Bauinspektor | Linie Bauamt (Beat Imhof) | 40 % | 100 | 6 | 0 | 1 | 0 | 3 | 90 | Anerkennung, Autonomie | – | tief |
+| P06 | Nadia Rossi, 39 | Kommunikationsverantwortliche | Linie Kanzlei (Claudia Wyss) | 50 % | 90 | 1 | 0 | 0 | 3 | 6 | 100 | Anerkennung, Zugehörigkeit | schnell | mittel |
+| P07 | Jasmin Huber, 24 | Applikationsbetreuerin | Linie Informatik (Silvan Schuler) | 60 % | 75 | 1 | 3 | 3 | 4 | 2 | 105 | Entwicklung, Anerkennung | lernt schnell | hoch |
+| P08 | Urs Ammann, 47 | Fachspezialist Gebühren und Debitoren | Linie Finanzen (Monika Steiner) | 40 % (Tag 18–20 und 38–40: 20 %) | 85 | 3 | 0 | 4 | 0 | 2 | 90 | Klarheit, Sicherheit | gründlich | tief |
+| P09 | Dario Pfister, 42 | Leitender Entwickler | Lieferant Lärchwerk (Daniel Frei) | 100 % | 155 | 2 | 6 | 4 | 2 | 2 | 95 | Autonomie, Anerkennung | schnell | hoch |
+| P10 | Elena Kovačević, 33 | Schnittstellenentwicklerin | Lieferant Lärchwerk (Daniel Frei) | 100 % | 150 | 0 | 5 | 6 | 1 | 1 | 100 | Klarheit, Autonomie | gründlich | mittel |
+| P11 | Jonas Brunner, 29 | Gestalter Benutzerführung | Lieferant Lärchwerk (Daniel Frei) | 80 % | 135 | 1 | 3 | 0 | 6 | 3 | 100 | Entwicklung, Zugehörigkeit | – | mittel |
+| P12 | Sabine Wäfler, 53 | Beraterin Datenschutz und Informationssicherheit | Beratung (eigenes Büro) | 40 % | 160 | 2 | 1 | 5 | 1 | 4 | 95 | Autonomie, Anerkennung | gründlich | tief |
+| P13 | Ramon Gisler, 27 | Entwickler (nur über Ereignis E08) | Lieferant Lärchwerk (Daniel Frei) | 100 % | 155 | 1 | 5 | 4 | 1 | 0 | 95 | Entwicklung | schnell | hoch |
 
 **Persönlichkeiten (Kurztexte; der Szenario-Autor schreibt sie in 3–5 Sätzen aus):**
 
@@ -269,8 +269,8 @@ Profil in der Reihenfolge BAU, ENT, DAT, UX, KOM. Stundensatz zu Vollkosten (int
 | P05 Thomas | Will als Fachautorität anerkannt werden und frei arbeiten. | Fachautorität bei den Fachstellen, direkt, entscheidet schnell. | Ungeduldig, Termine im Feld haben für ihn Vorrang. | Will keine. |
 | P06 Nadia | Will Anerkennung für ihre Texte, schätzt Teamgeist. | Schreibt verständlich, kennt die Lokalmedien. | Technik interessiert sie nicht; Ferien sind fest geplant (E21). | Kurz ja. |
 | P07 Jasmin | Will lernen und gelobt werden. | Neugierig, lernt schnell, kennt die Bedürfnisse junger Nutzer. | Wenig Erfahrung, unsicher bei Kritik. | Macht sie, um sich zu beweisen. |
-| P08 Reto | Braucht klare Vorgaben und Sicherheit. | Zahlengenau, kennt Tarife und Buchhaltung. | Nur 40 %, Monatsabschluss hat Vorrang. | Will keine. |
-| P09 Marco | Will technisch frei entscheiden und als Experte gelten. | Technisch stark, findet Lösungen, schnell. | Redet Fachleute in Grund und Boden, unterschätzt Verwaltungsabläufe; Konflikt mit Seraina (E07). | Ja, verrechnet den Zuschlag. |
+| P08 Urs | Braucht klare Vorgaben und Sicherheit. | Zahlengenau, kennt Tarife und Buchhaltung. | Nur 40 %, Monatsabschluss hat Vorrang. | Will keine. |
+| P09 Dario | Will technisch frei entscheiden und als Experte gelten. | Technisch stark, findet Lösungen, schnell. | Redet Fachleute in Grund und Boden, unterschätzt Verwaltungsabläufe; Konflikt mit Seraina (E07). | Ja, verrechnet den Zuschlag. |
 | P10 Elena | Braucht vollständige Grundlagen und Ruhe. | Präzise, dokumentiert sauber, wenig Fehler. | Blockiert bei Unklarheit (E14). | Kurz ja. |
 | P11 Jonas | Will Neues ausprobieren und im Team arbeiten. | Testet mit echten Nutzern, sprachlich stark. | Verliebt sich in Details. | Kurz ja. |
 | P12 Sabine | Will als Expertin respektiert werden und Termine selbst setzen. | Erfahren, klare Worte, kennt die Aufsicht. | Teuer, nur 40 %, nimmt kurzfristige Termine nicht an. | Will keine, verrechnet sie aber. |
@@ -298,15 +298,15 @@ Wahrscheinlichkeit W und Auswirkung A je 1–5, Risikowert = W × A. Fenster in 
 | R05 | Betrieb | Testumgebung beim Lieferanten fällt aus | 2 | 3 | 6 | 26–38 | Start | Ereignis E36 | M1 Notfallplan mit zweiter Umgebung (vermindern, CHF 1'500): A −2 · M2 Überwachung beauftragen (vermindern, CHF 300): W −1 |
 | R06 | Qualität | Formulare sind für Bauwillige unverständlich | 3 | 3 | 9 | 24–38 | Tag 8 oder E09 | V17 +24 h × A/3, S09 −8, S10 −8 | M1 Test mit Nutzern in V04 (vermindern, V04 +8 h): W −2 · M2 Hilfetexte im Formular (vermindern, V14 +4 h): A −1 |
 | R07 | Recht | Datenschutzauflagen kommen spät | 3 | 3 | 9 | 22–34 | Tag 5 oder E06 | Ereignis E27 | M1 Vorprüfung durch die Datenschutzstelle (vermindern, 4 h Sabine): W −2 |
-| R08 | Personal | Schlüsselperson fällt aus (Seraina) | 3 | 4 | 12 | 10–30 | Start | Ereignis E16 | M1 Stellvertretung einarbeiten (vermindern, 8 h Aylin): A −2 · M2 Wissen dokumentieren (vermindern, 4 h Seraina): A −1 |
+| R08 | Personal | Schlüsselperson fällt aus (Seraina) | 3 | 4 | 12 | 10–30 | Start | Ereignis E16 | M1 Stellvertretung einarbeiten (vermindern, 4 h Aylin): A −2 · M2 Wissen dokumentieren (vermindern, 4 h Seraina): A −1 |
 | R09 | Akzeptanz | Fachstellen nutzen die digitale Zirkulation nicht | 3 | 3 | 9 | 28–40 | Tag 16 oder E17 | V17 +16 h × A/3, S11 −5, S09 −5 | M1 Fachstellen in V10 einbeziehen (vermindern, 4 h Thomas): W −1 · M2 Kurzvideo für Fachstellen (vermindern, V13 +8 h): W −1 |
-| R10 | Lieferant | Schlüsselperson des Lieferanten fällt aus (Marco) | 2 | 4 | 8 | 25–35 | Tag 18 | Ereignis E29 | M1 Schlüsselpersonenklausel durchsetzen (übertragen, 0 CHF, S08 −2): A −2 · M2 Wissenstransfer an Elena (vermindern, 8 h Elena): A −1 |
+| R10 | Lieferant | Schlüsselperson des Lieferanten fällt aus (Dario) | 2 | 4 | 8 | 25–35 | Tag 18 | Ereignis E29 | M1 Schlüsselpersonenklausel durchsetzen (übertragen, 0 CHF, S08 −2): A −2 · M2 Wissenstransfer an Elena (vermindern, 8 h Elena): A −1 |
 
 Regeln: W und A nie unter 1 (ausser «vermeiden» mit W → 0, hier nicht vorgesehen). Jede Massnahme einmal. Massnahmen-Stunden werden im nächsten Takt bei der genannten Person gebucht (Stundenart `fuehrung`, Kosten = Stunden × Satz) und verringern deren Kapazität. Massnahmen, die einen Vorgang verlängern («V04 +8 h»), erhöhen Restaufwand **und** Plankosten nicht (sie sind Massnahmen, keine Basisplanänderung).
 
 ### 2.7 Ereigniskatalog
 
-Kanal: ✉ E-Mail, ☎ Anruf, 🚪 Besuch. Zeitpunkt «T4 VM» = Tag 4 Vormittag = Takt 6 (Formel: Takt = 2·(Tag − 1), +1 am Nachmittag). Bewertung der Optionen: **g** = gut, **m** = mittel, **s** = schlecht (für die Spielenden erst in der Rückmeldung sichtbar). «Std» = Standardentscheid bei Fristablauf. Wirkungen in Kurzform: «Mot» Motivation, «Abw.» Abwesenheit, «+16 h V09» Restaufwand.
+Kanal: ✉ E-Mail, ☎ Anruf, 🚪 Besuch. Zeitpunkt «T4 VM» = Tag 4 Vormittag = Takt 6 (Formel: Takt = 2·(Tag − 1), +1 am Nachmittag). Bewertung der Optionen: **g** = gut, **m** = mittel, **s** = schlecht (für die Spielenden erst in der Rückmeldung sichtbar). «Std» = Standardentscheid bei Fristablauf. Wirkungen in Kurzform: «Mot» Motivation, «Abw.» Abwesenheit, «+16 h V09» Restaufwand. Mehraufwand der Optionen «gut» hat AP5 halbiert (Begründung im Abstimmungsbericht).
 
 Fristen: ✉ bis Ende der laufenden Woche (Freitag Nachmittag; trifft die Mail am Freitag ein, Ende der Folgewoche); ☎ und 🚪 «sofort» (nur entscheiden oder «Bis morgen überlegen» = Frist 2 Takte), wo vermerkt ohne Aufschub.
 
@@ -314,23 +314,23 @@ Fristen: ✉ bis Ende der laufenden Woche (Freitag Nachmittag; trifft die Mail a
 
 | ID | Auslöser | Kanal, Absender | Kurzbeschreibung | Optionen (Bewertung) | Wirkungen | ICB | Station |
 |---|---|---|---|---|---|---|---|
-| E01 | T1 VM | 🚪 Seraina | Kick-off: wer wird eingeladen, wie lange? | A halber Tag mit Linie und Lieferant, Rollen und Spielregeln (g) · B 1 h nur Kernteam (m) · C Unterlagen per Mail statt Treffen (s) · Std = C | A: 4 h je Anwesende (Stundenart `fuehrung`), Mot alle +6, S05/S06/S07/S08 +4, Teamphase-Flag `kickoff=gut` · B: 1 h Kernteam, Mot Kernteam +2 · C: Mot alle −6, Personen mit Bedürfnis Klarheit −10, Sturmphase dauert 4 Tage länger | 3.05, 2.05 | 16 |
-| E02 | T1 NM | ✉ Marco | Statt Standardformular ein «massgeschneidertes» Formular programmieren? | A beim Standard bleiben, Wünsche sammeln (g) · B Eigenbau zulassen (s) · C als Änderungsantrag auf das Periodenende (m) · Std = B | B: V09 +40 h, R01 W +1, S08 +5, Flag `lieferantMehraufwand` · C: Antrag CR5 im Statusbericht verfügbar | 3.03 | 06 |
+| E01 | T1 VM | 🚪 Seraina | Kick-off: wer wird eingeladen, wie lange? | A Kick-off (2 h) mit Linie und Lieferant, Rollen und Spielregeln (g) · B 1 h nur Kernteam (m) · C Unterlagen per Mail statt Treffen (s) · Std = C | A: 2 h je Anwesende (Stundenart `fuehrung`; der Kick-off selbst ist Teil von V01), Mot alle +6, S05/S06/S07/S08 +4, Teamphase-Flag `kickoff=gut` · B: 1 h Kernteam, Mot Kernteam +2 · C: Mot alle −6, Personen mit Bedürfnis Klarheit −10, Sturmphase dauert 4 Tage länger | 3.05, 2.05 | 16 |
+| E02 | T1 NM | ✉ Dario | Statt Standardformular ein «massgeschneidertes» Formular programmieren? | A beim Standard bleiben, Wünsche sammeln (g) · B Eigenbau zulassen (s) · C als Änderungsantrag auf das Periodenende (m) · Std = B | B: V09 +40 h, R01 W +1, S08 +5, Flag `lieferantMehraufwand` · C: Antrag CR5 im Statusbericht verfügbar | 3.03 | 06 |
 | E03 | T2 VM | ☎ Walter Inauen | Will den Onlineschalter an der Gemeindeversammlung (Tag 35) live zeigen | A zusagen (s) · B Plan zeigen: Abnahme Tag 36–40, an der Versammlung Vorführung in der Testumgebung (g) · C an die Auftraggeberin verweisen (m) · Std = A | A: S02 +8, Flag `zusageTag35` (Tag 35 verpasst: S02 −20, S01 −8) · B: S02 −2, S01 +3 · C: S02 −4 | 3.12, 1.04 | 14 |
 | E04 | T3 NM, wenn kein Gespräch mit Martin und E01 ≠ A | ✉ Martin | Weiss nicht, was von ihm erwartet wird | A Gespräch ansetzen (g) · B schriftlicher Arbeitsauftrag (m) · C «steht im Plan» (s) · Std = C | A: Gespräch zählt doppelt (Mot +16) · B: Mot +5 · C: Mot −10 | 2.03 | 16 |
 | E05 | T4 VM | 🚪 Beat Imhof | Baugesuch-Spitze: zieht Martin und Thomas 3 Tage ab | **ausgeschrieben in 2.8** | | 1.04, 3.08 | 15, 11 |
-| E06 | T5 VM | ✉ Sabine | Beilagen enthalten Personendaten Dritter, Schutzbedarf hoch | A Massnahmen voll umsetzen (g) · B minimal umsetzen (s) · C Datenschutz-Folgenabschätzung durch die Auftraggeberin entscheiden lassen (m) · Std = B | A: V08 +24 h, R07 W −2 · B: V08 +8 h, R07 W +1, E27 sicher · C: V08 1 Tag blockiert, S01 +2; R07 wird sichtbar | 1.03 | 04, 20 |
-| E07 | Teamphase wechselt auf «Sturm» (frühestens T6) | 🚪 Aylin | Streit zwischen Seraina und Marco über «Fachsprache gegen Technik» | A moderiertes Klärungsgespräch (g) · B Spielregeln im Teammeeting (g) · C Aufgaben trennen (m) · D nicht einmischen (s) · Std = D | A: je 4 h Seraina und Marco, Mot beide +8, Teamphase → Normierung · B: 1 h alle, Mot alle +3, Sturm endet nach 2 Tagen · C: Seraina und Marco dürfen 5 Tage nicht im selben Vorgang arbeiten, sonst Leistung × 0.85 · D: E15 nach 3 Tagen | 2.07, 2.06 | 16, 17 |
-| E08 | T7 VM | ✉ Daniel Frei | Bietet zusätzlichen Entwickler (Ramon) für 3 Wochen an, CHF 180/h | A annehmen, Einarbeitung durch Elena (4 h), gezielt einsetzen (g) · B annehmen ab sofort (m) · C ablehnen (m) · Std = C | A: P13 ab T9 verfügbar, Lernkurve beginnt bei 0.95 · B: P13 ab T8, Lernkurve normal · C: S08 −2 | 3.08, 3.09 | 11, 21 |
-| E09 | T8 VM | ☎ Architekturforum | Will bei den Formularen mitreden | A drei Büros zum Nutzertest in V04 einladen (g) · B schriftliche Stellungnahme bis Tag 12 (m) · C ablehnen (s) · Std = C | A: V04 +8 h, S09 +15, R06 W −1, R06 sichtbar · B: V04 +4 h, S09 +5 · C: S09 −15, R06 W +1 | 3.12, 3.02 | 14, 05 |
+| E06 | T5 VM | ✉ Sabine | Beilagen enthalten Personendaten Dritter, Schutzbedarf hoch | A Massnahmen voll umsetzen (g) · B minimal umsetzen (s) · C Datenschutz-Folgenabschätzung durch die Auftraggeberin entscheiden lassen (m) · Std = B | A: V08 +12 h, R07 W −2 · B: V08 +8 h, R07 W +1, E27 sicher · C: V08 1 Tag blockiert, S01 +2; R07 wird sichtbar | 1.03 | 04, 20 |
+| E07 | Teamphase wechselt auf «Sturm» (frühestens T6) | 🚪 Aylin | Streit zwischen Seraina und Dario über «Fachsprache gegen Technik» | A moderiertes Klärungsgespräch (g) · B Spielregeln im Teammeeting (g) · C Aufgaben trennen (m) · D nicht einmischen (s) · Std = D | A: je 4 h Seraina und Dario, Mot beide +8, Teamphase → Normierung · B: 1 h alle, Mot alle +3, Sturm endet nach 2 Tagen · C: Seraina und Dario dürfen 5 Tage nicht im selben Vorgang arbeiten, sonst Leistung × 0.85 · D: E15 nach 3 Tagen | 2.07, 2.06 | 16, 17 |
+| E08 | T7 VM | ✉ Daniel Frei | Bietet zusätzlichen Entwickler (Ramon) für 3 Wochen an, CHF 155/h | A annehmen, Einarbeitung durch Elena (4 h), gezielt einsetzen (g) · B annehmen ab sofort (m) · C ablehnen (m) · Std = C | A: P13 ab T9 verfügbar, Lernkurve beginnt bei 0.95 · B: P13 ab T8, Lernkurve normal · C: S08 −2 | 3.08, 3.09 | 11, 21 |
+| E09 | T8 VM | ☎ Architekturforum | Will bei den Formularen mitreden | A drei Büros zum Nutzertest in V04 einladen (g) · B schriftliche Stellungnahme bis Tag 12 (m) · C ablehnen (s) · Std = C | A: V04 +4 h, S09 +15, R06 W −1, R06 sichtbar · B: V04 +4 h, S09 +5 · C: S09 −15, R06 W +1 | 3.12, 3.02 | 14, 05 |
 | E10 | T9 NM | ✉ Jasmin | Bittet um zweitägigen Kurs Benutzerführung (CHF 1'200) | A nach der Vorabnahme zusagen (Tag 22–23) (g) · B jetzt (m) · C ablehnen (s) · Std = C | A: Mot +4, Kurs Tag 22–23, UX +1 ab Tag 28 · B: Abw. 2 Tage ab T11, UX +1 nach 5 Tagen, Mot +12 · C: Mot −12 | 2.05, 3.08 | 16 |
 | E11 | T10 NM | 🚪 Franziska Bühlmann | Wünscht zusätzlich eine Online-Terminreservation beim Bauamt | A formeller Änderungsantrag mit Auswirkungsanalyse (g) · B sofort einbauen (s) · C ablehnen (s) · D für Ausbaustufe 2 vormerken, begründen (g) · Std = B | A: Antrag CR3 im Statusbericht verfügbar · B: +48 h auf V09 (oder V17, falls V09 fertig), keine Budgeterhöhung, S01 +4 · C: S01 −8 · D: S01 −2 | 3.03, 3.13 | 06, 20 |
 | E12 | Bedingung: eine Person > 5 Tage am Stück Überstunden (ab T6) | ✉ Claudia Wyss | Hinweis auf Arbeitsgesetz und Überzeit | A abbauen und kompensieren (g) · B befristen und begründen (m) · C ignorieren (s) · Std = C | A: Überstunden der Person auf 0, 1 Tag Abw. in den nächsten 5 Tagen, Mot +5 · B: Flag Frist 5 Tage, S04 −2 · C: S04 −10, Mot der Person −8 | 1.03, 2.05 | 11, 17 |
-| E13 | T12 VM | ✉ Reto | Zahlungsanbieter verlangt Sicherheitsprüfung | A Prüfung durchführen (g) · B nur QR-Rechnung, Online-Zahlung später (m) · C ohne Planung prüfen lassen (s) · Std = C | A: V06 +16 h, Kosten CHF 900 · B: V06 Rest −50 %, S10 −5, S01 −3 (Umfang ohne Antrag) · C: V06 3 Tage blockiert | 3.09, 3.02 | 21 |
+| E13 | T12 VM | ✉ Urs | Zahlungsanbieter verlangt Sicherheitsprüfung | A Prüfung durchführen (g) · B nur QR-Rechnung, Online-Zahlung später (m) · C ohne Planung prüfen lassen (s) · Std = C | A: V06 +8 h, Kosten CHF 900 · B: V06 Rest −50 %, S10 −5, S01 −3 (Umfang ohne Antrag) · C: V06 3 Tage blockiert | 3.09, 3.02 | 21 |
 | E14 | Eintritt R03 | ✉ Elena | Schnittstellenbeschreibung des Herstellers fehlt | **ausgeschrieben in 2.8** | | 3.09, 3.11 | 13, 21 |
-| E15 | 3 Tage nach E07 D | 🚪 Claudia Wyss | Konflikt eskaliert, Marco will das Projekt verlassen | A Mediation durch Claudia Wyss (g) · B Machtwort (m) · C Marco ersetzen lassen (s) · Std = B | A: je 4 h Seraina, Marco, Mot beide +5, Normierung · B: Mot beide −5, Normierung · C: Marco weg ab T+2, P13 kommt (falls nicht da), S08 −5 | 2.07 | 17 |
+| E15 | 3 Tage nach E07 D | 🚪 Claudia Wyss | Konflikt eskaliert, Dario will das Projekt verlassen | A Mediation durch Claudia Wyss (g) · B Machtwort (m) · C Dario ersetzen lassen (s) · Std = B | A: je 4 h Seraina, Dario, Mot beide +5, Normierung · B: Mot beide −5, Normierung · C: Dario weg ab T+2, P13 kommt (falls nicht da), S08 −5 | 2.07 | 17 |
 | E16 | Eintritt R08 | ☎ Seraina | Krank für 3 Tage (× A/4, gerundet, mind. 1) | A Arbeit auf dem kritischen Pfad umverteilen (g, Hinweis öffnet Teamansicht) · B Martin bei der Linie aufstocken lassen (m) · C abwarten (s) · Std = C | Immer: Abw. Seraina · B: Martin Pensum +20 % für 5 Tage, S05 −5 · C: keine | 3.08 | 11 |
-| E17 | T16 VM | ✉ Thomas | Unklar, welche kantonalen Stellen digital angebunden werden | A Anforderungsworkshop (g) · B Annahme dokumentieren, von Auftraggeberin bestätigen lassen (m) · C Lieferant entscheiden lassen (s) · Std = C | A: je 2 h Thomas, Seraina, Marco, V10 +8 h, R01 W −1, R09 sichtbar · B: S01 +1, R09 sichtbar · C: V10 Fehlerlast +4, Mot Thomas −6 | 3.02 | 05 |
+| E17 | T16 VM | ✉ Thomas | Unklar, welche kantonalen Stellen digital angebunden werden | A Anforderungsworkshop (g) · B Annahme dokumentieren, von Auftraggeberin bestätigen lassen (m) · C Lieferant entscheiden lassen (s) · Std = C | A: je 2 h Thomas, Seraina, Dario, V10 +4 h, R01 W −1, R09 sichtbar · B: S01 +1, R09 sichtbar · C: V10 Fehlerlast +4, Mot Thomas −6 | 3.02 | 05 |
 | E18 | Bedingung: Risiko-Index < 80 ab T15 | 🚪 Mia Baumann (Coach) | Fragt nach dem Risikoregister | A Risikoworkshop 2 h mit Kernteam (g) · B «mache ich am Freitag» (m) · C «habe ich im Kopf» (s) · ohne Aufschub | A: 2 h Kernteam, gilt als Register geprüft, verdeckte Risiken sichtbar · C: keine | 3.11 | 13 |
 | E19 | Flag `lieferantMehraufwand`, sonst T18 mit 40 % | ✉ Daniel Frei | Rechnung für Mehraufwand CHF 6'400 ausserhalb des Werkvertrags | A Vertrag prüfen, sachlich verhandeln (g) · B bezahlen (m) · C pauschal ablehnen (s) · Std = B | A: Kosten CHF 3'200 · B: Kosten CHF 6'400, S08 +5 · C: S08 −12, Mot Lieferant −5, R10 W +1 | 2.09, 3.09 | 21, 17 |
 | E20 | T19 VM, wenn wahre Gesamtampel ≠ Grün (sonst E20b Lob, nur Kenntnisnahme, S01 +3) | 🚪 Franziska Bühlmann | Bittet, im Statusbericht Grün zu melden | **ausgeschrieben in 2.8** | | 2.02, 3.10 | 19, 17 |
@@ -340,25 +340,25 @@ Fristen: ✉ bis Ende der laufenden Woche (Freitag Nachmittag; trifft die Mail a
 | ID | Auslöser | Kanal, Absender | Kurzbeschreibung | Optionen (Bewertung) | Wirkungen | ICB | Station |
 |---|---|---|---|---|---|---|---|
 | E21 | T21 VM | 🚪 Nadia | Ferien Tag 27–31 seit langem geplant | A gewähren, Schulung und Merkblatt vorziehen (g) · B bitten zu verschieben (s) · C gewähren, Aylin als Stellvertretung einarbeiten (g) · Std = A | Immer ausser B: Abw. Nadia Tag 27–31 · B: Mot −15, S04 −3 · C: 4 h Nadia + 4 h Aylin, Aylin KOM +1 ab Tag 24 | 3.08, 2.04 | 11 |
-| E22 | T22 NM | ✉ Wolkenrieder Bote | Leserbrief «Digital nur für Junge?» | A Begleitangebot am Schalter (g) · B Antwort der Gemeinderätin (m) · C ignorieren (s) · Std = C | A: V16 +16 h, S10 +10 · B: S10 +4, S01 +2 · C: S10 −8 | 3.12, 3.13 | 14, 20 |
-| E23 | Start V17 und Fehlerlast V05 > 3 | ☎ Pilotbüro | Gesuch kommt nicht in der Bausoftware an | A regulär im Pilot beheben (g) · B Wochenendeinsatz Lieferant (m) · C manuelle Umgehung (s) · ohne Aufschub | A: V17 +24 h, V05 Fehlerlast −3 · B: Kosten CHF 3'000, V05 Fehlerlast −3 · C: S09 −8, S10 −4 | 3.06 | 20 |
+| E22 | T22 NM | ✉ Wolkenrieder Bote | Leserbrief «Digital nur für Junge?» | A Begleitangebot am Schalter (g) · B Antwort der Gemeinderätin (m) · C ignorieren (s) · Std = C | A: V16 +8 h, S10 +10 · B: S10 +4, S01 +2 · C: S10 −8 | 3.12, 3.13 | 14, 20 |
+| E23 | Start V17 und Fehlerlast V05 > 3 | ☎ Pilotbüro | Gesuch kommt nicht in der Bausoftware an | A regulär im Pilot beheben (g) · B Wochenendeinsatz Lieferant (m) · C manuelle Umgehung (s) · ohne Aufschub | A: V17 +12 h, V05 Fehlerlast −3 · B: Kosten CHF 3'000, V05 Fehlerlast −3 · C: S09 −8, S10 −4 | 3.06 | 20 |
 | E24 | T24 VM, 40 % (sicher bei Flag `vertrauensverlust`) | ✉ Claudia Wyss | Budgetkürzung um CHF 9'000 (Sparprogramm) | A mit Zahlen verhandeln (g) · B Umfang reduzieren (CR1 auslösen) (m) · C hinnehmen (s) · Std = C | A: letzter Bericht ehrlich (H ≥ 70) → Kürzung entfällt, sonst halbe Kürzung · B: CR1 sofort genehmigt, Kürzung entfällt · C: Budget −9'000 | 3.07, 1.02 | 18, 12 |
-| E25 | Eintritt R04 (Fenster 21–35) | ☎ Peter Schuler | Braucht Jasmin 2 Tage für eine Servermigration | A Zeitpunkt aushandeln: nach V16 (g) · B zustimmen (m) · C ablehnen (s) · Std = B | A: Abw. Jasmin 2 Tage nach Ende V16 · B: Abw. 2 Tage ab T+1 (× A/3) · C: S06 −10 | 1.04 | 15 |
+| E25 | Eintritt R04 (Fenster 21–35) | ☎ Silvan Schuler | Braucht Jasmin 2 Tage für eine Servermigration | A Zeitpunkt aushandeln: nach V16 (g) · B zustimmen (m) · C ablehnen (s) · Std = B | A: Abw. Jasmin 2 Tage nach Ende V16 · B: Abw. 2 Tage ab T+1 (× A/3) · C: S06 −10 | 1.04 | 15 |
 | E26 | Bedingung: Teammotivation < 80 (ab T21) | 🚪 Aylin | Das Team ist müde | A Retrospektive 2 h (g) · B Teamabend (m) · C «nach der Produktivsetzung feiern wir» (s) · Std = C | A: 2 h alle, Mot alle +6, Teamphase → Normierung · B: CHF 120 je Person, Mot alle +10 · C: Mot alle −3 | 2.06 | 16 |
-| E27 | Eintritt R07; sicher bei E06 B | ✉ Datenschutzstelle | Löschkonzept fehlt | A mit Sabine nachliefern (g) · B Produktivsetzung mit Auflage (m) · C bestreiten (s) · Std = B | A: V16 +24 h · B: S12 −10, Restmängel +2 · C: V18 3 Tage blockiert, S12 −20 | 1.03 | 04 |
+| E27 | Eintritt R07; sicher bei E06 B | ✉ Datenschutzstelle | Löschkonzept fehlt | A mit Sabine nachliefern (g) · B Produktivsetzung mit Auflage (m) · C bestreiten (s) · Std = B | A: V16 +12 h · B: S12 −10, Restmängel +2 · C: V18 3 Tage blockiert, S12 −20 | 1.03 | 04 |
 | E28 | T28 VM | ✉ Gemeinde Seeweid | Nachbargemeinde will den Onlineschalter mitbenutzen | A Zusammenarbeit nach Projektabschluss prüfen (g) · B Anforderungen sofort aufnehmen (s) · C absagen (m) · Std = B | A: S01 +5, S02 +5 · B: V17 +32 h, R01 W +1 · C: S02 −5 | 1.01, 3.11 | 04, 13 |
-| E29 | Eintritt R10 | ✉ Daniel Frei | Marco wird 3 Tage für einen Notfall bei einem anderen Kunden abgezogen | A Schlüsselpersonenklausel durchsetzen (g) · B Wissenstransfer an Elena oder Ramon (g) · C akzeptieren (m) · Std = C | A: wenn R10-M1 genommen: kein Abzug, sonst 50 % Abzug 3 Tage · B: 4 h Marco + 4 h Elena, Abzug 3 Tage · C: Abzug 3 Tage (× A/4) | 3.09, 3.08 | 21 |
-| E30 | T30 VM | ✉ Thomas | Fachstellen wollen keine Schulung, lieber ein Video | A Kurzvideo erstellen (g) · B Schulung über Bauverwalter verordnen (m) · C Schulung für Fachstellen streichen (s) · Std = C | A: V15 +12 h (oder V16, falls V15 fertig), R09 W −1 · B: Mot Thomas −5, S05 −3 · C: R09 W +2 | 3.13, 2.08 | 20 |
+| E29 | Eintritt R10 | ✉ Daniel Frei | Dario wird 3 Tage für einen Notfall bei einem anderen Kunden abgezogen | A Schlüsselpersonenklausel durchsetzen (g) · B Wissenstransfer an Elena oder Ramon (g) · C akzeptieren (m) · Std = C | A: wenn R10-M1 genommen: kein Abzug, sonst 50 % Abzug 3 Tage · B: 4 h Dario + 4 h Elena, Abzug 3 Tage · C: Abzug 3 Tage (× A/4) | 3.09, 3.08 | 21 |
+| E30 | T30 VM | ✉ Thomas | Fachstellen wollen keine Schulung, lieber ein Video | A Kurzvideo erstellen (g) · B Schulung über Bauverwalter verordnen (m) · C Schulung für Fachstellen streichen (s) · Std = C | A: V15 +6 h (oder V16, falls V15 fertig), R09 W −1 · B: Mot Thomas −5, S05 −3 · C: R09 W +2 | 3.13, 2.08 | 20 |
 | E31 | Bedingung: Seraina > 8 Tage Überstunden oder Mot < 60 | 🚪 Seraina | Ist erschöpft | A entlasten, 1 Tag frei (g) · B Gespräch und Anerkennung (m) · C weiter so (s) · ohne Aufschub | A: Abw. 1 Tag, Überstunden 0, Mot +12 · B: Mot +6 · C: 60 % Ausfall 4 Tage, sonst Mot −10 | 2.05, 2.01 | 17 |
 | E32 | T32 VM | ☎ Walter Inauen | Fragt nach dem Termin der Produktivsetzung | A ehrliche Prognose nennen (g) · B optimistisch «Tag 36» (s) · C an die Auftraggeberin verweisen (m) · Std = C | A: S02 ±0, S03 +3 · B: S02 +5, Flag `zusageTag36` (verpasst: S02 −15) · C: S02 −3 | 2.02, 3.12 | 19 |
-| E33 | T33 VM | ✉ Marco | Vorschlag: alle Planungsbüros gleichzeitig freischalten statt gestaffelt | A gestaffelt: Pilotbüros zuerst (g) · B gleichzeitig (s) · C Produktivsetzung 1 Woche verschieben (m) · Std = B | B: V18 −16 h, R06 W +2, Restmängel × 1.2 · C: CR4 im Abschlussbericht automatisch beantragt | 3.13, 3.01 | 08, 20 |
+| E33 | T33 VM | ✉ Dario | Vorschlag: alle Planungsbüros gleichzeitig freischalten statt gestaffelt | A gestaffelt: Pilotbüros zuerst (g) · B gleichzeitig (s) · C Produktivsetzung 1 Woche verschieben (m) · Std = B | B: V18 −16 h, R06 W +2, Restmängel × 1.2 · C: CR4 im Abschlussbericht automatisch beantragt | 3.13, 3.01 | 08, 20 |
 | E34 | T34 VM | 🚪 Martin | Fürchtet, mit dem Onlineschalter überflüssig zu werden | A Rolle als Ansprechperson für die Planungsbüros anbieten (g) · B beruhigendes Gespräch (m) · C «die Digitalisierung kommt so oder so» (s) · Std = C | A: Mot +15, S05 +3, S09 +3 · B: Mot +5 · C: Mot −12 | 3.13, 2.04, 1.05 | 17, 20 |
 | E35 | Start V18 und Restmängel > 12 | ✉ Beat Imhof | Abnahme nur ohne Mängel | A Abnahme mit Mängelliste, Fristen und Verantwortlichen (g) · B alles vorher beheben (m) · C Abnahme verschieben (s) · Std = C | A: S05 −2 · B: V18 + 2 h je Restmangel, Restmängel → 0 · C: V18 3 Tage blockiert, S01 −5 | 3.06 | 20 |
 | E36 | Eintritt R05 | ☎ Elena | Testumgebung ausgefallen | A Notfallplan aktivieren (g, nur wirksam mit R05-M1) · B Überstunden zum Aufholen (m) · C warten (s) · ohne Aufschub | Ohne M1: laufende Vorgänge mit Anteil ENT ≥ 3 einen Tag blockiert (× A/3) · A mit M1: keine Blockade · B: Überstufe 1 für Lieferant 3 Tage | 3.11 | 13 |
 | E37 | T37 VM | 🚪 Aylin | Schlägt Lessons-Learned-Workshop und Abschlussanlass vor | A Workshop und Apéro (g) · B nur Abschlussbericht (m) · C nichts (s) · Std = B | A: CHF 900, Mot alle +6, S01 +3, Flag `lessonsLearned` · C: Mot alle −3 | 3.10, 2.06 | 20 |
 | E38 | V18 fertig | ☎ Wolkenrieder Bote | Medienanfrage zur Produktivsetzung | A gemeinsamer Auftritt mit der Gemeinderätin (g) · B allein (s) · C Medienmitteilung durch Nadia (m) · ohne Aufschub | A: S01 +5, S02 +3 · B: S01 −5 · C: S01 +1 | 3.12, 2.03 | 14 |
 | E39 | jede Woche ab T10 mit 25 % (höchstens 3 ×) | ☎ zufällige Linienperson | Krank 1–2 Tage (Grippewelle) | nur «Zur Kenntnis» | Abw. 1–2 Tage (Zufall) | 3.08 | 11 |
-| E40 | T13 VM | 🚪 Jonas | Nutzertest: Bauwillige verstehen «Zirkulation» und «Auflage» nicht | A Texte vereinfachen (g) · B nach dem Pilot anpassen (m) · C ignorieren (s) · Std = C | A: V09 +8 h (oder V17), R06 W −1, S10 +3 · B: V17 +12 h · C: R06 W +1 | 3.02, 3.06 | 05 |
+| E40 | T13 VM | 🚪 Jonas | Nutzertest: Bauwillige verstehen «Zirkulation» und «Auflage» nicht | A Texte vereinfachen (g) · B nach dem Pilot anpassen (m) · C ignorieren (s) · Std = C | A: V09 +4 h (oder V17), R06 W −1, S10 +3 · B: V17 +12 h · C: R06 W +1 | 3.02, 3.06 | 05 |
 
 #### Systemereignisse (keine Optionen, nur Kenntnisnahme)
 
@@ -404,7 +404,7 @@ Ton: Kolleginnen und Kollegen im Team duzen sich und die Projektleitung; Gemeind
 
 | Option | Text | Wirkungen | Bewertung |
 |---|---|---|---|
-| A | Die Gemeinde ist Vertragspartnerin des Herstellers: Luca ruft dort mit Bezug auf den Wartungsvertrag an. Elena baut in der Zwischenzeit die dokumentierten Teile. | 2 h Luca (`fuehrung`); V05 +16 h; S08 +2 | g |
+| A | Die Gemeinde ist Vertragspartnerin des Herstellers: Luca ruft dort mit Bezug auf den Wartungsvertrag an. Elena baut in der Zwischenzeit die dokumentierten Teile. | 2 h Luca (`fuehrung`); V05 +8 h; S08 +2 | g |
 | B | Abwarten, bis die neuen Unterlagen da sind. | V05 5 Tage blockiert | s |
 | C | Mit der alten Beschreibung weiterbauen und später anpassen. | V05 +8 h, V05 Fehlerlast +6; nach 6 Tagen mit 60 %: V11 +24 h (Info-Mail «Felder passen nicht») | m |
 | D | «Das ist euer Problem, ihr habt den Auftrag.» | V05 3 Tage blockiert; S08 −10; Mot Elena −8; Flag `lieferantMehraufwand` (löst E19 aus) | s |
@@ -518,7 +518,7 @@ Alle Koeffizienten stehen als `DEFAULT_PARAMS` in `lib/simulation/params.ts` (St
 | Zuweisungen | Je Person höchstens 6, Reihenfolge = Priorität A–F. Jede Zuweisung hat einen Anteil `share` ∈ {0.25, 0.5, 0.75, 1.0} (Standard 1.0) = höchstens dieser Anteil der Kapazität fliesst in diesen Vorgang. |
 | Bearbeitbar | Vorgang nicht fertig, **alle Vorgänger fertig** (Ende-Anfang-Beziehung), nicht blockiert (`blockedUntilTick ≤ t`), Phase E nur mit Flag `phaseReleased`. |
 | Verteilung je Takt | Rest = Kapazität. Für jede Zuweisung in Prioritätsreihenfolge: wenn bearbeitbar, erhält der Vorgang `h = min(Rest, share × Kapazität)`, Rest −= h. Übrige Kapazität ist Leerlauf. |
-| Überschuss | Würden alle Personen eines Vorgangs mehr effektive Stunden liefern als der Restaufwand, werden ihre Stunden anteilig gekürzt (`scale = Rest ÷ Leistung`). Gekürzte Stunden sind Leerlauf (nicht bezahlt), sie fliessen erst im nächsten Takt weiter. |
+| Überschuss | Würden alle Personen eines Vorgangs mehr effektive Stunden liefern als der Restaufwand, werden ihre Stunden anteilig gekürzt (`scale = Rest ÷ Leistung`). Gekürzte Stunden sind Leerlauf (nicht bezahlt), sie fliessen erst im nächsten Takt weiter. Gleiches gilt für die Kappung durch die Mindestdauer (3.4): Stunden über `Aufwand_plan ÷ (minDays × 2)` hinaus sind Leerlauf und werden nicht bezahlt (Nachtrag AP5). |
 | Planung abschliessen | Periode 1: Jeder Vorgang der Phase R hat mindestens eine Zuweisung. Periode 2: Jeder nicht fertige Vorgang hat mindestens eine Zuweisung. Sonst Fehler `PLAN_INCOMPLETE` mit Liste. |
 | Änderungen im Lauf | Jederzeit erlaubt. Zählt als Umplanung für das Bedürfnis Klarheit (3.7). |
 | Einschränkungen | Verdeckte Personen (P13) erst nach Freischaltung; abwesende Personen dürfen zugewiesen werden, arbeiten aber nicht. |
@@ -533,7 +533,7 @@ Kapazität(p, t) = hoursPerTick × Pensum(p, t) × (1 + OT_STEP × Überstufe(p)
 
 | Grösse | Festlegung |
 |---|---|
-| Pensum(p, t) | Grundpensum, ersetzt durch `availabilityOverrides` (z. B. Reto Tag 18–20: 0.2) und durch Ereignis-Wirkungen (Martin −10 %). |
+| Pensum(p, t) | Grundpensum, ersetzt durch `availabilityOverrides` (z. B. Urs Tag 18–20: 0.2) und durch Ereignis-Wirkungen (Martin −10 %). |
 | Überstufe | 0 = keine, 1 = +20 %, 2 = +40 % (`OT_STEP = 0.2`). Im Lauf je Person einstellbar. |
 | Verfügbar | 0 bei Abwesenheit (Krankheit, Ferien, Abzug, Weiterbildung), sonst 1. |
 | Termine | Stunden für Gespräche, Workshops und Massnahmen in diesem Takt (Stundenart `fuehrung`). |
@@ -558,7 +558,7 @@ O        = Σ_{k: r[k] ≥ 3} min(2, max(0, q_eff[k] − r[k]))                 
 fit      = clamp(1 − C_GAP × G + C_OVER × O, 0.35, 1.15)                             C_GAP = 0.06, C_OVER = 0.025
 ```
 
-Beispiele (Referenzwerte für Tests, Anhang 8.1): Seraina allein auf V02 → 1.000; Martin auf V02 (auch mit Seraina) → 0.832; Seraina allein auf V09 → 0.750; Seraina mit Marco auf V09 → 0.990; Elena auf V05 → 0.982.
+Beispiele (Referenzwerte für Tests, Anhang 8.1): Seraina allein auf V02 → 1.000; Martin auf V02 (auch mit Seraina) → 0.832; Seraina allein auf V09 → 0.750; Seraina mit Dario auf V09 → 0.990; Elena auf V05 → 0.982.
 
 **Weitere Faktoren:**
 
@@ -596,7 +596,7 @@ Die Projektleitung selbst verursacht keine Kosten. Ihr Kalender erlaubt **höchs
 
 ```
 neueFehler(p,v) = eff(p,v) × DEF_BASE × (1 + 0.15 × G(p,v)) × m_ot(p) × m_mot(p) × m_trait(p) × m_team(v)
-DEF_BASE = 0.05 Fehler je effektive Stunde
+DEF_BASE = 0.03 Fehler je effektive Stunde (AP5, vorher 0.05)
 m_ot   = 1 + 0.15 × Überstufe + 0.02 × max(0, Serie − 5)
 m_mot  = 1.3 wenn m < 60 · 1.1 wenn m < 80 · sonst 1.0
 m_trait = gründlich 0.8 · schnell 1.2 · sonst 1.0
@@ -622,7 +622,7 @@ Fehler addieren sich zur **Fehlerlast** `latentDefects` des Vorgangs.
 
 ```
 ρ   = Σ Fehlerlast aller Vorgänge ÷ max(1, Σ effektive Stunden) × 100        unentdeckte Fehler je 100 h
-QI  = clamp(100 × (1.5 − 0.5 × ρ ÷ RHO_REF), 0, 130)                          RHO_REF = 2.5
+QI  = clamp(100 × (1.5 − 0.5 × ρ ÷ RHO_REF), 0, 130)                          RHO_REF = 1.5 (AP5, vorher 2.5)
 ```
 
 Bedeutung: QI = 100 % entspricht «gute Passung und ein Review je Vorgang». Ohne Reviews sinkt der QI gegen 50 %, bis die Tests Fehler finden.
@@ -782,7 +782,7 @@ Danach: Systemereignis S2 mit der Begründung je Gegenstand, Phase `planung` (Pe
 | Teil | Max | Formel |
 |---|---|---|
 | Termin | 250 | E ≤ 38: 250 · 38 < E ≤ 40: 250 − 10·(E − 38) · E > 40: max(0, 230 − 23·(E − 40)) (bei genehmigtem CR4 zwischen 40 und 45 halber Abzug) · Abbruch: 0 |
-| Kosten | 200 | B = Budget ohne Nachträge + 0.5 × genehmigte Nachträge. AC ≤ 0.95 B: 200 · AC ≤ B: linear 200 → 160 · AC > B: max(0, 160 − 160 × (AC − B) ÷ (0.15 B)) |
+| Kosten | 200 | B = Budget ohne Nachträge + 0.5 × genehmigte Nachträge. AC ≤ 0.95 B: 200 · AC ≤ B: linear 200 → 160 · AC > B: max(0, 160 − 160 × (AC − B) ÷ (0.15 B)) · Abbruch: Ergebnis × erledigter Anteil des Planaufwands (1 − Restaufwand ÷ Planaufwand), damit Aufgeben keine Kostenpunkte bringt (Ergänzung 31.10.2026) |
 | Qualität | 200 | R = Restmängel (+1 je 8 h Restaufwand bei Abbruch): 200 × clamp((25 − R) ÷ 20, 0, 1) |
 | Stakeholder | 150 | SI_Ende (absolut 0–100): 150 × clamp((SI − 40) ÷ 50, 0, 1); Abbruch: SI − 20 |
 | Team | 100 | M̄ = mittlere Teammotivation über alle Takte: 100 × clamp((M̄ − 60) ÷ 40, 0, 1); −10 je Ausfall durch Überlastung (E31 C) |
@@ -875,10 +875,10 @@ export function nextRandom(s: number): [number, number] {
 | `motBase` / `motDrift` | 85 / 0.03 | 3.7 |
 | `learnStart` / `learnHours` | 0.9 / 16 | 3.4 |
 | `otTolerance` | tief 2, mittel 5, hoch 8 | 2.5 |
-| `defBase` | 0.05 | 3.6 |
+| `defBase` | 0.03 (AP5, vorher 0.05) | 3.6 |
 | `reviewShare` / `reviewDetect` | 0.03 / 0.5 | 3.6 |
 | `fixEarly` / `fixLate` | 1.0 / 3.0 | 3.6 |
-| `rhoRef` | 2.5 | 3.6 |
+| `rhoRef` | 1.5 (AP5, vorher 2.5) | 3.6 |
 | `riskProb` | [0.05, 0.15, 0.30, 0.50, 0.70] | 3.9 |
 | `talkBoost` / `talkCooldownDays` | 8 / 5 | 3.7 |
 | `calendarMaxPerDay` | 4 | 3.5 |
@@ -1376,6 +1376,17 @@ Massgebend ist `lib/simulation/types.ts`; die Nachträge sind dort mit «Ergänz
 - EAC rechnet mit CPI ≥ 0.05, damit der Wert endlich bleibt. S03 −3 je CHF 10'000 genehmigter Nachtrag wird anteilig gerechnet.
 - 4.4: Ein Ereignis mit Entscheid braucht **mindestens** eine Option «gut» (E07, E11 haben zwei).
 
+#### 4.3.2 Nachträge aus AP5 (Abstimmung, 31.10.2026)
+
+| Bereich | Nachtrag |
+|---|---|
+| Rechenkern | `workTick`: Stunden, die durch die Mindestdauer-Kappung (3.4) keine Leistung bringen, werden wie beim Überschuss (3.2) nicht bezahlt. Vorher wurden sie voll verrechnet; bei V17 (Mindestdauer 6 Tage) kostete das in der Prüfrechnung 8.2 rund CHF 10'000 ohne Gegenwert. |
+| Versionen | `ENGINE_VERSION` 1 → 2; `version` beider Szenarien 1.0.0 → 1.1.0 (alte Protokolle laufen anders, 4.5). |
+| Parameter | `defBase` 0.05 → 0.03, `rhoRef` 2.5 → 1.5 (3.16). |
+| Szenario | Sätze −15 % (2.5), Mehraufwand der Optionen «gut» halbiert (2.7, 2.8), E01 A 2 h statt 4 h, R08 M1 4 h statt 8 h. |
+| Schnittstelle | unverändert (`lib/simulation/index.ts` und Typen nicht angepasst). |
+| Roboter | `tests/helpers/simulation-bots.ts` (nur Tests). |
+
 ### 4.4 Szenario-Daten und Zod-Schema
 
 - Ablage: `content/simulation/<id>.json` (`wolkenried.json`, `einfuehrung.json`). UTF-8, 2 Leerzeichen Einzug.
@@ -1614,8 +1625,8 @@ Roboter in `tests/helpers/simulation-bots.ts` (nicht im Produktivcode). Jeder Ro
 
 | Roboter | Strategie |
 |---|---|
-| **gut** | Musterbesetzung (Anhang 8.2) mit Prioritäten; Reviews: 2 auf V05, V09, 1 auf allen übrigen R-Vorgängen; alle Risikomassnahmen mit Wert ≥ 9 in der Planung; Register jeden Montag prüfen; jedes Ereignis sofort mit der ersten Option der Bewertung `gut`; Gespräch mit jeder Person mit m < 85 (höchstens 4 je Tag); Überstufe 1 auf dem kritischen Pfad, wenn Prognose > 38, höchstens 5 Tage; ehrlicher Statusbericht (Wahrheit übernehmen, passende Massnahmen, Budgetnachtrag = max(0, EAC − Budget) gerundet auf 1'000) |
-| **naiv** | Je Vorgang genau die geplante Anzahl Personen, nach bester Einzelpassung, ohne Pensum und Konflikte zu beachten; keine Reviews; keine Risikomassnahmen; Register nie geprüft; Ereignisse: Option A; keine Gespräche; Statusbericht alles Grün, Prognosen = Plan |
+| **gut** | Musterbesetzung (Anhang 8.2) mit Prioritäten, Ramon nach E08 A auf V06, V07, V08; Reviews: 2 auf V05, V09, 1 auf allen übrigen R-Vorgängen; alle Risikomassnahmen mit Wert ≥ 9 in der Planung; Register jeden Montag prüfen; jedes Ereignis sofort mit der ersten Option der Bewertung `gut`; Gespräch mit jeder Person mit m < 85 (höchstens 4 je Tag); Überstufe 1 auf dem kritischen Pfad, wenn Prognose > 38, höchstens 5 Tage am Stück, nicht für Personen mit Überstunden-Toleranz `tief`; ehrlicher Statusbericht (Wahrheit übernehmen, passende Massnahmen, Budgetnachtrag = max(0, EAC − Budget) gerundet auf 1'000) |
+| **naiv** | Je Vorgang nach bester Einzelpassung so viele Personen, bis ihre Pensen zusammen die geplante Personenzahl ergeben; wer im Basisplan schon einen zeitgleichen Vorgang hat, kommt erst danach in Frage (Nachtrag AP5, siehe unten); kritischer Pfad und Prioritäten bleiben unbeachtet; keine Reviews; keine Risikomassnahmen; Register nie geprüft; Ereignisse: Option A; keine Gespräche; Statusbericht alles Grün, Prognosen = Plan |
 | **schlecht** | Je Vorgang 1 Person mit der tiefsten Passung; alle Personen Überstufe 2 ab Tag 1; Ereignisse immer aufschieben; Bericht alles Grün; jede Umfangserweiterung annehmen |
 
 **Schwellen (Abnahme von AP5):**
@@ -1635,6 +1646,8 @@ Roboter in `tests/helpers/simulation-bots.ts` (nicht im Produktivcode). Jeder Ro
 
 Der Test schreibt bei Fehlschlag eine Tabelle (Roboter × Startwert × Teilpunkte) in die Ausgabe, damit AP5 gezielt abstimmen kann.
 
+**Nachtrag AP5 zum Roboter «naiv»:** Wörtlich umgesetzt («geplante Anzahl Personen, ohne Pensum und Konflikte zu beachten») endet der Plan schon ohne Ereignisse erst bei Tag 52 (Tabelle 2.4; die alte Prüfrechnung nannte Tag 51) und mit Ereignissen in allen 20 Startwerten mit Abbruch bei Tag 50 (Median 318 Punkte). Die Schwellen «naiv 350–600 Punkte, Endtag 42–48» sind damit nicht erreichbar, ohne das Modell für alle zu verzerren. Der Roboter plant deshalb das Pensum und Überschneidungen ein, führt aber nicht (keine Reviews, Massnahmen, Gespräche, Steuerung; geschönte Berichte). Offene Frage an Jan: Schwellen für «naiv» belassen (so) oder die wörtliche Strategie mit eigenen Schwellen (z. B. «Abbruch oder Endtag > 48») prüfen.
+
 ### 5.5 Schema (`tests/simulation-schema.test.ts`)
 
 - Beide Szenarien bestehen das Zod-Schema inkl. `superRefine`.
@@ -1644,7 +1657,7 @@ Der Test schreibt bei Fehlschlag eine Tabelle (Roboter × Startwert × Teilpunkt
 
 ### 5.6 Rechtliche Leitplanke (`tests/simulation-content.test.ts`)
 
-- Sperrliste (ohne Gross-/Kleinschreibung, als ganze Wörter) gegen alle Texte der Szenarien: Figurennamen und Begriffe aus dem Vorbild-Handbuch (u. a. «SimulTrain», «E-COM», «ecom», «Anna», «Fred», «Sue», «Tim», «Jeff», «Novax», «STS»). AP2 ergänzt die Liste aus dem privaten Spickzettel, falls dort weitere Namen stehen; die Liste liegt im Test, nicht im Szenario.
+- Sperrliste (ohne Gross-/Kleinschreibung, als ganze Wörter) gegen alle Texte der Szenarien: Figurennamen und Begriffe aus dem Vorbild-Handbuch (u. a. «SimulTrain», «E-COM», «ecom», «Anna», «Fred», «Sue», «Tim», «Jeff», «Novax», «STS», dazu «Sorbus» als frühere Bezeichnung des fiktiven Lieferanten). AP2 ergänzt die Liste aus dem privaten Spickzettel, falls dort weitere Namen stehen; die Liste liegt im Test, nicht im Szenario.
 - Alle Personen, Stakeholder und Firmen tragen die im Szenario-Kopf erklärte Kennzeichnung «frei erfunden» (Feld `briefing` enthält den Satz «Alle Namen, Personen und Organisationen sind frei erfunden.»).
 
 ### 5.7 API (`tests/simulation-api.test.ts`)
@@ -1723,8 +1736,8 @@ Werte `fit(p, v)` mit C_GAP = 0.06, C_OVER = 0.025 (Referenz für Tests und für
 | P05 Thomas | 0.95 | 0.86 | 0.52 | 0.62 | 0.40 | 0.61 | 0.81 | 0.69 | 0.61 | 0.73 | 0.56 | 0.90 | 0.82 | 0.71 | 0.80 | 0.69 | 0.50 | 0.79 |
 | P06 Nadia | 0.94 | 0.63 | 0.46 | 0.82 | 0.35 | 0.45 | 0.52 | 0.64 | 0.45 | 0.45 | 0.45 | 0.72 | 0.85 | 0.96 | 0.82 | 0.67 | 0.46 | 0.65 |
 | P07 Jasmin | 0.81 | 0.72 | 0.82 | 0.81 | 0.70 | 0.81 | 0.70 | 0.81 | 0.72 | 0.70 | 0.81 | 0.72 | 0.67 | 0.75 | 0.58 | 0.87 | 0.72 | 0.70 |
-| P08 Reto | 0.84 | 0.71 | 0.70 | 0.59 | 0.58 | 0.74 | 0.88 | 0.83 | 0.53 | 0.62 | 0.69 | 0.75 | 0.65 | 0.65 | 0.63 | 0.84 | 0.45 | 0.72 |
-| P09 Marco | 0.84 | 0.72 | 1.02 | 0.72 | 0.91 | 1.01 | 0.82 | 0.90 | 0.87 | 0.87 | 1.01 | 0.78 | 0.66 | 0.72 | 0.64 | 1.01 | 0.80 | 0.83 |
+| P08 Urs | 0.84 | 0.71 | 0.70 | 0.59 | 0.58 | 0.74 | 0.88 | 0.83 | 0.53 | 0.62 | 0.69 | 0.75 | 0.65 | 0.65 | 0.63 | 0.84 | 0.45 | 0.72 |
+| P09 Dario | 0.84 | 0.72 | 1.02 | 0.72 | 0.91 | 1.01 | 0.82 | 0.90 | 0.87 | 0.87 | 1.01 | 0.78 | 0.66 | 0.72 | 0.64 | 1.01 | 0.80 | 0.83 |
 | P10 Elena | 0.71 | 0.53 | 1.05 | 0.56 | 0.98 | 0.97 | 0.79 | 0.88 | 0.69 | 0.72 | 0.93 | 0.59 | 0.45 | 0.56 | 0.42 | 0.96 | 0.58 | 0.68 |
 | P11 Jonas | 0.85 | 0.68 | 0.64 | 0.96 | 0.52 | 0.63 | 0.52 | 0.66 | 0.68 | 0.63 | 0.63 | 0.69 | 0.75 | 0.83 | 0.64 | 0.72 | 0.70 | 0.65 |
 | P12 Sabine | 0.96 | 0.69 | 0.79 | 0.72 | 0.70 | 0.81 | 0.88 | 0.99 | 0.57 | 0.64 | 0.77 | 0.81 | 0.75 | 0.81 | 0.72 | 0.98 | 0.59 | 0.86 |
@@ -1736,20 +1749,23 @@ Zuweisungen je Person in Prioritätsreihenfolge A, B, C, … Höchstens 6 gleich
 
 | Person | Prioritäten |
 |---|---|
-| P01 Seraina | V01, V02, V09, V10, V12, V15, V17, V18 |
+| P01 Seraina | V01, V02, V04, V09, V10, V12, V15, V17, V18 |
 | P02 Luca | V01, V05, V06, V07, V11, V16, V18 |
-| P03 Aylin | V01, V02, V04, V08, V13, V12, V15, V17, V18 |
-| P04 Martin | V02, V07, V13, V12, V17 |
+| P03 Aylin | V01, V02, V04, V08, V12, V13, V15, V17, V18 |
+| P04 Martin | V02, V07, V12, V13 |
 | P05 Thomas | V10, V12, V15 |
 | P06 Nadia | V01, V14, V13, V15, V18 |
-| P07 Jasmin | V04, V09, V11, V16, V17 |
-| P08 Reto | V06, V07, V16 |
-| P09 Marco | V03, V09, V10, V05, V11, V17, V18 |
-| P10 Elena | V05, V11, V16, V17 |
+| P07 Jasmin | V04, V09, V11, V16 |
+| P08 Urs | V07, V06 |
+| P09 Dario | V03, V09, V10, V05, V11, V17, V18 |
+| P10 Elena | V05, V11, V16 |
 | P11 Jonas | V04, V14, V17 |
 | P12 Sabine | V08, V16 |
+| P13 Ramon (nach E08 A) | V06, V07, V08 |
 
-Prüfrechnung ohne Ereignisse, Motivation 100, ohne Lernkurve und Fehler: Ende Tag 33.5, AC CHF 166'700. Die schlanke Variante (gleiche Personen, aber nur Planpersonen plus eine Person auf Teilpensum-Vorgängen des kritischen Pfads) endet Tag 40.0 mit AC CHF 155'500. Die gute Strategie liegt dazwischen.
+Änderungen AP5 gegenüber dem Entwurf: Seraina hilft nach V02 bei V04 (sonst Leerlauf auf dem kritischen Pfad), Aylin und Martin arbeiten V12 vor V13 ab (kritisch vor Puffer), Urs beginnt mit V07 (beste Passung, V07 war der Engpass vor V11), Ramon übernimmt V06 und V07, und V17 hat 4 statt 7 Personen (bei Mindestdauer 6 Tage brachten die zusätzlichen Personen nur Teamgrössen-Abzug).
+
+Prüfrechnung ohne Ereignisse, Motivation 100, ohne Lernkurve und Fehler (Rechenkern AP5, ohne Ramon): Ende Tag 35.0, AC CHF 133'900, CPI 1.21; V12 endet an Tag 22.5. Der Entwurf nannte Tag 33.5 und CHF 166'700; der Rechenkern ergab mit der Entwurfsbesetzung Tag 34.5 und (nach der Korrektur der Mindestdauer-Kappung) CHF 167'300 zu den alten Sätzen. Die schlanke Variante des Entwurfs ist nicht genau genug beschrieben, um sie nachzurechnen, und entfällt.
 
 ### 8.3 Kontrollrechnungen
 
@@ -1760,3 +1776,6 @@ Prüfrechnung ohne Ereignisse, Motivation 100, ohne Lernkurve und Fehler: Ende T
 - Gefahr je Takt, W 3 (30 %), Fenster Tag 7–14 (16 Takte): h = 1 − 0.7^(1/16) = **0.02205**.
 - Stakeholder-Index Start: 9'410 ÷ 143 = **65.8**.
 - Einführungslauf: 136 h × 110 = **14'960 CHF**; kritischer Pfad 1 + 4 + 1.5 + 1 = **7.5 Tage**.
+- Prüfrechnung Musterbesetzung (8.2, ohne Ereignisse, Motivation 100, ohne Lernkurve und Fehler): **Tag 35.0, AC CHF 133'900, CPI 1.21** (Rechenkern `ENGINE_VERSION` 2).
+- Strategie-Roboter, 20 Startwerte, Median (AP5): gut **784.5 Punkte, Tag 39.5, CPI 0.93** · naiv **512.5 Punkte, Tag 47, CPI 0.95** · schlecht **204 Punkte, Abbruch Tag 50**.
+- Qualitätsreferenz: DEF_BASE 0.03 × 1 Review (Entdeckung 50 %) → ρ ≈ 1.5 unentdeckte Fehler je 100 h = RHO_REF → QI 100 %.

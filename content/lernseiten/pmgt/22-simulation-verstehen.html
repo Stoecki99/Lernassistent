@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Die Projektsimulation verstehen · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/23-leitstand" title="Leitstand: Projekt Onlineschalter">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t22-», nur Farben aus :root -->
+  <style>
+    .t22-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t22-ziele li{margin-bottom:3px}
+    .t22-quelle{font-size:.9rem; color:var(--muted)}
+
+    /* Ablauf als nummerierte Kette */
+    .t22-fluss{margin:0; padding:0; list-style:none; counter-reset:t22f; display:flex; flex-direction:column; gap:8px}
+    .t22-fluss > li{counter-increment:t22f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t22-fluss > li::before{content:counter(t22f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t22-fluss .hint{margin:2px 0 0}
+    .t22-min{display:inline-block; font-weight:700; color:var(--accent); margin-left:4px; white-space:nowrap}
+
+    /* Formelzeilen auf der Tafel */
+    .t22-regeln{display:grid; grid-template-columns:minmax(0,1fr); gap:6px; font-family:var(--f-body); white-space:normal}
+    .t22-regel{display:flex; flex-wrap:wrap; gap:2px 12px; align-items:baseline}
+    .t22-regel b{min-width:8.5em; color:var(--accent)}
+
+    /* Profil: fünf Gebiete in einer Zeile */
+    .t22-profil{display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:4px; margin:6px 0 0}
+    .t22-profil span{display:flex; flex-direction:column; align-items:center; padding:3px 0; border:1px solid var(--line); border-radius:8px; background:var(--bg); font-size:.72rem; color:var(--muted); line-height:1.2}
+    .t22-profil span b{font-size:1.05rem; color:var(--ink); font-variant-numeric:tabular-nums}
+
+    /* Besetzungs-Trainer */
+    .t22-aufgaben{display:flex; flex-wrap:wrap; gap:8px}
+    .t22-vorgang{background:var(--board); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:6px}
+    .t22-vorgang h3{margin:0}
+    .t22-vorgang p{margin:0}
+    .t22-leute{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(250px,100%),1fr)); gap:10px}
+    .t22-person{font:inherit; color:var(--ink); text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; cursor:pointer; display:flex; flex-direction:column; gap:2px; min-width:0}
+    .t22-person:hover{border-color:var(--accent)}
+    .t22-person[aria-pressed="true"]{border:2px solid var(--accent); background:var(--accent-soft); padding:9px 11px}
+    .t22-person .t22-name{font-weight:700}
+    .t22-person .t22-wahl{font-size:.85rem; color:var(--accent); font-weight:700}
+    .t22-person .hint{margin:0}
+    .t22-luecke{color:var(--bad); font-weight:700}
+    .t22-passt{color:var(--ok); font-weight:700}
+    .t22-kennz{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(120px,100%),1fr)); gap:8px}
+    .t22-kz{border:1px solid var(--line); border-radius:10px; padding:8px 10px; background:var(--surface)}
+    .t22-kz span{display:block; font-size:.8rem; color:var(--muted)}
+    .t22-kz b{font-size:1.15rem; font-variant-numeric:tabular-nums}
+    .t22-kz small{display:block; color:var(--muted); font-size:.8rem}
+    .t22-gut{color:var(--ok)}
+    .t22-schlecht{color:var(--bad)}
+    .t22-rm{padding:10px 12px; border-radius:10px; line-height:1.5}
+    .t22-rm:empty{display:none}
+    .t22-rm.ok{border-left:4px solid var(--ok); background:var(--ok-bg)}
+    .t22-rm.bad{border-left:4px solid var(--bad); background:var(--bad-bg)}
+    .t22-rm.info{border-left:4px solid var(--accent); background:var(--board)}
+    .t22-rm p{margin:0}
+    .t22-rm p + p{margin-top:6px}
+
+    /* Entscheid-Trainer */
+    .t22-lage{display:flex; flex-direction:column; gap:10px}
+    .t22-meldung{margin:0; padding:10px 12px; border-left:3px solid var(--accent); background:var(--board); border-radius:0 8px 8px 0}
+    .t22-optionen{display:flex; flex-direction:column; gap:8px}
+    .t22-option{font:inherit; color:var(--ink); text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 12px; cursor:pointer; line-height:1.4}
+    .t22-option:hover{border-color:var(--accent)}
+    .t22-option[aria-pressed="true"]{border:2px solid var(--accent); padding:9px 11px}
+    .t22-option b{color:var(--accent); margin-right:4px}
+    .t22-option[disabled]{cursor:default}
+    .t22-option[disabled]:hover{border-color:var(--line)}
+    .t22-option[aria-pressed="true"][disabled]:hover{border-color:var(--accent)}
+    .t22-wertung{font-weight:700}
+    .t22-wertung.g{color:var(--ok)}
+    .t22-wertung.m{color:var(--free)}
+    .t22-wertung.s{color:var(--bad)}
+    .t22-stand{font-weight:600; margin:0}
+    .t22-stand:empty{display:none}
+
+    /* Checkliste */
+    .t22-check{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px}
+    .t22-check li{display:flex; gap:10px; align-items:baseline; padding:6px 10px; border-radius:8px; background:var(--board)}
+    .t22-check li > span:first-child{font-weight:700; color:var(--accent); min-width:5.2em}
+
+    /* RACI-Tabelle */
+    .t22-raci td{text-align:center; font-weight:700; white-space:nowrap}
+    .t22-raci th[scope="row"]{font-weight:600}
+
+    /* Film und Lösung */
+    .t22-ft{font-family:var(--f-body); font-size:.92rem; white-space:normal}
+    .t22-ft td, .t22-ft th{padding:3px 6px}
+    .t22-zeile{margin-top:8px; font-family:var(--f-body); white-space:normal; line-height:1.5}
+    .t22-loesung{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t22-fluss > li{padding-left:40px}
+      .t22-ft{font-size:.86rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="22-simulation-verstehen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 8/9 · Projektsimulation</span>
+    <h1>Die Projektsimulation verstehen</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.08</span><span class="icb">ICB 3.10</span><span class="icb">ICB 2.05</span><span class="icb">ICB 2.06</span>
+    </p>
+    <p class="lead">Am Samstag, 14. November 2026, führt deine Gruppe einen ganzen Tag lang ein Projekt am Computer: Team besetzen, Ereignisse entscheiden, Kennzahlen lesen, berichten. Diese Station erklärt, wie ein solcher Simulator funktioniert und wie ihr ihn mit einem klaren Plan spielt. Du übst die Besetzung am Onlineschalter Wolkenried und entscheidest drei typische Lagen.</p>
+    <div class="note"><b>Hinweis:</b> Diese Station erklärt Projektsimulatoren allgemein, mit dem Simulator aus dem Unterricht als Beispiel. Den eigenen Simulator des Lernpfads, den Leitstand mit dem Projekt Onlineschalter, spielst du in <a href="/lernseiten/pmgt/23-leitstand">Station 23</a>.</div>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t22-ziele">
+        <li>Du beschreibst Zweck und Ablauf des Simulationstags: Planung, zwei Perioden, zwei Nachbesprechungen mit Status- und Abschlussbericht.</li>
+        <li>Du liest die Kennzahlen eines Simulators als Index (100&nbsp;% = Plan, mehr ist besser) und verbindest CPI und SPI mit dem Earned Value.</li>
+        <li>Du besetzt einen Vorgang nach Qualifikationsprofil, Pensum und Stundensatz und schätzt Passung, Dauer und Kosten.</li>
+        <li>Du entscheidest Ereignisse rechtzeitig, führst das Team über Gespräche und Anlässe und pflegst Risikoregister und Reviews.</li>
+        <li>Du verteilst die Rollen in deiner Gruppe und arbeitest jede Simulationswoche mit einer Checkliste.</li>
+      </ul>
+      <p class="t22-quelle">Quellen: Benutzerhandbuch und Flyer zum Simulator (LB 8/9, nur die Mechanik, in eigenen Worten), RACI-Tabelle (nur die Form), Vorlage Statusbericht (Kennzahlenliste), LB 1 F.9 und F.11, LB 7 S.3, Modulbeschreibung, Swiss ICB 4.4.5, 4.4.6, 4.5.8, 4.5.10. Die Rechenregeln auf dieser Seite sind ein eigenes, vereinfachtes Lernmodell, angelehnt an den Leitstand. Der Simulator im Unterricht legt seine Formeln nicht offen.</p>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> Die Projektsimulation am Sa 14.11.2026 ist eine Gruppenleistung im Präsenzunterricht. In der Pause nach Woche 4 schreibt deine Gruppe einen Statusbericht (Station 19), am Schluss einen Abschlussbericht. Wer nicht teilnimmt, erbringt laut Modulbeschreibung eine Ersatzleistung: eine Seminararbeit von 8–12 Seiten in Einzelarbeit. In der IPMA-Prüfung tauchen dieselben Themen als Situationsfragen auf: Ressourcen (<span class="icb">ICB 3.08</span>), Steuerung (<span class="icb">ICB 3.10</span>), Führung (<span class="icb">ICB 2.05</span>) und Teamarbeit (<span class="icb">ICB 2.06</span>).</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#ablauf"><b>1</b>Ablauf</a>
+    <a href="#kennzahlen"><b>2</b>Kennzahlen</a>
+    <a href="#besetzung"><b>3</b>Besetzung</a>
+    <a href="#fuehrung"><b>4</b>Entscheide und Team</a>
+    <a href="#strategie"><b>5</b>Strategie</a>
+    <a href="#trainer"><b>6</b>Besetzungs-Trainer</a>
+    <a href="#entscheid"><b>7</b>Entscheid-Trainer</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine eines Projektsimulators</h2>
+    <p class="prose">Ein Flugsimulator lässt Pilotinnen üben, ohne dass ein Flugzeug abstürzt. Ein Projektsimulator macht dasselbe für Projekte: Du triffst Entscheide, die Zeit läuft im Zeitraffer, und du siehst sofort, was sie bewirken. Dazu brauchst du fünf Begriffe.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Vorgang mit Profil = Stelleninserat</span><span class="ex">BAU 4 · ENT 5 · DAT 2 · UX 3 · KOM 0</span><p>Jeder Vorgang sagt, wie viele Stunden er braucht, für wie viele Personen er geplant ist und welches Können er in welchem Gebiet verlangt, auf einer Skala von 0 bis 6. Wie ein Inserat, das Anforderungen auflistet.</p></div>
+      <div class="concept"><span class="tag">Passung = Schuh, der passt</span><span class="ex">Passung 0.75 → langsamer</span><p>Wie gut das Können einer Person zum Profil passt. Ein zu kleiner Schuh drückt: Wer eine Lücke hat, arbeitet langsamer und macht mehr Fehler.</p></div>
+      <div class="concept"><span class="tag">Kennzahl als Index = Notenskala</span><span class="ex">CPI 104 % · SPI 86 %</span><p>Der Simulator vergleicht alles mit dem Plan. 100&nbsp;% heisst «wie geplant», mehr ist besser, weniger ist schlechter. Wie ein Zeugnis, bei dem die 4 genügend ist.</p></div>
+      <div class="concept"><span class="tag">Entscheid mit Frist = Rechnung</span><span class="ex">bis Freitag, sonst Standard</span><p>E-Mails, Anrufe und Besuche verlangen einen Entscheid. Wer eine Rechnung liegen lässt, zahlt Mahngebühren. Wer einen Entscheid liegen lässt, bekommt einen fremden Entscheid, meist einen schlechten.</p></div>
+      <div class="concept"><span class="tag">Motivation = Akku</span><span class="ex">Gespräch +, Umplanen −</span><p>Jede Person hat eine Motivation, die ihre Leistung beeinflusst. Gespräche und Teamanlässe laden den Akku, Überzeit und ständiges Umplanen leeren ihn.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Besetzung, Entscheid oder Kennzahl?</h3>
+      <p class="hint">Frag dich: Lege ich fest, wer woran arbeitet (Besetzung)? Reagiere ich auf eine Meldung (Entscheid)? Oder lese ich ab, wie das Projekt steht (Kennzahl)?</p>
+      <div id="t22-sortierer-bausteine"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wozu und Ablauf ===== -->
+  <section id="ablauf">
+    <span class="eyebrow">Schritt 1 · Wozu und wie der Tag abläuft (Handbuch, Flyer, LB 1 F.9 und F.11)</span>
+    <h2>Wozu eine Simulation, und wie läuft der Tag?</h2>
+    <p class="prose">Die Modulbeschreibung sagt es deutlich: Die Fähigkeiten aus dem Unterricht werden in einer computergestützten Projektsimulation überprüft. Du erlebst die Folgen deiner Planung, deiner Führung und der Teamarbeit unmittelbar und bekommst eine <b>messbare Rückmeldung</b>. Das heisst <b>erfahrungsbasiertes Lernen</b>: Du lernst nicht aus einer Folie, sondern aus deinem eigenen Fehler, und zwar ohne echten Schaden.</p>
+    <p class="prose">Im Unterricht setzt ihr den Simulator SimulTrain® ein, ein Produkt der STS SA in Lausanne. Laut Flyer und LB 1 F.11 trainiert er, Ressourcen zu planen, mit Projektmanagement-Werkzeugen zu arbeiten, den Ablauf zu leiten, als Team auch unter Stress richtig zu entscheiden und auf typische Projektsituationen zu reagieren. Jede Gruppe sitzt an einem Computer und erhält E-Mails, Anrufe und Sprachnachrichten wie in einem echten Projekt. Viel Vorwissen braucht es nicht. Empfohlen sind Grundwissen zum Projektablauf und Kenntnisse von Gantt und Netzplan (Station 10).</p>
+
+    <h3>Der Ablauf des Simulationstags</h3>
+    <p class="prose">Der Tag dauert laut Übersicht (LB 1 F.9) von 08.30 bis 16.15 Uhr. Das Handbuch teilt die Simulation in zwei Perioden zu je vier simulierten Wochen. Sinngemäss:</p>
+    <ol class="t22-fluss">
+      <li><b>Planung</b><span class="t22-min">rund 60 min</span><p class="hint">Projektbeschreibung und Organigramm lesen, Vorgänge und Personen studieren, Team zusammenstellen, jedem Vorgang mindestens eine Person zuweisen, Risikoregister und Reviews einstellen.</p></li>
+      <li><b>Periode 1: Wochen 1–4</b><span class="t22-min">rund 90 min</span><p class="hint">Die Zeit läuft. Meldungen kommen herein, ihr entscheidet, besetzt um, führt Gespräche. Nach Woche 4 hält der Simulator an.</p></li>
+      <li><b>Nachbesprechung 1</b><span class="t22-min">rund 30 min</span><p class="hint">Trainer informieren, Resultate analysieren, Statusbericht schreiben (Station 19).</p></li>
+      <li><b>Kurze Planung</b><span class="t22-min">rund 10 min</span><p class="hint">Massnahmen aus dem Statusbericht umsetzen: umbesetzen, Prioritäten und Reviews anpassen.</p></li>
+      <li><b>Periode 2: Wochen 5–8</b><span class="t22-min">rund 70 min</span><p class="hint">Weiter mit neuen Ereignissen bis zum Projektende.</p></li>
+      <li><b>Nachbesprechung 2</b><span class="t22-min">rund 30 min</span><p class="hint">Trainer informieren, Resultate analysieren, Schlussfolgerungen ziehen, Abschlussbericht mit Lessons Learned schreiben, Simulation beenden.</p></li>
+    </ol>
+    <div class="note"><b>Merke:</b> Die Pause nach Woche 4 ist kein Kaffeestopp. Sie ist die Phasenschwelle des Projekts: Ihr schaut auf die Zahlen, berichtet ehrlich und steuert für die zweite Hälfte um. Genau das verlangt die ICB beim Abgleich von Projektleistung und Plan (Swiss ICB 4.5.10.3 und 4.5.10.4).</div>
+    <div class="note tipp"><b>Tipp:</b> Der Simulator lässt sich unterbrechen und später weiterspielen. Wichtig laut Handbuch: Öffnet nie zwei Sitzungen mit demselben Zugang gleichzeitig.</div>
+  </section>
+
+  <!-- ===== 2 · Kennzahlen ===== -->
+  <section id="kennzahlen">
+    <span class="eyebrow">Schritt 2 · Die Zahlen auf dem Bildschirm (Vorlage Statusbericht, Station 18)</span>
+    <h2>Kennzahlen: über 100 % ist gut</h2>
+    <p class="prose">Ein Simulator zeigt fast alle Werte als Index: Der Plan ist 100&nbsp;%. Liegt ein Wert darüber, läuft es besser als geplant, darunter schlechter. Das Handbuch sagt es in einem Satz: grösser als 100&nbsp;% ist in Ordnung. Für die Kosten heisst das: 95&nbsp;% bedeutet nicht «5&nbsp;% gespart», sondern «für jeden Franken nur 95 Rappen Leistung».</p>
+    <p class="prose">Zwei der Indizes kennst du aus dem Earned Value (<a href="/lernseiten/pmgt/18-earned-value">Station 18</a>). Der Simulator schreibt sie nur in Prozent:</p>
+    <div class="board t22-regeln" aria-label="CPI und SPI als Index">
+      <div class="t22-regel"><b>CPI</b><span>EV ÷ AC, zum Beispiel 0.93 → angezeigt als 93&nbsp;%</span></div>
+      <div class="t22-regel"><b>SPI</b><span>EV ÷ PV, zum Beispiel 0.86 → angezeigt als 86&nbsp;%</span></div>
+    </div>
+    <p class="prose">Beispiel Onlineschalter Wolkenried, Ende Woche 4 (gleiche Zahlen wie in Station 19): Plankosten aller Vorgänge (BAC) CHF 162'240, Planwert PV CHF 112'800, Fertigstellungswert EV CHF 96'624, Istkosten AC CHF 103'900. Ein Simulator würde also zeigen: SPI 86&nbsp;%, CPI 93&nbsp;%, Fertigstellungswert 60&nbsp;%.</p>
+    <p class="prose">Die Vorlage zum Statusbericht aus dem Unterricht listet die Kennzahlen auf, die ihr am Ende jeder Periode abschreibt. Was sie bedeuten, in eigenen Worten:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Kennzahlen eines Projektsimulators (Liste nach der Vorlage Statusbericht, Erklärung sinngemäss)</caption>
+        <thead><tr><th>Kennzahl</th><th>Was sie misst</th><th>So liest du sie</th></tr></thead>
+        <tbody>
+          <tr><th>CPI</th><td>Leistung pro Franken: EV ÷ AC</td><td>unter 100&nbsp;%: die erledigte Arbeit war teurer als geplant</td></tr>
+          <tr><th>SPI</th><td>Leistung gegenüber Plan: EV ÷ PV</td><td>unter 100&nbsp;%: weniger erledigt als geplant</td></tr>
+          <tr><th>Qualität</th><td>Wie viele Fehler unentdeckt im Projekt stecken</td><td>sinkt bei schlechter Passung, Überzeit und ohne Reviews</td></tr>
+          <tr><th>Motivation</th><td>Stimmung und Einsatz des Teams</td><td>steigt mit Gesprächen und Anlässen, sinkt mit Überzeit, Leerlauf und Umplanen</td></tr>
+          <tr><th>Risiko-Index</th><td>Wie gut das Risikoregister gepflegt ist (in der Vorlage «Risk Management Index»)</td><td>steigt, wenn ihr Risiken regelmässig prüft und Massnahmen ergreift</td></tr>
+          <tr><th>Ressourcenausgleich</th><td>Wie gleichmässig die Leute ausgelastet sind (in der Vorlage «Resource Leveling Score»)</td><td>sinkt bei Überlast und bei Leerlauf</td></tr>
+          <tr><th>Fertigstellungswert in %</th><td>Anteil der geplanten Leistung, der erbracht ist (EV ÷ BAC)</td><td>der Fortschritt in einer Zahl</td></tr>
+          <tr><th>Aktuelle Kosten</th><td>alle gebuchten Kosten bis heute (AC)</td><td>allein nie ein Urteil: immer zusammen mit dem EV lesen</td></tr>
+          <tr><th>Produktivität</th><td>wirksame Stunden ÷ bezahlte Stunden</td><td>sinkt bei schlechter Passung, tiefer Motivation, zu grossen Teams</td></tr>
+          <tr><th>Stundenarten</th><td>Anzahl Stunden, davon Meeting, Ausbildung, Überzeit, unproduktiv, Krankheit</td><td>zeigt, wohin die bezahlte Zeit geflossen ist</td></tr>
+          <tr><th>Qualitätsreviews, Zeit Fehlervorsorge</th><td>Anzahl Reviews und die Zeit, die sie gekostet haben</td><td>Investition: kostet jetzt, spart später</td></tr>
+          <tr><th>Korrekturzeit</th><td>Zeit, um gefundene Fehler zu beheben</td><td>hoch, wenn Fehler spät auffallen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle:</b> Tiefe «aktuelle Kosten» sehen gut aus. Sie heissen aber oft nur: Es wurde wenig gearbeitet. Ob das Geld gut eingesetzt ist, sagt erst der CPI. Und ein CPI über 100&nbsp;% bei einem SPI unter 100&nbsp;% bedeutet meist: Die Leute arbeiten effizient, aber es sind zu wenige auf den richtigen Vorgängen.</div>
+    <div class="note"><b>Ergänzung:</b> Wie der Simulator im Unterricht Qualität, Motivation oder Ressourcenausgleich genau berechnet, steht in keiner Unterlage. Die Erklärungen oben sind sinngemäss. Der Leitstand (Station 23) legt seine Formeln offen, dort kannst du nachlesen, wie jede Kennzahl entsteht.</div>
+  </section>
+
+  <!-- ===== 3 · Vorgänge, Team, Besetzung ===== -->
+  <section id="besetzung">
+    <span class="eyebrow">Schritt 3 · Vorgänge, Mitarbeitende, Besetzung</span>
+    <h2>Wie ein Simulator aus einer Besetzung Dauer und Kosten macht</h2>
+    <p class="prose"><b>Vorgänge.</b> Jeder Vorgang hat einen Aufwand in Stunden, eine geplante Anzahl Personen und ein <b>Qualifikationsprofil</b>: für jedes Gebiet eine Zahl von 0 (nicht nötig) bis 6 (Spitzenkönnen). Am Onlineschalter Wolkenried sind es fünf Gebiete: Fachwissen Bau und Verwaltung (BAU), Entwicklung (ENT), Daten und Schnittstellen (DAT), Benutzerführung (UX), Kommunikation und Schulung (KOM).</p>
+    <p class="prose"><b>Mitarbeitende.</b> Jede Person hat ebenfalls ein Profil von 0 bis 6, einen Stundensatz, ein Pensum (wie viel sie dem Projekt zur Verfügung steht) und eine Persönlichkeit mit Vorlieben und Abneigungen. Ein Kernteam ist fest dem Projekt zugeteilt, andere kommen aus der Linie oder vom Lieferanten.</p>
+    <p class="prose"><b>Besetzung und Prioritäten.</b> Du weist jeder Person Vorgänge zu, im Unterrichts-Simulator bis zu sechs. Die Reihenfolge ist die Priorität: Die Person arbeitet zuerst am obersten Vorgang, der gerade bearbeitbar ist, also dessen Vorgänger fertig sind. Ist der fertig, rückt der nächste nach. Die Simulation startet erst, wenn <b>jeder Vorgang mindestens eine Person</b> hat.</p>
+
+    <h3>Das Lernmodell dieser Seite</h3>
+    <p class="prose">Damit du die Zusammenhänge rechnen kannst, nutzt diese Seite ein einfaches Modell. Es ist an die Formeln des Leitstands angelehnt (Spezifikation Abschnitt 3.4), lässt aber Motivation, Lernkurve, Überzeit und Fehler weg. Eigene Ergänzung, nicht aus den Unterlagen:</p>
+    <div class="board t22-regeln" aria-label="Rechenregeln des Lernmodells">
+      <div class="t22-regel"><b>Lücke je Gebiet</b><span>Anforderung − Können, wenn positiv. Eine Kollegin im selben Vorgang hilft: Dein Können zählt mindestens «ihr Können − 2».</span></div>
+      <div class="t22-regel"><b>Gewicht</b><span>Anforderung 4–6: 1 · Anforderung 2–3: 0.6 · Anforderung 1: 0.3</span></div>
+      <div class="t22-regel"><b>Passung</b><span>1 − 0.06 × gewichtete Lücke + 0.025 × Überqualifikation, begrenzt auf 0.35 bis 1.15 (Überqualifikation zählt nur in Gebieten mit Anforderung ab 3, je höchstens 2)</span></div>
+      <div class="t22-regel"><b>Eigenheit</b><span>gründlich × 0.95 (weniger Fehler) · schnell × 1.05 (mehr Fehler)</span></div>
+      <div class="t22-regel"><b>Teamgrösse</b><span>eine Person mehr als geplant × 0.95, zwei mehr × 0.88 (Abstimmung)</span></div>
+      <div class="t22-regel"><b>Leistung pro Tag</b><span>Teamfaktor × Σ (8 h × Pensum × Passung × Eigenheit)</span></div>
+      <div class="t22-regel"><b>Dauer</b><span>Aufwand ÷ Leistung pro Tag</span></div>
+      <div class="t22-regel"><b>Kosten</b><span>Dauer × Σ (8 h × Pensum × Stundensatz)</span></div>
+      <div class="t22-regel"><b>Produktivität</b><span>wirksame Stunden ÷ bezahlte Stunden</span></div>
+      <div class="t22-regel"><b>Termin- und Kosten-Index</b><span>Plandauer ÷ Dauer und Plankosten ÷ Kosten, über 100&nbsp;% = gut (sinngemäss wie SPI und CPI für einen einzelnen Vorgang)</span></div>
+    </div>
+    <p class="prose">Klick dich durch ein Beispiel. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="t22-stepper-v04"></div>
+    <div class="note"><b>Merke:</b> Drei Dinge bestimmen die Dauer: Passung, Pensum und Teamgrösse. Mehr Personen verkürzen einen Vorgang, aber weniger als im Verhältnis, und sie kosten mehr. Eine schlechte Passung kostet doppelt: Der Vorgang dauert länger, und du bezahlst die zusätzlichen Stunden.</div>
+    <div class="note falle"><b>Falle:</b> Das Pensum ändert in diesem Modell die Kosten nicht, nur die Dauer. 40 Stunden Arbeit kosten bei 60&nbsp;% gleich viel wie bei 100&nbsp;%, sie dauern aber fast doppelt so lange. Auf einem kritischen Vorgang ist ein Teilpensum deshalb teuer: Es verschiebt das Projektende.</div>
+  </section>
+
+  <!-- ===== 4 · Entscheide, Team, Risiko, Qualität ===== -->
+  <section id="fuehrung">
+    <span class="eyebrow">Schritt 4 · Entscheide, Motivation, Risiko und Qualität (Handbuch)</span>
+    <h2>Entscheiden, führen, vorbeugen</h2>
+
+    <h3>Entscheide: mehrere Optionen, sofortige Rückmeldung</h3>
+    <p class="prose">Während die Zeit läuft, kommen Meldungen herein: eine Assistentin bringt Unterlagen, das Telefon klingelt, eine E-Mail beschwert sich. Zu jeder Lage gibt es mehrere Optionen. Nach dem Entscheid erhältst du sofort eine Rückmeldung, im Unterrichts-Simulator von der Leitung des PMO (Projektmanagement-Büro). Lies sie: Sie ist das Lernen in der Simulation.</p>
+    <div class="note falle"><b>Aufschieben ist teuer.</b> Eine Option heisst sinngemäss «abbrechen» oder «später». Dann bleibt die Sache liegen, bis die Frist abläuft, laut Handbuch bis Freitagabend. Danach entscheidet eine vorgesetzte Person für dich, und die wählt meistens die schlechteste Option. Du verlierst also Zeit und die Kontrolle. Im Leitstand heisst das «Standardentscheid».</div>
+    <p class="prose">Das passt zur ICB: Wer führt, trifft Entscheidungen, setzt sie durch und überprüft sie (Swiss ICB 4.4.5.5, <span class="icb">ICB 2.05</span>). In der Gruppe heisst das: Die Optionen kurz abwägen, dann entscheiden. Fünf Minuten Diskussion sind gut, fünfzehn sind zu viel, denn die Zeit läuft weiter.</p>
+
+    <h3>Gespräche und Teamanlässe</h3>
+    <p class="prose">Über den Kalender lädst du einzelne Personen zum Gespräch ein. Je nach Tageszeit gibt es auch gemeinsame Anlässe wie ein Mittagessen, einen Sportanlass oder ein Grillfest. Beides hebt die Motivation, und Motivation hebt die Leistung. Beschwert sich jemand per E-Mail, ist ein Gespräch fast immer die richtige erste Reaktion. Teamentwicklung gehört zu <span class="icb">ICB 2.06</span> (Swiss ICB 4.4.6.1: Team zusammenstellen und entwickeln).</p>
+    <div class="note tipp"><b>Tipp:</b> Ein Anlass wirkt stärker, wenn er nicht jeden Tag stattfindet. Auch ein Gespräch bringt wenig, wenn das letzte mit derselben Person erst ein paar Tage her ist. Am meisten bringt es bei Leuten, die Anerkennung oder Klarheit brauchen. Im Leitstand ist das so programmiert; im Unterrichts-Simulator ist es plausibel, aber nicht belegt (Ergänzung).</div>
+
+    <h3>Risikoregister: jede Woche, in vier Schritten</h3>
+    <p class="prose">Ist das Risikomanagement eingeschaltet, wählst du im Register ein Risiko und eine oder mehrere Massnahmen. Während der Simulation kommen neue Risiken dazu. Das Handbuch empfiehlt, das Register zu Beginn jeder Woche zu prüfen. Als Ablauf (eigene Ergänzung, Methode aus Station 13):</p>
+    <ol class="t22-fluss">
+      <li><b>Sichten:</b> Neue Risiken suchen, eingetretene als erledigt erkennen.</li>
+      <li><b>Bewerten:</b> Wahrscheinlichkeit × Auswirkung. Was trifft den kritischen Pfad?</li>
+      <li><b>Handeln:</b> Massnahme wählen, wenn sie weniger kostet als der erwartete Schaden, sonst bewusst akzeptieren.</li>
+      <li><b>Nachführen:</b> Risiko-Index notieren und im Statusbericht die wichtigsten Risiken nennen.</li>
+    </ol>
+
+    <h3>Qualitätsreviews pro Vorgang</h3>
+    <p class="prose">Für jeden Vorgang wählst du die Anzahl Qualitätsreviews. Ein Review kostet etwas Zeit (in der Vorlage «Zeit Fehlervorsorge»), findet aber Fehler früh. Fehler, die erst ein späterer Test findet, kosten ein Mehrfaches an Korrekturzeit und treffen oft den kritischen Pfad. Im Leitstand ist es dreimal so viel (1 Stunde früh gegenüber 3 Stunden spät je Fehler).</p>
+  </section>
+
+  <!-- ===== 5 · Strategie ===== -->
+  <section id="strategie">
+    <span class="eyebrow">Schritt 5 · Mit Plan in die Simulation</span>
+    <h2>Strategie, Rollen und Checkliste für eure Gruppe</h2>
+    <p class="prose">Die Simulation belohnt, was du im Modul gelernt hast. Die wichtigsten Regeln, aus den Unterlagen und den Abschnitten oben abgeleitet (Strategie als eigene Ergänzung, nicht vom Dozenten bestätigt):</p>
+    <ol class="t22-fluss">
+      <li><b>Kritischen Pfad kennen, bevor die Zeit läuft.</b><p class="hint">Netzplan aus den Vorgängen und Abhängigkeiten rechnen (<a href="/lernseiten/pmgt/10-netzplan-und-gantt">Station 10</a>). Nur ein schnellerer kritischer Vorgang bringt das Ende nach vorne.</p></li>
+      <li><b>Beste Profile auf kritische Vorgänge.</b><p class="hint">Vollzeit, gute Passung, wenn nötig eine zweite Person, die die Lücke deckt. Der Stundensatz ist zweitrangig, wenn der Termin wackelt.</p></li>
+      <li><b>Puffer zum Glätten nutzen.</b><p class="hint">Vorgänge mit Puffer dürfen mit Teilpensen, günstigeren Leuten oder später laufen. So vermeidest du Überlast und Leerlauf.</p></li>
+      <li><b>Alles besetzen, Prioritäten bewusst setzen.</b><p class="hint">Jeder Vorgang braucht mindestens eine Person. Die Reihenfolge der Vorgänge bei einer Person folgt dem Netzplan: kritisch vor Puffer.</p></li>
+      <li><b>Vor dem Start vorbeugen.</b><p class="hint">Risikomassnahmen für die grössten Risiken, Reviews mindestens auf den kritischen Vorgängen.</p></li>
+      <li><b>Nie einen Entscheid liegen lassen.</b><p class="hint">Jede Meldung sofort lesen, innert Minuten entscheiden, die Rückmeldung notieren.</p></li>
+      <li><b>Jeden Freitag die Kennzahlen notieren.</b><p class="hint">So seht ihr Trends und habt in der Pause die Zahlen für den Statusbericht.</p></li>
+      <li><b>Ehrlich berichten, aus Fehlern lernen.</b><p class="hint">Statusbericht in der Pause mit Zahlen (<a href="/lernseiten/pmgt/19-statusbericht">Station 19</a>), Abschlussbericht mit konkreten Lessons Learned.</p></li>
+    </ol>
+
+    <h3>Rollen in der Gruppe</h3>
+    <p class="prose">Vier Leute vor einem Bildschirm, die alle dasselbe anschauen, sind langsam. Verteilt Rollen. Die RACI-Tabelle aus dem Unterricht ordnet jedem Vorgang Verantwortlichkeiten zu: R arbeitet daran, A ist verantwortlich (laut LB 5 F.23 eine Person, also genau ein A pro Zeile), C wird konsultiert, I wird informiert, und zusätzlich Q für die Qualitätsverantwortung. Dieselbe Form passt auf eure Gruppe. Vorschlag (eigene Ergänzung); bei drei Personen legt ihr zwei Rollen zusammen:</p>
+    <div class="card tablebox">
+      <table class="tabelle t22-raci">
+        <caption>Gruppen-RACI für den Simulationstag (R arbeitet daran, A verantwortlich, C konsultiert, I informiert, Q Qualität)</caption>
+        <thead><tr><th scope="col">Aufgabe</th><th scope="col">Steuerung</th><th scope="col">Posteingang</th><th scope="col">Risiko und Qualität</th><th scope="col">Controlling und Bericht</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Kritischer Pfad, Besetzung, Prioritäten</th><td>R, A</td><td>C</td><td>C</td><td>I</td></tr>
+          <tr><th scope="row">E-Mails, Anrufe, Besuche entscheiden</th><td>A</td><td>R</td><td>C</td><td>I</td></tr>
+          <tr><th scope="row">Gespräche und Teamanlässe</th><td>R, A</td><td>C</td><td>I</td><td>I</td></tr>
+          <tr><th scope="row">Risikoregister jede Woche</th><td>C</td><td>I</td><td>R, A</td><td>I</td></tr>
+          <tr><th scope="row">Reviews je Vorgang</th><td>A</td><td>I</td><td>R</td><td>C</td></tr>
+          <tr><th scope="row">Kennzahlen jeden Freitag notieren</th><td>I</td><td>I</td><td>C</td><td>R, A</td></tr>
+          <tr><th scope="row">Statusbericht und Abschlussbericht</th><td>A</td><td>C</td><td>Q</td><td>R</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die Rolle <b>Steuerung</b> hat das letzte Wort, wenn sich die Gruppe nicht einigt. So bleibt kein Entscheid liegen. Rollen verteilen und Aufgaben delegieren stärkt das Team (Swiss ICB 4.4.6.4, <span class="icb">ICB 2.06</span>).</p>
+
+    <h3>Checkliste pro Simulationswoche</h3>
+    <ol class="t22-check">
+      <li><span>Montag</span><span>Risikoregister in vier Schritten. Gantt prüfen: Liegt ein kritischer Vorgang zurück? Besetzung prüfen: Wer ist im Leerlauf, wer überlastet?</span></li>
+      <li><span>Laufend</span><span>Posteingang sofort lesen und entscheiden. Rückmeldung notieren. Bei Beschwerde oder sinkender Motivation ein Gespräch ansetzen.</span></li>
+      <li><span>Mitte</span><span>Prioritäten nachführen, wenn ein Vorgang fertig wird. Reviews für die nächsten kritischen Vorgänge einstellen.</span></li>
+      <li><span>Freitag</span><span>Kennzahlen in die Tabelle schreiben (CPI, SPI, Qualität, Motivation, Risiko-Index, Fertigstellungswert, Kosten). Zwei Sätze: Was lief gut, was ändern wir?</span></li>
+    </ol>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Vorlage zum Abschreiben: Kennzahlen jeden Freitag</caption>
+        <thead><tr><th>Woche</th><th>CPI</th><th>SPI</th><th>Qualität</th><th>Motivation</th><th>Risiko-Index</th><th>Fertigstellungswert</th><th>Kosten</th><th>Bemerkung</th></tr></thead>
+        <tbody>
+          <tr><th>1</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>2</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>…</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><th>8</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Im Abschlussbericht zählen <b>Lessons Learned</b>, die jemand anders anwenden kann: Was ist passiert, warum, was kostete es, was macht ihr nächstes Mal anders? Fehler erkennen, um daraus zu lernen, ist ein Indikator der ICB-Teamarbeit (Swiss ICB 4.4.6.5).</div>
+  </section>
+
+  <!-- ===== 6 · Besetzungs-Trainer ===== -->
+  <section id="trainer">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>Besetzungs-Trainer: Onlineschalter Wolkenried</h2>
+    <p class="prose">Sechs Personen aus dem Team des Onlineschalters stehen zur Wahl. Wähle für den Vorgang eine bis drei Personen. Die Seite rechnet live nach dem Lernmodell aus Schritt 3: Passung je Gebiet, Lücken, Produktivität, Dauer und Kosten. Dann prüfst du gegen die beste Besetzung. Die Tage zählen ab Tag 1 wie in Station 10. Der Leitstand zeigt dieselben Tage an, rechnet intern aber in Halbtagen und mit Zeitpunkten ab 0.</p>
+    <div class="card stack" id="t22-bt">
+      <div class="t22-aufgaben" role="group" aria-label="Aufgabe wählen" id="t22-bt-aufgaben"></div>
+      <div class="t22-vorgang" id="t22-bt-vorgang" aria-live="polite"></div>
+      <h3>Team wählen</h3>
+      <p class="hint" id="t22-bt-hinweis">Tippe Personen an (höchstens drei). Ein zweites Antippen nimmt die Person wieder heraus.</p>
+      <div class="t22-leute" id="t22-bt-leute"></div>
+      <h3>Ergebnis der Besetzung</h3>
+      <div id="t22-bt-ergebnis" aria-live="polite"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t22-bt-pruefen">Gegen die beste Besetzung prüfen</button>
+        <button type="button" class="btn" id="t22-bt-loesung">Beste Besetzung zeigen</button>
+        <button type="button" class="btn" id="t22-bt-leeren">Auswahl leeren</button>
+      </div>
+      <div class="t22-rm" id="t22-bt-rm" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Entscheid-Trainer ===== -->
+  <section id="entscheid">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Entscheid-Trainer: drei Lagen am Onlineschalter</h2>
+    <p class="prose">So sehen Meldungen in einem Simulator aus. Wähle eine Option. Du erhältst sofort die Rückmeldung wie vom Coach: gut, mittel oder schlecht, mit Begründung. Achte besonders auf die Option «später entscheiden».</p>
+    <div id="t22-et"></div>
+    <p class="t22-stand" id="t22-et-stand" aria-live="polite"></p>
+    <div class="row"><button type="button" class="btn" id="t22-et-neu">Alle Lagen zurücksetzen</button></div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst rechnen, einordnen, entscheiden</span>
+    <h2>Übungen</h2>
+    <p class="prose">Neun Übungen in sieben Arten: zuordnen, rechnen, wahr oder falsch, Schritt-Aufgabe, Matrix, Einzelfrage und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung.</p>
+    <div id="t22-u-ablauf"></div>
+    <div id="t22-u-kosten"></div>
+    <div id="t22-u-spi"></div>
+    <div id="t22-u-wf"></div>
+    <div id="t22-u-prio"></div>
+    <div id="t22-u-rollen"></div>
+    <div id="t22-u-qualitaet"></div>
+    <div id="t22-u-kritisch"></div>
+    <div id="t22-u-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Planungsphase am Stück</h2>
+    <p class="prose">Die wichtigste Stunde des Simulationstags ist die Planung. Der Film spielt sie an einem kleinen Wolkenrieder Projekt durch: kritischen Pfad bestimmen, Profile lesen, kritische Vorgänge zuerst besetzen, Puffer nutzen, den Plan prüfen und nachsteuern. Gerechnet wird mit dem Lernmodell aus Schritt 3. Eigene Aufgabe und eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t22-film"></div>
+    <details class="sol"><summary>Der fertige Besetzungsplan als Text</summary>
+      <div class="t22-loesung" id="t22-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren Gruppen Punkte</h2>
+    <div class="note falle"><b>Besetzen ohne kritischen Pfad.</b> Wer die Leute nach Sympathie oder Reihenfolge der Liste verteilt, setzt die Besten oft auf Vorgänge mit Puffer. Zuerst den Netzplan rechnen.</div>
+    <div class="note falle"><b>Nur nach Stundensatz besetzen.</b> Die günstigste Person mit grosser Lücke ist auf einem kritischen Vorgang die teuerste: Sie braucht mehr Stunden und verschiebt das Ende.</div>
+    <div class="note falle"><b>Mehr Leute heisst schneller.</b> Zusätzliche Personen kosten Abstimmung. Die Dauer sinkt weniger als im Verhältnis, die Kosten steigen meist.</div>
+    <div class="note falle"><b>Teilpensum übersehen.</b> Eine perfekte Passung bei 50&nbsp;% Pensum braucht doppelt so viele Kalendertage. Auf dem kritischen Pfad ist das ein Terminproblem.</div>
+    <div class="note falle"><b>Entscheide liegen lassen.</b> «Später» oder «abbrechen» klingt vorsichtig. Nach der Frist entscheidet jemand anders, meist ungünstig.</div>
+    <div class="note falle"><b>Index verkehrt lesen.</b> 95&nbsp;% bei den Kosten heisst nicht «5&nbsp;% gespart», sondern «teurer als geplant». Über 100&nbsp;% ist gut, bei jeder Kennzahl.</div>
+    <div class="note falle"><b>Risikoregister nur am Anfang.</b> Neue Risiken erscheinen während der Simulation. Ohne wöchentliche Prüfung sinkt der Risiko-Index, und Risiken treffen euch ungebremst.</div>
+    <div class="note falle"><b>Reviews sparen.</b> Ohne Reviews sehen die ersten Wochen billig aus. Die Fehler kommen in den Tests zurück, als Korrekturzeit auf dem kritischen Pfad.</div>
+    <div class="note falle"><b>Statusbericht schönen.</b> Der Bericht in der Pause misst sich an den Zahlen des Simulators. Grün ohne Zahl oder trotz roter Werte ist ein Wassermelonen-Bericht (Station 19).</div>
+    <div class="note falle"><b>Alle machen alles.</b> Ohne Rollen schauen vier Leute auf eine Meldung, und niemand prüft das Register. Rollen vor dem Start verteilen.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t22-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Die <b>Projektsimulation</b> lässt dich Planung, Führung und Teamarbeit erleben und gibt messbare Rückmeldung. Ablauf: Planung rund 60 min, Periode 1 (Wochen 1–4) rund 90 min, Nachbesprechung mit <b>Statusbericht</b>, kurze Planung, Periode 2 (Wochen 5–8) rund 70 min, Nachbesprechung mit <b>Abschlussbericht</b>.</li>
+      <li><b>Kennzahlen</b> sind Indizes: 100&nbsp;% = Plan, mehr ist besser. CPI = EV ÷ AC, SPI = EV ÷ PV, in Prozent.</li>
+      <li>Vorgänge haben ein <b>Qualifikationsprofil</b> (0–6), Personen ein Profil, Pensum und Stundensatz. Schlechte Passung senkt die Produktivität. Mehr Personen verkürzen, kosten aber mehr. Prioritäten je Person in Reihenfolge, vor dem Start jeden Vorgang besetzen.</li>
+      <li><b>Kritischer Pfad zuerst:</b> beste Profile auf kritische Vorgänge, Puffer zum Glätten nutzen.</li>
+      <li><b>Entscheide sofort</b>, nie aufschieben. Gespräche und Teamanlässe für die Motivation. Risikoregister jede Woche, Reviews auf den kritischen Vorgängen.</li>
+      <li><b>Rollen</b> in der Gruppe nach RACI verteilen, jeden Freitag Kennzahlen notieren, ehrlich berichten, Lessons Learned konkret formulieren.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t22-ziele">
+        <li><span class="icb">ICB 3.08</span> Ressourcen (Swiss ICB 4.5.8, Indikatoren 4.5.8.4 «Ressourcen zuweisen und verteilen» und 4.5.8.5 «Ressourcenverbrauch evaluieren»): Regeln «kritischer Pfad zuerst, beste Profile, Puffer glätten» und das Lernmodell aus Schritt 3. Gubelmann/Sommer Kapitel 17 «Ressourcen», S. 202–209 (laut LB 6 F.4).</li>
+        <li><span class="icb">ICB 3.10</span> Planung und Steuerung (Swiss ICB 4.5.10.3 Leistung mit dem Plan abgleichen, 4.5.10.4 Bericht erstatten, 4.5.10.6 abschliessen und evaluieren): Kennzahlentabelle aus Schritt 2, CPI = EV ÷ AC, SPI = EV ÷ PV, Index über 100&nbsp;% = gut. Das Buchkapitel zu ICB 3.10 nennen die bisherigen Folien nicht; im Inhaltsverzeichnis nachschlagen.</li>
+        <li><span class="icb">ICB 2.05</span> Führung (Swiss ICB 4.4.5, Indikator 4.4.5.5 «Entscheidungen treffen, durchsetzen und überprüfen»): Aufschieben ist teuer, Gespräch bei Beschwerden. Gubelmann/Sommer Kapitel 23 «Führung», S. 270–279 (laut LB 7 S.3).</li>
+        <li><span class="icb">ICB 2.06</span> Teamarbeit (Swiss ICB 4.4.6, Indikatoren 4.4.6.1 Team entwickeln, 4.4.6.4 delegieren, 4.4.6.5 aus Fehlern lernen): Gruppen-RACI, Kick-off, Lessons Learned. Gubelmann/Sommer Kapitel 24 «Teamarbeit», S. 280–289 (laut LB 7 S.3).</li>
+        <li>Ablauf des Simulationstags und Checkliste pro Simulationswoche (Schritte 1 und 5), Vorlage «Kennzahlen jeden Freitag».</li>
+        <li>Fundstellen: Benutzerhandbuch des Simulators (Ablauf, Planung, Entscheide, Meetings, Reviews, Risikomanagement), Flyer (Lernziele), RACI-Tabelle (Form R, A, C, I, Q), LB 5 F.23 (RACI-Rollen), Vorlage Statusbericht (Kennzahlenliste), LB 1 F.9 (Datum, Zeit) und F.11 (Simulation im Modul), LB 7 S.3 (Lernziel «Rahmenbedingungen der Simulation»), Modulbeschreibung (Ersatzleistung).</li>
+      </ul>
+    </div>
+    <footer>Station 22 des Lernpfads PMGT. Gemeinde Wolkenried, Onlineschalter und «Ferienpass online» frei erfunden. SimulTrain® ist ein Produkt und geschütztes Markenzeichen der STS SA, Lausanne; diese Seite beschreibt die Mechanik in eigenen Worten, ohne Szenario, Figuren, Texte oder Bilder des Produkts.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ---------- Hilfen ---------- */
+  function chf(x) {
+    const s = String(Math.round(x));
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  }
+  function eins(x) { return (Math.round(x * 10) / 10).toFixed(1); }
+  function prozent(x) { return Math.round(x * 100) + "&nbsp;%"; }
+
+  /* ---------- Lernmodell (angelehnt an Leitstand-Spezifikation 3.4) ---------- */
+  const GEBIETE = ["BAU", "ENT", "DAT", "UX", "KOM"];
+  const GEBIET_NAME = ["Fachwissen Bau und Verwaltung", "Entwicklung", "Daten und Schnittstellen", "Benutzerführung", "Kommunikation und Schulung"];
+  function gewicht(r) { return r >= 4 ? 1 : r >= 2 ? 0.6 : r === 1 ? 0.3 : 0; }
+  // Passung einer Person im Team; Kolleginnen helfen mit «Können − 2»
+  function passung(p, team, v) {
+    let G = 0, O = 0;
+    for (let k = 0; k < 5; k++) {
+      let q = p.q[k];
+      team.forEach(function (c) { if (c !== p) q = Math.max(q, c.q[k] - 2); });
+      G += gewicht(v.r[k]) * Math.max(0, v.r[k] - q);
+      if (v.r[k] >= 3) O += Math.min(2, Math.max(0, q - v.r[k]));
+    }
+    return Math.min(1.15, Math.max(0.35, 1 - 0.06 * G + 0.025 * O));
+  }
+  function teamfaktor(n, geplant) {
+    const x = n - geplant;
+    if (x <= 0) return 1;
+    return Math.max(0.6, 1 - 0.05 * x - 0.01 * x * (x - 1));
+  }
+  function rechne(team, v) {
+    const tf = teamfaktor(team.length, v.n);
+    let wirksam = 0, bezahlt = 0, satzSumme = 0;
+    const einzeln = team.map(function (p) {
+      const h = 8 * p.pensum;
+      const f = passung(p, team, v);
+      const leistung = h * f * p.eig;
+      wirksam += leistung; bezahlt += h; satzSumme += h * p.satz;
+      return { p: p, h: h, f: f, leistung: leistung };
+    });
+    wirksam *= tf;
+    const dauer = v.h / wirksam;
+    const kosten = dauer * satzSumme;
+    const plandauer = v.h / (v.n * 8);
+    const plankosten = v.h * v.plansatz;
+    return { einzeln: einzeln, tf: tf, proTag: wirksam, dauer: dauer, kosten: kosten, prod: wirksam / bezahlt,
+      plandauer: plandauer, plankosten: plankosten, terminIdx: plandauer / dauer, kostenIdx: plankosten / kosten };
+  }
+  function kombis(liste, k) {
+    if (k === 0) return [[]];
+    const aus = [];
+    liste.forEach(function (a, i) { kombis(liste.slice(i + 1), k - 1).forEach(function (c) { aus.push([a].concat(c)); }); });
+    return aus;
+  }
+  function profilHtml(q, titel) {
+    return '<div class="t22-profil" role="img" aria-label="' + titel + ": " + GEBIETE.map(function (g, i) { return g + " " + q[i]; }).join(", ") + '">' +
+      GEBIETE.map(function (g, i) { return '<span aria-hidden="true">' + g + "<b>" + q[i] + "</b></span>"; }).join("") + "</div>";
+  }
+
+  /* ---------- Schritt 0: Besetzung, Entscheid oder Kennzahl ---------- */
+  L.sortierer("#t22-sortierer-bausteine", {
+    kategorien: ["Besetzung", "Entscheid", "Kennzahl"],
+    elemente: [
+      { html: "Jonas arbeitet mit Priorität 1 an der Benutzerführung.", kategorie: "Besetzung", erklaerung: "Du legst fest, wer woran in welcher Reihenfolge arbeitet." },
+      { html: "Der Lieferant ruft an: Das Zahlungsmodul kommt drei Tage später.", kategorie: "Entscheid", erklaerung: "Eine Meldung, auf die du mit einer Option reagieren musst." },
+      { html: "SPI 86&nbsp;%", kategorie: "Kennzahl", erklaerung: "Ein Index: weniger erledigt als geplant." },
+      { html: "Eine zweite Person auf den Vorgang «Schnittstelle» setzen.", kategorie: "Besetzung", erklaerung: "Du änderst, wer an einem Vorgang arbeitet." },
+      { html: "Motivation des Teams 104&nbsp;%", kategorie: "Kennzahl", erklaerung: "Über 100&nbsp;%: besser als der Ausgangswert." },
+      { html: "E-Mail von Martin: «Ich weiss nicht mehr, woran ich arbeiten soll.»", kategorie: "Entscheid", erklaerung: "Eine Beschwerde verlangt eine Reaktion, am besten ein Gespräch." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper V04 ---------- */
+  L.stepper("#t22-stepper-v04", {
+    titel: "V04 mit Jonas und Nadia",
+    text: 'Vorgang V04 «Benutzerführung gestalten und testen» braucht <span data-link="h">48 Stunden</span> und ist für <span data-link="plan">2 Personen in 3 Tagen</span> geplant, Plankosten CHF 7\'200. Profil: <span data-link="r">BAU 2, ENT 1, DAT 0, UX 6, KOM 3</span>. Du setzt <span data-link="j">Jonas (BAU 1, ENT 3, DAT 0, UX 6, KOM 3; 80&nbsp;%, CHF 160)</span> und <span data-link="n">Nadia (BAU 1, ENT 0, DAT 0, UX 3, KOM 6; 50&nbsp;%, CHF 105, schnell)</span> ein. V04 liegt auf dem kritischen Pfad.',
+    schritte: [
+      { html: '<span data-link="j">Jonas</span>: <span data-link="r">BAU 2</span> gegen 1 → Lücke 1 × 0.6 = 0.6 · KOM: Nadia hilft (6 − 2 = 4 &gt; 3) → Überqualifikation 1<br>Passung = 1 − 0.06 × 0.6 + 0.025 × 1 = <b>0.989</b>',
+        warum: "Jonas fehlt nur ein wenig Fachwissen Bau. In der Kommunikation zieht ihn Nadia über die Anforderung, das gibt einen kleinen Bonus." },
+      { html: '<span data-link="n">Nadia</span>: <span data-link="r">UX 6</span> gegen 3, Jonas hilft (6 − 2 = 4) → Lücke 2 × 1 · BAU Lücke 1 × 0.6 → gewichtete Lücke 2.6 · KOM 6 gegen 3 → Überqualifikation 2<br>Passung = 1 − 0.06 × 2.6 + 0.025 × 2 = <b>0.894</b>',
+        warum: "Ohne Jonas hätte Nadia in der Benutzerführung eine Lücke von 3. Die Hilfe der Kollegin verkleinert sie auf 2." },
+      { html: 'Leistung pro Tag = <span data-link="j">8 × 0.8 × 0.989</span> + <span data-link="n">8 × 0.5 × 0.894 × 1.05</span> = 6.33 + 3.75 = <b>10.08 h</b>',
+        warum: "Pensum zählt voll: Jonas arbeitet 6.4 Stunden am Tag, Nadia 4. «Schnell» gibt Nadia 5&nbsp;% mehr Leistung. Zwei Personen wie geplant, also Teamfaktor 1." },
+      { html: 'Dauer = <span data-link="h">48</span> ÷ 10.08 = <b>4.76 Tage</b>, rund 4.8 (<span data-link="plan">Plan 3</span>) → Termin-Index 3 ÷ 4.76 = 63&nbsp;%',
+        warum: "Die Passung ist fast perfekt, und trotzdem dauert es 1.8 Tage länger. Grund: zwei Teilpensen. Auf dem kritischen Pfad schiebt das das Projektende." },
+      { html: 'Kosten = 4.76 × (6.4 × 160 + 4 × 105) = 4.76 × 1\'444 = <b>CHF 6\'873</b> → Kosten-Index 7\'200 ÷ 6\'873 = 105&nbsp;% · Produktivität 10.08 ÷ 10.4 = 97&nbsp;%',
+        warum: "Günstiger als geplant, weil fast jede bezahlte Stunde wirkt. Ein gutes Ergebnis bei den Kosten, ein schlechtes beim Termin." },
+      { html: 'Besser für den Termin: Seraina (Vollzeit) statt Nadia → Passung Jonas 1.000, Seraina 0.905 → 6.4 + 7.24 = 13.64 h pro Tag → <b>3.5 Tage</b>, CHF 6\'841',
+        warum: "Für einen kritischen Vorgang zählt die Leistung pro Tag. Seraina bringt Vollzeit und Fachwissen Bau. Ihre Passung (0.905) ist sogar etwas besser als die von Nadia, und mit ihrer Hilfe deckt Jonas das Fachwissen Bau ganz (1.000). Die Dauer sinkt von 4.8 auf 3.5 Tage. Nadia passt besser auf einen Vorgang mit Puffer." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Besetzungs-Trainer ---------- */
+  const LEUTE = [
+    { id: "seraina", name: "Seraina Caflisch", rolle: "Fachverantwortliche Baugesuche, Kernteam", q: [6, 0, 2, 3, 4], pensum: 1.0, satz: 115, eig: 1, eigText: "prüft alles selbst (im Modell ohne Wirkung)" },
+    { id: "martin", name: "Martin Zgraggen", rolle: "Sachbearbeiter Baugesuche, Linie Bauamt", q: [5, 0, 1, 1, 2], pensum: 0.6, satz: 95, eig: 0.95, eigText: "gründlich: Leistung × 0.95, weniger Fehler" },
+    { id: "luca", name: "Luca Bernasconi", rolle: "Informatikverantwortlicher, Kernteam", q: [2, 3, 5, 2, 2], pensum: 1.0, satz: 125, eig: 1, eigText: "unterschätzt Aufwände (im Modell ohne Wirkung)" },
+    { id: "elena", name: "Elena Kovačević", rolle: "Schnittstellenentwicklerin, Lieferant", q: [0, 5, 6, 1, 1], pensum: 1.0, satz: 175, eig: 0.95, eigText: "gründlich: Leistung × 0.95, weniger Fehler" },
+    { id: "jonas", name: "Jonas Brunner", rolle: "Gestalter Benutzerführung, Lieferant", q: [1, 3, 0, 6, 3], pensum: 0.8, satz: 160, eig: 1, eigText: "verliebt sich in Details (im Modell ohne Wirkung)" },
+    { id: "nadia", name: "Nadia Rossi", rolle: "Kommunikationsverantwortliche, Linie Kanzlei", q: [1, 0, 0, 3, 6], pensum: 0.5, satz: 105, eig: 1.05, eigText: "schnell: Leistung × 1.05, mehr Fehler" }
+  ];
+  const V14 = { id: "V14", name: "Merkblatt und Webseite für Bauwillige", text: "Informationen für Bevölkerung und Planungsbüros.", h: 24, n: 1, plansatz: 115, r: [2, 0, 0, 3, 6], lage: "Plan Tag 10 bis 12, Gesamtpuffer 12 Tage (nicht kritisch)" };
+  const V09 = { id: "V09", name: "Gesuchsformulare und Ablauf konfigurieren", text: "Formulare, Prüfregeln und Statusmodell in der Plattform.", h: 64, n: 2, plansatz: 165, r: [4, 5, 2, 3, 0], lage: "Plan Tag 10 bis 13, kein Puffer (kritischer Pfad)" };
+  const AUFGABEN = [
+    { titel: "Aufgabe 1 · leicht", v: V14, min: 1, max: 1,
+      auftrag: "Besetze V14 mit <b>genau einer Person</b> zu den <b>tiefsten Kosten</b>. Der Vorgang hat 12 Tage Puffer, die Dauer darf also länger sein als geplant.",
+      ziel: function (e) { return e.kosten; }, zielText: "tiefste Kosten",
+      gueltig: function () { return true; },
+      erklaerung: "Nadia hat die beste Passung (0.964) und ist schnell, also wirkt fast jede bezahlte Stunde (Produktivität 101&nbsp;%). Mit 50&nbsp;% Pensum braucht sie 5.9 statt 3 Tage, das fängt der Puffer von 12 Tagen auf. Seraina wäre schneller, aber teurer, und sie wird zur selben Zeit auf dem kritischen Vorgang V09 gebraucht." },
+    { titel: "Aufgabe 2 · mittel", v: V09, min: 2, max: 2,
+      auftrag: "V09 liegt auf dem kritischen Pfad. Besetze ihn mit <b>genau zwei Personen</b> so, dass er <b>möglichst kurz</b> dauert.",
+      ziel: function (e) { return e.dauer; }, zielText: "kürzeste Dauer",
+      gueltig: function () { return true; },
+      erklaerung: "Allein hätte Seraina in der Entwicklung eine Lücke von 5 (Passung 0.75). Elena deckt die Entwicklung (ENT 5) und hilft Seraina über «Können − 2» auf ENT 3. Seraina bringt im Gegenzug das Fachwissen Bau. Beide arbeiten Vollzeit: 4.4 Tage. Zu zweit schafft niemand die Plandauer von 4 Tagen." },
+    { titel: "Aufgabe 3 · schwer", v: V09, min: 1, max: 3,
+      auftrag: "Gleicher Vorgang V09, jetzt <b>1 bis 3 Personen</b>. Halte die <b>Plandauer von 4 Tagen</b> (höchstens 4.0 Tage) und finde dafür die <b>günstigste</b> Besetzung.",
+      ziel: function (e) { return e.kosten; }, zielText: "tiefste Kosten bei höchstens 4.0 Tagen",
+      gueltig: function (e) { return e.dauer <= 4.0; },
+      erklaerung: "Zu zweit geht es nicht in 4 Tagen (Aufgabe 2), also braucht es eine dritte Person: Teamfaktor 0.95. Seraina, Luca und Jonas schaffen 3.4 Tage für CHF 9'981, unter den Plankosten von 10'560. Die Besetzung mit Elena wäre ähnlich schnell, aber teurer: Elenas Spitzengebiet Daten (DAT 6) verlangt V09 kaum (DAT 2), und sie kostet CHF 175 pro Stunde. Die teuerste Spezialistin gehört dorthin, wo ihr Spitzengebiet gefragt ist." }
+  ];
+
+  const btAufgaben = document.getElementById("t22-bt-aufgaben");
+  const btVorgang = document.getElementById("t22-bt-vorgang");
+  const btLeute = document.getElementById("t22-bt-leute");
+  const btErgebnis = document.getElementById("t22-bt-ergebnis");
+  const btRm = document.getElementById("t22-bt-rm");
+  let aufgabe = 0;
+  let gewaehlt = [];
+
+  AUFGABEN.forEach(function (a, i) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.textContent = a.titel;
+    b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    if (i === 0) b.classList.add("on");
+    b.addEventListener("click", function () {
+      aufgabe = i;
+      btAufgaben.querySelectorAll("button").forEach(function (x, j) {
+        x.setAttribute("aria-pressed", j === i ? "true" : "false");
+        x.classList.toggle("on", j === i);
+      });
+      gewaehlt = [];
+      btRm.className = "t22-rm"; btRm.innerHTML = "";
+      zeichnen();
+    });
+    btAufgaben.appendChild(b);
+  });
+
+  LEUTE.forEach(function (p) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "t22-person";
+    b.dataset.id = p.id;
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = '<span class="t22-name">' + p.name + '</span><span class="hint">' + p.rolle + '</span><span class="hint">Pensum ' + Math.round(p.pensum * 100) + "&nbsp;% · CHF " + p.satz + " pro Stunde</span>" +
+      '<span class="hint">Eigenheit: ' + p.eigText + "</span>" + profilHtml(p.q, "Profil " + p.name) + '<span class="t22-wahl" aria-hidden="true"></span>';
+    b.addEventListener("click", function () {
+      const i = gewaehlt.indexOf(p);
+      if (i >= 0) gewaehlt.splice(i, 1);
+      else if (gewaehlt.length >= 3) {
+        btRm.className = "t22-rm info";
+        btRm.innerHTML = "<p>Höchstens drei Personen. Nimm zuerst jemanden heraus.</p>";
+        return;
+      } else gewaehlt.push(p);
+      btRm.className = "t22-rm"; btRm.innerHTML = "";
+      zeichnen();
+    });
+    btLeute.appendChild(b);
+  });
+
+  function zeichnen() {
+    const a = AUFGABEN[aufgabe], v = a.v;
+    const plandauer = v.h / (v.n * 8), plankosten = v.h * v.plansatz;
+    btVorgang.innerHTML = "<h3>" + v.id + " · " + v.name + "</h3><p>" + v.text + " " + v.lage + ".</p>" +
+      "<p>Aufwand " + v.h + " h · geplant für " + v.n + (v.n === 1 ? " Person" : " Personen") + " · Plandauer " + plandauer + " Tage · Plankosten CHF " + chf(plankosten) + "</p>" +
+      profilHtml(v.r, "Anforderungsprofil " + v.id) + '<p class="hint" style="margin-top:6px"><b>Auftrag:</b> ' + a.auftrag + "</p>";
+
+    btLeute.querySelectorAll(".t22-person").forEach(function (b) {
+      const nr = gewaehlt.findIndex(function (p) { return p.id === b.dataset.id; });
+      b.setAttribute("aria-pressed", nr >= 0 ? "true" : "false");
+      b.querySelector(".t22-wahl").textContent = nr >= 0 ? "✓ gewählt" : "";
+    });
+
+    if (!gewaehlt.length) {
+      btErgebnis.innerHTML = '<p class="hint">Noch niemand gewählt. Wähle eine bis drei Personen.</p>';
+      return;
+    }
+    const e = rechne(gewaehlt, v);
+    // Passung je Gebiet: bestes Können im Team gegen Anforderung
+    let zeilen = "";
+    for (let k = 0; k < 5; k++) {
+      let bestes = -1, wer = "";
+      gewaehlt.forEach(function (p) { if (p.q[k] > bestes) { bestes = p.q[k]; wer = p.name.split(" ")[0]; } });
+      const luecke = v.r[k] - bestes;
+      const zelle = v.r[k] === 0 ? '<span class="hint">nicht verlangt</span>' :
+        luecke > 0 ? '<span class="t22-luecke">✗ Lücke ' + luecke + "</span>" : '<span class="t22-passt">✓ gedeckt</span>';
+      zeilen += "<tr><th>" + GEBIETE[k] + ' <span class="hint">' + GEBIET_NAME[k] + '</span></th><td class="zahl">' + v.r[k] + '</td><td class="zahl">' + bestes + " (" + wer + ")</td><td>" + zelle + "</td></tr>";
+    }
+    const personen = e.einzeln.map(function (x) {
+      return "<tr><th>" + x.p.name + '</th><td class="zahl">' + Math.round(x.p.pensum * 100) + '&nbsp;%</td><td class="zahl">' + x.f.toFixed(3) + '</td><td class="zahl">' + x.p.eig.toFixed(2) + '</td><td class="zahl">' + (x.leistung * e.tf).toFixed(2) + " h</td></tr>";
+    }).join("");
+    const tIdx = e.terminIdx, kIdx = e.kostenIdx;
+    btErgebnis.innerHTML =
+      '<div class="tablebox"><table class="tabelle"><caption>Passung je Gebiet (bestes Können im Team)</caption><thead><tr><th>Gebiet</th><th>verlangt</th><th>bestes Können</th><th>Lücke</th></tr></thead><tbody>' + zeilen + "</tbody></table></div>" +
+      '<div class="tablebox"><table class="tabelle"><caption>Personen (Passung mit Hilfe der Kolleginnen, Teamfaktor ' + e.tf.toFixed(2) + ')</caption><thead><tr><th>Person</th><th>Pensum</th><th>Passung</th><th>Eigenheit</th><th>Leistung pro Tag</th></tr></thead><tbody>' + personen + "</tbody></table></div>" +
+      '<div class="t22-kennz">' +
+        '<div class="t22-kz"><span>Produktivität</span><b>' + prozent(e.prod) + "</b><small>wirksam ÷ bezahlt</small></div>" +
+        '<div class="t22-kz"><span>Dauer</span><b>' + eins(e.dauer) + " Tage</b><small>Plan " + e.plandauer + " Tage</small></div>" +
+        '<div class="t22-kz"><span>Kosten</span><b>CHF ' + chf(e.kosten) + "</b><small>Plan CHF " + chf(e.plankosten) + "</small></div>" +
+        '<div class="t22-kz"><span>Termin-Index</span><b class="' + (tIdx >= 1 ? "t22-gut" : "t22-schlecht") + '">' + prozent(tIdx) + "</b><small>" + (tIdx >= 1 ? "▲ über Plan" : "▼ unter Plan") + "</small></div>" +
+        '<div class="t22-kz"><span>Kosten-Index</span><b class="' + (kIdx >= 1 ? "t22-gut" : "t22-schlecht") + '">' + prozent(kIdx) + "</b><small>" + (kIdx >= 1 ? "▲ über Plan" : "▼ unter Plan") + "</small></div>" +
+      "</div>";
+  }
+
+  function besteBesetzung(a) {
+    let beste = null;
+    for (let k = a.min; k <= a.max; k++) {
+      kombis(LEUTE, k).forEach(function (t) {
+        const e = rechne(t, a.v);
+        if (!a.gueltig(e)) return;
+        if (!beste || a.ziel(e) < a.ziel(beste.e)) beste = { t: t, e: e };
+      });
+    }
+    return beste;
+  }
+  function namen(t) { return t.map(function (p) { return p.name.split(" ")[0]; }).join(", "); }
+
+  document.getElementById("t22-bt-pruefen").addEventListener("click", function () {
+    const a = AUFGABEN[aufgabe];
+    const n = gewaehlt.length;
+    if (n < a.min || n > a.max) {
+      btRm.className = "t22-rm bad";
+      btRm.innerHTML = "<p><b>✗ Noch nicht gültig.</b> Diese Aufgabe verlangt " + (a.min === a.max ? "genau " + a.min : a.min + " bis " + a.max) + (a.max === 1 ? " Person" : " Personen") + ". Du hast " + n + " gewählt.</p>";
+      return;
+    }
+    const e = rechne(gewaehlt, a.v);
+    const beste = besteBesetzung(a);
+    if (!a.gueltig(e)) {
+      btRm.className = "t22-rm bad";
+      btRm.innerHTML = "<p><b>✗ Die Plandauer hält nicht:</b> " + eins(e.dauer) + " Tage statt höchstens 4.0. Auf dem kritischen Pfad verschiebt das das Projektende. Tipp: Wer deckt die Entwicklung, wer bringt Vollzeit?</p>";
+      return;
+    }
+    const gleich = beste.t.length === n && beste.t.every(function (p) { return gewaehlt.indexOf(p) >= 0; });
+    if (gleich) {
+      btRm.className = "t22-rm ok";
+      btRm.innerHTML = "<p><b>✓ Beste Besetzung (" + a.zielText + "):</b> " + namen(beste.t) + ", " + eins(e.dauer) + " Tage, CHF " + chf(e.kosten) + ".</p><p>" + a.erklaerung + "</p>";
+    } else {
+      const wert = a.zielText.indexOf("Dauer") >= 0 ? eins(beste.e.dauer) + " Tage" : "CHF " + chf(beste.e.kosten);
+      btRm.className = "t22-rm bad";
+      btRm.innerHTML = "<p><b>✗ Gültig, aber nicht die beste.</b> Deine Besetzung: " + eins(e.dauer) + " Tage, CHF " + chf(e.kosten) + ". Es gibt eine Besetzung mit " + wert + ". Schau auf Lücken, Pensum und Stundensatz und versuch es nochmals.</p>";
+    }
+  });
+
+  document.getElementById("t22-bt-loesung").addEventListener("click", function () {
+    const a = AUFGABEN[aufgabe];
+    const beste = besteBesetzung(a);
+    gewaehlt = beste.t.slice();
+    zeichnen();
+    btRm.className = "t22-rm info";
+    btRm.innerHTML = "<p><b>Beste Besetzung (" + a.zielText + "):</b> " + namen(beste.t) + ", " + eins(beste.e.dauer) + " Tage, CHF " + chf(beste.e.kosten) + ".</p><p>" + a.erklaerung + "</p>";
+  });
+
+  document.getElementById("t22-bt-leeren").addEventListener("click", function () {
+    gewaehlt = [];
+    btRm.className = "t22-rm"; btRm.innerHTML = "";
+    zeichnen();
+    const erste = btLeute.querySelector(".t22-person");
+    if (erste) erste.focus();
+  });
+  zeichnen();
+
+  /* ---------- Schritt 7: Entscheid-Trainer ---------- */
+  const WERT = { g: "✓ gut", m: "~ mittel", s: "✗ schlecht" };
+  const LAGEN = [
+    { titel: "Lage 1 · Tag 1, Montagmorgen · Besuch", icb: ["ICB 2.06", "ICB 2.05"],
+      meldung: "Seraina steht in der Tür: «Das Team ist komplett: Kernteam, zwei Leute aus dem Bauamt, die Kommunikation und drei Leute vom Lieferanten. Machen wir einen Kick-off, oder legen wir gleich los?»",
+      optionen: [
+        { text: "Heute Nachmittag ein halber Tag Kick-off mit allen: Ziele, Rollen, Spielregeln, Plan.", wert: "g",
+          rm: "Kostet am ersten Tag rund vier Stunden je Person. Dafür wissen alle, wer was macht und wie ihr zusammenarbeitet. Motivation und Klarheit steigen, das Team findet schneller in die Arbeitsphase. Team zusammenstellen und entwickeln (Swiss ICB 4.4.6.1)." },
+        { text: "Eine Stunde mit dem Kernteam. Die anderen informiere ich per E-Mail.", wert: "m",
+          rm: "Günstiger, aber Linie und Lieferant bleiben aussen vor. Gerade Leute mit Teilpensum und fremdem Arbeitgeber brauchen Klarheit über Rollen und Prioritäten." },
+        { text: "Kein Treffen. Ich schicke den Plan per E-Mail, alle fangen sofort an.", wert: "s",
+          rm: "Spart heute Stunden und kostet später mehr: Missverständnisse, Umplanen, tiefere Motivation und eher Konflikte im Team." },
+        { text: "Später entscheiden.", wert: "s",
+          rm: "Ein Kick-off gehört an den Anfang. Bleibt die Frage bis zur Frist liegen, entscheidet eine vorgesetzte Person für dich, meist ungünstig, hier: kein Treffen. Und ein Kick-off nach einer Woche kommt zu spät." }
+      ] },
+    { titel: "Lage 2 · Tag 8 · E-Mail", icb: ["ICB 2.05", "ICB 2.06"],
+      meldung: "Martin (Sachbearbeiter Baugesuche, 60&nbsp;% im Projekt) schreibt: «Diese Woche hast du meine Aufgaben dreimal geändert. Ich weiss nicht mehr, woran ich zuerst arbeiten soll. So macht das keinen Spass.»",
+      optionen: [
+        { text: "Ich lade Martin morgen zu einem Gespräch ein. Wir legen seine Prioritäten für zwei Wochen fest, und ich ändere sie nur noch nach Absprache.", wert: "g",
+          rm: "Richtig: Eine Beschwerde ist ein frühes Warnsignal. Das Gespräch nimmt ihn ernst und behebt die Ursache, das häufige Umplanen. Klarheit hebt Motivation und Leistung. Führung heisst Richtung geben und coachen (Swiss ICB 4.4.5.3)." },
+        { text: "Kurze Antwort: «Alles steht im Plan. Bitte dort nachschauen.»", wert: "s",
+          rm: "Formal korrekt, menschlich daneben. Martin fühlt sich nicht ernst genommen, seine Motivation sinkt weiter, und mit ihr die Leistung." },
+        { text: "Ich nehme Martin aus dem Projekt und verlange im Bauamt eine andere Person.", wert: "s",
+          rm: "Die neue Person braucht Einarbeitung und hat nicht sein Fachwissen. Das Bauamt ist verärgert. Und die Ursache, dein häufiges Umplanen, bleibt." },
+        { text: "Später entscheiden.", wert: "s",
+          rm: "Jeder Tag ohne Antwort kostet Motivation. Ein kleines Problem ist jetzt billig zu lösen; liegen gelassen, wird es ein Konflikt." }
+      ] },
+    { titel: "Lage 3 · Tag 6 · Anruf", icb: ["ICB 3.08", "ICB 3.10"],
+      meldung: "Der Lieferant ruft an: «Das Modul für die Online-Zahlung kommt drei Tage später als geplant. Gegen einen Express-Zuschlag von CHF 2'000 liefern wir pünktlich.» Ohne Modul kann V06 «Gebühren und Online-Zahlung» drei Tage später beginnen: Tag 10 bis 13 statt Tag 7 bis 10. V06 hat 5 Tage Gesamtpuffer.",
+      optionen: [
+        { text: "Express-Zuschlag bezahlen.", wert: "m",
+          rm: "Der Termin ist sicher, aber du zahlst CHF 2'000 für etwas, das der Puffer auffängt. Das Geld fehlt später in der Reserve, wenn ein kritischer Vorgang Hilfe braucht." },
+        { text: "Den Verzug annehmen: V06 rutscht innerhalb seines Puffers. Die zuständige Person arbeitet diese drei Tage an einem anderen Vorgang. Ich trage das Risiko im Register nach.", wert: "g",
+          rm: "Genau. Drei Tage Verzug bei fünf Tagen Puffer gefährden das Projektende nicht: V06 endet an Tag 13, spätestens erlaubt ist Tag 15. Du vermeidest Leerlauf und behältst das Geld. Netzplan kennen lohnt sich (Station 10)." },
+        { text: "Sofort an die Auftraggeberin eskalieren.", wert: "s",
+          rm: "Unnötig: Die Lösung liegt in deiner Kompetenz, und der Puffer reicht. Wer wegen jeder Kleinigkeit eskaliert, verbraucht das Vertrauen, das er für echte Probleme braucht (Station 19)." },
+        { text: "Später entscheiden.", wert: "s",
+          rm: "Bis zur Frist wartet die zuständige Person womöglich im Leerlauf, und am Schluss entscheidet jemand anders, vielleicht für den teuren Express." }
+      ] }
+  ];
+  const etBox = document.getElementById("t22-et");
+  const etStand = document.getElementById("t22-et-stand");
+  const etWahl = [];
+
+  function etStandZeigen() {
+    const n = etWahl.filter(function (x) { return x !== undefined; }).length;
+    const g = etWahl.filter(function (x, i) { return x !== undefined && LAGEN[i].optionen[x].wert === "g"; }).length;
+    etStand.textContent = n ? g + " von " + n + " entschiedenen Lagen gut gelöst" + (n === LAGEN.length ? "." + (g === LAGEN.length ? " Stark: So bleibt dein Projekt unter Kontrolle." : " Lies die Rückmeldungen und versuch die anderen Optionen.") : ".") : "";
+  }
+
+  LAGEN.forEach(function (lage, i) {
+    const karte = document.createElement("div");
+    karte.className = "card t22-lage";
+    karte.innerHTML = "<h3>" + lage.titel + " " + lage.icb.map(function (x) { return '<span class="icb">' + x + "</span>"; }).join(" ") + '</h3><p class="t22-meldung">' + lage.meldung + "</p>";
+    const opt = document.createElement("div");
+    opt.className = "t22-optionen";
+    opt.setAttribute("role", "group");
+    opt.setAttribute("aria-label", "Optionen " + lage.titel);
+    const rm = document.createElement("div");
+    rm.className = "t22-rm";
+    rm.setAttribute("aria-live", "polite");
+    const nochmals = document.createElement("button");
+    nochmals.type = "button";
+    nochmals.className = "btn";
+    nochmals.textContent = "Nochmals entscheiden";
+    nochmals.hidden = true;
+    lage.optionen.forEach(function (o, j) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "t22-option";
+      b.setAttribute("aria-pressed", "false");
+      b.innerHTML = "<b>" + "ABCD"[j] + "</b>" + o.text;
+      b.addEventListener("click", function () {
+        if (etWahl[i] !== undefined) return;
+        etWahl[i] = j;
+        opt.querySelectorAll("button").forEach(function (x, k) {
+          x.setAttribute("aria-pressed", k === j ? "true" : "false");
+          x.disabled = true;
+        });
+        rm.className = "t22-rm " + (o.wert === "g" ? "ok" : o.wert === "m" ? "info" : "bad");
+        const besteNr = lage.optionen.findIndex(function (x) { return x.wert === "g"; });
+        rm.innerHTML = '<p><span class="t22-wertung ' + o.wert + '">' + WERT[o.wert] + ".</span> " + o.rm + "</p>" +
+          (o.wert !== "g" ? "<p><b>Besser:</b> Option " + "ABCD"[besteNr] + ". " + lage.optionen[besteNr].rm + "</p>" : "");
+        nochmals.hidden = false;
+        nochmals.focus();
+        etStandZeigen();
+      });
+      opt.appendChild(b);
+    });
+    nochmals.addEventListener("click", function () {
+      etWahl[i] = undefined;
+      opt.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); x.disabled = false; });
+      rm.className = "t22-rm"; rm.innerHTML = "";
+      nochmals.hidden = true;
+      opt.querySelector("button").focus();
+      etStandZeigen();
+    });
+    karte.append(opt, rm, nochmals);
+    etBox.appendChild(karte);
+  });
+  document.getElementById("t22-et-neu").addEventListener("click", function () {
+    etBox.querySelectorAll(".t22-lage").forEach(function (karte) {
+      const n = karte.querySelector(".btn");
+      if (!n.hidden) n.click();
+    });
+    etStandZeigen();
+    const erste = etBox.querySelector(".t22-option");
+    if (erste) erste.focus();
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t22-u-ablauf", {
+    frage: "Übung 1 · Wann passiert das am Simulationstag?",
+    kategorien: ["Planung", "Periode 1", "Nachbesprechung 1", "Periode 2", "Nachbesprechung 2"],
+    elemente: [
+      { html: "Projektbeschreibung lesen, Netzplan und kritischen Pfad bestimmen", kategorie: "Planung", erklaerung: "Bevor die Zeit läuft, braucht ihr den kritischen Pfad, sonst besetzt ihr blind." },
+      { html: "Das Risikoregister zum ersten Mal durchgehen und Massnahmen wählen", kategorie: "Planung", erklaerung: "Vorbeugen ist am Anfang am günstigsten." },
+      { html: "In Woche 2 ein Gespräch mit einem unzufriedenen Teammitglied führen", kategorie: "Periode 1", erklaerung: "Wochen 1–4 sind die erste Periode." },
+      { html: "Kennzahlen am Freitag der Woche 3 notieren", kategorie: "Periode 1", erklaerung: "Woche 3 liegt in der ersten Periode." },
+      { html: "Den Statusbericht schreiben", kategorie: "Nachbesprechung 1", erklaerung: "Nach Woche 4 hält der Simulator an: analysieren und Statusbericht schreiben." },
+      { html: "Die Kennzahlen von Woche 4 analysieren und Massnahmen für die zweite Hälfte festlegen", kategorie: "Nachbesprechung 1", erklaerung: "Die Pause ist die Steuerungsschwelle des Projekts." },
+      { html: "Ereignisse in der Einführung (Wochen 5–8) entscheiden", kategorie: "Periode 2", erklaerung: "Wochen 5–8 sind die zweite Periode." },
+      { html: "Schlussfolgerungen ziehen und den Abschlussbericht mit Lessons Learned schreiben", kategorie: "Nachbesprechung 2", erklaerung: "Am Ende steht der Abschlussbericht." }
+    ]
+  });
+
+  L.zahlAufgabe("#t22-u-kosten", {
+    titel: "Übung 2 · Was kostet ein Teilpensum?",
+    frage: "<p>Projekt «Gemeindearchiv digital» in Wolkenried. Ein Vorgang braucht 40 Stunden. Du setzt eine Person mit 60&nbsp;% Pensum ein, Passung 0.80, keine Eigenheit, Stundensatz CHF 100. Wie viel kostet der Vorgang im Lernmodell dieser Seite? Auf ganze Franken.</p>",
+    antwort: 5000,
+    toleranz: 1,
+    einheit: "CHF",
+    anzeige: "CHF 5'000",
+    hinweise: ["Rechne zuerst die Leistung pro Tag: 8 h × Pensum × Passung.", "Dauer = 40 ÷ Leistung pro Tag. Kosten = Dauer × 8 h × Pensum × Satz."],
+    loesungsweg: [
+      "Leistung pro Tag = 8 × 0.6 × 0.80 = 3.84 wirksame Stunden",
+      "Dauer = 40 ÷ 3.84 = 10.4 Tage",
+      "Bezahlte Stunden pro Tag = 8 × 0.6 = 4.8, Kosten = 10.417 × 4.8 × 100 = CHF 5'000",
+      "Kürzer gerechnet: Kosten = Aufwand ÷ Passung × Satz = 40 ÷ 0.8 × 100 = 5'000. Das Pensum ändert die Kosten nicht, nur die Dauer. Mit 100&nbsp;% Pensum wären es 6.25 Tage für dieselben CHF 5'000."
+    ]
+  });
+
+  L.zahlAufgabe("#t22-u-spi", {
+    titel: "Übung 3 · Die Zahl auf dem Bildschirm",
+    frage: "<p>Onlineschalter Wolkenried, Ende Woche 4: PV CHF 112'800, EV CHF 96'624, AC CHF 103'900. Welchen SPI zeigt ein Simulator an, in Prozent? Auf ganze Prozent.</p>",
+    antwort: 85.66,
+    toleranz: 0.6,
+    einheit: "%",
+    anzeige: "96'624 ÷ 112'800 = 0.857 → 86&nbsp;%",
+    hinweise: ["SPI = EV ÷ PV.", "Der Simulator zeigt den Wert mal 100 als Prozent."],
+    loesungsweg: [
+      "SPI = EV ÷ PV = 96'624 ÷ 112'800 = 0.857",
+      "Angezeigt als 86&nbsp;%: weniger erledigt als geplant.",
+      "Zum Vergleich CPI = 96'624 ÷ 103'900 = 0.93 → 93&nbsp;%. Beide unter 100&nbsp;%: hinter Plan und teurer als geplant (gleiche Zahlen wie Station 19)."
+    ]
+  });
+
+  L.wahrFalsch("#t22-u-wf", {
+    titel: 'Übung 4 · Wahr oder falsch? <span class="icb">ICB 3.08</span> <span class="icb">ICB 3.10</span>',
+    aussagen: [
+      { html: "Eine Kennzahl von 95&nbsp;% ist besser als der Plan.", wahr: false,
+        erklaerung: "100&nbsp;% ist der Plan. Unter 100&nbsp;% ist schlechter, über 100&nbsp;% besser." },
+      { html: "Eine Person kann mehrere Vorgänge zugewiesen haben; die Reihenfolge bestimmt die Priorität.", wahr: true,
+        erklaerung: "Im Unterrichts-Simulator bis zu sechs. Die Person arbeitet zuerst am obersten Vorgang, der bearbeitbar ist." },
+      { html: "Die Simulation startet erst, wenn jeder Vorgang mindestens einer Person zugewiesen ist.", wahr: true,
+        erklaerung: "So steht es im Handbuch: Die Planung ist beendet, wenn jeder Vorgang besetzt ist." },
+      { html: "Wer einen Entscheid liegen lässt, verliert nichts: Die Meldung verschwindet nach der Frist.", wahr: false,
+        erklaerung: "Nach der Frist entscheidet eine vorgesetzte Person, meist mit der schlechtesten Option." },
+      { html: "Doppelt so viele Personen auf einem Vorgang halbieren seine Dauer.", wahr: false,
+        erklaerung: "Abstimmung kostet Leistung. Die Dauer sinkt weniger als im Verhältnis, die Kosten steigen meist (ICB 3.08)." },
+      { html: "Qualitätsreviews kosten jetzt Zeit, sparen aber später Korrekturzeit.", wahr: true,
+        erklaerung: "Früh gefundene Fehler sind billig. Späte Fehler kosten ein Mehrfaches und treffen oft den kritischen Pfad." }
+    ]
+  });
+
+  L.schrittAufgabe("#t22-u-prio", {
+    titel: "Übung 5 · Prioritäten für eine Person",
+    aufgabe: "<p>Luca hat zwei Vorgänge, beide ab Tag 5 bearbeitbar und beide 16 Stunden für ihn allein (also je 2 Tage). Vorgang K liegt auf dem kritischen Pfad (kein Puffer), Vorgang P hat 4 Tage Gesamtpuffer. Welche Priorität gibst du? Überleg zuerst selbst, dann deck Schritt für Schritt auf (Zählweise ab Tag 1).</p>",
+    schritte: [
+      { html: "Variante 1: K vor P → K Tag 5–6, P Tag 7–8", warum: "K läuft sofort und endet wie geplant." },
+      { html: "P verschiebt sich um 2 Tage, Puffer 4 → Rest 2 Tage. Ende hält ✓", warum: "Ein Verzug innerhalb des Gesamtpuffers verschiebt das Projektende nicht." },
+      { html: "Variante 2: P vor K → P Tag 5–6, K Tag 7–8", warum: "Jetzt wartet der kritische Vorgang." },
+      { html: "K endet 2 Tage später, kein Puffer → Projektende +2 Tage ✗", warum: "Jeder Tag Verzug auf dem kritischen Pfad schlägt aufs Projektende durch." },
+      { html: "<b>Priorität 1: K, Priorität 2: P.</b>", warum: "Regel: kritisch vor Puffer. Die Reihenfolge der Zuweisungen bei einer Person ist ihre Priorität (ICB 3.08, Ressourcen zuweisen)." }
+    ]
+  });
+
+  L.matrix("#t22-u-rollen", {
+    titel: "Übung 6 · Wer macht es, und wann?",
+    icb: ["ICB 2.06", "ICB 3.10"],
+    frage: "<p>Eure Gruppe arbeitet mit den vier Rollen aus Schritt 5. Lege jede Aufgabe in das Feld der Rolle, die daran arbeitet (R), und der Zeit, in der sie anfällt.</p>",
+    zeilen: ["Vor dem Start", "Während einer Periode", "In der Nachbesprechung"],
+    spalten: ["Steuerung", "Posteingang", "Risiko und Qualität", "Controlling und Bericht"],
+    achseY: "Wann", achseX: "Rolle",
+    elemente: [
+      { html: "Kritischen Pfad bestimmen und Besetzung festlegen", ziel: [0, 0], erklaerung: "Planung ist Steuerung, und zwar vor dem Start." },
+      { html: "Massnahmen für die ersten Risiken im Register wählen", ziel: [0, 2], erklaerung: "Vorbeugen vor dem Start, Rolle Risiko und Qualität." },
+      { html: "Anzahl Reviews je Vorgang festlegen", ziel: [0, 2], erklaerung: "Reviews gehören zur Qualität und werden vor dem Start eingestellt." },
+      { html: "Neue E-Mail lesen, Optionen vorstellen, Frist im Auge behalten", ziel: [1, 1], erklaerung: "Der Posteingang sorgt dafür, dass kein Entscheid liegen bleibt." },
+      { html: "Umbesetzen, weil ein kritischer Vorgang zurückfällt", ziel: [1, 0], erklaerung: "Besetzung und Prioritäten führt die Steuerung, laufend." },
+      { html: "Ein Gespräch mit einem unzufriedenen Teammitglied ansetzen", ziel: [1, 0], erklaerung: "Gespräche und Anlässe liegen bei der Steuerung (Führung)." },
+      { html: "Am Freitag CPI, SPI, Qualität, Motivation und Risiko-Index notieren", ziel: [1, 3], erklaerung: "Controlling sammelt die Zahlen jede Woche." },
+      { html: "Den Statusbericht nach Woche 4 schreiben", ziel: [2, 3], erklaerung: "R ist Controlling und Bericht, A die Steuerung, Q prüft Risiko und Qualität." }
+    ]
+  });
+
+  L.auswahl("#t22-u-qualitaet", {
+    frage: '<p><b>Übung 7 · Fallentscheid</b> <span class="icb">ICB 3.10</span></p><p>Freitag, Woche 2. Euer Simulator zeigt: CPI 101&nbsp;%, SPI 97&nbsp;%, Qualität 78&nbsp;% (Vorwoche 86&nbsp;%), Motivation 104&nbsp;%. Ihr habt bisher keine Reviews eingestellt. Was tut ihr?</p>',
+    optionen: [
+      "Nichts. Termine und Kosten sind fast im Plan, das zählt.",
+      "Für die laufenden und die nächsten kritischen Vorgänge Reviews einstellen und am nächsten Freitag vergleichen, ob die Qualität wieder steigt.",
+      "Alle Personen eine Woche auf Überzeit setzen, damit mehr Zeit für Korrekturen bleibt.",
+      "Den Statusbericht sofort vorziehen und die Auftraggeberin informieren."
+    ],
+    richtig: 1,
+    erklaerung: "Die Qualität sinkt seit einer Woche, und es gibt keine Reviews: Ursache und Massnahme liegen auf der Hand. Fehler, die jetzt unentdeckt bleiben, kommen in den Tests als Korrekturzeit zurück. Nichts tun verschiebt das Problem. Überzeit erhöht die Fehler eher noch. Eskalieren ist unnötig, die Massnahme liegt in eurer Kompetenz (ICB 3.10, Leistung mit dem Plan abgleichen und korrigieren)."
+  });
+
+  L.auswahl("#t22-u-kritisch", {
+    frage: '<p><b>Übung 8</b> <span class="icb">ICB 3.08</span></p><p>Ein Vorgang auf dem kritischen Pfad verlangt Fachwissen Bau 6. Wen setzt du ein?</p>',
+    optionen: [
+      "Die günstigste Person, auch wenn sie im Fachwissen Bau eine Lücke von 3 hat.",
+      "Die Fachperson mit Fachwissen Bau 6 und Vollzeitpensum, auch wenn sie teurer ist.",
+      "Eine Person mit perfektem Profil, aber nur 40&nbsp;% Pensum.",
+      "Die Person, die gerade im Leerlauf ist, egal mit welchem Profil."
+    ],
+    richtig: 1,
+    erklaerung: "Auf dem kritischen Pfad zählt die Leistung pro Tag: hohe Passung und Vollzeit. Eine Lücke von 3 senkt die Passung deutlich, die Person braucht mehr Stunden, und das Ende rutscht. Ein Teilpensum von 40&nbsp;% braucht zweieinhalb Mal so viele Tage. Leerlauf löst du auf Vorgängen mit Puffer (ICB 3.08, Ressourcen gemäss Bedarf zuweisen)."
+  });
+
+  L.reflexion("#t22-u-reflexion", {
+    titel: "Übung 9 · Offene Frage: Statusbericht in der Pause",
+    icb: ["ICB 3.10", "ICB 2.05"],
+    frage: "<p>Nach Woche 4 hält der Simulator an. Eure Kennzahlen: CPI 104&nbsp;%, SPI 88&nbsp;%, Qualität 76&nbsp;%, Motivation 92&nbsp;%, Risiko-Index 60&nbsp;%. Die Kostenprognose liegt im Budget. Schreib für den Statusbericht (a) die Ampeln je Bereich und die Gesamtampel mit den Schwellen des Leitstands (Station 19, Schritt 3, und Station 23), (b) die zwei wichtigsten Abweichungen mit vermuteter Ursache, (c) drei Massnahmen für die Wochen 5–8 mit verantwortlicher Rolle. Sechs bis zehn Sätze.</p>",
+    musterloesung:
+      "<p><b>Ampeln:</b> Termine ▲ Gelb (SPI 0.88 liegt unter 0.95, aber über 0.85). Kosten ● Grün (CPI 1.04 und Prognose im Budget). Qualität ■ Rot (76&nbsp;% unter 80&nbsp;%). Team ● Grün (Motivation 92&nbsp;%, mindestens 90&nbsp;%). Risiken ■ Rot (60&nbsp;% unter 75&nbsp;%). <b>Gesamt ■ Rot:</b> Termine und Kosten sind nicht rot, aber ausserhalb davon sind zwei Bereiche rot. Für Gelb dürfte es höchstens einer sein.</p>" +
+      "<p><b>Abweichungen:</b> (1) Qualität: Zu viele unentdeckte Fehler, vermutlich weil wir keine oder zu wenige Reviews eingestellt haben und Vorgänge mit Lücken im Profil besetzt sind. Folge: In den Tests der Wochen 5–8 droht Korrekturzeit auf dem kritischen Pfad. (2) Termine: 12&nbsp;% weniger erledigt als geplant; vermutlich arbeiten auf kritischen Vorgängen Leute mit Teilpensum oder schlechter Passung. Der Risiko-Index zeigt zudem, dass wir das Register nicht jede Woche geprüft haben.</p>" +
+      "<p><b>Massnahmen:</b> (1) Rolle Risiko und Qualität stellt ab sofort mindestens ein Review auf jedem laufenden und jedem kritischen Vorgang der Einführung ein. (2) Rolle Steuerung besetzt in der kurzen Planung die kritischen Vorgänge mit den besten Vollzeit-Profilen und setzt Teilpensen auf Vorgänge mit Puffer. (3) Rolle Risiko und Qualität prüft das Register jeden Montag in vier Schritten und ergreift Massnahmen für die hohen Risiken. Den guten CPI nutzen wir als Spielraum für diese Massnahmen.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Schwellen: Termine Grün ab SPI 0.95, Gelb ab 0.85; Qualität Gelb ab 80&nbsp;%; Team Grün ab 90&nbsp;%; Risiken Gelb ab 75&nbsp;% (Leitstand).</p>',
+    kriterien: [
+      { text: "Ampeln je Bereich richtig nach den Schwellen (Termine gelb, Kosten grün, Qualität rot, Team grün, Risiken rot)", punkte: 2 },
+      { text: "Gesamtampel Rot mit Begründung (zwei rote Bereiche), nicht als Durchschnitt", punkte: 1 },
+      { text: "Zwei Abweichungen mit Zahl und vermuteter Ursache", punkte: 2 },
+      { text: "Drei Massnahmen mit verantwortlicher Rolle, passend zu den roten und gelben Bereichen", punkte: 2 },
+      { text: "Ehrlich: keine Schönfärberei trotz gutem CPI", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm: Planungsphase «Ferienpass online» ---------- */
+  // Zustand des Besetzungsplans je Szene; Neues leuchtet auf
+  const VG = {
+    A: { name: "A Anforderungen", tage: "1–2", puffer: "0 · kritisch" },
+    B: { name: "B Formular", tage: "3–5", puffer: "0 · kritisch" },
+    C: { name: "C Kurse erfassen", tage: "3–4", puffer: "1" },
+    D: { name: "D Test, Freischaltung", tage: "6–8", puffer: "0 · kritisch" }
+  };
+  const BES = {
+    A: { team: "Lea, Samuel", fit: "1.075 / 0.940", dauer: "2.3", kosten: "3'879" },
+    B: { team: "Ivana, Samuel", fit: "0.989 / 0.820", dauer: "3.2", kosten: "7'619" },
+    C: { team: "Lea", fit: "0.870", dauer: "3.0", kosten: "2'130" },
+    DX: { team: "Lea, Rahel", fit: "0.946 / 1.007", dauer: "2.6", kosten: "2'852" },
+    DY: { team: "Ivana, Rahel", fit: "0.929 / 1.025", dauer: "2.1", kosten: "3'735" }
+  };
+  function plan(st, neu) {
+    neu = neu || [];
+    const zeilen = ["A", "B", "C", "D"].map(function (k) {
+      const v = VG[k];
+      const b = st[k] ? BES[st[k]] : null;
+      const z = function (key, txt) { return neu.indexOf(k + key) >= 0 ? NW(txt) : txt; };
+      return "<tr><th>" + v.name + "</th><td>" + z("t", st.netz ? v.tage : "?") + "</td><td>" + z("p", st.netz ? v.puffer : "?") + "</td><td>" +
+        (b ? z("b", b.team) : "–") + "</td><td>" + (b ? z("f", b.fit) : "–") + '</td><td class="zahl">' + (b ? z("d", b.dauer) : "–") + '</td><td class="zahl">' + (b ? z("k", b.kosten) : "–") + "</td></tr>";
+    }).join("");
+    return '<div class="tablebox"><table class="tabelle t22-ft"><thead><tr><th>Vorgang</th><th>Plan Tag</th><th>Puffer</th><th>Besetzung</th><th>Passung</th><th>Dauer T</th><th>CHF</th></tr></thead><tbody>' + zeilen + "</tbody></table></div>";
+  }
+  function zeile(html) { return '<div class="t22-zeile">' + html + "</div>"; }
+  const S0 = { netz: true };
+  const S1 = { netz: true, A: "A" };
+  const S2 = { netz: true, A: "A", B: "B" };
+  const S3 = { netz: true, A: "A", B: "B", D: "DX" };
+  const S4 = { netz: true, A: "A", B: "B", C: "C", D: "DX" };
+  const S5 = { netz: true, A: "A", B: "B", C: "C", D: "DY" };
+  const ERGEBNIS = zeile("<b>Ergebnis:</b> Ende nach 7.6 Tagen, also im Lauf von Tag 8 · Kosten CHF 17'363 (Plan 16'320, Budget 18'000) · Termin-Index 105&nbsp;% · Kosten-Index 94&nbsp;% · Prioritäten: Lea A, C · Samuel A, B · Ivana B, D · Rahel D");
+
+  L.film("#t22-film", {
+    phasen: ["1 · Netzplan", "2 · Profile", "3 · Kritisch besetzen", "4 · Puffer nutzen", "5 · Plan prüfen", "6 · Startklar"],
+    texte: [
+      'Projekt «Ferienpass online» der Gemeinde Wolkenried: Kinder melden sich im Sommer online für Kurse an. Simuliere die Planungsphase. <span data-ph="vg">Vorgänge: A Anforderungen und Kursdaten klären (32 h, 2 Personen geplant), B Anmeldeformular einrichten (48 h, 2), C Kurse und Leitende erfassen (16 h, 1), D Test mit Familien und Freischaltung (24 h, 1).</span> <span data-ph="abh">B und C brauchen A; D braucht B und C.</span> <span data-ph="prof">Profile (FACH, ENT, DAT, UX, KOM): A 5-0-2-1-3, B 2-5-2-4-0, C 3-0-4-0-1, D 2-1-0-3-5.</span> <span data-ph="team">Team: Lea, Jugendarbeit, 80&nbsp;%, CHF 110, 6-0-1-2-5, gründlich · Samuel, Informatik, 100&nbsp;%, CHF 125, 2-4-5-2-1 · Ivana, Lieferant, 100&nbsp;%, CHF 170, 1-6-3-4-1, schnell · Rahel, Kanzlei, 50&nbsp;%, CHF 100, 3-0-2-3-6.</span> <span data-ph="ziel">Die Anmeldung muss am Abend von Tag 8 offen sein. Plankosten CHF 16\'320 (Plansatz B CHF 160, sonst CHF 120), Budget CHF 18\'000.</span> Besetze alle Vorgänge und prüfe den Plan.'
+    ],
+    woerterbuch: [
+      "<b>Plandauer</b> = Aufwand ÷ (Personen × 8)",
+      "<b>Kritischer Pfad</b> = Kette ohne Puffer",
+      "<b>Passung</b> = 1 − 0.06 × Lücke + 0.025 × Über",
+      "<b>Leistung pro Tag</b> = Σ 8 × Pensum × Passung × Eigenheit",
+      "<b>Kosten</b> = Dauer × Σ 8 × Pensum × Satz",
+      "<b>Index</b> = Plan ÷ Ist, über 100&nbsp;% gut"
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Besetzungsplan", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So gehst du in der Planungsphase vor: Netzplan, Profile lesen, kritische Vorgänge zuerst besetzen, Puffer nutzen, den Plan prüfen und erst dann starten." },
+      { ph: 0, hl: ["vg"], dict: 1, dh: [0], f: plan({}) + zeile("Plandauer: A 32 ÷ 16 = 2 · B 48 ÷ 16 = 3 · C 16 ÷ 8 = 2 · D 24 ÷ 8 = 3 Tage"),
+        say: "Zuerst die Plandauern: Aufwand geteilt durch Personen mal acht Stunden. A dauert 2 Tage, B 3, C 2 und D 3 Tage." },
+      { ph: 0, hl: ["abh"], f: plan(S0, ["At", "Bt", "Ct", "Dt"]),
+        say: "Jetzt vorwärts rechnen, ab Tag 1 wie in Station 10. A läuft Tag 1 bis 2. B und C beginnen an Tag 3. D wartet auf beide und läuft Tag 6 bis 8." },
+      { ph: 0, dict: 2, dh: [1], f: plan(S0, ["Ap", "Bp", "Cp", "Dp"]),
+        say: "C endet an Tag 4, D beginnt erst an Tag 6. C hat also einen Tag Puffer. A, B und D bilden den kritischen Pfad mit 8 Tagen, genau das Ziel. Kein Spielraum." },
+      { ph: 1, hl: ["prof", "team"], f: plan(S0),
+        say: "Jetzt die Profile. Lea ist stark im Fachwissen und in der Kommunikation, passt also zu A und D. Ivana ist die Entwicklerin für B. Samuel kann Daten, das braucht C, und er hilft bei A und B." },
+      { ph: 1, hl: ["team"], f: plan(S0) + zeile("Lea gründlich × 0.95 · Ivana schnell × 1.05 · Rahel nur 50&nbsp;%"),
+        say: "Achte auf Pensum und Eigenheit. Rahel kommuniziert hervorragend, arbeitet aber nur halbtags. Das macht sie auf einem kritischen Vorgang langsam." },
+      { ph: 2, hl: ["prof"], dict: 3, dh: [2], f: plan(S1, ["Ab", "Af"]),
+        say: "Kritische Vorgänge zuerst. A mit Lea und Samuel. Lea ist überqualifiziert, Passung 1.075. Samuel hat im Fachwissen eine Lücke, Lea hilft ihm auf 4, Passung 0.94." },
+      { ph: 2, dict: 4, dh: [3], f: plan(S1, ["Ad", "Ak"]) + zeile("A: 8 × 0.8 × 1.075 × 0.95 + 8 × 1 × 0.94 = 14.06 h/Tag → 32 ÷ 14.06 = 2.3 Tage · Kosten 32 ÷ 14.056 × (704 + 1\'000) = 3\'879"),
+        say: "Leistung pro Tag: 6.54 Stunden von Lea und 7.52 von Samuel, zusammen 14.06. A dauert 2.3 Tage und kostet 3'879 Franken." },
+      { ph: 2, f: plan(S2, ["Bb", "Bf", "Bd", "Bk"]) + zeile("B: 8 × 0.989 × 1.05 + 8 × 0.82 = 14.87 h/Tag → 48 ÷ 14.87 = 3.2 Tage · Kosten 48 ÷ 14.868 × (1\'360 + 1\'000) = 7\'619"),
+        say: "B mit Ivana und Samuel. Ivana passt fast genau, 0.989. Samuel hat Lücken in Entwicklung und Benutzerführung, 0.82. Zusammen 3.2 Tage für 7'619 Franken." },
+      { ph: 2, f: plan(S2) + zeile("A + B = 2.3 + 3.2 = 5.5 Tage · Samuel ist ab Tag 3 auf B gebunden"),
+        say: "Zwischenstand auf dem kritischen Pfad: A und B zusammen 5.5 Tage. Samuel steckt ab jetzt in B." },
+      { ph: 2, f: plan(S3, ["Db", "Df", "Dd", "Dk"]) + zeile("D: 2 Personen statt 1 → Teamfaktor 0.95 · 0.95 × (8 × 0.8 × 0.946 × 0.95 + 8 × 0.5 × 1.007) = 9.29 h/Tag → 2.6 Tage"),
+        say: "D, erster Versuch: Lea und Rahel, beide stark in der Kommunikation. Weil D für eine Person geplant ist, kostet die zweite Abstimmung: Teamfaktor 0.95. Ergebnis 2.6 Tage für 2'852 Franken." },
+      { ph: 3, dict: 4, f: plan(S4, ["Cb", "Cf", "Cd", "Ck"]) + zeile("C muss vor D fertig sein, also bis 5.5 · Lea ab 2.3 frei: 16 ÷ (8 × 0.8 × 0.87 × 0.95) = 3.0 Tage → fertig bei 5.3 ✓"),
+        say: "Jetzt der Vorgang mit Puffer. Samuel wäre ideal für C, steckt aber in B. Lea ist nach A frei. Mit ihrer Daten-Lücke braucht sie 3 Tage und ist bei 5.3 fertig, knapp vor B. Der Puffer fängt das auf." },
+      { ph: 3, f: plan(S4) + zeile("Rahel allein auf C: 16 ÷ (8 × 0.5 × 0.88) = 4.5 Tage → fertig bei 6.8 ✗, D müsste warten"),
+        say: "Zum Vergleich: Rahel allein bräuchte 4.5 Tage und wäre erst bei 6.8 fertig. D müsste warten. Puffer nutzen heisst nicht: irgendwen nehmen." },
+      { ph: 4, dict: 5, dh: [4], f: plan(S4) + zeile("Ende = 2.3 + 3.2 + 2.6 = " + NW("8.1 Tage") + " · Kosten 3\'879 + 7\'619 + 2\'130 + 2\'852 = 16\'480"),
+        say: "Plan prüfen. Der kritische Pfad dauert 8.1 Tage, also bis in den Tag 9 hinein. Die Kosten liegen bei 16'480 Franken." },
+      { ph: 4, dict: 6, dh: [5], f: plan(S4) + zeile("Termin-Index 8 ÷ 8.09 = " + NW("99&nbsp;%") + " · Kosten-Index 16\'320 ÷ 16\'480 = 99&nbsp;% → das Ziel «Abend Tag 8» ist verfehlt"),
+        say: "Beide Indizes liegen bei 99 Prozent, knapp unter dem Plan. Das Ziel ist aber hart: Die Anmeldung ist angekündigt. Also nachsteuern, und zwar auf dem kritischen Pfad." },
+      { ph: 4, f: plan(S5, ["Db", "Df", "Dd", "Dk"]) + zeile("D neu mit Ivana (ab 5.5 frei) und Rahel: 0.95 × (8 × 0.929 × 1.05 + 8 × 0.5 × 1.025) = 11.31 h/Tag → 2.1 Tage"),
+        say: "Ivana ist nach B frei und arbeitet Vollzeit. Mit Rahel zusammen schafft sie D in 2.1 Tagen. Ihre Lücke in der Kommunikation deckt Rahel." },
+      { ph: 4, f: plan(S5) + zeile("Ende = 2.3 + 3.2 + 2.1 = " + NW("7.6 Tage ✓") + " · Kosten = " + NW("17\'363") + " · Termin-Index 105&nbsp;% · Kosten-Index 94&nbsp;%"),
+        say: "Neu endet das Projekt nach 7.6 Tagen, also im Lauf von Tag 8. Die Kosten steigen auf 17'363 Franken, der Kosten-Index fällt auf 94 Prozent." },
+      { ph: 4, f: plan(S5) + zeile("Abwägen: +883 Franken für einen sicheren Termin · Budget 18\'000 reicht · Vorsprung 0.4 Tage für Reviews und Unvorhergesehenes"),
+        say: "Ist das richtig? Der Termin ist hart, das Budget reicht, und der kleine Vorsprung fängt Reviews und Überraschungen auf. Also ja: bewusst etwas mehr Geld für den kritischen Pfad." },
+      { ph: 5, f: plan(S5) + zeile("Prioritäten: Lea 1 A, 2 C · Samuel 1 A, 2 B · Ivana 1 B, 2 D · Rahel 1 D"),
+        say: "Jetzt die Prioritäten je Person, in der Reihenfolge des Netzplans. Lea zuerst A, dann C. Samuel A, dann B. Ivana B, dann D. Rahel nur D, bis dahin arbeitet sie in der Linie." },
+      { ph: 5, f: plan(S5) + zeile("Startcheck: alle vier Vorgänge besetzt ✓ · Reviews auf A, B, D ✓ · Risiko «Ivana fällt aus» (B und D): Samuel als Stellvertretung ✓ · Kennzahlen-Tabelle bereit ✓"),
+        say: "Zum Schluss der Startcheck: Jeder Vorgang hat eine Person, die kritischen Vorgänge haben Reviews, das grösste Risiko hat eine Massnahme, und die Tabelle für die Kennzahlen liegt bereit." },
+      { ph: 5, f: plan(S5) + ERGEBNIS,
+        say: "Fertig. Kritischer Pfad mit den besten Leuten, Puffer sinnvoll genutzt, Plan geprüft und nachgesteuert. Jetzt darf die Zeit laufen. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t22-film-loesung").innerHTML = plan(S5) + ERGEBNIS;
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t22-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.10</span> Der Simulator zeigt nach Woche 3: CPI 93&nbsp;%, SPI 86&nbsp;%. Was heisst das?',
+        o: ["Vor Plan und günstiger als geplant", "Hinter Plan, und die erledigte Arbeit hat mehr gekostet als geplant", "Hinter Plan, aber günstiger als geplant", "Beide Werte sind gut, weil sie über 80&nbsp;% liegen"], a: 1,
+        e: "Beide Indizes liegen unter 100&nbsp;%: SPI = EV ÷ PV, weniger erledigt als geplant; CPI = EV ÷ AC, jeder Franken brachte nur 93 Rappen Leistung. ICB 3.10 Planung und Steuerung, Herleitung in Station 18." },
+      { q: '<span class="icb">ICB 3.08</span> Ein kritischer Vorgang verlangt BAU 4 und ENT 5. Welche Besetzung folgt der Strategie dieser Station am besten?',
+        o: ["Die zwei günstigsten Personen, egal mit welchem Profil", "Eine Fachperson mit BAU 6 und eine Entwicklerin mit ENT 5, beide Vollzeit", "Eine Person mit 40&nbsp;% Pensum, die in beiden Gebieten genau passt", "Möglichst viele Personen, damit es schneller geht"], a: 1,
+        e: "Auf dem kritischen Pfad zählt die Leistung pro Tag: gute Passung und Vollzeit. Die zwei ergänzen sich und helfen sich gegenseitig über Lücken. ICB 3.08 Ressourcen (Swiss ICB 4.5.8.4, Ressourcen zuweisen)." },
+      { q: '<span class="icb">ICB 3.08</span> Ein Vorgang ist für 2 Personen geplant. Du setzt eine dritte dazu. Was passiert im Lernmodell dieser Seite?',
+        o: ["Die Dauer sinkt um genau einen Drittel, die Kosten bleiben gleich", "Die Dauer sinkt weniger als im Verhältnis, weil Abstimmung Leistung kostet; die Kosten steigen meist", "Die Dauer steigt immer", "Nichts, die dritte Person wird nicht bezahlt"], a: 1,
+        e: "Eine Person mehr als geplant gibt den Teamfaktor 0.95: Die Dauer sinkt, aber nicht im Verhältnis, und die bezahlten Stunden steigen. Mehr Personen verkürzen, kosten aber mehr. ICB 3.08." },
+      { q: '<span class="icb">ICB 2.05</span> Eine Meldung liegt im Posteingang, und eure Gruppe ist uneinig. Was ist meist die schlechteste Wahl?',
+        o: ["Die Optionen kurz abwägen und innert Minuten entscheiden", "Nach dem Entscheid die Rückmeldung lesen und notieren", "Den Entscheid bis zur Frist liegen lassen", "Die Rolle Posteingang schlägt vor, die Steuerung entscheidet"], a: 2,
+        e: "Nach der Frist entscheidet eine vorgesetzte Person, meist mit der schlechtesten Option. Führen heisst Entscheidungen treffen, durchsetzen und überprüfen (ICB 2.05, Swiss ICB 4.4.5.5)." },
+      { q: '<span class="icb">ICB 2.06</span> Die Motivation eines Teammitglieds sinkt, nachdem du es mehrmals umgeplant hast. Was tust du zuerst?',
+        o: ["Nichts, die Motivation erholt sich von selbst", "Ein Gespräch führen und die Prioritäten verbindlich festlegen", "Die Person aus dem Projekt nehmen", "Einen Teamabend für alle ankündigen, ohne mit der Person zu reden"], a: 1,
+        e: "Das Gespräch behebt die Ursache (fehlende Klarheit) und zeigt Wertschätzung. Ein Anlass für alle hilft, ersetzt aber das Gespräch nicht. ICB 2.06 Teamarbeit und ICB 2.05 Führung." },
+      { q: '<span class="icb">ICB 3.10</span> Wann kann die Simulation starten?',
+        o: ["Sobald das Kernteam besetzt ist", "Sobald jeder Vorgang mindestens einer Person zugewiesen ist", "Sobald das Risikoregister leer ist", "Erst nach dem ersten Statusbericht"], a: 1,
+        e: "Die Planung ist beendet, wenn jeder Vorgang besetzt ist (Handbuch). Erst dann läuft die Zeit. ICB 3.10, Projekt starten und Plan festlegen (Swiss ICB 4.5.10.1)." },
+      { q: '<span class="icb">ICB 3.08</span> Eine Person hat mehrere Vorgänge zugewiesen. Woran arbeitet sie?',
+        o: ["An allen gleichzeitig zu gleichen Teilen", "Am Vorgang mit der höchsten Priorität, der gerade bearbeitbar ist", "Am kürzesten Vorgang", "Am Vorgang, der zuletzt zugewiesen wurde"], a: 1,
+        e: "Die Reihenfolge der Zuweisungen ist die Priorität. Bearbeitbar heisst: alle Vorgänger fertig. Darum gehört der kritische Vorgang nach oben. ICB 3.08." },
+      { q: '<span class="icb">ICB 3.10</span> Was gehört in den Statusbericht in der Pause nach Woche 4?',
+        o: ["Nur die Kennzahlen über 100&nbsp;%", "Die Kennzahlen des Simulators mit Ampeln, Abweichungen mit Ursache, Massnahmen für die Wochen 5–8 und Entscheidungsbedarf", "Eine Liste aller E-Mails", "Nichts, der Simulator schreibt den Bericht selbst"], a: 1,
+        e: "Der Bericht ist ehrlich und vollständig: Zahlen, Ampeln, Abweichungen, Massnahmen, Entscheide (Station 19). ICB 3.10, Bericht über den Projektfortschritt (Swiss ICB 4.5.10.4)." },
+      { q: '<span class="icb">ICB 2.06</span> Eure Gruppe verteilt die Rollen nach RACI. Welche Regel gilt?',
+        o: ["Jede Zeile hat genau ein A", "Jede Zeile hat genau ein R und kein A", "Q und A sind immer dieselbe Rolle", "Wer ein I hat, entscheidet mit"], a: 0,
+        e: "Genau eine Rolle ist verantwortlich (A). R arbeitet daran, C wird gefragt, I informiert, Q prüft die Qualität. Aufgaben und Verantwortung klar delegieren stärkt das Team (ICB 2.06, Swiss ICB 4.4.6.4)." },
+      { q: '<span class="icb">ICB 2.06</span> Welche Lesson Learned ist für den Abschlussbericht am brauchbarsten?',
+        o: ["«Es war spannend.»", "«Wir hatten Pech mit den Ereignissen.»", "«Wir haben bis Woche 4 keine Reviews eingestellt. In den Tests kostete die Korrektur rund zwei Tage auf dem kritischen Pfad. Nächstes Mal: ein Review je kritischem Vorgang vor dem Start.»", "«Der Simulator ist unfair.»"], a: 2,
+        e: "Eine gute Lesson Learned nennt, was passiert ist, warum, was es kostete und was ihr nächstes Mal anders macht. Fehler erkennen, um daraus zu lernen (ICB 2.06, Swiss ICB 4.4.6.5; ICB 3.10, Projekt abschliessen und evaluieren)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

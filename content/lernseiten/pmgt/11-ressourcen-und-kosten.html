@@ -1,0 +1,1226 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ressourcen und Kosten planen · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/12-wirtschaftlichkeit" title="Wirtschaftlichkeit: NPV, IRR, Payback">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t11-», nur Farben aus :root -->
+  <style>
+    .t11-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t11-ziele li{margin-bottom:3px}
+    .t11-quelle{font-size:.9rem; color:var(--muted)}
+
+    /* Formeln und Regeln auf der Tafel */
+    .t11-regeln{display:grid; grid-template-columns:minmax(0,1fr); gap:6px}
+    .t11-regel{display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline}
+    .t11-regel b{min-width:9em; color:var(--accent)}
+
+    /* Zusammenhang der Pläne */
+    .t11-plaene{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .t11-plan{padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-weight:600; line-height:1.3}
+    .t11-plan small{display:block; font-weight:400; color:var(--muted); font-size:.82rem}
+    .t11-pfeil-text{color:var(--muted); font-weight:700}
+
+    /* Fallbeispiel aus dem Referat */
+    .t11-fall{border-left:4px solid var(--accent)}
+    .t11-zahlen{display:flex; flex-wrap:wrap; gap:10px}
+    .t11-zahl{flex:1 1 7.5rem; padding:8px 10px; border-radius:10px; background:var(--board); line-height:1.3}
+    .t11-zahl b{display:block; font-family:var(--f-display); font-size:1.5rem; color:var(--accent)}
+
+    /* Auslastungs-Labor */
+    .t11-gantt{--gantt-einheit:1.6rem; --gantt-name:6.4rem}
+    .t11-saeulen{position:relative; display:grid; grid-template-columns:repeat(var(--gantt-einheiten, 10), var(--gantt-einheit));
+      height:4.4rem; align-items:end; background:var(--board); border-radius:4px}
+    /* 100-%-Linie: Skala 0–200 %, also in halber Höhe */
+    .t11-saeulen::after{content:""; position:absolute; left:0; right:0; bottom:50%; border-top:2px dashed var(--ink); pointer-events:none}
+    .t11-saeule{position:relative; height:100%; display:flex; align-items:flex-end; justify-content:center; border-left:1px solid var(--line)}
+    .t11-saeule i{display:block; width:72%; height:var(--h, 0%); background:var(--s1); border-radius:3px 3px 0 0}
+    .t11-saeule.t11-ueber i{background:repeating-linear-gradient(135deg, var(--bad) 0 4px, var(--bad-bg) 4px 7px); box-shadow:0 0 0 2px var(--bad)}
+    .t11-werte{display:grid; grid-template-columns:repeat(var(--gantt-einheiten, 10), var(--gantt-einheit)); font-size:.68rem; text-align:center; color:var(--muted)}
+    .t11-werte .t11-ueber{color:var(--bad); font-weight:700}
+    .t11-person{border-top:1px solid var(--line); padding-top:10px}
+    .t11-person h4{margin:0 0 4px; font-family:var(--f-display); font-size:1rem}
+    .t11-person .hint{margin-bottom:6px}
+    .t11-marke-ueber{color:var(--bad); font-weight:700}
+    .t11-legende-saeule{display:inline-block; width:.9em; height:1em; vertical-align:-2px; background:var(--s1); border-radius:2px}
+    .t11-legende-ueber{display:inline-block; width:.9em; height:1em; vertical-align:-2px; background:repeating-linear-gradient(135deg, var(--bad) 0 3px, var(--bad-bg) 3px 5px); border:1px solid var(--bad); border-radius:2px}
+    .t11-legende-linie{display:inline-block; width:1.6em; border-top:2px dashed var(--ink); vertical-align:middle}
+
+    .t11-steuer{display:flex; flex-direction:column; gap:8px}
+    .t11-ap{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+    .t11-ap-name{flex:1 1 100%; line-height:1.3}
+    .t11-ap-name .hint{display:block}
+    .t11-wahl, .t11-feld{font:inherit; min-height:38px; padding:4px 6px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink)}
+    .t11-wahl:hover, .t11-feld:hover{border-color:var(--accent)}
+    .t11-feld{font-variant-numeric:tabular-nums; width:8ch; text-align:right}
+    .t11-feld.t11-breit{width:10ch}
+    .t11-feld[aria-invalid="true"]{border-color:var(--bad); background:var(--bad-bg)}
+    .t11-feld.t11-richtig{border-color:var(--ok); background:var(--ok-bg)}
+    .t11-lage{display:inline-flex; align-items:center; gap:6px}
+    .t11-lage .btn{min-width:2.6rem; padding-inline:8px}
+    .t11-tage{min-width:6.6em; text-align:center; font-variant-numeric:tabular-nums; font-weight:600}
+    .t11-spiel{font-size:.9rem; color:var(--muted)}
+    .t11-geaendert{box-shadow:inset 4px 0 0 var(--lit)}
+    .t11-anzeige{display:flex; flex-wrap:wrap; gap:8px}
+    .t11-kpi{flex:1 1 8.5rem; padding:8px 10px; border-radius:10px; background:var(--board); line-height:1.3}
+    .t11-kpi b{display:block; font-family:var(--f-display); font-size:1.25rem}
+    .t11-kpi.t11-schlecht b{color:var(--bad)}
+    .t11-kpi.t11-gut b{color:var(--ok)}
+    .t11-meldung{padding:12px 14px; border-radius:10px; background:var(--board); border-left:4px solid var(--accent); line-height:1.5}
+    .t11-meldung p{margin:0}
+    .t11-meldung p + p{margin-top:6px}
+
+    /* Kostenrechner und Controlling-Tabelle */
+    .t11-eingabe td, .t11-eingabe th{vertical-align:middle}
+    .t11-summe td, .t11-summe th{font-weight:700; border-top:2px solid var(--ink)}
+    .t11-ctrl td, .t11-ctrl th{padding:4px 6px}
+    .t11-fb{font-size:.85rem; display:block; min-height:1.2em}
+    .t11-fb.ok{color:var(--ok)} .t11-fb.bad{color:var(--bad)}
+
+    /* Lösungsfilm */
+    .t11-film-tab{font-size:.9rem}
+    .t11-film-tab td, .t11-film-tab th{padding:3px 6px}
+    .t11-zeile{margin-top:8px; font-family:var(--f-body); white-space:normal}
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="11-ressourcen-und-kosten">
+<main class="wrap">
+
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 6 · Planen</span>
+    <h1>Ressourcen und Kosten planen</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.08</span><span class="icb">ICB 3.07</span>
+    </p>
+    <p class="lead">Ein guter Terminplan nützt nichts, wenn die Leute fehlen oder doppelt verplant sind. Hier lernst du, wie du aus Arbeitspaketen den Bedarf an Personen und Sachmitteln ableitest, den Aufwand schätzt, Überlastungen erkennst und ausgleichst und daraus einen Kostenplan mit Reserve machst. Im Labor verteilst du die Arbeit im Projekt «Onlineschalter Wolkenried» so, dass niemand über 100 % kommt.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t11-ziele">
+        <li>Du unterscheidest Ressourcenarten und leitest den Bedarf aus den Arbeitspaketen ab.</li>
+        <li>Du wählst ein Schätzverfahren, rechnest eine Dreipunktschätzung und kennst typische Schätzfehler.</li>
+        <li>Du liest ein Belastungsdiagramm und unterscheidest Ressourcenglättung von Ressourcenausgleich.</li>
+        <li>Du entscheidest zwischen interner Ressource aus der Linie und externer Beschaffung.</li>
+        <li>Du rechnest ein Budget aus Aufwand, Sachkosten und Reserve und führst eine Controlling-Tabelle.</li>
+      </ul>
+      <p class="t11-quelle">Quellen: Skript LB 6 F.7 (Zusammenhang der Pläne), F.8 (Kapazitätsdiagramm, Beschaffung der Ressourcen), F.10 (Kostenplanung), F.16 (Controlling im Statusbericht), F.18 (Reserven), F.19 (Schätzverfahren), F.20 (Schätzfehler); LB 7 S.15–16 (Kontrollgrössen für Auftraggeber); Referat «Ressourcen im Projekt» zu ICB 3.08 (Jan Stocker mit Mitreferierenden, 28.10.2026); Swiss ICB 4.5.8 «Ressourcen» und 4.5.7 «Kosten und Finanzierung»; Gubelmann/Sommer Kap. 13 und 17 (laut LB 6 F.4). Alle Zahlen sind eigene Beispiele.</p>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#bedarf"><b>1</b>Bedarf</a>
+    <a href="#schaetzen"><b>2</b>Schätzen</a>
+    <a href="#belastung"><b>3</b>Belastung</a>
+    <a href="#glaetten"><b>4</b>Glätten oder ausgleichen</a>
+    <a href="#beschaffen"><b>5</b>Intern oder extern</a>
+    <a href="#kosten"><b>6</b>Kostenplan</a>
+    <a href="#controlling"><b>7</b>Controlling</a>
+    <a href="#labor"><b>8</b>Labor</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine der Ressourcenplanung</h2>
+    <p class="prose">Denk an das Dorffest des Turnvereins. Du brauchst Helferinnen und Helfer, einen Grill, Tische und Geld für Würste. Wenn alle Helfenden gleichzeitig am Grill stehen sollen, aber zwei davon nur am Samstag Zeit haben, wird es eng. Genau dieses Problem löst die Ressourcenplanung.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Ressource</span><span class="ex">Personal · Sachmittel · Geld</span><p>Alles, was das Projekt zum Arbeiten braucht und nur begrenzt hat. Beim Fest: Helfende, Grill, Kasse. Meist ist das Personal der Engpass.</p></div>
+      <div class="concept"><span class="tag">Kapazität</span><span class="ex">60 % = 4.8 h/Tag</span><p>Wie viel eine Ressource leisten kann. Wer 60 % arbeitet, hat 0.6 × 8 h = 4.8 Stunden pro Tag, nicht 8.</p></div>
+      <div class="concept"><span class="tag">Bedarf</span><span class="ex">128 h = 16 PT</span><p>Wie viel Arbeit ein Arbeitspaket verlangt, in Stunden oder Personentagen (PT). Er kommt aus der Aufwandschätzung.</p></div>
+      <div class="concept"><span class="tag">Auslastung</span><span class="ex">12 h ÷ 8 h = 150 %</span><p>Bedarf geteilt durch Kapazität. Über 100 % heisst: Überstunden, Fehler oder Verzug. Am Fest: zwei Schichten gleichzeitig.</p></div>
+      <div class="concept"><span class="tag">Reserve</span><span class="ex">+ 20 %</span><p>Geld und Zeit für das Unerwartete. Beim Fest: ein paar Franken für Ersatzwürste, wenn es regnet und die Leute länger bleiben.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welche Art von Ressource?</h3>
+      <p class="hint">Frag dich: Arbeitet es, steht es herum, oder ist es Geld?</p>
+      <div id="t11-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Bedarf aus Arbeitspaketen ===== -->
+  <section id="bedarf">
+    <span class="eyebrow">Schritt 1 · Vom Arbeitspaket zum Bedarf</span>
+    <h2>Welche Ressourcen braucht das Projekt?</h2>
+    <p class="prose">Die Swiss ICB zählt zu den Ressourcen Personal, Know-how, Anlagen, Ausrüstung, Material, Infrastruktur und Werkzeuge (4.5.8, Definition). Für die Planung reichen drei Gruppen: <b>Personal</b> (Rollen, Fähigkeiten, Stunden), <b>Sachmittel</b> (Hardware, Lizenzen, Testumgebungen, Räume) und <b>Finanzmittel</b> (Budget für interne Stunden und externe Leistungen). Das Referat zu ICB 3.08 nennt als vierte Gruppe das <b>Wissen</b>: Es geht verloren, wenn Schlüsselpersonen gehen.</p>
+    <p class="prose">Den Bedarf rechnest du nicht aus dem Bauch, sondern aus den Arbeitspaketen im Projektstrukturplan. LB 6 F.7 zeigt, wie die Pläne zusammenhängen. In eigenen Worten:</p>
+    <div class="card stack">
+      <div class="t11-plaene" role="list" aria-label="Strang Arbeit: vom Projektstrukturplan zum Kostenplan">
+        <span class="t11-plan" role="listitem">Projektstrukturplan<small>Arbeitspakete</small></span><span class="t11-pfeil-text" aria-hidden="true">→</span>
+        <span class="t11-plan" role="listitem">Aufwandplan<small>Stunden je Paket</small></span><span class="t11-pfeil-text" aria-hidden="true">→</span>
+        <span class="t11-plan" role="listitem">Terminplan<small>Netzplan, Gantt</small></span><span class="t11-pfeil-text" aria-hidden="true">→</span>
+        <span class="t11-plan" role="listitem">Kostenplan<small>Franken je Kostenart und Periode</small></span>
+      </div>
+      <div class="t11-plaene" role="list" aria-label="Strang Ressourcen: von den Ressourcen zum Terminplan">
+        <span class="t11-plan" role="listitem">Ressourcen<small>Personen, Sachmittel</small></span><span class="t11-pfeil-text" aria-hidden="true">→</span>
+        <span class="t11-plan" role="listitem">Kapazitätsplan<small>wer ist wann verfügbar</small></span><span class="t11-pfeil-text" aria-hidden="true">→</span>
+        <span class="t11-plan" role="listitem">Terminplan</span>
+      </div>
+      <p class="hint">Zwei Stränge treffen sich im Terminplan: Der Aufwand sagt, wie viel Arbeit anfällt, der Kapazitätsplan, wer sie wann leisten kann. Was nicht verfügbar ist, verschiebt den Termin. Der Kostenplan bekommt seine Zahlen aus dem Aufwandplan und dem Terminplan.</p>
+    </div>
+    <p class="prose">Ein Beispiel aus dem Leitstand (Station 23): das Arbeitspaket V05 «Schnittstelle zur Bauverwaltungssoftware». Klick dich mit «Weiter» durch. Tippe auf ein unterstrichenes Satzstück: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="t11-stepper-bedarf"></div>
+    <div class="note"><b>Merke:</b> Bedarf heisst immer <b>Menge und Qualität</b> (Swiss ICB 4.5.8.2). 128 Stunden irgendeiner Person helfen nicht. Es braucht 128 Stunden von jemandem, der Daten und Schnittstellen kann.</div>
+    <p class="prose">Das Referat zu ICB 3.08 nutzt die fünf Kompetenzindikatoren der ICB (4.5.8.1–4.5.8.5) als roten Faden durch den Ressourcenprozess: <b>(1)</b> eine Strategie festlegen, etwa eigener Kern oder Zukauf; <b>(2)</b> den Bedarf nach Menge und Qualität aus den Arbeitspaketen ableiten; <b>(3)</b> Quellen finden und die Verfügbarkeit mit der Linie oder dem Lieferanten verhandeln; <b>(4)</b> die Ressourcen zuteilen und Überlast auflösen; <b>(5)</b> den Verbrauch überwachen und korrigieren. Das ist kein einmaliger Ablauf. Du wiederholst ihn bis zum Projektende.</p>
+  </section>
+
+  <!-- ===== 2 · Aufwand schätzen ===== -->
+  <section id="schaetzen">
+    <span class="eyebrow">Schritt 2 · Aufwand schätzen</span>
+    <h2>Woher kommen die 128 Stunden?</h2>
+    <p class="prose">LB 6 F.19 ordnet die Schätzverfahren in drei Familien. In eigenen Worten:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Schätzverfahren (nach LB 6 F.19)</caption>
+        <thead><tr><th>Familie</th><th>Verfahren</th><th>So funktioniert es</th></tr></thead>
+        <tbody>
+          <tr><th rowspan="3">Vergleich</th><td>Expertenschätzung, Delphi-Methode</td><td>Mindestens zwei Fachleute schätzen unabhängig, vergleichen und gleichen ab.</td></tr>
+          <tr><td>Analogieverfahren</td><td>Ist-Werte aus einem ähnlichen früheren Projekt übernehmen und anpassen.</td></tr>
+          <tr><td>Beta-Methode (Drei-Zeiten-Verfahren)</td><td>Eine optimistische, eine wahrscheinliche und eine pessimistische Schätzung kombinieren.</td></tr>
+          <tr><th>Kennzahlen</th><td>Prozentsatzverfahren</td><td>Aus Erfahrung weiss man, welcher Anteil auf jede Phase fällt. Kennt man eine Phase, rechnet man hoch.</td></tr>
+          <tr><th rowspan="3">Algorithmus</th><td>Standardwert-, Multiplikatorverfahren</td><td>Feste Standardwerte, zum Beispiel Aufwand pro Formular oder pro Mitarbeitenden.</td></tr>
+          <tr><td>Funktionsverfahren</td><td>Softwarefunktionen zählen und gewichten (IT-Projekte).</td></tr>
+          <tr><td>COCOMO</td><td>Aufwand aus der Grösse der Software und ihrer Schwierigkeit berechnen.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Für die Prüfung musst du vor allem die <b>Dreipunktschätzung</b> rechnen können. Die Folie nennt nur die Idee. Die übliche Formel gewichtet den wahrscheinlichen Wert vierfach (PERT-Formel, <i>Ergänzung</i>: nicht auf den Folien, aber in der Swiss ICB 4.5.7 als «Dreipunktschätzung» genannt):</p>
+    <div class="board">
+      $$\text{Erwartungswert} = \frac{O + 4 \cdot M + P}{6}$$
+    </div>
+    <p class="hint">O = optimistisch, M = wahrscheinlich (meist), P = pessimistisch.</p>
+    <div id="t11-stepper-drei"></div>
+    <h3>Schätzfehler und wie du sie vermeidest</h3>
+    <p class="prose">LB 6 F.20 nennt drei typische Fehler: Es wird <b>zu früh</b> geschätzt, <b>nur einmal</b> geschätzt, oder die Schätzung wird <b>falsch korrigiert</b>, zum Beispiel nach unten, weil das Budget knapp ist. Die Gegenregeln: erst schätzen, wenn genug Wissen da ist; die Schätzung laufend nachführen und richtig korrigieren; mehrere Köpfe schätzen lassen, denn mehrere schätzen besser als einer.</p>
+    <div class="note tipp"><b>Tipp aus dem Leitstand:</b> Im Risikoregister steht «Aufwand der Schnittstelle unterschätzt». Eine Massnahme ist eine Zweitschätzung durch die Schnittstellenentwicklerin. Das ist die Delphi-Idee im Kleinen.</div>
+  </section>
+
+  <!-- ===== 3 · Belastungsdiagramm ===== -->
+  <section id="belastung">
+    <span class="eyebrow">Schritt 3 · Belastung sichtbar machen</span>
+    <h2>Das Belastungsdiagramm</h2>
+    <p class="prose">Ein Gantt-Diagramm zeigt, <i>wann</i> etwas läuft. Ob jemand doppelt verplant ist, siehst du darin kaum. Dafür zeichnest du ein <b>Belastungsdiagramm</b>: Pro Tag oder Woche eine Säule mit dem Bedarf einer Person oder Rolle, dazu eine Linie für die verfügbare Kapazität. LB 6 F.8 nennt es <b>Kapazitätsdiagramm</b>: Dort stapeln sich die Arbeitspakete pro Rolle, und eine <b>Verfügbarkeitsgrenze</b> zeigt, wie viele Leute da sind. Was über die Linie ragt, ist Überlast.</p>
+    <div class="board t11-regeln" aria-label="Formeln zur Auslastung">
+      <div class="t11-regel"><b>Kapazität</b><span>\(\text{Pensum} \times 8\ \text{h pro Tag}\)</span></div>
+      <div class="t11-regel"><b>Auslastung</b><span>\(\dfrac{\text{Bedarf pro Tag}}{\text{Kapazität pro Tag}} \times 100\,\%\)</span></div>
+    </div>
+    <p class="prose">Im Labor (Schritt 8) planst du den Onlineschalter mit fünf Personen. Im ersten Entwurf laufen zwei Arbeitspakete von Luca Bernasconi gleichzeitig.</p>
+    <div id="t11-stepper-last"></div>
+    <div class="card stack">
+      <h3>So sieht das bei Luca aus</h3>
+      <p class="hint">Oben die Arbeitspakete als Balken, unten die Auslastung pro Tag. Die gestrichelte Linie ist 100 %. Schraffierte Säulen mit Zahl in Rot liegen darüber. Gestrichelte Verlängerung hinter einem Balken = Puffer. Seitlich wischen.</p>
+      <div id="t11-luca"></div>
+    </div>
+    <div class="note"><b>Merke:</b> Ob jemand überlastet ist, siehst du im Belastungsdiagramm, nicht im Gantt. Rechne die Auslastung immer mit dem <b>Pensum</b>: Jasmin mit 60 % ist mit 4.8 Stunden Projektarbeit pro Tag schon voll.</div>
+  </section>
+
+  <!-- ===== 4 · Glätten oder ausgleichen ===== -->
+  <section id="glaetten">
+    <span class="eyebrow">Schritt 4 · Überlast auflösen</span>
+    <h2>Ressourcenglättung oder Ressourcenausgleich?</h2>
+    <p class="prose">Zeigt das Belastungsdiagramm mehr als 100 %, hast du zwei Grundstrategien. Die Begriffe stehen so im Referat zu ICB 3.08; die Folien von LB 6 nennen sie nicht. Die Swiss ICB spricht von <b>Nivellierung</b> der Ressourcen und hält fest, dass sie den kritischen Pfad verändern kann (4.5.4.4).</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Ressourcenglättung</h3>
+        <p class="hint">englisch <span lang="en">resource smoothing</span></p>
+        <p><b>Der Endtermin ist fix.</b> Du verschiebst Arbeitspakete nur so weit, wie ihr Puffer reicht. Ist der Puffer zu klein, bleibt ein Teil der Überlast stehen. Dann brauchst du zusätzliche Kapazität oder eine andere Besetzung.</p>
+        <p><b>Passt, wenn</b> der Termin nicht verhandelbar ist: Supportende, Gemeindeversammlung, gesetzliche Frist.</p>
+      </div>
+      <div class="card stack">
+        <h3>Ressourcenausgleich</h3>
+        <p class="hint">auch Ressourcenabgleich, englisch <span lang="en">resource leveling</span></p>
+        <p><b>Die Kapazitätsgrenze ist fix.</b> Du verschiebst Arbeitspakete, bis niemand mehr über 100 % liegt, auch über den Puffer hinaus. Der Endtermin darf sich dabei nach hinten schieben.</p>
+        <p><b>Passt, wenn</b> niemand die Schlüsselperson ersetzen kann und der Auftraggeber einen späteren Termin akzeptiert.</p>
+      </div>
+    </div>
+    <p class="prose">Zurück zu Luca: Das Paket E «Stammdaten übernehmen» hat 3 Tage Puffer.</p>
+    <div id="t11-stepper-glaetten"></div>
+    <div class="card stack t11-fall">
+      <span class="eyebrow">Fallbeispiel aus dem Referat zu ICB 3.08</span>
+      <h3>Microsoft 365 in einer Gemeindeverwaltung</h3>
+      <p>Eine Gemeindeverwaltung mit rund 120 Mitarbeitenden wechselt von eigenem Fileserver und Mailserver auf Microsoft 365. Der Endtermin ist fix, weil der alte Mailserver aus dem Support fällt. Das Kernteam: Projektleitung, die einzige interne Systemadministratorin, ein externer Engineer (drei Tage pro Woche) und drei Key-User. Der Schulungsraum ist nur dienstags frei.</p>
+      <div class="t11-zahlen">
+        <div class="t11-zahl"><b>12</b>Wochen Laufzeit, Endtermin fix</div>
+        <div class="t11-zahl"><b>140 %</b>Spitze der Admin in KW 6 (erste Planung)</div>
+        <div class="t11-zahl"><b>95 %</b>Spitze nach den Massnahmen</div>
+        <div class="t11-zahl"><b>45 h</b>übernimmt der externe Partner</div>
+      </div>
+      <p>Das Problem: Datenmigration, Teams-Einführung und Support nach dem Go-live fielen in dieselben drei Wochen, dazu kam rund 50 % Tagesbetrieb. Die Lösung kombinierte vier Massnahmen: Migration in drei Wellen, innerhalb der Puffer verschoben; der Partner übernimmt in KW 6–8 den ersten Support, bezahlt aus der Reserve; Key-User schulen ihre Abteilungen selbst; die Freistellung der Admin wird schriftlich mit der Linie vereinbart. Der Endtermin in KW 12 hielt.</p>
+      <p><b>Einordnung:</b> Weil der Endtermin fix blieb, ist das im Kern eine <b>Glättung</b>, ergänzt um zusätzliche externe Kapazität (ICB 3.09 Beschaffung) und eine Vereinbarung mit der Linie (ICB 2.09 Verhandlung). Das Fazit des Referats trifft es: Die Methoden sind schnell gelernt, Ressourcen sind vor allem Verhandlungssache.</p>
+      <p class="hint">Korrektur zur Referatsfolie 3: Die ICB4 hat <b>13</b> Practice-Kompetenzen (3.01 bis 3.13), nicht 14.</p>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Intern oder extern ===== -->
+  <section id="beschaffen">
+    <span class="eyebrow">Schritt 5 · Ressourcen beschaffen</span>
+    <h2>Aus der Linie oder von aussen?</h2>
+    <p class="prose">LB 6 F.8 unterscheidet vier Wege, Ressourcen zu beschaffen. Die Swiss ICB sagt den Unterschied klar: Intern ist es eine Frage der Verfügbarkeit und Qualität, extern müssen zusätzlich die Kosten verhandelt werden (4.5.8.3).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Beschaffung der Ressourcen (nach LB 6 F.8)</caption>
+        <thead><tr><th></th><th>intern</th><th>extern</th></tr></thead>
+        <tbody>
+          <tr><th>Personal</th><td>Antrag an die Linienvorgesetzten. Sie geben Personen für einen Anteil ihres Pensums frei.</td><td>Ausschreibung, Offerten, Vertrag (Werkvertrag oder Auftrag, Station 21).</td></tr>
+          <tr><th>Sachmittel</th><td>Aus dem Bestand anfordern: Raum, Laptop, Testumgebung der Informatik.</td><td>Einkaufen oder mieten: Tablets, Lizenzen, Plattform des Lieferanten.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Der Matrixkonflikt</h3>
+    <p class="prose">In Wolkenried gehören Martin und Thomas dem Bauamt. Ihr Chef, Bauverwalter Beat Imhof, bleibt ihr Linienvorgesetzter: Er führt sie disziplinarisch und im Tagesgeschäft. Für die Projektarbeit gibst du als Projektleitung die Aufträge. Sie haben also zwei «Chefs». Kommt im Bauamt eine Spitze mit vielen Baugesuchen, zieht die Linie ihre Leute ab. Das ist der typische <b>Ressourcenkonflikt in der Matrixorganisation</b>.</p>
+    <div class="grid2">
+      <div class="card stack"><h3>Vorbeugen</h3><p>Ressourcenvereinbarung schriftlich festhalten: wer, wie viel Prozent, in welchen Wochen. Stellvertretungen planen. Linienvorgesetzte früh einbinden, sie sind Stakeholder.</p></div>
+      <div class="card stack"><h3>Wenn es passiert</h3><p>Folgen auf Termin und Kosten zeigen, mit der Linie eine Lösung verhandeln (zum Beispiel feste Projekttage). Gelingt das nicht: an den Auftraggeber eskalieren. Er entscheidet über Prioritäten zwischen Linie und Projekt.</p></div>
+    </div>
+    <div class="note"><b>Faustregel (LB 7 S.15):</b> Wer im Projekt mitarbeitet, sollte mindestens 20 % seiner Zeit dafür haben, also mindestens einen Tag pro Woche. Der Grund (eigene Erklärung): Mit zwei Stunden hier und dort geht viel Zeit mit Umschalten und Einlesen verloren.</div>
+  </section>
+
+  <!-- ===== 6 · Kostenplan ===== -->
+  <section id="kosten">
+    <span class="eyebrow">Schritt 6 · Kostenplan</span>
+    <h2>Vom Aufwand zum Budget</h2>
+    <p class="prose">Die Kosten planst du <b>bottom-up</b>: Für jedes Arbeitspaket Personalkosten und Sachkosten schätzen, dann zusammenzählen (LB 6 F.10, F.18). Personalkosten sind Aufwand mal Satz. Interne Stunden sind nicht gratis: In Wolkenried verrechnet die Gemeinde sie zu Vollkosten.</p>
+    <div class="board t11-regeln" aria-label="Formeln Kostenplan">
+      <div class="t11-regel"><b>Personalkosten</b><span>\(\text{Personentage} \times \text{Tagessatz}\) &nbsp;oder&nbsp; \(\text{Stunden} \times \text{Stundensatz}\)</span></div>
+      <div class="t11-regel"><b>Projektkosten</b><span>\(\text{Personal intern} + \text{Personal extern} + \text{Sachkosten}\)</span></div>
+      <div class="t11-regel"><b>Budget</b><span>\(\text{Projektkosten} + \text{Reserve}\)</span></div>
+    </div>
+    <p class="prose">Den Kostenplan gliederst du nach <b>Kostenarten</b> und nach Monaten. LB 6 F.10 nennt Personal intern, Personal extern, Hardware, Software und Verbrauchsmaterial; F.7 zusätzlich Ausbildung, Investitionen, Fremdleistungen und übrige Kosten. Die Swiss ICB unterscheidet zudem <b>direkte</b> Kosten (Arbeitsstunden, Betriebsmittel, Investitionen, laufende Betriebskosten, Reisen, Schulung) und <b>indirekte</b> Kosten wie Gemeinkosten (Overhead), Lizenzen oder Opportunitätskosten (4.5.7.1). Die Verteilung über die Monate zeigt, wann das Geld fliesst. Das braucht die Finanzverwaltung für die Liquidität (4.5.7.2).</p>
+    <h3>Reserven: kurz zur Erinnerung</h3>
+    <p class="prose">LB 6 F.18 (nach HERMES) baut das Budget in Stufen: geschätzte Projektkosten plus <b>Risikoreserven</b> ergeben die Gesamtkosten, die für das Projekt freigegeben sind und für die die Projektleitung verantwortlich ist. Darüber liegen die <b>Managementreserven</b>, die beim Auftraggeber bleiben. Details findest du in <a href="/lernseiten/pmgt/06-leistungsumfang-und-arbeitspakete">Station 06</a>.</p>
+    <h3>Kontrollgrössen für den Auftraggeber</h3>
+    <p class="prose">LB 7 S.15–16 gibt Faustregeln, mit denen ein Auftraggeber einen Plan rasch prüft:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Faustregeln (LB 7 S.15–16) und der Onlineschalter im Leitstand</caption>
+        <thead><tr><th>Kontrollgrösse</th><th>Faustregel</th><th>Onlineschalter</th></tr></thead>
+        <tbody>
+          <tr><th>Budgetreserve</th><td>ca. 20 %</td><td>CHF 17'760 auf Plankosten von CHF 162'240 = 10.9 %: knapp</td></tr>
+          <tr><th>Anteil Projektmanagement</th><td>ca. 15 % des Gesamtbudgets</td><td>die Projektleitung verursacht im Leitstand keine Kosten (Vereinfachung)</td></tr>
+          <tr><th>Zeitpuffer</th><td>ca. 30 %, vor allem bei fixem Endtermin</td><td>Plan 36 Tage, Terminziel Tag 40: Reserve 4 Tage, rund 10 %: knapp</td></tr>
+          <tr><th>Arbeitsvolumen pro Person</th><td>nicht unter 20 % (1 Tag pro Woche)</td><td>Urs (Gebühren) arbeitet 40 %, zeitweise nur 20 %: an der Grenze</td></tr>
+          <tr><th>Projektleitung Vollzeit</th><td>ab 7 Projektbeteiligten</td><td>rund 12 Personen: Vollzeitstelle «Projekte und Digitalisierung»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die Zahlen des Onlineschalters stammen aus dem Leitstand: Gesamtkredit des Gemeinderats CHF 180'000, davon Plankosten aller Vorgänge (BAC) CHF 162'240 und Reserve CHF 17'760. Der Plan ist also bewusst knapp. Wer im Leitstand Überstunden und Massnahmen nicht steuert, braucht die Reserve schnell auf.</p>
+    <div id="t11-stepper-kosten"></div>
+  </section>
+
+  <!-- ===== 7 · Controlling-Tabelle ===== -->
+  <section id="controlling">
+    <span class="eyebrow">Schritt 7 · Kosten im Griff behalten</span>
+    <h2>Die Controlling-Tabelle im Statusbericht</h2>
+    <p class="prose">Ist das Budget freigegeben, vergleichst du jeden Monat Plan und Ist. LB 6 F.16 zeigt dafür eine Tabelle als Praxistipp: pro Position das <b>Budget</b>, die Kosten im <b>Berichtsmonat</b>, das <b>IST kumuliert</b>, das <b>Restbudget</b> und das <b>Restbudget geplant</b>, jeweils in Personentagen und Franken, und darunter eine <b>Begründung der Abweichung</b> mit Datum. So lese ich die Spalten (eigene Lesart, die Folie zeigt nur die Überschriften):</p>
+    <div class="board t11-regeln" aria-label="Formeln Controlling-Tabelle">
+      <div class="t11-regel"><b>Restbudget</b><span>\(\text{Budget} - \text{IST kumuliert}\) &nbsp;(was noch übrig ist)</span></div>
+      <div class="t11-regel"><b>Restbudget geplant</b><span>neue Schätzung: was du bis zum Ende noch brauchst</span></div>
+      <div class="t11-regel"><b>Abweichung</b><span>\(\text{Restbudget} - \text{Restbudget geplant}\) &nbsp;(minus = Überschreitung)</span></div>
+      <div class="t11-regel"><b>Prognose</b><span>\(\text{IST kumuliert} + \text{Restbudget geplant}\)</span></div>
+    </div>
+    <div id="t11-stepper-ctrl"></div>
+    <div class="note"><b>Merke:</b> Das Restbudget sagt, was übrig ist. Erst das Restbudget geplant sagt, ob es reicht. Wer nur IST und Budget vergleicht, merkt eine Überschreitung zu spät. Den Zusammenhang mit dem Fortschritt (Earned Value, CPI) lernst du in <a href="/lernseiten/pmgt/18-earned-value">Station 18</a>.</div>
+  </section>
+
+  <!-- ===== 8 · Labor ===== -->
+  <section id="labor">
+    <span class="eyebrow">Schritt 8 · Ausprobieren</span>
+    <h2>Labor: Auslastung am Onlineschalter Wolkenried</h2>
+    <p class="prose">Hier liegt ein vereinfachter Ausschnitt der Realisierung: zehn Arbeitspakete, fünf Personen, Endtermin <b>Tag 14</b> (Vorabnahme). Alle Pakete starten so früh wie möglich. Das ergibt Überlast. Deine Aufgabe: <b>Niemand über 100 %, Endtermin halten.</b> Verschiebe Pakete mit ◀ ▶ oder gib sie einer anderen Person, die das kann. Wer übernimmt, braucht gleich lang (Vereinfachung).</p>
+    <p class="hint">Zählweise ab Tag 1 wie in Station 10. Der Leitstand rechnet intern mit Zeitpunkten ab 0 (Beginn Tag 1 = Zeitpunkt 0), zeigt aber ebenfalls «Tag 1» an. Personen, Pensen und Stundensätze wie im Leitstand; die Pakete sind für das Labor vereinfacht (im Leitstand heissen sie V01 bis V14 und die Realisierung dauert bis Tag 20).</p>
+
+    <div class="card stack">
+      <h3>1 · Strategie wählen</h3>
+      <div class="modes" role="group" aria-label="Strategie wählen">
+        <button type="button" class="btn on" aria-pressed="true" data-t11-modus="glaetten">Glätten: Endtermin Tag 14 fix</button>
+        <button type="button" class="btn" aria-pressed="false" data-t11-modus="ausgleichen">Ausgleichen: Endtermin darf rutschen</button>
+      </div>
+      <p class="hint" id="t11-modus-text"></p>
+    </div>
+
+    <div class="card stack">
+      <h3>2 · Arbeitspakete steuern</h3>
+      <p class="hint">«Puffer» = so viele Tage darf das Paket noch nach hinten, ohne dass der Endtermin rutscht. Geänderte Pakete sind links gelb markiert.</p>
+      <div class="t11-steuer" id="t11-steuer"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t11-pruefen">Plan prüfen</button>
+        <button type="button" class="btn" id="t11-zurueck">Zurücksetzen</button>
+        <button type="button" class="btn" id="t11-loes-glaetten">Lösung zeigen: Glätten</button>
+        <button type="button" class="btn" id="t11-loes-aus">Lösung zeigen: Ausgleichen</button>
+      </div>
+    </div>
+
+    <div class="t11-anzeige" id="t11-anzeige" aria-live="polite"></div>
+    <div class="t11-meldung" id="t11-ergebnis" aria-live="polite"><p>Drück auf «Plan prüfen», wenn du fertig bist.</p></div>
+
+    <div class="card stack">
+      <h3>3 · Belastungsdiagramm je Person</h3>
+      <p class="gantt-legende">
+        <span><span class="gantt-balken" aria-hidden="true"></span>Arbeitspaket (Buchstabe, Stunden pro Tag)</span>
+        <span><span class="gantt-balken kritisch" aria-hidden="true"></span>ohne Puffer</span>
+        <span><span class="gantt-puffer" aria-hidden="true"></span>Puffer</span>
+        <span><span class="t11-legende-saeule" aria-hidden="true"></span>Auslastung bis 100 %</span>
+        <span><span class="t11-legende-ueber" aria-hidden="true"></span>über 100 %</span>
+        <span><span class="t11-legende-linie" aria-hidden="true"></span>100-%-Linie</span>
+      </p>
+      <p class="hint">Seitlich wischen, wenn das Diagramm breiter ist als der Bildschirm.</p>
+      <div id="t11-diagramme"></div>
+    </div>
+
+    <h3>Kostenplan-Rechner</h3>
+    <p class="prose">Rechne ein Budget aus Personentagen, Tagessätzen, Sachkosten und Reserve. Voreingestellt ist das Projekt aus dem Lösungsfilm (Ratsinformationssystem). Die Prüfgrössen zeigen dir sofort, wo dein Plan von den Faustregeln abweicht.</p>
+    <div class="card stack">
+      <div class="tablebox">
+        <table class="tabelle t11-eingabe">
+          <caption>Eingaben</caption>
+          <thead><tr><th>Position</th><th>Menge</th><th>Satz CHF</th><th class="zahl">Kosten</th></tr></thead>
+          <tbody>
+            <tr><th>Projektleitung (intern)</th>
+              <td><label class="sr-only" for="t11-k-pl">Personentage Projektleitung</label><input class="t11-feld" id="t11-k-pl" type="number" inputmode="decimal" min="0" step="0.5" value="4"> PT</td>
+              <td><label class="sr-only" for="t11-k-pls">Tagessatz Projektleitung</label><input class="t11-feld" id="t11-k-pls" type="number" inputmode="numeric" min="0" step="50" value="1000"></td>
+              <td class="zahl" id="t11-k-plk"></td></tr>
+            <tr><th>Personal intern</th>
+              <td><label class="sr-only" for="t11-k-in">Personentage Personal intern</label><input class="t11-feld" id="t11-k-in" type="number" inputmode="decimal" min="0" step="0.5" value="15"> PT</td>
+              <td><label class="sr-only" for="t11-k-ins">Tagessatz Personal intern</label><input class="t11-feld" id="t11-k-ins" type="number" inputmode="numeric" min="0" step="50" value="1000"></td>
+              <td class="zahl" id="t11-k-ink"></td></tr>
+            <tr><th>Personal extern</th>
+              <td><label class="sr-only" for="t11-k-ex">Personentage Personal extern</label><input class="t11-feld" id="t11-k-ex" type="number" inputmode="decimal" min="0" step="0.5" value="11"> PT</td>
+              <td><label class="sr-only" for="t11-k-exs">Tagessatz Personal extern</label><input class="t11-feld" id="t11-k-exs" type="number" inputmode="numeric" min="0" step="50" value="1400"></td>
+              <td class="zahl" id="t11-k-exk"></td></tr>
+            <tr><th>Sachkosten</th>
+              <td colspan="2"><label class="sr-only" for="t11-k-sach">Sachkosten in Franken</label><input class="t11-feld t11-breit" id="t11-k-sach" type="number" inputmode="numeric" min="0" step="100" value="9600"> CHF</td>
+              <td class="zahl" id="t11-k-sachk"></td></tr>
+            <tr><th>Reserve</th>
+              <td colspan="2"><label class="sr-only" for="t11-k-res">Reserve in Prozent der Projektkosten</label><input class="t11-feld" id="t11-k-res" type="number" inputmode="decimal" min="0" max="100" step="1" value="20"> % der Projektkosten</td>
+              <td class="zahl" id="t11-k-resk"></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rechner-ergebnis t11-meldung" id="t11-k-ergebnis" aria-live="polite"></div>
+      <p class="hint">Die Reserve rechnen wir als Zuschlag auf die Projektkosten (eigene Lesart; LB 7 sagt nur «ca. 20 %»). Den PM-Anteil teilen wir durch das Gesamtbudget, wie in LB 7 S.15.</p>
+    </div>
+
+    <h3>Controlling-Tabelle zum Ausfüllen</h3>
+    <p class="prose">Onlineschalter, Stand Ende Woche 4 (Tag 20). Das Budget sind die Plankosten aller Vorgänge (BAC) von CHF 162'240, für diese Übung aufgeteilt nach Kostenart. Die Aufteilung und die Ist-Werte sind frei erfunden; im Leitstand selbst zählen nur die Stunden. Fülle Restbudget und Abweichung aus und prüfe.</p>
+    <div class="card stack">
+      <div class="tablebox">
+        <table class="tabelle t11-ctrl">
+          <caption>Controlling Onlineschalter, Ende Woche 4, Beträge in CHF</caption>
+          <thead><tr><th>Position</th><th class="zahl">Budget</th><th class="zahl">IST kumuliert</th><th>Restbudget</th><th class="zahl">Restbudget geplant</th><th>Abweichung</th></tr></thead>
+          <tbody id="t11-ctrl-zeilen"></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t11-ctrl-pruefen">Prüfen</button>
+        <button type="button" class="btn" id="t11-ctrl-loesung">Lösung zeigen</button>
+        <button type="button" class="btn" id="t11-ctrl-leeren">Leeren</button>
+      </div>
+      <div class="t11-meldung" id="t11-ctrl-ergebnis" aria-live="polite"><p>Tipp: Minus schreibst du mit «-». Hochkommas darfst du weglassen.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst rechnen und entscheiden</span>
+    <h2>Übungen</h2>
+    <p class="prose">Rechne zuerst auf Papier, dann prüfst du. Tipps und Lösungswege kannst du einzeln aufdecken. Die Lösungen sind eigene Lösungen, per Skript nachgerechnet, nicht vom Dozenten bestätigt.</p>
+    <div class="card stack"><h3>Glätten oder ausgleichen?</h3><div id="t11-ue-sort"></div></div>
+    <div id="t11-ue-drei"></div>
+    <div id="t11-ue-last"></div>
+    <div id="t11-ue-matrix"></div>
+    <div id="t11-ue-wf"></div>
+    <div id="t11-ue-budget"></div>
+    <div id="t11-ue-ctrl"></div>
+    <div class="card stack"><h3>IPMA-Stil: Die Linie zieht eine Person ab</h3><div id="t11-ue-konflikt"></div></div>
+    <div class="card stack"><h3>Fallentscheid: Seraina an Tag 10 und 11</h3><div id="t11-ue-fall"></div></div>
+    <div id="t11-ue-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Vom Aufwand zum Budget und zurück zum Ist</h2>
+    <p class="prose">Eine typische Aufgabe für die Modulschlussprüfung, mit eigenen Zahlen: Aufwand mit drei Werten schätzen, Kosten und Budget rechnen, die Auslastung prüfen und eine Controlling-Tabelle auswerten. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t11-film"></div>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier gehen die meisten Punkte verloren</h2>
+    <div class="note falle"><b>Glätten und Ausgleichen vertauschen.</b> Die Frage ist immer: Was ist fix? Bei der Glättung der Endtermin, beim Ausgleich die Kapazitätsgrenze. Achtung: Im Alltag sagt man oft «ausgleichen» für beides. Auch im Fallbeispiel des Referats heisst es «nach dem Ausgleich», obwohl der Endtermin hielt; fachlich ist das eine Glättung mit zusätzlicher Kapazität.</div>
+    <div class="note falle"><b>Auslastung mit 8 Stunden rechnen.</b> Die Kapazität hängt am Pensum. 6 Stunden pro Tag sind für Jasmin (60 % = 4.8 h) schon 125 %.</div>
+    <div class="note falle"><b>Glätten über den Puffer hinaus.</b> Wer ein Paket weiter schiebt, als sein Puffer reicht, verschiebt den Endtermin. Das ist dann kein Glätten mehr. Und Pakete auf demselben Weg teilen sich den Puffer.</div>
+    <div class="note falle"><b>Personentage und Kalendertage verwechseln.</b> 16 PT mit zwei Personen sind 8 Arbeitstage. Kosten rechnest du mit den Personentagen, Termine mit den Arbeitstagen.</div>
+    <div class="note falle"><b>Interne Leute als gratis betrachten.</b> Auch Stunden aus der Linie kosten Geld (Vollkosten) und fehlen dort im Tagesgeschäft. Ohne sie ist der Kostenplan zu tief.</div>
+    <div class="note falle"><b>Dreipunktschätzung als einfachen Mittelwert rechnen.</b> (O + M + P) ÷ 3 ist falsch. Der wahrscheinliche Wert zählt vierfach, geteilt wird durch 6.</div>
+    <div class="note falle"><b>Restbudget und Restbudget geplant gleichsetzen.</b> Das Restbudget ist übrig, das Restbudget geplant wird gebraucht. Die Differenz ist die Abweichung, die du begründen musst.</div>
+    <div class="note falle"><b>Managementreserve verplanen.</b> Sie gehört dem Auftraggeber. Die Projektleitung verantwortet die Gesamtkosten inklusive Risikoreserve, nicht mehr (LB 6 F.18).</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen wie in der IPMA-Prüfung: je eine richtige Antwort.</p>
+    <div id="t11-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Ressourcen</b> sind Personal, Sachmittel und Finanzmittel (dazu Wissen). Den Bedarf leitest du aus den Arbeitspaketen ab, nach Menge <b>und</b> Qualität.</li>
+      <li><b>Schätzen:</b> Vergleichs-, Kennzahlen- und algorithmische Verfahren. Dreipunkt: (O + 4M + P) ÷ 6. Gegen Schätzfehler: nicht zu früh, laufend nachführen, mehrere schätzen lassen.</li>
+      <li><b>Auslastung</b> = Bedarf ÷ Kapazität, Kapazität = Pensum × 8 h. Das Belastungsdiagramm zeigt Engpässe, der Gantt nicht.</li>
+      <li><b>Glätten:</b> Endtermin fix, nur innerhalb der Puffer verschieben. <b>Ausgleichen:</b> Kapazitätsgrenze fix, der Endtermin darf rutschen. Reicht beides nicht: umbesetzen oder extern zukaufen.</li>
+      <li><b>Intern</b> = Antrag an die Linie, Verfügbarkeit verhandeln, Matrixkonflikte vorbeugen. <b>Extern</b> = Ausschreibung, Vertrag, Kosten verhandeln.</li>
+      <li><b>Budget</b> = Σ Personentage × Tagessatz + Sachkosten + Reserve. Controlling: Restbudget = Budget − IST, Abweichung = Restbudget − Restbudget geplant. Faustregeln: Reserve ca. 20 %, PM ca. 15 %, Zeitpuffer ca. 30 %, ab 7 Beteiligten PM Vollzeit.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner</b> (Register <span class="icb">ICB 3.08</span> Ressourcen und <span class="icb">ICB 3.07</span> Kosten und Finanzierung):
+      <ul class="t11-ziele">
+        <li>Swiss ICB 4.5.8 «Ressourcen» (S. 116–119) mit den fünf Kompetenzindikatoren 4.5.8.1–4.5.8.5: Strategie, Menge und Qualität, Quellen und Verhandlung, Zuweisung, Überwachung. Swiss ICB 4.5.7 «Kosten und Finanzierung» (S. 111–115) mit 4.5.7.1–4.5.7.5; dort auch die Schätzmethoden (Delphi, Analogie, Dreipunkt).</li>
+        <li>Definitionen Ressourcenglättung (Endtermin fix, innerhalb der Puffer) und Ressourcenausgleich (Kapazität fix, Endtermin darf rutschen), dazu Nivellierung in Swiss ICB 4.5.4.4.</li>
+        <li>Formeln: Auslastung, Dreipunktschätzung (Ergänzung, PERT), Budget, Restbudget, Abweichung, Prognose.</li>
+        <li>LB 6: F.7 Zusammenhang der Pläne, F.8 Kapazitätsdiagramm und Beschaffung intern/extern, F.10 Kostenplan nach Kostenarten, F.16 Controlling-Tabelle, F.18 Reservenstufen, F.19 Schätzverfahren, F.20 Schätzfehler. LB 7 S.15–16 Kontrollgrössen für Auftraggeber.</li>
+        <li>Fundstellen im Pflichtbuch: Gubelmann/Sommer Kap. 17 «Ressourcen», S. 202–209, und Kap. 13 «Kosten und Finanzierung», S. 166–176 (laut LB 6 F.4 und F.6).</li>
+      </ul>
+    </div>
+    <footer>Station 11 des Lernpfads PMGT. Alle Pläne, Zahlen und Fälle ausser dem Fallbeispiel aus dem Referat sind eigene Beispiele; die Lösungen sind per Skript nachgerechnet (eigene Lösungen, nicht vom Dozenten bestätigt). Weiter geht es mit «Wirtschaftlichkeit: NPV, IRR, Payback».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  // Ganze Franken mit Hochkomma ab 1000 (wie 162'240), Minus als «−»
+  const tsd = (x) => String(Math.round(Math.abs(x))).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  const chf = (x) => (Math.round(x) < 0 ? "−" : "") + "CHF " + tsd(x);
+  const zahlMitVz = (x) => (Math.round(x) < 0 ? "−" : (Math.round(x) > 0 ? "+" : "")) + tsd(x);
+
+  /* ---------- 0 · Sortierer ---------- */
+  L.sortierer("#t11-sortierer", {
+    kategorien: ["Personal", "Sachmittel", "Finanzmittel"],
+    elemente: [
+      { html: "Elena, Schnittstellenentwicklerin des Lieferanten, 100 %", kategorie: "Personal", erklaerung: "Eine Person mit Fähigkeiten und Stunden: Personal, hier extern." },
+      { html: "Testumgebung beim Lieferanten", kategorie: "Sachmittel", erklaerung: "Eine technische Einrichtung. Sie ist oft unterschätzt, weil sie Lieferzeit und Freigaben braucht." },
+      { html: "Gesamtkredit des Gemeinderats von CHF 180'000", kategorie: "Finanzmittel", erklaerung: "Geld, mit dem interne Stunden und externe Leistungen bezahlt werden." },
+      { html: "Schulungsraum im Gemeindehaus, nur dienstags frei", kategorie: "Sachmittel", erklaerung: "Räume sind Sachmittel. Auch sie haben eine begrenzte Verfügbarkeit." },
+      { html: "Seraina, Fachverantwortliche Baugesuche", kategorie: "Personal", erklaerung: "Interne Person aus dem Kernteam. Sie ist der fachliche Engpass." },
+      { html: "Reserve für Überstunden und Massnahmen, CHF 17'760", kategorie: "Finanzmittel", erklaerung: "Teil des Budgets, zurückgehalten für Unvorhergesehenes." },
+      { html: "Lizenz für die Plattform", kategorie: "Sachmittel", erklaerung: "Software und Lizenzen zählen zu den Sachmitteln (Sachmittel und IT). Ihr Preis landet im Kostenplan." }
+    ]
+  });
+
+  /* ---------- 1 · Stepper Bedarf ---------- */
+  L.stepper("#t11-stepper-bedarf", {
+    titel: "Arbeitspaket V05 · Schnittstelle",
+    text: 'Die <span data-link="v">Schnittstelle zur Bauverwaltungssoftware</span> braucht <span data-link="h">128 Stunden</span>. Gefragt sind vor allem <span data-link="q">Daten und Schnittstellen sowie Entwicklung</span>. <span data-link="p">Zwei Personen</span> arbeiten Vollzeit daran. Der Plansatz ist <span data-link="s">CHF 195 pro Stunde</span>.',
+    schritte: [
+      { html: 'Menge: <span data-link="h">128 h</span> ÷ 8 h = 16 PT', warum: "Den Aufwand gibst du oft in Personentagen (PT) an. Ein Personentag sind 8 Stunden einer Person." },
+      { html: 'Qualität: <span data-link="q">Daten 6, Entwicklung 5</span> → Elena, dazu Dario', warum: "Die Qualifikation entscheidet, wer in Frage kommt. Im Leitstand passt Elena (Schnittstellen) am besten, Dario (Entwicklung) ergänzt." },
+      { html: 'Dauer: 16 PT ÷ <span data-link="p">2 Personen</span> = <b data-link="v">8 Arbeitstage</b>', warum: "Wie in Station 10: Aufwand geteilt durch die Leistung pro Tag. Zwei Personen schaffen 2 PT pro Tag." },
+      { html: 'Kosten: <span data-link="h">128 h</span> × <span data-link="s">CHF 195</span> = CHF 24\'960', warum: "Die Kosten hängen am Aufwand und am Satz, nicht an der Dauer. Das ist das teuerste Paket im Leitstand." },
+      { html: 'Bedarf V05: <b>2 Personen</b> mit Profil Daten/Entwicklung, <b>8 Tage</b>, <b>16 PT</b>, <b>CHF 24\'960</b>', warum: "So steht der Bedarf im Ressourcenplan: wer (Qualität), wie viel (Menge), wann (Termin) und was es kostet." }
+    ]
+  });
+
+  /* ---------- 2 · Stepper Dreipunkt ---------- */
+  L.stepper("#t11-stepper-drei", {
+    titel: "Dreipunktschätzung für V05",
+    text: 'Elena schätzt die Schnittstelle: <span data-link="o">im besten Fall 96 Stunden</span>, <span data-link="m">wahrscheinlich 128 Stunden</span>, <span data-link="p">wenn die Beschreibung des Herstellers fehlt 208 Stunden</span>.',
+    schritte: [
+      { html: '<span data-link="o">O = 96</span>, <span data-link="m">M = 128</span>, <span data-link="p">P = 208</span>', warum: "Zuerst die drei Werte sauber aufschreiben. Der pessimistische Wert liegt weiter weg als der optimistische. Das ist typisch: Es geht eher etwas schief als besonders gut." },
+      { html: '(<span data-link="o">96</span> + 4 × <span data-link="m">128</span> + <span data-link="p">208</span>) ÷ 6', warum: "Der wahrscheinliche Wert zählt vierfach. Zusammen sind es sechs Gewichte, darum teilst du durch 6." },
+      { html: "(96 + 512 + 208) ÷ 6 = 816 ÷ 6 = <b>136 h</b>", warum: "Der Erwartungswert liegt 8 Stunden über dem wahrscheinlichen Wert. Der lange pessimistische Ast zieht ihn nach oben." },
+      { html: "136 h = 17 PT → Plan mit 136 h oder 128 h plus Risikoreserve", warum: "Entweder planst du gleich mit 136 Stunden, oder du bleibst bei 128 und deckst das Risiko über die Reserve ab. Wichtig ist, dass du es bewusst entscheidest und begründest." }
+    ]
+  });
+
+  /* ---------- Labor: Modell ---------- */
+  const PERS = [
+    { id: "SC", name: "Seraina Caflisch", rolle: "Fachverantwortliche Baugesuche, Kernteam", pensum: 100, cap: 8, satz: 115 },
+    { id: "LB", name: "Luca Bernasconi", rolle: "Informatikverantwortlicher, Kernteam", pensum: 100, cap: 8, satz: 125 },
+    { id: "JH", name: "Jasmin Huber", rolle: "Applikationsbetreuerin, Linie Informatik", pensum: 60, cap: 4.8, satz: 90 },
+    { id: "EK", name: "Elena Kovačević", rolle: "Schnittstellenentwicklerin, Lieferant", pensum: 100, cap: 8, satz: 175 },
+    { id: "MP", name: "Dario Pfister", rolle: "Leitender Entwickler, Lieferant", pensum: 100, cap: 8, satz: 185 }
+  ];
+  const AP = [
+    { id: "A", name: "Soll-Ablauf festlegen", d: 3, vg: [], p: "SC", h: 8, ok: ["SC"] },
+    { id: "B", name: "Plattform einrichten", d: 3, vg: [], p: "MP", h: 8, ok: ["MP"] },
+    { id: "C", name: "Schnittstelle zur Bauverwaltung", d: 6, vg: ["A", "B"], p: "EK", h: 8, ok: ["EK", "MP"] },
+    { id: "D", name: "Gesuchsformulare konfigurieren", kurz: "Formulare", d: 4, vg: ["A", "B"], p: "SC", h: 8, ok: ["SC"] },
+    { id: "E", name: "Stammdaten übernehmen", d: 3, vg: ["B"], p: "LB", h: 8, ok: ["LB"] },
+    { id: "F", name: "Gebühren und Zahlung anbinden", d: 3, vg: ["A", "B"], p: "LB", h: 4, ok: ["LB", "MP"] },
+    { id: "G", name: "Zirkulation konfigurieren", d: 2, vg: ["D"], p: "JH", h: 4, ok: ["JH", "SC"] },
+    { id: "H", name: "Schulungsunterlagen erstellen", kurz: "Schulung", d: 4, vg: ["D"], p: "SC", h: 4, ok: ["SC", "JH"] },
+    { id: "I", name: "Integrationstest", d: 3, vg: ["C", "E", "F", "G"], p: "SC", h: 8, ok: ["SC", "LB", "MP"] },
+    { id: "J", name: "Vorabnahme", d: 2, vg: ["I", "H"], p: "SC", h: 8, ok: ["SC"] }
+  ];
+  const PI = {}; PERS.forEach((p) => { PI[p.id] = p; });
+  const AI = {}; AP.forEach((a, i) => { AI[a.id] = i; });
+  const ENDE_PLAN = 14, MAX_TAG = 20, BESTWERT = 30740;
+
+  // Frühester Start von Paket i bei den Starts s (Pakete stehen in topologischer Reihenfolge)
+  function fruehStart(s, i) {
+    const a = AP[i];
+    return a.vg.length ? Math.max.apply(null, a.vg.map((v) => s[AI[v]] + AP[AI[v]].d)) : 1;
+  }
+  function fruehtermine() { const s = []; AP.forEach((a, i) => { s[i] = fruehStart(s, i); }); return s; }
+  function endeVon(s) { return Math.max.apply(null, AP.map((a, i) => s[i] + a.d - 1)); }
+  // Ein Paket einen Tag später; Nachfolger rücken bei Bedarf mit
+  function schiebeRechts(s, i) {
+    const n = s.slice(); n[i]++;
+    for (let j = i + 1; j < AP.length; j++) n[j] = Math.max(n[j], fruehStart(n, j));
+    return n;
+  }
+  // Wie viele Tage darf Paket i noch nach hinten, ohne dass das Ende über «grenze» geht?
+  function spielraum(s, i, grenze) {
+    let k = 0, n = s;
+    while (k < 40) { n = schiebeRechts(n, i); if (endeVon(n) > grenze) return k; k++; }
+    return k;
+  }
+  function auswerten(st) {
+    const ende = endeVon(st.s), tage = Math.max(15, ende);
+    const last = {};
+    PERS.forEach((p) => { last[p.id] = []; for (let t = 0; t <= tage; t++) last[p.id].push(0); });
+    AP.forEach((a, i) => { for (let t = st.s[i]; t < st.s[i] + a.d; t++) last[st.p[i]][t] += a.h; });
+    let ueTage = 0, ueStd = 0, zuschlag = 0, kosten = 0;
+    const ueListe = [];
+    PERS.forEach((p) => {
+      const tl = [];
+      for (let t = 1; t <= tage; t++) {
+        const x = last[p.id][t];
+        if (x > p.cap + 1e-9) { ueTage++; ueStd += x - p.cap; zuschlag += (x - p.cap) * p.satz * 0.25; tl.push(t); }
+      }
+      if (tl.length) ueListe.push({ p: p, tage: tl });
+    });
+    AP.forEach((a, i) => { kosten += a.d * a.h * PI[st.p[i]].satz; });
+    return { ende: ende, tage: tage, last: last, ueTage: ueTage, ueStd: ueStd, zuschlag: zuschlag, kosten: kosten, ueListe: ueListe };
+  }
+  // [4,5,6,10,11] → "4–6, 10–11"
+  function bereiche(tl) {
+    const teile = []; let a = null, b = null;
+    tl.forEach((t) => {
+      if (a === null) { a = t; b = t; } else if (t === b + 1) { b = t; } else { teile.push(a === b ? String(a) : a + "–" + b); a = t; b = t; }
+    });
+    if (a !== null) teile.push(a === b ? String(a) : a + "–" + b);
+    return teile.join(", ");
+  }
+  const pct = (x, cap) => Math.round(x / cap * 100);
+
+  // Belastungsdiagramm einer Person als HTML (Baukasten-Klassen .gantt plus Säulen mit Präfix)
+  function personHtml(st, r, pid, grenze) {
+    const p = PI[pid], T = r.tage;
+    let skala = "";
+    for (let t = 1; t <= T; t++) skala += "<span>" + t + "</span>";
+    const teile = [];
+    let zeilen = "";
+    AP.forEach((a, i) => {
+      if (st.p[i] !== pid) return;
+      const gp = spielraum(st.s, i, grenze);
+      teile.push(a.id + " Tag " + st.s[i] + " bis " + (st.s[i] + a.d - 1) + " mit " + a.h + " Stunden pro Tag" + (gp ? ", Puffer " + gp : ", ohne Puffer"));
+      zeilen += '<div class="gantt-zeile"><span class="gantt-name">' + a.id + " " + (a.kurz || a.name.split(" ")[0]) + '</span><div class="gantt-spur">' +
+        '<span class="gantt-balken' + (gp === 0 ? " kritisch" : "") + '" style="--start:' + (st.s[i] - 1) + "; --dauer:" + a.d + '">' + a.id + " " + a.h + "h</span>" +
+        (gp > 0 ? '<span class="gantt-puffer" style="--start:' + (st.s[i] - 1 + a.d) + "; --dauer:" + gp + '"></span>' : "") + "</div></div>";
+    });
+    let saeulen = "", werte = "", spitze = 0;
+    const ueber = [];
+    for (let t = 1; t <= T; t++) {
+      const x = r.last[pid][t], pr = pct(x, p.cap), u = x > p.cap + 1e-9;
+      if (u) ueber.push(t);
+      spitze = Math.max(spitze, pr);
+      saeulen += '<span class="t11-saeule' + (u ? " t11-ueber" : "") + '"><i style="--h:' + (Math.min(pr, 200) / 2) + '%"></i></span>';
+      werte += "<span" + (u ? ' class="t11-ueber"' : "") + ">" + (x ? pr : "·") + "</span>";
+    }
+    const label = p.name + ": " + (teile.length ? teile.join("; ") : "keine Arbeitspakete") + ". Spitze " + spitze + " %" +
+      (ueber.length ? ", über 100 % an Tag " + bereiche(ueber) : ", nie über 100 %") + ".";
+    return '<div class="t11-person"><h4>' + p.name + "</h4>" +
+      '<p class="hint">' + p.rolle + " · " + p.pensum + " % = " + L.zahlText(p.cap, 1) + " h pro Tag · CHF " + p.satz + " pro h · Spitze " +
+      (spitze > 100 ? '<span class="t11-marke-ueber">' + spitze + " % ✗</span>" : spitze + " %") + "</p>" +
+      '<div class="tablebox"><div class="gantt t11-gantt" style="--gantt-einheiten:' + T + '" role="img" aria-label="' + label + '">' +
+      '<div class="gantt-kopf"><span class="gantt-name">Tag</span><div class="gantt-skala">' + skala + "</div></div>" + zeilen +
+      '<div class="gantt-zeile"><span class="gantt-name">Auslastung</span><div class="t11-saeulen">' + saeulen + "</div></div>" +
+      '<div class="gantt-zeile"><span class="gantt-name">in %</span><div class="t11-werte">' + werte + "</div></div>" +
+      "</div></div></div>";
+  }
+
+  const BASIS_S = fruehtermine();
+  const BASIS_P = AP.map((a) => a.p);
+  const BASIS_R = auswerten({ s: BASIS_S, p: BASIS_P });
+
+  /* ---------- 3 · Stepper Belastung und Beispiel Luca ---------- */
+  L.stepper("#t11-stepper-last", {
+    titel: "Luca an Tag 4",
+    text: 'Luca arbeitet <span data-link="pen">100 %</span>. Ab Tag 4 laufen bei ihm <span data-link="e">E Stammdaten mit 8 Stunden pro Tag</span> und <span data-link="f">F Gebühren mit 4 Stunden pro Tag</span> gleichzeitig.',
+    schritte: [
+      { html: 'Kapazität: <span data-link="pen">100 %</span> × 8 h = 8 h', warum: "Zuerst die Kapazität aus dem Pensum. Bei Luca sind das volle 8 Stunden." },
+      { html: 'Bedarf: <span data-link="e">8 h</span> + <span data-link="f">4 h</span> = 12 h', warum: "Alle Pakete, die an diesem Tag bei ihm laufen, zählst du zusammen." },
+      { html: "Auslastung: 12 h ÷ 8 h = <b>150 %</b>", warum: "Vier Stunden pro Tag zu viel. Das gilt für Tag 4, 5 und 6, solange beide Pakete laufen." },
+      { html: "Überlast: 3 Tage × 4 h = 12 h", warum: "Ohne Massnahme bleiben 12 Überstunden oder Verzug. Im Leitstand kosten Überstunden 25 % Zuschlag, und lange Serien senken die Leistung." }
+    ]
+  });
+  document.getElementById("t11-luca").innerHTML = personHtml({ s: BASIS_S, p: BASIS_P }, BASIS_R, "LB", ENDE_PLAN);
+
+  /* ---------- 4 · Stepper Glätten ---------- */
+  L.stepper("#t11-stepper-glaetten", {
+    titel: "Glätten bei Luca",
+    text: 'E Stammdaten läuft im Plan von <span data-link="lage">Tag 4 bis 6</span> und hat <span data-link="gp">3 Tage Puffer</span>. Der <span data-link="end">Endtermin Tag 14</span> ist fix.',
+    schritte: [
+      { html: 'Puffer von E: <span data-link="gp">3 Tage</span>', warum: "E muss erst vor dem Integrationstest (Start Tag 10) fertig sein. Spätester Anfang ist Tag 7, frühester Tag 4." },
+      { html: 'E von <span data-link="lage">Tag 4–6</span> auf Tag 7–9', warum: "Du verbrauchst den ganzen Puffer. E endet an Tag 9, der Integrationstest beginnt weiter an Tag 10." },
+      { html: "Tag 4–6: nur F (4 h) = 50 % · Tag 7–9: nur E (8 h) = 100 %", warum: "Luca ist nirgends mehr über 100 %. Die Arbeit ist dieselbe, nur zeitlich anders verteilt." },
+      { html: '<span data-link="end">Endtermin bleibt Tag 14</span> → Glättung', warum: "Weil du nur innerhalb des Puffers verschoben hast, rutscht nichts. Das ist Ressourcenglättung. Aber: E hat jetzt keinen Puffer mehr. Jede Verzögerung bei E trifft direkt den Endtermin." }
+    ]
+  });
+
+  /* ---------- 6 · Stepper Kosten (Leitstand) ---------- */
+  L.stepper("#t11-stepper-kosten", {
+    titel: "Budget Onlineschalter (Leitstand)",
+    text: 'Die Vorgänge V01 bis V18 brauchen zusammen <span data-link="h">1\'072 Stunden</span>. Ihre Plankosten (zu Mischsätzen je Vorgang) ergeben <span data-link="bac">CHF 162\'240</span>. Der Gemeinderat bewilligt einen <span data-link="kr">Gesamtkredit von CHF 180\'000</span>.',
+    schritte: [
+      { html: '<span data-link="h">1\'072 h</span> ÷ 8 = 134 PT', warum: "Der Aufwand aller Vorgänge in Personentagen. Er kommt aus dem Aufwandplan." },
+      { html: 'Plankosten (BAC) = Σ Aufwand × Satz = <span data-link="bac">CHF 162\'240</span>', warum: "Bottom-up: Jeder Vorgang hat seinen eigenen Satz, je nach Mischung aus internen und externen Leuten. V05 allein kostet CHF 24'960." },
+      { html: 'Reserve = <span data-link="kr">180\'000</span> − <span data-link="bac">162\'240</span> = CHF 17\'760', warum: "Was über den Plankosten liegt, ist Reserve für Massnahmen, Überstunden und Abweichungen." },
+      { html: "17'760 ÷ 162'240 = 10.9 % &nbsp;(Faustregel ca. 20 %)", warum: "Die Reserve ist halb so gross wie die Faustregel aus LB 7. Als Projektleitung weist du den Gemeinderat darauf hin, statt still zu hoffen." }
+    ]
+  });
+
+  /* ---------- 7 · Stepper Controlling ---------- */
+  L.stepper("#t11-stepper-ctrl", {
+    titel: "Zeile «Personal extern» nach drei Monaten",
+    text: 'Budget für den Lieferanten: <span data-link="b">CHF 30\'000</span>. Bisher verrechnet (IST kumuliert): <span data-link="ist">CHF 21\'000</span>. Der Lieferant schätzt, dass er noch <span data-link="rg">CHF 11\'500</span> braucht.',
+    schritte: [
+      { html: 'Restbudget = <span data-link="b">30\'000</span> − <span data-link="ist">21\'000</span> = 9\'000', warum: "So viel ist für diese Position noch übrig." },
+      { html: 'Abweichung = 9\'000 − <span data-link="rg">11\'500</span> = −2\'500', warum: "Das übrige Geld reicht nicht für die restliche Arbeit. Minus heisst Überschreitung." },
+      { html: 'Prognose = <span data-link="ist">21\'000</span> + <span data-link="rg">11\'500</span> = 32\'500', warum: "Kontrolle: Die Prognose liegt 2'500 über dem Budget. Beide Wege ergeben dieselbe Abweichung." },
+      { html: "Begründung: Datum, Ursache, Massnahme", warum: "Unter die Tabelle gehört die Begründung, zum Beispiel: «15.3.: Schnittstelle aufwendiger als geschätzt, 2 Zusatztage; gedeckt aus der Reserve, Information an den Auftraggeber im Statusbericht.»" }
+    ]
+  });
+
+  /* ---------- 8 · Labor: Zustand und Bedienung ---------- */
+  const st = { s: BASIS_S.slice(), p: BASIS_P.slice(), modus: "glaetten" };
+  const steuerEl = document.getElementById("t11-steuer");
+  const diagrammeEl = document.getElementById("t11-diagramme");
+  const anzeigeEl = document.getElementById("t11-anzeige");
+  const ergebnisEl = document.getElementById("t11-ergebnis");
+  const modusText = document.getElementById("t11-modus-text");
+  const grenze = () => (st.modus === "glaetten" ? ENDE_PLAN : MAX_TAG);
+
+  // Steuerzeilen einmal aufbauen (Fokus bleibt beim Neuzeichnen erhalten)
+  AP.forEach((a, i) => {
+    const div = document.createElement("div");
+    div.className = "t11-ap"; div.id = "t11-ap-" + a.id;
+    let opt = "";
+    a.ok.forEach((pid) => { opt += '<option value="' + pid + '">' + PI[pid].name.split(" ")[0] + " (CHF " + PI[pid].satz + ")</option>"; });
+    div.innerHTML =
+      '<div class="t11-ap-name"><b>' + a.id + "</b> " + a.name + '<span class="hint">' + a.d + " Tage · " + a.h + " h pro Tag · " + (a.d * a.h) + " h · nach " + (a.vg.length ? a.vg.join(", ") : "Start") + "</span></div>" +
+      '<label class="sr-only" for="t11-p-' + a.id + '">Wer arbeitet an ' + a.id + " " + a.name + "</label>" +
+      '<select class="t11-wahl" id="t11-p-' + a.id + '"' + (a.ok.length === 1 ? " disabled" : "") + ">" + opt + "</select>" +
+      '<span class="t11-lage"><button type="button" class="btn" id="t11-l-' + a.id + '" aria-label="' + a.id + ' einen Tag früher">◀</button>' +
+      '<span class="t11-tage" id="t11-t-' + a.id + '"></span>' +
+      '<button type="button" class="btn" id="t11-r-' + a.id + '" aria-label="' + a.id + ' einen Tag später">▶</button></span>' +
+      '<span class="t11-spiel" id="t11-g-' + a.id + '"></span>';
+    steuerEl.appendChild(div);
+    const sel = div.querySelector("select");
+    sel.value = a.p;
+    sel.addEventListener("change", () => { st.p[i] = sel.value; aktualisieren(); });
+    div.querySelector("#t11-l-" + a.id).addEventListener("click", (ev) => {
+      if (st.s[i] - 1 < fruehStart(st.s, i)) return;
+      st.s[i]--; aktualisieren(ev.currentTarget);
+    });
+    div.querySelector("#t11-r-" + a.id).addEventListener("click", (ev) => {
+      const n = schiebeRechts(st.s, i);
+      if (endeVon(n) > grenze()) return;
+      st.s = n; aktualisieren(ev.currentTarget);
+    });
+  });
+
+  function kpi(titel, wert, klasse) {
+    return '<div class="t11-kpi' + (klasse ? " " + klasse : "") + '"><span class="hint">' + titel + "</span><b>" + wert + "</b></div>";
+  }
+
+  // fokusKnopf: der gerade gedrückte Pfeil; wird er deaktiviert, geht der Fokus auf den Nachbarpfeil
+  function aktualisieren(fokusKnopf) {
+    const r = auswerten(st), g = Math.max(grenze() === ENDE_PLAN ? ENDE_PLAN : r.ende, ENDE_PLAN);
+    AP.forEach((a, i) => {
+      const links = document.getElementById("t11-l-" + a.id), rechts = document.getElementById("t11-r-" + a.id);
+      document.getElementById("t11-t-" + a.id).textContent = "Tag " + st.s[i] + "–" + (st.s[i] + a.d - 1);
+      links.disabled = st.s[i] - 1 < fruehStart(st.s, i);
+      rechts.disabled = endeVon(schiebeRechts(st.s, i)) > grenze();
+      const gp = spielraum(st.s, i, g);
+      document.getElementById("t11-g-" + a.id).textContent = "Puffer " + gp + (gp === 1 ? " Tag" : " Tage");
+      document.getElementById("t11-p-" + a.id).value = st.p[i];
+      const geaendert = st.s[i] !== BASIS_S[i] || st.p[i] !== BASIS_P[i];
+      document.getElementById("t11-ap-" + a.id).classList.toggle("t11-geaendert", geaendert);
+      if (fokusKnopf && fokusKnopf.disabled && (fokusKnopf === links || fokusKnopf === rechts)) {
+        (fokusKnopf === links ? rechts : links).focus();
+      }
+    });
+    let h = "";
+    PERS.forEach((p) => { h += personHtml(st, r, p.id, g); });
+    diagrammeEl.innerHTML = h;
+    const mehr = r.kosten - BASIS_R.kosten;
+    anzeigeEl.innerHTML =
+      kpi("Überlastungstage", String(r.ueTage) + (r.ueTage ? " ✗" : " ✓"), r.ueTage ? "t11-schlecht" : "t11-gut") +
+      kpi("Endtermin", "Tag " + r.ende + (r.ende > ENDE_PLAN ? " (+" + (r.ende - ENDE_PLAN) + ")" : ""), r.ende > ENDE_PLAN ? "t11-schlecht" : "t11-gut") +
+      kpi("Kosten Arbeit", chf(r.kosten), "") +
+      kpi("gegenüber Plan", (mehr === 0 ? "±0" : zahlMitVz(mehr)), "") +
+      kpi("Überstunden nötig", L.zahlText(r.ueStd, 1) + " h · Zuschlag " + chf(r.zuschlag), r.ueStd ? "t11-schlecht" : "");
+    modusText.textContent = st.modus === "glaetten"
+      ? "Glätten: Der Endtermin Tag 14 ist fix. ▶ geht nur, solange der Puffer reicht."
+      : "Ausgleichen: Die Kapazität ist fix. Du darfst über den Puffer hinaus schieben; der Endtermin rutscht dann mit (höchstens bis Tag " + MAX_TAG + ").";
+  }
+
+  // Strategie umschalten
+  const modusKnoepfe = Array.prototype.slice.call(document.querySelectorAll("[data-t11-modus]"));
+  function modusSetzen(m, meldung) {
+    st.modus = m;
+    modusKnoepfe.forEach((k) => { const an = k.getAttribute("data-t11-modus") === m; k.classList.toggle("on", an); k.setAttribute("aria-pressed", an ? "true" : "false"); });
+    if (m === "glaetten" && endeVon(st.s) > ENDE_PLAN) {
+      st.s = BASIS_S.slice();
+      if (meldung !== false) ergebnisEl.innerHTML = "<p>Beim Glätten ist der Endtermin fix. Die Pakete stehen wieder auf ihren frühesten Terminen; deine Besetzung bleibt.</p>";
+    }
+    aktualisieren();
+  }
+  modusKnoepfe.forEach((k) => k.addEventListener("click", () => modusSetzen(k.getAttribute("data-t11-modus"))));
+
+  document.getElementById("t11-pruefen").addEventListener("click", () => {
+    const r = auswerten(st);
+    const wechsel = AP.filter((a, i) => st.p[i] !== BASIS_P[i]).map((a, i) => a.id);
+    let html = "";
+    if (r.ueTage) {
+      html = "<p><b>Noch nicht ✗.</b> " + r.ueTage + (r.ueTage === 1 ? " Personentag liegt" : " Personentage liegen") + " über 100 %: " +
+        r.ueListe.map((u) => u.p.name.split(" ")[0] + " an Tag " + bereiche(u.tage)).join("; ") + ".</p>";
+      if (st.modus === "glaetten") html += "<p>Tipp: Suche Pakete mit Puffer. Reicht der Puffer nicht, gib ein Paket einer anderen Person, die zu dieser Zeit frei ist.</p>";
+      else html += "<p>Tipp: Im Ausgleich darfst du auch Pakete ohne Puffer nach hinten schieben. Der Endtermin rutscht dann mit.</p>";
+    } else if (r.ende <= ENDE_PLAN) {
+      const mehr = r.kosten - BASIS_R.kosten;
+      html = "<p><b>Geschafft ✓.</b> Niemand liegt über 100 %, der Endtermin Tag " + r.ende + " hält. Kosten " + chf(r.kosten) + " (" + (mehr === 0 ? "gleich wie der Plan" : zahlMitVz(mehr) + " gegenüber dem Plan") + ").</p>";
+      if (st.modus === "ausgleichen") html += "<p>Du hast den Endtermin gar nicht verschoben. Fachlich ist das eine Glättung mit Umbesetzung.</p>";
+      if (r.kosten > BESTWERT) html += "<p>Profi-Frage: Es geht noch günstiger, sogar unter den Plankosten. Der Bestwert liegt bei " + chf(BESTWERT) + ". Welche zwei Pakete könnten Seraina und Jasmin tauschen?</p>";
+      else html += "<p>Bestwert erreicht: Der Tausch nutzt freie Kapazität einer günstigeren Person. Prüfe in der Praxis trotzdem, ob die Qualifikation reicht.</p>";
+    } else {
+      html = "<p><b>Kapazität eingehalten ✓, Endtermin Tag " + r.ende + " (+" + (r.ende - ENDE_PLAN) + (r.ende - ENDE_PLAN === 1 ? " Tag" : " Tage") + ").</b> Das ist Ressourcenausgleich: Niemand ist überlastet, aber die Vorabnahme kommt später. Kosten " + chf(r.kosten) + ".</p>" +
+        "<p>Diesen Entscheid triffst nicht du allein: Der Endtermin ist ein Ziel des Auftraggebers. Zeig ihm die Wahl: später fertig oder zusätzliche Kapazität (Umbesetzung, extern zukaufen).</p>";
+    }
+    if (wechsel.length) html += "<p class=\"hint\">Umbesetzt: " + wechsel.join(", ") + ".</p>";
+    ergebnisEl.innerHTML = html;
+  });
+
+  document.getElementById("t11-zurueck").addEventListener("click", () => {
+    st.s = BASIS_S.slice(); st.p = BASIS_P.slice();
+    modusSetzen("glaetten", false);
+    ergebnisEl.innerHTML = "<p>Zurück auf dem ersten Entwurf: alle Pakete auf ihren frühesten Terminen.</p>";
+  });
+  document.getElementById("t11-loes-glaetten").addEventListener("click", () => {
+    st.p = BASIS_P.slice(); st.p[AI.I] = "LB";
+    st.s = BASIS_S.slice(); st.s[AI.F] = 7;
+    modusSetzen("glaetten", false);
+    ergebnisEl.innerHTML = "<p><b>Eine Lösung mit Glätten:</b> F Gebühren wandert innerhalb seines Puffers auf Tag 7–9. Damit ist Luca an Tag 4–6 nur noch mit E beschäftigt. Seraina kann nicht geglättet werden: H hat nur 1 Tag Puffer und überlappt den Integrationstest in jedem Fall. Darum übernimmt Luca den Integrationstest I (ab Tag 10 frei). Endtermin Tag 14 hält, Mehrkosten CHF 240, weil Luca CHF 125 statt 115 kostet.</p>" +
+      "<p>Es gibt weitere Lösungen. Die günstigste kostet " + chf(BESTWERT) + ": Probier es selbst.</p>";
+  });
+  document.getElementById("t11-loes-aus").addEventListener("click", () => {
+    st.p = BASIS_P.slice();
+    st.s = BASIS_S.slice(); st.s[AI.F] = 7; st.s[AI.I] = 12; st.s[AI.J] = 15;
+    modusSetzen("ausgleichen", false);
+    ergebnisEl.innerHTML = "<p><b>Eine Lösung mit Ausgleichen:</b> Niemand wird umbesetzt. F rückt wie beim Glätten auf Tag 7–9. Der Integrationstest I wartet, bis Seraina mit den Schulungsunterlagen H fertig ist (Tag 12–14). Die Vorabnahme rutscht auf Tag 15–16. Kosten wie im Plan, aber der Endtermin liegt 2 Tage später.</p>";
+  });
+
+  aktualisieren();
+
+  /* ---------- 8 · Kostenplan-Rechner ---------- */
+  const kIds = ["pl", "pls", "in", "ins", "ex", "exs", "sach", "res"];
+  const kFelder = {};
+  kIds.forEach((id) => { kFelder[id] = document.getElementById("t11-k-" + id); });
+  function kWert(id) { const x = Number(kFelder[id].value); return kFelder[id].value !== "" && isFinite(x) && x >= 0 ? x : null; }
+  function kRechnen() {
+    const w = {}; let ok = true;
+    kIds.forEach((id) => { w[id] = kWert(id); kFelder[id].setAttribute("aria-invalid", w[id] === null ? "true" : "false"); if (w[id] === null) ok = false; });
+    const erg = document.getElementById("t11-k-ergebnis");
+    if (!ok) { erg.innerHTML = "<p>Bitte nur Zahlen ab 0 eingeben.</p>"; return; }
+    const pl = w.pl * w.pls, inn = w["in"] * w.ins, ex = w.ex * w.exs, sach = w.sach;
+    const pk = pl + inn + ex + sach, res = pk * w.res / 100, budget = pk + res;
+    document.getElementById("t11-k-plk").textContent = chf(pl);
+    document.getElementById("t11-k-ink").textContent = chf(inn);
+    document.getElementById("t11-k-exk").textContent = chf(ex);
+    document.getElementById("t11-k-sachk").textContent = chf(sach);
+    document.getElementById("t11-k-resk").textContent = chf(res);
+    const pmAnteil = budget > 0 ? pl / budget * 100 : 0;
+    const exAnteil = pk > 0 ? ex / pk * 100 : 0;
+    erg.innerHTML =
+      "<p>Personal intern inkl. Projektleitung " + chf(pl + inn) + " · extern " + chf(ex) + " · Sachkosten " + chf(sach) + "</p>" +
+      "<p><b>Projektkosten " + chf(pk) + "</b> + Reserve " + chf(res) + " = <b>Budget " + chf(budget) + "</b></p>" +
+      "<p>Prüfgrössen: Reserve " + L.zahlText(w.res, 1) + " % (Faustregel ca. 20 %" + (w.res < 15 ? ", eher knapp" : "") + ") · " +
+      "Projektmanagement " + L.zahlText(pmAnteil, 1) + " % des Budgets (Faustregel ca. 15 %" + (pmAnteil < 10 ? ", eher wenig: Ist die Projektleitung genug eingeplant?" : "") + ") · " +
+      "externer Anteil " + L.zahlText(exAnteil, 1) + " % der Projektkosten</p>";
+  }
+  kIds.forEach((id) => kFelder[id].addEventListener("input", kRechnen));
+  kRechnen();
+
+  /* ---------- 8 · Controlling-Tabelle zum Ausfüllen ---------- */
+  const CTRL = [
+    { pos: "Personal intern", b: 64000, ist: 45500, rg: 21000 },
+    { pos: "Personal extern (Lieferant)", b: 88240, ist: 64800, rg: 26000 },
+    { pos: "Sachmittel", b: 6000, ist: 5200, rg: 800 },
+    { pos: "Diverses", b: 4000, ist: 2800, rg: 1500 }
+  ];
+  const tot = { pos: "Total", b: 0, ist: 0, rg: 0 };
+  CTRL.forEach((z) => { tot.b += z.b; tot.ist += z.ist; tot.rg += z.rg; });
+  const CTRL_ALLE = CTRL.concat([tot]);
+  const ctrlBody = document.getElementById("t11-ctrl-zeilen");
+  CTRL_ALLE.forEach((z, k) => {
+    const tr = document.createElement("tr");
+    if (k === CTRL.length) tr.className = "t11-summe";
+    tr.innerHTML = "<th>" + z.pos + '</th><td class="zahl">' + tsd(z.b) + '</td><td class="zahl">' + tsd(z.ist) + "</td>" +
+      '<td><label class="sr-only" for="t11-c-r' + k + '">Restbudget ' + z.pos + '</label><input class="t11-feld t11-breit" id="t11-c-r' + k + '" type="text" inputmode="decimal" autocomplete="off"><span class="t11-fb" id="t11-c-rf' + k + '" aria-live="polite"></span></td>' +
+      '<td class="zahl">' + tsd(z.rg) + "</td>" +
+      '<td><label class="sr-only" for="t11-c-a' + k + '">Abweichung ' + z.pos + '</label><input class="t11-feld t11-breit" id="t11-c-a' + k + '" type="text" inputmode="decimal" autocomplete="off"><span class="t11-fb" id="t11-c-af' + k + '" aria-live="polite"></span></td>';
+    ctrlBody.appendChild(tr);
+  });
+  const ctrlErg = document.getElementById("t11-ctrl-ergebnis");
+  function ctrlFeld(art, k, soll) {
+    const f = document.getElementById("t11-c-" + art + k), fb = document.getElementById("t11-c-" + art + "f" + k);
+    const roh = f.value.trim().replace(/CHF/gi, "").replace(/\s/g, "");
+    const x = L.zahlLesen(roh);
+    f.classList.remove("t11-richtig"); f.removeAttribute("aria-invalid"); fb.className = "t11-fb"; fb.textContent = "";
+    if (roh === "") { fb.textContent = "leer"; fb.classList.add("bad"); return false; }
+    if (isFinite(x) && Math.abs(x - soll) < 0.5) { f.classList.add("t11-richtig"); fb.textContent = "✓"; fb.classList.add("ok"); return true; }
+    f.setAttribute("aria-invalid", "true"); fb.classList.add("bad");
+    fb.textContent = (isFinite(x) && Math.abs(x + soll) < 0.5 && soll !== 0) ? "✗ Vorzeichen" : "✗";
+    return false;
+  }
+  document.getElementById("t11-ctrl-pruefen").addEventListener("click", () => {
+    let richtig = 0;
+    CTRL_ALLE.forEach((z, k) => {
+      if (ctrlFeld("r", k, z.b - z.ist)) richtig++;
+      if (ctrlFeld("a", k, z.b - z.ist - z.rg)) richtig++;
+    });
+    const n = CTRL_ALLE.length * 2;
+    ctrlErg.innerHTML = "<p><b>" + richtig + " von " + n + " Feldern richtig" + (richtig === n ? " ✓" : "") + ".</b> " +
+      (richtig === n
+        ? "Prognose " + tsd(tot.ist) + " + " + tsd(tot.rg) + " = CHF " + tsd(tot.ist + tot.rg) + ", also " + tsd(tot.ist + tot.rg - tot.b) + " über den Plankosten. Die Reserve von CHF 17'760 deckt das, danach bleiben CHF " + tsd(17760 - (tot.ist + tot.rg - tot.b)) + ". In den Statusbericht gehört die Begründung: Ursache, Massnahme, Information an den Auftraggeber."
+        : "Restbudget = Budget − IST kumuliert. Abweichung = Restbudget − Restbudget geplant (minus = Überschreitung).") + "</p>";
+  });
+  document.getElementById("t11-ctrl-loesung").addEventListener("click", () => {
+    CTRL_ALLE.forEach((z, k) => {
+      document.getElementById("t11-c-r" + k).value = String(z.b - z.ist);
+      document.getElementById("t11-c-a" + k).value = String(z.b - z.ist - z.rg);
+    });
+    document.getElementById("t11-ctrl-pruefen").click();
+  });
+  document.getElementById("t11-ctrl-leeren").addEventListener("click", () => {
+    CTRL_ALLE.forEach((z, k) => {
+      ["r", "a"].forEach((art) => {
+        const f = document.getElementById("t11-c-" + art + k);
+        f.value = ""; f.classList.remove("t11-richtig"); f.removeAttribute("aria-invalid");
+        const fb = document.getElementById("t11-c-" + art + "f" + k); fb.textContent = ""; fb.className = "t11-fb";
+      });
+    });
+    ctrlErg.innerHTML = "<p>Leer. Viel Erfolg!</p>";
+    document.getElementById("t11-c-r0").focus();
+  });
+
+  /* ---------- 9 · Übungen ---------- */
+  L.sortierer("#t11-ue-sort", {
+    kategorien: ["Glätten", "Ausgleichen"],
+    elemente: [
+      { html: "Der Go-live ist an die Gemeindeversammlung gebunden. Du verschiebst die Schulungsunterlagen um 2 Tage innerhalb ihres Puffers.", kategorie: "Glätten", erklaerung: "Termin fix, Verschiebung im Puffer: Ressourcenglättung." },
+      { html: "Die einzige Fachperson für Gebühren ist nicht ersetzbar. Der Gemeinderat akzeptiert, dass der Go-live eine Woche später kommt.", kategorie: "Ausgleichen", erklaerung: "Kapazität fix, Endtermin rutscht: Ressourcenausgleich." },
+      { html: "Der alte Mailserver fällt Ende März aus dem Support. Die Migration läuft in drei Wellen statt auf einmal, alle innerhalb der Puffer.", kategorie: "Glätten", erklaerung: "Das ist der Fall aus dem Referat zu ICB 3.08: Endtermin fix, Wellen im Puffer." },
+      { html: "Die Datenschutzberaterin arbeitet fest 40 %. Ihr Paket wird so lange gestreckt, bis sie nie über 100 % liegt; die Abnahme rutscht mit.", kategorie: "Ausgleichen", erklaerung: "Die Kapazitätsgrenze bestimmt, der Endtermin folgt. Ressourcenausgleich." },
+      { html: "Ein Vorgang auf dem kritischen Pfad wird verschoben, bis die Entwicklerin frei ist.", kategorie: "Ausgleichen", erklaerung: "Ein kritischer Vorgang hat keinen Puffer. Jede Verschiebung schiebt den Endtermin: Ausgleich." },
+      { html: "Die Stammdaten (6 Tage Puffer) beginnen 3 Tage später, damit Luca nicht doppelt verplant ist. Das Projektende bleibt.", kategorie: "Glätten", erklaerung: "Verschiebung kleiner als der Puffer, Ende bleibt: Glättung." }
+    ]
+  });
+
+  L.zahlAufgabe("#t11-ue-drei", {
+    titel: "Dreipunktschätzung",
+    frage: "Nadia schätzt das «Merkblatt für Bauwillige»: optimistisch 2 PT, wahrscheinlich 3 PT, pessimistisch 7 PT (falls der Gemeinderat den Text zweimal ändern will). Wie gross ist der Erwartungswert nach der Dreipunktschätzung? Auf eine Stelle nach dem Punkt.",
+    antwort: 3.5, toleranz: 0.05, einheit: "PT",
+    hinweise: ["Der wahrscheinliche Wert zählt vierfach.", "Formel: (O + 4M + P) ÷ 6."],
+    loesungsweg: ["(2 + 4 × 3 + 7) ÷ 6", "= (2 + 12 + 7) ÷ 6 = 21 ÷ 6 = 3.5 PT", "Zum Vergleich: der einfache Mittelwert (2 + 3 + 7) ÷ 3 = 4 PT übergewichtet den Ausreisser."]
+  });
+
+  L.zahlAufgabe("#t11-ue-last", {
+    titel: "Auslastung mit Teilpensum",
+    frage: "Nadia Rossi (Kommunikation) arbeitet 50 %. In Woche 3 hat sie pro Tag 2 Stunden für das Merkblatt und 3 Stunden für die Medienmitteilung zum Go-live. Wie hoch ist ihre Auslastung in Prozent?",
+    antwort: 125, toleranz: 0.5, einheit: "%", anzeige: "125 %",
+    hinweise: ["Rechne zuerst ihre Kapazität pro Tag aus dem Pensum.", "Kapazität = 50 % × 8 h = 4 h. Bedarf = 2 h + 3 h."],
+    loesungsweg: ["Kapazität: 0.5 × 8 h = 4 h pro Tag", "Bedarf: 2 h + 3 h = 5 h pro Tag", "Auslastung: 5 ÷ 4 = 1.25 = 125 %", "Mit 8 h gerechnet kämen 62.5 % heraus: Genau das ist die Falle."]
+  });
+
+  L.matrix("#t11-ue-matrix", {
+    titel: "Wie beschaffst du diese Ressource?",
+    icb: ["ICB 3.08", "ICB 3.09"],
+    frage: "<p>Ordne jede Ressource ein: Personal oder Sachmittel, aus der Gemeinde (intern) oder von aussen (extern). Im Feld steht der übliche Weg (nach LB 6 F.8).</p>",
+    zeilen: ["Personal", "Sachmittel"], spalten: ["intern", "extern"],
+    achseY: "Ressource", achseX: "Herkunft",
+    feldnamen: [["Antrag an die Linie", "Ausschreibung, Vertrag"], ["aus dem Bestand anfordern", "einkaufen oder mieten"]],
+    elemente: [
+      { html: "Martin aus dem Bauamt, 60 %", ziel: ["Personal", "intern"], erklaerung: "Interne Person: Der Bauverwalter muss sie freigeben." },
+      { html: "Schnittstellenentwicklerin der Lärchwerk AG", ziel: ["Personal", "extern"], erklaerung: "Externe Fachperson über den Vertrag mit dem Lieferanten." },
+      { html: "Schulungsraum im Gemeindehaus", ziel: ["Sachmittel", "intern"], erklaerung: "Gehört der Gemeinde. Du reservierst ihn, kaufst ihn aber nicht." },
+      { html: "12 Tablets für die Behördenmitglieder", ziel: ["Sachmittel", "extern"], erklaerung: "Muss eingekauft werden: Offerten, Bestellung, je nach Betrag ein Beschaffungsverfahren." },
+      { html: "Datenschutzberaterin mit eigenem Büro", ziel: ["Personal", "extern"], erklaerung: "Externe Beraterin: Auftrag mit Stundensatz." },
+      { html: "Testlaptop aus dem Lager der Informatik", ziel: ["Sachmittel", "intern"], erklaerung: "Interner Bestand: bei der Informatik anfordern." }
+    ]
+  });
+
+  L.wahrFalsch("#t11-ue-wf", {
+    titel: "Wahr oder falsch: Ressourcen und Kosten",
+    aussagen: [
+      { html: "Ressourcenglättung kann eine Überlast nicht immer ganz beseitigen.", wahr: true,
+        erklaerung: "Sie verschiebt nur innerhalb der Puffer. Reicht der Puffer nicht, bleibt eine Restüberlast, wie bei Seraina im Labor." },
+      { html: "Beim Ressourcenausgleich bleibt der Endtermin garantiert gleich.", wahr: false,
+        erklaerung: "Beim Ausgleich ist die Kapazitätsgrenze fix. Der Endtermin darf und wird sich oft verschieben." },
+      { html: "Eine Person mit 60 % Pensum ist mit 4.8 Stunden Projektarbeit pro Tag zu 100 % ausgelastet.", wahr: true,
+        erklaerung: "Kapazität = 0.6 × 8 h = 4.8 h. Mehr geht nur mit Überstunden." },
+      { html: "Über die Managementreserve verfügt die Projektleitung frei.", wahr: false,
+        erklaerung: "Die Managementreserve bleibt beim Auftraggeber (LB 6 F.18). Die Projektleitung verantwortet die Gesamtkosten inklusive Risikoreserve." },
+      { html: "Laut LB 7 ist die Projektleitung ab 7 Projektbeteiligten eine Vollzeitaufgabe.", wahr: true,
+        erklaerung: "Das ist eine der Faustregeln in LB 7 S.16. Der Onlineschalter mit rund 12 Personen braucht also eine volle Projektleitung." }
+    ]
+  });
+
+  L.zahlAufgabe("#t11-ue-budget", {
+    titel: "Budget aus Aufwand (Stil Modulprüfung)",
+    frage: "Wolkenried führt eine elektronische Geschäftsverwaltung ein. Geschätzt sind: Analyse 6 PT intern, Einrichtung 14 PT extern, Migration 10 PT intern, Schulung 4 PT intern, Projektleitung 6 PT intern. Tagessatz intern CHF 960, extern CHF 1'400. Sachkosten: Lizenzen CHF 8'000 und Scanner CHF 2'500. Reserve 20 % auf die Projektkosten. Wie hoch ist das Budget inklusive Reserve? Auf ganze Franken.",
+    antwort: 66072, toleranz: 1, einheit: "CHF",
+    hinweise: ["Zähle zuerst alle internen Personentage zusammen, die Projektleitung gehört dazu.", "Projektkosten = Personal intern + Personal extern + Sachkosten. Dann × 1.2."],
+    loesungsweg: [
+      "Intern: 6 + 10 + 4 + 6 = 26 PT × 960 = CHF 24'960",
+      "Extern: 14 PT × 1'400 = CHF 19'600",
+      "Sachkosten: 8'000 + 2'500 = CHF 10'500",
+      "Projektkosten: 24'960 + 19'600 + 10'500 = CHF 55'060",
+      "Reserve: 0.2 × 55'060 = CHF 11'012 → Budget CHF 66'072",
+      "Kontrolle Faustregel: Projektleitung 6 × 960 = 5'760, das sind 8.7 % des Budgets. Unter den ca. 15 % aus LB 7: Begründen oder mehr Zeit einplanen."
+    ]
+  });
+
+  L.schrittAufgabe("#t11-ue-ctrl", {
+    titel: "Controlling-Tabelle auswerten",
+    aufgabe: '<p>Projekt «Neue Website Wolkenried», Stand nach drei Monaten. Rechne Restbudget, Abweichung und Prognose für jede Zeile und das Total. Beurteile das Ergebnis. Überleg zuerst selbst, dann deck Schritt für Schritt auf.</p>' +
+      '<div class="tablebox"><table class="tabelle"><thead><tr><th>Position</th><th class="zahl">Budget</th><th class="zahl">IST kumuliert</th><th class="zahl">Restbudget geplant</th></tr></thead><tbody>' +
+      '<tr><td>Personal intern</td><td class="zahl">24\'000</td><td class="zahl">15\'000</td><td class="zahl">11\'000</td></tr>' +
+      '<tr><td>Personal extern</td><td class="zahl">30\'000</td><td class="zahl">18\'000</td><td class="zahl">10\'500</td></tr>' +
+      '<tr><td>Sachmittel</td><td class="zahl">6\'000</td><td class="zahl">6\'500</td><td class="zahl">0</td></tr></tbody></table></div>',
+    schritte: [
+      { html: "Restbudget: intern 24'000 − 15'000 = 9'000 · extern 30'000 − 18'000 = 12'000 · Sachmittel 6'000 − 6'500 = −500", warum: "Budget minus IST kumuliert. Bei den Sachmitteln ist das Budget schon überzogen." },
+      { html: "Abweichung: intern 9'000 − 11'000 = −2'000 · extern 12'000 − 10'500 = +1'500 · Sachmittel −500 − 0 = −500", warum: "Restbudget minus Restbudget geplant. Minus heisst: Das Geld reicht nicht." },
+      { html: "Total: Budget 60'000, IST 39'500, Restbudget 20'500, geplant 21'500 → Abweichung −1'000", warum: "Die Zeilen gleichen sich teilweise aus: Extern läuft besser, intern schlechter." },
+      { html: "Prognose: 39'500 + 21'500 = 61'000 (Budget 60'000)", warum: "Das Projekt wird voraussichtlich CHF 1'000 teurer, rund 1.7 %." },
+      { html: "Beurteilung: kleine Überschreitung, aber intern −2'000 ist ein Warnsignal", warum: "Im Statusbericht: Ursache bei den internen Stunden suchen (zum Beispiel mehr Abstimmung als geplant), Massnahme nennen und klären, ob die Reserve das deckt. Nicht einfach mit dem extern gesparten Geld verrechnen, ohne es zu erklären." }
+    ]
+  });
+
+  L.auswahl("#t11-ue-konflikt", {
+    frage: '<span class="icb">ICB 3.08</span> <span class="icb">ICB 2.09</span> Bauverwalter Beat Imhof teilt dir mit, dass Martin wegen einer Spitze bei den Baugesuchen in den nächsten zwei Wochen nur noch 20 % statt 60 % im Projekt arbeitet. Eine schriftliche Ressourcenvereinbarung gibt es. Was tust du zuerst?',
+    optionen: [
+      "Du planst Martin weiter mit 60 % ein, denn die Vereinbarung ist schriftlich.",
+      "Du gehst sofort an den Gemeinderat und verlangst, dass Imhof die Zusage einhält.",
+      "Du klärst mit Imhof die Folgen für Termin und Kosten, suchst gemeinsam eine Lösung (zum Beispiel feste Projekttage für Martins kritische Arbeiten) und eskalierst an die Auftraggeberin, wenn ihr euch nicht einigt.",
+      "Du übernimmst Martins Arbeit selbst, damit es keinen Konflikt gibt."
+    ],
+    richtig: 2,
+    erklaerung: "Ressourcen gehören der Linie. Zuerst verhandelst du auf gleicher Stufe mit Zahlen: Was heisst der Abzug für Termin und Kosten? Oft gibt es einen Kompromiss. Erst wenn ihr euch nicht einigt, entscheidet die Auftraggeberin über die Prioritäten (Eskalation). Option A ignoriert die Realität, B überspringt die Verhandlung, D macht dich zum Engpass. ICB 3.08 (4.5.8.4: in ressourcenbezogenen Konflikten vermitteln) mit ICB 2.09 Verhandlung."
+  });
+
+  L.auswahl("#t11-ue-fall", {
+    frage: '<span class="icb">ICB 3.08</span> Im Labor-Entwurf ist Seraina an Tag 10 und 11 zu 150 % ausgelastet: H Schulungsunterlagen (4 h pro Tag, Tag 8–11, 1 Tag Puffer) und I Integrationstest (8 h pro Tag, Tag 10–12, kein Puffer). Der Endtermin Tag 14 ist fix. Luca ist ab Tag 10 frei. Welche Massnahme löst das Problem?',
+    optionen: [
+      "H um einen Tag nach hinten schieben (Tag 9–12).",
+      "I an Luca geben (CHF 125 statt 115 pro Stunde).",
+      "Seraina zwei Tage Überstunden machen lassen und nichts weiter planen.",
+      "Den Endtermin auf Tag 16 verschieben."
+    ],
+    richtig: 1,
+    erklaerung: "H einen Tag später überlappt I immer noch, jetzt an drei Tagen (10–12). Mehr Puffer hat H nicht. Also braucht es Kapazität: Luca übernimmt I, Mehrkosten 24 h × CHF 10 = CHF 240, Endtermin hält. Überstunden ohne Plan sind keine Steuerung, und D verletzt den fixen Termin. Wer genau hinschaut, findet im Labor eine noch günstigere Lösung."
+  });
+
+  L.reflexion("#t11-ue-reflexion", {
+    titel: "Offene Frage: Abzug in der Matrix bei fixem Termin",
+    icb: ["ICB 3.08", "ICB 2.09", "ICB 1.04"],
+    frage: "<p>Im Onlineschalter arbeitet Martin (Bauamt, 60 %) an den Stammdaten (6 Tage Puffer) und an der Vorabnahme (kritischer Pfad, Tag 19–20). Die Stammdaten stehen im Plan an Tag 6–9 (Woche 2) und dürfen bis Tag 15 dauern. Sein Chef will ihn in Woche 2 und in Woche 4 auf 20 % reduzieren. Die Vorabnahme ist fix, weil der Gemeinderat danach über die nächste Phase entscheidet. Wie gehst du als Projektleitung vor? Nenne Analyse, Optionen und das Vorgehen mit der Linie. Schreib fünf bis acht Sätze.</p>",
+    musterloesung:
+      "<p><b>Analyse:</b> Ich prüfe im Belastungsdiagramm, welche Pakete in Woche 2 und 4 betroffen sind. Die Stammdaten in Woche 2 haben 6 Tage Puffer, dort kann ich glätten: Sie passen auch an Tag 12–15 (Woche 3). Die Vorabnahme liegt auf dem kritischen Pfad, jeder Tag Verzug verschiebt die Phasenfreigabe.</p>" +
+      "<p><b>Optionen:</b> Stammdaten innerhalb des Puffers verschieben oder an jemanden mit freier Kapazität geben (Glätten, Umbesetzen). Für die Vorabnahme braucht es Fachwissen Bau: Thomas oder Seraina könnten einspringen. Als letzte Option bleibt, die Vorabnahme zu verschieben (Ausgleich), das muss aber die Auftraggeberin entscheiden.</p>" +
+      "<p><b>Vorgehen mit der Linie:</b> Ich gehe mit den Zahlen zum Bauverwalter, verweise auf die Ressourcenvereinbarung und schlage einen Kompromiss vor: Martin arbeitet in Woche 2 weniger, holt die Stammdaten in Woche 3 nach und ist an Tag 19 und 20 voll für die Vorabnahme da. Das Ergebnis halte ich schriftlich fest.</p>" +
+      "<p><b>Eskalation und Nachführung:</b> Einigen wir uns nicht, lege ich der Auftraggeberin die Varianten mit Folgen für Termin und Kosten vor; sie entscheidet über die Priorität. Danach passe ich Ressourcen- und Terminplan an und berichte im Statusbericht.</p>",
+    kriterien: [
+      { text: "Betroffene Pakete und Puffer analysiert (kritisch oder nicht)", punkte: 2 },
+      { text: "Glätten beim Paket mit Puffer vorgeschlagen", punkte: 1 },
+      { text: "Für den kritischen Teil eine Lösung mit Kapazität (Ersatz, Kompromiss) genannt", punkte: 1 },
+      { text: "Verhandlung mit dem Linienvorgesetzten, Vereinbarung schriftlich", punkte: 1 },
+      { text: "Eskalation an die Auftraggeberin mit Varianten, falls keine Einigung", punkte: 1 },
+      { text: "Plan nachführen und informieren (Statusbericht)", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const zeile = (s) => '<div class="t11-zeile">' + s + "</div>";
+  const SCH = [
+    { nr: "1", name: "Anforderungen und Sitzungsablauf", wer: "intern", o: 4, m: 6, p: 14 },
+    { nr: "2", name: "System konfigurieren", wer: "Lieferant", o: 8, m: 10, p: 18 },
+    { nr: "3", name: "Daten und Vorlagen übernehmen", wer: "intern", o: 3, m: 5, p: 7 },
+    { nr: "4", name: "Behördenmitglieder schulen", wer: "intern", o: 2, m: 3, p: 4 }
+  ];
+  SCH.forEach((a) => { a.e = (a.o + 4 * a.m + a.p) / 6; });
+  // Schätztabelle mit aufgedeckten Erwartungswerten; neu = Nummern, die in dieser Szene dazukommen
+  const eSichtbar = {};
+  function schaetzTab(neu) {
+    neu.forEach((n) => { eSichtbar[n] = true; });
+    let h = '<div class="tablebox"><table class="tabelle t11-film-tab"><thead><tr><th>AP</th><th>wer</th><th class="zahl">O</th><th class="zahl">M</th><th class="zahl">P</th><th class="zahl">E (PT)</th></tr></thead><tbody>';
+    SCH.forEach((a) => {
+      const w = eSichtbar[a.nr] ? String(a.e) : "";
+      h += "<tr><th>" + a.nr + "</th><td>" + a.wer + '</td><td class="zahl">' + a.o + '</td><td class="zahl">' + a.m + '</td><td class="zahl">' + a.p + '</td><td class="zahl">' + (neu.indexOf(a.nr) >= 0 ? NW(w) : w) + "</td></tr>";
+    });
+    return h + "</tbody></table></div>";
+  }
+  function kostenTab(z) {
+    // z: Liste von [Kostenart, Betrag-HTML]
+    let h = '<div class="tablebox"><table class="tabelle t11-film-tab"><thead><tr><th>Kostenart</th><th class="zahl">CHF</th></tr></thead><tbody>';
+    z.forEach((r) => { h += "<tr" + (r[2] ? ' class="t11-summe"' : "") + "><th>" + r[0] + '</th><td class="zahl">' + r[1] + "</td></tr>"; });
+    return h + "</tbody></table></div>";
+  }
+  const KT_BASIS = [["Personal intern (19 PT × 1'000)", "19'000"], ["Personal extern (11 PT × 1'400)", "15'400"], ["Sachkosten", "9'600"]];
+  const FC = [
+    { pos: "Personal intern", b: 19000, ist: 13500, rg: 7000 },
+    { pos: "Personal extern", b: 15400, ist: 12600, rg: 2800 },
+    { pos: "Sachmittel", b: 9600, ist: 9200, rg: 0 }
+  ];
+  function ctrlTab(rest, abw, total) {
+    let h = '<div class="tablebox"><table class="tabelle t11-film-tab"><thead><tr><th>Position</th><th class="zahl">Budget</th><th class="zahl">IST kum.</th><th class="zahl">Rest</th><th class="zahl">Rest gepl.</th><th class="zahl">Abw.</th></tr></thead><tbody>';
+    let sb = 0, si = 0, sr = 0;
+    FC.forEach((z) => {
+      sb += z.b; si += z.ist; sr += z.rg;
+      const r = z.b - z.ist, a = r - z.rg;
+      h += "<tr><th>" + z.pos + '</th><td class="zahl">' + tsd(z.b) + '</td><td class="zahl">' + tsd(z.ist) + '</td><td class="zahl">' + (rest ? (rest === 2 ? NW(tsd(r)) : tsd(r)) : "") +
+        '</td><td class="zahl">' + tsd(z.rg) + '</td><td class="zahl">' + (abw ? (abw === 2 ? NW(zahlMitVz(a)) : zahlMitVz(a)) : "") + "</td></tr>";
+    });
+    h += '<tr class="t11-summe"><th>Total</th><td class="zahl">' + tsd(sb) + '</td><td class="zahl">' + tsd(si) + '</td><td class="zahl">' + (total ? (total === 2 ? NW(tsd(sb - si)) : tsd(sb - si)) : "") +
+      '</td><td class="zahl">' + tsd(sr) + '</td><td class="zahl">' + (total ? (total === 2 ? NW(zahlMitVz(sb - si - sr)) : zahlMitVz(sb - si - sr)) : "") + "</td></tr>";
+    return h + "</tbody></table></div>";
+  }
+
+  const fs = [];
+  const sz = (o) => fs.push(o);
+  sz({ ph: -1, f: schaetzTab([]), say: "Eine typische Aufgabe für die Modulprüfung: vom Aufwand zum Budget, dann Auslastung und Controlling. Wir gehen in fünf Schritten vor." });
+  sz({ ph: 0, hl: ["schaetz"], f: schaetzTab([]) + zeile("E = (O + 4 × M + P) ÷ 6"), say: "Für jedes Arbeitspaket hast du drei Schätzungen in Personentagen. Die Dreipunktschätzung gewichtet den wahrscheinlichen Wert vierfach und teilt durch sechs." });
+  sz({ ph: 0, f: schaetzTab(["1"]) + zeile("AP 1: (4 + 24 + 14) ÷ 6 = 42 ÷ 6 = " + NW("7 PT")), say: "Paket 1: 4 plus 4 mal 6 plus 14 gibt 42, geteilt durch 6 sind 7 Personentage. Der pessimistische Wert zieht von 6 auf 7 hoch." });
+  sz({ ph: 0, f: schaetzTab(["2"]) + zeile("AP 2: (8 + 40 + 18) ÷ 6 = 66 ÷ 6 = " + NW("11 PT")), say: "Paket 2 beim Lieferanten: 8 plus 40 plus 18 gibt 66, geteilt durch 6 sind 11 Personentage." });
+  sz({ ph: 0, f: schaetzTab(["3", "4"]) + zeile("AP 3: 30 ÷ 6 = 5 PT &nbsp;·&nbsp; AP 4: 18 ÷ 6 = 3 PT"), say: "Paket 3 ergibt 30 durch 6, also 5. Paket 4 ergibt 18 durch 6, also 3 Personentage." });
+  sz({ ph: 0, hl: ["pl"], f: schaetzTab([]) + zeile("intern: 7 + 5 + 3 + " + NW("4 PT Projektleitung") + " = 19 PT &nbsp;·&nbsp; extern: 11 PT"), say: "Jetzt zusammenzählen. Intern sind es 7, 5 und 3 Personentage, dazu die Projektleitung mit 4. Das gibt 19. Extern sind es 11." });
+  sz({ ph: 1, hl: ["satz"], f: kostenTab([["Personal intern (19 PT × 1'000)", NW("19'000")]]), say: "Personalkosten intern: 19 Personentage mal 1'000 Franken Tagessatz gibt 19'000 Franken." });
+  sz({ ph: 1, f: kostenTab([["Personal intern (19 PT × 1'000)", "19'000"], ["Personal extern (11 PT × 1'400)", NW("15'400")]]), say: "Personalkosten extern: 11 mal 1'400 gibt 15'400 Franken." });
+  sz({ ph: 1, hl: ["sach"], f: kostenTab(KT_BASIS.slice(0, 2).concat([["Sachkosten (3'600 + 12 × 500)", NW("9'600")]])), say: "Dazu die Sachkosten: Lizenz 3'600 Franken und zwölf Tablets zu je 500 Franken. Das sind 9'600 Franken." });
+  sz({ ph: 1, f: kostenTab(KT_BASIS.concat([["Projektkosten", NW("44'000"), true]])), say: "Die Projektkosten sind die Summe der Kostenarten: 19'000 plus 15'400 plus 9'600 gibt 44'000 Franken." });
+  sz({ ph: 2, hl: ["res"], f: kostenTab(KT_BASIS.concat([["Projektkosten", "44'000", true], ["Reserve 20 %", NW("8'800")], ["Budget", NW("52'800"), true]])), say: "Die Aufgabe verlangt 20 Prozent Reserve auf die Projektkosten: 8'800 Franken. Das Budget beträgt 52'800 Franken." });
+  sz({ ph: 2, f: kostenTab(KT_BASIS.concat([["Projektkosten", "44'000", true], ["Reserve 20 %", "8'800"], ["Budget", "52'800", true]])) +
+    zeile("PM-Anteil: 4'000 ÷ 52'800 = " + NW("7.6 %") + " (Faustregel ca. 15 %)"), say: "Kontrolle mit den Faustregeln aus LB 7. Die Reserve passt. Die Projektleitung macht nur 7.6 Prozent aus. Bei einem kleinen Team ist das vertretbar, du solltest es aber begründen." });
+  sz({ ph: 2, f: zeile("Projektkosten 44'000 + Risikoreserve 8'800 = " + NW("52'800") + " (Verantwortung Projektleitung)") + zeile("Managementreserve: bleibt beim Gemeinderat, nicht im Budget der Projektleitung"),
+    say: "Einordnen in die Reservenstufen: Die 52'800 Franken sind die Gesamtkosten, die der Projektleitung freigegeben werden. Eine Managementreserve bliebe beim Gemeinderat." });
+  sz({ ph: 3, hl: ["last"], f: zeile("Sachbearbeiterin: 50 % = 20 h pro Woche") + zeile("Woche 2: AP 1 10 h + AP 3 20 h = 30 h → " + NW("150 %")), say: "Jetzt die Auslastung. Die Sachbearbeiterin der Ratskanzlei arbeitet 50 Prozent, also 20 Stunden pro Woche. In Woche 2 hat sie 10 Stunden für Paket 1 und 20 für Paket 3. Das sind 150 Prozent." });
+  sz({ ph: 3, hl: ["termin"], f: zeile("Woche 2: 150 % ✗") + zeile("Sitzungstermin fix → " + NW("Glätten") + " · AP 3 hat 1 Woche Puffer"), say: "Welche Strategie? Die erste digitale Sitzung ist fest angesetzt, der Endtermin ist also fix. Darum glätten. Paket 3 hat eine Woche Puffer." });
+  sz({ ph: 3, f: zeile("AP 3 eine Woche später: Woche 2 = 10 h = 50 % · Woche 3 = 20 h = 100 % · Woche 4 = 20 h = 100 %") + zeile(NW("Endtermin hält")), say: "Paket 3 startet eine Woche später. Woche 2 hat noch 10 Stunden, also 50 Prozent. In Woche 3 und 4 je 20 Stunden, genau 100 Prozent. Der Endtermin hält." });
+  sz({ ph: 3, f: zeile("Reicht der Puffer nicht: Kapazität dazu (umbesetzen, extern) oder Endtermin schieben (Ausgleich, Entscheid Auftraggeber)"), say: "Hätte der Puffer nicht gereicht, bräuchtest du zusätzliche Kapazität oder einen späteren Termin. Den Termin verschiebt aber nur der Auftraggeber." });
+  sz({ ph: 4, hl: ["ctrl"], f: ctrlTab(0, 0, 0), say: "Nach sechs Wochen kommt die Controlling-Tabelle. Budget nach Kostenart, IST kumuliert und das Restbudget geplant, also was du noch zu brauchen schätzt." });
+  sz({ ph: 4, f: ctrlTab(2, 0, 0) + zeile("Restbudget = Budget − IST kumuliert"), say: "Zuerst das Restbudget: Budget minus IST. Intern bleiben 5'500, extern 2'800, bei den Sachmitteln 400 Franken." });
+  sz({ ph: 4, f: ctrlTab(1, 2, 0) + zeile("Abweichung = Restbudget − Restbudget geplant"), say: "Dann die Abweichung: Restbudget minus Restbudget geplant. Intern fehlen 1'500 Franken, extern passt es genau, bei den Sachmitteln bleiben 400 übrig." });
+  sz({ ph: 4, f: ctrlTab(1, 1, 2) + zeile("Prognose = 35'300 + 9'800 = " + NW("45'100") + " (Projektkosten 44'000)"), say: "Im Total fehlen 1'100 Franken. Die Prognose ist IST plus Restbudget geplant: 35'300 plus 9'800 gibt 45'100 Franken." });
+  sz({ ph: 4, f: ctrlTab(1, 1, 1) + zeile("Reserve 8'800 − 1'100 = " + NW("7'700 übrig")) + zeile("Begründung: Altdaten der Kommissionen in drei Formaten, Bereinigung aufwendiger"),
+    say: "Beurteilung: Die Überschreitung deckt die Reserve, danach bleiben 7'700 Franken. Unter die Tabelle gehört die Begründung mit Datum, zum Beispiel aufwendigere Altdaten, und die Massnahme." });
+  sz({ ph: 4, f: zeile("<b>Ergebnis:</b> 7 / 11 / 5 / 3 PT · Projektkosten CHF 44'000 · Budget CHF 52'800 · AP 3 glätten · Prognose CHF 45'100, Reserve übrig CHF 7'700"),
+    say: "Fertig: Aufwand 7, 11, 5 und 3 Personentage, Projektkosten 44'000, Budget 52'800 Franken, Paket 3 geglättet, Prognose 45'100 mit 7'700 Franken Reserve. Jetzt kannst du dich im Selbsttest prüfen.", end: true });
+
+  let filmTab = '<div class="tablebox"><table class="tabelle t11-film-tab"><thead><tr><th>AP</th><th>Arbeitspaket</th><th>wer</th><th class="zahl">O</th><th class="zahl">M</th><th class="zahl">P</th></tr></thead><tbody>';
+  SCH.forEach((a) => { filmTab += "<tr><td>" + a.nr + "</td><td>" + a.name + "</td><td>" + a.wer + '</td><td class="zahl">' + a.o + '</td><td class="zahl">' + a.m + '</td><td class="zahl">' + a.p + "</td></tr>"; });
+  filmTab += "</tbody></table></div>";
+
+  L.film("#t11-film", {
+    phasen: ["1 · Schätzen", "2 · Kosten", "3 · Budget", "4 · Auslastung", "5 · Controlling"],
+    texte: [
+      'Die Gemeinde Wolkenried führt ein Ratsinformationssystem ein: Gemeinderat und Kommissionen erhalten die Sitzungsunterlagen auf Tablets. <span data-ph="termin">Die erste digitale Gemeinderatssitzung ist fest angesetzt.</span> a) <span data-ph="schaetz">Schätze den Aufwand je Arbeitspaket mit der Dreipunktschätzung (Werte in PT).</span> b) Rechne Personalkosten, Projektkosten und <span data-ph="res">das Budget mit 20 % Reserve</span>. c) <span data-ph="last">Prüfe die Auslastung der Sachbearbeiterin (50 %).</span> d) <span data-ph="ctrl">Werte die Controlling-Tabelle nach sechs Wochen aus.</span>',
+      filmTab,
+      '<span data-ph="pl">Projektleitung intern: 4 PT.</span> <span data-ph="satz">Tagessatz intern CHF 1\'000, extern CHF 1\'400.</span> <span data-ph="sach">Sachkosten: Lizenz CHF 3\'600, 12 Tablets à CHF 500.</span> Die Sachbearbeiterin der Ratskanzlei (50 %) hat in Woche 2 10 h für AP 1 und in Woche 2 und 3 je 20 h für AP 3; AP 3 hat 1 Woche Puffer.'
+    ],
+    woerterbuch: [],
+    beschriftung: { texte: "Die Aufgabe", text: "Teil", formel: "Rechnung" },
+    szenen: fs
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t11-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.08</span> Der Endtermin ist fix, weil der alte Server Ende Monat abgeschaltet wird. Eine Person ist in zwei Wochen zu 130 % ausgelastet. Welche Grundstrategie prüfst du zuerst?',
+        o: ["Ressourcenausgleich: Pakete nach hinten schieben, bis die Kapazität reicht, auch über den Endtermin hinaus",
+            "Ressourcenglättung: Pakete innerhalb ihrer Puffer verschieben",
+            "Nichts tun: 130 % sind für zwei Wochen normal",
+            "Den kritischen Pfad bewusst verlängern"], a: 1,
+        e: "Bei fixem Endtermin ist Glätten die passende Strategie: verschieben nur im Puffer. Reicht das nicht, kommt zusätzliche Kapazität dazu. ICB 3.08, Indikator 4.5.8.4 «Ressourcen gemäss Bedarf zuweisen», mit Nivellierung aus 4.5.4.4." },
+      { q: '<span class="icb">ICB 3.08</span> Was kennzeichnet den Ressourcenausgleich (Leveling)?',
+        o: ["Der Endtermin bleibt in jedem Fall gleich.",
+            "Vorgänge werden nur innerhalb ihres freien Puffers verschoben.",
+            "Die Kapazitätsgrenze gilt fest, der Endtermin darf sich verschieben.",
+            "Es werden nur externe Ressourcen eingesetzt."], a: 2,
+        e: "Beim Ausgleich bestimmt die Kapazität. Pakete rücken so weit, bis niemand mehr überlastet ist, auch wenn das Ende rutscht. Das muss der Auftraggeber mittragen. ICB 3.08 mit ICB 3.04 (Terminplan)." },
+      { q: '<span class="icb">ICB 3.08</span> Eine Mitarbeiterin mit 80 % Pensum hat pro Tag 8 Stunden Projektarbeit eingeplant. Wie hoch ist ihre Auslastung?',
+        o: ["80 %", "100 %", "160 %", "125 %"], a: 3,
+        e: "Kapazität = 0.8 × 8 h = 6.4 h. Auslastung = 8 ÷ 6.4 = 1.25 = 125 %. ICB 3.08: Ressourcennutzung berechnen (Wissen in 4.5.8)." },
+      { q: '<span class="icb">ICB 3.07</span> Eine Expertin schätzt ein Paket: optimistisch 4 PT, wahrscheinlich 7 PT, pessimistisch 16 PT. Was ergibt die Dreipunktschätzung?',
+        o: ["9 PT", "8 PT", "7 PT", "27 PT"], a: 1,
+        e: "(4 + 4 × 7 + 16) ÷ 6 = 48 ÷ 6 = 8 PT. 9 PT wäre der einfache Mittelwert, 27 die Summe. Die Swiss ICB nennt die Dreipunktschätzung bei den Kostenschätzungsmethoden (4.5.7, ICB 3.07)." },
+      { q: '<span class="icb">ICB 3.08</span> Ein Linienvorgesetzter will eine zugesagte Mitarbeiterin für zwei Wochen abziehen. Was ist der beste erste Schritt der Projektleitung?',
+        o: ["Die Mitarbeiterin trotzdem einplanen, die Zusage gilt.",
+            "Sofort beim Auftraggeber eskalieren.",
+            "Mit dem Linienvorgesetzten die Folgen klären und eine verbindliche Lösung aushandeln; erst ohne Einigung eskalieren.",
+            "Die Arbeit selbst übernehmen."], a: 2,
+        e: "Ressourcenkonflikte in der Matrix löst du zuerst durch Verhandlung mit Zahlen, dann über die Eskalation. ICB 3.08, Indikator 4.5.8.3 (Verfügbarkeit verhandeln) und Messgrösse «vermittelt in ressourcenbezogenen Konflikten» aus 4.5.8.4, dazu ICB 2.09 Verhandlung." },
+      { q: '<span class="icb">ICB 3.08</span> Worin unterscheidet sich laut Swiss ICB die Beschaffung externer von der Zuweisung interner Ressourcen?',
+        o: ["Bei externen Ressourcen müssen zusätzlich die Kosten verhandelt werden, meist über Offerten und Vertrag.",
+            "Externe Ressourcen sind immer schneller verfügbar.",
+            "Interne Ressourcen kosten das Projekt nichts.",
+            "Externe Ressourcen brauchen keine Einarbeitung."], a: 0,
+        e: "Intern geht es um Verfügbarkeit und Qualität, extern zusätzlich um den Preis (Swiss ICB 4.5.8.3). Dazu Make-or-Buy und Beschaffungsrichtlinien, siehe ICB 3.09 Beschaffung und Station 21." },
+      { q: '<span class="icb">ICB 3.07</span> Budget CHF 50\'000, IST kumuliert CHF 32\'000, Restbudget geplant CHF 21\'000. Was stimmt?',
+        o: ["Restbudget 18\'000, Abweichung +3\'000, Prognose 47\'000",
+            "Restbudget 21\'000, Abweichung 0, Prognose 50\'000",
+            "Restbudget 32\'000, Abweichung −11\'000, Prognose 61\'000",
+            "Restbudget 18\'000, Abweichung −3\'000, Prognose 53\'000"], a: 3,
+        e: "Restbudget = 50'000 − 32'000 = 18'000. Abweichung = 18'000 − 21'000 = −3'000. Prognose = 32'000 + 21'000 = 53'000. ICB 3.07, Indikator 4.5.7.5 «Finanzen überwachen, Abweichungen identifizieren und korrigieren»." },
+      { q: '<span class="icb">ICB 3.07</span> Welche Regel hilft laut LB 6 gegen Schätzfehler?',
+        o: ["Möglichst früh einmal genau schätzen und dann festhalten.",
+            "Schätzen, wenn genug Wissen da ist, laufend aktualisieren und mehrere Personen schätzen lassen.",
+            "Immer den optimistischen Wert nehmen, damit das Projekt bewilligt wird.",
+            "Schätzungen nie nach oben korrigieren, sonst sinkt die Glaubwürdigkeit."], a: 1,
+        e: "LB 6 F.20: Fehler entstehen durch zu frühes, einmaliges oder falsch korrigiertes Schätzen. Gegenmittel: zum richtigen Zeitpunkt, laufend und mit mehreren Köpfen schätzen. ICB 3.07, Indikator 4.5.7.1 «Projektkosten abschätzen»." },
+      { q: '<span class="icb">ICB 3.07</span> Seraina arbeitet 64 Stunden im Projekt. Sie ist ohnehin bei der Gemeinde angestellt. Wie gehören ihre Stunden in den Kostenplan?',
+        o: ["Gar nicht, interne Stunden kosten das Projekt nichts.",
+            "Nur ihre Überstunden.",
+            "Mit allen Stunden zu einem internen Satz, in Wolkenried zu Vollkosten.",
+            "Nur, wenn ein externer Lieferant sie verrechnet."], a: 2,
+        e: "Interne Arbeitsstunden sind direkte Projektkosten (Swiss ICB 4.5.7.1). Sie fehlen in der Linie und müssen im Kostenplan stehen, sonst ist das Budget zu tief. ICB 3.07 Kosten und Finanzierung." },
+      { q: '<span class="icb">ICB 3.07</span> Ein Auftraggeber prüft einen Projektplan mit den Kontrollgrössen aus LB 7. Welche Kombination stimmt?',
+        o: ["Budgetreserve ca. 20 %, Projektmanagement ca. 15 %, Zeitpuffer ca. 30 %",
+            "Budgetreserve ca. 10 %, Projektmanagement ca. 30 %, Zeitpuffer ca. 15 %",
+            "Budgetreserve ca. 30 %, Projektmanagement ca. 20 %, Zeitpuffer ca. 15 %",
+            "Budgetreserve ca. 15 %, Projektmanagement ca. 20 %, Zeitpuffer ca. 10 %"], a: 0,
+        e: "LB 7 S.15: Reserve ca. 20 %, Projektmanagement ca. 15 % des Gesamtbudgets, Zeitpuffer ca. 30 % bei fixem Endtermin. Dazu S.16: ab 7 Beteiligten ist die Projektleitung Vollzeit. Bezug ICB 3.07 (Budget für Unvorhergesehenes, 4.5.7.2) und ICB 3.08." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

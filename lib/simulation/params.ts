@@ -7,7 +7,7 @@
 import type { Params, ParamsOverride } from "./types"
 
 /** Version des Rechenkerns. Erhöhen, sobald alte Aktionsprotokolle anders verlaufen würden (4.5). */
-export const ENGINE_VERSION = 1
+export const ENGINE_VERSION = 2
 
 export const DEFAULT_PARAMS: Params = {
   hoursPerTick: 4, // 3.1
@@ -29,12 +29,12 @@ export const DEFAULT_PARAMS: Params = {
   learnStart: 0.9, // 3.4
   learnHours: 16, // 3.4
   otTolerance: { tief: 2, mittel: 5, hoch: 8 }, // 2.5
-  defBase: 0.05, // 3.6
+  defBase: 0.03, // 3.6 (AP5: 0.05 → 0.03, Korrekturzeit sonst 3 Tage auf dem kritischen Pfad)
   reviewShare: 0.03, // 3.6
   reviewDetect: 0.5, // 3.6
   fixEarly: 1.0, // 3.6
   fixLate: 3.0, // 3.6
-  rhoRef: 2.5, // 3.6
+  rhoRef: 1.5, // 3.6 (AP5: mit defBase mitgeführt, QI 100 % = gute Passung und ein Review)
   riskProb: [0.05, 0.15, 0.3, 0.5, 0.7], // 3.9
   talkBoost: 8, // 3.7
   talkCooldownDays: 5, // 3.7

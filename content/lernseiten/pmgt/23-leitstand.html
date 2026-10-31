@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leitstand: Projekt Onlineschalter · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/24-ipma-pruefungssimulator" title="IPMA-Prüfungssimulator">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t23-», nur Farben aus :root -->
+  <style>
+    .t23-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t23-ziele li{margin-bottom:3px}
+
+    /* Ampel-Marke: immer Form + Text, Farbe nur als Zusatz */
+    .t23-sym{display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:.92em; padding:1px 8px; border-radius:999px; border:1px solid currentColor; white-space:nowrap}
+    .t23-gruen{color:var(--ok); background:var(--ok-bg)}
+    .t23-gelb{color:var(--free); background:var(--free-bg)}
+    .t23-rot{color:var(--bad); background:var(--bad-bg)}
+
+    /* Startfeld mit den grossen Knöpfen */
+    .t23-start{border:2px solid var(--accent); border-radius:14px; padding:16px; background:var(--accent-soft); display:flex; flex-direction:column; gap:12px}
+    .t23-start h3{margin:0}
+    .t23-knoepfe{display:flex; flex-wrap:wrap; gap:12px}
+    .t23-gross{font-size:1.12rem; font-weight:700; padding:14px 22px; min-height:52px; border-radius:12px; text-decoration:none; flex:1 1 220px}
+    .t23-start .hint{margin:0}
+
+    /* Ablauf als nummerierte Kette */
+    .t23-fluss{margin:0; padding:0; list-style:none; counter-reset:t23f; display:flex; flex-direction:column; gap:8px}
+    .t23-fluss > li{counter-increment:t23f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t23-fluss > li::before{content:counter(t23f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t23-fluss .hint{margin:2px 0 0}
+
+    /* Kacheln «Was du steuerst» */
+    .t23-kacheln{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(230px,100%),1fr)); gap:10px}
+    .t23-kachel{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface)}
+    .t23-kachel b{display:block; margin-bottom:2px}
+    .t23-kachel p{margin:0; font-size:.95rem}
+
+    /* Checkliste */
+    .t23-check{margin:0; padding-left:1.3em}
+    .t23-check li{margin-bottom:4px}
+
+    /* Logbuch im Lösungsfilm und in der Lösung */
+    .t23-log{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t23-eintrag{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t23-eintrag:last-child{border-bottom:0}
+    .t23-eintrag b{color:var(--accent)}
+    .t23-log-fertig{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t23-fluss > li{padding-left:40px}
+      .t23-log{font-size:.93rem}
+      .t23-gross{font-size:1.05rem; padding:12px 16px}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="23-leitstand">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 8/9 · Projektsimulation</span>
+    <h1>Leitstand: Projekt Onlineschalter</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.04</span><span class="icb">ICB 3.08</span><span class="icb">ICB 3.10</span><span class="icb">ICB 3.11</span><span class="icb">ICB 3.06</span><span class="icb">ICB 2.01</span><span class="icb">ICB 2.02</span><span class="icb">ICB 2.05</span>
+    </p>
+    <p class="lead">Jetzt leitest du selbst ein Projekt. Im Leitstand übernimmst du die Projektleitung für die Realisierung und Einführung des Onlineschalters Wolkenried: Du besetzt das Team, lässt die Zeit laufen, entscheidest im Posteingang, führst Gespräche, pflegst das Risikoregister und berichtest dem Gemeinderat. Diese Seite bereitet dich darauf vor, schickt dich in den Leitstand und hilft dir danach, aus deinem Lauf zu lernen.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t23-ziele">
+        <li>Vorgänge nach Qualifikation, Pensum und kritischem Pfad besetzen und den Plan vor dem Start prüfen,</li>
+        <li>den Fortschritt mit SPI und CPI lesen und die sechs Kennzahlen des Leitstands deuten,</li>
+        <li>auf Ereignisse rechtzeitig entscheiden und Interessen von Auftraggeberin, Linie, Lieferant und Bevölkerung abwägen,</li>
+        <li>ein gemischtes Team führen: Gespräche, Anlässe, Überstunden, Weiterbildung,</li>
+        <li>ehrlich berichten und erklären, wie der Leitstand deinen Statusbericht mit den Zahlen vergleicht,</li>
+        <li>aus deinem Lauf Lessons Learned ableiten und daraus einen Plan für die Projektsimulation am 14.11. machen.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> Am Samstag, 14.11.2026, spielst du im Unterricht eine Projektsimulation (LB 8/9, 08.30 bis 16.15 Uhr). Wie sie abläuft, erklärt <a href="/lernseiten/pmgt/22-simulation-verstehen">Station 22</a>. Der Leitstand ist dein Trainingsplatz dafür, mit eigenem Szenario. Über seine rund 40 Ereignisse übt er alle Practice- und People-Kompetenzen der IPMA-Prüfung in Situationen statt in Definitionen.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#auftrag"><b>1</b>Auftrag</a>
+    <a href="#besetzen"><b>2</b>Besetzen</a>
+    <a href="#fuehren"><b>3</b>Führen</a>
+    <a href="#kennzahlen"><b>4</b>Kennzahlen</a>
+    <a href="#leitstand"><b>5</b>Leitstand</a>
+    <a href="#nachher"><b>6</b>Nach dem Lauf</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Film</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine des Leitstands</h2>
+    <p class="prose">Stell dir einen Flugsimulator vor. Die Pilotin übt dort Start, Landung und Notfälle, ohne dass ein echtes Flugzeug abstürzt. Der Leitstand ist ein Flugsimulator für Projektleitung: Du triffst echte Entscheide, siehst sofort die Folgen und kannst danach in Ruhe auswerten, was du anders machen würdest.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Takt = halber Arbeitstag</span><span class="ex">Takt 0 = Mo, Tag 1, Vormittag</span><p>Die Zeit läuft in Halbtagen zu 4 Stunden, wie eine Uhr mit nur zwei Zeigerstellungen pro Tag. Eine Periode hat 20 Arbeitstage, also 40 Takte.</p></div>
+      <div class="concept"><span class="tag">Besetzung = Stundenplan</span><span class="ex">Priorität A bis F</span><p>Jede Person bekommt bis zu sechs Vorgänge in einer Reihenfolge. Wie ein Stundenplan: Zuerst A; ist A blockiert, arbeitet sie an B, und so weiter.</p></div>
+      <div class="concept"><span class="tag">Kennzahl = Tachometer</span><span class="ex">100 % = Plan</span><p>Sechs Anzeigen zeigen, wie dein Projekt fährt. 100&nbsp;% heisst «genau nach Plan», mehr ist besser, weniger schlechter. Wie beim Tacho reicht ein Blick.</p></div>
+      <div class="concept"><span class="tag">Ereignis = Brief mit Frist</span><span class="ex">✉ ☎ 🚪</span><p>E-Mails, Anrufe und Besuche landen im Posteingang und halten die Zeit an. Wie eine Mahnung: Wer sie liegen lässt, bekommt den Entscheid eines anderen.</p></div>
+      <div class="concept"><span class="tag">Abgleich = Fahrtenschreiber</span><span class="ex">gemeldet / gemessen</span><p>Der Leitstand vergleicht deinen Statusbericht mit den echten Zahlen, wie der Fahrtenschreiber im Lastwagen. Schönfärben fällt auf.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Steuerst du das, oder misst es der Leitstand?</h3>
+      <p class="hint">Frag dich: Kann ich das mit einem Klick festlegen, oder ist es eine Folge meiner Entscheide, die der Leitstand ausrechnet?</p>
+      <div id="t23-sortierer-steuern"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Auftrag ===== -->
+  <section id="auftrag">
+    <span class="eyebrow">Schritt 1 · Der Auftrag (Leitstand-Spezifikation Abschnitt 2)</span>
+    <h2>Dein Auftrag: Onlineschalter Wolkenried</h2>
+    <p class="prose">Wolkenried ist eine erfundene Gemeinde mit rund 9'000 Einwohnerinnen und Einwohnern. Das Bauamt behandelt pro Jahr rund 260 Baugesuche, alle auf Papier. Der Gemeinderat hat beschlossen, das Baugesuch online einzuführen: Gesuch einreichen, Status verfolgen, Zirkulation an die Fachstellen, Gebühren bezahlen. Die Plattform liefert die erfundene Lärchwerk Informatik AG als Standardprodukt.</p>
+    <p class="prose">Du bist neu in der Gemeinde und leitest das Projekt in den HERMES-Phasen <b>Realisierung</b> und <b>Einführung</b>. Initialisierung und Konzept sind erledigt. Zwischen den beiden Phasen gibt der <b>Gemeinderat</b> die Einführung frei, auf Grund deines Statusberichts.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Der Rahmen des Ernstfalls</caption>
+        <thead><tr><th>Phase</th><th>Im Leitstand</th><th>Meilenstein</th></tr></thead>
+        <tbody>
+          <tr><th>Realisierung</th><td>Periode 1, Woche 1 bis 4, Tag 1 bis 20, Vorgänge V01 bis V14</td><td>Vorabnahme (Ende V12, Plan Tag 20)</td></tr>
+          <tr><th>Phasenfreigabe</th><td>Ende Periode 1: Statusbericht, dann entscheidet der Gemeinderat</td><td>Freigabe der Einführung</td></tr>
+          <tr><th>Einführung</th><td>Periode 2, Woche 5 bis 8, Tag 21 bis 40, Vorgänge V15 bis V18</td><td>Abnahme (Ende V18, Plan Tag 36)</td></tr>
+          <tr><th>Nachspielzeit</th><td>Tag 41 bis 50, danach endet der Lauf zwangsweise</td><td>–</td></tr>
+          <tr><th>Abschluss</th><td>Abschlussbericht und Nachbesprechung mit Punkten und Lessons Learned</td><td>–</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Termine und Geld (gleich wie in Station 19)</caption>
+        <tbody>
+          <tr><th>Plan (Basisplan, kritischer Pfad)</th><td class="zahl">36 Arbeitstage</td></tr>
+          <tr><th>Terminziel</th><td class="zahl">Tag 40 (Reserve 4 Tage)</td></tr>
+          <tr><th>Budget (Kredit des Gemeinderats)</th><td class="zahl">CHF 180'000</td></tr>
+          <tr><th>Plankosten aller Vorgänge (BAC)</th><td class="zahl">CHF 162'240</td></tr>
+          <tr><th>Reserve für Massnahmen, Überstunden, Abweichungen</th><td class="zahl">CHF 17'760</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><b>Das Team:</b> rund 12 Personen, alle erfunden. Ein Kernteam aus der Verwaltung (zum Beispiel Seraina Caflisch, Fachverantwortliche Baugesuche, und Luca Bernasconi, Informatik), Mitarbeitende aus der Linie mit Teilpensum (Bauamt, Kanzlei, Informatik, Finanzen), drei Fachleute des Lieferanten und eine Beraterin für Datenschutz. Jede Person hat ein Profil von 0 bis 6 in fünf Gebieten: Fachwissen Bau und Verwaltung, Entwicklung, Daten und Schnittstellen, Benutzerführung, Kommunikation und Schulung. Dazu kommen Pensum, Stundensatz, Motivation und Bedürfnisse.</p>
+    <p class="prose"><b>Der kritische Pfad</b> des Basisplans: V01 Kick-off → V02 Soll-Ablauf → V04 Benutzerführung → V09 Formulare → V10 Zirkulation → V11 Integrationstest → V12 Vorabnahme → V16 Betrieb und Support → V17 Pilotbetrieb → V18 Produktivsetzung. Das ergibt 2 + 4 + 3 + 4 + 2 + 3 + 2 + 4 + 8 + 4 = 36 Tage. Fast kritisch sind V05 Schnittstelle (1 Tag Puffer, grösstes Risiko) und V15 Schulung (1 Tag). Wie man so etwas rechnet, zeigt <a href="/lernseiten/pmgt/10-netzplan-und-gantt">Station 10</a>.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Planwert-Kurve PV (kumuliert, Basisplan), dieselben Zahlen wie in Station 19</caption>
+        <thead><tr><th>Ende Tag</th><th class="zahl">5</th><th class="zahl">10</th><th class="zahl">15</th><th class="zahl">20</th><th class="zahl">25</th><th class="zahl">30</th><th class="zahl">35</th><th class="zahl">36</th></tr></thead>
+        <tbody><tr><th>PV in CHF</th><td class="zahl">17'880</td><td class="zahl">63'920</td><td class="zahl">95'280</td><td class="zahl">112'800</td><td class="zahl">129'440</td><td class="zahl">142'240</td><td class="zahl">158'520</td><td class="zahl">162'240</td></tr></tbody>
+      </table>
+    </div>
+
+    <h3>Die Zählweise des Leitstands</h3>
+    <p class="prose">In Station 10 zählen wir wie im Unterricht <b>ab Tag 1</b>: Ein Vorgang mit FA 3 und Dauer 4 arbeitet an den Tagen 3 bis 6. Der Leitstand zeigt dir die Tage ebenfalls ab Tag 1 an («Di, Woche 3 · Tag 12 · Nachmittag»). Intern rechnet er aber mit zwei Zählungen, die <b>bei 0 beginnen</b>:</p>
+    <ul class="prose">
+      <li><b>Takte:</b> Takt 0 ist Montag, Tag 1, Vormittag. Takt 1 ist derselbe Tag am Nachmittag. Allgemein: Takt = 2 × (Tag − 1) + Halbtag, mit Halbtag 0 = Vormittag (8 bis 12 Uhr) und 1 = Nachmittag (13 bis 17 Uhr). Periode 1 sind die Takte 0 bis 39, Periode 2 die Takte 40 bis 79.</li>
+      <li><b>Zeitpunkte im Basisplan:</b> FA = 0 heisst «Beginn am Morgen von Tag 1», FE = 2 heisst «Ende am Abend von Tag 2». Darum gilt im Leitstand FE = FA + Dauer.</li>
+    </ul>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Dieselben Vorgänge in beiden Zählweisen</caption>
+        <thead><tr><th>Vorgang</th><th class="zahl">Dauer</th><th>Leitstand (Zeitpunkte ab 0)</th><th>Station 10 (ab Tag 1)</th><th>Kalender</th></tr></thead>
+        <tbody>
+          <tr><th>V01 Kick-off</th><td class="zahl">2</td><td>FA 0, FE 2</td><td>FA 1, FE 2</td><td>Tag 1 und 2</td></tr>
+          <tr><th>V02 Soll-Ablauf</th><td class="zahl">4</td><td>FA 2, FE 6</td><td>FA 3, FE 6</td><td>Tag 3 bis 6</td></tr>
+          <tr><th>V18 Produktivsetzung</th><td class="zahl">4</td><td>FA 32, FE 36</td><td>FA 33, FE 36</td><td>Tag 33 bis 36</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Das Ende (FE) ist in beiden Zählweisen gleich. Nur der Anfang unterscheidet sich um 1: FA ab Tag 1 = FA im Leitstand + 1. Rechne in der Prüfung immer ab Tag 1 wie in Station 10, und lies im Leitstand einfach den angezeigten Tag.</div>
+    <div id="t23-u-takt-intro"></div>
+  </section>
+
+  <!-- ===== 2 · Besetzen ===== -->
+  <section id="besetzen">
+    <span class="eyebrow">Schritt 2 · Planen und besetzen (Spezifikation 3.2 bis 3.4)</span>
+    <h2>Besetzen: Wer arbeitet woran, in welcher Reihenfolge?</h2>
+    <p class="prose">Vor dem Start besetzt du jeden Vorgang der Realisierung mit mindestens einer Person. Jede Person hat höchstens sechs Zuweisungen mit Priorität A bis F und einem Anteil (25, 50, 75 oder 100&nbsp;% ihrer Kapazität). Ein Vorgang ist erst bearbeitbar, wenn alle Vorgänger fertig sind. Vorgänge der Einführung sind erst nach der Phasenfreigabe durch den Gemeinderat bearbeitbar, also frühestens ab Tag 21.</p>
+    <p class="prose">Wie viel eine Person schafft, zeigt der Leitstand offen. Die wichtigsten Faktoren in eigenen Worten:</p>
+    <div class="t23-kacheln">
+      <div class="t23-kachel"><b>Pensum</b><p>Wer 60&nbsp;% arbeitet, liefert pro Tag 4.8 statt 8 Stunden. Die Plandauer gilt für Vollzeit.</p></div>
+      <div class="t23-kachel"><b>Passung</b><p>Wie gut das Profil der Person zum Vorgang passt, Faktor 0.35 bis 1.15. Eine Kollegin mit starkem Profil im selben Vorgang hilft (Kollegenhilfe).</p></div>
+      <div class="t23-kachel"><b>Motivation</b><p>Bei 100 wirkt sie neutral, bei 50 schafft die Person nur noch 80&nbsp;%.</p></div>
+      <div class="t23-kachel"><b>Teamgrösse</b><p>Mehr Personen als geplant kosten Abstimmung: eine mehr ergibt 95&nbsp;%, zwei mehr 88&nbsp;% Leistung.</p></div>
+      <div class="t23-kachel"><b>Lernkurve</b><p>Wer neu an einem Gebiet arbeitet, startet mit 90&nbsp;% und erreicht nach 16 Stunden die volle Leistung.</p></div>
+      <div class="t23-kachel"><b>Überstunden</b><p>Kurz helfen sie (+20&nbsp;% oder +40&nbsp;% Kapazität), erhöhen aber sofort die Fehlerrate. Die Motivation sinkt, sobald die Serie die persönliche Toleranz übersteigt (2, 5 oder 8 Tage am Stück), die Leistung nach mehr als 5 Tagen.</p></div>
+    </div>
+    <p class="prose">Klick dich durch eine typische Besetzungsfrage am Onlineschalter. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf. Die Rechnung ist vereinfacht (ohne Lernkurve, Motivation, Teamphase und Eigenschaften wie «gründlich»), die Passungen stammen aus der Spezifikation.</p>
+    <div id="t23-stepper-besetzung"></div>
+    <div class="note"><b>Merke:</b> Beste Leute mit vollem Pensum auf den kritischen Pfad. Teilpensen und schwache Passung gehören auf Vorgänge mit Puffer. Vor dem Start zeigt dir die <b>Plan-Prüfung</b> Warnungen: kritische Vorgänge, die länger dauern als geplant, Personen über 100&nbsp;%, Passung unter 0.8, Teilpensen auf dem kritischen Pfad, hohe Risiken ohne Massnahme, Vorgänge ohne Review.</div>
+  </section>
+
+  <!-- ===== 3 · Führen ===== -->
+  <section id="fuehren">
+    <span class="eyebrow">Schritt 3 · Durchführen und führen (Spezifikation 3.5 bis 3.12)</span>
+    <h2>Führen: Posteingang, Team, Risiken, Qualität, Bericht</h2>
+    <p class="prose">Sobald du die Planung abschliesst, läuft die Zeit. Ab jetzt steuerst du mit sieben Hebeln. Jeder entspricht einer Kompetenz der ICB.</p>
+    <div class="t23-kacheln">
+      <div class="t23-kachel"><b>Zeitraffer</b><p>Pause, 1× (8 Sekunden je Halbtag), 2× und 4×. Ein neues Ereignis, das Periodenende und das Projektende halten die Zeit an.</p></div>
+      <div class="t23-kachel"><b>Posteingang mit Entscheiden</b><p>Rund 40 Lagen per E-Mail, Anruf oder Besuch. Du wählst eine Option. Danach erklärt dir der Coach Mia Baumann den Entscheid, mit ICB-Bezug und Link zur passenden Station.</p></div>
+      <div class="t23-kachel"><b>Gespräche und Anlässe</b><p>Ein Gespräch (1 Stunde) hebt die Motivation, bei Bedürfnis Anerkennung oder Klarheit stärker. Mittagessen, Teamabend und Weiterbildung kosten Geld. Dein Kalender fasst höchstens 4 Termine pro Tag.</p></div>
+      <div class="t23-kachel"><b>Risikoregister</b><p>Zehn Risiken mit Wahrscheinlichkeit × Auswirkung. Massnahmen kosten Geld oder Stunden. Prüf das Register jede Woche und klick «Register geprüft».</p></div>
+      <div class="t23-kachel"><b>Reviews</b><p>0 bis 3 Reviews je Vorgang. Ein Review kostet 3&nbsp;% des Planaufwands und findet die Hälfte der versteckten Fehler, die dann je 1 Stunde Korrektur brauchen.</p></div>
+      <div class="t23-kachel"><b>Besetzung ändern</b><p>Jederzeit möglich. Wer das Bedürfnis Klarheit hat, verliert ab der dritten Änderung in einer Woche Motivation.</p></div>
+      <div class="t23-kachel"><b>Statusbericht an den Gemeinderat</b><p>Ende Periode 1 und am Projektende: Ampeln, Fertigstellungsgrad, Prognosen, Abweichungen, Massnahmen, Anträge. Der Gemeinderat entscheidet über Phasenfreigabe, Budgetnachtrag und Änderungsanträge.</p></div>
+    </div>
+
+    <h3>Fristen: Aufschieben ist teuer</h3>
+    <ol class="t23-fluss">
+      <li><b>E-Mail ✉:</b> Frist bis Freitagabend der laufenden Woche.<p class="hint">Kommt die Mail an einem Freitag, gilt das Ende der Folgewoche.</p></li>
+      <li><b>Anruf ☎ oder Besuch 🚪:</b> sofort entscheiden oder «Bis morgen überlegen» (2 Takte).<p class="hint">Manche Lagen erlauben keinen Aufschub.</p></li>
+      <li><b>Frist abgelaufen:</b> Die Gemeindeschreiberin Claudia Wyss entscheidet für dich.<p class="hint">Meist wählt sie die schlechteste Option. Dazu sinkt ihre Zufriedenheit, und der Standardentscheid zählt in der Führungsnote 0 Punkte plus einen Abzug.</p></li>
+    </ol>
+    <div class="note"><b>Merke:</b> Ein Entscheid, den du nicht triffst, wird trotzdem getroffen, nur nicht von dir. Die ICB nennt das Vermeiden von Aufschieben ausdrücklich als Teil des Selbstmanagements (<span class="icb">ICB 2.01</span>, Swiss ICB 4.4.1.3).</div>
+
+    <h3>Qualität: früh finden ist billig</h3>
+    <p class="prose">Bei der Arbeit entstehen Fehler, mehr bei schlechter Passung, langen Überstunden und tiefer Motivation. Ein Review findet sie früh: 1 Stunde Korrektur je Fehler im eigenen Vorgang. Ohne Review finden erst die Tests (Integrationstest, Vorabnahme, Pilot) die Fehler: dann kostet jeder Fehler 3 Stunden, und zwar im Testvorgang, der auf dem kritischen Pfad liegt. Was niemand findet, bleibt als <b>Restmangel</b> bei der Abnahme und kostet Qualitätspunkte. Mehr dazu in <a href="/lernseiten/pmgt/20-qualitaet-und-aenderungen">Station 20</a>.</p>
+
+    <h3>Der Statusbericht und der Abgleich</h3>
+    <p class="prose">Am Ende von Periode 1 hält die Zeit an. Du setzt sechs Ampeln (Gesamt, Termine, Kosten, Qualität, Team, Risiken), schätzt Fertigstellungsgrad, Endtag und Endkosten, beschreibst die Abweichungen, wählst Massnahmen und stellst Anträge. Dann vergleicht der Leitstand deine Angaben mit den gemessenen Werten und berechnet die <b>Ehrlichkeit H</b> von 0 bis 100:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Abzüge bei der Ehrlichkeit (Spezifikation 3.11)</caption>
+        <thead><tr><th>Was du meldest</th><th class="zahl">Abzug</th></tr></thead>
+        <tbody>
+          <tr><th>Ampel eine Stufe besser als gemessen</th><td class="zahl">−10 (Gesamtampel −15)</td></tr>
+          <tr><th>Ampel zwei Stufen besser</th><td class="zahl">−25 (Gesamtampel −30)</td></tr>
+          <tr><th>Ampel schlechter als gemessen (Schwarzmalerei)</th><td class="zahl">−5</td></tr>
+          <tr><th>Fertigstellungsgrad mehr als 10 Prozentpunkte neben EV ÷ BAC</th><td class="zahl">−10</td></tr>
+          <tr><th>Endtag mehr als 2 Tage früher als die Prognose des Leitstands</th><td class="zahl">−15</td></tr>
+          <tr><th>Endkosten unter 95&nbsp;% der Kostenprognose EAC</th><td class="zahl">−15</td></tr>
+          <tr><th>Gelber oder roter Bereich ohne passende Massnahme</th><td class="zahl">−5 je Bereich</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Unter 70 gilt der Bericht als <b>Schönfärberei</b>: Die Nachbesprechung stellt «gemeldet» und «gemessen» nebeneinander. Der Gemeinderat entscheidet danach: Ist die Vorabnahme fertig, gibt er die Einführung frei. Ist sie es nicht, gibt er sie frei, wenn dein Bericht ehrlich ist (H mindestens 70) und mindestens eine Massnahme enthält. Sonst gibt er sie nur mit Auflage frei, und du schreibst jede Woche einen Zusatzbericht. Wie man ehrlich berichtet, übst du in <a href="/lernseiten/pmgt/19-statusbericht">Station 19</a>.</p>
+  </section>
+
+  <!-- ===== 4 · Kennzahlen und Punkte ===== -->
+  <section id="kennzahlen">
+    <span class="eyebrow">Schritt 4 · Kennzahlen, Punkte, Sterne, Abzeichen (Spezifikation 3.10, 3.13)</span>
+    <h2>Woran der Leitstand dich misst</h2>
+    <p class="prose">Oben im Leitstand stehen sechs Kacheln. Jede zeigt einen Wert in Prozent, eine Ampel mit Form und Wort (● Grün, ▲ Gelb, ■ Rot) und einen Trendpfeil. Wie im Unterricht gilt: <b>100&nbsp;% entspricht dem Plan, mehr ist besser</b>.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die sechs Kennzahlen</caption>
+        <thead><tr><th>Kennzahl</th><th>So rechnet der Leitstand</th><th><span class="t23-sym t23-gruen">● Grün</span> ab</th></tr></thead>
+        <tbody>
+          <tr><th>Termine (SPI)</th><td>Fertigstellungswert ÷ Planwert, EV ÷ PV</td><td>SPI 0.95 und Prognose bis Tag 40</td></tr>
+          <tr><th>Kosten (CPI)</th><td>Fertigstellungswert ÷ Istkosten, EV ÷ AC; daraus EAC = BAC ÷ CPI</td><td>CPI 0.95 und EAC höchstens Budget</td></tr>
+          <tr><th>Qualität</th><td>Qualitätsindex aus den unentdeckten Fehlern je 100 Stunden; 100&nbsp;% entspricht guter Passung und einem Review je Vorgang</td><td>95&nbsp;%</td></tr>
+          <tr><th>Motivation</th><td>Teammotivation, nach Pensum gewichtet</td><td>90&nbsp;%</td></tr>
+          <tr><th>Stakeholder</th><td>Gewichtete Zufriedenheit von 12 Stakeholdern (Gewicht = Einfluss × Interesse), gemessen am Startwert (Start = 100&nbsp;%)</td><td>95&nbsp;% (Hilfsampel der Kachel; kein Bereich im Statusbericht)</td></tr>
+          <tr><th>Risiko-Index</th><td>Wie viel des Risikowerts mit Massnahmen abgedeckt ist (60&nbsp;%) und wie regelmässig du das Register prüfst (40&nbsp;%), höchstens 120&nbsp;%</td><td>95&nbsp;%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Tipp:</b> Ohne Massnahmen zeigt der Risiko-Index schon am Start 48&nbsp;% (rot). Das ist Absicht: Er lenkt dich in der Planung auf das Risikoregister. Die Herleitung von SPI, CPI und EAC steht in <a href="/lernseiten/pmgt/18-earned-value">Station 18</a>.</div>
+
+    <h3>Punkte von 0 bis 1000</h3>
+    <p class="prose">Nach dem Abschlussbericht rechnet der Leitstand deine Punkte aus sechs Teilen. Jeder Teil wird gerundet, die Summe ergibt die Punkte. E ist der Endtag (Ende von V18).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Punkte im Ernstfall</caption>
+        <thead><tr><th>Teil</th><th class="zahl">Max.</th><th>So entstehen die Punkte</th></tr></thead>
+        <tbody>
+          <tr><th>Termin</th><td class="zahl">250</td><td>E bis Tag 38: 250. Bis Tag 40: −10 je Tag nach 38. Nach Tag 40: 230 − 23 je Tag nach 40. Abbruch: 0.</td></tr>
+          <tr><th>Kosten</th><td class="zahl">200</td><td>Istkosten bis 95&nbsp;% des Budgets: 200. Bis zum Budget: linear auf 160. Darüber sinkt es weiter, bei 15&nbsp;% Überschreitung auf 0.</td></tr>
+          <tr><th>Qualität</th><td class="zahl">200</td><td>Restmängel bei der Abnahme: 5 oder weniger ergibt 200, 25 oder mehr ergibt 0.</td></tr>
+          <tr><th>Stakeholder</th><td class="zahl">150</td><td>Zufriedenheit am Ende (0 bis 100): ab 90 volle Punkte, 40 oder weniger ergibt 0.</td></tr>
+          <tr><th>Team</th><td class="zahl">100</td><td>Mittlere Motivation über den ganzen Lauf: ab 100 volle Punkte, 60 oder weniger ergibt 0; −10 je Ausfall durch Überlastung.</td></tr>
+          <tr><th>Führung</th><td class="zahl">100</td><td>40 für die Ehrlichkeit der Berichte, 30 für den mittleren Risiko-Index, 30 für die Qualität deiner Entscheide (gut 1, mittel 0.5, schlecht 0; Standardentscheide kosten extra).</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><b>Sterne:</b> ★ ab 500 Punkten, ★★ ab 680, ★★★ ab 820. Der Einführungslauf rechnet gleich, aber mit Terminziel Tag 10, und zählt nicht für deinen Bestwert. Deine Bestwerte zeigt die Startseite des Leitstands.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Abzeichen (Namen laut Spezifikation, Vorschlag)</caption>
+        <thead><tr><th>Abzeichen</th><th>Bedingung</th></tr></thead>
+        <tbody>
+          <tr><th>Erster Schichtwechsel</th><td>Einführungslauf abgeschlossen</td></tr>
+          <tr><th>Onlineschalter eröffnet</th><td>Ernstfall abgeschlossen, egal mit wie vielen Punkten</td></tr>
+          <tr><th>Leitstand-Profi</th><td>Ernstfall mit mindestens 820 Punkten</td></tr>
+          <tr><th>Punktlandung</th><td>Endtag höchstens 40 und Istkosten höchstens Budget ohne Nachträge</td></tr>
+          <tr><th>Klartext</th><td>alle Berichte des Laufs mit Ehrlichkeit mindestens 85</td></tr>
+          <tr><th>Teamgeist</th><td>Teammotivation nie unter 80, kein Ausfall durch Überlastung</td></tr>
+          <tr><th>Risikoprofi</th><td>mittlerer Risiko-Index mindestens 100&nbsp;% und mindestens 3 Risiken vor ihrem Zeitfenster behandelt</td></tr>
+          <tr><th>Null-Fehler-Abnahme</th><td>höchstens 3 Restmängel</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Abzeichen und Punkte im Konto gibt es nur für Läufe mit neuem Startwert. Wiederholst du einen Lauf mit demselben Startwert (gleiche Zufälle), ist das eine gute Übung, zählt aber nicht. Sonst würdest du den Zufall auswendig lernen statt die Führung.</p>
+  </section>
+
+  <!-- ===== 5 · Leitstand ===== -->
+  <section id="leitstand">
+    <span class="eyebrow">Schritt 5 · Themeneigene Interaktion</span>
+    <h2>Ab in den Leitstand</h2>
+    <div class="t23-start">
+      <h3>Leitstand · Onlineschalter Wolkenried</h3>
+      <p class="hint">Fang mit dem Einführungslauf «Hundeanmeldung online» an: 2 Wochen, 6 Vorgänge, 4 Personen, mit eingeblendeten Hinweisen. Danach wagst du den Ernstfall (2 Perioden à 4 Wochen). Ein Ernstfall dauert mit Ereignissen rund 75 bis 90 Minuten. Du kannst jederzeit pausieren und später weiterspielen; dein Lauf ist im Konto gespeichert.</p>
+      <div class="t23-knoepfe">
+        <a class="btn primary t23-gross" href="/leitstand?start=einfuehrung">▶ Einführungslauf starten</a>
+        <a class="btn t23-gross" href="/leitstand">⚑ Leitstand öffnen</a>
+      </div>
+      <p class="hint">Einführungslauf geschafft? Dann direkt <a href="/leitstand?start=ernstfall">zum Ernstfall «Onlineschalter Wolkenried»</a>. Deine Bestwerte siehst du auf der Startseite des Leitstands.</p>
+      <p class="hint"><b>Zugang:</b> Der Leitstand ist eine App-Seite für Pro- und Admin-Konten. Mit einem Free-Konto siehst du dort einen Hinweis mit der Möglichkeit zum Upgrade. Diese Station mit Theorie, Übungen und Selbsttest funktioniert für alle Konten. Sobald du einen Ernstfall abgeschlossen hast, meldet der Leitstand die Station als erledigt.</p>
+    </div>
+
+    <h3>Spielanleitung in neun Schritten</h3>
+    <p class="prose">So läuft ein Lauf ab, von der Projektbeschreibung bis zur Nachbesprechung. Klick dich durch, bevor du startest.</p>
+    <div id="t23-stepper-anleitung"></div>
+
+    <h3>Kennzahlen-Quiz: Was zeigt welche Kachel?</h3>
+    <p class="prose">Bevor du startest, solltest du die sechs Kacheln auf einen Blick lesen können. Ordne jede Beschreibung der richtigen Kennzahl zu.</p>
+    <div class="card stack"><div id="t23-sortierer-kennzahlen"></div></div>
+
+    <h3>Drei Tipps, die am meisten Punkte bringen</h3>
+    <div class="note tipp"><b>1 · Kritischer Pfad zuerst.</b> Besetze V01, V02, V04, V09, V10, V11, V12, V16, V17 und V18 mit den passendsten Leuten in Vollzeit. Gib Personen mit Leerlauf einen Vorgang mit Priorität B, den sie vorziehen können. Behalte V05 im Auge: ein Tag Puffer, grösstes Risiko.</div>
+    <div class="note tipp"><b>2 · Ehrlich berichten.</b> Setz die Ampeln nach den Zahlen, nicht nach der Hoffnung. Bring zu jeder gelben oder roten Ampel eine Massnahme mit und, wenn nötig, einen Antrag. Ein ehrlicher gelber Bericht bringt mehr Punkte als ein geschöntes Grün.</div>
+    <div class="note tipp"><b>3 · Nie aufschieben.</b> Entscheide jede Lage, solange du sie selbst entscheiden kannst. Prüf jeden Freitag das Risikoregister. Ein Standardentscheid kostet dich Führungspunkte und meist noch mehr.</div>
+    <div class="card stack">
+      <h3>Checkliste für jeden Lauf</h3>
+      <ul class="t23-check">
+        <li><b>Vor dem Start:</b> Projektbeschreibung lesen · kritischen Pfad besetzen · Pensum einrechnen · Reviews auf den kritischen Vorgängen · Massnahmen für alle Risiken ab Wert 12 · Plan-Prüfung ohne offene Warnung.</li>
+        <li><b>Jeden Tag:</b> Posteingang leeren · Leerlauf vermeiden · Überstunden höchstens wenige Tage.</li>
+        <li><b>Jeden Freitag:</b> Kennzahlen ansehen · Risikoregister prüfen · ein Gespräch mit der Person, deren Motivation am stärksten fällt.</li>
+        <li><b>Am Periodenende:</b> Ampeln nach der Regel · Abweichung mit Ursache und Auswirkung · Massnahmen · Anträge · Periode 2 neu besetzen.</li>
+        <li><b>Nach dem Lauf:</b> Nachbesprechung lesen · Lessons Learned notieren · Reflexion unten schreiben.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Nach dem Lauf ===== -->
+  <section id="nachher">
+    <span class="eyebrow">Schritt 6 · Nach dem Lauf (Swiss ICB 4.5.10.6, 4.4.1.5)</span>
+    <h2>Nach dem Lauf: Lessons Learned</h2>
+    <p class="prose">Ein Lauf ohne Auswertung ist nur ein Spiel. Die Nachbesprechung des Leitstands zeigt dir einen Zeitstrahl mit den Wendepunkten deines Laufs, die Punkte je Teil, den Abgleich deiner Berichte und bis zu fünf Lessons Learned. Die ICB verlangt genau das am Ende einer Phase oder eines Projekts: Ergebnisse und Erfahrungen auswerten und so dokumentieren, dass sie künftigen Projekten dienen (<span class="icb">ICB 3.10</span>, Indikator 4.5.10.6). Für dich selbst heisst das: Verantwortung für das eigene Lernen übernehmen (<span class="icb">ICB 2.01</span>, Indikator 4.4.1.5).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Häufige Lessons Learned des Leitstands (Auswahl aus Spezifikation 3.14)</caption>
+        <thead><tr><th>Wenn im Lauf …</th><th>Lehre</th><th>Station</th></tr></thead>
+        <tbody>
+          <tr><th>der kritische Pfad schwach oder mit Teilpensen besetzt war</th><td>Beste Leute auf den kritischen Pfad, Pensum einrechnen</td><td>10, 11</td></tr>
+          <tr><th>10 oder mehr Fehler erst im Test gefunden wurden</th><td>Reviews sind günstiger als Korrektur im Test</td><td>20</td></tr>
+          <tr><th>jemand mehr als 10 Tage Überstunden machte</th><td>Überstunden helfen kurz, schaden lang</td><td>11, 17</td></tr>
+          <tr><th>ein Standardentscheid fiel</th><td>Aufschieben ist teuer: entscheiden oder delegieren</td><td>17</td></tr>
+          <tr><th>ein Bericht eine Ehrlichkeit unter 70 hatte</th><td>Ehrlich berichten, Massnahmen und Anträge mitbringen</td><td>19</td></tr>
+          <tr><th>der Risiko-Index im Mittel unter 80&nbsp;% lag</th><td>Risikoregister wöchentlich pflegen</td><td>13</td></tr>
+          <tr><th>die Teammotivation länger unter 75 lag</th><td>Gespräche und Anlässe gezielt einsetzen</td><td>16</td></tr>
+          <tr><th>der Umfang ohne Antrag geändert wurde</th><td>Änderungen über den Änderungsprozess</td><td>06, 20</td></tr>
+          <tr><th>die Linie Leute abzog und du nachgabst oder blocktest</th><td>Mit der Linie über Interessen verhandeln</td><td>15</td></tr>
+          <tr><th>die Phasenfreigabe nur mit Auflage kam</th><td>Meilensteine sind Qualitätstore</td><td>03</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Schreib nach deinem Ernstfall die beiden Antworten unten. Sie bleiben nur auf dieser Seite und werden nirgends gespeichert. Kopier sie in deine Notizen, wenn du sie am 14.11. dabeihaben willst.</p>
+    <div id="t23-reflexion-fehler"></div>
+    <div id="t23-reflexion-bericht"></div>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst rechnen, einordnen, entscheiden</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zehn Übungen in fünf Arten: rechnen, zuordnen, wahr oder falsch, Fallentscheid und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und eine offene Frage, die du nach einem Raster selbst bewertest. Die Lösungen zu den Rechenaufgaben folgen den Regeln der Leitstand-Spezifikation; Musterlösungen sind eigene Lösungen, nicht vom Dozenten bestätigt.</p>
+    <div id="t23-u-takt"></div>
+    <div id="t23-u-dauer"></div>
+    <div id="t23-u-massnahmen"></div>
+    <div id="t23-u-wf"></div>
+    <div id="t23-u-linie"></div>
+    <div id="t23-u-pfad"></div>
+    <div id="t23-u-punkte"></div>
+    <div id="t23-u-ehrlich"></div>
+    <div id="t23-u-aufschub"></div>
+    <div id="t23-u-reflexion"></div>
+  </section>
+
+  <!-- ===== Film ===== -->
+  <section id="film">
+    <span class="eyebrow">Film · Erst zuschauen, dann selbst spielen</span>
+    <h2>So läuft ein Ernstfall ab</h2>
+    <p class="prose">Ein erfundener Beispiellauf von der Planung bis zur Nachbesprechung, in 15 Szenen. Die Zahlen folgen den Regeln des Leitstands, der Verlauf ist ausgedacht: In deinem Lauf kommen andere Zufälle. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t23-film"></div>
+    <details class="sol"><summary>Das ganze Logbuch als Text</summary>
+      <div class="t23-log-fertig" id="t23-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Fallen im Leitstand und in der Simulation</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>Plandauer ohne Pensum.</b> Die Plandauer gilt für Vollzeit und volle Passung. Wer zwei Teilzeitleute auf einen Vorgang für «2 Personen» setzt, verliert Tage auf dem kritischen Pfad.</div>
+    <div class="note falle"><b>Mehr Leute, mehr Tempo?</b> Jede Person über dem Plan kostet Abstimmung (eine mehr: 95&nbsp;%, zwei mehr: 88&nbsp;% Leistung) und erhöht die Fehlerrate. Gezielt verstärken, nicht stapeln.</div>
+    <div class="note falle"><b>Aufschieben bis zur Frist.</b> Bei Fristablauf entscheidet die Gemeindeschreiberin, meist schlecht. «Bis morgen überlegen» ist erlaubt, «nie» nicht.</div>
+    <div class="note falle"><b>Risikoregister nur am Anfang.</b> Der Risiko-Index misst auch, wie regelmässig du prüfst. Einmal Massnahmen wählen und das Register dann vergessen drückt die Führungspunkte.</div>
+    <div class="note falle"><b>Reviews weglassen, um Zeit zu sparen.</b> Ein Fehler kostet im Review 1 Stunde, im Test 3 Stunden auf dem kritischen Pfad, als Restmangel Qualitätspunkte.</div>
+    <div class="note falle"><b>Überstunden als Dauerlösung.</b> Die Fehlerrate steigt ab dem ersten Tag, die Linienvorgesetzten verlieren jede Woche Zufriedenheit, und nach mehr als 5 Tagen am Stück sinkt die Leistung. Die Motivation fällt schon früher bei Personen mit tiefer Toleranz (Martin, Thomas, Urs, Sabine: ab 3 Tagen).</div>
+    <div class="note falle"><b>Grün melden, weil man aufholen will.</b> Der Leitstand vergleicht jede Ampel mit den Zahlen. Unter einer Ehrlichkeit von 70 gilt der Bericht als Schönfärberei, und der Gemeinderat verliert Vertrauen.</div>
+    <div class="note falle"><b>Zählweise mischen.</b> Der Leitstand zählt Takte und Zeitpunkte ab 0 und zeigt Tage ab 1. In der Prüfung rechnest du ab Tag 1 wie in Station 10. Takt 6 ist Tag 4 Vormittag, nicht Tag 6.</div>
+    <div class="note falle"><b>Einführung vor der Freigabe besetzen und warten.</b> Vorgänge der Einführung sind vor der Phasenfreigabe gesperrt. Plan Periode 2 nach dem Gemeinderat neu, statt Leute auf gesperrten Vorgängen leer laufen zu lassen.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · Regeln des Leitstands</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, die hinter der Regel steckt, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t23-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Im Leitstand leitest du die <b>Realisierung und Einführung</b> des Onlineschalters Wolkenried: 2 Perioden à 4 Wochen, Plan 36 Tage, Terminziel Tag 40, Budget CHF 180'000, BAC CHF 162'240. Der <b>Gemeinderat</b> gibt die Einführung frei.</li>
+      <li><b>Besetzen</b> heisst: Prioritäten A bis F, Pensum und Passung einrechnen, beste Leute auf den <b>kritischen Pfad</b>. Die Plan-Prüfung zeigt Warnungen vor dem Start.</li>
+      <li>Sechs <b>Kennzahlen</b>: SPI, CPI, Qualität, Motivation, Stakeholder, Risiko-Index. 100&nbsp;% = Plan, mehr ist besser.</li>
+      <li><b>Nie aufschieben:</b> Bei Fristablauf entscheidet jemand anders, meist schlecht. Risikoregister jede Woche prüfen, Reviews statt später Korrektur.</li>
+      <li>Der <b>Statusbericht</b> wird mit den Zahlen abgeglichen. Unter einer Ehrlichkeit von 70 gilt er als Schönfärberei.</li>
+      <li><b>Punkte</b> 0 bis 1000 aus Termin (250), Kosten (200), Qualität (200), Stakeholdern (150), Team (100) und Führung (100); Sterne ab 500, 680 und 820. Danach zählt die Auswertung: Lessons Learned für den 14.11.</li>
+      <li><b>Zählweise:</b> Takte und Zeitpunkte ab 0 (Takt = 2 × (Tag − 1) + Halbtag), angezeigt werden Tage ab 1.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t23-ziele">
+        <li><span class="icb">ICB 3.10</span> Planung und Steuerung: Indikatoren «Bericht über den Projektfortschritt erstatten» (Swiss ICB 4.5.10.4) und «Eine Phase oder das Projekt abschliessen und evaluieren» mit Lessons-Learned-Bericht (4.5.10.6).</li>
+        <li><span class="icb">ICB 2.01</span> Selbstreflexion und Selbstmanagement (Swiss ICB 4.4.1): Aufschieben und Vertagen vermeiden (Beschreibung zu Indikator 4.4.1.3), Verantwortung für das eigene Lernen (4.4.1.5). <span class="icb">ICB 3.01</span> Projektdesign: Lessons Learned aus anderen Projekten nutzen und weitergeben (4.5.1.2).</li>
+        <li><span class="icb">ICB 3.04</span> Ablauf und Termine (kritischer Pfad), <span class="icb">ICB 3.08</span> Ressourcen (Pensum, Passung, Überstunden), <span class="icb">ICB 3.11</span> Chancen und Risiken (Register wöchentlich), <span class="icb">ICB 3.06</span> Qualität (Review gegenüber später Korrektur), <span class="icb">ICB 2.02</span> Integrität (ehrlicher Bericht), <span class="icb">ICB 2.05</span> Führung, andere motivieren (Gespräche, Anlässe; Swiss ICB 4.4.5).</li>
+        <li>Spielregeln dieser Station: Zählweise (Takt = 2 × (Tag − 1) + Halbtag), Fristen der Ereignisse, Abzüge bei der Ehrlichkeit, Punkteschema und Sterne.</li>
+        <li>Fundstellen: LB 7 F.3, Zielsetzungen («Rahmenbedingungen für die Projektsimulation») und Literatur; Übersicht Lektionenblöcke (LB 8/9 Projektsimulation am 14.11., LB 10 am 18.11. mit Auswertung der Simulation); Vorlage Statusbericht zu LB 8/9 (Kennzahlenliste); Modulbeschreibung (computergestützte Projektsimulation mit messbarem Feedback). Ablauf des Simulationstags: <a href="/lernseiten/pmgt/22-simulation-verstehen">Station 22</a>.</li>
+        <li>Gubelmann/Sommer: Kapitel 23 «Führung», S. 270–279, und Kapitel 24 «Teamarbeit», S. 280–289 (Lektüre zu LB 7, die direkt vor der Simulation liegt).</li>
+      </ul>
+    </div>
+    <footer>Station 23 des Lernpfads PMGT. Gemeinde Wolkenried, Lärchwerk Informatik AG und alle Personen frei erfunden. Spielregeln und Zahlen aus der Leitstand-Spezifikation (docs/leitstand-spezifikation.md); Quellen: LB 7, Unterlagen zu LB 8/9, Swiss ICB 4.0, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const SYM = {
+    gruen: '<span class="t23-sym t23-gruen">● Grün</span>',
+    gelb: '<span class="t23-sym t23-gelb">▲ Gelb</span>',
+    rot: '<span class="t23-sym t23-rot">■ Rot</span>'
+  };
+
+  /* ---------- Schritt 0: steuern oder messen ---------- */
+  L.sortierer("#t23-sortierer-steuern", {
+    kategorien: ["Du steuerst", "Der Leitstand misst"],
+    elemente: [
+      { html: "Wer an V02 mit Priorität A arbeitet", kategorie: "Du steuerst", erklaerung: "Die Besetzung legst du selbst fest, vor dem Start und jederzeit im Lauf." },
+      { html: "Der SPI am Ende von Woche 2", kategorie: "Der Leitstand misst", erklaerung: "SPI = EV ÷ PV folgt aus dem, was dein Team geschafft hat. Du kannst ihn nur über deine Entscheide beeinflussen." },
+      { html: "Ob ein Vorgang ein oder zwei Reviews bekommt", kategorie: "Du steuerst", erklaerung: "Reviews setzt du je Vorgang, 0 bis 3." },
+      { html: "Die Motivation von Martin nach drei Tagen Überstunden", kategorie: "Der Leitstand misst", erklaerung: "Die Überstunden hast du angeordnet, die Motivation ist die Folge." },
+      { html: "Ein Einzelgespräch am Donnerstagvormittag", kategorie: "Du steuerst", erklaerung: "Gespräche und Anlässe trägst du in deinen Kalender ein, höchstens 4 Termine pro Tag." },
+      { html: "Die Ehrlichkeit deines Statusberichts", kategorie: "Der Leitstand misst", erklaerung: "Du füllst den Bericht aus, der Leitstand vergleicht ihn mit den Zahlen und berechnet die Ehrlichkeit." },
+      { html: "Eine Massnahme gegen das Risiko «Schnittstelle unterschätzt»", kategorie: "Du steuerst", erklaerung: "Massnahmen im Risikoregister wählst du. Ob das Risiko trotzdem eintritt, entscheidet der Zufall." },
+      { html: "Die Zufriedenheit des Bauverwalters", kategorie: "Der Leitstand misst", erklaerung: "Sie ändert sich durch deine Entscheide, Überstunden seiner Leute und Ereignisse." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Zählweise ---------- */
+  L.zahlAufgabe("#t23-u-takt-intro", {
+    titel: "Kurz rechnen: Welcher Tag ist Takt 27?",
+    frage: "<p>Der Leitstand meldet ein Ereignis in Takt 27. An welchem Tag (Zählweise ab Tag 1, wie der Leitstand ihn anzeigt) trifft es ein?</p>",
+    antwort: 14,
+    einheit: "Tag",
+    hinweise: ["Zwei Takte sind ein Tag. Takt 0 und 1 gehören zu Tag 1.", "Tag (ab 0) = ganzzahliger Teil von 27 ÷ 2."],
+    loesungsweg: [
+      "27 ÷ 2 = 13.5, ganzzahliger Teil 13: Das ist der Tag ab 0.",
+      "Angezeigt wird Tag 13 + 1 = 14.",
+      "27 ist ungerade, also Nachmittag. Woche: 13 ÷ 5 = 2 Rest 3, also Woche 3, Wochentag Nr. 3 ab Montag = Donnerstag.",
+      "Der Leitstand zeigt: «Do, Woche 3 · Tag 14 · Nachmittag». Probe: 2 × (14 − 1) + 1 = 27."
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper Besetzung V02 ---------- */
+  L.stepper("#t23-stepper-besetzung", {
+    titel: "Wer kommt auf V02?",
+    text: "Vorgang V02 «Soll-Ablauf und Formularinhalte» hat <span data-link='aufw'>64 Stunden Aufwand</span>, geplant mit <span data-link='plan'>2 Personen in 4 Tagen</span>. Er liegt auf dem <span data-link='kp'>kritischen Pfad (Puffer 0)</span>. Du besetzt ihn mit <span data-link='ser'>Seraina (100 %, Passung 1.00)</span> und <span data-link='mar'>Martin (60 %, Passung 0.83)</span>. Zur Wahl steht auch <span data-link='ayl'>Aylin (80 %, Passung 0.91 neben Seraina)</span>.",
+    schritte: [
+      { html: "Plandauer = <span data-link='aufw'>64 h</span> ÷ (<span data-link='plan'>2 × 8 h</span>) = <span data-link='plan'>4 Tage</span>",
+        warum: "So rechnet der Basisplan, wie in Station 10. Er nimmt Vollzeit und volle Passung an." },
+      { html: "effektive Stunden je Tag ≈ Pensum × 8 h × Passung",
+        warum: "Vereinfacht: Nur die effektiven Stunden bauen den Restaufwand ab. Lernkurve, Motivation, Teamphase und Eigenschaften lassen wir hier weg; sie drücken die Leistung am Anfang noch zusätzlich." },
+      { html: "<span data-link='ser'>Seraina: 1.0 × 8 × 1.00 = 8.0</span> &nbsp;+&nbsp; <span data-link='mar'>Martin: 0.6 × 8 × 0.832 = 4.0</span> &nbsp;=&nbsp; 12.0 h je Tag",
+        warum: "Martin arbeitet nur 60&nbsp;% und hat im Gebiet Benutzerführung eine Lücke. Er liefert pro Tag nur halb so viel wie Seraina." },
+      { html: "Dauer ≈ <span data-link='aufw'>64</span> ÷ 12.0 = 5.3 Tage, also 1.3 Tage über dem Plan",
+        warum: "V02 hat <span data-link='kp'>keinen Puffer</span>. Jeder Tag mehr verschiebt alle Nachfolger auf dem kritischen Pfad und damit die Abnahme." },
+      { html: "<span data-link='ser'>8.0</span> + <span data-link='ayl'>Aylin: 0.8 × 8 × 0.905 = 5.8</span> = 13.8 h je Tag → 64 ÷ 13.8 = 4.6 Tage",
+        warum: "Aylin hat mehr Pensum und passt neben Seraina besser (Kollegenhilfe im Fachgebiet Bau). Das spart rund 0.7 Tage auf dem kritischen Pfad." },
+      { html: "Entscheid: <span data-link='ser'>Seraina</span> und <span data-link='ayl'>Aylin</span> auf V02 (Priorität A). <span data-link='mar'>Martin</span> auf einen Vorgang mit Puffer, wo sein Fachwissen Bau zählt.",
+        warum: "Beste Leute mit vollem Pensum auf den kritischen Pfad, Teilpensen auf Vorgänge mit Puffer. Das ist die häufigste Lehre der Nachbesprechung (ICB 3.04 Ablauf und Termine, ICB 3.08 Ressourcen)." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Spielanleitung ---------- */
+  L.stepper("#t23-stepper-anleitung", {
+    titel: "Ein Lauf von A bis Z",
+    text: "Du <span data-link='lesen'>liest den Auftrag</span>, <span data-link='plan'>besetzt die Vorgänge</span>, <span data-link='risiko'>pflegst Risiken und Reviews</span>, <span data-link='zeit'>lässt die Zeit laufen</span>, <span data-link='post'>entscheidest im Posteingang</span>, <span data-link='team'>führst das Team</span>, <span data-link='bericht'>berichtest dem Gemeinderat</span> und <span data-link='lernen'>wertest den Lauf aus</span>.",
+    schritte: [
+      { html: "<b>1 · <span data-link='lesen'>Projektbeschreibung</span></b>: Auftrag, Team mit Profilen und Pensen, Budget, Terminziel.",
+        warum: "Wer die Personen kennt, besetzt besser. Lies vor allem Bedürfnisse und Eigenschaften (gründlich, schnell, verzettelt)." },
+      { html: "<b>2 · <span data-link='plan'>Besetzen</span></b>: in der Ansicht Team oder Vorgänge Personen zuweisen, Priorität A bis F, Anteil, Passung ablesen. Der kritische Pfad ist rot markiert, mit dickem Rand und dem Wort «kritisch».",
+        warum: "Jeder Vorgang der Realisierung braucht mindestens eine Person, sonst lässt sich die Planung nicht abschliessen." },
+      { html: "<b>3 · <span data-link='risiko'>Reviews und Risiken</span></b>: Reviews je Vorgang setzen, im Risikoregister Massnahmen wählen, dann die Plan-Prüfung lesen und «Planung abschliessen».",
+        warum: "Massnahmen vor dem Zeitfenster eines Risikos sind am billigsten. Die Plan-Prüfung warnt nur, sie verbietet nichts." },
+      { html: "<b>4 · <span data-link='zeit'>Zeitraffer</span></b>: ▶ 1× = 8 Sekunden je Halbtag, 2×, 4×, ⏸ Pause. Laut Spezifikation auch mit Tasten: Leertaste = Pause oder Weiter, 1, 2, 4 = Tempo, P = Posteingang.",
+        warum: "Neue Ereignisse, das Periodenende und das Projektende halten die Zeit von selbst an." },
+      { html: "<b>5 · <span data-link='post'>Posteingang</span></b>: Lage lesen, Option wählen «Ich entscheide» oder, wo erlaubt, «Bis morgen überlegen». Danach Rückmeldung des Coachs mit ICB-Kennzeichen und Link zur Station.",
+        warum: "Solange ein Ereignis neu ist, läuft keine Zeit. Bei Fristablauf entscheidet die Gemeindeschreiberin." },
+      { html: "<b>6 · <span data-link='team'>Team führen</span></b>: Gespräche, Mittagessen, Teamabend, Weiterbildung im Kalender; Überstufe je Person; Besetzung anpassen.",
+        warum: "Höchstens 4 Termine pro Tag. Ein zweites Gespräch innert 5 Tagen wirkt kaum noch." },
+      { html: "<b>7 · <span data-link='risiko'>Jeden Freitag</span></b>: Kennzahlen ansehen, Risikoregister öffnen und «Register geprüft» klicken.",
+        warum: "Der Risiko-Index zählt geprüfte Wochen. Sonst erinnert dich der Coach am Freitag." },
+      { html: "<b>8 · <span data-link='bericht'>Periodenende Tag 20</span></b>: Statusbericht ausfüllen, absenden, Entscheid des <span data-link='bericht'>Gemeinderats</span> lesen, Periode 2 neu besetzen.",
+        warum: "Die aktuellen Zahlen stehen neben dem Formular. Melde, was sie zeigen." },
+      { html: "<b>9 · <span data-link='lernen'>Projektende</span></b>: Abschlussbericht, dann Nachbesprechung mit Punkten, Sternen, Abzeichen, Zeitstrahl und Lessons Learned. Danach zurück zu dieser Station, Schritt 6.",
+        warum: "Die Punkte sind nicht das Ziel. Das Ziel ist, dass du am 14.11. weisst, was du anders machst." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Kennzahlen-Quiz ---------- */
+  L.sortierer("#t23-sortierer-kennzahlen", {
+    frage: "Kennzahl → Bedeutung",
+    kategorien: ["SPI", "CPI", "Qualität", "Motivation", "Stakeholder", "Risiko-Index"],
+    elemente: [
+      { html: "Erledigte Arbeit geteilt durch die bis heute geplante Arbeit, beides in Franken.", kategorie: "SPI", erklaerung: "SPI = EV ÷ PV, der Termin-Leistungsindex." },
+      { html: "Zeigt 92&nbsp;%: Dein Team hat weniger geschafft als geplant.", kategorie: "SPI", erklaerung: "Unter 100&nbsp;% heisst beim SPI: hinter dem Plan." },
+      { html: "Erledigte Arbeit geteilt durch die Istkosten.", kategorie: "CPI", erklaerung: "CPI = EV ÷ AC, der Kosten-Leistungsindex." },
+      { html: "Daraus rechnet der Leitstand die Kostenprognose EAC = BAC ÷ …", kategorie: "CPI", erklaerung: "EAC = BAC ÷ CPI: So viel kostet das Projekt, wenn es so weiterläuft." },
+      { html: "Sinkt, wenn sich unentdeckte Fehler häufen; Reviews heben ihn.", kategorie: "Qualität", erklaerung: "Der Qualitätsindex misst die unentdeckten Fehler je 100 Stunden." },
+      { html: "Liegt bei rund 100&nbsp;% mit guter Passung und einem Review je Vorgang.", kategorie: "Qualität", erklaerung: "So ist der Qualitätsindex geeicht. Ohne Reviews sinkt er gegen 50&nbsp;%, bis die Tests Fehler finden." },
+      { html: "Nach Pensum gewichtetes Mittel des Teams; Gespräche und Anlässe heben sie.", kategorie: "Motivation", erklaerung: "Teammotivation. Lange Überstunden und Leerlauf drücken sie." },
+      { html: "Fällt, wenn jemand länger am Stück Überstunden macht, als er verträgt.", kategorie: "Motivation", erklaerung: "Über der persönlichen Toleranz (2, 5 oder 8 Tage) kosten Überstunden jeden Tag Motivation." },
+      { html: "Gewichtete Zufriedenheit von Auftraggeberin, Linie, Lieferant, Bevölkerung und Aufsicht.", kategorie: "Stakeholder", erklaerung: "Gewicht = Einfluss × Interesse; die Auftraggeberin zählt am meisten." },
+      { html: "Startet bei genau 100&nbsp;%, weil er am Startwert gemessen wird.", kategorie: "Stakeholder", erklaerung: "Der Stakeholder-Index wird als Prozent des Startwerts angezeigt." },
+      { html: "Zeigt am Start ohne jede Massnahme 48&nbsp;%.", kategorie: "Risiko-Index", erklaerung: "Keine Abdeckung, aber vor dem Start gilt die Prüfung als regelmässig: 120 × 0.4 = 48&nbsp;%." },
+      { html: "Steigt, wenn du Massnahmen wählst und das Register jede Woche prüfst.", kategorie: "Risiko-Index", erklaerung: "60&nbsp;% Gewicht auf der Abdeckung, 40&nbsp;% auf der Regelmässigkeit." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Reflexion nach dem Lauf ---------- */
+  L.reflexion("#t23-reflexion-fehler", {
+    titel: "Reflexion 1 · Dein grösster Fehler",
+    icb: ["ICB 2.01", "ICB 3.10"],
+    frage: "<p>Was war dein grösster Fehler im Leitstand, und was machst du am 14.11. anders? Nenne die Situation mit Tag, die Wirkung mit einer Kennzahl, den Grund für deinen Entscheid, die Lehre als allgemeine Regel und eine konkrete Handlung für die Simulation. Fünf bis acht Sätze.</p>",
+    hinweis: "Schreib zuerst selbst, mit deinem Lauf vor Augen. Die Musterlösung ist ein Beispiel für Aufbau und Tiefe, nicht die einzige richtige Antwort.",
+    musterloesung:
+      "<p><b>Situation:</b> An Tag 1 habe ich V02 mit Seraina und Martin besetzt, weil beide Fachwissen Bau haben. Martin arbeitet aber nur 60&nbsp;% und passt schlecht zur Benutzerführung.</p>" +
+      "<p><b>Wirkung:</b> V02 war erst an Tag 8 statt an Tag 6 fertig. Weil V02 keinen Puffer hat, rutschte der ganze kritische Pfad. Der SPI lag Ende Woche 2 bei 0.88, die Prognose bei Tag 42.</p>" +
+      "<p><b>Grund:</b> Ich habe nur auf das stärkste Gebiet geschaut und die Plandauer übernommen, ohne Pensum und Passung einzurechnen. Die Warnung der Plan-Prüfung habe ich weggeklickt.</p>" +
+      "<p><b>Lehre:</b> Auf den kritischen Pfad gehören die passendsten Leute mit vollem Pensum. Teilpensen setze ich auf Vorgänge mit Puffer (ICB 3.04, 3.08).</p>" +
+      "<p><b>Am 14.11.:</b> In der Planungsstunde rechnen wir für jeden kritischen Vorgang die Dauer mit Pensum und Qualifikation nach und lesen jede Warnung, bevor wir starten. Ich übernehme in der Gruppe die Rolle, die den kritischen Pfad überwacht.</p>" +
+      "<p class='hint'>Beispielantwort an einem erfundenen Lauf, eigene Lösung, nicht vom Dozenten bestätigt.</p>",
+    kriterien: [
+      { text: "Fehler konkret benannt, mit Zeitpunkt oder Ereignis", punkte: 1 },
+      { text: "Wirkung mit mindestens einer Kennzahl (SPI, CPI, Prognose, Punkte)", punkte: 2 },
+      { text: "Grund für den damaligen Entscheid ehrlich genannt, ohne Ausrede", punkte: 1 },
+      { text: "Lehre als allgemeine Regel formuliert, mit ICB-Bezug oder Station", punkte: 1 },
+      { text: "Konkrete, prüfbare Handlung für den 14.11.", punkte: 2 }
+    ]
+  });
+
+  L.reflexion("#t23-reflexion-bericht", {
+    titel: "Reflexion 2 · Wie ehrlich war dein Statusbericht?",
+    icb: ["ICB 2.02", "ICB 3.10"],
+    frage: "<p>Wie ehrlich war dein Statusbericht am Ende von Periode 1? Vergleich in der Nachbesprechung «gemeldet» und «gemessen»: Welche Ampeln und Prognosen wichen ab, welche Ehrlichkeit H hast du erreicht, und warum hast du so gemeldet? Was hat der Gemeinderat entschieden, und was meldest du beim nächsten Mal anders? Vier bis sieben Sätze.</p>",
+    musterloesung:
+      "<p><b>Abgleich:</b> Ich habe Termine grün gemeldet, gemessen war Gelb (SPI 0.91, Prognose Tag 41). Damit war auch meine grüne Gesamtampel eine Stufe zu gut. Die übrigen Ampeln stimmten, Endtag und Endkosten hatte ich aus der Prognose übernommen. Als Massnahme hatte ich M2 (Überstunden befristet) angekreuzt. Den Fertigstellungsgrad habe ich mit 70&nbsp;% angegeben, gemessen waren 62&nbsp;% (EV ÷ BAC). Ehrlichkeit H = 100 − 10 (Ampel Termine) − 15 (Gesamtampel) = 75: knapp über der Grenze von 70, aber keine gute Grundlage für den Gemeinderat.</p>" +
+      "<p><b>Warum:</b> Ich hoffte, die Verspätung in Periode 2 aufzuholen, und wollte die Auftraggeberin nicht beunruhigen. Das ist genau der Wassermelonen-Effekt.</p>" +
+      "<p><b>Folge:</b> Der Gemeinderat gab die Einführung frei, weil der Bericht knapp ehrlich genug war und eine Massnahme enthielt. Einen Budgetnachtrag hatte ich nicht beantragt, weil mein Bericht ja Grün zeigte. In Periode 2 fehlte mir dann das Geld für eine zusätzliche Person.</p>" +
+      "<p><b>Nächstes Mal:</b> Ich setze jede Ampel nach der Regel aus den Zahlen, rechne den Fertigstellungsgrad als EV ÷ BAC, nehme die Prognose des Leitstands, bringe zu jeder gelben Ampel eine Massnahme mit und bespreche den Bericht vorher mit der Auftraggeberin (ICB 2.02 Integrität, ICB 3.10 Bericht über den Projektfortschritt).</p>" +
+      "<p class='hint'>Beispielantwort an einem erfundenen Lauf, eigene Lösung, nicht vom Dozenten bestätigt. Die Abzüge folgen der Spezifikation 3.11: Ampel eine Stufe zu gut −10, Gesamtampel eine Stufe zu gut −15; 8 Prozentpunkte Abweichung beim Fertigstellungsgrad liegen unter der Grenze von 10.</p>",
+    kriterien: [
+      { text: "Gemeldet und gemessen konkret verglichen (mindestens eine Ampel oder Prognose mit Wert)", punkte: 2 },
+      { text: "Ehrlichkeit H genannt und eingeordnet (Grenze 70, Klartext ab 85)", punkte: 1 },
+      { text: "Eigenen Grund für die Abweichung ehrlich benannt", punkte: 1 },
+      { text: "Folge beim Gemeinderat oder bei den Stakeholdern genannt", punkte: 1 },
+      { text: "Konkrete Regel für den nächsten Bericht (Ampel nach Zahlen, Massnahme, Vorbesprechung)", punkte: 2 }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.zahlAufgabe("#t23-u-takt", {
+    titel: "Übung 1 · Vom Kalender zum Takt",
+    frage: "<p>Du willst im Leitstand prüfen, was am <b>Mittwoch der Woche 2, Nachmittag</b> passiert. Welcher Takt ist das? (Takte zählen ab 0, Tag 1 ist ein Montag.)</p>",
+    antwort: 15,
+    einheit: "Takt",
+    hinweise: ["Woche 1 hat die Tage 1 bis 5. Welcher Tag ist der Mittwoch der Woche 2?", "Takt = 2 × (Tag − 1) + Halbtag, Nachmittag = 1."],
+    loesungsweg: [
+      "Woche 2: Montag = Tag 6, Dienstag = Tag 7, Mittwoch = Tag 8.",
+      "Takt = 2 × (8 − 1) + 1 = 15.",
+      "Probe: 15 ÷ 2 = 7 Rest 1, also Tag 7 + 1 = 8, Nachmittag; Wochentag 7 mod 5 = 2 = Mittwoch, Woche 7 ÷ 5 = 1 Rest 2, also Woche 2."
+    ]
+  });
+
+  L.zahlAufgabe("#t23-u-dauer", {
+    titel: "Übung 2 · Dauer mit Pensum und Passung",
+    frage: "<p>Projekt «Neue Telefonie» der Gemeinde Wolkenried, eigenes Beispiel. Der Vorgang «Rufnummern migrieren» hat 48 Stunden Aufwand. Person A arbeitet 100&nbsp;% mit Passung 1.0, Person B 50&nbsp;% mit Passung 0.8. Rechne vereinfacht wie im Stepper (Pensum × 8 h × Passung, ohne Lernkurve und Motivation): Wie viele Arbeitstage dauert der Vorgang? Auf eine Stelle nach dem Punkt.</p>",
+    antwort: 4.3,
+    toleranz: 0.051,
+    einheit: "Tage",
+    anzeige: "48 ÷ 11.2 ≈ 4.29",
+    hinweise: ["Rechne zuerst die effektiven Stunden je Tag beider Personen zusammen.", "A: 1.0 × 8 × 1.0 = 8; B: 0.5 × 8 × 0.8 = 3.2."],
+    loesungsweg: [
+      "Effektive Stunden je Tag: 8 + 3.2 = 11.2.",
+      "Dauer = 48 ÷ 11.2 ≈ 4.29, gerundet 4.3 Tage.",
+      "Der Basisplan hätte mit «2 Personen» 48 ÷ 16 = 3 Tage angenommen. Liegt der Vorgang auf dem kritischen Pfad, verlierst du 1.3 Tage."
+    ]
+  });
+
+  L.sortierer("#t23-u-massnahmen", {
+    frage: "Übung 3 · Massnahme im Statusbericht → Bereich",
+    kategorien: ["Termine", "Qualität", "Team", "Risiken"],
+    elemente: [
+      { html: "M1 · zusätzliche Ressource", kategorie: "Termine", erklaerung: "Mehr Kapazität auf dem kritischen Pfad holt Tage auf." },
+      { html: "M2 · Überstunden befristet", kategorie: "Termine", erklaerung: "Kurzfristig mehr Kapazität. Befristet, weil lange Überstunden schaden." },
+      { html: "M8 · Termin verschieben", kategorie: "Termine", erklaerung: "Die Antwort, wenn das Terminziel nicht mehr haltbar ist. Braucht einen Antrag an den Gemeinderat." },
+      { html: "M4 · Reviews verstärken", kategorie: "Qualität", erklaerung: "Reviews finden Fehler früh, bevor sie im Test teuer werden." },
+      { html: "M6 · Teamentwicklung", kategorie: "Team", erklaerung: "Gespräche, Retrospektive, Anlass: die Antwort auf sinkende Motivation." },
+      { html: "M5 · Risikomassnahmen umsetzen", kategorie: "Risiken", erklaerung: "Die Antwort auf einen gelben oder roten Risiko-Index." }
+    ]
+  });
+
+  L.wahrFalsch("#t23-u-wf", {
+    titel: "Übung 4 · Spielregeln: wahr oder falsch?",
+    aussagen: [
+      { html: "Ein Vorgang der Einführung kann schon an Tag 18 beginnen, wenn seine Vorgänger fertig sind.", wahr: false,
+        erklaerung: "Vorgänge der Phase Einführung sind erst nach der Phasenfreigabe durch den Gemeinderat bearbeitbar, frühestens ab Tag 21." },
+      { html: "Solange ein Ereignis neu im Posteingang liegt, läuft keine Zeit.", wahr: true,
+        erklaerung: "Erst wenn du entscheidest oder aufschiebst, läuft die Zeit weiter." },
+      { html: "Die Projektleitung selbst verursacht im Leitstand keine Kosten, hat aber höchstens 4 Termine pro Tag.", wahr: true,
+        erklaerung: "Deine eigene Zeit kostet nichts, ist aber auf 4 Termine pro Tag begrenzt. Die Stunden der Teilnehmenden und die Anlässe (Mittagessen CHF 45, Teamabend CHF 120 je Person) kosten aber Geld." },
+      { html: "Mehr Personen auf einem Vorgang verkürzen ihn immer im gleichen Verhältnis.", wahr: false,
+        erklaerung: "Jede Person über dem Plan kostet Abstimmung: eine mehr 95&nbsp;%, zwei mehr 88&nbsp;% Leistung, und die Fehlerrate steigt." },
+      { html: "Ein Fehler, den erst der Integrationstest findet, kostet 3 Stunden Korrektur im Testvorgang.", wahr: true,
+        erklaerung: "Späte Korrektur kostet dreimal so viel wie im Review und trifft den kritischen Pfad." },
+      { html: "Der Einführungslauf zählt für deinen Bestwert im Ernstfall.", wahr: false,
+        erklaerung: "Der Einführungslauf ist zum Üben da. Bestwert und Punkte im Konto zählen nur für Ernstfälle mit neuem Startwert." }
+    ]
+  });
+
+  L.auswahl("#t23-u-linie", {
+    frage: "<p><b>Übung 5 · Fallentscheid</b> <span class='icb'>ICB 1.04</span> <span class='icb'>ICB 3.08</span></p><p>Projekt «Archiv digital» in Wolkenried. Die Leiterin der Einwohnerdienste will ihre Mitarbeiterin Petra ab morgen für vier Tage zurück, weil am Schalter Ferienablösungen fehlen. Petra arbeitet im Projekt an einem Vorgang auf dem kritischen Pfad. Ein zweiter Mitarbeiter derselben Abteilung arbeitet an einem Vorgang mit 5 Tagen Puffer. Was tust du?</p>",
+    optionen: [
+      "Zustimmen. Das Tagesgeschäft hat Vorrang, das Projekt holt das später auf.",
+      "Ablehnen und auf den Projektauftrag verweisen: Die Ressourcen sind zugesichert.",
+      "Mit ihr auf den Plan schauen: Zeigen, dass Petras Vorgang keinen Puffer hat, und den Mitarbeiter mit Puffer für die Ablösung anbieten.",
+      "Die Frage sofort an die Auftraggeberin weitergeben, damit sie entscheidet."
+    ],
+    richtig: 2,
+    erklaerung: "Du verhandelst über Interessen statt über Positionen: Die Linie braucht Ablösung, das Projekt braucht den kritischen Pfad. Mit dem Plan zeigst du, wo ein Ausfall wirklich weh tut, und bietest eine Lösung an (ICB 1.04 Macht und Interessen, ICB 3.08 Ressourcen). Folgen der anderen Optionen: Zustimmen kostet ohne Prüfung Tage auf dem kritischen Pfad. Ablehnen ist formal richtig, macht die Linie aber zur Gegnerin, die dir die Leute beim nächsten Mal nicht mehr gibt. Sofort eskalieren ist zu früh, weil du selbst eine Lösung findest; die Auftraggeberin will nicht jede Kleinigkeit entscheiden."
+  });
+
+  L.auswahl("#t23-u-pfad", {
+    frage: "<p><b>Übung 6</b> <span class='icb'>ICB 3.04</span> <span class='icb'>ICB 3.08</span></p><p>Zwei Vorgänge beginnen am selben Tag. Vorgang X liegt auf dem kritischen Pfad (Puffer 0), Vorgang Y hat 6 Tage Puffer. Du hast Lea (100&nbsp;%, Passung auf beiden 1.0) und Rolf (50&nbsp;%, Passung auf beiden 0.75). Wie besetzt du?</p>",
+    optionen: [
+      "Lea auf Y, Rolf auf X: Der Schwächere soll an der wichtigen Aufgabe lernen.",
+      "Lea auf X mit Priorität A, Rolf auf Y; Lea bekommt Y als Priorität B, falls X blockiert ist.",
+      "Beide je zur Hälfte auf X und Y, damit beide Vorgänge gleich schnell laufen.",
+      "Beide auf X, Y wartet, bis X fertig ist."
+    ],
+    richtig: 1,
+    erklaerung: "Auf den kritischen Pfad gehört die stärkste Person mit vollem Pensum, weil jeder Tag dort das Projektende verschiebt. Y hat 6 Tage Puffer und verträgt die langsamere Besetzung. Die Priorität B sorgt dafür, dass Lea nie leer läuft. Halb-halb verlangsamt X ohne Not. Y ganz warten zu lassen verbraucht seinen Puffer und kann Y selbst kritisch machen (ICB 3.04 Ablauf und Termine, ICB 3.08 Ressourcen)."
+  });
+
+  L.zahlAufgabe("#t23-u-punkte", {
+    titel: "Übung 7 · Terminpunkte berechnen",
+    frage: "<p>Dein Ernstfall endet an Tag 42 (Terminziel Tag 40, kein Änderungsantrag zum Termin). Wie viele Terminpunkte gibt der Leitstand? Die Regel steht in Schritt 4.</p>",
+    antwort: 184,
+    einheit: "Punkte",
+    hinweise: ["E liegt nach Tag 40: 230 − 23 je Tag nach 40."],
+    loesungsweg: [
+      "E = 42 liegt 2 Tage nach dem Terminziel 40.",
+      "Terminpunkte = 230 − 23 × 2 = 184 (von 250).",
+      "Zum Vergleich: E = 38 ergäbe 250, E = 40 noch 230. Zwei Tage Verzug kosten also 46 Punkte gegenüber dem Terminziel."
+    ]
+  });
+
+  L.zahlAufgabe("#t23-u-ehrlich", {
+    titel: "Übung 8 · Ehrlichkeit des Berichts berechnen",
+    frage: "<p>Gemessen hat der Leitstand am Ende von Periode 1: Gesamt ▲ Gelb, Termine ▲ Gelb, Kosten ▲ Gelb, Qualität, Team und Risiken ● Grün; EV ÷ BAC = 58&nbsp;%; Prognose Endtag 42; EAC CHF 172'000.</p><p>Gemeldet hast du: Gesamt ● Grün, Termine ● Grün, Kosten ▲ Gelb, Qualität, Team und Risiken ● Grün; Fertigstellungsgrad 70&nbsp;%; Endtag 39; Endkosten CHF 170'000; als einzige Massnahme M1 (zusätzliche Ressource).</p><p>Welche Ehrlichkeit H ergibt sich nach den Abzügen in Schritt 3?</p>",
+    antwort: 45,
+    einheit: "von 100",
+    hinweise: ["Geh Zeile für Zeile durch die Abzugstabelle in Schritt 3.", "M1 passt zu Termine, aber nicht zu Kosten. Zu Kosten passen M3 und M7."],
+    loesungsweg: [
+      "Gesamtampel eine Stufe zu gut (Grün statt Gelb): −15.",
+      "Termine eine Stufe zu gut: −10. Kosten, Qualität, Team, Risiken stimmen: 0.",
+      "Fertigstellungsgrad 70&nbsp;% gegenüber 58&nbsp;%: 12 Prozentpunkte, mehr als 10: −10.",
+      "Endtag 39 liegt mehr als 2 Tage vor der Prognose 42 (Grenze 40): −15.",
+      "Endkosten 170'000 liegen über 95&nbsp;% von 172'000 = 163'400: kein Abzug.",
+      "Kosten sind gemessen gelb, aber es fehlt eine passende Massnahme (M3 oder M7): −5. Termine sind mit M1 abgedeckt.",
+      "H = 100 − 15 − 10 − 10 − 15 − 5 = 45. Unter 70: Schönfärberei. Die Nachbesprechung stellt «gemeldet» und «gemessen» nebeneinander, die Zufriedenheit des Gemeinderats sinkt (S03 −10), ein Budgetnachtrag würde abgelehnt, und ist die Vorabnahme nicht fertig, gibt es die Freigabe nur mit Auflage."
+    ]
+  });
+
+  L.auswahl("#t23-u-aufschub", {
+    frage: "<p><b>Übung 9</b> <span class='icb'>ICB 2.01</span> <span class='icb'>ICB 3.10</span></p><p>Am Dienstag kommt eine E-Mail des Lieferanten: Er will für einen Mehraufwand ausserhalb des Werkvertrags CHF 6'400 verrechnen. Die Frist ist Freitagabend. Du hast gerade drei andere Lagen offen und wenig Lust auf das Thema. Was ist der beste Umgang?</p>",
+    optionen: [
+      "Liegen lassen, bis Freitag klärt es sich vielleicht von selbst.",
+      "Noch heute einen Termin setzen: Vertrag prüfen und bis Donnerstag sachlich mit dem Lieferanten verhandeln.",
+      "Sofort bezahlen, damit das Thema vom Tisch ist.",
+      "Die Rechnung pauschal ablehnen, ohne den Vertrag anzusehen."
+    ],
+    richtig: 1,
+    erklaerung: "Unangenehme Entscheide nicht aufschieben, sondern mit klarer Frist selbst planen: Das gehört zum Selbstmanagement (ICB 2.01, Swiss ICB 4.4.1.3: Aufschieben und Vertagen vermeiden). Im Leitstand entscheidet bei Fristablauf die Gemeindeschreiberin, meist mit der schlechtesten Option. Sofort zahlen verschenkt Geld ohne Prüfung. Pauschal ablehnen belastet die Beziehung zum Lieferanten, ohne die Rechtslage zu kennen (ICB 2.09 Verhandlungen, ICB 3.09 Beschaffung)."
+  });
+
+  L.reflexion("#t23-u-reflexion", {
+    titel: "Übung 10 · Offene Frage: Lessons-Learned-Workshop",
+    icb: ["ICB 3.10", "ICB 3.01", "ICB 2.01"],
+    frage: "<p>Das Projekt «Neue Telefonie» der Gemeinde Wolkenried ist abgenommen. Du organisierst einen Lessons-Learned-Workshop mit dem Projektteam. Beschreibe Ziel, Teilnehmende, Ablauf und Ergebnis des Workshops und wie die Erkenntnisse in künftige Projekte gelangen. Fünf bis acht Sätze.</p>",
+    musterloesung:
+      "<p><b>Ziel:</b> Erfahrungen aus dem Projekt auswerten, damit künftige Projekte davon profitieren, nicht Schuldige suchen. Die ICB nennt das beim Abschluss einer Phase oder eines Projekts ausdrücklich (Indikator 4.5.10.6).</p>" +
+      "<p><b>Teilnehmende:</b> Kernteam, Vertretung der Linie und des Lieferanten, auf Wunsch die Auftraggeberin. Moderiert von der Projektleitung oder einer neutralen Person.</p>" +
+      "<p><b>Ablauf:</b> (1) Rückblick auf Ziele und Zahlen: Termin, Kosten, Qualität im Soll-Ist-Vergleich. (2) Zeitstrahl mit den Wendepunkten. (3) Je Wendepunkt: Was lief gut, was nicht, warum? (4) Ableiten: Was behalten wir bei, was machen wir anders? (5) Massnahmen mit Verantwortlichen.</p>" +
+      "<p><b>Ergebnis:</b> ein kurzer Lessons-Learned-Bericht mit wenigen, konkreten Regeln, zum Beispiel «Testdaten des Herstellers im Vertrag mit Termin festhalten».</p>" +
+      "<p><b>Weitergabe:</b> Bericht in die Projektablage und an das Projektbüro oder die Gemeindeschreiberin; beim Start des nächsten Projekts liest die Projektleitung die Lessons Learned früherer Projekte (ICB 3.01, Indikator 4.5.1.2). Danach das Team formell aus dem Projekt entlassen und den Abschluss feiern.</p>" +
+      "<p class='hint'>Eigene Musterlösung, nicht vom Dozenten bestätigt.</p>",
+    kriterien: [
+      { text: "Ziel: lernen für künftige Projekte, keine Schuldzuweisung", punkte: 1 },
+      { text: "Passende Teilnehmende und Moderation genannt", punkte: 1 },
+      { text: "Ablauf mit Soll-Ist-Rückblick und Ursachen (was gut, was schlecht, warum)", punkte: 2 },
+      { text: "Ergebnis als dokumentierter Lessons-Learned-Bericht mit konkreten Regeln", punkte: 1 },
+      { text: "Weitergabe an die Organisation und Nutzung im nächsten Projekt", punkte: 2 }
+    ]
+  });
+
+  /* ---------- Film: So läuft ein Ernstfall ab ---------- */
+  // Logbuch des erfundenen Beispiellaufs; jede Szene zeigt eine Auswahl, Neues leuchtet auf.
+  const B = {
+    p1: "<b>Planung:</b> kritischer Pfad V01 → V02 → V04 → V09 → V10 → V11 → V12 → V16 → V17 → V18 (36 Tage) mit Vollzeit und guter Passung besetzt. V02: Seraina und Aylin (4.6 statt 5.3 Tage mit Martin).",
+    p2: "<b>Planung:</b> ein Review je Vorgang auf dem kritischen Pfad. Massnahmen für alle Risiken mit Wert 12 (R02, R03, R04, R08); R05 (Wert 6) nur akzeptiert. Plan-Prüfung gelesen, Planung abgeschlossen.",
+    e1: "<b>Tag 1 · Kick-off:</b> halber Tag mit Linie und Lieferant, Rollen und Spielregeln geklärt.",
+    e2: "<b>Tag 4 · Die Linie will zwei Leute abziehen:</b> am kritischen Pfad gezeigt, wer fehlen darf, und ein Gegengeschäft angeboten.",
+    e3: "<b>Tag 12 · Risiko R02 eingetreten:</b> Schnittstelle V05 +38 h (30&nbsp;% von 128 h; die Massnahme M1 Zweitschätzung senkte nur die Wahrscheinlichkeit) bei nur 1 Tag Puffer. Dario mit Priorität B zusätzlich auf V05. Register jeden Freitag geprüft.",
+    e4: "<b>Tag 19 · «Melden Sie Grün»:</b> freundlich abgelehnt, Bericht mit der Auftraggeberin vorbesprochen.",
+    k1: "<b>Tag 20 · Kennzahlen:</b> SPI = 105'000 ÷ 112'800 = 0.93 · CPI = 105'000 ÷ 108'500 = 0.97 · EAC = 162'240 ÷ 0.968 ≈ 167'650 · Prognose Tag 39",
+    b1: "<b>Statusbericht 1:</b> Gesamt " + SYM.gelb + " · Termine " + SYM.gelb + " · Kosten, Qualität, Team, Risiken " + SYM.gruen + " · Fertigstellungsgrad 65&nbsp;% · Massnahme M1 → Ehrlichkeit H = 100",
+    g1: "<b>Gemeinderat:</b> Phasenfreigabe erteilt. Die Vorabnahme ist noch nicht fertig, aber der Bericht ist ehrlich und enthält eine Massnahme.",
+    e5: "<b>Periode 2:</b> Vorabnahme an Tag 22, Einführung besetzt. Tag 30: Testumgebung fällt aus; R05 war nur akzeptiert, die Entwicklung steht 1 Tag. Dazu Mehraufwand im Pilot, Prognose Tag 41. Team müde: Retrospektive.",
+    b2: "<b>Abschlussbericht · Tag 41 (Nachspielzeit):</b> Gesamt und Termine " + SYM.gelb + " (Ende nach Tag 40) richtig gemeldet, mit Massnahme · Qualität " + SYM.gruen + " gemeldet, gemessen " + SYM.gelb + ", ohne Massnahme M4 → H = 100 − 10 − 5 = 85",
+    s: "<b>Punkte:</b> Termin 207 + Kosten 176 + Qualität 170 + Stakeholder 78 + Team 65 + Führung 82 = <b>778 · ★★</b> · Abzeichen «Onlineschalter eröffnet» und «Klartext» (mittlerer Risiko-Index 96&nbsp;%, darum kein «Risikoprofi»)",
+    ll: "<b>Lessons Learned:</b> (1) Ein Risiko auf dem kritischen Pfad nicht nur akzeptieren, wenn eine günstige Massnahme es abfedert. (2) Die Qualitätsampel aus dem Qualitätsindex setzen, nicht aus dem Gefühl."
+  };
+  const REIHE = ["p1", "p2", "e1", "e2", "e3", "e4", "k1", "b1", "g1", "e5", "b2", "s", "ll"];
+  function logbuch(bis, neu) {
+    if (!bis) return "";
+    const n = REIHE.indexOf(bis);
+    return '<div class="t23-log">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k];
+      return '<div class="t23-eintrag">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t23-film", {
+    phasen: ["1 · Planung", "2 · Periode 1", "3 · Bericht", "4 · Periode 2", "5 · Auswertung"],
+    texte: [
+      "Ernstfall «Onlineschalter Wolkenried»: <span data-ph='auftrag'>Realisierung und Einführung des Baugesuchs online</span>, <span data-ph='zeit'>2 Perioden à 4 Wochen, Plan 36 Tage, Terminziel Tag 40</span>, <span data-ph='geld'>Budget CHF 180'000, Plankosten (BAC) CHF 162'240, PV bis Tag 20 CHF 112'800</span>, <span data-ph='team'>rund 12 Personen aus Verwaltung, Linie, Lieferant und Beratung</span>. <span data-ph='gr'>Nach Periode 1 entscheidet der Gemeinderat über die Einführung.</span>"
+    ],
+    woerterbuch: [
+      "<b>Takt</b> = Halbtag, ab 0",
+      "<b>SPI</b> = EV ÷ PV",
+      "<b>CPI</b> = EV ÷ AC, EAC = BAC ÷ CPI",
+      "<b>Ampel</b> nach festen Schwellen",
+      "<b>Ehrlichkeit H</b> 0–100, unter 70 Schönfärberei",
+      "<b>Punkte</b> 0–1000 · ★ 500 · ★★ 680 · ★★★ 820"
+    ],
+    beschriftung: { texte: "Der Auftrag", text: "Auftrag", woerterbuch: "Spielregeln", formel: "Logbuch", ende: "Weiter zu den Fallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So läuft ein Ernstfall ab: planen, Periode 1 spielen, berichten, Periode 2 spielen, auswerten. Das Logbuch füllt sich mit den Wendepunkten des Laufs." },
+      { ph: 0, hl: ["auftrag", "zeit", "geld", "team"],
+        say: "Zuerst liest du die Projektbeschreibung: Auftrag, Termine, Budget und das Team mit Profilen und Pensen." },
+      { ph: 0, hl: ["zeit"], f: logbuch("p1", ["p1"]),
+        say: "Dann besetzt du den kritischen Pfad, 36 Tage ohne Puffer. Auf V02 kommen Seraina und Aylin, nicht Martin: mit seinem Teilpensum würde V02 über einen Tag länger dauern." },
+      { ph: 0, f: logbuch("p2", ["p2"]),
+        say: "Reviews auf die kritischen Vorgänge, Massnahmen für alle Risiken mit Wert 12. Das kleine Risiko R05 nur akzeptiert. Die Plan-Prüfung zeigt keine Warnung mehr. Planung abschliessen." },
+      { ph: 1, dict: 1, dh: [0], f: logbuch("e1", ["e1"]),
+        say: "Takt 0, Montag, Tag 1, Vormittag. Die Zeit läuft und hält sofort an: Seraina fragt nach dem Kick-off. Du lädst Linie und Lieferant für einen halben Tag ein." },
+      { ph: 1, f: logbuch("e2", ["e2"]),
+        say: "Tag 4, Takt 6: Der Bauverwalter will zwei Leute ins Tagesgeschäft holen. Du zeigst am kritischen Pfad, wer wirklich fehlen darf, und bietest ein Gegengeschäft an." },
+      { ph: 1, f: logbuch("e3", ["e3"]),
+        say: "Tag 12: Die Schnittstelle braucht 38 Stunden mehr. Sie hat nur einen Tag Puffer. Dario hilft mit Priorität B. Und jeden Freitag klickst du «Register geprüft»." },
+      { ph: 1, f: logbuch("e4", ["e4"]),
+        say: "Tag 19: Die Auftraggeberin bittet dich, Grün zu melden. Du bleibst bei den Zahlen und bietest an, den Bericht vorher mit ihr durchzugehen." },
+      { ph: 2, hl: ["geld"], dict: 3, dh: [1, 2], f: logbuch("k1", ["k1"]),
+        say: "Tag 20, Periodenende. SPI gleich 105'000 durch 112'800, also 0.93. CPI gleich 105'000 durch 108'500, also 0.97. Kostenprognose rund 167'650, Prognose Endtag 39." },
+      { ph: 2, dict: 5, dh: [3, 4], f: logbuch("b1", ["b1"]),
+        say: "Termine: SPI unter 0.95, also Gelb. Kosten: CPI über 0.95 und Prognose unter Budget, Grün. Gesamtampel Gelb. Du meldest genau das, mit Massnahme. Ehrlichkeit 100." },
+      { ph: 2, hl: ["gr"], f: logbuch("g1", ["g1"]),
+        say: "Der Gemeinderat gibt die Einführung frei. Die Vorabnahme fehlt noch, aber der Bericht ist ehrlich und bringt eine Massnahme mit." },
+      { ph: 3, f: logbuch("e5", ["e5"]),
+        say: "Periode 2. An Tag 30 fällt die Testumgebung aus. R05 war nur akzeptiert, also steht die Entwicklung einen Tag. Mit dem Mehraufwand im Pilot rutscht die Prognose auf Tag 41." },
+      { ph: 4, dh: [4], f: logbuch("b2", ["b2"]),
+        say: "Tag 41, in der Nachspielzeit, ist die Abnahme da. Im Abschlussbericht meldest du die Qualität grün, gemessen ist sie gelb. Ehrlichkeit 85: gerade noch Klartext." },
+      { ph: 4, dict: 6, dh: [5], f: logbuch("s", ["s"]),
+        say: "Die Punkte: 207 für den Termin, 176 Kosten, 170 Qualität, 78 Stakeholder, 65 Team, 82 Führung. Zusammen 778, zwei Sterne." },
+      { ph: 4, f: logbuch("ll", ["ll"]),
+        say: "Und die Lehre für den 14.11.: kein Risiko auf dem kritischen Pfad nur akzeptieren, und jede Ampel aus den Zahlen setzen. Jetzt zu den Fallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t23-film-loesung").innerHTML = logbuch("ll");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t23-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.04</span> Wie viele Takte hat eine Periode im Leitstand?',
+        o: ["20", "40", "80", "4"], a: 1,
+        e: "Eine Periode hat 4 Wochen = 20 Arbeitstage, jeder Tag hat 2 Takte (Vormittag, Nachmittag): 40 Takte. Zeit planen in festen Einheiten gehört zu ICB 3.04 Ablauf und Termine." },
+      { q: '<span class="icb">ICB 3.04</span> Der Leitstand meldet ein Ereignis in Takt 6. Wann ist das?',
+        o: ["Tag 3, Vormittag", "Tag 4, Vormittag", "Tag 6, Vormittag", "Tag 7, Nachmittag"], a: 1,
+        e: "Tag (ab 0) = 6 ÷ 2 = 3, angezeigt Tag 4; 6 ist gerade, also Vormittag. Probe: 2 × (4 − 1) + 0 = 6. Zählweise sauber trennen ist Teil der Terminplanung (ICB 3.04)." },
+      { q: '<span class="icb">ICB 3.10</span> Die Kachel Kosten zeigt CPI 104&nbsp;%. Was heisst das?',
+        o: ["Du hast 4&nbsp;% mehr ausgegeben als geplant.", "Die erledigte Arbeit hat weniger gekostet als geplant.", "Du bist 4&nbsp;% vor dem Terminplan.", "Das Budget ist um 4&nbsp;% überschritten."], a: 1,
+        e: "CPI = EV ÷ AC über 1: Für jeden Franken gab es mehr als einen Franken Leistung. Im Leitstand gilt: über 100&nbsp;% ist gut. Kennzahlen lesen gehört zu ICB 3.10 Planung und Steuerung (und ICB 3.07 Kosten und Finanzierung)." },
+      { q: '<span class="icb">ICB 2.01</span> Du lässt eine E-Mail bis zum Ablauf der Frist liegen. Was passiert?',
+        o: ["Nichts, das Ereignis verfällt ohne Wirkung.", "Die Gemeindeschreiberin trifft den Standardentscheid, meist die schlechteste Option, und das kostet Führungspunkte.", "Der Leitstand hält an, bis du entscheidest.", "Der Coach entscheidet die beste Option für dich."], a: 1,
+        e: "Bei Fristablauf gilt der Standardentscheid: Er zählt 0 in der Entscheidquote und bringt einen Zusatzabzug. Aufschieben vermeiden ist Teil des Selbstmanagements (ICB 2.01, Swiss ICB 4.4.1.3)." },
+      { q: '<span class="icb">ICB 3.10</span> Wer gibt im Ernstfall die Phase Einführung frei?',
+        o: ["Die Projektleitung, sobald die Vorabnahme fertig ist", "Der Lieferant", "Der Gemeinderat auf Grund des Statusberichts", "Der Coach Mia Baumann"], a: 2,
+        e: "Die Phasenfreigabe ist ein Entscheid der Steuerung, hier des Gemeinderats. Der Statusbericht ist seine Grundlage. ICB 3.10, Indikator «Übergang in eine neue Projektphase einleiten und managen» (4.5.10.2); HERMES nennt das Phasenfreigabe." },
+      { q: '<span class="icb">ICB 2.02</span> Ab welcher Ehrlichkeit gilt ein Statusbericht im Leitstand als Schönfärberei?',
+        o: ["unter 100", "unter 85", "unter 70", "unter 50"], a: 2,
+        e: "Unter 70 gilt der Bericht als Schönfärberei; ab 85 gibt es das Abzeichen «Klartext». Ehrlich berichten gehört zu ICB 2.02 Persönliche Integrität und Verlässlichkeit und zu ICB 3.10." },
+      { q: '<span class="icb">ICB 3.06</span> Ein Fehler wird erst im Integrationstest gefunden. Was kostet seine Korrektur im Leitstand?',
+        o: ["nichts, Tests sind im Plan enthalten", "1 Stunde im ursprünglichen Vorgang", "3 Stunden im Testvorgang auf dem kritischen Pfad", "einen Tag Blockade aller Vorgänge"], a: 2,
+        e: "Späte Korrektur kostet 3 Stunden je Fehler, und zwar im Testvorgang. Im Review wäre es 1 Stunde gewesen. Fehler früh finden ist der Kern von ICB 3.06 Qualität." },
+      { q: '<span class="icb">ICB 3.11</span> Warum zeigt der Risiko-Index am Start ohne Massnahmen 48&nbsp;%?',
+        o: ["Weil 48&nbsp;% der Risiken schon eingetreten sind", "Weil noch kein Risiko eine Massnahme hat; nur die Regelmässigkeit zählt (120 × 0.4)", "Weil der Zufall den Startwert festlegt", "Weil das Register noch leer ist"], a: 1,
+        e: "Abdeckung 0, Regelmässigkeit vor dem Start 1: 120 × (0.6 × 0 + 0.4 × 1) = 48&nbsp;%. Risiken früh behandeln und regelmässig überwachen gehört zu ICB 3.11 Chancen und Risiken." },
+      { q: '<span class="icb">ICB 2.05</span> Du führst mit Jasmin am Montag ein Gespräch und am Mittwoch gleich noch eines. Was bewirkt das zweite?',
+        o: ["Doppelt so viel wie das erste", "Gleich viel wie das erste", "Nur wenig (+2), weil das letzte Gespräch weniger als 5 Tage her ist", "Es senkt die Motivation"], a: 2,
+        e: "Ein Gespräch bringt +8 (bei Anerkennung oder Klarheit × 1.5), innert 5 Tagen nur +2. Motivation braucht gezielte, gut verteilte Zuwendung. Andere zu motivieren gehört zu ICB 2.05 Führung (Swiss ICB 4.4.5)." },
+      { q: '<span class="icb">ICB 3.10</span> Dein Ernstfall endet mit 700 Punkten. Wie viele Sterne gibt es?',
+        o: ["keinen", "★", "★★", "★★★"], a: 2,
+        e: "★ ab 500, ★★ ab 680, ★★★ ab 820: 700 Punkte ergeben zwei Sterne. Die Punkte bewerten das Projekt am Schluss nach festen Kriterien, wie die Projektschlussbeurteilung (ICB 3.10, Indikator 4.5.10.6)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

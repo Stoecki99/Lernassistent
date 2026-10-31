@@ -149,7 +149,7 @@ describe("Passung (3.4, Anhang 8.1)", () => {
     near(fit(PERSON.martin, "V02"), 0.832, 3, "Martin V02")
     near(fit(PERSON.martin, "V02", [PERSON.seraina]), 0.832, 3, "Martin V02 mit Seraina")
     near(fit(PERSON.seraina, "V09"), 0.75, 3, "Seraina V09")
-    near(fit(PERSON.seraina, "V09", [PERSON.marco]), 0.99, 3, "Seraina V09 mit Marco")
+    near(fit(PERSON.seraina, "V09", [PERSON.marco]), 0.99, 3, "Seraina V09 mit Dario")
     near(fit(PERSON.elena, "V05"), 0.982, 3, "Elena V05")
   })
   test("Stichproben aus Tabelle 8.1 (2 Nachkommastellen)", () => {

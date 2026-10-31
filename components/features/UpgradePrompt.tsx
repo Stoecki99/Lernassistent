@@ -12,7 +12,17 @@ function useObfuscatedPhone(): string {
   return parts.join("")
 }
 
-export default function UpgradePrompt() {
+interface UpgradePromptProps {
+  /** Ueberschrift, Standard: KI-Tutor */
+  title?: string
+  /** Einleitender Satz unter der Ueberschrift */
+  description?: string
+}
+
+export default function UpgradePrompt({
+  title = "KI-Tutor freischalten",
+  description = "Mit dem Pro-Plan kannst du direkt mit dem generativen KI-Tutor chatten, Karteikarten erstellen lassen und Fragen zu deinem Lernstoff stellen.",
+}: UpgradePromptProps = {}) {
   const phone = useObfuscatedPhone()
 
   return (
@@ -23,11 +33,10 @@ export default function UpgradePrompt() {
 
         <div className="space-y-2">
           <h2 className="text-2xl font-extrabold text-text-dark">
-            KI-Tutor freischalten
+            {title}
           </h2>
           <p className="text-text-light">
-            Mit dem Pro-Plan kannst du direkt mit dem generativen KI-Tutor chatten,
-            Karteikarten erstellen lassen und Fragen zu deinem Lernstoff stellen.
+            {description}
           </p>
           <p className="text-xs text-text-light">
             Der Betrag deckt die Kosten fuer die Anbindung an die Claude-KI (Anthropic API),

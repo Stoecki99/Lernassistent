@@ -269,7 +269,9 @@ export function workTick(state: SimState, ctx: Ctx, tick: number): WorkTickResul
     for (const part of parts) {
       const person = state.people[part.personId]
       const pdef = ctx.people[part.personId]
-      const paid = part.hours * scale
+      // Mindestdauer-Kappung wie Überschuss behandeln (3.2, Nachtrag AP5): Stunden, die wegen minDays
+      // keine Leistung bringen, sind Leerlauf und werden nicht bezahlt (Prüfrechnung 8.2).
+      const paid = part.hours * capFactor * scale
       if (paid <= 0) continue
       const effP = part.contribution * fTeam * fPhase * capFactor * scale
       task.latentDefects += newDefects({
