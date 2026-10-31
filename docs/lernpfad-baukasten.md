@@ -393,7 +393,7 @@ Keine `fill="#…"`- oder `stroke="#…"`-Attribute. Wähle einen `viewBox` um 3
 
 | Klasse | Zweck |
 |--------|-------|
-| `.gantt` | Behälter; `--gantt-einheiten` (Standard 10), `--gantt-einheit` (Breite einer Einheit, Standard 2.2em), `--gantt-name` (Namensspalte, 8.5em). In `.tablebox` legen. |
+| `.gantt` | Behälter; `--gantt-einheiten` (Standard 10), `--gantt-einheit` (Breite einer Einheit, Standard 2rem), `--gantt-name` (Namensspalte, 7.8rem). Eigene Werte nur in `rem` oder `px` setzen: Eine `em`-Angabe würde je Element mit dessen Schriftgrösse aufgelöst, Skala, Balken und Rauten liefen auseinander. In `.tablebox` legen. |
 | `.gantt-kopf`, `.gantt-skala` | Kopfzeile mit Zeitskala (ein `span` je Einheit) |
 | `.gantt-zeile`, `.gantt-name`, `.gantt-spur` | Zeile, Name, Spur mit Gitter |
 | `.gantt-balken` | Balken (`--start`, `--dauer`); Text darin kurz halten |
