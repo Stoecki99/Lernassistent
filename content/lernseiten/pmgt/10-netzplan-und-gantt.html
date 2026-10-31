@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Netzplan, Gantt und kritischer Pfad · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/11-ressourcen-und-kosten" title="Ressourcen und Kosten planen">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t10-», nur Farben aus :root -->
+  <style>
+    .t10-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t10-ziele li{margin-bottom:3px}
+    .t10-quelle{font-size:.9rem; color:var(--muted)}
+
+    /* Formeln als Zeilen auf der Tafel */
+    .t10-tafel{position:relative}
+    .t10-regeln{display:grid; grid-template-columns:minmax(0,1fr); gap:6px}
+    .t10-regel{display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline}
+    .t10-regel b{min-width:7.5em; color:var(--accent)}
+
+    /* Vorgänger-Angabe im Netzplan-Knoten */
+    .t10-vg{display:block; font-size:.72rem; font-weight:400; color:var(--muted); margin-top:2px}
+    .t10-nk{display:block}
+
+    /* Netzplan-Labor */
+    .t10-eingaben td, .t10-eingaben th{vertical-align:middle}
+    .t10-zahl{font:inherit; font-variant-numeric:tabular-nums; width:6.5ch; min-height:38px; padding:4px 6px; text-align:right;
+      border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink)}
+    .t10-zahl:hover{border-color:var(--accent)}
+    .t10-zahl[aria-invalid="true"]{border-color:var(--bad); background:var(--bad-bg)}
+    .t10-wahl{font:inherit; min-height:38px; padding:4px 6px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink)}
+    .t10-wahl:hover{border-color:var(--accent)}
+    .t10-geaendert td:first-child{box-shadow:inset 4px 0 0 var(--lit)}
+    .t10-satz{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center}
+    .t10-satz label{font-weight:600}
+    .t10-szenarien{display:flex; flex-wrap:wrap; gap:8px}
+    .t10-meldung{padding:12px 14px; border-radius:10px; background:var(--board); border-left:4px solid var(--accent); line-height:1.5}
+    .t10-meldung p{margin:0}
+    .t10-meldung p + p{margin-top:6px}
+    /* Einheit in rem: Eine em-Einheit löst jedes Gantt-Element mit seiner eigenen Schriftgrösse auf, dann laufen Skala, Balken und Rauten auseinander */
+    .t10-gantt-rem{--gantt-einheit:1.75rem}
+    .t10-film-tab{font-size:.9rem}
+    .t10-film-tab td, .t10-film-tab th{padding:3px 6px}
+    .t10-zeile{margin-top:8px; font-family:var(--f-body); white-space:normal}
+    .t10-ap td, .t10-ap th{padding:3px 6px; font-size:.92rem}
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="10-netzplan-und-gantt">
+<main class="wrap">
+
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 4 · Planen</span>
+    <h1>Netzplan, Gantt und kritischer Pfad</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.04</span>
+    </p>
+    <p class="lead">Ein Projekt besteht aus vielen Vorgängen, die aufeinander warten. Mit dem Netzplan rechnest du aus, wann jeder Vorgang frühestens und spätestens laufen kann, wie viel Luft er hat und welche Vorgänge das Projektende bestimmen. Am Fall «Onlineschalter Wolkenried» rechnest du das Schritt für Schritt und spielst im Labor durch, was eine Verkürzung bringt.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t10-ziele">
+        <li>Du rechnest aus Aufwand und Personen die Dauer eines Vorgangs.</li>
+        <li>Du füllst einen Vorgangsknoten (FA, FE, SA, SE, Dauer) vorwärts und rückwärts aus.</li>
+        <li>Du bestimmst Gesamtpuffer, freien Puffer und den kritischen Pfad.</li>
+        <li>Du zeichnest daraus ein Gantt-Diagramm mit Meilensteinen und rechnest das Budget.</li>
+        <li>Du begründest, welche Verkürzung das Projekt wirklich schneller macht.</li>
+      </ul>
+      <p class="t10-quelle">Quellen: Skript LB 4 F.20–22 (Netzplanknoten, kritischer Pfad, Gantt), Arbeitsblatt Projektstruktur Dok. 3.2 S.2 (Begriffe Puffer, Meilenstein), Swiss ICB 4.5.4 «Ablauf und Termine», Gubelmann/Sommer Kap. 21 «Ablauf und Termine» (S. 238–257, laut LB 4 F.4). Alle Zahlen auf dieser Seite sind eigene Beispiele.</p>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#dauer"><b>1</b>Dauer</a>
+    <a href="#knoten"><b>2</b>Vorwärts</a>
+    <a href="#rueckwaerts"><b>3</b>Rückwärts</a>
+    <a href="#puffer"><b>4</b>Puffer</a>
+    <a href="#gantt"><b>5</b>Gantt und Budget</a>
+    <a href="#labor"><b>6</b>Labor</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine eines Terminplans</h2>
+    <p class="prose">Denk an einen Umzug. Du packst Kisten, der Lastwagen fährt, dann räumst du ein. Manches geht gleichzeitig, manches muss warten. Und wenn der Lastwagen zu spät kommt, wird alles später. Genau das bildet ein Netzplan ab.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Vorgang</span><span class="ex">B · Soll-Ablauf</span><p>Eine Tätigkeit mit Anfang, Ende und Dauer. Beim Umzug: «Kisten packen». Im Netzplan meist ein Arbeitspaket aus dem Projektstrukturplan.</p></div>
+      <div class="concept"><span class="tag">Aufwand und Dauer</span><span class="ex">64 h ÷ 16 h = 4 T</span><p>Aufwand ist die Arbeit in Personenstunden, Dauer die Zeit im Kalender. 24 Stunden Packen sind zu dritt ein einziger Tag.</p></div>
+      <div class="concept"><span class="tag">Abhängigkeit</span><span class="ex">B → D</span><p>D beginnt erst, wenn B fertig ist. Den Lastwagen beladen kannst du erst, wenn die Kisten gepackt sind.</p></div>
+      <div class="concept"><span class="tag">Meilenstein</span><span class="ex">◆ Go-live</span><p>Ein Zeitpunkt ohne Dauer und ohne Ressourcen, an dem ein wichtiges Ergebnis vorliegt. Beim Umzug: Schlüsselübergabe.</p></div>
+      <div class="concept"><span class="tag">Puffer</span><span class="ex">GP = 4 T</span><p>So viele Tage darf ein Vorgang sich verschieben, ohne dass das Ende rutscht. Den Keller kannst du später räumen, die Wohnung nicht.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Aufwand, Dauer oder Meilenstein?</h3>
+      <p class="hint">Frag dich: Sind das Personenstunden, Kalendertage oder ein Zeitpunkt?</p>
+      <div id="t10-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Dauer aus Aufwand ===== -->
+  <section id="dauer">
+    <span class="eyebrow">Schritt 1 · Vom Aufwand zur Dauer</span>
+    <h2>Wie lange dauert ein Arbeitspaket?</h2>
+    <p class="prose">Die Gemeinde Wolkenried führt das Baugesuch online ein. Initialisierung und Konzept sind erledigt, jetzt planst du Realisierung und Einführung. Für jedes Arbeitspaket kennst du den geschätzten Aufwand in Stunden und wie viele Leute daran arbeiten. Daraus rechnest du die Dauer in Arbeitstagen.</p>
+    <div class="board t10-tafel">
+      $$\text{Dauer in Tagen} = \frac{\text{Aufwand in Stunden}}{\text{Mitarbeitende} \times 8\ \text{h}}$$
+    </div>
+    <p class="prose">Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="t10-stepper-dauer"></div>
+    <div class="note"><b>Merke:</b> Geht die Rechnung nicht auf, rundest du auf ganze Tage auf. 40 Stunden mit 2 Personen sind 2.5 Tage, im Plan also 3 Tage. Ein angefangener Tag ist im Kalender verbraucht.</div>
+    <div class="note falle"><b>Falle:</b> Doppelt so viele Leute halbieren die Dauer nur auf dem Papier. Neue Leute brauchen Einarbeitung, mehr Leute brauchen mehr Absprachen, und manche Arbeit lässt sich nicht teilen. Die Formel ist eine Planungsannahme, kein Naturgesetz.</div>
+  </section>
+
+  <!-- ===== 2 · Vorgangsknoten und Vorwärtsrechnung ===== -->
+  <section id="knoten">
+    <span class="eyebrow">Schritt 2 · Vorwärts rechnen</span>
+    <h2>Der Vorgangsknoten und die früheste Lage</h2>
+    <p class="prose">Im Netzplan ist jeder Vorgang ein Kästchen mit sechs Feldern (LB 4 F.20). Oben stehen die frühesten Zeiten, unten die spätesten, in der Mitte Name und Dauer.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Felder eines Vorgangsknotens</caption>
+        <thead><tr><th>Kürzel</th><th>Bedeutung</th><th>Frage dahinter</th></tr></thead>
+        <tbody>
+          <tr><th>FA</th><td>frühester Anfang</td><td>An welchem Tag kann ich frühestens beginnen?</td></tr>
+          <tr><th>FE</th><td>frühestes Ende</td><td>An welchem Tag bin ich frühestens fertig?</td></tr>
+          <tr><th>SA</th><td>spätester Anfang</td><td>Wann muss ich spätestens beginnen?</td></tr>
+          <tr><th>SE</th><td>spätestes Ende</td><td>Wann muss ich spätestens fertig sein?</td></tr>
+          <tr><th>D</th><td>Dauer</td><td>Wie viele Arbeitstage brauche ich?</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Wir zählen wie im Unterricht <b>ab Tag 1</b>: Der erste Vorgang beginnt am Morgen von Tag 1. Ein Vorgang mit FA 3 und Dauer 4 arbeitet an den Tagen 3, 4, 5 und 6. Er endet also am Abend von Tag 6, nicht von Tag 7.</p>
+    <div class="board t10-tafel t10-regeln" aria-label="Regeln der Vorwärtsrechnung">
+      <div class="t10-regel"><b>Start</b><span>\(\text{FA} = 1\) beim ersten Vorgang</span></div>
+      <div class="t10-regel"><b>Frühestes Ende</b><span>\(\text{FE} = \text{FA} + D - 1\)</span></div>
+      <div class="t10-regel"><b>Nachfolger</b><span>\(\text{FA} = \max(\text{FE aller Vorgänger}) + 1\)</span></div>
+      <div class="t10-regel"><b>Projektende</b><span>grösstes FE im Netzplan</span></div>
+    </div>
+    <p class="prose">Ein Beispiel aus Wolkenried: Die Schnittstelle zur Bauverwaltungssoftware (E) braucht den fertigen Soll-Ablauf (B) und die eingerichtete Plattform (C).</p>
+    <div id="t10-stepper-vorwaerts"></div>
+    <p class="prose">So sieht der Knoten von E nach der Vorwärtsrechnung aus. Die unteren Felder folgen im nächsten Schritt.</p>
+    <div class="tablebox"><div class="netzplan" id="t10-knoten-e" style="--np-spalten:1"></div></div>
+    <div class="note"><b>Merke:</b> Vorwärts nimmst du das <b>Maximum</b>. Ein Vorgang kann erst beginnen, wenn sein langsamster Vorgänger fertig ist.</div>
+  </section>
+
+  <!-- ===== 3 · Rückwärtsrechnung ===== -->
+  <section id="rueckwaerts">
+    <span class="eyebrow">Schritt 3 · Rückwärts rechnen</span>
+    <h2>Die späteste Lage: vom Ende her denken</h2>
+    <p class="prose">Die Vorwärtsrechnung liefert das Projektende. Jetzt gehst du vom letzten Vorgang zurück zum ersten und fragst bei jedem: Wann muss ich spätestens fertig sein, damit das Projektende hält?</p>
+    <div class="board t10-tafel t10-regeln" aria-label="Regeln der Rückwärtsrechnung">
+      <div class="t10-regel"><b>Start</b><span>\(\text{SE} = \text{Projektende}\) beim letzten Vorgang</span></div>
+      <div class="t10-regel"><b>Spätester Anfang</b><span>\(\text{SA} = \text{SE} - D + 1\)</span></div>
+      <div class="t10-regel"><b>Vorgänger</b><span>\(\text{SE} = \min(\text{SA aller Nachfolger}) - 1\)</span></div>
+      <div class="t10-regel"><b>Kontrolle</b><span>der erste Vorgang hat \(\text{SA} = 1\)</span></div>
+    </div>
+    <p class="prose">Beispiel: Der Integrationstest (H) hat zwei Nachfolger, die Schulung (I) und den Pilotbetrieb (J). Ihre spätesten Anfänge kennst du schon aus der Rückwärtsrechnung.</p>
+    <div id="t10-stepper-rueckwaerts"></div>
+    <div class="note"><b>Merke:</b> Rückwärts nimmst du das <b>Minimum</b>. Der dringendste Nachfolger bestimmt, wann du spätestens fertig sein musst.</div>
+  </section>
+
+  <!-- ===== 4 · Puffer und kritischer Pfad ===== -->
+  <section id="puffer">
+    <span class="eyebrow">Schritt 4 · Luft im Plan</span>
+    <h2>Gesamtpuffer, freier Puffer, kritischer Pfad</h2>
+    <p class="prose">Sobald alle sechs Felder stehen, liest du die Luft im Plan ab. Das Arbeitsblatt Projektstruktur (Dok. 3.2 S.2) unterscheidet zwei Arten von Puffer. In eigenen Worten:</p>
+    <div class="grid2">
+      <div class="card stack"><h3>Gesamtpuffer (GP)</h3><p>So viele Tage darf sich ein Vorgang gegenüber seinem frühesten Termin verschieben, <b>ohne dass das Projektende rutscht</b>. Die Nachfolger dürfen sich dabei mitverschieben.</p></div>
+      <div class="card stack"><h3>Freier Puffer (FP)</h3><p>So viele Tage darf sich ein Vorgang verschieben, <b>ohne dass ein direkter Nachfolger später beginnen muss</b>. Kein anderer Vorgang merkt etwas.</p></div>
+    </div>
+    <div class="board t10-tafel t10-regeln" aria-label="Formeln für Puffer">
+      <div class="t10-regel"><b>Gesamtpuffer</b><span>\(\text{GP} = \text{SA} - \text{FA} = \text{SE} - \text{FE}\)</span></div>
+      <div class="t10-regel"><b>Freier Puffer</b><span>\(\text{FP} = \min(\text{FA der Nachfolger}) - \text{FE} - 1\)</span></div>
+      <div class="t10-regel"><b>Kritisch</b><span>\(\text{GP} = 0\), also \(\text{FA} = \text{SA}\) und \(\text{FE} = \text{SE}\)</span></div>
+    </div>
+    <div id="t10-stepper-puffer"></div>
+    <p class="prose">Der <b>kritische Pfad</b> ist die Kette der Vorgänge ohne Gesamtpuffer vom Start bis zum Ende. Er ist der längste Weg durch den Netzplan, gemessen an der Summe der Dauern. Verschiebt sich ein Vorgang darauf, verschiebt sich das Projektende um gleich viel (LB 4 F.21). Im Grundplan von Wolkenried ist das A → B → D → F → H → J → K mit 2 + 4 + 3 + 4 + 3 + 6 + 2 = 24 Tagen.</p>
+    <div class="note tipp"><b>Tipp für die Projektsimulation:</b> Setz die stärksten und passendsten Leute auf die kritischen Vorgänge. Vorgänge mit viel Puffer eignen sich, um die Auslastung zu glätten oder Neue einzuarbeiten.</div>
+    <details class="sol"><summary>Kann es mehr als einen kritischen Pfad geben?</summary>
+      <div class="stack">
+        <p>Ja. Sind zwei Wege genau gleich lang, haben alle Vorgänge auf beiden Wegen Gesamtpuffer 0. Das passiert oft, nachdem du einen kritischen Vorgang verkürzt hast: Der bisher zweitlängste Weg holt auf. Im Labor siehst du das beim Szenario «D mit 3 Personen».</p>
+      </div>
+    </details>
+    <details class="sol"><summary>Was bringt eine Verkürzung, und was nicht?</summary>
+      <div class="stack">
+        <p><b>Bringt etwas:</b> einen kritischen Vorgang verkürzen. Das Projektende rückt nach vorn, aber höchstens so weit, bis ein anderer Weg gleich lang ist. Ab dann ist ein neuer kritischer Pfad da, und du musst auch dort verkürzen.</p>
+        <p><b>Bringt nichts:</b> einen Vorgang mit Puffer verkürzen. Er wartet danach einfach länger auf seinen Nachfolger. Sein Puffer wächst, das Projektende bleibt.</p>
+        <p><b>Kostet trotzdem:</b> Verkürzen heisst meist mehr Leute, Überstunden oder externe Hilfe. Prüf also zuerst, ob der Vorgang kritisch ist, und rechne danach den Netzplan neu.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Gantt und Budget ===== -->
+  <section id="gantt">
+    <span class="eyebrow">Schritt 5 · Darstellen und bewerten</span>
+    <h2>Gantt-Diagramm, Meilensteine und Budget</h2>
+    <p class="prose">Der Netzplan zeigt die Abhängigkeiten. Für den Gemeinderat und das Team ist ein <b>Gantt-Diagramm</b> oft lesbarer: Jeder Vorgang ist ein Balken auf einer Zeitachse, von FA bis FE (LB 4 F.22). Puffer zeichnest du als gestrichelte Verlängerung, kritische Balken hebst du hervor. Meilensteine sind Rauten ohne Länge, zum Beispiel die Vorabnahme nach dem Integrationstest und der Go-live.</p>
+    <p class="prose">Das <b>Budget</b> hängt am Aufwand, nicht an der Dauer. Du multiplizierst die Stunden jedes Arbeitspakets mit dem Stundensatz und zählst zusammen.</p>
+    <div class="board t10-tafel">
+      $$\text{Budget} = \sum \text{Aufwand in Stunden} \times \text{Stundensatz}$$
+    </div>
+    <p class="prose">Wolkenried: 616 Stunden zu CHF 140 ergeben CHF 86'240. Setzt du bei einem Vorgang mehr Leute ein, wird er kürzer, aber nicht billiger. Die Stunden bleiben gleich, solange niemand länger braucht.</p>
+    <div class="note falle"><b>Falle:</b> Ein Meilenstein hat die Dauer 0 und keine Ressourcen (Arbeitsblatt Dok. 3.2). Er kostet im Budget nichts und verlängert den Netzplan nicht.</div>
+  </section>
+
+  <!-- ===== 6 · Netzplan-Labor ===== -->
+  <section id="labor">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Netzplan-Labor: Onlineschalter Wolkenried</h2>
+    <p class="prose">Hier liegt der ganze Plan für Realisierung und Einführung: elf Arbeitspakete mit Aufwand und Personen. Ändere Stunden oder Personen. Dauer, alle Knotenwerte, Puffer, kritischer Pfad, Gantt und Budget rechnen sich sofort neu. Geänderte Zeilen sind links gelb markiert.</p>
+
+    <div class="card stack">
+      <h3>1 · Aufwand und Personen</h3>
+      <p class="hint">Personen arbeiten Vollzeit (8 h pro Tag). Die Dauer wird auf ganze Tage aufgerundet. Auf schmalen Bildschirmen seitlich wischen.</p>
+      <div class="tablebox t10-tafel">
+        <table class="tabelle t10-eingaben">
+          <caption>Arbeitspakete des Onlineschalters</caption>
+          <thead><tr><th>Vorgang</th><th>Vorgänger</th><th>Aufwand (h)</th><th>Personen</th><th class="zahl">Dauer (T)</th></tr></thead>
+          <tbody id="t10-eingabe-zeilen"></tbody>
+        </table>
+      </div>
+      <div class="t10-satz">
+        <label for="t10-satz">Stundensatz CHF</label>
+        <input class="t10-zahl" id="t10-satz" type="number" inputmode="numeric" min="50" max="400" step="5" value="140">
+      </div>
+    </div>
+
+    <div class="card stack">
+      <h3>2 · Szenarien zum Ausprobieren</h3>
+      <p class="hint">Jedes Szenario startet vom Grundplan aus. Achte auf Projektende und kritischen Pfad.</p>
+      <div class="t10-szenarien" id="t10-szenarien"></div>
+    </div>
+
+    <div class="t10-meldung" id="t10-meldung" aria-live="polite"></div>
+
+    <div class="card stack">
+      <h3>3 · Ansicht</h3>
+      <div class="modes" role="group" aria-label="Ansicht wählen">
+        <button type="button" class="btn on" aria-pressed="true" data-t10-ansicht="netz">Netzplan</button>
+        <button type="button" class="btn" aria-pressed="false" data-t10-ansicht="gantt">Gantt</button>
+        <button type="button" class="btn" aria-pressed="false" data-t10-ansicht="tabelle">Tabelle</button>
+      </div>
+      <div id="t10-ansicht-netz">
+        <p class="hint">Jeder Knoten nennt seine Vorgänger («nach …»). Kritische Knoten haben einen dicken Rahmen und die Marke «kritisch». Seitlich wischen.</p>
+        <div class="tablebox"><div class="netzplan" id="t10-netz" style="--np-spalten:13"></div></div>
+      </div>
+      <div id="t10-ansicht-gantt" hidden>
+        <div class="gantt-legende">
+          <span><span class="gantt-balken" aria-hidden="true"></span>Vorgang</span>
+          <span><span class="gantt-balken kritisch" aria-hidden="true"></span>kritisch (Rahmen und Schraffur)</span>
+          <span><span class="gantt-puffer" aria-hidden="true"></span>Gesamtpuffer</span>
+          <span><span class="gantt-meilenstein" aria-hidden="true"></span>Meilenstein</span>
+        </div>
+        <p class="hint">Die Skala zählt Arbeitstage ab Tag 1. Ein Balken reicht vom Morgen des FA bis zum Abend des FE.</p>
+        <div class="tablebox" id="t10-gantt"></div>
+      </div>
+      <div id="t10-ansicht-tabelle" hidden>
+        <div class="tablebox" id="t10-tabelle"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst rechnen und entscheiden</span>
+    <h2>Übungen</h2>
+    <p class="prose">Rechne zuerst selbst auf Papier, dann prüfst du. Tipps und Lösungsweg kannst du einzeln aufdecken. Alle Aufgaben zählen ab Tag 1.</p>
+    <div id="t10-ue-dauer"></div>
+    <div id="t10-ue-vorwaerts"></div>
+    <div id="t10-ue-rueckwaerts"></div>
+    <div id="t10-ue-puffer"></div>
+    <div id="t10-ue-wf"></div>
+    <div id="t10-ue-schritt"></div>
+    <div class="card stack"><h3>IPMA-Stil: Ein Lieferant meldet Verzug</h3><div id="t10-ue-verzug"></div></div>
+    <div class="card stack"><h3>Fallentscheid: Eine zusätzliche Person für eine Woche</h3><div id="t10-ue-fall"></div></div>
+    <div id="t10-ue-budget"></div>
+    <div id="t10-ue-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein ganzer Netzplan am Stück</h2>
+    <p class="prose">So sieht eine typische Prüfungsaufgabe aus, im Stil des Arbeitsblatts Projektstruktur (Dok. 3.2), aber mit eigenen Zahlen: Dauer aus dem Aufwand, Netzplan vorwärts und rückwärts, Puffer, kritischer Pfad, Gantt und Budget. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t10-film"></div>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier gehen die meisten Punkte verloren</h2>
+    <div class="note falle"><b>Zählweise mischen.</b> Ab Tag 1 gilt FE = FA + D − 1 und der Nachfolger beginnt bei FE + 1. Manche Bücher und Programme zählen Zeitpunkte ab 0 (FE = FA + D, Nachfolger beginnt bei FE). Beide sind richtig, wenn du sie durchziehst. Schreib in der Prüfung oben hin, wie du zählst, und wechsle nie mitten in der Rechnung.</div>
+    <div class="note falle"><b>Maximum und Minimum verwechseln.</b> Vorwärts nimmst du bei mehreren Vorgängern das grösste FE, rückwärts bei mehreren Nachfolgern das kleinste SA.</div>
+    <div class="note falle"><b>Aufwand als Dauer eintragen.</b> 64 Stunden sind nicht 64 Tage und auch nicht 8 Tage, wenn zwei Personen daran arbeiten. Erst teilen durch Personen × 8 h, dann aufrunden.</div>
+    <div class="note falle"><b>Den Weg mit den meisten Vorgängen für kritisch halten.</b> Kritisch ist der Weg mit der grössten Summe der Dauern, also der mit GP 0. Zähl die Dauern nach, als Kontrolle.</div>
+    <div class="note falle"><b>Freien Puffer und Gesamtpuffer gleichsetzen.</b> G Schulungsunterlagen hat GP 4, aber FP 0. Schon ein Tag Verzug schiebt die Schulung (I) nach hinten, das Projektende aber erst nach mehr als 4 Tagen.</div>
+    <div class="note falle"><b>Puffer doppelt verteilen.</b> G und I haben je 4 Tage Gesamtpuffer, liegen aber auf demselben Weg. Zusammen haben sie nur 4 Tage, nicht 8.</div>
+    <div class="note falle"><b>Den falschen Vorgang verkürzen.</b> Nur kritische Vorgänge ziehen das Projektende vor, und nur bis ein anderer Weg gleich lang ist. Nach jeder Änderung neu rechnen.</div>
+    <div class="note falle"><b>Budget aus der Dauer rechnen.</b> Das Budget ist Aufwand × Stundensatz. Dauer × Stundensatz vergisst die Personen und die Stunden pro Tag.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen wie in der IPMA-Prüfung: je eine richtige Antwort. Zählweise ab Tag 1.</p>
+    <div id="t10-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Dauer</b> = Aufwand ÷ (Mitarbeitende × 8 h), auf ganze Tage aufrunden. <b>Budget</b> = Σ Aufwand × Stundensatz.</li>
+      <li><b>Vorwärts</b> (ab Tag 1): FE = FA + D − 1, Nachfolger FA = max(FE der Vorgänger) + 1. Grösstes FE = Projektende.</li>
+      <li><b>Rückwärts:</b> SA = SE − D + 1, Vorgänger SE = min(SA der Nachfolger) − 1. Der erste Vorgang landet wieder bei SA 1.</li>
+      <li><b>Gesamtpuffer</b> GP = SA − FA (Projektende hält). <b>Freier Puffer</b> FP = min(FA der Nachfolger) − FE − 1 (Nachfolger merken nichts).</li>
+      <li><b>Kritischer Pfad:</b> alle Vorgänge mit GP 0, der längste Weg nach Dauer. Erkennbar an FA = SA und FE = SE.</li>
+      <li><b>Verkürzen</b> wirkt nur auf dem kritischen Pfad und nur, bis ein anderer Weg kritisch wird. Beste Leute auf den kritischen Pfad, Vorgänge mit Puffer zum Glätten.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner</b> (Register <span class="icb">ICB 3.04</span> Ablauf und Termine):
+      <ul class="t10-ziele">
+        <li>Knotenschema FA | Vorgang | FE über SA | Dauer | SE (LB 4 F.20) mit den sechs Formeln dieser Seite und dem Vermerk «Zählweise ab Tag 1».</li>
+        <li>Definition kritischer Pfad (LB 4 F.21) und Puffer-Definitionen (Arbeitsblatt Projektstruktur Dok. 3.2 S.2), Meilenstein = Dauer 0, keine Ressourcen.</li>
+        <li>Dauer- und Budgetformel, Rundungsregel «aufrunden».</li>
+        <li>Ablauf einer Netzplan-Aufgabe: Dauer → vorwärts → rückwärts → GP/FP → kritischer Pfad → Gantt → Budget.</li>
+        <li>Fundstellen: Gubelmann/Sommer Kap. 21 «Ablauf und Termine», S. 238–257, und Kap. 8 «Projektdesign», S. 89–104 (laut LB 4 F.4); Swiss ICB 4.5.4 (Kompetenzindikatoren 4.5.4.1–4.5.4.5).</li>
+      </ul>
+    </div>
+    <footer>Station 10 des Lernpfads PMGT. Alle Netzpläne, Zahlen und Fälle sind eigene Beispiele; die Lösungen sind per Skript nachgerechnet (eigene Lösungen, nicht vom Dozenten bestätigt). Weiter geht es mit «Ressourcen und Kosten planen».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  // Ganze Franken mit Hochkomma ab 1000, wie im Text der Seite (86'240)
+  const chf = (x) => "CHF " + String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+
+  /* ---------- Rechenkern: Netzplan mit Zählweise ab Tag 1 ---------- */
+  // liste: [{ id, vg: [ids], d }] in einer Reihenfolge, in der Vorgänger vor Nachfolgern stehen
+  function netzRechnen(liste) {
+    const m = {};
+    liste.forEach((v) => { m[v.id] = { id: v.id, vg: v.vg.slice(), d: v.d, nf: [] }; });
+    liste.forEach((v) => v.vg.forEach((p) => m[p].nf.push(v.id)));
+    liste.forEach((v) => {
+      const x = m[v.id];
+      x.fa = x.vg.length ? Math.max.apply(null, x.vg.map((p) => m[p].fe)) + 1 : 1;
+      x.fe = x.fa + x.d - 1;
+    });
+    const ende = Math.max.apply(null, liste.map((v) => m[v.id].fe));
+    liste.slice().reverse().forEach((v) => {
+      const x = m[v.id];
+      x.se = x.nf.length ? Math.min.apply(null, x.nf.map((n) => m[n].sa)) - 1 : ende;
+      x.sa = x.se - x.d + 1;
+      x.gp = x.sa - x.fa;
+      x.fp = x.nf.length ? Math.min.apply(null, x.nf.map((n) => m[n].fa)) - x.fe - 1 : ende - x.fe;
+      x.kritisch = x.gp === 0;
+    });
+    // alle kritischen Pfade vom Start bis zum Ende
+    const pfade = [];
+    function weiter(id, weg) {
+      const x = m[id], w = weg.concat(id);
+      const naechste = x.nf.filter((n) => m[n].kritisch && m[n].fa === x.fe + 1);
+      if (!naechste.length) { if (x.fe === ende) pfade.push(w); return; }
+      naechste.forEach((n) => weiter(n, w));
+    }
+    liste.forEach((v) => { if (!v.vg.length && m[v.id].kritisch) weiter(v.id, []); });
+    return { m: m, ende: ende, pfade: pfade };
+  }
+  const dauerAus = (h, p) => Math.max(1, Math.ceil(h / (p * 8)));
+
+  /* Gantt als HTML (Baukasten-Klassen); zeilen: [{ name, fa, d, gp, kritisch }] oder { name, meilenstein, kritisch } */
+  function ganttHtml(zeilen, einheiten, extraKlasse, label) {
+    let skala = "";
+    for (let t = 1; t <= einheiten; t++) skala += "<span>" + t + "</span>";
+    let h = '<div class="gantt ' + (extraKlasse || "") + '" style="--gantt-einheiten:' + einheiten + '" role="img" aria-label="' + label + '">' +
+      '<div class="gantt-kopf"><span class="gantt-name">Vorgang</span><div class="gantt-skala">' + skala + "</div></div>";
+    zeilen.forEach((z) => {
+      h += '<div class="gantt-zeile"><span class="gantt-name">' + z.name + '</span><div class="gantt-spur">';
+      if (z.meilenstein !== undefined) {
+        h += '<span class="gantt-meilenstein' + (z.kritisch ? " kritisch" : "") + '" style="--start:' + z.meilenstein + '"></span>';
+      } else {
+        h += '<span class="gantt-balken' + (z.kritisch ? " kritisch" : "") + '" style="--start:' + (z.fa - 1) + "; --dauer:" + z.d + '">' + z.d + " T</span>";
+        if (z.gp > 0) h += '<span class="gantt-puffer" style="--start:' + (z.fa - 1 + z.d) + "; --dauer:" + z.gp + '"></span>';
+      }
+      h += "</div></div>";
+    });
+    return h + "</div>";
+  }
+
+  /* ---------- 0 · Sortierer ---------- */
+  L.sortierer("#t10-sortierer", {
+    kategorien: ["Aufwand", "Dauer", "Meilenstein"],
+    elemente: [
+      { html: "64 Personenstunden für den Soll-Ablauf", kategorie: "Aufwand", erklaerung: "Personenstunden messen die Arbeit, egal wie viele Leute sie leisten." },
+      { html: "Der Pilotbetrieb läuft von Tag 17 bis Tag 22", kategorie: "Dauer", erklaerung: "Das ist Zeit im Kalender: 6 Arbeitstage." },
+      { html: "Vorabnahme durch das Bauamt unterschrieben", kategorie: "Meilenstein", erklaerung: "Ein Zeitpunkt mit einem Ergebnis, ohne eigene Dauer." },
+      { html: "3 Personentage für die Plattform", kategorie: "Aufwand", erklaerung: "Personentage sind Arbeit (3 × 8 = 24 Stunden), keine Kalenderzeit." },
+      { html: "Die Schulung braucht 2 Arbeitstage", kategorie: "Dauer", erklaerung: "Wie lange es im Kalender dauert, mit den eingeplanten Leuten." },
+      { html: "Go-live des Onlineschalters", kategorie: "Meilenstein", erklaerung: "Der Tag, an dem der Schalter für alle offen ist. Ein Zeitpunkt." }
+    ]
+  });
+
+  /* ---------- 1 · Stepper Dauer ---------- */
+  L.stepper("#t10-stepper-dauer", {
+    titel: "Arbeitspaket B · Soll-Ablauf festlegen",
+    text: 'Das Arbeitspaket <span data-link="b">B Soll-Ablauf und Formularinhalte festlegen</span> braucht <span data-link="h">64 Stunden</span> Arbeit. <span data-link="p">Zwei Personen</span> arbeiten <span data-link="t">Vollzeit, also 8 Stunden pro Tag</span>, daran. Der Stundensatz ist <span data-link="s">CHF 140</span>.',
+    schritte: [
+      { html: 'Aufwand = <span data-link="h">64 h</span>', warum: "Der Aufwand ist die ganze Arbeit in Personenstunden. Er hängt nicht davon ab, wie viele Leute mitarbeiten." },
+      { html: 'Leistung pro Tag = <span data-link="p">2</span> × <span data-link="t">8 h</span> = 16 h', warum: "Zwei Personen leisten zusammen 16 Stunden pro Arbeitstag." },
+      { html: 'Dauer = <span data-link="h">64 h</span> ÷ 16 h = <b data-link="b">4 Tage</b>', warum: "Aufwand geteilt durch die Leistung pro Tag. Die Rechnung geht auf, Runden ist nicht nötig." },
+      { html: 'Kosten = <span data-link="h">64 h</span> × <span data-link="s">CHF 140</span> = CHF 8\'960', warum: "Die Kosten hängen am Aufwand. Mit vier Personen wäre B in 2 Tagen fertig, kostete aber gleich viel." }
+    ]
+  });
+
+  /* ---------- 2 · Stepper Vorwärts ---------- */
+  L.stepper("#t10-stepper-vorwaerts", {
+    titel: "Vorgang E · Schnittstelle",
+    text: 'Die <span data-link="e">Schnittstelle E dauert 6 Tage</span>. Sie braucht den <span data-link="b">Soll-Ablauf B, frühestens fertig am Abend von Tag 6</span>, und die <span data-link="c">Plattform C, frühestens fertig am Abend von Tag 5</span>.',
+    schritte: [
+      { html: '<span data-link="b">FE<sub>B</sub> = 6</span>, &nbsp; <span data-link="c">FE<sub>C</sub> = 5</span>', warum: "Zuerst schreibst du die frühesten Enden aller Vorgänger auf." },
+      { html: 'max(<span data-link="b">6</span>, <span data-link="c">5</span>) = 6', warum: "E braucht beide Ergebnisse. Darum wartet E auf den Vorgänger, der zuletzt fertig wird: B." },
+      { html: '<span data-link="e">FA<sub>E</sub></span> = 6 + 1 = 7', warum: "B endet am Abend von Tag 6. E kann am Morgen von Tag 7 beginnen." },
+      { html: '<span data-link="e">FE<sub>E</sub></span> = 7 + <span data-link="e">6</span> − 1 = 12', warum: "Tag 7 ist schon der erste Arbeitstag. E arbeitet an den Tagen 7, 8, 9, 10, 11 und 12. Darum minus 1." }
+    ]
+  });
+
+  /* Knoten E nach der Vorwärtsrechnung */
+  document.getElementById("t10-knoten-e").appendChild(
+    L.netzplanKnoten({ vorgang: '<span class="t10-nk">E Schnittstelle</span><span class="t10-vg">nach B, C</span>', dauer: 6, fa: 7, fe: 12 })
+  );
+
+  /* ---------- 3 · Stepper Rückwärts ---------- */
+  L.stepper("#t10-stepper-rueckwaerts", {
+    titel: "Vorgang H · Integrationstest",
+    text: 'Der <span data-link="h">Integrationstest H dauert 3 Tage</span>. Seine Nachfolger sind die <span data-link="i">Schulung I mit spätestem Anfang Tag 21</span> und der <span data-link="j">Pilotbetrieb J mit spätestem Anfang Tag 17</span>.',
+    schritte: [
+      { html: '<span data-link="i">SA<sub>I</sub> = 21</span>, &nbsp; <span data-link="j">SA<sub>J</sub> = 17</span>', warum: "Rückwärts schreibst du die spätesten Anfänge aller Nachfolger auf." },
+      { html: 'min(<span data-link="i">21</span>, <span data-link="j">17</span>) = 17', warum: "H muss vor beiden fertig sein. Der Pilotbetrieb muss früher beginnen, also bestimmt er." },
+      { html: '<span data-link="h">SE<sub>H</sub></span> = 17 − 1 = 16', warum: "J beginnt spätestens am Morgen von Tag 17. H muss also spätestens am Abend von Tag 16 fertig sein." },
+      { html: '<span data-link="h">SA<sub>H</sub></span> = 16 − <span data-link="h">3</span> + 1 = 14', warum: "H braucht die Tage 14, 15 und 16. Spätester Anfang ist Tag 14. Weil auch FA<sub>H</sub> = 14 ist, hat H keinen Puffer." }
+    ]
+  });
+
+  /* ---------- 4 · Stepper Puffer ---------- */
+  L.stepper("#t10-stepper-puffer", {
+    titel: "Vorgang G · Schulungsunterlagen",
+    text: 'Die <span data-link="g">Schulungsunterlagen G</span> haben <span data-link="fa">FA 14</span>, <span data-link="fe">FE 16</span>, <span data-link="sa">SA 18</span> und <span data-link="se">SE 20</span>. Einziger Nachfolger ist die <span data-link="i">Schulung I mit frühestem Anfang Tag 17</span>.',
+    schritte: [
+      { html: 'GP = <span data-link="sa">18</span> − <span data-link="fa">14</span> = 4', warum: "Gesamtpuffer = spätester minus frühester Anfang. G darf bis zu 4 Tage später beginnen, ohne dass das Projektende rutscht." },
+      { html: 'Kontrolle: <span data-link="se">20</span> − <span data-link="fe">16</span> = 4 ✓', warum: "SE − FE ergibt immer dasselbe. So findest du Rechenfehler." },
+      { html: 'FP = <span data-link="i">17</span> − <span data-link="fe">16</span> − 1 = 0', warum: "Freier Puffer: Die Schulung startet frühestens am Tag direkt nach G. Für G bleibt kein Tag, ohne dass I später beginnt." },
+      { html: '<span data-link="g">G</span>: GP 4, FP 0', warum: "Verschiebt sich G um 2 Tage, beginnt auch I 2 Tage später. Das Projektende hält trotzdem, weil I selbst 4 Tage Puffer hat. Die 4 Tage teilen sich G und I." }
+    ]
+  });
+
+  /* ---------- 6 · Netzplan-Labor ---------- */
+  const GRUND = [
+    { id: "A", name: "Kick-off und Detailplanung", kurz: "Kick-off", vg: [], h: 48, p: 3, sp: 1, ze: "1 / span 2" },
+    { id: "B", name: "Soll-Ablauf und Formularinhalte", kurz: "Soll-Ablauf", vg: ["A"], h: 64, p: 2, sp: 3, ze: "1" },
+    { id: "C", name: "Plattform einrichten", kurz: "Plattform", vg: ["A"], h: 24, p: 1, sp: 3, ze: "2" },
+    { id: "D", name: "Benutzerführung gestalten und testen", kurz: "Benutzerführung", vg: ["B"], h: 48, p: 2, sp: 5, ze: "1" },
+    { id: "E", name: "Schnittstelle zur Bauverwaltung", kurz: "Schnittstelle", vg: ["B", "C"], h: 96, p: 2, sp: 5, ze: "2" },
+    { id: "F", name: "Formulare und Ablauf konfigurieren", kurz: "Formulare", vg: ["C", "D"], h: 64, p: 2, sp: 7, ze: "1" },
+    { id: "G", name: "Schulungsunterlagen erstellen", kurz: "Unterlagen", vg: ["F"], h: 48, p: 2, sp: 9, ze: "1" },
+    { id: "H", name: "Integrationstest", kurz: "Integrationstest", vg: ["E", "F"], h: 48, p: 2, sp: 9, ze: "2" },
+    { id: "I", name: "Schulung durchführen", kurz: "Schulung", vg: ["G", "H"], h: 32, p: 2, sp: 11, ze: "1" },
+    { id: "J", name: "Pilotbetrieb mit Planungsbüros", kurz: "Pilotbetrieb", vg: ["H"], h: 96, p: 2, sp: 11, ze: "2" },
+    { id: "K", name: "Go-live, Abnahme, Übergabe", kurz: "Go-live", vg: ["I", "J"], h: 48, p: 3, sp: 13, ze: "1 / span 2" }
+  ];
+  const zustand = GRUND.map((v) => ({ h: v.h, p: v.p }));
+  let satz = 140;
+  const grundErgebnis = netzRechnen(GRUND.map((v) => ({ id: v.id, vg: v.vg, d: dauerAus(v.h, v.p) })));
+
+  const SZENARIEN = [
+    { titel: "Grundplan", aenderung: {}, text: "Grundplan: So hast du das Projekt geplant." },
+    { titel: "J Pilot mit 3 Personen", aenderung: { J: { p: 3 } },
+      text: "Der Pilotbetrieb liegt auf dem kritischen Pfad. Mit 3 statt 2 Personen dauert er 4 statt 6 Tage, das Projekt endet 2 Tage früher. Die Kosten bleiben gleich, denn die Stunden ändern sich nicht." },
+    { titel: "G Unterlagen mit 1 Person", aenderung: { G: { p: 1 } },
+      text: "G dauert jetzt 6 statt 3 Tage. Das Projektende bleibt, weil G 4 Tage Gesamtpuffer hatte. Aber der Puffer von G und I schrumpft auf 1 Tag, und die Schulung beginnt später." },
+    { titel: "E Schnittstelle 128 h", aenderung: { E: { h: 128 } },
+      text: "Die Schnittstelle braucht 32 Stunden mehr und dauert 8 statt 6 Tage. Sie hatte nur 1 Tag Puffer. Das Projekt endet 1 Tag später, und der kritische Pfad läuft jetzt über E statt über D und F." },
+    { titel: "D Benutzerführung mit 3 Personen", aenderung: { D: { p: 3 } },
+      text: "D ist kritisch und wird 1 Tag kürzer, das Projekt endet 1 Tag früher. Jetzt sind zwei Wege gleich lang: Es gibt zwei kritische Pfade. Ein weiterer Tag bei D brächte nichts mehr, weil E dann bremst." }
+  ];
+
+  const zeilenEl = document.getElementById("t10-eingabe-zeilen");
+  const meldung = document.getElementById("t10-meldung");
+  let szenarioText = "";
+
+  // Eingabetabelle aufbauen
+  GRUND.forEach((v, i) => {
+    const tr = document.createElement("tr");
+    tr.id = "t10-zeile-" + v.id;
+    let opt = "";
+    for (let n = 1; n <= 4; n++) opt += '<option value="' + n + '">' + n + "</option>";
+    tr.innerHTML =
+      "<td><b>" + v.id + "</b> " + v.name + "</td>" +
+      "<td>" + (v.vg.length ? v.vg.join(", ") : "–") + "</td>" +
+      '<td><label class="sr-only" for="t10-h-' + v.id + '">Aufwand in Stunden für ' + v.id + " " + v.name + "</label>" +
+      '<input class="t10-zahl" id="t10-h-' + v.id + '" type="number" inputmode="numeric" min="1" max="999" step="8" value="' + v.h + '"></td>' +
+      '<td><label class="sr-only" for="t10-p-' + v.id + '">Personen für ' + v.id + " " + v.name + "</label>" +
+      '<select class="t10-wahl" id="t10-p-' + v.id + '">' + opt + "</select></td>" +
+      '<td class="zahl" id="t10-d-' + v.id + '"></td>';
+    zeilenEl.appendChild(tr);
+    const hFeld = tr.querySelector("#t10-h-" + v.id), pFeld = tr.querySelector("#t10-p-" + v.id);
+    pFeld.value = String(v.p);
+    hFeld.addEventListener("input", () => {
+      const x = Number(hFeld.value);
+      const ok = hFeld.value !== "" && Number.isInteger(x) && x >= 1 && x <= 999;
+      hFeld.setAttribute("aria-invalid", ok ? "false" : "true");
+      if (ok) { zustand[i].h = x; szenarioText = ""; zeichnen(); }
+    });
+    pFeld.addEventListener("change", () => { zustand[i].p = Number(pFeld.value); szenarioText = ""; zeichnen(); });
+  });
+  const satzFeld = document.getElementById("t10-satz");
+  satzFeld.addEventListener("input", () => {
+    const x = Number(satzFeld.value);
+    const ok = satzFeld.value !== "" && x >= 50 && x <= 400;
+    satzFeld.setAttribute("aria-invalid", ok ? "false" : "true");
+    if (ok) { satz = x; zeichnen(); }
+  });
+
+  // Szenario-Knöpfe
+  const szEl = document.getElementById("t10-szenarien");
+  SZENARIEN.forEach((s) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.textContent = s.titel;
+    b.addEventListener("click", () => {
+      GRUND.forEach((v, i) => {
+        const a = s.aenderung[v.id] || {};
+        zustand[i].h = a.h !== undefined ? a.h : v.h;
+        zustand[i].p = a.p !== undefined ? a.p : v.p;
+        const hF = document.getElementById("t10-h-" + v.id), pF = document.getElementById("t10-p-" + v.id);
+        hF.value = String(zustand[i].h); hF.setAttribute("aria-invalid", "false");
+        pF.value = String(zustand[i].p);
+      });
+      satz = 140; satzFeld.value = "140"; satzFeld.setAttribute("aria-invalid", "false");
+      szenarioText = s.text;
+      zeichnen();
+    });
+    szEl.appendChild(b);
+  });
+
+  // Ansicht umschalten
+  const ansichtKnoepfe = Array.prototype.slice.call(document.querySelectorAll("[data-t10-ansicht]"));
+  ansichtKnoepfe.forEach((b) => b.addEventListener("click", () => {
+    ansichtKnoepfe.forEach((k) => {
+      const an = k === b;
+      k.classList.toggle("on", an); k.setAttribute("aria-pressed", an ? "true" : "false");
+      document.getElementById("t10-ansicht-" + k.getAttribute("data-t10-ansicht")).hidden = !an;
+    });
+  }));
+
+  function zeichnen() {
+    const liste = GRUND.map((v, i) => ({ id: v.id, vg: v.vg, d: dauerAus(zustand[i].h, zustand[i].p) }));
+    const r = netzRechnen(liste);
+    const stunden = zustand.reduce((s, z) => s + z.h, 0);
+
+    // Dauer in der Eingabetabelle, geänderte Zeilen markieren
+    GRUND.forEach((v, i) => {
+      document.getElementById("t10-d-" + v.id).textContent = String(r.m[v.id].d);
+      const geaendert = zustand[i].h !== v.h || zustand[i].p !== v.p;
+      document.getElementById("t10-zeile-" + v.id).classList.toggle("t10-geaendert", geaendert);
+    });
+
+    // Netzplan
+    const netz = document.getElementById("t10-netz");
+    netz.innerHTML = "";
+    [2, 4, 6, 8, 10, 12].forEach((sp) => {
+      const pf = document.createElement("span");
+      pf.className = "np-pfeil"; pf.setAttribute("aria-hidden", "true"); pf.textContent = "→";
+      pf.style.gridColumn = String(sp); pf.style.gridRow = "1 / span 2";
+      netz.appendChild(pf);
+    });
+    GRUND.forEach((v, i) => {
+      const x = r.m[v.id];
+      const k = L.netzplanKnoten({
+        vorgang: '<span class="t10-nk">' + v.id + " " + v.kurz + '</span><span class="t10-vg">' + (v.vg.length ? "nach " + v.vg.join(", ") : "Start") + "</span>",
+        dauer: x.d, fa: x.fa, fe: x.fe, sa: x.sa, se: x.se, gp: x.gp, fp: x.fp, kritisch: x.kritisch
+      });
+      k.style.gridColumn = String(v.sp); k.style.gridRow = v.ze;
+      if (zustand[i].h !== v.h || zustand[i].p !== v.p) k.classList.add("an");
+      netz.appendChild(k);
+    });
+
+    // Gantt mit Meilensteinen
+    const zeilen = GRUND.map((v) => {
+      const x = r.m[v.id];
+      return { name: v.id + " " + v.kurz, fa: x.fa, d: x.d, gp: x.gp, kritisch: x.kritisch };
+    });
+    zeilen.splice(8, 0, { name: "◆ Vorabnahme", meilenstein: r.m.H.fe, kritisch: r.m.H.kritisch });
+    zeilen.push({ name: "◆ Go-live", meilenstein: r.m.K.fe, kritisch: true });
+    const label = "Gantt: " + GRUND.map((v) => {
+      const x = r.m[v.id];
+      return v.id + " " + v.kurz + " Tag " + x.fa + " bis " + x.fe + (x.kritisch ? " kritisch" : ", Puffer " + x.gp);
+    }).join("; ") + "; Meilenstein Vorabnahme Ende Tag " + r.m.H.fe + ", Go-live Ende Tag " + r.m.K.fe;
+    document.getElementById("t10-gantt").innerHTML = ganttHtml(zeilen, r.ende, "t10-gantt-rem", label);
+
+    // Tabelle
+    let t = '<table class="tabelle"><caption>Alle Werte des aktuellen Plans</caption><thead><tr><th>Vorgang</th>' +
+      '<th class="zahl">D</th><th class="zahl">FA</th><th class="zahl">FE</th><th class="zahl">SA</th><th class="zahl">SE</th><th class="zahl">GP</th><th class="zahl">FP</th><th>kritisch</th></tr></thead><tbody>';
+    GRUND.forEach((v) => {
+      const x = r.m[v.id];
+      t += "<tr" + (x.kritisch ? ' class="an"' : "") + "><th>" + v.id + " " + v.kurz + '</th><td class="zahl">' + x.d + '</td><td class="zahl">' + x.fa +
+        '</td><td class="zahl">' + x.fe + '</td><td class="zahl">' + x.sa + '</td><td class="zahl">' + x.se + '</td><td class="zahl">' + x.gp +
+        '</td><td class="zahl">' + x.fp + "</td><td>" + (x.kritisch ? "ja" : "–") + "</td></tr>";
+    });
+    document.getElementById("t10-tabelle").innerHTML = t + "</tbody></table>";
+
+    // Rückmeldung
+    const diff = r.ende - grundErgebnis.ende;
+    const vergleich = diff === 0 ? "gleich wie im Grundplan" : Math.abs(diff) + (Math.abs(diff) === 1 ? " Tag " : " Tage ") + (diff < 0 ? "früher" : "später") + " als im Grundplan mit Tag " + grundErgebnis.ende;
+    const pfadText = r.pfade.map((p) => p.join(" → ")).join(" und ");
+    let html = "<p><b>Projektende Tag " + r.ende + "</b> (" + vergleich + "). " +
+      (r.pfade.length > 1 ? "Kritische Pfade: " : "Kritischer Pfad: ") + pfadText + ".</p>" +
+      "<p>Budget: " + L.zahlText(stunden, 0) + " h × CHF " + L.zahlText(satz, 0) + " = <b>" + chf(stunden * satz) + "</b>.</p>";
+    if (szenarioText) html += "<p>" + szenarioText + "</p>";
+    meldung.innerHTML = html;
+  }
+  zeichnen();
+
+  /* ---------- 7 · Übungen ---------- */
+  L.zahlAufgabe("#t10-ue-dauer", {
+    titel: "Dauer aus dem Aufwand",
+    frage: "Das Arbeitspaket «Stammdaten übernehmen» (Parzellen, Fachstellen, Tarife) braucht 120 Stunden. Drei Personen arbeiten Vollzeit (8 h pro Tag) daran. Wie viele Arbeitstage dauert es? Ganze Tage, aufgerundet.",
+    antwort: 5, einheit: "Tage",
+    hinweise: ["Wie viele Stunden leisten drei Personen zusammen an einem Tag?", "Teile den Aufwand durch diese Tagesleistung."],
+    loesungsweg: ["Leistung pro Tag: 3 × 8 h = 24 h", "Dauer: 120 h ÷ 24 h = 5 Tage (geht auf, kein Runden)"]
+  });
+
+  L.zahlAufgabe("#t10-ue-vorwaerts", {
+    titel: "Vorwärts: frühestes Ende",
+    frage: "Das «Merkblatt für Bauwillige» dauert 3 Tage. Es braucht die «Formulare» (FE = 13) und die «Rechtsprüfung» (FE = 9). Berechne das früheste Ende FE des Merkblatts (Zählweise ab Tag 1).",
+    antwort: 16, einheit: "Tag", anzeige: "Tag 16",
+    hinweise: ["Bei mehreren Vorgängern: Welches FE nimmst du?", "FA = max(FE der Vorgänger) + 1, dann FE = FA + D − 1."],
+    loesungsweg: ["max(13, 9) = 13", "FA = 13 + 1 = 14", "FE = 14 + 3 − 1 = 16 (Arbeitstage 14, 15, 16)"]
+  });
+
+  L.zahlAufgabe("#t10-ue-rueckwaerts", {
+    titel: "Rückwärts: spätester Anfang",
+    frage: "Der «Abnahmetest» dauert 4 Tage. Seine Nachfolger sind der «Pilotbetrieb» (SA = 21) und die «Schulung» (SA = 23). Wann muss der Abnahmetest spätestens beginnen (SA)?",
+    antwort: 17, einheit: "Tag", anzeige: "Tag 17",
+    hinweise: ["Bei mehreren Nachfolgern: Welches SA nimmst du?", "SE = min(SA der Nachfolger) − 1, dann SA = SE − D + 1."],
+    loesungsweg: ["min(21, 23) = 21", "SE = 21 − 1 = 20", "SA = 20 − 4 + 1 = 17 (Arbeitstage 17, 18, 19, 20)"]
+  });
+
+  L.zahlAufgabe("#t10-ue-puffer", {
+    titel: "Puffer bestimmen",
+    frage: "Die «Information an die Fachstellen» hat FA = 10, Dauer 3 und SE = 17. Ihr einziger Nachfolger «Versand» hat FA = 14. Wie gross ist der <b>freie</b> Puffer in Tagen?",
+    antwort: 1, einheit: "Tage", anzeige: "1 Tag",
+    hinweise: ["Rechne zuerst das früheste Ende FE.", "FP = FA des Nachfolgers − FE − 1."],
+    loesungsweg: ["FE = 10 + 3 − 1 = 12", "FP = 14 − 12 − 1 = 1 Tag", "Zum Vergleich der Gesamtpuffer: SE − FE = 17 − 12 = 5 Tage. Der Versand wartet noch auf einen anderen Vorgang, darum ist FP kleiner als GP."]
+  });
+
+  L.wahrFalsch("#t10-ue-wf", {
+    titel: "Wahr oder falsch: Puffer",
+    aussagen: [
+      { html: "Der freie Puffer eines Vorgangs ist nie grösser als sein Gesamtpuffer.", wahr: true,
+        erklaerung: "Der freie Puffer schützt die direkten Nachfolger, der Gesamtpuffer nur das Projektende. Die erste Bedingung ist strenger, also ist FP ≤ GP." },
+      { html: "G und I haben im Grundplan je 4 Tage Gesamtpuffer. Also dürfen sich beide je 4 Tage verschieben.", wahr: false,
+        erklaerung: "G und I liegen auf demselben Weg. Verbraucht G seine 4 Tage, hat I keinen Puffer mehr. Zusammen bleiben 4 Tage." },
+      { html: "Ein Vorgang mit freiem Puffer 0 liegt immer auf dem kritischen Pfad.", wahr: false,
+        erklaerung: "G hat FP 0, aber GP 4. Kritisch ist nur, wer Gesamtpuffer 0 hat." },
+      { html: "Verbraucht ein Vorgang nur seinen freien Puffer, ändern sich die frühesten Termine aller anderen Vorgänge nicht.", wahr: true,
+        erklaerung: "Genau das bedeutet freier Puffer: Kein direkter Nachfolger muss später beginnen, also verschiebt sich auch sonst nichts." },
+      { html: "Endet ein Netzplan mit einem einzigen Vorgang (wie K Go-live), hat dieser Vorgang Gesamtpuffer 0.", wahr: true,
+        erklaerung: "Sein SE ist das Projektende und gleich seinem FE. Also ist SE − FE = 0." }
+    ]
+  });
+
+  L.schrittAufgabe("#t10-ue-schritt", {
+    titel: "Ganzer Netzplan: Informationsabend",
+    aufgabe: '<p>Vor dem Go-live organisiert das Projektteam einen Informationsabend für Planungsbüros. Zeichne den Netzplan, rechne alle Knoten (ab Tag 1), bestimme die Puffer und den kritischen Pfad.</p>' +
+      '<div class="tablebox"><table class="tabelle"><thead><tr><th>Nr.</th><th>Vorgang</th><th>Vorgänger</th><th class="zahl">Dauer (T)</th></tr></thead><tbody>' +
+      '<tr><td>P</td><td>Programm festlegen</td><td>–</td><td class="zahl">2</td></tr>' +
+      '<tr><td>Q</td><td>Saal und Technik reservieren</td><td>P</td><td class="zahl">1</td></tr>' +
+      '<tr><td>R</td><td>Einladung gestalten</td><td>P</td><td class="zahl">3</td></tr>' +
+      '<tr><td>S</td><td>Präsentation vorbereiten</td><td>P</td><td class="zahl">4</td></tr>' +
+      '<tr><td>T</td><td>Einladung versenden</td><td>Q, R</td><td class="zahl">2</td></tr>' +
+      '<tr><td>U</td><td>Probelauf</td><td>S, T</td><td class="zahl">1</td></tr></tbody></table></div>',
+    schritte: [
+      { html: "P: FA 1, FE 2 &nbsp;·&nbsp; Q: FA 3, FE 3 &nbsp;·&nbsp; R: FA 3, FE 5 &nbsp;·&nbsp; S: FA 3, FE 6", warum: "Vorwärts: P beginnt an Tag 1. Q, R und S hängen nur von P ab und beginnen an Tag 3. FE = FA + D − 1." },
+      { html: "T: FA = max(3, 5) + 1 = 6, FE 7 &nbsp;·&nbsp; U: FA = max(6, 7) + 1 = 8, FE 8", warum: "T wartet auf R (der spätere Vorgänger), U wartet auf T. Projektende: Tag 8." },
+      { html: "U: SE 8, SA 8 &nbsp;·&nbsp; T: SE 7, SA 6 &nbsp;·&nbsp; S: SE 7, SA 4", warum: "Rückwärts ab dem Projektende. T und S haben nur U als Nachfolger: SE = 8 − 1 = 7." },
+      { html: "R: SE 5, SA 3 &nbsp;·&nbsp; Q: SE 5, SA 5 &nbsp;·&nbsp; P: SE = min(5, 3, 4) − 1 = 2, SA 1", warum: "Q und R haben T als Nachfolger (SA 6). P hat drei Nachfolger, das kleinste SA ist 3 (R). Kontrolle: SA von P ist 1." },
+      { html: "GP: P 0, Q 2, R 0, S 1, T 0, U 0 &nbsp;·&nbsp; FP: Q 2, S 1, sonst 0", warum: "GP = SA − FA. FP für Q: 6 − 3 − 1 = 2. FP für S: 8 − 6 − 1 = 1." },
+      { html: "Kritischer Pfad: P → R → T → U, 2 + 3 + 2 + 1 = 8 Tage", warum: "Alle Vorgänge mit GP 0. Die Summe der Dauern ergibt das Projektende: Kontrolle bestanden." }
+    ]
+  });
+
+  L.auswahl("#t10-ue-verzug", {
+    frage: '<span class="icb">ICB 3.04</span> Grundplan des Labors: Der Lieferant meldet, dass <b>C Plattform</b> 5 statt 3 Tage dauert (C hatte GP 2, FP 1). Was folgt daraus?',
+    optionen: [
+      "Das Projekt endet 2 Tage später, an Tag 26.",
+      "Das Projekt endet 1 Tag später, weil der freie Puffer von C nur 1 Tag ist.",
+      "Das Projektende bleibt bei Tag 24. Nur C wird kritisch, E behält seinen Tag Puffer.",
+      "Das Projektende bleibt bei Tag 24. C und E verlieren ihren ganzen Puffer, es gibt einen zweiten kritischen Pfad."
+    ],
+    richtig: 3,
+    erklaerung: "C endet neu an Tag 7. E beginnt dadurch an Tag 8 statt 7 (der freie Puffer von 1 Tag ist weg) und endet an Tag 13 statt 12. Das ist genau sein spätestes Ende, E ist jetzt kritisch. Das Projektende hält, weil die 2 Tage dem Gesamtpuffer von C entsprechen. Neu kritisch ist A → C → E → H → J → K, zusätzlich zu A → B → D → F → H → J → K. Für dich als Projektleitung heisst das: Jetzt darf weder C noch E noch einen Tag verlieren."
+  });
+
+  L.auswahl("#t10-ue-fall", {
+    frage: '<span class="icb">ICB 3.04</span> Der Gemeinderat fragt, ob der Go-live früher möglich ist. Du bekommst aus der Linie für eine Woche eine zusätzliche Person (Vollzeit). Wo setzt du sie im Grundplan ein?',
+    optionen: [
+      "Bei G Schulungsunterlagen (dann 3 statt 2 Personen)",
+      "Bei J Pilotbetrieb (dann 3 statt 2 Personen)",
+      "Bei C Plattform (dann 2 statt 1 Person)",
+      "Bei I Schulung (dann 3 statt 2 Personen)"
+    ],
+    richtig: 1,
+    erklaerung: "J liegt auf dem kritischen Pfad: 96 h ÷ (3 × 8 h) = 4 statt 6 Tage, das Projekt endet an Tag 22 statt 24. Die Kosten bleiben gleich, weil die Stunden gleich bleiben (sofern die Arbeit wirklich teilbar ist). Die anderen Optionen bringen nichts fürs Projektende: G wird 2 statt 3 Tage, C wird 2 statt 3 Tage, I bleibt bei 2 Tagen (32 h ÷ 24 h = 1.33, aufgerundet 2). Bei G und C wächst nur der Puffer. Begründung im Sinn der ICB 3.04: Ressourcen dort einsetzen, wo sie den Terminplan tatsächlich verändern."
+  });
+
+  L.zahlAufgabe("#t10-ue-budget", {
+    titel: "Budget aus Dauer und Personen",
+    frage: "Die Produktivsetzung dauert 4 Arbeitstage. Drei Personen arbeiten Vollzeit (8 h pro Tag) daran. Der Stundensatz ist CHF 150. Wie hoch sind die Plankosten dieses Vorgangs?",
+    antwort: 14400, einheit: "CHF",
+    hinweise: ["Rechne zuerst den Aufwand in Stunden zurück.", "Aufwand = Dauer × Personen × 8 h."],
+    loesungsweg: ["Aufwand: 4 T × 3 Personen × 8 h = 96 h", "Kosten: 96 h × CHF 150 = CHF 14'400"]
+  });
+
+  L.reflexion("#t10-ue-reflexion", {
+    titel: "Wo setzt du deine besten Leute ein?",
+    icb: ["ICB 3.04", "ICB 3.08"],
+    frage: "<p>Im Projekt Onlineschalter hast du zwei sehr erfahrene Personen und mehrere Neue im Team. Wo setzt du deine besten Leute ein, und warum? Beziehe dich auf den Netzplan (kritischer Pfad, Puffer) und nenne auch eine Grenze deiner Strategie. Schreib vier bis sechs Sätze.</p>",
+    musterloesung:
+      "<p>Ich setze die erfahrensten Leute auf die kritischen Vorgänge, im Grundplan zum Beispiel auf die Formulare (F) und den Pilotbetrieb (J). Dort verschiebt jeder Tag Verzug das Projektende um einen Tag, und gute Leute arbeiten schneller und mit weniger Fehlern.</p>" +
+      "<p>Ich achte auch auf fast kritische und riskante Vorgänge wie die Schnittstelle (E) mit nur 1 Tag Puffer. Dort braucht es Fachwissen zu Daten und Schnittstellen.</p>" +
+      "<p>Die Neuen setze ich auf Vorgänge mit viel Puffer, etwa die Schulungsunterlagen (G) oder die Schulung (I). Dort dürfen sie sich einarbeiten, und ich kann mit diesen Vorgängen die Auslastung glätten.</p>" +
+      "<p>Grenzen: Wird ein kritischer Vorgang kürzer, kann ein anderer Weg kritisch werden; ich rechne den Plan danach neu. Ich überlaste die Besten nicht und verteile Wissen, damit nicht alles an einer Person hängt. Entscheidend ist die Passung der Qualifikation zum Vorgang, nicht das Dienstalter.</p>",
+    kriterien: [
+      { text: "Beste Leute auf kritische Vorgänge (GP 0) gesetzt", punkte: 2 },
+      { text: "Begründet: Verzug auf dem kritischen Pfad verschiebt das Projektende", punkte: 1 },
+      { text: "Fast kritische oder riskante Vorgänge berücksichtigt", punkte: 1 },
+      { text: "Vorgänge mit Puffer für Einarbeitung oder Glätten genutzt", punkte: 1 },
+      { text: "Mindestens eine Grenze genannt (neuer kritischer Pfad, Überlastung, Klumpenrisiko, Passung)", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const AP = [
+    { nr: "1", name: "Anforderungen klären", vg: [], h: 32, p: 2 },
+    { nr: "2", name: "Formular gestalten", vg: ["1"], h: 48, p: 2 },
+    { nr: "3", name: "Zahlung anbinden", vg: ["1"], h: 40, p: 1 },
+    { nr: "4", name: "Kalender-Schnittstelle", vg: ["1"], h: 64, p: 2 },
+    { nr: "5", name: "Formular konfigurieren", vg: ["2"], h: 24, p: 1 },
+    { nr: "6", name: "Test", vg: ["3", "4", "5"], h: 48, p: 3 },
+    { nr: "7", name: "Information Vereine", vg: ["2"], h: 16, p: 1 },
+    { nr: "8", name: "Go-live", vg: ["6", "7"], h: 16, p: 2 }
+  ];
+  const FR = netzRechnen(AP.map((a) => ({ id: a.nr, vg: a.vg, d: dauerAus(a.h, a.p) }))).m;
+  const FELDER = ["d", "fa", "fe", "sa", "se", "gp", "fp"];
+  const sichtbar = {};      // "fa3" → true
+  // Tabelle mit aufgedeckten Feldern; neu = Liste von Schlüsseln, die in diesem Schritt dazukommen
+  function tabelle(neu, kritischZeigen) {
+    neu.forEach((k) => { sichtbar[k] = true; });
+    let h = '<div class="tablebox"><table class="tabelle t10-film-tab"><thead><tr><th>Nr.</th><th class="zahl">D</th><th class="zahl">FA</th><th class="zahl">FE</th>' +
+      '<th class="zahl">SA</th><th class="zahl">SE</th><th class="zahl">GP</th><th class="zahl">FP</th></tr></thead><tbody>';
+    AP.forEach((a) => {
+      const x = FR[a.nr];
+      h += "<tr" + (kritischZeigen && x.kritisch ? ' class="an"' : "") + "><th>" + a.nr + (kritischZeigen && x.kritisch ? " ★" : "") + "</th>";
+      FELDER.forEach((f) => {
+        const k = f + a.nr;
+        const w = sichtbar[k] ? String(x[f]) : "";
+        h += '<td class="zahl">' + (neu.indexOf(k) >= 0 ? NW(w) : w) + "</td>";
+      });
+      h += "</tr>";
+    });
+    return h + "</tbody></table></div>";
+  }
+  const zeile = (s) => '<div class="t10-zeile">' + s + "</div>";
+  const alle = (f, nrn) => nrn.map((n) => f + n);
+
+  const filmSzenen = [];
+  const sz = (o) => filmSzenen.push(o);
+  sz({ ph: -1, f: tabelle([]), say: "Eine typische Prüfungsaufgabe: acht Arbeitspakete mit Aufwand und Personen. Gesucht sind Netzplan, kritischer Pfad und Budget. Wir gehen in fünf Schritten vor." });
+  sz({ ph: 0, hl: ["ap1"], f: tabelle(["d1"]) + zeile("D<sub>1</sub> = 32 h ÷ (2 × 8 h) = " + NW("2 T")), say: "Zuerst die Dauer. Paket 1 braucht 32 Stunden, zwei Personen leisten 16 Stunden pro Tag. Das ergibt 2 Tage." });
+  sz({ ph: 0, hl: ["ap2", "ap3", "ap4"], f: tabelle(["d2", "d3", "d4"]) + zeile("48 ÷ 16 = 3 &nbsp;·&nbsp; 40 ÷ 8 = 5 &nbsp;·&nbsp; 64 ÷ 16 = 4"), say: "Paket 2: 48 durch 16 gibt 3 Tage. Paket 3 hat nur eine Person: 40 durch 8 gibt 5 Tage. Paket 4: 64 durch 16 gibt 4 Tage." });
+  sz({ ph: 0, hl: ["ap5", "ap6", "ap7", "ap8"], f: tabelle(["d5", "d6", "d7", "d8"]) + zeile("24 ÷ 8 = 3 &nbsp;·&nbsp; 48 ÷ 24 = 2 &nbsp;·&nbsp; 16 ÷ 8 = 2 &nbsp;·&nbsp; 16 ÷ 16 = 1"), say: "Die restlichen Pakete: 3, 2, 2 und 1 Tag. Alle Rechnungen gehen auf, wir müssen nicht runden." });
+  sz({ ph: 1, hl: ["ap1"], f: tabelle(["fa1", "fe1"]) + zeile("FA<sub>1</sub> = 1, &nbsp; FE<sub>1</sub> = 1 + 2 − 1 = " + NW("2")), say: "Jetzt vorwärts. Paket 1 beginnt an Tag 1 und dauert 2 Tage. Es endet am Abend von Tag 2." });
+  sz({ ph: 1, hl: ["ap2", "ap3", "ap4"], f: tabelle(["fa2", "fe2", "fa3", "fe3", "fa4", "fe4"]) + zeile("FA = 2 + 1 = 3 &nbsp;·&nbsp; FE<sub>2</sub> = 5, FE<sub>3</sub> = 7, FE<sub>4</sub> = 6"), say: "Die Pakete 2, 3 und 4 warten nur auf Paket 1. Sie beginnen an Tag 3. Paket 2 endet an Tag 5, Paket 3 an Tag 7, Paket 4 an Tag 6." });
+  sz({ ph: 1, hl: ["ap5", "ap7"], f: tabelle(["fa5", "fe5", "fa7", "fe7"]) + zeile("FA<sub>5</sub> = FA<sub>7</sub> = 5 + 1 = 6 &nbsp;·&nbsp; FE<sub>5</sub> = 8, FE<sub>7</sub> = 7"), say: "Die Pakete 5 und 7 brauchen Paket 2. Sie beginnen an Tag 6. Paket 5 endet an Tag 8, Paket 7 an Tag 7." });
+  sz({ ph: 1, hl: ["ap6"], f: tabelle(["fa6", "fe6"]) + zeile("FA<sub>6</sub> = max(7, 6, 8) + 1 = " + NW("9") + ", &nbsp; FE<sub>6</sub> = 10"), say: "Der Test hat drei Vorgänger. Er wartet auf den spätesten, also auf Paket 5 mit Ende Tag 8. Der Test läuft an den Tagen 9 und 10." });
+  sz({ ph: 1, hl: ["ap8"], f: tabelle(["fa8", "fe8"]) + zeile("FA<sub>8</sub> = max(10, 7) + 1 = 11, &nbsp; FE<sub>8</sub> = 11 &nbsp;→&nbsp; " + NW("Projektende Tag 11")), say: "Der Go-live wartet auf den Test und auf die Information. Er findet an Tag 11 statt. Das grösste FE ist das Projektende: Tag 11." });
+  sz({ ph: 2, hl: ["ap8"], f: tabelle(["se8", "sa8"]) + zeile("SE<sub>8</sub> = 11, &nbsp; SA<sub>8</sub> = 11 − 1 + 1 = 11"), say: "Jetzt rückwärts. Der letzte Vorgang muss am Projektende fertig sein. Sein spätestes Ende ist Tag 11, sein spätester Anfang auch." });
+  sz({ ph: 2, hl: ["ap6", "ap7"], f: tabelle(["se6", "sa6", "se7", "sa7"]) + zeile("SE<sub>6</sub> = SE<sub>7</sub> = 11 − 1 = 10 &nbsp;·&nbsp; SA<sub>6</sub> = 9, SA<sub>7</sub> = 9"), say: "Test und Information müssen spätestens am Abend von Tag 10 fertig sein. Beide dauern 2 Tage, also beginnen sie spätestens an Tag 9." });
+  sz({ ph: 2, hl: ["ap3", "ap4", "ap5"], f: tabelle(["se3", "sa3", "se4", "sa4", "se5", "sa5"]) + zeile("SE = 9 − 1 = 8 &nbsp;·&nbsp; SA<sub>3</sub> = 4, SA<sub>4</sub> = 5, SA<sub>5</sub> = 6"), say: "Die Pakete 3, 4 und 5 haben nur den Test als Nachfolger. Sie müssen bis Tag 8 fertig sein. Daraus folgen die spätesten Anfänge 4, 5 und 6." });
+  sz({ ph: 2, hl: ["ap2"], f: tabelle(["se2", "sa2"]) + zeile("SE<sub>2</sub> = min(6, 9) − 1 = " + NW("5") + ", &nbsp; SA<sub>2</sub> = 3"), say: "Paket 2 hat zwei Nachfolger: Paket 5 mit spätestem Anfang 6 und Paket 7 mit 9. Wir nehmen das Minimum. Paket 2 muss bis Tag 5 fertig sein." });
+  sz({ ph: 2, hl: ["ap1"], f: tabelle(["se1", "sa1"]) + zeile("SE<sub>1</sub> = min(3, 4, 5) − 1 = 2, &nbsp; SA<sub>1</sub> = " + NW("1") + " ✓"), say: "Paket 1 hat drei Nachfolger. Das kleinste SA ist 3. Paket 1 muss also bis Tag 2 fertig sein und spätestens an Tag 1 beginnen. Kontrolle bestanden: Wir landen wieder bei Tag 1." });
+  sz({ ph: 3, f: tabelle(alle("gp", ["1", "2", "3", "4", "5", "6", "7", "8"])) + zeile("GP = SA − FA"), say: "Jetzt die Puffer. Der Gesamtpuffer ist spätester minus frühester Anfang. Paket 3 hat 1 Tag, Paket 4 hat 2 Tage, Paket 7 hat 3 Tage. Alle anderen haben 0." });
+  sz({ ph: 3, hl: ["ap3", "ap4", "ap7"], f: tabelle(alle("fp", ["1", "2", "3", "4", "5", "6", "7", "8"])) + zeile("FP<sub>3</sub> = 9 − 7 − 1 = 1 &nbsp;·&nbsp; FP<sub>4</sub> = 9 − 6 − 1 = 2 &nbsp;·&nbsp; FP<sub>7</sub> = 11 − 7 − 1 = 3"), say: "Der freie Puffer vergleicht mit dem frühesten Anfang des Nachfolgers. Hier ist er bei allen Paketen gleich gross wie der Gesamtpuffer, weil keines davon einen Puffer mit einem Nachfolger teilt." });
+  sz({ ph: 3, hl: ["ap1", "ap2", "ap5", "ap6", "ap8"], f: tabelle([], true) + zeile(NW("Kritischer Pfad: 1 → 2 → 5 → 6 → 8") + " &nbsp;·&nbsp; 2 + 3 + 3 + 2 + 1 = 11 T"), say: "Kritisch sind alle Pakete mit Gesamtpuffer 0: 1, 2, 5, 6 und 8. Die Summe ihrer Dauern ist 11 Tage, genau das Projektende. So kontrollierst du den kritischen Pfad." });
+  const filmGantt = ganttHtml(AP.map((a) => ({ name: "AP " + a.nr, fa: FR[a.nr].fa, d: FR[a.nr].d, gp: FR[a.nr].gp, kritisch: FR[a.nr].kritisch }))
+    .concat([{ name: "◆ Go-live", meilenstein: FR["8"].fe, kritisch: true }]), 11, "t10-gantt-rem",
+    "Gantt: 1 Tag 1 bis 2, 2 Tag 3 bis 5, 3 Tag 3 bis 7 mit 1 Tag Puffer, 4 Tag 3 bis 6 mit 2 Tagen Puffer, 5 Tag 6 bis 8, 6 Tag 9 bis 10, 7 Tag 6 bis 7 mit 3 Tagen Puffer, 8 Tag 11; kritisch 1, 2, 5, 6, 8; Meilenstein Ende Tag 11");
+  sz({ ph: 4, f: '<div class="tablebox">' + filmGantt + "</div>", say: "Im Gantt-Diagramm zeichnest du jeden Balken von FA bis FE. Kritische Balken hebst du hervor, Puffer hängst du gestrichelt an. Der Meilenstein am Ende von Tag 11 ist eine Raute ohne Dauer." });
+  sz({ ph: 4, f: '<div class="tablebox">' + filmGantt + "</div>" + zeile("Σ Aufwand = 32 + 48 + 40 + 64 + 24 + 48 + 16 + 16 = " + NW("288 h")), say: "Jetzt das Budget. Zuerst zählst du den Aufwand aller Pakete zusammen: 288 Stunden. Die Dauer spielt dafür keine Rolle." });
+  sz({ ph: 4, f: '<div class="tablebox">' + filmGantt + "</div>" + zeile("Budget = 288 h × CHF 130 = " + NW("CHF 37'440")), say: "Mal Stundensatz 130 Franken ergibt ein Budget von 37'440 Franken." });
+  sz({ ph: 4, f: zeile("Paket 4 einen Tag kürzer → Ende bleibt Tag 11 (GP 2 wird 3)") + zeile("Paket 5 mit 2 Personen → 2 T → " + NW("Ende Tag 10") + ", neu auch 1 → 3 → 6 → 8 kritisch"), say: "Zum Schluss die Kontrollfrage zur Verkürzung. Paket 4 schneller zu machen, bringt nichts, es hat Puffer. Paket 5 liegt auf dem kritischen Pfad: Mit zwei Personen endet das Projekt an Tag 10. Dann wird aber auch der Weg über Paket 3 kritisch." });
+  sz({ ph: 4, f: zeile("<b>Ergebnis:</b> Projektende Tag 11 · kritischer Pfad 1 → 2 → 5 → 6 → 8 · Budget CHF 37'440"), say: "Fertig: Projektende Tag 11, kritischer Pfad 1, 2, 5, 6, 8, Budget 37'440 Franken. Jetzt kannst du dich im Selbsttest prüfen.", end: true });
+
+  let apTabelle = '<div class="tablebox"><table class="tabelle t10-ap"><thead><tr><th>Nr.</th><th>Arbeitspaket</th><th>Vorgänger</th><th class="zahl">Aufwand h</th><th class="zahl">Personen</th></tr></thead><tbody>';
+  AP.forEach((a) => {
+    apTabelle += '<tr><td><span data-ph="ap' + a.nr + '">' + a.nr + "</span></td><td>" + a.name + "</td><td>" + (a.vg.length ? a.vg.join(", ") : "–") +
+      '</td><td class="zahl">' + a.h + '</td><td class="zahl">' + a.p + "</td></tr>";
+  });
+  apTabelle += "</tbody></table></div>";
+
+  L.film("#t10-film", {
+    phasen: ["1 · Dauer", "2 · Vorwärts", "3 · Rückwärts", "4 · Puffer", "5 · Gantt und Budget"],
+    texte: [
+      "Die Gemeinde Wolkenried führt die Online-Reservation der Mehrzweckhalle ein. Erstelle den Netzplan (ab Tag 1), bezeichne den kritischen Pfad und berechne das Budget. Stundensatz CHF 130, 8 h pro Tag.",
+      apTabelle
+    ],
+    woerterbuch: [],
+    beschriftung: { texte: "Die Aufgabe", text: "Teil", formel: "Rechnung" },
+    szenen: filmSzenen
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t10-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.04</span> Ein Vorgang hat FA = 5 und dauert 4 Tage. Wann ist sein frühestes Ende (Zählweise ab Tag 1)?',
+        o: ["Tag 9", "Tag 8", "Tag 4", "Tag 20"], a: 1,
+        e: "FE = FA + D − 1 = 5 + 4 − 1 = 8: Arbeitstage 5, 6, 7, 8. Tag 9 wäre der früheste Anfang des Nachfolgers. ICB 3.04: Dauer von Aktivitäten festlegen und den Terminplan erstellen." },
+      { q: '<span class="icb">ICB 3.04</span> Vorgang X hat zwei Vorgänger mit FE 7 und FE 10. Wann beginnt X frühestens?',
+        o: ["Tag 8", "Tag 10", "Tag 11", "Tag 17"], a: 2,
+        e: "X braucht beide Ergebnisse, also wartet er auf den späteren: max(7, 10) + 1 = 11. ICB 3.04: Abhängigkeiten bestimmen." },
+      { q: '<span class="icb">ICB 3.04</span> Woran erkennst du im Knoten einen Vorgang auf dem kritischen Pfad?',
+        o: ["FA = SA und FE = SE", "Er hat die längste Dauer im Projekt", "Er hat mehr als einen Vorgänger", "Sein freier Puffer ist grösser als 0"], a: 0,
+        e: "Kritische Vorgänge haben keine Zeitreserve: frühester und spätester Termin fallen zusammen (LB 4 F.21). ICB 3.04: den kritischen Pfad berechnen." },
+      { q: '<span class="icb">ICB 3.04</span> Was beschreibt der Gesamtpuffer eines Vorgangs?',
+        o: ["Die Reserve im Budget des Arbeitspakets",
+            "Wie viele Tage sich der Vorgang verschieben darf, ohne dass ein direkter Nachfolger später beginnt",
+            "Wie viele Tage sich der Vorgang verschieben darf, ohne dass das Projektende rutscht",
+            "Die Zeit zwischen zwei Meilensteinen"], a: 2,
+        e: "Gesamtpuffer schützt das Projektende (GP = SA − FA). Die zweite Option beschreibt den freien Puffer (Arbeitsblatt Dok. 3.2 S.2). ICB 3.04: Zeitpuffer im Terminplan." },
+      { q: '<span class="icb">ICB 3.04</span> Ein Vorgang hat GP 4 und FP 0. Er verzögert sich um 2 Tage. Was passiert?',
+        o: ["Das Projektende verschiebt sich um 2 Tage.",
+            "Der direkte Nachfolger beginnt später, das Projektende bleibt.",
+            "Nichts, weder der Nachfolger noch das Projektende verschieben sich.",
+            "Der Vorgang wird kritisch und das Projekt endet 4 Tage später."], a: 1,
+        e: "FP 0 heisst: Schon 1 Tag Verzug schiebt den Nachfolger. GP 4 heisst: Das Ende hält bis 4 Tage. Darum Nachfolger später, Ende gleich. ICB 3.04: Fortschritt überwachen und Plan anpassen." },
+      { q: '<span class="icb">ICB 3.04</span> Ein Arbeitspaket hat 160 Stunden Aufwand. Vier Personen arbeiten Vollzeit (8 h pro Tag) daran. Wie lange dauert es?',
+        o: ["4 Tage", "40 Tage", "20 Tage", "5 Tage"], a: 3,
+        e: "160 h ÷ (4 × 8 h) = 160 ÷ 32 = 5 Tage. 20 Tage wäre der Aufwand in Personentagen. ICB 3.04: Arbeitsaufwand und Dauer festlegen (4.5.4.2)." },
+      { q: '<span class="icb">ICB 3.07</span> Ein Projekt hat 450 Stunden Aufwand, der Stundensatz ist CHF 120. Wie hoch ist das Budget für die Arbeit?',
+        o: ["CHF 54'000", "CHF 6'750", "CHF 5'400", "CHF 43'200"], a: 0,
+        e: "Budget = Aufwand × Stundensatz = 450 × 120 = CHF 54'000. CHF 6'750 entsteht, wenn du Personentage (56.25) mit dem Stundensatz multiplizierst. ICB 3.07 Kosten und Finanzierung, Grundlage ist der Aufwand aus ICB 3.04." },
+      { q: '<span class="icb">ICB 3.04</span> Der Auftraggeber will einen früheren Go-live. Welche Aussage zur Verkürzung stimmt?',
+        o: ["Jeder verkürzte Vorgang zieht das Projektende vor.",
+            "Ein kritischer Vorgang, der 3 Tage kürzer wird, verkürzt das Projekt immer um 3 Tage.",
+            "Nur das Verkürzen kritischer Vorgänge zieht das Ende vor, und nur bis ein anderer Weg kritisch wird.",
+            "Verkürzen ist nur mit Überstunden möglich."], a: 2,
+        e: "Vorgänge mit Puffer bremsen das Ende nicht. Auf dem kritischen Pfad wirkt die Verkürzung nur, bis der nächstlängere Weg gleich lang ist (Labor: D mit 3 Personen). ICB 3.04: Verdichtung des Terminplans." },
+      { q: '<span class="icb">ICB 3.04</span> Was gilt für einen Meilenstein?',
+        o: ["Er dauert so lange wie die längste Phase.",
+            "Er hat die Dauer 0 und keine Ressourcen.",
+            "Er liegt immer am Ende eines Projekts.",
+            "Er hat immer einen Gesamtpuffer von 0."], a: 1,
+        e: "Ein Meilenstein ist ein Zeitpunkt mit wichtigem Ergebnis, ohne Dauer und ohne Ressourcen (Arbeitsblatt Dok. 3.2 S.2). Er kann auch mitten im Projekt liegen, etwa die Vorabnahme. ICB 3.04: Meilensteine." },
+      { q: '<span class="icb">ICB 3.04</span> In der Projektsimulation hast du eine besonders erfahrene Fachperson. Wo setzt du sie zuerst ein?',
+        o: ["Auf einen kritischen Vorgang, dessen Qualifikationsprofil zu ihr passt",
+            "Auf den Vorgang mit dem grössten Puffer",
+            "Gleichmässig verteilt auf alle Vorgänge, je ein Tag",
+            "Gar nicht, sie bleibt als Reserve in der Linie"], a: 0,
+        e: "Auf dem kritischen Pfad kostet jeder Tag Verzug einen Tag am Ende. Dort wirkt eine starke, passende Besetzung am meisten. Vorgänge mit Puffer eignen sich zum Glätten der Auslastung. ICB 3.04 mit ICB 3.08 Ressourcen." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
