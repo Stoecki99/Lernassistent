@@ -1201,6 +1201,453 @@
     return { zuruecksetzen: aufbauen };
   }
 
+  /* ---------- ICB-Kennzeichen (für Kopf von Bausteinen) ---------- */
+
+  // «icb» darf Text oder Text-Liste sein: "ICB 4.5.4" oder ["ICB 3.04", "ICB 4.5.11"]
+  function icbHtml(icb) {
+    const liste = (Array.isArray(icb) ? icb : icb ? [icb] : []).map((x) => String(x).trim()).filter(Boolean);
+    if (!liste.length) return "";
+    const esc = (s) => s.replace(/[&<>"]/g, (z) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[z]);
+    return '<span class="icb-liste">' + liste.map((x) => '<span class="icb">' + esc(x) + "</span>").join("") + "</span>";
+  }
+
+  /* ---------- Baustein: Reflexion (offene Frage mit Musterlösung und Raster) ---------- */
+
+  function reflexion(el, cfg) {
+    el = elementHolen(el, "reflexion");
+    if (!el) return null;
+    cfg = cfg || {};
+    if (!cfg.frage || !cfg.musterloesung) {
+      console.error("[Lernpfad] reflexion: «frage» und «musterloesung» sind Pflicht.");
+      return null;
+    }
+    const kriterien = (cfg.kriterien || []).map((k) => ({
+      text: k && k.text ? k.text : "",
+      punkte: k && Number.isFinite(Number(k.punkte)) && Number(k.punkte) >= 0 ? Number(k.punkte) : 1,
+    }));
+    const maximum = kriterien.reduce((s, k) => s + k.punkte, 0);
+    const id = neueId("rf");
+    el.innerHTML = "";
+    el.classList.add("card", "stack", "uebung", "reflexion");
+    el.innerHTML =
+      '<div class="uebung-kopf"><span class="eyebrow">Übung · Offene Frage</span>' + icbHtml(cfg.icb) +
+      (cfg.titel ? "<h3>" + cfg.titel + "</h3>" : "") + "</div>" +
+      '<div class="rf-frage">' + cfg.frage + "</div>" +
+      '<p class="hint">' + (cfg.hinweis || "Schreib zuerst deine eigene Antwort, in Stichworten oder ganzen Sätzen. Vergleiche danach mit der Musterlösung und bewerte dich selbst.") + "</p>" +
+      '<div class="rf-eingabe"><label for="' + id + '-feld">Deine Antwort</label>' +
+      '<textarea id="' + id + '-feld" class="rf-feld" rows="5" spellcheck="true"></textarea>' +
+      '<p class="hint">Bleibt auf dieser Seite. Nichts wird gespeichert oder übermittelt.</p></div>';
+    const feld = $(".rf-feld", el);
+
+    const reihe = erzeugen("div", "row");
+    const bZeigen = knopf("Musterlösung zeigen", "primary", { "aria-controls": id + "-loesung" });
+    const bReset = knopf("Zurücksetzen");
+    bReset.hidden = true;
+    reihe.append(bZeigen, bReset);
+
+    // Rückfrage, wenn noch nichts geschrieben ist
+    const rueckfrage = erzeugen("div", "note rf-rueckfrage");
+    rueckfrage.hidden = true;
+    rueckfrage.innerHTML = "<p><b>Noch keine Antwort.</b> Wer zuerst selbst formuliert, merkt sich mehr. Willst du die Musterlösung trotzdem ansehen?</p>";
+    const rfReihe = erzeugen("div", "row");
+    const bOhne = knopf("Ohne Antwort ansehen");
+    const bSchreiben = knopf("Zuerst schreiben");
+    rfReihe.append(bOhne, bSchreiben);
+    rueckfrage.appendChild(rfReihe);
+
+    const loesung = erzeugen("div", "stack rf-loesung");
+    loesung.id = id + "-loesung";
+    loesung.hidden = true;
+    loesung.tabIndex = -1;
+    loesung.setAttribute("aria-labelledby", id + "-ml");
+    loesung.innerHTML =
+      '<div class="rf-muster"><p class="slabel" id="' + id + '-ml">Musterlösung</p><div class="stack">' + cfg.musterloesung + "</div></div>";
+    let summe = null;
+    if (kriterien.length) {
+      const raster = erzeugen("fieldset", "rf-raster");
+      raster.innerHTML = "<legend>Selbstbewertung: Was steht in deiner Antwort?</legend>";
+      const liste = erzeugen("ul", "rf-kriterien");
+      kriterien.forEach((k, i) => {
+        const li = erzeugen("li");
+        const kid = id + "-k" + i;
+        li.innerHTML =
+          '<input type="checkbox" id="' + kid + '" value="' + k.punkte + '">' +
+          '<label for="' + kid + '"><span class="rf-ktext">' + k.text + '</span> <span class="rf-punkte">' +
+          k.punkte + (k.punkte === 1 ? " Punkt" : " Punkte") + "</span></label>";
+        liste.appendChild(li);
+      });
+      raster.appendChild(liste);
+      summe = erzeugen("p", "score rf-summe");
+      summe.setAttribute("aria-live", "polite");
+      raster.appendChild(summe);
+      loesung.appendChild(raster);
+      liste.addEventListener("change", summeZeigen);
+    }
+    const ohneHinweis = erzeugen("p", "hint rf-ohne");
+    ohneHinweis.hidden = true;
+    ohneHinweis.textContent = "Du hast ohne eigene Antwort nachgesehen. Nutze das Raster als Checkliste und versuch die Frage später nochmals.";
+    loesung.appendChild(ohneHinweis);
+
+    const ansage = ansageRegion();
+    el.append(reihe, rueckfrage, loesung, ansage);
+
+    function summeZeigen() {
+      if (!summe) return;
+      const p = $$('input[type="checkbox"]', loesung).reduce((s, c) => s + (c.checked ? Number(c.value) : 0), 0);
+      summe.textContent = p + " von " + maximum + " Punkten";
+    }
+
+    function zeigen(ohneAntwort) {
+      ohneHinweis.hidden = !ohneAntwort;
+      loesung.hidden = false;
+      bReset.hidden = false;
+      // Erst den Fokus auf die Musterlösung setzen, dann Knopf und Rückfrage ausblenden
+      loesung.focus();
+      rueckfrage.hidden = true;
+      bZeigen.hidden = true;
+      summeZeigen();
+      ansage.textContent = "Musterlösung eingeblendet." + (kriterien.length ? " Kreuze an, was deine Antwort enthält." : "");
+      formeln(loesung);
+    }
+
+    bZeigen.addEventListener("click", () => {
+      if (feld.value.trim()) return zeigen(false);
+      rueckfrage.hidden = false;
+      ansage.textContent = "Noch keine Antwort geschrieben. Ohne Antwort ansehen oder zuerst schreiben?";
+      formeln(rueckfrage);
+    });
+    bOhne.addEventListener("click", () => zeigen(true));
+    bSchreiben.addEventListener("click", () => {
+      rueckfrage.hidden = true;
+      feld.focus();
+    });
+    feld.addEventListener("input", () => {
+      if (feld.value.trim() && !rueckfrage.hidden) {
+        if (rueckfrage.contains(document.activeElement)) bZeigen.focus();
+        rueckfrage.hidden = true;
+      }
+    });
+    bReset.addEventListener("click", () => {
+      feld.value = "";
+      $$('input[type="checkbox"]', loesung).forEach((c) => { c.checked = false; });
+      loesung.hidden = true;
+      rueckfrage.hidden = true;
+      bZeigen.hidden = false;
+      feld.focus(); // vor dem Ausblenden: Fokus nicht verlieren
+      bReset.hidden = true;
+      ansage.textContent = "Zurückgesetzt.";
+    });
+    formeln(el);
+    return {
+      zeigen: () => zeigen(!feld.value.trim()),
+      zuruecksetzen: () => bReset.click(),
+    };
+  }
+
+  /* ---------- Baustein: Matrix (Karten Feldern zuordnen) ---------- */
+
+  function matrix(el, cfg) {
+    el = elementHolen(el, "matrix");
+    if (!el) return null;
+    cfg = cfg || {};
+    const zeilen = (cfg.zeilen || []).map(String);
+    const spalten = (cfg.spalten || []).map(String);
+    const elemente = cfg.elemente || [];
+    if (zeilen.length < 2 || zeilen.length > 5 || spalten.length < 2 || spalten.length > 5 || !elemente.length) {
+      console.error("[Lernpfad] matrix: «zeilen» und «spalten» (je 2 bis 5) sowie «elemente» sind Pflicht.");
+      return null;
+    }
+    const achseX = cfg.achseX ? String(cfg.achseX) : "";
+    const achseY = cfg.achseY ? String(cfg.achseY) : "";
+    const feldnamen = Array.isArray(cfg.feldnamen) ? cfg.feldnamen : [];
+    const stufen = Array.isArray(cfg.stufen) ? cfg.stufen : [];
+    const STUFEN = ["tief", "mittel", "hoch"];
+    // Ziel: [zeile, spalte] als Index ab 0 oder als Beschriftung
+    const zielLesen = (z) => {
+      if (!Array.isArray(z) || z.length !== 2) return null;
+      const r = typeof z[0] === "number" ? z[0] : zeilen.indexOf(String(z[0]));
+      const c = typeof z[1] === "number" ? z[1] : spalten.indexOf(String(z[1]));
+      return r >= 0 && r < zeilen.length && c >= 0 && c < spalten.length ? [r, c] : null;
+    };
+    const ziele = elemente.map((it, i) => {
+      if (it.ziel === undefined) return null;
+      const z = zielLesen(it.ziel);
+      if (!z) console.error("[Lernpfad] matrix: Ziel von Element " + (i + 1) + " ist kein Feld der Matrix.");
+      return z;
+    });
+    const mitPruefen = ziele.some(Boolean);
+    const feldText = (r, c) =>
+      (achseY ? achseY + " " : "") + zeilen[r] + ", " + (achseX ? achseX + " " : "") + spalten[c] +
+      (feldnamen[r] && feldnamen[r][c] ? ": " + ohneTags(feldnamen[r][c]) : "") +
+      (stufen[r] && STUFEN.indexOf(stufen[r][c]) >= 0 ? ", Stufe " + stufen[r][c] : "");
+    const kurzOrt = (r, c) => zeilen[r] + " · " + spalten[c];
+
+    el.innerHTML = "";
+    el.classList.add("card", "stack", "uebung", "matrix");
+    el.innerHTML =
+      '<div class="uebung-kopf"><span class="eyebrow">Übung · Matrix</span>' + icbHtml(cfg.icb) +
+      (cfg.titel ? "<h3>" + cfg.titel + "</h3>" : "") + "</div>" +
+      (cfg.frage ? '<div class="mx-frage">' + cfg.frage + "</div>" : "") +
+      '<p class="hint">Wähle unten eine Karte, dann ein Feld im Raster. Nach der Wahl springt der Fokus ins Raster: Pfeiltasten bewegen, Enter legt ab, Escape hebt die Wahl auf.</p>';
+
+    // Raster
+    const rahmen = erzeugen("div", "mx-rahmen");
+    rahmen.style.setProperty("--mx-spalten", String(spalten.length));
+    if (achseY) rahmen.appendChild(erzeugen("div", "mx-achse-y", achseY + ' <span aria-hidden="true">↑</span>'));
+    else rahmen.classList.add("ohne-achse-y");
+    const raster = erzeugen("div", "mx-raster");
+    raster.setAttribute("role", "group");
+    raster.setAttribute("aria-label", "Raster" + (achseY || achseX ? ": " + [achseY, achseX].filter(Boolean).join(" × ") : ""));
+    // Beschriftungen nur fürs Auge: jedes Feld nennt Zeile und Spalte selbst (aria-label)
+    const kopfZelle = (klasse, text) => {
+      const d = erzeugen("div", "mx-kopf " + klasse, text);
+      d.setAttribute("aria-hidden", "true");
+      return d;
+    };
+    const zellen = [];
+    zeilen.forEach((zname, r) => {
+      raster.appendChild(kopfZelle("mx-zk", zname));
+      zellen[r] = [];
+      spalten.forEach((_, c) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "mx-feld";
+        const stufe = stufen[r] && STUFEN.indexOf(stufen[r][c]) >= 0 ? stufen[r][c] : "";
+        if (stufe) b.classList.add("mx-" + stufe);
+        b.tabIndex = r === 0 && c === 0 ? 0 : -1;
+        b.dataset.r = String(r);
+        b.dataset.c = String(c);
+        b.innerHTML =
+          (feldnamen[r] && feldnamen[r][c] ? '<span class="mx-name" aria-hidden="true">' + feldnamen[r][c] + "</span>" : "") +
+          '<span class="mx-marken" aria-hidden="true"></span>';
+        b.addEventListener("click", () => feldGewaehlt(r, c));
+        b.addEventListener("keydown", (e) => pfeilTaste(e, r, c));
+        b.addEventListener("focus", () => rovingSetzen(r, c));
+        raster.appendChild(b);
+        zellen[r][c] = b;
+      });
+    });
+    raster.appendChild(kopfZelle("mx-ecke", ""));
+    spalten.forEach((sname) => raster.appendChild(kopfZelle("mx-sk", sname)));
+    rahmen.appendChild(raster);
+    if (achseX) rahmen.appendChild(erzeugen("div", "mx-achse-x", achseX + ' <span aria-hidden="true">→</span>'));
+    el.appendChild(rahmen);
+
+    // Karten unter dem Raster
+    const liste = erzeugen("ul", "mx-karten");
+    liste.setAttribute("aria-label", "Karten");
+    const karten = elemente.map((it, i) => {
+      const li = erzeugen("li", "mx-eintrag");
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "mx-karte";
+      b.setAttribute("aria-pressed", "false");
+      b.innerHTML =
+        '<span class="mx-nr" aria-hidden="true">' + (i + 1) + "</span>" +
+        '<span class="mx-inhalt">' + (it.html || "") + "</span>" +
+        '<span class="mx-ort">noch nicht zugeordnet</span>';
+      const erkl = erzeugen("p", "mx-erkl");
+      erkl.hidden = true;
+      li.append(b, erkl);
+      liste.appendChild(li);
+      b.addEventListener("click", () => karteWaehlen(i));
+      b.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && gewaehlt !== null) { e.preventDefault(); karteWaehlen(null); }
+      });
+      return { li: li, b: b, erkl: erkl };
+    });
+    el.appendChild(liste);
+
+    const reihe = erzeugen("div", "row");
+    const bPruefen = mitPruefen ? knopf("Prüfen", "primary") : null;
+    const bReset = knopf("Zurücksetzen");
+    if (bPruefen) reihe.appendChild(bPruefen);
+    reihe.appendChild(bReset);
+    const fb = erzeugen("p", "fb");
+    fb.setAttribute("aria-live", "polite");
+    el.append(reihe, fb);
+
+    const ort = elemente.map(() => null); // [r, c] oder null
+    let gewaehlt = null;
+    let roving = [0, 0];
+
+    function rovingSetzen(r, c) {
+      zellen[roving[0]][roving[1]].tabIndex = -1;
+      roving = [r, c];
+      zellen[r][c].tabIndex = 0;
+    }
+    function pfeilTaste(e, r, c) {
+      let nr = r, nc = c;
+      if (e.key === "ArrowUp") nr = Math.max(0, r - 1);
+      else if (e.key === "ArrowDown") nr = Math.min(zeilen.length - 1, r + 1);
+      else if (e.key === "ArrowLeft") nc = Math.max(0, c - 1);
+      else if (e.key === "ArrowRight") nc = Math.min(spalten.length - 1, c + 1);
+      else if (e.key === "Home") nc = 0;
+      else if (e.key === "End") nc = spalten.length - 1;
+      else if (e.key === "Escape") {
+        if (gewaehlt !== null) { e.preventDefault(); karteWaehlen(null); }
+        return;
+      } else return;
+      e.preventDefault();
+      rovingSetzen(nr, nc);
+      zellen[nr][nc].focus();
+    }
+
+    function kartenText(i) {
+      return ohneTags(elemente[i].html || "Karte " + (i + 1));
+    }
+
+    function feldAnzeigen() {
+      zellen.forEach((reiheZ, r) => reiheZ.forEach((b, c) => {
+        const drin = ort.map((o, i) => (o && o[0] === r && o[1] === c ? i : -1)).filter((i) => i >= 0);
+        $(".mx-marken", b).innerHTML = drin
+          .map((i) => {
+            const k = karten[i].li;
+            const zustand = k.classList.contains("right") ? " right" : k.classList.contains("wrong") ? " wrong" : "";
+            const zeichen = zustand === " right" ? "✓" : zustand === " wrong" ? "✗" : "";
+            return '<span class="mx-marke' + zustand + '">' + zeichen + (i + 1) + "</span>";
+          })
+          .join("");
+        b.classList.toggle("belegt", drin.length > 0);
+        b.setAttribute("aria-label",
+          feldText(r, c) + (drin.length ? ". Karten: " + drin.map((i) => i + 1 + " " + kartenText(i)).join("; ") : ". leer"));
+      }));
+    }
+
+    function karteAnzeigen(i) {
+      const k = karten[i];
+      const o = ort[i];
+      $(".mx-ort", k.b).textContent =
+        gewaehlt === i ? "gewählt: jetzt ein Feld wählen" : o ? "Feld: " + kurzOrt(o[0], o[1]) : "noch nicht zugeordnet";
+      k.b.setAttribute("aria-pressed", String(gewaehlt === i));
+    }
+
+    function karteWaehlen(i) {
+      const vorher = gewaehlt;
+      gewaehlt = i === vorher ? null : i;
+      if (vorher !== null) karteAnzeigen(vorher);
+      if (gewaehlt !== null) {
+        karteAnzeigen(gewaehlt);
+        fb.textContent = "Karte " + (gewaehlt + 1) + " gewählt. Wähle jetzt ein Feld im Raster.";
+      } else {
+        fb.textContent = "Wahl aufgehoben.";
+      }
+      el.classList.toggle("mx-waehlt", gewaehlt !== null);
+      // Gewählt: Fokus ins Raster (aktuelles Feld), damit Tastatur und Screenreader direkt weitermachen.
+      // Aufgehoben aus dem Raster heraus: zurück zur Karte.
+      if (gewaehlt !== null) zellen[roving[0]][roving[1]].focus();
+      else if (vorher !== null && raster.contains(document.activeElement)) karten[vorher].b.focus();
+    }
+
+    function ergebnisLoeschen(i) {
+      karten[i].li.classList.remove("right", "wrong");
+      karten[i].erkl.hidden = true;
+    }
+
+    function feldGewaehlt(r, c) {
+      rovingSetzen(r, c);
+      if (gewaehlt === null) {
+        fb.textContent = "Wähle zuerst unten eine Karte, dann dieses Feld.";
+        return;
+      }
+      const i = gewaehlt;
+      ort[i] = [r, c];
+      gewaehlt = null;
+      el.classList.remove("mx-waehlt");
+      ergebnisLoeschen(i);
+      karteAnzeigen(i);
+      feldAnzeigen();
+      const naechste = ort.findIndex((o, j) => o === null && j !== i);
+      fb.textContent = "Karte " + (i + 1) + " liegt im Feld " + kurzOrt(r, c) + "." +
+        (naechste >= 0 ? " Weiter mit Karte " + (naechste + 1) + "." : " Alle Karten liegen im Raster.");
+      if (naechste >= 0) karten[naechste].b.focus();
+    }
+
+    function pruefen() {
+      let richtig = 0;
+      elemente.forEach((it, i) => {
+        const z = ziele[i];
+        const k = karten[i];
+        k.li.classList.remove("right", "wrong");
+        if (!z) { k.erkl.hidden = true; return; }
+        const o = ort[i];
+        let text;
+        if (!o) {
+          text = '<span class="marke" aria-hidden="true">–</span>Noch nicht zugeordnet. Richtig: ' + kurzOrt(z[0], z[1]) + ".";
+        } else if (o[0] === z[0] && o[1] === z[1]) {
+          richtig++;
+          k.li.classList.add("right");
+          text = '<span class="marke" aria-hidden="true">✓</span>Richtig.';
+        } else {
+          k.li.classList.add("wrong");
+          text = '<span class="marke" aria-hidden="true">✗</span>Nicht richtig. Richtig: ' + kurzOrt(z[0], z[1]) + ".";
+        }
+        k.erkl.innerHTML = text + (it.erklaerung ? " " + it.erklaerung : "");
+        k.erkl.hidden = false;
+      });
+      const anzahl = ziele.filter(Boolean).length;
+      feldAnzeigen();
+      fb.textContent = richtig + " von " + anzahl + " richtig zugeordnet" + (richtig === anzahl ? " · alles richtig." : ".");
+      formeln(liste);
+    }
+
+    function zuruecksetzen() {
+      ort.fill(null);
+      gewaehlt = null;
+      el.classList.remove("mx-waehlt");
+      elemente.forEach((_, i) => { ergebnisLoeschen(i); karteAnzeigen(i); });
+      feldAnzeigen();
+      fb.textContent = "Zurückgesetzt.";
+    }
+
+    if (bPruefen) bPruefen.addEventListener("click", pruefen);
+    bReset.addEventListener("click", zuruecksetzen);
+    feldAnzeigen();
+    formeln(el);
+    return {
+      pruefen: pruefen,
+      zuruecksetzen: zuruecksetzen,
+      stand: () => ort.map((o) => (o ? o.slice() : null)),
+    };
+  }
+
+  /* ---------- Hilfsfunktion: Netzplan-Knoten ---------- */
+
+  // Baut einen Knoten mit FA, Vorgang, FE / SA, Dauer, SE und Puffer. Rechnen tut die Station selbst.
+  function netzplanKnoten(d) {
+    d = d || {};
+    const wert = (x) => (x === undefined || x === null || x === "" ? "–" : String(x));
+    const k = erzeugen("div", "np-knoten" + (d.kritisch ? " kritisch" : ""));
+    const zelle = (klasse, kurz, x, inhaltHtml) => {
+      const s = erzeugen("span", klasse);
+      s.setAttribute("data-kurz", kurz);
+      if (inhaltHtml !== undefined) s.innerHTML = inhaltHtml;
+      else s.textContent = wert(x);
+      return s;
+    };
+    k.append(
+      zelle("np-fa", "FA", d.fa),
+      zelle("np-vorgang", "Vorgang", null, d.vorgang || ""),
+      zelle("np-fe", "FE", d.fe),
+      zelle("np-sa", "SA", d.sa),
+      zelle("np-dauer", "Dauer", d.dauer),
+      zelle("np-se", "SE", d.se)
+    );
+    const hatPuffer = d.gp !== undefined || d.fp !== undefined;
+    if (hatPuffer) {
+      const p = erzeugen("span", "np-puffer");
+      p.textContent = "GP " + wert(d.gp) + (d.fp !== undefined ? " · FP " + wert(d.fp) : "");
+      k.appendChild(p);
+    }
+    k.setAttribute("role", "group");
+    k.setAttribute("aria-label",
+      "Vorgang " + ohneTags(d.vorgang || "") + ": Dauer " + wert(d.dauer) +
+      ", FA " + wert(d.fa) + ", FE " + wert(d.fe) + ", SA " + wert(d.sa) + ", SE " + wert(d.se) +
+      (hatPuffer ? ", Gesamtpuffer " + wert(d.gp) + (d.fp !== undefined ? ", freier Puffer " + wert(d.fp) : "") : "") +
+      (d.kritisch ? ", kritisch" : ""));
+    return k;
+  }
+
   /* ---------- Seitenrahmen: Kopfleiste, Navigation, Abschluss ---------- */
 
   function kopfleisteEinfuegen() {
@@ -1438,7 +1885,7 @@
   }
 
   window.Lernpfad = {
-    version: "1.0.0",
+    version: "1.1.0",
     formeln: formeln,
     verknuepfen: verknuepfen,
     sortierer: sortierer,
@@ -1449,6 +1896,9 @@
     wahrFalsch: wahrFalsch,
     schrittAufgabe: schrittAufgabe,
     auswahl: auswahl,
+    reflexion: reflexion,
+    matrix: matrix,
+    netzplanKnoten: netzplanKnoten,
     fortschritt: fortschritt,
     zahlLesen: zahlLesen,
     zahlText: zahlText,

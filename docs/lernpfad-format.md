@@ -205,7 +205,7 @@ Validierung: `lib/validations/lernfortschritt.ts`, Tests: `tests/lernfortschritt
 node scripts/lernpfad-vorschau.mjs --port 4400
 ```
 
-Liefert `/lernpfad/*` und `/lernseiten/mstw/<slug>` ohne Login aus, die Fortschritts-API als Attrappe. Details in `docs/lernpfad-baukasten.md`.
+Liefert `/lernpfad/*` und `/lernseiten/<fach>/<slug>` (jedes Fach unter `content/lernseiten/`) ohne Login aus, die Fortschritts-API als Attrappe. Details in `docs/lernpfad-baukasten.md`.
 
 ## Urheberrecht
 

@@ -63,6 +63,10 @@
 
 ## Changelog
 
+### 2026-10-31
+
+- **feat: Baukasten 1.1.0 für den Lernpfad PMGT** (noch nicht committet, Branch `feat/lernpfad-pmgt`) — neue Bausteine `Lernpfad.reflexion` (offene Frage mit Musterlösung und Selbstbewertung nach Raster), `Lernpfad.matrix` (2×2 bis 5×5, Karten per Tipp und Tastatur ablegen, Prüfen), Hilfsfunktion `Lernpfad.netzplanKnoten`; CSS für ICB-Kennzeichen (`.icb`), Netzplan-Knoten (`.np-knoten`), Gantt-Balken (`.gantt`) und Akzentfarbe pro Fach (`body[data-fach="pmgt"]`, Orange, Kontrast ≥ 4.5:1 hell und dunkel). Vorlage `content/lernseiten/pmgt/_vorlage.html`. Bestehende Bausteine und MSTW-Seiten unverändert (im Browser geprüft). Doku: `docs/lernpfad-baukasten.md` (Abschnitte 7, 8.11–8.13, 9.12–9.14, Prüfliste)
+
 ### 2026-10-29
 
 - **feat: Lernpfad MSTW live** (Commit b3baed9) — Baukasten `public/lernpfad/` (CSS, JavaScript, selbst gehostete Schriften, KaTeX), 18 Stationen von Aussagenlogik bis Prüfungstraining als fertige HTML-Dateien in `content/lernseiten/mstw/`, Lernpfad-Seite `/lernseiten/mstw` mit Fortschritt im Konto (Tabelle `Lernfortschritt`, Migration `20261028160000_add_lernfortschritt`, API `GET/POST /api/lernfortschritt`), Themenseiten nur eingeloggt (Route-Handler). Format: `docs/lernpfad-format.md`, Baukasten: `docs/lernpfad-baukasten.md`

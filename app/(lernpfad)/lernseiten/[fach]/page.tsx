@@ -36,6 +36,7 @@ interface StationAnzeige extends StationMitStatus {
 /** Kuerzerer Titel fuer die Ueberschrift, wo der Titel aus fach.json den Studiengang enthaelt. */
 const KURZTITEL: Record<string, string> = {
   mstw: "Mathematik und Statistik",
+  pmgt: "Projektmanagement",
 }
 
 /** Status-Texte wie in der Abschluss-Box der Themenseiten (lernpfad.js). */
