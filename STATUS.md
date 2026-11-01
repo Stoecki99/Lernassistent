@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-10-29 (Lernpfad MSTW live, Review-Korrekturen)
+**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live)
 
 ---
 
@@ -21,6 +21,8 @@
 | 11. Deployment | Fertig | Dockerfile, Docker Compose, Caddy |
 | 12. Polish | Fertig | Skeletons, Error States, A11y, SEO |
 | 13. Lernpfad | Live seit 29.10.2026 | Reiter Lernseiten, Lernpfad MSTW mit 18 Stationen (fertige HTML-Seiten aus dem Baukasten `public/lernpfad/`), Fortschritt im Konto |
+| 14. Lernpfad PMGT | Welle 1 live seit 01.11.2026 | 7 von 25 Stationen (10, 11, 13, 18, 19, 22, 23), Baukasten 1.1.0; Konzept im Vault «02 Projekte/Lernpfad PMGT» |
+| 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
 
 ## Security-Fixes (alle angewendet)
 
@@ -65,11 +67,12 @@
 
 ### 2026-11-01
 
-- **fix: Review-Befunde Leitstand** (noch nicht committet, Branch `feat/lernpfad-pmgt`) — Client lädt nur `lib/simulation/core.ts`, Szenarien und Attrappe nur dynamisch; Sende-Logik `syncQueue.ts` (409 nach verlorener Antwort, 401 «Anmeldung abgelaufen», neue Versuche mit wachsendem Abstand / Retry-After, Sicherung mit Zod, Rest weiterverwenden); Fokusfalle mit inertem Hintergrund; Tastenkürzel nur im Leitstand und abschaltbar; Meldungen 10 s mit Pause; Rate-Limits auch für finish/GET/DELETE; Körpergrenze als Strom; `MAX_ACTIONS_PER_RUN` 900; Migration `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, vor Deploy nötig); finish «Serializable» mit Wiederholung; Abzeichen per create. Neue Tests `tests/leitstand-sync.test.ts`, `tests/leitstand-server.test.ts`. Doku: `docs/leitstand-spezifikation.md` (Nachträge 4.5–4.8, 5.7, Restrisiko).
+- **feat: Lernpfad PMGT Welle 1 und Leitstand live** — Stationen 10, 11, 13, 18, 19, 22, 23; Projektsimulator `/leitstand` mit API `/api/simulation/runs`, Migrationen `20261101090000_add_simulation_run` (inkl. 8 Abzeichen) und `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, von Prisma nicht abbildbar: bei `migrate dev` den Vorschlag zum Löschen entfernen). Integrationstest im Browser bestanden (Punkte Browser = Server, Free 403, Station 23 «erledigt»). Projekt-Agenten in `.claude/agents/` repariert (Werkzeugnamen).
+- **fix: Review-Befunde Leitstand** (Branch `feat/lernpfad-pmgt`, live am 01.11.2026) — Client lädt nur `lib/simulation/core.ts`, Szenarien und Attrappe nur dynamisch; Sende-Logik `syncQueue.ts` (409 nach verlorener Antwort, 401 «Anmeldung abgelaufen», neue Versuche mit wachsendem Abstand / Retry-After, Sicherung mit Zod, Rest weiterverwenden); Fokusfalle mit inertem Hintergrund; Tastenkürzel nur im Leitstand und abschaltbar; Meldungen 10 s mit Pause; Rate-Limits auch für finish/GET/DELETE; Körpergrenze als Strom; `MAX_ACTIONS_PER_RUN` 900; Migration `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, vor Deploy nötig); finish «Serializable» mit Wiederholung; Abzeichen per create. Neue Tests `tests/leitstand-sync.test.ts`, `tests/leitstand-server.test.ts`. Doku: `docs/leitstand-spezifikation.md` (Nachträge 4.5–4.8, 5.7, Restrisiko).
 
 ### 2026-10-31
 
-- **feat: Baukasten 1.1.0 für den Lernpfad PMGT** (noch nicht committet, Branch `feat/lernpfad-pmgt`) — neue Bausteine `Lernpfad.reflexion` (offene Frage mit Musterlösung und Selbstbewertung nach Raster), `Lernpfad.matrix` (2×2 bis 5×5, Karten per Tipp und Tastatur ablegen, Prüfen), Hilfsfunktion `Lernpfad.netzplanKnoten`; CSS für ICB-Kennzeichen (`.icb`), Netzplan-Knoten (`.np-knoten`), Gantt-Balken (`.gantt`) und Akzentfarbe pro Fach (`body[data-fach="pmgt"]`, Orange, Kontrast ≥ 4.5:1 hell und dunkel). Vorlage `content/lernseiten/pmgt/_vorlage.html`. Bestehende Bausteine und MSTW-Seiten unverändert (im Browser geprüft). Doku: `docs/lernpfad-baukasten.md` (Abschnitte 7, 8.11–8.13, 9.12–9.14, Prüfliste)
+- **feat: Baukasten 1.1.0 für den Lernpfad PMGT** (Branch `feat/lernpfad-pmgt`, live am 01.11.2026) — neue Bausteine `Lernpfad.reflexion` (offene Frage mit Musterlösung und Selbstbewertung nach Raster), `Lernpfad.matrix` (2×2 bis 5×5, Karten per Tipp und Tastatur ablegen, Prüfen), Hilfsfunktion `Lernpfad.netzplanKnoten`; CSS für ICB-Kennzeichen (`.icb`), Netzplan-Knoten (`.np-knoten`), Gantt-Balken (`.gantt`) und Akzentfarbe pro Fach (`body[data-fach="pmgt"]`, Orange, Kontrast ≥ 4.5:1 hell und dunkel). Vorlage `content/lernseiten/pmgt/_vorlage.html`. Bestehende Bausteine und MSTW-Seiten unverändert (im Browser geprüft). Doku: `docs/lernpfad-baukasten.md` (Abschnitte 7, 8.11–8.13, 9.12–9.14, Prüfliste)
 
 ### 2026-10-29
 
