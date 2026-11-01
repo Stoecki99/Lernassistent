@@ -1424,6 +1424,22 @@ Danach geht der Simulator mit **Welle 2** am **So 29.11.** live (mit Fragenpool 
 | 9 | 6.6 `finish` | Prüfung nach Ablauf der Uhr: `finish` gibt selbst ab; Training/Lücken: ungesperrte Positionen werden beim Abschluss gesperrt (unbewertet) | Kein Speichern in abgeschlossene Versuche. |
 | 10 | 6.6 `OverviewView` | Neu in `types.ts`: `OverviewView`, `AttemptSummary`, `FinishView`, `AwardedBadgeView`; Übersicht zusätzlich mit `pool` (geprüfte Fragen je Kompetenz) | AP4 kann Training-Auswahl und «Pool zu klein» ohne Lösungsdaten anzeigen. |
 
+### 8.6 Nachtrag AP4 (01.11.2026): Abweichungen und Ergänzungen
+
+| Nr. | Stelle | Umsetzung | Begründung |
+|---|---|---|---|
+| 1 | 6.8 Komponenten | `ExamApp` heisst `AttemptApp` (Prüfung, Training, Lücken in einer Komponente); `SubmitDialog` ist Teil davon; neu `ResultApp` (Auswertung), `api.ts` (REST-Client), `format.ts` (Anzeige-Hilfen) | Training und Prüfung teilen Navigation, Speichern und Übersicht. |
+| 2 | 6.8 Dialoge | Wiederverwendung von `components/features/leitstand/Dialog.tsx` (Fokusfalle, `inert`, Esc) | Kein doppelter Code; gleiches Verhalten wie im Leitstand. |
+| 3 | 6.8 Tastatur | Einzeltasten-Kürzel wie im Leitstand: W weiter, Z zurück, M markieren, U Übersicht; nur ausserhalb von Eingabefeldern und Dialogen, Schalter «Tastenkürzel an/aus» (gespeichert) | WCAG 2.1.4 erlaubt Einzeltasten, wenn abschaltbar; Auftrag «Muster Leitstand». |
+| 4 | 4.4 Stationen in der Landkarte | Titel und «veröffentlicht» aus `content/lernseiten/pmgt/fach.json` über `app/(ipma)/stations.ts` (Server), als Props an die Client-Komponenten | `lib/ipma/pool.ts` ist für `app/(ipma)` tabu (Bündel-Test). |
+| 5 | 6.8 Grenzen in der Anzeige | `PASS_PERCENT` 60, `MIN_COMPETENCES` 23, 180 min als Konstanten in `components/features/ipma/format.ts` (nur Anzeige; entschieden wird auf dem Server) | Der Client importiert `lib/ipma/config.ts` nicht. Bei Änderung von `EXAM_CONFIG` mitziehen. |
+| 6 | 3.5 Vorher/Nachher | Beherrschung vor dem Start im `sessionStorage` (`ipma-vorher-<id>`), Nachher aus `GET overview` | Die API liefert keinen historischen Stand; nur im Start-Browser verfügbar. |
+| 7 | 6.6 Abschluss | `FinishView` des Trainings im `sessionStorage` (`ipma-abschluss-<id>`) für die Anzeige von Punkten und Abzeichen auf der Auswertung | Abschluss im Training geschieht in der Versuchsansicht. |
+| 8 | 4.2 Pflichtschritt | «Auswertung abschliessen» erst, wenn jede beantwortete offene Frage selbst bewertet ist (Prüfung in der Oberfläche; `finish` selbst erzwingt es nicht) | Server bleibt unverändert (AP3). |
+| 9 | 7.4 Bündel-Test | Der Regex liest `[^;]*` zeilenübergreifend; ohne Semikolons trifft er vorangehende Importe. Workaround: `import type … from "@/lib/ipma/types"` steht in jeder Client-Datei als erster Import | Test für AP6 präzisieren (`[^;
+]*`). |
+| 10 | 5 Pro-Hinweis | Free: Knopf «Von Claude bewerten lassen» zeigt ohne Anfrage den Hinweis, «Mehr erfahren» öffnet `UpgradePrompt` im Dialog (helle Karte) | Wie 5 vorgeschlagen. |
+
 ---
 
 ## 9. Offene Fragen an Jan
