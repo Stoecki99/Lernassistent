@@ -188,8 +188,9 @@ Ereignis nach jedem abgeschlossenen Level: `architektur:spiel` (bubbelt) mit `de
 `POST /api/spielstand` mit `{ fach, spiel, level, sterne, xp }`:
 
 - Login nötig (401), Zod: `fach` `^[a-z0-9]+$`, `spiel` `^[a-z0-9-]{1,60}$`, `level` `^[a-z0-9-]{1,40}$`, `sterne` 0–3, `xp` 0–500 ganzzahlig.
-- Speichert den **Bestwert** (höhere Sterne, bei Gleichstand höhere XP); schlechtere Werte ändern nichts.
-- Punkte ins Konto (`User.points`) = Verbesserung der besten XP dieses Levels ÷ 10, abgerundet. Antwort `{ ok: true, verbessert, punkte }`.
+- Speichert den **Bestwert** je Feld: höchste Sterne und höchste XP (beide sinken nie); schlechtere Werte ändern nichts.
+- Punkte ins Konto (`User.points`) = Zuwachs der besten XP dieses Levels ÷ 10, abgerundet. Antwort `{ ok: true, verbessert, punkte, abzeichen }` (`abzeichen`: neu vergebene Abzeichen).
+- Höchstens 300 Levels pro Konto und Fach (409), damit erfundene Level-IDs keine unbegrenzten Punkte bringen.
 - Rate-Limit pro Konto (z. B. 60/min). Hinweis: Werte kommen vom Browser und sind nicht fälschungssicher (wie Quiz-Ergebnisse); Obergrenzen begrenzen den Schaden.
 
 Prisma-Modell `Spielstand { id, userId, fach, spiel, level, sterne, xp, createdAt, updatedAt; @@unique([userId, fach, spiel, level]); onDelete: Cascade }`.
