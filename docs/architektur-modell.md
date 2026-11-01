@@ -326,3 +326,72 @@ Ganze Punkte je Teil, Summe 0–1000. Sterne: ★ ab 400, ★★ ab 650, ★★�
 | `m2-black-friday` | Black Friday im Webshop | vorgegeben | Gateway, Katalog, Bestellung, Lager, Zahlung, Broker → Versand; Spitze ×8, fehlerhaftes Deployment; SLO p95 < 400 ms, ≥ 99.5 %, 750 CHF |
 | `m3-zahlungsanbieter` | Der Zahlungsanbieter stottert | vorgegeben | PayAlpin hängt (×50, 20 Minuten), dann 10 Minuten Ausfall; 10 s Timeout und 3 Retries als Startkonfiguration; Kaufstatus-Abfrage (15 %) läuft auf denselben Threads wie der Queue-Konsument. Abstimmung: nur Queue ≤ ★★, Resilienz ohne Queue ≤ ★ (Käufe verloren), Queue + zwei von Timeout/Retry-Begrenzung/Circuit Breaker/Bulkhead ★★★ |
 | `m4-ticketplattform` | Modelliere die Ticketplattform | modellieren | Auftrag mit Bausteinen (`data-baustein`), Palette mit Ablenkern, 6 Anforderungen, Musterlösung; Vorverkauf ×10, langsamer Zahlungsanbieter |
+
+## 10. Modulnotation AVSW: UML-Komponentendiagramm mit Paketen (Erweiterung, verbindlich)
+
+Die Modulschlussprüfung verlangt **UML-Komponentendiagramme nach Referenzarchitekturen**: verschachtelte Pakete (Tiers/Layers), Komponenten mit technologiespezifischem Stereotyp, bereitgestellte und benötigte Schnittstellen (Ball and Socket) mit Namen, beschriftete Assoziationen (Protokoll, Format/Semantik), Abhängigkeiten zwischen Paketen, Notizen und `{xor}`-Einschränkungen. Die Engine bildet das zusätzlich zur bisherigen Darstellung ab (`notation: "uml-komponenten"`).
+
+### 10.1 Rollenfarben (wie in den Referenzarchitekturen des Moduls, für den Lerntransfer)
+
+| `rolle` | Bedeutung | Farbton |
+|---------|-----------|---------|
+| `client` | Client-Apps, Präsentationskomponenten | Apricot |
+| `webapi` | Web API / Web Services, Service-Consumer-Apps | Grün |
+| `business` | Domänen-/Business-Komponenten, Facade, Microservices | Hellblau/Türkis |
+| `shared` | Shared Services | Blau |
+| `async` | asynchrone Adapter (Receiver/Sender), MOM/Broker | Pink |
+| `sync` | synchrone (Driven) Adapter, Service-Provider-Apps | Gelb |
+| `daten` | DACs, Datenbanken, Data Services | Grau |
+| `infra` | Docker-Host-MQ, Infrastruktur-Hinweise | Lavendel |
+| `extern` | Umsysteme ohne besondere Rolle | Weiss/Grau gestrichelt |
+
+`rolle` ist optional; ohne Angabe leitet die Engine sie aus `typ` ab. Tokens `--r-<rolle>` / `--r-<rolle>-bg` in `architektur.css` (hell/dunkel). Die bisherigen Kategorien (Abschnitt 3) bleiben für die anderen Ansichten bestehen.
+
+### 10.2 Modell-Erweiterungen
+
+```js
+{
+  notation: "uml-komponenten",
+  pakete: [                                   // verschachtelte UML-Pakete, Reihenfolge = Darstellung
+    { id: "server", name: "Server – Docker Host", in: null, spalte: 0, zeile: 1, breite: 3 },
+    { id: "client", name: "Client Tier", spalte: 0, zeile: 0, breite: 3 }
+  ],
+  elemente: [
+    { id: "ws", typ: "dienst", rolle: "webapi", name: "Web API", stereotyp: "Microservice", in: "server",
+      schnittstellen: [{ id: "gql", name: "GraphQL" }, { id: "odata", name: "OData" }] }   // bereitgestellt (Ball)
+  ],
+  verbindungen: [
+    { von: "spa", nach: "ws#gql", art: "assoziation", label: "AJAX" },          // Ziel = Schnittstelle → Socket am Aufrufer
+    { von: "zeit", nach: "broker#amqp", art: "assoziation", protokoll: "AMQP", format: "JSON" },
+    { von: "client", nach: "server", art: "abhaengigkeit" }                       // Paket → Paket, gestrichelt
+  ],
+  notizen: [{ id: "n1", text: "MDB = Message-Driven Bean", an: "recv" }],
+  einschraenkungen: [{ text: "{xor}", zwischen: ["v3", "v4"] }]
+}
+```
+
+- Pakete: Rasterlayout je Elternpaket (`spalte`, `zeile`, `breite`, `hoehe` in Zellen); Elemente fliessen im Paket in Reihen. Ohne Angaben ordnet die Engine Pakete untereinander an.
+- `art: "assoziation"` = UML-Assoziation (durchgezogene Linie ohne Pfeil), die im Modul übliche Verbindung; `abhaengigkeit` = gestrichelt mit offener Spitze. Ziel `element#schnittstelle` zeichnet Ball (Anbieter) und Socket (Nutzer).
+- `label` frei; `protokoll`, `format`, `semantik` werden als Label `Protokoll · Format` gesetzt, wenn `label` fehlt.
+
+### 10.3 Prüfungsspiel (`Architektur.spiel` mit `modus: "uml"`)
+
+Level-Erweiterungen:
+
+```js
+{
+  modus: "uml", auftrag: "<p>…</p>", referenz: "jakarta",          // Referenzarchitektur als Tipp (kostet XP)
+  pakete: [...],                                                   // vorgegebene leere Pakete (Ablagefelder) oder aus der Palette zu setzen
+  palette: [{ id, typ, rolle, name, stereotypen: ["EJB", "EJB MDB", "C#"], schnittstellen: [...], falle: "Ein Web-Server ist Infrastruktur, keine Komponente." }],
+  protokolle: ["REST", "SOAP", "GraphQL", "OData", "gRPC", "AMQP", "JMS", "MQTT", "RMI", "HTTP", "SMTP", "AD LDS"],
+  loesung: {
+    elemente: [{ id, paket, stereotyp }],
+    verbindungen: [{ von, nach, art, protokoll, warum }],
+    beschreibungen: [{ id, optionen: ["…", "…", "…"], richtig: 0 }]   // optional: passende 2–3-Satz-Beschreibung wählen
+  },
+  gewichte: { komponenten: 2, pakete: 1, stereotypen: 1, verbindungen: 2, beschriftungen: 1, beschreibungen: 1 },
+  zielzeit: 600
+}
+```
+
+Bewertung je Kriterium mit Teilpunkten wie ein Bewertungsraster; Fallen (`falle`) geben Abzug mit Erklärung; Rückmeldung je Kriterium («Pakete 4/5: «Sender Adapter» gehört in den Async Communication Layer»). Prüfungsmodus wie Abschnitt 7.
