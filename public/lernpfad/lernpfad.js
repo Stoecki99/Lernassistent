@@ -1495,7 +1495,7 @@
         const nRicht = e.vStatus.filter((s) => s.status === "richtung").length;
         if (nFalsch) teile.push(nFalsch + " Verbindung" + (nFalsch > 1 ? "en gibt" : " gibt") + " es so nicht (mit ✗ markiert).");
         if (nRicht) teile.push(nRicht + " Verbindung" + (nRicht > 1 ? "en zeigen" : " zeigt") + " in die falsche Richtung. Wer ruft wen auf, wer sendet an wen?");
-        if (nArt) teile.push(nArt + " Verbindung" + (nArt > 1 ? "en haben" : " hat") + " die falsche Art (synchron, asynchron oder Datenzugriff?).");
+        if (nArt) teile.push(nArt + " Verbindung" + (nArt > 1 ? "en haben" : " hat") + " die falsche Art (" + arten.map((a) => a.name).join(", ") + "?).");
         if (e.vFehlt.length) {
           const tipp = e.vFehlt[0];
           teile.push((e.vFehlt.length > 1 ? "Es fehlen " + e.vFehlt.length + " Verbindungen" : "Es fehlt 1 Verbindung") + ". Tipp: Schau dir «" + name(tipp.von) + "» nochmals an.");
