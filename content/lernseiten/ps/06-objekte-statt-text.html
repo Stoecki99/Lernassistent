@@ -82,6 +82,7 @@
     <a href="#ausprobieren"><b>6</b>Ausprobieren</a>
     <a href="#roentgen"><b>7</b>Objekt-Röntgen</a>
     <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#tipp-training"><b>9</b>Tipp-Training</a>
     <a href="#film"><b>▶</b>Lösungsfilm</a>
     <a href="#fehler"><b>!</b>Fehler</a>
     <a href="#test"><b>✓</b>Selbsttest</a>
@@ -348,19 +349,50 @@ Get-ChildItem Logs | Where-Object { $PSItem.Length -lt 1KB }</code></pre>
       <div id="t06-u2"></div>
     </div>
     <div class="card stack">
-      <h3>Übung 3 · Befehl zusammenbauen</h3>
-      <p class="prose">Lea will wissen: Auf welchen Wochentag fällt der Tag genau eine Woche nach der letzten Änderung von <code>notizen.txt</code>? Gib jedem Teil seinen Platz in der Kette (1 bis 4).</p>
+      <h3>Übung 3 · Befehl zusammenbauen und tippen</h3>
+      <p class="prose">Lea will ihre Notizen 12 Tage nach der letzten Änderung wieder anschauen. Auf welchen Wochentag fällt das? Die Kette hat vier Teile: die Datei in Klammern, die letzte Änderung, 12 Tage dazu, der Wochentag. Tippe sie als einen Befehl in die Konsole.</p>
       <div id="t06-u3"></div>
     </div>
     <div class="card stack"><h3>Übung 4 · Ausgabe vorhersagen</h3><div id="t06-u4"></div></div>
     <div class="card stack"><h3>Übung 5 · Ausgabe vorhersagen</h3><div id="t06-u5"></div></div>
-    <div class="card stack"><h3>Übung 6 · Fehler finden</h3><div id="t06-u6"></div></div>
+    <div class="card stack">
+      <h3>Übung 6 · Fehler finden und korrigieren</h3>
+      <p class="prose">Lea wollte nur den Namen ihrer Datei sehen. Die Konsole zeigt ihren Versuch und die rote Meldung. Finde den Fehler und tippe den korrigierten Befehl.</p>
+      <div id="t06-u6"></div>
+    </div>
     <div class="card stack"><h3>Übung 7 · Fehler finden</h3><div id="t06-u7"></div></div>
     <div class="card stack"><h3>Übung 8 · Wahr oder falsch?</h3><div id="t06-u8"></div></div>
     <div class="card stack">
       <h3>Übung 9 · Befehl selbst schreiben</h3>
       <p class="prose">Drei Aufträge ohne Vorlage. Schreib den Befehl selbst in den Simulator.</p>
       <div id="t06-u9"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 9 · Selbst tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Lesen ist gut, tippen ist besser. Hier schreibst du jeden Befehl selbst, Zeichen für Zeichen. So gehen dir Klammern, Punkt und Feldnamen in die Finger. Es gibt drei Stufen: zuerst abtippen, dann abwandeln, dann ganz allein.</p>
+    <p class="hint">Jede Stufe hat ihre eigene Konsole, und jede startet in Leas Benutzerordner <code>C:\Users\lea</code>. Gross- und Kleinschreibung spielen keine Rolle. Aliase wie <code class="ps">gi</code> und abgekürzte Parameter sind erlaubt. «Hinweis» gibt dir einen Denkanstoss, «Lösung» zeigt den ganzen Befehl.</p>
+
+    <div class="card stack">
+      <h3>Stufe 1 · Nachtippen</h3>
+      <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn ab und drück Enter. Schau dir dann die Ausgabe an: Was kommt genau heraus?</p>
+      <div id="t06-tipp1"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 2 · Abwandeln</h3>
+      <p class="prose">Jede Aufgabe zeigt einen Befehl, den du von dieser Seite kennst. Du änderst ein Stück: eine andere Datei, einen anderen Ordner, ein anderes Feld oder eine andere Methode.</p>
+      <div id="t06-tipp2"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 3 · Selber lösen</h3>
+      <p class="prose">Jetzt bekommst du nur noch das Ziel. Den Befehl baust du selbst. Drei Aufgaben holen Stoff aus früheren Stationen dazu: versteckte Dateien und den Ort wechseln (Station 04), eine Datei schreiben (Station 05).</p>
+      <p class="hint">Die letzte Aufgabe wechselt den Ort. Mit <code class="ps">cd ~</code> kommst du zurück in den Benutzerordner, «↺ Zurücksetzen» stellt den ganzen Rechner wieder her.</p>
+      <div id="t06-tipp3"></div>
     </div>
   </section>
 
@@ -484,6 +516,14 @@ Get-ChildItem Logs | Where-Object { $PSItem.Length -lt 1KB }</code></pre>
   // Hilfen für pruefe(ctx)
   const einzig = (ctx) => (ctx.objekte.length === 1 ? ctx.objekte[0] : undefined);
   const textVon = (ctx, o) => (o === undefined || o === null ? "" : ctx.text(o));
+  // Datei oder Ordner geholt? (Aliase wie gi, gci, ls sind schon aufgelöst)
+  const holt = (ctx) => ctx.befehle.includes("Get-Item") || ctx.befehle.includes("Get-ChildItem");
+  // Wert einer Eigenschaft eines Ausgabeobjekts als Text
+  const feld = (ctx, o, n) => (o && typeof o === "object" && typeof o.wert === "function" ? textVon(ctx, o.wert(n)) : undefined);
+  const gleicheMenge = (a, b) => a.length === b.length && a.slice().sort().join("|") === b.slice().sort().join("|");
+  // Get-Member-Ausgabe: genau anzahl Zeilen, alle vom Typ typ und von der Art Property
+  const nurEigenschaften = (ctx, typ, anzahl) => ctx.befehle.includes("Get-Member") && ctx.objekte.length === anzahl &&
+    ctx.objekte.every((o) => feld(ctx, o, "TypeName") === typ && feld(ctx, o, "MemberType") === "Property");
 
   /* ---------- Schritt 0: Mini-Übung ---------- */
   L.sortierer("#t06-mini", {
@@ -789,13 +829,19 @@ Get-ChildItem Logs | Where-Object { $PSItem.Length -lt 1KB }</code></pre>
       { html: C("DirectoryName"), kategorie: "nur Datei", erklaerung: "Der Pfad des Ordners, in dem die Datei liegt." }
     ]
   });
-  L.sortierer("#t06-u3", {
-    kategorien: ["1.", "2.", "3.", "4."],
-    elemente: [
-      { html: C(".AddDays(7)"), kategorie: "3.", erklaerung: "Vom Änderungsdatum aus eine Woche weiterrechnen." },
-      { html: C(R`(Get-Item Dokumente\notizen.txt)`), kategorie: "1.", erklaerung: "Ganz links: die Datei holen, in Klammern." },
-      { html: C(".DayOfWeek"), kategorie: "4.", erklaerung: "Vom neuen Datum den Wochentag nehmen. Ergebnis: Friday (Änderung am Freitag, 30.10., eine Woche später wieder Freitag)." },
-      { html: C(".LastWriteTime"), kategorie: "2.", erklaerung: "Das Datum der letzten Änderung: Freitag, 30. Oktober 2026." }
+  L.konsole("#t06-u3", {
+    begruessung: false,
+    aufgabenTitel: "Befehl tippen",
+    aufgaben: [
+      {
+        titel: "Wochentag 12 Tage nach der letzten Änderung",
+        text: "<p>Hol die Datei <code>Dokumente\\notizen.txt</code>, nimm ihre letzte Änderung, zähl 12 Tage dazu und gib nur den Wochentag aus.</p>",
+        hinweis: "<p>Lies die Kette von links nach rechts: " + C("(Get-Item …)") + ", dann " + C(".LastWriteTime") + ", dann eine Methode mit der Zahl in den Klammern, ganz rechts das Feld für den Wochentag.</p>",
+        loesung: R`(Get-Item Dokumente\notizen.txt).LastWriteTime.AddDays(12).DayOfWeek  # Freitag, 30.10., plus 12 Tage: Mittwoch, 11.11.`,
+        // Ergebnis prüfen; die 12 muss vorkommen, denn +5 Tage ergäben auch Mittwoch
+        pruefe: (ctx) => holt(ctx) && /notizen\.txt/i.test(ctx.eingabe) && /LastWriteTime/i.test(ctx.eingabe) && /\b12\b/.test(ctx.eingabe) &&
+          ["Wednesday", "Mittwoch"].includes(textVon(ctx, einzig(ctx)))
+      }
     ]
   });
   L.auswahl("#t06-u4", {
@@ -810,16 +856,19 @@ Get-ChildItem Logs | Where-Object { $PSItem.Length -lt 1KB }</code></pre>
     richtig: 0,
     erklaerung: "AddDays(-2) geht zwei Tage zurück, auf Samstag, 31. Oktober. DayOfWeek liefert den Wochentag englisch: Saturday."
   });
-  L.auswahl("#t06-u6", {
-    frage: "Lea tippt " + C(R`Get-Item Dokumente\notizen.txt.Name`) + " und bekommt " + '<span lang="en">' + C("Cannot find path …notizen.txt.Name…") + "</span>. Was ist falsch?",
-    optionen: [
-      "Die Datei notizen.txt gibt es nicht.",
-      "Die Klammern fehlen. So sucht PowerShell eine Datei namens notizen.txt.Name.",
-      "Name ist eine Methode und braucht Klammern.",
-      "Get-Item kann keine Eigenschaften liefern."
-    ],
-    richtig: 1,
-    erklaerung: R`Ohne Klammern gehört .Name zum Pfad. Richtig: (Get-Item Dokumente\notizen.txt).Name ergibt notizen.txt.`
+  L.konsole("#t06-u6", {
+    begruessung: false,
+    befehle: [R`Get-Item Dokumente\notizen.txt.Name`],
+    aufgabenTitel: "Korrigieren",
+    aufgaben: [
+      {
+        titel: "Nur der Name von notizen.txt",
+        text: "<p>Oben steht Leas Versuch mit der Meldung <span lang=\"en\">" + C("Cannot find path …notizen.txt.Name…") + "</span>. Tippe den korrigierten Befehl, der nur den Text " + C("notizen.txt") + " ausgibt.</p>",
+        hinweis: "<p>Lies die Meldung genau: Welchen Pfad sucht PowerShell? Was fehlt, damit zuerst die Datei geholt wird und erst danach der Punkt hineingreift?</p>",
+        loesung: R`(Get-Item Dokumente\notizen.txt).Name  # Klammern: erst die Datei holen, dann greift .Name hinein`,
+        pruefe: (ctx) => holt(ctx) && !ctx.hatFehler && ctx.objekte.length === 1 && einzig(ctx) === "notizen.txt"
+      }
+    ]
   });
   L.auswahl("#t06-u7", {
     frage: "Lea tippt " + C("(Get-Date).ToString") + " und erwartet das Datum als Text. Stattdessen erscheint eine Liste mit der Überschrift " + C("OverloadDefinitions") + ". Warum?",
@@ -868,6 +917,119 @@ Get-ChildItem Logs | Where-Object { $PSItem.Length -lt 1KB }</code></pre>
         loesung: "(Get-Date | Get-Member -MemberType Property).Count",
         pruefe: (ctx) => ctx.befehle.includes("Get-Date") && ctx.befehle.includes("Get-Member") && /Property/i.test(ctx.eingabe) &&
           (einzig(ctx) === 15 || /^Count\s+:\s*15\s*$/m.test(ctx.ausgabe))
+      }
+    ]
+  });
+
+  /* ---------- Tipp-Training ---------- */
+  const berichte = ["budget-2027.xlsx", "mitarbeitende.csv", "quartalsbericht-q3.xlsx"];
+  const appLogs = ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log", "app-2026-10.log", "app.log"];
+
+  // Stufe 1: abtippen. Geprüft wird das Ergebnis, dazu Datei und Methode aus der Vorlage.
+  L.konsole("#t06-tipp1", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 1 · Nachtippen",
+    aufgaben: [
+      {
+        titel: "Die Felder einer Logdatei",
+        text: "<p>Tippe ab: " + C(R`Get-Item Logs\app.log | Get-Member -MemberType Property`) + "</p><p>Welcher Typ steht ganz oben?</p>",
+        hinweis: "<p>Den senkrechten Strich " + C("|") + " tippst du auf der Schweizer Tastatur mit AltGr und 7, den Rückstrich " + C("\\") + " mit AltGr und der Taste &lt; links unten.</p>",
+        loesung: R`Get-Item Logs\app.log | Get-Member -MemberType Property  # Typ System.IO.FileInfo mit 17 Eigenschaften`,
+        pruefe: (ctx) => holt(ctx) && /app\.log/i.test(ctx.eingabe) && nurEigenschaften(ctx, "System.IO.FileInfo", 17)
+      },
+      {
+        titel: "Grösse in Megabyte",
+        text: "<p>Tippe ab: " + C(R`(Get-Item Downloads\setup-alt.exe).Length / 1MB`) + "</p><p>Wie viele MB hat die alte Setup-Datei?</p>",
+        hinweis: "<p>Zwischen der Klammer zu und " + C(".Length") + " steht kein Leerzeichen. " + C("1MB") + " schreibst du ohne Leerzeichen zwischen Zahl und Einheit.</p>",
+        loesung: R`(Get-Item Downloads\setup-alt.exe).Length / 1MB  # 52 428 800 Bytes geteilt durch 1 MB ergibt 50`,
+        pruefe: (ctx) => holt(ctx) && /setup-alt/i.test(ctx.eingabe) && ctx.objekte.length === 1 && typeof einzig(ctx) === "number" && einzig(ctx) === 50
+      },
+      {
+        titel: "Datum vor 30 Tagen als Text",
+        text: "<p>Tippe ab: " + C("(Get-Date).AddDays(-30).ToString('dd.MM.yyyy')") + "</p><p>Welches Datum war vor 30 Tagen?</p>",
+        hinweis: "<p>Drei Paar runde Klammern: um " + C("Get-Date") + ", um die Zahl und um das Muster. Das Muster steht in einfachen Anführungszeichen " + C("'…'") + ", grosses " + C("MM") + " heisst Monat.</p>",
+        loesung: "(Get-Date).AddDays(-30).ToString('dd.MM.yyyy')  # 30 Tage vor dem 2.11.2026: 03.10.2026",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /AddDays/i.test(ctx.eingabe) && ctx.objekte.length === 1 && textVon(ctx, einzig(ctx)) === "03.10.2026"
+      }
+    ]
+  });
+
+  // Stufe 2: einen bekannten Befehl abwandeln. Geprüft wird das Ergebnis, nicht der Wortlaut.
+  L.konsole("#t06-tipp2", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 2 · Abwandeln",
+    aufgaben: [
+      {
+        titel: "Anderes Feld, andere Datei",
+        text: "<p>Gezeigt: " + C(R`(Get-Item Dokumente\notizen.txt).LastWriteTime`) + "</p><p>Wie oben, aber für die Datei <code>Bilder\\logo-wolkenried.png</code>, und gib <b>nur das Jahr</b> der letzten Änderung aus.</p>",
+        hinweis: "<p>Ein Datum ist selbst eine Karte. Hängst du noch einen Punkt an, kommst du an seine Felder. Wie heisst «Jahr» auf Englisch?</p>",
+        loesung: R`(Get-Item Bilder\logo-wolkenried.png).LastWriteTime.Year  # zweiter Punkt: vom Datum nur das Jahr, 2025`,
+        pruefe: (ctx) => holt(ctx) && /logo/i.test(ctx.eingabe) && ctx.objekte.length === 1 && textVon(ctx, einzig(ctx)) === "2025"
+      },
+      {
+        titel: "Anderer Ordner, andere Felder",
+        text: "<p>Gezeigt: " + C(R`Get-Item Dokumente\notizen.txt | Select-Object Name, Length, LastWriteTime, FullName`) + "</p><p>Wie oben, aber für <b>alle Dateien im Ordner</b> <code>Berichte</code> und nur mit den Feldern <code>Name</code> und <code>Extension</code> (Endung).</p>",
+        hinweis: "<p>Für alle Dateien eines Ordners brauchst du ein anderes Cmdlet als " + C("Get-Item") + ". Hinter " + C("Select-Object") + " stehen dann nur noch zwei Namen.</p>",
+        loesung: "Get-ChildItem Berichte | Select-Object Name, Extension  # drei schlanke Karten mit Name und Endung",
+        pruefe: (ctx) => holt(ctx) && ctx.befehle.includes("Select-Object") && ctx.objekte.length === 3 &&
+          ctx.objekte.every((o) => o && typeof o === "object" && typeof o.namen === "function" &&
+            gleicheMenge(o.namen().map((n) => n.toLowerCase()), ["extension", "name"])) &&
+          gleicheMenge(ctx.objekte.map((o) => feld(ctx, o, "Name")), berichte)
+      },
+      {
+        titel: "Ein Ordner statt einer Datei",
+        text: "<p>Gezeigt: " + C(R`Get-Item Dokumente\notizen.txt | Get-Member -MemberType Property`) + "</p><p>Wie oben, aber für den <b>Ordner</b> <code>Dokumente</code> selbst. Welcher Typ erscheint jetzt, und welche Felder hat nur der Ordner?</p>",
+        hinweis: "<p>Du änderst nur den Pfad hinter " + C("Get-Item") + ". Kein " + C("Get-ChildItem") + ": Das würde die Dateien im Ordner holen, nicht den Ordner.</p>",
+        loesung: "Get-Item Dokumente | Get-Member -MemberType Property  # Typ System.IO.DirectoryInfo, dazu Parent und Root",
+        pruefe: (ctx) => holt(ctx) && /Dokumente/i.test(ctx.eingabe) && !/Archiv/i.test(ctx.eingabe) && nurEigenschaften(ctx, "System.IO.DirectoryInfo", 15)
+      },
+      {
+        titel: "Andere Methode",
+        text: "<p>Gezeigt: " + C(R`(Get-Item Dokumente\notizen.txt).Name.ToUpper()`) + "</p><p>Wie oben, aber für die Datei <code>Downloads\\WolkenriedSync-setup.exe</code>, und der Name soll ganz in <b>Kleinbuchstaben</b> erscheinen.</p>",
+        hinweis: "<p>Upper heisst «gross», das Gegenteil von upper ist lower. Die Klammern der Methode bleiben.</p>",
+        loesung: R`(Get-Item Downloads\WolkenriedSync-setup.exe).Name.ToLower()  # ToLower() liefert den Namen klein geschrieben`,
+        pruefe: (ctx) => holt(ctx) && /ToLower\(\s*\)/i.test(ctx.eingabe) && ctx.objekte.length === 1 && einzig(ctx) === "wolkenriedsync-setup.exe"
+      }
+    ]
+  });
+
+  // Stufe 3: nur das Ziel. Aufgaben 2 bis 4 wiederholen Station 04 und 05.
+  L.konsole("#t06-tipp3", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 3 · Selber lösen",
+    aufgaben: [
+      {
+        titel: "Speicher von notepad",
+        text: "<p>Wie viel Arbeitsspeicher belegt der Prozess <code>notepad</code> gerade? Gib <b>nur die Zahl</b> in Bytes aus, ohne Tabelle.</p>",
+        hinweis: "<p>Die Spalte " + C("WS(M)") + " in der Tabelle ist nur eine Beschriftung. Wie das echte Feld heisst, verrät dir " + C("Get-Member") + ".</p>",
+        loesung: "(Get-Process notepad).WorkingSet64  # das echte Feld hinter der Spalte WS(M), in Bytes",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && /WorkingSet64|\bWS\b/i.test(ctx.eingabe) && ctx.objekte.length === 1 &&
+          typeof einzig(ctx) === "number" && textVon(ctx, einzig(ctx)) === "14680064"
+      },
+      {
+        titel: "Die versteckte Datei im Archiv",
+        text: "<p>Im Ordner <code>Dokumente\\Archiv</code> liegt eine versteckte Datei. Wie gross ist sie? Gib <b>nur die Zahl</b> aus (Wiederholung aus Station 04).</p>",
+        hinweis: "<p>Versteckte Dateien zeigt " + C("Get-ChildItem") + " nur mit einem bestimmten Schalter. Kennst du den Namen, greifst du mit Klammern und Punkt nach der Grösse. Auch " + C("Get-Item") + " braucht bei versteckten Dateien diesen Schalter.</p>",
+        loesung: R`(Get-Item Dokumente\Archiv\schatz.txt -Force).Length  # -Force findet auch versteckte Dateien, die Grösse ist 53`,
+        pruefe: (ctx) => holt(ctx) && /Archiv|schatz/i.test(ctx.eingabe) && ctx.objekte.length === 1 && typeof einzig(ctx) === "number" && einzig(ctx) === 53
+      },
+      {
+        titel: "Wiedervorlage in eine Datei schreiben",
+        text: "<p>Lege im Benutzerordner die Datei <code>wiedervorlage.txt</code> an. Ihr Inhalt ist das Datum in 7 Tagen im Format <code>TT.MM.JJJJ</code> (Wiederholung aus Station 05).</p>",
+        hinweis: "<p>Zuerst das Datum als Text bauen, wie im Lösungsfilm. Dann mit " + C("Set-Content") + ", " + C("Out-File") + " oder " + C(">") + " in die Datei schreiben. Ein Ausdruck als Wert eines Parameters steht in runden Klammern.</p>",
+        loesung: "Set-Content wiedervorlage.txt (Get-Date).AddDays(7).ToString('dd.MM.yyyy')  # schreibt 09.11.2026 in die neue Datei",
+        // Zustand prüfen; das Datum muss mit Get-Date plus 7 Tage gerechnet sein (auch in einer früheren Zeile, z. B. über eine Variable),
+        // ein von Hand getipptes 09.11.2026 nach einem blossen Get-Date zählt nicht
+        pruefe: (ctx) => (ctx.inhalt(R`C:\Users\lea\wiedervorlage.txt`) || "").trim() === "09.11.2026" &&
+          ctx.verlauf.some((z) => /Get-Date|\[datetime\]::(Now|Today)/i.test(z) && /AddDays\(\s*7\s*\)|New-TimeSpan/i.test(z))
+      },
+      {
+        titel: "In Logs wechseln und Namen holen",
+        text: "<p>Wechsle in den Ordner <code>Logs</code>. Gib dort die Namen aller Dateien, die mit <code>app</code> beginnen, als reinen Text aus, ohne Tabelle (Wiederholung aus Station 04).</p>",
+        hinweis: "<p>Zwei Schritte, gern in zwei Eingaben: erst den Ort wechseln, dann mit dem Platzhalter " + C("*") + " die passenden Dateien holen und mit Klammern und Punkt nur das Feld " + C("Name") + " nehmen.</p>",
+        loesung: "Set-Location Logs; (Get-ChildItem app*).Name  # erst wechseln, dann von fünf Dateien nur den Namen",
+        pruefe: (ctx) => /\\Logs$/i.test(ctx.ort) && ctx.objekte.length === 5 && ctx.objekte.every((o) => typeof o === "string") &&
+          gleicheMenge(ctx.objekte.slice(), appLogs)
       }
     ]
   });

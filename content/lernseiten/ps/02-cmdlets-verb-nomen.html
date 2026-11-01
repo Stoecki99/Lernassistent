@@ -81,6 +81,7 @@
     <a href="#zerleger"><b>5</b>Zerleger</a>
     <a href="#baukasten"><b>6</b>Baukasten</a>
     <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#tipp-training"><b>8</b>Tipp-Training</a>
     <a href="#film"><b>▶</b>Lösungsfilm</a>
     <a href="#fallen"><b>!</b>Fallen</a>
     <a href="#test"><b>✓</b>Selbsttest</a>
@@ -275,16 +276,35 @@
       <div class="uebung-kopf"><span class="eyebrow">Übung 4 · Ausgabe vorhersagen</span><h3>Ein Wert ohne Namen</h3></div>
       <div id="t02-u-pos"></div>
     </div>
-    <div class="card stack">
+    <div class="stack">
       <div class="uebung-kopf"><span class="eyebrow">Übung 5 · Fehler finden</span><h3>Lea tippt schnell</h3></div>
-      <div id="t02-u-fehler1"></div>
-      <div id="t02-u-fehler2"></div>
+      <p class="prose">Lea hat sich dreimal vertippt. Ihre Befehle und die Fehlermeldungen stehen schon in der Konsole. Lies jede Meldung, finde den Fehler und tippe den korrigierten Befehl.</p>
+      <div id="t02-u-fehler"></div>
     </div>
     <div id="t02-u-wf"></div>
     <div class="stack">
       <div class="uebung-kopf"><span class="eyebrow">Übung 7 · Befehl selbst schreiben</span><h3>Zwei Aufträge für den Simulator</h3></div>
       <div id="t02-u-konsole"></div>
     </div>
+  </section>
+
+  <!-- ===== 8 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 8 · Üben mit den Fingern</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Befehle sitzen erst, wenn du sie selbst getippt hast. Hier übst du in drei Stufen: zuerst abtippen, dann abwandeln, am Schluss ganz ohne Vorlage. Jede Stufe hat ihre eigene Konsole mit Leas Rechner. Du brauchst weder Tab noch Pfeiltasten, alles geht auch auf dem Handy. Gross- und Kleinschreibung ist egal. Hat ein Befehl etwas verändert, holt «↺ Zurücksetzen» den Anfangszustand zurück. Gelöste Aufgaben bleiben gelöst.</p>
+
+    <h3>Stufe 1 · Nachtippen</h3>
+    <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn genau ab und drück Enter. Achte auf die Bindestriche und die Leerzeichen zwischen den Teilen.</p>
+    <div id="t02-tt-1"></div>
+
+    <h3>Stufe 2 · Abwandeln</h3>
+    <p class="prose">Jetzt bekommst du einen Befehl als Vorlage und änderst ein Stück daran: einen Wert, einen Ordner, einen Schalter. Abkürzungen und Aliase sind erlaubt, solange das Ergebnis stimmt.</p>
+    <div id="t02-tt-2"></div>
+
+    <h3>Stufe 3 · Selber lösen</h3>
+    <p class="prose">Hier steht nur noch, was Lea will. Den Befehl baust du selbst. Zwei Aufgaben holen Befehle aus Station 01 zurück und verbinden sie mit dem, was du hier gelernt hast. Es gibt oft mehrere richtige Wege.</p>
+    <div id="t02-tt-3"></div>
   </section>
 
   <!-- ===== Lösungsfilm ===== -->
@@ -904,27 +924,155 @@
     richtig: 0,
     erklaerung: "Get-ChildItem hat zwei Positionsparameter: Position 0 ist -Path, Position 1 ist -Filter. Der Befehl heisst ausgeschrieben Get-ChildItem -Path Bilder -Filter *.jpg und zeigt nur die JPG-Bilder."
   });
-  L.auswahl("#t02-u-fehler1", {
-    frage: "Lea tippt " + C("Get-Services -Name Spooler") + " und erhält «The term 'Get-Services' is not recognized». Was ist falsch?",
-    optionen: [
-      "Das Nomen steht in der Mehrzahl. Richtig ist Get-Service",
-      "Es fehlen Anführungszeichen um Spooler",
-      "Statt -Name braucht es -Path",
-      "Get ist kein genehmigtes Verb"
-    ],
-    richtig: 0,
-    erklaerung: "Cmdlet-Nomen stehen immer in der Einzahl, auch wenn mehrere Objekte herauskommen. Spooler hat kein Leerzeichen und braucht keine Anführungszeichen."
-  });
-  L.auswahl("#t02-u-fehler2", {
-    frage: "Lea tippt " + C("Get-ChildItem -Path -Recurse Dokumente") + ". Es kommt «Missing an argument for parameter 'Path'». Welche Korrektur stimmt?",
-    optionen: [
-      C("Get-ChildItem -Path Dokumente -Recurse"),
-      C("Get-ChildItem -Path -Recurse 'Dokumente'"),
-      C("Get-ChildItem -Recurse -Path"),
-      C("Get-ChildItem -Path:-Recurse Dokumente")
-    ],
-    richtig: 0,
-    erklaerung: "Direkt nach -Path muss sein Wert stehen. -Recurse ist ein Schalter ohne Wert und darf irgendwo stehen, aber nicht zwischen -Path und Dokumente."
+  /* ---------- Hilfen für die Tipp-Aufgaben ---------- */
+  // Eingabe vergleichbar machen: Kommentar weg, Gross/Klein und Leerzeichen egal, typografische Striche wie pwsh
+  const tNorm = (t) => String(t).replace(/[\u2013\u2014\u2015]/g, "-").replace(/\s#.*$/, "").trim().replace(/\s+/g, " ").toLowerCase();
+  const tEig = (o, n) => (o && typeof o === "object" && typeof o.wert === "function") ? o.wert(n) : undefined;
+  const tName = (ctx, o) => (typeof o === "string") ? o : (tEig(o, "Name") != null ? ctx.text(tEig(o, "Name")) : ctx.text(o));
+  const tNamen = (ctx) => ctx.objekte.map((o) => tName(ctx, o));
+  const tGleicheMenge = (a, b) => a.length === b.length && a.slice().sort().join("|") === b.slice().sort().join("|");
+  const tKoepfe = (ctx) => (ctx.ausgabe.match(/Directory: [^\r\n]+/g) || []).map((z) => z.slice(11).trim());
+  const tWasWaere = (ctx) => (ctx.ausgabe.match(/What if: Performing the operation "[^"]+" on target "[^"]+"/g) || []);
+  const tErstesWort = (ctx) => tNorm(ctx.eingabe).split(" ")[0];
+  const tAbgetippt = (ziel) => (ctx) => !ctx.hatFehler && tNorm(ctx.eingabe) === tNorm(ziel);
+  const LEA = "C:\\Users\\lea\\";
+
+  /* ---------- Übung 5: Fehler finden und korrigiert tippen ---------- */
+  const fehlerAufgaben = [
+    {
+      titel: "Get-Processes",
+      text: "<p>Lea wollte den Editor <code>notepad</code> sehen und hat " + C("Get-Processes -Name notepad") + " getippt. Die Meldung beginnt mit <span lang=\"en\">«The term 'Get-Processes' is not recognized»</span>. Tippe den korrigierten Befehl.</p>",
+      hinweis: "<p>Den Befehl gibt es nicht. Schau dir das Nomen genau an: Wie viele Prozesse stehen im Namen?</p>",
+      loesung: "Get-Process -Name notepad   # Nomen in der Einzahl",
+      pruefe: (ctx) => ctx.befehle.includes("Get-Process") && ctx.objekte.length === 1 && tName(ctx, ctx.objekte[0]).toLowerCase() === "notepad"
+    },
+    {
+      titel: "Parameter ohne Wert",
+      text: "<p>Lea wollte den Ordner <code>Dokumente</code> samt Unterordnern sehen: " + C("Get-ChildItem -Path -Recurse Dokumente") + ". Es kommt <span lang=\"en\">«Missing an argument for parameter 'Path'»</span>. Tippe den Befehl richtig.</p>",
+      hinweis: "<p>Welcher Teil gehört direkt hinter <code>-Path</code>? Und welcher Teil braucht gar keinen Wert?</p>",
+      loesung: "Get-ChildItem -Path Dokumente -Recurse   # erst der Wert zu -Path, der Schalter steht allein",
+      pruefe: (ctx) => {
+        const k = tKoepfe(ctx);
+        return ctx.befehle.includes("Get-ChildItem") && !ctx.hatFehler && k.includes(LEA + "Dokumente") &&
+          k.includes(LEA + "Dokumente\\Archiv") && k.every((p) => p.indexOf(LEA + "Dokumente") === 0);
+      }
+    },
+    {
+      titel: "Ein erfundenes Verb",
+      text: "<p>Lea wollte gefahrlos testen, was das Löschen von <code>foto-apero.jpg</code> im Ordner <code>Downloads</code> bewirkt: " + C("Delete-Item Downloads\\foto-apero.jpg -WhatIf") + ". Wieder heisst es <span lang=\"en\">«is not recognized»</span>. Tippe den korrigierten Befehl.</p>",
+      hinweis: "<p>Delete steht nicht in der Liste von <code>Get-Verb</code>. Welches genehmigte Verb heisst «entfernen»?</p>",
+      loesung: "Remove-Item Downloads\\foto-apero.jpg -WhatIf   # Remove ist das genehmigte Verb für löschen",
+      pruefe: (ctx) => {
+        const w = tWasWaere(ctx);
+        return ctx.befehle.includes("Remove-Item") && w.length === 1 && /"Remove File" on target "C:\\Users\\lea\\Downloads\\foto-apero\.jpg"/i.test(w[0]) && ctx.existiert(LEA + "Downloads\\foto-apero.jpg");
+      }
+    }
+  ];
+
+  /* ---------- Tipp-Training Stufe 1: Nachtippen ---------- */
+  const stufe1 = [
+    {
+      titel: "Ein Dienst mit Namen",
+      text: "<p>Tippe ab: " + C("Get-Service -Name Spooler") + "</p>",
+      hinweis: "<p>Verb, Bindestrich, Nomen ohne Leerzeichen. Dann ein Leerzeichen, der Parameter mit Bindestrich, ein Leerzeichen und der Wert.</p>",
+      loesung: "Get-Service -Name Spooler   # Cmdlet, Parameter, Wert",
+      pruefe: tAbgetippt("Get-Service -Name Spooler")
+    },
+    {
+      titel: "Zwei Parameter mit Wert",
+      text: "<p>Tippe ab: " + C("Get-ChildItem -Path Downloads -Filter *.pdf") + "</p>",
+      hinweis: "<p>Zwei Paare aus Parameter und Wert, getrennt durch Leerzeichen. Der Stern gehört zum Wert <code>*.pdf</code>.</p>",
+      loesung: "Get-ChildItem -Path Downloads -Filter *.pdf   # zwei benannte Parameter",
+      pruefe: tAbgetippt("Get-ChildItem -Path Downloads -Filter *.pdf")
+    },
+    {
+      titel: "Ein Schalter am Schluss",
+      text: "<p>Tippe ab: " + C("Remove-Item -Path Downloads\\setup-alt.exe -WhatIf") + "</p><p>Vergisst du " + C("-WhatIf") + ", ist die Datei wirklich weg. Dann holt «↺ Zurücksetzen» sie zurück.</p>",
+      hinweis: "<p>Zwischen Ordner und Datei steht ein umgekehrter Schrägstrich <code>\\</code>. <code>-WhatIf</code> braucht keinen Wert.</p>",
+      loesung: "Remove-Item -Path Downloads\\setup-alt.exe -WhatIf   # nur zeigen, nichts löschen",
+      pruefe: tAbgetippt("Remove-Item -Path Downloads\\setup-alt.exe -WhatIf")
+    }
+  ];
+
+  /* ---------- Tipp-Training Stufe 2: Abwandeln ---------- */
+  const stufe2 = [
+    {
+      titel: "Anderer Dienst",
+      text: "<p>Aus Stufe 1 kennst du " + C("Get-Service -Name Spooler") + ". Zeige auf dieselbe Art den Dienst <code>WolkenriedSync</code>.</p>",
+      hinweis: "<p>Cmdlet und Parameter bleiben gleich. Nur der Wert ändert sich.</p>",
+      loesung: "Get-Service -Name WolkenriedSync   # nur der Wert ist neu",
+      pruefe: (ctx) => ctx.befehle.includes("Get-Service") && ctx.objekte.length === 1 && tName(ctx, ctx.objekte[0]) === "WolkenriedSync"
+    },
+    {
+      titel: "Anderer Ordner, anderer Filter",
+      text: "<p>" + C("Get-ChildItem -Path Downloads -Filter *.pdf") + " zeigt die PDF-Dateien in <code>Downloads</code>. Zeige jetzt die <code>.jpg</code>-Bilder im Ordner <code>Bilder</code>.</p>",
+      hinweis: "<p>Beide Werte ändern sich: der Ordner nach <code>-Path</code> und das Muster nach <code>-Filter</code>.</p>",
+      loesung: "Get-ChildItem -Path Bilder -Filter *.jpg   # neuer Ordner, neues Muster",
+      pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && tGleicheMenge(tNamen(ctx), ["ferien-01.jpg", "ferien-02.jpg"])
+    },
+    {
+      titel: "Nur die Ordner",
+      text: "<p>" + C("Get-ChildItem -Path Dokumente") + " zeigt alles im Ordner <code>Dokumente</code>, Dateien und Unterordner. Zeige darin nur die Ordner. " + C("Get-ChildItem") + " hat dafür den Schalter " + C("-Directory") + ".</p>",
+      hinweis: "<p>Ein Schalter braucht keinen Wert. Hänge ihn einfach an den Befehl von oben an.</p>",
+      loesung: "Get-ChildItem -Path Dokumente -Directory   # Schalter: nur Ordner",
+      pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && tGleicheMenge(tNamen(ctx), ["Archiv"]) && tKoepfe(ctx).every((p) => p === LEA + "Dokumente")
+    },
+    {
+      titel: "Mehrere Dateien auf einmal",
+      text: "<p>" + C("Remove-Item -Path Downloads\\setup-alt.exe -WhatIf") + " testet das Löschen einer Datei. Teste genauso für <b>alle</b> <code>.exe</code>-Dateien im Ordner <code>Downloads</code> auf einmal. Gelöscht werden darf nichts.</p>",
+      hinweis: "<p>Ersetze den Dateinamen durch ein Muster mit Stern, wie bei <code>-Filter</code>. Das Sicherheitsnetz bleibt dran.</p>",
+      loesung: "Remove-Item -Path Downloads\\*.exe -WhatIf   # der Stern trifft beide .exe-Dateien",
+      pruefe: (ctx) => {
+        const w = tWasWaere(ctx);
+        return ctx.befehle.includes("Remove-Item") && w.length === 2 &&
+          w.some((z) => /\\Downloads\\setup-alt\.exe"$/i.test(z)) && w.some((z) => /\\Downloads\\WolkenriedSync-setup\.exe"$/i.test(z)) &&
+          ctx.existiert(LEA + "Downloads\\setup-alt.exe") && ctx.existiert(LEA + "Downloads\\WolkenriedSync-setup.exe");
+      }
+    }
+  ];
+
+  /* ---------- Tipp-Training Stufe 3: Selber lösen ---------- */
+  const stufe3 = [
+    {
+      titel: "Wo bin ich? (Wiederholung Station 01)",
+      text: "<p>Zeige, in welchem Ordner du gerade bist. Nimm dafür einen <b>Alias</b>, nicht den vollen Cmdlet-Namen.</p>",
+      hinweis: "<p>Das Cmdlet kennst du aus Station 01: Verb Get, Nomen Location. Seine Aliase verrät " + C("Get-Alias -Definition") + ".</p>",
+      loesung: "pwd   # Alias für Get-Location (gl geht auch)",
+      pruefe: (ctx) => ctx.befehle.includes("Get-Location") && !ctx.hatFehler && tErstesWort(ctx) !== "get-location" && /(^|\n)Path\r?\n/.test(ctx.ausgabe)
+    },
+    {
+      titel: "Nur das Datum (Wiederholung Station 01)",
+      text: "<p>" + C("Get-Date") + " zeigt Datum und Uhrzeit. Lea braucht für ihr Ticket nur das Datum, ohne Uhrzeit.</p>",
+      hinweis: "<p>Get-Date hat einen Parameter, der bestimmt, was angezeigt wird. Er beginnt mit <code>-Display…</code> und will als Wert das englische Wort für Datum.</p>",
+      loesung: "Get-Date -DisplayHint Date   # Parameter mit Wert: nur das Datum",
+      pruefe: (ctx) => ctx.befehle.includes("Get-Date") && !ctx.hatFehler && /^(Montag, )?(2\. November 2026|02\.11\.2026)$/.test(ctx.ausgabe.trim())
+    },
+    {
+      titel: "Befehle für Elemente",
+      text: "<p>Lea will eine Datei kopieren, kennt aber den Befehl nicht. Liste alle Cmdlets auf, deren Nomen <code>Item</code> ist.</p>",
+      hinweis: "<p>Ein Cmdlet, das Befehle findet, kennst du aus Schritt 1. Es kann nach dem Nomen suchen.</p>",
+      loesung: "Get-Command -Noun Item   # sucht nach dem Nomen",
+      pruefe: (ctx) => ctx.befehle.includes("Get-Command") && ["Copy-Item", "Move-Item", "New-Item", "Remove-Item", "Rename-Item"].every((n) => ctx.ausgabe.indexOf(n) >= 0) &&
+        !/Get-ChildItem|Get-Process|Get-Service/.test(ctx.ausgabe)
+    },
+    {
+      titel: "Programmordner mit Unterordnern",
+      text: "<p>Zeige den Ordner <code>C:\\Program Files\\PowerShell</code> mitsamt allem, was in seinen Unterordnern liegt.</p>",
+      hinweis: "<p>Zwei Dinge aus dieser Station: Der Pfad enthält ein Leerzeichen. Und für «auch in Unterordnern» gibt es einen Schalter.</p>",
+      loesung: "Get-ChildItem 'C:\\Program Files\\PowerShell' -Recurse   # Anführungszeichen halten den Pfad zusammen",
+      pruefe: (ctx) => {
+        const k = tKoepfe(ctx);
+        return ctx.befehle.includes("Get-ChildItem") && k.includes("C:\\Program Files\\PowerShell") && k.includes("C:\\Program Files\\PowerShell\\7") &&
+          k.every((p) => p.indexOf("C:\\Program Files\\PowerShell") === 0);
+      }
+    }
+  ];
+  L.konsole("#t02-u-fehler", {
+    titel: "PowerShell 7 · Übung 5",
+    begruessung: false,
+    befehle: ["Get-Processes -Name notepad", "Get-ChildItem -Path -Recurse Dokumente", "Delete-Item Downloads\\foto-apero.jpg -WhatIf"],
+    aufgabenTitel: "Übung 5: korrigiert tippen",
+    aufgaben: fehlerAufgaben
   });
   L.wahrFalsch("#t02-u-wf", {
     titel: "Übung 6 · Stimmt das?",
@@ -958,6 +1106,11 @@
       }
     ]
   });
+
+  /* ---------- Tipp-Training: eine Konsole pro Stufe ---------- */
+  L.konsole("#t02-tt-1", { titel: "PowerShell 7 · Stufe 1", begruessung: false, aufgabenTitel: "Stufe 1 · Nachtippen", aufgaben: stufe1 });
+  L.konsole("#t02-tt-2", { titel: "PowerShell 7 · Stufe 2", begruessung: false, aufgabenTitel: "Stufe 2 · Abwandeln", aufgaben: stufe2 });
+  L.konsole("#t02-tt-3", { titel: "PowerShell 7 · Stufe 3", begruessung: false, aufgabenTitel: "Stufe 3 · Selber lösen", aufgaben: stufe3 });
 
   /* ---------- Lösungsfilm mit echten Simulator-Ausgaben ---------- */
   const film = L.konsole.sitzung();

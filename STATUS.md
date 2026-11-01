@@ -71,6 +71,7 @@
 
 ### 2026-11-01
 
+- **feat: Lernpfad PS · Tipp-Training** — jede der 13 Stationen hat einen neuen Abschnitt «Tipp-Training» mit 11–12 Simulator-Aufgaben in drei Stufen (Nachtippen, Abwandeln, Selber lösen mit Wiederholung früherer Stationen); je 2–3 Klick-Übungen pro Station sind Tipp-Aufgaben geworden. Prüfungen akzeptieren gleichwertige Lösungen (Aliase, Abkürzungen, andere Wege), lehnen zu breite Befehle ab; je Station unabhängig geprüft, Integrationstest löst alle 150 Aufgaben automatisch
 - **feat: Lernpfad PS live** (Commits 28cd6c5, 3478fb0, live am 01.11.2026) — 13 Stationen von «Konsole, erste Schritte» bis «Praxisprojekt und Abschluss» in `content/lernseiten/ps/`, Lernpfad `/lernseiten/ps`, Kurzlink `/PS`, Kachel im Reiter Lernseiten. Jede Station mit Konsolen-Simulator, Aufgaben, Lösungsfilm und Selbsttest; Fortschritt im Konto wie bei MSTW. Konzept: Vault `02 Projekte/Lernpfad PS.md`
 - **test: Integrationstest bestanden** — Tests, `tsc`, Lint, Inhaltsprüfung (PS 13 von 13), Produktions-Build und Docker-Build; Ende-zu-Ende mit Wegwerf-Datenbank: ohne Login 307 auf `/login`, eingeloggt alle 13 Stationen 200 mit CSP, keine Konsolenfehler, kein waagrechter Scroll bei 360 px hell und dunkel
 - **fix: Befunde aus dem Code-Review**:

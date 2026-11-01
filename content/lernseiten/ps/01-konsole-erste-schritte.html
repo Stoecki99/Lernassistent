@@ -71,6 +71,7 @@
     <a href="#ausprobieren"><b>6</b>Tour</a>
     <a href="#anatomie"><b>7</b>Anatomie</a>
     <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#tipp-training"><b>9</b>Tipp-Training</a>
     <a href="#film"><b>▶</b>Lösungsfilm</a>
     <a href="#fallen"><b>!</b>Fallen</a>
     <a href="#test"><b>✓</b>Selbsttest</a>
@@ -303,15 +304,35 @@ SerializationVersion           1.1.0.1</pre>
       <div id="t01-u-verlauf"></div>
     </div>
     <div class="card stack">
-      <div class="uebung-kopf"><span class="eyebrow">Übung 6 · Fehler finden</span><h3>Lea kopiert aus einer Anleitung</h3></div>
-      <div id="t01-u-fehler1"></div>
-      <div id="t01-u-fehler2"></div>
+      <div class="uebung-kopf"><span class="eyebrow">Übung 6 · Fehler finden</span><h3>Drei Zeilen, die nicht laufen</h3></div>
+      <p class="hint">Lea hat drei Befehle aus Anleitungen übernommen, und jeder endet rot. Finde den Fehler und tippe den Befehl richtig in die Konsole.</p>
+      <div id="t01-u-fehler"></div>
     </div>
     <div id="t01-u-wf"></div>
     <div class="stack">
       <div class="uebung-kopf"><span class="eyebrow">Übung 8 · Befehl selbst schreiben</span><h3>Zwei Angaben für die Inventarliste</h3></div>
       <div id="t01-u-konsole"></div>
     </div>
+  </section>
+
+  <!-- ===== 9 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 9 · Selbst tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Lesen ist gut, Tippen ist besser. Hier schreibst du jeden Befehl selbst, Buchstabe für Buchstabe. Das Training hat drei Stufen: Erst tippst du ab, dann wandelst du einen Befehl ab, am Schluss findest du den Befehl allein. Jede Stufe hat ihre eigene Konsole. Tab und Pfeiltasten brauchst du nicht, es geht also auch auf dem Handy.</p>
+    <div class="note tipp"><b>Verirrt?</b> «↺ Zurücksetzen» stellt Leas Rechner wieder her. Gelöste Aufgaben bleiben gelöst. Gross und Klein ist bei Befehlsnamen egal, und für die meisten Aufgaben gibt es mehr als einen richtigen Weg.</div>
+
+    <h3>Stufe 1 · Nachtippen</h3>
+    <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn genau ab und drück Enter. So gewöhnen sich deine Finger an Bindestrich, Backslash und Anführungszeichen.</p>
+    <div id="t01-tipp-1"></div>
+
+    <h3>Stufe 2 · Abwandeln</h3>
+    <p class="prose">Jetzt siehst du einen fertigen Befehl, brauchst aber etwas anderes. Ändere nur das, was sich ändern muss.</p>
+    <div id="t01-tipp-2"></div>
+
+    <h3>Stufe 3 · Selber lösen</h3>
+    <p class="prose">Hier steht nur noch, was Lea wissen will. Den Befehl findest du selbst. Brauchst du einen Anstoss, öffne den Hinweis. Die Lösung kommt erst ganz zum Schluss.</p>
+    <div id="t01-tipp-3"></div>
   </section>
 
   <!-- ===== Lösungsfilm ===== -->
@@ -736,27 +757,53 @@ SerializationVersion           1.1.0.1</pre>
     richtig: 1,
     erklaerung: "cls leert nur das Fenster. Der Verlauf speichert den Befehl so, wie er getippt wurde, also cls und nicht Clear-Host. Get-History selbst kommt erst in den Verlauf, wenn es fertig ist."
   });
-  L.auswahl("#t01-u-fehler1", {
-    frage: "In einer Anleitung steht <code>PS C:\\Users\\lea&gt; Get-ChildItem</code>. Lea kopiert die ganze Zeile in ihre Konsole und erhält eine Fehlermeldung von " + C("Get-Process") + ". Was ist passiert?",
-    optionen: [
-      "Lea hat den Prompt mitkopiert. PS wird als Befehl gelesen, und ps ist ein Kurzname für Get-Process",
-      "Get-ChildItem ist in PowerShell 7 verboten",
-      "Lea braucht Adminrechte",
-      "Die Anleitung ist für Linux geschrieben"
-    ],
-    richtig: 0,
-    erklaerung: "Der Prompt gehört nicht zum Befehl. Kopiere nur den Teil nach dem Zeichen >. Weil Gross und Klein egal ist, startet PS den Befehl Get-Process."
-  });
-  L.auswahl("#t01-u-fehler2", {
-    frage: "Lea tippt " + C("Get-ChildItme") + " und erhält «The term 'Get-ChildItme' is not recognized». Wie vermeidet sie das am einfachsten?",
-    optionen: [
-      "Alles in Grossbuchstaben tippen",
-      "Die Konsole als Administrator öffnen",
-      "Get-Chi tippen und mit Tab ergänzen lassen",
-      "Den Befehl in Anführungszeichen setzen"
-    ],
-    richtig: 2,
-    erklaerung: "Die Buchstaben e und m sind vertauscht. Tab schreibt den Namen fehlerfrei fertig. Gross oder klein spielt keine Rolle, und Adminrechte helfen gegen Tippfehler nicht."
+  /* ---------- Prüfhilfen für die Tipp-Aufgaben ---------- */
+  // Prüfen das Ergebnis, nicht den Text: Aliase (ls, dir, gci), .\, / statt \, -Path und -Name zählen gleich
+  const HOME = "C:\\Users\\lea";
+  // Sichtbare Einträge eines Ordners im Spiel-Rechner (ohne versteckte, wie Get-ChildItem ohne -Force)
+  const sichtbar = (ctx, pfad) => (ctx.kinder(pfad) || []).filter((n) => { const d = ctx.datei(pfad + "\\" + n); return d && !d.versteckt; });
+  // Genau der Inhalt dieses einen Ordners, mit Get-ChildItem geholt, ohne Fehler. -Recurse, -Force oder ein anderer Ordner liefern andere Einträge.
+  const zeigtOrdner = (ctx, pfad) => {
+    if (!ctx.befehle.includes("Get-ChildItem") || ctx.hatFehler || !ctx.objekte.length) return false;
+    const vorne = pfad.toLowerCase() + "\\";
+    const ist = ctx.objekte.map((o) => {
+      if (typeof o === "string") return o.toLowerCase();             // mit -Name: nur Namen
+      const voll = ctx.text(o).toLowerCase();                          // sonst Datei- und Ordnerobjekte mit vollem Pfad
+      return voll.startsWith(vorne) ? voll.slice(vorne.length) : "\u0000";
+    }).sort();
+    const soll = sichtbar(ctx, pfad).map((n) => n.toLowerCase()).sort();
+    return soll.length > 0 && ist.join("|") === soll.join("|");
+  };
+  // Stufe 1 (Abtippen): Text vergleichen, aber Kommentar, Gross/Klein, Leerzeichen und ' oder " egal
+  const norm = (t) => String(t).replace(/#.*$/, "").replace(/'/g, '"').replace(/\s+/g, " ").trim().toLowerCase();
+  const abgetippt = (ctx, soll) => norm(ctx.eingabe) === norm(soll);
+  const einWert = (ctx, wert) => !ctx.hatFehler && ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === wert;
+
+  /* ---------- Übung 6: Fehler finden und richtig tippen ---------- */
+  L.konsole("#t01-u-fehler", {
+    titel: "PowerShell 7 · Fehler finden",
+    begruessung: false,
+    aufgabenTitel: "Übung 6",
+    aufgaben: [
+      { titel: "Den Prompt mitkopiert",
+        text: "<p>In einer Anleitung steht diese Zeile. Lea kopiert sie ganz in ihre Konsole:</p>" +
+          '<pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei mitkopiertem Prompt" lang="en">' + PROMPT + "PS C:\\Users\\lea&gt; Get-ChildItem Downloads\n" +
+          '<span class="psk-fehler">Get-Process: A positional parameter cannot be found that accepts argument \'Get-ChildItem\'.</span></pre>' +
+          "<p>Die Meldung kommt von " + C("Get-Process") + ", obwohl Lea ihre Downloads sehen wollte. Tippe den Befehl so, wie er wirklich in die Konsole gehört.</p>",
+        hinweis: "<p>Welcher Teil der Zeile ist der Prompt, also die Meldung «Ich bin bereit»? Der gehört nie zum Befehl. PS am Anfang liest PowerShell sonst als Kurzname ps für Get-Process.</p>",
+        loesung: "Get-ChildItem Downloads   # nur der Teil nach dem Zeichen > ist der Befehl",
+        pruefe: (ctx) => !ctx.befehle.includes("Get-Process") && zeigtOrdner(ctx, HOME + "\\Downloads") },
+      { titel: "Zwei Buchstaben vertauscht",
+        text: "<p>Lea tippt " + C("Get-ChildItme Logs") + " und erhält <span lang=\"en\">«The term 'Get-ChildItme' is not recognized»</span>. Tippe den Befehl richtig.</p>",
+        hinweis: "<p>Lies den Namen des Cmdlets Buchstabe für Buchstabe: Child Item heisst Kind-Element. Am Computer hilft dir Tab: Get-Chi tippen, Tab drücken, PowerShell schreibt den Namen fehlerfrei fertig.</p>",
+        loesung: "Get-ChildItem Logs   # Item statt Itme: e und m waren vertauscht",
+        pruefe: (ctx) => zeigtOrdner(ctx, HOME + "\\Logs") },
+      { titel: "Getrennt geschrieben",
+        text: "<p>Lea tippt " + C("Get - Date") + " und erhält <span lang=\"en\">«The term 'Get' is not recognized»</span>. Tippe den Befehl richtig.</p>",
+        hinweis: "<p>PowerShell liest nur Get als Befehlsnamen, weil danach ein Leerzeichen kommt. Wie hängen Verb und Nomen in einem Cmdlet zusammen?</p>",
+        loesung: "Get-Date   # Verb und Nomen hängen ohne Leerzeichen mit einem Bindestrich zusammen",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && ctx.objekte.length === 1 && !ctx.hatFehler }
+    ]
   });
   L.wahrFalsch("#t01-u-wf", {
     titel: "Übung 7 · Stimmt das?",
@@ -785,6 +832,85 @@ SerializationVersion           1.1.0.1</pre>
         hinweis: "<p>Es gibt ein klassisches Programm, das genau so heisst wie das, was du suchst: Rechnername auf Englisch, in einem Wort (host name).</p>",
         loesung: "hostname",
         pruefe: (ctx) => ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === "WR-LEA-01" }
+    ]
+  });
+
+  /* ---------- Schritt 9: Tipp-Training ---------- */
+  L.konsole("#t01-tipp-1", {
+    titel: "PowerShell 7 · Stufe 1",
+    begruessung: false,
+    aufgabenTitel: "Stufe 1 · Nachtippen",
+    aufgaben: [
+      { titel: "Ein Ordner als Angabe",
+        text: "<p>Tippe ab und drück Enter:</p><pre class=\"ps-code\"><code>Get-ChildItem Downloads</code></pre><p>Du siehst, was Lea heruntergeladen hat.</p>",
+        hinweis: "<p>Zwischen Get und ChildItem steht ein Bindestrich ohne Leerzeichen. Nach dem Cmdlet folgt ein Leerzeichen, dann der Ordnername.</p>",
+        loesung: "Get-ChildItem Downloads   # Cmdlet, Leerzeichen, Ordnername",
+        pruefe: (ctx) => abgetippt(ctx, "Get-ChildItem Downloads") && zeigtOrdner(ctx, HOME + "\\Downloads") },
+      { titel: "Der ganze Pfad",
+        text: "<p>Statt nur des Ordnernamens geht auch der volle Pfad. Tippe ab:</p><pre class=\"ps-code\"><code>Get-ChildItem C:\\Users\\lea\\Logs</code></pre>",
+        hinweis: "<p>Nach C kommt ein Doppelpunkt. Die Teile des Pfads trennt der Backslash \\ (auf der Schweizer Tastatur AltGr und die Taste mit &lt;).</p>",
+        loesung: "Get-ChildItem C:\\Users\\lea\\Logs   # voller Pfad: Laufwerk, dann Ordner für Ordner",
+        pruefe: (ctx) => abgetippt(ctx, "Get-ChildItem C:\\Users\\lea\\Logs") && zeigtOrdner(ctx, HOME + "\\Logs") },
+      { titel: "Datum im Schweizer Format",
+        text: "<p>" + C("Get-Date") + " kennt eine Angabe für das Format. Tippe ab:</p><pre class=\"ps-code\"><code>Get-Date -Format \"dd.MM.yyyy\"</code></pre><p>Der Text in Anführungszeichen ist das Muster: <code>dd</code> Tag, <code>MM</code> Monat, <code>yyyy</code> Jahr.</p>",
+        hinweis: "<p>Vor Format steht ein Bindestrich und davor ein Leerzeichen. Im Muster zählt ausnahmsweise Gross und Klein: MM gross, dd und yyyy klein.</p>",
+        loesung: "Get-Date -Format \"dd.MM.yyyy\"   # das Muster in Anführungszeichen bestimmt die Darstellung",
+        pruefe: (ctx) => abgetippt(ctx, "Get-Date -Format \"dd.MM.yyyy\"") && ctx.befehle.includes("Get-Date") && einWert(ctx, "02.11.2026") }
+    ]
+  });
+  L.konsole("#t01-tipp-2", {
+    titel: "PowerShell 7 · Stufe 2",
+    begruessung: false,
+    aufgabenTitel: "Stufe 2 · Abwandeln",
+    aufgaben: [
+      { titel: "Anderer Ordner",
+        text: "<p>" + C("Get-ChildItem Downloads") + " zeigt Leas Downloads. Zeige genauso den Ordner <code>Bilder</code>.</p>",
+        hinweis: "<p>Das Cmdlet bleibt gleich. Nur die Angabe dahinter ändert sich.</p>",
+        loesung: "Get-ChildItem Bilder   # gleiches Cmdlet, anderer Ordnername",
+        pruefe: (ctx) => zeigtOrdner(ctx, HOME + "\\Bilder") },
+      { titel: "Eine Ebene tiefer",
+        text: "<p>" + C("Get-ChildItem Dokumente") + " zeigt im Ordner Dokumente auch einen Unterordner <code>Archiv</code>. Zeige den Inhalt von Archiv.</p>",
+        hinweis: "<p>Ein Pfad kann mehrere Ordner enthalten. Zuerst Dokumente, dann ein Backslash \\, dann der Unterordner.</p>",
+        loesung: "Get-ChildItem Dokumente\\Archiv   # Ordner und Unterordner mit \\ verbunden",
+        pruefe: (ctx) => zeigtOrdner(ctx, HOME + "\\Dokumente\\Archiv") },
+      { titel: "Anderer Wert aus der Tabelle",
+        text: "<p>" + C("$PSVersionTable.PSEdition") + " zeigt nur die Edition. Zeige auf dieselbe Art nur den Wert <code>Platform</code>, also das Betriebssystem, auf dem diese PowerShell läuft.</p>",
+        hinweis: "<p>Variable, Punkt, Name des Werts. Nur der Name nach dem Punkt ändert sich.</p>",
+        loesung: "$PSVersionTable.Platform   # Win32NT heisst: PowerShell läuft unter Windows",
+        pruefe: (ctx) => /\$PSVersionTable\b/i.test(ctx.eingabe) && einWert(ctx, "Win32NT") },
+      { titel: "Uhrzeit statt Datum",
+        text: "<p>" + C("Get-Date -Format \"dd.MM.yyyy\"") + " zeigt 02.11.2026. Zeige stattdessen nur Stunde und Minuten, also <code>09:00</code>.</p>",
+        hinweis: "<p>Stunden heissen im Muster HH (gross, 24-Stunden-Uhr), Minuten mm (klein). Achtung: MM gross wäre der Monat.</p>",
+        loesung: "Get-Date -Format \"HH:mm\"   # HH Stunden, mm Minuten, dazwischen ein Doppelpunkt",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && einWert(ctx, "09:00") }
+    ]
+  });
+  L.konsole("#t01-tipp-3", {
+    titel: "PowerShell 7 · Stufe 3",
+    begruessung: false,
+    aufgabenTitel: "Stufe 3 · Selber lösen",
+    aufgaben: [
+      { titel: "Wo bin ich?",
+        text: "<p>Lea hat die Konsole eben geöffnet. Lass dir anzeigen, in welchem Ordner sie gerade arbeitet.</p>",
+        hinweis: "<p>Der Ordner, in dem du arbeitest, heisst aktueller Ort. Ort heisst auf Englisch Location.</p>",
+        loesung: "Get-Location   # zeigt den aktuellen Ort, denselben Pfad wie der Prompt",
+        pruefe: (ctx) => (ctx.befehle.includes("Get-Location") || /\$PWD\b/i.test(ctx.eingabe)) && ctx.objekte.length === 1 && !ctx.hatFehler && ctx.ausgabe.includes(ctx.ort) },
+      { titel: "Wo wohnt PowerShell 7?",
+        text: "<p>Für die Inventarliste will Lea sehen, was im Installationsordner von PowerShell 7 liegt. Den Pfad findest du in Schritt 2 in der Tabelle.</p>",
+        hinweis: "<p>Der Pfad enthält ein Leerzeichen (Program Files). Ohne Anführungszeichen hält PowerShell ihn für zwei Angaben. Setz den ganzen Pfad darum in Anführungszeichen.</p>",
+        loesung: "Get-ChildItem \"C:\\Program Files\\PowerShell\\7\"   # Anführungszeichen halten den Pfad mit Leerzeichen zusammen",
+        pruefe: (ctx) => zeigtOrdner(ctx, "C:\\Program Files\\PowerShell\\7") },
+      { titel: "Datum für den Dateinamen",
+        text: "<p>Lea will ihre Inventarliste mit dem heutigen Datum benennen. Dafür braucht sie das Datum als Jahr-Monat-Tag mit Bindestrichen, ohne Uhrzeit.</p>",
+        hinweis: "<p>Du kennst das Cmdlet für das Datum und seine Angabe für das Muster. Jahr sind vier y, Monat zwei grosse M, Tag zwei kleine d. Dazwischen stehen Bindestriche.</p>",
+        loesung: "Get-Date -Format \"yyyy-MM-dd\"   # zeigt 2026-11-02, so sortieren sich Dateinamen richtig",
+        // Datum muss aus Get-Date oder [datetime] kommen, nicht als fertiger Text getippt
+        pruefe: (ctx) => (ctx.befehle.includes("Get-Date") || /\[datetime\]/i.test(ctx.eingabe)) && einWert(ctx, "2026-11-02") },
+      { titel: "Aufräumen",
+        text: "<p>Das Fenster ist voll. Leere es so, dass der Verlauf erhalten bleibt.</p>",
+        hinweis: "<p>Das Verb für Leeren ist Clear. Das Fenster, in dem die Konsole läuft, heisst Host. Es gibt auch einen kurzen Namen mit drei Buchstaben.</p>",
+        loesung: "Clear-Host   # leert nur das Fenster, Get-History kennt danach noch alles",
+        pruefe: (ctx) => ctx.befehle.includes("Clear-Host") }
     ]
   });
 

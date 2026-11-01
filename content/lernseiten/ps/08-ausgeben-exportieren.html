@@ -62,6 +62,7 @@
     <a href="#ausprobieren"><b>6</b>Ausprobieren</a>
     <a href="#werkstatt"><b>7</b>Werkstatt</a>
     <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#tipp-training"><b>9</b>Tipp-Training</a>
     <a href="#film"><b>▶</b>Lösungsfilm</a>
     <a href="#fehler"><b>!</b>Fehler</a>
     <a href="#test"><b>✓</b>Selbsttest</a>
@@ -367,12 +368,18 @@ $abt | ConvertTo-Json</code></pre>
     <h2>Übungen</h2>
     <div class="card stack">
       <h3>Übung 1 · Befehl zusammenbauen</h3>
-      <p class="prose">Das Finanzamt der Gemeinde will die Finanzen-Abteilung mit Name und Pensum als Excel-Datei mit Semikolon. Gib jedem Baustein seinen Platz in der Pipeline.</p>
+      <p class="prose">Das Finanzamt der Gemeinde will die Finanzen-Abteilung mit Name und Pensum als Excel-Datei mit Semikolon. Bau die ganze Pipeline selbst und tippe sie in den Simulator.</p>
       <div id="t08-u1"></div>
     </div>
     <div class="card stack"><h3>Übung 2 · Ausgabe vorhersagen</h3><div id="t08-u2"></div></div>
     <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t08-u3"></div></div>
-    <div class="card stack"><h3>Übung 4 · Fehler finden</h3><div id="t08-u4"></div></div>
+    <div class="card stack">
+      <h3>Übung 4 · Fehler finden und reparieren</h3>
+      <p class="prose">Lea will nur ihren eigenen Eintrag mit Name und Pensum als Tabelle sehen. Sie schreibt:</p>
+      <pre class="ps-code"><code>Import-Csv Berichte\mitarbeitende.csv | Format-Table Name, Pensum | Where-Object Name -eq Keller</code></pre>
+      <p class="prose">Es erscheint nichts, auch keine Fehlermeldung. Probier den Befehl im Simulator aus, finde den Fehler und tippe die reparierte Fassung.</p>
+      <div id="t08-u4"></div>
+    </div>
     <div class="card stack">
       <h3>Übung 5 · Zuordnen</h3>
       <p class="prose">Welches Cmdlet passt zum Wunsch?</p>
@@ -383,6 +390,31 @@ $abt | ConvertTo-Json</code></pre>
       <h3>Übung 7 · Befehl selbst schreiben</h3>
       <p class="prose">Zwei Aufträge ohne Vorlage. Schreib den Befehl selbst in den Simulator.</p>
       <div id="t08-u7"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 9 · Selbst tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Hier tippst du jeden Befehl selbst, in drei Stufen: erst abschreiben, dann abwandeln, dann ganz ohne Vorlage. Jede Stufe hat ihren eigenen Simulator. Ob du die vollen Namen oder Aliase wie <code class="ps">ft</code> nimmst, ist egal: Der Simulator prüft, ob das Ergebnis stimmt. «Hinweis» gibt dir einen Denkanstoss, «Lösung» den ganzen Befehl mit einer kurzen Erklärung nach dem <code class="ps">#</code>. Steht dein Prompt nicht mehr auf <code>C:\Users\lea</code>, bringt dich «↺ Zurücksetzen» an den Anfang zurück.</p>
+
+    <div class="card stack">
+      <h3>Stufe 1 · Nachtippen</h3>
+      <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn ab und schau dir an, was herauskommt. So lernen deine Finger, wo Kommas, Anführungszeichen und Klammern hingehören.</p>
+      <div id="t08-tipp1"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 2 · Abwandeln</h3>
+      <p class="prose">Jede Aufgabe zeigt einen Befehl, den du schon kennst. Du passt ihn an: anderer Ordner, andere Eigenschaft, anderer Filter oder ein anderer Parameter.</p>
+      <div id="t08-tipp2"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 3 · Selber lösen</h3>
+      <p class="prose">Jetzt gibt es nur noch das Ziel. Welche Cmdlets du nimmst, entscheidest du. Einige Aufgaben holen Stoff aus früheren Stationen zurück: sortieren, gruppieren und zählen aus Station 07, Dateien schreiben und lesen aus Station 05.</p>
+      <div id="t08-tipp3"></div>
     </div>
   </section>
 
@@ -515,6 +547,26 @@ $abt | ConvertTo-Json</code></pre>
   const zeilen = (t) => (t || "").split(/\r?\n/).filter((z) => z.trim() !== "");
   const zahl = (ctx, v) => Number(String(ctx.text(v)).replace(",", "."));
   const dateiText = (ctx, p) => { try { return ctx.existiert(p) ? (ctx.inhalt(p) || "") : ""; } catch (e) { return ""; } };
+  // CSV-Datei mit Semikolon zerlegen: { kopf: [..], zeilen: [{ Spalte: Wert }] } oder null (fehlt, kein Semikolon, Formatierungsobjekte)
+  const csvSemikolon = (ctx, p) => {
+    const z = zeilen(dateiText(ctx, p).replace(/^﻿/, ""));
+    if (z.length < 2 || z[0].indexOf(";") < 0 || /ClassId/.test(z[0])) return null;
+    const teile = (l) => l.split(";").map((w) => w.trim().replace(/^"(.*)"$/, "$1"));
+    const kopf = teile(z[0]);
+    return { kopf: kopf, zeilen: z.slice(1).map((l) => { const w = teile(l), o = {}; kopf.forEach((k, i) => { o[k] = w[i]; }); return o; }) };
+  };
+  // CSV-Inhalt genau wie erwartet? spalten in beliebiger Reihenfolge, erwartet = { Name: { Spalte: Wert } }
+  const csvStimmt = (csv, spalten, erwartet) => {
+    if (!csv || !gleicheMenge(csv.kopf, spalten)) return false;
+    const n = Object.keys(erwartet);
+    return csv.zeilen.length === n.length && gleicheMenge(csv.zeilen.map((r) => r.Name), n) &&
+      csv.zeilen.every((r) => Object.keys(erwartet[r.Name]).every((k) => r[k] === erwartet[r.Name][k]));
+  };
+  // Ausgabeobjekte mit Name und einer Zahl-Eigenschaft prüfen: erwartet = { Name: Zahl }
+  const zahlenStimmen = (ctx, feld, erwartet) => ctx.objekte.length === Object.keys(erwartet).length &&
+    ctx.objekte.every((o) => { const n = nameVon(ctx, o), v = eig(o, feld); return v != null && erwartet[n] !== undefined && Math.abs(zahl(ctx, v) - erwartet[n]) < 1e-9; });
+  const VORNAMEN = ["Lea", "Marco", "Sandra", "Reto", "Anna", "Peter", "Nina", "Jonas"];
+  const ANDERE = ["Brunner", "Huber", "Meier", "Frei", "Schmid", "Gerber", "Bühler"];
 
   /* ---------- Schritt 0: Mini-Übung ---------- */
   L.sortierer("#t08-mini", {
@@ -729,13 +781,19 @@ $abt | ConvertTo-Json</code></pre>
   })();
 
   /* ---------- Übungen ---------- */
-  L.sortierer("#t08-u1", {
-    kategorien: ["1.", "2.", "3.", "4."],
-    elemente: [
-      { html: C("Select-Object Name, Pensum"), kategorie: "3.", erklaerung: "Nur die zwei gewünschten Spalten behalten. Select-Object, weil danach noch exportiert wird." },
-      { html: C("Export-Csv Berichte\\finanzen.csv -Delimiter ';'"), kategorie: "4.", erklaerung: "Ganz am Schluss in die Datei, mit Semikolon für Excel." },
-      { html: C("Import-Csv " + CSV), kategorie: "1.", erklaerung: "Zuerst die Liste als Objekte einlesen." },
-      { html: C("Where-Object Abteilung -eq Finanzen"), kategorie: "2.", erklaerung: "Nur Brunner und Gerber dürfen weiter." }
+  L.konsole("#t08-u1", {
+    begruessung: false,
+    titel: "PowerShell 7 · Übung 1",
+    aufgabenTitel: "Befehl tippen",
+    aufgaben: [
+      {
+        titel: "Finanzen als Excel-Datei",
+        text: "<p>Schreib die Mitarbeitenden der Abteilung <code>Finanzen</code> mit <code>Name</code> und <code>Pensum</code> in die Datei <code>Berichte\\finanzen.csv</code>, mit Semikolon als Trennzeichen. Kontrolliere danach mit " + C("Get-Content Berichte\\finanzen.csv") + ".</p>",
+        hinweis: "<p>Vier Bausteine: einlesen, filtern, Spalten wählen, exportieren. Welches Cmdlet wählt Spalten, ohne aus den Objekten Bauanleitungen zu machen? Und welcher Parameter von " + C("Export-Csv") + " setzt das Trennzeichen?</p>",
+        loesung: "Import-Csv " + CSV + " | Where-Object Abteilung -eq Finanzen | Select-Object Name, Pensum | Export-Csv Berichte\\finanzen.csv -Delimiter ';'  # filtern, Spalten mit Select-Object wählen, ganz am Schluss exportieren",
+        pruefe: (ctx) => csvStimmt(csvSemikolon(ctx, "C:\\Users\\lea\\Berichte\\finanzen.csv"), ["Name", "Pensum"],
+          { Brunner: { Pensum: "100" }, Gerber: { Pensum: "50" } })
+      }
     ]
   });
   L.auswahl("#t08-u2", {
@@ -755,16 +813,21 @@ $abt | ConvertTo-Json</code></pre>
     richtig: 1,
     erklaerung: "Mit -Depth 1 schreibt ConvertTo-Json nur die Leitung als eigenes JSON-Objekt. Die Adresse liegt eine Ebene tiefer und wird zum flachen Text @{Ort=Wolkenried; PLZ=9999}. pwsh 7 warnt: Resulting JSON is truncated. Mit dem Standard -Depth 2 käme die Adresse vollständig."
   });
-  L.auswahl("#t08-u4", {
-    frage: "Lea will nur ihren eigenen Eintrag und schreibt " + C("Import-Csv " + CSV + " | Format-Table Name, Pensum | Where-Object Name -eq Keller") + ". Es erscheint nichts. Warum?",
-    optionen: [
-      "Keller ist falsch geschrieben, es müsste 'keller' heissen.",
-      "Nach Format-Table gibt es nur noch Formatierungsobjekte ohne Eigenschaft Name. Where-Object muss vor Format-Table stehen.",
-      "Where-Object braucht hier geschweifte Klammern.",
-      "Format-Table zeigt nur die ersten Zeilen."
-    ],
-    richtig: 1,
-    erklaerung: "Format-Table verwandelt die Objekte in Bauanleitungen für den Bildschirm. Keine davon hat Name = Keller. Richtig: Import-Csv … | Where-Object Name -eq Keller | Format-Table Name, Pensum. -eq ignoriert Gross und Klein, daran liegt es nicht."
+  L.konsole("#t08-u4", {
+    begruessung: false,
+    titel: "PowerShell 7 · Übung 4",
+    aufgabenTitel: "Reparieren",
+    aufgaben: [
+      {
+        titel: "Leas Zeile als Tabelle",
+        text: "<p>Tippe einen Befehl, der nur Leas Eintrag (Name <code>Keller</code>) mit den Spalten <code>Name</code> und <code>Pensum</code> als Tabelle zeigt.</p>",
+        hinweis: "<p>An der Schreibweise von " + C("Keller") + " liegt es nicht, " + C("-eq") + " ignoriert Gross und Klein. Überleg dir, was " + C("Format-Table") + " an den nächsten Befehl weitergibt und welche Eigenschaften das hat.</p>",
+        loesung: "Import-Csv " + CSV + " | Where-Object Name -eq Keller | Format-Table Name, Pensum  # zuerst filtern, Format-Table als Endstation",
+        // Spaltenreihenfolge egal (Name, Pensum oder Pensum, Name)
+        pruefe: (ctx) => ctx.befehle.includes("Import-Csv") && /^\s*(Name\s+Pensum|Pensum\s+Name)\s*$/m.test(ctx.ausgabe) && /^\s*(Keller\s+80|80\s+Keller)\s*$/m.test(ctx.ausgabe) &&
+          ANDERE.every((n) => ctx.ausgabe.indexOf(n) < 0)
+      }
+    ]
   });
   L.sortierer("#t08-u5", {
     kategorien: ["Format-Table", "Format-List", "Export-Csv", "ConvertTo-Json"],
@@ -806,6 +869,153 @@ $abt | ConvertTo-Json</code></pre>
         loesung: "Get-ChildItem Logs | Format-Table Name, @{ Label = 'KB'; Expression = { [math]::Round($_.Length / 1KB) } }",
         pruefe: (ctx) => ctx.befehle.includes("Format-Table") && /^Name\s+KB\s*$/m.test(ctx.ausgabe) && /app-2026-07\.log\s+8704(\.00)?\s*$/m.test(ctx.ausgabe) &&
           /backup-2026-06\.log\s+1126(\.00)?\s*$/m.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Tipp-Training ---------- */
+  // Stufe 1: Befehl steht in der Aufgabe, geprüft wird das Ergebnis (Gross/Klein, Leerzeichen und Aliase egal)
+  const KB_ZEILE = "Get-ChildItem Bilder | Select-Object Name, @{ n = 'KB'; e = { [math]::Round($_.Length / 1KB) } }";
+  L.konsole("#t08-tipp1", {
+    begruessung: false,
+    titel: "PowerShell 7 · Stufe 1",
+    aufgabenTitel: "Nachtippen",
+    aufgaben: [
+      {
+        titel: "Drei Spalten als Tabelle",
+        text: "<p>Tippe ab:</p><pre class=\"ps-code\"><code>Import-Csv " + esc(CSV) + " | Format-Table Name, Vorname, Abteilung</code></pre>",
+        hinweis: "<p>Zwischen den Spaltennamen steht ein Komma. Gross und Klein spielt keine Rolle.</p>",
+        loesung: "Import-Csv " + CSV + " | Format-Table Name, Vorname, Abteilung  # Format-Table zeigt nur die genannten Spalten",
+        pruefe: (ctx) => ctx.befehle.includes("Import-Csv") && ctx.befehle.includes("Format-Table") && /^Name\s+Vorname\s+Abteilung\s*$/m.test(ctx.ausgabe) &&
+          (ctx.ausgabe.match(/^\S+\s+\S+\s+(Informatik|Finanzen|Bauamt|Einwohnerdienste)\s*$/gm) || []).length === 8
+      },
+      {
+        titel: "Pensen als CSV mit Semikolon",
+        text: "<p>Tippe ab und schau danach mit " + C("Get-Content pensen.csv") + " in die Datei:</p><pre class=\"ps-code\"><code>Import-Csv " + esc(CSV) + " | Select-Object Name, Pensum | Export-Csv pensen.csv -Delimiter ';'</code></pre>",
+        hinweis: "<p>Das Semikolon steht in einfachen Anführungszeichen: " + C("';'") + ". Ohne sie hält PowerShell es für das Ende des Befehls.</p>",
+        loesung: "Import-Csv " + CSV + " | Select-Object Name, Pensum | Export-Csv pensen.csv -Delimiter ';'  # Export-Csv schreibt still in die Datei",
+        pruefe: (ctx) => csvStimmt(csvSemikolon(ctx, "pensen.csv"), ["Name", "Pensum"], {
+          Keller: { Pensum: "80" }, Brunner: { Pensum: "100" }, Huber: { Pensum: "100" }, Meier: { Pensum: "100" },
+          Frei: { Pensum: "60" }, Schmid: { Pensum: "90" }, Gerber: { Pensum: "50" }, "Bühler": { Pensum: "100" } })
+      },
+      {
+        titel: "Bildgrössen in KB",
+        text: "<p>Tippe ab, mit allen Klammern:</p><pre class=\"ps-code\"><code>" + esc(KB_ZEILE) + "</code></pre>",
+        hinweis: "<p>Zähl die Klammern: " + C("@{") + " öffnet die Hashtable, " + C("{") + " nach " + C("e =") + " den Skriptblock, " + C("(") + " die Rechnung. Jede braucht ihr Gegenstück.</p>",
+        loesung: KB_ZEILE + "  # n ist der Spaltenname, e die Rechnung pro Datei",
+        pruefe: (ctx) => ctx.befehle.includes("Select-Object") &&
+          zahlenStimmen(ctx, "KB", { "ferien-01.jpg": 3072, "ferien-02.jpg": 2816, "gemeindehaus.png": 826, "logo-wolkenried.png": 47 })
+      }
+    ]
+  });
+
+  // Stufe 2: gezeigten Befehl abwandeln
+  L.konsole("#t08-tipp2", {
+    begruessung: false,
+    titel: "PowerShell 7 · Stufe 2",
+    aufgabenTitel: "Abwandeln",
+    aufgaben: [
+      {
+        titel: "Vornamen in zwei Spalten",
+        text: "<p>Bekannt:</p><pre class=\"ps-code\"><code>Import-Csv " + esc(CSV) + " | Format-Wide Name -Column 4</code></pre><p>Wie oben, aber mit den <b>Vornamen</b> statt der Namen, verteilt auf <b>zwei</b> Spalten.</p>",
+        hinweis: "<p>Zwei Stellen ändern sich: die Eigenschaft hinter " + C("Format-Wide") + " und die Zahl hinter " + C("-Column") + ".</p>",
+        loesung: "Import-Csv " + CSV + " | Format-Wide Vorname -Column 2  # eine Eigenschaft, zwei Spalten",
+        pruefe: (ctx) => {
+          if (!ctx.befehle.includes("Format-Wide")) return false;
+          const z = zeilen(ctx.ausgabe).map((l) => l.trim().split(/\s+/));
+          return z.length === 4 && z.every((w) => w.length === 2) && gleicheMenge([].concat.apply([], z), VORNAMEN);
+        }
+      },
+      {
+        titel: "Das Bauamt exportieren",
+        text: "<p>Bekannt:</p><pre class=\"ps-code\"><code>Import-Csv " + esc(CSV) + " | Where-Object Abteilung -eq Informatik |\n  Export-Csv Berichte\\informatik.csv -Delimiter ';'</code></pre><p>Wie oben, aber für die Abteilung <code>Bauamt</code>, nur mit den Spalten <code>Name</code> und <code>Eintritt</code>, in die Datei <code>Berichte\\bauamt.csv</code>.</p>",
+        hinweis: "<p>Der Filter bekommt einen anderen Wert, der Dateiname ändert sich, und für die Spalten brauchst du einen zusätzlichen Baustein vor dem Export.</p>",
+        loesung: "Import-Csv " + CSV + " | Where-Object Abteilung -eq Bauamt | Select-Object Name, Eintritt | Export-Csv Berichte\\bauamt.csv -Delimiter ';'  # Select-Object wählt die zwei Spalten vor dem Export",
+        pruefe: (ctx) => csvStimmt(csvSemikolon(ctx, "C:\\Users\\lea\\Berichte\\bauamt.csv"), ["Name", "Eintritt"],
+          { Huber: { Eintritt: "2015-01-01" }, Schmid: { Eintritt: "2012-04-01" } })
+      },
+      {
+        titel: "Downloads in MB",
+        text: "<p>Bekannt:</p><pre class=\"ps-code\"><code>Get-ChildItem Logs | Select-Object Name, " + esc(MB) + "</code></pre><p>Wie oben, aber für den Ordner <code>Downloads</code> und auf <b>eine</b> Nachkommastelle gerundet.</p>",
+        hinweis: "<p>Der Ordner steht hinter " + C("Get-ChildItem") + ". Die Anzahl Nachkommastellen ist die zweite Zahl in " + C("[math]::Round( … , …)") + ".</p>",
+        loesung: "Get-ChildItem Downloads | Select-Object Name, @{ Name = 'MB'; Expression = { [math]::Round($_.Length / 1MB, 1) } }  # Round(…, 1) rundet auf eine Stelle",
+        pruefe: (ctx) => ctx.befehle.includes("Select-Object") && zahlenStimmen(ctx, "MB", {
+          "foto-apero.jpg": 2, "handbuch-drucker.pdf": 5, "rechnung-2026-09.pdf": 0.2, "rechnung-2026-10.pdf": 0.2, "setup-alt.exe": 50, "WolkenriedSync-setup.exe": 30 })
+      },
+      {
+        titel: "Finanzen als kompaktes JSON",
+        text: "<p>Bekannt:</p><pre class=\"ps-code\"><code>Import-Csv " + esc(CSV) + " | Select-Object -First 2 Name, Vorname | ConvertTo-Json</code></pre><p>Wie oben, aber für alle Mitarbeitenden der Abteilung <code>Finanzen</code> mit <code>Name</code> und <code>Pensum</code>, und so kompakt, dass das ganze JSON auf <b>einer</b> Zeile steht.</p>",
+        hinweis: "<p>Statt der ersten zwei brauchst du einen Filter nach Abteilung. Für eine Zeile ohne Leerzeichen hat " + C("ConvertTo-Json") + " einen Schalter (Schritt 4).</p>",
+        loesung: "Import-Csv " + CSV + " | Where-Object Abteilung -eq Finanzen | Select-Object Name, Pensum | ConvertTo-Json -Compress  # -Compress lässt Umbrüche weg",
+        pruefe: (ctx) => {
+          if (!ctx.befehle.includes("ConvertTo-Json") || ctx.objekte.length !== 1 || typeof ctx.objekte[0] !== "string" || /\n/.test(ctx.objekte[0])) return false;
+          let d;
+          try { d = JSON.parse(ctx.objekte[0]); } catch (e) { return false; }
+          return Array.isArray(d) && d.length === 2 && d.every((x) => x && gleicheMenge(Object.keys(x), ["Name", "Pensum"])) &&
+            gleicheMenge(d.map((x) => x.Name + "=" + x.Pensum), ["Brunner=100", "Gerber=50"]);
+        }
+      }
+    ]
+  });
+
+  // Stufe 3: nur das Ziel, Wiederholung aus Station 05 und 07
+  const tabZeile = (ctx, re) => zeilen(ctx.ausgabe).some((l) => re.test(l));
+  L.konsole("#t08-tipp3", {
+    begruessung: false,
+    titel: "PowerShell 7 · Stufe 3",
+    aufgabenTitel: "Selber lösen",
+    aufgaben: [
+      {
+        titel: "Die drei grössten Downloads",
+        text: "<p>Zeig die drei grössten Dateien im Ordner <code>Downloads</code> als Tabelle, die grösste zuerst. Die Tabelle hat nur zwei Spalten: den Namen und die Grösse in Bytes.</p>",
+        hinweis: "<p>Wiederholung aus Station 07: erst sortieren (absteigend), dann die ersten drei nehmen. Danach nur die zwei Spalten zeigen.</p>",
+        loesung: "Get-ChildItem Downloads | Sort-Object Length -Descending | Select-Object -First 3 | Format-Table Name, Length  # sortieren, drei nehmen, zwei Spalten zeigen",
+        pruefe: (ctx) => {
+          const z = zeilen(ctx.ausgabe).map((l) => l.trim());
+          const kopf = z.findIndex((l) => /^(Name\s+Length|Length\s+Name)$/.test(l));
+          if (kopf < 0 || !/^-+\s+-+$/.test(z[kopf + 1] || "")) return false;
+          const reihen = z.slice(kopf + 2);
+          const erwartet = [["setup-alt.exe", "52428800"], ["WolkenriedSync-setup.exe", "31457280"], ["handbuch-drucker.pdf", "5242880"]];
+          return reihen.length === 3 && reihen.every((l, i) => gleicheMenge(l.split(/\s+/), erwartet[i]));
+        }
+      },
+      {
+        titel: "Köpfe pro Abteilung",
+        text: "<p>Wie viele Mitarbeitende arbeiten in jeder Abteilung? Zeig es aus der Mitarbeitendenliste, eine Zeile pro Abteilung mit ihrer Anzahl.</p>",
+        hinweis: "<p>Wiederholung aus Station 07: Es gibt ein Cmdlet, das gleiche Werte in Gruppen zusammenfasst und zählt.</p>",
+        loesung: "Import-Csv " + CSV + " | Group-Object Abteilung  # Group-Object zählt pro Abteilung (Spalte Count)",
+        pruefe: (ctx) => {
+          const soll = { Informatik: 3, Finanzen: 2, Bauamt: 2, Einwohnerdienste: 1 };
+          if (!ctx.befehle.includes("Import-Csv") || !ctx.befehle.includes("Group-Object")) return false;
+          const alsObjekte = ctx.objekte.length === 4 && ctx.objekte.every((o) => { const n = nameVon(ctx, o), c = eig(o, "Count"); return soll[n] !== undefined && c != null && zahl(ctx, c) === soll[n]; });
+          // auch mit Format-Table/Format-List am Schluss: jede Abteilung mit ihrer Zahl in der Ausgabe
+          const alsText = Object.keys(soll).every((n) => tabZeile(ctx, new RegExp("^\\s*(" + soll[n] + "\\s+" + n + "|" + n + "\\s+" + soll[n] + ")(\\s|$)")));
+          return alsObjekte || alsText;
+        }
+      },
+      {
+        titel: "Alle Stellenprozente zusammen",
+        text: "<p>Wie viele Stellenprozente hat die Gemeinde insgesamt? Zähl alle Pensen aus der Mitarbeitendenliste zusammen. Denk daran, was " + C("Import-Csv") + " aus Zahlen macht.</p>",
+        hinweis: "<p>Wiederholung aus Station 07: Ein Cmdlet misst Eigenschaften und kann summieren. Es wandelt die Texte dabei selbst in Zahlen um.</p>",
+        loesung: "Import-Csv " + CSV + " | Measure-Object -Property Pensum -Sum  # Measure-Object rechnet die Texte als Zahlen zusammen: 680",
+        pruefe: (ctx) => ctx.befehle.includes("Import-Csv") && !ctx.hatFehler && /(^|[\s:])680(\.0+)?\s*$/m.test(ctx.ausgabe)
+      },
+      {
+        titel: "Bilderliste als JSON-Datei",
+        text: "<p>Speichere für jedes Bild im Ordner <code>Bilder</code> den Namen und die Grösse in Bytes als JSON in die Datei <code>Berichte\\bilder.json</code>. Lies die Datei danach wieder ein, sodass du vier Objekte mit Name und Grösse siehst.</p>",
+        hinweis: "<p>Hinweg: auswählen, in JSON umwandeln, in die Datei schreiben (Station 05). Rückweg: die Datei lesen und das Gegenstück zum Umwandeln anhängen.</p>",
+        loesung: "Get-ChildItem Bilder | Select-Object Name, Length | ConvertTo-Json | Out-File Berichte\\bilder.json; Get-Content Berichte\\bilder.json -Raw | ConvertFrom-Json  # hin mit ConvertTo-Json, zurück mit ConvertFrom-Json",
+        pruefe: (ctx) => {
+          const soll = { "ferien-01.jpg": 3145728, "ferien-02.jpg": 2883584, "gemeindehaus.png": 845312, "logo-wolkenried.png": 48213 };
+          let d;
+          try { d = JSON.parse(dateiText(ctx, "C:\\Users\\lea\\Berichte\\bilder.json").replace(/^\uFEFF/, "")); } catch (e) { return false; }
+          const dateiOk = Array.isArray(d) && d.length === 4 && d.every((x) => x && soll[x.Name] !== undefined && Object.keys(x).some((k) => k !== "Name" && Number(x[k]) === soll[x.Name]));
+          if (!dateiOk || !ctx.befehle.includes("ConvertFrom-Json")) return false;
+          const alsObjekte = ctx.objekte.length === 4 && ctx.objekte.every((o) => soll[nameVon(ctx, o)] !== undefined);
+          // auch mit Format-Table/Format-List am Schluss: jedes Bild mit seiner Grösse in der Ausgabe
+          const alsText = Object.keys(soll).every((n) => ctx.ausgabe.indexOf(n) >= 0 && new RegExp("(^|\\D)" + soll[n] + "(\\D|$)").test(ctx.ausgabe));
+          return alsObjekte || alsText;
+        }
       }
     ]
   });
