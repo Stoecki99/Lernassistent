@@ -55,6 +55,7 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
+  const mz = (x) => String(x).replace(/^-/, "−");
   const zahl = (x, st) => (L.zahlText ? L.zahlText(x, st === undefined ? 1 : st) : String(Math.round(x * 10) / 10));
   const fehler = (msg) => { console.error("[Lernpfad] spiel: " + msg); return null; };
 
@@ -466,7 +467,7 @@
     const zn = Z.name, sn = S.name;
     const zs = (i) => "«" + ohneTags(Z.strategien[i]) + "»", ss = (j) => "«" + ohneTags(S.strategien[j]) + "»";
     const EINZAHL = { Jahre: "Jahr", Punkte: "Punkt", Monate: "Monat", Tage: "Tag", Schiffe: "Schiff", Stimmen: "Stimme" };
-    const w = (x) => x + " " + (Math.abs(x) === 1 ? cfg.einheit_eins || EINZAHL[einheit] || einheit : einheit);
+    const w = (x) => mz(x) + " " + (Math.abs(x) === 1 ? cfg.einheit_eins || EINZAHL[einheit] || einheit : einheit);
 
     root.innerHTML = "";
     root.classList.add("st-brett-box", "stack");
@@ -504,8 +505,8 @@
       felder[i] = [];
       for (let j = 0; j < ns; j++) {
         const f = neu("button", { type: "button", class: "st-feld" });
-        f.innerHTML = '<span class="st-diag" aria-hidden="true"></span><span class="st-ws"><span class="st-ba" data-w="s">' + W[i][j][1] + '</span><span class="st-chip" aria-hidden="true"></span></span>' +
-          '<span class="st-wz"><span class="st-chip" aria-hidden="true"></span><span class="st-ba" data-w="z">' + W[i][j][0] + "</span></span>";
+        f.innerHTML = '<span class="st-diag" aria-hidden="true"></span><span class="st-ws"><span class="st-ba" data-w="s">' + mz(W[i][j][1]) + '</span><span class="st-chip" aria-hidden="true"></span></span>' +
+          '<span class="st-wz"><span class="st-chip" aria-hidden="true"></span><span class="st-ba" data-w="z">' + mz(W[i][j][0]) + "</span></span>";
         f.setAttribute("aria-label", zn + " " + zs(i) + ", " + sn + " " + ss(j) + ": " + zn + " " + w(W[i][j][0]) + ", " + sn + " " + w(W[i][j][1]));
         f.addEventListener("click", () => klick(i, j));
         felder[i][j] = f; brett.appendChild(f);
@@ -729,7 +730,7 @@
           felder.flat().forEach((f) => f.classList.remove("an"));
           felder[i][j].classList.add("an");
           konto.z += W[i][j][0]; konto.s += W[i][j][1]; konto.runden++; letzteZeile = i;
-          proto.insertAdjacentHTML("beforeend", "<li>R" + konto.runden + ": " + ohneTags(Z.strategien[i]) + " / " + ohneTags(S.strategien[j]) + " → " + W[i][j][0] + " : " + W[i][j][1] + "</li>");
+          proto.insertAdjacentHTML("beforeend", "<li>R" + konto.runden + ": " + ohneTags(Z.strategien[i]) + " / " + ohneTags(S.strategien[j]) + " → " + mz(W[i][j][0]) + " : " + mz(W[i][j][1]) + "</li>");
           zeichneTafel();
           info.innerHTML = "Runde " + konto.runden + ": " + sn + " wählte " + ss(j) + ". Du bekommst <b>" + w(W[i][j][0]) + "</b>, " + sn + " <b>" + w(W[i][j][1]) + "</b>.";
         });
@@ -738,8 +739,8 @@
       const proto = neu("ol", { class: "st-protokoll", "aria-label": "Verlauf" });
       const reset = knopf("↺ Neu"); reset.addEventListener("click", () => modus("spielen"));
       function zeichneTafel() {
-        tafel.innerHTML = '<span class="st-konto">' + figur(Z.figur || "kapitaenin", { groesse: 28 }) + ' <span class="st-z">' + zn + "</span> <b>" + konto.z + "</b></span>" +
-          '<span class="st-konto">' + figur(S.figur || "pirat", { groesse: 28 }) + ' <span class="st-s">' + sn + "</span> <b>" + konto.s + "</b></span>" +
+        tafel.innerHTML = '<span class="st-konto">' + figur(Z.figur || "kapitaenin", { groesse: 28 }) + ' <span class="st-z">' + zn + "</span> <b>" + mz(konto.z) + "</b></span>" +
+          '<span class="st-konto">' + figur(S.figur || "pirat", { groesse: 28 }) + ' <span class="st-s">' + sn + "</span> <b>" + mz(konto.s) + "</b></span>" +
           '<span class="st-konto">Runden <b>' + konto.runden + "</b></span>";
       }
       zeichneTafel();
@@ -1055,12 +1056,12 @@
         if (k.ende) {
           s += '<rect class="st-blatt" x="' + (px(id) - 52) + '" y="' + (py(id) - 18) + '" width="104" height="44" rx="8"/>';
           if (k.kurz) s += '<text class="st-blatt-t" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) - 2) + '">' + esc(k.kurz) + "</text>";
-          s += '<text class="st-wert" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) + (k.kurz ? 16 : 8)) + '">' + k.werte.join(" | ") + "</text>";
+          s += '<text class="st-wert" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) + (k.kurz ? 16 : 8)) + '">' + k.werte.map(mz).join(" | ") + "</text>";
         } else {
           const cls = k.spieler === 0 ? "z" : k.spieler === 1 ? "s" : "d";
           s += '<circle class="st-knoten ' + cls + (id === aktuell ? " aktuell" : "") + '" cx="' + px(id) + '" cy="' + py(id) + '" r="17"/>';
           s += '<text class="st-kn-t" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) + 4) + '">' + esc(SP[k.spieler].name.charAt(0)) + "</text>";
-          if (wert[id]) s += '<text class="st-wert" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) - 22) + '">(' + wert[id].join(" | ") + ")</text>";
+          if (wert[id]) s += '<text class="st-wert" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) - 22) + '">(' + wert[id].map(mz).join(" | ") + ")</text>";
         }
       }
       bild.innerHTML = s + "</svg>";
@@ -1077,7 +1078,7 @@
       const opt = neu("div", { class: "st-optionen" });
       k.aeste.forEach((a, n) => {
         const v = wertVon(a.ziel);
-        const b = knopf(a.text + ' <span class="hint">→ ' + SP.map((p, i) => p.name + " " + v[i]).join(", ") + "</span>");
+        const b = knopf(a.text + ' <span class="hint">→ ' + SP.map((p, i) => p.name + " " + mz(v[i])).join(", ") + "</span>");
         b.addEventListener("click", () => antwort(id, n));
         opt.appendChild(b);
       });
@@ -1089,18 +1090,18 @@
       const best = Math.max(...werte);
       if (werte[n] === best) {
         wahl[id] = n; wert[id] = wertVon(k.aeste[n].ziel);
-        info.innerHTML = '<span class="marke">✓</span> Richtig: ' + SP[sp].name + " wählt «" + ohneTags(k.aeste[n].text) + "» und bekommt " + best + ". " + (k.warum ? k.warum : "");
+        info.innerHTML = '<span class="marke">✓</span> Richtig: ' + SP[sp].name + " wählt «" + ohneTags(k.aeste[n].text) + "» und bekommt " + mz(best) + ". " + (k.warum ? k.warum : "");
         frageStellen();
         const b = frage.querySelector("button"); if (b) b.focus();
       } else {
         const bi = werte.indexOf(best);
-        info.innerHTML = '<span class="marke">✗</span> ' + SP[sp].name + " bekäme hier nur " + werte[n] + ", mit «" + ohneTags(k.aeste[bi].text) + "» aber " + best + ". Am Zug zählt nur der eigene Vorteil, keine Versprechen.";
+        info.innerHTML = '<span class="marke">✗</span> ' + SP[sp].name + " bekäme hier nur " + mz(werte[n]) + ", mit «" + ohneTags(k.aeste[bi].text) + "» aber " + mz(best) + ". Am Zug zählt nur der eigene Vorteil, keine Versprechen.";
       }
     }
     function fertig() {
       const pfad = []; let id = wurzel;
       while (!KN[id].ende) { const a = KN[id].aeste[wahl[id]]; pfad.push(SP[KN[id].spieler].name + ": «" + ohneTags(a.text) + "»"); id = a.ziel; }
-      frage.innerHTML = '<div class="note tipp"><b>Gleichgewichtspfad:</b> ' + pfad.join(" → ") + " → Ergebnis " + SP.map((p, i) => p.name + " " + KN[id].werte[i]).join(", ") + "." + (cfg.erklaerung ? "<p>" + cfg.erklaerung + "</p>" : "") + "</div>";
+      frage.innerHTML = '<div class="note tipp"><b>Gleichgewichtspfad:</b> ' + pfad.join(" → ") + " → Ergebnis " + SP.map((p, i) => p.name + " " + mz(KN[id].werte[i])).join(", ") + "." + (cfg.erklaerung ? "<p>" + cfg.erklaerung + "</p>" : "") + "</div>";
       formeln(frage);
       melde(root, "lernpfad:baum", { fertig: true });
     }
