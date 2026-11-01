@@ -318,22 +318,23 @@
 
   /* ---------- 6. Layout: Raster, Schichten nach Kategorie, Gruppen ---------- */
 
-  const MASS = { CW: 164, CH: 88, GX: 96, GY: 78, PAD: 22, PADTOP: 40, RAND: 30 };
+  // Schrift in Weltkoordinaten: Name 15, Stereotyp/Technologie/Label 12. Bei Massstab ≥ 0.92 ergibt das ≥ 13.8 px bzw. ≥ 11 px.
+  const MASS = { CW: 188, CH: 98, GX: 84, GY: 72, PAD: 22, PADTOP: 42, RAND: 26 };
   const PX = MASS.CW + MASS.GX;
   const PY = MASS.CH + MASS.GY;
 
   function groesse(e) {
     const t = TYPEN[e.typ];
     switch (t.form) {
-      case "akteur": return { w: 88, h: 86 };
-      case "zylinder": return { w: 144, h: 86 };
-      case "ordner": return { w: 156, h: 76 };
-      case "lolli": return { w: 120, h: 58 };
-      case "bus": return { w: 164, h: 56 };
-      case "knoten": return { w: 164, h: 80 };
-      case "artefakt": return { w: 156, h: 70 };
-      case "queue": case "topic": return { w: 164, h: 78 };
-      default: return { w: 164, h: t.gross ? 88 : 72 };
+      case "akteur": return { w: 96, h: 96 };
+      case "zylinder": return { w: 168, h: 96 };
+      case "ordner": return { w: 180, h: 86 };
+      case "lolli": return { w: 136, h: 64 };
+      case "bus": return { w: 188, h: 62 };
+      case "knoten": return { w: 188, h: 90 };
+      case "artefakt": return { w: 180, h: 80 };
+      case "queue": case "topic": return { w: 188, h: 90 };
+      default: return { w: 188, h: t.gross ? 98 : 82 };
     }
   }
 
@@ -868,8 +869,8 @@
       grX.push(g.x, g.x + g.w); grY.push(g.y, g.y + g.h);
       // Kopfzeile der Gruppe (Name) nicht überfahren
       const e = lay.ix.nachId[id];
-      const tb = Math.min(g.w - 8, 46 + textBreite(ohneTags(e.name), 12.5, 650) + textBreite(e.stereotyp ? "«" + e.stereotyp + "»" : "", 10.5, 400));
-      hindernisse.push({ id: id + "#kopf", x1: g.x + 2, y1: g.y + 2, x2: g.x + tb, y2: g.y + 28 });
+      const tb = Math.min(g.w - 8, 50 + textBreite(ohneTags(e.name), 14, 650) + textBreite(e.stereotyp ? "«" + e.stereotyp + "» " : "", 12, 400));
+      hindernisse.push({ id: id + "#kopf", x1: g.x + 2, y1: g.y + 2, x2: g.x + tb, y2: g.y + 32 });
     });
     const box = { x: lay.box.x - 20, y: lay.box.y - 20, w: lay.box.w + 40, h: lay.box.h + 40 };
     const ends = kanten.map((k) => ({ k: k, a: rechteckVon(lay, k.von), b: rechteckVon(lay, k.nach), fa: formVon(lay, k.von), fb: formVon(lay, k.nach) })).filter((x) => x.a && x.b);
@@ -1003,7 +1004,7 @@
       const r = routen[k.id];
       const text = ohneTags(k.label || "");
       if (!r || !text) return;
-      const w = textBreite(text, 11, 600) + 12, h = 17;
+      const w = textBreite(text, 12, 600) + 14, h = 19;
       const segs = [];
       for (let i = 0; i + 1 < r.punkte.length; i++) {
         const a = r.punkte[i], b = r.punkte[i + 1];
@@ -1073,10 +1074,10 @@
     opt = opt || {};
     const zeilen = [];
     const stereo = opt.ohneStereo || !e.stereotyp ? "" : "«" + e.stereotyp + "»";
-    if (stereo) zeilen.push({ t: kuerzen(stereo, 10.5, 400, breite - (opt.stereoRand || 0)), px: 10.5, k: "ar-stereo", h: 14 });
-    const n = umbrechen(ohneTags(e.name), 13.5, 650, breite, 2);
+    if (stereo) zeilen.push({ t: kuerzen(stereo, 12, 400, breite - (opt.stereoRand || 0)), px: 12, k: "ar-stereo", h: 16 });
+    const n = umbrechen(ohneTags(e.name), 15, 650, breite, 2);
     n.zeilen.forEach((z) => zeilen.push({ t: z, px: n.px, k: "ar-name", h: n.px + 3 }));
-    if (e.technologie && !opt.ohneTech) zeilen.push({ t: kuerzen(ohneTags(e.technologie), 11, 400, breite), px: 11, k: "ar-tech", h: 15 });
+    if (e.technologie && !opt.ohneTech) zeilen.push({ t: kuerzen(ohneTags(e.technologie), 12, 400, breite), px: 12, k: "ar-tech", h: 16 });
     const gesamt = zeilen.reduce((s, z) => s + z.h, 0);
     let y = oben + Math.max(0, (unten - oben - gesamt) / 2);
     let out = "";
@@ -1099,8 +1100,8 @@
         const k = 11;
         s += '<rect class="ar-treffer" x="0" y="0" width="' + w + '" height="' + h + '"/>';
         s += '<g class="ar-figur"><circle class="ar-form" cx="' + cx + '" cy="' + k + '" r="8.5"/><path class="ar-form-linie" d="M' + cx + " " + (k + 8.5) + "V43M" + (cx - 16) + " 28H" + (cx + 16) + "M" + cx + " 43L" + (cx - 13) + " 58M" + cx + " 43L" + (cx + 13) + ' 58"/></g>';
-        const n = umbrechen(ohneTags(e.name), 13, 650, 150, 2);
-        n.zeilen.forEach((z, i) => (s += '<text class="ar-name" x="' + cx + '" y="' + (75 + i * 15) + '" text-anchor="middle" style="font-size:' + n.px + 'px">' + esc(z) + "</text>"));
+        const n = umbrechen(ohneTags(e.name), 15, 650, 170, 2);
+        n.zeilen.forEach((z, i) => (s += '<text class="ar-name" x="' + cx + '" y="' + (79 + i * 17) + '" text-anchor="middle" style="font-size:' + n.px + 'px">' + esc(z) + "</text>"));
         return s;
       }
       case "zylinder": {
@@ -1122,8 +1123,8 @@
       case "lolli": {
         s += '<rect class="ar-treffer" x="0" y="0" width="' + w + '" height="' + h + '"/>';
         s += '<circle class="ar-form ar-ball" cx="' + cx + '" cy="17" r="11"/>';
-        const n = umbrechen(ohneTags(e.name), 12.5, 650, w + 30, 2);
-        n.zeilen.forEach((z, i) => (s += '<text class="ar-name" x="' + cx + '" y="' + (46 + i * 14) + '" text-anchor="middle" style="font-size:' + n.px + 'px">' + esc(z) + "</text>"));
+        const n = umbrechen(ohneTags(e.name), 14, 650, w + 30, 2);
+        n.zeilen.forEach((z, i) => (s += '<text class="ar-name" x="' + cx + '" y="' + (48 + i * 16) + '" text-anchor="middle" style="font-size:' + n.px + 'px">' + esc(z) + "</text>"));
         return s;
       }
       case "knoten": {
@@ -1190,15 +1191,15 @@
       s += '<path class="ar-gform ar-seite-oben" d="M0 ' + d + "L" + d + " 0H" + w + "L" + (w - d) + " " + d + 'Z"/>';
       s += '<path class="ar-gform ar-seite-rechts" d="M' + (w - d) + " " + d + "L" + w + " 0V" + (h - d) + "L" + (w - d) + " " + h + 'Z"/>';
       s += piktoG(t.pikto, 10, d + 8, 15);
-      s += '<text class="ar-gkopf" x="31" y="' + (d + 20) + '"><tspan class="ar-stereo">' + esc(stereo) + '</tspan><tspan class="ar-gname">' + esc(name) + "</tspan></text>";
+      s += '<text class="ar-gkopf" x="32" y="' + (d + 21) + '"><tspan class="ar-stereo">' + esc(stereo) + '</tspan><tspan class="ar-gname">' + esc(name) + "</tspan></text>";
     } else if (t.form === "paket") {
-      const tw = Math.min(w - 10, textBreite(stereo + name, 12.5, 650) + 26);
-      s += '<path class="ar-gform ar-reiter" d="M0 4Q0 0 4 0H' + (tw - 4) + "Q" + tw + " 0 " + tw + " 4V22H0Z" + '"/>';
-      s += '<rect class="ar-gform" x="0" y="22" width="' + w + '" height="' + (h - 22) + '" rx="3"/>';
-      s += '<text class="ar-gkopf" x="12" y="16"><tspan class="ar-stereo">' + esc(stereo) + '</tspan><tspan class="ar-gname">' + esc(name) + "</tspan></text>";
+      const tw = Math.min(w - 10, textBreite(stereo, 12, 400) + textBreite(name, 14, 650) + 28);
+      s += '<path class="ar-gform ar-reiter" d="M0 4Q0 0 4 0H' + (tw - 4) + "Q" + tw + " 0 " + tw + " 4V25H0Z" + '"/>';
+      s += '<rect class="ar-gform" x="0" y="25" width="' + w + '" height="' + (h - 25) + '" rx="3"/>';
+      s += '<text class="ar-gkopf" x="12" y="18"><tspan class="ar-stereo">' + esc(stereo) + '</tspan><tspan class="ar-gname">' + esc(name) + "</tspan></text>";
     } else {
       s += '<rect class="ar-gform ar-grenze" x="0" y="0" width="' + w + '" height="' + h + '" rx="12"/>';
-      s += '<text class="ar-gkopf" x="14" y="21"><tspan class="ar-stereo">' + esc(stereo) + '</tspan><tspan class="ar-gname">' + esc(name) + "</tspan></text>";
+      s += '<text class="ar-gkopf" x="14" y="23"><tspan class="ar-stereo">' + esc(stereo) + '</tspan><tspan class="ar-gname">' + esc(name) + "</tspan></text>";
     }
     return s;
   }
@@ -1286,7 +1287,7 @@
       const lb = labels[k.id];
       if (lb) {
         const l = svgEl("g", { "data-id": k.id }, "ar-label " + katKlasse(ziel.typ));
-        l.innerHTML = '<rect x="' + f1(lb.x) + '" y="' + f1(lb.y) + '" width="' + f1(lb.w) + '" height="' + lb.h + '" rx="4"/><text x="' + f1(lb.x + lb.w / 2) + '" y="' + f1(lb.y + lb.h / 2 + 3.8) + '" text-anchor="middle">' + esc(lb.text) + "</text>";
+        l.innerHTML = '<rect x="' + f1(lb.x) + '" y="' + f1(lb.y) + '" width="' + f1(lb.w) + '" height="' + lb.h + '" rx="4"/><text x="' + f1(lb.x + lb.w / 2) + '" y="' + f1(lb.y + lb.h / 2 + 4.2) + '" text-anchor="middle">' + esc(lb.text) + "</text>";
         gLabels.appendChild(l);
         labelG[k.id] = l;
       }
@@ -1328,32 +1329,36 @@
     let inhalt = opt.inhalt;
     const vb = { x: 0, y: 0, w: 100, h: 100 };
     let hoehe = 0, fitK = 1, letzteBreite = 0;
-    const kMin = opt.kMin || 0.5;
+    // Lesbarer Mindestmassstab: breit 0.92 (Name ≥ 13.8 px, Stereotyp/Label ≥ 11 px), schmal 0.74 (Name ≥ 11 px)
+    const kMin = () => (opt.kMin !== undefined ? opt.kMin : breite() < 600 ? 0.74 : 0.92);
+    let startK = 1;
     const breite = () => rahmen.clientWidth || 640;
     const k = () => breite() / vb.w;
     function anwenden() {
       svg.setAttribute("viewBox", f1(vb.x) + " " + f1(vb.y) + " " + f1(vb.w) + " " + f1(vb.h));
-      rahmen.classList.toggle("ar-gezoomt", k() > fitK * 1.04 || vb.w < inhalt.w * 0.98);
+      // erst nach eigenem Zoomen fängt die Fläche alle Gesten ab; sonst scrollt die Seite senkrecht weiter
+      rahmen.classList.toggle("ar-gezoomt", k() > Math.max(fitK, startK) * 1.04);
       if (opt.onZoom) opt.onZoom(k());
     }
     function start() {
       const cw = breite();
       letzteBreite = cw;
-      let kk = Math.min(cw / inhalt.w, opt.kMax || 1);
-      if (kk < kMin) kk = kMin;
-      const maxH = opt.hoehe || Math.min(opt.maxHoehe || 820, Math.max(320, (window.innerHeight || 800) * 0.86));
+      // Breite füllen; ist das Diagramm dafür zu breit, lesbar starten und in sich verschieben
+      let kk = Math.max(Math.min(cw / inhalt.w, opt.kMax || 1.08), kMin());
+      // Höhe folgt dem Inhalt (die Seite scrollt daran vorbei); sehr hohe Diagramme verschieben sich in sich
+      const maxH = opt.hoehe || opt.maxHoehe || Math.max(1100, (window.innerHeight || 800) * 1.2);
       hoehe = klemmen(inhalt.h * kk, opt.minHoehe || 220, maxH);
-      if (inhalt.h * kk > hoehe) kk = Math.max(Math.min(kMin, kk), hoehe / inhalt.h);
       rahmen.style.height = Math.round(hoehe) + "px";
       vb.w = cw / kk; vb.h = hoehe / kk;
-      vb.x = inhalt.x + (inhalt.w - vb.w) / 2;
+      vb.x = vb.w >= inhalt.w ? inhalt.x + (inhalt.w - vb.w) / 2 : inhalt.x;
       vb.y = vb.h >= inhalt.h ? inhalt.y + (inhalt.h - vb.h) / 2 : inhalt.y;
       fitK = Math.min(cw / inhalt.w, hoehe / inhalt.h);
+      startK = kk;
       anwenden();
     }
     function einpassen() {
       const cw = breite();
-      const kk = Math.min(cw / inhalt.w, hoehe / inhalt.h, opt.kMax || 1);
+      const kk = Math.min(cw / inhalt.w, hoehe / inhalt.h, opt.kMax || 1.08);
       vb.w = cw / kk; vb.h = hoehe / kk;
       vb.x = inhalt.x + (inhalt.w - vb.w) / 2; vb.y = inhalt.y + (inhalt.h - vb.h) / 2;
       anwenden();
@@ -1564,7 +1569,7 @@
     el.append(kopf, buehne);
 
     const szene = szeneZeichnen(svg, m, lay, routen, labels, { uid: uid });
-    fl = zoomFlaeche(rahmen, svg, { inhalt: lay.box, hoehe: opt.hoehe, kMin: 0.5 });
+    fl = zoomFlaeche(rahmen, svg, { inhalt: lay.box, hoehe: opt.hoehe, kMin: opt.kMin });
 
     // Nachbarschaft
     const nachbarn = {};
@@ -1627,11 +1632,39 @@
         '<dl class="ar-sb-felder"><dt>Bedeutung</dt><dd>' + esc(ARTEN[v.art].erkl) + ".</dd>" + (v.info ? "<dt>Warum so</dt><dd>" + v.info + "</dd>" : "") + "</dl>";
       formelnSetzen(sb);
     }
+    // Steckbrief: auf breiten Bildschirmen als Karte über dem Diagramm, nur wenn es etwas zu zeigen gibt
+    const breitesPanel = () => !!(window.matchMedia && window.matchMedia("(min-width: 900px)").matches);
+    function sbZustand() {
+      const offen = !!sb.firstElementChild && !sb.querySelector(".ar-sb-leer");
+      buehne.classList.toggle("ar-sb-offen", offen);
+      if (offen && !sb.querySelector(".ar-sb-zu")) {
+        const zu = knopf('<span aria-hidden="true">×</span>', "ar-ikon ar-sb-zu", { "aria-label": "Steckbrief schliessen" });
+        zu.addEventListener("click", () => {
+          const zurueck = gewaehlt;
+          if (gewaehlt) waehlen(null); else steckbriefLeer();
+          const g = zurueck && szene.elG[zurueck];
+          (g || rahmen).focus();
+        });
+        sb.insertBefore(zu, sb.firstChild);
+      }
+    }
+    if (window.MutationObserver) new MutationObserver(sbZustand).observe(sb, { childList: true });
+    function sichtbarNebenPanel(id) {
+      // Element nicht unter der Steckbrief-Karte verstecken
+      const r = lay.el[id] || lay.gr[id];
+      if (!r || !breitesPanel() || !buehne.classList.contains("ar-sb-offen")) return;
+      const p = fl.bildschirm(r.x + r.w, r.y);
+      const frei = rahmen.clientWidth - sb.offsetWidth - 28;
+      if (p[0] > frei) fl.verschieben(-(p[0] - frei), 0);
+      // Karte auf Höhe des Elements, damit sie bei hohen Diagrammen im Blick bleibt
+      const y = fl.bildschirm(r.x, r.y)[1];
+      sb.style.top = Math.round(klemmen(y - 20, 12, Math.max(12, rahmen.clientHeight - sb.offsetHeight - 12))) + "px";
+    }
     function waehlen(id) {
       if (gewaehlt && szene.elG[gewaehlt]) szene.elG[gewaehlt].classList.remove("ar-gewaehlt");
       gewaehlt = id;
       if (id && szene.elG[id]) szene.elG[id].classList.add("ar-gewaehlt");
-      if (id) { steckbriefZeigen(id); nachbarschaftAn(id); } else { steckbriefLeer(); hervorheben(null, null); }
+      if (id) { steckbriefZeigen(id); nachbarschaftAn(id); sbZustand(); sichtbarNebenPanel(id); } else { steckbriefLeer(); hervorheben(null, null); }
       if (id && !opt.steckbrief) live.textContent = elementLabel(nachId[id], ix);
     }
 
@@ -2354,7 +2387,7 @@
       const a = ort[w.a], b = ort[w.b];
       const dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1;
       const rnd = zufall(w.a + w.b);
-      const bog = (rnd() > 0.5 ? 1 : -1) * Math.min(60, l * 0.18);
+      const bog = (rnd() > 0.5 ? 1 : -1) * Math.min(90, l * 0.22);
       const c1 = [a.x + dx * 0.3 - (dy / l) * bog, a.y + dy * 0.3 + (dx / l) * bog];
       const c2 = [a.x + dx * 0.7 - (dy / l) * bog, a.y + dy * 0.7 + (dx / l) * bog];
       const d = "M" + f1(a.x) + " " + f1(a.y) + "C" + f1(c1[0]) + " " + f1(c1[1]) + " " + f1(c2[0]) + " " + f1(c2[1]) + " " + f1(b.x) + " " + f1(b.y);
@@ -2373,18 +2406,15 @@
       const o = ort[st.id];
       const k = farbe(st);
       const g = svgEl("g", { transform: "translate(" + f1(o.x) + " " + f1(o.y) + ")", tabindex: "0", role: "button", "data-id": st.id }, "ar-ort ar-k-" + k);
-      const n = umbrechen(ohneTags(st.kurzname || st.name), 14, 650, 156, 2);
+      const n = umbrechen(ohneTags(st.kurzname || st.name), 16, 650, 164, 2);
       let inner = '<g class="ar-ort-innen"><circle class="ar-ort-schatten" r="27" cy="3"/><circle class="ar-ort-ring" r="27"/><circle class="ar-ort-feld" r="21"/>' + piktoG(symbolVon(st), -11, -11, 22) +
         '<g class="ar-flagge" transform="translate(17 -30)"><path d="M0 0V20"/><path class="ar-flagge-tuch" d="M0 0H14L10 5L14 10H0Z"/></g></g>';
-      n.zeilen.forEach((z, i) => (inner += '<text class="ar-ort-name" y="' + (47 + i * 16) + '" text-anchor="middle" style="font-size:' + n.px + 'px">' + esc(z) + "</text>"));
+      n.zeilen.forEach((z, i) => (inner += '<text class="ar-ort-name" y="' + (49 + i * 18) + '" text-anchor="middle" style="font-size:' + n.px + 'px">' + esc(z) + "</text>"));
       g.innerHTML = inner;
       g.setAttribute("aria-label", ohneTags(st.name) + ", Familie " + ohneTags(fam[st.familie].f.name) + (st.kopplung ? ", Kopplung " + st.kopplung : "") + (st.kommunikation ? ", " + st.kommunikation : ""));
       g.addEventListener("click", (ev) => { ev.stopPropagation(); zeigeStil(st.id); });
       g.addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); zeigeStil(st.id); } });
-      const wegeAn = (an) => {
-        $$(".ar-weg", svg).forEach((w) => w.classList.toggle("ar-weg-an", an && (w.dataset.a === st.id || w.dataset.b === st.id)));
-        svg.querySelector(".ar-wege").classList.toggle("ar-hat-fokus", an);
-      };
+      const wegeAn = (an) => wegeZeigen(an ? st.id : letzterOrt);
       g.addEventListener("pointerenter", () => wegeAn(true));
       g.addEventListener("pointerleave", () => wegeAn(false));
       g.addEventListener("focus", () => { wegeAn(true); fk.zeige({ x: o.x - 80, y: o.y - 40, w: 160, h: 100 }); });
@@ -2392,12 +2422,34 @@
       orteG.appendChild(g);
       ortG[st.id] = g;
     });
+    // Wege: standardmässig ausgeblendet; Hover, Fokus oder zuletzt geöffneter Ort zeigt nur dessen Wege in Familienfarbe
+    let letzterOrt = null;
+    function wegeZeigen(id) {
+      const k = id && stilNach[id] ? farbe(stilNach[id]) : null;
+      $$(".ar-weg", svg).forEach((w) => {
+        const an = !!id && (w.dataset.a === id || w.dataset.b === id);
+        w.classList.toggle("ar-weg-an", an);
+        KATEGORIEN.forEach((x) => w.classList.remove("ar-k-" + x.id));
+        if (an) w.classList.add("ar-k-" + k);
+      });
+      svg.querySelector(".ar-wege").classList.toggle("ar-hat-fokus", !!id);
+      Object.keys(ortG).forEach((oid) => ortG[oid].classList.toggle("ar-verwandt-an", !!id && oid !== id && (stilNach[id].verwandt || []).concat(katalog.stile.filter((x) => (x.verwandt || []).indexOf(id) >= 0).map((x) => x.id)).indexOf(oid) >= 0));
+    }
     const karteKopf = erzeugen("div", "ar-karte-leiste");
     let fk = null;
+    const alleWege = knopf('<svg class="ar-muster" viewBox="0 0 30 12" aria-hidden="true"><path d="M2 9C10 1 20 1 28 9" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 3"/></svg>Alle Verwandtschaften zeigen', "ar-chip ar-alle-wege", { "aria-pressed": "false" });
+    alleWege.addEventListener("click", () => {
+      const an = alleWege.getAttribute("aria-pressed") !== "true";
+      alleWege.setAttribute("aria-pressed", String(an));
+      svg.querySelector(".ar-wege").classList.toggle("ar-alle", an);
+      live.textContent = an ? "Alle Verwandtschaften sind eingeblendet." : "Verwandtschaften nur beim gewählten Ort.";
+    });
     const legende = erzeugen("div", "ar-karte-legende");
     legende.innerHTML = famListe.map((f) => '<span class="ar-k-' + (f.farbe && KAT[f.farbe] ? f.farbe : "infrastruktur") + '"><span class="ar-farbpunkt" aria-hidden="true"></span>' + esc(f.name) + "</span>").join("") +
-      '<span class="ar-legende-weg"><svg viewBox="0 0 30 10" aria-hidden="true"><path d="M2 5H28"/></svg>verwandt</span><span class="ar-legende-flagge"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1V13M3 1H12L9 4.5L12 8H3"/></svg>entdeckt</span>';
-    karteKopf.append(legende, zoomLeiste(() => fk, "Karte zoomen"));
+      '<span class="ar-legende-weg"><svg viewBox="0 0 30 10" aria-hidden="true"><path d="M2 8C10 2 20 2 28 8"/></svg>verwandt (Ort antippen oder Schalter)</span><span class="ar-legende-flagge"><svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1V13M3 1H12L9 4.5L12 8H3"/></svg>entdeckt</span>';
+    const karteKnoepfe = erzeugen("div", "ar-karte-knoepfe");
+    karteKnoepfe.append(alleWege, zoomLeiste(() => fk, "Karte zoomen"));
+    karteKopf.append(legende, karteKnoepfe);
     karteWrap.append(rahmen, karteKopf);
 
     // Liste aller Orte (auch für Screenreader und schmale Bildschirme)
@@ -2424,7 +2476,7 @@
     const detail = erzeugen("div", "ar-detail");
     detail.hidden = true;
     el.append(kopf, uebersicht, detail, live);
-    fk = zoomFlaeche(rahmen, svg, { inhalt: { x: 0, y: 0, w: breiteKarte, h: hoeheKarte }, kMin: 0.55, maxHoehe: 720 });
+    fk = zoomFlaeche(rahmen, svg, { inhalt: { x: 0, y: 0, w: breiteKarte, h: hoeheKarte }, kMin: 0.55, kMax: 1.2, maxHoehe: 760 });
 
     function filtern() {
       let n = 0;
@@ -2506,6 +2558,7 @@
       const st = stilNach[id];
       if (!st) return fehler("atlas", "Stil «" + id + "» unbekannt.");
       aktStil = id;
+      letzterOrt = id;
       if (!vonOrt) vonOrt = id;
       const neu = !besucht.has(id);
       besucht.add(id);
@@ -2586,6 +2639,7 @@
       detail.innerHTML = "";
       uebersicht.hidden = false;
       fk.start();
+      wegeZeigen(letzterOrt);
       const ziel = aktStil && ortG[aktStil] && !ortG[aktStil].classList.contains("ar-ausgeblendet") ? ortG[aktStil] : rahmen;
       aktStil = null;
       vonOrt = null;
@@ -2616,7 +2670,7 @@
         if (st.modell) {
           const d = erzeugen("div");
           sp.appendChild(d);
-          diagramm(d, st.modell, { breit: false, titel: "", ablauf: false, ausfall: false, steckbrief: false, legende: false, textliste: true, hoehe: 340 });
+          diagramm(d, st.modell, { breit: false, titel: "", ablauf: false, ausfall: false, steckbrief: false, legende: false, textliste: true, hoehe: 380, kMin: 0.62 });
         }
         spalten.appendChild(sp);
       });
@@ -2995,7 +3049,7 @@
       zielG = svgEl("g", null, "ar-slots");
       szene.welt.insertBefore(zielG, szene.welt.children[1]);
       const box = inhaltBox();
-      if (!fl) fl = zoomFlaeche(rahmen, svg, { inhalt: box, kMin: 0.48, minHoehe: 260, darfZiehen: (ev) => !ev.target.closest(".ar-el, .ar-griff, .ar-kante") });
+      if (!fl) fl = zoomFlaeche(rahmen, svg, { inhalt: box, kMin: 0.48, kMax: 1, minHoehe: 260, darfZiehen: (ev) => !ev.target.closest(".ar-el, .ar-griff, .ar-kante") });
       else if (Math.abs(fl.vb.w - 0) >= 0 && (box.w !== letzteBox.w || box.h !== letzteBox.h)) fl.setzeInhalt(box);
       letzteBox = box;
       zielZeichnen();
