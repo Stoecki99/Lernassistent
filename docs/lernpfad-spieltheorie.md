@@ -190,6 +190,8 @@ Regeln: Wie Baukasten Abschnitt 11. Seiteneigene Klassen mit Präfix `t<NN>-`. F
 | `gleichgewichte` | optional Liste `[[i, j], …]`, sonst automatisch berechnet (reine Gleichgewichte) |
 | `erklaerung` | HTML nach dem Lösen |
 
+Weitere Felder: `feldtexte` (`[[HTML]]`, Zusatztext je Feld im Modus «lesen»), `einheit_eins` (Einzahl der Einheit, z. B. «Jahr»; für «Jahre», «Punkte», «Monate», «Tage», «Schiffe», «Stimmen» automatisch). Der Modus «dominanz» prüft strikte Dominanz in einem Schritt; schrittweises Streichen (iterierte Elimination) baut eine Station seitenlokal (Muster: Station 02).
+
 Rückgabe `{ modus(name), zuruecksetzen() }`. Ereignis `lernpfad:spielbrett` mit `detail: { modus, richtig }`.
 
 ### 5.4 `S.turnier(el, cfg)`
@@ -217,6 +219,8 @@ Spielbaum mit Rückwärtsinduktion. `knoten`: `{ id, spieler, text, aeste: [{ te
 | `start` | Knoten-Id |
 | `knoten` | `{ id: { szene, sprecher, figur, stimmung, text, karten: [{ titel, symbol, text, effekte: { id: Zahl }, ziel, lupe, bedingung }] } }`. `ziel` = nächster Knoten; `bedingung(stand)` optional (Funktion, Karte nur sichtbar, wenn wahr) |
 | `enden` | `{ id: { titel, siegel, text, konzepte: [Text] } }`; Knoten mit `ende: "id"` beenden das Szenario. Statt fester Enden darf ein Knoten `weiche(stand)` haben (Funktion → Knoten-Id) |
+
+Weitere Felder: `einleitung` (HTML über der Leiste), `zustand` (zusätzliche Startwerte im Stand, z. B. Merker), `pruefe(stand, verlauf)` (nach jeder Karte: Ende-Id oder `null`). Auf Karten: `ende` (Ende-Id statt `ziel`), `setze` (Objekt, wird in den Stand übernommen, z. B. `{ pfand: true }`), `folge`, `folgeFigur`, `folgeSprecher`, `folgeStimmung` (Antwort einer Figur nach der Wahl), `ziel` darf eine Funktion `(stand, verlauf) → Id` sein. Auf Knoten: `ort`, `figuren`, `effekte` (beim Betreten). Texte (`text`, `lupe`, Ende-`text`) dürfen Funktionen `(stand, verlauf) → HTML` sein.
 
 Rückgabe `{ neuStarten() }`. Ereignis `lernpfad:szenario` mit `detail: { ende, stand }`.
 
