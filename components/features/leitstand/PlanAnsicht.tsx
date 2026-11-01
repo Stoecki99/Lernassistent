@@ -7,7 +7,7 @@
 // Plan (4.8): Umschalter Gantt / Netzplan (als Liste mit FA, FE, SA, SE, GP, FP); Basisplan und Prognose.
 
 import { useState } from "react"
-import { forecast } from "@/lib/simulation"
+import { forecast } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import GanttDiagramm from "./charts/GanttDiagramm"

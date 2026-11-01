@@ -2,7 +2,7 @@
 // Proprietary — copying, modification, or distribution prohibited without permission.
 
 // POST /api/simulation/runs/[id]/finish
-// Auth: erforderlich, nur Pro oder Admin
+// Auth: erforderlich, nur Pro oder Admin. Rate-Limit 10/min.
 // Body: {} (oder leer)
 // Spielt nach, verlangt Phase «abgeschlossen» (sonst 422), berechnet die Punkte auf dem Server,
 // speichert, vergibt Konto-Punkte (Bestwert-Verbesserung ÷ 10, nur Ernstfall mit neuem Startwert),
@@ -13,7 +13,16 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { checkAndAwardBadges } from "@/lib/badges"
-import { LeitstandError, NO_CACHE, errorResponse, finishRun, readJsonBody, requireLeitstandUser } from "@/lib/leitstand"
+import {
+  LeitstandError,
+  NO_CACHE,
+  checkRateLimit,
+  errorResponse,
+  finishRun,
+  rateLimitResponse,
+  readJsonBody,
+  requireLeitstandUser,
+} from "@/lib/leitstand"
 import { runIdSchema } from "@/lib/validations/simulation"
 
 const finishSchema = z.object({}).strict()
@@ -27,6 +36,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     const auth = await requireLeitstandUser()
     if (auth.response) return auth.response
     const userId = auth.user.id
+    if (!checkRateLimit(userId, "finish")) return rateLimitResponse()
 
     const { id } = await params
     const parsedId = runIdSchema.safeParse(id)

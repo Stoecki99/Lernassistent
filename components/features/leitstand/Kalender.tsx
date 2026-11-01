@@ -8,7 +8,7 @@
 // Höchstens 4 Termine pro Tag im Kalender der Projektleitung (3.5).
 
 import { useState } from "react"
-import { dayOf, formatTick } from "@/lib/simulation"
+import { dayOf, formatTick } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { personName, useLeitstand } from "./context"
 import { chf } from "./format"

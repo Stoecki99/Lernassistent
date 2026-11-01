@@ -7,8 +7,8 @@
 // Ereignis lesen und entscheiden (3.12): Optionen, «Ich entscheide», «Bis morgen überlegen» (Aufschub),
 // Kenntnisnahme bei nur einer Option; danach sofort die Rückmeldung des Coachs mit Link auf die Station.
 
-import { useState } from "react"
-import { formatTick, type InboxItem } from "@/lib/simulation"
+import { useEffect, useRef, useState } from "react"
+import { formatTick, type InboxItem } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import Dialog from "./Dialog"
@@ -47,6 +47,13 @@ export default function EntscheidDialog({
     state.inbox.find((i) => i.eventId === eventId)
   const [choice, setChoice] = useState<string | null>(null)
   const [decidedOption, setDecidedOption] = useState<string | null>(null)
+  const weiterRef = useRef<HTMLButtonElement>(null)
+
+  // Nach dem Entscheid verschwinden die Optionen: Fokus auf «Weiter», damit er nicht ins Leere fällt
+  useEffect(() => {
+    if (decidedOption) weiterRef.current?.focus()
+  }, [decidedOption])
+
   if (!def || !item) return null
 
   const isOpen = item.status === "neu" || item.status === "aufgeschoben"
@@ -74,6 +81,10 @@ export default function EntscheidDialog({
     if (run({ type: "defer", eventId: def.id })) onClose()
   }
 
+  // Esc: neues Ereignis mit Frist → aufschieben; schon aufgeschoben, entschieden oder erledigt → schliessen;
+  // neues Ereignis ohne Frist → Dialog bleibt offen (die Zeit steht, bis entschieden ist)
+  const escapeAction = option || !isOpen || item.status === "aufgeschoben" ? onClose : canDefer ? defer : undefined
+
   const kicker = (
     <>
       <span aria-hidden="true">{CHANNEL_ICON[def.channel]}</span> {CHANNEL_TEXT[def.channel]} · {def.sender.name} · {formatTick(item.arrivedTick)}
@@ -81,7 +92,7 @@ export default function EntscheidDialog({
   )
 
   return (
-    <Dialog title={def.title} kicker={kicker} onEscape={canDefer && !option ? defer : option || !isOpen ? onClose : undefined}>
+    <Dialog title={def.title} kicker={kicker} onEscape={escapeAction}>
       <blockquote className={`${styles.ereignisText} ${styles[`kanal_${def.channel}`]}`}>
         {eventBody(def, item)
           .split(/\n+/)
@@ -101,7 +112,7 @@ export default function EntscheidDialog({
             number={optionNumber(state.seed, def.id, def.options, option.id)}
           />
           <div className={styles.dialogKnoepfe}>
-            <button type="button" className="btn primary" onClick={onClose}>
+            <button ref={weiterRef} type="button" className="btn primary" onClick={onClose}>
               Weiter
             </button>
           </div>

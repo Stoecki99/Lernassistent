@@ -5,7 +5,7 @@
 // Gantt: Basisplan (Umriss) und Prognose bzw. Ist (gefüllt) übereinander, heute als Linie.
 // Kritischer Pfad mit Farbe, dickem Rand und dem Wort «kritisch». Erste Spalte bleibt beim Scrollen stehen.
 
-import type { ScheduleRow, SimState, TaskDef } from "@/lib/simulation"
+import type { ScheduleRow, SimState, TaskDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 
 export default function GanttDiagramm({
@@ -31,7 +31,7 @@ export default function GanttDiagramm({
   const ticks = Array.from({ length: Math.floor(xMax / step) + 1 }, (_, i) => i * step)
 
   return (
-    <div className={styles.gantt} role="group" aria-label="Gantt-Diagramm: Basisplan und Prognose je Vorgang">
+    <div className={styles.gantt} role="group" aria-label="Gantt-Diagramm: Basisplan und Prognose je Vorgang" tabIndex={0}>
       <div className={styles.ganttInnen}>
         <div className={`${styles.ganttZeile} ${styles.ganttKopf}`} aria-hidden="true">
           <div className={styles.ganttLabel}>Vorgang</div>

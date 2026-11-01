@@ -4,7 +4,7 @@
 // components/features/leitstand/Rueckmeldung.tsx
 // Rückmeldung des Coachs nach einem Entscheid (3.12): Bewertung als Form und Text, ICB, Station im Lernpfad.
 
-import type { EventDef, OptionDef } from "@/lib/simulation"
+import type { EventDef, OptionDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { RATING_AMPEL, RATING_FORM, RATING_TEXT, splitFeedback, stationHref, stationNumber, stationTitle } from "./format"
 

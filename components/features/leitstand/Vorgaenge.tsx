@@ -8,7 +8,7 @@
 // Auf schmalen Schirmen eine Karte je Vorgang. Detail mit Profil gegen Team und Besetzung.
 
 import { useState } from "react"
-import { AREAS, fitFor, forecast, type Scenario, type SimState, type TaskDef } from "@/lib/simulation"
+import { AREAS, fitFor, forecast, type Scenario, type SimState, type TaskDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { firstName, useLeitstand } from "./context"
 import { AREA_LABEL, AREA_NAME, STATUS_TEXT, PRIORITIES, chf, stunden } from "./format"

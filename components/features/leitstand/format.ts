@@ -5,7 +5,7 @@
 // Anzeigehilfen des Leitstands: Zahlen (Schweizer Format), Ampeln, Bezeichnungen, Stationen.
 
 import pmgtFach from "@/content/lernseiten/pmgt/fach.json"
-import type { Ampel, AreaId, Channel, Rating, TaskStatus, TeamPhase } from "@/lib/simulation"
+import type { Ampel, AreaId, Channel, Rating, TaskStatus, TeamPhase } from "@/lib/simulation/core"
 
 /** CHF 168'400 (gerundet auf Franken, Apostroph als Tausendertrennzeichen) */
 export function chf(value: number): string {

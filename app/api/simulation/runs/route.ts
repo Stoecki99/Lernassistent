@@ -2,7 +2,7 @@
 // Proprietary — copying, modification, or distribution prohibited without permission.
 
 // GET /api/simulation/runs?scenarioId=
-// Auth: erforderlich, nur Pro oder Admin (sonst 403)
+// Auth: erforderlich, nur Pro oder Admin (sonst 403). Rate-Limit 60/min (Lesen).
 // Eigene Läufe ohne Aktionsprotokoll, neueste zuerst, höchstens 20.
 // best = Bestwert des Szenarios (ohne scenarioId: «wolkenried»), nur Ernstfall und nur Läufe mit neuem Startwert.
 // Antwort: { runs: RunListItem[], best: { score, stars, runId } | null }
@@ -36,6 +36,7 @@ export async function GET(request: Request) {
     const auth = await requireLeitstandUser()
     if (auth.response) return auth.response
     const userId = auth.user.id
+    if (!checkRateLimit(userId, "read")) return rateLimitResponse()
 
     const { searchParams } = new URL(request.url)
     const parsed = listRunsQuerySchema.safeParse({ scenarioId: searchParams.get("scenarioId") ?? undefined })

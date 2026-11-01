@@ -5,6 +5,8 @@
 
 // components/features/leitstand/Dialog.tsx
 // Modaler Dialog mit Fokusfalle (4.8 Barrierefreiheit). Auf schmalen Schirmen ein Vollbild-Blatt von unten.
+// Fokusfalle: Tab und Umschalt+Tab kreisen im Dialog; Fokus, der trotzdem hinausgelangt (Klick, Bildschirmleser),
+// wird zurückgeholt. Der Hintergrund ist solange «inert» (nicht bedienbar, für Bildschirmleser ausgeblendet).
 
 import { useEffect, useId, useRef } from "react"
 import styles from "@/app/(leitstand)/leitstand.module.css"
@@ -34,6 +36,12 @@ export default function Dialog({
     const previous = document.activeElement as HTMLElement | null
     const el = ref.current
     el?.querySelector<HTMLElement>("h2")?.focus()
+    const restoreInert = el ? makeBackgroundInert(el) : () => undefined
+    const onFocusIn = (e: FocusEvent) => {
+      if (!el || !(e.target instanceof Node) || el.contains(e.target)) return
+      el.querySelector<HTMLElement>("h2")?.focus()
+    }
+    document.addEventListener("focusin", onFocusIn)
     const onKey = (e: KeyboardEvent) => {
       if (!el) return
       if (e.key === "Escape") {
@@ -62,6 +70,8 @@ export default function Dialog({
     body.style.overflow = "hidden"
     return () => {
       document.removeEventListener("keydown", onKey)
+      document.removeEventListener("focusin", onFocusIn)
+      restoreInert()
       body.style.overflow = overflow
       previous?.focus?.()
     }
@@ -78,4 +88,29 @@ export default function Dialog({
       </div>
     </div>
   )
+}
+
+/**
+ * Alle Geschwister auf dem Weg vom Dialog bis zum <body> inert setzen; liefert die Rücknahme.
+ * Bereits inerte Elemente (z. B. von einem anderen Dialog) und Live-Regionen bleiben unverändert.
+ */
+function makeBackgroundInert(dialog: HTMLElement): () => void {
+  const changed: HTMLElement[] = []
+  let node: HTMLElement | null = dialog
+  while (node && node !== document.body) {
+    const parent: HTMLElement | null = node.parentElement
+    if (!parent) break
+    for (const sibling of Array.from(parent.children)) {
+      if (sibling === node || !(sibling instanceof HTMLElement) || sibling.inert) continue
+      if (sibling.tagName === "SCRIPT" || sibling.tagName === "STYLE") continue
+      // Live-Regionen bleiben aktiv, sonst gingen Ansagen (z. B. «Anruf von …») verloren
+      if (sibling.hasAttribute("aria-live")) continue
+      sibling.inert = true
+      changed.push(sibling)
+    }
+    node = parent
+  }
+  return () => {
+    for (const el of changed) el.inert = false
+  }
 }

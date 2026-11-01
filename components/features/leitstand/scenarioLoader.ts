@@ -5,7 +5,7 @@
 // Szenarien im Browser: statischer JSON-Import ohne erneute Zod-Prüfung (Spezifikation 4.4).
 // Dynamischer Import, damit nur der gespielte Lauf das grosse Szenario lädt.
 
-import type { Scenario } from "@/lib/simulation"
+import type { Scenario } from "@/lib/simulation/core"
 
 const cache = new Map<string, Scenario>()
 

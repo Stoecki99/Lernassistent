@@ -7,7 +7,7 @@
 // Risikoregister (4.8, 3.9): Reiter Identifizieren / Bewerten (5×5-Matrix) / Massnahmen / Überwachen; Knopf «Register geprüft».
 
 import { useState } from "react"
-import { dayOf, type RiskDef } from "@/lib/simulation"
+import { dayOf, type RiskDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { personName, useLeitstand } from "./context"
 import { chf, pct } from "./format"

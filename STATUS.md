@@ -63,6 +63,10 @@
 
 ## Changelog
 
+### 2026-11-01
+
+- **fix: Review-Befunde Leitstand** (noch nicht committet, Branch `feat/lernpfad-pmgt`) — Client lädt nur `lib/simulation/core.ts`, Szenarien und Attrappe nur dynamisch; Sende-Logik `syncQueue.ts` (409 nach verlorener Antwort, 401 «Anmeldung abgelaufen», neue Versuche mit wachsendem Abstand / Retry-After, Sicherung mit Zod, Rest weiterverwenden); Fokusfalle mit inertem Hintergrund; Tastenkürzel nur im Leitstand und abschaltbar; Meldungen 10 s mit Pause; Rate-Limits auch für finish/GET/DELETE; Körpergrenze als Strom; `MAX_ACTIONS_PER_RUN` 900; Migration `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, vor Deploy nötig); finish «Serializable» mit Wiederholung; Abzeichen per create. Neue Tests `tests/leitstand-sync.test.ts`, `tests/leitstand-server.test.ts`. Doku: `docs/leitstand-spezifikation.md` (Nachträge 4.5–4.8, 5.7, Restrisiko).
+
 ### 2026-10-31
 
 - **feat: Baukasten 1.1.0 für den Lernpfad PMGT** (noch nicht committet, Branch `feat/lernpfad-pmgt`) — neue Bausteine `Lernpfad.reflexion` (offene Frage mit Musterlösung und Selbstbewertung nach Raster), `Lernpfad.matrix` (2×2 bis 5×5, Karten per Tipp und Tastatur ablegen, Prüfen), Hilfsfunktion `Lernpfad.netzplanKnoten`; CSS für ICB-Kennzeichen (`.icb`), Netzplan-Knoten (`.np-knoten`), Gantt-Balken (`.gantt`) und Akzentfarbe pro Fach (`body[data-fach="pmgt"]`, Orange, Kontrast ≥ 4.5:1 hell und dunkel). Vorlage `content/lernseiten/pmgt/_vorlage.html`. Bestehende Bausteine und MSTW-Seiten unverändert (im Browser geprüft). Doku: `docs/lernpfad-baukasten.md` (Abschnitte 7, 8.11–8.13, 9.12–9.14, Prüfliste)

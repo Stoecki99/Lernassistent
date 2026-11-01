@@ -16,9 +16,24 @@ export interface MatrixRisk {
   impact: number
 }
 
-function zone(value: number): "rot" | "gelb" | "gruen" {
+type Zone = "rot" | "gelb" | "gruen"
+
+function zone(value: number): Zone {
   return value >= 12 ? "rot" : value >= 6 ? "gelb" : "gruen"
 }
+
+/** Zonenname als Text, damit die Zone nicht nur über die Farbe erkennbar ist (4.8 «Farbe nie allein») */
+export const ZONE_TEXT: Record<Zone, string> = {
+  rot: "rote Zone, hohes Risiko",
+  gelb: "gelbe Zone, mittleres Risiko",
+  gruen: "grüne Zone, tiefes Risiko",
+}
+
+const LEGEND: Array<[Zone, string, string]> = [
+  ["rot", "Rot: hoch", "Wert 12 bis 25"],
+  ["gelb", "Gelb: mittel", "Wert 6 bis 10"],
+  ["gruen", "Grün: tief", "Wert 1 bis 5"],
+]
 
 export default function RisikoMatrix({
   risks,
@@ -64,7 +79,7 @@ export default function RisikoMatrix({
               const value = w * a
               const z = zone(value)
               const isSel = selected?.w === w && selected?.a === a
-              const label = `Wahrscheinlichkeit ${w}, Auswirkung ${a}, Wert ${value}${
+              const label = `Wahrscheinlichkeit ${w}, Auswirkung ${a}, Wert ${value}, ${ZONE_TEXT[z]}${
                 here.length ? `: ${here.map((r) => `${r.id} ${r.title}`).join(", ")}` : ", kein Risiko"
               }`
               return (
@@ -110,6 +125,14 @@ export default function RisikoMatrix({
       <div className={styles.matrixAchseX} aria-hidden="true">
         Auswirkung →
       </div>
+      <ul className={styles.matrixLegende} aria-label="Legende der Zonen">
+        {LEGEND.map(([z, name, range]) => (
+          <li key={z}>
+            <span className={`${styles.matrixFeld} ${styles[`zone_${z}`]}`} aria-hidden="true" />
+            <strong>{name}</strong> ({range})
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

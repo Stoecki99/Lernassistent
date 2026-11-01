@@ -6,7 +6,7 @@
 // components/features/leitstand/KopfLeiste.tsx
 // Uhr, Zeitraffer (Pause · 1× = 8 s je Halbtag · 2× · 4×), Periode, Posteingang, Speicherstand (4.8).
 
-import { formatTick, formatTickShort } from "@/lib/simulation"
+import { formatTick, formatTickShort } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import type { SyncStatus } from "./useRunSync"
@@ -21,7 +21,11 @@ const SYNC_TEXT: Record<SyncStatus, string> = {
   speichert: "speichert …",
   offline: "nicht gespeichert, neuer Versuch folgt",
   fehler: "Speicherfehler",
+  abgemeldet: "Anmeldung abgelaufen, nicht gespeichert",
 }
+
+/** Nur diese Zustände werden angesagt; «speichert/gespeichert» wechseln zu oft (Befund Barrierefreiheit) */
+const ANNOUNCED: ReadonlySet<SyncStatus> = new Set<SyncStatus>(["fehler", "offline", "abgemeldet"])
 
 export default function KopfLeiste({
   speed,
@@ -29,12 +33,15 @@ export default function KopfLeiste({
   running,
   blockedByEvent,
   syncStatus,
+  shortcuts = true,
 }: {
   speed: Speed
   setSpeed: (s: Speed) => void
   running: boolean
   blockedByEvent: boolean
   syncStatus: SyncStatus
+  /** Tastenkürzel aktiv (sonst keine aria-keyshortcuts und keine Kürzel in den Beschriftungen) */
+  shortcuts?: boolean
 }) {
   const { state, scenario, setView, kpis } = useLeitstand()
   const open = state.inbox.filter((i) => i.status === "neu" || i.status === "aufgeschoben").length
@@ -68,8 +75,8 @@ export default function KopfLeiste({
             type="button"
             className={`btn ${styles.playKnopf} ${speed > 0 ? "on" : ""}`}
             onClick={() => setSpeed(speed === 0 ? 1 : 0)}
-            aria-label={speed === 0 ? "Zeit starten (Leertaste)" : "Pause (Leertaste)"}
-            aria-keyshortcuts="Space"
+            aria-label={`${speed === 0 ? "Zeit starten" : "Pause"}${shortcuts ? " (Leertaste)" : ""}`}
+            aria-keyshortcuts={shortcuts ? "Space" : undefined}
             disabled={blockedByEvent}
           >
             <span aria-hidden="true">{speed === 0 ? "▶" : "⏸"}</span>
@@ -81,7 +88,7 @@ export default function KopfLeiste({
                 type="button"
                 className={`btn ${styles.tempoKnopf} ${speed === s ? "on" : ""}`}
                 aria-pressed={speed === s}
-                aria-keyshortcuts={String(s)}
+                aria-keyshortcuts={shortcuts ? String(s) : undefined}
                 onClick={() => setSpeed(s)}
                 disabled={blockedByEvent}
               >
@@ -125,15 +132,19 @@ export default function KopfLeiste({
         type="button"
         className={`btn ${styles.postKnopf} ${fresh > 0 ? styles.postNeu : ""}`}
         onClick={() => setView("posteingang")}
-        aria-keyshortcuts="P"
+        aria-keyshortcuts={shortcuts ? "P" : undefined}
         aria-label={`Posteingang: ${open} offen${fresh > 0 ? `, ${fresh} neu` : ""}`}
       >
         <span aria-hidden="true">✉</span>
         <span aria-hidden="true">{open}</span>
       </button>
 
-      <span className={`${styles.sync} ${syncStatus === "fehler" || syncStatus === "offline" ? styles.syncFehler : ""}`} role="status">
-        <span aria-hidden="true">{syncStatus === "gespeichert" ? "✓" : syncStatus === "fehler" ? "!" : "…"}</span> {SYNC_TEXT[syncStatus]}
+      <span className={`${styles.sync} ${ANNOUNCED.has(syncStatus) ? styles.syncFehler : ""}`}>
+        <span aria-hidden="true">{syncStatus === "gespeichert" ? "✓" : syncStatus === "fehler" || syncStatus === "abgemeldet" ? "!" : "…"}</span>{" "}
+        {SYNC_TEXT[syncStatus]}
+      </span>
+      <span className="sr-only" role="status">
+        {ANNOUNCED.has(syncStatus) ? `Speicherstand: ${SYNC_TEXT[syncStatus]}` : ""}
       </span>
 
       {running && speed > 0 && (

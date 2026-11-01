@@ -9,7 +9,7 @@
 // Danach die Antwort des Gemeinderats (nur Statusbericht).
 
 import { useState } from "react"
-import { isChangeRequestAvailable, type Ampel as AmpelWert, type ReportArea, type ReportRecord, type StatusReportInput } from "@/lib/simulation"
+import { isChangeRequestAvailable, type Ampel as AmpelWert, type ReportArea, type ReportRecord, type StatusReportInput } from "@/lib/simulation/core"
 import { statusReportInputSchema } from "@/lib/validations/simulation"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"

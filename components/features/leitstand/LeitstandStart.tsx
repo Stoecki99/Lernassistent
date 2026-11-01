@@ -99,10 +99,12 @@ export default function LeitstandStart({ scenarios, start }: { scenarios: Scenar
     const list = s ? lists[s.id] : undefined
     if (!s || list === undefined) return
     setAutoStarted(true)
+    // Parameter entfernen: «Zurück» oder Neuladen startet sonst erneut einen Lauf
+    router.replace("/leitstand", { scroll: false })
     const active = list?.runs.find((r) => r.status === "aktiv")
     if (!active) void create(s)
     else document.getElementById(`weiter-${s.id}`)?.focus()
-  }, [start, autoStarted, scenarios, lists, create])
+  }, [start, autoStarted, scenarios, lists, create, router])
 
   return (
     <>

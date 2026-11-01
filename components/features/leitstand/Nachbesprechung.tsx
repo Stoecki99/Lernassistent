@@ -8,7 +8,7 @@
 // Gegenüberstellung der Berichte, Kurven und Links auf die Stationen.
 
 import { useEffect, useState } from "react"
-import { debrief, formatTick } from "@/lib/simulation"
+import { debrief, formatTick } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import { ACHIEVEMENTS, chf, stationHref, stationNumber, stationTitle } from "./format"

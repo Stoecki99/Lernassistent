@@ -7,7 +7,7 @@
 // Gemeinsamer Zustand der Lauf-Ansicht für alle Ansichten (statt langer Prop-Ketten).
 
 import { createContext, useContext } from "react"
-import type { Action, KpiSnapshot, Scenario, ScheduleRow, SimState, TaskId } from "@/lib/simulation"
+import type { Action, KpiSnapshot, Scenario, ScheduleRow, SimState, TaskId } from "@/lib/simulation/core"
 import type { Trace } from "./logic"
 
 export type ViewKey =

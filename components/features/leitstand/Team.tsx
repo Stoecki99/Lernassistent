@@ -8,7 +8,7 @@
 // Überstunden und Abwesenheiten; Aktionen Gespräch, Weiterbildung, Überstufe; Persönlichkeit aufklappbar.
 
 import { useState } from "react"
-import { AREAS, dayOf, fitFor, type AreaId, type PersonDef } from "@/lib/simulation"
+import { AREAS, dayOf, fitFor, type AreaId, type PersonDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import { AREA_LABEL, AREA_NAME, ORIGIN_TEXT, PRIORITIES, SHARE_OPTIONS, chf } from "./format"

@@ -15,7 +15,7 @@ import {
   type Scenario,
   type ScheduleRow,
   type SimState,
-} from "@/lib/simulation"
+} from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import { chf, stunden } from "./format"

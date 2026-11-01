@@ -2,14 +2,14 @@
 // Proprietary — copying, modification, or distribution prohibited without permission.
 
 // GET /api/simulation/runs/[id]
-// Auth: erforderlich, nur Pro oder Admin
+// Auth: erforderlich, nur Pro oder Admin. Rate-Limit 60/min (Lesen, gemeinsam mit der Liste).
 // Lauf mit Aktionsprotokoll zum Weiterspielen. Ein aktiver Lauf mit abweichender Szenario- oder
 // Rechenkern-Version wird als «veraltet» gespeichert; outdated = Version weicht ab.
 // Antwort: { id, scenarioId, scenarioVersion, engineVersion, seed, seedReused, status, actions, actionCount,
 //            tick, summary, score, stars, result, pointsAwarded, outdated, createdAt, updatedAt, finishedAt }
 
 // DELETE /api/simulation/runs/[id]
-// Auth: erforderlich, nur Pro oder Admin
+// Auth: erforderlich, nur Pro oder Admin. Rate-Limit 10/min.
 // Bricht einen aktiven Lauf ab (Status «abgebrochen», kein Löschen). Abgeschlossener Lauf → 409.
 // Antwort: { ok: true }
 
@@ -18,9 +18,11 @@ import { prisma } from "@/lib/prisma"
 import {
   LeitstandError,
   NO_CACHE,
+  checkRateLimit,
   checkRunVersion,
   errorResponse,
   isOutdated,
+  rateLimitResponse,
   requireLeitstandUser,
   requireScenario,
 } from "@/lib/leitstand"
@@ -42,6 +44,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const auth = await requireLeitstandUser()
     if (auth.response) return auth.response
     const userId = auth.user.id
+    if (!checkRateLimit(userId, "read")) return rateLimitResponse()
     const id = await parseId(params)
 
     const run = await prisma.simulationRun.findFirst({
@@ -99,6 +102,7 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
     const auth = await requireLeitstandUser()
     if (auth.response) return auth.response
     const userId = auth.user.id
+    if (!checkRateLimit(userId, "abort")) return rateLimitResponse()
     const id = await parseId(params)
 
     const updated = await prisma.simulationRun.updateMany({

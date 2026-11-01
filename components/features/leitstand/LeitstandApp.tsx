@@ -21,9 +21,10 @@ import {
   type HintDef,
   type Scenario,
   type SimState,
-} from "@/lib/simulation"
+} from "@/lib/simulation/core"
+import { MAX_ACTIONS_PER_RUN } from "@/lib/validations/simulation"
 import styles from "@/app/(leitstand)/leitstand.module.css"
-import { ApiError, leitstandApi, setMockScenarioLoader, type FinishResponse, type RunDetail } from "./api"
+import { ApiError, leitstandApi, type FinishResponse, type RunDetail } from "./api"
 import { loadClientScenario } from "./scenarioLoader"
 import { readPendingBackup, useRunSync } from "./useRunSync"
 import { LeitstandContext, useLeitstand, type LeitstandCtx, type ViewKey } from "./context"
@@ -59,7 +60,6 @@ export default function LeitstandApp({ runId }: { runId: string }) {
 
   useEffect(() => {
     let cancelled = false
-    setMockScenarioLoader(loadClientScenario)
     ;(async () => {
       try {
         const detail = await leitstandApi.getRun(runId)
@@ -140,6 +140,9 @@ export default function LeitstandApp({ runId }: { runId: string }) {
 // ---------- Hinweise (nur Einführungslauf) ----------
 
 const HINTS_OFF_KEY = "leitstand-hinweise-aus"
+const SHORTCUTS_OFF_KEY = "leitstand-kuerzel-aus"
+/** Anzeigedauer einer Meldung; pausiert, solange Maus oder Fokus darauf liegen */
+const TOAST_MS = 10_000
 
 function readList(key: string): string[] {
   try {
@@ -222,13 +225,20 @@ function Spiel({
   const [finishError, setFinishError] = useState<string | null>(null)
   const [best, setBest] = useState<number | null>(null)
   const [hintsOff, setHintsOff] = useState<boolean>(() => readFlag(HINTS_OFF_KEY))
+  const [shortcutsOff, setShortcutsOff] = useState<boolean>(() => readFlag(SHORTCUTS_OFF_KEY))
+  /** Anmeldung abgelaufen: keine weiteren Aktionen, bis neu angemeldet (die Sicherung im Browser bleibt) */
+  const [authExpired, setAuthExpired] = useState(false)
   const dismissKey = `leitstand-hinweise-${detail.id}`
   const [dismissed, setDismissed] = useState<string[]>(() => readList(dismissKey))
   const [fired, setFired] = useState<string[]>([])
   const navRef = useRef<HTMLElement>(null)
   const finishStarted = useRef(false)
 
-  const notify = useCallback((text: string) => setToast({ text, id: Date.now() }), [])
+  // Meldungen sichtbar unten und zugleich über die bestehende polite-Region angesagt
+  const notify = useCallback((text: string) => {
+    setToast({ text, id: Date.now() })
+    setPolite(text)
+  }, [])
 
   const sync = useRunSync({
     api: leitstandApi,
@@ -244,8 +254,13 @@ function Spiel({
       notify(`Der Server hat eine Aktion abgelehnt: ${message} Der Lauf wird neu geladen.`)
       window.setTimeout(onReload, 2500)
     },
+    onAuthExpired: () => {
+      setAuthExpired(true)
+      setSpeedRaw(0)
+      notify("Anmeldung abgelaufen. Melde dich neu an; deine letzten Aktionen bleiben in diesem Browser gesichert.")
+    },
   })
-  const { push, flush } = sync
+  const { push, flush, total } = sync
 
   const kpis = useMemo(() => computeKpis(state, scenario), [state, scenario])
   const base = useMemo(() => baselineRows(scenario), [scenario])
@@ -254,6 +269,16 @@ function Spiel({
     (action: Action): SimState | null => {
       if (readOnly) {
         notify("Dieser Lauf lässt sich nicht mehr ändern.")
+        return null
+      }
+      if (authExpired) {
+        notify("Anmeldung abgelaufen. Melde dich neu an, um weiterzuspielen.")
+        return null
+      }
+      // Der Server nimmt höchstens MAX_ACTIONS_PER_RUN an; ohne diese Sperre folgte 422 und Neuladen in Schlaufe
+      if (total() >= MAX_ACTIONS_PER_RUN) {
+        notify(`Höchstzahl von ${MAX_ACTIONS_PER_RUN} Aktionen erreicht. Dieser Lauf lässt sich nicht weiter ändern.`)
+        setSpeedRaw(0)
         return null
       }
       try {
@@ -273,7 +298,7 @@ function Spiel({
         return null
       }
     },
-    [readOnly, scenario, push, notify]
+    [readOnly, authExpired, scenario, push, notify, total]
   )
 
   // ---------- Hinweise ----------
@@ -312,7 +337,7 @@ function Spiel({
 
   // ---------- Zeitraffer ----------
   const hasNew = state.inbox.some((i) => i.status === "neu")
-  const running = !readOnly && state.phase === "lauf" && speed > 0 && !hasNew && dialog === null && !gemeinderat
+  const running = !readOnly && !authExpired && state.phase === "lauf" && speed > 0 && !hasNew && dialog === null && !gemeinderat
 
   const setSpeed = useCallback(
     (s: Speed) => {
@@ -426,11 +451,13 @@ function Spiel({
   }, [scenario.id, detail.id])
 
   // ---------- Tastatur ----------
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (dialog || gemeinderat || e.ctrlKey || e.metaKey || e.altKey) return
+  // Einzeltasten-Kürzel nur, wenn der Fokus im Leitstand liegt (Handler am Container), nicht in Eingabefeldern
+  // und nicht bei offenem Dialog; abschaltbar mit «Tastenkürzel aus» (WCAG 2.1.4).
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (shortcutsOff || dialog || gemeinderat || e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return
       const target = e.target as HTMLElement | null
-      if (target?.closest("input, textarea, select, [contenteditable='true']")) return
+      if (target?.closest("input, textarea, select, [contenteditable='true'], [role='dialog']")) return
       if (e.key === " " || e.code === "Space") {
         // Auf Knöpfen und Links bleibt die Leertaste deren eigene Bedienung
         if (target?.closest("button, a, summary, [role='button']")) return
@@ -443,22 +470,14 @@ function Spiel({
       } else if (e.key === "p" || e.key === "P") {
         setView("posteingang")
       }
-    }
-    document.addEventListener("keydown", onKey)
-    return () => document.removeEventListener("keydown", onKey)
-  }, [dialog, gemeinderat, speed, setSpeed, setView])
+    },
+    [shortcutsOff, dialog, gemeinderat, speed, setSpeed, setView]
+  )
 
   // Aktive Ansicht in der Chip-Leiste sichtbar halten
   useEffect(() => {
     navRef.current?.querySelector<HTMLElement>("[aria-current='page']")?.scrollIntoView({ block: "nearest", inline: "nearest" })
   }, [view])
-
-  // Meldung ausblenden
-  useEffect(() => {
-    if (!toast) return
-    const id = window.setTimeout(() => setToast(null), 6000)
-    return () => window.clearTimeout(id)
-  }, [toast])
 
   const openEvent = useCallback(
     (eventId: string) => {
@@ -470,19 +489,23 @@ function Spiel({
     []
   )
 
-  const ctx: LeitstandCtx = {
-    scenario,
-    state,
-    kpis,
-    trace: traceRef.current,
-    base,
-    run,
-    view,
-    setView,
-    openEvent,
-    notify,
-    readOnly,
-  }
+  // traceRef wird in run() vor setState fortgeschrieben; state als Abhängigkeit deckt das ab
+  const ctx = useMemo<LeitstandCtx>(
+    () => ({
+      scenario,
+      state,
+      kpis,
+      trace: traceRef.current,
+      base,
+      run,
+      view,
+      setView,
+      openEvent,
+      notify,
+      readOnly,
+    }),
+    [scenario, state, kpis, base, run, view, setView, openEvent, notify, readOnly]
+  )
 
   const openCount = state.inbox.filter((i) => i.status === "neu" || i.status === "aufgeschoben").length
   const firstNew = state.inbox.find((i) => i.status === "neu")
@@ -490,7 +513,7 @@ function Spiel({
 
   return (
     <LeitstandContext.Provider value={ctx}>
-      <div className={styles.spiel}>
+      <div className={styles.spiel} onKeyDown={onKeyDown}>
         <div className={styles.titelZeile}>
           <h1 className={styles.titel}>
             <span className={styles.titelMarke}>Leitstand</span> {scenario.title}
@@ -513,6 +536,23 @@ function Spiel({
               Hinweise {hintsOff ? "aus" : "an"}
             </button>
           )}
+          <button
+            type="button"
+            className={`btn ${styles.klein}`}
+            aria-pressed={!shortcutsOff}
+            title="Leertaste: Zeit starten/anhalten · 1, 2, 4: Tempo · P: Posteingang"
+            onClick={() => {
+              const next = !shortcutsOff
+              setShortcutsOff(next)
+              try {
+                window.localStorage.setItem(SHORTCUTS_OFF_KEY, next ? "1" : "0")
+              } catch {
+                // ohne Speicher gilt die Wahl bis zum Neuladen
+              }
+            }}
+          >
+            Tastenkürzel {shortcutsOff ? "aus" : "an"}
+          </button>
         </div>
         <div className="sr-only" aria-live="polite">
           {polite}
@@ -521,7 +561,24 @@ function Spiel({
           {assertive}
         </div>
 
-        <KopfLeiste speed={speed} setSpeed={setSpeed} running={running} blockedByEvent={hasNew} syncStatus={sync.status} />
+        <KopfLeiste
+          speed={speed}
+          setSpeed={setSpeed}
+          running={running}
+          blockedByEvent={hasNew}
+          syncStatus={sync.status}
+          shortcuts={!shortcutsOff}
+        />
+
+        {authExpired && (
+          <p className={`note ${styles.lage} ${styles.lageWarn}`}>
+            Anmeldung abgelaufen: Deine letzten Aktionen sind nur in diesem Browser gesichert.{" "}
+            <a href="/login" target="_blank" rel="noopener">
+              Neu anmelden (neuer Tab)
+            </a>{" "}
+            und diese Seite danach neu laden: Der Lauf geht am gleichen Takt weiter.
+          </p>
+        )}
 
         {readOnly && state.phase !== "abgeschlossen" && (
           <p className={`note ${styles.lage}`}>Dieser Lauf ist {detail.status} und lässt sich nur ansehen.</p>
@@ -531,15 +588,15 @@ function Spiel({
 
         <Kennzahlen />
 
-        {activeHint && (
-          <Hinweis
-            text={activeHint.text}
-            coach={scenario.coach.name}
-            onClose={() => {
-              const next = [...dismissed, activeHint.id]
-              setDismissed(next)
-              writeList(dismissKey, next)
-            }}
+        <Hinweis
+          hint={activeHint ?? null}
+          coach={scenario.coach.name}
+          onClose={() => {
+            if (!activeHint) return
+            const next = [...dismissed, activeHint.id]
+            setDismissed(next)
+            writeList(dismissKey, next)
+          }}
             onAllOff={() => {
               setHintsOff(true)
               try {
@@ -549,7 +606,6 @@ function Spiel({
               }
             }}
           />
-        )}
 
         <nav ref={navRef} className={styles.ansichten} aria-label="Ansichten">
           {VIEWS.filter(([key]) => key !== "nachbesprechung" || state.phase === "abgeschlossen").map(([key, label]) => (
@@ -617,16 +673,48 @@ function Spiel({
           </Dialog>
         )}
 
-        {toast && (
-          <div key={toast.id} className={styles.meldung} role="status">
-            <span>{toast.text}</span>
-            <button type="button" className={`btn ${styles.klein}`} onClick={() => setToast(null)} aria-label="Meldung schliessen">
-              ✕
-            </button>
-          </div>
-        )}
+        {toast && <Meldung key={toast.id} text={toast.text} onClose={() => setToast(null)} />}
       </div>
     </LeitstandContext.Provider>
+  )
+}
+
+/**
+ * Sichtbare Meldung unten (die Ansage läuft über die polite-Region der Lauf-Ansicht).
+ * Blendet nach TOAST_MS aus; Maus darüber oder Fokus darin hält den Zeitgeber an (WCAG 2.2.1).
+ */
+function Meldung({ text, onClose }: { text: string; onClose: () => void }) {
+  const [paused, setPaused] = useState({ hover: false, focus: false })
+  const remainingRef = useRef(TOAST_MS)
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+  const isPaused = paused.hover || paused.focus
+
+  useEffect(() => {
+    if (isPaused) return
+    const started = Date.now()
+    const id = window.setTimeout(() => closeRef.current(), remainingRef.current)
+    return () => {
+      window.clearTimeout(id)
+      remainingRef.current = Math.max(1000, remainingRef.current - (Date.now() - started))
+    }
+  }, [isPaused])
+
+  return (
+    <div
+      className={styles.meldung}
+      onMouseEnter={() => setPaused((p) => ({ ...p, hover: true }))}
+      onMouseLeave={() => setPaused((p) => ({ ...p, hover: false }))}
+      onFocus={() => setPaused((p) => ({ ...p, focus: true }))}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPaused((p) => ({ ...p, focus: false }))
+      }}
+    >
+      <span>{text}</span>
+      <button type="button" className={`btn ${styles.klein}`} onClick={onClose} aria-label="Meldung schliessen">
+        ✕
+      </button>
+    </div>
   )
 }
 

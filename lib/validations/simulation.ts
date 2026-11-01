@@ -631,8 +631,12 @@ export const actionSchema: z.ZodType<Action> = z.discriminatedUnion(
 
 // ---------- API-Eingaben (4.6) ----------
 
-/** Höchstens 5'000 Aktionen je Lauf (4.5) */
-export const MAX_ACTIONS_PER_RUN = 5000
+/**
+ * Höchstens 900 Aktionen je Lauf (4.5). Gemessen (AP Review): längstes Protokoll der Roboter 298 Aktionen
+ * (Roboter «gut», Ernstfall, Startwerte 1–20; «naiv» 217, Einführung 57), Grenze ≈ 3 × Maximum.
+ * replay an der Grenze ≈ 20–30 ms: die Rechenzeit hängt an den Takten (höchstens hardStopTick), kaum an der Länge.
+ */
+export const MAX_ACTIONS_PER_RUN = 900
 
 export const runIdSchema = z.cuid({ message: "Ungültige Lauf-ID." })
 

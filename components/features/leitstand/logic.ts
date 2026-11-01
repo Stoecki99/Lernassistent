@@ -18,7 +18,7 @@ import {
   type ScheduleRow,
   type SimState,
   type TaskId,
-} from "@/lib/simulation"
+} from "@/lib/simulation/core"
 
 /** Verlauf je Person nach jedem Takt: kumulierte Projektstunden und Motivation (für Auslastung und Kleinkurven). */
 export interface Trace {

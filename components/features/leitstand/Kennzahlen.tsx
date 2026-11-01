@@ -8,7 +8,7 @@
 // 100 % entspricht dem Plan, mehr ist besser (1.5 «Kennzahl über 100 %»).
 
 import { useState } from "react"
-import type { Ampel as AmpelWert, KpiPoint } from "@/lib/simulation"
+import type { Ampel as AmpelWert, KpiPoint } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import { AMPEL_FORM, AMPEL_TEXT } from "./format"

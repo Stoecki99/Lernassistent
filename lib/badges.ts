@@ -5,7 +5,33 @@
 // Badge-Vergabe-Logik: Prueft Bedingungen und vergibt neue Badges.
 
 import { prisma } from "@/lib/prisma"
-import { achievementStats } from "@/lib/leitstand"
+import { achievementStats, prismaErrorCode } from "@/lib/leitstand"
+
+type BadgeDb = Pick<typeof prisma, "$transaction">
+
+/**
+ * Ein Abzeichen vergeben: UserBadge per create (nicht upsert) und Punkte erst danach, in einer Transaktion.
+ * Hat eine gleichzeitige Anfrage das Abzeichen schon vergeben, scheitert create mit P2002; die Transaktion
+ * wird zurückgerollt und es gibt keine Punkte. Liefert true, wenn diese Anfrage vergeben hat.
+ */
+export async function awardBadge(
+  userId: string,
+  badge: { id: string; points: number },
+  db: BadgeDb = prisma,
+): Promise<boolean> {
+  try {
+    await db.$transaction(async (tx) => {
+      await tx.userBadge.create({ data: { userId, badgeId: badge.id } })
+      if (badge.points > 0) {
+        await tx.user.update({ where: { id: userId }, data: { points: { increment: badge.points } } })
+      }
+    })
+    return true
+  } catch (error: unknown) {
+    if (prismaErrorCode(error) === "P2002") return false
+    throw error
+  }
+}
 
 interface AwardedBadge {
   name: string
@@ -41,29 +67,7 @@ export async function checkAndAwardBadges(userId: string): Promise<AwardedBadge[
       continue
     }
 
-    try {
-      await prisma.$transaction([
-        prisma.userBadge.upsert({
-          where: { userId_badgeId: { userId, badgeId: badge.id } },
-          update: {},
-          create: { userId, badgeId: badge.id },
-        }),
-        prisma.user.update({
-          where: { id: userId },
-          data: { points: { increment: badge.points } },
-        }),
-      ])
-    } catch (error: unknown) {
-      // Unique constraint violation (P2002) — Badge already awarded by concurrent request
-      if (
-        error instanceof Error &&
-        "code" in error &&
-        (error as { code: string }).code === "P2002"
-      ) {
-        continue
-      }
-      throw error
-    }
+    if (!(await awardBadge(userId, badge))) continue
 
     newBadges.push({
       name: badge.name,

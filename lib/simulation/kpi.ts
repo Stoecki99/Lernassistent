@@ -16,10 +16,18 @@ export function currentTau(state: SimState): number {
   return state.tick / 2
 }
 
+/**
+ * Vorgangs-IDs in fester Reihenfolge (Summen sind dann bitgleich). state.tasks enthält genau die Vorgänge
+ * des Szenarios (engine.createRun), daher gilt ctx.taskIds; der Rückfall sortiert die Schlüssel selbst.
+ */
+function sortedTaskIds(state: SimState): readonly string[] {
+  return Object.keys(state.tasks).sort()
+}
+
 /** BAC = Σ BAC_v (inkl. genehmigter Änderungsanträge) */
-export function totalBac(state: SimState): number {
+export function totalBac(state: SimState, taskIds: readonly string[] = sortedTaskIds(state)): number {
   let sum = 0
-  for (const id of Object.keys(state.tasks).sort()) sum += state.tasks[id].bac
+  for (const id of taskIds) sum += state.tasks[id].bac
   return sum
 }
 
@@ -27,7 +35,7 @@ export function totalBac(state: SimState): number {
 export function plannedValue(state: SimState, scenario: Scenario, tau: number): number {
   const base = baseline(scenario)
   let pv = 0
-  for (const id of Object.keys(state.tasks).sort()) {
+  for (const id of getCtx(scenario).taskIds) {
     const row = base[id]
     if (!row) continue
     const share = row.duration > 0 ? clamp((tau - row.es) / row.duration, 0, 1) : tau >= row.es ? 1 : 0
@@ -37,9 +45,9 @@ export function plannedValue(state: SimState, scenario: Scenario, tau: number): 
 }
 
 /** EV = Σ_v BAC_v × Fortschritt_v (3.10) */
-export function earnedValue(state: SimState): number {
+export function earnedValue(state: SimState, taskIds: readonly string[] = sortedTaskIds(state)): number {
   let ev = 0
-  for (const id of Object.keys(state.tasks).sort()) ev += state.tasks[id].bac * progressOf(state.tasks[id])
+  for (const id of taskIds) ev += state.tasks[id].bac * progressOf(state.tasks[id])
   return ev
 }
 
@@ -88,9 +96,9 @@ export function computeAmpeln(input: {
 export function computeKpis(state: SimState, scenario: Scenario): KpiSnapshot {
   const ctx = getCtx(scenario)
   const tau = currentTau(state)
-  const bac = totalBac(state)
+  const bac = totalBac(state, ctx.taskIds)
   const pv = plannedValue(state, scenario, tau)
-  const ev = earnedValue(state)
+  const ev = earnedValue(state, ctx.taskIds)
   const ac = state.finance.ac
   // SPI = EV ÷ PV (PV = 0 → 1), CPI = EV ÷ AC (AC = 0 → 1)
   const spi = safeDiv(ev, pv, 1)

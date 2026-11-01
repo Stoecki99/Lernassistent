@@ -1458,11 +1458,17 @@ model SimulationRun {
 
 Dazu im Modell `User`: `simulationRuns SimulationRun[]`. Migration mit `npx prisma migrate dev --name add_simulation_run`.
 
-**Regeln:** höchstens ein aktiver Lauf je Konto und Szenario (ein neuer Start setzt den alten auf «abgebrochen», nach Rückfrage in der Oberfläche); höchstens 5'000 Aktionen je Lauf; abgebrochene Läufe älter als 30 Tage dürfen gelöscht werden (spätere Aufräumaufgabe, nicht Teil der ersten Fassung).
+**Regeln:** höchstens ein aktiver Lauf je Konto und Szenario (ein neuer Start setzt den alten auf «abgebrochen», nach Rückfrage in der Oberfläche); höchstens 900 Aktionen je Lauf; abgebrochene Läufe älter als 30 Tage dürfen gelöscht werden (spätere Aufräumaufgabe, nicht Teil der ersten Fassung).
+
+*Nachtrag Review (1.11.2026):*
+
+- **Ein aktiver Lauf, auch bei gleichzeitigen Starts:** Teil-Index `SimulationRun_aktiv_eindeutig` auf `("userId", "scenarioId") WHERE "status" = 'aktiv'` (Migration `20261101100000_simulation_run_aktiv_eindeutig`; die Migration setzt vorher allfällige ältere Doppelungen auf «abgebrochen»). Prisma 7.6 kennt keine Teil-Indizes im Schema; der Index lebt nur in der Migration. Schlägt `prisma migrate dev` vor, ihn zu entfernen, diese Zeile im Vorschlag löschen.
+- **Höchstzahl Aktionen 900 statt 5'000:** gemessen mit den Robotern (Ernstfall, Startwerte 1–20): «gut» höchstens 298 Aktionen, «naiv» 217, «schlecht» 200, Einführung 57. Grenze ≈ 3 × Maximum. Nachspielen an der Grenze ≈ 20–30 ms; die Rechenzeit hängt an den Takten (höchstens `hardStopTick` = 100), kaum an der Länge des Protokolls. Die Oberfläche sperrt weitere Aktionen an der Grenze mit einer Meldung (sonst 422 und Neuladen in Schlaufe).
+- **Restrisiko (akzeptiert):** Startwert und Szenario liegen im Browser, weil er das Protokoll selbst nachspielt. Wer den Rechenkern lokal ausführt, kann Entscheide vorausrechnen und den besten Verlauf suchen; der Server prüft nur, dass jede Aktion gültig ist, nicht wie sie gefunden wurde. Akzeptiert, weil die Punkte ins Konto je Lauf auf 100 begrenzt sind, Wiederholungen mit bekanntem Startwert nichts geben und der Leitstand ein persönliches Lernspiel ohne Rangliste ist.
 
 ### 4.6 API
 
-Alle Routen nach dem Muster von `app/api/lernfortschritt/route.ts`: `getCurrentUser()` → 401; JSON-Body in try/catch → 400; Zod `safeParse` → 400 mit erster Meldung; Zugriff nur mit `where: { id, userId }` → 404; Fehler `console.error("[simulation/…]", error)` und generische Meldung 500; Header `Cache-Control: private, no-store`. IDs mit `z.cuid()` prüfen. Rate-Limit im Speicher je Konto (wie Chat): 60 Anfragen je Minute für `actions`, 10 je Minute für `POST runs`.
+Alle Routen nach dem Muster von `app/api/lernfortschritt/route.ts`: `getCurrentUser()` → 401; JSON-Body in try/catch → 400; Zod `safeParse` → 400 mit erster Meldung; Zugriff nur mit `where: { id, userId }` → 404; Fehler `console.error("[simulation/…]", error)` und generische Meldung 500; Header `Cache-Control: private, no-store`. IDs mit `z.cuid()` prüfen. Rate-Limit im Speicher je Konto (wie Chat): 60 Anfragen je Minute für `actions`, 10 je Minute für `POST runs`, 10 je Minute für `finish`, 60 je Minute für das Lesen (`GET` Liste und Lauf zusammen), 10 je Minute für `DELETE`; Antwort 429 mit `Retry-After: 60`.
 
 | Methode, Pfad | Eingabe | Ablauf | Antwort |
 |---|---|---|---|
@@ -1473,7 +1479,13 @@ Alle Routen nach dem Muster von `app/api/lernfortschritt/route.ts`: `getCurrentU
 | `POST /api/simulation/runs/[id]/finish` | `{}` | Nachspielen; Phase muss `abgeschlossen` sein (sonst 422); `computeScore` auf dem Server; speichern; Punkte, Abzeichen, Lernfortschritt (4.7) in einer Transaktion soweit möglich; idempotent (zweiter Aufruf liefert gespeichertes Ergebnis) | `{ result: RunResult, newBadges, improvedBest: boolean, pointsAwarded }` |
 | `DELETE /api/simulation/runs/[id]` | – | Status `abgebrochen` (kein Löschen) | `{ ok: true }` |
 
-Grösse: Body höchstens 256 KB (Prüfung über `content-length` und Länge des gelesenen Texts).
+Grösse: Body höchstens 256 KB. Geprüft über `content-length` und beim Lesen: Der Körper wird als Strom stückweise gelesen und beim Überschreiten abgebrochen (413), auch ohne oder mit falschem `content-length` (`readLimitedText` in `lib/leitstand.ts`).
+
+*Nachtrag Review (1.11.2026):*
+
+- **409 mit `actionCount`:** Jede 409 wegen `fromIndex` (auch die verlorene optimistische Sperre beim Speichern) liefert den aktuellen `actionCount` mit. Der Browser erkennt daran eine verlorene Antwort (siehe `useRunSync` in 4.8).
+- **`POST runs` gleichzeitig:** Scheitert `create` am Teil-Index (Prisma P2002), startet die Transaktion neu (der spätere Start gewinnt); nach drei Versuchen 409.
+- **`finish` gleichzeitig:** Transaktion mit `isolationLevel: Serializable`, damit zwei Abschlüsse desselben Szenarios nicht denselben alten Bestwert lesen und die Verbesserung doppelt gutschreiben. Serialisierungsfehler (P2034) → bis zu drei Versuche.
 
 ### 4.7 Anbindung an Lernpfad, Punkte, Abzeichen
 
@@ -1482,7 +1494,7 @@ Grösse: Body höchstens 256 KB (Prüfung über `content-length` und Länge des 
 | Station 23 «erledigt» | In `finish`, wenn `scenarioId = "wolkenried"` und Ende `fertig` oder `abbruch`: `prisma.lernfortschritt.upsert` für `{ userId, fach: "pmgt", thema: "23-leitstand" }` mit `fortschrittSchreibdaten({ fach, thema, status: "erledigt", quiz: null })` aus `lib/validations/lernfortschritt.ts`. Direkt über Prisma, nicht über HTTP. |
 | Station 23 «begonnen» | Beim Start eines Laufs (beide Szenarien), gleiche Funktion mit `begonnen` (stuft `erledigt` nie zurück). |
 | Punkte im Konto | `user.points += round(max(0, neuerBestwert − alterBestwert) ÷ 10)` nur für Ernstfälle mit `seedReused = false`. Erster Lauf zählt voll (höchstens 100 Punkte je Lauf). Kein Farmen durch Wiederholung. |
-| Abzeichen | `prisma/seed.ts` um die 8 Abzeichen aus 3.13 ergänzen (Symbole: 🎛️, 🏛️, ⭐, 🎯, 📣, 🤝, 🛡️, ✅). `lib/badges.ts`: `UserBadgeStats` um `leitstandAchievements: Set<string>` erweitern (Vereinigung von `scoreDetail.achievements` aller abgeschlossenen Läufe mit `seedReused = false`; für `leitstand_einfuehrung` auch Einführungsläufe); `evaluateCondition`: `case` für jedes `leitstand_*` → `stats.leitstandAchievements.has(condition)`. Danach wie bisher `checkAndAwardBadges(userId)` in `finish`. |
+| Abzeichen | `prisma/seed.ts` um die 8 Abzeichen aus 3.13 ergänzen (Symbole: 🎛️, 🏛️, ⭐, 🎯, 📣, 🤝, 🛡️, ✅). `lib/badges.ts`: `UserBadgeStats` um `leitstandAchievements: Set<string>` erweitern (Vereinigung von `scoreDetail.achievements` aller abgeschlossenen Läufe mit `seedReused = false`; für `leitstand_einfuehrung` auch Einführungsläufe); `evaluateCondition`: `case` für jedes `leitstand_*` → `stats.leitstandAchievements.has(condition)`. Danach wie bisher `checkAndAwardBadges(userId)` in `finish`. Nachtrag Review: Vergabe je Abzeichen mit `userBadge.create` (nicht `upsert`) und Punkten danach in derselben Transaktion (`awardBadge`); hat eine gleichzeitige Anfrage das Abzeichen schon vergeben, scheitert `create` mit P2002, die Transaktion wird zurückgerollt und es gibt keine Punkte. |
 | Einstieg aus dem Lernpfad | Station 23 (HTML-Seite, eigenes Arbeitspaket des Lernpfads) verlinkt `/leitstand` und `/leitstand?start=einfuehrung` bzw. `?start=ernstfall`. |
 
 ### 4.8 Oberfläche
@@ -1494,7 +1506,7 @@ Grösse: Body höchstens 256 KB (Prüfung über `content-length` und Länge des 
 | Komponente | Aufgabe |
 |---|---|
 | `LeitstandApp` | Lädt Lauf, spielt Protokoll nach, hält Zustand, Zeitraffer (`setInterval` mit Tempo), Tastaturkürzel, Synchronisation |
-| `useRunSync` | Sammelt Aktionen, sendet alle 10 Aktionen, alle 20 s, bei Pause, Periodenende, Seitenwechsel (`visibilitychange`); bei 409 neu laden; bei 422 Fehlermeldung und Neuladen |
+| `useRunSync` | Sammelt Aktionen, sendet alle 10 Aktionen, alle 20 s, bei Pause, Periodenende, Seitenwechsel (`visibilitychange`); bei 409 neu laden; bei 422 Fehlermeldung und Neuladen. Nachtrag Review: Sende-Regeln in `syncQueue.ts` (ohne React, getestet in `tests/leitstand-sync.test.ts`): höchstens eine Anfrage gleichzeitig; 409 mit `fromIndex < actionCount ≤ fromIndex + Paketgrösse` = verlorene Antwort, der Teil gilt als bestätigt und der Rest wird weitergesendet; andere 409 → neu laden; 400/403/404/413/422 → Meldung und neu laden; 401 → Status «abgemeldet», Meldung «Anmeldung abgelaufen», keine weiteren Aktionen, Sicherung bleibt; 429/5xx/offline → neuer Versuch nach 2 s, 4 s, … bis 60 s oder nach `Retry-After`. Die Sicherung im `localStorage` wird mit Zod geprüft; ist ihr Anfang schon gespeichert, wird der Rest weiterverwendet statt verworfen. |
 | `KopfLeiste` | Uhr («Di, Woche 3 · Tag 12 · Nachmittag»), Tempo, Periode, Posteingang-Zähler |
 | `Kennzahlen` | Kacheln mit Wert, Ampel (Form + Text), Trendpfeil, Kurzhilfe |
 | `Uebersicht`, `Vorgaenge`, `VorgangDetail`, `Team`, `PersonDetail`, `PlanAnsicht` (Netzplan/Gantt), `Auslastung`, `Kalender`, `Posteingang`, `EntscheidDialog`, `Rueckmeldung`, `Risikoregister`, `BudgetAnsicht`, `Statusbericht`, `Gemeinderat`, `Nachbesprechung`, `Hinweis` | Ansichten unten |
@@ -1585,12 +1597,14 @@ Person (Detail):
 
 | Anforderung | Umsetzung |
 |---|---|
-| Tastatur | Alles mit Tab erreichbar; Leertaste = Pause/Weiter (nicht in Eingabefeldern); `1`, `2`, `4` = Tempo; `P` = Posteingang; Dialoge mit Fokusfalle, `Esc` = «Bis morgen überlegen» nur wenn erlaubt; Prioritäten mit Pfeil-Schaltflächen statt nur Ziehen |
-| Vorlesen | `aria-live="polite"` für Tageswechsel («Tag 12, Nachmittag. SPI 0.94.») höchstens einmal je Tag; `aria-live="assertive"` für neue Anrufe und Besuche; Kennzahlen mit `aria-label` inkl. Ampeltext |
+| Tastatur | Alles mit Tab erreichbar; Leertaste = Pause/Weiter (nicht in Eingabefeldern); `1`, `2`, `4` = Tempo; `P` = Posteingang; Dialoge mit Fokusfalle, `Esc` = «Bis morgen überlegen» nur wenn erlaubt; Prioritäten mit Pfeil-Schaltflächen statt nur Ziehen. Nachtrag Review: Einzeltasten-Kürzel wirken nur, wenn der Fokus im Leitstand liegt (nicht in Eingabefeldern, nicht im Dialog), und lassen sich mit «Tastenkürzel aus» abschalten (WCAG 2.1.4). Fokusfalle holt Fokus zurück, der den Dialog verlässt; der Hintergrund ist `inert` (Live-Regionen ausgenommen); nach einem Entscheid liegt der Fokus auf «Weiter»; `Esc` schliesst ein schon aufgeschobenes Ereignis. Gantt-Scrollbereich mit `tabIndex={0}`. |
+| Vorlesen | `aria-live="polite"` für Tageswechsel («Tag 12, Nachmittag. SPI 0.94.») höchstens einmal je Tag; `aria-live="assertive"` für neue Anrufe und Besuche; Kennzahlen mit `aria-label` inkl. Ampeltext. Nachtrag Review: Meldungen laufen über dieselbe polite-Region, bleiben ≈ 10 s sichtbar und halten bei Maus oder Fokus an; die Live-Region der Hinweise bleibt dauerhaft im DOM; der Speicherstand wird nur bei «Speicherfehler», «offline» und «abgemeldet» angesagt; die Risikomatrix nennt die Zone im `aria-label` jeder Zelle und in einer Legende mit Text. |
 | Farbe nie allein | Ampel mit Form (● ▲ ■) und Wort; kritischer Pfad mit Rand und Text; Kurven mit Linienart und Beschriftung |
 | Bewegung | `prefers-reduced-motion`: keine Animation der Balken, Zeitraffer bleibt |
 | Diagramme | SVG mit `role="img"`, `<title>`, `<desc>` und einer gleichwertigen Tabelle («Als Tabelle zeigen») |
 | Zielgrösse | Bedienelemente mindestens 44 × 44 px auf Touch |
+
+**Bündel (Nachtrag Review):** Client-Komponenten importieren nur `@/lib/simulation/core` (Rechenkern ohne Szenario-JSON); `@/lib/simulation` (mit `loadScenario` und Zod-Prüfung) bleibt Server und Tests vorbehalten. Szenarien lädt der Browser nur dynamisch über `scenarioLoader.ts`; die Attrappe der API (`mockApi.ts`) wird nur ausserhalb der Produktion dynamisch geladen.
 
 **Neue Pakete:** keine. Diagramme als eigenes SVG, Zustand mit React-Bordmitteln (`useReducer`), Ziehen und Ablegen nicht nötig (Pfeil-Schaltflächen).
 
@@ -1690,6 +1704,8 @@ Nach Projektmuster ohne Datenbank: Zod-Schemas der Routen und die reinen Serverh
 | Versionsabweichung Szenario/Rechenkern | `veraltet` |
 | Punktevergabe | erster Lauf 735 → 74; zweiter Lauf 700 → 0; dritter 820 → 9; `seedReused` → 0 |
 | Abzeichen-Statistik | Vereinigung der `achievements`, Wiederholungen ausgeschlossen |
+
+Nachtrag Review: `tests/leitstand-server.test.ts` prüft ohne Datenbank die Körpergrenze als Strom ohne `content-length`, die Rate-Limits, die Wiederholung bei P2002/P2034 und `awardBadge` mit einer Fake-Transaktion (zweite gleichzeitige Vergabe ohne Punkte). `tests/leitstand-sync.test.ts` prüft die Sende-Logik mit einer Fake-API (Reihenfolge, keine Doppelsendung, 409 nach verlorener Antwort, 422, offline mit neuem Versuch, 401, Sicherung).
 
 ---
 

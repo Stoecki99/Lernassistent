@@ -6,7 +6,7 @@
 // components/features/leitstand/Uebersicht.tsx
 // Übersicht (4.8): Prognose Endtag und EAC, Kurve PV/EV/AC, heutige Termine, kritischer Pfad jetzt, Posteingang-Vorschau.
 
-import { forecast, formatTick, dayOf } from "@/lib/simulation"
+import { forecast, formatTick, dayOf } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand, personName, taskName } from "./context"
 import { CHANNEL_ICON, CHANNEL_TEXT, chf, tausender } from "./format"

@@ -267,6 +267,30 @@ export function achievementStats(runs: AchievementRun[]): Set<string> {
   return out
 }
 
+/** Fehlercode eines Prisma-Fehlers (P2002 eindeutig verletzt, P2034 Schreibkonflikt/Deadlock), sonst undefined */
+export function prismaErrorCode(error: unknown): string | undefined {
+  if (error && typeof error === "object" && "code" in error) {
+    const code = (error as { code: unknown }).code
+    return typeof code === "string" ? code : undefined
+  }
+  return undefined
+}
+
+/**
+ * fn bis zu attempts Mal ausführen, solange der Prisma-Fehlercode in codes liegt (z. B. Transaktion neu starten).
+ * Andere Fehler und der letzte Fehlschlag gehen unverändert weiter.
+ */
+export async function retryOnPrismaCodes<T>(codes: readonly string[], attempts: number, fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      const code = prismaErrorCode(error)
+      if (attempt >= attempts || code === undefined || !codes.includes(code)) throw error
+    }
+  }
+}
+
 /** Startwert für einen neuen Lauf (4.6) */
 export function newSeed(): number {
   return randomInt(SEED_MIN, SEED_MAX_EXCLUSIVE)
@@ -275,18 +299,37 @@ export function newSeed(): number {
 // ---------- Anfrage-Hilfen ----------
 
 /**
- * Liest den JSON-Körper mit Grössenprüfung (256 KB über content-length und gelesene Länge).
+ * Liest den Körper als Text, höchstens maxBytes. Der Strom wird stückweise gelesen und beim Überschreiten
+ * abgebrochen, damit auch ohne (oder mit falschem) content-length nie mehr als die Grenze im Speicher landet.
+ */
+export async function readLimitedText(request: Request, maxBytes: number = MAX_BODY_BYTES): Promise<string> {
+  const declared = Number(request.headers.get("content-length") ?? "0")
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    throw new LeitstandError(413, "LIMIT", "Anfrage zu gross.")
+  }
+  if (!request.body) return ""
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let size = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => undefined)
+      throw new LeitstandError(413, "LIMIT", "Anfrage zu gross.")
+    }
+    chunks.push(value)
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks))
+}
+
+/**
+ * Liest den JSON-Körper mit Grössenprüfung (256 KB, siehe readLimitedText).
  * Leerer Körper ergibt emptyValue (für finish mit «{}» oder ohne Körper).
  */
 export async function readJsonBody(request: Request, emptyValue?: unknown): Promise<unknown> {
-  const declared = Number(request.headers.get("content-length") ?? "0")
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) {
-    throw new LeitstandError(413, "LIMIT", "Anfrage zu gross.")
-  }
-  const text = await request.text()
-  if (Buffer.byteLength(text, "utf8") > MAX_BODY_BYTES) {
-    throw new LeitstandError(413, "LIMIT", "Anfrage zu gross.")
-  }
+  const text = await readLimitedText(request)
   if (text.trim() === "" && emptyValue !== undefined) return emptyValue
   try {
     return JSON.parse(text) as unknown
@@ -299,7 +342,8 @@ export async function readJsonBody(request: Request, emptyValue?: unknown): Prom
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_WINDOW_MS = 60 * 1000
 
-export const RATE_LIMITS = { actions: 60, createRun: 10 } as const
+/** Anfragen je Minute und Konto: Anhängen, Starten, Abschliessen (Nachspielen + Transaktion), Lesen, Abbrechen */
+export const RATE_LIMITS = { actions: 60, createRun: 10, finish: 10, read: 60, abort: 10 } as const
 
 export function checkRateLimit(userId: string, purpose: keyof typeof RATE_LIMITS): boolean {
   const now = Date.now()
@@ -413,6 +457,9 @@ export interface CreatedRun {
 /**
  * Neuer Lauf (4.6 POST runs): Startwert neu oder vom eigenen abgeschlossenen Lauf übernommen,
  * alten aktiven Lauf desselben Szenarios abbrechen, Station 23 «begonnen».
+ * Der Teil-Index «SimulationRun_aktiv_eindeutig» erlaubt nur einen aktiven Lauf: Legt eine gleichzeitige
+ * Anfrage zuerst einen an, scheitert create mit P2002; dann neuer Versuch (der spätere Start gewinnt),
+ * nach drei Versuchen 409.
  */
 export async function createRunForUser(userId: string, scenarioId: string, repeatOfRunId?: string): Promise<CreatedRun> {
   const scenario = requireScenario(scenarioId)
@@ -429,7 +476,7 @@ export async function createRunForUser(userId: string, scenarioId: string, repea
     seedReused = true
   }
 
-  return prisma.$transaction(async (tx) => {
+  const createTx = () => prisma.$transaction(async (tx) => {
     await tx.simulationRun.updateMany({
       where: { userId, scenarioId, status: "aktiv" },
       data: { status: "abgebrochen" },
@@ -452,6 +499,14 @@ export async function createRunForUser(userId: string, scenarioId: string, repea
     await markStation(tx, userId, "begonnen")
     return { id: run.id, scenarioId, seed, seedReused, scenarioVersion: scenario.version, engineVersion: ENGINE_VERSION }
   })
+  try {
+    return await retryOnPrismaCodes(["P2002"], 3, createTx)
+  } catch (error) {
+    if (prismaErrorCode(error) === "P2002") {
+      throw new LeitstandError(409, "CONFLICT", "Gleichzeitig wurde ein anderer Lauf gestartet. Bitte erneut versuchen.")
+    }
+    throw error
+  }
 }
 
 /** Lauf eines Kontos laden; fremd oder nicht vorhanden → 404 */
@@ -500,10 +555,17 @@ export async function appendActions(userId: string, runId: string, input: Append
     },
   })
   if (saved.count === 0) {
-    throw new LeitstandError(409, "CONFLICT", "Konflikt: Der Lauf wurde inzwischen an anderer Stelle weitergespielt.")
+    // Gleichzeitiger Anhang: aktuellen Stand mitgeben, damit der Browser eine verlorene Antwort erkennt (4.6)
+    const now = await prisma.simulationRun.findFirst({ where: { id: runId, userId }, select: { actionCount: true, status: true } })
+    throw new LeitstandError(409, "CONFLICT", "Konflikt: Der Lauf wurde inzwischen an anderer Stelle weitergespielt.", {
+      ...(now ? { actionCount: now.actionCount, status: now.status } : {}),
+    })
   }
   return { actionCount: result.actionCount, tick: result.tick, phase: result.phase, summary: result.summary }
 }
+
+/** Versuche der Abschluss-Transaktion bei Serialisierungsfehlern */
+const FINISH_ATTEMPTS = 3
 
 export interface FinishOutcome {
   result: RunResult
@@ -517,6 +579,8 @@ export interface FinishOutcome {
  * POST runs/[id]/finish (4.6, 4.7): nachspielen, Punkte auf dem Server berechnen, speichern,
  * Punkte ins Konto und Station 23 in einer Transaktion. Abzeichen vergibt die Route danach
  * (checkAndAwardBadges). Idempotent: ein zweiter Aufruf liefert das gespeicherte Ergebnis.
+ * Die Transaktion läuft «Serializable»: Zwei gleichzeitige Abschlüsse desselben Szenarios lesen sonst
+ * denselben alten Bestwert und vergäben die Verbesserung doppelt. Serialisierungsfehler (P2034) → neuer Versuch.
  */
 export async function finishRun(userId: string, runId: string): Promise<FinishOutcome> {
   const run = await requireOwnRun(userId, runId)
@@ -540,7 +604,7 @@ export async function finishRun(userId: string, runId: string): Promise<FinishOu
   const result = computeScore(state, scenario)
   const countsForBest = scenario.kind === "main" && !run.seedReused
 
-  const outcome = await prisma.$transaction(async (tx) => {
+  const finishTx = () => prisma.$transaction(async (tx) => {
     const oldBest = countsForBest ? await findBest(tx, userId, run.scenarioId, runId) : null
     const pointsAwarded = countsForBest ? computePointsAward(oldBest?.score ?? null, result.score.total, false) : 0
     const improvedBest = countsForBest && (oldBest === null || result.score.total > oldBest.score)
@@ -565,7 +629,8 @@ export async function finishRun(userId: string, runId: string): Promise<FinishOu
     }
     if (run.scenarioId === ERNSTFALL_SCENARIO_ID) await markStation(tx, userId, "erledigt")
     return { result, improvedBest, pointsAwarded, firstFinish: true }
-  })
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+  const outcome = await retryOnPrismaCodes(["P2034"], FINISH_ATTEMPTS, finishTx)
 
   if (outcome) return outcome
   const again = await requireOwnRun(userId, runId)
