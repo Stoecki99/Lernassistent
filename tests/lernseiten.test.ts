@@ -321,6 +321,21 @@ describe("Pflicht-Geruest einer Themenseite", () => {
     assert.match(fehler, /externe Ressource <script src="https:\/\/cdn\.example\.org\/ps-konsole\.js">/)
   })
 
+  test("Erweiterung Spieltheorie: st-spiel.css und st-spiel.js nach dem Baukasten sind erlaubt", () => {
+    const html = seite("test", "01-erstes", {
+      css: '<link rel="stylesheet" href="/lernpfad/lernpfad.css">\n<link rel="stylesheet" href="/lernpfad/st-spiel.css">',
+      js: '<script src="/lernpfad/lernpfad.js"></script>\n<script src="/lernpfad/st-spiel.js"></script>',
+    })
+    assert.deepEqual(pruefeThemaHtml(html, "test", "01-erstes"), [])
+  })
+
+  test("Erweiterung Spieltheorie: falsche Reihenfolge ist ein Fehler", () => {
+    const js = pruefe({ js: '<script src="/lernpfad/st-spiel.js"></script>\n<script src="/lernpfad/lernpfad.js"></script>' })
+    assert.match(js, /st-spiel\.js"> gehört nach <script src="\/lernpfad\/lernpfad\.js">/)
+    const css = pruefe({ css: '<link rel="stylesheet" href="/lernpfad/st-spiel.css">\n<link rel="stylesheet" href="/lernpfad/lernpfad.css">' })
+    assert.match(css, /st-spiel\.css"> gehört nach <link rel="stylesheet" href="\/lernpfad\/lernpfad\.css">/)
+  })
+
   test("lernpfad.js gehoert ans Ende von <body>", () => {
     const fehler = pruefe({ js: "", kopf: '<script src="/lernpfad/lernpfad.js"></script>' })
     assert.match(fehler, /Ende von <body>/)
