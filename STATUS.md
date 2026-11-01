@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live; Lernpfad PS mit 13 Stationen fertig)
+**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live; Lernpfad PS mit 13 Stationen live)
 
 ---
 
@@ -23,7 +23,7 @@
 | 13. Lernpfad | Live seit 29.10.2026 | Reiter Lernseiten, Lernpfad MSTW mit 18 Stationen (fertige HTML-Seiten aus dem Baukasten `public/lernpfad/`), Fortschritt im Konto |
 | 14. Lernpfad PMGT | Welle 1 live seit 01.11.2026 | 7 von 25 Stationen (10, 11, 13, 18, 19, 22, 23), Baukasten 1.1.0; Konzept im Vault «02 Projekte/Lernpfad PMGT» |
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
-| 16. Lernpfad PS | Fertig, noch nicht live | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
+| 16. Lernpfad PS | Live seit 01.11.2026 | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
 
 ## Security-Fixes (alle angewendet)
 
@@ -71,7 +71,7 @@
 
 ### 2026-11-01
 
-- **feat: Lernpfad PS fertig** (Branch `feat/lernpfad-powershell`) — 13 Stationen von «Konsole, erste Schritte» bis «Praxisprojekt und Abschluss» in `content/lernseiten/ps/`, Lernpfad `/lernseiten/ps`, Kurzlink `/PS`, Kachel im Reiter Lernseiten. Jede Station mit Konsolen-Simulator, Aufgaben, Lösungsfilm und Selbsttest; Fortschritt im Konto wie bei MSTW. Konzept: Vault `02 Projekte/Lernpfad PS.md`
+- **feat: Lernpfad PS live** (Commits 28cd6c5, 3478fb0, live am 01.11.2026) — 13 Stationen von «Konsole, erste Schritte» bis «Praxisprojekt und Abschluss» in `content/lernseiten/ps/`, Lernpfad `/lernseiten/ps`, Kurzlink `/PS`, Kachel im Reiter Lernseiten. Jede Station mit Konsolen-Simulator, Aufgaben, Lösungsfilm und Selbsttest; Fortschritt im Konto wie bei MSTW. Konzept: Vault `02 Projekte/Lernpfad PS.md`
 - **test: Integrationstest bestanden** — Tests, `tsc`, Lint, Inhaltsprüfung (PS 13 von 13), Produktions-Build und Docker-Build; Ende-zu-Ende mit Wegwerf-Datenbank: ohne Login 307 auf `/login`, eingeloggt alle 13 Stationen 200 mit CSP, keine Konsolenfehler, kein waagrechter Scroll bei 360 px hell und dunkel
 - **fix: Befunde aus dem Code-Review**:
   - Simulator: Arrays aus `*` und `+` höchstens 100 000 Elemente, Strings höchstens 10 Mio. Zeichen; Vervielfachen von Arrays in einem Schritt statt quadratisch mit `concat`
