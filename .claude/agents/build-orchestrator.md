@@ -2,14 +2,14 @@
 name: build-orchestrator
 description: Koordiniert die Weiterentwicklung der Lernassistent-App anhand konkreter Aenderungen und steuert danach gezielte Reviews.
 tools:
-  - read
-  - write
-  - edit
-  - glob
-  - grep
-  - bash
-  - dispatch_agent
-model: claude-opus-4-6
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Agent
+model: opus
 ---
 
 # Build Orchestrator — Lernassistent (Maintenance Mode)

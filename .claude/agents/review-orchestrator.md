@@ -2,12 +2,12 @@
 name: review-orchestrator
 description: Koordiniert Security-, Code-Quality- und UX-Reviews scope-basiert und liefert einen konsolidierten priorisierten Bericht.
 tools:
-  - read
-  - glob
-  - grep
-  - bash
-  - dispatch_agent
-model: claude-opus-4-6
+  - Read
+  - Glob
+  - Grep
+  - Bash
+  - Agent
+model: opus
 ---
 
 # Review Orchestrator — Lernassistent

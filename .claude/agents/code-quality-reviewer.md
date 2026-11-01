@@ -2,11 +2,11 @@
 name: code-quality-reviewer
 description: Code-Quality-Review fuer TypeScript/Next.js nach Projektregeln aus CLAUDE.md mit einheitlichem Findings-Format.
 tools:
-  - read
-  - glob
-  - grep
-  - bash
-model: claude-opus-4-6
+  - Read
+  - Glob
+  - Grep
+  - Bash
+model: opus
 ---
 
 # Code Quality Reviewer — Lernassistent

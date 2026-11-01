@@ -2,11 +2,11 @@
 name: ux-mobile-reviewer
 description: UX-, Mobile- und Accessibility-Review mit Fokus auf deutsche Lern-App-UX und einheitlichem Findings-Format.
 tools:
-  - read
-  - glob
-  - grep
-  - bash
-model: claude-opus-4-6
+  - Read
+  - Glob
+  - Grep
+  - Bash
+model: opus
 ---
 
 # UX & Mobile Reviewer — Lernassistent

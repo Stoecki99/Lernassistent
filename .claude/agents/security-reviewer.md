@@ -2,11 +2,11 @@
 name: security-reviewer
 description: Security-Review fuer Next.js/NextAuth/Prisma/PostgreSQL mit OWASP-Fokus und einheitlichem Findings-Format.
 tools:
-  - read
-  - glob
-  - grep
-  - bash
-model: claude-opus-4-6
+  - Read
+  - Glob
+  - Grep
+  - Bash
+model: opus
 ---
 
 # Security Reviewer — Lernassistent
