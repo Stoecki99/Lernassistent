@@ -1,6 +1,6 @@
 # Lernpfad AVSW: Architektur-Engine
 
-**Version:** Architektur-Engine 1.0.0 auf Baukasten 1.2.0. Gilt für Seiten des Fachs `avsw` (Verteilte Softwarearchitekturen) und den Architektur-Leitstand.
+**Version:** Architektur-Engine 1.1.0 auf Baukasten 1.2.0. Gilt für Seiten des Fachs `avsw` (Verteilte Softwarearchitekturen) und den Architektur-Leitstand.
 
 Verbindlich für Typen, Kategorien, Modell-JSON, Verbindungsarten, Spiel und Spielstand ist der Vertrag `docs/architektur-modell.md`. Dieses Dokument beschreibt, wie du die Engine auf einer Seite einsetzt.
 
@@ -8,7 +8,7 @@ Verbindlich für Typen, Kategorien, Modell-JSON, Verbindungsarten, Spiel und Spi
 |-------|-------|
 | `public/lernpfad/architektur.css` | Farbtokens der Kategorien und Zustände (hell, dunkel), AVSW-Akzent Petrol, farbigeres Erscheinungsbild der AVSW-Seiten, alle Klassen `ar-…` |
 | `public/lernpfad/architektur.js` | `window.Architektur`: Diagramm in UML-Notation (SVG) mit Steckbrief, Abläufen und Ausfall; Atlas; Editor; Modellierspiel. Vanilla-JS, keine Bibliotheken |
-| `content/lernseiten/avsw/_vorlage.html` | Muster mit Farbsystem, Diagramm (Webshop mit Broker, zwei Abläufe, Ausfall), Mini-Atlas (drei Stile), Editor und Spiel (drei Levels) |
+| `content/lernseiten/avsw/_vorlage.html` | Muster mit Farbsystem, Diagramm (Webshop mit Broker, zwei Abläufe, Ausfall), Mini-Atlas (drei Stile), Editor, Spiel (drei Levels), UML-Komponentendiagramm in Modulnotation und Prüfungsspiel (`modus: "uml"`) |
 
 **Schnellstart:** Kopiere aus `content/lernseiten/avsw/_vorlage.html` den Kopf (beide Stylesheets) und das Ende von `<body>` (beide Scripts), dann den Baustein, den du brauchst. Für alle anderen Bausteine gilt `docs/lernpfad-baukasten.md`.
 
@@ -16,10 +16,10 @@ Verbindlich für Typen, Kategorien, Modell-JSON, Verbindungsarten, Spiel und Spi
 
 1. [Einbinden](#1-einbinden)
 2. [Farbsystem und AVSW-Erscheinungsbild](#2-farbsystem-und-avsw-erscheinungsbild)
-3. [Diagramm](#3-diagramm)
+3. [Diagramm](#3-diagramm) (mit [3.1 Modulnotation UML](#31-modulnotation-uml-komponentendiagramm-mit-paketen) und [3.2 Plaketten, Fluss, Startzoom](#32-plaketten-fluss-startzoom))
 4. [Atlas](#4-atlas)
 5. [Editor](#5-editor)
-6. [Modellierspiel](#6-modellierspiel)
+6. [Modellierspiel](#6-modellierspiel) (mit [6.1 Prüfungsspiel in Modulnotation](#61-prüfungsspiel-in-modulnotation-modus-uml))
 7. [Barrierefreiheit und Bedienung](#7-barrierefreiheit-und-bedienung)
 8. [Grenzen](#8-grenzen)
 9. [Prüfliste](#9-prüfliste)
@@ -103,6 +103,72 @@ Was die Seite zeigt:
 - **Zoom:** −, +, Einpassen; Ziehen verschiebt, Ctrl+Mausrad und zwei Finger zoomen. Auf schmalen Bildschirmen startet das Diagramm mit Mindestgrösse und lässt sich verschieben.
 - **Textliste** «Alle Elemente und Verbindungen als Text» (aufklappbar) mit Abläufen.
 
+### 3.1 Modulnotation: UML-Komponentendiagramm mit Paketen
+
+Mit `notation: "uml-komponenten"` zeichnet die Engine Diagramme so, wie sie in der Modulschlussprüfung verlangt sind (Vertrag Abschnitt 10): verschachtelte UML-Pakete mit Reiter, Komponenten mit Komponentensymbol, «Stereotyp» und Name, bereitgestellte Schnittstellen als Ball mit Namen, benötigte als Socket am Aufrufer, Assoziationen (Linie ohne Pfeil) mit Beschriftung «Protokoll · Format», gestrichelte Abhängigkeiten (auch Paket → Paket), Notizen mit Eselsohr und `{xor}` zwischen zwei Verbindungen. Farbe = **Rolle** wie im Referenzkatalog.
+
+```js
+Architektur.diagramm("#mehrschicht", {
+  notation: "uml-komponenten",
+  pakete: [
+    { id: "app", name: "Velo-Verleih", spalte: 0, zeile: 0, hoehe: 2 },   // Wurzelraster: links die Anwendung …
+    { id: "client", name: "Client Tier", in: "app" },                   // ohne Lage: untereinander
+    { id: "server", name: ".NET-Server (Middle Tier)", in: "app" },
+    { id: "bl", name: "Business Logic Layer", in: "server", spalte: 0, zeile: 0 },
+    { id: "asy", name: "Async Comm. Layer", in: "server", spalte: 1, zeile: 0 },
+    { id: "mom", name: "MOM", spalte: 1, zeile: 0 }                     // … rechts die Umsysteme
+  ],
+  elemente: [
+    { id: "app1", typ: "mobile", name: "MAUI App", in: "client" },                          // Rolle aus dem Typ: client
+    { id: "aus", typ: "dienst", rolle: "business", name: "Ausleihe", stereotyp: "C#", in: "bl" },
+    { id: "send", typ: "dienst", rolle: "async", name: "Sender Adapter", stereotyp: "C#", in: "asy" },
+    { id: "broker", typ: "broker", name: "Message Broker", in: "mom",
+      schnittstellen: [{ id: "amqp", name: "AMQP", seite: "links" }] }                      // Ball: oben (Standard), unten, links, rechts
+  ],
+  verbindungen: [
+    { von: "aus", nach: "send" },                                        // Standard: Assoziation
+    { von: "send", nach: "broker#amqp", protokoll: "AMQP", format: "JSON" }, // Ziel = Ball → Socket am Aufrufer, Label «AMQP · JSON»
+    { von: "client", nach: "server", art: "abhaengigkeit" }               // Paket → Paket, gestrichelt mit offener Spitze
+  ],
+  notizen: [{ id: "n1", text: "MDB = Message-Driven Bean", an: "send" }],
+  einschraenkungen: [{ text: "{xor}", zwischen: ["v1", "v2"] }]
+});
+```
+
+| `rolle` | Farbe | für |
+|---------|-------|-----|
+| `client` | Apricot | Client-Apps, Präsentationskomponenten |
+| `webapi` | Grün | Web API, Web Services, Service-Consumer-Apps |
+| `business` | Türkis | Domänen-/Business-Komponenten, Facade, Microservices |
+| `shared` | Blau | Shared Services |
+| `async` | Pink | Receiver-/Sender-Adapter, Message Broker |
+| `sync` | Gelb | Driven Adapter, Service-Provider-Apps |
+| `daten` | Grau | DACs, Datenbanken, Data Services |
+| `infra` | Lavendel | Docker-Host-MQ, Infrastruktur |
+| `extern` | Weiss, gestrichelt | Umsysteme ohne besondere Rolle |
+
+Tokens `--r-<rolle>` (Rand) und `--r-<rolle>-bg` (Fläche) hell und dunkel; Text bleibt `--ink` (Kontrast ≥ 12.9:1 hell, ≥ 10.4:1 dunkel auf allen Rollenflächen; Stereotyp in `--muted` ≥ 4.85:1; Rand zur Fläche ≥ 3.95:1). Pakete: `--r-paket`, `--r-paket-bg`, `--r-paket-bg2` (verschachtelte Pakete im Wechsel).
+
+**Layout:** Jedes Paket ist ein Raster: Kinder (Pakete, Komponenten, Notizen) mit `spalte`, `zeile`, `breite`, `hoehe` (Zellen) liegen dort; Kinder ohne Lage füllen die nächste freie Zelle. Hat kein Kind eine Lage, fliessen Komponenten in Reihen (höchstens vier) und Pakete stehen untereinander. Pakete in derselben Reihe werden gleich hoch, alle Pakete füllen die Breite ihrer Zelle. Linien laufen rechtwinklig um Komponenten, Bälle, Ball-Beschriftungen und Paketreiter herum; Linien zu demselben Ball treffen sich am Ball (wie im Original).
+
+**Ausfall in der Modulnotation:** Assoziationen zählen als synchron, ausser das Protokoll ist asynchron (AMQP, JMS, MQTT, Kafka …) oder eine Seite ist ein Broker: dann staut sich die Nachricht im Broker.
+
+Eine IDs-Regel: Pakete und Komponenten teilen sich die IDs (`web` darf nicht Paket und Komponente zugleich sein).
+
+### 3.2 Plaketten, Fluss, Startzoom
+
+Für eigene Anzeigen (z. B. Architektur-Leitstand) gibt `diagramm` zusätzlich zurück:
+
+```js
+const d = Architektur.diagramm("#lage", modell, { massstab: 0.8 });  // Startzoom (Massstab 1 = Weltkoordinaten in px)
+d.plakette("best", "3 Instanzen", "ar-plakette-warn");  // Plakette am Element oder an einer Verbindung (Text, Klassen: ar-plakette-warn | -fehler | -ok)
+d.entfernePlakette("best");                              // ohne ID: alle
+d.fluss("v3", { an: true, tempo: 2 });                    // Linie animiert «fliessen» lassen, ohne Ablauf; { an: false } stoppt
+d.modell();                                               // sauberes Modell nach Vertrag
+```
+
+`modell()` von `diagramm` und `editor` liefert das Modell in Vertragsform: keine leeren Felder, kein `info: null`, kein `zustand: "ok"`, Namen unverändert, unbekannte Zusatzfelder der Eingabe (z. B. `sim`) unverändert durchgereicht. Bei «Bewegung reduzieren» bleibt die Fluss-Linie stehen (gestrichelt, ohne Bewegung).
+
 ## 4. Atlas
 
 ```js
@@ -160,6 +226,37 @@ document.addEventListener("architektur:spiel", (e) => console.log(e.detail));
 - **Speichern:** nach jedem Level mit neuem Bestwert `POST /api/spielstand` (Vertrag Abschnitt 8), beim Start `GET /api/spielstand?fach=…` für Bestwerte und Freischaltungen. Fehler (nicht angemeldet, offline) fängt das Spiel ab: «nicht gespeichert», das Ergebnis gilt für die Sitzung. `speichern: false` schaltet das aus. Die Vorschau (`scripts/lernpfad-vorschau.mjs`) hat eine Attrappe der API im Speicher.
 
 Gute Level: Jede Lösungs-Verbindung folgt aus einem Signalwort im Auftrag («ruft auf», «fragt» = synchron; «veröffentlicht», «abonniert» = asynchron; «speichert», «liest» = Daten). Mindestens ein Ablenker. Höchstens vier Spalten (Handy).
+
+### 6.1 Prüfungsspiel in Modulnotation (`modus: "uml"`)
+
+Ein Level mit `modus: "uml"` (oder `cfg.modus: "uml"` für alle) übt die Prüfungsaufgabe: vorgegebene, leere Pakete sind Ablagefelder. Felder nach Vertrag Abschnitt 10.3.
+
+```js
+Architektur.referenzen["dotnet"] = { notation: "uml-komponenten", pakete: [ … ], elemente: [ … ], verbindungen: [ … ] };  // Tipp «Referenz»
+Architektur.spiel("#pruefung", {
+  spielId: "avsw-05-mehrschicht", fach: "avsw",
+  levels: [{
+    id: "kino", modus: "uml", titel: "Kino-Reservation", schwierigkeit: 3, zielzeit: 900, referenz: "dotnet",
+    auftrag: "<p>… <span data-baustein=\"facade\">Facade</span> …</p>",
+    pakete: [{ id: "app", name: "Kino", spalte: 0, zeile: 0 }, { id: "fac", name: "Business Facade", in: "app" }, …],
+    palette: [
+      { id: "facade", typ: "dienst", rolle: "business", name: "Business API", stereotypen: ["C#", "EJB"], schnittstellen: [{ id: "rest", name: "REST" }] },
+      { id: "iis", typ: "dienst", rolle: "infra", name: "IIS Web Server", falle: "Ein Web-Server ist Infrastruktur, keine Komponente." }
+    ],
+    protokolle: ["REST", "SOAP", "AMQP", "HTTP"],          // Auswahl an der Verbindung (Standard: Liste aus dem Vertrag)
+    loesung: {
+      elemente: [{ id: "facade", paket: "fac", stereotyp: "C#" }],
+      verbindungen: [{ von: "razor", nach: "facade#rest", protokoll: "REST", warum: "…" }],
+      beschreibungen: [{ id: "facade", optionen: ["…", "…", "…"], richtig: 1 }]
+    },
+    gewichte: { komponenten: 2, pakete: 1, stereotypen: 1, verbindungen: 2, beschriftungen: 1, beschreibungen: 1 }
+  }]
+});
+```
+
+Bedienung: Komponente aus der Palette in ein Paket ziehen (Maus, Touch, Stift) oder antippen und dann das Paket wählen (Tastatur: Enter, Pfeiltasten wechseln das Paket, Enter legt ab, Escape bricht ab). Im Eigenschaften-Panel: Stereotyp (Auswahl aus `stereotypen`), Paket ändern, Schnittstellen (Ball) hinzufügen und benennen, Beschreibung wählen. Verbinden: Element wählen, «Verbinden» oder Taste V, Ziel wählen (Komponente, Ball oder Paket); danach im Panel Art, Ziel-Schnittstelle, Protokoll (Auswahl) und Format (frei) setzen. Rückgängig (Ctrl+Z).
+
+Bewertung je Kriterium mit Teilpunkten (Raster): Komponenten (überflüssige kosten halb), Pakete (Lage), Stereotypen, Verbindungen (Paar; Art und Ball geben Teilpunkte), Beschriftungen (Protokoll), Beschreibungen; Gewichte aus `gewichte`. Jede Falle (`falle`) zieht 8 % ab und erklärt warum. «Prüfen» zeigt das Raster, ✓/✗ an Komponenten, Paketen und Linien und konkrete Hinweise («Sender Adapter gehört in Async Comm. Layer»). Tipps: 1 = Referenzarchitektur aus `Architektur.referenzen[referenz]` einblenden, 2 = fehlende Komponente oder falsches Paket, 3 = fehlende Verbindung gestrichelt. Musterlösung als Diagramm in Modulnotation mit Ablauf und Begründungen; Prüfungsmodus und Speichern wie beim normalen Spiel.
 
 ## 7. Barrierefreiheit und Bedienung
 

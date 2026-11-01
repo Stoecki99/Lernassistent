@@ -26,7 +26,9 @@
     <a href="#atlas"><b>3</b>Atlas</a>
     <a href="#editor"><b>4</b>Editor</a>
     <a href="#spiel"><b>5</b>Spiel</a>
-    <a href="#blick"><b>6</b>Auf einen Blick</a>
+    <a href="#uml"><b>6</b>UML-Notation</a>
+    <a href="#pruefung"><b>7</b>Prüfungsspiel</a>
+    <a href="#blick"><b>8</b>Auf einen Blick</a>
   </nav>
 
   <section id="farben" data-kategorie="client">
@@ -75,6 +77,20 @@
     <div id="t00-spiel"></div>
   </section>
 
+  <section id="uml" data-kategorie="infrastruktur">
+    <span class="eyebrow">notation: "uml-komponenten"</span>
+    <h2>UML-Komponentendiagramm mit Paketen</h2>
+    <p class="prose">So sehen Architekturen in der Prüfung aus: verschachtelte Pakete für Tiers und Layers, Komponenten mit technologiespezifischem «Stereotyp», bereitgestellte Schnittstellen als Ball, beschriftete Assoziationen und gestrichelte Abhängigkeiten zwischen Paketen. Die Farben zeigen die Rolle. Das Beispiel ist ein fiktiver Velo-Verleih als .NET-Mehrschichtenarchitektur.</p>
+    <div id="t00-uml"></div>
+  </section>
+
+  <section id="pruefung" data-kategorie="sicherheit">
+    <span class="eyebrow">spiel mit modus: "uml"</span>
+    <h2>Prüfungsspiel: Mehrschicht modellieren</h2>
+    <p class="prose">Leg die Komponenten in die vorgegebenen Pakete, setz Stereotypen, ergänze Schnittstellen, verbinde und beschrifte mit Protokoll und Format. Bewertet wird wie in der Prüfung nach einem Raster. Achtung: In der Palette liegen Fallen.</p>
+    <div id="t00-pruefung"></div>
+  </section>
+
   <section id="blick" data-kategorie="zugang">
     <span class="eyebrow">Merksätze</span>
     <h2>Auf einen Blick</h2>
@@ -82,6 +98,7 @@
       <li>Farbe = Kategorie, Form = UML-Element, «Stereotyp» = Rolle. Alle drei sagen dasselbe.</li>
       <li>Durchgezogen mit gefülltem Pfeil = synchron, gestrichelt mit offenem Pfeil = asynchron, dick = Datenzugriff.</li>
       <li>Synchrone Aufrufe reichen Ausfälle weiter; ein Broker puffert und entkoppelt.</li>
+      <li>In der Modulnotation: Pakete für Tiers und Layers, «Stereotyp» je Technologie, Ball für bereitgestellte Schnittstellen, jede Verbindung mit Protokoll beschriftet.</li>
     </ul>
   </section>
   <footer>Muster für AVSW-Stationen · eigene Beispiele, keine Folieninhalte.</footer>
@@ -352,6 +369,177 @@
         ] },
         erklaerung: "<b>Signalwörter:</b> «ruft auf», «fragt», «prüft» = synchron · «veröffentlicht», «abonniert» = asynchron · «speichert», «liest» = Datenzugriff." }
     ]
+  });
+
+  /* 6 · UML-Komponentendiagramm in Modulnotation (eigenes, fiktives Beispiel) */
+  A.diagramm("#t00-uml", {
+    titel: "Velo-Verleih (fiktiv) · .NET-Mehrschichtenarchitektur",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "app", name: "Velo-Verleih", spalte: 0, zeile: 0, hoehe: 2 },
+      { id: "client", name: "Client Tier", in: "app" },
+      { id: "server", name: ".NET-Server (Middle Tier)", in: "app" },
+      { id: "webtier", name: "Web Tier (IIS)", in: "server" },
+      { id: "pres", name: "Presentation Tier", in: "webtier", spalte: 0, zeile: 0 },
+      { id: "wapi", name: "Web API", in: "webtier", spalte: 1, zeile: 0 },
+      { id: "biz", name: "Business Tier", in: "server" },
+      { id: "fac", name: "Business Facade", in: "biz", spalte: 0, zeile: 0, breite: 2 },
+      { id: "bl", name: "Business Logic Layer", in: "biz", spalte: 0, zeile: 1 },
+      { id: "asy", name: "Async Comm. Layer", in: "biz", spalte: 1, zeile: 1 },
+      { id: "dal", name: "Data Access Layer", in: "biz", spalte: 0, zeile: 2 },
+      { id: "sal", name: "Service Access Layer", in: "biz", spalte: 1, zeile: 2 },
+      { id: "data", name: "Data Tier", in: "app" },
+      { id: "mom", name: "MOM", spalte: 1, zeile: 0 },
+      { id: "prov", name: "Service Provider", spalte: 1, zeile: 1 }
+    ],
+    elemente: [
+      { id: "web", typ: "web", name: "Web App (Browser)", in: "client" },
+      { id: "maui", typ: "mobile", name: "MAUI App", in: "client" },
+      { id: "razor", typ: "dienst", rolle: "client", name: "Pres. Components", stereotyp: "ASP.NET", in: "pres", schnittstellen: [{ id: "http", name: "HTTP" }],
+        info: { was: "Serverseitig gerenderte Seiten (Razor).", kann: "HTML erzeugen und Formulare verarbeiten.", warum: "Gleiche Sprache (C#) wie die Fachlogik." } },
+      { id: "ws", typ: "dienst", rolle: "webapi", name: "WS Ausleihe", stereotyp: "C#", in: "wapi", schnittstellen: [{ id: "rest", name: "REST" }],
+        info: { was: "Web Service für die App und für Partner.", kann: "Ausleihen über REST anbieten." } },
+      { id: "api", typ: "dienst", rolle: "business", name: "Business API", stereotyp: "C#", in: "fac", schnittstellen: [{ id: "rest", name: "REST" }],
+        info: { was: "Facade: einziger Zugang zum Business Tier.", warum: "Web Tier und Business Tier lassen sich so getrennt betreiben und skalieren." } },
+      { id: "ausleihe", typ: "dienst", rolle: "business", name: "Ausleihe", stereotyp: "C#", in: "bl" },
+      { id: "kunden", typ: "dienst", rolle: "business", name: "Kunden", stereotyp: "C#", in: "bl" },
+      { id: "recv", typ: "dienst", rolle: "async", name: "Receiver Adapter", stereotyp: "C#", in: "asy" },
+      { id: "send", typ: "dienst", rolle: "async", name: "Sender Adapter", stereotyp: "C#", in: "asy" },
+      { id: "dac", typ: "dienst", rolle: "daten", name: "DACs (Entity Framework)", stereotyp: "C#", in: "dal" },
+      { id: "pay", typ: "dienst", rolle: "sync", name: "Adapter Zahlung", stereotyp: "C#", in: "sal" },
+      { id: "db", typ: "datenbank", name: "DB in SQL Server", in: "data" },
+      { id: "broker", typ: "broker", name: "Message Broker (Azure Service Bus)", in: "mom", schnittstellen: [{ id: "amqp", name: "AMQP", seite: "links" }] },
+      { id: "psp", typ: "extern", rolle: "sync", name: "Zahlungsdienst", in: "prov", schnittstellen: [{ id: "api", name: "API" }] }
+    ],
+    verbindungen: [
+      { id: "u1", von: "web", nach: "razor#http", protokoll: "HTTP", format: "HTML" },
+      { id: "u2", von: "maui", nach: "ws#rest", protokoll: "REST", format: "JSON" },
+      { id: "u3", von: "razor", nach: "api#rest", protokoll: "REST" },
+      { id: "u4", von: "ws", nach: "api#rest", protokoll: "REST" },
+      { id: "u5", von: "api", nach: "ausleihe" },
+      { id: "u6", von: "api", nach: "kunden" },
+      { id: "u7", von: "recv", nach: "ausleihe" },
+      { id: "u8", von: "ausleihe", nach: "send" },
+      { id: "u9", von: "recv", nach: "broker#amqp", protokoll: "AMQP" },
+      { id: "u10", von: "send", nach: "broker#amqp", protokoll: "AMQP" },
+      { id: "u11", von: "ausleihe", nach: "dac" },
+      { id: "u12", von: "kunden", nach: "dac" },
+      { id: "u13", von: "dac", nach: "db", label: "ADO.NET" },
+      { id: "u14", von: "ausleihe", nach: "pay" },
+      { id: "u15", von: "pay", nach: "psp#api", protokoll: "REST", format: "JSON" },
+      { id: "d1", von: "client", nach: "server", art: "abhaengigkeit" },
+      { id: "d2", von: "webtier", nach: "biz", art: "abhaengigkeit" },
+      { id: "d3", von: "sal", nach: "prov", art: "abhaengigkeit" }
+    ],
+    notizen: [{ id: "n1", text: "EF = Entity Framework (ORM)", an: "dac" }],
+    ablaeufe: [{ id: "ausleihen", name: "Velo ausleihen", schritte: [
+      { von: "maui", nach: "ws", text: "Die App schickt die Ausleihe per REST an den Web Service." },
+      { von: "ws", nach: "api", text: "Der Web Service ruft die Business API (Facade) auf." },
+      { von: "api", nach: "ausleihe", text: "Die Facade gibt an die Komponente Ausleihe weiter." },
+      { von: "ausleihe", nach: "pay", text: "Die Ausleihe lässt die Kaution über den Adapter reservieren …" },
+      { von: "pay", nach: "psp", text: "… der Adapter ruft den Zahlungsdienst synchron auf." },
+      { von: "ausleihe", nach: "dac", text: "Die Ausleihe speichert über den DAC." },
+      { von: "ausleihe", nach: "send", text: "Sie meldet «Velo ausgeliehen» an den Sender Adapter …" },
+      { von: "send", nach: "broker", text: "… der die Nachricht per AMQP an den Broker übergibt." }
+    ] }]
+  });
+
+  /* 7 · Prüfungsspiel in Modulnotation: Referenz als Tipp, eigenes fiktives Kino */
+  A.referenzen["dotnet-vorlage"] = {
+    titel: "Referenz .NET (vereinfacht)", notation: "uml-komponenten",
+    pakete: [
+      { id: "c", name: "Client/Frontend" }, { id: "m", name: "Middle Tier (.NET Server)" },
+      { id: "w", name: "Web Tier (IIS, Apache, Nginx)", in: "m" }, { id: "b", name: "Business Tier", in: "m" },
+      { id: "f", name: "Business Facade", in: "b", spalte: 0, zeile: 0 }, { id: "l", name: "Business Logic Layer", in: "b", spalte: 0, zeile: 1 },
+      { id: "a", name: "Async Comm. Layer", in: "b", spalte: 1, zeile: 1 }, { id: "d", name: "Data Access Layer", in: "b", spalte: 0, zeile: 2 },
+      { id: "s", name: "Service Access Layer", in: "b", spalte: 1, zeile: 2 }, { id: "p", name: "Persistence/Data Tier" }
+    ],
+    elemente: [
+      { id: "wa", typ: "web", name: "Web App (Browser)", in: "c" },
+      { id: "pc", typ: "dienst", rolle: "client", name: "Pres. Components", stereotyp: "ASP.NET", in: "w", schnittstellen: [{ id: "h", name: "HTTP" }] },
+      { id: "iws", typ: "dienst", rolle: "webapi", name: "internal WS", stereotyp: "C#", in: "w", schnittstellen: [{ id: "r", name: "REST" }] },
+      { id: "ba", typ: "dienst", rolle: "business", name: "Business API", stereotyp: "C#", in: "f", schnittstellen: [{ id: "r", name: "REST/gRPC" }] },
+      { id: "blc", typ: "dienst", rolle: "business", name: "Business Logic Components", stereotyp: "C#", in: "l" },
+      { id: "ra", typ: "dienst", rolle: "async", name: "Receiver/Sender Adapter", stereotyp: "C#", in: "a" },
+      { id: "dac", typ: "dienst", rolle: "daten", name: "DACs (Entity Framework)", stereotyp: "C#", in: "d" },
+      { id: "sa", typ: "dienst", rolle: "sync", name: "Sync Adapter Components", stereotyp: "C#", in: "s" },
+      { id: "db", typ: "datenbank", name: "DB in DBMS", in: "p" }
+    ],
+    verbindungen: [
+      { von: "wa", nach: "pc#h", protokoll: "HTTP" }, { von: "pc", nach: "ba#r" }, { von: "iws", nach: "ba#r" },
+      { von: "ba", nach: "blc" }, { von: "blc", nach: "ra" }, { von: "blc", nach: "dac" }, { von: "blc", nach: "sa" }, { von: "dac", nach: "db" }
+    ]
+  };
+  A.spiel("#t00-pruefung", {
+    spielId: "avsw-vorlage-uml",
+    fach: "avsw",
+    titel: "Prüfungsnah: Mehrschicht in .NET",
+    levels: [{
+      id: "kino", modus: "uml", titel: "Kino-Reservation (fiktiv)", schwierigkeit: 3, zielzeit: 900, referenz: "dotnet-vorlage",
+      auftrag: '<p>Das Kino «Lichtspiel» (fiktiv) baut seine Reservation als <b>.NET-Mehrschichtenarchitektur</b>. Gäste reservieren in der <span data-baustein="web">Web App im Browser</span> (serverseitig gerendert mit <span data-baustein="razor">ASP.NET-Komponenten</span>) oder in der <span data-baustein="maui">MAUI App</span>, die einen <span data-baustein="ws">REST-Web-Service</span> nutzt. Der Business Tier ist nur über eine <span data-baustein="facade">Facade</span> erreichbar. Die Fachkomponente <span data-baustein="res">Reservation</span> speichert über <span data-baustein="dac">DACs mit Entity Framework</span> in einer <span data-baustein="db">SQL-Server-Datenbank</span>, meldet jede Reservation über einen <span data-baustein="send">Sender Adapter</span> per AMQP an einen <span data-baustein="broker">Message Broker</span> und lässt die Zahlung über einen <span data-baustein="pay">eigenen Adapter</span> beim <span data-baustein="psp">Zahlungsdienst</span> (REST) ausführen.</p>',
+      pakete: [
+        { id: "app", name: "Kino-Reservation", spalte: 0, zeile: 0, hoehe: 2 },
+        { id: "client", name: "Client Tier", in: "app" },
+        { id: "server", name: ".NET-Server (Middle Tier)", in: "app" },
+        { id: "webtier", name: "Web Tier (IIS)", in: "server" },
+        { id: "pres", name: "Presentation Tier", in: "webtier", spalte: 0, zeile: 0 },
+        { id: "wapi", name: "Web API", in: "webtier", spalte: 1, zeile: 0 },
+        { id: "biz", name: "Business Tier", in: "server" },
+        { id: "fac", name: "Business Facade", in: "biz", spalte: 0, zeile: 0, breite: 2 },
+        { id: "bl", name: "Business Logic Layer", in: "biz", spalte: 0, zeile: 1 },
+        { id: "asy", name: "Async Comm. Layer", in: "biz", spalte: 1, zeile: 1 },
+        { id: "dal", name: "Data Access Layer", in: "biz", spalte: 0, zeile: 2 },
+        { id: "sal", name: "Service Access Layer", in: "biz", spalte: 1, zeile: 2 },
+        { id: "data", name: "Data Tier", in: "app" },
+        { id: "mom", name: "MOM", spalte: 1, zeile: 0 },
+        { id: "prov", name: "Service Provider", spalte: 1, zeile: 1 }
+      ],
+      palette: [
+        { id: "web", typ: "web", rolle: "client", name: "Web App (Browser)", stereotypen: ["ASP.NET", "JS"] },
+        { id: "maui", typ: "mobile", rolle: "client", name: "MAUI App", stereotypen: ["C#"] },
+        { id: "razor", typ: "dienst", rolle: "client", name: "Pres. Components", stereotypen: ["ASP.NET", "C#", "JS", "EJB"], schnittstellen: [{ id: "http", name: "HTTP" }] },
+        { id: "ws", typ: "dienst", rolle: "webapi", name: "WS Reservation", stereotypen: ["C#", "ASP.NET", "EJB"], schnittstellen: [{ id: "rest", name: "REST" }] },
+        { id: "facade", typ: "dienst", rolle: "business", name: "Business API", stereotypen: ["C#", "EJB", "Microservice"], schnittstellen: [{ id: "rest", name: "REST" }] },
+        { id: "res", typ: "dienst", rolle: "business", name: "Reservation", stereotypen: ["C#", "EJB", "JS"] },
+        { id: "send", typ: "dienst", rolle: "async", name: "Sender Adapter", stereotypen: ["C#", "EJB MDB"] },
+        { id: "dac", typ: "dienst", rolle: "daten", name: "DACs (Entity Framework)", stereotypen: ["C#", "EJB"] },
+        { id: "pay", typ: "dienst", rolle: "sync", name: "Adapter Zahlung", stereotypen: ["C#", "EJB"] },
+        { id: "db", typ: "datenbank", rolle: "daten", name: "DB in SQL Server" },
+        { id: "broker", typ: "broker", rolle: "async", name: "Message Broker", schnittstellen: [{ id: "amqp", name: "AMQP" }] },
+        { id: "psp", typ: "extern", rolle: "sync", name: "Zahlungsdienst", schnittstellen: [{ id: "api", name: "API" }] },
+        { id: "iis", typ: "dienst", rolle: "infra", name: "IIS Web Server", falle: "Ein Web-Server ist Infrastruktur, keine Komponente. Nenne ihn im Paketnamen, z. B. «Web Tier (IIS)»." },
+        { id: "gw", typ: "gateway", rolle: "webapi", name: "API Gateway", falle: "API-Gateway und Integration-Middleware modellierst du in der Mehrschichtenarchitektur nicht." }
+      ],
+      loesung: {
+        elemente: [
+          { id: "web", paket: "client" }, { id: "maui", paket: "client" },
+          { id: "razor", paket: "pres", stereotyp: "ASP.NET" }, { id: "ws", paket: "wapi", stereotyp: "C#" },
+          { id: "facade", paket: "fac", stereotyp: "C#" }, { id: "res", paket: "bl", stereotyp: "C#" },
+          { id: "send", paket: "asy", stereotyp: "C#" }, { id: "dac", paket: "dal", stereotyp: "C#" },
+          { id: "pay", paket: "sal", stereotyp: "C#" }, { id: "db", paket: "data" },
+          { id: "broker", paket: "mom" }, { id: "psp", paket: "prov" }
+        ],
+        verbindungen: [
+          { von: "web", nach: "razor#http", protokoll: "HTTP", warum: "Der Browser holt die gerenderten Seiten über HTTP." },
+          { von: "maui", nach: "ws#rest", protokoll: "REST", warum: "Die installierte App nutzt den Web Service; REST ist leichtgewichtig." },
+          { von: "razor", nach: "facade#rest", protokoll: "REST", warum: "Der Zugang zum Business Tier läuft über die Facade als Web Service." },
+          { von: "ws", nach: "facade#rest", protokoll: "REST", warum: "Auch das Web API greift nur über die Facade auf die Fachlogik zu." },
+          { von: "facade", nach: "res", warum: "Die Facade delegiert an die Fachkomponente." },
+          { von: "res", nach: "send", warum: "Ausgehende Nachrichten laufen über den Sender Adapter im Async Layer." },
+          { von: "send", nach: "broker#amqp", protokoll: "AMQP", warum: "Der Broker wird über ein asynchrones Protokoll angebunden." },
+          { von: "res", nach: "dac", warum: "Datenzugriff nur über den Data Access Layer." },
+          { von: "dac", nach: "db", warum: "Entity Framework bildet die Objekte auf die SQL-Server-Tabellen ab." },
+          { von: "res", nach: "pay", warum: "Je Service Provider ein eigener Adapter." },
+          { von: "pay", nach: "psp#api", protokoll: "REST", warum: "Der Adapter ruft die API des Zahlungsdienstes synchron auf." }
+        ],
+        beschreibungen: [{ id: "facade", richtig: 1, optionen: [
+          "Die Facade speichert Reservationen direkt in der Datenbank, damit der Zugriff schnell ist.",
+          "Die Facade ist der einzige Zugang zum Business Tier. Sie bietet die Fachfunktionen als Web Service (REST) an, damit Web Tier und Business Tier getrennt laufen können.",
+          "Die Facade verteilt Nachrichten an andere Systeme und ersetzt damit den Message Broker."
+        ] }]
+      },
+      erklaerung: "<b>Merke:</b> Web-Server und API-Gateway sind keine Komponenten der Mehrschichtenarchitektur. Jede Komponente bekommt einen technologiespezifischen Stereotyp, jede Verbindung eine Beschriftung."
+    }]
   });
 })();
 </script>

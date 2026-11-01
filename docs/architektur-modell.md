@@ -170,10 +170,12 @@ Kopplung, Kommunikation und Einsatz werden als Filter-Chips angeboten, sobald ei
 
 | Funktion | zusätzliche Optionen | zusätzliche Rückgabe |
 |----------|----------------------|----------------------|
-| `diagramm` | `titel` (überschreibt `modell.titel`, `""` = kein Titel), `textliste` (Standard `true`), `breit` (Standard `true`: auf breiten Bildschirmen über die Lesespalte hinaus) | `waehle(id)` |
+| `diagramm` | `titel` (überschreibt `modell.titel`, `""` = kein Titel), `textliste` (Standard `true`), `breit` (Standard `true`: auf breiten Bildschirmen über die Lesespalte hinaus), `massstab` (Startzoom, 1 = Weltkoordinaten), `kMin` (lesbarer Mindestmassstab) | `waehle(id)`, `plakette(id, text, klasse)`, `entfernePlakette(id?)`, `fluss(verbindungId, { an, tempo })`; `modell()` liefert die Vertragsform ohne leere Felder und reicht Zusatzfelder (z. B. `sim`) durch |
 | `atlas` | drittes Argument `opt`: `{ titel, breit }` | `{ zeigeStil(id), karte(), vergleiche(a, b), entdeckt() }` |
 | `editor` | `arten` (erlaubte Verbindungsarten), `fest` (IDs, die nicht gelöscht oder verschoben werden), `labels` (Beschriftung im Art-Menü, Standard `true`), `breit` | `markiere([])` löscht; Klassen `ar-ok`/`ar-falsch` setzen zusätzlich ✓/✗; `geist({ von, nach, art })`, `palettePuls(id)`, `rueckgaengig()` |
 | `spiel` | `titel`, `breit`, `speichern`; je Level `arten`, `raster` (`{ spalten, zeilen }`), `erklaerung`; je Lösungs-Verbindung `gerichtet: false`, `label` | `{ starten(levelId), levelkarte(), abgeben(), ergebnis(levelId), ergebnisse(), bestwerte() }` |
+
+`editor().modell()` liefert ebenfalls die saubere Vertragsform. `Architektur.referenzen` ist eine Registry für Referenzmodelle in Modulnotation (Tipp im Prüfungsspiel, Abschnitt 10.3).
 
 Weitere Felder von `window.Architektur`: `kategorien` (Liste mit `id`, `name`, `kurz`), `arten` (je Art `name`, `erkl`), `linie(art)` (SVG-Muster der Linie als HTML) und `piktogramm(typ, titel)` (Piktogramm eines Typs als HTML).
 

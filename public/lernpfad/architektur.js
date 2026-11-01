@@ -141,14 +141,40 @@
     realisiert: { name: "stellt Schnittstelle bereit", kurz: "realisiert", erkl: "Komponente bietet die Schnittstelle an (Lollipop)" },
     deploy: { name: "läuft auf", kurz: "Deployment", erkl: "Artefakt ist auf einem Knoten verteilt", standardLabel: "«deploy»" },
     stream: { name: "Datenstrom (Pipe)", kurz: "Pipe", erkl: "Daten fliessen ununterbrochen von Stufe zu Stufe" },
+    assoziation: { name: "Assoziation", kurz: "Assoziation", erkl: "UML-Assoziation: die beiden kommunizieren (Protokoll und Format stehen an der Linie)" },
   };
   const ART_IDS = Object.keys(ARTEN);
   // Abhängig im Sinne des Ausfalls: der Aufrufer wartet auf das Ziel
-  const SYNCHRON_ARTEN = { sync: 1, daten: 1, abhaengigkeit: 1, realisiert: 1, stream: 1 };
+  const SYNCHRON_ARTEN = { sync: 1, daten: 1, abhaengigkeit: 1, realisiert: 1, stream: 1, assoziation: 1 };
+  // Protokolle, die über einen Puffer laufen (Assoziation zählt dann im Ausfall als asynchron)
+  const ASYNC_PROTOKOLL = /\b(AMQP|JMS|MQTT|MQ|Kafka|async|STOMP|Jakarta Messaging)\b/i;
+
+  // Rollenfarben der Modulnotation (Vertrag 10.1)
+  const ROLLEN = [
+    { id: "client", name: "Client / Präsentation", kurz: "Client-Apps und Präsentationskomponenten" },
+    { id: "webapi", name: "Web API / Consumer", kurz: "Web API, Web Services, Service-Consumer-Apps" },
+    { id: "business", name: "Business / Domäne", kurz: "Domänen- und Business-Komponenten, Facade, Microservices" },
+    { id: "shared", name: "Shared Services", kurz: "gemeinsam genutzte Dienste" },
+    { id: "async", name: "asynchron / MOM", kurz: "Receiver- und Sender-Adapter, Message Broker" },
+    { id: "sync", name: "synchron / Provider", kurz: "Driven Adapter, Service-Provider-Apps" },
+    { id: "daten", name: "Daten", kurz: "DACs, Datenbanken, Data Services" },
+    { id: "infra", name: "Infrastruktur", kurz: "Docker-Host-MQ und Infrastruktur" },
+    { id: "extern", name: "Umsystem", kurz: "Umsysteme ohne besondere Rolle" },
+  ];
+  const ROLLE = {};
+  ROLLEN.forEach((r) => (ROLLE[r.id] = r));
+  const ROLLE_VON_TYP = {
+    akteur: "client", web: "client", mobile: "client", gateway: "webapi", auth: "shared", cdn: "infra", lastverteiler: "infra", ingress: "infra",
+    dienst: "business", monolith: "business", funktion: "business", orchestrator: "business", filter: "business", peer: "business", plugin: "business",
+    queue: "async", topic: "async", broker: "async", bus: "async", mesh: "infra", monitor: "infra", knoten: "infra", cluster: "infra", pod: "infra",
+    container: "infra", artefakt: "infra", datenbank: "daten", nosql: "daten", cache: "daten", suche: "daten", speicher: "daten", extern: "extern",
+  };
 
   const kategorieVon = (typ) => (TYPEN[typ] ? TYPEN[typ].kategorie : null);
   const istGruppenTyp = (typ) => !!(TYPEN[typ] && TYPEN[typ].gruppe);
   const katKlasse = (typ) => "ar-k-" + (kategorieVon(typ) || "neutral");
+  // Farbklasse eines Elements: in der Modulnotation die Rolle, sonst die Kategorie
+  const klasseVon = (e) => (e && e.rolle ? "ar-r-" + e.rolle : katKlasse(e ? e.typ : ""));
 
   /* ---------- 3. Piktogramme (24×24, currentColor, keine Markenlogos) ---------- */
 
@@ -198,6 +224,8 @@
   /* ---------- 4. Modell prüfen und normalisieren ---------- */
 
   const ID_MUSTER = /^[a-z0-9-]+$/;
+  const ELEMENT_FELDER = ["id", "typ", "name", "technologie", "stereotyp", "info", "zustand", "in", "x", "y", "rolle", "schnittstellen", "spalte", "zeile", "breite", "hoehe", "istPaket", "uml"];
+  const VERBINDUNG_FELDER = ["id", "von", "nach", "art", "label", "info", "warum", "protokoll", "format", "semantik", "vonSch", "nachSch"];
 
   function modellPruefen(m, baustein) {
     const f = (t) => fehler(baustein, t);
@@ -206,12 +234,19 @@
       titel: m.titel || "",
       ansicht: m.ansicht || "komponenten",
       richtung: m.richtung === "rechts" ? "rechts" : "unten",
+      notation: m.notation === "uml-komponenten" ? "uml-komponenten" : "",
       elemente: [],
       verbindungen: [],
       ablaeufe: [],
+      notizen: [],
+      einschraenkungen: [],
     };
+    const uml = n.notation === "uml-komponenten";
     const nachId = {};
-    for (const e of m.elemente) {
+    const zahl = (v) => (Number.isFinite(v) ? v : undefined);
+    // Modulnotation: Pakete als Gruppen vom Typ «paket»
+    const allesElemente = (uml && Array.isArray(m.pakete) ? m.pakete.map((p) => Object.assign({}, p, { typ: "paket", istPaket: true })) : []).concat(m.elemente);
+    for (const e of allesElemente) {
       if (!e || !e.id || !ID_MUSTER.test(e.id)) return f("Element-ID «" + (e && e.id) + "» fehlt oder ist ungültig (a-z, 0-9, -).");
       if (nachId[e.id]) return f("Element-ID «" + e.id + "» doppelt.");
       if (!TYPEN[e.typ]) return f("Typ «" + e.typ + "» bei «" + e.id + "» unbekannt. Bekannt: " + Object.keys(TYPEN).join(", ") + ".");
@@ -222,6 +257,21 @@
       };
       if (e.in) k.in = e.in;
       if (Number.isFinite(e.x) && Number.isFinite(e.y)) { k.x = e.x; k.y = e.y; }
+      // unbekannte Zusatzfelder (z. B. «sim» für den Simulator) unverändert durchreichen
+      Object.keys(e).forEach((f2) => { if (!(f2 in k) && ELEMENT_FELDER.indexOf(f2) < 0) k[f2] = e[f2]; });
+      if (uml) {
+        k.uml = true;
+        if (e.istPaket) k.istPaket = true;
+        ["spalte", "zeile", "breite", "hoehe"].forEach((f2) => { if (zahl(e[f2]) !== undefined) k[f2] = e[f2]; });
+        if (!e.istPaket && e.typ !== "paket" && e.typ !== "grenze") {
+          if (e.rolle && !ROLLE[e.rolle]) f("Rolle «" + e.rolle + "» bei «" + e.id + "» unbekannt. Bekannt: " + Object.keys(ROLLE).join(", ") + ".");
+          k.rolle = ROLLE[e.rolle] ? e.rolle : ROLLE_VON_TYP[e.typ] || "extern";
+          if (e.stereotyp === undefined) k.stereotyp = "";
+          k.schnittstellen = (Array.isArray(e.schnittstellen) ? e.schnittstellen : []).filter((x) => x && x.id && ID_MUSTER.test(x.id))
+            .map((x) => ({ id: x.id, name: x.name || x.id, seite: ["oben", "unten", "links", "rechts"].indexOf(x.seite) >= 0 ? x.seite : "oben" }));
+        }
+        if (e.istPaket && e.stereotyp === undefined) k.stereotyp = "";
+      }
       nachId[e.id] = k;
       n.elemente.push(k);
     }
@@ -237,7 +287,7 @@
         gesehen[p.id] = 1;
         p = nachId[p.in];
         tiefe++;
-        if (tiefe > 3) return f("«" + e.id + "»: Gruppen höchstens 3 Ebenen tief.");
+        if (tiefe > (uml ? 7 : 3)) return f("«" + e.id + "»: Gruppen höchstens " + (uml ? 7 : 3) + " Ebenen tief.");
       }
     }
     const kinderZahl = {};
@@ -247,19 +297,31 @@
     (m.verbindungen || []).forEach((v, i) => {
       if (!v) return;
       const id = v.id && ID_MUSTER.test(v.id) ? v.id : "v" + (i + 1);
-      if (!nachId[v.von] || !nachId[v.nach]) { f("Verbindung " + v.von + " → " + v.nach + " nennt unbekanntes Element (übersprungen)."); return; }
-      if (v.von === v.nach) { f("Verbindung " + v.von + " → " + v.nach + " zeigt auf sich selbst (übersprungen)."); return; }
-      const art = ARTEN[v.art] ? v.art : "sync";
-      if (v.art && !ARTEN[v.art]) f("Verbindungsart «" + v.art + "» unbekannt, nehme «sync». Bekannt: " + ART_IDS.join(", ") + ".");
-      if ((istGruppe(v.von) || istGruppe(v.nach)) && art !== "deploy") { f("Verbindung " + v.von + " → " + v.nach + ": Gruppen nur mit art «deploy» verbinden (übersprungen)."); return; }
+      // «element#schnittstelle» (Modulnotation): Ziel ist eine bereitgestellte Schnittstelle
+      const teil = (x) => { const t = String(x || "").split("#"); return { el: t[0], sch: t[1] || null }; };
+      const a = teil(v.von), b = teil(v.nach);
+      if (!nachId[a.el] || !nachId[b.el]) { f("Verbindung " + v.von + " → " + v.nach + " nennt unbekanntes Element (übersprungen)."); return; }
+      if (a.el === b.el) { f("Verbindung " + v.von + " → " + v.nach + " zeigt auf sich selbst (übersprungen)."); return; }
+      const hatSch = (el, sch) => !sch || (nachId[el].schnittstellen || []).some((x) => x.id === sch);
+      if (!hatSch(a.el, a.sch) || !hatSch(b.el, b.sch)) { f("Verbindung " + v.von + " → " + v.nach + ": Schnittstelle unbekannt (übersprungen)."); return; }
+      const art = ARTEN[v.art] ? v.art : uml ? "assoziation" : "sync";
+      if (v.art && !ARTEN[v.art]) f("Verbindungsart «" + v.art + "» unbekannt, nehme «" + art + "». Bekannt: " + ART_IDS.join(", ") + ".");
+      if (!uml && (istGruppe(a.el) || istGruppe(b.el)) && art !== "deploy") { f("Verbindung " + v.von + " → " + v.nach + ": Gruppen nur mit art «deploy» verbinden (übersprungen)."); return; }
       if (vIds[id]) { f("Verbindungs-ID «" + id + "» doppelt (übersprungen)."); return; }
       vIds[id] = 1;
-      n.verbindungen.push({ id: id, von: v.von, nach: v.nach, art: art, label: v.label !== undefined ? v.label : ARTEN[art].standardLabel || "", info: v.info || "" });
+      const fmt = v.format || v.semantik || "";
+      const auto = [v.protokoll || "", fmt].filter(Boolean).join(" · ");
+      n.verbindungen.push({ id: id, von: a.el, nach: b.el, vonSch: a.sch, nachSch: b.sch, art: art,
+        label: v.label !== undefined ? v.label : auto || (uml ? "" : ARTEN[art].standardLabel || ""), info: v.info || v.warum || "",
+        protokoll: v.protokoll || "", format: fmt });
+      const neu = n.verbindungen[n.verbindungen.length - 1];
+      Object.keys(v).forEach((f2) => { if (!(f2 in neu) && VERBINDUNG_FELDER.indexOf(f2) < 0) neu[f2] = v[f2]; });
     });
     (m.ablaeufe || []).forEach((a, i) => {
       if (!a || !Array.isArray(a.schritte) || !a.schritte.length) { f("Ablauf " + (i + 1) + " braucht «schritte» (übersprungen)."); return; }
       const schritte = [];
-      for (const s of a.schritte) {
+      for (const s0 of a.schritte) {
+        const s = Object.assign({}, s0, { von: s0.von ? String(s0.von).split("#")[0] : s0.von, nach: s0.nach ? String(s0.nach).split("#")[0] : s0.nach });
         if (s.bei !== undefined) {
           if (!nachId[s.bei]) { f("Ablauf «" + (a.id || i) + "»: Schritt bei unbekanntem Element «" + s.bei + "»."); continue; }
         } else if (!nachId[s.von] || !nachId[s.nach]) { f("Ablauf «" + (a.id || i) + "»: Schritt " + s.von + " → " + s.nach + " nennt unbekanntes Element."); continue; }
@@ -270,7 +332,56 @@
       }
       if (schritte.length) n.ablaeufe.push({ id: a.id || "ablauf-" + (i + 1), name: a.name || "Ablauf " + (i + 1), schritte: schritte, beschreibung: a.beschreibung || "" });
     });
+    if (uml) {
+      (m.notizen || []).forEach((no, i) => {
+        if (!no || !no.text) return;
+        const id = no.id && ID_MUSTER.test(no.id) ? no.id : "notiz-" + (i + 1);
+        if (nachId[id]) { f("Notiz-ID «" + id + "» kollidiert mit einem Element (übersprungen)."); return; }
+        const an = no.an && nachId[String(no.an).split("#")[0]] ? String(no.an).split("#")[0] : null;
+        if (no.an && !an) f("Notiz «" + id + "»: Ziel «" + no.an + "» unbekannt.");
+        n.notizen.push({ id: id, text: no.text, an: an, in: no.in && nachId[no.in] ? no.in : an ? nachId[an].in || null : null,
+          spalte: zahl(no.spalte), zeile: zahl(no.zeile) });
+      });
+      (m.einschraenkungen || []).forEach((x) => {
+        if (!x || !Array.isArray(x.zwischen) || x.zwischen.length !== 2) return;
+        if (!x.zwischen.every((vid) => n.verbindungen.some((v) => v.id === vid))) { f("Einschränkung " + (x.text || "{xor}") + ": Verbindungen " + x.zwischen.join(", ") + " unbekannt (übersprungen)."); return; }
+        n.einschraenkungen.push({ text: x.text || "{xor}", zwischen: x.zwischen.slice() });
+      });
+    }
     return n;
+  }
+
+  // Normalisiertes Modell zurück in die Vertragsform (Abschnitt 4/10): ohne leere Felder und Standardwerte
+  function modellSauber(m) {
+    const leer = (v) => v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length);
+    const raus = { titel: m.titel || undefined, ansicht: m.ansicht, richtung: m.richtung };
+    if (m.notation) raus.notation = m.notation;
+    const pakete = [], elemente = [];
+    m.elemente.forEach((e) => {
+      const k = {};
+      Object.keys(e).forEach((f2) => { if (f2 !== "uml" && f2 !== "istPaket" && !leer(e[f2])) k[f2] = kopie(e[f2]); });
+      if (k.zustand === "ok") delete k.zustand;
+      if (TYPEN[e.typ] && k.stereotyp === TYPEN[e.typ].stereotyp) delete k.stereotyp;
+      if (k.info && typeof k.info === "object" && !Object.keys(k.info).some((x) => !leer(k.info[x]))) delete k.info;
+      if (e.istPaket) { delete k.typ; pakete.push(k); } else elemente.push(k);
+    });
+    if (pakete.length) raus.pakete = pakete;
+    raus.elemente = elemente;
+    raus.verbindungen = m.verbindungen.map((v) => {
+      const k = {};
+      Object.keys(v).forEach((f2) => { if (["vonSch", "nachSch"].indexOf(f2) < 0 && !leer(v[f2])) k[f2] = kopie(v[f2]); });
+      if (v.vonSch) k.von = v.von + "#" + v.vonSch;
+      if (v.nachSch) k.nach = v.nach + "#" + v.nachSch;
+      if (ARTEN[v.art] && k.label === ARTEN[v.art].standardLabel) delete k.label;
+      if (k.label && k.label === [v.protokoll, v.format].filter(Boolean).join(" · ")) delete k.label;
+      return k;
+    });
+    if (m.ablaeufe && m.ablaeufe.length) raus.ablaeufe = m.ablaeufe.map((a) => ({ id: a.id, name: a.name, beschreibung: a.beschreibung || undefined,
+      schritte: a.schritte.map((st) => { const k = {}; Object.keys(st).forEach((f2) => { if (!leer(st[f2]) && st[f2] !== false) k[f2] = st[f2]; }); return k; }) }));
+    if (m.notizen && m.notizen.length) raus.notizen = kopie(m.notizen).map((no) => { Object.keys(no).forEach((f2) => { if (leer(no[f2])) delete no[f2]; }); return no; });
+    if (m.einschraenkungen && m.einschraenkungen.length) raus.einschraenkungen = kopie(m.einschraenkungen);
+    Object.keys(raus).forEach((f2) => { if (raus[f2] === undefined) delete raus[f2]; });
+    return raus;
   }
 
   /* ---------- 5. Text messen ---------- */
@@ -649,6 +760,7 @@
   const RICHT = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // 0 oben, 1 rechts, 2 unten, 3 links
 
   function formVon(lay, id) {
+    if (lay.el[id] && (lay.el[id].ball || lay.el[id].notiz)) return "komponente";
     const e = lay.ix.nachId[id];
     return e ? TYPEN[e.typ].form : "komponente";
   }
@@ -783,7 +895,7 @@
       const i = Math.floor(knoten / ny), j = knoten % ny;
       const g = kosten[zust];
       if (knoten === ziel) { fund = zust; break; }
-      if (++schritte > 60000) break;
+      if (++schritte > 400000) break;
       for (let nd = 0; nd < 4; nd++) {
         if (nd === (d + 2) % 4) continue; // nicht umkehren
         let ni = i, nj = j, segFrei, seg, laenge, randig;
@@ -869,11 +981,18 @@
       grX.push(g.x, g.x + g.w); grY.push(g.y, g.y + g.h);
       // Kopfzeile der Gruppe (Name) nicht überfahren
       const e = lay.ix.nachId[id];
+      if (lay.kopf && lay.kopf[id]) { const k = lay.kopf[id]; hindernisse.push({ id: id + "#kopf", x1: k.x + 1, y1: k.y + 1, x2: k.x + k.w, y2: k.y + k.h - 1 }); return; }
       const tb = Math.min(g.w - 8, 50 + textBreite(ohneTags(e.name), 14, 650) + textBreite(e.stereotyp ? "«" + e.stereotyp + "» " : "", 12, 400));
       hindernisse.push({ id: id + "#kopf", x1: g.x + 2, y1: g.y + 2, x2: g.x + tb, y2: g.y + 32 });
     });
-    const box = { x: lay.box.x - 20, y: lay.box.y - 20, w: lay.box.w + 40, h: lay.box.h + 40 };
-    const ends = kanten.map((k) => ({ k: k, a: rechteckVon(lay, k.von), b: rechteckVon(lay, k.nach), fa: formVon(lay, k.von), fb: formVon(lay, k.nach) })).filter((x) => x.a && x.b);
+    (lay.hindernisse || []).forEach((h) => hindernisse.push(h));
+    const rd = lay.uml ? 2 : 20; // Modulnotation: Umwege innerhalb des sichtbaren Rands
+    const box = { x: lay.box.x - rd, y: lay.box.y - rd, w: lay.box.w + 2 * rd, h: lay.box.h + 2 * rd };
+    const ende = (id, sch) => (sch ? id + "#" + sch : id);
+    const ends = kanten.map((k) => {
+      const va = ende(k.von, k.vonSch), vb = ende(k.nach, k.nachSch);
+      return { k: k, a: rechteckVon(lay, va), b: rechteckVon(lay, vb), fa: formVon(lay, va), fb: formVon(lay, vb) };
+    }).filter((x) => x.a && x.b);
 
     const route = (G, x, sa, sb, ta, tb, mitNutzung) => {
       const pa = portPunkt(x.a, x.fa, sa, ta), pb = portPunkt(x.b, x.fb, sb, tb);
@@ -986,6 +1105,15 @@
     ends.slice().sort((p, q) => p.k1 - q.k1).forEach((x) => {
       let r = route(G2, x, x.sa, x.sb, x.ta || 0, x.tb || 0, true);
       if (!r) {
+        // andere Seiten versuchen, bevor die Notlösung kommt
+        for (const [sa, sb] of seitenKandidaten(x.a, x.b).concat([[0, 0], [2, 2], [1, 1], [3, 3], [0, 2], [2, 0], [1, 3], [3, 1]])) {
+          const G3 = gitterBauen(hindernisse, { x: grX, y: grY }, ex2.concat([stummel(x.a, sa, portPunkt(x.a, x.fa, sa, 0))[0], stummel(x.b, sb, portPunkt(x.b, x.fb, sb, 0))[0], portPunkt(x.a, x.fa, sa, 0)[0], portPunkt(x.b, x.fb, sb, 0)[0]]),
+            ey2.concat([stummel(x.a, sa, portPunkt(x.a, x.fa, sa, 0))[1], stummel(x.b, sb, portPunkt(x.b, x.fb, sb, 0))[1], portPunkt(x.a, x.fa, sa, 0)[1], portPunkt(x.b, x.fb, sb, 0)[1]]), box);
+          r = route(G3, x, sa, sb, 0, 0, false);
+          if (r) break;
+        }
+      }
+      if (!r) {
         // Notlösung: gerade Linie mit einem Knick
         const pa = portPunkt(x.a, x.fa, x.sa, 0), pb = portPunkt(x.b, x.fb, x.sb, 0);
         r = { punkte: vereinfachen([pa, [pa[0], pb[1]], pb]), pfad: [] };
@@ -998,6 +1126,8 @@
   // Beschriftungen: auf dem längsten freien Stück der Linie, ohne Überlappung
   function labelsSetzen(lay, kanten, routen) {
     const belegt = Object.keys(lay.el).map((id) => { const r = lay.el[id]; return { x1: r.x - 4, y1: r.y - 4, x2: r.x + r.w + 4, y2: r.y + r.h + 4 }; });
+    (lay.hindernisse || []).forEach((h) => belegt.push({ x1: h.x1, y1: h.y1, x2: h.x2, y2: h.y2 }));
+    if (lay.kopf) Object.keys(lay.kopf).forEach((id) => { const k = lay.kopf[id]; belegt.push({ x1: k.x, y1: k.y, x2: k.x + k.w, y2: k.y + k.h }); });
     const ueber = (a, b) => a.x1 < b.x2 && a.x2 > b.x1 && a.y1 < b.y2 && a.y2 > b.y1;
     const out = {};
     kanten.forEach((k) => {
@@ -1224,9 +1354,16 @@
     return { linie: kuerzer(art === "daten" ? 1.5 : 0.8), spitze: '<path class="ar-spitze ar-spitze-offen" d="M' + pt(L, B) + "L" + pt(0, 0) + "L" + pt(L, -B) + '"/>' };
   }
 
-  function kanteMarkup(k, route, zielTyp) {
+  function kanteMarkup(k, route, zielTyp, ball) {
     const zielLolli = zielTyp && TYPEN[zielTyp].form === "lolli";
-    const sp = spitzeMarkup(k.art, route.punkte, zielLolli);
+    let sp = k.art === "assoziation" || k.art === "notiz" ? { linie: route.punkte, spitze: "" } : spitzeMarkup(k.art, route.punkte, zielLolli);
+    if (ball && k.art === "assoziation") {
+      // Linie endet am Socket, nicht am Ball
+      const p = route.punkte.slice(), n = p.length, q = p[n - 1], v = p[n - 2];
+      const l = Math.hypot(q[0] - v[0], q[1] - v[1]) || 1;
+      p[n - 1] = [q[0] - ((q[0] - v[0]) / l) * 5, q[1] - ((q[1] - v[1]) / l) * 5];
+      sp = { linie: p, spitze: socketMarkup({ punkte: p }, ball) };
+    }
     const d = pfadD(sp.linie, 7);
     let s = '<path class="ar-kante-treffer" d="' + d + '"/>';
     s += '<path class="ar-linie" d="' + d + '"/>';
@@ -1265,8 +1402,8 @@
     const elG = {}, kantenG = {}, labelG = {}, gruppenG = {};
     Object.keys(lay.gr).sort((a, c) => lay.gr[a].tiefe - lay.gr[c].tiefe).forEach((id) => {
       const e = ix.nachId[id], g = lay.gr[id];
-      const n = svgEl("g", { transform: "translate(" + f1(g.x) + " " + f1(g.y) + ")", "data-id": id }, "ar-gruppe " + katKlasse(e.typ) + " ar-typ-" + e.typ);
-      n.innerHTML = gruppeMarkup(e, g);
+      const n = svgEl("g", { transform: "translate(" + f1(g.x) + " " + f1(g.y) + ")", "data-id": id }, "ar-gruppe " + katKlasse(e.typ) + " ar-typ-" + e.typ + (lay.uml ? " ar-uml-tiefe-" + (g.tiefe % 2) : ""));
+      n.innerHTML = lay.uml ? umlPaketMarkup(e, g) : gruppeMarkup(e, g);
       if (opt.fokussierbar !== false) {
         n.setAttribute("tabindex", "0");
         n.setAttribute("role", "button");
@@ -1280,23 +1417,48 @@
       const r = routen[k.id];
       if (!r) return;
       const ziel = ix.nachId[k.nach];
-      const n = svgEl("g", { "data-id": k.id }, "ar-kante ar-art-" + k.art + " " + katKlasse(ziel.typ));
-      n.innerHTML = kanteMarkup(k, r, ziel.typ);
+      const n = svgEl("g", { "data-id": k.id }, "ar-kante ar-art-" + k.art + " " + klasseVon(ziel));
+      n.innerHTML = kanteMarkup(k, r, ziel.typ, k.nachSch && lay.ballInfo ? lay.ballInfo[k.nach + "#" + k.nachSch] : null);
       gKanten.appendChild(n);
       kantenG[k.id] = n;
       const lb = labels[k.id];
       if (lb) {
-        const l = svgEl("g", { "data-id": k.id }, "ar-label " + katKlasse(ziel.typ));
+        const l = svgEl("g", { "data-id": k.id }, "ar-label " + klasseVon(ziel));
         l.innerHTML = '<rect x="' + f1(lb.x) + '" y="' + f1(lb.y) + '" width="' + f1(lb.w) + '" height="' + lb.h + '" rx="4"/><text x="' + f1(lb.x + lb.w / 2) + '" y="' + f1(lb.y + lb.h / 2 + 4.2) + '" text-anchor="middle">' + esc(lb.text) + "</text>";
         gLabels.appendChild(l);
         labelG[k.id] = l;
       }
     });
+    // Notizen und Einschränkungen ({xor})
+    if (lay.uml) {
+      const gNotiz = svgEl("g", null, "ar-notizen");
+      gKanten.parentNode.insertBefore(gNotiz, gElemente);
+      (lay.notizKanten || []).forEach((k) => {
+        const r = routen[k.id];
+        if (r) gNotiz.appendChild(svgEl("path", { d: pfadD(r.punkte, 6) }, "ar-uml-anker"));
+      });
+      Object.keys(lay.notizLage || {}).forEach((id) => {
+        const r = lay.notizLage[id];
+        const n = svgEl("g", { transform: "translate(" + f1(r.x) + " " + f1(r.y) + ")" }, "ar-notiz");
+        n.innerHTML = notizMarkup(null, r);
+        gNotiz.appendChild(n);
+      });
+      (m.einschraenkungen || []).forEach((x) => {
+        const ra = routen[x.zwischen[0]], rb = routen[x.zwischen[1]];
+        if (!ra || !rb) return;
+        const pa = punktAuf(ra.punkte, polyLaenge(ra.punkte) * 0.42), pb = punktAuf(rb.punkte, polyLaenge(rb.punkte) * 0.42);
+        const mx = (pa[0] + pb[0]) / 2, my = (pa[1] + pb[1]) / 2;
+        const tw = textBreite(x.text, 12, 700) + 10;
+        const n = svgEl("g", null, "ar-xor");
+        n.innerHTML = '<path class="ar-xor-linie" d="M' + f1(pa[0]) + " " + f1(pa[1]) + "L" + f1(pb[0]) + " " + f1(pb[1]) + '"/><rect x="' + f1(mx - tw / 2) + '" y="' + f1(my - 9) + '" width="' + f1(tw) + '" height="18" rx="4"/><text x="' + f1(mx) + '" y="' + f1(my + 4) + '" text-anchor="middle">' + esc(x.text) + "</text>";
+        gLabels.appendChild(n);
+      });
+    }
     m.elemente.forEach((e) => {
       const r = lay.el[e.id];
       if (!r) return;
-      const n = svgEl("g", { transform: "translate(" + f1(r.x) + " " + f1(r.y) + ")", "data-id": e.id }, "ar-el " + katKlasse(e.typ) + " ar-typ-" + e.typ + " ar-form-" + TYPEN[e.typ].form);
-      n.innerHTML = elementMarkup(e, r) + '<g class="ar-marken"></g>';
+      const n = svgEl("g", { transform: "translate(" + f1(r.x) + " " + f1(r.y) + ")", "data-id": e.id }, "ar-el " + klasseVon(e) + " ar-typ-" + e.typ + " ar-form-" + (lay.uml ? "uml" : TYPEN[e.typ].form));
+      n.innerHTML = (lay.uml ? umlElementMarkup(e, r, lay) : elementMarkup(e, r)) + '<g class="ar-marken"></g>';
       if (opt.fokussierbar !== false) {
         n.setAttribute("tabindex", "0");
         n.setAttribute("role", "button");
@@ -1305,6 +1467,7 @@
       gElemente.appendChild(n);
       elG[e.id] = n;
     });
+    if (lay.uml) svg.classList.add("ar-notation");
     return { uid: uid, welt: welt, elG: elG, kantenG: kantenG, labelG: labelG, gruppenG: gruppenG, effekte: gEffekte, gElemente: gElemente, gKanten: gKanten };
   }
 
@@ -1320,6 +1483,219 @@
   function markenLeeren(g, klasse) {
     if (!g) return;
     $$(".ar-marke" + (klasse ? "." + klasse : ""), g).forEach((x) => x.remove());
+  }
+
+  /* ---------- 8b. Modulnotation: UML-Komponentendiagramm mit Paketen (Vertrag 10) ---------- */
+
+  const U = { EW: 166, EH: 70, BALL: 8, BALLRAUM: 50, SEITRAUM: 76, GAP: 26, PAD: 16, TAB: 26, OBEN: 20, RAND: 36, NOTIZ: 180 };
+  const istPaketEl = (e) => !!e && istGruppenTyp(e.typ);
+
+  function umlStereo(e) { return e.stereotyp ? "«" + e.stereotyp + "»" : ""; }
+  function umlGroesse(e) {
+    const sch = e.schnittstellen || [];
+    const zahl = (s) => sch.filter((x) => x.seite === s).length;
+    const nameW = textBreite(ohneTags(e.name), 15, 650) + 44;
+    const stereoW = textBreite(umlStereo(e), 12, 400) + 60;
+    let w = klemmen(Math.max(nameW, stereoW), U.EW, 230);
+    w = Math.max(w, zahl("oben") * 96, zahl("unten") * 96);
+    const n = umbrechen(ohneTags(e.name), 15, 650, w - 28, 2);
+    const h = U.EH + (n.zeilen.length > 1 ? 17 : 0) + (e.technologie ? 15 : 0);
+    return { w: w, h: h, oben: zahl("oben") ? U.BALLRAUM : 0, unten: zahl("unten") ? U.BALLRAUM : 0, links: zahl("links") ? U.SEITRAUM : 0, rechts: zahl("rechts") ? U.SEITRAUM : 0 };
+  }
+  function notizGroesse(no) {
+    const n = umbrechen(ohneTags(no.text), 12.5, 400, U.NOTIZ - 28, 4);
+    return { w: U.NOTIZ, h: 18 + n.zeilen.length * 16, zeilen: n.zeilen };
+  }
+  function paketKopfBreite(e) {
+    return textBreite(umlStereo(e) ? umlStereo(e) + " " : "", 12, 400) + textBreite(ohneTags(e.name), 13.5, 700) + 26;
+  }
+
+  function umlLayout(m, lopt) {
+    lopt = lopt || {};
+    const ix = modellIndex(m);
+    const el = {}, gr = {}, kopf = {}, hindernisse = [], notizLage = {}, ballInfo = {};
+    const kinder = (pid) => {
+      const p = m.elemente.filter((e) => (e.in || null) === pid);
+      const pk = p.filter(istPaketEl), bl = p.filter((e) => !istPaketEl(e));
+      const no = m.notizen.filter((x) => (x.in || null) === pid).map((x) => Object.assign({ istNotiz: true }, x));
+      return pk.concat(bl, no);
+    };
+    const plan = {};
+    // Natürliche Grösse eines Behälters (Paket oder Wurzel) und Rasterplan seiner Kinder
+    function messen(pid) {
+      const items = kinder(pid).map((k) => {
+        let nat;
+        if (k.istNotiz) nat = notizGroesse(k);
+        else if (istPaketEl(k)) nat = messen(k.id);
+        else { const g = umlGroesse(k); nat = { w: g.w + g.links + g.rechts, h: g.h + g.oben + g.unten, g: g }; }
+        return { k: k, nat: nat, c: k.spalte, r: k.zeile, bw: Math.max(1, Math.round(k.breite || 1)), bh: Math.max(1, Math.round(k.hoehe || 1)), paket: istPaketEl(k) && !k.istNotiz };
+      });
+      const mitLage = items.some((it) => Number.isFinite(it.c) || Number.isFinite(it.r));
+      let C = 1;
+      if (!mitLage) {
+        // automatisch: Komponenten fliessen in Reihen (max. 4), Pakete je eine ganze Reihe
+        let lauf = 0, maxLauf = 0;
+        items.forEach((it) => { if (it.paket) lauf = 0; else { lauf++; maxLauf = Math.max(maxLauf, lauf); } });
+        C = Math.max(1, Math.min(4, maxLauf));
+        let c = 0, r = 0;
+        items.forEach((it) => {
+          if (it.paket) { if (c > 0) { r++; c = 0; } it.c = 0; it.r = r; it.bw = C; r++; }
+          else { it.c = c; it.r = r; it.bw = 1; c++; if (c >= C) { c = 0; r++; } }
+        });
+      } else {
+        items.forEach((it) => { if (Number.isFinite(it.c)) C = Math.max(C, it.c + it.bw); });
+        const belegt = {};
+        const frei = (c, r, bw, bh) => { for (let i = c; i < c + bw; i++) for (let j = r; j < r + bh; j++) if (belegt[i + "/" + j]) return false; return true; };
+        const setze = (it) => { for (let i = it.c; i < it.c + it.bw; i++) for (let j = it.r; j < it.r + it.bh; j++) belegt[i + "/" + j] = 1; };
+        items.forEach((it) => { if (Number.isFinite(it.c) && Number.isFinite(it.r)) setze(it); });
+        items.forEach((it) => {
+          if (Number.isFinite(it.c) && Number.isFinite(it.r)) return;
+          if (Number.isFinite(it.c)) { let r = 0; while (!frei(it.c, r, it.bw, it.bh)) r++; it.r = r; setze(it); return; }
+          let r = Number.isFinite(it.r) ? it.r : 0, c = 0;
+          for (;;) { if (c + Math.min(it.bw, C) > C) { c = 0; r++; } if (frei(c, r, Math.min(it.bw, C), it.bh)) break; c++; }
+          it.c = c; it.r = r; it.bw = Math.min(it.bw, C); setze(it);
+        });
+      }
+      let R = 1;
+      items.forEach((it) => { R = Math.max(R, it.r + it.bh); C = Math.max(C, it.c + it.bw); });
+      const colW = new Array(C).fill(0), rowH = new Array(R).fill(0);
+      const verteilen = (arr, a, n, mass) => {
+        let summe = U.GAP * (n - 1);
+        for (let i = a; i < a + n; i++) summe += arr[i];
+        if (summe < mass) { const d = (mass - summe) / n; for (let i = a; i < a + n; i++) arr[i] += d; }
+      };
+      items.filter((it) => it.bw === 1).forEach((it) => (colW[it.c] = Math.max(colW[it.c], it.nat.w)));
+      items.filter((it) => it.bh === 1).forEach((it) => (rowH[it.r] = Math.max(rowH[it.r], it.nat.h)));
+      items.filter((it) => it.bw > 1).forEach((it) => verteilen(colW, it.c, it.bw, it.nat.w));
+      items.filter((it) => it.bh > 1).forEach((it) => verteilen(rowH, it.r, it.bh, it.nat.h));
+      const leer = lopt.leerMin || { w: 120, h: 40 };
+      const iw = items.length ? colW.reduce((a, b) => a + b, 0) + U.GAP * (C - 1) : leer.w;
+      const ih = items.length ? rowH.reduce((a, b) => a + b, 0) + U.GAP * (R - 1) : leer.h;
+      plan[pid || "#wurzel"] = { items: items, colW: colW, rowH: rowH, iw: iw, ih: ih };
+      if (pid === null) return { w: iw, h: ih };
+      const e = ix.nachId[pid];
+      return { w: Math.max(iw + 2 * U.PAD, paketKopfBreite(e) + 40), h: ih + U.TAB + U.OBEN + U.PAD };
+    }
+    function platzieren(pid, x, y, w, h, tiefe) {
+      const pl = plan[pid || "#wurzel"];
+      let cx, cy, cw, ch;
+      if (pid === null) { cx = x; cy = y; cw = w; ch = h; }
+      else {
+        const e = ix.nachId[pid];
+        gr[pid] = { id: pid, x: x, y: y, w: w, h: h, tiefe: tiefe, gruppe: true };
+        kopf[pid] = { x: x, y: y, w: Math.min(w, paketKopfBreite(e)), h: U.TAB };
+        cx = x + U.PAD; cy = y + U.TAB + U.OBEN; cw = w - 2 * U.PAD; ch = h - U.TAB - U.OBEN - U.PAD;
+      }
+      const colW = pl.colW.slice(), rowH = pl.rowH.slice();
+      const extraW = Math.max(0, cw - pl.iw), extraH = Math.max(0, ch - pl.ih);
+      colW.forEach((_, i) => (colW[i] += extraW / colW.length));
+      rowH.forEach((_, i) => (rowH[i] += extraH / rowH.length));
+      const xs = [cx], ys = [cy];
+      colW.forEach((v, i) => xs.push(xs[i] + v + U.GAP));
+      rowH.forEach((v, i) => ys.push(ys[i] + v + U.GAP));
+      pl.items.forEach((it) => {
+        const zx = xs[it.c], zy = ys[it.r];
+        const zw = xs[it.c + it.bw] - U.GAP - zx, zh = ys[it.r + it.bh] - U.GAP - zy;
+        if (it.k.istNotiz) {
+          const n = it.nat;
+          notizLage[it.k.id] = { x: zx + (zw - n.w) / 2, y: zy + (zh - n.h) / 2, w: n.w, h: n.h, zeilen: n.zeilen };
+          el[it.k.id] = { id: it.k.id, x: notizLage[it.k.id].x, y: notizLage[it.k.id].y, w: n.w, h: n.h, notiz: true };
+        } else if (it.paket) {
+          // Höhe nur strecken, wenn ein Nachbar in derselben Reihe liegt (gleich hohe Schichten); sonst natürliche Höhe
+          const nachbar = pl.items.some((o) => o !== it && o.bh === 1 && o.r >= it.r && o.r < it.r + it.bh);
+          platzieren(it.k.id, zx, zy, zw, nachbar || it.bh > 1 ? zh : Math.min(zh, it.nat.h), tiefe + 1);
+        }
+        else {
+          const g = it.nat.g;
+          const tw = g.w + g.links + g.rechts, th = g.h + g.oben + g.unten;
+          const ex = zx + (zw - tw) / 2 + g.links, ey = zy + Math.min((zh - th) / 2, 18) + g.oben;
+          el[it.k.id] = { id: it.k.id, x: ex, y: ey, w: g.w, h: g.h, zelle: { x: zx, y: zy, w: zw, h: zh } };
+          // Schnittstellen (Ball) mit Beschriftung
+          const sch = it.k.schnittstellen || [];
+          ["oben", "unten", "links", "rechts"].forEach((seite) => {
+            const liste = sch.filter((x) => x.seite === seite);
+            liste.forEach((x, i) => {
+              let bx, by;
+              const lw = textBreite(x.name, 12.5, 650);
+              if (seite === "oben" || seite === "unten") {
+                bx = ex + (g.w * (i + 0.5)) / liste.length - Math.min(lw, 60) / 2;
+                by = seite === "oben" ? ey - 32 : ey + g.h + 32;
+              } else {
+                bx = seite === "rechts" ? ex + g.w + 40 : ex - 40;
+                by = ey + (g.h * (i + 1)) / (liste.length + 1);
+              }
+              const id = it.k.id + "#" + x.id;
+              el[id] = { id: id, x: bx - U.BALL, y: by - U.BALL, w: 2 * U.BALL, h: 2 * U.BALL, ball: true, besitzer: it.k.id, seite: seite };
+              const lab = seite === "oben" || seite === "unten" ? { x: bx + 13, y: by - 9, w: lw + 4, h: 18 } : { x: bx - lw / 2, y: by - 30, w: lw + 4, h: 18 };
+              ballInfo[id] = { cx: bx, cy: by, name: x.name, lab: lab, seite: seite };
+              hindernisse.push({ x1: lab.x - 2, y1: lab.y, x2: lab.x + lab.w, y2: lab.y + lab.h });
+            });
+          });
+        }
+      });
+    }
+    const wurzel = messen(null);
+    platzieren(null, U.RAND, U.RAND, wurzel.w, wurzel.h, -1);
+    // Notizen werden gestrichelt an ihr Element gebunden
+    const notizKanten = m.notizen.filter((no) => no.an && (el[no.an] || gr[no.an])).map((no) => ({ id: "notiz-" + no.id, von: no.id, nach: no.an, art: "notiz" }));
+    const box = { x: 0, y: 0, w: wurzel.w + 2 * U.RAND, h: wurzel.h + 2 * U.RAND };
+    return { el: el, gr: gr, box: box, ix: ix, kopf: kopf, hindernisse: hindernisse, notizLage: notizLage, notizKanten: notizKanten, ballInfo: ballInfo, uml: true, manuell: true };
+  }
+
+  function umlElementMarkup(e, r, lay) {
+    const w = r.w, h = r.h, cx = w / 2;
+    let s = '<rect class="ar-ring" x="-6" y="-6" width="' + (w + 12) + '" height="' + (h + 12) + '" rx="8"/>';
+    // Schnittstellen: Stiel und Ball (bereitgestellt)
+    (e.schnittstellen || []).forEach((x) => {
+      const b = lay.ballInfo[e.id + "#" + x.id];
+      if (!b) return;
+      const bx = b.cx - r.x, by = b.cy - r.y;
+      let stiel;
+      if (b.seite === "oben") stiel = "M" + f1(bx) + " 0V" + f1(by + U.BALL);
+      else if (b.seite === "unten") stiel = "M" + f1(bx) + " " + h + "V" + f1(by - U.BALL);
+      else if (b.seite === "rechts") stiel = "M" + w + " " + f1(by) + "H" + f1(bx - U.BALL);
+      else stiel = "M0 " + f1(by) + "H" + f1(bx + U.BALL);
+      s += '<path class="ar-uml-stiel" d="' + stiel + '"/><circle class="ar-uml-ball" data-sch="' + esc(x.id) + '" cx="' + f1(bx) + '" cy="' + f1(by) + '" r="' + U.BALL + '"/>';
+      const lx = b.lab.x - r.x, ly = b.lab.y - r.y;
+      s += '<text class="ar-uml-sch" x="' + f1(lx) + '" y="' + f1(ly + 13.5) + '">' + esc(b.name) + "</text>";
+    });
+    s += '<rect class="ar-form ar-uml-komp' + (e.rolle === "extern" ? " ar-gestrichelt" : "") + '" x="0" y="0" width="' + w + '" height="' + h + '" rx="4"/>';
+    s += UML_KOMPONENTE(w - 25, 8);
+    const zeilen = [];
+    if (e.stereotyp) zeilen.push({ t: kuerzen(umlStereo(e), 12, 400, w - 60), px: 12, k: "ar-stereo", h: 16 });
+    const n = umbrechen(ohneTags(e.name), 15, 650, w - 28, 2);
+    n.zeilen.forEach((z) => zeilen.push({ t: z, px: n.px, k: "ar-name", h: n.px + 3 }));
+    if (e.technologie) zeilen.push({ t: kuerzen(ohneTags(e.technologie), 12, 400, w - 24), px: 12, k: "ar-tech", h: 15 });
+    const gesamt = zeilen.reduce((a, z) => a + z.h, 0);
+    let y = Math.max(6, (h - gesamt) / 2);
+    zeilen.forEach((z) => { y += z.h; s += '<text class="' + z.k + '" x="' + f1(cx) + '" y="' + f1(y - (z.h - z.px) / 2 - 2) + '" text-anchor="middle" style="font-size:' + z.px + 'px">' + esc(z.t) + "</text>"; });
+    return s;
+  }
+
+  function umlPaketMarkup(e, g) {
+    const tw = Math.min(g.w, paketKopfBreite(e));
+    let s = '<path class="ar-uml-reiter" d="M0 ' + U.TAB + "V3Q0 0 3 0H" + f1(tw - 3) + "Q" + f1(tw) + " 0 " + f1(tw) + " 3V" + U.TAB + 'Z"/>';
+    s += '<rect class="ar-uml-paket" x="0" y="' + (U.TAB - 0.5) + '" width="' + f1(g.w) + '" height="' + f1(g.h - U.TAB + 0.5) + '" rx="2"/>';
+    s += '<rect class="ar-ring" x="-4" y="-4" width="' + f1(g.w + 8) + '" height="' + f1(g.h + 8) + '" rx="6"/>';
+    s += '<text class="ar-uml-ptitel" x="12" y="18">' + (e.stereotyp ? '<tspan class="ar-stereo">' + esc(umlStereo(e)) + " </tspan>" : "") + esc(ohneTags(e.name)) + "</text>";
+    return s;
+  }
+
+  // Socket (benötigte Schnittstelle) als Halbkreis um den Ball, offen zum Ball hin
+  function socketMarkup(route, ball) {
+    const p = route.punkte;
+    if (!ball || p.length < 2) return "";
+    const a = p[p.length - 2];
+    const ang = Math.atan2(a[1] - ball.cy, a[0] - ball.cx); // Richtung zum Aufrufer
+    const R2 = U.BALL + 5;
+    const p1 = [ball.cx + R2 * Math.cos(ang - Math.PI / 2), ball.cy + R2 * Math.sin(ang - Math.PI / 2)];
+    const p2 = [ball.cx + R2 * Math.cos(ang + Math.PI / 2), ball.cy + R2 * Math.sin(ang + Math.PI / 2)];
+    return '<path class="ar-uml-socket" d="M' + f1(p1[0]) + " " + f1(p1[1]) + "A" + R2 + " " + R2 + " 0 0 1 " + f1(p2[0]) + " " + f1(p2[1]) + '"/>';
+  }
+  function notizMarkup(no, r) {
+    let s = '<path class="ar-uml-notiz" d="M0 0H' + (r.w - 12) + "L" + r.w + " 12V" + r.h + 'H0Z"/><path class="ar-uml-notiz-ecke" d="M' + (r.w - 12) + " 0V12H" + r.w + '"/>';
+    (r.zeilen || []).forEach((z, i) => (s += '<text class="ar-uml-notiz-text" x="10" y="' + (21 + i * 16) + '">' + esc(z) + "</text>"));
+    return s;
   }
 
   /* ---------- 9. Zoom und Verschieben ---------- */
@@ -1344,7 +1720,7 @@
       const cw = breite();
       letzteBreite = cw;
       // Breite füllen; ist das Diagramm dafür zu breit, lesbar starten und in sich verschieben
-      let kk = Math.max(Math.min(cw / inhalt.w, opt.kMax || 1.08), kMin());
+      let kk = Number.isFinite(opt.massstab) && opt.massstab > 0 ? klemmen(opt.massstab, 0.15, 3) : Math.max(Math.min(cw / inhalt.w, opt.kMax || 1.08), kMin());
       // Höhe folgt dem Inhalt (die Seite scrollt daran vorbei); sehr hohe Diagramme verschieben sich in sich
       const maxH = opt.hoehe || opt.maxHoehe || Math.max(1100, (window.innerHeight || 800) * 1.2);
       hoehe = klemmen(inhalt.h * kk, opt.minHoehe || 220, maxH);
@@ -1504,6 +1880,8 @@
     realisiert: ["stellt bereit", "wird bereitgestellt von"],
     deploy: ["läuft auf", "führt aus"],
     stream: ["leitet Daten weiter an", "erhält Daten von"],
+    assoziation: ["kommuniziert mit", "wird genutzt von"],
+    notiz: ["erläutert", "wird erläutert von"],
   };
 
   function artMuster(art, breite) {
@@ -1523,9 +1901,10 @@
     const m = modellPruefen(modell, "diagramm");
     if (!m) return null;
     const uid = neueId("dg");
-    const lay = layoutBerechnen(m);
+    const uml = m.notation === "uml-komponenten";
+    const lay = uml ? umlLayout(m) : layoutBerechnen(m);
     const ix = lay.ix;
-    const routen = kantenRouten(lay, m.verbindungen);
+    const routen = kantenRouten(lay, m.verbindungen.concat(lay.notizKanten || []));
     const labels = labelsSetzen(lay, m.verbindungen, routen);
     const nachId = ix.nachId;
     const name = (id) => ohneTags(nachId[id].name);
@@ -1569,7 +1948,7 @@
     el.append(kopf, buehne);
 
     const szene = szeneZeichnen(svg, m, lay, routen, labels, { uid: uid });
-    fl = zoomFlaeche(rahmen, svg, { inhalt: lay.box, hoehe: opt.hoehe, kMin: opt.kMin });
+    fl = zoomFlaeche(rahmen, svg, { inhalt: lay.box, hoehe: opt.hoehe, kMin: opt.kMin, massstab: opt.massstab });
 
     // Nachbarschaft
     const nachbarn = {};
@@ -1605,12 +1984,15 @@
       if (!e) return;
       const t = TYPEN[e.typ];
       const kat = kategorieVon(e.typ);
-      let h = '<div class="ar-sb-kopf ' + katKlasse(e.typ) + '"><span class="ar-sb-ikon">' + piktoSvg(t.pikto) + "</span><div>" +
-        '<p class="ar-sb-kat">' + (kat ? esc(KAT[kat].name) + " · " : "") + esc(e.stereotyp ? "«" + e.stereotyp + "»" : t.name) + "</p>" +
+      const gruppe = e.rolle ? ROLLE[e.rolle].name : kat ? KAT[kat].name : e.uml && istPaketEl(e) ? "Paket" : "";
+      let h = '<div class="ar-sb-kopf ' + klasseVon(e) + '"><span class="ar-sb-ikon">' + piktoSvg(t.pikto) + "</span><div>" +
+        '<p class="ar-sb-kat">' + (gruppe ? esc(gruppe) + " · " : "") + esc(e.stereotyp ? "«" + e.stereotyp + "»" : t.name) + "</p>" +
         '<h4 class="ar-sb-name">' + e.name + "</h4>" + (e.technologie ? '<p class="ar-sb-tech">' + e.technologie + "</p>" : "") + "</div></div>";
       const info = e.info || {};
       let felder = "";
       STECKBRIEF_FELDER.forEach(([f, titel]) => { if (info[f]) felder += "<dt>" + titel + "</dt><dd>" + info[f] + "</dd>"; });
+      if (!felder && e.uml) felder = "<dt>Was es ist</dt><dd>" + (istPaketEl(e) ? "UML-Paket: fasst zusammen, was in dieser Schicht oder auf diesem Knoten liegt." : esc(e.rolle ? ROLLE[e.rolle].kurz : t.name) + ".") + "</dd>" +
+        ((e.schnittstellen || []).length ? "<dt>Bietet an</dt><dd>" + e.schnittstellen.map((x) => esc(x.name)).join(", ") + "</dd>" : "");
       if (!felder) felder = "<dt>Was es ist</dt><dd>" + esc(t.name) + (kat ? " (" + esc(KAT[kat].kurz) + ")" : "") + ".</dd><dt>Typische Technologien</dt><dd>" + esc(t.beispiele) + "</dd>";
       h += '<dl class="ar-sb-felder">' + felder + "</dl>";
       const vl = [];
@@ -1626,8 +2008,8 @@
     function kanteZeigen(kid) {
       const v = m.verbindungen.find((x) => x.id === kid);
       if (!v) return;
-      sb.innerHTML = '<div class="ar-sb-kopf ' + katKlasse(nachId[v.nach].typ) + '"><span class="ar-sb-ikon ar-sb-ikon-linie">' + artMuster(v.art, 40) + "</span><div>" +
-        '<p class="ar-sb-kat">Verbindung · ' + esc(ARTEN[v.art].name) + "</p><h4 class=\"ar-sb-name\">" + esc(name(v.von)) + " → " + esc(name(v.nach)) + "</h4>" +
+      sb.innerHTML = '<div class="ar-sb-kopf ' + klasseVon(nachId[v.nach]) + '"><span class="ar-sb-ikon ar-sb-ikon-linie">' + artMuster(v.art, 40) + "</span><div>" +
+        '<p class="ar-sb-kat">Verbindung · ' + esc(ARTEN[v.art].name) + "</p><h4 class=\"ar-sb-name\">" + esc(name(v.von)) + " → " + esc(name(v.nach)) + (v.nachSch ? " (" + esc(schName(v.nach, v.nachSch)) + ")" : "") + "</h4>" +
         (v.label ? '<p class="ar-sb-tech">' + esc(ohneTags(v.label)) + "</p>" : "") + "</div></div>" +
         '<dl class="ar-sb-felder"><dt>Bedeutung</dt><dd>' + esc(ARTEN[v.art].erkl) + ".</dd>" + (v.info ? "<dt>Warum so</dt><dd>" + v.info + "</dd>" : "") + "</dl>";
       formelnSetzen(sb);
@@ -1660,6 +2042,9 @@
       const y = fl.bildschirm(r.x, r.y)[1];
       sb.style.top = Math.round(klemmen(y - 20, 12, Math.max(12, rahmen.clientHeight - sb.offsetHeight - 12))) + "px";
     }
+    function schName(el, sch) { const x = (nachId[el].schnittstellen || []).find((y) => y.id === sch); return x ? x.name : sch; }
+    const plaketten = {};
+    function plaketteWeg(id) { if (plaketten[id]) { plaketten[id].remove(); delete plaketten[id]; } }
     function waehlen(id) {
       if (gewaehlt && szene.elG[gewaehlt]) szene.elG[gewaehlt].classList.remove("ar-gewaehlt");
       gewaehlt = id;
@@ -1689,7 +2074,11 @@
         m.verbindungen.forEach((v) => {
           if (v.nach !== x || aus.has(v.von) || v.art === "deploy") return;
           const a = v.von;
-          if (SYNCHRON_ARTEN[v.art]) {
+          const asyncAsso = v.art === "assoziation" && (ASYNC_PROTOKOLL.test((v.label || "") + " " + (v.protokoll || "")) || kategorieVon(nachId[x].typ) === "messaging" || kategorieVon(nachId[a].typ) === "messaging");
+          if (asyncAsso) {
+            if (kategorieVon(nachId[a].typ) === "messaging") (stau[a] = stau[a] || []).push(x);
+            else if (kategorieVon(nachId[x].typ) === "messaging") { if (!betroffen[a]) { betroffen[a] = { wegen: x, art: "publish" }; liste.push(a); } }
+          } else if (SYNCHRON_ARTEN[v.art]) {
             if (!betroffen[a]) { betroffen[a] = { wegen: x, art: v.art }; liste.push(a); }
           } else if (v.art === "async") {
             if (kategorieVon(nachId[a].typ) === "messaging") (stau[a] = stau[a] || []).push(x);
@@ -1811,25 +2200,28 @@
     const katFokus = new Set();
     if (opt.legende) {
       legende = erzeugen("div", "ar-legende");
-      const kats = KATEGORIEN.filter((k) => m.elemente.some((e) => kategorieVon(e.typ) === k.id));
+      // Modulnotation: Rollen statt Kategorien
+      const gruppeVon = (e) => (uml ? e.rolle || null : kategorieVon(e.typ));
+      const namen = uml ? ROLLE : KAT;
+      const kats = (uml ? ROLLEN : KATEGORIEN).filter((k) => m.elemente.some((e) => gruppeVon(e) === k.id));
       const kReihe = erzeugen("div", "ar-legende-reihe");
       kReihe.setAttribute("role", "group");
-      kReihe.setAttribute("aria-label", "Kategorien hervorheben");
-      kReihe.appendChild(erzeugen("span", "ar-legende-titel", "Kategorien"));
+      kReihe.setAttribute("aria-label", uml ? "Rollen hervorheben" : "Kategorien hervorheben");
+      kReihe.appendChild(erzeugen("span", "ar-legende-titel", uml ? "Rollen" : "Kategorien"));
       kats.forEach((k) => {
-        const b = knopf('<span class="ar-farbpunkt" aria-hidden="true"></span>' + esc(k.name), "ar-chip ar-k-" + k.id, { "aria-pressed": "false", title: k.kurz });
+        const b = knopf('<span class="ar-farbpunkt" aria-hidden="true"></span>' + esc(k.name), "ar-chip " + (uml ? "ar-r-" : "ar-k-") + k.id, { "aria-pressed": "false", title: k.kurz });
         b.addEventListener("click", () => {
           if (katFokus.has(k.id)) katFokus.delete(k.id); else katFokus.add(k.id);
           b.setAttribute("aria-pressed", String(katFokus.has(k.id)));
           svg.classList.toggle("ar-kat-fokus", katFokus.size > 0);
-          Object.keys(szene.elG).forEach((id) => szene.elG[id].classList.toggle("ar-kat-an", katFokus.has(kategorieVon(nachId[id].typ))));
+          Object.keys(szene.elG).forEach((id) => szene.elG[id].classList.toggle("ar-kat-an", katFokus.has(gruppeVon(nachId[id]))));
           Object.keys(szene.kantenG).forEach((kid) => {
             const v = m.verbindungen.find((x) => x.id === kid);
-            const an = katFokus.has(kategorieVon(nachId[v.von].typ)) && katFokus.has(kategorieVon(nachId[v.nach].typ));
+            const an = katFokus.has(gruppeVon(nachId[v.von])) || katFokus.has(gruppeVon(nachId[v.nach]));
             szene.kantenG[kid].classList.toggle("ar-kat-an", an);
             if (szene.labelG[kid]) szene.labelG[kid].classList.toggle("ar-kat-an", an);
           });
-          live.textContent = katFokus.size ? "Hervorgehoben: " + Array.from(katFokus).map((x) => KAT[x].name).join(", ") : "Keine Kategorie hervorgehoben.";
+          live.textContent = katFokus.size ? "Hervorgehoben: " + Array.from(katFokus).map((x) => namen[x].name).join(", ") : "Nichts hervorgehoben.";
         });
         kReihe.appendChild(b);
       });
@@ -1878,7 +2270,35 @@
         svg.classList.toggle("ar-mit-markierung", s.size > 0);
       },
       waehle: (id) => waehlen(id || null),
-      modell: () => kopie(m),
+      modell: () => modellSauber(m),
+      // eigene Plakette (Text, z. B. «3 Instanzen», «p95 220 ms») an einem Element oder einer Verbindung
+      plakette: (id, html, klasse) => {
+        const ziel = szene.elG[id] ? (lay.el[id] || lay.gr[id]) : null;
+        const rt = !ziel && routen[id];
+        if (!ziel && !rt) return fehler("diagramm", "plakette: «" + id + "» ist weder Element noch Verbindung.");
+        plaketteWeg(id);
+        const text = ohneTags(html);
+        const w = textBreite(text, 11.5, 700) + 14;
+        let x, y;
+        if (ziel) { x = ziel.x + 4; y = ziel.y - 11; }
+        else { const p = punktAuf(rt.punkte, polyLaenge(rt.punkte) * 0.5); x = p[0] - w / 2; y = p[1] + 10; }
+        const g = svgEl("g", { transform: "translate(" + f1(x) + " " + f1(y) + ")", "data-plakette": id }, "ar-plakette" + (klasse ? " " + klasse : ""));
+        g.innerHTML = '<rect width="' + f1(w) + '" height="20" rx="10"/><text x="' + f1(w / 2) + '" y="14" text-anchor="middle">' + esc(text) + "</text>";
+        szene.effekte.appendChild(g);
+        plaketten[id] = g;
+        return true;
+      },
+      entfernePlakette: (id) => { if (id === undefined) Object.keys(plaketten).forEach(plaketteWeg); else plaketteWeg(id); },
+      // Fluss-Animation einer Verbindung ohne Ablauf: { an: true|false, tempo: 1 = normal, 2 = doppelt so schnell }
+      fluss: (kid, o) => {
+        const g = szene.kantenG[kid];
+        if (!g) return fehler("diagramm", "fluss: Verbindung «" + kid + "» unbekannt.");
+        o = o || {};
+        const an = o.an !== false;
+        g.classList.toggle("ar-fluss", an);
+        g.style.setProperty("--ar-fluss-dauer", (0.9 / klemmen(Number(o.tempo) || 1, 0.1, 10)).toFixed(2) + "s");
+        return true;
+      },
     };
   }
 
@@ -1889,9 +2309,10 @@
     inhalt.appendChild(erzeugen("h4", null, "Elemente (" + m.elemente.length + ")"));
     const ul = erzeugen("ul");
     m.elemente.forEach((e) => {
-      const li = erzeugen("li", katKlasse(e.typ));
+      const li = erzeugen("li", klasseVon(e));
       li.innerHTML = '<span class="ar-farbpunkt" aria-hidden="true"></span><span><b>' + e.name + "</b> " + esc(e.stereotyp ? "«" + e.stereotyp + "»" : "") +
-        (kategorieVon(e.typ) ? ' <span class="hint">· ' + esc(KAT[kategorieVon(e.typ)].name) + "</span>" : "") +
+        (e.rolle ? ' <span class="hint">· ' + esc(ROLLE[e.rolle].name) + "</span>" : e.uml && istPaketEl(e) ? ' <span class="hint">· Paket</span>' : kategorieVon(e.typ) ? ' <span class="hint">· ' + esc(KAT[kategorieVon(e.typ)].name) + "</span>" : "") +
+        ((e.schnittstellen || []).length ? ' <span class="hint">· bietet ' + e.schnittstellen.map((x) => esc(x.name)).join(", ") + "</span>" : "") +
         (e.technologie ? ' <span class="hint">· ' + e.technologie + "</span>" : "") +
         (e.in && ix.nachId[e.in] ? ' <span class="hint">· in ' + ix.nachId[e.in].name + "</span>" : "") + "</span>";
       if (zeigen) {
@@ -1906,7 +2327,8 @@
       inhalt.appendChild(erzeugen("h4", null, "Verbindungen (" + m.verbindungen.length + ")"));
       const ul2 = erzeugen("ul");
       m.verbindungen.forEach((v) => {
-        ul2.appendChild(erzeugen("li", null, "<span><b>" + ix.nachId[v.von].name + "</b> " + ART_VERB[v.art][0] + " <b>" + ix.nachId[v.nach].name + "</b>" +
+        const sch = v.nachSch ? (ix.nachId[v.nach].schnittstellen || []).find((x) => x.id === v.nachSch) : null;
+        ul2.appendChild(erzeugen("li", null, "<span><b>" + ix.nachId[v.von].name + "</b> " + ART_VERB[v.art][0] + " <b>" + ix.nachId[v.nach].name + "</b>" + (sch ? " über die Schnittstelle «" + esc(sch.name) + "»" : "") +
           ' <span class="hint">· ' + esc(ARTEN[v.art].name) + (v.label ? " · " + esc(ohneTags(v.label)) : "") + "</span></span>"));
       });
       inhalt.appendChild(ul2);
@@ -2861,7 +3283,7 @@
       markierungen = [];
       geister = [];
       zeichnen();
-      if (typeof opt.onChange === "function") { try { opt.onChange(kopie(m)); } catch (e) { console.error("[Architektur] editor: onChange", e); } }
+      if (typeof opt.onChange === "function") { try { opt.onChange(modellSauber(m)); } catch (e) { console.error("[Architektur] editor: onChange", e); } }
     }
     function zustandLaden(s) {
       const d = JSON.parse(s);
@@ -2986,6 +3408,7 @@
         if (ev.button > 0) return;
         if (it.id && m.elemente.some((e) => e.id === it.id)) return;
         start = { x: ev.clientX, y: ev.clientY, id: ev.pointerId };
+        try { b.setPointerCapture(ev.pointerId); } catch (e) { /* egal */ }
       });
       b.addEventListener("pointermove", (ev) => {
         if (!start || start.id !== ev.pointerId) return;
@@ -3394,7 +3817,7 @@
       const t = nameInput.value.trim();
       if (!e || !t) return;
       sichern();
-      e.name = esc(t);
+      e.name = t;
       geaendert();
       melden("Umbenannt in «" + t + "».");
     });
@@ -3418,7 +3841,7 @@
     melden(nurVerbinden ? "Wähle ein Element, dann «Verbinden» und das Ziel. Oder zieh vom Griff am Element." : "Zieh Bausteine aus der Palette auf die Fläche oder tippe sie an und wähle ein Feld.");
 
     return {
-      modell: () => kopie(m),
+      modell: () => modellSauber(m),
       setzeModell: (neu) => {
         const n = modellPruefen(neu, "editor");
         if (!n) return false;
@@ -3441,6 +3864,697 @@
         palKnoepfe[i].scrollIntoView && palKnoepfe[i].scrollIntoView({ block: "nearest" });
       },
       rueckgaengig: rueckgaengig,
+    };
+  }
+
+  /* ---------- 13b. Prüfungsspiel in Modulnotation (Vertrag 10.3) ---------- */
+
+  const UML_PROTOKOLLE = ["REST", "SOAP", "GraphQL", "OData", "gRPC", "AMQP", "JMS", "MQTT", "RMI", "HTTP", "SMTP", "AD LDS"];
+  const UML_GEWICHTE = { komponenten: 2, pakete: 1, stereotypen: 1, verbindungen: 2, beschriftungen: 1, beschreibungen: 1 };
+  const KRITERIEN = [
+    ["komponenten", "Komponenten"], ["pakete", "Pakete (Lage)"], ["stereotypen", "Stereotypen"],
+    ["verbindungen", "Verbindungen"], ["beschriftungen", "Beschriftungen (Protokoll)"], ["beschreibungen", "Beschreibungen"],
+  ];
+  const ohneGuillemets = (t) => String(t || "").replace(/[«»<>]/g, "").trim().toLowerCase();
+
+  function umlLevelPruefen(l, f) {
+    const pakete = Array.isArray(l.pakete) ? l.pakete.filter((p) => p && p.id && ID_MUSTER.test(p.id)) : [];
+    if (!pakete.length) return f("Level «" + l.id + "» (uml): «pakete» fehlt.");
+    const pIds = new Set(pakete.map((p) => p.id));
+    const palette = (l.palette || []).filter((p) => {
+      if (!p || !p.id || !ID_MUSTER.test(p.id) || !TYPEN[p.typ]) { f("Level «" + l.id + "»: Palette-Eintrag braucht gültige «id» und bekannten «typ»."); return false; }
+      if (pIds.has(p.id)) { f("Level «" + l.id + "»: ID «" + p.id + "» ist schon ein Paket."); return false; }
+      return true;
+    });
+    const nachId = {};
+    palette.forEach((p) => (nachId[p.id] = p));
+    const loe = l.loesung || {};
+    if (!Array.isArray(loe.elemente) || !Array.isArray(loe.verbindungen)) return f("Level «" + l.id + "»: «loesung» braucht «elemente» und «verbindungen».");
+    const elemente = loe.elemente.map((x) => (typeof x === "string" ? { id: x } : x));
+    for (const x of elemente) {
+      if (!nachId[x.id]) return f("Level «" + l.id + "»: Lösung nennt unbekannte Komponente «" + x.id + "».");
+      if (x.paket && !pIds.has(x.paket)) return f("Level «" + l.id + "»: Paket «" + x.paket + "» unbekannt.");
+    }
+    const kennt = (ref) => { const t = String(ref || "").split("#"); return (nachId[t[0]] || pIds.has(t[0])) && (!t[1] || (nachId[t[0]] && (nachId[t[0]].schnittstellen || []).some((s) => s.id === t[1]))); };
+    for (const v of loe.verbindungen) {
+      if (!kennt(v.von) || !kennt(v.nach)) return f("Level «" + l.id + "»: Lösungs-Verbindung " + v.von + " → " + v.nach + " nennt Unbekanntes.");
+    }
+    (loe.beschreibungen || []).forEach((b) => { if (!nachId[b.id] && !pIds.has(b.id)) f("Level «" + l.id + "»: Beschreibung für unbekanntes «" + b.id + "»."); });
+    return {
+      id: l.id, uml: true, titel: l.titel || "Level", schwierigkeit: klemmen(Math.round(l.schwierigkeit || 2), 1, 3),
+      auftrag: l.auftrag || "", pakete: pakete, palette: palette, referenz: l.referenz || null,
+      protokolle: Array.isArray(l.protokolle) && l.protokolle.length ? l.protokolle : UML_PROTOKOLLE,
+      loesung: { elemente: elemente, verbindungen: loe.verbindungen.map((v) => Object.assign({ art: "assoziation" }, v)), beschreibungen: loe.beschreibungen || [] },
+      gewichte: Object.assign({}, UML_GEWICHTE, l.gewichte || {}), zielzeit: Number(l.zielzeit) > 0 ? Number(l.zielzeit) : 600,
+      erklaerung: l.erklaerung || "", ablenker: palette.filter((p) => p.ablenker || p.falle).map((p) => p.id),
+    };
+  }
+
+  // Musterlösung als Modell (für Anzeige und Referenz)
+  function umlMusterModell(L, mitAblauf) {
+    const sch = {};
+    L.loesung.verbindungen.forEach((v) => {
+      const t = String(v.nach).split("#");
+      if (t[1]) (sch[t[0]] = sch[t[0]] || new Set()).add(t[1]);
+    });
+    const elemente = L.loesung.elemente.map((x) => {
+      const p = L.palette.find((q) => q.id === x.id);
+      return { id: p.id, typ: p.typ, rolle: p.rolle, name: p.name, in: x.paket, stereotyp: x.stereotyp || "", technologie: p.technologie || "",
+        info: p.info ? { was: p.info } : undefined,
+        schnittstellen: (p.schnittstellen || []).filter((s) => (sch[p.id] && sch[p.id].has(s.id)) || s.immer) };
+    });
+    const verbindungen = L.loesung.verbindungen.map((v, k) => ({ id: "l" + (k + 1), von: v.von, nach: v.nach, art: v.art, protokoll: v.protokoll || "", format: v.format || "", label: v.label, info: v.warum || "" }));
+    const m = { notation: "uml-komponenten", titel: "", pakete: L.pakete, elemente: elemente, verbindungen: verbindungen };
+    if (mitAblauf) m.ablaeufe = [{ id: "loesung", name: "Musterlösung Schritt für Schritt", schritte: L.loesung.verbindungen.filter((v) => v.warum).map((v) => ({ von: v.von, nach: v.nach, text: v.warum })) }];
+    return m;
+  }
+
+  function umlFeld(el, L, opt) {
+    opt = opt || {};
+    const uid = neueId("uf");
+    const live = ansage();
+    let m = { elemente: [], verbindungen: [] };
+    let auswahl = null, kanteWahl = null, modus = null, markierung = null, geister = [];
+    const verlauf = [];
+    const beschreibungWahl = {};
+    const palNach = {};
+    L.palette.forEach((p) => (palNach[p.id] = p));
+    const paketNach = {};
+    L.pakete.forEach((p) => (paketNach[p.id] = p));
+    const istPaket = (id) => !!paketNach[id];
+    const name = (id) => ohneTags((palNach[id] || paketNach[id] || { name: id }).name);
+
+    el.innerHTML = "";
+    el.classList.add("ar-uml-feld");
+    const leiste = erzeugen("div", "ar-ed-leiste");
+    leiste.setAttribute("role", "toolbar");
+    leiste.setAttribute("aria-label", "Werkzeuge");
+    const bVerb = knopf('<svg class="pikto" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.5"/><circle cx="19" cy="12" r="2.5"/><path d="M7.5 12h9"/></svg>Verbinden', "", { "aria-pressed": "false", "aria-keyshortcuts": "V" });
+    const bWeg = knopf('<svg class="pikto" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13"/></svg>Entfernen');
+    const bUndo = knopf('<svg class="pikto" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7L4.5 11.5 9 16"/><path d="M4.5 11.5H15a5 5 0 0 1 0 10h-3"/></svg>Rückgängig');
+    leiste.append(bVerb, bWeg, bUndo);
+    const status = erzeugen("p", "ar-ed-status");
+    status.setAttribute("aria-live", "polite");
+    const arbeit = erzeugen("div", "ar-uf-arbeit");
+    const pal = erzeugen("div", "ar-ed-palette ar-uf-palette");
+    pal.appendChild(erzeugen("p", "ar-ed-titel", "Komponenten"));
+    const palListe = erzeugen("div", "ar-uf-pal-liste");
+    palListe.setAttribute("role", "group");
+    palListe.setAttribute("aria-label", "Komponenten: antippen und Paket wählen, oder in ein Paket ziehen");
+    pal.appendChild(palListe);
+    pal.appendChild(erzeugen("p", "hint ar-ed-pal-hinweis", "In ein Paket ziehen, oder antippen und dann das Paket wählen. Tastatur: Enter, Pfeiltasten, Enter."));
+    const buehne = erzeugen("div", "ar-ed-buehne");
+    const rahmen = erzeugen("div", "ar-viewport ar-uf-flaeche");
+    rahmen.tabIndex = 0;
+    rahmen.setAttribute("role", "group");
+    rahmen.setAttribute("aria-label", "Modellierfläche mit Paketen");
+    const svg = svgEl("svg", { role: "group", "aria-label": "UML-Komponentendiagramm", preserveAspectRatio: "xMidYMid meet" }, "ar-svg");
+    rahmen.appendChild(svg);
+    let fl = null;
+    buehne.append(rahmen, zoomLeiste(() => fl, "Zoom"));
+    const panel = erzeugen("div", "ar-uf-panel");
+    panel.setAttribute("aria-label", "Eigenschaften");
+    arbeit.append(pal, buehne, panel);
+    const liste = erzeugen("details", "ar-ed-liste");
+    liste.innerHTML = "<summary>Modell als Liste</summary>";
+    const listeInhalt = erzeugen("div", "ar-ed-liste-inhalt");
+    liste.appendChild(listeInhalt);
+    el.append(leiste, status, arbeit, liste, live);
+    const melden = (t) => { status.textContent = t; };
+
+    // Palette
+    const palKnoepfe = {};
+    L.palette.forEach((p) => {
+      const b = knopf('<span class="ar-uf-chip ' + "ar-r-" + (p.rolle || ROLLE_VON_TYP[p.typ] || "extern") + '"><span class="ar-uf-chip-ikon" aria-hidden="true">' +
+        '<svg viewBox="0 0 16 13"><rect x="4.5" y=".5" width="11" height="12" rx="1.5"/><rect x=".5" y="3" width="7" height="2.6" rx=".6"/><rect x=".5" y="7.2" width="7" height="2.6" rx=".6"/></svg></span>' +
+        esc(ohneTags(p.name)) + "</span>", "ar-uf-pal", { "aria-pressed": "false" });
+      if (p.info) b.title = ohneTags(p.info);
+      palKnoepfe[p.id] = b;
+      palListe.appendChild(b);
+      ziehenAusPalette(b, p);
+      b.addEventListener("click", () => {
+        if (b.dataset.gezogen) { delete b.dataset.gezogen; return; }
+        if (m.elemente.some((e) => e.id === p.id)) { waehlen(p.id); fokus(p.id); return; }
+        modus = { art: "platzieren", item: p };
+        el.classList.add("ar-platzieren");
+        Object.keys(palKnoepfe).forEach((k) => palKnoepfe[k].setAttribute("aria-pressed", String(k === p.id)));
+        zeichnen();
+        const erstes = Object.keys(szene.gruppenG)[0];
+        fokus(paketZiel(erstes));
+        melden("«" + ohneTags(p.name) + "»: Wähle das Paket (antippen, oder Pfeiltasten und Enter). Escape bricht ab.");
+      });
+    });
+
+    function sichern() { verlauf.push(JSON.stringify({ m: m, b: beschreibungWahl })); if (verlauf.length > 60) verlauf.shift(); }
+    function geaendert() {
+      markierung = null;
+      geister = [];
+      zeichnen();
+      panelZeigen();
+      if (opt.onChange) opt.onChange();
+    }
+    function modellVoll() {
+      return {
+        notation: "uml-komponenten", pakete: L.pakete,
+        elemente: m.elemente.map((e) => Object.assign({}, e)),
+        verbindungen: m.verbindungen.map((v) => ({ id: v.id, von: v.von, nach: v.nachSch ? v.nach + "#" + v.nachSch : v.nach, art: v.art, protokoll: v.protokoll, format: v.format, label: [v.protokoll, v.format].filter(Boolean).join(" · ") })),
+      };
+    }
+    function setzen(item, paket) {
+      if (!istPaket(paket)) return;
+      sichern();
+      const da = m.elemente.find((e) => e.id === item.id);
+      if (da) { da.in = paket; melden("«" + ohneTags(item.name) + "» liegt jetzt in «" + name(paket) + "»."); }
+      else {
+        m.elemente.push({ id: item.id, typ: item.typ, rolle: item.rolle || ROLLE_VON_TYP[item.typ] || "extern", name: item.name, in: paket, stereotyp: "", schnittstellen: [] });
+        melden("«" + ohneTags(item.name) + "» liegt in «" + name(paket) + "». Wähle jetzt den Stereotyp.");
+      }
+      modus = null;
+      el.classList.remove("ar-platzieren");
+      Object.keys(palKnoepfe).forEach((k) => palKnoepfe[k].setAttribute("aria-pressed", "false"));
+      auswahl = item.id; kanteWahl = null;
+      geaendert();
+      fokus(item.id);
+    }
+    function entfernen() {
+      if (kanteWahl) {
+        sichern();
+        m.verbindungen = m.verbindungen.filter((v) => v.id !== kanteWahl);
+        kanteWahl = null;
+        geaendert();
+        melden("Verbindung entfernt.");
+        rahmen.focus();
+        return;
+      }
+      if (!auswahl || istPaket(auswahl)) { melden("Wähle zuerst eine Komponente oder Verbindung."); return; }
+      sichern();
+      const weg = auswahl;
+      m.elemente = m.elemente.filter((e) => e.id !== weg);
+      m.verbindungen = m.verbindungen.filter((v) => v.von !== weg && v.nach !== weg);
+      delete beschreibungWahl[weg];
+      auswahl = null;
+      geaendert();
+      melden("«" + name(weg) + "» entfernt.");
+      if (palKnoepfe[weg]) palKnoepfe[weg].focus();
+    }
+    function verbinden(von, nach, sch) {
+      if (von === nach) { melden("Eine Verbindung braucht zwei verschiedene Teile."); return; }
+      sichern();
+      let n = 1;
+      while (m.verbindungen.some((v) => v.id === "u" + n)) n++;
+      const art = istPaket(von) || istPaket(nach) ? "abhaengigkeit" : "assoziation";
+      const v = { id: "u" + n, von: von, nach: nach, nachSch: sch || null, art: art, protokoll: "", format: "" };
+      m.verbindungen.push(v);
+      modus = null;
+      el.classList.remove("ar-verbinden");
+      bVerb.setAttribute("aria-pressed", "false");
+      auswahl = null; kanteWahl = v.id;
+      geaendert();
+      melden("Verbindung «" + name(von) + " → " + name(nach) + (sch ? " (" + schName(nach, sch) + ")" : "") + "». Beschrifte sie mit Protokoll und Format.");
+      const p = $("select", panel);
+      if (p) p.focus();
+    }
+    function schName(id, sch) { const e = m.elemente.find((x) => x.id === id); const s2 = e && e.schnittstellen.find((x) => x.id === sch); return s2 ? s2.name : sch; }
+    function verbindenStart(von) {
+      if (!von) { melden("Wähle zuerst Start-Komponente oder -Paket, dann «Verbinden»."); return; }
+      modus = { art: "verbinden", von: von };
+      el.classList.add("ar-verbinden");
+      bVerb.setAttribute("aria-pressed", "true");
+      zeichnen();
+      melden("Verbinden ab «" + name(von) + "»: Wähle das Ziel (Komponente, Ball oder Paket). Escape bricht ab.");
+    }
+
+    // Zeichnen
+    let szene = null, lay = null, routen = {}, letzteBox = null;
+    function zeichnen() {
+      const n = modellPruefen(modellVoll(), "spiel");
+      if (!n) return;
+      lay = umlLayout(n, { leerMin: { w: 200, h: 64 } });
+      routen = kantenRouten(lay, n.verbindungen);
+      const labels = labelsSetzen(lay, n.verbindungen, routen);
+      szene = szeneZeichnen(svg, n, lay, routen, labels, { uid: uid });
+      if (!fl) fl = zoomFlaeche(rahmen, svg, { inhalt: lay.box, kMin: 0.5, kMax: 1, minHoehe: 300, darfZiehen: (ev) => !ev.target.closest(".ar-el, .ar-gruppe .ar-uml-reiter") });
+      else if (!letzteBox || Math.abs(letzteBox.w - lay.box.w) > 4 || Math.abs(letzteBox.h - lay.box.h) > 4) fl.setzeInhalt(lay.box);
+      letzteBox = lay.box;
+      // leere Pakete als Ablagefelder
+      Object.keys(szene.gruppenG).forEach((pid) => {
+        const g = szene.gruppenG[pid], r = lay.gr[pid];
+        const leer = !m.elemente.some((e) => e.in === pid) && !L.pakete.some((p) => p.in === pid);
+        g.classList.add("ar-ablage");
+        if (leer) {
+          const t = svgEl("text", { x: f1(r.w / 2), y: f1(U.TAB + (r.h - U.TAB) / 2 + 4), "text-anchor": "middle" }, "ar-ablage-text");
+          t.textContent = "Komponente hierher ziehen";
+          g.appendChild(t);
+        }
+        g.setAttribute("aria-label", "Paket " + name(pid) + (leer ? ", leer" : ", enthält " + m.elemente.filter((e) => e.in === pid).map((e) => name(e.id)).join(", ")) + (modus && modus.art === "platzieren" ? ". Enter legt «" + ohneTags(modus.item.name) + "» hier ab." : ""));
+        paketBedienung(pid, g);
+      });
+      Object.keys(szene.elG).forEach((id) => { if (!istPaket(id)) elementBedienung(id, szene.elG[id]); });
+      Object.keys(szene.kantenG).forEach((kid) => {
+        szene.kantenG[kid].classList.toggle("ar-gewaehlt", kid === kanteWahl);
+        szene.kantenG[kid].addEventListener("click", (ev) => { ev.stopPropagation(); auswahl = null; kanteWahl = kid; zeichnen(); panelZeigen(); });
+      });
+      if (auswahl && szene.elG[auswahl]) szene.elG[auswahl].classList.add("ar-gewaehlt");
+      if (modus && modus.art === "verbinden" && szene.elG[modus.von]) szene.elG[modus.von].classList.add("ar-quelle");
+      if (markierung) markierungAnwenden();
+      geister.forEach((gv) => {
+        const r = kantenRouten(lay, [{ id: "geist", von: gv.von, nach: gv.nach, nachSch: gv.nachSch || null, art: "assoziation" }]);
+        if (r.geist) szene.effekte.appendChild(svgEl("path", { d: pfadD(r.geist.punkte, 7) }, "ar-geist ar-tipp-geist"));
+      });
+      Object.keys(palKnoepfe).forEach((k) => palKnoepfe[k].classList.toggle("ar-liegt", m.elemente.some((e) => e.id === k)));
+      bWeg.disabled = !(kanteWahl || (auswahl && !istPaket(auswahl)));
+      bUndo.disabled = !verlauf.length;
+      listeZeichnen();
+    }
+    const paketZiel = (pid) => pid;
+    function fokus(id) {
+      const g = szene && szene.elG[id];
+      if (g) { try { g.focus({ preventScroll: true }); } catch (e) { g.focus(); } if (fl) fl.zeige(lay.el[id] || lay.gr[id]); }
+    }
+    function paketBedienung(pid, g) {
+      const aktion = () => {
+        if (modus && modus.art === "platzieren") { setzen(modus.item, pid); return; }
+        if (modus && modus.art === "verbinden") { verbinden(modus.von, pid, null); return; }
+        auswahl = auswahl === pid ? null : pid; kanteWahl = null;
+        zeichnen(); panelZeigen(); fokus(pid);
+      };
+      g.addEventListener("click", (ev) => { if (ev.target.closest(".ar-el")) return; ev.stopPropagation(); aktion(); });
+      g.addEventListener("keydown", (ev) => {
+        if (ev.target !== g) return;
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); aktion(); }
+        else if (ev.key === "Escape") { ev.preventDefault(); abbrechen(); }
+        else if (modus && /^Arrow/.test(ev.key)) {
+          ev.preventDefault();
+          const ids = Object.keys(szene.gruppenG);
+          const i = ids.indexOf(pid) + (ev.key === "ArrowDown" || ev.key === "ArrowRight" ? 1 : -1);
+          fokus(ids[(i + ids.length) % ids.length]);
+          melden("Paket «" + name(ids[(i + ids.length) % ids.length]) + "».");
+        }
+      });
+    }
+    function elementBedienung(id, g) {
+      const aktion = (sch) => {
+        if (modus && modus.art === "verbinden") { verbinden(modus.von, id, sch || null); return; }
+        if (modus && modus.art === "platzieren") { const e = m.elemente.find((x) => x.id === id); if (e) setzen(modus.item, e.in); return; }
+        auswahl = auswahl === id ? null : id; kanteWahl = null;
+        zeichnen(); panelZeigen(); fokus(id);
+      };
+      g.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        if (g.dataset.gezogen) { delete g.dataset.gezogen; return; }
+        const ball = ev.target.closest(".ar-uml-ball");
+        aktion(ball ? ball.getAttribute("data-sch") : null);
+      });
+      g.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); aktion(null); }
+        else if (ev.key === "Escape") { ev.preventDefault(); abbrechen(); }
+        else if ((ev.key === "v" || ev.key === "V") && !ev.ctrlKey && !ev.metaKey) { ev.preventDefault(); verbindenStart(id); }
+        else if ((ev.key === "Delete" || ev.key === "Backspace") && auswahl === id) { ev.preventDefault(); entfernen(); }
+      });
+      // in ein anderes Paket ziehen
+      let start = null, geist = null;
+      g.addEventListener("pointerdown", (ev) => { if (ev.button > 0 || modus) return; start = { x: ev.clientX, y: ev.clientY, id: ev.pointerId }; });
+      g.addEventListener("pointermove", (ev) => {
+        if (!start || start.id !== ev.pointerId) return;
+        if (!geist && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 7) {
+          try { g.setPointerCapture(ev.pointerId); } catch (e) { /* egal */ }
+          geist = erzeugen("div", "ar-zieh-geist ar-uf-geist", '<span class="ar-uf-chip ' + klasseVon(m.elemente.find((x) => x.id === id)) + '">' + esc(name(id)) + "</span>");
+          document.body.appendChild(geist);
+          el.classList.add("ar-platzieren");
+        }
+        if (geist) { ev.preventDefault(); geist.style.left = ev.clientX + "px"; geist.style.top = ev.clientY + "px"; zielHervorheben(paketUnter(ev)); }
+      });
+      const ende = (ev) => {
+        if (!start || start.id !== ev.pointerId) return;
+        start = null;
+        if (!geist) return;
+        geist.remove(); geist = null;
+        el.classList.remove("ar-platzieren");
+        g.dataset.gezogen = "1";
+        const pid = paketUnter(ev);
+        zielHervorheben(null);
+        if (pid) setzen(palNach[id], pid); else zeichnen();
+      };
+      g.addEventListener("pointerup", ende);
+      g.addEventListener("pointercancel", ende);
+    }
+    function paketUnter(ev) {
+      const unter = document.elementFromPoint(ev.clientX, ev.clientY);
+      const g = unter && unter.closest ? unter.closest(".ar-gruppe") : null;
+      if (g && svg.contains(g)) return g.getAttribute("data-id");
+      const e = unter && unter.closest ? unter.closest(".ar-el") : null;
+      if (e && svg.contains(e)) { const x = m.elemente.find((y) => y.id === e.getAttribute("data-id")); return x ? x.in : null; }
+      return null;
+    }
+    function zielHervorheben(pid) { if (!szene) return; Object.keys(szene.gruppenG).forEach((k) => szene.gruppenG[k].classList.toggle("ar-ablage-ziel", k === pid)); }
+    function ziehenAusPalette(b, p) {
+      let start = null, geist = null;
+      b.addEventListener("pointerdown", (ev) => {
+        if (ev.button > 0 || m.elemente.some((e) => e.id === p.id)) return;
+        start = { x: ev.clientX, y: ev.clientY, id: ev.pointerId };
+        try { b.setPointerCapture(ev.pointerId); } catch (e) { /* egal */ }
+      });
+      b.addEventListener("pointermove", (ev) => {
+        if (!start || start.id !== ev.pointerId) return;
+        if (!geist && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 6) {
+          try { b.setPointerCapture(ev.pointerId); } catch (e) { /* egal */ }
+          geist = erzeugen("div", "ar-zieh-geist ar-uf-geist", b.innerHTML);
+          document.body.appendChild(geist);
+          el.classList.add("ar-platzieren");
+        }
+        if (geist) { ev.preventDefault(); geist.style.left = ev.clientX + "px"; geist.style.top = ev.clientY + "px"; zielHervorheben(paketUnter(ev)); }
+      });
+      const ende = (ev, abbruch) => {
+        if (!start || start.id !== ev.pointerId) return;
+        start = null;
+        if (!geist) return;
+        geist.remove(); geist = null;
+        el.classList.remove("ar-platzieren");
+        b.dataset.gezogen = "1";
+        setTimeout(() => delete b.dataset.gezogen, 60);
+        const pid = abbruch ? null : paketUnter(ev);
+        zielHervorheben(null);
+        if (pid) setzen(p, pid); else melden("Nicht abgelegt: Zieh die Komponente auf ein Paket.");
+      };
+      b.addEventListener("pointerup", (ev) => ende(ev, false));
+      b.addEventListener("pointercancel", (ev) => ende(ev, true));
+    }
+    function abbrechen() {
+      const war = modus;
+      modus = null;
+      el.classList.remove("ar-platzieren", "ar-verbinden");
+      bVerb.setAttribute("aria-pressed", "false");
+      Object.keys(palKnoepfe).forEach((k) => palKnoepfe[k].setAttribute("aria-pressed", "false"));
+      zeichnen();
+      melden("Abgebrochen.");
+      if (war && war.art === "platzieren") palKnoepfe[war.item.id].focus();
+    }
+    svg.addEventListener("click", () => { if (modus) return; if (auswahl || kanteWahl) { auswahl = null; kanteWahl = null; zeichnen(); panelZeigen(); } });
+
+    // Eigenschaften
+    function feld(lab, inhalt) {
+      const id = neueId("f");
+      const d = erzeugen("div", "ar-uf-feld");
+      d.innerHTML = '<label for="' + id + '">' + lab + "</label>";
+      inhalt.id = id;
+      d.appendChild(inhalt);
+      return d;
+    }
+    function auswahlFeld(werte, wert) {
+      const s2 = erzeugen("select", "btn");
+      werte.forEach(([v, t]) => { const o = erzeugen("option", null, esc(t)); o.value = v; if (v === wert) o.selected = true; s2.appendChild(o); });
+      return s2;
+    }
+    function panelZeigen() {
+      panel.innerHTML = "";
+      if (kanteWahl) {
+        const v = m.verbindungen.find((x) => x.id === kanteWahl);
+        if (!v) return;
+        panel.appendChild(erzeugen("p", "ar-uf-titel", "Verbindung"));
+        panel.appendChild(erzeugen("h4", null, esc(name(v.von)) + ' <span aria-hidden="true">→</span><span class="sr-only">nach</span> ' + esc(name(v.nach))));
+        const art = auswahlFeld([["assoziation", "Assoziation (Linie)"], ["abhaengigkeit", "Abhängigkeit (gestrichelt, Pfeil)"]], v.art);
+        art.addEventListener("change", () => { sichern(); v.art = art.value; geaendert(); });
+        panel.appendChild(feld("Art", art));
+        const ziel = m.elemente.find((x) => x.id === v.nach);
+        if (ziel && ziel.schnittstellen.length) {
+          const sch = auswahlFeld([["", "ohne Schnittstelle"]].concat(ziel.schnittstellen.map((x) => [x.id, "Ball «" + x.name + "»"])), v.nachSch || "");
+          sch.addEventListener("change", () => { sichern(); v.nachSch = sch.value || null; geaendert(); });
+          panel.appendChild(feld("Ziel-Schnittstelle", sch));
+        }
+        const prot = auswahlFeld([["", "– Protokoll wählen –"]].concat(L.protokolle.map((x) => [x, x])), v.protokoll);
+        prot.addEventListener("change", () => { sichern(); v.protokoll = prot.value; geaendert(); melden("Protokoll: " + (prot.value || "keins") + "."); });
+        panel.appendChild(feld("Protokoll", prot));
+        const fmt = erzeugen("input");
+        fmt.type = "text"; fmt.maxLength = 30; fmt.value = v.format || ""; fmt.placeholder = "z. B. JSON, XML, UBL";
+        fmt.setAttribute("list", uid + "-formate");
+        fmt.addEventListener("change", () => { sichern(); v.format = fmt.value.trim(); geaendert(); melden("Format: " + (v.format || "keins") + "."); });
+        panel.appendChild(feld("Format / Semantik (frei)", fmt));
+        if (!$("#" + uid + "-formate")) {
+          const dl = erzeugen("datalist");
+          dl.id = uid + "-formate";
+          ["JSON", "XML", "AppDef/JSON", "UBL", "IDoc", "ebXML", "CSV", "HTML"].forEach((x) => { const o = erzeugen("option"); o.value = x; dl.appendChild(o); });
+          el.appendChild(dl);
+        }
+        const r = erzeugen("div", "row");
+        const um = knopf("Richtung umkehren", "ar-klein");
+        um.addEventListener("click", () => { if (v.nachSch) { melden("Mit Schnittstelle lässt sich die Richtung nicht umkehren."); return; } sichern(); const t = v.von; v.von = v.nach; v.nach = t; geaendert(); });
+        const weg = knopf("Verbindung entfernen", "ar-klein");
+        weg.addEventListener("click", entfernen);
+        r.append(um, weg);
+        panel.appendChild(r);
+        return;
+      }
+      if (auswahl && istPaket(auswahl)) {
+        panel.appendChild(erzeugen("p", "ar-uf-titel", "Paket"));
+        panel.appendChild(erzeugen("h4", null, esc(name(auswahl))));
+        panel.appendChild(erzeugen("p", "hint", "Pakete sind vorgegeben. Eine Abhängigkeit zwischen Paketen (gestrichelt) ziehst du mit «Verbinden»."));
+        const b = knopf("Abhängigkeit ziehen …", "ar-klein");
+        b.addEventListener("click", () => verbindenStart(auswahl));
+        panel.appendChild(b);
+        return;
+      }
+      const e = auswahl && m.elemente.find((x) => x.id === auswahl);
+      if (!e) {
+        panel.innerHTML = '<p class="ar-uf-titel">Eigenschaften</p><p class="hint">Wähle eine Komponente: Hier setzt du Stereotyp, Schnittstellen und Beschreibung. Eine gewählte Verbindung beschriftest du hier mit Protokoll und Format.</p>';
+        return;
+      }
+      const p = palNach[e.id];
+      panel.appendChild(erzeugen("p", "ar-uf-titel", "Komponente · " + esc(ROLLE[e.rolle].name)));
+      panel.appendChild(erzeugen("h4", null, esc(ohneTags(e.name))));
+      const st = auswahlFeld([["", "(kein Stereotyp)"]].concat((p.stereotypen || []).map((x) => [x, "«" + x + "»"])), e.stereotyp);
+      st.addEventListener("change", () => { sichern(); e.stereotyp = st.value; geaendert(); melden("Stereotyp: " + (st.value ? "«" + st.value + "»" : "keiner") + "."); });
+      panel.appendChild(feld("Stereotyp", st));
+      const pk = auswahlFeld(L.pakete.map((x) => [x.id, ohneTags(x.name)]), e.in);
+      pk.addEventListener("change", () => setzen(p, pk.value));
+      panel.appendChild(feld("Paket", pk));
+      // Schnittstellen
+      const sw = erzeugen("div", "ar-uf-sch");
+      sw.appendChild(erzeugen("p", "ar-uf-label", "Bereitgestellte Schnittstellen (Ball)"));
+      const ul = erzeugen("ul");
+      e.schnittstellen.forEach((x) => {
+        const li = erzeugen("li", null, "<span>○ " + esc(x.name) + "</span>");
+        const w = knopf("Entfernen", "ar-klein", { "aria-label": "Schnittstelle " + x.name + " entfernen" });
+        w.addEventListener("click", () => { sichern(); e.schnittstellen = e.schnittstellen.filter((y) => y !== x); m.verbindungen.forEach((v) => { if (v.nach === e.id && v.nachSch === x.id) v.nachSch = null; }); geaendert(); });
+        li.appendChild(w);
+        ul.appendChild(li);
+      });
+      if (!e.schnittstellen.length) ul.appendChild(erzeugen("li", "hint", "keine"));
+      sw.appendChild(ul);
+      const vorschlaege = (p.schnittstellen || []).filter((x) => !e.schnittstellen.some((y) => y.id === x.id));
+      const neu = erzeugen("div", "ar-uf-neu");
+      const inp = erzeugen("input");
+      inp.type = "text"; inp.maxLength = 24; inp.placeholder = vorschlaege.length ? vorschlaege[0].name : "z. B. REST";
+      inp.setAttribute("list", uid + "-sch-" + e.id);
+      const dl = erzeugen("datalist");
+      dl.id = uid + "-sch-" + e.id;
+      vorschlaege.concat(L.protokolle.map((x) => ({ name: x }))).forEach((x) => { const o = erzeugen("option"); o.value = x.name; dl.appendChild(o); });
+      const add = knopf("Ball hinzufügen", "ar-klein");
+      const hinzu = () => {
+        const t = inp.value.trim() || (vorschlaege[0] && vorschlaege[0].name) || "";
+        if (!t) { inp.focus(); return; }
+        const bekannt = (p.schnittstellen || []).find((x) => ohneGuillemets(x.name) === ohneGuillemets(t));
+        let id = bekannt ? bekannt.id : t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "api";
+        while (e.schnittstellen.some((x) => x.id === id)) id += "-2";
+        sichern();
+        e.schnittstellen.push({ id: id, name: t });
+        geaendert();
+        melden("Schnittstelle «" + t + "» an «" + ohneTags(e.name) + "».");
+      };
+      add.addEventListener("click", hinzu);
+      inp.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); hinzu(); } });
+      const sid = neueId("f");
+      inp.id = sid;
+      neu.innerHTML = '<label for="' + sid + '" class="sr-only">Name der neuen Schnittstelle</label>';
+      neu.append(inp, dl, add);
+      sw.appendChild(neu);
+      panel.appendChild(sw);
+      // Beschreibung
+      const be = L.loesung.beschreibungen.find((x) => x.id === e.id);
+      if (be) {
+        const fs = erzeugen("fieldset", "ar-uf-beschr");
+        fs.appendChild(erzeugen("legend", null, "Beschreibung wählen"));
+        be.optionen.forEach((o, i) => {
+          const id = neueId("b");
+          const d = erzeugen("div", "ar-uf-radio");
+          d.innerHTML = '<input type="radio" name="' + uid + "-b-" + e.id + '" id="' + id + '"' + (beschreibungWahl[e.id] === i ? " checked" : "") + '><label for="' + id + '">' + o + "</label>";
+          $("input", d).addEventListener("change", () => { sichern(); beschreibungWahl[e.id] = i; if (opt.onChange) opt.onChange(); melden("Beschreibung gewählt."); });
+          fs.appendChild(d);
+        });
+        panel.appendChild(fs);
+      }
+      const r = erzeugen("div", "row");
+      const vb = knopf("Verbinden …", "ar-klein");
+      vb.addEventListener("click", () => verbindenStart(e.id));
+      const wg = knopf("Entfernen", "ar-klein");
+      wg.addEventListener("click", entfernen);
+      r.append(vb, wg);
+      panel.appendChild(r);
+      formelnSetzen(panel);
+    }
+    function listeZeichnen() {
+      let h = "<h4>Komponenten (" + m.elemente.length + ")</h4><ul>" + (m.elemente.map((e) => '<li class="' + klasseVon(e) + '"><span class="ar-farbpunkt" aria-hidden="true"></span>' +
+        esc(ohneTags(e.name)) + ' <span class="hint">' + (e.stereotyp ? "«" + esc(e.stereotyp) + "» · " : "") + "in " + esc(name(e.in)) +
+        (e.schnittstellen.length ? " · bietet " + e.schnittstellen.map((x) => esc(x.name)).join(", ") : "") + "</span></li>").join("") || '<li class="hint">noch keine</li>') + "</ul>";
+      h += "<h4>Verbindungen (" + m.verbindungen.length + ")</h4><ul>" + (m.verbindungen.map((v) => "<li>" + esc(name(v.von)) + " → " + esc(name(v.nach)) + (v.nachSch ? " (" + esc(schName(v.nach, v.nachSch)) + ")" : "") +
+        ' <span class="hint">· ' + esc(ARTEN[v.art].name) + (v.protokoll || v.format ? " · " + esc([v.protokoll, v.format].filter(Boolean).join(" · ")) : " · ohne Beschriftung") + "</span></li>").join("") || '<li class="hint">noch keine</li>') + "</ul>";
+      listeInhalt.innerHTML = h;
+    }
+
+    bVerb.addEventListener("click", () => { if (modus && modus.art === "verbinden") { abbrechen(); return; } verbindenStart(auswahl); });
+    bWeg.addEventListener("click", entfernen);
+    bUndo.addEventListener("click", () => {
+      if (!verlauf.length) return;
+      const d = JSON.parse(verlauf.pop());
+      m = d.m;
+      Object.keys(beschreibungWahl).forEach((k) => delete beschreibungWahl[k]);
+      Object.assign(beschreibungWahl, d.b);
+      auswahl = null; kanteWahl = null; modus = null;
+      geaendert();
+      melden("Rückgängig gemacht.");
+      if (bUndo.disabled) rahmen.focus();
+    });
+    el.addEventListener("keydown", (ev) => {
+      if ((ev.ctrlKey || ev.metaKey) && (ev.key === "z" || ev.key === "Z") && ev.target.tagName !== "INPUT") { ev.preventDefault(); bUndo.click(); }
+    });
+
+    // Bewertung nach Kriterien (Raster mit Teilpunkten, Fallen mit Abzug)
+    function bewerten() {
+      const sol = L.loesung;
+      const g = L.gewichte;
+      const krit = {};
+      const marken = { el: {}, pk: {}, v: {} };
+      const hinweise = { komponenten: [], pakete: [], stereotypen: [], verbindungen: [], beschriftungen: [], beschreibungen: [] };
+      const da = new Set(m.elemente.map((e) => e.id));
+      const sollIds = new Set(sol.elemente.map((x) => x.id));
+      // Komponenten
+      const fehlt = sol.elemente.filter((x) => !da.has(x.id));
+      const extra = m.elemente.filter((e) => !sollIds.has(e.id));
+      const fallen = extra.filter((e) => palNach[e.id] && palNach[e.id].falle);
+      const okK = sol.elemente.length - fehlt.length;
+      krit.komponenten = { ok: okK, n: sol.elemente.length, s: sol.elemente.length ? Math.max(0, (okK - 0.5 * (extra.length - fallen.length)) / sol.elemente.length) : 1 };
+      if (fehlt.length) hinweise.komponenten.push((fehlt.length > 1 ? "Es fehlen " + fehlt.length + " Komponenten" : "Es fehlt 1 Komponente") + ". Was verlangt die Referenzarchitektur noch?");
+      extra.filter((e) => !(palNach[e.id] && palNach[e.id].falle)).forEach((e) => { hinweise.komponenten.push("«" + esc(name(e.id)) + "» gehört nicht in dieses Modell."); marken.el[e.id] = { ok: false, t: "überflüssig" }; });
+      // Pakete und Stereotypen
+      let okP = 0, okS = 0;
+      const nS = sol.elemente.filter((x) => x.stereotyp !== undefined && x.stereotyp !== "").length;
+      sol.elemente.forEach((x) => {
+        const e = m.elemente.find((y) => y.id === x.id);
+        if (!e) return;
+        const pOk = !x.paket || e.in === x.paket;
+        if (pOk) okP++; else hinweise.pakete.push("«" + esc(name(x.id)) + "» gehört in «" + esc(name(x.paket)) + "», nicht in «" + esc(name(e.in)) + "».");
+        let sOk = true;
+        if (x.stereotyp !== undefined && x.stereotyp !== "") {
+          sOk = ohneGuillemets(e.stereotyp) === ohneGuillemets(x.stereotyp);
+          if (sOk) okS++; else hinweise.stereotypen.push("«" + esc(name(x.id)) + "»: " + (e.stereotyp ? "Stereotyp «" + esc(e.stereotyp) + "» passt nicht." : "Stereotyp fehlt (technologiespezifisch ist Pflicht)."));
+        }
+        marken.el[x.id] = { ok: pOk && sOk, t: !pOk ? "falsches Paket" : !sOk ? "Stereotyp" : "richtig" };
+      });
+      fehlt.forEach(() => { /* fehlende zählen als falsch platziert */ });
+      krit.pakete = { ok: okP, n: sol.elemente.length, s: sol.elemente.length ? okP / sol.elemente.length : 1 };
+      krit.stereotypen = { ok: okS, n: nS, s: nS ? okS / nS : 1, leer: !nS };
+      // Verbindungen und Beschriftungen
+      const teil = (ref) => { const t = String(ref).split("#"); return { el: t[0], sch: t[1] || null }; };
+      const soll = sol.verbindungen.map((v) => ({ v: v, a: teil(v.von), b: teil(v.nach), gefunden: null }));
+      let punkte = 0, extraV = 0;
+      m.verbindungen.forEach((u) => {
+        let t = soll.find((s) => !s.gefunden && ((s.a.el === u.von && s.b.el === u.nach) || (s.v.art !== "abhaengigkeit" && s.a.el === u.nach && s.b.el === u.von)));
+        if (!t) {
+          extraV++;
+          marken.v[u.id] = { ok: false, t: "gibt es so nicht" };
+          hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "» gehört nicht ins Modell.");
+          return;
+        }
+        t.gefunden = u;
+        let p = 1;
+        if ((t.v.art || "assoziation") !== u.art) { p -= 0.5; hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: falsche Art (" + ARTEN[t.v.art || "assoziation"].name + " erwartet)."); }
+        if (t.b.sch && u.nachSch !== t.b.sch) { p -= 0.25; hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: Verbinde mit dem Ball «" + esc(schNameSoll(t.b.el, t.b.sch)) + "» (Socket am Aufrufer)."); }
+        punkte += p;
+        marken.v[u.id] = { ok: p === 1, t: p === 1 ? "richtig" : "teilweise" };
+      });
+      const nV = soll.length;
+      const fehltV = soll.filter((s) => !s.gefunden);
+      if (fehltV.length) hinweise.verbindungen.push((fehltV.length > 1 ? "Es fehlen " + fehltV.length + " Verbindungen" : "Es fehlt 1 Verbindung") + ".");
+      krit.verbindungen = { ok: Math.round(punkte * 10) / 10, n: nV, s: nV ? Math.max(0, (punkte - 0.5 * extraV) / nV) : 1 };
+      const mitProt = soll.filter((s) => s.v.protokoll);
+      let okB = 0;
+      mitProt.forEach((s) => {
+        if (!s.gefunden) return;
+        const u = s.gefunden;
+        const erl = [s.v.protokoll].concat(s.v.protokollAlternativen || []).map(ohneGuillemets);
+        if (erl.indexOf(ohneGuillemets(u.protokoll)) >= 0) okB++;
+        else {
+          hinweise.beschriftungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: " + (u.protokoll ? "Protokoll «" + esc(u.protokoll) + "» passt nicht." : "Protokoll fehlt. Jede Verbindung wird beschriftet."));
+          if (marken.v[u.id]) marken.v[u.id] = { ok: false, t: "Beschriftung" };
+        }
+      });
+      krit.beschriftungen = { ok: okB, n: mitProt.length, s: mitProt.length ? okB / mitProt.length : 1, leer: !mitProt.length };
+      const be = sol.beschreibungen || [];
+      const okBe = be.filter((b) => beschreibungWahl[b.id] === b.richtig).length;
+      be.forEach((b) => { if (beschreibungWahl[b.id] !== b.richtig) hinweise.beschreibungen.push("«" + esc(name(b.id)) + "»: " + (beschreibungWahl[b.id] === undefined ? "noch keine Beschreibung gewählt." : "die gewählte Beschreibung trifft nicht zu.")); });
+      krit.beschreibungen = { ok: okBe, n: be.length, s: be.length ? okBe / be.length : 1, leer: !be.length };
+      // Pakete: ✓, wenn alle erwarteten Komponenten darin richtig liegen
+      L.pakete.forEach((p) => {
+        const erwartet = sol.elemente.filter((x) => x.paket === p.id);
+        const drin = m.elemente.filter((e) => e.in === p.id);
+        if (!erwartet.length && !drin.length) return;
+        marken.pk[p.id] = { ok: erwartet.every((x) => drin.some((e) => e.id === x.id)) && drin.every((e) => erwartet.some((x) => x.id === e.id)) };
+      });
+      // Gesamt
+      let summe = 0, gew = 0;
+      const liste = KRITERIEN.filter(([k]) => !(krit[k].leer) && (g[k] || 0) > 0).map(([k, t]) => {
+        summe += krit[k].s * g[k]; gew += g[k];
+        return { id: k, name: t, ok: krit[k].ok, n: krit[k].n, s: krit[k].s, gewicht: g[k], punkte: Math.round(krit[k].s * g[k] * 10) / 10, hinweise: hinweise[k] };
+      });
+      const abzug = fallen.map((e) => ({ id: e.id, text: palNach[e.id].falle }));
+      fallen.forEach((e) => (marken.el[e.id] = { ok: false, t: "Falle" }));
+      const roh = gew ? summe / gew : 1;
+      const anteil = Math.max(0, roh - 0.08 * fallen.length);
+      const fehler = liste.reduce((a, k) => a + (k.s < 1 ? 1 : 0), 0) + fallen.length;
+      return {
+        uml: true, kriterien: liste, fallen: abzug, marken: marken, anteil: anteil === 1 && fehler ? 0.999 : anteil,
+        richtig: Math.round(anteil * gew * 10), gesamt: Math.round(gew * 10), fehler: fehler,
+        fehlendeKomponenten: fehlt.map((x) => x.id), falschesPaket: sol.elemente.filter((x) => { const e = m.elemente.find((y) => y.id === x.id); return e && x.paket && e.in !== x.paket; }),
+        fehlendeVerbindungen: fehltV.map((s) => s.v),
+      };
+    }
+    function schNameSoll(el2, sch) { const p = palNach[el2]; const s2 = p && (p.schnittstellen || []).find((x) => x.id === sch); return s2 ? s2.name : sch; }
+    function markierungAnwenden() {
+      const mk = markierung;
+      Object.keys(mk.el).forEach((id) => {
+        const g = szene.elG[id], r = lay.el[id];
+        if (!g || !r) return;
+        g.classList.add(mk.el[id].ok ? "ar-ok" : "ar-falsch");
+        marke(g, r, mk.el[id].ok ? "✓" : "✗", mk.el[id].ok ? "ar-marke-ok" : "ar-marke-falsch", mk.el[id].t);
+      });
+      Object.keys(mk.pk).forEach((id) => {
+        const g = szene.gruppenG[id], r = lay.gr[id];
+        if (!g || !r) return;
+        g.classList.add(mk.pk[id].ok ? "ar-pk-ok" : "ar-pk-falsch");
+        const n = marke(g, r, mk.pk[id].ok ? "✓" : "✗", mk.pk[id].ok ? "ar-marke-ok" : "ar-marke-falsch");
+        if (n) n.setAttribute("transform", "translate(" + f1(r.w - 14) + " " + (U.TAB + 12) + ")");
+      });
+      Object.keys(mk.v).forEach((id) => {
+        const kg = szene.kantenG[id], rt = routen[id];
+        if (!kg || !rt) return;
+        kg.classList.add(mk.v[id].ok ? "ar-ok" : "ar-falsch");
+        const p = punktAuf(rt.punkte, polyLaenge(rt.punkte) * 0.5);
+        const n = svgEl("g", { transform: "translate(" + f1(p[0]) + " " + f1(p[1]) + ")" }, "ar-marke ar-marke-kante " + (mk.v[id].ok ? "ar-marke-ok" : "ar-marke-falsch"));
+        n.innerHTML = '<g class="ar-marke-innen"><circle r="10"/><text y="4.2" text-anchor="middle">' + (mk.v[id].ok ? "✓" : "✗") + "</text><title>" + esc(mk.v[id].t) + "</title></g>";
+        szene.effekte.appendChild(n);
+      });
+    }
+
+    zeichnen();
+    panelZeigen();
+    melden("Zieh die Komponenten in die passenden Pakete, setz Stereotypen und Schnittstellen, verbinde und beschrifte.");
+    return {
+      modell: () => kopie(modellVoll()),
+      bewerten: bewerten,
+      markieren: (e) => { markierung = e ? e.marken : null; zeichnen(); },
+      geist: (v) => { const t = String(v.nach).split("#"); geister.push({ von: String(v.von).split("#")[0], nach: t[0], nachSch: t[1] || null }); zeichnen(); },
+      palettePuls: (id) => { const b = palKnoepfe[id]; if (!b) return; b.classList.remove("ar-puls"); void b.offsetWidth; b.classList.add("ar-puls"); },
+      zuruecksetzen: () => { sichern(); m = { elemente: [], verbindungen: [] }; Object.keys(beschreibungWahl).forEach((k) => delete beschreibungWahl[k]); auswahl = null; kanteWahl = null; geaendert(); },
+      name: name,
     };
   }
 
@@ -3474,6 +4588,12 @@
     for (const l of cfg.levels) {
       if (!l || !l.id || !/^[a-z0-9-]{1,40}$/.test(l.id)) return f("Level-ID «" + (l && l.id) + "» ungültig.");
       if (levels.some((x) => x.id === l.id)) return f("Level-ID «" + l.id + "» doppelt.");
+      if ((l.modus || cfg.modus) === "uml") {
+        const ul = umlLevelPruefen(l, f);
+        if (!ul) return null;
+        levels.push(ul);
+        continue;
+      }
       const pal = (l.palette || []).filter((p) => {
         if (!p || !p.id || !TYPEN[p.typ]) { f("Level «" + l.id + "»: Palette-Eintrag braucht «id» und bekannten «typ»."); return false; }
         return true;
@@ -3671,8 +4791,11 @@
         const da = new Set(mm.elemente.map((e) => e.id));
         $$(".ar-stelle", auftrag).forEach((s) => s.classList.toggle("ar-stelle-gelegt", da.has(s.getAttribute("data-baustein"))));
       };
-      const arten = L.arten || Array.from(new Set(["sync", "async", "daten"].concat(L.loesung.verbindungen.map((v) => v.art))));
-      lv.ed = editor(edEl, {
+      const arten = L.uml ? [] : L.arten || Array.from(new Set(["sync", "async", "daten"].concat(L.loesung.verbindungen.map((v) => v.art))));
+      if (L.uml) {
+        lv.uf = umlFeld(edEl, L, { onChange: () => { textAktualisieren(lv.uf.modell()); if (lv && lv.geprueft) { lv.geprueft = false; lv.uf.markieren(null); fb.innerHTML = ""; fb.className = "ar-sf-fb"; } } });
+        lv.ed = { modell: lv.uf.modell, setzeModell: lv.uf.zuruecksetzen };
+      } else lv.ed = editor(edEl, {
         palette: L.palette, modell: vorgModell, arten: arten, fest: Array.from(lv.vorgIds), raster: L.raster || { spalten: 4, zeilen: 3 }, labels: false,
         onChange: (mm) => { textAktualisieren(mm); if (lv && lv.geprueft) { lv.geprueft = false; fb.innerHTML = ""; fb.className = "ar-sf-fb"; } },
       });
@@ -3697,7 +4820,7 @@
       }, 1000);
 
       tippKnopf.addEventListener("click", () => tippGeben(tippBox, tippKnopf, auftrag));
-      bReset.addEventListener("click", () => { lv.ed.setzeModell(vorgModell); fb.innerHTML = ""; fb.className = "ar-sf-fb"; live.textContent = "Spielfeld zurückgesetzt. Die Zeit läuft weiter."; });
+      bReset.addEventListener("click", () => { if (L.uml) lv.uf.zuruecksetzen(); else lv.ed.setzeModell(vorgModell); fb.innerHTML = ""; fb.className = "ar-sf-fb"; live.textContent = "Spielfeld zurückgesetzt. Die Zeit läuft weiter."; });
       bAufgeben.addEventListener("click", () => {
         if (!bAufgeben.dataset.sicher) { bAufgeben.dataset.sicher = "1"; bAufgeben.textContent = "Wirklich? 0 Sterne"; live.textContent = "Nochmals tippen zeigt die Lösung. Das Level zählt dann mit 0 Sternen."; return; }
         abschliessen(bewerten(), true);
@@ -3718,6 +4841,7 @@
     function maxXp(L) { return 40 * L.schwierigkeit + 40; }
 
     function bewerten() {
+      if (lv.L.uml) return lv.uf.bewerten();
       const L = lv.L;
       const mm = lv.ed.modell();
       const vorg = lv.vorgIds;
@@ -3753,7 +4877,32 @@
       lv.ed.markiere(e.vStatus.filter((s) => s.status === "ok").map((s) => s.v.id), "ar-ok");
       lv.ed.markiere(e.vStatus.filter((s) => s.status !== "ok").map((s) => s.v.id), "ar-falsch");
     }
+    function kriterienHtml(e) {
+      return '<table class="ar-kriterien"><caption>Bewertungsraster</caption><thead><tr><th scope="col">Kriterium</th><th scope="col">erfüllt</th><th scope="col">Punkte</th></tr></thead><tbody>' +
+        e.kriterien.map((k) => '<tr class="' + (k.s >= 1 ? "ar-k-ok" : "ar-k-teil") + '"><th scope="row"><span aria-hidden="true">' + (k.s >= 1 ? "✓" : "✗") + "</span> " + esc(k.name) + "</th><td>" + k.ok + "/" + k.n + "</td><td>" + k.punkte + " / " + k.gewicht + "</td></tr>").join("") +
+        (e.fallen.length ? '<tr class="ar-k-falle"><th scope="row"><span aria-hidden="true">!</span> Fallen</th><td>' + e.fallen.length + "</td><td>−" + Math.round(e.fallen.length * 8) + " %</td></tr>" : "") + "</tbody></table>";
+    }
+    function umlRueckmeldung(e, fb) {
+      lv.uf.markieren(e);
+      const pz = Math.round(e.anteil * 100);
+      let h = '<div class="ar-fb-kopf"><span class="ar-fb-prozent">' + pz + ' %</span><p><b>Noch nicht ganz.</b> Fehlversuch ' + lv.fehlversuche + ": drei Sterne sind jetzt nicht mehr möglich.</p></div>" + kriterienHtml(e);
+      const punkte = [];
+      e.kriterien.forEach((k) => k.hinweise.slice(0, 4).forEach((t) => punkte.push("<b>" + esc(k.name) + ":</b> " + t)));
+      e.fallen.forEach((x) => punkte.push('<b>Falle «' + esc(lv.uf.name(x.id)) + "»:</b> " + x.text));
+      if (punkte.length) h += "<ul>" + punkte.map((t) => "<li>" + t + "</li>").join("") + "</ul>";
+      fb.className = "ar-sf-fb ar-fb-bad";
+      fb.innerHTML = h;
+      const reihe = erzeugen("div", "row");
+      const weiter = knopf("Weiter verbessern", "primary");
+      weiter.addEventListener("click", () => { const g = $(".ar-uf-pal, .ar-uf-flaeche", ansichtFeld); if (g) g.focus(); });
+      const ab = knopf("Mit " + pz + " % abgeben");
+      ab.addEventListener("click", () => abschliessen(bewerten(), false));
+      reihe.append(weiter, ab);
+      fb.appendChild(reihe);
+      live.textContent = pz + " Prozent. " + e.kriterien.map((k) => k.name + " " + k.ok + " von " + k.n).join(", ") + ".";
+    }
     function rueckmeldung(e, fb) {
+      if (e.uml) return umlRueckmeldung(e, fb);
       trefferMarkieren(e);
       const name = (id) => {
         const p = lv.L.palette.find((x) => x.id === id) || (lv.L.vorgegeben && lv.L.vorgegeben.elemente.find((x) => x.id === id));
@@ -3780,9 +4929,42 @@
       live.textContent = pz + " Prozent. " + ohneTags(teile.join(" "));
     }
 
+    function umlTipp(stufe, box) {
+      const L = lv.L;
+      const e = bewerten();
+      const ref = L.referenz && Architektur.referenzen && Architektur.referenzen[L.referenz];
+      if (stufe === 0 && ref) {
+        const d = erzeugen("details", "ar-referenz");
+        d.open = true;
+        d.innerHTML = "<summary>Referenzarchitektur: " + esc(ref.titel || L.referenz) + "</summary>";
+        const inner = erzeugen("div");
+        d.appendChild(inner);
+        box.appendChild(d);
+        diagramm(inner, ref, { breit: false, titel: "", ablauf: false, ausfall: false, steckbrief: true, textliste: true, kMin: 0.55 });
+        return "Die Referenzarchitektur ist eingeblendet. Übertrage ihre Pakete und Rollen auf den Auftrag.";
+      }
+      if (stufe <= 1 && e.fehlendeKomponenten.length) { lv.uf.palettePuls(e.fehlendeKomponenten[0]); return "Dir fehlt «" + esc(lv.uf.name(e.fehlendeKomponenten[0])) + "». Die Komponente blinkt in der Palette."; }
+      if (stufe <= 1 && e.falschesPaket.length) { const x = e.falschesPaket[0]; return "«" + esc(lv.uf.name(x.id)) + "» liegt im falschen Paket. Richtig: «" + esc(lv.uf.name(x.paket)) + "»."; }
+      if (e.fehlendeVerbindungen.length) {
+        const v = e.fehlendeVerbindungen[0];
+        lv.uf.geist(v);
+        return "Verbinde «" + esc(lv.uf.name(String(v.von).split("#")[0])) + "» mit «" + esc(lv.uf.name(String(v.nach).split("#")[0])) + "»" + (v.protokoll ? " (" + esc(v.protokoll) + ")" : "") + " – gestrichelt eingezeichnet.";
+      }
+      const k = e.kriterien.find((x) => x.s < 1 && x.hinweise.length);
+      return k ? "<b>" + esc(k.name) + ":</b> " + k.hinweise[0] : "Alles sieht gut aus. Prüf dein Modell!";
+    }
     function tippGeben(box, knopfT, auftrag) {
       const L = lv.L;
       if (lv.tipps >= 3) { live.textContent = "Keine Tipps mehr in diesem Level."; return; }
+      if (L.uml) {
+        const stufe0 = lv.tipps;
+        const t0 = umlTipp(stufe0, box);
+        lv.tipps++;
+        box.insertAdjacentHTML("beforeend", '<p class="ar-tipp"><span class="ar-tipp-stufe">Tipp ' + lv.tipps + " · −" + TIPP_KOSTEN[stufe0] + " XP</span> " + t0 + "</p>");
+        knopfT.querySelector(".ar-tipp-text").textContent = lv.tipps >= 3 ? "Keine Tipps mehr" : "Tipp " + (lv.tipps + 1) + " (−" + TIPP_KOSTEN[lv.tipps] + " XP)";
+        if (lv.tipps >= 3) knopfT.disabled = true;
+        return;
+      }
       const e = bewerten();
       const stufe = lv.tipps;
       const name = (id) => { const p = L.palette.find((x) => x.id === id) || (L.vorgegeben && L.vorgegeben.elemente.find((x) => x.id === id)); return p ? ohneTags(p.name) : id; };
@@ -3873,6 +5055,7 @@
           (x.tippKosten ? zeile("Tipps (" + lv.tipps + ")", "−" + x.tippKosten, "ar-minus-zeile") : "")) +
         '</tbody><tfoot><tr><th scope="row">Total</th><td><b>' + erg.xp + " XP</b></td></tr></tfoot>";
       karte.appendChild(tab);
+      if (e.uml) karte.insertAdjacentHTML("beforeend", kriterienHtml(e) + (e.fallen.length ? '<ul class="ar-fallen">' + e.fallen.map((x) => '<li><b>Falle «' + esc(lv.uf.name(x.id)) + "»:</b> " + x.text + "</li>").join("") + "</ul>" : ""));
       karte.insertAdjacentHTML("beforeend", (x.verbessert && !x.aufgegeben && erg.sterne > 0 ? '<p class="ar-erg-neu">★ Neuer Bestwert</p>' : best[L.id] && !x.verbessert ? '<p class="hint">Bestwert bleibt: ' + best[L.id].sterne + " Sterne, " + best[L.id].xp + " XP.</p>" : "") +
         '<p class="ar-erg-speicher ar-speicher" aria-live="polite">' + (speichern ? "Speichere …" : "") + "</p>" +
         (serie > 1 ? '<p class="ar-erg-serie">' + IKON.serie + " Serie ×" + serie + ": " + serie + " Level hintereinander perfekt!</p>" : ""));
@@ -3909,6 +5092,17 @@
 
     function loesungZeigen(L, box, e) {
       box.innerHTML = '<h4 tabindex="-1">Musterlösung mit Begründung</h4><p class="hint">Der Ablauf zeichnet jede Verbindung nach und sagt, warum sie so ist.</p>';
+      if (L.uml) {
+        const d = erzeugen("div");
+        box.appendChild(d);
+        const dg = diagramm(d, umlMusterModell(L, true), { breit: false, ausfall: false, titel: "" });
+        if (dg && L.loesung.verbindungen.some((v) => v.warum)) dg.ablaufStarten("loesung");
+        const be = L.loesung.beschreibungen || [];
+        if (be.length) box.insertAdjacentHTML("beforeend", '<div class="card stack"><h5>Beschreibungen</h5><dl class="ar-sb-felder">' + be.map((b) => "<dt>" + esc(lv.uf.name(b.id)) + "</dt><dd>" + b.optionen[b.richtig] + "</dd>").join("") + "</dl></div>");
+        if (L.erklaerung) box.insertAdjacentHTML("beforeend", '<div class="note tipp">' + L.erklaerung + "</div>");
+        formelnSetzen(box);
+        return;
+      }
       const elemente = L.loesung.elemente.map((id) => {
         const p = L.palette.find((x) => x.id === id) || (L.vorgegeben && L.vorgegeben.elemente.find((x) => x.id === id));
         return { id: id, typ: p.typ, name: p.name, technologie: p.technologie || "", stereotyp: p.stereotyp, info: p.info ? { was: p.info } : undefined };
@@ -3968,7 +5162,8 @@
   /* ---------- 15. Öffentliche Schnittstelle ---------- */
 
   window.Architektur = {
-    version: "1.0.0",
+    version: "1.1.0",
+    referenzen: {}, // Referenzarchitekturen (Modelle in Modulnotation), von Seiten befüllt: Architektur.referenzen.jakarta = { … }
     diagramm: diagramm,
     atlas: atlas,
     editor: editor,
