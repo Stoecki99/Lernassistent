@@ -329,7 +329,7 @@ Paket B ist doppelt so gross wie A und bekommt deshalb zwei Autor-Agenten (2.01�
 
 ### 2.7 Beispiele (verbindliches Muster, je Bereich eine MC- und eine offene Frage)
 
-Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachprüfung prüft sie wie alle anderen).
+Die Beispiele gehen als erste Fragen in die Dateien (zuerst Status `entwurf`, die Fachprüfung prüft sie wie alle anderen). Stand 01.11.2026: alle sechs `geprueft`. Erklärungen nennen falsche Optionen über ihren Inhalt, nie über die Position («Option 2»), weil die Optionen je Versuch gemischt werden (ausser `optionenFest`); der Test 7.1 sperrt Positionsverweise.
 
 **Perspective · MC · 1.02 Governance, Strukturen und Prozesse**
 
@@ -347,7 +347,7 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
     "Das Bündel ist ein Grossprojekt mit drei Teilprojekten, die Liste ist das Projekthandbuch."
   ],
   "richtig": 0,
-  "erklaerung": "Ein Programm fasst zusammenhängende Projekte zusammen, die gemeinsam ein übergeordnetes, strategisches Ziel erreichen; es ist wie ein Projekt befristet. Ein Portfolio ist eine dauerhafte Sammlung von Projekten und Programmen, die nicht zusammenhängen müssen; es dient dazu, Vorhaben nach der Strategie zu priorisieren und Mittel zuzuteilen. Option 2 vertauscht die Begriffe. Option 3 übersieht, dass die Liste kein gemeinsames Ziel hat. Option 4 verwechselt eigenständige Projekte (je eigener Auftrag) mit Teilprojekten eines einzigen Projekts.",
+  "erklaerung": "Ein Programm fasst zusammenhängende Projekte zusammen, die gemeinsam ein übergeordnetes, strategisches Ziel erreichen; es ist wie ein Projekt befristet. Ein Portfolio ist eine dauerhafte Sammlung von Projekten und Programmen, die nicht zusammenhängen müssen; es dient dazu, Vorhaben nach der Strategie zu priorisieren und Mittel zuzuteilen. Die Antwort «Bündel Portfolio, Liste Programm» vertauscht die Begriffe. Die Antwort «beides Programme» übersieht, dass die Liste kein gemeinsames Ziel hat. Die Antwort «Grossprojekt mit drei Teilprojekten» verwechselt eigenständige Projekte (je eigener Auftrag) mit Teilprojekten eines einzigen Projekts.",
   "optionHinweise": [
     "",
     "Umgekehrt: Das gemeinsame Ziel macht das Programm aus, die dauerhafte Steuerung aller Vorhaben das Portfolio.",
@@ -359,8 +359,8 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
     "icb": { "seite": 35, "indikatoren": ["1.02.02", "1.02.03"] },
     "station": "04-projektkontext"
   },
-  "status": "entwurf",
-  "version": 1
+  "status": "geprueft",
+  "version": 3
 }
 ```
 
@@ -386,7 +386,7 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
     "station": "04-projektkontext",
     "hinweis": "Gesetzesnamen als Ergänzung, nicht im Skript"
   },
-  "status": "entwurf",
+  "status": "geprueft",
   "version": 1
 }
 ```
@@ -408,14 +408,14 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
   ],
   "richtig": 0,
   "optionenFest": true,
-  "erklaerung": "Glasl teilt die neun Stufen in drei Bereiche: Auf den Stufen 1–3 ist noch eine Lösung möglich, bei der beide gewinnen; auf den Stufen 4–6 will eine Partei auf Kosten der anderen gewinnen; auf den Stufen 7–9 nehmen beide eigenen Schaden in Kauf, um der anderen zu schaden. Je höher die Stufe, desto stärker muss eingegriffen werden: zuerst Moderation, dann Prozessbegleitung und Mediation, zuletzt ein Machteingriff. Darum ist die letzte Option falsch.",
+  "erklaerung": "Glasl teilt die neun Stufen in drei Bereiche: Auf den Stufen 1–3 ist noch eine Lösung möglich, bei der beide gewinnen; auf den Stufen 4–6 will eine Partei auf Kosten der anderen gewinnen; auf den Stufen 7–9 nehmen beide eigenen Schaden in Kauf, um der anderen zu schaden. Je höher die Stufe, desto stärker muss eingegriffen werden: zuerst Moderation, dann Prozessbegleitung und Mediation, zuletzt ein Machteingriff. Darum ist die Antwort «auf allen Stufen gleich gut» falsch.",
   "fundstelle": {
     "icb": { "seite": 73, "indikatoren": ["2.07.02", "2.07.03"] },
     "station": "17-persoenliche-kompetenzen",
     "hinweis": "Modell nach Glasl als Ergänzung (nicht in der Swiss ICB); nach LB 12 prüfen"
   },
-  "status": "entwurf",
-  "version": 1
+  "status": "geprueft",
+  "version": 3
 }
 ```
 
@@ -441,7 +441,7 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
     "icb": { "seite": 59, "indikatoren": ["2.03.01", "2.03.03"] },
     "station": "16-fuehrung-team-meetings"
   },
-  "status": "entwurf",
+  "status": "geprueft",
   "version": 1
 }
 ```
@@ -467,11 +467,11 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
   ],
   "fundstelle": {
     "lb": "LB 4 F.20–22",
-    "icb": { "seite": 100, "indikatoren": ["3.04.04"] },
+    "icb": { "seite": 103, "indikatoren": ["3.04.04"] },
     "station": "10-netzplan-und-gantt"
   },
-  "status": "entwurf",
-  "version": 1
+  "status": "geprueft",
+  "version": 2
 }
 ```
 
@@ -484,10 +484,10 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
   "typ": "offen",
   "schwierigkeit": 2,
   "frage": "Im Projekt Onlineschalter Wolkenried besteht das Risiko, dass der Softwarelieferant die Schnittstelle zum Geschäftsverwaltungssystem zu spät liefert. Die Projektleitung schätzt die Eintrittswahrscheinlichkeit auf 30 %. Tritt das Risiko ein, verzögert sich das Projekt um 20 Arbeitstage, und jeder Tag kostet CHF 1'500. a) Berechne den Risikowert. b) Nenne zwei verschiedene Strategien für dieses Risiko mit je einer konkreten Massnahme.",
-  "musterloesung": "a) Schaden bei Eintritt: 20 × CHF 1'500 = CHF 30'000. Risikowert = Wahrscheinlichkeit × Schaden = 0.3 × 30'000 = CHF 9'000. b) Zwei davon: Vermeiden: eine Standardschnittstelle (eCH) verlangen, die der Lieferant schon im Einsatz hat, oder die Schnittstelle aus dem ersten Release nehmen (Übergabe vorerst manuell). Vermindern: Schnittstelle früh als Prototyp liefern lassen und den Meilenstein «Schnittstelle getestet» vor die abhängigen Vorgänge legen; wöchentlicher Stand mit dem Lieferanten. Übertragen: Liefertermin mit Konventionalstrafe im Werkvertrag absichern. Akzeptieren: Risikoreserve von rund CHF 9'000 einplanen und einen Frühwarnindikator festlegen (z. B. Testfälle der Schnittstelle zwei Wochen vor Termin nicht grün).",
+  "musterloesung": "a) Schaden bei Eintritt: 20 × CHF 1'500 = CHF 30'000. Risikowert = Wahrscheinlichkeit × Schaden = 0.3 × 30'000 = CHF 9'000. b) Zwei davon: Vermeiden (Ursache ganz ausschalten): die Schnittstelle aus dem ersten Release nehmen (Übergabe vorerst manuell) oder sie selbst bauen, statt sie beim Lieferanten zu bestellen. Vermindern: eine Standardschnittstelle (eCH) verlangen, die der Lieferant schon im Einsatz hat (senkt die Wahrscheinlichkeit der Verspätung), oder die Schnittstelle früh als Prototyp liefern lassen und den Meilenstein «Schnittstelle getestet» vor die abhängigen Vorgänge legen; wöchentlicher Stand mit dem Lieferanten. Übertragen: Liefertermin mit Konventionalstrafe im Werkvertrag absichern. Akzeptieren: Risikoreserve von rund CHF 9'000 einplanen und einen Frühwarnindikator festlegen (z. B. Testfälle der Schnittstelle zwei Wochen vor Termin nicht grün).",
   "bewertungsraster": [
     { "kriterium": "Risikowert richtig berechnet (CHF 9'000) mit sichtbarem Rechenweg", "punkte": 1 },
-    { "kriterium": "Erste Strategie richtig benannt (vermeiden, vermindern, übertragen oder akzeptieren) mit passender Massnahme", "punkte": 1 },
+    { "kriterium": "Erste Strategie richtig benannt (vermeiden, vermindern, übertragen oder akzeptieren) mit passender Massnahme (z. B. Standardschnittstelle verlangen = vermindern, nicht vermeiden)", "punkte": 1 },
     { "kriterium": "Zweite, andere Strategie richtig benannt mit passender Massnahme", "punkte": 1 },
     { "kriterium": "Massnahmen sind konkret auf Lieferant und Schnittstelle bezogen", "punkte": 1 }
   ],
@@ -497,8 +497,8 @@ Die Beispiele gehen als erste Fragen in die Dateien (Status `entwurf`, die Fachp
     "icb": { "seite": 129, "indikatoren": ["3.11.03", "3.11.04"] },
     "station": "13-chancen-und-risiken"
   },
-  "status": "entwurf",
-  "version": 1
+  "status": "geprueft",
+  "version": 2
 }
 ```
 
@@ -1258,6 +1258,7 @@ Alle Tests mit `npm test` (`tsx --test "tests/**/*.test.ts"`), ohne Datenbank, M
 | Schwierigkeit | je Kompetenz höchstens ein Drittel `schwierigkeit: 3` |
 | Längste Option | in höchstens 40 % der MC-Fragen ist die richtige Option die längste |
 | Dubletten | kein normalisierter Fragetext doppelt; Jaccard-Ähnlichkeit der Wörter > 0.8 innerhalb einer Kompetenz → Fehler mit beiden IDs |
+| Positionsverweise | ohne `optionenFest` kein «Option 2», «Optionen 2 und 3», «die letzte Option» o. ä. in `erklaerung`, `optionHinweise` und `musterloesung` (Optionen werden gemischt) |
 | Sperrwörter | kein «Persönliches Exemplar» (Wasserzeichen der PDF-Dateien; den Namen des Lizenzinhabers nie in den Test schreiben) und keine Formulierung «Musterprüfung» oder «Prüfungsfrage aus» in Fragetexten (Liste im Test) |
 | Stationen | jede `fundstelle.station` existiert in `fach.json`; jede Kompetenz hat in `COMPETENCES.stations` mindestens eine Station |
 

@@ -61,11 +61,11 @@ describe("Echte Dateien in content/ipma/fragen", () => {
     assert.equal(pool.files.length, 28)
   })
 
-  test("die 6 Beispiele aus 2.7 sind enthalten (Status entwurf)", () => {
+  test("die 6 Beispiele aus 2.7 sind enthalten (entwurf oder nach Fachprüfung geprueft)", () => {
     const byId = new Map(realFiles().flatMap((f) => f.fragen).map((q) => [q.id, q]))
     for (const id of EXAMPLE_IDS) {
       assert.ok(byId.has(id), `${id} fehlt`)
-      assert.equal(byId.get(id)?.status, "entwurf", id)
+      assert.ok(["entwurf", "geprueft"].includes(byId.get(id)?.status ?? ""), id)
     }
   })
 
@@ -121,6 +121,18 @@ describe("Echte Dateien in content/ipma/fragen", () => {
         }
       }
     }
+  })
+
+  test("keine Positionsverweise («Option 2», «die letzte Option») bei gemischten Optionen", () => {
+    // Optionen werden je Versuch gemischt (ausser optionenFest); eine Nummer zeigt dann auf die falsche Antwort.
+    const position = /\bOption(en)?\s+\d|\b(erste|zweite|dritte|vierte|letzte)[nr]?\s+Option(en)?\b/i
+    const hits: string[] = []
+    for (const q of realFiles().flatMap((f) => f.fragen)) {
+      if (q.typ === "mc" && q.optionenFest) continue
+      const texts = q.typ === "mc" ? [q.erklaerung, ...(q.optionHinweise ?? [])] : [q.musterloesung, q.erklaerung ?? ""]
+      if (texts.some((t) => position.test(t))) hits.push(q.id)
+    }
+    assert.deepEqual(hits, [], `Positionsverweise in: ${hits.join(", ")}`)
   })
 
   test("Sperrwörter (1.3)", () => {

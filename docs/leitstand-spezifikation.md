@@ -248,7 +248,7 @@ Profil in der Reihenfolge BAU, ENT, DAT, UX, KOM. Stundensatz zu Vollkosten (int
 | P02 | Luca Bernasconi, 36 | Informatikverantwortlicher der Gemeinde | Kernteam | 100 % | 105 | 2 | 3 | 5 | 2 | 2 | 95 | Autonomie, Entwicklung | – | hoch |
 | P03 | Aylin Demir, 31 | Organisationsentwicklerin Gemeindekanzlei | Kernteam | 80 % | 95 | 3 | 1 | 3 | 4 | 3 | 105 | Zugehörigkeit, Entwicklung | verzettelt | mittel |
 | P04 | Martin Zgraggen, 61 | Sachbearbeiter Baugesuche | Linie Bauamt (Beat Imhof) | 60 % | 80 | 5 | 0 | 1 | 1 | 2 | 85 | Klarheit, Sicherheit | gründlich | tief |
-| P05 | Thomas Kälin, 50 | Bauinspektor | Linie Bauamt (Beat Imhof) | 40 % | 100 | 6 | 0 | 1 | 0 | 3 | 90 | Anerkennung, Autonomie | – | tief |
+| P05 | Thomas Ellinger, 50 | Bauinspektor | Linie Bauamt (Beat Imhof) | 40 % | 100 | 6 | 0 | 1 | 0 | 3 | 90 | Anerkennung, Autonomie | – | tief |
 | P06 | Nadia Rossi, 39 | Kommunikationsverantwortliche | Linie Kanzlei (Claudia Wyss) | 50 % | 90 | 1 | 0 | 0 | 3 | 6 | 100 | Anerkennung, Zugehörigkeit | schnell | mittel |
 | P07 | Jasmin Huber, 24 | Applikationsbetreuerin | Linie Informatik (Silvan Schuler) | 60 % | 75 | 1 | 3 | 3 | 4 | 2 | 105 | Entwicklung, Anerkennung | lernt schnell | hoch |
 | P08 | Urs Ammann, 47 | Fachspezialist Gebühren und Debitoren | Linie Finanzen (Monika Steiner) | 40 % (Tag 18–20 und 38–40: 20 %) | 85 | 3 | 0 | 4 | 0 | 2 | 90 | Klarheit, Sicherheit | gründlich | tief |
