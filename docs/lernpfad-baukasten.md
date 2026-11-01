@@ -16,7 +16,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 6. [Farbcode der Symbole](#6-farbcode-der-symbole)
 7. [Design-Tokens](#7-design-tokens)
 8. [CSS-Klassen](#8-css-klassen)
-9. [JavaScript: window.Lernpfad](#9-javascript-windowlernpfad)
+9. [JavaScript: window.Lernpfad](#9-javascript-windowlernpfad) (inkl. `modellieren`, `piktogramm`)
 10. [Fortschritt und Abschluss-Box](#10-fortschritt-und-abschluss-box)
 11. [Themeneigene Interaktionen](#11-themeneigene-interaktionen)
 12. [Barrierefreiheit](#12-barrierefreiheit)
@@ -575,7 +575,35 @@ Lernpfad.auswahl("#frage-1", {
 });
 ```
 
-### 9.12 Hilfsfunktionen
+### 9.12 `Lernpfad.modellieren(el, cfg)`
+
+Modellierungsübung: Anforderungstext lesen, passende Bausteine auf die Fläche legen, Verbindungen mit Art ziehen, prüfen. Ohne Ziehen mit der Maus: alles per Antippen und Tastatur (Palette-Knopf legt hin oder entfernt, Startbaustein antippen, Zielbaustein antippen). Eine Verbindungsliste unter der Fläche zeigt dasselbe als Text (Screenreader, sich kreuzende Linien) und hat je einen Knopf «Entfernen». Muster: `content/lernseiten/avsw/_vorlage.html`.
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel` | HTML | nein | Titel |
+| `aufgabe` | HTML | nein | Anforderungstext. `<span data-baustein="id">` markiert die Textstelle zu einem Baustein: Sie wird unterstrichen, sobald der Baustein liegt, und leuchtet mit ihm zusammen auf. |
+| `schichten` | Objekt[] | nein | `{ id, name }`: Bänder auf der Fläche (z. B. Client, Zugang, Dienste, Daten). Ohne: ein Band. |
+| `bausteine` | Objekt[] | ja | `{ id, name, art, schicht, info }`. `art` = Piktogramm (siehe 9.13), `schicht` = `id` aus `schichten`. Ablenker (nicht in der Lösung) sind erwünscht. |
+| `verbindungsarten` | Objekt[] | nein | `{ id, name }`, höchstens vier. Standard: `sync` «synchron (Request/Response)», `async` «asynchron (Nachricht/Event)», `daten` «liest/schreibt Daten». Linienstil je Position: voll, gestrichelt, gepunktet, Strich-Punkt. |
+| `loesung` | Objekt | ja | `{ bausteine: [id], verbindungen: [{ von, nach, art, warum, gerichtet }] }`. `warum` erscheint nach dem Lösen. `gerichtet: false` akzeptiert beide Richtungen. |
+| `richtungEgal` | Bool | nein | `true`: Richtung zählt nirgends, Linien ohne Pfeil (z. B. Deployment-Sicht «läuft auf»). |
+| `vorgegeben` | Bool | nein | `true`: Lösungs-Bausteine liegen schon, Palette ausgeblendet. Nur verbinden («die nötigen Teile miteinander verbinden»). |
+| `erklaerung` | HTML | nein | Merksatz nach dem Lösen (z. B. «Verben verraten die Verbindungsart»). |
+
+Bewertung: je ein Punkt pro richtig gelegtem Lösungs-Baustein und pro Lösungs-Verbindung mit richtiger Richtung und Art. Die Rückmeldung nennt überflüssige Bausteine beim Namen, zählt fehlende Bausteine und Verbindungen, falsche Richtungen und falsche Arten, und gibt einen Tipp («Schau dir «Bestellservice» nochmals an»), ohne die Lösung zu verraten. «Lösung zeigen» zeichnet die Musterlösung mit allen `warum` ein.
+
+Ereignis `lernpfad:modell` (bubbelt) nach jedem Prüfen: `detail: { richtig, gesamt, vollstaendig, loesungGezeigt }`. Rückgabe: `{ zuruecksetzen(), loesungZeigen(), pruefen() }`.
+
+Regeln für gute Aufgaben: Jede Verbindung der Lösung muss aus dem Text folgen (Signalwörter wie «fragt synchron», «veröffentlicht», «abonniert», «speichert»). Mindestens ein Ablenker in der Palette. Schichten so wählen, dass die Fläche bei 320 px lesbar bleibt (höchstens etwa vier Bausteine pro Schicht).
+
+### 9.13 `Lernpfad.piktogramm(art, titel)`
+
+Gibt ein eigenes Inline-SVG (24 × 24, `currentColor`, Klasse `.pikto`) als HTML-Text zurück, für Konzeptkarten, Tabellen, Bilder von Architekturen und den Baustein `modellieren`. Mit `titel` bekommt es `role="img"` und `<title>`, sonst `aria-hidden`. **Keine Markenlogos** (Kubernetes, Docker, Kafka …): Werkzeuge werden mit diesen Piktogrammen und echten Code-Beispielen gezeigt.
+
+Arten: `client`, `mobile`, `user`, `gateway`, `lb`, `service`, `function`, `db`, `cache`, `queue`, `topic`, `storage`, `extern`, `container`, `pod`, `node`, `cluster`, `auth`, `cdn`, `monitor`, `config`, `code`. Galerie in `content/lernseiten/avsw/_vorlage.html`.
+
+### 9.14 Hilfsfunktionen
 
 | Funktion | Zweck |
 |----------|-------|
