@@ -321,6 +321,41 @@ describe("Pflicht-Geruest einer Themenseite", () => {
     assert.match(fehler, /externe Ressource <script src="https:\/\/cdn\.example\.org\/ps-konsole\.js">/)
   })
 
+  test("Erweiterung AVSW: architektur.css und architektur.js aus /lernpfad/ sind erlaubt", () => {
+    const html = seite("test", "01-erstes", {
+      css: '<link rel="stylesheet" href="/lernpfad/lernpfad.css">\n<link rel="stylesheet" href="/lernpfad/architektur.css">',
+      js: '<script src="/lernpfad/lernpfad.js"></script>\n<script src="/lernpfad/architektur.js"></script>',
+    })
+    assert.deepEqual(pruefeThemaHtml(html, "test", "01-erstes"), [])
+  })
+
+  test("Erweiterung AVSW: architektur.js vor lernpfad.js ist ein Fehler", () => {
+    const fehler = pruefe({ js: '<script src="/lernpfad/architektur.js"></script>\n<script src="/lernpfad/lernpfad.js"></script>' })
+    assert.match(fehler, /architektur\.js"> gehört nach <script src="\/lernpfad\/lernpfad\.js">/)
+  })
+
+  test("Erweiterung AVSW: architektur.css vor lernpfad.css ist ein Fehler", () => {
+    const fehler = pruefe({ css: '<link rel="stylesheet" href="/lernpfad/architektur.css">\n<link rel="stylesheet" href="/lernpfad/lernpfad.css">' })
+    assert.match(fehler, /architektur\.css"> gehört nach <link rel="stylesheet" href="\/lernpfad\/lernpfad\.css">/)
+  })
+
+  test("Erweiterung AVSW: architektur.css ersetzt lernpfad.css nicht, architektur.js nicht lernpfad.js", () => {
+    assert.match(pruefe({ css: '<link rel="stylesheet" href="/lernpfad/architektur.css">' }), /lernpfad\.css/)
+    assert.match(pruefe({ js: '<script src="/lernpfad/architektur.js"></script>' }), /lernpfad\.js/)
+  })
+
+  test("Erweiterung AVSW: auskommentiertes architektur.js zaehlt nicht", () => {
+    const html = seite("test", "01-erstes", {
+      js: '<!-- <script src="/lernpfad/architektur.js"></script> -->\n<script src="/lernpfad/lernpfad.js"></script>',
+    })
+    assert.deepEqual(pruefeThemaHtml(html, "test", "01-erstes"), [])
+  })
+
+  test("Erweiterung AVSW: architektur.js von einem fremden Server ist eine externe Ressource", () => {
+    const fehler = pruefe({ js: '<script src="/lernpfad/lernpfad.js"></script>\n<script src="https://cdn.example.org/architektur.js"></script>' })
+    assert.match(fehler, /externe Ressource <script src="https:\/\/cdn\.example\.org\/architektur\.js">/)
+  })
+
   test("lernpfad.js gehoert ans Ende von <body>", () => {
     const fehler = pruefe({ js: "", kopf: '<script src="/lernpfad/lernpfad.js"></script>' })
     assert.match(fehler, /Ende von <body>/)

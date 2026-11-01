@@ -139,6 +139,8 @@ Auskommentierte Teile (`<!-- … -->`) zählen bei der Prüfung nicht. Code: `li
 
 **Zusatz Lernpfad PS:** Weitere Dateien aus `/lernpfad/` sind erlaubt (sie sind keine externen Ressourcen), z. B. `<link rel="stylesheet" href="/lernpfad/ps-konsole.css">` nach `lernpfad.css` und `<script src="/lernpfad/ps-konsole.js"></script>` nach `lernpfad.js`. `lernpfad.css` und `lernpfad.js` bleiben Pflicht. Steht `ps-konsole.js` vor `lernpfad.js` oder `ps-konsole.css` vor `lernpfad.css`, ist das ein Fehler. Details: `docs/lernpfad-powershell.md`.
 
+**Zusatz Lernpfad AVSW:** Ebenso `<link rel="stylesheet" href="/lernpfad/architektur.css">` nach `lernpfad.css` und `<script src="/lernpfad/architektur.js"></script>` nach `lernpfad.js` (Architektur-Engine). Die falsche Reihenfolge ist ein Fehler. Details: `docs/lernpfad-architektur.md`.
+
 ## Auslieferung
 
 Route-Handler `app/(lernpfad)/lernseiten/[fach]/[thema]/route.ts`:

@@ -24,6 +24,9 @@ const JS_PFAD = "/lernpfad/lernpfad.js"
 /** Erweiterung für den Lernpfad PS (Simulator und Syntaxfärbung), siehe docs/lernpfad-powershell.md. */
 const PS_KONSOLE_PFAD = "/lernpfad/ps-konsole.js"
 const PS_KONSOLE_CSS_PFAD = "/lernpfad/ps-konsole.css"
+/** Architektur-Engine für AVSW (Diagramme, Atlas, Editor, Spiel), siehe docs/lernpfad-architektur.md. */
+const ARCHITEKTUR_PFAD = "/lernpfad/architektur.js"
+const ARCHITEKTUR_CSS_PFAD = "/lernpfad/architektur.css"
 
 /** Namen der Seiten auf oberster Ebene der App (inkl. Routen-Gruppen wie (dashboard)). */
 export function appSeiten(appPfad = path.join(process.cwd(), "app")): string[] {
@@ -372,6 +375,11 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
   if (psStylesheet && stylesheet && psStylesheet.index < stylesheet.index) {
     fehler.push(`<link rel="stylesheet" href="${PS_KONSOLE_CSS_PFAD}"> gehört nach <link rel="stylesheet" href="${CSS_PFAD}">.`)
   }
+  // architektur.css setzt Tokens und den AVSW-Akzent über lernpfad.css und gehört darum danach
+  const arStylesheet = startTags(quelle, "link").find(({ tag }) => istStylesheet(tag, ARCHITEKTUR_CSS_PFAD))
+  if (arStylesheet && stylesheet && arStylesheet.index < stylesheet.index) {
+    fehler.push(`<link rel="stylesheet" href="${ARCHITEKTUR_CSS_PFAD}"> gehört nach <link rel="stylesheet" href="${CSS_PFAD}">.`)
+  }
 
   const body = startTags(quelle, "body")[0]
   if (!body) {
@@ -400,6 +408,11 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
   const erweiterung = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), PS_KONSOLE_PFAD))
   if (erweiterung && skript && erweiterung.index < skript.index) {
     fehler.push(`<script src="${PS_KONSOLE_PFAD}"> gehört nach <script src="${JS_PFAD}">.`)
+  }
+  // architektur.js nutzt window.Lernpfad (Formeln, Kontext) und braucht lernpfad.js davor
+  const architektur = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), ARCHITEKTUR_PFAD))
+  if (architektur && skript && architektur.index < skript.index) {
+    fehler.push(`<script src="${ARCHITEKTUR_PFAD}"> gehört nach <script src="${JS_PFAD}">.`)
   }
 
   fehler.push(...externeRessourcen(quelle))

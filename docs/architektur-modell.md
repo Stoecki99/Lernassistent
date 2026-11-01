@@ -87,7 +87,7 @@ Zustände: `--z-fehler` (Rot), `--z-langsam` (Orange), `--z-neu` (Gelb, wie `--l
 {
   titel: "Webshop mit Message Broker",          // optional
   ansicht: "komponenten",                          // "komponenten" | "verteilung" | "kontext"
-  richtung: "rechts",                              // Hauptflussrichtung für das Auto-Layout: "rechts" | "unten"
+  richtung: "rechts",                              // Hauptflussrichtung für das Auto-Layout: "rechts" | "unten" (Standard "unten")
   elemente: [
     { id: "web", typ: "web", name: "Shop-Frontend", technologie: "React",
       x: 0, y: 1,                                  // optional: Rasterposition (Spalte, Zeile); sonst Auto-Layout
@@ -107,13 +107,17 @@ Zustände: `--z-fehler` (Rot), `--z-langsam` (Orange), `--z-neu` (Gelb, wie `--l
       schritte: [
         { von: "web", nach: "gw", art: "sync", text: "Die Kundin schickt die Bestellung (POST /orders)." },
         { von: "best", nach: "broker", art: "async", text: "…", parallel: true },  // gleichzeitig mit dem vorherigen
-        { bei: "zahlung", text: "Zahlungsanbieter antwortet nicht.", fehler: true }   // Ereignis an einem Element
+        { bei: "zahlung", text: "Zahlungsanbieter antwortet nicht.", fehler: true },  // Ereignis an einem Element
+        { von: "gw", nach: "web", text: "Antwort 201.", phase: "Antwort" }          // optional: Phase für die Phasenleiste;
+                                                                                      // von→nach darf eine Verbindung rückwärts laufen
       ] }
   ]
 }
 ```
 
-Regeln: IDs eindeutig, `a-z0-9-`. `von`/`nach` zeigen auf Elemente (nicht Gruppen, ausser `art: "deploy"`). Ohne `x`/`y` legt die Engine selbst aus (Schichten nach Kategorie: client → zugang/sicherheit → dienst → messaging → daten, extern rechts; Gruppen zusammenhalten).
+Regeln: IDs eindeutig, `a-z0-9-`. `von`/`nach` zeigen auf Elemente (nicht Gruppen, ausser `art: "deploy"`). Ohne `x`/`y` legt die Engine selbst aus (Schichten nach Kategorie: client → zugang/sicherheit → dienst → messaging → daten, extern rechts; Gruppen zusammenhalten). `x`/`y` gelten nur, wenn **alle** Elemente (ausser Gruppen) sie haben.
+
+Verfeinerungen des Auto-Layouts (Engine 1.0, damit Diagramme ohne `x`/`y` sauber werden): Akteure stehen vor ihren Clients; Sidecars (`mesh`) zwischen Zugang und Dienst; ein Dienst, der nur von Messaging-Elementen aufgerufen wird (Konsument), steht hinter dem Broker; Datenhaltung steht hinter ihren Nutzern; eine Schnittstelle steht direkt hinter der Komponente ihrer Gruppe, die sie realisiert oder nutzt; Elemente ausserhalb einer Gruppe, die nur mit deren Mitgliedern verbunden sind (Adapter, verwaltete Datenbank), stehen hinter der Gruppe (vor ihr bei Stereotyp mit «driving»); Fremdsysteme bei `richtung: "rechts"` hinter ihrem letzten Nachbarn (reine Quellen davor). Ein Bus allein in seiner Zeile (Spalte bei «rechts») wird zum durchgehenden Balken. Ab drei `peer` ohne Gruppen: Ring statt Schichten.
 
 ## 5. Verbindungsarten (UML-Notation)
 
@@ -152,11 +156,26 @@ Alle Funktionen: erstes Argument Element oder Selektor, Fehler als `[Architektur
     technologien: [{ name: "RabbitMQ", warum: "…" }, { name: "IBM MQ", warum: "…" }],
     passtWenn: ["…"], passtNichtWenn: ["…"],
     kopplung: "lose" , kommunikation: "asynchron", jahr: 1990,
+    einsatz: ["Integration", "Web"],                  // optional: Werte für den Filter «Einsatz»
+    kurzname: "MOM", symbol: "queue",                // optional: Name auf der Karte, Typ für das Ortssymbol
     verwandt: ["pubsub", "esb"],
     modell: { /* Modell nach 4, mit ablaeufe */ }
   }]
 }
 ```
+
+Kopplung, Kommunikation und Einsatz werden als Filter-Chips angeboten, sobald ein Stil den Wert hat. `verwandt` darf einseitig sein; Wege sind ungerichtet und dedupliziert. Diagramme zeichnet der Atlas erst beim Öffnen eines Stils.
+
+### 6.2 Ergänzungen der Engine 1.0
+
+| Funktion | zusätzliche Optionen | zusätzliche Rückgabe |
+|----------|----------------------|----------------------|
+| `diagramm` | `titel` (überschreibt `modell.titel`, `""` = kein Titel), `textliste` (Standard `true`), `breit` (Standard `true`: auf breiten Bildschirmen über die Lesespalte hinaus) | `waehle(id)` |
+| `atlas` | drittes Argument `opt`: `{ titel, breit }` | `{ zeigeStil(id), karte(), vergleiche(a, b), entdeckt() }` |
+| `editor` | `arten` (erlaubte Verbindungsarten), `fest` (IDs, die nicht gelöscht oder verschoben werden), `labels` (Beschriftung im Art-Menü, Standard `true`), `breit` | `markiere([])` löscht; Klassen `ar-ok`/`ar-falsch` setzen zusätzlich ✓/✗; `geist({ von, nach, art })`, `palettePuls(id)`, `rueckgaengig()` |
+| `spiel` | `titel`, `breit`, `speichern`; je Level `arten`, `raster` (`{ spalten, zeilen }`), `erklaerung`; je Lösungs-Verbindung `gerichtet: false`, `label` | `{ starten(levelId), levelkarte(), abgeben(), ergebnis(levelId), ergebnisse(), bestwerte() }` |
+
+Weitere Felder von `window.Architektur`: `kategorien` (Liste mit `id`, `name`, `kurz`), `arten` (je Art `name`, `erkl`), `linie(art)` (SVG-Muster der Linie als HTML) und `piktogramm(typ, titel)` (Piktogramm eines Typs als HTML).
 
 ## 7. Modellierspiel (`Architektur.spiel`)
 
@@ -177,7 +196,7 @@ Architektur.spiel("#spiel", {
 })
 ```
 
-Spielmechanik: Levelkarte mit Schlössern (nächstes Level frei ab 1 Stern), pro Level 0–3 Sterne (★ ≥ 50 %, ★★ ≥ 80 %, ★★★ = 100 % ohne Fehlversuch), XP = Grundpunkte × Schwierigkeit + Zeitbonus − Tipps; Tipps kosten XP und zeigen gestuft (Textstelle → Element → Verbindung); «Prüfen» zeigt Treffer direkt im Diagramm (grün/rot mit ✓/✗) und am Schluss die Musterlösung als animierter Ablauf. Serie (Combo) für Level hintereinander ohne Fehler. `prefers-reduced-motion` ohne Konfetti.
+Spielmechanik: Levelkarte mit Schlössern (nächstes Level frei ab 1 Stern), pro Level 0–3 Sterne (★ ≥ 50 %, ★★ ≥ 80 %, ★★★ = 100 % ohne Fehlversuch), XP = Grundpunkte × Schwierigkeit + Zeitbonus − Tipps (Engine 1.0: Anteil = max(0, Treffer − überflüssige Elemente − erfundene Verbindungen) ÷ (Lösungs-Elemente ohne vorgegebene + Lösungs-Verbindungen); Grundpunkte = round(40 × Anteil); Zeitbonus bis 30 anteilig zur Zielzeit, +10 bei perfekter Lösung; Serie +5 je Level ab dem zweiten, höchstens +25; Tipps kosten 5, 10, 15; «Lösung zeigen» vor dem Abschluss = 0 Sterne, 0 XP; Ergebnis 0–500); Tipps kosten XP und zeigen gestuft (Textstelle → Element → Verbindung); «Prüfen» zeigt Treffer direkt im Diagramm (grün/rot mit ✓/✗) und am Schluss die Musterlösung als animierter Ablauf. Serie (Combo) für Level hintereinander ohne Fehler. `prefers-reduced-motion` ohne Konfetti.
 
 Ereignis nach jedem abgeschlossenen Level: `architektur:spiel` (bubbelt) mit `detail: { spielId, levelId, sterne, xp, richtig, gesamt, loesungGezeigt, gespeichert }`. Die Engine speichert selbst über `/api/spielstand` (siehe 8), ausser `opt.speichern === false` oder in der Vorschau ohne API (Fehler abfangen, Seite läuft weiter).
 

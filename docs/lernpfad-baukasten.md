@@ -35,6 +35,8 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 | `scripts/lernpfad-vorschau.mjs` | Lokaler Vorschau-Server ohne App und Login |
 | `public/lernpfad/ps-konsole.css`, `ps-konsole.js` | Erweiterung Lernpfad PS: Konsolen-Simulator, Syntaxfärbung, Ausgabeblöcke. Nur für PS-Seiten, Doku in `docs/lernpfad-powershell.md` |
 | `content/lernseiten/ps/_vorlage.html` | Muster-Themenseite PS mit Simulator, Code- und Ausgabeblöcken (keine Station) |
+| `public/lernpfad/architektur.css`, `architektur.js` | Architektur-Engine für AVSW: Farbtokens der Kategorien, AVSW-Akzent, UML-Diagramme mit Abläufen und Ausfall, Atlas, Editor, Modellierspiel (`window.Architektur`). Nach `lernpfad.css`/`lernpfad.js` einbinden. Doku in `docs/lernpfad-architektur.md`, Vertrag in `docs/architektur-modell.md` |
+| `content/lernseiten/avsw/_vorlage.html` | Muster-Themenseite AVSW mit allen Bausteinen der Architektur-Engine (keine Station) |
 
 Ändere diese Dateien nicht für eine einzelne Themenseite. Was nur deine Seite braucht, gehört in die Seite (siehe [Abschnitt 11](#11-themeneigene-interaktionen)).
 
@@ -735,7 +737,7 @@ document.getElementById("t10-netzplan").appendChild(k);
 
 ### 9.15 `Lernpfad.modellieren(el, cfg)`
 
-Modellierungsübung: Anforderungstext lesen, passende Bausteine auf die Fläche legen, Verbindungen mit Art ziehen, prüfen. Ohne Ziehen mit der Maus: alles per Antippen und Tastatur (Palette-Knopf legt hin oder entfernt, Startbaustein antippen, Zielbaustein antippen). Eine Verbindungsliste unter der Fläche zeigt dasselbe als Text (Screenreader, sich kreuzende Linien) und hat je einen Knopf «Entfernen». Muster: `content/lernseiten/avsw/_vorlage.html`.
+Modellierungsübung: Anforderungstext lesen, passende Bausteine auf die Fläche legen, Verbindungen mit Art ziehen, prüfen. Ohne Ziehen mit der Maus: alles per Antippen und Tastatur (Palette-Knopf legt hin oder entfernt, Startbaustein antippen, Zielbaustein antippen). Eine Verbindungsliste unter der Fläche zeigt dasselbe als Text (Screenreader, sich kreuzende Linien) und hat je einen Knopf «Entfernen». Für neue AVSW-Seiten nimm stattdessen `Architektur.editor` und `Architektur.spiel` (UML-Darstellung, Levels, Spielstand, `docs/lernpfad-architektur.md`); `modellieren` bleibt für bestehende Seiten.
 
 | Feld | Typ | Pflicht | Bedeutung |
 |------|-----|---------|-----------|
@@ -759,7 +761,7 @@ Regeln für gute Aufgaben: Jede Verbindung der Lösung muss aus dem Text folgen 
 
 Gibt ein eigenes Inline-SVG (24 × 24, `currentColor`, Klasse `.pikto`) als HTML-Text zurück, für Konzeptkarten, Tabellen, Bilder von Architekturen und den Baustein `modellieren`. Mit `titel` bekommt es `role="img"` und `<title>`, sonst `aria-hidden`. **Keine Markenlogos** (Kubernetes, Docker, Kafka …): Werkzeuge werden mit diesen Piktogrammen und echten Code-Beispielen gezeigt.
 
-Arten: `client`, `mobile`, `user`, `gateway`, `lb`, `service`, `function`, `db`, `cache`, `queue`, `topic`, `storage`, `extern`, `container`, `pod`, `node`, `cluster`, `auth`, `cdn`, `monitor`, `config`, `code`. Galerie in `content/lernseiten/avsw/_vorlage.html`.
+Arten: `client`, `mobile`, `user`, `gateway`, `lb`, `service`, `function`, `db`, `cache`, `queue`, `topic`, `storage`, `extern`, `container`, `pod`, `node`, `cluster`, `auth`, `cdn`, `monitor`, `config`, `code`. Für Architektur-Typen nach `docs/architektur-modell.md` liefert `Architektur.piktogramm(typ)` das passende Piktogramm.
 
 ### 9.17 Hilfsfunktionen
 
