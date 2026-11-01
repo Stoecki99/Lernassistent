@@ -1,6 +1,6 @@
 # Lernpfad — Format und Auslieferung
 
-Ein Lernpfad führt durch ein Studienfach (zuerst MSTW), Station für Station bis zur Modulschlussprüfung. Jede Station ist **eine fertige HTML-Datei**. Die App liefert sie hinter dem Login aus und speichert den Fortschritt pro Konto.
+Ein Lernpfad führt durch ein Studienfach (bisher MSTW und AVSW), Station für Station bis zur Modulschlussprüfung. Jede Station ist **eine fertige HTML-Datei**. Die App liefert sie hinter dem Login aus und speichert den Fortschritt pro Konto.
 
 Gestaltung und Bausteine der Seiten (CSS, JavaScript, Schriften, KaTeX, Vorlage) beschreibt `docs/lernpfad-baukasten.md`. Dieses Dokument regelt Daten, Dateien, Prüfung, Auslieferung und Fortschritt.
 

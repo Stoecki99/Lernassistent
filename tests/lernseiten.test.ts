@@ -556,3 +556,30 @@ describe("MSTW fach.json im Repo", () => {
     assert.equal(reserviert.includes("mstw"), false)
   })
 })
+
+describe("AVSW fach.json im Repo", () => {
+  test("5 Stationen in Reihenfolge, Prüfungstraining am Schluss", () => {
+    const ergebnis = ladeFach("avsw")
+    assert.ok(ergebnis)
+    assert.equal(ergebnis.fach.kuerzel, "AVSW")
+    assert.deepEqual(
+      ergebnis.fach.sektionen.map((s) => s.id),
+      ["s1", "s2", "abschluss"],
+    )
+    assert.deepEqual(
+      ergebnis.pfad.map((s) => s.slug),
+      [
+        "01-redundanz-verfuegbarkeit",
+        "02-raid",
+        "03-backup-strategien",
+        "04-monitoring",
+        "05-pruefungstraining",
+      ],
+    )
+    assert.equal(ergebnis.pfad[4].sektion, "abschluss")
+  })
+
+  test("Fachordner kollidiert nicht mit App-Seiten, public/ oder _next", () => {
+    assert.equal(reservierteNamen().includes("avsw"), false)
+  })
+})
