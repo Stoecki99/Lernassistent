@@ -291,6 +291,9 @@ export type CostCategory = "arbeit" | "ueberzeit" | "fuehrung" | "anlass" | "wei
 export type HourCategory =
   | "arbeit" | "ueberzeit" | "review" | "korrektur_frueh" | "korrektur_spaet" | "weiterbildung" | "fuehrung"
 
+/** Höchster Prognose-Endtag im Statusbericht (Formular und Schema); assessHonesty misst nur bis hierhin */
+export const REPORT_FORECAST_DAY_MAX = 60
+
 export const COST_CATEGORIES: readonly CostCategory[] = [
   "arbeit", "ueberzeit", "fuehrung", "anlass", "weiterbildung", "risiko", "ereignis",
 ]

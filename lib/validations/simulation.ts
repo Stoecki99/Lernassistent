@@ -7,7 +7,7 @@
 
 import { z } from "zod"
 import pmgtFach from "../../content/lernseiten/pmgt/fach.json"
-import type { Action, Condition, Effect, Scenario, StatusReportInput } from "../simulation/types"
+import { REPORT_FORECAST_DAY_MAX, type Action, type Condition, type Effect, type Scenario, type StatusReportInput } from "../simulation/types"
 
 // ---------- Grundbausteine ----------
 
@@ -592,7 +592,7 @@ export const statusReportInputSchema: z.ZodType<StatusReportInput> = z
       .object({ gesamt: ampelSchema, termine: ampelSchema, kosten: ampelSchema, qualitaet: ampelSchema, team: ampelSchema, risiken: ampelSchema })
       .strict(),
     progressPercent: z.number().min(0).max(100),
-    forecastEndDay: z.number().min(1).max(60),
+    forecastEndDay: z.number().min(1).max(REPORT_FORECAST_DAY_MAX),
     forecastCostChf: z.number().min(0).max(1_000_000),
     deviations: z.string().max(1000, "Abweichungen: höchstens 1'000 Zeichen."),
     measures: z.array(idField).max(8),

@@ -35,6 +35,7 @@ import { earnedValue, plannedValue } from "@/lib/simulation/kpi"
 import { DEFAULT_PARAMS } from "@/lib/simulation/params"
 import { newDefects, qualityIndexFromRho, runReviews, runTest } from "@/lib/simulation/quality"
 import { assessHonesty, boardDecision } from "@/lib/simulation/report"
+import { REPORT_FORECAST_DAY_MAX } from "@/lib/simulation/types"
 import { hazardPerTick } from "@/lib/simulation/risk"
 import { dayEndPeople, talk } from "@/lib/simulation/team"
 import {
@@ -582,6 +583,12 @@ describe("Statusbericht (3.11)", () => {
     const t = { ...truth("gruen"), ampeln: { ...truth("gruen").ampeln, termine: "gelb" as const } }
     assert.equal(assessHonesty(input("gruen"), t, ctx, {}).honesty, 90)
     assert.equal(assessHonesty(input("gruen"), t, ctx, { zusageGruen: true }).honesty, 80)
+  })
+  test("Prognose über der Formulargrenze: Tag 60 gilt als ehrlich", () => {
+    // Formular und Schema erlauben höchstens Tag 60 (REPORT_FORECAST_DAY_MAX); ein Rechenkern über 62 darf nicht bestrafen
+    const t = { ...truth("gelb"), forecastEndDay: 76.7 }
+    assert.equal(assessHonesty(input("gelb", { forecastEndDay: REPORT_FORECAST_DAY_MAX }), t, ctx, {}).honesty, 100)
+    assert.equal(assessHonesty(input("gelb", { forecastEndDay: 50 }), t, ctx, {}).honesty, 85)
   })
   test("Gemeinderat: Phasenfreigabe", () => {
     const { s, sc } = fresh()

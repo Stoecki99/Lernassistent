@@ -513,7 +513,8 @@ function Spiel({
 
   return (
     <LeitstandContext.Provider value={ctx}>
-      <div className={styles.spiel} onKeyDown={onKeyDown}>
+      {/* tabIndex -1: ein Mausklick in den Leitstand setzt den Fokus hierher, sonst läge er auf body und die Kürzel griffen nicht */}
+      <div className={styles.spiel} onKeyDown={onKeyDown} tabIndex={-1}>
         <div className={styles.titelZeile}>
           <h1 className={styles.titel}>
             <span className={styles.titelMarke}>Leitstand</span> {scenario.title}

@@ -7,7 +7,7 @@
 import { clamp, safeDiv, type Ctx } from "./context"
 import { applyEffects, evalCondition, newMemo } from "./events"
 import { ampelRank } from "./kpi"
-import type { Ampel, BoardDecision, KpiSnapshot, ReportArea, ReportRecord, SimState, StatusReportInput } from "./types"
+import { REPORT_FORECAST_DAY_MAX, type Ampel, type BoardDecision, type KpiSnapshot, type ReportArea, type ReportRecord, type SimState, type StatusReportInput } from "./types"
 
 export const REPORT_AREAS: readonly ReportArea[] = ["termine", "kosten", "qualitaet", "team", "risiken"]
 const AMPEL_KEYS: ReadonlyArray<ReportArea | "gesamt"> = ["gesamt", ...REPORT_AREAS]
@@ -41,7 +41,8 @@ export function reportTruth(k: KpiSnapshot): ReportRecord["truth"] {
 /**
  * Ehrlichkeit H (3.11), Start 100:
  * Ampel 1 Stufe besser −10 (Gesamt −15) · 2 Stufen besser −25 (Gesamt −30) · schlechter −5 (Schwarzmalerei);
- * Fertigstellungsgrad > 10 Prozentpunkte daneben −10; Prognose Endtag < Rechenkern − 2 −15;
+ * Fertigstellungsgrad > 10 Prozentpunkte daneben −10; Prognose Endtag < Rechenkern − 2 −15 (Rechenkern höchstens
+ * REPORT_FORECAST_DAY_MAX, weil das Formular nicht mehr zulässt);
  * Endkosten < EAC × 0.95 −15; gelber/roter Bereich ohne passende Massnahme −5 je Bereich;
  * Flag zusageGruen und geschönt: Ampel-Abzüge doppelt; Flag zusageGelb und Abweichungen leer −10.
  */
@@ -76,7 +77,7 @@ export function assessHonesty(input: StatusReportInput, truth: ReportRecord["tru
     other += 10
     findings.push(`Fertigstellungsgrad ${input.progressPercent} % statt ${truth.progress.toFixed(0)} % (−10)`)
   }
-  if (input.forecastEndDay < truth.forecastEndDay - 2) {
+  if (input.forecastEndDay < Math.min(truth.forecastEndDay, REPORT_FORECAST_DAY_MAX) - 2) {
     other += 15
     findings.push(`Prognose Endtag ${input.forecastEndDay} zu optimistisch, Rechenkern ${truth.forecastEndDay.toFixed(1)} (−15)`)
   }

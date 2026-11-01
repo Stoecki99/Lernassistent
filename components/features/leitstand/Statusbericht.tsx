@@ -9,6 +9,7 @@
 // Danach die Antwort des Gemeinderats (nur Statusbericht).
 
 import { useState } from "react"
+import { REPORT_FORECAST_DAY_MAX } from "@/lib/simulation/types"
 import { isChangeRequestAvailable, type Ampel as AmpelWert, type ReportArea, type ReportRecord, type StatusReportInput } from "@/lib/simulation/core"
 import { statusReportInputSchema } from "@/lib/validations/simulation"
 import styles from "@/app/(leitstand)/leitstand.module.css"
@@ -108,7 +109,7 @@ export default function Statusbericht() {
           </label>
           <label className={styles.feld}>
             <span>Prognose Endtag</span>
-            <input className={styles.eingabe} type="number" inputMode="decimal" min={1} max={60} step={0.5} required value={endDay} onChange={(e) => setEndDay(e.target.value)} />
+            <input className={styles.eingabe} type="number" inputMode="decimal" min={1} max={REPORT_FORECAST_DAY_MAX} step={0.5} required value={endDay} onChange={(e) => setEndDay(e.target.value)} />
           </label>
           <label className={styles.feld}>
             <span>Prognose Endkosten CHF</span>
