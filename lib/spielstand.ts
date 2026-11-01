@@ -86,7 +86,7 @@ export async function speichereSpielstand(
   userId: string,
   eingabe: SpielstandEingabe,
   db: SpielstandDb = prisma,
-): Promise<SpielstandBewertung> {
+): Promise<Omit<SpielstandBewertung, "stand">> {
   const { fach, spiel, level, sterne, xp } = eingabe
 
   const versuch = () =>
