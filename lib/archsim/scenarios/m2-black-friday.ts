@@ -20,10 +20,10 @@ export const m2BlackFriday: Mission = {
     "<p>Der Shop besteht aus Microservices hinter einem API-Gateway: Katalog, Bestellung, Lager und Zahlung, dazu ein Message Broker, über den der Versand Aufträge bekommt. Drei Viertel der Besucherinnen stöbern nur, ein Viertel bestellt.</p>" +
     "<p>Ziel (SLO): <strong>p95 unter 400 ms</strong> und <strong>Verfügbarkeit mindestens 99.5 %</strong> über die ganzen 90 Minuten, Budget 750 CHF. Halte die Augen offen: Heute Nacht wird auch noch eine neue Version des Lagerservice ausgerollt.</p>",
   lernziele: [
-    { text: "Eine planbare Lastspitze mit Autoscaling und rechtzeitiger Reserve abfangen.", station: "03-container-kubernetes", abschnitt: "objekte" },
-    { text: "Lese-Last mit CDN und Cache vom Katalog und seiner Datenbank fernhalten.", station: "05-architektur-modellieren", abschnitt: "verfahren" },
-    { text: "Erkennen, dass ein asynchron angebundener Dienst (Versand) einen Rückstau aufbaut statt Fehler zu werfen.", station: "02-kommunikation", abschnitt: "messaging" },
-    { text: "Ein fehlerhaftes Deployment an der Fehlerquote erkennen und zurückrollen.", station: "03-container-kubernetes", abschnitt: "objekte" },
+    { text: "Eine planbare Lastspitze mit Autoscaling und rechtzeitiger Reserve abfangen.", station: "05-microservices", abschnitt: "objekte" },
+    { text: "Lese-Last mit CDN und Cache vom Katalog und seiner Datenbank fernhalten.", station: "10-fallstudie", abschnitt: "verfahren" },
+    { text: "Erkennen, dass ein asynchron angebundener Dienst (Versand) einen Rückstau aufbaut statt Fehler zu werfen.", station: "03-eda-message-broker", abschnitt: "messaging" },
+    { text: "Ein fehlerhaftes Deployment an der Fehlerquote erkennen und zurückrollen.", station: "05-microservices", abschnitt: "objekte" },
   ],
   modell: {
     titel: "Gipfelstürmer-Shop: Microservices mit Broker",

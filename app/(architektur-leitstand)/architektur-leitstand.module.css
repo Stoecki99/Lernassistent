@@ -1,0 +1,2539 @@
+/* app/(architektur-leitstand)/architektur-leitstand.module.css
+   Stile des Architektur-Leitstands auf Basis der Lernpfad-Tokens (/lernpfad/lernpfad.css) und der Engine-Tokens
+   (/lernpfad/architektur.css: --k-* Kategorien, --z-* Zustände). Lokal ergänzt: Akzent AVSW (gleiche Werte wie
+   body[data-fach="avsw"] in architektur.css) und die dunkle Leitstand-Leiste (--al-pult*).
+   Kontraste (Text auf Fläche): --al-pult-text #e8f6f8 auf --al-pult #0f2a30: 13.9:1; --al-pult-akzent #5fe0ea: 9.6:1;
+   Ampelwörter nutzen --ok, --z-langsam, --z-fehler (≥ 4.5:1 laut architektur.css). Farbe nie allein: Ampel mit Form und Wort. */
+
+/* ---------- Rahmen und Tokens ---------- */
+
+.seite {
+  --accent: #0b6f7c;
+  --accent-soft: #dcf0f2;
+  --s5: var(--accent);
+  --al-pult: #0f2a30;
+  --al-pult-2: #163a42;
+  --al-pult-linie: #2b5560;
+  --al-pult-text: #e8f6f8;
+  --al-pult-leise: #a9c8cd;
+  --al-pult-akzent: #5fe0ea;
+  --al-schatten: 0 1px 2px rgba(15, 42, 48, 0.08), 0 6px 18px rgba(15, 42, 48, 0.07);
+  --gap: 14px;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(:root:not([data-theme="light"])) .seite {
+    --accent: #4fd0da;
+    --accent-soft: #10343a;
+    --al-pult: #0b1f24;
+    --al-pult-2: #12313a;
+    --al-pult-linie: #285059;
+    --al-schatten: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.3);
+  }
+}
+
+:global(:root[data-theme="dark"]) .seite {
+  --accent: #4fd0da;
+  --accent-soft: #10343a;
+  --al-pult: #0b1f24;
+  --al-pult-2: #12313a;
+  --al-pult-linie: #285059;
+  --al-schatten: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.seite :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.kopfleiste.kopfleiste,
+.wrap.wrap {
+  max-width: 1280px;
+  padding-inline: 0;
+}
+
+.wrap.wrap {
+  padding-block: 12px 110px;
+}
+
+.seite :global(.btn) {
+  min-height: 44px;
+}
+
+@media (pointer: fine) {
+  .seite :global(.btn) {
+    min-height: 36px;
+  }
+}
+
+.seite :global(.card) {
+  box-shadow: var(--al-schatten);
+}
+
+.klein.klein {
+  font-size: 0.85rem;
+  padding: 4px 10px;
+}
+
+.h2klein {
+  font-size: clamp(1.15rem, 2.6vw, 1.4rem);
+}
+
+.h3 {
+  font-family: var(--f-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.h4 {
+  font-family: var(--f-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.fehlerText {
+  color: var(--bad);
+  font-weight: 600;
+}
+
+.zeileZwischen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+/* ---------- Missionswahl ---------- */
+
+.start {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.startKopf {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+}
+
+.startKopf::before {
+  content: "";
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  margin-bottom: 4px;
+  background: linear-gradient(90deg, var(--k-client) 0 12.5%, var(--k-zugang) 0 25%, var(--k-sicherheit) 0 37.5%, var(--k-dienst) 0 50%, var(--k-messaging) 0 62.5%, var(--k-daten) 0 75%, var(--k-extern) 0 87.5%, var(--k-infra) 0 100%);
+}
+
+.fortschritt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fortschrittKopf {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 12px;
+}
+
+.sternSumme {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sternSumme span {
+  color: var(--ar-gold);
+}
+
+.pfad {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  counter-reset: pfad;
+}
+
+.pfadPunkt {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 10px 52px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--board);
+  min-height: 62px;
+}
+
+.pfadNummer {
+  position: absolute;
+  left: 10px;
+  top: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.pfadGeschafft {
+  border-color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.pfadGeschafft .pfadNummer {
+  background: var(--ok);
+}
+
+.pfadGesperrt {
+  opacity: 0.75;
+}
+
+.pfadGesperrt .pfadNummer {
+  background: var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.pfadName {
+  font-weight: 650;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.missionsRaster {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 14px;
+}
+
+.missionKarte {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: hidden;
+  border-top: 5px solid var(--accent);
+}
+
+.stufe1 {
+  border-top-color: var(--k-dienst);
+}
+.stufe2 {
+  border-top-color: var(--k-daten);
+}
+.stufe3 {
+  border-top-color: var(--k-sicherheit);
+}
+
+.missionGesperrt {
+  background: var(--board);
+}
+
+.missionGesperrt .missionTitel,
+.missionGesperrt .missionUnter {
+  color: var(--muted);
+}
+
+.missionBand {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bandPunkt {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--ar-bg);
+  border: 2px solid var(--ar-c);
+}
+
+.missionTitel {
+  font-size: 1.3rem;
+  hyphens: manual;
+}
+
+.missionUnter {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.fakten {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fakten li {
+  font-size: 0.85rem;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--board);
+  border: 1px solid var(--line);
+}
+
+.schwierigkeit {
+  letter-spacing: 1px;
+}
+
+.sAn {
+  color: var(--accent);
+}
+
+.sAus {
+  color: var(--line);
+}
+
+.lernzieleAuf summary,
+.laeufe summary,
+.tabelleAuf summary,
+.muster summary,
+.hinweisListe summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.lernzieleAuf ul,
+.laeufe ul {
+  margin: 6px 0 0;
+  padding-left: 1.1em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.92rem;
+}
+
+.laeufe ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.laufZeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.bestwert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gesperrtText {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sterneKlein,
+.sterneMittel {
+  letter-spacing: 1px;
+}
+
+.sterneMittel {
+  font-size: 1.3rem;
+}
+
+.sternAn {
+  color: var(--ar-gold);
+}
+
+.sternAus {
+  color: var(--line);
+}
+
+.ablauf {
+  margin-top: 4px;
+}
+
+.schritte {
+  margin: 0;
+  list-style: decimal;
+  padding-left: 1.3em;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ---------- Spiel: Rahmen ---------- */
+
+.laden {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ladenPuls {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: puls 1s ease-in-out infinite;
+}
+
+@keyframes puls {
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+}
+
+.spiel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  outline: none;
+}
+
+.titelZeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.titel {
+  font-size: clamp(1.25rem, 3.2vw, 1.75rem);
+}
+
+.titelMarke {
+  display: block;
+  font-family: var(--f-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.titelKnoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.titelKnoepfe :global(.btn)[aria-pressed="true"] {
+  border-color: var(--accent);
+}
+
+.lage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+}
+
+.lageWarn {
+  border-color: var(--z-langsam);
+  background: var(--z-langsam-bg);
+}
+
+.zurueck {
+  margin: 0;
+}
+
+/* ---------- Leitstand-Pult (Zeitsteuerung) ---------- */
+
+.kopf {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr) auto auto;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--al-pult), var(--al-pult-2));
+  color: var(--al-pult-text);
+  box-shadow: 0 6px 18px rgba(8, 26, 30, 0.25);
+}
+
+.kopf :global(.btn) {
+  background: transparent;
+  color: var(--al-pult-text);
+  border-color: var(--al-pult-linie);
+}
+
+.kopf :global(.btn.primary) {
+  background: var(--al-pult-akzent);
+  border-color: var(--al-pult-akzent);
+  color: #072226;
+  font-weight: 700;
+}
+
+.kopf :global(.btn:disabled) {
+  opacity: 0.5;
+}
+
+.kopf :focus-visible {
+  outline-color: var(--al-pult-akzent);
+}
+
+.uhr {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  min-width: 108px;
+}
+
+.uhrZahl {
+  font-family: var(--f-display);
+  font-size: 1.7rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.uhrZahl small {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--al-pult-leise);
+}
+
+.phase {
+  font-size: 0.8rem;
+  color: var(--al-pult-leise);
+}
+
+.phaseLaeuft {
+  color: var(--al-pult-akzent);
+}
+
+.phaseLaeuft span:first-child {
+  animation: puls 1.2s ease-in-out infinite;
+  display: inline-block;
+}
+
+.zeitleiste {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--al-pult-linie);
+  overflow: hidden;
+}
+
+.zeitFuellung {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--al-pult-akzent), #9af0f5);
+  border-radius: 999px;
+  transition: width 0.25s linear;
+}
+
+.zeitEreignis {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, rgba(255, 168, 87, 0.85) 0 5px, rgba(255, 123, 112, 0.85) 5px 10px);
+  opacity: 0.75;
+}
+
+.zeitEreignisAktiv {
+  opacity: 1;
+  box-shadow: 0 0 0 2px #ffa857 inset;
+}
+
+.tempo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.play {
+  min-width: 112px;
+}
+
+.tempoKnopf.tempoKnopf {
+  min-width: 44px;
+  padding-inline: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tempoAn.tempoAn {
+  background: var(--al-pult-2);
+  border-color: var(--al-pult-akzent);
+  color: var(--al-pult-akzent);
+  font-weight: 700;
+}
+
+.sync {
+  font-size: 0.8rem;
+  color: var(--al-pult-leise);
+  white-space: nowrap;
+}
+
+.sync_fehler,
+.sync_abgemeldet,
+.sync_offline {
+  color: #ffb4ab;
+  font-weight: 700;
+}
+
+/* ---------- Coach, Tabs ---------- */
+
+.coach {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--ar-gold);
+  background: var(--ar-gold-bg);
+  color: var(--ink);
+  animation: einblenden 0.35s ease-out;
+}
+
+.coach p {
+  flex: 1 1 auto;
+}
+
+.coachSymbol {
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+@keyframes einblenden {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+}
+
+.tabs {
+  display: none;
+}
+
+/* ---------- Kennzahlen ---------- */
+
+.kennzahlen {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kacheln {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.kachel {
+  --kc: var(--muted);
+  --kc-bg: var(--board);
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--kc);
+  box-shadow: var(--al-schatten);
+  overflow: hidden;
+}
+
+.kachel_gut {
+  --kc: var(--ok);
+  --kc-bg: var(--ok-bg);
+}
+.kachel_knapp {
+  --kc: var(--z-langsam);
+  --kc-bg: var(--z-langsam-bg);
+}
+.kachel_schlecht {
+  --kc: var(--z-fehler);
+  --kc-bg: var(--z-fehler-bg);
+}
+.kachel_neutral {
+  --kc: var(--k-zugang);
+  --kc-bg: var(--k-zugang-bg);
+}
+
+.kachelKnopf {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 6px;
+  cursor: pointer;
+  min-height: 132px;
+}
+
+.kachelKnopf:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.kachelTitel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.kachelWert {
+  font-family: var(--f-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  line-height: 1.15;
+}
+
+.kachelUnter {
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.kachelHilfe {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--board);
+  border: 1px solid var(--line);
+}
+
+.ampel {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0 8px;
+  border-radius: 999px;
+}
+
+.ampel_gut {
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+.ampel_knapp {
+  color: var(--z-langsam);
+  background: var(--z-langsam-bg);
+}
+.ampel_schlecht {
+  color: var(--z-fehler);
+  background: var(--z-fehler-bg);
+}
+.ampel_neutral {
+  color: var(--muted);
+  background: var(--board);
+}
+
+.kleinkurve {
+  margin-top: 4px;
+  width: 100%;
+  height: 28px;
+}
+
+.kkFlaeche {
+  fill: var(--kc);
+  opacity: 0.14;
+}
+
+.kkLinie {
+  fill: none;
+  stroke: var(--kc);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+/* ---------- Bühne: Diagramm und Seitenpanel ---------- */
+
+.buehne {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 12px;
+  align-items: start;
+}
+
+.diagrammKarte {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.diagrammKopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.zustandsLegende {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.zs_ok {
+  color: var(--ok);
+}
+.zs_ausgelastet,
+.zs_langsam {
+  color: var(--z-langsam);
+}
+.zs_ueberlast,
+.zs_ausfall,
+.zs_fehlerhaft {
+  color: var(--z-fehler);
+}
+.zs_leer {
+  color: var(--muted);
+}
+.zsCb {
+  color: var(--muted);
+}
+
+.diagrammRahmen {
+  position: relative;
+  min-width: 0;
+}
+
+.diagrammLaden {
+  padding: 40px 12px;
+  text-align: center;
+}
+
+.diagramm {
+  min-width: 0;
+}
+
+/* Overlay der Oberfläche auf dem Engine-Diagramm (Klassen al-*, Selektoren mit Engine-Klassen ar-*) */
+.diagramm :global(.ar-el.al-z-ausgelastet .ar-form),
+.diagramm :global(.ar-el.al-z-langsam .ar-form) {
+  stroke: var(--z-langsam);
+  stroke-width: 2.6;
+}
+.diagramm :global(.ar-el.al-z-ausgelastet > .ar-form:first-of-type),
+.diagramm :global(.ar-el.al-z-langsam > .ar-form:first-of-type) {
+  fill: var(--z-langsam-bg);
+}
+.diagramm :global(.ar-el.al-z-langsam .ar-form) {
+  stroke-dasharray: 7 4;
+}
+.diagramm :global(.ar-el.al-z-ueberlast .ar-form),
+.diagramm :global(.ar-el.al-z-fehlerhaft .ar-form) {
+  stroke: var(--z-fehler);
+  stroke-width: 3;
+}
+.diagramm :global(.ar-el.al-z-ueberlast > .ar-form:first-of-type),
+.diagramm :global(.ar-el.al-z-fehlerhaft > .ar-form:first-of-type) {
+  fill: var(--z-fehler-bg);
+}
+.diagramm :global(.ar-el.al-z-fehlerhaft .ar-form) {
+  stroke-dasharray: 3 3;
+}
+.diagramm :global(.ar-el.al-z-ueberlast > .ar-form:first-of-type) {
+  animation: al-glut 1.4s ease-in-out infinite;
+}
+.diagramm :global(.ar-el.al-z-leer) {
+  opacity: 0.72;
+}
+.diagramm :global(.ar-el.al-gewaehlt .ar-ring),
+.diagramm :global(.ar-kante.al-gewaehlt .ar-linie) {
+  opacity: 1;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+}
+.diagramm :global(.ar-kante.al-gewaehlt .ar-linie) {
+  stroke-width: 4;
+}
+
+@keyframes al-glut {
+  50% {
+    filter: drop-shadow(0 0 8px var(--z-fehler));
+  }
+}
+
+/* Plaketten: Instanzen, Auslastung, Last, Rückstau, Circuit Breaker */
+.diagramm :global(.al-plakette rect) {
+  fill: var(--surface);
+  stroke: var(--line);
+  stroke-width: 1.2;
+}
+.diagramm :global(.al-plakette text) {
+  font-size: 12.5px;
+  font-weight: 750;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.diagramm :global(.al-pl-ok rect) {
+  stroke: var(--ok);
+}
+.diagramm :global(.al-pl-ausgelastet rect),
+.diagramm :global(.al-pl-langsam rect) {
+  fill: var(--z-langsam-bg);
+  stroke: var(--z-langsam);
+}
+.diagramm :global(.al-pl-ausgelastet text),
+.diagramm :global(.al-pl-langsam text) {
+  fill: var(--z-langsam);
+}
+.diagramm :global(.al-pl-ueberlast rect),
+.diagramm :global(.al-pl-ausfall rect),
+.diagramm :global(.al-pl-fehlerhaft rect) {
+  fill: var(--z-fehler-bg);
+  stroke: var(--z-fehler);
+}
+.diagramm :global(.al-pl-ueberlast text),
+.diagramm :global(.al-pl-ausfall text),
+.diagramm :global(.al-pl-fehlerhaft text) {
+  fill: var(--z-fehler);
+}
+.diagramm :global(.al-pl-stau rect) {
+  fill: var(--k-messaging-bg);
+  stroke: var(--k-messaging);
+}
+.diagramm :global(.al-pl-stau text) {
+  fill: var(--k-messaging);
+}
+.diagramm :global(.al-pl-last rect) {
+  fill: var(--k-client-bg);
+  stroke: var(--k-client);
+}
+.diagramm :global(.al-pl-last text) {
+  fill: var(--k-client);
+}
+.diagramm :global(.al-as) {
+  font-size: 10.5px;
+  font-weight: 700;
+  fill: var(--k-dienst);
+}
+.diagramm :global(.al-fuellung) {
+  fill: var(--k-messaging);
+  opacity: 0.75;
+  transition: width 0.3s;
+}
+.diagramm :global(.al-fuellung.al-voll) {
+  fill: var(--z-fehler);
+}
+.diagramm :global(.al-cb rect) {
+  stroke-width: 1.6;
+}
+.diagramm :global(.al-cb-zu rect) {
+  fill: var(--ok-bg);
+  stroke: var(--ok);
+}
+.diagramm :global(.al-cb-zu text) {
+  fill: var(--ok);
+}
+.diagramm :global(.al-cb-offen rect) {
+  fill: var(--z-fehler-bg);
+  stroke: var(--z-fehler);
+}
+.diagramm :global(.al-cb-offen text) {
+  fill: var(--z-fehler);
+}
+.diagramm :global(.al-cb-halboffen rect) {
+  fill: var(--z-langsam-bg);
+  stroke: var(--z-langsam);
+}
+.diagramm :global(.al-cb-halboffen text) {
+  fill: var(--z-langsam);
+}
+.diagramm :global(.al-cb-bh rect) {
+  fill: var(--k-infra-bg);
+  stroke: var(--k-infra);
+}
+.diagramm :global(.al-cb-bh text) {
+  fill: var(--k-infra);
+}
+
+/* Nachrichtenfluss */
+.diagramm :global(.ar-kante.al-fluss .ar-linie) {
+  stroke: var(--ar-c);
+  stroke-width: 2.4;
+}
+.diagramm :global(.ar-kante.al-fluss.ar-art-daten .ar-linie) {
+  stroke-width: 3.4;
+}
+.diagramm :global(.ar-kante.al-lage-gestresst .ar-linie) {
+  stroke: var(--z-langsam);
+}
+.diagramm :global(.ar-kante.al-lage-gestoert .ar-linie) {
+  stroke: var(--z-fehler);
+}
+.diagramm :global(.al-punkt) {
+  fill: var(--ar-c);
+  stroke: var(--surface);
+  stroke-width: 1.2;
+  pointer-events: none;
+}
+.diagramm :global(.al-lage-gestresst .al-punkt) {
+  fill: var(--z-langsam);
+}
+.diagramm :global(.al-lage-gestoert .al-punkt) {
+  fill: var(--z-fehler);
+}
+
+.seitenPanel {
+  min-width: 0;
+  padding: 14px;
+  position: sticky;
+  top: 94px;
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panelLeer {
+  color: var(--muted);
+  padding: 12px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+}
+
+.panelKopf {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.katPunkt {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  background: var(--ar-bg);
+  border: 3px solid var(--ar-c);
+}
+
+.kantePikto {
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.zustandZeile {
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  align-self: flex-start;
+  background: var(--board);
+}
+
+.messwerte {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.messwerte > div {
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--board);
+}
+
+.messwerte dt {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.messwerte dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.panelMassnahmen {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aufrufe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aufrufKnopf.aufrufKnopf {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0;
+  padding: 6px 10px;
+}
+
+.waehlen {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.auswahlFeld,
+.zahlFeld {
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 40px;
+  max-width: 100%;
+}
+
+.zahlFeld {
+  width: 6.5em;
+}
+
+/* ---------- Massnahmen ---------- */
+
+.massnahme {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.massnahmeKompakt {
+  background: var(--board);
+}
+
+.massnahmeKopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+
+.massnahmeSymbol {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.massnahmeKosten {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.massnahmeText {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.formZeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.formFeld {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.stepper :global(.btn) {
+  border: 0;
+  border-radius: 0;
+  min-width: 40px;
+  font-weight: 800;
+}
+
+.stepperWert {
+  min-width: 2.2em;
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.segment {
+  display: inline-flex;
+  flex-wrap: wrap;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.segKnopf {
+  font: inherit;
+  font-size: 0.85rem;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  padding: 6px 10px;
+  min-height: 36px;
+  min-width: 36px;
+  cursor: pointer;
+}
+
+.segKnopf:last-child {
+  border-right: 0;
+}
+
+.segAn {
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 700;
+}
+
+.sperrGrund {
+  font-size: 0.85rem;
+  color: var(--z-fehler);
+  font-weight: 600;
+}
+
+.leiste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leisteKopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.karten {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.karte {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--al-schatten);
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+}
+
+.karte:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.karte:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.karteAus {
+  background: var(--board);
+}
+
+.karteAus .karteTitel {
+  color: var(--muted);
+}
+
+.karteSymbol {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--surface);
+  background: var(--accent);
+}
+
+.karteAus .karteSymbol {
+  background: var(--muted);
+}
+
+.karteTitel {
+  font-weight: 750;
+  font-family: var(--f-display);
+}
+
+.karteText {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.35;
+  flex: 1 1 auto;
+}
+
+.karteFuss {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.zielWahl {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 10px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.zielWahl legend {
+  font-weight: 700;
+  padding: 0 4px;
+}
+
+.zielOption {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.zielAn {
+  background: var(--accent-soft);
+}
+
+.zielGrund {
+  grid-column: 2;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ---------- Unten: Verlauf und Protokoll ---------- */
+
+.unten {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.kurve {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kurveKopf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
+}
+
+.kurveFlaeche {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.kurveFlaeche svg {
+  display: block;
+  font-family: var(--f-body);
+}
+
+.kurveKlickbar {
+  cursor: crosshair;
+}
+
+.kEreignis rect {
+  fill: var(--z-langsam-bg);
+  opacity: 0.75;
+}
+
+.kEreignis text {
+  font-size: 10.5px;
+  font-weight: 700;
+  fill: var(--z-langsam);
+}
+
+.kRaster line {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.kRaster text,
+.kAchse {
+  font-size: 10.5px;
+  fill: var(--muted);
+}
+
+.kAchsenLinie {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.kFehler {
+  fill: var(--z-fehler);
+  opacity: 0.55;
+}
+
+.kDurchsatzFlaeche {
+  fill: var(--k-dienst);
+  opacity: 0.22;
+}
+
+.kLast {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.kDurchsatz {
+  fill: none;
+  stroke: var(--k-dienst);
+  stroke-width: 2.2;
+}
+
+.kSlo {
+  stroke: var(--z-fehler);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.kSloText {
+  font-size: 10.5px;
+  font-weight: 700;
+  fill: var(--z-fehler);
+}
+
+.kP95 {
+  fill: none;
+  stroke: var(--k-client);
+  stroke-width: 2.2;
+}
+
+.kVerletzt {
+  fill: var(--z-fehler);
+}
+
+.kKosten {
+  fill: none;
+  stroke: var(--k-daten);
+  stroke-width: 2.2;
+}
+
+.kPrognose {
+  fill: none;
+  stroke: var(--k-daten);
+  stroke-width: 1.6;
+  stroke-dasharray: 5 4;
+}
+
+.kAktion {
+  fill: var(--accent);
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+
+.kJetzt {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.kZeiger line {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+.kZeiger text {
+  font-size: 11px;
+  font-weight: 800;
+  fill: var(--accent);
+}
+
+.kurveLegende {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.lgLast,
+.lgDurchsatz,
+.lgFehler,
+.lgP95,
+.lgSlo,
+.lgKosten,
+.lgEreignis {
+  display: inline-block;
+  width: 18px;
+  height: 10px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.lgLast {
+  border-top: 2px dashed var(--ink);
+  height: 0;
+}
+.lgDurchsatz {
+  background: var(--k-dienst);
+}
+.lgFehler {
+  background: var(--z-fehler);
+  opacity: 0.6;
+}
+.lgP95 {
+  background: var(--k-client);
+  height: 3px;
+}
+.lgSlo {
+  border-top: 2px dashed var(--z-fehler);
+  height: 0;
+}
+.lgKosten {
+  background: var(--k-daten);
+  height: 3px;
+}
+.lgEreignis {
+  background: var(--z-langsam-bg);
+  border: 1px solid var(--z-langsam);
+}
+
+.tabelleAuf {
+  font-size: 0.9rem;
+}
+
+.tabelle {
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+
+.tabelle th,
+.tabelle td {
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
+
+.protokoll {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.protokollListe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+}
+
+.protokollListe li {
+  display: grid;
+  grid-template-columns: 2.6em 1.2em minmax(0, 1fr);
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: var(--board);
+}
+
+.protokollMinute {
+  font-weight: 800;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.pz_ereignis {
+  border-left: 4px solid var(--z-langsam);
+}
+.pz_aktion {
+  border-left: 4px solid var(--accent);
+}
+.pz_hinweis {
+  border-left: 4px solid var(--ar-gold);
+}
+
+/* ---------- Meldungen ---------- */
+
+.meldungen {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(440px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.meldung {
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--accent);
+  box-shadow: 0 10px 30px rgba(10, 20, 25, 0.25);
+  animation: einblenden 0.3s ease-out;
+}
+
+.meldung_ereignis {
+  border-left-color: var(--z-langsam);
+  background: linear-gradient(90deg, var(--z-langsam-bg), var(--surface) 60%);
+}
+
+.meldung_fehler {
+  border-left-color: var(--z-fehler);
+}
+
+.meldungSymbol {
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+.meldung_ereignis .meldungSymbol {
+  color: var(--z-langsam);
+}
+
+.meldung_fehler .meldungSymbol {
+  color: var(--z-fehler);
+}
+
+.meldungText {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.92rem;
+}
+
+.meldungKnoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ---------- Dialog ---------- */
+
+.dialogHinter {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(10, 18, 22, 0.55);
+}
+
+.dialog {
+  width: min(560px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.dialogBreit {
+  width: min(720px, 100%);
+}
+
+.dialogKicker {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.dialogTitel {
+  font-size: 1.35rem;
+  outline: none;
+}
+
+.dialogKnoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* ---------- Briefing ---------- */
+
+.briefing {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-top: 5px solid var(--accent);
+}
+
+.briefingKopf {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.briefingRaster {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.prosa {
+  max-width: 66ch;
+}
+
+.prosa p {
+  margin: 0;
+}
+
+.ziele {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+
+.zielListe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zielListe li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  line-height: 1.3;
+}
+
+.zielSymbol {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--surface);
+  font-weight: 800;
+}
+
+.werkzeuge {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.werkzeug {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+}
+
+.lernziele ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.punkteRegel {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--board);
+}
+
+/* ---------- Modellierphase ---------- */
+
+.modellieren {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auftrag {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 5px solid var(--k-messaging);
+}
+
+.auftragText {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  line-height: 1.7;
+  max-width: 80ch;
+}
+
+.baustein {
+  font: inherit;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px dotted var(--accent);
+  padding: 0 2px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.baustein:hover {
+  background: var(--accent-soft);
+}
+
+.bausteinMarkiert {
+  background: var(--lit);
+  border-bottom-style: solid;
+}
+
+.bausteinGesetzt {
+  border-bottom: 3px solid var(--ok);
+}
+
+.bausteinGesetzt::after {
+  content: " ✓";
+  color: var(--ok);
+  font-weight: 800;
+  font-size: 0.85em;
+}
+
+.bausteinZaehler {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.modellierRaster {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 12px;
+  align-items: start;
+}
+
+.editorKarte {
+  min-width: 0;
+  padding: 12px;
+}
+
+.editor {
+  min-width: 0;
+}
+
+.pruefung {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 12px;
+}
+
+.pruefZeile {
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
+.pruefOk {
+  color: var(--ok);
+  background: var(--ok-bg);
+}
+
+.pruefFehlt {
+  color: var(--z-fehler);
+  background: var(--z-fehler-bg);
+}
+
+.pruefFehler {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.85rem;
+  color: var(--z-fehler);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkliste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkliste li {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 6px;
+  align-items: start;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.checkSymbol {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.checkOk .checkSymbol {
+  background: var(--ok);
+  color: var(--surface);
+}
+
+.checkOffen .checkSymbol {
+  background: var(--z-fehler-bg);
+  color: var(--z-fehler);
+  border: 1.5px solid var(--z-fehler);
+}
+
+.checkHinweis {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.hinweisListe ul {
+  margin: 4px 0 0;
+  padding-left: 1.2em;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.pruefKnoepfe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Ergebnis ---------- */
+
+.ergebnis {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ergebnisKopf {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  border-top: 5px solid var(--ar-gold);
+  background: radial-gradient(ellipse at 85% 0%, var(--ar-gold-bg), var(--surface) 55%);
+}
+
+.punkteGross {
+  font-family: var(--f-display);
+  font-size: clamp(2.6rem, 9vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.punkteGross small {
+  font-size: 0.4em;
+  color: var(--muted);
+}
+
+.sterneGross {
+  display: flex;
+  gap: 6px;
+  font-size: clamp(2.2rem, 8vw, 3.2rem);
+  line-height: 1;
+}
+
+.stern {
+  display: inline-block;
+  animation: stern-rein 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.stern.sternAn {
+  text-shadow: 0 2px 10px rgba(217, 154, 0, 0.45);
+}
+
+@keyframes stern-rein {
+  0% {
+    transform: scale(0) rotate(-50deg);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.abzeichenZeile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.plakat {
+  font-size: 0.88rem;
+  font-weight: 750;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--ar-gold-bg);
+  border: 1px solid var(--ar-gold);
+  color: var(--ink);
+  animation: einblenden 0.5s ease-out both;
+  animation-delay: 1.4s;
+}
+
+.plakatAbzeichen {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.plakatGrau {
+  font-size: 0.85rem;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--board);
+  color: var(--muted);
+}
+
+.speicherStand {
+  font-size: 0.85rem;
+  color: var(--muted);
+  min-height: 1.4em;
+}
+
+.zusammenfassung {
+  max-width: 75ch;
+}
+
+.naechste {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--board);
+}
+
+.teile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.teilListe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
+  gap: 12px;
+}
+
+.teil {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--board);
+}
+
+.teilKopf {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.balken {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.balkenFuellung {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  animation: balken-rein 1.2s ease-out both;
+  transform-origin: left;
+}
+
+@keyframes balken-rein {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+.bGut {
+  background: var(--ok);
+}
+.bKnapp {
+  background: var(--z-langsam);
+}
+.bSchlecht {
+  background: var(--z-fehler);
+}
+
+.gesamtWerte {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.gesamtWerte > div {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.gesamtWerte dt {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.gesamtWerte dd {
+  margin: 0;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.zeitreise {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.regler {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.regler input {
+  width: min(260px, 50vw);
+  accent-color: var(--accent);
+}
+
+.zeitreiseRaster {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.zeitachse {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+  border-left: 3px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.zeitEintrag {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2.8em 1.4em minmax(0, 1fr);
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: var(--board);
+  border-left: 4px solid var(--muted);
+}
+
+.zeitEintrag:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.zeitEintrag:hover,
+.zeitEintragAn {
+  background: var(--accent-soft);
+}
+
+.za_ereignis {
+  border-left-color: var(--z-langsam);
+}
+.za_aktion {
+  border-left-color: var(--accent);
+}
+.za_stoerung,
+.za_verlust,
+.za_retrysturm {
+  border-left-color: var(--z-fehler);
+}
+.za_erholung {
+  border-left-color: var(--ok);
+}
+.za_circuitbreaker {
+  border-left-color: var(--k-infra);
+}
+
+.zeitMinute {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.zeitText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.ursache {
+  color: var(--muted);
+}
+
+.wirkung {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.zeitreiseDiagramm {
+  min-width: 0;
+}
+
+.lehren {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lehrenListe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 12px;
+}
+
+.lehre {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-left: 6px solid var(--z-langsam);
+}
+
+.lehrePositiv {
+  border-left-color: var(--ok);
+}
+
+.lehreKopf span {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-weight: 800;
+  background: var(--z-langsam-bg);
+  color: var(--z-langsam);
+}
+
+.lehrePositiv .lehreKopf span {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.haette {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--board);
+  font-size: 0.92rem;
+}
+
+.abschlussInfos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: 16px;
+}
+
+.lernzielListe {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.muster {
+  grid-column: 1 / -1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+}
+
+.muster p {
+  margin-top: 6px;
+}
+
+/* ---------- Breakpoints ---------- */
+
+@media (max-width: 1100px) {
+  .kacheln {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .buehne {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .modellierRaster {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pruefung {
+    position: static;
+  }
+}
+
+@media (max-width: 860px) {
+  .buehne,
+  .unten,
+  .briefingRaster,
+  .zeitreiseRaster {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .seitenPanel {
+    position: static;
+    max-height: none;
+  }
+  .kopf {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .zeitleiste {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+  .tempo {
+    grid-column: 1 / -1;
+    order: 4;
+  }
+  .sync {
+    justify-self: end;
+  }
+}
+
+/* Mobil: Tabs Diagramm / Kennzahlen / Massnahmen */
+@media (max-width: 760px) {
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
+    background: var(--board);
+  }
+  .tab {
+    flex: 1 1 0;
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.92rem;
+    min-height: 44px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .tabAn {
+    background: var(--surface);
+    color: var(--accent);
+    box-shadow: var(--al-schatten);
+  }
+  .tabPanel:not(.tabSichtbar) {
+    display: none;
+  }
+  .kacheln {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .kachelKnopf {
+    min-height: 118px;
+    padding: 8px 10px 4px;
+  }
+  .kachelWert {
+    font-size: 1.25rem;
+  }
+  .titelKnoepfe {
+    width: 100%;
+  }
+  .meldungen {
+    left: 16px;
+    right: 16px;
+    bottom: 12px;
+    width: auto;
+  }
+  .diagrammKarte,
+  .seitenPanel {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .uhrZahl {
+    font-size: 1.4rem;
+  }
+  .play {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+  .kopf {
+    padding: 8px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ladenPuls,
+  .phaseLaeuft span:first-child,
+  .coach,
+  .meldung,
+  .stern,
+  .plakat,
+  .balkenFuellung,
+  .diagramm :global(.ar-el.al-z-ueberlast > .ar-form:first-of-type) {
+    animation: none !important;
+  }
+  .zeitFuellung,
+  .karte {
+    transition: none;
+  }
+}

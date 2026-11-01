@@ -75,6 +75,9 @@ export type LeitstandErrorCode =
   | "NOT_FINISHED"
   | "NOT_FOUND"
   | "BAD_REQUEST"
+  // Architektur-Leitstand (lib/architektur-leitstand.ts)
+  | "LOCKED"
+  | "INVALID_MODEL"
 
 /** Fachlicher Fehler mit HTTP-Status; die Meldung ist für die Oberfläche bestimmt. */
 export class LeitstandError extends Error {

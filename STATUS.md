@@ -25,6 +25,7 @@
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
 | 16. Lernpfad PS | Live seit 01.11.2026 | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
 | 17. Lernpfad AVSW | Fertig, wartet auf Deploy | Verteilte Softwarearchitekturen, 6 Stationen mit 35 Modellierungsübungen, Kurzlink `/avsw`, Baukasten 1.2.0 (`modellieren`, `piktogramm`, `pre.code`) |
+| 18. Architektur-Leitstand | Fertig, wartet auf Deploy | Simulator `/architektur-leitstand` (nur Pro und Admin), vier Missionen auf `lib/archsim/`, Engine `public/lernpfad/architektur.js`, Speicherung `ArchitekturLauf`, API `/api/archsim/runs`, Doku `docs/architektur-leitstand.md` |
 
 ## Security-Fixes (alle angewendet)
 
@@ -57,6 +58,7 @@
 
 ## Offene Punkte (Stand 2026-11-01)
 
+- **Architektur-Leitstand:** Anker (`#objekte`, `#messaging`, `#resilienz` …) in Lernzielen und Lehren stammen aus der alten AVSW-Gliederung; mit den neuen Stationsseiten abgleichen. Migration `20261101120000_add_architektur_lauf` vor dem Deploy nötig. Kein Eintrag in der Navigation (wie Leitstand); Einstieg über Station 11.
 - **AVSW-Inhalte nicht mit Folien abgeglichen:** Die Folien lagen beim Erstellen nicht vor. Alle Stationen tragen den Hinweis «Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt». Begriffe, Notation (C4/UML), Themenreihenfolge, Feld `vorlesung` (vorläufig «Thema 1–5») und Prüfungsrahmen mit den Modulunterlagen abgleichen.
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
 - **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
@@ -73,6 +75,7 @@
 
 ### 2026-11-01
 
+- **feat: Architektur-Leitstand** — Seiten `/architektur-leitstand` (Missionswahl mit Fortschritt, Freischalten ab 1 Stern) und `/architektur-leitstand/[laufId]` (Briefing, Modellierphase mit Engine-Editor und Live-Prüfung, Leitstand mit Live-Diagramm, Kennzahlen mit SLO-Ampel, Massnahmen, Verlauf, Protokoll, Ergebnis mit Zeitreise), API `/api/archsim/runs/**` (Server-Seed, Nachrechnen, Bestwert ÷ 10 ins Konto, Rate-Limits), Prisma-Modell `ArchitekturLauf`, Migration `20261101120000_add_architektur_lauf` (Teil-Index «ein aktiver Lauf je Mission», 3 Abzeichen), Station `avsw/11-architektur-leitstand` begonnen/erledigt. Stationslinks im Kern auf die neue AVSW-Gliederung abgebildet. Tests `tests/architektur-leitstand-*.test.ts`; Browser-Test mit Wegwerf-Datenbank (M1 bis Ende, M4 modelliert, 1280/375 px, hell/dunkel). Doku `docs/architektur-leitstand.md`
 - **feat: Simulator-Kern Architektur-Leitstand** (`lib/archsim/`, noch ohne Oberfläche und API) — deterministischer Lastsimulator auf dem Architektur-Modell (Vertrag `docs/architektur-modell.md`, Abschnitt 9.1–9.11): Tick = 1 Minute, Aufrufbäume aus dem Modell, M/M/c-Näherung, Thread-Erschöpfung, Timeout/Retry (Retry-Sturm), Circuit Breaker, Bulkhead, Queue mit Puffer und Rückstau, Cache, CDN, Read-Replica, Rate Limiting, Autoscaling, Rollback; Kennzahlen, Punkte/Sterne, Nachbesprechung mit Links auf die AVSW-Stationen, Modellprüfung mit Anforderungen. Vier Missionen (Velokurier, Black Friday, Zahlungsanbieter, Ticketplattform modellieren). Tests `tests/archsim-*.test.ts` (Determinismus, Plausibilität, Schema, Abstimmung über 20 Seeds, Validierung)
 - **feat: Lernpfad AVSW (Verteilte Softwarearchitekturen, FS26)** — `content/lernseiten/avsw/` mit sechs Stationen: Architekturstile, Kommunikation (REST, gRPC, Messaging), Container und Kubernetes, Resilienz und Konsistenz, Architektur modellieren, Prüfungstraining mit Prüfungsmodus. Navigation automatisch über den Fachordner (Kachel unter `/lernseiten`, Kurzlink `/avsw`). Test für `fach.json`. (Eine erste Fassung mit falschem Fach «Verlässliche IT-Infrastruktur» wurde ersetzt.)
 - **feat: Baukasten 1.2.0** — Baustein `Lernpfad.modellieren` (Architektur aus Anforderungstext modellieren: Bausteine legen, Verbindungen mit Art ziehen, prüfen mit Rückmeldung, Musterlösung mit Begründungen, ohne Ziehen per Maus bedienbar), `Lernpfad.piktogramm` (22 eigene SVG-Symbole statt Markenlogos), Codeblöcke `pre.code`. Doku in `docs/lernpfad-baukasten.md` (8.14, 9.15, 9.16), Muster in `content/lernseiten/avsw/_vorlage.html`

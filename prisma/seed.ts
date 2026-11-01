@@ -123,6 +123,28 @@ const BADGES = [
     condition: "leitstand_null_fehler",
     points: 100,
   },
+  // Architektur-Leitstand (docs/architektur-leitstand.md, ARCHSIM_ABZEICHEN in lib/architektur-leitstand-regeln.ts)
+  {
+    name: "Erster Lasttest",
+    description: "Architektur-Leitstand: erste Mission abgeschlossen",
+    icon: "🖥️",
+    condition: "archsim_erste_mission",
+    points: 25,
+  },
+  {
+    name: "Architektur hält",
+    description: "Architektur-Leitstand: eine Mission mit 3 Sternen",
+    icon: "🏗️",
+    condition: "archsim_drei_sterne",
+    points: 75,
+  },
+  {
+    name: "Leitstand-Architekt·in",
+    description: "Architektur-Leitstand: alle Missionen mit mindestens einem Stern",
+    icon: "🛰️",
+    condition: "archsim_alle_missionen",
+    points: 100,
+  },
   // AVSW-Modellierspiele (Spielstand, docs/architektur-modell.md Abschnitt 8)
   {
     name: "Fehlerfrei",

@@ -112,7 +112,7 @@ export function miniMission(anpassen?: (m: Mission) => void): Mission {
     gefuehrt: false,
     firma: "Test AG",
     briefing: "<p>Test</p>",
-    lernziele: [{ text: "Test", station: "04-resilienz-konsistenz" }],
+    lernziele: [{ text: "Test", station: "03-eda-message-broker" }],
     modell: {
       elemente: [
         { id: "web", typ: "web", name: "Web", x: 0, y: 0 },

@@ -68,10 +68,10 @@ export const m4Ticketplattform: Mission = {
     "<p><strong>Zahlungen dürfen nicht verloren gehen</strong>, auch wenn der <span data-baustein=\"psp\">Zahlungsanbieter</span> hängt. Der Ticketservice übergibt Zahlungsaufträge darum über eine <span data-baustein=\"queue\">Queue</span> an den <span data-baustein=\"zahlung\">Zahlungsservice</span>, der mit dem Zahlungsanbieter spricht und seine eigene <span data-baustein=\"zahlung-db\">Zahlungs-DB</span> hat. Nach erfolgreicher Zahlung verschickt er die Bestätigung über den <span data-baustein=\"mailer\">E-Mail-Dienst</span>.</p>" +
     "<p>Jeder Dienst besitzt seine Daten. Beim Vorverkaufsstart kommt zehnmal so viel Last wie sonst.</p>",
   lernziele: [
-    { text: "Aus einem Anforderungstext Bausteine und Verbindungsarten (sync, async, Daten) ableiten.", station: "05-architektur-modellieren", abschnitt: "verfahren" },
-    { text: "Begründen, wo Cache, CDN und API-Gateway hingehören.", station: "05-architektur-modellieren", abschnitt: "verfahren" },
-    { text: "Kritische Vorgänge mit einer Queue entkoppeln und die Wirkung im Lasttest nachweisen.", station: "02-kommunikation", abschnitt: "messaging" },
-    { text: "Database per Service: Jeder Dienst besitzt seine Daten.", station: "01-architekturstile", abschnitt: "prinzipien" },
+    { text: "Aus einem Anforderungstext Bausteine und Verbindungsarten (sync, async, Daten) ableiten.", station: "10-fallstudie", abschnitt: "verfahren" },
+    { text: "Begründen, wo Cache, CDN und API-Gateway hingehören.", station: "10-fallstudie", abschnitt: "verfahren" },
+    { text: "Kritische Vorgänge mit einer Queue entkoppeln und die Wirkung im Lasttest nachweisen.", station: "03-eda-message-broker", abschnitt: "messaging" },
+    { text: "Database per Service: Jeder Dienst besitzt seine Daten.", station: "05-microservices", abschnitt: "prinzipien" },
   ],
   modell: vorgegeben,
   palette: [
@@ -91,32 +91,32 @@ export const m4Ticketplattform: Mission = {
     {
       id: "a-gateway", art: "vorgeschaltet", einstieg: "fan-app", bis: "ticket", typ: "gateway",
       text: "Alle Aufrufe der App laufen über ein API-Gateway.",
-      warum: "Das Gateway ist der einzige Eingang: Authentisierung, Rate Limiting und Routing an einer Stelle.", station: "02-kommunikation",
+      warum: "Das Gateway ist der einzige Eingang: Authentisierung, Rate Limiting und Routing an einer Stelle.", station: "02-soa-apis",
     },
     {
       id: "a-cdn", art: "vorgeschaltet", einstieg: "fan-app", bis: "gw", typ: "cdn",
       text: "Statische Inhalte kommen aus einem CDN vor dem Gateway.",
-      warum: "Bilder und Saalpläne machen einen grossen Teil der Anfragen aus und müssen die Dienste nie erreichen.", station: "05-architektur-modellieren",
+      warum: "Bilder und Saalpläne machen einen grossen Teil der Anfragen aus und müssen die Dienste nie erreichen.", station: "10-fallstudie",
     },
     {
       id: "a-cache", art: "cache", element: "ticket",
       text: "Der Ticketservice liest die Verfügbarkeit über einen Cache.",
-      warum: "Bei 50 Lesezugriffen pro Kauf wäre sonst die Ticket-DB der Engpass.", station: "05-architektur-modellieren",
+      warum: "Bei 50 Lesezugriffen pro Kauf wäre sonst die Ticket-DB der Engpass.", station: "10-fallstudie",
     },
     {
       id: "a-zahlung", art: "entkoppelt", von: "ticket", nach: "zahlung",
       text: "Zahlungen dürfen nicht verloren gehen.",
-      warum: "Ein synchroner Aufruf scheitert, sobald der Zahlungsweg klemmt; eine Queue puffert die Aufträge, bis sie verarbeitet sind.", station: "04-resilienz-konsistenz",
+      warum: "Ein synchroner Aufruf scheitert, sobald der Zahlungsweg klemmt; eine Queue puffert die Aufträge, bis sie verarbeitet sind.", station: "03-eda-message-broker",
     },
     {
       id: "a-mail", art: "pfad", von: "zahlung", nach: "mailer",
       text: "Nach der Zahlung wird eine Bestätigung verschickt.",
-      warum: "Der Zahlungsservice braucht eine Verbindung zum E-Mail-Dienst.", station: "02-kommunikation",
+      warum: "Der Zahlungsservice braucht eine Verbindung zum E-Mail-Dienst.", station: "03-eda-message-broker",
     },
     {
       id: "a-daten", art: "eigeneDaten", elemente: ["ticket", "zahlung"],
       text: "Jeder Dienst besitzt seine Daten.",
-      warum: "Gemeinsame Datenbanken koppeln Dienste eng (Database per Service).", station: "01-architekturstile",
+      warum: "Gemeinsame Datenbanken koppeln Dienste eng (Database per Service).", station: "05-microservices",
     },
   ],
   musterloesung: muster,

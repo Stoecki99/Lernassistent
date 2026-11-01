@@ -20,9 +20,9 @@ export const m1Velokurier: Mission = {
     "<p>Die ganze Logik steckt in einem <strong>Monolithen</strong> hinter einem Lastverteiler, die Daten in einer PostgreSQL-Datenbank. Am Morgen ist wenig los, über Mittag vervierfacht sich die Last. Heute ist zudem Regen angesagt.</p>" +
     "<p>Deine Aufgabe: Halte die App 80 Minuten lang schnell und verfügbar, ohne das Budget zu sprengen. Die Hinweise unterwegs helfen dir.</p>",
   lernziele: [
-    { text: "Auslastung ρ lesen und erklären, warum die Antwortzeit ab etwa 80 % stark steigt.", station: "06-architektur-leitstand" },
-    { text: "Einen zustandslosen Monolithen hinter einem Lastverteiler horizontal skalieren.", station: "03-container-kubernetes", abschnitt: "objekte" },
-    { text: "Mit einem Cache (Cache-Aside) Lesezugriffe von der Datenbank fernhalten.", station: "05-architektur-modellieren", abschnitt: "verfahren" },
+    { text: "Auslastung ρ lesen und erklären, warum die Antwortzeit ab etwa 80 % stark steigt.", station: "11-architektur-leitstand" },
+    { text: "Einen zustandslosen Monolithen hinter einem Lastverteiler horizontal skalieren.", station: "05-microservices", abschnitt: "objekte" },
+    { text: "Mit einem Cache (Cache-Aside) Lesezugriffe von der Datenbank fernhalten.", station: "10-fallstudie", abschnitt: "verfahren" },
   ],
   modell: {
     titel: "Velokurier: Monolith mit Datenbank",

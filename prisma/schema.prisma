@@ -41,6 +41,7 @@ model User {
   lernfortschritte Lernfortschritt[]
   simulationRuns   SimulationRun[]
   spielstaende     Spielstand[]
+  architekturLaeufe ArchitekturLauf[]
 }
 
 model Account {
@@ -236,6 +237,40 @@ model SimulationRun {
   @@index([userId, scenarioId, score])
   // Zusätzlich Teil-Index «SimulationRun_aktiv_eindeutig» (userId, scenarioId) WHERE status = 'aktiv',
   // nur in prisma/migrations/20261101100000_simulation_run_aktiv_eindeutig (Prisma kennt keine Teil-Indizes).
+}
+
+// Lauf im Architektur-Leitstand (docs/architektur-leitstand.md). Massgebend sind seed + aktionen
+// (+ modell bei Missionen zum Modellieren); summary und score berechnet der Server beim Nachspielen
+// (lib/architektur-leitstand.ts mit dem Simulator-Kern lib/archsim).
+model ArchitekturLauf {
+  id             String    @id @default(cuid())
+  userId         String
+  missionId      String    // z. B. "m1-velokurier" (lib/archsim/scenarios)
+  missionVersion Int
+  engineVersion  Int       // ARCHSIM_VERSION beim Start
+  seed           Int       // 1 … 2'147'483'646, vom Server erzeugt
+  seedReused     Boolean   @default(false) // Wiederholung mit bekanntem Startwert: kein Bestwert, keine Punkte
+  status         String    // "aktiv" | "abgeschlossen" | "abgebrochen" | "veraltet"
+  aktionen       Json      // Aktion[] (lib/archsim)
+  aktionCount    Int       @default(0)
+  modell         Json?     // ArchModell des Spielers, nur Missionen zum Modellieren; fest ab der ersten Aktion
+  tick           Int       @default(0)
+  summary        Json?     // { minute, phase, verfuegbarkeit, p95, kosten, rueckstau }
+  score          Int?
+  stars          Int?
+  scoreDetail    Json?     // { score, kennzahlen, nachbesprechung, validierung }
+  pointsAwarded  Int       @default(0) // Punkte ins Konto beim Abschluss (Bestwert-Verbesserung ÷ 10)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  finishedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, missionId, status])
+  @@index([userId, missionId, score])
+  @@index([userId, createdAt])
+  // Zusätzlich Teil-Index «ArchitekturLauf_aktiv_eindeutig» (userId, missionId) WHERE status = 'aktiv',
+  // nur in prisma/migrations/20261101120000_add_architektur_lauf (Prisma kennt keine Teil-Indizes).
 }
 
 // Bestwert eines Modellierspiel-Levels im Lernpfad (docs/architektur-modell.md, Abschnitt 8).

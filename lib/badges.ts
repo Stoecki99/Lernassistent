@@ -6,6 +6,9 @@
 
 import { prisma } from "@/lib/prisma"
 import { achievementStats, prismaErrorCode } from "@/lib/leitstand"
+import { MISSION_IDS } from "@/lib/archsim"
+import { ladeArchsimAbzeichenStatistik } from "@/lib/architektur-leitstand"
+import { archsimAbzeichenErfuellt, type ArchsimAbzeichenStatistik } from "@/lib/architektur-leitstand-regeln"
 import {
   SPIEL_ABZEICHEN_BEDINGUNGEN,
   ladeSpielAbzeichenStatistik,
@@ -119,10 +122,12 @@ interface UserBadgeStats {
   leitstandAchievements: Set<string>
   /** Modellierspiele (Spielstand) im Fach avsw */
   spielStats: SpielAbzeichenStatistik
+  /** Architektur-Leitstand: abgeschlossene Läufe mit neuem Startwert */
+  archsimStats: ArchsimAbzeichenStatistik
 }
 
 async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
-  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns, spielStats] = await Promise.all([
+  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns, spielStats, archsimStats] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { streak: true },
@@ -142,6 +147,7 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
       select: { status: true, seedReused: true, scoreDetail: true },
     }),
     ladeSpielAbzeichenStatistik(userId),
+    ladeArchsimAbzeichenStatistik(userId),
   ])
 
   const totalQuizzes = quizStats.length
@@ -157,6 +163,7 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
     hasPerfectQuiz,
     leitstandAchievements: achievementStats(simulationRuns),
     spielStats,
+    archsimStats,
   }
 }
 
@@ -188,6 +195,11 @@ function evaluateCondition(condition: string, stats: UserBadgeStats): boolean {
     case "leitstand_risikoprofi":
     case "leitstand_null_fehler":
       return stats.leitstandAchievements.has(condition)
+    // Architektur-Leitstand (archsim_*), siehe ARCHSIM_ABZEICHEN_BEDINGUNGEN
+    case "archsim_erste_mission":
+    case "archsim_drei_sterne":
+    case "archsim_alle_missionen":
+      return archsimAbzeichenErfuellt(condition, stats.archsimStats, MISSION_IDS) ?? false
     default:
       // Modellierspiele (avsw_spiel_*), siehe SPIEL_ABZEICHEN in lib/spielstand.ts
       return spielAbzeichenErfuellt(condition, stats.spielStats) ?? false

@@ -27,13 +27,13 @@ export function stationsLink(station: string, abschnitt?: string): string {
 
 /** Lernstationen der Themen (Slug + Abschnitt) */
 export const THEMEN = {
-  skalieren: { station: "03-container-kubernetes", abschnitt: "objekte" },
-  caching: { station: "05-architektur-modellieren", abschnitt: "verfahren" },
-  gateway: { station: "02-kommunikation", abschnitt: "gateway" },
-  messaging: { station: "02-kommunikation", abschnitt: "messaging" },
-  resilienz: { station: "04-resilienz-konsistenz", abschnitt: "resilienz" },
-  outbox: { station: "04-resilienz-konsistenz", abschnitt: "transaktionen" },
-  leitstand: { station: "06-architektur-leitstand" },
+  skalieren: { station: "05-microservices", abschnitt: "objekte" },
+  caching: { station: "10-fallstudie", abschnitt: "verfahren" },
+  gateway: { station: "02-soa-apis", abschnitt: "gateway" },
+  messaging: { station: "03-eda-message-broker", abschnitt: "messaging" },
+  resilienz: { station: "03-eda-message-broker", abschnitt: "resilienz" },
+  outbox: { station: "03-eda-message-broker", abschnitt: "transaktionen" },
+  leitstand: { station: "11-architektur-leitstand" },
 } as const
 
 const pct = (x: number, n = 1) => `${(x * 100).toFixed(n)} %`

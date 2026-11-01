@@ -21,10 +21,10 @@ export const m3Zahlungsanbieter: Mission = {
     "<p>Nach dem Kauf fragt die App beim Zahlungsservice nach, ob die Zahlung durch ist (<strong>Kaufstatus</strong>). Dieselben Instanzen des Zahlungsservice beantworten diese Abfragen und arbeiten im Hintergrund Zahlungsaufträge ab.</p>" +
     "<p>Gerüchte sagen, dass PayAlpin heute Probleme hat. Drei Anforderungen: <strong>keine Käufe verlieren</strong>; das <strong>Angebot</strong> und die <strong>Kaufstatus-Abfrage</strong> bleiben schnell, auch während PayAlpin hängt. SLO: p95 unter 500 ms, Verfügbarkeit mindestens 99 %.</p>",
   lernziele: [
-    { text: "Erklären, warum lange Timeouts und viele Wiederholungen eine Störung verschlimmern (Retry-Sturm, Thread-Erschöpfung).", station: "04-resilienz-konsistenz", abschnitt: "resilienz" },
-    { text: "Circuit Breaker und Bulkhead einsetzen, damit eine gestörte Abhängigkeit nicht das ganze System mitreisst.", station: "04-resilienz-konsistenz", abschnitt: "resilienz" },
-    { text: "Kritische Vorgänge über eine Queue entkoppeln, damit sie bei einem Ausfall gepuffert statt verloren werden.", station: "04-resilienz-konsistenz", abschnitt: "transaktionen" },
-    { text: "Erkennen, dass auch Queue-Konsumenten Timeout und Circuit Breaker brauchen: Hängende Worker blockieren den ganzen Dienst.", station: "02-kommunikation", abschnitt: "messaging" },
+    { text: "Erklären, warum lange Timeouts und viele Wiederholungen eine Störung verschlimmern (Retry-Sturm, Thread-Erschöpfung).", station: "03-eda-message-broker", abschnitt: "resilienz" },
+    { text: "Circuit Breaker und Bulkhead einsetzen, damit eine gestörte Abhängigkeit nicht das ganze System mitreisst.", station: "03-eda-message-broker", abschnitt: "resilienz" },
+    { text: "Kritische Vorgänge über eine Queue entkoppeln, damit sie bei einem Ausfall gepuffert statt verloren werden.", station: "03-eda-message-broker", abschnitt: "transaktionen" },
+    { text: "Erkennen, dass auch Queue-Konsumenten Timeout und Circuit Breaker brauchen: Hängende Worker blockieren den ganzen Dienst.", station: "03-eda-message-broker", abschnitt: "messaging" },
   ],
   modell: {
     titel: "Pistenpass: Kauf mit externem Zahlungsanbieter",

@@ -190,7 +190,7 @@ export interface Hinweis {
 
 export interface Lernziel {
   text: string
-  /** Slug der AVSW-Station, z. B. "04-resilienz-konsistenz" */
+  /** Slug der AVSW-Station, z. B. "03-eda-message-broker" */
   station: string
   /** Abschnitt (Anker) der Station, z. B. "resilienz" */
   abschnitt?: string
@@ -516,7 +516,7 @@ export interface Lehre {
   titel: string
   text: string
   haetteGeholfen: string
-  /** Link auf die Lernstation, z. B. /lernseiten/avsw/04-resilienz-konsistenz#resilienz */
+  /** Link auf die Lernstation, z. B. /lernseiten/avsw/03-eda-message-broker#resilienz */
   link: string
   station: string
   positiv: boolean
