@@ -1,0 +1,1762 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kommunikation: REST, gRPC und Messaging · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/avsw/03-container-kubernetes" title="Container und Kubernetes">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t02-», nur Farben aus :root -->
+  <style>
+    .t02-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t02-ziele li{margin-bottom:2px}
+
+    /* Konzeptkarten mit Piktogramm */
+    .t02-ck{display:inline-flex; color:var(--accent)}
+    .t02-ck .pikto{width:2em; height:2em}
+
+    /* Architektur-Bilder (vom Script erzeugt) */
+    .t02-bild{--t02-halo:var(--surface); display:block; width:100%; height:auto; max-width:440px; margin:0 auto; overflow:visible}
+    .fstage .t02-bild, .formula .t02-bild{--t02-halo:var(--board)}
+    .formula .t02-bild{--t02-halo:var(--surface)}
+    .t02-bild .t02-kbox{fill:var(--surface); stroke:var(--muted); stroke-width:1.4}
+    .t02-bild .t02-pk{fill:none; stroke:var(--accent); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round}
+    .t02-bild .t02-pk .pk-f{fill:var(--accent); stroke:none}
+    .t02-bild .t02-kt{font-family:var(--f-body); font-size:13px; font-weight:600; fill:var(--ink)}
+    .t02-bild .t02-k.t02-neu .t02-kbox{stroke:var(--accent); stroke-width:2.8; fill:var(--accent-soft)}
+    .t02-bild .t02-k.t02-weg{opacity:.35}
+    .t02-e{fill:none; stroke-width:2.2; stroke-linecap:round}
+    .t02-e-sync{stroke:var(--s1)}
+    .t02-e-async{stroke:var(--s2); stroke-dasharray:7 5}
+    .t02-e-daten{stroke:var(--s3); stroke-dasharray:1.5 4.5; stroke-width:2.8}
+    .t02-e-falsch{stroke:var(--bad); stroke-dasharray:3 3}
+    .t02-e.t02-neu{stroke-width:3.6; animation:t02-puls 1.6s ease-out 2}
+    .t02-pf-sync{fill:var(--s1)} .t02-pf-async{fill:var(--s2)} .t02-pf-daten{fill:var(--s3)} .t02-pf-falsch{fill:var(--bad)}
+    .t02-kl{font-family:var(--f-body); font-size:12px; font-weight:600; fill:var(--muted); paint-order:stroke; stroke:var(--t02-halo); stroke-width:4px; stroke-linejoin:round}
+    @keyframes t02-puls{0%{opacity:.25}50%{opacity:1}100%{opacity:1}}
+
+    /* Legende der Linienarten */
+    .t02-leg{display:flex; flex-wrap:wrap; gap:4px 16px; font-size:.86rem; color:var(--muted); margin-top:6px}
+    .t02-leg span{display:inline-flex; align-items:center; gap:6px}
+    .t02-leg svg{width:34px; height:10px; flex:none}
+
+    /* Verbindungsliste unter Bildern im Stepper */
+    .t02-sx{font-family:var(--f-body); font-size:1rem; line-height:1.5}
+    .t02-vl{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:4px; font-size:.95rem}
+    .t02-vl li{padding:4px 10px; border-radius:8px; background:var(--board)}
+    .t02-vl .t02-art{color:var(--muted); font-size:.88rem}
+
+    /* Sequenzdiagramme (statisches SVG) */
+    .t02-sq{display:block; width:100%; height:auto; max-width:420px; margin:0 auto}
+    .t02-sq text{font-family:var(--f-body); font-size:13px; fill:var(--ink)}
+    .t02-sq .t02-kopf{fill:var(--surface); stroke:var(--muted); stroke-width:1.3}
+    .t02-sq .t02-kopft{font-weight:700}
+    .t02-sq .t02-ll{stroke:var(--line); stroke-width:1.5; stroke-dasharray:4 4}
+    .t02-sq .t02-act{fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.2}
+    .t02-sq .t02-warten{fill:var(--bad-bg); stroke:var(--bad); stroke-width:1.2}
+    .t02-sq .t02-wartet{fill:var(--bad); font-weight:700}
+    .t02-sq .t02-msync{stroke:var(--s1); stroke-width:2; fill:none}
+    .t02-sq .t02-masync{stroke:var(--s2); stroke-width:2; stroke-dasharray:6 4; fill:none}
+    .t02-sq .t02-mret{stroke:var(--muted); stroke-width:1.5; stroke-dasharray:3 3; fill:none}
+    .t02-sq .t02-ml{font-size:12px; fill:var(--muted); font-weight:600}
+    .t02-sq .t02-note{font-size:12px; fill:var(--muted)}
+    .t02-sq .t02-msgbox{fill:var(--lit); stroke:var(--s2); stroke-width:1.2}
+    .t02-sq .t02-offline{fill:var(--bad); font-size:12px; font-weight:700}
+    .t02-mk-s1{fill:var(--s1)} .t02-mk-s2{fill:var(--s2)} .t02-mk-m{fill:var(--muted)}
+
+    /* Queue und Topic zum Umschalten */
+    .t02-qt{display:block; width:100%; height:auto; max-width:440px; margin:0 auto}
+    .t02-qt text{font-family:var(--f-body); font-size:13px; fill:var(--ink)}
+    .t02-qt .t02-qbox{fill:var(--surface); stroke:var(--muted); stroke-width:1.4}
+    .t02-qt .t02-qbroker{fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.8}
+    .t02-qt .t02-qoff .t02-qbox{stroke:var(--bad); stroke-dasharray:4 3; fill:var(--bad-bg)}
+    .t02-qt .t02-qname{font-weight:700}
+    .t02-qt .t02-qzahl{fill:var(--muted); font-size:12px}
+    .t02-qt .t02-qlinie{stroke:var(--line); stroke-width:2.5}
+    .t02-qt .t02-qwartet{fill:var(--bad); font-size:12px; font-weight:700}
+    .t02-qt .t02-msg circle{fill:var(--s2); stroke:var(--surface); stroke-width:1.5}
+    .t02-qt .t02-msg text{fill:var(--surface); font-size:11px; font-weight:700}
+    .t02-qt .t02-msg{transition:transform .55s ease-in-out}
+    .t02-qt .t02-qhit .t02-qbox{stroke:var(--ok); stroke-width:2.6}
+    .t02-qlog{font-size:.92rem; color:var(--muted); min-height:2.8em}
+    .t02-check{display:inline-flex; align-items:center; gap:8px; font-size:.95rem; min-height:36px}
+
+    /* Kafka-Log */
+    .t02-log{display:block; width:100%; height:auto; max-width:440px; margin:0 auto}
+    .t02-log text{font-family:var(--f-body); font-size:12px; fill:var(--ink)}
+    .t02-log .t02-zelle{fill:var(--surface); stroke:var(--muted); stroke-width:1.2}
+    .t02-log .t02-alt{fill:var(--board); stroke:var(--line); stroke-dasharray:3 3}
+    .t02-log .t02-altt{fill:var(--muted)}
+    .t02-log .t02-cons{fill:var(--surface); stroke:var(--s1); stroke-width:1.6}
+    .t02-log .t02-cons2{fill:var(--surface); stroke:var(--s2); stroke-width:1.6}
+    .t02-log .t02-l1{stroke:var(--s1); stroke-width:1.6}
+    .t02-log .t02-klein{font-size:11px; fill:var(--muted)}
+    .t02-log .t02-fett{font-weight:700}
+
+    /* Werkzeug-Tabelle */
+    .t02-wz td:first-child{width:2.6em}
+    .t02-wz .pikto{width:1.9em; height:1.9em; color:var(--accent)}
+    .t02-wz b{white-space:nowrap}
+
+    /* Bildunterschrift im Film */
+    .t02-fcap{font-family:var(--f-body); font-size:.95rem; white-space:normal; line-height:1.5; margin-top:8px}
+    .t02-chip .pikto{width:1.15em; height:1.15em; color:var(--accent); margin-right:4px}
+
+    @media (prefers-reduced-motion: reduce){
+      .t02-e.t02-neu{animation:none}
+      .t02-qt .t02-msg{transition:none}
+    }
+  </style>
+</head>
+<body data-fach="avsw" data-thema="02-kommunikation">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">AVSW · Thema 2 · Kommunikation</span>
+    <h1>Kommunikation: REST, gRPC und Messaging</h1>
+    <p class="lead">Verteilte Dienste müssen miteinander reden. Hier lernst du die zwei Grundarten kennen: synchron, also anrufen und auf die Antwort warten, und asynchron, also eine Nachricht hinterlassen und weiterarbeiten. Du siehst REST, gRPC und GraphQL, Queues und Topics, Kafka und RabbitMQ, Events, API-Gateway und Service Discovery, jeweils mit echtem Code. Am Schluss modellierst du aus einem Anforderungstext eine ganze Food-Delivery-Architektur und begründest jede Verbindung.</p>
+    <div class="note"><b>Hinweis:</b> Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt. Begriffe und Notation mit den Vorlesungsfolien abgleichen.</div>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t02-ziele">
+        <li>synchrone und asynchrone Kommunikation unterscheiden und an Signalwörtern im Text erkennen,</li>
+        <li>eine REST-Schnittstelle mit Ressourcen, HTTP-Verben und Statuscodes lesen und entwerfen,</li>
+        <li>begründen, wann gRPC, GraphQL oder Messaging besser passt als REST,</li>
+        <li>Queue und Topic, RabbitMQ und Kafka sowie die drei Zustellgarantien auseinanderhalten,</li>
+        <li>API-Gateway, Backend for Frontend und Service Discovery einordnen,</li>
+        <li>aus einem Anforderungstext eine Architektur mit richtigen Verbindungsarten modellieren.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#sync-async"><b>2</b>Sync / Async</a>
+    <a href="#verfahren"><b>3</b>Signalwörter</a>
+    <a href="#rest"><b>4</b>REST</a>
+    <a href="#grpc"><b>5</b>gRPC, GraphQL</a>
+    <a href="#messaging"><b>6</b>Messaging</a>
+    <a href="#garantien"><b>7</b>Garantien</a>
+    <a href="#events"><b>8</b>Events</a>
+    <a href="#gateway"><b>9</b>Gateway</a>
+    <a href="#werkzeuge"><b>10</b>Werkzeuge</a>
+    <a href="#modellieren"><b>11</b>Modellieren</a>
+    <a href="#uebungen"><b>12</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Begriffe, die du zuerst brauchst</h2>
+    <p class="prose">Ein verteiltes System besteht aus mehreren Programmen, die auf verschiedenen Rechnern laufen. Man nennt sie <b>Dienste</b> (englisch <span lang="en">services</span>). Ein Dienst kann einem anderen nicht einfach eine Variable zeigen. Er muss ihm über das Netzwerk etwas schicken. Wie er das tut, entscheidet, wie stark die Dienste voneinander abhängen.</p>
+    <div class="grid4">
+      <div class="concept"><span class="t02-ck" data-t02-pikto="client"></span><span class="tag">Synchron = Telefonanruf</span><span class="ex">fragen → warten → Antwort</span><p>Du rufst an und bleibst am Apparat, bis du die Antwort hast. Beispiel: Die Shop-App fragt den Zahlungsdienst «Ist die Karte gedeckt?» und wartet.</p></div>
+      <div class="concept"><span class="t02-ck" data-t02-pikto="queue"></span><span class="tag">Asynchron = Briefkasten</span><span class="ex">einwerfen → weiterarbeiten</span><p>Du wirfst einen Brief ein und gehst. Der Empfänger liest ihn, wenn er Zeit hat. Beispiel: Der Bestellservice legt «Etikett drucken» in eine Warteschlange.</p></div>
+      <div class="concept"><span class="t02-ck" data-t02-pikto="topic"></span><span class="tag">Event = Durchsage</span><span class="ex">«BestellungAufgegeben»</span><p>Eine Meldung, dass etwas passiert ist, wie eine Durchsage im Bahnhof. Wer sich dafür interessiert, hört zu. Der Absender weiss nicht, wer zuhört.</p></div>
+      <div class="concept"><span class="t02-ck" data-t02-pikto="storage"></span><span class="tag">Message Broker = Post</span><span class="ex">RabbitMQ, Kafka</span><p>Ein eigenes Programm zwischen Sender und Empfänger. Es nimmt Nachrichten an, bewahrt sie auf und stellt sie zu, auch wenn der Empfänger gerade nicht läuft.</p></div>
+      <div class="concept"><span class="t02-ck" data-t02-pikto="code"></span><span class="tag">API = Speisekarte</span><span class="ex">GET /restaurants</span><p>Die Schnittstelle (<span lang="en">Application Programming Interface</span>) sagt, was ein Dienst anbietet und wie man es bestellt. Was in der Küche passiert, sieht der Gast nicht.</p></div>
+    </div>
+    <p class="prose">Nachrichten gibt es in drei Sorten. Ein <b>Befehl</b> (<span lang="en">command</span>) verlangt etwas: «Storniere Bestellung 42». Ein <b>Event</b> meldet etwas Vergangenes: «Bestellung 42 wurde storniert». Eine <b>Abfrage</b> (<span lang="en">query</span>) will nur lesen: «Wie ist der Status von Bestellung 42?». Events benennt man darum in der Vergangenheit.</p>
+    <div class="card stack">
+      <h3>Kurz üben: Befehl, Event oder Abfrage?</h3>
+      <p class="hint">Achte auf die Zeitform. Befehl = Imperativ (tu etwas). Event = Vergangenheit (ist passiert). Abfrage = Frage, ändert nichts.</p>
+      <div id="t02-sortierer-0"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Wörterbuch</span>
+    <h2>Die Begriffe dieser Station</h2>
+    <p class="prose">Die Tabelle gilt für die ganze Seite. Viele Begriffe sind englisch, weil die Werkzeuge so heissen. Lies sie einmal ganz durch und komm später zurück, wenn ein Wort unklar ist.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Begriff</th><th scope="col">Bedeutung</th><th scope="col">Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">synchron</th><td>Der Aufrufer wartet auf die Antwort, bevor er weitermacht. Beide müssen gleichzeitig laufen.</td><td>Checkout fragt Zahlung</td></tr>
+          <tr><th scope="row">asynchron</th><td>Der Sender wartet nicht. Die Nachricht wird später verarbeitet.</td><td>Bestätigungsmail</td></tr>
+          <tr><th scope="row">zeitliche Kopplung</th><td>Ein Dienst funktioniert nur, wenn der andere im selben Moment läuft. Synchron = zeitlich gekoppelt.</td><td>Zahlung down → Bestellung scheitert</td></tr>
+          <tr><th scope="row">Request/Response</th><td>Muster: eine Anfrage, eine Antwort. Meist synchron über HTTP.</td><td><code>GET /bestellungen/42</code> → <code>200 OK</code></td></tr>
+          <tr><th scope="row">REST</th><td>Stil für HTTP-APIs: Ressourcen mit Adressen, Standard-Verben, zustandslos</td><td><code>POST /bestellungen</code></td></tr>
+          <tr><th scope="row">Ressource</th><td>Ein Ding, das die API anbietet, mit eigener Adresse (URI). Immer ein Nomen.</td><td><code>/restaurants/7/gerichte</code></td></tr>
+          <tr><th scope="row">idempotent</th><td>Mehrmals ausführen ergibt denselben Zustand wie einmal ausführen.</td><td>PUT, DELETE</td></tr>
+          <tr><th scope="row">OpenAPI</th><td>Beschreibung einer HTTP-API in YAML oder JSON. Daraus entstehen Doku und Code.</td><td><code>openapi: 3.0.3</code></td></tr>
+          <tr><th scope="row">gRPC</th><td>Schnelle Fernaufrufe über HTTP/2 mit binären Protobuf-Nachrichten</td><td><code>rpc HoleStatus(...)</code></td></tr>
+          <tr><th scope="row">Queue</th><td>Warteschlange: Jede Nachricht bekommt genau ein Empfänger (Point-to-Point).</td><td>Druckaufträge</td></tr>
+          <tr><th scope="row">Topic</th><td>Kanal für Publish/Subscribe: Jeder Abonnent bekommt eine Kopie.</td><td>«bestellungen»</td></tr>
+          <tr><th scope="row">Producer, Consumer</th><td>Wer Nachrichten schreibt, wer sie liest</td><td>Bestellservice, Küche</td></tr>
+          <tr><th scope="row">Consumer Group</th><td>Kafka: mehrere Consumer, die sich die Partitionen eines Topics teilen</td><td>Gruppe «kueche»</td></tr>
+          <tr><th scope="row">Partition</th><td>Kafka: Teilstück eines Topics. Reihenfolge gilt nur innerhalb einer Partition.</td><td>P0, P1, P2</td></tr>
+          <tr><th scope="row">Retention</th><td>Wie lange Kafka Nachrichten aufbewahrt, egal ob gelesen</td><td>7 Tage</td></tr>
+          <tr><th scope="row">at-least-once</th><td>Zustellgarantie: kommt sicher an, aber vielleicht doppelt</td><td>Retry nach Absturz</td></tr>
+          <tr><th scope="row">Choreografie</th><td>Dienste reagieren selbständig auf Events, niemand steuert zentral.</td><td>Tanz ohne Dirigent</td></tr>
+          <tr><th scope="row">Orchestrierung</th><td>Ein zentraler Dienst schickt Befehle und kennt den ganzen Ablauf.</td><td>Orchester mit Dirigent</td></tr>
+          <tr><th scope="row">API-Gateway</th><td>Eingangstür für alle Clients: Routing, Anmeldung prüfen, Rate Limiting</td><td>Kong, Spring Cloud Gateway</td></tr>
+          <tr><th scope="row">BFF</th><td><span lang="en">Backend for Frontend</span>: eigenes kleines Backend pro Client-Art</td><td>Web-BFF, Mobile-BFF</td></tr>
+          <tr><th scope="row">Service Discovery</th><td>Ein Dienst findet die aktuelle Adresse eines anderen über ein Verzeichnis.</td><td>Consul, Kubernetes-DNS</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">In allen Bildern und Modellierungsübungen dieser Station gilt dieselbe Notation für Verbindungen:</p>
+    <div class="card" id="t02-legende-gross"></div>
+    <div class="note"><b>Merke:</b> Bei Nachrichten zeigt der Pfeil immer in Flussrichtung: Sender → Broker → Empfänger. Das gilt auch, wenn der Empfänger die Nachricht technisch selbst abholt (<span lang="en">pull</span>), wie bei Kafka.</div>
+  </section>
+
+  <!-- ===== 2 · Synchron und asynchron ===== -->
+  <section id="sync-async">
+    <span class="eyebrow">Schritt 2 · Synchron und asynchron</span>
+    <h2>Warten oder weiterarbeiten?</h2>
+    <p class="prose">Ein <b>Sequenzdiagramm</b> zeigt, wer wann wem etwas schickt. Die Zeit läuft von oben nach unten. Jede beteiligte Komponente hat eine gestrichelte Lebenslinie. Ein Balken auf der Linie heisst: «Ich arbeite gerade».</p>
+    <div class="grid2">
+      <figure class="diagramm card">
+        <svg class="t02-sq" viewBox="0 0 320 214" role="img" aria-labelledby="t02-sq1-t">
+          <title id="t02-sq1-t">Sequenzdiagramm synchron: Die App wartet, bis Bestellservice und Zahlungsservice geantwortet haben.</title>
+          <defs>
+            <marker id="t02-sq-ps" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="t02-mk-s1"/></marker>
+            <marker id="t02-sq-pr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="t02-mk-m"/></marker>
+          </defs>
+          <rect class="t02-kopf" x="12" y="6" width="76" height="26" rx="6"/><text class="t02-kopft" x="50" y="23" text-anchor="middle">App</text>
+          <rect class="t02-kopf" x="108" y="6" width="104" height="26" rx="6"/><text class="t02-kopft" x="160" y="23" text-anchor="middle">Bestellservice</text>
+          <rect class="t02-kopf" x="230" y="6" width="80" height="26" rx="6"/><text class="t02-kopft" x="270" y="23" text-anchor="middle">Zahlung</text>
+          <line class="t02-ll" x1="50" y1="32" x2="50" y2="180"/>
+          <line class="t02-ll" x1="160" y1="32" x2="160" y2="180"/>
+          <line class="t02-ll" x1="270" y1="32" x2="270" y2="180"/>
+          <rect class="t02-warten" x="45" y="56" width="10" height="108"/>
+          <text class="t02-wartet" x="40" y="114" text-anchor="end">wartet</text>
+          <rect class="t02-act" x="155" y="56" width="10" height="108"/>
+          <rect class="t02-act" x="265" y="82" width="10" height="48"/>
+          <line class="t02-msync" x1="55" y1="56" x2="154" y2="56" marker-end="url(#t02-sq-ps)"/>
+          <text class="t02-ml" x="105" y="50" text-anchor="middle">POST /bestellungen</text>
+          <line class="t02-msync" x1="165" y1="82" x2="264" y2="82" marker-end="url(#t02-sq-ps)"/>
+          <text class="t02-ml" x="215" y="77" text-anchor="middle">autorisieren</text>
+          <line class="t02-mret" x1="265" y1="130" x2="166" y2="130" marker-end="url(#t02-sq-pr)"/>
+          <text class="t02-ml" x="215" y="125" text-anchor="middle">OK</text>
+          <line class="t02-mret" x1="155" y1="164" x2="56" y2="164" marker-end="url(#t02-sq-pr)"/>
+          <text class="t02-ml" x="105" y="159" text-anchor="middle">201 Created</text>
+          <text class="t02-note" x="160" y="200" text-anchor="middle">Fällt die Zahlung aus, scheitert die ganze Bestellung.</text>
+        </svg>
+        <figcaption><b>Synchron:</b> Die App wartet (rot) während der ganzen Kette. Alle drei müssen im selben Moment laufen.</figcaption>
+      </figure>
+      <figure class="diagramm card">
+        <svg class="t02-sq" viewBox="0 0 320 214" role="img" aria-labelledby="t02-sq2-t">
+          <title id="t02-sq2-t">Sequenzdiagramm asynchron: Der Bestellservice übergibt das Event dem Broker und arbeitet weiter. Die Küche bekommt es später.</title>
+          <defs>
+            <marker id="t02-sq-pa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="t02-mk-s2"/></marker>
+            <marker id="t02-sq-pr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="t02-mk-m"/></marker>
+          </defs>
+          <rect class="t02-kopf" x="0" y="6" width="100" height="26" rx="6"/><text class="t02-kopft" x="50" y="23" text-anchor="middle">Bestellservice</text>
+          <rect class="t02-kopf" x="120" y="6" width="80" height="26" rx="6"/><text class="t02-kopft" x="160" y="23" text-anchor="middle">Broker</text>
+          <rect class="t02-kopf" x="230" y="6" width="80" height="26" rx="6"/><text class="t02-kopft" x="270" y="23" text-anchor="middle">Küche</text>
+          <line class="t02-ll" x1="50" y1="32" x2="50" y2="190"/>
+          <line class="t02-ll" x1="160" y1="32" x2="160" y2="190"/>
+          <line class="t02-ll" x1="270" y1="32" x2="270" y2="190"/>
+          <rect class="t02-act" x="45" y="50" width="10" height="34"/>
+          <line class="t02-masync" x1="55" y1="56" x2="154" y2="56" marker-end="url(#t02-sq-pa)"/>
+          <text class="t02-ml" x="105" y="51" text-anchor="middle">Event senden</text>
+          <line class="t02-mret" x1="155" y1="78" x2="56" y2="78" marker-end="url(#t02-sq-pr2)"/>
+          <text class="t02-ml" x="105" y="73" text-anchor="middle">gespeichert</text>
+          <text class="t02-note" x="58" y="104">arbeitet weiter</text>
+          <rect class="t02-msgbox" x="152" y="92" width="16" height="12" rx="2"/>
+          <text class="t02-note" x="174" y="102">liegt im Broker</text>
+          <text class="t02-offline" x="270" y="76" text-anchor="middle">offline</text>
+          <line class="t02-masync" x1="165" y1="140" x2="264" y2="140" marker-end="url(#t02-sq-pa)"/>
+          <text class="t02-ml" x="215" y="135" text-anchor="middle">zustellen</text>
+          <rect class="t02-act" x="265" y="140" width="10" height="40"/>
+          <text class="t02-note" x="160" y="206" text-anchor="middle">Die Küche verarbeitet, sobald sie wieder läuft.</text>
+        </svg>
+        <figcaption><b>Asynchron:</b> Der Bestellservice ist nach dem Übergeben fertig. Die Küche darf gerade offline sein, die Nachricht wartet.</figcaption>
+      </figure>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col"></th><th scope="col">synchron</th><th scope="col">asynchron</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Wartet der Sender?</th><td>ja, bis zur Antwort oder zum Timeout</td><td>nein</td></tr>
+          <tr><th scope="row">Empfänger muss laufen?</th><td>ja, im selben Moment</td><td>nein, der Broker puffert</td></tr>
+          <tr><th scope="row">Antwort</th><td>sofort, im selben Aufruf</td><td>keine oder später als eigene Nachricht</td></tr>
+          <tr><th scope="row">Typische Technik</th><td>REST über HTTP, gRPC, GraphQL</td><td>Queue, Topic, Events über RabbitMQ oder Kafka</td></tr>
+          <tr><th scope="row">Stärke</th><td>einfach zu verstehen, Ergebnis sofort da</td><td>entkoppelt, Lastspitzen werden gepuffert</td></tr>
+          <tr><th scope="row">Schwäche</th><td>Ausfälle und Wartezeiten addieren sich über die Kette</td><td>schwerer zu testen, Daten erst «irgendwann» konsistent</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Klick dich jetzt mit «Weiter» durch ein kleines Beispiel. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Die passende Verbindung leuchtet auf, und umgekehrt.</p>
+    <div id="t02-stepper"></div>
+  </section>
+
+  <!-- ===== 3 · Verfahren: Signalwörter ===== -->
+  <section id="verfahren">
+    <span class="eyebrow">Schritt 3 · Das Verfahren</span>
+    <h2>Die Verbindungsart aus dem Text lesen</h2>
+    <p class="prose">In der Prüfung bekommst du einen Anforderungstext und zeichnest die Architektur. Die Substantive liefern die Bausteine. Die Verben liefern die Verbindungen. Stell dir zu jedem Verb zwei Fragen: <b>Braucht der Absender die Antwort, um weiterzumachen?</b> Dann synchron. <b>Darf der Empfänger gerade weg sein?</b> Dann asynchron.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Art</th><th scope="col">Signalwörter im Text</th><th scope="col">Pfeil</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">synchron</th><td>fragt, ruft auf, prüft sofort, wartet auf, braucht die Antwort, leitet weiter, erst nach der Antwort</td><td>Aufrufer → Aufgerufener</td></tr>
+          <tr><th scope="row">asynchron</th><td>veröffentlicht, sendet ein Event, abonniert, reagiert auf, stellt in die Queue, holt aus der Queue, im Hintergrund, später, ohne zu warten</td><td>Sender → Broker → Empfänger</td></tr>
+          <tr><th scope="row">Daten</th><td>speichert, liest, schreibt, legt ab, eigene Datenbank, hält im Cache</td><td>Dienst → Speicher</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Das Verfahren für jede Modellierungsaufgabe:</p>
+    <ol class="prose">
+      <li><b>Lesen</b> und alle Systeme, Dienste und Speicher markieren.</li>
+      <li><b>Bausteine legen</b>, aber nur, was im Text steht. Alles andere ist ein Ablenker.</li>
+      <li><b>Verben lesen</b> und je eine Verbindung ziehen: Wer ruft oder sendet? Das ist der Start des Pfeils.</li>
+      <li><b>Art festlegen</b> mit der Signalwort-Tabelle.</li>
+      <li><b>Prüfen:</b> Hat jede Verbindung ein Signalwort? Greift jeder Dienst nur auf seine eigene Datenbank zu?</li>
+    </ol>
+    <div class="note falle"><b>Falle 1:</b> «schickt» ist nicht automatisch asynchron. «Die App schickt die Anfrage und zeigt das Ergebnis an» heisst: Sie wartet. Entscheidend ist, ob jemand auf die Antwort wartet, nicht das Verb «schicken».</div>
+    <div class="note falle"><b>Falle 2:</b> Liegt ein Broker dazwischen, sind <b>beide</b> Pfeile asynchron: Sender → Broker und Broker → Empfänger. Ein synchroner Pfeil vom Sender direkt zum Empfänger wäre eine zweite, zusätzliche Kopplung.</div>
+    <div class="note falle"><b>Falle 3:</b> Ein Dienst liest nie direkt die Datenbank eines anderen Dienstes. Braucht er dessen Daten, fragt er den Dienst (synchron) oder hält eine eigene Kopie aus Events (asynchron). Das Prinzip heisst <span lang="en">database per service</span>.</div>
+    <details class="sol"><summary>Synchron oder asynchron? «Das Gateway leitet die Anfrage an den Bestellservice weiter und gibt dessen Antwort an die App zurück.»</summary>
+      <div class="stack">
+        <p>Synchron. Das Gateway wartet auf die Antwort des Bestellservice, denn es muss sie zurückgeben. Ein Gateway ist fast immer ein synchroner Zwischenhalt: Es leitet HTTP-Anfragen weiter.</p>
+      </div>
+    </details>
+    <details class="sol"><summary>Und hier? «Der Bestellservice antwortet sofort mit 202 Accepted. Die Rechnung erstellt der Rechnungsservice im Hintergrund.»</summary>
+      <div class="stack">
+        <p>Die Antwort an den Client ist synchron, aber kurz: «Ich habe es angenommen». Die Verbindung Bestellservice → Rechnungsservice ist asynchron: «im Hintergrund» ist das Signalwort. Technisch läuft sie über eine Queue oder ein Topic. Statuscode 202 heisst genau das: angenommen, aber noch nicht erledigt.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 4 · REST ===== -->
+  <section id="rest">
+    <span class="eyebrow">Schritt 4 · REST und OpenAPI</span>
+    <h2>REST: Ressourcen, Verben, Statuscodes</h2>
+    <p class="prose"><b>REST</b> (<span lang="en">Representational State Transfer</span>) ist kein Protokoll, sondern ein Stil für Schnittstellen über HTTP. Die Idee: Es gibt <b>Ressourcen</b> mit eigenen Adressen, zum Beispiel <code>/bestellungen/B-4711</code>. Was du damit tust, sagt das <b>HTTP-Verb</b>. Wie es ausgegangen ist, sagt der <b>Statuscode</b>. Die Daten reisen meist als JSON.</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Ressourcen statt Aktionen</h3>
+        <p class="hint">Die Adresse ist ein Nomen in der Mehrzahl. Die Aktion steckt im Verb.</p>
+        <ul class="prose">
+          <li>✓ <code>POST /bestellungen</code></li>
+          <li>✓ <code>GET /restaurants/7/gerichte</code></li>
+          <li>✓ <code>DELETE /bestellungen/B-4711</code></li>
+          <li>✗ <code>POST /erstelleBestellung</code></li>
+          <li>✗ <code>GET /loescheBestellung?id=4711</code></li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3>Zustandslos (<span lang="en">stateless</span>)</h3>
+        <p class="prose">Jede Anfrage bringt alles mit, was der Server braucht, zum Beispiel das Token im Header <code>Authorization</code>. Der Server merkt sich zwischen zwei Anfragen nichts über den Client. Darum kann jede Anfrage auf einer anderen Instanz landen. So lässt sich ein Dienst einfach skalieren.</p>
+      </div>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>HTTP-Verben am Beispiel Food-Delivery</caption>
+        <thead><tr><th scope="col">Verb</th><th scope="col">Zweck</th><th scope="col">sicher</th><th scope="col">idempotent</th><th scope="col">Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">GET</th><td>lesen</td><td>ja</td><td>ja</td><td><code>GET /bestellungen/B-4711</code></td></tr>
+          <tr><th scope="row">POST</th><td>neu anlegen, Aktion auslösen</td><td>nein</td><td><b>nein</b></td><td><code>POST /bestellungen</code></td></tr>
+          <tr><th scope="row">PUT</th><td>ganz ersetzen (oder an bekannter Adresse anlegen)</td><td>nein</td><td>ja</td><td><code>PUT /kunden/K-9/adresse</code></td></tr>
+          <tr><th scope="row">PATCH</th><td>teilweise ändern</td><td>nein</td><td>nicht garantiert</td><td><code>PATCH /bestellungen/B-4711</code></td></tr>
+          <tr><th scope="row">DELETE</th><td>löschen</td><td>nein</td><td>ja</td><td><code>DELETE /bestellungen/B-4711</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><b>Sicher</b> heisst: ändert nichts auf dem Server. <b>Idempotent</b> heisst: Zweimal ausführen hinterlässt denselben Zustand wie einmal. Das ist wichtig, weil Netzwerke unzuverlässig sind. Kommt keine Antwort, weisst du nicht, ob die Anfrage angekommen ist. Eine idempotente Anfrage darfst du gefahrlos wiederholen (<span lang="en">retry</span>).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die wichtigsten Statuscodes. Erste Ziffer: 2 = gut, 4 = Fehler des Clients, 5 = Fehler des Servers</caption>
+        <thead><tr><th scope="col">Code</th><th scope="col">Bedeutung</th><th scope="col">Wann im Food-Delivery?</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">200 OK</th><td>Erfolg mit Inhalt</td><td>Bestellung gelesen</td></tr>
+          <tr><th scope="row">201 Created</th><td>neu angelegt, Adresse im Header <code>Location</code></td><td>Bestellung angelegt</td></tr>
+          <tr><th scope="row">202 Accepted</th><td>angenommen, wird später verarbeitet</td><td>Monatsrechnung wird erstellt</td></tr>
+          <tr><th scope="row">204 No Content</th><td>Erfolg ohne Inhalt</td><td>Bestellung gelöscht</td></tr>
+          <tr><th scope="row">400 Bad Request</th><td>Anfrage falsch aufgebaut</td><td>Feld «anzahl» fehlt</td></tr>
+          <tr><th scope="row">401 Unauthorized</th><td><b>nicht angemeldet</b>, Token fehlt oder ist ungültig</td><td>Token abgelaufen</td></tr>
+          <tr><th scope="row">403 Forbidden</th><td><b>angemeldet, aber nicht berechtigt</b></td><td>Kurier will Restaurantmenü ändern</td></tr>
+          <tr><th scope="row">404 Not Found</th><td>Ressource gibt es nicht</td><td>Bestellung B-9999</td></tr>
+          <tr><th scope="row">409 Conflict</th><td>Widerspruch zum aktuellen Zustand</td><td>Stornieren, obwohl schon geliefert</td></tr>
+          <tr><th scope="row">429 Too Many Requests</th><td>zu viele Anfragen, Rate Limit erreicht</td><td>Bot fragt 1000-mal pro Minute</td></tr>
+          <tr><th scope="row">500 Internal Server Error</th><td>unerwarteter Fehler im Server</td><td>Programmfehler im Bestellservice</td></tr>
+          <tr><th scope="row">503 Service Unavailable</th><td>Dienst gerade nicht verfügbar</td><td>Wartung, Überlast</td></tr>
+          <tr><th scope="row">504 Gateway Timeout</th><td>Gateway bekam keine rechtzeitige Antwort</td><td>Bestellservice hängt</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Ein HTTP-Aufruf, wie er wirklich über die Leitung geht</h3>
+    <p class="prose">Oben die Anfrage, unten die Antwort. Eine Leerzeile trennt jeweils Kopfzeilen (<span lang="en">header</span>) und Inhalt (<span lang="en">body</span>). Der Header <code>Idempotency-Key</code> ist eine verbreitete Konvention: Schickt die App dieselbe Bestellung wegen eines Timeouts nochmals, erkennt der Server sie am Schlüssel und legt sie nicht doppelt an.</p>
+    <pre class="code" data-sprache="HTTP · Anfrage"><code><span class="k">POST</span> /api/bestellungen HTTP/1.1
+Host: api.food.example
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9…
+Content-Type: application/json
+<mark>Idempotency-Key: 3f6c1a2e-8b7d-4c1e-9f0a-52d1c0e9a7b4</mark>
+
+{
+  <span class="s">"restaurantId"</span>: <span class="s">"R-12"</span>,
+  <span class="s">"positionen"</span>: [ { <span class="s">"gericht"</span>: <span class="s">"Pad Thai"</span>, <span class="s">"anzahl"</span>: <span class="n">2</span> } ],
+  <span class="s">"lieferadresse"</span>: <span class="s">"Bahnhofstrasse 1, 3011 Bern"</span>
+}</code></pre>
+    <pre class="code" data-sprache="HTTP · Antwort"><code>HTTP/1.1 <mark><span class="n">201</span> Created</mark>
+Location: /api/bestellungen/B-4711
+Content-Type: application/json
+
+{
+  <span class="s">"id"</span>: <span class="s">"B-4711"</span>,
+  <span class="s">"status"</span>: <span class="s">"NEU"</span>,
+  <span class="s">"total"</span>: <span class="n">34.50</span>,
+  <span class="s">"_links"</span>: {
+    <span class="s">"self"</span>:       { <span class="s">"href"</span>: <span class="s">"/api/bestellungen/B-4711"</span> },
+    <span class="s">"stornieren"</span>: { <span class="s">"href"</span>: <span class="s">"/api/bestellungen/B-4711/stornierung"</span> }
+  }
+}</code></pre>
+    <p class="prose">Der Block <code>_links</code> zeigt <b>HATEOAS</b> (<span lang="en">Hypermedia as the Engine of Application State</span>): Die Antwort sagt dem Client, was er als Nächstes tun kann. Ist die Bestellung schon geliefert, fehlt der Link «stornieren». Viele APIs lassen HATEOAS weg. Für die Prüfung reicht: Links in der Antwort steuern den nächsten Schritt.</p>
+    <h3>Dieselbe Schnittstelle in Java mit Spring</h3>
+    <pre class="code" data-sprache="Java · Spring Boot"><code><span class="k">@RestController</span>
+<span class="k">@RequestMapping</span>(<span class="s">"/api/bestellungen"</span>)
+<span class="k">public class</span> BestellController {
+
+  <span class="k">private final</span> BestellService service;
+
+  <span class="k">public</span> BestellController(BestellService service) {
+    <span class="k">this</span>.service = service;
+  }
+
+  <span class="c">// GET /api/bestellungen/B-4711 → 200 oder 404</span>
+  <span class="k">@GetMapping</span>(<span class="s">"/{id}"</span>)
+  <span class="k">public</span> ResponseEntity&lt;BestellungDto&gt; lesen(<span class="k">@PathVariable</span> String id) {
+    <span class="k">return</span> service.finden(id)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
+
+  <span class="c">// POST /api/bestellungen → 201 Created mit Location-Header</span>
+  <span class="k">@PostMapping</span>
+  <span class="k">public</span> ResponseEntity&lt;BestellungDto&gt; anlegen(
+      <span class="k">@Valid @RequestBody</span> NeueBestellung neu,
+      <mark><span class="k">@RequestHeader</span>(<span class="s">"Idempotency-Key"</span>) String schluessel</mark>) {
+    BestellungDto b = service.anlegen(neu, schluessel); <span class="c">// gleicher Schlüssel → gleiche Bestellung</span>
+    URI ort = URI.create(<span class="s">"/api/bestellungen/"</span> + b.id());
+    <span class="k">return</span> ResponseEntity.created(ort).body(b);
+  }
+}</code></pre>
+    <h3>OpenAPI: der Vertrag zur Schnittstelle</h3>
+    <p class="prose">Eine <b>OpenAPI</b>-Datei beschreibt alle Adressen, Parameter, Antworten und Datentypen. Andere Teams lesen sie wie eine Bedienungsanleitung. Werkzeuge erzeugen daraus eine klickbare Doku (Swagger UI), Client-Code und Tests. Arbeitet ein Team zuerst am Vertrag und erst dann am Code, heisst das <b><span lang="en">API first</span></b>.</p>
+    <pre class="code" data-sprache="YAML · OpenAPI 3"><code><span class="k">openapi</span>: <span class="n">3.0.3</span>
+<span class="k">info</span>:
+  <span class="k">title</span>: Bestell-API
+  <span class="k">version</span>: <span class="n">1.0.0</span>
+<span class="k">paths</span>:
+  <mark>/bestellungen/{id}</mark>:
+    <span class="k">get</span>:
+      <span class="k">summary</span>: Eine Bestellung lesen
+      <span class="k">parameters</span>:
+        - <span class="k">name</span>: id
+          <span class="k">in</span>: path
+          <span class="k">required</span>: <span class="n">true</span>
+          <span class="k">schema</span>: { <span class="k">type</span>: string }
+      <span class="k">responses</span>:
+        <span class="s">"200"</span>:
+          <span class="k">description</span>: Bestellung gefunden
+          <span class="k">content</span>:
+            <span class="k">application/json</span>:
+              <span class="k">schema</span>: { <span class="k">$ref</span>: <span class="s">"#/components/schemas/Bestellung"</span> }
+        <span class="s">"404"</span>:
+          <span class="k">description</span>: Bestellung gibt es nicht
+<span class="k">components</span>:
+  <span class="k">schemas</span>:
+    <span class="k">Bestellung</span>:
+      <span class="k">type</span>: object
+      <span class="k">required</span>: [id, status]
+      <span class="k">properties</span>:
+        <span class="k">id</span>:     { <span class="k">type</span>: string, <span class="k">example</span>: <span class="s">"B-4711"</span> }
+        <span class="k">status</span>: { <span class="k">type</span>: string, <span class="k">enum</span>: [NEU, IN_KUECHE, UNTERWEGS, GELIEFERT] }
+        <span class="k">total</span>:  { <span class="k">type</span>: number, <span class="k">example</span>: <span class="n">34.5</span> }</code></pre>
+    <div class="note falle"><b>Falle:</b> POST ist nicht idempotent. Wiederholt die App nach einem Timeout einfach dieselbe POST-Anfrage, entstehen zwei Bestellungen und zwei Belastungen. Abhilfe: ein <code>Idempotency-Key</code>, den der Server speichert, oder eine vom Client erzeugte ID mit <code>PUT /bestellungen/{id}</code>.</div>
+    <div class="note falle"><b>Falle:</b> 401 heisst «Wer bist du?» (nicht angemeldet). 403 heisst «Ich weiss, wer du bist, aber du darfst das nicht.» Der Name «Unauthorized» bei 401 ist historisch missglückt.</div>
+    <details class="sol"><summary>Ist DELETE wirklich idempotent? Der zweite Aufruf liefert doch 404 statt 204.</summary>
+      <div class="stack">
+        <p>Ja. Idempotenz betrifft den <b>Zustand auf dem Server</b>, nicht den Statuscode. Nach dem ersten und nach dem zweiten DELETE ist die Bestellung weg. Der Zustand ist derselbe. Dass die Antwort beim zweiten Mal 404 lautet, ändert daran nichts.</p>
+      </div>
+    </details>
+    <details class="sol"><summary>Warum ist PATCH nicht automatisch idempotent?</summary>
+      <div class="stack">
+        <p>Es kommt darauf an, was im Body steht. <code>{"status": "STORNIERT"}</code> setzt einen Wert. Zweimal gesetzt ist dasselbe, also idempotent. Eine Anweisung wie <code>{"op": "erhoehe", "feld": "anzahl", "um": 1}</code> erhöht bei jedem Aufruf. Nach zwei Aufrufen ist die Anzahl um 2 höher, also nicht idempotent.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · gRPC und GraphQL ===== -->
+  <section id="grpc">
+    <span class="eyebrow">Schritt 5 · gRPC und GraphQL</span>
+    <h2>Zwei Alternativen zu REST</h2>
+    <p class="prose"><b>gRPC</b> ist ein Framework für Fernaufrufe (<span lang="en">Remote Procedure Call</span>), ursprünglich von Google. Du rufst eine Methode eines anderen Dienstes auf, fast als wäre sie lokal. Drei Dinge machen gRPC aus:</p>
+    <ul class="prose">
+      <li><b>Protocol Buffers (Protobuf):</b> Der Vertrag steht in einer <code>.proto</code>-Datei. Ein Generator erzeugt daraus Client- und Server-Code für Java, Go, Python, C# und viele weitere Sprachen.</li>
+      <li><b>Binär statt Text:</b> Nachrichten sind kompakt und schnell zu verarbeiten. Dafür kannst du sie nicht mehr von Auge lesen wie JSON.</li>
+      <li><b>HTTP/2:</b> Viele Aufrufe teilen sich eine Verbindung, und es gibt <b>Streaming</b> in beide Richtungen.</li>
+    </ul>
+    <pre class="code" data-sprache="Protobuf · tracking.proto"><code><span class="k">syntax</span> = <span class="s">"proto3"</span>;
+<span class="k">package</span> lieferung.v1;
+<span class="k">option</span> java_package = <span class="s">"ch.beispiel.lieferung.v1"</span>;
+<span class="k">option</span> java_multiple_files = <span class="n">true</span>;
+
+<span class="k">service</span> Tracking {
+  <span class="c">// Unary: eine Anfrage, eine Antwort</span>
+  <span class="k">rpc</span> HoleStatus (StatusAnfrage) <span class="k">returns</span> (StatusAntwort);
+  <span class="c">// Server-Streaming: laufend neue Positionen der Kurierin</span>
+  <mark><span class="k">rpc</span> VerfolgeKurier (StatusAnfrage) <span class="k">returns</span> (<span class="k">stream</span> Position);</mark>
+}
+
+<span class="k">message</span> StatusAnfrage { <span class="k">string</span> bestell_id = <span class="n">1</span>; }
+
+<span class="k">message</span> StatusAntwort {
+  <span class="k">string</span> bestell_id  = <span class="n">1</span>;
+  Status status      = <span class="n">2</span>;
+  <span class="k">int32</span>  eta_minuten = <span class="n">3</span>;   <span class="c">// Feldnummern nie wiederverwenden</span>
+}
+
+<span class="k">enum</span> Status { UNBEKANNT = <span class="n">0</span>; IN_KUECHE = <span class="n">1</span>; UNTERWEGS = <span class="n">2</span>; GELIEFERT = <span class="n">3</span>; }
+
+<span class="k">message</span> Position { <span class="k">double</span> breite = <span class="n">1</span>; <span class="k">double</span> laenge = <span class="n">2</span>; <span class="k">int64</span> zeit_ms = <span class="n">3</span>; }</code></pre>
+    <pre class="code" data-sprache="Java · gRPC-Client"><code>ManagedChannel kanal = ManagedChannelBuilder
+    .forAddress(<span class="s">"tracking"</span>, <span class="n">9090</span>)
+    .usePlaintext()                       <span class="c">// nur intern, sonst TLS</span>
+    .build();
+TrackingGrpc.TrackingBlockingStub stub = TrackingGrpc.newBlockingStub(kanal);
+
+StatusAnfrage anfrage = StatusAnfrage.newBuilder().setBestellId(<span class="s">"B-4711"</span>).build();
+
+<span class="c">// Unary-Aufruf mit Deadline: nach 500 ms gibt der Client auf</span>
+StatusAntwort antwort = stub
+    <mark>.withDeadlineAfter(<span class="n">500</span>, TimeUnit.MILLISECONDS)</mark>
+    .holeStatus(anfrage);
+System.out.println(antwort.getStatus() + <span class="s">", noch "</span> + antwort.getEtaMinuten() + <span class="s">" min"</span>);
+
+<span class="c">// Server-Streaming: ein Iterator, der neue Positionen liefert</span>
+Iterator&lt;Position&gt; positionen = stub.verfolgeKurier(anfrage);
+<span class="k">while</span> (positionen.hasNext()) {
+  Position p = positionen.next();
+  karte.zeige(p.getBreite(), p.getLaenge());
+}</code></pre>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die vier Aufrufarten von gRPC</caption>
+        <thead><tr><th scope="col">Art</th><th scope="col">Ablauf</th><th scope="col">Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Unary</th><td>eine Anfrage, eine Antwort</td><td>Status einer Bestellung</td></tr>
+          <tr><th scope="row">Server-Streaming</th><td>eine Anfrage, viele Antworten</td><td>Kurierposition live</td></tr>
+          <tr><th scope="row">Client-Streaming</th><td>viele Anfragen, eine Antwort</td><td>Kurier-App lädt GPS-Punkte hoch</td></tr>
+          <tr><th scope="row">Bidirektional</th><td>beide senden laufend</td><td>Chat Kundin ↔ Kurier</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><b>Wann gRPC statt REST?</b> Für Aufrufe <b>zwischen eigenen Diensten</b> mit viel Last, kurzen Antwortzeiten, mehreren Programmiersprachen oder Streaming. Für eine <b>öffentliche API</b>, die Partner mit curl, Browser oder beliebigen Werkzeugen nutzen, bleibt REST meist besser: lesbar, überall unterstützt, gut zu cachen. Browser können gRPC nicht direkt sprechen, sie brauchen gRPC-Web und einen Proxy.</p>
+    <p class="prose">gRPC ist trotz Streaming eine <b>synchrone</b> Verbindung im Sinn dieser Station: Beide Seiten müssen gleichzeitig laufen. Ein Stream ist kein Broker und puffert nichts für später.</p>
+    <h3>GraphQL in einem Absatz</h3>
+    <p class="prose"><b>GraphQL</b> ist eine Abfragesprache für APIs. Es gibt nur eine Adresse, meist <code>POST /graphql</code>. Der Client schreibt genau hin, welche Felder er will, auch über mehrere Objekte hinweg. Er bekommt nicht zu viel (<span lang="en">overfetching</span>) und muss nicht fünfmal nachfragen (<span lang="en">underfetching</span>). Das passt gut für Apps mit vielen verschiedenen Bildschirmen. Nachteile: HTTP-Caching ist schwieriger, und teure Abfragen müssen begrenzt werden.</p>
+    <pre class="code" data-sprache="GraphQL · Abfrage der Mobile-App"><code><span class="k">query</span> {
+  bestellung(id: <span class="s">"B-4711"</span>) {
+    status
+    restaurant { name }
+    kurier { vorname position { breite laenge } }
+  }
+}</code></pre>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>REST, gRPC und GraphQL im Vergleich</caption>
+        <thead><tr><th scope="col"></th><th scope="col">REST</th><th scope="col">gRPC</th><th scope="col">GraphQL</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Vertrag</th><td>OpenAPI (optional)</td><td><code>.proto</code> (Pflicht)</td><td>Schema (Pflicht)</td></tr>
+          <tr><th scope="row">Format</th><td>JSON, Text</td><td>Protobuf, binär</td><td>JSON</td></tr>
+          <tr><th scope="row">Transport</th><td>HTTP/1.1 oder 2</td><td>HTTP/2</td><td>meist HTTP POST</td></tr>
+          <tr><th scope="row">Stärke</th><td>einfach, überall, cachebar</td><td>schnell, Streaming, Codegenerierung</td><td>Client wählt die Felder</td></tr>
+          <tr><th scope="row">Typisch für</th><td>öffentliche APIs</td><td>interne Dienst-zu-Dienst-Aufrufe</td><td>Frontends mit vielen Ansichten</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Messaging ===== -->
+  <section id="messaging">
+    <span class="eyebrow">Schritt 6 · Messaging</span>
+    <h2>Queue oder Topic: Wer bekommt die Nachricht?</h2>
+    <p class="prose">Bei asynchroner Kommunikation steht ein <b>Message Broker</b> zwischen den Diensten. Er kennt zwei Grundmuster:</p>
+    <ul class="prose">
+      <li><b>Point-to-Point mit Queue:</b> Jede Nachricht bekommt <b>genau ein</b> Empfänger. Mehrere Empfänger an derselben Queue teilen sich die Arbeit (<span lang="en">competing consumers</span>). Beispiel: 300 Druckaufträge für Etiketten, drei Drucker-Worker.</li>
+      <li><b>Publish/Subscribe mit Topic:</b> Jeder Abonnent bekommt <b>eine eigene Kopie</b>. Der Sender weiss nicht, wie viele zuhören. Beispiel: «BestellungAufgegeben» interessiert Küche, Kurier und Benachrichtigung.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Ausprobieren: Nachrichten verschicken</h3>
+      <div class="modes" role="group" aria-label="Muster wählen">
+        <button type="button" class="btn on" aria-pressed="true" data-t02-modus="queue">Queue (Point-to-Point)</button>
+        <button type="button" class="btn" aria-pressed="false" data-t02-modus="topic">Topic (Publish/Subscribe)</button>
+      </div>
+      <figure class="diagramm">
+        <svg class="t02-qt" id="t02-qt" viewBox="0 0 320 210" role="img" aria-labelledby="t02-qt-t">
+          <title id="t02-qt-t">Ein Sender, ein Broker in der Mitte, drei Empfänger rechts. Bewegte Punkte zeigen, wer eine Nachricht bekommt.</title>
+        </svg>
+        <figcaption id="t02-qt-erkl"></figcaption>
+      </figure>
+      <div class="row">
+        <button type="button" class="btn primary" id="t02-qt-senden">Nachricht senden</button>
+        <label class="t02-check"><input type="checkbox" id="t02-qt-offline"> <span id="t02-qt-offline-text">Worker 2 ist offline</span></label>
+        <button type="button" class="btn" id="t02-qt-reset">Zurücksetzen</button>
+      </div>
+      <p class="t02-qlog" id="t02-qt-log" aria-live="polite">Drück auf «Nachricht senden». Sende mehrere Nachrichten und vergleiche die Zähler.</p>
+    </div>
+    <div class="note"><b>Was du sehen solltest:</b> Bei der Queue zählen die drei Worker zusammen so viele Nachrichten, wie du gesendet hast. Beim Topic zählt jeder Abonnent alle. Ist ein Abonnent offline, hält der Broker seine Kopien zurück und liefert sie nach, sobald er wieder läuft. Das ist zeitliche Entkopplung.</div>
+
+    <h3>RabbitMQ und Kafka: zwei verschiedene Ideen</h3>
+    <p class="prose">Beide sind Message Broker, aber sie speichern Nachrichten ganz verschieden.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col"></th><th scope="col">RabbitMQ</th><th scope="col">Apache Kafka</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Grundidee</th><td><b>Queue:</b> Postfach. Gelesen und bestätigt = gelöscht.</td><td><b>Log:</b> Tagebuch. Nachrichten werden hinten angehängt und bleiben stehen.</td></tr>
+          <tr><th scope="row">Wer merkt sich, was gelesen ist?</th><td>der Broker (Bestätigung pro Nachricht, <code>ack</code>)</td><td>der Consumer, über seine Position im Log (<span lang="en">offset</span>)</td></tr>
+          <tr><th scope="row">Verteilen an viele</th><td>Exchange kopiert in mehrere Queues (Typ <code>fanout</code> oder <code>topic</code>)</td><td>jede Consumer Group liest das ganze Topic</td></tr>
+          <tr><th scope="row">Arbeit teilen</th><td>mehrere Consumer an einer Queue</td><td>Consumer einer Gruppe teilen sich die Partitionen</td></tr>
+          <tr><th scope="row">Aufbewahrung</th><td>bis zur Bestätigung</td><td>nach Zeit oder Grösse (<span lang="en">retention</span>), z. B. 7 Tage</td></tr>
+          <tr><th scope="row">Nochmals abspielen</th><td>nicht vorgesehen</td><td>ja, Offset zurücksetzen (<span lang="en">replay</span>)</td></tr>
+          <tr><th scope="row">Reihenfolge</th><td>pro Queue, solange ein Consumer liest</td><td>nur innerhalb einer Partition</td></tr>
+          <tr><th scope="row">Typisch für</th><td>Aufgaben verteilen, flexible Weiterleitung</td><td>Event-Streaming, grosse Datenmengen, Replay</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <figure class="diagramm card">
+      <svg class="t02-log" viewBox="0 0 320 222" role="img" aria-labelledby="t02-log-t">
+        <title id="t02-log-t">Kafka-Topic mit drei Partitionen. Die Consumer Group Küche hat drei Consumer, je einen pro Partition. Die Gruppe Statistik hat einen Consumer, der alle drei Partitionen liest und noch zurückliegt.</title>
+        <text class="t02-fett" x="8" y="14">Topic «bestellungen»</text>
+        <text class="t02-klein" x="238" y="14">Gruppe «kueche»</text>
+        <!-- P0 -->
+        <text class="t02-fett" x="8" y="45">P0</text>
+        <rect class="t02-alt" x="34" y="28" width="24" height="26" rx="3"/><text class="t02-altt" x="46" y="45" text-anchor="middle">0</text>
+        <rect class="t02-zelle" x="60" y="28" width="24" height="26" rx="3"/><text x="72" y="45" text-anchor="middle">1</text>
+        <rect class="t02-zelle" x="86" y="28" width="24" height="26" rx="3"/><text x="98" y="45" text-anchor="middle">2</text>
+        <rect class="t02-zelle" x="112" y="28" width="24" height="26" rx="3"/><text x="124" y="45" text-anchor="middle">3</text>
+        <rect class="t02-zelle" x="138" y="28" width="24" height="26" rx="3"/><text x="150" y="45" text-anchor="middle">4</text>
+        <rect class="t02-zelle" x="164" y="28" width="24" height="26" rx="3"/><text x="176" y="45" text-anchor="middle">5</text>
+        <rect class="t02-zelle" x="190" y="28" width="24" height="26" rx="3"/><text x="202" y="45" text-anchor="middle">6</text>
+        <!-- P1 -->
+        <text class="t02-fett" x="8" y="91">P1</text>
+        <rect class="t02-zelle" x="34" y="74" width="24" height="26" rx="3"/><text x="46" y="91" text-anchor="middle">0</text>
+        <rect class="t02-zelle" x="60" y="74" width="24" height="26" rx="3"/><text x="72" y="91" text-anchor="middle">1</text>
+        <rect class="t02-zelle" x="86" y="74" width="24" height="26" rx="3"/><text x="98" y="91" text-anchor="middle">2</text>
+        <rect class="t02-zelle" x="112" y="74" width="24" height="26" rx="3"/><text x="124" y="91" text-anchor="middle">3</text>
+        <rect class="t02-zelle" x="138" y="74" width="24" height="26" rx="3"/><text x="150" y="91" text-anchor="middle">4</text>
+        <!-- P2 -->
+        <text class="t02-fett" x="8" y="137">P2</text>
+        <rect class="t02-zelle" x="34" y="120" width="24" height="26" rx="3"/><text x="46" y="137" text-anchor="middle">0</text>
+        <rect class="t02-zelle" x="60" y="120" width="24" height="26" rx="3"/><text x="72" y="137" text-anchor="middle">1</text>
+        <rect class="t02-zelle" x="86" y="120" width="24" height="26" rx="3"/><text x="98" y="137" text-anchor="middle">2</text>
+        <rect class="t02-zelle" x="112" y="120" width="24" height="26" rx="3"/><text x="124" y="137" text-anchor="middle">3</text>
+        <rect class="t02-zelle" x="138" y="120" width="24" height="26" rx="3"/><text x="150" y="137" text-anchor="middle">4</text>
+        <rect class="t02-zelle" x="164" y="120" width="24" height="26" rx="3"/><text x="176" y="137" text-anchor="middle">5</text>
+        <!-- Küche-Gruppe: Position am Ende (aktuell) -->
+        <path class="t02-mk-s1" d="M196 24 L208 24 L202 31 Z"/>
+        <path class="t02-mk-s1" d="M144 70 L156 70 L150 77 Z"/>
+        <path class="t02-mk-s1" d="M170 116 L182 116 L176 123 Z"/>
+        <line class="t02-l1" x1="216" y1="41" x2="244" y2="41"/>
+        <line class="t02-l1" x1="164" y1="87" x2="244" y2="87"/>
+        <line class="t02-l1" x1="190" y1="133" x2="244" y2="133"/>
+        <rect class="t02-cons" x="244" y="30" width="70" height="22" rx="6"/><text x="279" y="45" text-anchor="middle">Küche 1</text>
+        <rect class="t02-cons" x="244" y="76" width="70" height="22" rx="6"/><text x="279" y="91" text-anchor="middle">Küche 2</text>
+        <rect class="t02-cons" x="244" y="122" width="70" height="22" rx="6"/><text x="279" y="137" text-anchor="middle">Küche 3</text>
+        <!-- Statistik-Gruppe: liegt zurück -->
+        <path class="t02-mk-s2" d="M92 58 L104 58 L98 51 Z"/>
+        <path class="t02-mk-s2" d="M66 104 L78 104 L72 97 Z"/>
+        <path class="t02-mk-s2" d="M118 150 L130 150 L124 143 Z"/>
+        <rect class="t02-cons2" x="20" y="164" width="214" height="22" rx="6"/><text x="127" y="179" text-anchor="middle">Statistik: 1 Consumer liest P0 bis P2</text>
+        <text class="t02-klein" x="8" y="204">Gestrichelt: Offset 0 von P0 ist nach Ablauf der Retention gelöscht.</text>
+        <text class="t02-klein" x="8" y="218">Neue Events werden rechts angehängt.</text>
+      </svg>
+      <figcaption>Dreiecke oben (blau): Position der Gruppe «kueche». Dreiecke unten (orange): Position der Gruppe «statistik». Beide Gruppen lesen alle Events, unabhängig voneinander und in ihrem eigenen Tempo.</figcaption>
+    </figure>
+    <p class="prose">So funktioniert Kafka im Detail:</p>
+    <ul class="prose">
+      <li>Ein <b>Topic</b> ist in <b>Partitionen</b> aufgeteilt. Der Producer gibt jedem Event einen <b>Schlüssel</b> mit, zum Beispiel die Bestell-ID. Gleicher Schlüssel = gleiche Partition = Reihenfolge bleibt erhalten. Alle Events zu B-4711 kommen also in der richtigen Reihenfolge an.</li>
+      <li>In einer <b>Consumer Group</b> liest jede Partition genau ein Consumer. Innerhalb der Gruppe verhält sich das Topic also wie eine Queue: Die Arbeit wird geteilt.</li>
+      <li>Verschiedene <b>Gruppen</b> lesen unabhängig voneinander alles. Zwischen Gruppen verhält sich das Topic wie Publish/Subscribe.</li>
+      <li>Kafka löscht nicht beim Lesen, sondern erst nach der <b>Retention</b>. Ein neuer Dienst kann darum die Events der letzten Tage nachlesen.</li>
+    </ul>
+    <div class="note falle"><b>Falle:</b> Mehr Consumer als Partitionen bringen nichts. Ein Topic mit 3 Partitionen und eine Gruppe mit 5 Consumern: Nur 3 arbeiten, 2 warten untätig. Die Zahl der Partitionen begrenzt die Parallelität einer Gruppe.</div>
+    <div class="note falle"><b>Falle:</b> Kafka garantiert die Reihenfolge nur innerhalb einer Partition, nicht über das ganze Topic. Haben «BestellungAufgegeben» und «BestellungStorniert» verschiedene Schlüssel, kann das Storno zuerst ankommen.</div>
+    <details class="sol"><summary>Wie baust du Publish/Subscribe mit RabbitMQ?</summary>
+      <div class="stack">
+        <p>Der Producer schickt an einen <b>Exchange</b> vom Typ <code>fanout</code> (oder <code>topic</code> mit Routing-Mustern). Jeder Abonnent hat eine <b>eigene Queue</b>, die an den Exchange gebunden ist. Der Exchange legt eine Kopie in jede gebundene Queue. Innerhalb jeder Queue gilt wieder Point-to-Point.</p>
+      </div>
+    </details>
+    <h3>Code: Kafka-Producer und -Consumer in TypeScript</h3>
+    <p class="prose">Mit der Bibliothek kafkajs für Node.js. Der Bestellservice schreibt, die Küche liest in ihrer Consumer Group.</p>
+    <pre class="code" data-sprache="TypeScript · Producer (Bestellservice)"><code><span class="k">import</span> { Kafka } <span class="k">from</span> <span class="s">"kafkajs"</span>;
+
+<span class="k">const</span> kafka = <span class="k">new</span> Kafka({ clientId: <span class="s">"bestellservice"</span>, brokers: [<span class="s">"kafka:9092"</span>] });
+<span class="k">const</span> producer = kafka.producer();
+<span class="k">await</span> producer.connect();
+
+<span class="k">export async function</span> bestellungAufgegeben(b: Bestellung) {
+  <span class="k">await</span> producer.send({
+    topic: <span class="s">"bestellungen"</span>,
+    messages: [{
+      <mark>key: b.id,</mark>                     <span class="c">// gleiche Bestellung → gleiche Partition</span>
+      value: JSON.stringify({ id: crypto.randomUUID(), type: <span class="s">"BestellungAufgegeben"</span>, data: b }),
+    }],
+  });
+}</code></pre>
+    <pre class="code" data-sprache="TypeScript · Consumer (Küche)"><code><span class="k">const</span> consumer = kafka.consumer({ <mark>groupId: <span class="s">"kueche"</span></mark> });
+<span class="k">await</span> consumer.connect();
+<span class="k">await</span> consumer.subscribe({ topics: [<span class="s">"bestellungen"</span>] });
+
+<span class="k">await</span> consumer.run({
+  eachMessage: <span class="k">async</span> ({ partition, message }) =&gt; {
+    <span class="k">const</span> event = JSON.parse(message.value!.toString());
+    <span class="k">if</span> (<span class="k">await</span> schonVerarbeitet(event.id)) <span class="k">return</span>; <span class="c">// Duplikat: idempotent bleiben</span>
+    <span class="k">await</span> kochauftragAnlegen(event.data);
+    <span class="k">await</span> alsVerarbeitetMerken(event.id);
+    <span class="c">// Offset wird erst nach erfolgreichem Durchlauf bestätigt → at-least-once</span>
+  },
+});</code></pre>
+    <h3>Code: RabbitMQ-Queue in Python</h3>
+    <p class="prose">Mit der Bibliothek pika. Der Bestellservice legt Druckaufträge in die Queue «etiketten», mehrere Worker holen sie ab.</p>
+    <pre class="code" data-sprache="Python · Producer"><code><span class="k">import</span> json, pika
+
+verbindung = pika.BlockingConnection(pika.ConnectionParameters(<span class="s">"rabbitmq"</span>))
+kanal = verbindung.channel()
+kanal.queue_declare(queue=<span class="s">"etiketten"</span>, durable=<span class="n">True</span>)   <span class="c"># Queue überlebt Neustart</span>
+
+kanal.basic_publish(
+    exchange=<span class="s">""</span>,                  <span class="c"># Standard-Exchange: direkt in die Queue</span>
+    routing_key=<span class="s">"etiketten"</span>,
+    body=json.dumps({<span class="s">"bestellId"</span>: <span class="s">"B-4711"</span>, <span class="s">"drucker"</span>: <span class="s">"Halle-2"</span>}),
+    properties=pika.BasicProperties(delivery_mode=<span class="n">2</span>),  <span class="c"># 2 = auf Disk speichern</span>
+)</code></pre>
+    <pre class="code" data-sprache="Python · Worker (Consumer)"><code><span class="k">def</span> verarbeiten(kanal, methode, eigenschaften, body):
+    auftrag = json.loads(body)
+    drucke_etikett(auftrag)
+    <mark>kanal.basic_ack(delivery_tag=methode.delivery_tag)</mark>   <span class="c"># erst jetzt löscht RabbitMQ</span>
+
+kanal.basic_qos(prefetch_count=<span class="n">1</span>)   <span class="c"># jeder Worker nimmt nur einen Auftrag aufs Mal</span>
+kanal.basic_consume(queue=<span class="s">"etiketten"</span>, on_message_callback=verarbeiten)
+kanal.start_consuming()</code></pre>
+  </section>
+
+  <!-- ===== 7 · Zustellgarantien und Idempotenz ===== -->
+  <section id="garantien">
+    <span class="eyebrow">Schritt 7 · Zustellgarantien</span>
+    <h2>Kommt die Nachricht an, und wie oft?</h2>
+    <p class="prose">Ein Consumer kann abstürzen, nachdem er eine Nachricht verarbeitet, aber bevor er das bestätigt hat. Oder davor. Je nachdem, wann bestätigt wird, gibt es drei Garantien:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Garantie</th><th scope="col">Wie</th><th scope="col">Folge</th><th scope="col">Passt für</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">at-most-once<br><span class="hint">höchstens einmal</span></th><td>zuerst bestätigen, dann verarbeiten; kein Retry</td><td>kann <b>verloren gehen</b>, nie doppelt</td><td>Kurierposition jede Sekunde: eine fehlt, egal</td></tr>
+          <tr><th scope="row">at-least-once<br><span class="hint">mindestens einmal</span></th><td>zuerst verarbeiten, dann bestätigen; bei Fehler nochmals</td><td>geht nie verloren, kann <b>doppelt</b> kommen</td><td>Standard für Bestellungen und Zahlungen, zusammen mit idempotentem Consumer</td></tr>
+          <tr><th scope="row">exactly-once<br><span class="hint">genau einmal</span></th><td>Transaktionen über Lesen, Verarbeiten und Schreiben</td><td>genau einmal, aber aufwendig</td><td>Kafka-intern (Kafka Streams, Transaktionen)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Exactly-once über Systemgrenzen hinweg, etwa Kafka plus eine fremde Zahlungs-API, gibt es nicht gratis. In der Praxis kombiniert man darum <b>at-least-once</b> mit einem <b>idempotenten Consumer</b>: Jedes Event hat eine eindeutige ID. Der Consumer merkt sich die verarbeiteten IDs und ignoriert Duplikate. Das Ergebnis wirkt wie «genau einmal».</p>
+    <pre class="code" data-sprache="JSON · Event mit eindeutiger ID (angelehnt an CloudEvents)"><code>{
+  <span class="s">"specversion"</span>: <span class="s">"1.0"</span>,
+  <mark><span class="s">"id"</span>: <span class="s">"e7a1c2d4-5b6f-4e8a-9c0d-1f2e3a4b5c6d"</span></mark>,
+  <span class="s">"type"</span>: <span class="s">"BestellungAufgegeben"</span>,
+  <span class="s">"source"</span>: <span class="s">"/bestellservice"</span>,
+  <span class="s">"time"</span>: <span class="s">"2026-11-01T18:42:07Z"</span>,
+  <span class="s">"subject"</span>: <span class="s">"B-4711"</span>,
+  <span class="s">"data"</span>: { <span class="s">"bestellId"</span>: <span class="s">"B-4711"</span>, <span class="s">"restaurantId"</span>: <span class="s">"R-12"</span>, <span class="s">"total"</span>: <span class="n">34.50</span> }
+}</code></pre>
+    <div class="note falle"><b>Falle:</b> «Wir nutzen Kafka, also ist alles exactly-once.» Nein. Kafka bietet exactly-once nur für Abläufe, die von Kafka lesen und nach Kafka schreiben. Belastet dein Consumer eine Kreditkarte über eine fremde API, musst du Duplikate selbst abfangen.</div>
+    <div id="t02-schritt"></div>
+  </section>
+
+  <!-- ===== 8 · Event-getriebene Architektur ===== -->
+  <section id="events">
+    <span class="eyebrow">Schritt 8 · Event-getrieben</span>
+    <h2>Was steht im Event, und wer steuert den Ablauf?</h2>
+    <p class="prose">In einer <b>event-getriebenen Architektur</b> melden Dienste, was bei ihnen passiert ist. Andere reagieren darauf. Zwei Fragen musst du dabei entscheiden.</p>
+    <h3>Frage 1: Wie viel steht im Event?</h3>
+    <div class="grid2">
+      <figure class="diagramm card">
+        <div id="t02-bild-notif"></div>
+        <figcaption><b>Event Notification:</b> Das Event ist schlank und sagt nur «B-4711 ist neu». Braucht der Kurierservice die Adresse, fragt er synchron zurück. Damit ist er wieder zeitlich gekoppelt.</figcaption>
+      </figure>
+      <figure class="diagramm card">
+        <div id="t02-bild-ecst"></div>
+        <figcaption><b>Event-Carried State Transfer:</b> Das Event trägt alle nötigen Daten. Der Kurierservice speichert eine lokale Kopie und muss nie zurückfragen.</figcaption>
+      </figure>
+    </div>
+    <div class="stack">
+      <pre class="code" data-sprache="JSON · Notification (schlank)"><code>{
+  <span class="s">"type"</span>: <span class="s">"BestellungAufgegeben"</span>,
+  <span class="s">"id"</span>: <span class="s">"e7a1…"</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"bestellId"</span>: <span class="s">"B-4711"</span>
+  }
+}</code></pre>
+      <pre class="code" data-sprache="JSON · State Transfer (vollständig)"><code>{
+  <span class="s">"type"</span>: <span class="s">"BestellungAufgegeben"</span>,
+  <span class="s">"id"</span>: <span class="s">"e7a1…"</span>,
+  <span class="s">"data"</span>: {
+    <span class="s">"bestellId"</span>: <span class="s">"B-4711"</span>,
+    <span class="s">"restaurant"</span>: { <span class="s">"id"</span>: <span class="s">"R-12"</span>, <span class="s">"adresse"</span>: <span class="s">"Marktgasse 5, Bern"</span> },
+    <span class="s">"lieferadresse"</span>: <span class="s">"Bahnhofstrasse 1, Bern"</span>,
+    <span class="s">"positionen"</span>: [ { <span class="s">"gericht"</span>: <span class="s">"Pad Thai"</span>, <span class="s">"anzahl"</span>: <span class="n">2</span> } ],
+    <span class="s">"bereitUm"</span>: <span class="s">"2026-11-01T19:05:00Z"</span>
+  }
+}</code></pre>
+    </div>
+    <p class="prose">State Transfer entkoppelt stärker, aber die Kopien sind kurz veraltet, bis das nächste Event ankommt. Das heisst <b>eventual consistency</b> (letztlich konsistent). Mehr dazu in Station 4.</p>
+    <h3>Frage 2: Wer steuert einen Ablauf über mehrere Dienste?</h3>
+    <div class="grid2">
+      <figure class="diagramm card">
+        <div id="t02-bild-choreo"></div>
+        <figcaption><b>Choreografie:</b> Jeder Dienst reagiert auf Events und veröffentlicht eigene. Kein Dienst kennt den ganzen Ablauf. Wie Tänzer, die auf die Musik hören, ohne Dirigent.</figcaption>
+      </figure>
+      <figure class="diagramm card">
+        <div id="t02-bild-orch"></div>
+        <figcaption><b>Orchestrierung:</b> Ein Orchestrator schickt der Reihe nach Befehle (1, 2, 3) und wertet die Antworten aus. Der Ablauf steht an einem Ort. Die Befehle können auch über eine Queue laufen.</figcaption>
+      </figure>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col"></th><th scope="col">Choreografie</th><th scope="col">Orchestrierung</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Steuerung</th><td>verteilt, jeder reagiert selbst</td><td>zentral im Orchestrator</td></tr>
+          <tr><th scope="row">Nachrichten</th><td>Events («ist passiert»)</td><td>Befehle («tu das») und Antworten</td></tr>
+          <tr><th scope="row">Kopplung</th><td>lose, neue Abonnenten ohne Änderung am Sender</td><td>Orchestrator kennt alle Beteiligten</td></tr>
+          <tr><th scope="row">Übersicht</th><td>Ablauf nirgends an einem Ort sichtbar</td><td>Ablauf in einer Datei lesbar</td></tr>
+          <tr><th scope="row">Passt für</th><td>kurze Ketten, viele unabhängige Reaktionen</td><td>lange Prozesse mit Fehlerbehandlung</td></tr>
+          <tr><th scope="row">Werkzeuge</th><td>Kafka, RabbitMQ</td><td>Camunda, Temporal, AWS Step Functions</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle:</b> Choreografie-Ketten wachsen leicht zu einem Netz, das niemand mehr versteht. Wenn du fragst «Was passiert eigentlich nach der Zahlung?» und vier Teams fragen musst, ist eine Orchestrierung oft die bessere Wahl.</div>
+  </section>
+
+  <!-- ===== 9 · API-Gateway, BFF, Service Discovery ===== -->
+  <section id="gateway">
+    <span class="eyebrow">Schritt 9 · Zugang und Adressen</span>
+    <h2>API-Gateway, Backend for Frontend und Service Discovery</h2>
+    <p class="prose">Ein <b>API-Gateway</b> ist die einzige Eingangstür für alle Clients. Wie der Empfang in einem Spital: Er prüft den Ausweis und schickt dich in die richtige Abteilung. Die Clients kennen nur das Gateway, nicht die Dienste dahinter. Typische Aufgaben:</p>
+    <ul class="prose">
+      <li><b>Routing:</b> <code>/api/bestellungen/**</code> geht an den Bestellservice, <code>/api/restaurants/**</code> an den Katalogservice.</li>
+      <li><b>Authentifizierung:</b> Token prüfen, bevor eine Anfrage ins Innere darf. Ohne gültiges Token: 401.</li>
+      <li><b>Rate Limiting:</b> höchstens so viele Anfragen pro Minute und Client, sonst 429. Schützt vor Überlast und Missbrauch.</li>
+      <li>Ausserdem oft: TLS beenden, Protokolle übersetzen, Antworten zwischenspeichern, Zugriffe protokollieren.</li>
+    </ul>
+    <p class="prose">Ein <b>Backend for Frontend (BFF)</b> ist ein eigenes kleines Backend pro Client-Art. Die Web-App will eine reichhaltige Seite, die Mobile-App eine schlanke Antwort für langsames Netz. Statt einer API, die allen ein bisschen passt, bekommt jede Client-Art ihr eigenes BFF. Meist gehört es dem Team, das auch den Client baut.</p>
+    <figure class="diagramm card">
+      <div id="t02-bild-bff"></div>
+      <figcaption>Gateway prüft das Token beim Identity-Dienst und leitet an das passende BFF weiter. Jedes BFF ruft die Dienste auf, die es braucht.</figcaption>
+    </figure>
+    <pre class="code" data-sprache="YAML · Spring Cloud Gateway (Ausschnitt)"><code><span class="k">spring</span>:
+  <span class="k">cloud</span>:
+    <span class="k">gateway</span>:
+      <span class="k">routes</span>:
+        - <span class="k">id</span>: bestellungen
+          <mark><span class="k">uri</span>: lb://bestellservice</mark>        <span class="c"># Name statt IP: Service Discovery</span>
+          <span class="k">predicates</span>:
+            - Path=/api/bestellungen/**
+          <span class="k">filters</span>:
+            - <span class="k">name</span>: RequestRateLimiter    <span class="c"># zu viele Anfragen → 429</span>
+              <span class="k">args</span>:
+                <span class="k">redis-rate-limiter.replenishRate</span>: <span class="n">10</span>
+                <span class="k">redis-rate-limiter.burstCapacity</span>: <span class="n">20</span></code></pre>
+    <h3>Service Discovery: Wo läuft der Dienst gerade?</h3>
+    <p class="prose">In der Cloud starten und stoppen Instanzen laufend. Ihre IP-Adressen ändern sich. Darum schreibt man keine Adressen fest in den Code, sondern fragt ein Verzeichnis, die <b>Service Registry</b>. Jede Instanz meldet sich beim Start dort an und wird entfernt, wenn ihr Gesundheitscheck (<span lang="en">health check</span>) scheitert.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col"></th><th scope="col">client-seitig</th><th scope="col">server-seitig</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Ablauf</th><td>Der Aufrufer fragt die Registry nach allen Adressen und wählt selbst eine Instanz aus.</td><td>Der Aufrufer ruft einen festen Namen auf. Ein Load Balancer oder die Plattform sucht die Instanz.</td></tr>
+          <tr><th scope="row">Beispiel</th><td>Netflix Eureka mit Spring Cloud LoadBalancer, Consul</td><td>Kubernetes: <code>http://zahlung</code> → Service → Pods</td></tr>
+          <tr><th scope="row">Aufwand im Code</th><td>Bibliothek im Dienst nötig</td><td>keiner, nur der Name</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Ausblick:</b> In Kubernetes (Station 3) ist Service Discovery eingebaut. Ein Service bekommt einen DNS-Namen, und Kubernetes verteilt die Aufrufe auf die passenden Pods.</div>
+    <div class="note falle"><b>Falle:</b> Gateway und BFF nicht verwechseln. Das Gateway ist <b>eines für alle</b> und kümmert sich um Querschnittsthemen wie Anmeldung und Rate Limiting. Ein BFF gibt es <b>pro Client-Art</b>, und es formt Daten für genau diesen Client.</div>
+  </section>
+
+  <!-- ===== 10 · Werkzeuge ===== -->
+  <section id="werkzeuge">
+    <span class="eyebrow">Schritt 10 · Werkzeuge</span>
+    <h2>Werkzeuge und wofür</h2>
+    <p class="prose">Diese Namen hörst du in Vorlesung und Praxis. Die Piktogramme sind dieselben wie in den Modellierungsübungen.</p>
+    <div class="card tablebox">
+      <table class="tabelle t02-wz">
+        <thead><tr><th scope="col"><span class="sr-only">Piktogramm</span></th><th scope="col">Werkzeug</th><th scope="col">Wofür</th><th scope="col">Alternativen</th></tr></thead>
+        <tbody>
+          <tr><td data-t02-pikto="service"></td><td><b>Spring Boot</b> (Spring Web)</td><td>REST-APIs in Java mit <code>@RestController</code></td><td>Express, NestJS (Node), FastAPI (Python), ASP.NET Core</td></tr>
+          <tr><td data-t02-pikto="code"></td><td><b>OpenAPI</b>, Swagger UI</td><td>API-Vertrag in YAML, daraus Doku und Client-Code</td><td>AsyncAPI für Events, RAML</td></tr>
+          <tr><td data-t02-pikto="service"></td><td><b>gRPC</b>, Protocol Buffers</td><td>schnelle interne Aufrufe, Streaming, Code aus <code>.proto</code></td><td>Apache Thrift, REST mit JSON</td></tr>
+          <tr><td data-t02-pikto="code"></td><td><b>GraphQL</b> (z. B. Apollo Server)</td><td>Client wählt Felder, eine Schnittstelle für viele Quellen</td><td>BFF mit REST</td></tr>
+          <tr><td data-t02-pikto="queue"></td><td><b>RabbitMQ</b></td><td>Message Broker mit Queues und Exchanges, Aufgaben verteilen</td><td>ActiveMQ, Amazon SQS</td></tr>
+          <tr><td data-t02-pikto="topic"></td><td><b>Apache Kafka</b></td><td>verteiltes Log, Event-Streaming, Replay</td><td>Apache Pulsar, Redpanda, Amazon Kinesis</td></tr>
+          <tr><td data-t02-pikto="gateway"></td><td><b>Kong</b>, <b>Spring Cloud Gateway</b></td><td>API-Gateway: Routing, Auth, Rate Limiting</td><td>NGINX, Traefik, AWS API Gateway</td></tr>
+          <tr><td data-t02-pikto="auth"></td><td><b>Keycloak</b></td><td>Identity Provider: Login, Token nach OAuth 2.0 und OpenID Connect</td><td>Auth0, Microsoft Entra ID</td></tr>
+          <tr><td data-t02-pikto="config"></td><td><b>Consul</b>, <b>Eureka</b></td><td>Service Registry für Service Discovery</td><td>Kubernetes Service (DNS), etcd</td></tr>
+          <tr><td data-t02-pikto="function"></td><td><b>Camunda</b>, <b>Temporal</b></td><td>Orchestrierung langer Abläufe über mehrere Dienste</td><td>AWS Step Functions, eigener Orchestrator</td></tr>
+          <tr><td data-t02-pikto="monitor"></td><td><b>OpenTelemetry</b>, <b>Jaeger</b></td><td>einen Aufruf über alle Dienste verfolgen (Tracing)</td><td>Zipkin, Grafana Tempo</td></tr>
+          <tr><td data-t02-pikto="client"></td><td><b>curl</b>, <b>Postman</b></td><td>HTTP-APIs von Hand ausprobieren</td><td>HTTPie, Bruno, grpcurl für gRPC</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 11 · Modellieren ===== -->
+  <section id="modellieren">
+    <span class="eyebrow">Schritt 11 · Modellieren</span>
+    <h2>Vom Text zur Architektur</h2>
+    <p class="prose">Sechs Übungen mit steigender Schwierigkeit. In den ersten drei liegen die Bausteine schon da, du verbindest nur. Ab Übung 4 wählst du auch die Bausteine selbst, und die Liste enthält Ablenker. So gehst du vor: Verbindungsart wählen, dann Start antippen, dann Ziel antippen. Unter der Fläche steht dieselbe Verbindung als Text.</p>
+    <div class="note tipp"><b>Tipp:</b> Lies jeden Satz einzeln und frag: Wer tut etwas? Mit wem? Wartet er? Die Signalwort-Tabelle aus Schritt 3 hilft.</div>
+    <div id="t02-mod-1"></div>
+    <div id="t02-mod-2"></div>
+    <div id="t02-mod-3"></div>
+    <div id="t02-mod-4"></div>
+    <div id="t02-mod-5"></div>
+    <div id="t02-mod-6"></div>
+  </section>
+
+  <!-- ===== 12 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 12 · Üben</span>
+    <h2>Weitere Übungen</h2>
+    <div class="card stack">
+      <h3>Synchron oder asynchron?</h3>
+      <p class="hint">Frag dich jedes Mal: Wartet jemand auf die Antwort? Muss der Empfänger in diesem Moment laufen?</p>
+      <div id="t02-sortierer-1"></div>
+    </div>
+    <h3>Welches Protokoll passt?</h3>
+    <div id="t02-auswahl-1"></div>
+    <div id="t02-auswahl-2"></div>
+    <div id="t02-auswahl-3"></div>
+    <div id="t02-auswahl-4"></div>
+    <div id="t02-wf"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Food-Delivery: vom Text zur Architektur</h2>
+    <p class="prose">Drück auf «Abspielen». Der Film löst die Aufgabe aus Übung 5 Schritt für Schritt und begründet jede Verbindungsart. Gelb leuchtet das Signalwort im Text, im Bild ist das Neue hervorgehoben. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t02-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t02-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Synchron</b> = der Aufrufer wartet, beide müssen gleichzeitig laufen (REST, gRPC). <b>Asynchron</b> = Nachricht an einen Broker, der Empfänger verarbeitet später.</li>
+      <li><b>REST:</b> Ressourcen als Nomen, Aktion im HTTP-Verb, Ergebnis im Statuscode. GET, PUT, DELETE sind idempotent, POST nicht. 401 = nicht angemeldet, 403 = nicht berechtigt.</li>
+      <li><b>gRPC</b> für schnelle interne Aufrufe und Streaming, <b>REST</b> für öffentliche APIs, <b>GraphQL</b>, wenn der Client die Felder wählen soll.</li>
+      <li><b>Queue</b> = genau ein Empfänger pro Nachricht, <b>Topic</b> = jeder Abonnent bekommt eine Kopie. Kafka ist ein Log mit Partitionen, Consumer Groups und Retention.</li>
+      <li><b>At-least-once</b> plus <b>idempotenter Consumer</b> (Event-ID merken) ist der Standard gegen verlorene und doppelte Nachrichten.</li>
+      <li>Beim Modellieren liefern Substantive die Bausteine und Verben die Verbindungsart: «fragt» = synchron, «veröffentlicht», «abonniert» = asynchron, «speichert» = Daten.</li>
+    </ul>
+    <footer>AVSW · Thema 2. Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+
+  /* ---------- Piktogramme in statischem HTML ---------- */
+  document.querySelectorAll("[data-t02-pikto]").forEach((el) => {
+    el.innerHTML = L.piktogramm(el.getAttribute("data-t02-pikto"));
+  });
+
+  /* ---------- Hilfsfunktionen für Architektur-Bilder ---------- */
+  const PK = (art) => L.piktogramm(art).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+  const ARTEN = { sync: "synchron (Request/Response)", async: "asynchron (Nachricht/Event)", daten: "liest/schreibt Daten" };
+  let bildNr = 0;
+
+  function randPunkt(k, zx, zy, bw, bh) {
+    const dx = zx - k.x, dy = zy - k.y;
+    if (!dx && !dy) return [k.x, k.y];
+    const sx = dx ? (bw / 2 + 3) / Math.abs(dx) : Infinity;
+    const sy = dy ? (bh / 2 + 3) / Math.abs(dy) : Infinity;
+    const s = Math.min(sx, sy);
+    return [k.x + dx * s, k.y + dy * s];
+  }
+
+  // cfg: { w, h, titel, knoten: [{ id, x, y, art, name ("a|b" = zwei Zeilen) }], kanten: [{ von, nach, art, t }], neu: [id oder "von>nach"] }
+  function bild(cfg) {
+    const id = "t02-b" + (++bildNr);
+    const BW = cfg.bw || 96, BH = cfg.bh || 58;
+    const neu = cfg.neu || [];
+    const nach = {};
+    cfg.knoten.forEach((k) => { nach[k.id] = k; });
+    let s = '<svg class="t02-bild" viewBox="0 0 ' + cfg.w + " " + cfg.h + '" role="img" aria-labelledby="' + id + '-t"><title id="' + id + '-t">' + cfg.titel + "</title><defs>";
+    ["sync", "async", "daten", "falsch"].forEach((a) => {
+      s += '<marker id="' + id + "-" + a + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="t02-pf-' + a + '"/></marker>';
+    });
+    s += "</defs>";
+    let labels = "";
+    (cfg.kanten || []).forEach((e) => {
+      const a = nach[e.von], b = nach[e.nach];
+      if (!a || !b) return;
+      let [x1, y1] = randPunkt(a, b.x, b.y, BW, BH);
+      let [x2, y2] = randPunkt(b, a.x, a.y, BW, BH);
+      if ((cfg.kanten || []).some((w) => w !== e && w.von === e.nach && w.nach === e.von)) {
+        const l = Math.hypot(x2 - x1, y2 - y1) || 1;
+        const ox = (-(y2 - y1) / l) * 5, oy = ((x2 - x1) / l) * 5;
+        x1 += ox; y1 += oy; x2 += ox; y2 += oy;
+      }
+      const istNeu = neu.indexOf(e.von + ">" + e.nach) >= 0;
+      s += '<line class="t02-e t02-e-' + e.art + (istNeu ? " t02-neu" : "") + '" x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" marker-end="url(#' + id + "-" + e.art + ')"/>';
+      if (e.t) labels += '<text class="t02-kl" x="' + ((x1 + x2) / 2 + (e.dx || 0)).toFixed(1) + '" y="' + ((y1 + y2) / 2 + 4).toFixed(1) + '" text-anchor="' + (e.dx ? "start" : "middle") + '">' + e.t + "</text>";
+    });
+    cfg.knoten.forEach((k) => {
+      const zeilen = k.name.split("|");
+      s += '<g class="t02-k' + (neu.indexOf(k.id) >= 0 ? " t02-neu" : "") + (k.weg ? " t02-weg" : "") + '" transform="translate(' + (k.x - BW / 2) + "," + (k.y - BH / 2) + ')">';
+      s += '<rect class="t02-kbox" width="' + BW + '" height="' + BH + '" rx="10"/>';
+      s += '<g class="t02-pk" transform="translate(' + (BW / 2 - 10) + ',6) scale(.8333)">' + PK(k.art) + "</g>";
+      if (zeilen.length === 1) s += '<text class="t02-kt" x="' + BW / 2 + '" y="' + (BH - 12) + '" text-anchor="middle">' + zeilen[0] + "</text>";
+      else s += '<text class="t02-kt" x="' + BW / 2 + '" y="' + (BH - 19) + '" text-anchor="middle">' + zeilen[0] + '</text><text class="t02-kt" x="' + BW / 2 + '" y="' + (BH - 5) + '" text-anchor="middle">' + zeilen[1] + "</text>";
+      s += "</g>";
+    });
+    return s + labels + "</svg>";
+  }
+
+  function legende(arten) {
+    return '<div class="t02-leg">' + (arten || ["sync", "async", "daten"]).map((a) =>
+      '<span><svg viewBox="0 0 34 10" aria-hidden="true"><line class="t02-e t02-e-' + a + '" x1="2" y1="5" x2="32" y2="5"/></svg>' + ARTEN[a] + "</span>").join("") + "</div>";
+  }
+
+  document.getElementById("t02-legende-gross").innerHTML = legende();
+
+  /* ---------- Schritt 0: Sortierer Befehl / Event / Abfrage ---------- */
+  L.sortierer("#t02-sortierer-0", {
+    kategorien: ["Befehl", "Event", "Abfrage"],
+    elemente: [
+      { html: "«BestelleEssen»", kategorie: "Befehl", erklaerung: "Imperativ: Der Sender will, dass etwas passiert. Der Empfänger darf ablehnen." },
+      { html: "«BestellungAufgegeben»", kategorie: "Event", erklaerung: "Vergangenheit: Es ist schon passiert. Ein Event kann man nicht ablehnen, nur darauf reagieren." },
+      { html: "«Wie ist der Status von B-4711?»", kategorie: "Abfrage", erklaerung: "Eine Frage, die nichts verändert." },
+      { html: "«ZahlungFehlgeschlagen»", kategorie: "Event", erklaerung: "Auch ein Fehler, der passiert ist, ist ein Event." },
+      { html: "«StorniereBestellung»", kategorie: "Befehl", erklaerung: "Aufforderung an den Bestellservice, etwas zu tun." },
+      { html: "<code>GET /restaurants?ort=Bern</code>", kategorie: "Abfrage", erklaerung: "GET liest nur. Das ist eine Abfrage." },
+      { html: "«KurierZugewiesen»", kategorie: "Event", erklaerung: "Vergangenheitsform: Der Kurierservice meldet, was er getan hat." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper ---------- */
+  const SK = {
+    app: { id: "app", x: 70, y: 30, art: "mobile", name: "Mobile App" },
+    best: { id: "best", x: 70, y: 135, art: "service", name: "Bestell-|service" },
+    zahl: { id: "zahl", x: 250, y: 135, art: "service", name: "Zahlungs-|service" },
+    db: { id: "db", x: 54, y: 240, art: "db", name: "Bestell-DB" },
+    broker: { id: "broker", x: 200, y: 240, art: "topic", name: "Broker" },
+    kueche: { id: "kueche", x: 200, y: 340, art: "service", name: "Küche" }
+  };
+  const SE = [
+    { von: "app", nach: "best", art: "sync", link: "s-best", text: "App → Bestellservice" },
+    { von: "best", nach: "zahl", art: "sync", link: "s-zahl", text: "Bestellservice → Zahlungsservice" },
+    { von: "best", nach: "db", art: "daten", link: "s-db", text: "Bestellservice → Bestell-DB" },
+    { von: "best", nach: "broker", art: "async", link: "s-evt", text: "Bestellservice → Broker" },
+    { von: "broker", nach: "kueche", art: "async", link: "s-kueche", text: "Broker → Küche" }
+  ];
+  const SKN = [["app", "best"], ["zahl"], ["db"], ["broker"], ["kueche"]];
+  function stepBild(n, schluss) {
+    const ids = [].concat.apply([], SKN.slice(0, n + 1));
+    const kanten = SE.slice(0, n + 1);
+    const neuK = schluss ? [] : [kanten[n].von + ">" + kanten[n].nach].concat(SKN[n].filter((x) => x !== "app"));
+    const svg = bild({ w: 320, h: 372, titel: "Architektur nach Schritt " + (n + 1), knoten: ids.map((i) => SK[i]), kanten: kanten, neu: neuK });
+    const liste = '<ul class="t02-vl">' + kanten.map((e) => '<li><span data-link="' + e.link + '">' + e.text + '</span> <span class="t02-art">· ' + ARTEN[e.art] + "</span></li>").join("") + "</ul>";
+    return '<div class="t02-sx">' + svg + liste + "</div>";
+  }
+  L.stepper("#t02-stepper", {
+    titel: "Lea bestellt eine Pizza",
+    text: 'Lea <span data-link="s-best">bestellt in der App</span> eine Pizza und wartet auf die Bestätigung. Der Bestellservice <span data-link="s-zahl">fragt den Zahlungsservice und wartet auf die Antwort</span>. Dann <span data-link="s-db">speichert er die Bestellung</span> und <span data-link="s-evt">veröffentlicht das Event «BestellungAufgegeben»</span>. <span data-link="s-kueche">Die Küche reagiert darauf, sobald sie Zeit hat</span>.',
+    schritte: [
+      { html: stepBild(0), warum: "«bestellt in der App … und wartet auf die Bestätigung»: Lea tippt auf «Bestellen» und sieht einen Ladekreis. Das ist Request/Response, also synchron. Der Pfeil zeigt vom Aufrufer zum Aufgerufenen." },
+      { html: stepBild(1), warum: "«fragt … und wartet auf die Antwort» ist das stärkste Signalwort für synchron. Ohne gedeckte Karte gibt es keine Bestellung. Der Bestellservice braucht die Antwort, bevor er weitermacht." },
+      { html: stepBild(2), warum: "«speichert» heisst Datenzugriff. Die Bestell-DB gehört nur dem Bestellservice (database per service). Darum gepunktet." },
+      { html: stepBild(3), warum: "«veröffentlicht das Event»: Der Bestellservice übergibt dem Broker und ist fertig. Er weiss nicht einmal, wer zuhört. Asynchron, gestrichelt." },
+      { html: stepBild(4), warum: "«reagiert darauf, sobald sie Zeit hat»: Die Küche bekommt das Event vom Broker, vielleicht erst Minuten später. Auch dieser Pfeil ist asynchron." },
+      { html: stepBild(4, true), warum: "Prüfe die zeitliche Kopplung: Fällt der Zahlungsservice aus, scheitert jede Bestellung (synchron). Fällt die Küche fünf Minuten aus, merkt Lea nichts. Die Events warten im Broker (asynchron)." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Queue und Topic ---------- */
+  (function () {
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.getElementById("t02-qt");
+    const erkl = document.getElementById("t02-qt-erkl");
+    const log = document.getElementById("t02-qt-log");
+    const bSenden = document.getElementById("t02-qt-senden");
+    const cOffline = document.getElementById("t02-qt-offline");
+    const tOffline = document.getElementById("t02-qt-offline-text");
+    const bReset = document.getElementById("t02-qt-reset");
+    const modusKnoepfe = Array.prototype.slice.call(document.querySelectorAll("[data-t02-modus]"));
+    const ruhig = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const NAMEN = {
+      queue: { broker: ["Queue", "«kochauftraege»"], emp: [["Worker 1", ""], ["Worker 2", ""], ["Worker 3", ""]] },
+      topic: { broker: ["Topic", "«bestellungen»"], emp: [["Küche", ""], ["Kurier", ""], ["E-Mail-Dienst", ""]] }
+    };
+    const EY = [12, 85, 158];
+    let modus = "queue", nr = 0, zaehler = [0, 0, 0], wartend = 0, rr = 0;
+
+    function el(tag, attr, text) {
+      const e = document.createElementNS(NS, tag);
+      Object.keys(attr || {}).forEach((k) => e.setAttribute(k, attr[k]));
+      if (text !== undefined) e.textContent = text;
+      return e;
+    }
+    // Grundbild
+    svg.appendChild(el("line", { class: "t02-qlinie", x1: 80, y1: 105, x2: 112, y2: 105 }));
+    EY.forEach((y) => svg.appendChild(el("line", { class: "t02-qlinie", x1: 208, y1: 105, x2: 230, y2: y + 21 })));
+    const prod = el("g", {});
+    prod.appendChild(el("rect", { class: "t02-qbox", x: 6, y: 83, width: 74, height: 44, rx: 8 }));
+    prod.appendChild(el("text", { class: "t02-qname", x: 43, y: 102, "text-anchor": "middle" }, "Bestell-"));
+    prod.appendChild(el("text", { class: "t02-qname", x: 43, y: 116, "text-anchor": "middle" }, "service"));
+    svg.appendChild(prod);
+    svg.appendChild(el("rect", { class: "t02-qbroker", x: 112, y: 76, width: 96, height: 58, rx: 10 }));
+    const bT1 = el("text", { class: "t02-qname", x: 160, y: 100, "text-anchor": "middle" }, "");
+    const bT2 = el("text", { class: "t02-qzahl", x: 160, y: 115, "text-anchor": "middle" }, "");
+    const bWartet = el("text", { class: "t02-qwartet", x: 160, y: 150, "text-anchor": "middle" }, "");
+    svg.append(bT1, bT2, bWartet);
+    const emp = EY.map((y) => {
+      const g = el("g", {});
+      g.appendChild(el("rect", { class: "t02-qbox", x: 230, y: y, width: 88, height: 42, rx: 8 }));
+      const n = el("text", { class: "t02-qname", x: 274, y: y + 18, "text-anchor": "middle" }, "");
+      const z = el("text", { class: "t02-qzahl", x: 274, y: y + 34, "text-anchor": "middle" }, "");
+      g.append(n, z);
+      svg.appendChild(g);
+      return { g: g, n: n, z: z, y: y };
+    });
+    const ebene = el("g", {});
+    svg.appendChild(ebene);
+
+    function anzeigen() {
+      const N = NAMEN[modus];
+      bT1.textContent = N.broker[0];
+      bT2.textContent = N.broker[1];
+      emp.forEach((e, i) => {
+        const off = cOffline.checked && i === 1;
+        e.n.textContent = N.emp[i][0];
+        e.z.textContent = off ? "offline" : zaehler[i] + " erhalten";
+        e.g.setAttribute("class", off ? "t02-qoff" : "");
+      });
+      bWartet.textContent = wartend ? wartend + " warten auf «" + N.emp[1][0] + "»" : "";
+      tOffline.textContent = N.emp[1][0] + " ist offline";
+      erkl.innerHTML = modus === "queue"
+        ? "<b>Point-to-Point:</b> Jede Nachricht landet bei genau einem Worker. Die Worker teilen sich die Arbeit (competing consumers)."
+        : "<b>Publish/Subscribe:</b> Jeder Abonnent bekommt eine eigene Kopie. Der Bestellservice weiss nicht, wer zuhört.";
+    }
+    function punkt(n, x, y) {
+      const g = el("g", { class: "t02-msg" });
+      g.appendChild(el("circle", { cx: 0, cy: 0, r: 9 }));
+      g.appendChild(el("text", { x: 0, y: 3.5, "text-anchor": "middle" }, String(n)));
+      g.style.transform = "translate(" + x + "px," + y + "px)";
+      ebene.appendChild(g);
+      return g;
+    }
+    function fahren(g, x, y, fertig) {
+      if (ruhig) { g.style.transform = "translate(" + x + "px," + y + "px)"; fertig(); return; }
+      g.getBoundingClientRect();
+      requestAnimationFrame(() => {
+        g.style.transform = "translate(" + x + "px," + y + "px)";
+        setTimeout(fertig, 580);
+      });
+    }
+    function zustellen(i, n) {
+      const e = emp[i];
+      const g = punkt(n, 160, 105);
+      fahren(g, 230, e.y + 21, () => {
+        g.remove();
+        zaehler[i]++;
+        e.g.classList.add("t02-qhit");
+        setTimeout(() => e.g.classList.remove("t02-qhit"), 500);
+        anzeigen();
+      });
+    }
+    function senden() {
+      nr++;
+      const n = nr;
+      const g = punkt(n, 80, 105);
+      fahren(g, 160, 105, () => {
+        g.remove();
+        const N = NAMEN[modus];
+        if (modus === "queue") {
+          let i = rr % 3;
+          if (cOffline.checked && i === 1) i = 2;
+          rr = i + 1;
+          zustellen(i, n);
+          log.textContent = "Nachricht " + n + " → nur " + N.emp[i][0] + ". Die anderen bekommen sie nicht." + (cOffline.checked ? " Worker 2 ist offline, die anderen übernehmen seine Arbeit." : "");
+        } else {
+          [0, 1, 2].forEach((i) => {
+            if (cOffline.checked && i === 1) wartend++;
+            else zustellen(i, n);
+          });
+          log.textContent = "Nachricht " + n + " → Kopie an jeden Abonnenten." + (cOffline.checked ? " Die Kopie für «" + N.emp[1][0] + "» wartet im Broker." : "");
+          anzeigen();
+        }
+      });
+    }
+    function reset() {
+      ebene.innerHTML = "";
+      nr = 0; zaehler = [0, 0, 0]; wartend = 0; rr = 0;
+      cOffline.checked = false;
+      log.textContent = "Drück auf «Nachricht senden». Sende mehrere Nachrichten und vergleiche die Zähler.";
+      anzeigen();
+    }
+    bSenden.addEventListener("click", senden);
+    bReset.addEventListener("click", reset);
+    cOffline.addEventListener("change", () => {
+      if (!cOffline.checked && wartend > 0) {
+        const k = wartend;
+        for (let j = 0; j < k; j++) zustellen(1, "+");
+        wartend = 0;
+        log.textContent = "«" + NAMEN[modus].emp[1][0] + "» ist wieder online. Der Broker liefert " + k + (k > 1 ? " zurückgehaltene Nachrichten" : " zurückgehaltene Nachricht") + " nach.";
+      } else if (cOffline.checked) {
+        log.textContent = "«" + NAMEN[modus].emp[1][0] + "» ist jetzt offline. Sende weitere Nachrichten.";
+      }
+      anzeigen();
+    });
+    modusKnoepfe.forEach((k) => k.addEventListener("click", () => {
+      modus = k.getAttribute("data-t02-modus");
+      modusKnoepfe.forEach((x) => { const an = x === k; x.classList.toggle("on", an); x.setAttribute("aria-pressed", String(an)); });
+      reset();
+    }));
+    anzeigen();
+  })();
+
+  /* ---------- Schritt 7: Schritt-Aufgabe Idempotenz ---------- */
+  L.schrittAufgabe("#t02-schritt", {
+    titel: "Doppelte Belastung verhindern",
+    aufgabe: "<p>Der Zahlungsservice liest «BestellungAufgegeben» aus Kafka (at-least-once) und belastet die Karte über eine externe Zahlungs-API. Nach einem Absturz kommt dasselbe Event ein zweites Mal. Wie verhinderst du, dass Lea zweimal zahlt? Überlege zuerst selbst, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "Ursache: Verarbeitet → <b>Absturz</b> → Offset nicht bestätigt → Kafka liefert nochmals.", warum: "At-least-once bestätigt erst nach der Verarbeitung. Stürzt der Consumer dazwischen ab, weiss Kafka nicht, dass das Event schon erledigt ist." },
+      { html: "Jedes Event trägt eine eindeutige <code>id</code>.", warum: "Ohne ID kann der Consumer zwei gleiche Bestellungen nicht von einem Duplikat unterscheiden." },
+      { html: "Tabelle <code>verarbeitete_events(id PRIMARY KEY)</code> in der Datenbank des Zahlungsservice", warum: "Der Primärschlüssel verhindert, dass dieselbe ID zweimal eingetragen wird. Die Prüfung ist damit auch bei parallelen Consumern sicher." },
+      { html: "Vor der Belastung: ID schon da? → überspringen. Sonst belasten, die Event-ID als Idempotenz-Schlüssel an die Zahlungs-API geben und die ID eintragen.", warum: "Zwischen Belastung und Eintrag kann der Dienst immer noch abstürzen. Darum gibt er die Event-ID auch der Zahlungs-API mit: Viele Zahlungs-APIs erkennen so eine doppelte Belastung selbst." },
+      { html: "Ergebnis: <b>at-least-once + idempotenter Consumer</b> = wirkt wie genau einmal", warum: "Die Nachricht geht nie verloren, und ein Duplikat richtet keinen Schaden an. Genau das brauchst du bei Geld." }
+    ]
+  });
+
+  /* ---------- Schritt 8: Bilder Events ---------- */
+  document.getElementById("t02-bild-notif").innerHTML = bild({
+    w: 320, h: 180, titel: "Event Notification: Bestellservice veröffentlicht schlankes Event, Kurierservice fragt synchron die Details nach",
+    knoten: [
+      { id: "best", x: 54, y: 32, art: "service", name: "Bestell-|service" },
+      { id: "broker", x: 160, y: 146, art: "topic", name: "Broker" },
+      { id: "kurier", x: 266, y: 32, art: "service", name: "Kurier-|service" }
+    ],
+    kanten: [
+      { von: "best", nach: "broker", art: "async", t: "B-4711 neu" },
+      { von: "broker", nach: "kurier", art: "async" },
+      { von: "kurier", nach: "best", art: "sync", t: "Adresse?" }
+    ]
+  }) + legende(["sync", "async"]);
+  document.getElementById("t02-bild-ecst").innerHTML = bild({
+    w: 320, h: 180, titel: "Event-Carried State Transfer: Kurierservice speichert die Daten aus dem Event in seiner eigenen Datenbank",
+    knoten: [
+      { id: "best", x: 54, y: 32, art: "service", name: "Bestell-|service" },
+      { id: "broker", x: 160, y: 146, art: "topic", name: "Broker" },
+      { id: "kurier", x: 266, y: 32, art: "service", name: "Kurier-|service" },
+      { id: "kdb", x: 266, y: 146, art: "db", name: "Kurier-DB" }
+    ],
+    kanten: [
+      { von: "best", nach: "broker", art: "async", t: "alle Daten" },
+      { von: "broker", nach: "kurier", art: "async" },
+      { von: "kurier", nach: "kdb", art: "daten", t: "Kopie", dx: 6 }
+    ]
+  }) + legende(["async", "daten"]);
+  document.getElementById("t02-bild-choreo").innerHTML = bild({
+    w: 320, h: 250, titel: "Choreografie: Bestellservice, Zahlung, Küche und Kurier kommunizieren nur über Events auf dem Broker",
+    knoten: [
+      { id: "best", x: 54, y: 32, art: "service", name: "Bestell-|service" },
+      { id: "broker", x: 160, y: 125, art: "topic", name: "Broker" },
+      { id: "zahl", x: 266, y: 32, art: "service", name: "Zahlung" },
+      { id: "kueche", x: 54, y: 218, art: "service", name: "Küche" },
+      { id: "kurier", x: 266, y: 218, art: "service", name: "Kurier" }
+    ],
+    kanten: [
+      { von: "best", nach: "broker", art: "async" },
+      { von: "broker", nach: "zahl", art: "async" },
+      { von: "zahl", nach: "broker", art: "async" },
+      { von: "broker", nach: "kueche", art: "async" },
+      { von: "broker", nach: "kurier", art: "async" }
+    ]
+  }) + legende(["async"]);
+  document.getElementById("t02-bild-orch").innerHTML = bild({
+    w: 320, h: 214, titel: "Orchestrierung: Ein Orchestrator ruft Zahlung, Küche und Kurier der Reihe nach auf",
+    knoten: [
+      { id: "orch", x: 160, y: 40, art: "function", name: "Orchestrator" },
+      { id: "zahl", x: 54, y: 175, art: "service", name: "Zahlung" },
+      { id: "kueche", x: 160, y: 175, art: "service", name: "Küche" },
+      { id: "kurier", x: 266, y: 175, art: "service", name: "Kurier" }
+    ],
+    kanten: [
+      { von: "orch", nach: "zahl", art: "sync", t: "1" },
+      { von: "orch", nach: "kueche", art: "sync", t: "2" },
+      { von: "orch", nach: "kurier", art: "sync", t: "3" }
+    ]
+  }) + legende(["sync"]);
+
+  /* ---------- Schritt 9: Gateway und BFF ---------- */
+  document.getElementById("t02-bild-bff").innerHTML = bild({
+    w: 320, h: 344, titel: "Web-App und Mobile-App rufen das API-Gateway auf. Das Gateway prüft beim Identity-Dienst und leitet an Web-BFF oder Mobile-BFF weiter. Die BFFs rufen Katalog- und Bestellservice auf.",
+    knoten: [
+      { id: "web", x: 70, y: 30, art: "client", name: "Web-App" },
+      { id: "mob", x: 250, y: 30, art: "mobile", name: "Mobile-App" },
+      { id: "gw", x: 160, y: 120, art: "gateway", name: "API-Gateway" },
+      { id: "idp", x: 270, y: 120, art: "auth", name: "Identity" },
+      { id: "wb", x: 70, y: 215, art: "service", name: "Web-BFF" },
+      { id: "mb", x: 250, y: 215, art: "service", name: "Mobile-BFF" },
+      { id: "kat", x: 70, y: 310, art: "service", name: "Katalog" },
+      { id: "best", x: 210, y: 310, art: "service", name: "Bestellung" }
+    ],
+    kanten: [
+      { von: "web", nach: "gw", art: "sync" },
+      { von: "mob", nach: "gw", art: "sync" },
+      { von: "gw", nach: "idp", art: "sync" },
+      { von: "gw", nach: "wb", art: "sync" },
+      { von: "gw", nach: "mb", art: "sync" },
+      { von: "wb", nach: "kat", art: "sync" },
+      { von: "wb", nach: "best", art: "sync" },
+      { von: "mb", nach: "best", art: "sync" }
+    ]
+  }) + legende(["sync"]);
+
+  /* ---------- Schritt 11: Modellierungsübungen ---------- */
+
+  // 1 · vorgegeben: Queue oder Topic
+  L.modellieren("#t02-mod-1", {
+    titel: "Übung 1 · Queue oder Topic? (nur verbinden)",
+    aufgabe: '<p>Der <span data-baustein="best">Bestellservice</span> stellt für jede Bestellung einen Druckauftrag in die <span data-baustein="q">Queue «etiketten»</span>. Zwei Druck-Worker, <span data-baustein="w1">Worker 1</span> und <span data-baustein="w2">Worker 2</span>, holen die Aufträge aus der Queue ab. Jeden Auftrag bearbeitet genau einer von beiden. Ausserdem veröffentlicht der Bestellservice das Event «BestellungAufgegeben» auf dem <span data-baustein="t">Topic «bestellungen»</span>. Die <span data-baustein="kueche">Küche</span> und der <span data-baustein="stat">Statistikdienst</span> abonnieren das Topic. Der Statistikdienst schreibt seine Kennzahlen in die <span data-baustein="statdb">Statistik-DB</span>.</p>',
+    vorgegeben: true,
+    schichten: [
+      { id: "prod", name: "Sender" },
+      { id: "broker", name: "Broker" },
+      { id: "cons", name: "Empfänger" },
+      { id: "daten", name: "Daten" }
+    ],
+    bausteine: [
+      { id: "best", name: "Bestellservice", art: "service", schicht: "prod" },
+      { id: "q", name: "Queue «etiketten»", art: "queue", schicht: "broker" },
+      { id: "t", name: "Topic «bestellungen»", art: "topic", schicht: "broker" },
+      { id: "w1", name: "Worker 1", art: "function", schicht: "cons" },
+      { id: "w2", name: "Worker 2", art: "function", schicht: "cons" },
+      { id: "kueche", name: "Küche", art: "service", schicht: "cons" },
+      { id: "stat", name: "Statistikdienst", art: "service", schicht: "cons" },
+      { id: "statdb", name: "Statistik-DB", art: "db", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["best", "q", "t", "w1", "w2", "kueche", "stat", "statdb"],
+      verbindungen: [
+        { von: "best", nach: "q", art: "async", warum: "«stellt in die Queue»: Der Bestellservice wartet nicht, bis gedruckt ist." },
+        { von: "q", nach: "w1", art: "async", warum: "«holen die Aufträge ab»: Die Nachricht fliesst von der Queue zum Worker. Der Pfeil zeigt in Flussrichtung, auch wenn der Worker abholt." },
+        { von: "q", nach: "w2", art: "async", warum: "Beide Worker hängen an derselben Queue. Jeder Auftrag geht aber nur an einen (competing consumers)." },
+        { von: "best", nach: "t", art: "async", warum: "«veröffentlicht das Event»: Publish/Subscribe über ein Topic." },
+        { von: "t", nach: "kueche", art: "async", warum: "«abonnieren»: Die Küche bekommt eine eigene Kopie jedes Events." },
+        { von: "t", nach: "stat", art: "async", warum: "Der Statistikdienst bekommt ebenfalls eine Kopie, unabhängig von der Küche." },
+        { von: "stat", nach: "statdb", art: "daten", warum: "«schreibt in die Statistik-DB»: Datenzugriff auf den eigenen Speicher." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> «genau einer» = Queue, mehrere Interessenten mit «abonnieren» = Topic. Alle Pfeile über einen Broker sind asynchron und zeigen vom Sender zum Broker und vom Broker zum Empfänger."
+  });
+
+  // 2 · vorgegeben: Service Discovery mit eigenen Verbindungsarten
+  L.modellieren("#t02-mod-2", {
+    titel: "Übung 2 · Service Discovery (nur verbinden, eigene Verbindungsarten)",
+    aufgabe: '<p>Beim Start registriert sich jede Instanz des Zahlungsservice, <span data-baustein="za">Zahlung Instanz A</span> und <span data-baustein="zb">Zahlung Instanz B</span>, bei der <span data-baustein="reg">Service Registry</span>. Der <span data-baustein="best">Bestellservice</span> kennt keine IP-Adressen. Vor einem Aufruf fragt er die Registry nach den Adressen der Zahlungsinstanzen. Dann ruft er abwechselnd Instanz A und Instanz B direkt auf (client-seitige Discovery).</p>',
+    vorgegeben: true,
+    verbindungsarten: [
+      { id: "reg", name: "registriert sich bei" },
+      { id: "frag", name: "fragt Adresse ab bei" },
+      { id: "ruft", name: "ruft auf (synchron)" }
+    ],
+    schichten: [
+      { id: "aufrufer", name: "Aufrufer" },
+      { id: "verz", name: "Verzeichnis" },
+      { id: "inst", name: "Instanzen" }
+    ],
+    bausteine: [
+      { id: "best", name: "Bestellservice", art: "service", schicht: "aufrufer" },
+      { id: "reg", name: "Service Registry", art: "config", schicht: "verz" },
+      { id: "za", name: "Zahlung Instanz A", art: "service", schicht: "inst" },
+      { id: "zb", name: "Zahlung Instanz B", art: "service", schicht: "inst" }
+    ],
+    loesung: {
+      bausteine: ["best", "reg", "za", "zb"],
+      verbindungen: [
+        { von: "za", nach: "reg", art: "reg", warum: "«registriert sich»: Die Instanz meldet ihre Adresse beim Start selbst an." },
+        { von: "zb", nach: "reg", art: "reg", warum: "Jede Instanz registriert sich einzeln. Darum zwei Pfeile." },
+        { von: "best", nach: "reg", art: "frag", warum: "«fragt die Registry nach den Adressen»: Der Bestellservice holt die aktuelle Liste." },
+        { von: "best", nach: "za", art: "ruft", warum: "«ruft … direkt auf»: Client-seitige Discovery, der Bestellservice wählt selbst." },
+        { von: "best", nach: "zb", art: "ruft", warum: "«abwechselnd»: Der Bestellservice verteilt die Last selbst auf beide Instanzen." }
+      ]
+    },
+    erklaerung: "<b>Merke:</b> Bei client-seitiger Discovery wählt der Aufrufer die Instanz. In Kubernetes ist es server-seitig: Der Bestellservice ruft nur <code>http://zahlung</code> auf, und Kubernetes verteilt."
+  });
+
+  // 3 · vorgegeben: Gateway und BFF
+  L.modellieren("#t02-mod-3", {
+    titel: "Übung 3 · API-Gateway und Backend for Frontend (nur verbinden)",
+    aufgabe: '<p>Die <span data-baustein="web">Web-App</span> und die <span data-baustein="mob">Mobile-App</span> schicken alle Anfragen an das <span data-baustein="gw">API-Gateway</span> und warten auf die Antwort. Das Gateway fragt bei jeder Anfrage synchron den <span data-baustein="idp">Identity-Dienst</span>, ob das Token gültig ist. Anfragen der Web-App leitet es an das <span data-baustein="wb">Web-BFF</span> weiter, Anfragen der Mobile-App an das <span data-baustein="mb">Mobile-BFF</span>. Das Web-BFF ruft den <span data-baustein="kat">Katalogservice</span> und den <span data-baustein="best">Bestellservice</span> auf und baut daraus eine ganze Seite. Das Mobile-BFF ruft nur den Bestellservice auf und schickt eine schlanke Antwort. Der Bestellservice liest und schreibt seine <span data-baustein="bdb">Bestell-DB</span>.</p>',
+    vorgegeben: true,
+    schichten: [
+      { id: "client", name: "Client" },
+      { id: "zugang", name: "Zugang" },
+      { id: "bff", name: "Backend for Frontend" },
+      { id: "dienste", name: "Dienste" },
+      { id: "daten", name: "Daten" }
+    ],
+    bausteine: [
+      { id: "web", name: "Web-App", art: "client", schicht: "client" },
+      { id: "mob", name: "Mobile-App", art: "mobile", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "zugang" },
+      { id: "idp", name: "Identity-Dienst", art: "auth", schicht: "zugang" },
+      { id: "wb", name: "Web-BFF", art: "service", schicht: "bff" },
+      { id: "mb", name: "Mobile-BFF", art: "service", schicht: "bff" },
+      { id: "kat", name: "Katalogservice", art: "service", schicht: "dienste" },
+      { id: "best", name: "Bestellservice", art: "service", schicht: "dienste" },
+      { id: "bdb", name: "Bestell-DB", art: "db", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["web", "mob", "gw", "idp", "wb", "mb", "kat", "best", "bdb"],
+      verbindungen: [
+        { von: "web", nach: "gw", art: "sync", warum: "«schicken alle Anfragen an das Gateway und warten»: Request/Response." },
+        { von: "mob", nach: "gw", art: "sync", warum: "Auch die Mobile-App kennt nur das Gateway, nicht die Dienste dahinter." },
+        { von: "gw", nach: "idp", art: "sync", warum: "«fragt synchron, ob das Token gültig ist»: Ohne Antwort lässt das Gateway nichts durch." },
+        { von: "gw", nach: "wb", art: "sync", warum: "«leitet weiter»: Das Gateway routet die Web-Anfragen an ihr BFF." },
+        { von: "gw", nach: "mb", art: "sync", warum: "Mobile-Anfragen gehen an das Mobile-BFF. Jede Client-Art hat ihr eigenes Backend." },
+        { von: "wb", nach: "kat", art: "sync", warum: "«ruft auf … und baut daraus eine Seite»: Das BFF braucht beide Antworten sofort." },
+        { von: "wb", nach: "best", art: "sync", warum: "Zweiter Aufruf des Web-BFF für dieselbe Seite." },
+        { von: "mb", nach: "best", art: "sync", warum: "«ruft nur den Bestellservice auf»: Das Mobile-BFF lässt den Katalog weg." },
+        { von: "best", nach: "bdb", art: "daten", warum: "«liest und schreibt seine Bestell-DB»: Datenzugriff auf den eigenen Speicher." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> Das Gateway ist eines für alle (Token, Routing, Rate Limiting). Die BFFs gibt es pro Client-Art. Die Mobile-App ruft nie direkt das Web-BFF auf."
+  });
+
+  // 4 · frei: Signalwörter (Streaming)
+  L.modellieren("#t02-mod-4", {
+    titel: "Übung 4 · Streaming-Dienst: Signalwörter entscheiden",
+    aufgabe: '<p>Beim Start ruft die <span data-baustein="tv">Smart-TV-App</span> über das <span data-baustein="gw">API-Gateway</span> den <span data-baustein="kat">Katalogservice</span> auf und wartet auf die Liste der Filme. Der Katalogservice liest die Filmdaten aus seiner <span data-baustein="kdb">Katalog-DB</span> und legt häufig gefragte Listen in einem <span data-baustein="cache">Cache</span> ab. Startet jemand einen Film, ruft die App, wieder über das Gateway, den <span data-baustein="wg">Wiedergabeservice</span> auf. Dieser fragt sofort beim <span data-baustein="abo">Aboservice</span> nach, ob das Abo aktiv ist, und startet den Film erst nach der Antwort. Danach veröffentlicht der Wiedergabeservice das Event «FilmGestartet» auf dem <span data-baustein="broker">Event-Broker</span>, ohne auf jemanden zu warten. Der <span data-baustein="empf">Empfehlungsservice</span> abonniert diese Events, wertet sie im Hintergrund aus und speichert die Sehgewohnheiten in seiner <span data-baustein="pdb">Profil-DB</span>.</p>',
+    schichten: [
+      { id: "client", name: "Client" },
+      { id: "zugang", name: "Zugang" },
+      { id: "dienste", name: "Dienste" },
+      { id: "daten", name: "Daten und Broker" }
+    ],
+    bausteine: [
+      { id: "tv", name: "Smart-TV-App", art: "client", schicht: "client" },
+      { id: "mob", name: "Mobile-App", art: "mobile", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "zugang" },
+      { id: "lb", name: "Load Balancer", art: "lb", schicht: "zugang" },
+      { id: "kat", name: "Katalogservice", art: "service", schicht: "dienste" },
+      { id: "wg", name: "Wiedergabeservice", art: "service", schicht: "dienste" },
+      { id: "abo", name: "Aboservice", art: "service", schicht: "dienste" },
+      { id: "empf", name: "Empfehlungsservice", art: "service", schicht: "dienste" },
+      { id: "mail", name: "Mailservice", art: "service", schicht: "dienste" },
+      { id: "kdb", name: "Katalog-DB", art: "db", schicht: "daten" },
+      { id: "cache", name: "Cache", art: "cache", schicht: "daten" },
+      { id: "broker", name: "Event-Broker", art: "topic", schicht: "daten" },
+      { id: "pdb", name: "Profil-DB", art: "db", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["tv", "gw", "kat", "wg", "abo", "empf", "kdb", "cache", "broker", "pdb"],
+      verbindungen: [
+        { von: "tv", nach: "gw", art: "sync", warum: "«ruft über das Gateway … auf und wartet»: synchron." },
+        { von: "gw", nach: "kat", art: "sync", warum: "Das Gateway leitet weiter und gibt die Filmliste zurück. Die App wartet ja darauf." },
+        { von: "kat", nach: "kdb", art: "daten", warum: "«liest die Filmdaten aus seiner Katalog-DB»: Datenzugriff." },
+        { von: "kat", nach: "cache", art: "daten", warum: "«legt … in einem Cache ab»: Auch ein Cache ist ein Speicher." },
+        { von: "gw", nach: "wg", art: "sync", warum: "«ruft die App, wieder über das Gateway, den Wiedergabeservice auf»." },
+        { von: "wg", nach: "abo", art: "sync", warum: "«fragt sofort … und startet erst nach der Antwort»: Ohne aktives Abo kein Film, also synchron." },
+        { von: "wg", nach: "broker", art: "async", warum: "«veröffentlicht … ohne auf jemanden zu warten»: asynchron." },
+        { von: "broker", nach: "empf", art: "async", warum: "«abonniert … im Hintergrund»: Der Empfehlungsservice darf später verarbeiten." },
+        { von: "empf", nach: "pdb", art: "daten", warum: "«speichert die Sehgewohnheiten in seiner Profil-DB»." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> «wartet», «sofort», «erst nach der Antwort» = synchron. «ohne zu warten», «abonniert», «im Hintergrund» = asynchron. «liest», «legt ab», «speichert» = Daten. Mobile-App, Load Balancer und Mailservice stehen nicht im Text."
+  });
+
+  // 5 · frei: Food-Delivery (= Lösungsfilm)
+  L.modellieren("#t02-mod-5", {
+    titel: "Übung 5 · Food-Delivery: Bestellung, Event, Küche, Kurier, Benachrichtigung",
+    aufgabe: '<p>Kundinnen bestellen Essen in der <span data-baustein="app">Mobile App</span>. Die App ruft das <span data-baustein="gw">API-Gateway</span> auf, und das Gateway leitet die Bestellung an den <span data-baustein="best">Bestellservice</span> weiter. Der Bestellservice fragt den <span data-baustein="zahl">Zahlungsservice</span> synchron, ob die Zahlung autorisiert ist, denn ohne Zahlung gibt es keine Bestellung. Danach speichert er die Bestellung in seiner <span data-baustein="db">Bestell-DB</span> und veröffentlicht das Event «BestellungAufgegeben» auf dem <span data-baustein="broker">Message Broker</span>. Die App erhält sofort eine Bestätigung. Die <span data-baustein="kueche">Küche</span>, der <span data-baustein="kurier">Kurierservice</span> und der <span data-baustein="notif">Benachrichtigungsdienst</span> abonnieren das Event und reagieren unabhängig voneinander: Die Küche beginnt zu kochen, der Kurierservice sucht eine Fahrerin, der Benachrichtigungsdienst schickt der Kundin eine E-Mail.</p>',
+    schichten: [
+      { id: "client", name: "Client" },
+      { id: "zugang", name: "Zugang" },
+      { id: "dienste", name: "Dienste" },
+      { id: "daten", name: "Daten und Broker" },
+      { id: "abo", name: "Abonnenten" }
+    ],
+    bausteine: [
+      { id: "app", name: "Mobile App", art: "mobile", schicht: "client" },
+      { id: "web", name: "Web-Client", art: "client", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "zugang" },
+      { id: "best", name: "Bestellservice", art: "service", schicht: "dienste" },
+      { id: "zahl", name: "Zahlungsservice", art: "service", schicht: "dienste" },
+      { id: "lager", name: "Lagerservice", art: "service", schicht: "dienste" },
+      { id: "db", name: "Bestell-DB", art: "db", schicht: "daten" },
+      { id: "broker", name: "Message Broker", art: "topic", schicht: "daten" },
+      { id: "cache", name: "Cache", art: "cache", schicht: "daten" },
+      { id: "kueche", name: "Küche", art: "service", schicht: "abo" },
+      { id: "kurier", name: "Kurierservice", art: "service", schicht: "abo" },
+      { id: "notif", name: "Benachrichtigung", art: "service", schicht: "abo" }
+    ],
+    loesung: {
+      bausteine: ["app", "gw", "best", "zahl", "db", "broker", "kueche", "kurier", "notif"],
+      verbindungen: [
+        { von: "app", nach: "gw", art: "sync", warum: "«Die App ruft das API-Gateway auf»: Request/Response." },
+        { von: "gw", nach: "best", art: "sync", warum: "«leitet die Bestellung … weiter»: Das Gateway wartet auf die Antwort und gibt sie der App zurück." },
+        { von: "best", nach: "zahl", art: "sync", warum: "«fragt … synchron», «ohne Zahlung keine Bestellung»: Der Bestellservice braucht die Antwort." },
+        { von: "best", nach: "db", art: "daten", warum: "«speichert … in seiner Bestell-DB»: Datenzugriff auf den eigenen Speicher." },
+        { von: "best", nach: "broker", art: "async", warum: "«veröffentlicht das Event»: Darum bekommt die App sofort die Bestätigung, ohne auf Küche und Kurier zu warten." },
+        { von: "broker", nach: "kueche", art: "async", warum: "«abonnieren»: Die Küche bekommt eine Kopie des Events." },
+        { von: "broker", nach: "kurier", art: "async", warum: "«reagieren unabhängig voneinander»: eigene Kopie für den Kurierservice." },
+        { von: "broker", nach: "notif", art: "async", warum: "Auch der Benachrichtigungsdienst ist Abonnent. Die E-Mail an die Kundin ist keine Verbindung zur App." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> Synchron nur dort, wo eine Antwort für den nächsten Schritt nötig ist (Zahlung). Alles, was danach unabhängig passieren darf, hängt asynchron am Broker. Web-Client, Lagerservice und Cache stehen nicht im Text."
+  });
+
+  // 6 · frei: Choreografie-Kette
+  L.modellieren("#t02-mod-6", {
+    titel: "Übung 6 · Kino-Tickets als Choreografie-Kette",
+    aufgabe: '<p>Ein Kino-Ticketsystem arbeitet ohne zentrale Steuerung: Jeder Dienst reagiert nur auf Events (Choreografie). Die Kundin wählt im <span data-baustein="web">Browser</span> einen Platz. Der Browser ruft den <span data-baustein="res">Reservierungsservice</span> auf und wartet, bis der Platz reserviert ist. Dann veröffentlicht der Reservierungsservice das Event «PlatzReserviert» auf dem <span data-baustein="broker">Event-Broker</span>. Der <span data-baustein="zahl">Zahlungsservice</span> abonniert «PlatzReserviert», belastet die Karte und veröffentlicht «ZahlungErfolgt» auf demselben Broker. Der <span data-baustein="ticket">Ticketservice</span> abonniert «ZahlungErfolgt», speichert das Ticket in seiner <span data-baustein="tdb">Ticket-DB</span> und veröffentlicht «TicketAusgestellt». Der <span data-baustein="mail">Mailservice</span> abonniert «TicketAusgestellt» und schickt das Ticket per E-Mail.</p>',
+    schichten: [
+      { id: "client", name: "Client und Zugang" },
+      { id: "dienste", name: "Dienste" },
+      { id: "infra", name: "Broker und Daten" }
+    ],
+    bausteine: [
+      { id: "web", name: "Browser", art: "client", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "client" },
+      { id: "res", name: "Reservierungsservice", art: "service", schicht: "dienste" },
+      { id: "zahl", name: "Zahlungsservice", art: "service", schicht: "dienste" },
+      { id: "ticket", name: "Ticketservice", art: "service", schicht: "dienste" },
+      { id: "mail", name: "Mailservice", art: "service", schicht: "dienste" },
+      { id: "orch", name: "Saga-Orchestrator", art: "function", schicht: "dienste" },
+      { id: "broker", name: "Event-Broker", art: "topic", schicht: "infra" },
+      { id: "tdb", name: "Ticket-DB", art: "db", schicht: "infra" },
+      { id: "rdb", name: "Reservierungs-DB", art: "db", schicht: "infra" }
+    ],
+    loesung: {
+      bausteine: ["web", "res", "zahl", "ticket", "mail", "broker", "tdb"],
+      verbindungen: [
+        { von: "web", nach: "res", art: "sync", warum: "«ruft auf und wartet, bis der Platz reserviert ist»: synchron. Hier braucht die Kundin eine sofortige Zusage." },
+        { von: "res", nach: "broker", art: "async", warum: "«veröffentlicht «PlatzReserviert»»: Start der Kette." },
+        { von: "broker", nach: "zahl", art: "async", warum: "«Der Zahlungsservice abonniert «PlatzReserviert»»." },
+        { von: "zahl", nach: "broker", art: "async", warum: "«veröffentlicht «ZahlungErfolgt» auf demselben Broker»: Der Zahlungsservice ist Empfänger und Sender zugleich. Darum zwei Pfeile in entgegengesetzter Richtung." },
+        { von: "broker", nach: "ticket", art: "async", warum: "«abonniert «ZahlungErfolgt»»." },
+        { von: "ticket", nach: "tdb", art: "daten", warum: "«speichert das Ticket in seiner Ticket-DB»." },
+        { von: "ticket", nach: "broker", art: "async", warum: "«veröffentlicht «TicketAusgestellt»»: nächstes Glied der Kette." },
+        { von: "broker", nach: "mail", art: "async", warum: "«abonniert «TicketAusgestellt»»: Ende der Kette." }
+      ]
+    },
+    erklaerung: "<b>Muster Choreografie:</b> Jeder Dienst hat einen Pfeil vom Broker (abonniert) und oft einen zum Broker (veröffentlicht). Ein Saga-Orchestrator wäre falsch, denn der Text sagt «ohne zentrale Steuerung». Gateway und Reservierungs-DB nennt der Text nicht."
+  });
+
+  /* ---------- Schritt 12: Übungen ---------- */
+  L.sortierer("#t02-sortierer-1", {
+    kategorien: ["synchron", "asynchron"],
+    elemente: [
+      { html: "Der Checkout prüft den Gutscheincode und zeigt sofort «gültig» oder «ungültig».", kategorie: "synchron", erklaerung: "Die Kundin wartet auf das Ergebnis, bevor sie weiterklickt." },
+      { html: "Nach der Bestellung bekommt die Kundin irgendwann eine Bestätigungsmail.", kategorie: "asynchron", erklaerung: "«irgendwann»: Niemand wartet auf den Mailversand." },
+      { html: "Das Gateway fragt beim Identity-Dienst, ob das Token gültig ist.", kategorie: "synchron", erklaerung: "Ohne Antwort darf das Gateway die Anfrage nicht durchlassen." },
+      { html: "Der Videodienst stellt einen Umwandlungsauftrag in eine Queue. Ein Worker bearbeitet ihn in den nächsten Minuten.", kategorie: "asynchron", erklaerung: "Queue und «in den nächsten Minuten»: klassisch asynchron." },
+      { html: "Die Bank-App zeigt den aktuellen Kontostand an.", kategorie: "synchron", erklaerung: "Der Kontostand wird abgefragt und angezeigt. Die App wartet darauf." },
+      { html: "Der Lagerservice reagiert auf das Event «BestellungStorniert» und gibt die Ware frei.", kategorie: "asynchron", erklaerung: "«reagiert auf ein Event»: Der Bestellservice wartet nicht auf das Lager." },
+      { html: "gRPC-Aufruf <code>HoleStatus</code> mit Deadline 500 ms", kategorie: "synchron", erklaerung: "gRPC ist Request/Response. Die Deadline sagt, wie lange der Client höchstens wartet." },
+      { html: "Das Spitalsystem veröffentlicht «PatientEingetreten». Labor und Spitalküche abonnieren es.", kategorie: "asynchron", erklaerung: "Publish/Subscribe: Der Sender kennt die Abonnenten nicht und wartet nicht." },
+      { html: "Der Server antwortet sofort mit 202 Accepted und erstellt den Jahresbericht im Hintergrund.", kategorie: "asynchron", erklaerung: "Die eigentliche Arbeit geschieht «im Hintergrund». 202 bestätigt nur den Empfang." }
+    ]
+  });
+
+  L.auswahl("#t02-auswahl-1", {
+    frage: "Partner-Restaurants sollen ihre Speisekarte über eine öffentliche Schnittstelle pflegen. Sie arbeiten mit ganz verschiedenen Werkzeugen, manche nur mit curl. Was passt am besten?",
+    optionen: ["gRPC mit Protobuf", "REST über HTTP mit JSON und einer OpenAPI-Beschreibung", "Kafka-Topic «speisekarten»", "GraphQL-Subscription über WebSocket"],
+    richtig: 1,
+    erklaerung: "Öffentlich, viele Werkzeuge, curl: REST mit JSON versteht jeder, und die OpenAPI-Datei dient als Doku. gRPC braucht generierten Code, und Kafka gibt man Partnern nicht direkt."
+  });
+  L.auswahl("#t02-auswahl-2", {
+    frage: "Der interne Tracking-Dienst soll einem anderen internen Dienst laufend die Position der Kurierin schicken, mehrmals pro Sekunde, mit möglichst wenig Overhead. Beide sind in verschiedenen Sprachen geschrieben.",
+    optionen: ["gRPC mit Server-Streaming", "REST, jede Sekunde ein neues GET (Polling)", "E-Mail", "RabbitMQ mit Retention von 30 Tagen"],
+    richtig: 0,
+    erklaerung: "Intern, schnell, verschiedene Sprachen, laufende Daten: gRPC-Server-Streaming. Polling mit REST erzeugt viele unnötige Anfragen. RabbitMQ kennt keine Retention wie Kafka."
+  });
+  L.auswahl("#t02-auswahl-3", {
+    frage: "Ein neuer Analytics-Dienst soll ab heute auch alle Bestell-Events der letzten 14 Tage verarbeiten können, ohne dass der Bestellservice etwas nochmals senden muss.",
+    optionen: ["RabbitMQ-Queue", "Synchroner REST-Aufruf an den Analytics-Dienst", "gRPC-Unary-Aufruf", "Kafka-Topic mit Retention von mindestens 14 Tagen"],
+    richtig: 3,
+    erklaerung: "Kafka bewahrt Events bis zum Ende der Retention auf. Eine neue Consumer Group liest das Topic von vorne (Replay). Eine RabbitMQ-Queue hat bestätigte Nachrichten längst gelöscht."
+  });
+  L.auswahl("#t02-auswahl-4", {
+    frage: "Die Startseite der Mobile-App braucht von vier Diensten je nur zwei, drei Felder. Mit REST wären es vier Aufrufe mit viel überflüssigen Daten. Welche Technik löst genau dieses Problem?",
+    optionen: ["Kafka mit Consumer Groups", "Ein zusätzlicher Load Balancer", "GraphQL: Der Client fragt genau die Felder ab, die er braucht", "at-least-once Zustellung"],
+    richtig: 2,
+    erklaerung: "GraphQL verhindert Over- und Underfetching: eine Abfrage, genau die Felder. Ein Mobile-BFF wäre eine zweite gute Lösung, stand hier aber nicht zur Wahl."
+  });
+
+  L.wahrFalsch("#t02-wf", {
+    titel: "Statuscodes und Idempotenz",
+    aussagen: [
+      { html: "GET ist sicher und idempotent.", wahr: true, erklaerung: "GET liest nur und ändert nichts. Mehrmals lesen ergibt denselben Zustand." },
+      { html: "POST ist idempotent. Eine wiederholte Bestellung ändert nichts.", wahr: false, erklaerung: "Jedes POST /bestellungen legt eine neue Bestellung an. Erst ein Idempotency-Key macht den Aufruf wiederholbar." },
+      { html: "DELETE ist nicht idempotent, weil der zweite Aufruf 404 statt 204 liefert.", wahr: false, erklaerung: "Idempotenz betrifft den Zustand. Nach beiden Aufrufen ist die Ressource weg. Der andere Statuscode spielt keine Rolle." },
+      { html: "PUT ersetzt eine Ressource ganz. Zweimal dasselbe PUT ergibt denselben Zustand.", wahr: true, erklaerung: "Darum ist PUT idempotent." },
+      { html: "Nach einem erfolgreichen POST, das etwas anlegt, passt 201 Created mit einem Location-Header.", wahr: true, erklaerung: "Location zeigt auf die Adresse der neuen Ressource." },
+      { html: "401 bedeutet: Die Person ist angemeldet, hat aber keine Berechtigung.", wahr: false, erklaerung: "Das ist 403 Forbidden. 401 heisst: nicht oder ungültig angemeldet." },
+      { html: "503 Service Unavailable ist ein Fehler des Clients.", wahr: false, erklaerung: "Alle 5xx-Codes sind Fehler auf der Serverseite. Client-Fehler beginnen mit 4." },
+      { html: "Ein API-Gateway antwortet beim Rate Limiting mit 429 Too Many Requests.", wahr: true, erklaerung: "429 sagt dem Client: zu viele Anfragen, später nochmals versuchen." },
+      { html: "202 Accepted heisst: angenommen, die Verarbeitung folgt später.", wahr: true, erklaerung: "Typisch für asynchrone Verarbeitung hinter einer synchronen HTTP-Schnittstelle." }
+    ]
+  });
+
+  /* ---------- Lösungsfilm: Food-Delivery ---------- */
+  const FK = {
+    app: { id: "app", x: 160, y: 30, art: "mobile", name: "Mobile App" },
+    gw: { id: "gw", x: 160, y: 125, art: "gateway", name: "API-Gateway" },
+    best: { id: "best", x: 110, y: 220, art: "service", name: "Bestell-|service" },
+    zahl: { id: "zahl", x: 258, y: 220, art: "service", name: "Zahlungs-|service" },
+    db: { id: "db", x: 54, y: 315, art: "db", name: "Bestell-DB" },
+    broker: { id: "broker", x: 190, y: 315, art: "topic", name: "Message|Broker" },
+    kueche: { id: "kueche", x: 54, y: 410, art: "service", name: "Küche" },
+    kurier: { id: "kurier", x: 160, y: 410, art: "service", name: "Kurier-|service" },
+    notif: { id: "notif", x: 266, y: 410, art: "service", name: "Benachrich-|tigung" }
+  };
+  const FE = {
+    "app>gw": { von: "app", nach: "gw", art: "sync" },
+    "gw>best": { von: "gw", nach: "best", art: "sync" },
+    "best>zahl": { von: "best", nach: "zahl", art: "sync" },
+    "best>db": { von: "best", nach: "db", art: "daten" },
+    "best>broker": { von: "best", nach: "broker", art: "async" },
+    "broker>kueche": { von: "broker", nach: "kueche", art: "async" },
+    "broker>kurier": { von: "broker", nach: "kurier", art: "async" },
+    "broker>notif": { von: "broker", nach: "notif", art: "async" }
+  };
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  function fb(knoten, kanten, neu, text, extra) {
+    const ks = knoten.map((k) => FK[k]);
+    const es = kanten.map((k) => FE[k]);
+    if (extra) es.push(extra);
+    const svg = bild({ w: 320, h: 440, titel: "Architektur im Aufbau: " + knoten.length + " Bausteine, " + kanten.length + " Verbindungen", knoten: ks, kanten: es, neu: neu || [] });
+    return '<div class="t02-sx">' + svg + legende() + (text ? '<p class="t02-fcap">' + text + "</p>" : "") + "</div>";
+  }
+  const K1 = ["app"], K2 = K1.concat("gw"), K3 = K2.concat("best"), K4 = K3.concat("zahl"), K5 = K4.concat("db"), K6 = K5.concat("broker");
+  const K7 = K6.concat("kueche"), K8 = K7.concat("kurier"), K9 = K8.concat("notif");
+  const E1 = ["app>gw"], E2 = E1.concat("gw>best"), E3 = E2.concat("best>zahl"), E4 = E3.concat("best>db"), E5 = E4.concat("best>broker");
+  const E6 = E5.concat("broker>kueche"), E7 = E6.concat("broker>kurier"), E8 = E7.concat("broker>notif");
+  const chip = (art, name) => '<span class="t02-chip">' + L.piktogramm(art) + name + "</span>";
+
+  L.film("#t02-film", {
+    phasen: ["1 · Lesen", "2 · Bausteine", "3 · Synchron", "4 · Daten", "5 · Asynchron", "6 · Prüfen"],
+    texte: [
+      'Kundinnen bestellen Essen in der <span data-ph="app">Mobile App</span>. Die App <span data-ph="ruft">ruft das API-Gateway auf</span>, und das Gateway <span data-ph="leitet">leitet die Bestellung an den Bestellservice weiter</span>. Der Bestellservice <span data-ph="fragt">fragt den Zahlungsservice synchron</span>, ob die Zahlung autorisiert ist, denn <span data-ph="ohne">ohne Zahlung gibt es keine Bestellung</span>. Danach <span data-ph="speichert">speichert er die Bestellung in seiner Bestell-DB</span> und <span data-ph="veroeff">veröffentlicht das Event «BestellungAufgegeben» auf dem Message Broker</span>. <span data-ph="sofort">Die App erhält sofort eine Bestätigung.</span> Die <span data-ph="kueche">Küche</span>, der <span data-ph="kurier">Kurierservice</span> und der <span data-ph="notif">Benachrichtigungsdienst</span> <span data-ph="abo">abonnieren das Event und reagieren unabhängig voneinander</span>: Die Küche beginnt zu kochen, der Kurierservice sucht eine Fahrerin, der Benachrichtigungsdienst <span data-ph="mail">schickt der Kundin eine E-Mail</span>.'
+    ],
+    woerterbuch: [
+      chip("mobile", "Mobile App"),
+      chip("gateway", "API-Gateway"),
+      chip("service", "Bestellservice"),
+      chip("service", "Zahlungsservice"),
+      chip("db", "Bestell-DB"),
+      chip("topic", "Message Broker"),
+      chip("service", "Küche"),
+      chip("service", "Kurierservice"),
+      chip("service", "Benachrichtigung")
+    ],
+    beschriftung: { texte: "Die Aufgabe", woerterbuch: "Bausteine", formel: "Architektur" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So modellierst du jede solche Aufgabe: Erst alle Substantive markieren, die ein System oder einen Speicher bezeichnen. Daraus werden Bausteine. Dann die Verben lesen: Sie verraten die Verbindungsart. Zum Schluss prüfst du, ob jede Verbindung ein Signalwort im Text hat." },
+      { ph: 0, hl: ["app"], dict: 1, dh: [0], f: fb(K1, [], ["app"], "Neu: " + NW("Mobile App") + " als Client"),
+        say: "Lies den Text einmal ganz. Der erste Baustein ist der Client: die Mobile App. Hier beginnt jede Bestellung." },
+      { ph: 1, hl: ["ruft"], dict: 2, dh: [1], f: fb(K2, [], ["gw"], "Neu: " + NW("API-Gateway")),
+        say: "Die App spricht mit dem API-Gateway. Das Gateway ist die Eingangstür für alle Anfragen von aussen." },
+      { ph: 1, hl: ["leitet"], dict: 3, dh: [2], f: fb(K3, [], ["best"], "Neu: " + NW("Bestellservice")),
+        say: "Hinter dem Gateway liegt der Bestellservice. Er ist der Dienst, um den sich die ganze Geschichte dreht." },
+      { ph: 1, hl: ["fragt"], dict: 4, dh: [3], f: fb(K4, [], ["zahl"], "Neu: " + NW("Zahlungsservice")),
+        say: "Der Zahlungsservice wird gefragt, ob die Zahlung autorisiert ist. Also ist er ein eigener Baustein." },
+      { ph: 1, hl: ["speichert"], dict: 5, dh: [4], f: fb(K5, [], ["db"], "Neu: " + NW("Bestell-DB")),
+        say: "«In seiner Bestell-DB»: Der Speicher gehört dem Bestellservice. Jeder Dienst hat seine eigene Datenbank." },
+      { ph: 1, hl: ["veroeff"], dict: 6, dh: [5], f: fb(K6, [], ["broker"], "Neu: " + NW("Message Broker")),
+        say: "Der Message Broker nimmt Events an und verteilt sie. Er ist das Postamt zwischen den Diensten." },
+      { ph: 1, hl: ["kueche"], dict: 7, dh: [6], f: fb(K7, [], ["kueche"], "Neu: " + NW("Küche")),
+        say: "Jetzt die drei Empfänger. Zuerst die Küche." },
+      { ph: 1, hl: ["kurier"], dict: 8, dh: [7], f: fb(K8, [], ["kurier"], "Neu: " + NW("Kurierservice")),
+        say: "Dann der Kurierservice, der eine Fahrerin sucht." },
+      { ph: 1, hl: ["notif"], dict: 9, dh: [8], f: fb(K9, [], ["notif"], "Neu: " + NW("Benachrichtigung")),
+        say: "Und der Benachrichtigungsdienst. Damit sind alle neun Bausteine auf der Fläche." },
+      { ph: 1, hl: ["mail"], f: fb(K9, [], [], NW("Nicht im Modell: Web-Client, Cache, Lagerservice. Die E-Mail an die Kundin ist keine Verbindung zur App.")),
+        say: "Achtung, Ablenker: Ein Web-Client, ein Cache oder ein Lager kommen im Text nicht vor. Und die E-Mail geht an die Kundin, nicht an die App. Also gibt es dort keinen Pfeil." },
+      { ph: 2, hl: ["ruft"], f: fb(K9, E1, ["app>gw"], "Neu: " + NW("App → Gateway · synchron")),
+        say: "Jetzt die Verben. «Die App ruft das Gateway auf.» Die Kundin sieht einen Ladekreis und wartet. Das ist Request/Response, also synchron, ein voller Pfeil." },
+      { ph: 2, hl: ["leitet"], f: fb(K9, E2, ["gw>best"], "Neu: " + NW("Gateway → Bestellservice · synchron")),
+        say: "«Das Gateway leitet weiter.» Es wartet auf die Antwort des Bestellservice, denn es muss sie der App zurückgeben. Wieder synchron." },
+      { ph: 2, hl: ["fragt", "ohne"], f: fb(K9, E3, ["best>zahl"], "Neu: " + NW("Bestellservice → Zahlungsservice · synchron")),
+        say: "«Fragt synchron» und «ohne Zahlung keine Bestellung». Der Bestellservice braucht die Antwort, bevor er weitermacht. Eindeutig synchron." },
+      { ph: 3, hl: ["speichert"], f: fb(K9, E4, ["best>db"], "Neu: " + NW("Bestellservice → Bestell-DB · Daten")),
+        say: "«Speichert in seiner Bestell-DB» ist ein Datenzugriff. Gepunktet, vom Dienst zum Speicher." },
+      { ph: 4, hl: ["veroeff"], f: fb(K9, E5, ["best>broker"], "Neu: " + NW("Bestellservice → Broker · asynchron")),
+        say: "«Veröffentlicht das Event» ist das Signalwort für asynchron. Der Bestellservice übergibt dem Broker und ist fertig. Gestrichelter Pfeil." },
+      { ph: 4, hl: ["sofort"], f: fb(K9, E5, [], NW("Begründung: Die App wartet nur bis zum Event, nicht auf Küche und Kurier.")),
+        say: "«Die App erhält sofort eine Bestätigung.» Das bestätigt die Entscheidung: Würde der Bestellservice Küche und Kurier synchron aufrufen, müsste die App auf alle warten." },
+      { ph: 4, hl: ["abo", "kueche"], f: fb(K9, E6, ["broker>kueche"], "Neu: " + NW("Broker → Küche · asynchron")),
+        say: "«Abonnieren das Event.» Der Pfeil zeigt in Flussrichtung, vom Broker zur Küche. Asynchron." },
+      { ph: 4, hl: ["abo", "kurier"], f: fb(K9, E7, ["broker>kurier"], "Neu: " + NW("Broker → Kurierservice · asynchron")),
+        say: "Der Kurierservice bekommt eine eigene Kopie. Das ist Publish/Subscribe über ein Topic, keine Queue." },
+      { ph: 4, hl: ["abo", "notif"], f: fb(K9, E8, ["broker>notif"], "Neu: " + NW("Broker → Benachrichtigung · asynchron")),
+        say: "Ebenso der Benachrichtigungsdienst. «Unabhängig voneinander» heisst: Fällt einer aus, arbeiten die anderen weiter." },
+      { ph: 5, hl: [], f: fb(K9, E8, [], NW("Kontrolle: 9 Bausteine, 8 Verbindungen, jede mit Signalwort.")),
+        say: "Prüfen: Jede der acht Verbindungen hat ein Signalwort im Text. Drei synchrone, eine Datenverbindung, vier asynchrone." },
+      { ph: 5, hl: [], f: fb(K9, E8, [], NW("Falsch wäre: Bestellservice → Küche synchron (rot gestrichelt)."), { von: "best", nach: "kueche", art: "falsch" }),
+        say: "Typischer Fehler: ein direkter synchroner Pfeil vom Bestellservice zur Küche. Dann hinge jede Bestellung davon ab, dass die Küche gerade läuft. Genau das vermeidet der Broker." },
+      { ph: 5, hl: [], f: fb(K9, E8, [], "Das ist die Musterlösung von Übung 5."),
+        say: "Fertig. Diese Lösung kannst du oben in Übung 5 selbst legen und prüfen lassen. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t02-selbsttest", {
+    fragen: [
+      { q: "Was kennzeichnet synchrone Kommunikation?",
+        o: ["Der Sender wartet auf die Antwort, und der Empfänger muss im selben Moment laufen.", "Die Nachricht läuft immer über einen Message Broker.", "Es wird immer gRPC verwendet."], a: 0,
+        e: "Synchron heisst zeitlich gekoppelt: fragen und warten. REST und gRPC sind typische Beispiele, ein Broker gehört zu asynchron." },
+      { q: "Die App schickt <code>POST /bestellungen</code>, bekommt einen Timeout und schickt dieselbe Anfrage nochmals. Was verhindert eine doppelte Bestellung?",
+        o: ["Einen längeren Timeout einstellen", "Statt POST einfach GET verwenden", "Ein Idempotency-Key, den der Server pro Bestellung speichert"], a: 2,
+        e: "POST ist nicht idempotent. Mit dem Schlüssel erkennt der Server die Wiederholung und gibt die bestehende Bestellung zurück. GET darf nichts anlegen." },
+      { q: "Eine Queue hat drei Worker. Der Producer schickt 9 Nachrichten. Wie viele Nachrichten bearbeitet jeder Worker ungefähr?",
+        o: ["etwa 3, jede Nachricht geht an genau einen Worker", "9, jeder bekommt jede Nachricht", "0, die Nachrichten bleiben in der Queue"], a: 0,
+        e: "Point-to-Point: Jede Nachricht hat genau einen Empfänger. Die Worker teilen sich die Arbeit. «Jeder bekommt alles» wäre ein Topic." },
+      { q: "Ein Kafka-Topic hat 4 Partitionen. Die Consumer Group «kurier» hat 6 Consumer. Was passiert?",
+        o: ["Alle 6 lesen parallel und doppelt so schnell", "Kafka verteilt jede Nachricht an alle 6", "4 Consumer lesen je eine Partition, 2 sind untätig"], a: 2,
+        e: "In einer Gruppe liest jede Partition genau ein Consumer. Mehr Consumer als Partitionen bringen keine zusätzliche Parallelität." },
+      { q: "Ein Consumer arbeitet mit at-least-once. Worauf musst du achten?",
+        o: ["Nachrichten können verloren gehen", "Nachrichten können doppelt ankommen, der Consumer muss idempotent sein", "Nichts, at-least-once heisst genau einmal"], a: 1,
+        e: "At-least-once bestätigt erst nach der Verarbeitung. Bei einem Absturz dazwischen kommt die Nachricht nochmals. Mit gemerkten Event-IDs bleibt das harmlos." },
+      { q: "Ein Kurier ist angemeldet, versucht aber, die Speisekarte eines Restaurants zu ändern. Welcher Statuscode passt?",
+        o: ["403 Forbidden", "401 Unauthorized", "404 Not Found"], a: 0,
+        e: "Der Kurier ist bekannt (angemeldet), darf das aber nicht: 403. 401 wäre richtig, wenn er gar nicht oder ungültig angemeldet wäre." },
+      { q: "Der Kurierservice soll nach «BestellungAufgegeben» nie beim Bestellservice zurückfragen müssen. Welche Art Event braucht er?",
+        o: ["Event Notification mit nur der Bestell-ID", "Einen synchronen REST-Aufruf statt eines Events", "Event-Carried State Transfer mit allen nötigen Daten im Event"], a: 2,
+        e: "Trägt das Event alle Daten, speichert der Kurierservice eine lokale Kopie. Bei einer schlanken Notification müsste er synchron zurückfragen." },
+      { q: "In einem Ablauf schickt ein zentraler Dienst der Reihe nach die Befehle «belaste Karte», «koche», «liefere» und wertet jede Antwort aus. Wie heisst das?",
+        o: ["Orchestrierung", "Choreografie", "Publish/Subscribe"], a: 0,
+        e: "Ein zentraler Dienst mit Befehlen ist ein Orchestrator. Bei Choreografie reagiert jeder Dienst selbst auf Events, ohne zentrale Steuerung." },
+      { q: "Web-App und Mobile-App sollen je ein eigenes Backend bekommen, das die Daten genau für sie zusammenstellt. Wie heisst das Muster?",
+        o: ["API-Gateway", "Backend for Frontend (BFF)", "Service Registry"], a: 1,
+        e: "Ein BFF gibt es pro Client-Art. Das API-Gateway ist eines für alle und kümmert sich um Routing, Token und Rate Limiting." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
