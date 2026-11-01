@@ -166,6 +166,8 @@ Dateien: `public/lernpfad/st-spiel.css` (nach `lernpfad.css`) und `public/lernpf
 
 Regeln: Wie Baukasten Abschnitt 11. Seiteneigene Klassen mit Präfix `t<NN>-`. Farben nur aus Tokens (`--st-…` aus `st-spiel.css` oder Baukasten-Tokens). Kein `localStorage` für Inhalte, keine Server-Aufrufe.
 
+**Antworten mischen:** Auf Seiten mit `data-fach="spieltheorie"` mischt `st-spiel.js` die Optionen von `Lernpfad.selbsttest` und `Lernpfad.auswahl` fest (gleiche Reihenfolge bei jedem Laden, Schlüssel = Fragetext). Abschalten mit `mischen: false` in der Konfiguration. Antworttexte dürfen sich darum nicht auf Positionen beziehen («die erste Antwort»).
+
 ### 5.1 `S.figur(art, opts)` → HTML-Text (SVG)
 
 `art`: `papagei`, `kapitaenin`, `pirat`, `haendlerin`, `gouverneur`, `spionin`, `feldherr`, `diplomatin`, `matrose`, `buerger`.
@@ -220,7 +222,7 @@ Spielbaum mit Rückwärtsinduktion. `knoten`: `{ id, spieler, text, aeste: [{ te
 | `knoten` | `{ id: { szene, sprecher, figur, stimmung, text, karten: [{ titel, symbol, text, effekte: { id: Zahl }, ziel, lupe, bedingung }] } }`. `ziel` = nächster Knoten; `bedingung(stand)` optional (Funktion, Karte nur sichtbar, wenn wahr) |
 | `enden` | `{ id: { titel, siegel, text, konzepte: [Text] } }`; Knoten mit `ende: "id"` beenden das Szenario. Statt fester Enden darf ein Knoten `weiche(stand)` haben (Funktion → Knoten-Id) |
 
-Weitere Felder: `einleitung` (HTML über der Leiste), `zustand` (zusätzliche Startwerte im Stand, z. B. Merker), `pruefe(stand, verlauf)` (nach jeder Karte: Ende-Id oder `null`). Auf Karten: `ende` (Ende-Id statt `ziel`), `setze` (Objekt, wird in den Stand übernommen, z. B. `{ pfand: true }`), `folge`, `folgeFigur`, `folgeSprecher`, `folgeStimmung` (Antwort einer Figur nach der Wahl), `ziel` darf eine Funktion `(stand, verlauf) → Id` sein. Auf Knoten: `ort`, `figuren`, `effekte` (beim Betreten). Texte (`text`, `lupe`, Ende-`text`) dürfen Funktionen `(stand, verlauf) → HTML` sein.
+Weitere Felder: `einleitung` (HTML über der Leiste), `zustand` (zusätzliche Startwerte im Stand, z. B. Merker), `pruefe(stand, verlauf)` (nach jeder Karte: Ende-Id oder `null`). Auf Karten: `ende` (Ende-Id statt `ziel`), `setze` (Objekt oder Funktion `(stand, verlauf) → Objekt`, wird in den Stand übernommen, z. B. `{ pfand: true }`), `folge`, `folgeFigur`, `folgeSprecher`, `folgeStimmung` (Antwort einer Figur nach der Wahl), `ziel` darf eine Funktion `(stand, verlauf) → Id` sein. Auf Knoten: `ort`, `figuren`, `effekte` (beim Betreten). Texte (`text`, `lupe`, Ende-`text`) dürfen Funktionen `(stand, verlauf) → HTML` sein.
 
 Rückgabe `{ neuStarten() }`. Ereignis `lernpfad:szenario` mit `detail: { ende, stand }`.
 

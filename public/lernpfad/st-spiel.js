@@ -1185,7 +1185,7 @@
     }
     function waehle(k, ka) {
       const d = anwenden(ka.effekte || {});
-      if (ka.setze) Object.assign(stand, ka.setze);
+      if (ka.setze) Object.assign(stand, typeof ka.setze === "function" ? ka.setze(stand, verlauf) || {} : ka.setze);
       verlauf.push({ knoten: knotenId, karte: ohneTags(ka.titel) });
       zeichneLeiste(d);
       const karten = buehne.querySelector(".st-karten");
@@ -1397,6 +1397,34 @@
       });
       e.innerHTML = szene(e.getAttribute("data-st-szene"), { titel: e.getAttribute("data-st-titel") || undefined, figuren: f, unterschrift: e.getAttribute("data-st-unterschrift") || undefined });
     });
+  }
+
+  // ------------------------------------------------------------------------
+  // Selbsttest und Einzelfragen: Antworten fest gemischt (gleiche Reihenfolge bei jedem Laden),
+  // damit die richtige Antwort nicht immer an derselben Stelle steht. Nur auf Seiten mit st-spiel.js.
+  // ------------------------------------------------------------------------
+  function streuwert(t) { let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mische(optionen, richtig, schluessel) {
+    if (!Array.isArray(optionen) || optionen.length < 2 || typeof richtig !== "number") return [optionen, richtig];
+    // «Alle …»/«Keine …»-Antworten bleiben, wo sie sind: dann wird nicht gemischt
+    if (optionen.some((o) => /^(alle|keine) (der |dieser )?(oben|genannten|antworten)/i.test(ohneTags(o)))) return [optionen, richtig];
+    const r = rng(streuwert(schluessel));
+    const idx = optionen.map((_, i) => i);
+    for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); const t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    return [idx.map((i) => optionen[i]), idx.indexOf(richtig)];
+  }
+  if (document.body && document.body.getAttribute("data-fach") === "spieltheorie") {
+    const selbsttestOrig = L.selbsttest, auswahlOrig = L.auswahl;
+    if (selbsttestOrig) L.selbsttest = function (el, cfg) {
+      if (cfg && Array.isArray(cfg.fragen) && cfg.mischen !== false) {
+        cfg = Object.assign({}, cfg, { fragen: cfg.fragen.map((f) => { const [o, a] = mische(f.o, f.a, ohneTags(f.q || "")); return Object.assign({}, f, { o, a }); }) });
+      }
+      return selbsttestOrig.call(L, el, cfg);
+    };
+    if (auswahlOrig) L.auswahl = function (el, cfg) {
+      if (cfg && cfg.mischen !== false) { const [o, a] = mische(cfg.optionen, cfg.richtig, ohneTags(cfg.frage || "")); cfg = Object.assign({}, cfg, { optionen: o, richtig: a }); }
+      return auswahlOrig.call(L, el, cfg);
+    };
   }
 
   L.spiel = {
