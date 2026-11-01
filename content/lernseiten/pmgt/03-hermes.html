@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HERMES: Phasen, Rollen, Ergebnisse · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/04-projektkontext" title="Kontext: Strategie, Portfolio, Governance">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t03-», nur Farben aus :root -->
+  <style>
+    .t03-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t03-ziele li{margin-bottom:3px}
+
+    /* Ablauf als nummerierte Kette */
+    .t03-fluss{margin:0; padding:0; list-style:none; counter-reset:t03f; display:flex; flex-direction:column; gap:8px}
+    .t03-fluss > li{counter-increment:t03f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t03-fluss > li::before{content:counter(t03f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t03-fluss .hint{margin:2px 0 0}
+
+    /* Phasenmodell als Band: klassisch fünf, agil drei Phasen */
+    .t03-strahl{display:flex; flex-direction:column; gap:10px}
+    .t03-zeile{display:flex; flex-direction:column; gap:4px}
+    .t03-zeile > b{font-size:.9rem; color:var(--muted); font-weight:600}
+    .t03-kette{display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:4px}
+    .t03-ph{padding:8px 6px; border-radius:8px; background:var(--board); border-top:4px solid var(--s2); text-align:center; font-size:.9rem; font-weight:600; overflow-wrap:anywhere}
+    .t03-ph small{display:block; font-weight:400; color:var(--muted); font-size:.8rem}
+    .t03-ph.t03-rahmen{border-top-color:var(--s1)}
+    .t03-ph.t03-agil{border-top-color:var(--s4); border-top-style:dashed; grid-column:span 3}
+
+    /* Tabellenzellen mit Phasenkürzel */
+    .t03-kurz{font-weight:700; white-space:nowrap}
+
+    /* Versionen */
+    .t03-version td:first-child{font-weight:600}
+
+    /* Konzept-Ebenen-Raster (Rollen) */
+    .t03-ebenen{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(220px,100%),1fr)); gap:10px}
+    .t03-ebene{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface); min-width:0}
+    .t03-ebene b{display:block; margin-bottom:2px}
+    .t03-ebene p{margin:0; font-size:.95rem}
+
+    /* Phasen-Zeitstrahl (themeneigene Interaktion) */
+    .t03-modus{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .t03-modus .btn[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); font-weight:700}
+    .t03-stapel{display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:8px; border:1px dashed var(--line); border-radius:10px}
+    .t03-stapel:empty::before{content:"Alle Karten liegen auf dem Zeitstrahl."; color:var(--muted); font-size:.95rem; padding:4px}
+    .t03-karte, .t03-chip{display:block; text-align:left; white-space:normal; height:auto; line-height:1.3; max-width:100%; min-width:0; overflow-wrap:break-word; hyphens:auto}
+    .t03-karte{display:inline-block}
+    .t03-karte[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); box-shadow:inset 0 0 0 2px var(--accent); font-weight:600}
+    .t03-art{display:block; font-size:.78rem; color:var(--muted); font-weight:600; margin-right:4px}
+    .t03-bahnen{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(150px,100%),1fr)); gap:8px}
+    .t03-bahn{display:flex; flex-direction:column; gap:6px; padding:8px; border-radius:10px; background:var(--board); border-top:4px solid var(--s2); min-width:0}
+    .t03-bahn.t03-b-rahmen{border-top-color:var(--s1)}
+    .t03-bahn.t03-b-agil{border-top-color:var(--s4); border-top-style:dashed}
+    .t03-bahn.t03-b-laufend{grid-column:1 / -1; border-top-color:var(--s3); border-top-style:dotted}
+    .t03-bahn h4{margin:0; font-size:.95rem}
+    .t03-bahn .t03-ablegen{width:100%; font-size:.88rem; white-space:normal; height:auto}
+    .t03-inhalt{display:flex; flex-direction:column; gap:6px}
+    .t03-bahn.t03-b-laufend .t03-inhalt{flex-direction:row; flex-wrap:wrap}
+    .t03-chip{font-size:.9rem; padding:6px 8px; width:100%}
+    .t03-bahn.t03-b-laufend .t03-chip{width:auto}
+    .t03-bahn.t03-b-laufend .t03-chip .marke{float:none; margin:0 4px 0 0}
+    .t03-chip[aria-pressed="true"]{border-color:var(--accent); box-shadow:inset 0 0 0 2px var(--accent)}
+    .t03-chip.t03-ok{border-color:var(--ok); background:var(--ok-bg)}
+    .t03-chip.t03-falsch{border-color:var(--bad); background:var(--bad-bg)}
+    .t03-chip .marke{font-weight:700; float:right; margin-left:6px}
+    .t03-chip.t03-ok .marke{color:var(--ok)}
+    .t03-chip.t03-falsch .marke{color:var(--bad)}
+    .t03-meldung{margin:0; font-weight:600}
+    .t03-meldung:empty{display:none}
+    .t03-erkl{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px}
+    .t03-erkl:empty{display:none}
+    .t03-erkl li{font-size:.95rem; line-height:1.5; padding:4px 0 4px 10px; border-left:3px solid var(--line)}
+    .t03-erkl li.ok{border-left-color:var(--ok)}
+    .t03-erkl li.bad{border-left-color:var(--bad)}
+    .t03-erkl li .marke{font-weight:700}
+    .t03-erkl li.ok .marke{color:var(--ok)}
+    .t03-erkl li.bad .marke{color:var(--bad)}
+    .t03-entfaellt{margin:0; padding-left:1.2em; font-size:.95rem}
+    .t03-entfaellt li{margin-bottom:4px}
+    .t03-entfaellt:empty{display:none}
+
+    /* Steckbrief im Lösungsfilm und in der Lösung */
+    .t03-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t03-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t03-fb:last-child{border-bottom:0}
+    .t03-fb b{color:var(--accent)}
+    .t03-steckbrief{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 560px){
+      .t03-kette{grid-template-columns:1fr}
+      .t03-ph.t03-agil{grid-column:auto}
+      .t03-fluss > li{padding-left:40px}
+      .t03-fz{font-size:.93rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="03-hermes">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 1–4 · Grundlagen und Kontext</span>
+    <h1>HERMES: Phasen, Rollen, Ergebnisse</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 1.02</span><span class="icb">ICB 1.03</span><span class="icb">ICB 3.01</span><span class="icb">ICB 3.05</span>
+    </p>
+    <p class="lead">HERMES ist die Projektmanagement-Methode der Schweizer Bundesverwaltung. Als offener Standard steht sie auch Kantonen und Gemeinden offen. Sie gibt jedem Projekt dasselbe Gerüst: Phasen mit Toren dazwischen, klare Rollen und Ergebnisse, die am Ende jeder Phase auf dem Tisch liegen. Hier lernst du dieses Gerüst am Onlineschalter Wolkenried so, dass du in der Prüfung jedes Ergebnis seiner Phase und jede Rolle ihrer Ebene zuordnen kannst.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t03-ziele">
+        <li>die Phasen von HERMES klassisch (fünf) und agil (drei) nennen und sagen, welche immer vorkommen,</li>
+        <li>erklären, warum Meilensteine in HERMES Quality Gates sind, und die wichtigsten Meilensteine ihrer Phase zuordnen,</li>
+        <li>Rollen den Ebenen Steuerung, Führung, Ausführung und den Partnergruppen Anwender, Ersteller, Betreiber zuordnen,</li>
+        <li>Module, Szenarien, Sizing und Tailoring unterscheiden und die drei Pflichtmodule nennen,</li>
+        <li>die wichtigsten Ergebnisse jeder Phase nennen und Begriffe aus verschiedenen HERMES-Versionen richtig übersetzen.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der IPMA-Prüfung kommen Fragen wie «In welcher Phase entsteht …?», «Welche Rolle ist minimal zu besetzen?» oder «Was ist ein Quality Gate?» (<span class="icb">ICB 3.01</span> Projektdesign, <span class="icb">ICB 3.05</span> Organisation, <span class="icb">ICB 1.02</span> Governance, <span class="icb">ICB 1.03</span> Standards). In der Modulschlussprüfung musst du ein Projekt in Phasen gliedern und eine Projektorganisation aufstellen. Im Leitstand (Station 23) ist die Phasenfreigabe durch den Gemeinderat das Tor zwischen Periode 1 und Periode 2.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#methode"><b>1</b>Methode</a>
+    <a href="#phasen"><b>2</b>Phasen</a>
+    <a href="#meilensteine"><b>3</b>Meilensteine</a>
+    <a href="#rollen"><b>4</b>Rollen</a>
+    <a href="#module"><b>5</b>Module</a>
+    <a href="#ergebnisse"><b>6</b>Ergebnisse</a>
+    <a href="#zeitstrahl"><b>7</b>Zeitstrahl</a>
+    <a href="#rollenkarte"><b>8</b>Rollenkarte</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir vor, eine Familie baut ein Haus. Sie baut in Etappen: planen, Baugesuch, Rohbau, Innenausbau, Einzug. Nach jeder Etappe schaut jemand drauf, bevor es weitergeht. Jede beteiligte Person hat ihren Hut auf: Bauherrschaft, Architektin, Handwerker. Und am Ende jeder Etappe liegt etwas Greifbares vor: ein Plan, eine Bewilligung, ein fertiges Bad. Genau so ist HERMES gebaut.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Phase = Bauetappe</span><span class="ex">Initialisierung … Abschluss</span><p>Ein zeitlicher Abschnitt des Projekts mit eigenem Zweck. Beim Hausbau: zuerst planen, dann bauen, dann einziehen. Nie umgekehrt.</p></div>
+      <div class="concept"><span class="tag">Meilenstein = Bauabnahme</span><span class="ex">◆ Phasenfreigabe</span><p>Ein Tor zwischen den Etappen. Jemand mit Entscheidungsbefugnis prüft die Ergebnisse und entscheidet: weiter, weiter mit Auflagen oder stopp.</p></div>
+      <div class="concept"><span class="tag">Ergebnis = was auf dem Tisch liegt</span><span class="ex">Studie · System aktiviert</span><p>Ein Dokument (zum Beispiel die Studie) oder ein erreichter Zustand (zum Beispiel «System aktiviert»). HERMES dreht sich um diese Ergebnisse.</p></div>
+      <div class="concept"><span class="tag">Rolle = Hut</span><span class="ex">Auftraggeber · Projektleiter</span><p>Beschreibt Verantwortung und Kompetenzen, nicht die Person. Eine Person kann mehrere Hüte tragen, wenn kein Interessenkonflikt entsteht.</p></div>
+      <div class="concept"><span class="tag">Modul und Szenario = Baukasten und Bauplan-Vorlage</span><span class="ex">Modul IT-System · Szenario IT-Anwendung Adaption</span><p>Ein Modul bündelt Aufgaben und Ergebnisse zu einem Thema. Ein Szenario ist eine fertige Auswahl von Modulen für eine Projektart, wie die Vorlage «Fertighaus» oder «Umbau».</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Phase, Meilenstein, Rolle oder Ergebnis?</h3>
+      <p class="hint">Frag dich: Ist es ein Zeitabschnitt (Phase), ein Tor nach einem Entscheid (Meilenstein), ein Hut für eine Person (Rolle) oder etwas, das vorliegt (Ergebnis)? Alle Beispiele stammen aus dem Onlineschalter Wolkenried.</p>
+      <div id="t03-sortierer-bausteine"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Methode ===== -->
+  <section id="methode">
+    <span class="eyebrow">Schritt 1 · Was ist HERMES? (Referenzhandbuch S.6–10, LB 1 F.21–23)</span>
+    <h2>Eine Methode, eine Sprache für alle Projekte</h2>
+    <p class="prose">HERMES ist eine <b>ergebnisorientierte Projektmanagement-Methode</b>. Sie stammt aus der Bundesverwaltung und ist ein <b>offener Standard</b>: Die Eidgenossenschaft (Bundeskanzlei, Bereich Digitale Transformation und IKT-Lenkung) besitzt die Rechte, die Methode ist als eCH-Standard 0054 veröffentlicht, und jede Organisation darf sie nutzen (Referenzhandbuch, Impressum). Das Handbuch nennt als Beispiele für Stammorganisationen ausdrücklich auch Kantons- und Stadtverwaltungen und Vereine (S.142).</p>
+    <p class="prose">HERMES erfindet keine eigene Entwicklungsmethode. Es legt eine <b>Hülle</b> um das Projekt: Phasen, Meilensteine, Rollen und Ergebnisse, die nach aussen immer gleich aussehen. Innen darf das Team klassisch oder agil, etwa nach Scrum, arbeiten (Referenzhandbuch Kap. A.4–A.5). Für Wolkenried heisst das: Der Gemeinderat bekommt von jedem Projekt dieselben Berichte und entscheidet an denselben Toren, egal wie das Team arbeitet. Das ist der Kern von <span class="icb">ICB 1.02</span> (Projekt mit den Entscheidungs- und Berichtsstrukturen der Organisation abstimmen) und <span class="icb">ICB 1.03</span> (professionelle Standards kennen und nutzen).</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Was HERMES festlegt</h3>
+        <ul class="t03-ziele">
+          <li><b>Phasen</b> und <b>Meilensteine</b> (zeitlicher Ablauf)</li>
+          <li><b>Rollen</b> mit Verantwortung und Kompetenzen</li>
+          <li><b>Ergebnisse</b> und die <b>Aufgaben</b>, die zu ihnen führen</li>
+          <li><b>Module</b> und <b>Szenarien</b> als Bausteine und Vorlagen</li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3>Was HERMES offenlässt</h3>
+        <ul class="t03-ziele">
+          <li>wie das Team innerhalb der Umsetzung arbeitet (Rituale, Sprints)</li>
+          <li>die Grösse der Dokumentation: Sie passt sich über Sizing und Tailoring dem Projekt an</li>
+          <li>Kompetenzordnung und Vorgaben der eigenen Organisation</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Achtung Versionen: gleiche Sache, andere Namen</h3>
+    <p class="prose">In den Unterlagen begegnen dir drei Stände. Das <b>Referenzhandbuch HERMES 2021</b> (Moodle, LB 1) ist die Grundlage dieser Station. Die Folien zeigen auch Grafiken aus <b>HERMES 5.1</b> (LB 1 F.22, LB 3 F.11, LB 4 F.11) und verweisen auf die Webseite <b>HERMES 2022</b> (LB 1 F.21). Die Word-Vorlagen stammen aus beiden Ständen. Inhaltlich ist es dasselbe Gerüst, aber einige Begriffe weichen ab:</p>
+    <div class="card tablebox">
+      <table class="tabelle t03-version">
+        <caption>Begriffe übersetzen (eigene Gegenüberstellung)</caption>
+        <thead><tr><th>Referenzhandbuch 2021</th><th>In Folien und Vorlagen auch</th><th>Fundstelle</th></tr></thead>
+        <tbody>
+          <tr><td>Projektdurchführungsauftrag</td><td>Projektauftrag (5.1), Durchführungsauftrag (2022)</td><td>Vorlage LB 3, Vorlage LB 6, LB 2 F.36</td></tr>
+          <tr><td>Projektdurchführungsfreigabe</td><td>Projektfreigabe (5.1), Durchführungsfreigabe</td><td>Vorlage LB 3, LB 2 F.35–36</td></tr>
+          <tr><td>Meilenstein Weiteres Vorgehen</td><td>Variantenwahl</td><td>LB 1 F.22</td></tr>
+          <tr><td>Lösungsarchitektur</td><td>Systemarchitektur</td><td>LB 1 F.22</td></tr>
+          <tr><td>Lösungsanforderungen, Lösungsziele</td><td>Systemanforderungen, Systemziele</td><td>LB 1 F.22, Vorlage LB 3</td></tr>
+          <tr><td>Szenario IT-Anwendung Adaption</td><td>IT-Adaption</td><td>Vorlage LB 6</td></tr>
+          <tr><td>Phasen Initialisierung bis Abschluss</td><td>Grafik nur mit vier Phasen, Initialisierung bis Einführung</td><td>LB 1 F.22</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Tipp für die Prüfung:</b> Schreib den Begriff des Referenzhandbuchs und in Klammern den Folienbegriff, zum Beispiel «Projektdurchführungsauftrag (Projektauftrag)». Dann ist die Antwort in jeder Version richtig.</div>
+  </section>
+
+  <!-- ===== 2 · Phasen ===== -->
+  <section id="phasen">
+    <span class="eyebrow">Schritt 2 · Das Phasenmodell (Referenzhandbuch Tab. 1, S.21; Kap. 1.4)</span>
+    <h2>Fünf Phasen klassisch, drei Phasen agil</h2>
+    <p class="prose">Das Phasenmodell ist das Rückgrat jedes HERMES-Projekts. Es folgt dem Lebenszyklus: <b>Projektbeginn</b>, <b>Lösungsentstehung</b>, <b>Projektende</b>. Beginn und Ende sind immer gleich: Jedes Projekt startet mit der <b>Initialisierung</b> und endet mit dem <b>Abschluss</b>. Dazwischen entsteht die Lösung entweder klassisch in drei Phasen oder agil in einer einzigen Phase <b>Umsetzung</b> (Tab. 1, S.21).</p>
+    <div class="card stack">
+      <div class="t03-strahl" role="img" aria-label="HERMES-Phasenmodell. Klassisch: Initialisierung, Konzept, Realisierung, Einführung, Abschluss. Agil: Initialisierung, Umsetzung, Abschluss. Initialisierung und Abschluss sind beiden gemeinsam.">
+        <div class="t03-zeile"><b>klassisch</b>
+          <div class="t03-kette">
+            <span class="t03-ph t03-rahmen">Initialisierung<small>Projektbeginn</small></span>
+            <span class="t03-ph">Konzept<small>Lösungsentstehung</small></span>
+            <span class="t03-ph">Realisierung<small>Lösungsentstehung</small></span>
+            <span class="t03-ph">Einführung<small>Lösungsentstehung</small></span>
+            <span class="t03-ph t03-rahmen">Abschluss<small>Projektende</small></span>
+          </div>
+        </div>
+        <div class="t03-zeile"><b>agil</b>
+          <div class="t03-kette">
+            <span class="t03-ph t03-rahmen">Initialisierung<small>Projektbeginn</small></span>
+            <span class="t03-ph t03-agil">Umsetzung<small>Lösungsentstehung, iterativ-inkrementell</small></span>
+            <span class="t03-ph t03-rahmen">Abschluss<small>Projektende</small></span>
+          </div>
+        </div>
+      </div>
+      <p class="hint">Durchgezogener Rand oben: klassische Phase. Gestrichelt: agile Phase. Initialisierung und Abschluss laufen in beiden Fällen klassisch ab (S.21–22, S.143).</p>
+    </div>
+
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Phasen im Überblick (Referenzhandbuch Kap. 1.4, in eigenen Worten)</caption>
+        <thead><tr><th>Phase</th><th>Wozu?</th><th>Typische Ergebnisse</th><th>Endet mit</th></tr></thead>
+        <tbody>
+          <tr><th>Initialisierung</th><td>Ausgangslage klären, Varianten vergleichen, klassisch oder agil entscheiden, Szenario wählen</td><td>Projektinitialisierungsauftrag, Studie, Rechtsgrundlagen-, Schutzbedarfs- und Beschaffungsanalyse, Stakeholderliste, Projektmanagementplan, Projektdurchführungsauftrag</td><td>◆ Projektdurchführungsfreigabe</td></tr>
+          <tr><th>Konzept</th><td>gewählte Variante so genau beschreiben, dass man planen, offerieren und bauen kann; beschaffen</td><td>Lösungsanforderungen, Organisations- und Systemkonzept, Lösungsarchitektur, Test-, Einführungs-, Migrations-, Betriebs- und ISDS-Konzept, Ausschreibung und Zuschlag</td><td>◆ Phasenfreigabe (für die Realisierung)</td></tr>
+          <tr><th>Realisierung</th><td>Lösung bauen oder parametrisieren, testen, Einführung vorbereiten</td><td>System entwickelt oder parametrisiert, Testprotokoll, Betriebsorganisation realisiert, Abnahmeprotokoll der Vorabnahme</td><td>◆ Vorabnahme, dann ◆ Phasenfreigabe (für die Einführung)</td></tr>
+          <tr><th>Einführung</th><td>sicherer Übergang vom alten zum neuen Zustand, Betrieb aufnehmen</td><td>Einführungsmassnahmen durchgeführt (Schulung), Migration durchgeführt, System aktiviert, Abnahmeprotokoll</td><td>◆ Abnahme und ◆ Phasenfreigabe Abschluss</td></tr>
+          <tr><th>Umsetzung (agil)</th><td>Lösung in Iterationen entwickeln und releaseweise einführen</td><td>priorisierte Lösungsanforderungen, Inkremente, Releasebericht, je Release Abnahme</td><td>◆ Phasenfreigabe Abschluss</td></tr>
+          <tr><th>Abschluss</th><td>Projekt geordnet beenden, Verantwortung übergeben, archivieren</td><td>Projekterfahrungen, Projektschlussbeurteilung, Altsystem entfernt</td><td>◆ Projektabschluss</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Jede Phasenbeschreibung im Handbuch endet mit einer Prüffrage, ob es sinnvoll ist weiterzumachen. Nach der Initialisierung zum Beispiel: Fehlt die Wirtschaftlichkeit, sind die Risiken zu hoch oder passt das Projekt nicht zur Strategie, wird es nicht freigegeben (S.22, LB 2 F.35). Nach der Realisierung müssen die Einführungsrisiken beurteilt und vertretbar sein, sonst darf die Einführung nicht starten (S.23).</p>
+    <p class="prose">Klick dich durch den Onlineschalter Wolkenried. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Die passende Phase leuchtet auf.</p>
+    <div id="t03-stepper-phasen"></div>
+    <div class="note"><b>Bezug zum Leitstand:</b> Im Leitstand (Station 23) sind Initialisierung und Konzept schon erledigt. Du spielst Periode 1 = Realisierung (Woche 1–4, Tag 1–20) und Periode 2 = Einführung (Woche 5–8, Tag 21–40). Dazwischen gibt der Gemeinderat die Phase frei. Der Leitstand rechnet intern mit Zeitpunkten (0 = Beginn Tag 1, 20 = Ende Tag 20); auf dieser Seite zählen wir wie in Station 10 ab Tag 1.</div>
+  </section>
+
+  <!-- ===== 3 · Meilensteine ===== -->
+  <section id="meilensteine">
+    <span class="eyebrow">Schritt 3 · Meilensteine als Quality Gates (Abb. 25–26, S.44; Kap. 4.4.2.9)</span>
+    <h2>Meilensteine: Tore, an denen entschieden wird</h2>
+    <p class="prose">In HERMES ist ein Meilenstein kein blosser Termin im Kalender. Er ist ein besonderes Ergebnis, das <b>immer die Folge eines Entscheids</b> ist (S.43–44). Am Anfang und am Ende jeder Phase steht ein Meilenstein. Dort prüft die zuständige Stelle die Ergebnisse, die Einhaltung der Vorgaben und die Übereinstimmung mit der Strategie der Organisation. Darum nennt HERMES sie <b>Quality Gates</b>: Ein Tor öffnet sich nur, wenn die Qualität stimmt.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die wichtigsten Meilensteine (Abb. 25–26 und Meilensteinverzeichnis, in eigenen Worten; Lage klassisch, in Klammern agil)</caption>
+        <thead><tr><th>Meilenstein</th><th>Lage</th><th>Wer entscheidet (Abb. 26)</th><th>Was danach möglich ist</th></tr></thead>
+        <tbody>
+          <tr><th>Projektinitialisierungsfreigabe</th><td>Beginn Initialisierung</td><td>Steuerung</td><td>Das Projekt ist formell geboren, die Initialisierung hat Ressourcen.</td></tr>
+          <tr><th>Weiteres Vorgehen</th><td>Initialisierung</td><td>Führung und Ausführung</td><td>Variante, klassisch oder agil und Szenario stehen fest. Grundlage für Projektmanagementplan und Durchführungsauftrag.</td></tr>
+          <tr><th>Projektdurchführungsfreigabe</th><td>Ende Initialisierung</td><td>Steuerung (mit der Stammorganisation)</td><td>Die Lösungsentstehung beginnt.</td></tr>
+          <tr><th>Ausschreibung, Zuschlag</th><td>Konzept (Umsetzung)</td><td>Steuerung</td><td>Ausschreibung publizieren; Vertrag mit dem Anbieter.</td></tr>
+          <tr><th>Lösungsarchitektur, ISDS-Konzept</th><td>Konzept (Umsetzung, je Iteration oder Release)</td><td>Führung und Ausführung</td><td>System entwickeln oder anpassen; Sicherheits- und Datenschutzmassnahmen umsetzen.</td></tr>
+          <tr><th>Phasenfreigabe</th><td>Ende Konzept und Ende Realisierung (agil keine)</td><td>Steuerung</td><td>Ressourcen für die nächste Phase sind freigegeben.</td></tr>
+          <tr><th>Releasefreigabe (optional)</th><td>(nur agil, in der Umsetzung)</td><td>Steuerung</td><td>Arbeit am nächsten Release.</td></tr>
+          <tr><th>Vorabnahme</th><td>Ende Realisierung (Umsetzung)</td><td>Führung und Ausführung</td><td>Grundlage für Betriebsaufnahme und Phasenfreigabe der Einführung.</td></tr>
+          <tr><th>Abnahme Migration, Betriebsaufnahme</th><td>Einführung (Umsetzung)</td><td>Führung bzw. Steuerung</td><td>Die Anwender dürfen das neue System nutzen.</td></tr>
+          <tr><th>Abnahme</th><td>Ende Einführung (Umsetzung)</td><td>Führung und Ausführung</td><td>Die Lösung geht definitiv an Anwender und Betrieb.</td></tr>
+          <tr><th>Phasenfreigabe Abschluss</th><td>Ende Einführung (Ende Umsetzung)</td><td>Steuerung</td><td>Die Leistungserbringung ist beendet, die Abschlussarbeiten beginnen.</td></tr>
+          <tr><th>Projektabschluss</th><td>Ende Abschluss</td><td>Steuerung</td><td>Die Projektorganisation wird aufgelöst.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Daneben gibt es den <b>Entscheid Projektabbruch</b>. Die Steuerung kann ihn in jeder Phase der Lösungsentstehung treffen. Er endet ebenfalls mit dem Meilenstein Projektabschluss, samt Projekterfahrungen und Projektschlussbeurteilung (Modul Projektsteuerung, Tab. 4, S.36).</p>
+    <p class="prose">Die Folien geben allgemeine Regeln für gute Meilensteine (LB 4 F.15, sinngemäss): Sie sind für alle verständlich, prüfbar, eher wenige (rund 10 bis 25), liegen in sinnvollen Abständen und markieren die Ereignisse, die für das Projektziel wirklich zählen. Und das Phasenprinzip dahinter: vor dem Detail die Entscheidung.</p>
+    <h3>Das Tor am Tag 20: Phasenfreigabe für die Einführung</h3>
+    <p class="prose">Im Onlineschalter liegt das wichtigste Tor nach Tag 20. Die Kompetenzordnung von Wolkenried (Festlegung im Fall) behält diesen Entscheid dem Gemeinderat vor: Die Auftraggeberin Franziska Bühlmann beantragt, der Gesamtgemeinderat entscheidet. Klick dich durch, was am Tor geprüft wird.</p>
+    <div id="t03-stepper-tor"></div>
+    <div class="note falle"><b>Falle:</b> Vorabnahme und Abnahme verwechseln. Die <b>Vorabnahme</b> schliesst die Realisierung ab und macht den Weg zur Einführung frei. Die <b>Abnahme</b> kommt am Ende der Einführung, nach der Betriebsaufnahme. Beide erzeugen ein Abnahmeprotokoll (Ergebnis 4.4.1.1).</div>
+  </section>
+
+  <!-- ===== 4 · Rollen ===== -->
+  <section id="rollen">
+    <span class="eyebrow">Schritt 4 · Rollen, Ebenen, Partnergruppen (Kap. 6, Abb. 27–28, Tab. 19, S.142–147; LB 5 F.11)</span>
+    <h2>Wer steuert, wer führt, wer führt aus?</h2>
+    <p class="prose">HERMES unterscheidet die <b>Stammorganisation</b> (die dauerhafte Organisation, in Wolkenried die Gemeinde) und die <b>Projektorganisation</b> (befristet, entsteht mit dem Projektinitialisierungsauftrag und wird mit dem Projektabschluss aufgelöst). Jede Rolle der Projektorganisation gehört zu genau einer <b>Hierarchieebene</b> und zu einer oder mehreren <b>Partnergruppen</b>. Das ist der Kern von <span class="icb">ICB 3.05</span> (Struktur, Rollen und Verantwortlichkeiten im Projekt festlegen).</p>
+    <div class="t03-ebenen">
+      <div class="t03-ebene"><b>Steuerung</b><p>steuert das Projekt gesamthaft und über die Organisation hinweg und sorgt dafür, dass die Ziele erreicht werden. Rollen: Auftraggeber, Projektausschuss, Qualitäts- und Risikomanager.</p></div>
+      <div class="t03-ebene"><b>Führung</b><p>erarbeitet die Projektgrundlagen, führt Projekt und Mitarbeitende, schliesst das Projekt ab. Rollen: Projektleiter, Teilprojektleiter, Projektunterstützung, Fachausschuss.</p></div>
+      <div class="t03-ebene"><b>Ausführung</b><p>erarbeitet die Ergebnisse und sichert ihre Qualität. Rollen: Anwendervertreter, Entwickler, Tester, IT-Architekt, Betriebsverantwortlicher und weitere Fachspezialisten.</p></div>
+    </div>
+    <div class="t03-ebenen">
+      <div class="t03-ebene"><b>Anwender</b><p>Eigner des Projekts und Nutzer der Lösung. Formuliert die Anforderungen, testet und nimmt ab. In Wolkenried: Gemeinde, Bauamt.</p></div>
+      <div class="t03-ebene"><b>Ersteller</b><p>entwickelt oder liefert die Lösung und integriert sie, gemäss Vorgaben zu Qualität, Zeit und Kosten. In Wolkenried: Lärchwerk Informatik AG.</p></div>
+      <div class="t03-ebene"><b>Betreiber</b><p>integriert die Lösung in die Betriebsumgebung, stellt Betriebsorganisation und Betrieb sicher. In Wolkenried: die Informatik der Gemeinde (Zentrale Dienste).</p></div>
+    </div>
+
+    <h3>Minimal besetzt: drei Rollen, alle vom Anwender</h3>
+    <p class="prose">Jedes HERMES-Projekt braucht mindestens <b>Auftraggeber</b>, <b>Projektleiter</b> und <b>Anwendervertreter</b>, klassisch wie agil. Diese drei Rollen muss die Partnergruppe <b>Anwender</b> besetzen (S.146, Tab. 19). Die Aufteilung (S.147): Der Auftraggeber trägt die Gesamtverantwortung für Vorhaben und Zielerreichung. Der Projektleiter führt das Projekt. Der Anwendervertreter verantwortet die fachliche Lösung. Wichtig: Der Auftraggeber ist <b>immer eine einzelne natürliche Person</b> aus der Stammorganisation (S.149), nie ein Gremium.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Rollen, Ebene und Partnergruppe (Auszug aus Tab. 19, S.146–147; * = minimal zu besetzen)</caption>
+        <thead><tr><th>Ebene</th><th>Rolle</th><th>Anwender</th><th>Ersteller</th><th>Betreiber</th></tr></thead>
+        <tbody>
+          <tr><th>Steuerung</th><td>Auftraggeber*</td><td>✓</td><td></td><td></td></tr>
+          <tr><th>Steuerung</th><td>Projektausschussmitglied</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><th>Steuerung</th><td>Qualitäts- und Risikomanager</td><td>✓</td><td></td><td></td></tr>
+          <tr><th>Führung</th><td>Projektleiter*</td><td>✓</td><td></td><td></td></tr>
+          <tr><th>Führung</th><td>Teilprojektleiter, Fachausschussmitglied</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><th>Führung</th><td>Projektunterstützung</td><td>✓</td><td>✓</td><td></td></tr>
+          <tr><th>Ausführung</th><td>Anwendervertreter*</td><td>✓</td><td></td><td></td></tr>
+          <tr><th>Ausführung</th><td>Entwickler, Iterationsleiter</td><td></td><td>✓</td><td></td></tr>
+          <tr><th>Ausführung</th><td>Betriebsverantwortlicher</td><td></td><td></td><td>✓</td></tr>
+          <tr><th>Ausführung</th><td>Business Analyst</td><td>✓</td><td>✓</td><td></td></tr>
+          <tr><th>Ausführung</th><td>IT-Architekt, Tester, Testverantwortlicher, Entwicklungsteam</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><th>Ausführung</th><td>ISDS-Verantwortlicher, Geschäftsprozessverantwortlicher, Anwendungsverantwortlicher</td><td>✓</td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Agil ist es etwas anders</h3>
+        <p>In der Phase Umsetzung bilden Anwendervertreter, Iterationsleiter und Entwickler die Gruppenrolle <b>Entwicklungsteam</b>. Der Anwendervertreter entspricht dort dem Product Owner, der Auftraggeber dem Business Owner (S.149, S.157). Der Projektleiter führt weiter, greift aber nicht in die Selbstorganisation des Teams ein.</p>
+      </div>
+      <div class="card stack">
+        <h3>Die Stammorganisation</h3>
+        <p>Drei Rollengruppen stehen ausserhalb des Projekts (S.142–143): die <b>Leitung</b> (Portfolio, Prioritäten, Ressourcen), das <b>Kompetenzzentrum Projektmanagement</b> (PMO: Methoden, Coaching) und die <b>Controlling- und Vorgabestellen</b> (Finanzkontrolle, Datenschutz, Informationssicherheit). In Wolkenried ist der Gemeinderat als Gesamtbehörde die Leitung.</p>
+      </div>
+    </div>
+    <div class="note"><b>Merke:</b> Rollen vertreten immer die Sicht ihrer Partnergruppe. Darum darf der Lieferant nicht die Projektleitung des Gesamtprojekts übernehmen: Er würde seine eigenen Lieferungen prüfen und abnehmen (Interessenkonflikt, S.144). Er stellt aber gerne einen Teilprojektleiter für seinen Teil.</div>
+    <p class="prose">Mehr zu Organisationsformen, Lenkungsausschuss und RACI lernst du in <a href="/lernseiten/pmgt/15-organisation-und-rollen">Station 15 · Projektorganisation, Rollen, RACI</a>.</p>
+  </section>
+
+  <!-- ===== 5 · Module ===== -->
+  <section id="module">
+    <span class="eyebrow">Schritt 5 · Module, Szenarien, Sizing, Tailoring (Kap. 2–3, Tab. 2, S.26–35)</span>
+    <h2>Module und Szenarien: der Baukasten</h2>
+    <p class="prose">Ein <b>Modul</b> bündelt thematisch zusammengehörende Aufgaben und Ergebnisse, zum Beispiel alles zum Testen. Module sind den Phasen zugeordnet und wiederverwendbar. Drei Module müssen in jedem Projekt vorkommen, damit die Governance eingehalten ist (S.35):</p>
+    <ol class="t03-fluss">
+      <li><b>Projektsteuerung</b><p class="hint">Aufgaben der Steuerung: alle Freigabe-Entscheide, Projekt steuern, Projektabbruch. Ergebnisse zum Beispiel Projektinitialisierungsauftrag, Checklisten, QS- und Risikobericht, Meilensteine der Steuerung.</p></li>
+      <li><b>Projektführung</b><p class="hint">Aufgaben der Projektleitung: planen, führen, kontrollieren, Stakeholder, Änderungen, Leistungen vereinbaren, Qualität, Risiken. Ergebnisse zum Beispiel Projektmanagementplan, Arbeitsauftrag, Projektstatusbericht, Änderungsantrag, Phasenbericht.</p></li>
+      <li><b>Projektgrundlagen</b><p class="hint">nur in der Initialisierung: Studie, Rechtsgrundlagen-, Schutzbedarfs- und Beschaffungsanalyse, Prototyping, Entscheid weiteres Vorgehen (LB 3 F.12).</p></li>
+    </ol>
+    <p class="prose">Dazu kommen je nach Projekt die Fachmodule <b>Beschaffung</b>, <b>Organisation</b>, <b>Produkt</b>, <b>IT-System</b>, <b>Tests</b>, <b>Einführungsorganisation</b>, <b>IT-Migration</b>, <b>IT-Betrieb</b> und <b>ISDS</b> (Informationssicherheit und Datenschutz).</p>
+
+    <h3>Szenario: die passende Modul-Auswahl</h3>
+    <p class="prose">Ein <b>Szenario</b> ist eine Vorlage für eine Projektart. Es enthält genau die Module, die diese Projektart braucht. Die Projektleitung wählt es in der Initialisierung zusammen mit der Variante. Wichtig: Ein Szenario beschreibt <b>nur die Lösungsentstehung</b>. Initialisierung und Abschluss liegen ausserhalb (S.27). HERMES bietet sechs Standardszenarien an:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Standardszenarien und ihre Fachmodule (nach Tab. 2, S.27; alle Szenarien enthalten zusätzlich Projektsteuerung und Projektführung)</caption>
+        <thead><tr><th>Szenario</th><th>Wofür?</th><th>Fachmodule</th></tr></thead>
+        <tbody>
+          <tr><th>Dienstleistung/Produkt Entwicklung</th><td>neue Dienstleistung oder neues Produkt entwickeln</td><td>Organisation, Produkt, Einführungsorganisation</td></tr>
+          <tr><th>Dienstleistung/Produkt Adaption</th><td>Produkt am Markt beschaffen und anpassen</td><td>Beschaffung, Organisation, Produkt, Tests, Einführungsorganisation</td></tr>
+          <tr><th>IT-Anwendung Entwicklung</th><td>eigene IT-Anwendung entwickeln oder weiterentwickeln</td><td>Organisation, IT-System, Tests, Einführungsorganisation, IT-Migration, IT-Betrieb, ISDS</td></tr>
+          <tr><th>IT-Anwendung Adaption</th><td>IT-Anwendung am Markt beschaffen und integrieren</td><td>Beschaffung, Organisation, IT-System, Tests, Einführungsorganisation, IT-Migration, IT-Betrieb, ISDS</td></tr>
+          <tr><th>IT-Infrastruktur</th><td>Infrastruktur aufbauen oder ändern</td><td>Tests, Einführungsorganisation, IT-Migration, IT-Betrieb</td></tr>
+          <tr><th>Organisationsanpassung</th><td>Abläufe und Strukturen ändern</td><td>Organisation, Einführungsorganisation</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Achtung, kleiner Widerspruch im Handbuch: Bei Dienstleistung/Produkt Adaption kreuzt Tab. 2 auch das Modul Tests an, die Szenariobeschreibung in Kap. 2.4.1.2 (S.30) nennt es nicht. In der Prüfung nennst du die Module nach Tab. 2 und erwähnst die Abweichung.</p>
+    <p class="prose">Der Onlineschalter Wolkenried nutzt ein Standardprodukt der Lärchwerk Informatik AG, das konfiguriert und an die Bauverwaltungssoftware angebunden wird. Das passt zu <b>IT-Anwendung Adaption</b>. Alle Fachmodule sind nötig: Die Plattform wird beschafft, die Abläufe im Bauamt ändern sich, laufende Gesuche werden migriert, und Baugesuche enthalten Personendaten.</p>
+
+    <h3>Sizing und Tailoring: so schlank wie möglich</h3>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Sizing</h3>
+        <p>Das Handbuch beschreibt die Maximalvariante für Megaprojekte. Mit dem <b>Sizing</b> (HERMES online) passt du Szenario und Dokumentvorlagen der Grösse oder Wertigkeit des Projekts an: <b>XL</b> Megaprojekt, <b>L</b> Grossprojekt, <b>M</b> mittleres Projekt, <b>S</b> Kleinprojekt. Kriterien sind etwa Budget, Durchlaufzeit, Teamgrösse, Stakeholder, politische Brisanz, Vertraulichkeit und rechtliche Bedeutung (S.8, S.27–28).</p>
+      </div>
+      <div class="card stack">
+        <h3>Tailoring</h3>
+        <p>Danach schneidest du das Szenario aufs Projekt zu. Vier Möglichkeiten, kombinierbar (S.28): (1) nicht benötigte Module entfernen, (2) Aufgaben und Ergebnisse entfernen, ausser den minimal geforderten Dokumenten, (3) ein eigenes Fachmodul ergänzen, (4) Aufgaben und Ergebnisse ergänzen.</p>
+      </div>
+    </div>
+    <div class="note"><b>Merke:</b> Phasen gliedern das Projekt <b>zeitlich</b>, Module gliedern es <b>thematisch</b>. «Initialisierung» ist eine Phase, «Projektgrundlagen» ist das Modul, das in dieser Phase arbeitet. Das Szenario wählt die Module, das Sizing bestimmt die Grösse, das Tailoring den Feinschliff. Diese Wahl gehört zu <span class="icb">ICB 3.01</span> (Projektmanagement-Ansatz auswählen und anpassen).</div>
+  </section>
+
+  <!-- ===== 6 · Ergebnisse ===== -->
+  <section id="ergebnisse">
+    <span class="eyebrow">Schritt 6 · Ergebnisse (Kap. 4, S.43–73; Big Picture S.6–7, LB 1 F.23)</span>
+    <h2>Ergebnisse: Dokumente und Zustände</h2>
+    <p class="prose">HERMES ist ergebnisorientiert: Im Zentrum steht, was am Ende jeder Aufgabe vorliegt. Ein Ergebnis ist entweder ein <b>Dokument</b> (zum Beispiel Studie, Checkliste, Testkonzept) oder ein <b>Zustand</b> (zum Beispiel «System aktiviert», «Migration durchgeführt»). Meilensteine sind ebenfalls Zustände (S.43). Für viele Dokumente gibt es Vorlagen. Eine Liste der minimal geforderten Dokumente steht in Tab. 16 (S.45); entfällt ein Modul, entfallen auch seine Pflichtdokumente.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Ergebnisse, die du für die Prüfung kennen musst (Modultabellen 4–15, S.36–42)</caption>
+        <thead><tr><th>Phase</th><th>Ergebnis</th><th>Wozu?</th></tr></thead>
+        <tbody>
+          <tr><th>Initialisierung</th><td>Projektinitialisierungsauftrag</td><td>Vereinbarung zwischen Auftraggeber und Projektleiter für die Initialisierung; Grundlage ihrer Freigabe (4.4.1.34)</td></tr>
+          <tr><th>Initialisierung</th><td>Stakeholderliste</td><td>wer betroffen ist und Einfluss hat; danach laufend nachgeführt</td></tr>
+          <tr><th>Initialisierung</th><td>Studie</td><td>Ziele, Varianten, Vorgehen, Szenario und Grösse; Grundlage für den Entscheid, ob das Projekt umgesetzt wird (4.4.1.53)</td></tr>
+          <tr><th>Initialisierung</th><td>Projektmanagementplan</td><td>Gesamtplanung und Regeln des Projekts; wird rollend nachgeführt (4.4.1.35)</td></tr>
+          <tr><th>Initialisierung</th><td>Projektdurchführungsauftrag</td><td>verbindliche Grundlage der Projektdurchführungsfreigabe: Ziele, Lösung, Vorgehen, Kosten und Nutzen, Risiken (4.4.1.57)</td></tr>
+          <tr><th>Konzept</th><td>Lösungsanforderungen, Testkonzept, Einführungskonzept</td><td>was die Lösung können muss, wie getestet und wie eingeführt wird</td></tr>
+          <tr><th>Realisierung</th><td>Testprotokoll, Abnahmeprotokoll (Vorabnahme)</td><td>Nachweis der Tests; rechtlich verbindliches Protokoll mit Mängeln (4.4.1.1)</td></tr>
+          <tr><th>Einführung</th><td>Abnahmeprotokoll (Abnahme)</td><td>definitive Übergabe der Lösung</td></tr>
+          <tr><th>Abschluss</th><td>Projektschlussbeurteilung</td><td>Soll-Ist zu Zielen, Kosten, Terminen, Erfahrungen, offene Punkte; Grundlage für den Entscheid Projektabschluss (4.4.1.36)</td></tr>
+          <tr><th>laufend</th><td>Projektstatusbericht</td><td>periodisch über Stand, Fortschritt und Prognose berichten (4.4.1.37)</td></tr>
+          <tr><th>laufend</th><td>Phasenbericht</td><td>am Ende jeder Phase der Lösungsentstehung, Grundlage für die nächste Phasenfreigabe (4.4.1.30)</td></tr>
+          <tr><th>laufend</th><td>QS- und Risikobericht</td><td>unabhängige Sicht auf Qualität und Risiken für die Steuerung (4.4.1.44)</td></tr>
+          <tr><th>laufend</th><td>Änderungsantrag, Änderungsstatusliste</td><td>Änderungen beantragen, entscheiden und überwachen; der Änderungsantrag gilt nur klassisch (4.4.1.2–3)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Wie ein Projektdurchführungsauftrag konkret aussieht, übst du in <a href="/lernseiten/pmgt/07-projektauftrag">Station 07 · Initialisierung und Projektauftrag</a>. Den Statusbericht vertiefst du in <a href="/lernseiten/pmgt/19-statusbericht">Station 19</a>.</p>
+  </section>
+
+  <!-- ===== 7 · Zeitstrahl ===== -->
+  <section id="zeitstrahl">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Phasen-Zeitstrahl: der Onlineschalter von Anfang bis Ende</h2>
+    <p class="prose">Leg jede Karte auf die Phase, in der das Ergebnis entsteht oder der Meilenstein liegt. Tippe zuerst eine Karte an, dann den Knopf «hier ablegen» einer Phase. Ergebnisse, die in mehreren Phasen immer wieder entstehen, gehören auf das Band «laufend». Eine abgelegte Karte kannst du wieder antippen und verschieben. Danach schaltest du auf «agil» um und siehst, was sich verschiebt.</p>
+    <div class="card stack" id="t03-zs">
+      <div class="t03-modus" role="group" aria-label="Vorgehen">
+        <span><b>Vorgehen:</b></span>
+        <button type="button" class="btn" id="t03-m-klassisch" aria-pressed="true">klassisch</button>
+        <button type="button" class="btn" id="t03-m-agil" aria-pressed="false">agil</button>
+      </div>
+      <p class="t03-meldung" id="t03-zs-hinweis" aria-live="polite"></p>
+      <h3>Kartenstapel</h3>
+      <div class="t03-stapel" id="t03-stapel"></div>
+      <div class="row">
+        <button type="button" class="btn" id="t03-zurueck-stapel">Gewählte Karte zurück in den Stapel</button>
+      </div>
+      <h3>Zeitstrahl</h3>
+      <div class="t03-bahnen" id="t03-bahnen"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t03-zs-pruefen">Prüfen</button>
+        <button type="button" class="btn" id="t03-zs-loesung">Lösung zeigen</button>
+        <button type="button" class="btn" id="t03-zs-reset">Zurücksetzen</button>
+      </div>
+      <p class="t03-meldung" id="t03-zs-stand" aria-live="polite"></p>
+      <ul class="t03-erkl" id="t03-zs-erkl"></ul>
+      <div class="stack" id="t03-zs-entfaellt-box">
+        <h3 id="t03-zs-entfaellt-titel">Gibt es in diesem Vorgehen nicht</h3>
+        <ul class="t03-entfaellt" id="t03-zs-entfaellt"></ul>
+      </div>
+    </div>
+    <details class="sol"><summary>Was verschiebt sich von klassisch zu agil?</summary>
+      <div class="stack">
+        <ul class="t03-ziele">
+          <li><b>Konzept, Realisierung und Einführung verschmelzen zur Umsetzung.</b> Alles, was klassisch dort entsteht (Lösungsanforderungen, Testkonzept, Lösungsarchitektur, Vorabnahme, Abnahme, Schulung), entsteht agil in der Umsetzung, oft mehrmals, je Iteration oder Release.</li>
+          <li><b>Initialisierung und Abschluss bleiben gleich</b>, mit denselben Ergebnissen und Meilensteinen.</li>
+          <li><b>Die Phasenfreigaben zwischen Konzept, Realisierung und Einführung entfallen.</b> Dafür kann der Projektmanagementplan eine <b>Releasefreigabe</b> verlangen (optional).</li>
+          <li><b>Der Releasebericht</b> kommt neu dazu, der <b>Phasenbericht</b> entsteht nur noch einmal: vor der Phasenfreigabe Abschluss.</li>
+          <li><b>Der Änderungsantrag entfällt</b>: Er kommt laut HERMES nur klassisch vor (4.4.1.2). Agil fliessen Änderungen in die Lösungsanforderungen (Backlog), die der Anwendervertreter priorisiert.</li>
+          <li><b>Projektstatusbericht und QS- und Risikobericht</b> bleiben laufend. Nach aussen berichtet das Projekt gleich, das ist ja der Sinn der HERMES-Hülle.</li>
+        </ul>
+        <p class="hint">Quellen: Modultabellen 4, 5, 7, 10–12 (S.36–41), Phasenbeschreibungen S.22–25, Ergebnis 4.4.1.2.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 8 · Rollenkarte ===== -->
+  <section id="rollenkarte">
+    <span class="eyebrow">Schritt 8 · Themeneigene Interaktion</span>
+    <h2>Rollenkarte: Wer im Onlineschalter steht wo?</h2>
+    <p class="prose">Ordne die Personen des Onlineschalters der Hierarchieebene ihrer Projektrolle und ihrer Partnergruppe zu. Lies dazu, was die Person im Projekt tut. Bedienung: Karte antippen, dann Feld antippen. Mit der Tastatur: Karte mit Enter wählen, Pfeiltasten im Raster, Enter legt ab, Escape bricht ab.</p>
+    <div id="t03-matrix-rollen"></div>
+    <div id="t03-frage-gemeinderat"></div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Zuordnen, entscheiden, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Neun Übungen in fünf Arten: zuordnen, Vorlage füllen, wahr oder falsch, Fallentscheid und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest.</p>
+    <div id="t03-u-module"></div>
+    <div id="t03-u-auftraege"></div>
+    <div id="t03-u-wf"></div>
+    <div id="t03-u-partner"></div>
+    <div id="t03-u-lieferant"></div>
+    <div id="t03-u-sizing"></div>
+    <div id="t03-u-gever"></div>
+    <div id="t03-u-reflexion-tor"></div>
+    <div id="t03-u-reflexion-agil"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein Projekt in HERMES einordnen, am Stück</h2>
+    <p class="prose">Eine Aufgabe im Stil der Modulschlussprüfung (eigener Fall): Ein neues Wolkenried-Projekt soll nach HERMES aufgesetzt werden. Vorgehen, Szenario mit Modulen, Grösse, Phasen mit Ergebnissen und Toren, Projektorganisation. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t03-film"></div>
+    <details class="sol"><summary>Der fertige HERMES-Steckbrief als Text</summary>
+      <div class="t03-steckbrief" id="t03-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>«Kleines Projekt, wir lassen die Initialisierung weg.»</b> Falsch. Initialisierung und Abschluss gibt es in jedem Projekt, klassisch wie agil. Bei kleinen Projekten werden sie mit Sizing und Tailoring schlank, aber sie entfallen nie.</div>
+    <div class="note falle"><b>Phase und Modul verwechseln.</b> Initialisierung ist eine Phase, Projektgrundlagen das Modul dazu. Die drei Pflichtmodule heissen Projektsteuerung, Projektführung und Projektgrundlagen, nicht «Initialisierung, Konzept, Abschluss».</div>
+    <div class="note falle"><b>Das Szenario umfasse das ganze Projekt.</b> Ein Szenario beschreibt nur die Lösungsentstehung (Konzept bis Einführung oder Umsetzung). Initialisierung und Abschluss liegen ausserhalb.</div>
+    <div class="note falle"><b>Der Gemeinderat als Auftraggeber.</b> Der Auftraggeber ist in HERMES immer eine einzelne natürliche Person. Ein Gremium wie der Gemeinderat gehört zur Stammorganisation oder bildet mit Vertretern den Projektausschuss.</div>
+    <div class="note falle"><b>Minimalrollen beim Lieferanten.</b> Auftraggeber, Projektleiter und Anwendervertreter besetzt immer der Anwender. Der Lieferant ist Ersteller. Er besetzt nur Rollen, die Tab. 19 dem Ersteller erlaubt, zum Beispiel Teilprojektleiter, Entwickler, Tester oder einen Sitz im Projektausschuss, nie Auftraggeber, Projektleiter oder Anwendervertreter (S.148).</div>
+    <div class="note falle"><b>Meilenstein = Termin.</b> In HERMES ist ein Meilenstein die Folge eines Entscheids, ein Quality Gate. Ein Datum ohne Entscheid ist kein HERMES-Meilenstein.</div>
+    <div class="note falle"><b>Vorabnahme und Abnahme vertauschen.</b> Vorabnahme am Ende der Realisierung, Abnahme am Ende der Einführung nach der Betriebsaufnahme.</div>
+    <div class="note falle"><b>Agil heisse «ohne HERMES-Regeln».</b> Nur die Phase Umsetzung ist agil. Initialisierung und Abschluss bleiben klassisch, die Releasefreigabe ist optional, Berichte nach aussen bleiben gleich.</div>
+    <div class="note falle"><b>Begriffe aus verschiedenen Versionen mischen.</b> Projektauftrag (5.1) und Projektdurchführungsauftrag (2021) sind dasselbe Dokument. Schreib den Handbuchbegriff und den Folienbegriff in Klammern.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t03-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>HERMES</b> ist der offene Projektmanagement-Standard der Bundesverwaltung (eCH-0054): eine ergebnisorientierte Hülle aus Phasen, Meilensteinen, Rollen, Ergebnissen, Modulen und Szenarien.</li>
+      <li><b>Phasen:</b> klassisch Initialisierung, Konzept, Realisierung, Einführung, Abschluss; agil Initialisierung, Umsetzung, Abschluss. Initialisierung und Abschluss gibt es immer.</li>
+      <li><b>Meilensteine</b> sind Quality Gates: immer die Folge eines Entscheids, am Anfang und Ende jeder Phase. Wichtig: Projektinitialisierungs-, Projektdurchführungs-, Phasenfreigabe, Vorabnahme, Abnahme, Phasenfreigabe Abschluss, Projektabschluss.</li>
+      <li><b>Rollen</b> gehören zu einer Ebene (Steuerung, Führung, Ausführung) und zu Partnergruppen (Anwender, Ersteller, Betreiber). Minimal: Auftraggeber, Projektleiter, Anwendervertreter, alle vom Anwender besetzt.</li>
+      <li><b>Pflichtmodule:</b> Projektsteuerung, Projektführung, Projektgrundlagen. Das <b>Szenario</b> wählt die Fachmodule für die Lösungsentstehung, <b>Sizing</b> (XL, L, M, S) und <b>Tailoring</b> passen den Aufwand an.</li>
+      <li><b>Ergebnisse je Phase:</b> Initialisierung mit Projektinitialisierungsauftrag, Studie, Stakeholderliste, PM-Plan, Projektdurchführungsauftrag; laufend Projektstatusbericht, Phasenbericht, QS- und Risikobericht, Änderungsantrag; am Ende Abnahmeprotokoll und Projektschlussbeurteilung.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t03-ziele">
+        <li><span class="icb">ICB 3.01</span> Projektdesign (Swiss ICB 4.5.1, Indikator 4.5.1.4 «Generellen Projektmanagement-Ansatz auswählen und anpassen»): Phasenmodell klassisch und agil, Szenario, Sizing, Tailoring.</li>
+        <li><span class="icb">ICB 3.05</span> Organisation, Information und Dokumentation (Swiss ICB 4.5.5, Indikator 4.5.5.2 «Struktur, Rollen und Verantwortlichkeiten definieren»): Ebenen, Partnergruppen, Minimalrollen, Tab. 19.</li>
+        <li><span class="icb">ICB 1.02</span> Governance, Strukturen und Prozesse (Swiss ICB 4.3.2, Indikator 4.3.2.5 Entscheidungs- und Berichtsstrukturen): Stammorganisation, Kompetenzordnung, Meilensteine als Quality Gates.</li>
+        <li><span class="icb">ICB 1.03</span> Compliance, Standards und Regulationen (Swiss ICB 4.3.3, Indikator 4.3.3.5 professionelle Standards und Tools): HERMES als offener Standard. Dazu <span class="icb">ICB 3.10</span>, Indikator 4.5.10.2 «Übergang in eine neue Projektphase».</li>
+        <li>Referenzhandbuch HERMES 2021: Big Picture S.6–7; Sizing S.8 und S.27–28; Phasenmodell Tab. 1 S.21 und Kap. 1.4 S.22–25; Abb. 8 und 9 S.14; Standardszenarien Tab. 2 S.27; Pflichtmodule S.35; Modultabellen 4–15 S.36–42; Meilensteine Abb. 25–26 S.44 und Kap. 4.4.2.9 S.72–73; Dokumentliste Tab. 16 S.45; Rollen Abb. 27–28 S.142–143, Partnergruppen S.144, Tab. 19 S.146–147, Auftraggeber S.149.</li>
+        <li>Folien: LB 1 F.21–23 (HERMES 2022, Grafik 5.1, Big Picture); LB 2 F.35–36 (Initialisierung); LB 3 F.10–12 (Projektgrundlagen); LB 4 F.10–11 (HERMES), F.15–16 (Phasen, Meilensteine); LB 5 F.11 (HERMES-Rollen). Vorlagen: Projektauftrag (5.1, LB 3), Durchführungsauftrag (2022, LB 6). Diese Seite: Tabelle «Begriffe übersetzen» und Meilensteintabelle aus Schritt 3.</li>
+        <li>Gubelmann/Sommer: Kapitel 8 «Projektdesign», S. 89–104 (laut LB 4) und Kapitel 9 «Organisation, Information und Dokumentation», S. 105–124 (laut LB 5). Die Kapitel zu ICB 1.02 und 1.03 nennen die bisherigen Folien nicht; im Inhaltsverzeichnis nachschlagen. Dazu Compendio Kapitel 1, S. 9–24 (laut LB 1).</li>
+      </ul>
+    </div>
+    <footer>Station 3 des Lernpfads PMGT. Gemeinde Wolkenried, «Onlineschalter Wolkenried», «Raumreservation online» und alle Personen frei erfunden. Quellen: HERMES-Referenzhandbuch Projektmanagement 2021, LB 1–5, HERMES-Vorlagen, Swiss ICB 4.0, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ---------- Schritt 0: Phase, Meilenstein, Rolle oder Ergebnis ---------- */
+  L.sortierer("#t03-sortierer-bausteine", {
+    kategorien: ["Phase", "Meilenstein", "Rolle", "Ergebnis"],
+    elemente: [
+      { html: "Realisierung", kategorie: "Phase", erklaerung: "Ein Zeitabschnitt: Die Lösung wird gebaut oder konfiguriert und getestet." },
+      { html: "Vorabnahme durch das Bauamt", kategorie: "Meilenstein", erklaerung: "Ein Tor nach einem Entscheid: Das Bauamt bestätigt, dass die Lösung reif für die Einführung ist." },
+      { html: "Anwendervertreterin (Seraina Caflisch)", kategorie: "Rolle", erklaerung: "Ein Hut mit Verantwortung: Sie vertritt die fachliche Sicht des Bauamts." },
+      { html: "Testkonzept", kategorie: "Ergebnis", erklaerung: "Ein Dokument, das im Konzept entsteht." },
+      { html: "Phasenfreigabe durch den Gemeinderat", kategorie: "Meilenstein", erklaerung: "Die Folge eines Entscheids: Die nächste Phase darf starten." },
+      { html: "Auftraggeberin", kategorie: "Rolle", erklaerung: "Die Rolle mit der Gesamtverantwortung. In Wolkenried trägt Gemeinderätin Franziska Bühlmann diesen Hut." },
+      { html: "Einführung", kategorie: "Phase", erklaerung: "Der Zeitabschnitt, in dem Schulung, Freischaltung und Betriebsaufnahme stattfinden." },
+      { html: "System parametrisiert", kategorie: "Ergebnis", erklaerung: "Ein Zustand, kein Dokument. Auch das ist in HERMES ein Ergebnis." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper Phasen am Onlineschalter ---------- */
+  L.stepper("#t03-stepper-phasen", {
+    titel: "Der Onlineschalter durch die fünf Phasen",
+    text: 'Der Gemeinderat will das Baugesuch online. Zuerst <span data-link="i">klärt eine Studie Varianten und Vorgehen</span>. Dann <span data-link="k">beschreibt das Team die Lösung und beschafft die Plattform</span>. Die Lärchwerk Informatik AG <span data-link="r">konfiguriert die Plattform, das Bauamt testet</span>. Danach <span data-link="e">werden Bauamt und Fachstellen geschult und der Schalter freigeschaltet</span>. Zum Schluss <span data-link="a">wird das Projekt übergeben und beurteilt</span>.',
+    schritte: [
+      { html: '<span data-link="i"><b>Initialisierung</b></span>',
+        warum: "Mit dem Projektinitialisierungsauftrag gibt die Auftraggeberin die Initialisierung frei. Die Studie vergleicht Varianten (eigene Entwicklung oder Standardprodukt) und entscheidet: klassisch, Szenario IT-Anwendung Adaption. Dazu Rechtsgrundlagen- und Schutzbedarfsanalyse, Stakeholderliste, Projektmanagementplan, Projektdurchführungsauftrag. Tor: Projektdurchführungsfreigabe." },
+      { html: '<span data-link="i">Initialisierung</span> → <span data-link="k"><b>Konzept</b></span>',
+        warum: "Lösungsanforderungen, Lösungsarchitektur, ISDS-Konzept, Test- und Einführungskonzept. Die Plattform wird ausgeschrieben, Lärchwerk erhält den Zuschlag. Tor: Phasenfreigabe für die Realisierung." },
+      { html: '<span data-link="i">Initialisierung</span> → <span data-link="k">Konzept</span> → <span data-link="r"><b>Realisierung</b></span>',
+        warum: "Plattform einrichten, Formulare konfigurieren, Schnittstelle bauen, Daten übernehmen, Integrationstest. Im Leitstand ist das Periode 1, Tag 1 bis 20. Tore: Vorabnahme (Plan Tag 20), dann Phasenfreigabe für die Einführung durch den Gemeinderat." },
+      { html: '<span data-link="i">Initialisierung</span> → <span data-link="k">Konzept</span> → <span data-link="r">Realisierung</span> → <span data-link="e"><b>Einführung</b></span>',
+        warum: "Schulung, Betrieb und Support aufbauen, Pilot mit Planungsbüros, Freischaltung für alle. Im Leitstand Periode 2, Tag 21 bis 40. Tore: Betriebsaufnahme, Abnahme (Plan Tag 36, Terminziel Tag 40), Phasenfreigabe Abschluss." },
+      { html: '<span data-link="i">Initialisierung</span> → <span data-link="k">Konzept</span> → <span data-link="r">Realisierung</span> → <span data-link="e">Einführung</span> → <span data-link="a"><b>Abschluss</b></span>',
+        warum: "Dokumentation prüfen und archivieren, Verantwortung an Bauamt und Betrieb übergeben, Projekterfahrungen und Projektschlussbeurteilung. Tor: Projektabschluss, die Projektorganisation wird aufgelöst. Im Leitstand entspricht das der Nachbesprechung." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper Tor am Tag 20 ---------- */
+  L.stepper("#t03-stepper-tor", {
+    titel: "Phasenfreigabe Einführung, Onlineschalter",
+    text: 'Tag 20: Das Bauamt hat die <span data-link="vor">Vorabnahme durchgeführt</span>. Die Projektleitung legt den <span data-link="ber">Phasenbericht mit dem Statusbericht</span> vor. Die <span data-link="risk">Einführungsrisiken</span> sind beurteilt, der <span data-link="plan">Projektmanagementplan für die Einführung ist nachgeführt</span>. Der <span data-link="gr">Gemeinderat entscheidet</span>.',
+    schritte: [
+      { html: '<span data-link="vor">Entscheid Vorabnahme</span> mit Abnahmeprotokoll',
+        warum: "Die Phasenfreigabe der Einführung basiert auf dem Entscheid Vorabnahme (S.23). Das Abnahmeprotokoll nennt die offenen Mängel mit Massnahmen und Terminen." },
+      { html: '<span data-link="vor">Vorabnahme</span> + <span data-link="ber">Phasenbericht</span> + QS- und Risikobericht',
+        warum: "Der Phasenbericht fasst Ergebnisse und Entscheide der Realisierung zusammen und zeigt Planung und Organisation der Einführung. Der QS- und Risikobericht liefert eine unabhängige Sicht." },
+      { html: '… + <span data-link="risk">Einführungsrisiken vertretbar?</span>',
+        warum: "Am Ende der Realisierung müssen die Einführungsrisiken beurteilt und vertretbar sein. Sonst kann die Einführung nicht erfolgen (S.23)." },
+      { html: '… + <span data-link="plan">PM-Plan nachgeführt</span> → Checkliste Phasenfreigabe',
+        warum: "Die Ressourcen für die nächste Phase werden auf Grund des nachgeführten Projektmanagementplans freigegeben. Die Checkliste stellt sicher, dass kein Prüfpunkt vergessen geht." },
+      { html: '<span data-link="gr">Entscheid</span>: freigeben · freigeben mit Auflagen · nicht freigeben → ◆ Meilenstein Phasenfreigabe',
+        warum: "Erst der Entscheid erzeugt den Meilenstein. Im Leitstand fällt hier der Übergang von Periode 1 zu Periode 2: Vorher dürfen die Vorgänge der Einführung nicht starten." }
+    ]
+  });
+
+  /* ---------- Schritt 7: Phasen-Zeitstrahl ---------- */
+  const PH = {
+    I: "Initialisierung", K: "Konzept", R: "Realisierung", E: "Einführung",
+    U: "Umsetzung", A: "Abschluss", L: "laufend (mehrere Phasen)"
+  };
+  const BAHNEN = { klassisch: ["I", "K", "R", "E", "A", "L"], agil: ["I", "U", "A", "L"] };
+  const BAHN_KLASSE = { I: "t03-b-rahmen", A: "t03-b-rahmen", U: "t03-b-agil", L: "t03-b-laufend" };
+  // k = Phase klassisch, a = Phase agil, null = gibt es in diesem Vorgehen nicht
+  const KARTEN = [
+    { id: "pif", m: true, name: "Projekt&shy;initialisierungs&shy;freigabe", k: "I", a: "I",
+      ek: "Steht am Anfang der Initialisierung: Mit dem Projektinitialisierungsauftrag gibt die Auftraggeberin die Initialisierung frei. Das Projekt ist formell geboren.",
+      ea: "Gleich wie klassisch: Die Initialisierung ist in beiden Vorgehen identisch." },
+    { id: "wv", m: true, name: "Weiteres Vorgehen (Variante, klassisch oder agil)", k: "I", a: "I",
+      ek: "Fällt in der Initialisierung auf Grund der Studie. Er legt Variante, Vorgehen und Szenario fest.",
+      ea: "Gleich wie klassisch: Hier wird ja gerade entschieden, ob agil gearbeitet wird." },
+    { id: "pdf", m: true, name: "Projekt&shy;durchführungs&shy;freigabe", k: "I", a: "I",
+      ek: "Schliesst die Initialisierung ab. Erst danach beginnt die Lösungsentstehung.",
+      ea: "Schliesst auch agil die Initialisierung ab; danach wird das Entwicklungsteam formell etabliert." },
+    { id: "la", m: true, name: "Lösungs&shy;architektur", k: "K", a: "U",
+      ek: "Im Konzept: Erst wenn die Architektur entschieden ist, darf Lärchwerk die Plattform anpassen.",
+      ea: "Agil in der Umsetzung, je Iteration oder Release." },
+    { id: "zu", m: true, name: "Zuschlag an die Lärchwerk Informatik AG", k: "K", a: "U",
+      ek: "Die Beschaffung mit Ausschreibung, Evaluation und Zuschlag läuft im Konzept.",
+      ea: "Agil wird in der Umsetzung beschafft (Modul Beschaffung, Tab. 7)." },
+    { id: "vab", m: true, name: "Vorabnahme", k: "R", a: "U",
+      ek: "Am Ende der Realisierung (Onlineschalter: Plan Tag 20). Grundlage für die Phasenfreigabe der Einführung.",
+      ea: "Agil in der Umsetzung, je Inkrement oder Release." },
+    { id: "pfe", m: true, name: "Phasen&shy;freigabe Einführung durch den Gemeinderat", k: "R", a: null,
+      ek: "Am Ende der Realisierung: Darf die Einführung starten? Im Leitstand das Tor zwischen Periode 1 und 2.",
+      ea: "Agil gibt es zwischen Konzept, Realisierung und Einführung keine Phasen und darum keine Phasenfreigabe. Die Steuerung kann stattdessen eine Releasefreigabe verlangen." },
+    { id: "ab", m: true, name: "Abnahme", k: "E", a: "U",
+      ek: "Am Ende der Einführung, nach der Betriebsaufnahme (Onlineschalter: Plan Tag 36). Die Lösung geht definitiv an Bauamt und Betrieb.",
+      ea: "Agil in der Umsetzung, je Release." },
+    { id: "pfa", m: true, name: "Phasen&shy;freigabe Abschluss", k: "E", a: "U",
+      ek: "Am Ende der Einführung: Die Leistungserbringung ist fertig, die Ressourcen für den Abschluss werden freigegeben.",
+      ea: "Agil am Ende der Umsetzung, nach dem letzten Release." },
+    { id: "pab", m: true, name: "Projekt&shy;abschluss", k: "A", a: "A",
+      ek: "Der letzte formelle Entscheid. Danach wird die Projektorganisation aufgelöst.",
+      ea: "Gleich wie klassisch: Der Abschluss ist in beiden Vorgehen identisch." },
+    { id: "rf", m: true, name: "Release&shy;freigabe", k: null, a: "U",
+      ek: "Gibt es nur agil. Klassisch übernehmen die Phasenfreigaben diese Steuerungsaufgabe.",
+      ea: "Optional in der Umsetzung: Die Auftraggeberin gibt das nächste Release frei, wenn der PM-Plan das verlangt." },
+    { id: "pia", m: false, name: "Projekt&shy;initialisierungs&shy;auftrag", k: "I", a: "I",
+      ek: "Grundlage für die Freigabe der Initialisierung: Vereinbarung zwischen Auftraggeberin und Projektleitung für diese Phase.",
+      ea: "Gleich wie klassisch." },
+    { id: "st", m: false, name: "Studie mit Lösungsvarianten", k: "I", a: "I",
+      ek: "Entsteht in der Initialisierung (Modul Projektgrundlagen) und ist Grundlage für den Entscheid weiteres Vorgehen.",
+      ea: "Gleich wie klassisch." },
+    { id: "pda", m: false, name: "Projekt&shy;durchführungs&shy;auftrag", k: "I", a: "I",
+      ek: "Wird in der Initialisierung erarbeitet und ist die verbindliche Grundlage für die Projektdurchführungsfreigabe.",
+      ea: "Gleich wie klassisch; er hält auch fest, dass agil gearbeitet wird." },
+    { id: "lan", m: false, name: "Lösungs&shy;anforderungen", k: "K", a: "U",
+      ek: "Im Konzept werden die groben Anforderungen der Studie konkretisiert und als Lösungsanforderungen festgelegt.",
+      ea: "Agil in der Umsetzung, als priorisierte Liste, die laufend verfeinert wird (Backlog)." },
+    { id: "tk", m: false, name: "Testkonzept", k: "K", a: "U",
+      ek: "Im Konzept: Wie und womit getestet wird, steht fest, bevor gebaut wird.",
+      ea: "Agil in der Umsetzung, Tests werden je Iteration oder Release konzipiert." },
+    { id: "sch", m: false, name: "Einführungs&shy;massnahmen durchgeführt (Schulung Bauamt und Fachstellen)", k: "E", a: "U",
+      ek: "Ein Zustand in der Einführung: Die Anwender sind geschult.",
+      ea: "Agil in der Umsetzung, je Release gemäss Releaseplan." },
+    { id: "psb", m: false, name: "Projekt&shy;schluss&shy;beurteilung", k: "A", a: "A",
+      ek: "Im Abschluss: Soll-Ist, Erfahrungen, offene Punkte. Grundlage für den Entscheid Projektabschluss.",
+      ea: "Gleich wie klassisch." },
+    { id: "psr", m: false, name: "Projekt&shy;status&shy;bericht", k: "L", a: "L",
+      ek: "Laufend in allen Phasen, im Rhythmus des PM-Plans.",
+      ea: "Auch agil laufend: Nach aussen berichtet das Projekt gleich." },
+    { id: "qsr", m: false, name: "QS- und Risiko&shy;bericht", k: "L", a: "L",
+      ek: "Laufend in der Lösungsentstehung und zu jeder Freigabe (Modul Projektsteuerung).",
+      ea: "Auch agil laufend, zum Beispiel zu jeder Releasefreigabe." },
+    { id: "aea", m: false, name: "Änderungs&shy;antrag", k: "L", a: null,
+      ek: "Laufend in Konzept, Realisierung und Einführung, immer wenn sich am vereinbarten Umfang etwas ändern soll.",
+      ea: "Kommt laut HERMES nur klassisch vor (4.4.1.2). Agil fliessen Änderungen in die Lösungsanforderungen, die der Anwendervertreter priorisiert." },
+    { id: "phb", m: false, name: "Phasen&shy;bericht", k: "L", a: "U",
+      ek: "Klassisch am Ende von Konzept, Realisierung und Einführung, als Grundlage für die nächste Freigabe: also laufend.",
+      ea: "Agil gibt es nur die Phase Umsetzung: Der Phasenbericht entsteht dort, vor der Phasenfreigabe Abschluss." },
+    { id: "rb", m: false, name: "Release&shy;bericht", k: null, a: "U",
+      ek: "Gibt es nur agil, als Abschluss eines Release.",
+      ea: "In der Umsetzung am Ende jedes Release." }
+  ];
+  const NACH_AGIL = { I: "I", K: "U", R: "U", E: "U", A: "A", L: "L" };
+
+  let modus = "klassisch";
+  let gewaehlt = null;
+  let geprueft = false;
+  const ort = { klassisch: {}, agil: {} };
+  const agilBesucht = { wert: false };
+
+  const elStapel = document.getElementById("t03-stapel");
+  const elBahnen = document.getElementById("t03-bahnen");
+  const elHinweis = document.getElementById("t03-zs-hinweis");
+  const elStand = document.getElementById("t03-zs-stand");
+  const elErkl = document.getElementById("t03-zs-erkl");
+  const elEntf = document.getElementById("t03-zs-entfaellt");
+  const elEntfTitel = document.getElementById("t03-zs-entfaellt-titel");
+  const btnK = document.getElementById("t03-m-klassisch");
+  const btnA = document.getElementById("t03-m-agil");
+
+  function ziel(karte) { return modus === "klassisch" ? karte.k : karte.a; }
+  function erkl(karte) { return modus === "klassisch" ? karte.ek : karte.ea; }
+  function aktive() { return KARTEN.filter(function (c) { return ziel(c) !== null; }); }
+  function art(c) { return '<span class="t03-art">' + (c.m ? "◆ Meilenstein" : "▭ Ergebnis") + "</span>"; }
+
+  function kartenKnopf(c, klasse) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn " + klasse;
+    b.id = "t03-k-" + klasse.replace("t03-", "") + "-" + c.id;
+    b.dataset.id = c.id;
+    b.setAttribute("aria-pressed", gewaehlt === c.id ? "true" : "false");
+    b.innerHTML = art(c) + c.name;
+    b.addEventListener("click", function () {
+      gewaehlt = gewaehlt === c.id ? null : c.id;
+      zeichnen();
+      const neu = document.getElementById(b.id);
+      if (neu) neu.focus();
+    });
+    return b;
+  }
+
+  function zeichnen() {
+    const o = ort[modus];
+    // Stapel
+    elStapel.innerHTML = "";
+    aktive().forEach(function (c) {
+      if (!o[c.id]) elStapel.appendChild(kartenKnopf(c, "t03-karte"));
+    });
+    // Bahnen
+    elBahnen.innerHTML = "";
+    BAHNEN[modus].forEach(function (p) {
+      const bahn = document.createElement("div");
+      bahn.className = "t03-bahn " + (BAHN_KLASSE[p] || "");
+      const h = document.createElement("h4");
+      h.textContent = PH[p];
+      const knopf = document.createElement("button");
+      knopf.type = "button";
+      knopf.className = "btn t03-ablegen";
+      knopf.id = "t03-ab-" + p;
+      knopf.textContent = "↓ hier ablegen";
+      knopf.setAttribute("aria-label", "Gewählte Karte in " + PH[p] + " ablegen");
+      knopf.addEventListener("click", function () { ablegen(p); });
+      const inhalt = document.createElement("div");
+      inhalt.className = "t03-inhalt";
+      aktive().forEach(function (c) {
+        if (o[c.id] !== p) return;
+        const chip = kartenKnopf(c, "t03-chip");
+        if (geprueft) {
+          const ok = ziel(c) === p;
+          chip.classList.add(ok ? "t03-ok" : "t03-falsch");
+          chip.innerHTML = '<span class="marke">' + (ok ? "✓ " : "✗ ") + "</span>" + art(c) + c.name;
+          chip.setAttribute("aria-label", c.name.replace(/&shy;/g, "") + (ok ? ", richtig" : ", falsch"));
+        }
+        inhalt.appendChild(chip);
+      });
+      bahn.append(h, knopf, inhalt);
+      elBahnen.appendChild(bahn);
+    });
+    // Gibt es in diesem Vorgehen nicht
+    const weg = KARTEN.filter(function (c) { return ziel(c) === null; });
+    elEntfTitel.textContent = "Gibt es " + (modus === "klassisch" ? "klassisch" : "agil") + " nicht";
+    elEntf.innerHTML = weg.map(function (c) { return "<li><b>" + c.name + ":</b> " + erkl(c) + "</li>"; }).join("");
+  }
+
+  function ablegen(p) {
+    if (!gewaehlt) {
+      elHinweis.textContent = "Wähle zuerst eine Karte im Stapel oder auf dem Zeitstrahl.";
+      return;
+    }
+    ort[modus][gewaehlt] = p;
+    gewaehlt = null;
+    geprueft = false;
+    elStand.textContent = "";
+    elErkl.innerHTML = "";
+    elHinweis.textContent = "";
+    zeichnen();
+    // Fokus: nächste offene Karte im Stapel, sonst derselbe Ablegen-Knopf
+    const naechste = elStapel.querySelector("button");
+    if (naechste) naechste.focus();
+    else { const k = document.getElementById("t03-ab-" + p); if (k) k.focus(); }
+  }
+
+  function pruefen() {
+    const o = ort[modus];
+    const liste = aktive();
+    let richtig = 0, gelegt = 0;
+    const zeilen = [];
+    liste.forEach(function (c) {
+      if (!o[c.id]) return;
+      gelegt++;
+      const ok = o[c.id] === ziel(c);
+      if (ok) richtig++;
+      zeilen.push('<li class="' + (ok ? "ok" : "bad") + '"><span class="marke">' + (ok ? "✓ " : "✗ ") + c.name + "</span>" +
+        (ok ? "" : " (gelegt: " + PH[o[c.id]] + ", richtig: " + PH[ziel(c)] + ")") + " · " + erkl(c) + "</li>");
+    });
+    geprueft = true;
+    zeichnen();
+    elErkl.innerHTML = zeilen.join("");
+    const offen = liste.length - gelegt;
+    elStand.textContent = richtig + " von " + liste.length + " Karten richtig" + (offen ? " · " + offen + " noch im Stapel" : "") +
+      (richtig === liste.length ? (modus === "klassisch" ? ". Stark! Schalte jetzt auf «agil» um." : ". Alles richtig, auch agil.") : ".");
+  }
+
+  function loesung() {
+    aktive().forEach(function (c) { ort[modus][c.id] = ziel(c); });
+    gewaehlt = null;
+    pruefen();
+  }
+
+  function zuruecksetzen() {
+    ort[modus] = {};
+    gewaehlt = null;
+    geprueft = false;
+    elStand.textContent = "";
+    elErkl.innerHTML = "";
+    elHinweis.textContent = "";
+    zeichnen();
+    const erste = elStapel.querySelector("button");
+    if (erste) erste.focus();
+  }
+
+  function umschalten(neu) {
+    if (neu === modus) return;
+    modus = neu;
+    gewaehlt = null;
+    geprueft = false;
+    btnK.setAttribute("aria-pressed", modus === "klassisch" ? "true" : "false");
+    btnA.setAttribute("aria-pressed", modus === "agil" ? "true" : "false");
+    btnK.classList.toggle("on", modus === "klassisch");
+    btnA.classList.toggle("on", modus === "agil");
+    elStand.textContent = "";
+    elErkl.innerHTML = "";
+    if (modus === "agil" && !agilBesucht.wert) {
+      agilBesucht.wert = true;
+      let n = 0;
+      KARTEN.forEach(function (c) {
+        const alt = ort.klassisch[c.id];
+        if (alt && c.a !== null) { ort.agil[c.id] = NACH_AGIL[alt]; n++; }
+      });
+      elHinweis.textContent = n
+        ? "Deine klassische Zuordnung ist übernommen: Konzept, Realisierung und Einführung sind jetzt die Umsetzung. Zwei Karten sind weggefallen (unten erklärt), zwei neue liegen im Stapel. Prüfe, was nicht mehr stimmt."
+        : "Agil gibt es nur drei Phasen und das Band «laufend». Zwei Karten sind weggefallen, zwei neue sind dazugekommen.";
+    } else {
+      elHinweis.textContent = modus === "agil" ? "Ansicht agil: drei Phasen." : "Ansicht klassisch: fünf Phasen.";
+    }
+    zeichnen();
+  }
+
+  btnK.addEventListener("click", function () { umschalten("klassisch"); });
+  btnA.addEventListener("click", function () { umschalten("agil"); });
+  btnK.classList.add("on");
+  document.getElementById("t03-zs-pruefen").addEventListener("click", pruefen);
+  document.getElementById("t03-zs-loesung").addEventListener("click", loesung);
+  document.getElementById("t03-zs-reset").addEventListener("click", zuruecksetzen);
+  document.getElementById("t03-zurueck-stapel").addEventListener("click", function () {
+    if (gewaehlt && ort[modus][gewaehlt]) {
+      delete ort[modus][gewaehlt];
+      const id = gewaehlt;
+      gewaehlt = null;
+      geprueft = false;
+      elErkl.innerHTML = "";
+      elStand.textContent = "";
+      zeichnen();
+      const k = document.getElementById("t03-k-karte-" + id);
+      if (k) k.focus();
+    } else {
+      elHinweis.textContent = "Wähle zuerst eine Karte auf dem Zeitstrahl.";
+    }
+  });
+  zeichnen();
+
+  /* ---------- Schritt 8: Rollenkarte ---------- */
+  L.matrix("#t03-matrix-rollen", {
+    titel: "Projektorganisation Onlineschalter Wolkenried",
+    icb: ["ICB 3.05", "ICB 1.02"],
+    frage: "<p>In welcher Hierarchieebene und für welche Partnergruppe arbeitet die Person im Projekt?</p>",
+    zeilen: ["Steuerung", "Führung", "Ausführung"],
+    spalten: ["Anwender", "Ersteller", "Betreiber"],
+    achseY: "Hierarchieebene",
+    achseX: "Partnergruppe",
+    elemente: [
+      { html: "Franziska Bühlmann, Gemeinderätin Bau und Planung: trägt die Gesamtverantwortung, leitet den Projektausschuss", ziel: ["Steuerung", "Anwender"],
+        erklaerung: "Sie ist die Auftraggeberin: eine einzelne Person aus der Stammorganisation, Steuerung, Partnergruppe Anwender." },
+      { html: "Beat Imhof, Bauverwalter: sitzt im Projektausschuss und bringt die Anliegen des Bauamts ein", ziel: ["Steuerung", "Anwender"],
+        erklaerung: "Projektausschussmitglied (Steuerung). Er vertritt das Bauamt, also die Anwender." },
+      { html: "Daniel Frei, Kundenverantwortlicher Lärchwerk: berät den Projektausschuss", ziel: ["Steuerung", "Ersteller"],
+        erklaerung: "Projektausschussmitglied für den Lieferanten. Laut Tab. 19 können alle drei Partnergruppen im Projektausschuss sitzen; er vertritt den Ersteller." },
+      { html: "Silvan Schuler, Leiter Zentrale Dienste mit der Informatik: sitzt im Projektausschuss und achtet auf stabilen Betrieb", ziel: ["Steuerung", "Betreiber"],
+        erklaerung: "Projektausschussmitglied, das den Betreiber vertritt: Die Informatik der Gemeinde betreibt Berechtigungen, Support und Schnittstellen." },
+      { html: "Du, Projektleiterin oder Projektleiter der Gemeinde: planst, führst und berichtest", ziel: ["Führung", "Anwender"],
+        erklaerung: "Projektleiter ist eine Minimalrolle und muss vom Anwender besetzt sein. Ebene Führung." },
+      { html: "Dario Pfister, leitender Entwickler Lärchwerk: leitet das Teilprojekt «Plattform und Formulare»", ziel: ["Führung", "Ersteller"],
+        erklaerung: "Teilprojektleiter (Führung). Diese Rolle dürfen alle Partnergruppen besetzen; er führt den Teil des Lieferanten." },
+      { html: "Seraina Caflisch, Fachverantwortliche Baugesuche: vertritt das Bauamt, verantwortet die fachlichen Anforderungen und nimmt ab", ziel: ["Ausführung", "Anwender"],
+        erklaerung: "Anwendervertreterin: Minimalrolle, Ausführung, Partnergruppe Anwender." },
+      { html: "Martin Zgraggen, Sachbearbeiter Baugesuche: testet die Formulare mit echten Fällen", ziel: ["Ausführung", "Anwender"],
+        erklaerung: "Tester (Ausführung). Er kommt aus dem Bauamt und vertritt damit die Anwender." },
+      { html: "Elena Kovačević, Schnittstellenentwicklerin Lärchwerk: baut die Schnittstelle zur Bauverwaltungssoftware", ziel: ["Ausführung", "Ersteller"],
+        erklaerung: "Entwicklerin: Ausführung, laut Tab. 19 nur Ersteller." },
+      { html: "Jasmin Huber, Applikationsbetreuerin der Informatik: baut Betrieb und Support auf", ziel: ["Ausführung", "Betreiber"],
+        erklaerung: "Betriebsverantwortliche: Ausführung, Partnergruppe Betreiber." }
+    ]
+  });
+
+  L.auswahl("#t03-frage-gemeinderat", {
+    frage: '<span class="icb">ICB 1.02</span> <span class="icb">ICB 3.05</span> Und der Gemeinderat als Gesamtbehörde? Er spricht den Kredit und entscheidet in Wolkenried über die Phasenfreigabe. Wo gehört er hin?',
+    optionen: [
+      "In die Projektorganisation, Ebene Steuerung, als Auftraggeber",
+      "In die Projektorganisation, Ebene Führung, weil er den Projektleiter führt",
+      "In die Stammorganisation (Leitung). Auftraggeberin ist eine einzelne Person, hier Gemeinderätin Bühlmann.",
+      "Nirgends, ein Gemeinderat hat in HERMES keine Aufgabe"
+    ],
+    richtig: 2,
+    erklaerung: "Der Auftraggeber ist in HERMES immer eine einzelne natürliche Person (S.149). Der Gemeinderat ist die Leitung der Stammorganisation: Er stellt Ressourcen bereit und behält sich laut Kompetenzordnung grosse Entscheide vor. Die Auftraggeberin entscheidet im Rahmen dieser Kompetenzordnung und eskaliert darüber hinaus an die Stammorganisation (Rollenbeschreibung Auftraggeber, S.149–150)."
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t03-u-module", {
+    frage: "Übung 1 · Welches Pflichtmodul erarbeitet dieses Ergebnis?",
+    kategorien: ["Projektsteuerung", "Projektführung", "Projektgrundlagen"],
+    elemente: [
+      { html: "Projektinitialisierungsauftrag", kategorie: "Projektsteuerung", erklaerung: "Ergebnis der Aufgabe «Entscheid Projektinitialisierungsfreigabe treffen» (Tab. 4)." },
+      { html: "Checkliste Phasenfreigabe", kategorie: "Projektsteuerung", erklaerung: "Freigabe-Entscheide gehören zur Steuerung (Tab. 4)." },
+      { html: "QS- und Risikobericht", kategorie: "Projektsteuerung", erklaerung: "Liefert der Steuerung eine unabhängige Sicht, Aufgabe «Projekt steuern» (Tab. 4)." },
+      { html: "Meilenstein Projektabschluss", kategorie: "Projektsteuerung", erklaerung: "Der letzte Entscheid im Projekt fällt die Steuerung (Tab. 4)." },
+      { html: "Projektstatusbericht", kategorie: "Projektführung", erklaerung: "Aufgabe «Projekt führen und kontrollieren» der Projektleitung (Tab. 5)." },
+      { html: "Änderungsantrag", kategorie: "Projektführung", erklaerung: "Aufgabe «Änderungen managen» (Tab. 5). Entschieden wird er von der Steuerung." },
+      { html: "Arbeitsauftrag", kategorie: "Projektführung", erklaerung: "Damit vergibt die Projektleitung Arbeit an Mitarbeitende (Tab. 5)." },
+      { html: "Studie", kategorie: "Projektgrundlagen", erklaerung: "Kernergebnis des Moduls Projektgrundlagen in der Initialisierung (Tab. 6)." },
+      { html: "Rechtsgrundlagenanalyse", kategorie: "Projektgrundlagen", erklaerung: "Entsteht parallel zur Studie (Tab. 6, LB 2 F.36)." },
+      { html: "Meilenstein Weiteres Vorgehen", kategorie: "Projektgrundlagen", erklaerung: "Aufgabe «Entscheid weiteres Vorgehen treffen» im Modul Projektgrundlagen (Tab. 6)." }
+    ]
+  });
+
+  L.sortierer("#t03-u-auftraege", {
+    frage: "Übung 2 · Vorlage füllen: Gehört das in den Projektinitialisierungsauftrag oder in den Projektdurchführungsauftrag?",
+    kategorien: ["Projektinitialisierungsauftrag", "Projektdurchführungsauftrag"],
+    elemente: [
+      { html: "Ziele und Rahmenbedingungen der Phase Initialisierung", kategorie: "Projektinitialisierungsauftrag", erklaerung: "Der Projektinitialisierungsauftrag regelt nur die Initialisierung (4.4.1.34)." },
+      { html: "Ressourcen und Termine, um Studie und Varianten zu erarbeiten", kategorie: "Projektinitialisierungsauftrag", erklaerung: "Damit gibt die Auftraggeberin die Ressourcen für die Initialisierung frei." },
+      { html: "Grundlage für die Freigabe der Phase Initialisierung", kategorie: "Projektinitialisierungsauftrag", erklaerung: "Genau so beschreibt ihn das Handbuch." },
+      { html: "Lösungsbeschreibung der gewählten Variante aus der Studie", kategorie: "Projektdurchführungsauftrag", erklaerung: "Die Variante steht erst nach der Studie fest (4.4.1.57, Vorlage LB 6)." },
+      { html: "Vorgehensziele: klassisch oder agil, gewähltes Szenario", kategorie: "Projektdurchführungsauftrag", erklaerung: "Das Vorgehen entscheidet der Meilenstein weiteres Vorgehen, der Durchführungsauftrag hält es fest." },
+      { html: "Kosten, Nutzen und Wirtschaftlichkeit (Vorschau)", kategorie: "Projektdurchführungsauftrag", erklaerung: "Für die Freigabe des ganzen Projekts braucht die Steuerung die Wirtschaftlichkeit." },
+      { html: "Schlussfolgerungen aus der Rechtsgrundlagenanalyse", kategorie: "Projektdurchführungsauftrag", erklaerung: "Die Analyse entsteht in der Initialisierung, ihr Ergebnis fliesst in den Durchführungsauftrag (Kapitel «Rechtliche Grundlagen»)." },
+      { html: "Grundlage für die Projektdurchführungsfreigabe", kategorie: "Projektdurchführungsauftrag", erklaerung: "Verbindliche Vereinbarung zwischen Auftraggeber und Projektleiter für die Lösungsentstehung." }
+    ]
+  });
+
+  L.wahrFalsch("#t03-u-wf", {
+    titel: 'Übung 3 · Wahr oder falsch? <span class="icb">ICB 3.01</span> <span class="icb">ICB 1.03</span>',
+    aussagen: [
+      { html: "HERMES ist ein offener Standard der Bundesverwaltung. Auch eine Gemeinde darf damit arbeiten.", wahr: true,
+        erklaerung: "HERMES ist ein offener Standard (eCH-0054). Das Handbuch nennt Kantons- und Stadtverwaltungen ausdrücklich als Stammorganisationen (ICB 1.03, Standards)." },
+      { html: "Bei einem kleinen Projekt darf man die Phase Initialisierung weglassen.", wahr: false,
+        erklaerung: "Jedes Projekt beginnt mit der Initialisierung. Bei kleinen Projekten wird sie über das Sizing schlank, aber sie entfällt nicht (ICB 3.01)." },
+      { html: "Agil ersetzt die Phase Umsetzung die drei Phasen Konzept, Realisierung und Einführung.", wahr: true,
+        erklaerung: "Tab. 1: Initialisierung, Umsetzung, Abschluss. Nur die Umsetzung ist agil." },
+      { html: "Ein Szenario umfasst Initialisierung, Lösungsentstehung und Abschluss.", wahr: false,
+        erklaerung: "Ein Szenario beschreibt nur die Lösungsentstehung; Initialisierung und Abschluss liegen ausserhalb (S.27)." },
+      { html: "Der Auftraggeber kann ein Gremium sein, zum Beispiel der Gemeinderat.", wahr: false,
+        erklaerung: "Der Auftraggeber ist immer eine einzelne natürliche Person aus der Stammorganisation (S.149, ICB 3.05)." },
+      { html: "Ein HERMES-Meilenstein ist immer die Folge eines Entscheids.", wahr: true,
+        erklaerung: "Meilensteine sind Zustände, die durch einen Entscheid erreicht werden. Darum sind sie Quality Gates (S.44)." },
+      { html: "Im agilen Vorgehen ist die Releasefreigabe Pflicht.", wahr: false,
+        erklaerung: "Die Releasefreigabe ist optional. In der Initialisierung wird festgelegt, ob sie verlangt ist (LB 2 F.36, Abb. 25)." }
+    ]
+  });
+
+  L.auswahl("#t03-u-partner", {
+    frage: '<p><b>Übung 4</b> <span class="icb">ICB 3.05</span></p><p>Welche Partnergruppe muss die drei minimal zu besetzenden Rollen eines HERMES-Projekts stellen?</p>',
+    optionen: ["Ersteller", "Betreiber", "Anwender", "Das spielt keine Rolle, Hauptsache besetzt"],
+    richtig: 2,
+    erklaerung: "Auftraggeber, Projektleiter und Anwendervertreter sind zwingend durch die Partnergruppe Anwender zu besetzen (S.146, Tab. 19). Der Anwender ist Eigner des Projekts und Nutzer der Lösung."
+  });
+
+  L.auswahl("#t03-u-lieferant", {
+    frage: '<p><b>Übung 5 · Fallentscheid</b> <span class="icb">ICB 3.05</span> <span class="icb">ICB 1.02</span></p><p>Daniel Frei von der Lärchwerk Informatik AG macht der Gemeinde ein Angebot: «Unser erfahrener Projektleiter führt den ganzen Onlineschalter. Sie sparen sich eine Stelle, und die Abnahme machen wir gleich mit.» Die Gemeindeschreiberin findet das verlockend. Was empfiehlst du?</p>',
+    optionen: [
+      "Annehmen. Der Lieferant kennt das Produkt am besten.",
+      "Annehmen, aber nur für die Realisierung. In der Einführung übernimmt die Gemeinde.",
+      "Ablehnen: Die Projektleitung bleibt bei der Gemeinde, ebenso Auftraggeberin und Anwendervertretung. Lärchwerk stellt einen Teilprojektleiter für seinen Teil.",
+      "Ablehnen und ganz auf eine Projektleitung verzichten. Die Auftraggeberin führt direkt."
+    ],
+    richtig: 2,
+    erklaerung: "Projektleiter ist eine Minimalrolle und muss vom Anwender besetzt sein (Tab. 19). Jede Rolle vertritt die Sicht ihrer Partnergruppe: Ein Lieferant, der sein eigenes Werk abnimmt, steckt im Interessenkonflikt (S.144). Folgen der anderen Optionen: Annehmen schwächt die Gemeinde bei Mängeln und Nachforderungen; die Teillösung ändert am Konflikt nichts; ohne Projektleitung fehlt eine Minimalrolle."
+  });
+
+  L.auswahl("#t03-u-sizing", {
+    frage: '<p><b>Übung 6 · Fallentscheid</b> <span class="icb">ICB 3.01</span></p><p>Gemeindepräsident Walter Inauen zur geplanten «Hundeanmeldung online» (2 Wochen, Kredit CHF 15\'500, 4 Personen, wie im Einführungslauf des Leitstands): «Für so etwas brauchen wir kein HERMES mit fünfzig Dokumenten. Fangt einfach an.» Wie reagierst du?</p>',
+    optionen: [
+      "Er hat recht. Für Kleinprojekte gilt HERMES nicht.",
+      "HERMES nutzen, aber schlank: Sizing als Kleinprojekt S, Tailoring auf die Pflichtmodule, nötige Fachmodule und minimal geforderten Dokumente; Initialisierung und Abschluss kurz, aber vorhanden.",
+      "Die volle Maximalvariante des Referenzhandbuchs anwenden, damit nichts fehlt.",
+      "Die Initialisierung weglassen und direkt mit der Realisierung beginnen."
+    ],
+    richtig: 1,
+    erklaerung: "Das Handbuch beschreibt eine Maximalvariante. Genau dafür gibt es Sizing (XL, L, M, S) und Tailoring: Der Aufwand passt sich dem Projekt an, die Governance bleibt (S.8, S.27–28). Folgen der anderen Optionen: ohne Methode keine Freigaben und keine Vergleichbarkeit; die Maximalvariante erstickt das Kleinprojekt in Papier; ohne Initialisierung fehlen Variantenwahl und Auftrag."
+  });
+
+  L.schrittAufgabe("#t03-u-gever", {
+    titel: "Übung 7 · Szenario, Module und Grösse bestimmen",
+    aufgabe: "<p>Die Gemeindekanzlei Wolkenried will ihre alte Geschäftsverwaltung (Akten, Beschlüsse, Fristen) ablösen. Ein marktübliches Geschäftsverwaltungsprodukt soll beschafft, eingerichtet und an die Anforderungen der Kanzlei angepasst werden. Rund 40'000 Akten müssen übernommen werden, viele enthalten besonders schützenswerte Personendaten. Budget rund CHF 400'000, Dauer 14 Monate, Ausschreibung nach öffentlichem Beschaffungsrecht. Bestimme Szenario, Module, Tailoring und Grösse. Überleg zuerst selbst, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "Szenario: <b>IT-Anwendung Adaption</b>", warum: "Ein Produkt am Markt wird beschafft und technisch wie organisatorisch integriert. «Entwicklung» wäre richtig, wenn die Gemeinde selbst eine Anwendung baut." },
+      { html: "Pflichtmodule: Projektsteuerung, Projektführung, Projektgrundlagen", warum: "Die drei Module gelten in jedem Projekt. Projektgrundlagen arbeitet in der Initialisierung, also ausserhalb des Szenarios." },
+      { html: "Fachmodule laut Tab. 2: Beschaffung, Organisation, IT-System, Tests, Einführungsorganisation, IT-Migration, IT-Betrieb, ISDS", warum: "Das Szenario bringt sie mit. Prüfe jetzt, ob jedes wirklich gebraucht wird." },
+      { html: "Tailoring: alle behalten. Beschaffung (öffentliche Ausschreibung), IT-Migration (40'000 Akten), ISDS (besonders schützenswerte Daten), Organisation (Abläufe der Kanzlei ändern sich)", warum: "Ein Modul entfernst du nur, wenn es nicht nötig ist. Wäre nichts zu migrieren, könnte IT-Migration weg (S.32)." },
+      { html: "Grösse: eher <b>L</b> (eigene Einschätzung)", warum: "Hohes Budget, über ein Jahr Laufzeit, öffentliche Ausschreibung, heikle Daten. HERMES nennt keine festen Schwellen, die Stammorganisation passt die Grössen an. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.reflexion("#t03-u-reflexion-tor", {
+    titel: "Übung 8 · Offene Frage: Meilensteine als Quality Gates",
+    icb: ["ICB 3.01", "ICB 3.10", "ICB 1.02"],
+    frage: "<p>Ein neues Gemeinderatsmitglied fragt: «Warum soll der Gemeinderat nach der Realisierung des Onlineschalters überhaupt noch einmal entscheiden? Der Kredit ist doch gesprochen.» Erkläre in vier bis sechs Sätzen, was ein Meilenstein in HERMES ist, warum er ein Quality Gate ist und was der Gemeinderat am Tor Ende Realisierung prüft.</p>",
+    musterloesung:
+      "<p>Ein Meilenstein ist in HERMES kein Termin, sondern die Folge eines Entscheids. Er steht am Anfang und Ende jeder Phase. Dort wird über Ergebnisse und weiteres Vorgehen entschieden, deshalb heisst er Quality Gate: Die nächste Phase startet nur, wenn die Qualität stimmt.</p>" +
+      "<p>Der Kredit deckt das Projekt, aber die Ressourcen werden phasenweise freigegeben. So behält die Steuerung die Kontrolle und kann rechtzeitig korrigieren oder abbrechen.</p>" +
+      "<p>Am Tor Ende Realisierung prüft der Gemeinderat: Ist die Vorabnahme bestanden und sind die offenen Mängel im Abnahmeprotokoll tragbar? Sind die Einführungsrisiken beurteilt und vertretbar? Ist der Projektmanagementplan für die Einführung nachgeführt? Grundlage sind Phasenbericht, Statusbericht, QS- und Risikobericht und die Checkliste Phasenfreigabe. Der Entscheid lautet: freigeben, freigeben mit Auflagen oder nicht freigeben.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Quellen: Referenzhandbuch S.23, S.43–44, Tab. 4.</p>',
+    kriterien: [
+      { text: "Meilenstein als Folge eines Entscheids, nicht als blosser Termin", punkte: 2 },
+      { text: "Quality Gate erklärt: Weiter nur, wenn Ergebnisse und Vorgaben stimmen", punkte: 1 },
+      { text: "Sinn der phasenweisen Freigabe: Kontrolle, Korrektur, Abbruch möglich", punkte: 1 },
+      { text: "Mindestens zwei Prüfpunkte genannt (Vorabnahme, Einführungsrisiken, PM-Plan, Ressourcen)", punkte: 2 },
+      { text: "Grundlagen des Entscheids genannt (Phasenbericht, QS- und Risikobericht, Checkliste)", punkte: 1 }
+    ]
+  });
+
+  L.reflexion("#t03-u-reflexion-agil", {
+    titel: "Übung 9 · Offene Frage: klassisch oder agil?",
+    icb: ["ICB 3.01", "ICB 3.05"],
+    frage: "<p>Wolkenried plant eine App, mit der die Bevölkerung Schäden an Strassen, Spielplätzen und Beleuchtung melden kann. Was die Leute wirklich brauchen, ist noch unklar; die Gemeinde will früh eine erste Version testen und danach ausbauen. Empfiehl ein Vorgehen nach HERMES und begründe es. Nenne die Phasen und je einen Unterschied zum klassischen Vorgehen bei den Rollen und bei den Meilensteinen. Fünf bis acht Sätze.</p>",
+    musterloesung:
+      "<p>Ich empfehle das agile Vorgehen. Die Anforderungen sind unklar und sollen sich durch Rückmeldungen der Bevölkerung klären; eine frühe erste Version und schrittweiser Ausbau passen zum iterativ-inkrementellen Vorgehen. Entschieden wird das in der Initialisierung mit dem Meilenstein Weiteres Vorgehen, festgehalten im Projektdurchführungsauftrag.</p>" +
+      "<p>Phasen: Initialisierung, Umsetzung, Abschluss. Initialisierung und Abschluss laufen auch hier klassisch.</p>" +
+      "<p>Rollen: In der Umsetzung bilden Anwendervertreter, Iterationsleiter und Entwickler das Entwicklungsteam. Der Anwendervertreter priorisiert die Lösungsanforderungen wie ein Product Owner; die Projektleitung führt, greift aber nicht in die Selbstorganisation des Teams ein.</p>" +
+      "<p>Meilensteine: Zwischen Konzept, Realisierung und Einführung gibt es keine Phasenfreigaben. Stattdessen kann der Projektmanagementplan eine Releasefreigabe je Release verlangen; Vorabnahme und Abnahme finden je Release statt. Änderungen laufen über die Lösungsanforderungen statt über Änderungsanträge.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt.</p>',
+    kriterien: [
+      { text: "Klare Empfehlung agil mit Begründung aus dem Fall (unklare Anforderungen, frühe Version)", punkte: 2 },
+      { text: "Phasen richtig: Initialisierung, Umsetzung, Abschluss", punkte: 1 },
+      { text: "Rollen-Unterschied: Entwicklungsteam, Anwendervertreter priorisiert, PL greift nicht ein", punkte: 2 },
+      { text: "Meilenstein-Unterschied: keine Phasenfreigaben dazwischen, optionale Releasefreigabe", punkte: 2 },
+      { text: "Hinweis, dass Initialisierung und Abschluss klassisch bleiben oder Entscheid im Meilenstein Weiteres Vorgehen", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Bausteine des HERMES-Steckbriefs; jede Szene zeigt eine Auswahl, Neues leuchtet auf.
+  const B = {
+    kopf: "<b>HERMES-Steckbrief</b> · Raumreservation online · Gemeinde Wolkenried",
+    vorgehen: "<b>Vorgehen: klassisch.</b> Standardprodukt mit bekannten Anforderungen, fester Starttermin zum neuen Vereinsjahr, kleiner Spielraum für Experimente. Initialisierung und Abschluss laufen ohnehin klassisch.",
+    szenario: "<b>Szenario: IT-Anwendung Adaption</b> (ein Produkt am Markt beschaffen und integrieren).",
+    module: "<b>Module:</b> Pflicht Projektsteuerung, Projektführung, Projektgrundlagen. Aus dem Szenario: Organisation, IT-System, Tests, Einführungsorganisation, IT-Migration (Excel-Belegungslisten), IT-Betrieb, ISDS (Personendaten der Vereine).",
+    tailoring: "<b>Tailoring:</b> Modul Beschaffung entfernt. Kein offenes oder selektives Verfahren nötig; die Offerte von Lärchwerk läuft über die Projektführung (Offertanfrage, Angebot, Vereinbarung).",
+    sizing: "<b>Sizing: S</b> (Kleinprojekt: CHF 60'000, 5 Monate, 5 Personen, wenig politische Brisanz). Nur die minimal geforderten Dokumente, kein Projektausschuss.",
+    pI: "<b>Initialisierung:</b> Projektinitialisierungsauftrag, Studie mit Varianten, Rechtsgrundlagen- und Schutzbedarfsanalyse, Stakeholderliste, PM-Plan, Projektdurchführungsauftrag · ◆ Projektinitialisierungsfreigabe, ◆ Weiteres Vorgehen, ◆ Projektdurchführungsfreigabe",
+    pK: "<b>Konzept:</b> Lösungsanforderungen, Systemkonzept und Lösungsarchitektur, Vereinbarung mit Lärchwerk, Test-, Einführungs- und Migrationskonzept, ISDS-Konzept · ◆ Lösungsarchitektur, ◆ ISDS-Konzept, ◆ Phasenfreigabe",
+    pR: "<b>Realisierung:</b> System parametrisiert (Reservationsmodul, Anbindung Debitoren), Migrationsverfahren realisiert, Testprotokoll, Schulungsunterlagen · ◆ Vorabnahme mit Abnahmeprotokoll, ◆ Phasenfreigabe",
+    pE: "<b>Einführung:</b> Hauswarte und Kanzlei geschult, Belegungsdaten migriert, System und Betrieb aktiviert · ◆ Abnahme Migration, ◆ Betriebsaufnahme, ◆ Abnahme mit Abnahmeprotokoll, ◆ Phasenfreigabe Abschluss",
+    pA: "<b>Abschluss:</b> Dokumentation übergeben und archiviert, Projekterfahrungen, Projektschlussbeurteilung · ◆ Projektabschluss",
+    pL: "<b>Laufend:</b> PM-Plan nachführen, Projektstatusbericht, Phasenbericht vor jeder Phasenfreigabe, Änderungsantrag und Änderungsstatusliste",
+    r1: "<b>Steuerung:</b> Auftraggeberin Karin Odermatt, Gemeinderätin Liegenschaften (Anwender)",
+    r2: "<b>Führung:</b> Projektleiterin Aylin Demir, Gemeindekanzlei (Anwender)",
+    r3: "<b>Ausführung:</b> Anwendervertreterin Corinne Hug, Leiterin Liegenschaften (Anwender) · Entwickler Dario Pfister, Lärchwerk (Ersteller) · Betriebsverantwortliche Jasmin Huber, Informatik (Betreiber)"
+  };
+  const REIHE = ["kopf", "vorgehen", "szenario", "module", "tailoring", "sizing", "pI", "pK", "pR", "pE", "pA", "pL", "r1", "r2", "r3"];
+  function steckbrief(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t03-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k];
+      return '<div class="t03-fb">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t03-film", {
+    phasen: ["1 · Lesen", "2 · Vorgehen", "3 · Szenario", "4 · Phasen und Tore", "5 · Rollen", "6 · Prüfen"],
+    texte: [
+      'Gemeinde Wolkenried: <span data-ph="was">Turnhallen, Mehrzweckhalle und Sitzungszimmer sollen online reservierbar sein.</span> <span data-ph="termin">Start zum neuen Vereinsjahr am 1. August, fester Termin.</span> Heute führt die Liegenschaftsverwaltung <span data-ph="alt">Excel-Listen mit den Belegungen der nächsten zwei Jahre</span>. <span data-ph="produkt">Die Lärchwerk Informatik AG bietet ein fertiges Reservationsmodul an; es wird konfiguriert und an die Debitorenbuchhaltung angebunden.</span> <span data-ph="budget">Budget CHF 60\'000, Laufzeit 5 Monate.</span> Die Offerte liegt unter dem Schwellenwert, ab dem die Gemeinde öffentlich ausschreiben muss. <span data-ph="team">Team: Liegenschaftsverwaltung, Gemeindekanzlei und Informatik der Gemeinde, dazu zwei Personen von Lärchwerk.</span> <span data-ph="daten">Die Kontaktdaten der Vereine sind Personendaten.</span> Aufgabe: Ordne das Projekt in HERMES ein. (a) Vorgehen mit Begründung, (b) Szenario, Module und Grösse, (c) je Phase die wichtigsten Ergebnisse und Meilensteine, (d) minimale Projektorganisation mit Ebene und Partnergruppe.'
+    ],
+    woerterbuch: [
+      "<b>Klassisch</b>: Konzept, Realisierung, Einführung · <b>Agil</b>: Umsetzung",
+      "<b>Szenario</b> = Fachmodule der Lösungsentstehung",
+      "<b>Tailoring</b>: Module weglassen oder ergänzen",
+      "<b>Sizing</b>: XL · L · M · S",
+      "<b>Meilenstein</b> = Tor nach einem Entscheid",
+      "<b>Minimal</b>: Auftraggeber, Projektleiter, Anwendervertreter (Anwender)"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "HERMES-Steckbrief", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So ordnest du ein Projekt in HERMES ein: Fall lesen, Vorgehen wählen, Szenario mit Modulen und Grösse bestimmen, Phasen mit Ergebnissen und Toren füllen, Rollen besetzen und zum Schluss prüfen." },
+      { ph: 0, hl: ["was", "produkt"], f: steckbrief("kopf", ["kopf"]),
+        say: "Zuerst der Kopf des Steckbriefs. Dann markierst du, was gebaut wird: eine Raumreservation, und zwar mit einem fertigen Produkt von Lärchwerk." },
+      { ph: 0, hl: ["termin", "budget", "team"], f: steckbrief("kopf"),
+        say: "Dann Termin, Geld und Team. Fester Start am 1. August, 60'000 Franken, fünf Monate, fünf Personen. Das ist ein kleines Projekt." },
+      { ph: 0, hl: ["alt", "daten"], f: steckbrief("kopf"),
+        say: "Und die Besonderheiten: Alte Excel-Listen müssen übernommen werden, und es geht um Personendaten. Beides entscheidet später über Module." },
+      { ph: 1, dict: 1, dh: [0], f: steckbrief("vorgehen", ["vorgehen"]),
+        say: "Klassisch oder agil? Das Produkt ist fertig, die Anforderungen sind bekannt, der Termin ist fest. Das spricht für klassisch mit Konzept, Realisierung und Einführung." },
+      { ph: 1, hl: ["termin"], f: steckbrief("vorgehen"),
+        say: "Agil wäre nicht verboten. Aber wenig Unklarheit und ein fixer Stichtag sprechen hier für klare Phasen und Freigaben. Wichtig: Initialisierung und Abschluss gibt es in beiden Fällen." },
+      { ph: 2, hl: ["produkt"], dict: 2, dh: [1], f: steckbrief("szenario", ["szenario"]),
+        say: "Ein Produkt am Markt beschaffen und integrieren: Das ist das Szenario IT-Anwendung Adaption." },
+      { ph: 2, hl: ["alt", "daten"], f: steckbrief("module", ["module"]),
+        say: "Die drei Pflichtmodule kommen immer dazu. Aus dem Szenario bleiben Organisation, IT-System, Tests, Einführungsorganisation, IT-Migration für die Excel-Listen, IT-Betrieb und ISDS für die Personendaten." },
+      { ph: 2, hl: ["budget"], dict: 3, dh: [2], f: steckbrief("tailoring", ["tailoring"]),
+        say: "Tailoring: Das Modul Beschaffung ist nur für offene oder selektive Verfahren gedacht. Hier reicht eine Offerte, sie läuft über die Projektführung. Also Modul Beschaffung entfernen." },
+      { ph: 2, hl: ["budget", "team"], dict: 4, dh: [3], f: steckbrief("sizing", ["sizing"]),
+        say: "Sizing: wenig Geld, kurze Dauer, kleines Team, kaum politische Brisanz. Das ist ein Kleinprojekt S. Nur die minimal geforderten Dokumente, kein Projektausschuss." },
+      { ph: 3, dict: 5, dh: [4], f: steckbrief("pI", ["pI"]),
+        say: "Jetzt die Phasen. Initialisierung: Initialisierungsauftrag, Studie, Rechts- und Schutzbedarfsanalyse, Stakeholderliste, PM-Plan und Durchführungsauftrag. Drei Tore: Initialisierungsfreigabe, Weiteres Vorgehen, Durchführungsfreigabe." },
+      { ph: 3, dh: [4], f: steckbrief("pK", ["pK"]),
+        say: "Konzept: Lösungsanforderungen, Architektur, Vereinbarung mit Lärchwerk, Test-, Einführungs- und Migrationskonzept, ISDS-Konzept. Am Ende die Phasenfreigabe für die Realisierung." },
+      { ph: 3, dh: [4], f: steckbrief("pR", ["pR"]),
+        say: "Realisierung: Lärchwerk parametrisiert das Modul und bindet die Debitoren an, das Migrationsverfahren steht, es wird getestet. Tore: Vorabnahme, dann Phasenfreigabe für die Einführung." },
+      { ph: 3, hl: ["termin"], dh: [4], f: steckbrief("pE", ["pE"]),
+        say: "Einführung: schulen, Belegungen migrieren, System und Betrieb aktivieren. Tore: Abnahme der Migration, Betriebsaufnahme vor dem 1. August, Abnahme und Phasenfreigabe Abschluss." },
+      { ph: 3, dh: [4], f: steckbrief("pA", ["pA"]),
+        say: "Abschluss: Dokumentation übergeben, Erfahrungen festhalten, Projektschlussbeurteilung. Letztes Tor: Projektabschluss." },
+      { ph: 3, f: steckbrief("pL", ["pL"]),
+        say: "Was durch alle Phasen läuft, schreibst du separat: PM-Plan nachführen, Statusberichte, Phasenberichte vor jeder Freigabe, Änderungsanträge mit Statusliste." },
+      { ph: 4, dict: 6, dh: [5], f: steckbrief("r1", ["r1"]),
+        say: "Jetzt die Rollen. Minimal drei, alle vom Anwender. Auftraggeberin ist eine einzelne Person: Gemeinderätin Karin Odermatt, Ressort Liegenschaften. Ebene Steuerung." },
+      { ph: 4, dh: [5], f: steckbrief("r2", ["r2"]),
+        say: "Projektleiterin wird Aylin Demir aus der Gemeindekanzlei. Ebene Führung, Partnergruppe Anwender." },
+      { ph: 4, hl: ["team"], dh: [5], f: steckbrief("r3", ["r3"]),
+        say: "Ausführung: Corinne Hug vertritt als Anwendervertreterin die Liegenschaften. Dazu kommen Dario Pfister von Lärchwerk als Ersteller und Jasmin Huber als Betriebsverantwortliche der Informatik." },
+      { ph: 4, dh: [5], f: steckbrief("r3"),
+        say: "Achtung Falle: Die Projektleitung gibst du nicht dem Lieferanten. Er würde sein eigenes Werk abnehmen. Lärchwerk führt höchstens ein Teilprojekt." },
+      { ph: 5, dh: [0, 4, 5], f: steckbrief("r3"),
+        say: "Prüf zum Schluss: Initialisierung und Abschluss vorhanden? Ja. Drei Pflichtmodule? Ja. Endet jede Phase mit einem Tor? Ja. Drei Minimalrollen vom Anwender besetzt? Ja." },
+      { ph: 5, f: steckbrief("r3", ["szenario", "r1", "r2", "r3"]),
+        say: "Fertig. Der Steckbrief ist schlank wie das Projekt, und trotzdem sind alle Tore und Rollen da, die HERMES verlangt. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t03-film-loesung").innerHTML = steckbrief("r3");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t03-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.01</span> Welche Phasen hat ein HERMES-Projekt mit agiler Lösungsentstehung?',
+        o: ["Initialisierung, Konzept, Umsetzung, Abschluss", "Initialisierung, Umsetzung, Abschluss", "Konzept, Realisierung, Einführung", "Nur die Phase Umsetzung"], a: 1,
+        e: "Agil: Initialisierung, Umsetzung, Abschluss (Tab. 1, S.21). Konzept, Realisierung und Einführung gibt es nur klassisch. ICB 3.01 Projektdesign: Vorgehen wählen." },
+      { q: '<span class="icb">ICB 3.05</span> Welche drei Rollen sind in jedem HERMES-Projekt minimal zu besetzen?',
+        o: ["Auftraggeber, Projektleiter, Anwendervertreter", "Auftraggeber, Projektausschuss, Projektleiter", "Projektleiter, Entwickler, Tester", "Projektleiter, Anwendervertreter, Betriebsverantwortlicher"], a: 0,
+        e: "Auftraggeber, Projektleiter und Anwendervertreter, alle von der Partnergruppe Anwender besetzt (Tab. 19, S.146). ICB 3.05 Struktur, Rollen und Verantwortlichkeiten." },
+      { q: '<span class="icb">ICB 1.02</span> Welche Module müssen in jedem HERMES-Projekt vorkommen?',
+        o: ["Initialisierung, Konzept, Abschluss", "Projektsteuerung, Projektführung, Projektgrundlagen", "Projektführung, Tests, ISDS", "Beschaffung, Organisation, IT-System"], a: 1,
+        e: "Projektsteuerung, Projektführung und Projektgrundlagen sind Pflicht, damit die Governance eingehalten ist (S.35). Initialisierung und Abschluss sind Phasen, keine Module. ICB 1.02 Governance." },
+      { q: '<span class="icb">ICB 3.01</span> Was ist ein Meilenstein in HERMES?',
+        o: ["Ein beliebiger Termin im Terminplan", "Ein Arbeitspaket ohne Dauer", "Ein Zustand, der durch einen Entscheid erreicht wird, ein Quality Gate", "Ein Dokument, das am Ende jeder Woche entsteht"], a: 2,
+        e: "Meilensteine sind spezielle Ergebnisse, immer die Folge eines Entscheids, und entsprechen Quality Gates (S.44). ICB 3.01 und ICB 3.10 (Übergang in eine neue Phase)." },
+      { q: '<span class="icb">ICB 3.05</span> Zu welcher Partnergruppe gehört die Entwicklerin der Lärchwerk Informatik AG?',
+        o: ["Anwender", "Ersteller", "Betreiber", "Stammorganisation"], a: 1,
+        e: "Der Ersteller entwickelt oder liefert und integriert die Lösung (S.144). Die Rolle Entwickler gehört laut Tab. 19 nur zum Ersteller. ICB 3.05." },
+      { q: '<span class="icb">ICB 3.01</span> In welcher Phase wird der Projektdurchführungsauftrag erarbeitet?',
+        o: ["Initialisierung", "Konzept", "Realisierung", "Abschluss"], a: 0,
+        e: "Er entsteht in der Initialisierung und ist die Grundlage für die Projektdurchführungsfreigabe am Ende dieser Phase (Tab. 5, Ergebnis 4.4.1.57). ICB 3.01 und ICB 3.10 (Projekt starten)." },
+      { q: '<span class="icb">ICB 3.01</span> Welche Aussage zu HERMES-Szenarien stimmt?',
+        o: ["Ein Szenario umfasst immer alle Module.", "Ein Szenario beschreibt nur die Lösungsentstehung; Initialisierung und Abschluss liegen ausserhalb.", "Ein Szenario ist dasselbe wie eine Phase.", "Szenarien gibt es nur für IT-Projekte."], a: 1,
+        e: "Szenarien enthalten die passenden Module für die Lösungsentstehung (S.27). Es gibt auch Szenarien für Dienstleistungen, Produkte und Organisationsanpassungen. ICB 3.01 Projektmanagement-Ansatz anpassen." },
+      { q: '<span class="icb">ICB 3.01</span> Wozu dient das Sizing?',
+        o: ["Es berechnet das Budget des Projekts.", "Es legt die Grösse des Projektteams fest.", "Es passt Szenario und Dokumentation der Grösse oder Wertigkeit des Projekts an (XL, L, M, S).", "Es ersetzt die Initialisierung bei kleinen Projekten."], a: 2,
+        e: "Sizing reduziert den Aufwand auf das Nötige, abhängig von Budget, Dauer, Team, Stakeholdern, Brisanz (S.8, S.27–28). Die Initialisierung bleibt. ICB 3.01." },
+      { q: '<span class="icb">ICB 3.10</span> Welcher Meilenstein schliesst klassisch die Realisierung fachlich ab und ist Grundlage für die Phasenfreigabe der Einführung?',
+        o: ["Abnahme", "Vorabnahme", "Projektdurchführungsfreigabe", "Phasenfreigabe Abschluss"], a: 1,
+        e: "Der Entscheid zur Phasenfreigabe der Einführung basiert auf dem Entscheid Vorabnahme (S.23). Die Abnahme folgt erst am Ende der Einführung. ICB 3.10 Übergang in eine neue Phase." },
+      { q: '<span class="icb">ICB 3.05</span> Auf welcher Hierarchieebene steht der Projektausschuss?',
+        o: ["Steuerung", "Führung", "Ausführung", "Er gehört zur Stammorganisation, nicht zum Projekt."], a: 0,
+        e: "Der Projektausschuss unterstützt den Auftraggeber und ist eine Steuerungsrolle (Abb. 28, Tab. 19). Seine Mitglieder können alle drei Partnergruppen vertreten. ICB 3.05 und ICB 1.02 (Entscheidungsstrukturen)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

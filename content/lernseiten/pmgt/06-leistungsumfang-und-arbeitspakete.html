@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leistungsumfang, Lieferobjekte, Arbeitspakete · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/07-projektauftrag" title="Initialisierung und Projektauftrag">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t06-», nur Farben aus :root -->
+  <style>
+    .t06-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t06-ziele li{margin-bottom:3px}
+    .t06-quelle{font-size:.9rem; color:var(--muted); margin:6px 0 0}
+
+    /* Grenze: drei Spalten In / Schnittstellen / Out */
+    .t06-grenze{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(220px,100%),1fr)); gap:10px}
+    .t06-zone{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface)}
+    .t06-zone b{display:block; margin-bottom:4px}
+    .t06-zone ul{margin:0; padding-left:1.2em; font-size:.95rem}
+    .t06-zone.t06-in{border-left:4px solid var(--ok)}
+    .t06-zone.t06-rand{border-left:4px solid var(--var); border-style:dashed solid dashed solid}
+    .t06-zone.t06-out{border-left:4px solid var(--bad)}
+
+    /* Ablauf als nummerierte Kette */
+    .t06-fluss{margin:0; padding:0; list-style:none; counter-reset:t06f; display:flex; flex-direction:column; gap:8px}
+    .t06-fluss > li{counter-increment:t06f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t06-fluss > li::before{content:counter(t06f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t06-fluss .hint{margin:2px 0 0}
+
+    /* Arbeitspaket-Formular (Fünf-Punkte-Schema) */
+    .t06-ap{border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface)}
+    .t06-ap-kopf{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(200px,100%),1fr)); gap:4px 14px; padding:10px 12px; background:var(--board); font-size:.95rem}
+    .t06-ap-feld{display:grid; grid-template-columns:minmax(0,10.5em) minmax(0,1fr); gap:4px 12px; padding:9px 12px; border-top:1px solid var(--line)}
+    .t06-ap-feld > b{color:var(--accent)}
+    .t06-ap-feld > b small{display:block; color:var(--muted); font-weight:400; font-size:.85rem}
+    .t06-ap-feld ul{margin:0; padding-left:1.15em}
+    .t06-ap-feld p{margin:0}
+    @media (max-width: 520px){ .t06-ap-feld{grid-template-columns:1fr} }
+
+    /* Projektauftrag-Auszug */
+    .t06-auftrag{border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:var(--board)}
+    .t06-auftrag h3{margin:0 0 6px}
+    .t06-auftrag ol{margin:0; padding-left:1.4em}
+    .t06-auftrag li{margin-bottom:6px}
+    .t06-auftrag ul{margin:2px 0 0; padding-left:1.2em}
+
+    /* Reserven-Treppe */
+    .t06-eingaben{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(200px,100%),1fr)); gap:10px}
+    .t06-eingabe{display:flex; flex-direction:column; gap:4px}
+    .t06-eingabe label{font-weight:600}
+    .t06-eingabe input{font:inherit; padding:7px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); width:100%; box-sizing:border-box; font-variant-numeric:tabular-nums}
+    .t06-treppe{display:flex; flex-direction:column; gap:10px; margin:0; padding:0; list-style:none}
+    .t06-stufe{display:flex; flex-direction:column; gap:4px}
+    .t06-stufe-text{display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:.95rem}
+    .t06-stufe-text .t06-betrag{font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap}
+    .t06-balken{display:flex; height:22px; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--bg)}
+    .t06-seg{height:100%; width:0; transition:width .3s ease}
+    .t06-seg.t06-pk{background:var(--s1)}
+    .t06-seg.t06-rr{background:var(--s2); background-image:repeating-linear-gradient(45deg, transparent 0 5px, var(--surface) 5px 7px)}
+    .t06-seg.t06-mr{background:var(--s4); background-image:repeating-linear-gradient(-45deg, transparent 0 5px, var(--surface) 5px 7px)}
+    .t06-wer{font-size:.85rem; color:var(--muted)}
+    .t06-legende{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.9rem; margin:0}
+    .t06-legende span{display:inline-flex; align-items:center; gap:6px}
+    .t06-legende i{display:inline-block; width:22px; height:12px; border:1px solid var(--line); border-radius:3px}
+    .t06-pruef{margin:0; padding:8px 12px; border-radius:8px; background:var(--board); border-left:4px solid var(--line)}
+    .t06-pruef.ok{border-left-color:var(--ok)}
+    .t06-pruef.bad{border-left-color:var(--bad)}
+
+    /* Lösung im Film und als Text */
+    .t06-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t06-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t06-fb:last-child{border-bottom:0}
+    .t06-fb b{color:var(--accent)}
+    .t06-fb ul{margin:2px 0 0; padding-left:1.2em}
+    .t06-loesung-fertig{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t06-fluss > li{padding-left:40px}
+      .t06-fz{font-size:.93rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="06-leistungsumfang-und-arbeitspakete">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 3 · Projekt aufsetzen</span>
+    <h1>Leistungsumfang, Lieferobjekte, Arbeitspakete</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenz dieser Station:</span>
+      <span class="icb">ICB 3.03</span>
+    </p>
+    <p class="lead">Bevor du planst, musst du wissen, was genau das Projekt liefert und was nicht. Hier lernst du, den Leistungsumfang mit klaren Grenzen festzulegen, prüfbare Lieferobjekte zu formulieren, Arbeitspakete im Fünf-Punkte-Schema zu beschreiben und das Budget in Reservestufen aufzubauen. Roter Faden ist der Onlineschalter Wolkenried.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t06-ziele">
+        <li>den Leistungsumfang eines Projekts mit In Scope, Out of Scope und Schnittstellen beschreiben,</li>
+        <li>Ziel und Lieferobjekt unterscheiden und Lieferobjekte mit Abnahmekriterien formulieren,</li>
+        <li>ein Arbeitspaket definieren und im Fünf-Punkte-Schema oder als HERMES-Arbeitsauftrag beschreiben,</li>
+        <li>aus den Arbeitspaketen Projektkosten, Gesamtkosten und Gesamtbudget rechnen und sagen, wer über welche Reserve verfügt,</li>
+        <li>erklären, was eine Baseline ist und wie du Scope Creep mit dem Änderungsprozess verhinderst.</li>
+      </ul>
+      <p class="t06-quelle">Quellen: Skript LB 3 F.5 (Lernziele, Literatur), F.12 (HERMES-Modul Projektgrundlagen), F.13 (Lieferobjekte), F.14 (Definition Arbeitspaket, Beispiel eines Arbeitsauftrags), F.15 (Fünf-Punkte-Schema), F.16 (Reservenstufen), F.17 (Projektstrukturplan); Arbeitsblatt Arbeitspaket (Dok. 3.1); Vorlage «HERMES Arbeitsauftrag»; Referate zu ICB 3.03 (Gruppen RJ und SG, mit Handout); Swiss ICB 4.5.3 «Leistungsumfang und Lieferobjekte» (S. 97–100); HERMES-Referenzhandbuch 2021. Alles in eigenen Worten, alle Fälle und Zahlen eigene Beispiele.</p>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> Für die Modulschlussprüfung (90 min, Open Book) rechnest du mit einer Aufgabe wie «Definiere Arbeitspakete und beschreibe eines davon», im Stil von Aufgabe B der Fallstudie MOVE und Arbeitsblatt 3.1. Eine Beispielprüfung liegt nicht vor. In der IPMA-Prüfung (<span class="icb">ICB 3.03</span>) sind Ziel gegenüber Lieferobjekt, Arbeitspaket gegenüber Planungspaket und die Reservenstufen typische Fragen, als Einzelfrage oder als kurze Rechnung.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#scope"><b>1</b>Leistungsumfang</a>
+    <a href="#lieferobjekte"><b>2</b>Lieferobjekte</a>
+    <a href="#arbeitspaket"><b>3</b>Arbeitspaket</a>
+    <a href="#reserven"><b>4</b>Reserven</a>
+    <a href="#baseline"><b>5</b>Baseline</a>
+    <a href="#grenze"><b>6</b>Grenze ziehen</a>
+    <a href="#treppe"><b>7</b>Reserven-Treppe</a>
+    <a href="#formular"><b>8</b>AP-Formular</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir vor, du lässt deine Küche umbauen. Bevor der Schreiner kommt, klärst du: Was gehört zum Auftrag (neue Fronten, Arbeitsplatte) und was nicht (Boden, Malerarbeiten)? Was steht am Schluss in der Küche, und woran erkennst du, dass es gut ist? Wer macht was, und wie viel Geld legst du für Überraschungen zur Seite? Genau diese Fragen beantwortet diese Station für ein Projekt.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Leistungsumfang = Gartenzaun</span><span class="ex">drin · draussen</span><p>Was zum Projekt gehört und ausdrücklich, was nicht. Wie ein Zaun: Erst mit der Grenze weisst du, wofür du zuständig bist.</p></div>
+      <div class="concept"><span class="tag">Lieferobjekt = Paket an der Haustür</span><span class="ex">prüfen · abnehmen</span><p>Ein konkretes Ergebnis, das jemand übernimmt. Du packst es aus, prüfst es gegen die Bestellung und quittierst den Empfang.</p></div>
+      <div class="concept"><span class="tag">Arbeitspaket = Rezeptkarte</span><span class="ex">Zutaten · Schritte · Gericht · Koch</span><p>Die kleinste geplante Arbeit mit klarem Ergebnis: Was brauchst du zum Start, was tust du, was liegt am Ende vor, wer kocht, mit welcher Technik?</p></div>
+      <div class="concept"><span class="tag">Reserve = Notgroschen</span><span class="ex">Portemonnaie · Sparkonto</span><p>Geld für Unvorhergesehenes. Den Notgroschen im Portemonnaie verwaltest du selbst, das Sparkonto bleibt bei den Eltern.</p></div>
+      <div class="concept"><span class="tag">Scope Creep = «Wenn Sie schon da sind …»</span><span class="ex">+ noch eine Kleinigkeit</span><p>Der Umfang wächst schleichend, Wunsch für Wunsch, ohne dass jemand Kosten und Termin neu entscheidet. Am Ende ist der Schreiner zwei Wochen länger da.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Baustein ist das?</h3>
+      <p class="hint">Alles stammt aus dem Küchenumbau. Frag dich: Geht es um die Grenze, um ein übergebenes Ergebnis, um eine geplante Arbeit oder um Geld für Überraschungen?</p>
+      <div id="t06-sortierer-bausteine"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Leistungsumfang ===== -->
+  <section id="scope">
+    <span class="eyebrow">Schritt 1 · Inhalt plus Grenzen (Swiss ICB 4.5.3)</span>
+    <h2>Leistungsumfang: was dazugehört und was nicht</h2>
+    <p class="prose">Die Swiss ICB beschreibt den <b>Leistungsumfang</b> (englisch Scope) sinngemäss so: Er legt den Fokus und den Inhalt des Projekts fest, also die Ergebnisse, ihre Wirkung und ihren Nutzen und die Arbeit, die dafür nötig ist. Ebenso deutlich hält er fest, was <b>nicht</b> zum Projekt gehört. Damit beschreibt er die Grenzen des Projekts (Swiss ICB 4.5.3, Definition, S. 97). Kurz: <b>Leistungsumfang = Inhalt + Grenzen.</b></p>
+    <p class="prose">Die ICB nennt vier Kompetenzindikatoren. Sie sind zugleich die Reihenfolge dieser Station:</p>
+    <ol class="t06-fluss">
+      <li><b>Lieferobjekte definieren</b> (3.03.01): materielle und immaterielle Ergebnisse festlegen und den Zielen zuordnen.<p class="hint">Schritt 2 dieser Station.</p></li>
+      <li><b>Leistungsumfang strukturieren</b> (3.03.02): den ganzen Inhalt in einen Projektstrukturplan gliedern.<p class="hint">Kurz in Schritt 3, ausführlich in <a href="/lernseiten/pmgt/09-projektstrukturplan">Station 09</a>.</p></li>
+      <li><b>Arbeitspakete definieren</b> (3.03.03): die kleinsten Elemente mit klaren Grenzen beschreiben.<p class="hint">Schritt 3 dieser Station.</p></li>
+      <li><b>Konfiguration des Leistungsumfangs erstellen und aufrechterhalten</b> (3.03.04): Baseline halten, Änderungen steuern, Scope Creep verhindern.<p class="hint">Schritt 5. Die ersten drei Indikatoren sind Planung, der vierte begleitet das ganze Projekt.</p></li>
+    </ol>
+
+    <h3>Drei Zonen: drin, an der Grenze, draussen</h3>
+    <p class="prose">Ein guter Leistungsumfang hat drei Zonen (nach dem Referat der Gruppe RJ zu ICB 3.03). Am Onlineschalter Wolkenried sieht das so aus:</p>
+    <div class="t06-grenze">
+      <div class="t06-zone t06-in"><b>✓ In Scope</b>
+        <ul><li>alle vereinbarten Lieferobjekte: Gesuch einreichen, Status verfolgen, Zirkulation an die Fachstellen, Gebühren bezahlen</li><li>die Arbeit dafür: Plattform einrichten, Schnittstelle bauen, testen, schulen, Pilot</li><li>die Abnahmekriterien</li></ul></div>
+      <div class="t06-zone t06-rand"><b>◇ Schnittstellen und Rahmenbedingungen</b>
+        <ul><li>Abhängigkeit vom Hersteller der Bauverwaltungssoftware (Schnittstellenbeschreibung)</li><li>Standardprodukt der Lärchwerk Informatik AG</li><li>Kredit CHF 180'000, Terminziel Tag 40, Datenschutzrecht</li></ul></div>
+      <div class="t06-zone t06-out"><b>✕ Out of Scope</b>
+        <ul><li>ausdrücklich ausgeschlossene Leistungen, zum Beispiel andere Gesuchsarten oder der laufende Betrieb nach der Übergabe</li><li>Folgeprojekte und Wünsche «nice to have»</li></ul></div>
+    </div>
+    <div class="note"><b>Merke:</b> Die Liste «Out of Scope» ist kein Beiwerk. Sie schützt das Projekt. Die Prüffrage der Gruppe SG lautet sinngemäss: Würde ein Stakeholder diese Leistung stillschweigend erwarten? Dann klärst du sie ausdrücklich, entweder drin oder draussen.</div>
+    <p class="prose">Wie erfasst du den Leistungsumfang überhaupt? Die ICB nennt dafür <b>Anwendungsszenarien</b> (wie wird das Ergebnis im Alltag genutzt?) und <b>History Writing</b> (Rückblick aus der Zukunft: «Das Projekt ist abgeschlossen. Was haben wir geliefert?»). Dazu kommen der Anforderungskatalog mit Muss, Soll und Kann (<a href="/lernseiten/pmgt/05-ziele-und-anforderungen">Station 05</a>) und die Stakeholderanalyse (Swiss ICB 4.5.3, Wissen; Handout RJ).</p>
+  </section>
+
+  <!-- ===== 2 · Lieferobjekte ===== -->
+  <section id="lieferobjekte">
+    <span class="eyebrow">Schritt 2 · Ziel ist nicht Lieferobjekt (LB 3 F.12–13, ICB 3.03.01)</span>
+    <h2>Lieferobjekte: prüfbar und abnehmbar</h2>
+    <p class="prose">Ein <b>Lieferobjekt</b> (Deliverable) ist ein materielles oder immaterielles Ergebnis, das das Projekt erzeugt und an einen internen oder externen Kunden übergibt. Es ist messbar und lässt sich abnehmen (Swiss ICB 4.5.3.1, in eigenen Worten). LB 3 F.13 sagt es kurz: Alle Lieferobjekte zusammen bilden den <b>Leistungsinhalt</b> des Projekts.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Ziel und Lieferobjekt im Vergleich</caption>
+        <thead><tr><th></th><th>Ziel</th><th>Lieferobjekt</th></tr></thead>
+        <tbody>
+          <tr><th>Frage</th><td>Was soll erreicht werden?</td><td>Was wird übergeben und abgenommen?</td></tr>
+          <tr><th>Art</th><td>angestrebter Zustand oder Nutzen</td><td>konkretes Ergebnis: ein Dokument, ein System, ein Zustand</td></tr>
+          <tr><th>Geprüft</th><td>oft erst nach dem Projekt (Wirkung)</td><td>bei der Abnahme, gegen Abnahmekriterien</td></tr>
+          <tr><th>Wolkenried</th><td>Bauwillige reichen ihr Gesuch ohne Papier ein, die Bewilligung kommt schneller.</td><td>Onlineschalter mit vier Funktionen, im Pilot getestet und vom Bauamt abgenommen.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die ICB verlangt, dass du Ziele den Lieferobjekten zuordnest. Daraus entsteht eine <b>Zielhierarchie</b>: oben Nutzen und Ziele, darunter die Lieferobjekte, ganz unten die Arbeitspakete. Klick dich von oben nach unten durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil leuchtet auf.</p>
+    <div id="t06-stepper-hierarchie"></div>
+    <p class="hint">Die Zielwerte (70&nbsp;%, 20&nbsp;%) sind eine Ergänzung dieser Station. Im Leitstand stehen keine Zielwerte.</p>
+
+    <h3>Abnahmekriterien machen ein Lieferobjekt prüfbar</h3>
+    <p class="prose">«Onlineschalter fertig» ist kein Lieferobjekt, sondern ein Wunsch. Erst mit Abnahmekriterien weiss jede Seite, wann es geliefert ist. Die Gruppe SG zeigte das an einem Terminbuchungs-Tool: Statt «Tool fertigstellen» besser «Buchungsportal mit Kalenderabgleich und erfolgreich getesteter Bestätigungsfunktion». Für Wolkenried:</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Unscharf</h3>
+        <p>«Die Gebührenfunktion funktioniert.»</p>
+        <p class="hint">Wer entscheidet, ob sie funktioniert? Nach welchen Fällen?</p>
+      </div>
+      <div class="card stack">
+        <h3>Prüfbar</h3>
+        <p>«Gebührenberechnung nach Tarif: Für 20 Testgesuche (Neubau, Umbau, Kleinbaute) stimmt der Betrag auf den Franken mit der Handrechnung des Bauamts überein. Zahlung online und per QR-Rechnung ist je einmal im Pilot erfolgreich gebucht.»</p>
+      </div>
+    </div>
+    <div class="note tipp"><b>HERMES denkt in Ergebnissen:</b> Ein HERMES-Ergebnis ist entweder ein Dokument (Studie, Projektauftrag, Projektmanagementplan, Arbeitsauftrag) oder ein Zustand (zum Beispiel «System aktiviert»). LB 3 F.12 zeigt das HERMES-Modul <b>Projektgrundlagen</b> der Initialisierung: Rechtsgrundlagen erarbeiten, Schutzbedarf analysieren, Studie erarbeiten, bei Bedarf Prototyping, und am Schluss der Entscheid über das weitere Vorgehen (Referenzhandbuch 3.4.2.1, S. 37). Diese Ergebnisse sind die Grundlage, um Projektauftrag und Leistungsumfang festzulegen. Mehr dazu in <a href="/lernseiten/pmgt/07-projektauftrag">Station 07</a>.</div>
+  </section>
+
+  <!-- ===== 3 · Arbeitspaket ===== -->
+  <section id="arbeitspaket">
+    <span class="eyebrow">Schritt 3 · Kleinste Einheit mit klaren Grenzen (LB 3 F.14–15, F.17)</span>
+    <h2>Das Arbeitspaket und das Fünf-Punkte-Schema</h2>
+    <p class="prose"><b>Definition in eigenen Worten (LB 3 F.14):</b> Ein Arbeitspaket beschreibt eine Aufgabe so, dass am Ende ein in sich abgeschlossenes Ergebnis steht. Es hat klare Grenzen und Schnittstellen zu den anderen Paketen und fasst gleichartige Tätigkeiten zusammen. Bearbeitet wird es von einer Person oder einer Arbeitsgruppe. Mehrere Arbeitspakete bilden ein Teilprojekt. Das Arbeitspaket ist das zentrale Element der Planung: Aus ihm leitest du Aufwand, Kosten, Termine und Ressourcen ab (Bottom-up-Planung).</p>
+    <p class="prose">Die Swiss ICB ergänzt (4.5.3.3): Das Arbeitspaket ist das kleinste Element im Projektstrukturplan. Zu seiner Definition gehören die Arbeit, die Arbeitsziele, Kosten, Ressourcen und Dauer. Sind Dauer, Kosten oder Ressourcen noch offen, heisst es <b>Planungspaket</b>. Im agilen Vorgehen entspricht ihm meist eine <b>User Story</b>. Eine Gruppe von Arbeitspaketen für das Reporting heisst <b>Control Account</b>.</p>
+
+    <h3>Fünf Fragen an jedes Arbeitspaket</h3>
+    <p class="prose">LB 3 F.15 und das Arbeitsblatt Arbeitspaket (Dok. 3.1) beschreiben ein Arbeitspaket mit fünf Punkten. Jeder Punkt beantwortet eine einfache Frage:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Das Fünf-Punkte-Schema</caption>
+        <thead><tr><th>Punkt</th><th>Leitfrage</th><th>Was gehört hinein (Arbeitsblatt 3.1)</th></tr></thead>
+        <tbody>
+          <tr><th>1 · Anfangsereignis</th><td>Was brauche ich, um anfangen zu können?</td><td>Zielsetzung, Aufgabenstellung, Rahmenbedingungen, Vorleistungen</td></tr>
+          <tr><th>2 · Aktivitäten</th><td>Was muss ich tun, um das Ergebnis zu erreichen?</td><td>die einzelnen Tätigkeiten</td></tr>
+          <tr><th>3 · Ergebnis</th><td>Was liegt am Ende vor?</td><td>was in welcher Qualität vorliegen muss (Abnahmekriterien)</td></tr>
+          <tr><th>4 · Verantwortlich, Mitarbeit</th><td>Wer führt es durch?</td><td>eine verantwortliche Person, Mitarbeitende, Schnittstellen, Budget, Zeitplan und Termine</td></tr>
+          <tr><th>5 · Methoden, Techniken</th><td>Wie mache ich es?</td><td>Vorgehen, Werkzeuge, Prüfmethoden</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Leitfragen nach LB 3 F.15, Stichworte nach Arbeitsblatt 3.1. Ergänzungen dieser Station: «Vorleistungen» bei Punkt 1 (folgt aus der Leitfrage), die verantwortliche Person und Mitarbeitende bei Punkt 4 (stehen auf dem Arbeitsblatt bei den Unterschriften) und die Stichworte zu Punkt 5 (das Arbeitsblatt lässt das Feld leer).</p>
+    <p class="prose">Am Schluss unterschreiben die verantwortliche Person des Arbeitspakets und die Projektleitung oder die Auftraggeberin. Damit ist das Arbeitspaket ein Auftrag. So sieht ein ausgefülltes Arbeitspaket am Onlineschalter aus (Vorgang V13 aus dem Leitstand, eigenes Beispiel):</p>
+    <div class="t06-ap" role="group" aria-label="Beispiel: Arbeitspaket V13 Schulungsunterlagen erstellen">
+      <div class="t06-ap-kopf">
+        <span><b>Projekt:</b> Onlineschalter Wolkenried</span>
+        <span><b>AP:</b> V13 Schulungsunterlagen erstellen</span>
+        <span><b>Teilprojekt:</b> Einführung und Kommunikation</span>
+      </div>
+      <div class="t06-ap-feld"><b>1 · Anfangsereignis<small>Was brauche ich zum Start?</small></b>
+        <ul><li>Formulare und Ablauf in der Plattform konfiguriert (V09 abgeschlossen, Ende Tag 13)</li><li>Ziel: Bauamt und Fachstellen können nach der Schulung jedes Gesuch selbständig bearbeiten.</li><li>Rahmen: Deutsch, einfache Sprache; Kurzvideos höchstens 3 Minuten</li></ul></div>
+      <div class="t06-ap-feld"><b>2 · Aktivitäten<small>Was tue ich?</small></b>
+        <ul><li>Zielgruppen und typische Fälle festlegen (Bauamt, Fachstellen)</li><li>Schritt-für-Schritt-Anleitungen schreiben</li><li>vier Kurzvideos aufnehmen</li><li>Probelauf mit Seraina Caflisch, Unterlagen überarbeiten</li></ul></div>
+      <div class="t06-ap-feld"><b>3 · Ergebnis<small>Was liegt am Ende vor?</small></b>
+        <p>Anleitung Bauamt, Anleitung Fachstellen und vier Kurzvideos, von der Anwendervertretung freigegeben. Abnahmekriterium: Im Probelauf löst eine Person ohne Vorkenntnisse drei typische Fälle allein mit den Unterlagen.</p></div>
+      <div class="t06-ap-feld"><b>4 · Verantwortlich, Mitarbeit<small>Wer? Wann? Wie viel?</small></b>
+        <ul><li>Verantwortlich: Aylin Demir; Mitarbeit: Nadia Rossi (Texte, Videos)</li><li>Schnittstellen: V09 liefert die Konfiguration, V15 Schulung nutzt die Unterlagen</li><li>Aufwand 64 h, 2 Personen, 4 Tage; Plankosten CHF 7'680</li><li>Termine: Tag 14 bis Tag 17 (ab Tag 1 gezählt)</li></ul></div>
+      <div class="t06-ap-feld"><b>5 · Methoden<small>Wie?</small></b>
+        <ul><li>Vorlage für Anleitungen aus der Gemeindekanzlei</li><li>Bildschirmaufnahme mit Ton</li><li>Probelauf mit Aufgabenkarten (Test mit Nutzern)</li></ul></div>
+    </div>
+    <p class="hint">Aufwand, Personen, Dauer und Plankosten aus dem Leitstand (Vorgang V13: 64 h × CHF 120 = CHF 7'680; 64 ÷ (2 × 8) = 4 Tage). Der Leitstand schreibt die Termine als Zeitpunkte: Start 13, Ende 17. Ab Tag 1 gezählt wie in <a href="/lernseiten/pmgt/10-netzplan-und-gantt">Station 10</a> heisst das: Arbeit an den Tagen 14 bis 17. Personen, Aktivitäten und Abnahmekriterium sind eigene Ergänzungen.</p>
+
+    <h3>Der HERMES-Arbeitsauftrag</h3>
+    <p class="prose">HERMES macht aus dem Arbeitspaket einen <b>Arbeitsauftrag</b> (Ergebnis 4.4.1.7). Die Projektleitung erteilt damit Arbeiten an die Projektmitarbeitenden, intern oder extern. Die Vorlage zu LB 3 hält fest: Für jedes Arbeitspaket gibt es einen Arbeitsauftrag, und zusammen mit dem Fertigstellungsgrad der Ergebnisse dient er der Fortschrittskontrolle. Die Vorlage gliedert so:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Gliederung HERMES-Arbeitsauftrag und das passende Feld im Fünf-Punkte-Schema</caption>
+        <thead><tr><th>Kapitel im Arbeitsauftrag</th><th>Inhalt</th><th>Fünf-Punkte-Schema</th></tr></thead>
+        <tbody>
+          <tr><th>1 Arbeitsziele</th><td>was mit dem Auftrag erreicht werden soll</td><td>1 Anfangsereignis (Zielsetzung)</td></tr>
+          <tr><th>2 Ergebnisse</th><td>Liste der Ergebnisse mit Beschreibung</td><td>3 Ergebnis</td></tr>
+          <tr><th>3 Abgrenzung</th><td>was ausdrücklich nicht dazugehört</td><td>(Grenzen, wie Out of Scope im Kleinen)</td></tr>
+          <tr><th>4 Voraussetzungen und Abhängigkeiten</th><td>Voraussetzungen für den Beginn, Abhängigkeiten von und zu anderen</td><td>1 Anfangsereignis, 4 Schnittstellen</td></tr>
+          <tr><th>5 Aktivitäten</th><td>je Aktivität: Ergebnis, Verantwortliche, Planstunden, Termin, Status; inklusive Qualitätssicherung</td><td>2 Aktivitäten, 4 Termine</td></tr>
+          <tr><th>6 Ressourcenbedarf</th><td>Personalstunden je Person und Monat, Sachmittel</td><td>4 Verantwortlich, Mitarbeit, Budget</td></tr>
+          <tr><th>7 Ergebnisdarstellung, 8 Qualitätssicherung</th><td>Form des Ergebnisses, Prüfmassnahmen</td><td>3 Ergebnis (Qualität), 5 Methoden</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Das Beispiel eines Arbeitsauftrags auf LB 3 F.14 hat ein eigenes Feld <b>«Nicht-Aufgaben»</b>: Was soll in diesem Paket nicht getan werden? Das ist die Grenze des Leistungsumfangs im Kleinen. Klare Grenzen nennt die ICB das allgemeine Erfolgskriterium eines Projektstrukturplans (4.5.3.3).</div>
+
+    <h3>Brücke zum Projektstrukturplan</h3>
+    <p class="prose">Wo kommen die Arbeitspakete her? Aus dem <b>Projektstrukturplan</b> (PSP). Er zerlegt den ganzen Leistungsumfang von oben nach unten in Teilprojekte oder Teilaufgaben und darunter in Arbeitspakete (LB 3 F.17). Der PSP enthält alles, was zum Leistungsumfang gehört, und nichts sonst. Er ist die Basis für Aufwand-, Kapazitäts-, Kosten-, Ablauf- und Terminplanung und für die Risikoabschätzung. Ein Ausschnitt am Onlineschalter (eigene Gliederung):</p>
+    <ul class="baum">
+      <li><span class="baum-knoten">Onlineschalter Wolkenried</span>
+        <ul>
+          <li><span class="baum-knoten">1 Plattform und Formulare</span>
+            <ul><li><span class="baum-knoten">V03 Plattform einrichten</span></li><li><span class="baum-knoten">V09 Formulare konfigurieren</span></li></ul></li>
+          <li class="an"><span class="baum-knoten">2 Schnittstelle und Daten</span>
+            <ul><li class="an"><span class="baum-knoten">V05 Schnittstelle Bauverwaltung</span></li><li><span class="baum-knoten">V07 Stammdaten übernehmen</span></li></ul></li>
+          <li><span class="baum-knoten">3 Einführung und Kommunikation</span>
+            <ul><li><span class="baum-knoten">V13 Schulungsunterlagen</span></li><li><span class="baum-knoten">V15 Schulung durchführen</span></li></ul></li>
+        </ul></li>
+    </ul>
+    <p class="hint">Die drei Teilprojekte heissen wie in Station 19. Wie du einen PSP vollständig gliederst (objekt-, funktions- oder phasenorientiert, Kodierung, 100-%-Regel), lernst du in <a href="/lernseiten/pmgt/09-projektstrukturplan">Station 09</a>.</p>
+  </section>
+
+  <!-- ===== 4 · Reserven ===== -->
+  <section id="reserven">
+    <span class="eyebrow">Schritt 4 · Vom Arbeitspaket zum Budget (LB 3 F.16)</span>
+    <h2>Reservenstufen: Projektkosten, Gesamtkosten, Gesamtbudget</h2>
+    <p class="prose">LB 3 F.16 (gleich in LB 6 F.18, Quelle dort: HERMES) zeigt, wie das Budget von unten nach oben entsteht. In eigenen Worten:</p>
+    <ol class="t06-fluss">
+      <li><b>Arbeitspakete schätzen:</b> Du schätzt die Kosten jedes Vorgangs und jedes Arbeitspakets.</li>
+      <li><b>Hochrechnen:</b> Die Summe aller Arbeitspakete ergibt die <b>Projektkosten</b>.</li>
+      <li><b>Risikoreserve dazuschlagen:</b> Projektkosten plus Risikoreserve ergeben die <b>Gesamtkosten</b>. Sie sind für das Projekt freigegeben und an die Projektleitung delegiert.<p class="hint">Für die Gesamtkosten trägt die Projektleitung die Verantwortung.</p></li>
+      <li><b>Managementreserve:</b> Zusätzlich hält das Management eine Reserve zurück. Gesamtkosten plus Managementreserve ergeben das <b>Gesamtbudget</b>.<p class="hint">Die Managementreserve bleibt in der Hand des Managements, also der Auftraggeberin oder des Gemeinderats.</p></li>
+    </ol>
+    <div class="board">Projektkosten = Σ Arbeitspakete &nbsp;·&nbsp; Gesamtkosten = Projektkosten + Risikoreserve &nbsp;·&nbsp; Gesamtbudget = Gesamtkosten + Managementreserve</div>
+    <p class="prose">Klick dich durch die Zahlen des Onlineschalters:</p>
+    <div id="t06-stepper-reserven"></div>
+    <div class="note"><b>Merke:</b> Die <b>Risikoreserve</b> deckt die <b>bekannten</b> Risiken. Du leitest sie aus dem Risikoregister her, als Summe der Erwartungswerte (<a href="/lernseiten/pmgt/13-chancen-und-risiken">Station 13</a>). Die <b>Managementreserve</b> deckt das <b>Unbekannte</b>. Will die Projektleitung sie anzapfen, braucht es einen Entscheid der Steuerung. Faustwert für den Auftraggeber laut LB 7 S.15: rund 20&nbsp;% Reserve im Projektbudget (<a href="/lernseiten/pmgt/11-ressourcen-und-kosten">Station 11</a>).</div>
+  </section>
+
+  <!-- ===== 5 · Baseline und Scope Creep ===== -->
+  <section id="baseline">
+    <span class="eyebrow">Schritt 5 · Konfiguration halten (ICB 3.03.04, HERMES 5.4.3.2)</span>
+    <h2>Baseline, Scope Creep und der Änderungsprozess</h2>
+    <p class="prose">Sobald Leistungsumfang, Termine und Kosten freigegeben sind, frierst du sie als <b>Baseline</b> ein (Basisplan). Alle arbeiten mit derselben Version, und jede Abweichung misst du gegen diese Baseline. Im Leitstand ist das der Basisplan mit 36 Tagen und Plankosten (BAC) von CHF 162'240. Die Swiss ICB nennt das Konfigurationsmanagement des Leistungsumfangs: Es soll Fehler und schleichende Änderungen klein halten und sicherstellen, dass der Umfang auf die vereinbarten Bedürfnisse abgestimmt bleibt (4.5.3.4).</p>
+    <p class="prose"><b>Scope Creep</b> ist die schleichende, ungesteuerte Ausweitung des Leistungsumfangs. Er beginnt fast immer harmlos: «Kannst du schnell noch …?» Jede einzelne Erweiterung wirkt klein, niemand bewertet Zeit, Kosten und Risiken, und am Schluss fehlt die Zeit für das Vereinbarte. Typische Warnsignale (Referate RJ und SG): Wünsche per Zuruf ohne Antrag, keine gemeinsame Version des Umfangs, das Budget wächst, aber die Lieferobjekte nicht.</p>
+    <h3>So verhinderst du Scope Creep</h3>
+    <ol class="t06-fluss">
+      <li><b>Änderungsantrag:</b> Jeder Wunsch kommt schriftlich, mit Beschreibung und Begründung. Auch der kleine, auch der «gratis».<p class="hint">HERMES-Ergebnis Änderungsantrag (4.4.1.2), nur im klassischen Vorgehen.</p></li>
+      <li><b>Auswirkungsanalyse:</b> Was bedeutet die Änderung für Aufwand, Kosten, Termin und Risiken?<p class="hint">Gehört laut HERMES in den Änderungsantrag (Beurteilung der Auswirkungen).</p></li>
+      <li><b>Entscheid:</b> Wer entscheidet, steht im Projektmanagementplan. In Wolkenried entscheidet der Gemeinderat über Änderungsanträge über CHF 5'000.</li>
+      <li><b>Änderungsstatusliste und neue Baseline:</b> Jede Änderung mit Status nachführen; genehmigte Änderungen in Plan, Lieferobjekte und Abnahmekriterien einarbeiten und alle informieren.<p class="hint">HERMES-Ergebnis Änderungsstatusliste (4.4.1.3).</p></li>
+    </ol>
+    <div class="note tipp"><b>Bezug zum Leitstand:</b> Die Online-Terminreservation ist im Onlineschalter nicht vereinbart. Im Leitstand taucht sie als Änderungsantrag CR3 auf: Mehraufwand 48 Stunden und CHF 7'680, Entscheid beim Gemeinderat. Genau so muss es laufen. Wie du einen Änderungsantrag vollständig durch den Prozess führst, übst du in <a href="/lernseiten/pmgt/20-qualitaet-und-aenderungen">Station 20</a>.</div>
+    <div class="note"><b>Klassisch und agil:</b> Klassisch ist der Umfang fix, Zeit und Kosten werden geschätzt. Agil sind Zeit und Kosten fix, der Umfang ist variabel: Das Product Backlog wird laufend neu priorisiert. Strukturieren lohnt sich laut ICB auch agil, nur weniger detailliert (Referat RJ, Swiss ICB 4.5.3.2).</div>
+  </section>
+
+  <!-- ===== 6 · Grenze ziehen ===== -->
+  <section id="grenze">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>Grenze ziehen: was gehört zum Onlineschalter?</h2>
+    <p class="prose">Der Gemeinderat hat den Projektauftrag freigegeben. Im Kick-off prasseln Wünsche und Annahmen auf dich ein. Lies zuerst den Auszug aus dem Projektauftrag. Ordne dann zwölf Leistungen ein. Die Begründung nennt die Stelle im Auftrag.</p>
+    <div class="t06-auftrag">
+      <h3>Projektauftrag «Onlineschalter Baugesuch» (Auszug)</h3>
+      <ol>
+        <li><b>Ausgangslage:</b> Das Bauamt behandelt rund 260 Baugesuche pro Jahr, alle auf Papier. Gesuche, Stand und Stellungnahmen der Fachstellen laufen über Kopien, Post und Telefon.</li>
+        <li><b>Ziel:</b> Bauwillige und Planungsbüros reichen Baugesuche online ein und verfolgen den Stand; das Bauamt arbeitet ohne Doppelerfassung.</li>
+        <li><b>Leistungsinhalt:</b>
+          <ul>
+            <li>vier Funktionen: Gesuch einreichen, Status verfolgen, Zirkulation an die Fachstellen, Gebühren bezahlen</li>
+            <li>Anbindung an die bestehende Bauverwaltungssoftware</li>
+            <li>Übernahme der Stammdaten und der laufenden Gesuche</li>
+            <li>Schulung von Bauamt und Fachstellen; Merkblatt und Infoseite für Bauwillige</li>
+            <li>Pilot mit Planungsbüros, Aufbau von Support und Betrieb bis zur Übergabe</li>
+          </ul></li>
+        <li><b>Abgrenzung:</b> nur Baugesuche (andere Gesuchsarten später); Plattform-Lizenz und laufender Betrieb nach der Übergabe trägt die Linie Informatik.</li>
+        <li><b>Rahmenbedingungen:</b> Standardprodukt der Lärchwerk Informatik AG; Kredit CHF 180'000; Terminziel Tag 40; Änderungen über CHF 5'000 entscheidet der Gemeinderat.</li>
+      </ol>
+      <p class="hint">Der Auszug ist eine Ergänzung dieser Station, abgeleitet aus dem Leitstand-Szenario (Funktionen, Kredit, Terminziel, Vorgänge V01–V18).</p>
+    </div>
+    <div class="card stack">
+      <div id="t06-sortierer-grenze"></div>
+    </div>
+    <details class="sol"><summary>Das fertige Scope Statement des Onlineschalters</summary>
+      <div class="stack">
+        <div class="t06-grenze">
+          <div class="t06-zone t06-in"><b>✓ In Scope</b>
+            <ul><li>Online-Baugesuch mit Planbeilagen</li><li>Status online verfolgen</li><li>Gebühren online oder per QR-Rechnung</li><li>Schnittstelle zur Bauverwaltungssoftware</li><li>laufende Gesuche übernehmen</li><li>Schulung von Bauamt und Fachstellen</li><li>Supportprozess und Betriebshandbuch</li></ul></div>
+          <div class="t06-zone t06-rand"><b>◇ Schnittstellen</b>
+            <ul><li>Parzellen kommen als Stammdaten (V07), nicht über eine GIS-Schnittstelle</li><li>Linie Informatik übernimmt den Betrieb nach der Übergabe</li><li>Hersteller der Bauverwaltungssoftware</li></ul></div>
+          <div class="t06-zone t06-out"><b>✕ Out of Scope</b>
+            <ul><li>Papierarchiv digitalisieren</li><li>neue Gemeinde-Website</li><li>GIS-Schnittstelle</li><li>laufender Betrieb und Lizenz nach der Übergabe</li><li>Online-Terminreservation (nur über Änderungsantrag)</li></ul></div>
+        </div>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 7 · Reserven-Treppe ===== -->
+  <section id="treppe">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Reserven-Treppe: der Kredit von CHF 180'000</h2>
+    <p class="prose">Der Gemeinderat hat für den Onlineschalter einen Kredit von CHF 180'000 gesprochen. Die Plankosten aller Vorgänge (BAC) betragen CHF 162'240, wie im Leitstand und in Station 19. Spiel mit der Aufteilung der Reserve: Wie viel bekommt die Projektleitung als Risikoreserve, wie viel hält der Gemeinderat als Managementreserve zurück?</p>
+    <div class="card stack">
+      <div class="row modes" role="group" aria-label="Fall wählen">
+        <button type="button" class="btn on" aria-pressed="true" id="t06-fall-a">Fall A · wie im Leitstand</button>
+        <button type="button" class="btn" aria-pressed="false" id="t06-fall-b">Fall B · Gemeinderat behält zurück</button>
+      </div>
+      <p class="hint" id="t06-fall-text" aria-live="polite"></p>
+      <div class="t06-eingaben">
+        <div class="t06-eingabe"><label for="t06-pk">Projektkosten (Σ Arbeitspakete), CHF</label><input id="t06-pk" type="text" inputmode="decimal" value="162'240"></div>
+        <div class="t06-eingabe"><label for="t06-rr">Risikoreserve, CHF</label><input id="t06-rr" type="text" inputmode="decimal" value="17'760"></div>
+        <div class="t06-eingabe"><label for="t06-mr">Managementreserve, CHF</label><input id="t06-mr" type="text" inputmode="decimal" value="0"></div>
+      </div>
+      <p class="t06-legende" aria-hidden="true"><span><i class="t06-seg t06-pk" style="width:22px"></i>Projektkosten</span><span><i class="t06-seg t06-rr" style="width:22px"></i>Risikoreserve</span><span><i class="t06-seg t06-mr" style="width:22px"></i>Managementreserve</span></p>
+      <ol class="t06-treppe" id="t06-treppe"></ol>
+      <p class="t06-pruef" id="t06-pruef" aria-live="polite"></p>
+    </div>
+    <p class="hint">Fall A entspricht dem Leitstand: Die ganze Reserve von CHF 17'760 liegt im Kredit und steht der Projektleitung für Massnahmen, Überstunden und Abweichungen zur Verfügung; eine Managementreserve gäbe es nur über einen Nachtragskredit (wie in Station 13). Fall B ist eine Ergänzung dieser Station: So sähe es aus, wenn der Gemeinderat einen Teil des Kredits zurückbehält.</p>
+    <div id="t06-u-treppe"></div>
+  </section>
+
+  <!-- ===== 8 · Arbeitspaket-Formular ===== -->
+  <section id="formular">
+    <span class="eyebrow">Schritt 8 · Themeneigene Interaktion</span>
+    <h2>Arbeitspaket-Formular: die Schnittstelle V05</h2>
+    <p class="prose">Jetzt bist du dran. Beschreibe das Arbeitspaket V05 «Schnittstelle zur Bauverwaltungssoftware» im Fünf-Punkte-Schema. Diese Angaben hast du aus dem Leitstand:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Steckbrief Vorgang V05 (Leitstand, Basisplan)</caption>
+        <tbody>
+          <tr><th>Inhalt</th><td>Gesuche, Status und Dokumente zwischen Plattform und Bauverwaltungssoftware in beide Richtungen übertragen</td></tr>
+          <tr><th>Vorgänger</th><td>V02 Soll-Ablauf und Formularinhalte festlegen (Ende Tag 6), V03 Plattform einrichten (Ende Tag 5)</td></tr>
+          <tr><th>Nachfolger</th><td>V11 Integrationstest</td></tr>
+          <tr><th>Aufwand, Personen, Dauer</th><td class="zahl">128 h · 2 Personen · 8 Tage</td></tr>
+          <tr><th>Plansatz, Plankosten</th><td class="zahl">CHF 195 · CHF 24'960</td></tr>
+          <tr><th>Termine</th><td>Tag 7 bis Tag 14, Gesamtpuffer 1 Tag (fast kritisch)</td></tr>
+          <tr><th>Risiken</th><td>R02 Aufwand unterschätzt (W 3, A 4); R03 Hersteller liefert die Schnittstellenbeschreibung zu spät (W 3, A 4)</td></tr>
+          <tr><th>Team (Auswahl)</th><td>Elena Kovačević, Schnittstellenentwicklerin, Lärchwerk Informatik AG; Luca Bernasconi, Informatikverantwortlicher der Gemeinde</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Termine ab Tag 1 gezählt wie in Station 10. Der Leitstand schreibt dafür die Zeitpunkte 6 (Start) und 14 (Ende). Wen du einsetzt, entscheidest du: Im Leitstand besetzt du die Vorgänge selbst.</p>
+    <div id="t06-ap-reflexion"></div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst einordnen, rechnen, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Neun Übungen in sechs Arten: zuordnen, Einzelfrage, rechnen, Schritt-Aufgabe, wahr oder falsch und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest. Die meisten Fälle stammen aus anderen Projekten der Gemeinde Wolkenried, Übung 7 spielt am Onlineschalter.</p>
+    <div class="card stack">
+      <h3>Übung 1 · Nutzen, Ziel, Lieferobjekt oder Arbeitspaket?</h3>
+      <p class="hint">Projekt «Neues Kassensystem im Freibad Wolkenried». Frag dich: Ist es eine Wirkung, ein angestrebter Zustand mit Messgrösse, ein abnehmbares Ergebnis oder eine geplante Arbeit?</p>
+      <div id="t06-u-ebenen"></div>
+    </div>
+    <div id="t06-u-lieferobjekt"></div>
+    <div class="card stack">
+      <h3>Übung 3 · Fünf Punkte zuordnen</h3>
+      <p class="hint">Ein Arbeitspaket des Freibad-Projekts: «Kassen installieren und testen». Zu welchem Punkt des Schemas gehört jede Angabe?</p>
+      <div id="t06-u-fuenf"></div>
+    </div>
+    <div id="t06-u-gesamtkosten"></div>
+    <div id="t06-u-budget"></div>
+    <div id="t06-u-wf"></div>
+    <div id="t06-u-creep"></div>
+    <div id="t06-u-planungspaket"></div>
+    <div id="t06-u-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Umzug der Gemeindeverwaltung: Umfang, Pakete, Budget</h2>
+    <p class="prose">Eine Aufgabe im Stil der Fallstudie MOVE, Aufgabe B (eigener Fall, eigene Zahlen): Leistungsumfang abgrenzen, Lieferobjekte und Arbeitspakete festlegen, ein Paket im Fünf-Punkte-Schema beschreiben und das Budget mit Reserven rechnen. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t06-film"></div>
+    <details class="sol"><summary>Die fertige Lösung als Text</summary>
+      <div class="t06-loesung-fertig" id="t06-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>Ziel und Lieferobjekt verwechseln.</b> «Die Bearbeitung wird schneller» ist ein Ziel. «Onlineschalter, im Pilot getestet und abgenommen» ist ein Lieferobjekt. Ein Lieferobjekt kannst du übergeben und abnehmen.</div>
+    <div class="note falle"><b>Nur In Scope beschreiben.</b> Ohne Out of Scope bleibt jede Grenze verhandelbar. Nenne ausdrücklich, was nicht dazugehört, vor allem das, was jemand stillschweigend erwarten könnte.</div>
+    <div class="note falle"><b>Arbeitspaket ohne Ergebnis.</b> «Schnittstelle bearbeiten» beschreibt eine Tätigkeit. Ein Arbeitspaket endet mit einem prüfbaren Ergebnis und Abnahmekriterien.</div>
+    <div class="note falle"><b>Keine oder mehrere Verantwortliche.</b> «Das Team» ist nicht verantwortlich. Jedes Arbeitspaket hat genau eine verantwortliche Person, dazu Mitarbeitende.</div>
+    <div class="note falle"><b>Anfangsereignis = Startdatum.</b> Das Anfangsereignis sagt, was vorliegen muss, damit du beginnen kannst: Vorleistungen, Ziel, Rahmenbedingungen. Das Datum allein reicht nicht.</div>
+    <div class="note falle"><b>Reservestufen vertauschen.</b> Projektkosten + Risikoreserve = Gesamtkosten (Projektleitung). Gesamtkosten + Managementreserve = Gesamtbudget (Auftraggeber). Die Managementreserve gehört nie der Projektleitung.</div>
+    <div class="note falle"><b>Risikoreserve aus dem schlimmsten Fall.</b> Die Risikoreserve ist die Summe der Erwartungswerte (Wahrscheinlichkeit × Schaden), nicht die Summe aller Schäden.</div>
+    <div class="note falle"><b>Den kleinen Wunsch «einfach machen».</b> Auch eine gratis wirkende Erweiterung läuft über Änderungsantrag, Auswirkungsanalyse und Entscheid. Sonst beginnt Scope Creep.</div>
+    <div class="note falle"><b>Planungspaket und Arbeitspaket gleichsetzen.</b> Ein Planungspaket ist ein Arbeitspaket, bei dem Dauer, Kosten oder Ressourcen noch offen sind.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t06-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Leistungsumfang = Inhalt + Grenzen:</b> In Scope, Schnittstellen und Rahmenbedingungen, Out of Scope. Was jemand stillschweigend erwarten könnte, klärst du ausdrücklich.</li>
+      <li>Ein <b>Lieferobjekt</b> ist ein konkretes, prüfbares und abnehmbares Ergebnis. Ein <b>Ziel</b> beschreibt den angestrebten Zustand. Alle Lieferobjekte zusammen bilden den Leistungsinhalt.</li>
+      <li>Das <b>Arbeitspaket</b> ist das kleinste Element im PSP, mit klarem Ergebnis, Grenzen und Schnittstellen. Fünf Punkte: Anfangsereignis, Aktivitäten, Ergebnis, Verantwortlich, Methoden. HERMES erteilt es als <b>Arbeitsauftrag</b>.</li>
+      <li><b>Planungspaket:</b> Dauer, Kosten oder Ressourcen noch offen. <b>User Story:</b> das agile Gegenstück.</li>
+      <li><b>Σ Arbeitspakete = Projektkosten</b>; + Risikoreserve = <b>Gesamtkosten</b> (Projektleitung); + Managementreserve = <b>Gesamtbudget</b> (Auftraggeber).</li>
+      <li><b>Baseline</b> einfrieren, jede Änderung über <b>Änderungsantrag → Auswirkungsanalyse → Entscheid → Änderungsstatusliste</b>. So bleibt der Umfang flexibel und trotzdem unter Kontrolle.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t06-ziele">
+        <li><span class="icb">ICB 3.03</span> Leistungsumfang und Lieferobjekte (Swiss ICB 4.5.3, S. 97–100): Definition, vier Indikatoren 3.03.01 Lieferobjekte definieren, 3.03.02 Leistungsumfang strukturieren, 3.03.03 Arbeitspakete definieren, 3.03.04 Konfiguration erstellen und aufrechterhalten. Begriffe Planungspaket, Control Account, PSP-Lexikon, Scope Creep.</li>
+        <li>Fünf-Punkte-Schema mit Leitfragen (Tabelle aus Schritt 3) und die Gliederung des HERMES-Arbeitsauftrags.</li>
+        <li>Reservenstufen als Formelzeile: Σ AP = Projektkosten; + Risikoreserve = Gesamtkosten (PL); + Managementreserve = Gesamtbudget (Auftraggeber).</li>
+        <li>Änderungsprozess in vier Schritten und die Tabelle Ziel gegenüber Lieferobjekt.</li>
+        <li>Fundstellen: LB 3 F.5 (Lernziele), F.12 (Projektgrundlagen), F.13 (Lieferobjekte), F.14 (Definition AP, Beispiel Arbeitsauftrag), F.15 (Fünf-Punkte-Schema), F.16 (Reservenstufen, gleich LB 6 F.18), F.17 (PSP); Arbeitsblatt Arbeitspaket Dok. 3.1; HERMES-Referenzhandbuch: Modul Projektgrundlagen 3.4.2.1 (S. 37), Ergebnisse Änderungsantrag 4.4.1.2, Änderungsstatusliste 4.4.1.3, Arbeitsauftrag 4.4.1.7 (S. 46–48), Aufgabe Änderungen managen 5.4.3.2 (S. 95).</li>
+        <li>Gubelmann/Sommer: Kapitel 11 «Leistungsumfang und Lieferobjekte», S. 142–155 (laut LB 3 F.5).</li>
+      </ul>
+    </div>
+    <footer>Station 06 des Lernpfads PMGT. Fälle «Onlineschalter Wolkenried», «Kassensystem Freibad» und «Umzug der Gemeindeverwaltung» frei erfunden. Quellen: LB 3, Arbeitsblatt 3.1, Vorlage HERMES Arbeitsauftrag, Referate zu ICB 3.03, HERMES-Referenzhandbuch, Swiss ICB 4.0, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* Franken mit Hochkomma ab 1000 (wie 162'240) */
+  function chf(x) {
+    const n = Math.round(x);
+    const s = String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+    return (n < 0 ? "−" : "") + s;
+  }
+
+  /* ---------- Schritt 0: Bausteine ---------- */
+  L.sortierer("#t06-sortierer-bausteine", {
+    kategorien: ["Leistungsumfang", "Lieferobjekt", "Arbeitspaket", "Reserve"],
+    elemente: [
+      { html: "Boden und Malerarbeiten gehören nicht zum Auftrag des Schreiners.", kategorie: "Leistungsumfang", erklaerung: "Eine Grenze: ausdrücklich draussen (Out of Scope)." },
+      { html: "Die montierte Arbeitsplatte, die du nach dem Einbau prüfst und abnimmst.", kategorie: "Lieferobjekt", erklaerung: "Ein konkretes Ergebnis, das übergeben und abgenommen wird." },
+      { html: "«Alte Küche ausbauen»: Start nach dem Ausräumen, zwei Personen, ein Tag, Ergebnis leerer Raum.", kategorie: "Arbeitspaket", erklaerung: "Eine geplante Arbeit mit Anfangsereignis, Aufwand, Verantwortung und Ergebnis." },
+      { html: "CHF 2'000 auf der Seite, falls hinter der alten Küche Schimmel auftaucht.", kategorie: "Reserve", erklaerung: "Geld für ein bekanntes Risiko: eine Risikoreserve." },
+      { html: "Neue Fronten und Arbeitsplatte gehören zum Auftrag.", kategorie: "Leistungsumfang", erklaerung: "Der Inhalt des Auftrags (In Scope)." },
+      { html: "«Elektroanschlüsse verlegen»: Elektriker, nach dem Ausbau, halber Tag.", kategorie: "Arbeitspaket", erklaerung: "Abgegrenzte Arbeit mit Verantwortlichem und Zeitpunkt." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Zielhierarchie ---------- */
+  L.stepper("#t06-stepper-hierarchie", {
+    titel: "Vom Nutzen bis zum Arbeitspaket",
+    text: 'Die Gemeinde will, dass <span data-link="nutzen">Bauwillige schneller zu ihrem Entscheid kommen</span>. Dafür sollen <span data-link="ziel">die meisten Gesuche online eingehen</span>. Das Projekt liefert <span data-link="lo">einen abgenommenen Onlineschalter</span>, und dafür werden unter anderem <span data-link="ap">die Formulare in der Plattform konfiguriert</span>.',
+    schritte: [
+      { html: '<b>Nutzen, Wirkung:</b> <span data-link="nutzen">Bauwillige erhalten schneller einen Entscheid; das Bauamt spart Kopier- und Telefonaufwand.</span>',
+        warum: "Ganz oben steht, wozu das Projekt da ist. Den Nutzen misst du oft erst nach dem Projekt." },
+      { html: '<b>Projektziel:</b> <span data-link="ziel">Ein Jahr nach der Einführung gehen mindestens 70&nbsp;% der Baugesuche online ein; die Zeit bis zum Entscheid sinkt im Mittel um 20&nbsp;%.</span>',
+        warum: "Das Ziel beschreibt einen angestrebten Zustand. Es beantwortet: Was soll erreicht werden? (SMART, Station 05)" },
+      { html: '<b>Lieferobjekt:</b> <span data-link="lo">Onlineschalter mit vier Funktionen, im Pilot mit drei Planungsbüros getestet, vom Bauamt abgenommen (Abnahmeprotokoll).</span>',
+        warum: "Das Lieferobjekt ist konkret und prüfbar. Es beantwortet: Was wird übergeben und abgenommen? Das Ziel erreichst du erst, wenn das Lieferobjekt genutzt wird." },
+      { html: '<b>Arbeitspaket:</b> <span data-link="ap">V09 Gesuchsformulare und Ablauf konfigurieren (64 h, 2 Personen, 4 Tage).</span>',
+        warum: "Darunter die Arbeit, die das Lieferobjekt erzeugt. Erst auf dieser Ebene planst du Aufwand, Kosten und Termine." },
+      { html: '<span data-link="nutzen">Nutzen</span> → <span data-link="ziel">Ziel</span> → <span data-link="lo">Lieferobjekt</span> → <span data-link="ap">Arbeitspaket</span>',
+        warum: "Die ganze Kette. Prüffrage nach oben: Wozu dient das? Prüffrage nach unten: Was braucht es dafür? Ziele werden erst über Lieferobjekte und Arbeitspakete steuerbar." }
+    ]
+  });
+
+  /* ---------- Schritt 4: Reservenstufen ---------- */
+  L.stepper("#t06-stepper-reserven", {
+    titel: "Reservenstufen am Onlineschalter",
+    text: 'Die 18 Vorgänge des Onlineschalters kosten im Plan <span data-link="pk">CHF 162\'240</span>. Der Gemeinderat spricht einen <span data-link="kredit">Kredit von CHF 180\'000</span>. Über <span data-link="mr">zusätzliches Geld</span> entscheidet er selbst.',
+    schritte: [
+      { html: 'Projektkosten = Σ Vorgänge = <span data-link="pk">162\'240</span>',
+        warum: "Stufe 1: die Summe aller Arbeitspakete und Vorgänge. Im Leitstand heisst sie BAC (Plankosten aller Vorgänge)." },
+      { html: 'Risikoreserve = <span data-link="kredit">180\'000</span> − <span data-link="pk">162\'240</span> = 17\'760',
+        warum: "Was im Kredit über den Projektkosten liegt, ist Reserve. Das sind rund 10.9&nbsp;% der Projektkosten, also gut die Hälfte des Faustwerts von rund 20&nbsp;% (LB 7 S.15)." },
+      { html: 'Gesamtkosten = <span data-link="pk">162\'240</span> + 17\'760 = <span data-link="kredit">180\'000</span> → Projektleitung',
+        warum: "Stufe 2: für das Projekt freigegeben, an die Projektleitung delegiert. Im Leitstand verwaltest du diese 17'760 Franken selbst." },
+      { html: 'Gesamtbudget = <span data-link="kredit">180\'000</span> + <span data-link="mr">Managementreserve</span> → Gemeinderat',
+        warum: "Stufe 3: Eine Managementreserve gibt es hier nur als Nachtragskredit des Gemeinderats. Die Projektleitung muss sie mit einem Antrag holen." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Grenze ziehen ---------- */
+  L.sortierer("#t06-sortierer-grenze", {
+    frage: "Zwölf Leistungen: In Scope oder Out of Scope?",
+    kategorien: ["In Scope", "Out of Scope"],
+    elemente: [
+      { html: "Online-Baugesuch mit Planbeilagen (PDF) einreichen", kategorie: "In Scope", erklaerung: "Ziff. 3, Funktion «Gesuch einreichen». Der Kern des Projekts." },
+      { html: "Papierarchiv der abgeschlossenen Baugesuche digitalisieren", kategorie: "Out of Scope", erklaerung: "Ziff. 3 nennt nur die Übernahme der Stammdaten und der <b>laufenden</b> Gesuche. Das Archiv wäre ein eigenes Vorhaben und gehört auf die Out-of-Scope-Liste, weil es jemand stillschweigend erwarten könnte." },
+      { html: "Zahlung der Gebühren online oder per QR-Rechnung", kategorie: "In Scope", erklaerung: "Ziff. 3, Funktion «Gebühren bezahlen» (Vorgang V06)." },
+      { html: "Schulung der Bauverwaltung und der Fachstellen", kategorie: "In Scope", erklaerung: "Ziff. 3 nennt die Schulung ausdrücklich (Vorgänge V13 und V15). Ohne Schulung wird das Lieferobjekt nicht genutzt." },
+      { html: "Neue Website der Gemeinde Wolkenried", kategorie: "Out of Scope", erklaerung: "Ziff. 3 verlangt nur Merkblatt und Infoseite für Bauwillige (V14). Ein Relaunch der ganzen Website ist ein anderes Projekt." },
+      { html: "GIS-Schnittstelle: Parzellen live aus dem Geoportal anzeigen", kategorie: "Out of Scope", erklaerung: "Ziff. 3 nennt nur die Anbindung an die Bauverwaltungssoftware. Die Parzellen kommen als Stammdaten (V07). Eine GIS-Schnittstelle wäre ein Änderungsantrag." },
+      { html: "Status des Gesuchs online verfolgen", kategorie: "In Scope", erklaerung: "Ziff. 3, Funktion «Status verfolgen»." },
+      { html: "Schnittstelle zur bestehenden Bauverwaltungssoftware", kategorie: "In Scope", erklaerung: "Ziff. 3, ausdrücklich genannt (Vorgang V05)." },
+      { html: "Laufende Baugesuche in die neue Plattform übernehmen", kategorie: "In Scope", erklaerung: "Ziff. 3, Übernahme der laufenden Gesuche (Vorgang V07). Sonst liefen zwei Systeme parallel." },
+      { html: "Supportprozess und Betriebshandbuch aufbauen", kategorie: "In Scope", erklaerung: "Ziff. 3: Aufbau von Support und Betrieb bis zur Übergabe (Vorgang V16). Der Aufbau gehört dazu, der laufende Betrieb danach nicht." },
+      { html: "Laufender Betrieb und Lizenzgebühren der Plattform nach der Übergabe", kategorie: "Out of Scope", erklaerung: "Ziff. 4, Abgrenzung: Das trägt die Linie Informatik. Das Projekt endet mit der Übergabe." },
+      { html: "Online-Terminreservation für die Bauberatung", kategorie: "Out of Scope", erklaerung: "Steht nicht im Leistungsinhalt. Wer sie will, stellt einen Änderungsantrag; der Gemeinderat entscheidet (im Leitstand CR3, +CHF 7'680)." }
+    ]
+  });
+
+  /* ---------- Schritt 7: Reserven-Treppe ---------- */
+  const KREDIT = 180000;
+  const FAELLE = {
+    a: { pk: 162240, rr: 17760, mr: 0, text: "Fall A: Die ganze Reserve von CHF 17'760 ist an die Projektleitung freigegeben. Die Managementreserve liegt ausserhalb des Kredits (Nachtragskredit)." },
+    b: { pk: 162240, rr: 11760, mr: 6000, text: "Fall B (Ergänzung): Der Gemeinderat behält CHF 6'000 des Kredits als Managementreserve zurück. Der Projektleitung bleiben CHF 11'760 Risikoreserve." }
+  };
+  const fPk = document.getElementById("t06-pk");
+  const fRr = document.getElementById("t06-rr");
+  const fMr = document.getElementById("t06-mr");
+  const treppe = document.getElementById("t06-treppe");
+  const pruef = document.getElementById("t06-pruef");
+  const fallText = document.getElementById("t06-fall-text");
+  const knopfA = document.getElementById("t06-fall-a");
+  const knopfB = document.getElementById("t06-fall-b");
+
+  function lesen(feld) {
+    const x = L.zahlLesen(feld.value);
+    return isFinite(x) && x >= 0 ? x : NaN;
+  }
+
+  function stufe(titel, wer, betrag, teile, max) {
+    const segs = teile.map(function (t) {
+      return '<span class="t06-seg ' + t[0] + '" style="width:' + (max > 0 ? (t[1] / max * 100).toFixed(2) : 0) + '%"></span>';
+    }).join("");
+    return '<li class="t06-stufe"><div class="t06-stufe-text"><span>' + titel + ' <span class="t06-wer">· ' + wer + "</span></span>" +
+      '<span class="t06-betrag">CHF ' + chf(betrag) + "</span></div>" +
+      '<div class="t06-balken" aria-hidden="true">' + segs + "</div></li>";
+  }
+
+  function zeichnen() {
+    const pk = lesen(fPk), rr = lesen(fRr), mr = lesen(fMr);
+    if (isNaN(pk) || isNaN(rr) || isNaN(mr)) {
+      treppe.innerHTML = "";
+      pruef.className = "t06-pruef bad";
+      pruef.textContent = "✗ Bitte in alle drei Felder einen Betrag von 0 oder mehr eintragen, zum Beispiel 17'760.";
+      return;
+    }
+    const gk = pk + rr, gb = gk + mr;
+    const max = Math.max(gb, KREDIT);
+    treppe.innerHTML =
+      stufe("1 · Projektkosten (Σ Arbeitspakete)", "Planungsgrundlage", pk, [["t06-pk", pk]], max) +
+      stufe("2 · Gesamtkosten = Projektkosten + Risikoreserve", "Verantwortung Projektleitung", gk, [["t06-pk", pk], ["t06-rr", rr]], max) +
+      stufe("3 · Gesamtbudget = Gesamtkosten + Managementreserve", "bleibt beim Gemeinderat", gb, [["t06-pk", pk], ["t06-rr", rr], ["t06-mr", mr]], max);
+    const anteilRr = pk > 0 ? rr / pk * 100 : 0;
+    const anteilRes = pk > 0 ? (rr + mr) / pk * 100 : 0;
+    let satz = "Risikoreserve " + L.zahlText(anteilRr, 1) + "&nbsp;% der Projektkosten, Reserven zusammen " + L.zahlText(anteilRes, 1) + "&nbsp;% (Faustwert LB 7: rund 20&nbsp;%). ";
+    if (Math.abs(gb - KREDIT) < 0.5) {
+      pruef.className = "t06-pruef ok";
+      satz = "✓ Das Gesamtbudget entspricht genau dem Kredit von CHF 180'000. " + satz;
+    } else if (gb > KREDIT) {
+      pruef.className = "t06-pruef bad";
+      satz = "✗ Das Gesamtbudget liegt CHF " + chf(gb - KREDIT) + " über dem Kredit von CHF 180'000. Dafür bräuchte es einen Nachtragskredit des Gemeinderats. " + satz;
+    } else {
+      pruef.className = "t06-pruef";
+      satz = "◇ Das Gesamtbudget liegt CHF " + chf(KREDIT - gb) + " unter dem Kredit. Dieser Teil ist noch nicht verteilt. " + satz;
+    }
+    pruef.innerHTML = satz;
+  }
+
+  function fallWaehlen(id) {
+    const f = FAELLE[id];
+    fPk.value = chf(f.pk); fRr.value = chf(f.rr); fMr.value = chf(f.mr);
+    fallText.textContent = f.text;
+    [[knopfA, "a"], [knopfB, "b"]].forEach(function (k) {
+      const an = k[1] === id;
+      k[0].classList.toggle("on", an);
+      k[0].setAttribute("aria-pressed", an ? "true" : "false");
+    });
+    zeichnen();
+  }
+  knopfA.addEventListener("click", function () { fallWaehlen("a"); });
+  knopfB.addEventListener("click", function () { fallWaehlen("b"); });
+  [fPk, fRr, fMr].forEach(function (f) {
+    f.addEventListener("input", function () {
+      [knopfA, knopfB].forEach(function (k) { k.classList.remove("on"); k.setAttribute("aria-pressed", "false"); });
+      fallText.textContent = "Eigene Werte.";
+      zeichnen();
+    });
+  });
+  fallWaehlen("a");
+
+  L.zahlAufgabe("#t06-u-treppe", {
+    titel: "Kurz rechnen · Managementreserve im Kredit",
+    frage: "<p>Die Risikoanalyse des Onlineschalters ergibt als Summe der Erwartungswerte eine Risikoreserve von CHF 11'760. Der Kredit bleibt bei CHF 180'000, die Projektkosten bei CHF 162'240. Wie gross ist die Managementreserve, die der Gemeinderat zurückbehält? In ganzen Franken.</p>",
+    antwort: 6000,
+    einheit: "CHF",
+    anzeige: "180'000 − 162'240 − 11'760 = 6'000",
+    hinweise: ["Gesamtkosten = Projektkosten + Risikoreserve.", "Gesamtkosten = 162'240 + 11'760 = 174'000. Der Rest bis zum Kredit ist die Managementreserve."],
+    loesungsweg: [
+      "Gesamtkosten = 162'240 + 11'760 = 174'000 (Verantwortung Projektleitung)",
+      "Managementreserve = 180'000 − 174'000 = 6'000 (beim Gemeinderat)",
+      "Anteil: 6'000 ÷ 174'000 = 3.4&nbsp;% der Gesamtkosten. Stell Fall B oben ein und vergleiche."
+    ]
+  });
+
+  /* ---------- Schritt 8: Arbeitspaket-Formular ---------- */
+  L.reflexion("#t06-ap-reflexion", {
+    titel: "Arbeitspaket V05 im Fünf-Punkte-Schema",
+    icb: "ICB 3.03",
+    frage: "<p>Beschreibe das Arbeitspaket V05 «Schnittstelle zur Bauverwaltungssoftware» im Fünf-Punkte-Schema: 1 Anfangsereignis, 2 Aktivitäten, 3 Ergebnis mit mindestens zwei Abnahmekriterien, 4 Verantwortlich und Mitarbeit mit Schnittstellen, Aufwand, Kosten und Terminen, 5 Methoden. Ergänze eine Abgrenzung (Nicht-Aufgaben). Stichworte genügen.</p>",
+    hinweis: "Schreib die fünf Punkte untereinander. Das Feld hat schon die Überschriften als Platzhalter. Musterlösung erst danach ansehen.",
+    musterloesung:
+      '<div class="t06-ap" role="group" aria-label="Musterlösung Arbeitspaket V05">' +
+        '<div class="t06-ap-kopf"><span><b>Projekt:</b> Onlineschalter Wolkenried</span><span><b>AP:</b> V05 Schnittstelle zur Bauverwaltungssoftware</span><span><b>Teilprojekt:</b> Schnittstelle und Daten</span></div>' +
+        '<div class="t06-ap-feld"><b>1 · Anfangsereignis</b><ul><li>Soll-Ablauf und Formularinhalte festgelegt (V02, Ende Tag 6), Plattform eingerichtet (V03, Ende Tag 5)</li><li>Schnittstellenbeschreibung des Herstellers liegt vor</li><li>Ziel: Gesuche, Status und Dokumente fliessen ohne Doppelerfassung in beide Richtungen.</li><li>Rahmen: Standardschnittstelle der Plattform, Vorgaben aus dem ISDS-Konzept</li></ul></div>' +
+        '<div class="t06-ap-feld"><b>2 · Aktivitäten</b><ul><li>Datenfelder beider Systeme abgleichen (Feldzuordnung)</li><li>heikle Felder zuerst als Prototyp bauen</li><li>Schnittstelle konfigurieren und entwickeln</li><li>Testfälle schreiben, Komponententest, Fehler beheben</li><li>Schnittstelle dokumentieren, an den Integrationstest übergeben</li></ul></div>' +
+        '<div class="t06-ap-feld"><b>3 · Ergebnis</b><p>Getestete Schnittstelle in der Testumgebung mit Dokumentation. Abnahmekriterien: 20 Testgesuche gehen ohne Nacharbeit in beide Richtungen; ein Statuswechsel erscheint innert 15 Minuten im anderen System; Planbeilagen bis 20&nbsp;MB werden übertragen; Testprotokoll von Luca Bernasconi unterschrieben.</p></div>' +
+        '<div class="t06-ap-feld"><b>4 · Verantwortlich, Mitarbeit</b><ul><li>Verantwortlich: Elena Kovačević (Lärchwerk Informatik AG); Mitarbeit: Luca Bernasconi (Informatik Gemeinde)</li><li>Schnittstellen: V02 und V03 liefern zu, V11 Integrationstest übernimmt; extern: Hersteller der Bauverwaltungssoftware</li><li>128 h, 2 Personen, 8 Tage; Plankosten CHF 24\'960</li><li>Termine: Tag 7 bis Tag 14, Puffer 1 Tag</li></ul></div>' +
+        '<div class="t06-ap-feld"><b>5 · Methoden</b><ul><li>Tabelle der Feldzuordnung</li><li>Prototyp der heiklen Felder (senkt Risiko R02)</li><li>Testfälle vor der Entwicklung, Review durch Luca</li><li>Dokumentation nach Vorlage des Lieferanten</li></ul></div>' +
+        '<div class="t06-ap-feld"><b>Abgrenzung</b><p>Keine GIS-Anbindung, keine Übernahme der Stammdaten und laufenden Gesuche (das macht V07), kein Digitalisieren des Papierarchivs, keine Änderungen an der Bauverwaltungssoftware selbst.</p></div>' +
+      "</div>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Aufwand, Kosten und Termine aus dem Leitstand (128 h × CHF 195 = CHF 24\'960; 128 ÷ (2 × 8) = 8 Tage), alles andere Ergänzung. Gleichwertige Inhalte zählen genauso.</p>',
+    kriterien: [
+      { text: "Anfangsereignis mit Vorleistungen (V02, V03, Beschreibung des Herstellers), nicht nur ein Datum", punkte: 2 },
+      { text: "Aktivitäten als konkrete Tätigkeiten bis zur Übergabe, inklusive Test", punkte: 1 },
+      { text: "Ergebnis mit mindestens zwei prüfbaren Abnahmekriterien", punkte: 2 },
+      { text: "Genau eine verantwortliche Person, dazu Mitarbeit", punkte: 1 },
+      { text: "Schnittstellen zu anderen Paketen, Aufwand, Kosten und Termine genannt", punkte: 2 },
+      { text: "Methoden genannt und Abgrenzung (Nicht-Aufgaben) ergänzt", punkte: 1 }
+    ]
+  });
+  (function () {
+    const feld = document.querySelector("#t06-ap-reflexion textarea");
+    if (feld) {
+      feld.placeholder = "1 Anfangsereignis:\n\n2 Aktivitäten:\n\n3 Ergebnis und Abnahmekriterien:\n\n4 Verantwortlich, Mitarbeit, Schnittstellen, Aufwand, Termine:\n\n5 Methoden:\n\nAbgrenzung:";
+      feld.rows = 14;
+    }
+  })();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t06-u-ebenen", {
+    kategorien: ["Nutzen", "Ziel", "Lieferobjekt", "Arbeitspaket"],
+    elemente: [
+      { html: "Familien kommen schneller ins Bad, an schönen Tagen bilden sich keine Schlangen mehr.", kategorie: "Nutzen", erklaerung: "Die Wirkung für die Badegäste. Ganz oben in der Hierarchie." },
+      { html: "Ab der nächsten Saison wartet niemand länger als 5 Minuten an der Kasse.", kategorie: "Ziel", erklaerung: "Ein angestrebter Zustand mit Messgrösse. Er beantwortet: Was soll erreicht werden?" },
+      { html: "Zwei Kassen und ein Drehkreuz mit Kartenzahlung, getestet und vom Badmeister abgenommen.", kategorie: "Lieferobjekt", erklaerung: "Konkret, übergeben, abgenommen." },
+      { html: "Saisonabos an alle Abonnentinnen und Abonnenten verschickt, Versandliste quittiert.", kategorie: "Lieferobjekt", erklaerung: "Ein Zustand, den man prüfen kann: verschickt und quittiert." },
+      { html: "«Kassen installieren und testen»: 3 Tage, verantwortlich der Lieferant, Mitarbeit Hauswart.", kategorie: "Arbeitspaket", erklaerung: "Abgegrenzte Arbeit mit Dauer und Verantwortung. Sie erzeugt ein Lieferobjekt." },
+      { html: "Der Anteil Kartenzahlungen steigt in der ersten Saison auf mindestens 60&nbsp;%.", kategorie: "Ziel", erklaerung: "Messbarer Zielzustand. Kein Ergebnis, das man übergeben kann." },
+      { html: "«Kassenpersonal schulen»: 4 Stunden, verantwortlich die Leiterin Freibad.", kategorie: "Arbeitspaket", erklaerung: "Geplante Arbeit. Das Lieferobjekt dazu wäre «Kassenpersonal geschult, Teilnehmerliste»." }
+    ]
+  });
+
+  L.auswahl("#t06-u-lieferobjekt", {
+    frage: '<span class="icb">ICB 3.03</span> <b>Übung 2 · Einzelfrage.</b> Welche Formulierung ist ein sauber beschriebenes Lieferobjekt?',
+    optionen: [
+      "«Das Kassensystem wird modernisiert.»",
+      "«Die Badegäste sind zufriedener mit dem Eintritt.»",
+      "«Kassensystem mit zwei Kassen und Kartenzahlung, an drei Testtagen ohne Ausfall in Betrieb, vom Badmeister abgenommen.»",
+      "«Wir arbeiten eng mit dem Lieferanten zusammen.»"
+    ],
+    richtig: 2,
+    erklaerung: "Nur C ist konkret, prüfbar und abnehmbar: Umfang, Abnahmekriterium und wer abnimmt. A ist eine Absicht, B ein Ziel oder Nutzen, D eine Arbeitsweise. ICB 3.03.01: Lieferobjekte definieren und von Zielen unterscheiden."
+  });
+
+  L.sortierer("#t06-u-fuenf", {
+    kategorien: ["1 Anfangsereignis", "2 Aktivitäten", "3 Ergebnis", "4 Verantwortlich", "5 Methoden"],
+    elemente: [
+      { html: "Stromanschlüsse beim Eingang sind gelegt, die Kassen sind geliefert.", kategorie: "1 Anfangsereignis", erklaerung: "Das muss vorliegen, damit die Arbeit beginnen kann." },
+      { html: "Kassen montieren, mit dem Abosystem verbinden, Testbuchungen machen.", kategorie: "2 Aktivitäten", erklaerung: "Was getan wird, um das Ergebnis zu erreichen." },
+      { html: "Beide Kassen buchen 50 Testeintritte fehlerfrei, Abnahmeprotokoll unterschrieben.", kategorie: "3 Ergebnis", erklaerung: "Was am Ende in welcher Qualität vorliegt, mit Abnahmekriterium." },
+      { html: "Techniker des Lieferanten; Mitarbeit Hauswart; Budget CHF 6'200; Woche 3.", kategorie: "4 Verantwortlich", erklaerung: "Wer, mit wem, mit wie viel Geld und wann. Budget und Termine stehen im Arbeitsblatt bei Punkt 4." },
+      { html: "Checkliste des Herstellers, Testdrehbuch mit typischen Eintritten.", kategorie: "5 Methoden", erklaerung: "Wie gearbeitet und geprüft wird." },
+      { html: "Ziel: Ab Saisonstart zahlen alle Gäste am Drehkreuz bargeldlos.", kategorie: "1 Anfangsereignis", erklaerung: "Im Arbeitsblatt 3.1 steht die Zielsetzung beim Anfangsereignis, zusammen mit Aufgabenstellung und Rahmenbedingungen." }
+    ]
+  });
+
+  L.zahlAufgabe("#t06-u-gesamtkosten", {
+    titel: "Übung 4 · Gesamtkosten rechnen",
+    frage: "<p>Kassensystem Freibad. Arbeitspakete: Planung CHF 4'800, Beschaffung CHF 18'400, Installation CHF 6'200, Schulung und Einführung CHF 9'600. Drei bekannte Risiken: Lieferverzug (30&nbsp;%, Schaden CHF 5'000), Schnittstelle zum Abosystem (20&nbsp;%, CHF 8'000), Kartenterminal defekt (50&nbsp;%, CHF 1'800). Die Risikoreserve ist die Summe der Erwartungswerte. Wie hoch sind die Gesamtkosten, für die die Projektleitung verantwortlich ist? In ganzen Franken.</p>",
+    antwort: 43000,
+    einheit: "CHF",
+    anzeige: "39'000 + 4'000 = 43'000",
+    hinweise: ["Zuerst die Projektkosten: Summe der vier Arbeitspakete.", "Risikoreserve = 0.3 × 5'000 + 0.2 × 8'000 + 0.5 × 1'800."],
+    loesungsweg: [
+      "Projektkosten = 4'800 + 18'400 + 6'200 + 9'600 = 39'000",
+      "Risikoreserve = 1'500 + 1'600 + 900 = 4'000",
+      "Gesamtkosten = 39'000 + 4'000 = 43'000 (Verantwortung Projektleitung)",
+      "Falle: Wer die vollen Schäden addiert (14'800), rechnet mit dem schlimmsten Fall und kommt auf 53'800."
+    ]
+  });
+
+  L.schrittAufgabe("#t06-u-budget", {
+    titel: "Übung 5 · Vom Arbeitspaket zum Kreditantrag",
+    aufgabe: "<p>Gleiches Projekt. Der Gemeinderat hält zusätzlich 5&nbsp;% der Gesamtkosten als Managementreserve zurück. Wie gross ist das Gesamtbudget, und wer verfügt über welchen Teil? Rechne zuerst selbst, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "Projektkosten = Σ Arbeitspakete = 39'000", warum: "Stufe 1: Summe aller Arbeitspakete." },
+      { html: "Gesamtkosten = 39'000 + 4'000 = 43'000", warum: "Stufe 2: plus Risikoreserve aus den Erwartungswerten. Freigegeben an die Projektleitung." },
+      { html: "Managementreserve = 0.05 × 43'000 = 2'150", warum: "Die Basis steht in der Aufgabe: 5&nbsp;% der Gesamtkosten, nicht der Projektkosten. Lies die Basis immer genau." },
+      { html: "Gesamtbudget = 43'000 + 2'150 = 45'150", warum: "Stufe 3: Das ist der Betrag des Kreditantrags an den Gemeinderat." },
+      { html: "Projektleitung: 43'000 · Gemeinderat: 2'150", warum: "Die Projektleitung verantwortet die Gesamtkosten. Die Managementreserve bleibt beim Gemeinderat; um sie zu nutzen, braucht es seinen Entscheid. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.wahrFalsch("#t06-u-wf", {
+    titel: "Übung 6 · Wahr oder falsch?",
+    aussagen: [
+      { html: "Alle Lieferobjekte zusammen bilden den Leistungsinhalt des Projekts.", wahr: true, erklaerung: "So sagt es LB 3 F.13. Der Leistungsumfang ergänzt den Inhalt um die Grenzen." },
+      { html: "Ein Arbeitspaket darf zwei gleichberechtigte Verantwortliche haben, wenn es gross ist.", wahr: false, erklaerung: "Genau eine Person ist verantwortlich. Grosse Pakete teilst du auf, oder du ergänzt Mitarbeitende." },
+      { html: "Im HERMES-Arbeitsauftrag gibt es ein eigenes Kapitel «Abgrenzung».", wahr: true, erklaerung: "Die Vorlage gliedert: Arbeitsziele, Ergebnisse, Abgrenzung, Voraussetzungen und Abhängigkeiten, Aktivitäten, Ressourcenbedarf, Ergebnisdarstellung, Qualitätssicherung." },
+      { html: "Die Managementreserve gehört zu den Gesamtkosten, für die die Projektleitung verantwortlich ist.", wahr: false, erklaerung: "Gesamtkosten = Projektkosten + Risikoreserve. Die Managementreserve liegt darüber und bleibt beim Management (LB 3 F.16)." },
+      { html: "Eine Baseline ist der freigegebene Stand von Umfang, Terminen und Kosten, gegen den Abweichungen gemessen werden.", wahr: true, erklaerung: "Ohne Baseline gibt es keine Abweichung und keinen Änderungsantrag, nur Meinungen." },
+      { html: "Ein kleiner Zusatzwunsch ohne Mehrkosten braucht keinen Änderungsantrag.", wahr: false, erklaerung: "Gerade die kleinen Wünsche sind der Anfang von Scope Creep. Ob es wirklich keine Folgen hat, zeigt erst die Auswirkungsanalyse." }
+    ]
+  });
+
+  L.auswahl("#t06-u-creep", {
+    frage: '<span class="icb">ICB 3.03</span> <b>Übung 7 · Fallentscheid.</b> Tag 16 im Onlineschalter. Bauverwalter Beat Imhof bittet dich im Gang: «Kann Dario nicht schnell noch die Online-Terminreservation für die Bauberatung einbauen? Das sind doch nur ein paar Stunden.» Was tust du?',
+    optionen: [
+      "Zusagen. Der Bauverwalter ist ein wichtiger Stakeholder, und ein paar Stunden fallen nicht ins Gewicht.",
+      "Ablehnen. Was nicht im Projektauftrag steht, wird nie umgesetzt.",
+      "Den Wunsch als Änderungsantrag aufnehmen, Aufwand, Kosten, Termin und Risiken analysieren lassen und dem zuständigen Gremium mit Empfehlung zum Entscheid vorlegen.",
+      "Dario selbst entscheiden lassen, weil er den Aufwand am besten kennt."
+    ],
+    richtig: 2,
+    erklaerung: "Änderungen sind normal, aber sie laufen über den Prozess: Antrag, Auswirkungsanalyse, Entscheid, Änderungsstatusliste. Im Leitstand kostet die Terminreservation 48 Stunden und CHF 7'680; über CHF 5'000 entscheidet der Gemeinderat. A ist Scope Creep, B blockiert sinnvolle Änderungen, D übergeht die Steuerung. ICB 3.03.04 und HERMES-Aufgabe «Änderungen managen»."
+  });
+
+  L.auswahl("#t06-u-planungspaket", {
+    frage: '<span class="icb">ICB 3.03</span> <b>Übung 8 · Einzelfrage.</b> Im PSP des Freibad-Projekts steht «Schnittstelle zum kantonalen Abosystem». Ob sie nötig ist und wie viel sie kostet, klärt der Kanton erst in zwei Monaten. Wie heisst so ein Element?',
+    optionen: ["Control Account", "Planungspaket", "Meilenstein", "User Story"],
+    richtig: 1,
+    erklaerung: "Ein Planungspaket ist ein Arbeitspaket, bei dem Dauer, Kosten oder Ressourcen noch nicht geklärt sind (Swiss ICB 4.5.3.3). Ein Control Account ist eine Gruppe von Arbeitspaketen für das Reporting, eine User Story das agile Gegenstück zum Arbeitspaket, ein Meilenstein ein Zeitpunkt ohne Dauer."
+  });
+
+  L.reflexion("#t06-u-reflexion", {
+    titel: "Übung 9 · Offene Frage: Ziel und Lieferobjekt",
+    icb: "ICB 3.03",
+    frage: "<p>Die Gemeinde Wolkenried führt eine digitale Hundeanmeldung ein. Erkläre den Unterschied zwischen einem Ziel und einem Lieferobjekt. Nenne zu diesem Projekt je ein Beispiel und formuliere für das Lieferobjekt zwei Abnahmekriterien. Fünf bis sieben Sätze.</p>",
+    musterloesung:
+      "<p><b>Unterschied:</b> Ein Ziel beschreibt einen angestrebten Zustand oder Nutzen und beantwortet die Frage, was erreicht werden soll. Ein Lieferobjekt ist ein konkretes materielles oder immaterielles Ergebnis, das das Projekt an einen Kunden übergibt und das sich prüfen und abnehmen lässt. Ziele werden über Lieferobjekte erreicht und erst über sie steuerbar.</p>" +
+      "<p><b>Beispiel Ziel:</b> Ein Jahr nach dem Start melden mindestens 80&nbsp;% der Hundehalterinnen und Hundehalter ihren Hund online an; die Einwohnerkontrolle spart pro Anmeldung 10 Minuten.</p>" +
+      "<p><b>Beispiel Lieferobjekt:</b> Online-Formular «Hundeanmeldung» mit Anbindung an das Einwohnerregister und Rechnungsstellung der Hundesteuer, von der Einwohnerkontrolle abgenommen.</p>" +
+      "<p><b>Abnahmekriterien:</b> (1) 15 Testanmeldungen werden ohne Nacharbeit im Einwohnerregister erfasst. (2) Für jede Testanmeldung entsteht die richtige Rechnung der Hundesteuer. Zudem möglich: Das Formular lässt sich auf dem Handy ohne Hilfe ausfüllen (Test mit fünf Personen).</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Bezug: Swiss ICB 4.5.3.1 (Unterschied Ziel und Lieferobjekt, Zielhierarchie).</p>',
+    kriterien: [
+      { text: "Ziel als angestrebter Zustand oder Nutzen erklärt", punkte: 1 },
+      { text: "Lieferobjekt als konkretes, übergebenes, prüfbares Ergebnis erklärt", punkte: 1 },
+      { text: "Zusammenhang genannt (Ziele werden über Lieferobjekte erreicht, Zielhierarchie)", punkte: 1 },
+      { text: "Passendes Beispiel für ein Ziel, möglichst messbar", punkte: 1 },
+      { text: "Passendes Beispiel für ein Lieferobjekt", punkte: 1 },
+      { text: "Zwei prüfbare Abnahmekriterien", punkte: 2 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Bausteine der Lösung; jede Szene zeigt eine Auswahl, Neues leuchtet auf.
+  const B = {
+    kopf: "<b>Lösung</b> · Umzug der Gemeindeverwaltung Wolkenried ins Schulhaus Mattenhof",
+    inS: "<b>In Scope:</b> 22 Arbeitsplätze mit Akten zügeln; Server, Netzwerk und Telefonie zügeln und in Betrieb nehmen; Mobiliar für 8 neue Arbeitsplätze beschaffen und montieren; Bevölkerung informieren; altes Gemeindehaus räumen und reinigen.",
+    outS: "<b>Out of Scope:</b> Umbau des Schulhauses (Projekt des Hochbauamts); Verkauf des alten Gemeindehauses (Gemeindeversammlung); neue Telefonanlage (die bestehende zügelt mit).",
+    rb: "<b>Schnittstellen und Rahmenbedingungen:</b> Bauende Mattenhof Woche 8 (Hochbauamt); Bezug am Montag der Woche 10; Schalter höchstens einen Tag geschlossen.",
+    lo: "<b>Lieferobjekte mit Abnahmekriterium:</b><ul><li>L1 22 Arbeitsplätze bezugsbereit: jede Person meldet sich an, druckt und telefoniert (Testprotokoll).</li><li>L2 Server und Telefonie in Betrieb: alle Fachanwendungen laufen, Nummern unverändert erreichbar.</li><li>L3 8 neue Arbeitsplätze möbliert: Lieferschein quittiert, Mängelliste leer.</li><li>L4 Bevölkerung informiert: Publikation 3 Wochen vor dem Umzug in Mitteilungsblatt und Website.</li><li>L5 Altes Gemeindehaus geräumt und gereinigt: Abgabeprotokoll der Liegenschaftsverwaltung.</li></ul>",
+    aps: "<b>Arbeitspakete:</b> AP 1 Projektführung · AP 2 Möblierung · AP 3 Zügeltag und Reinigung · AP 4 Informatik und Telefonie · AP 5 Information Bevölkerung",
+    a1: "<b>AP 4 · 1 Anfangsereignis:</b> Serverraum im Mattenhof gebaut und abgenommen, Glasfaser aktiv (Woche 8). Ziel: Am Montag der Woche 10 arbeitet die Verwaltung ab 7.30 Uhr mit allen Fachanwendungen. Rahmen: Server höchstens 36 Stunden ausser Betrieb.",
+    a2: "<b>2 Aktivitäten:</b> Netzwerk im Mattenhof einrichten und testen; Datensicherung mit Probe-Rücksicherung; Server am Freitagabend abbauen, transportieren, aufbauen; Telefonnummern umschalten; jeden Arbeitsplatz testen; Pikett am Montag.",
+    a3: "<b>3 Ergebnis:</b> Server, Netzwerk und Telefonie in Betrieb; Testprotokoll: alle 22 Arbeitsplätze melden sich an, drucken und telefonieren.",
+    a4: "<b>4 Verantwortlich:</b> Luca Bernasconi (Informatik); Mitarbeit IT-Dienstleister und Hauswart. Schnittstellen: AP 3 (Zügeltag), Hochbauamt (Serverraum). Budget CHF 21'800. Termine: Woche 8 bis Montag Woche 10.",
+    a5: "<b>5 Methoden:</b> Checkliste je Arbeitsplatz, Testprotokoll, Rücksicherungstest vor dem Abbau, Pikettplan.",
+    pk: "<b>Projektkosten</b> = 9'600 + 38'400 + 14'200 + 21'800 + 3'000 = 87'000",
+    rr: "<b>Risikoreserve</b> = 0.1 × 20'000 + 0.3 × 6'000 + 0.2 × 4'000 = 2'000 + 1'800 + 800 = 4'600",
+    gk: "<b>Gesamtkosten</b> = 87'000 + 4'600 = 91'600 → Verantwortung Projektleitung",
+    mr: "<b>Managementreserve</b> = 0.05 × 91'600 = 4'580 → bleibt beim Gemeinderat",
+    gb: "<b>Gesamtbudget</b> = 91'600 + 4'580 = <b>CHF 96'180</b> → Kreditantrag an den Gemeinderat"
+  };
+  const REIHE = ["kopf", "inS", "outS", "rb", "lo", "aps", "a1", "a2", "a3", "a4", "a5", "pk", "rr", "gk", "mr", "gb"];
+  function loesung(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t06-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k];
+      return '<div class="t06-fb">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t06-film", {
+    phasen: ["1 · Sichten", "2 · Abgrenzen", "3 · Lieferobjekte", "4 · Arbeitspaket", "5 · Budget", "6 · Prüfen"],
+    texte: [
+      'Die <span data-ph="umzug">Gemeindeverwaltung Wolkenried (22 Arbeitsplätze) zieht vom alten Gemeindehaus ins umgebaute Schulhaus Mattenhof.</span> <span data-ph="frist">Bezug am Montag der Woche 10; die Schalter dürfen höchstens einen Tag geschlossen sein.</span> <span data-ph="umbau">Den Umbau führt das Hochbauamt als eigenes Projekt, Bauende Woche 8.</span> <span data-ph="it">Server, Netzwerk und Telefonie zügeln mit; die bestehende Telefonanlage bleibt.</span> <span data-ph="moebel">Für 8 neue Arbeitsplätze braucht es Mobiliar, Lieferzeit 6 Wochen.</span> <span data-ph="verkauf">Über den Verkauf des alten Gemeindehauses entscheidet später die Gemeindeversammlung.</span> <span data-ph="kosten">Geschätzte Kosten: Projektführung CHF 9\'600, Möblierung CHF 38\'400, Zügeltag und Reinigung CHF 14\'200, Informatik und Telefonie CHF 21\'800, Information Bevölkerung CHF 3\'000.</span> <span data-ph="risiken">Risiken: Server beschädigt beim Transport (10&nbsp;%, Schaden CHF 20\'000), Möbel kommen zu spät, Mietmöbel nötig (30&nbsp;%, CHF 6\'000), Umschaltung der Telefonnummern misslingt (20&nbsp;%, CHF 4\'000).</span> <span data-ph="mr">Der Gemeinderat hält 5&nbsp;% der Gesamtkosten als Managementreserve zurück.</span> a) Grenze den Leistungsumfang ab. b) Nenne die Lieferobjekte mit Abnahmekriterium und die Arbeitspakete. c) Beschreibe AP 4 im Fünf-Punkte-Schema. d) Rechne Projektkosten, Gesamtkosten und Gesamtbudget.'
+    ],
+    woerterbuch: [
+      "<b>Scope</b> = Inhalt + Grenzen",
+      "<b>Lieferobjekt</b> = prüfbar + abnehmbar",
+      "<b>AP</b> = Anfang · Aktivitäten · Ergebnis · Wer · Wie",
+      "<b>Risikoreserve</b> = Σ p × Schaden",
+      "<b>Stufen</b>: Projektkosten → Gesamtkosten → Gesamtbudget"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Lösung", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So löst du eine Aufgabe zu Leistungsumfang und Arbeitspaketen: Angaben sichten, abgrenzen, Lieferobjekte und Pakete festlegen, ein Paket beschreiben, das Budget rechnen und zum Schluss prüfen." },
+      { ph: 0, hl: ["umzug", "frist"], f: loesung("kopf", ["kopf"]),
+        say: "Zuerst markierst du, worum es geht: 22 Arbeitsplätze ziehen um, Bezug am Montag der Woche 10, Schalter höchstens einen Tag zu." },
+      { ph: 0, hl: ["umbau", "verkauf", "it"], f: loesung("kopf"),
+        say: "Dann suchst du nach Grenzen. Der Umbau ist ein eigenes Projekt, der Verkauf entscheidet die Gemeindeversammlung, die Telefonanlage bleibt. Das sind Kandidaten für Out of Scope." },
+      { ph: 1, hl: ["umzug", "it", "moebel"], dict: 1, dh: [0], f: loesung("inS", ["inS"]),
+        say: "In Scope: alles, was das Projekt liefern muss. Zügeln der Arbeitsplätze und Akten, Informatik und Telefonie, neues Mobiliar, Information der Bevölkerung und die Räumung des alten Hauses." },
+      { ph: 1, hl: ["umbau", "verkauf"], dh: [0], f: loesung("outS", ["outS"]),
+        say: "Out of Scope schreibst du ausdrücklich hin: Umbau, Verkauf und eine neue Telefonanlage. Sonst erwartet sie jemand stillschweigend." },
+      { ph: 1, hl: ["umbau", "frist"], f: loesung("rb", ["rb"]),
+        say: "Dazu die Schnittstellen und Rahmenbedingungen. Das Bauende in Woche 8 ist die wichtigste Abhängigkeit: Vorher kann die Informatik nicht beginnen." },
+      { ph: 2, dict: 2, dh: [1], f: loesung("lo", ["lo"]),
+        say: "Jetzt die Lieferobjekte. Jedes bekommt ein Abnahmekriterium. Nicht «Informatik erledigt», sondern: alle Fachanwendungen laufen, die Nummern sind unverändert erreichbar." },
+      { ph: 2, hl: ["kosten"], f: loesung("aps", ["aps"]),
+        say: "Die Arbeitspakete leitest du aus den Lieferobjekten ab. Die Kostenangaben verraten sie dir schon: fünf Pakete, von der Projektführung bis zur Information der Bevölkerung." },
+      { ph: 3, hl: ["umbau", "it", "frist"], dict: 3, dh: [2], f: loesung("a1", ["a1"]),
+        say: "Arbeitspaket 4 im Fünf-Punkte-Schema. Punkt 1, das Anfangsereignis: Was muss vorliegen? Der fertige Serverraum und die aktive Glasfaser. Dazu Ziel und Rahmen." },
+      { ph: 3, hl: ["it"], dh: [2], f: loesung("a2", ["a2"]),
+        say: "Punkt 2, die Aktivitäten: einrichten, sichern, abbauen, transportieren, aufbauen, umschalten, testen. Mit Pikett am Montag." },
+      { ph: 3, dh: [1, 2], f: loesung("a3", ["a3"]),
+        say: "Punkt 3, das Ergebnis mit Abnahmekriterium: Server, Netzwerk und Telefonie laufen, das Testprotokoll zeigt alle 22 Arbeitsplätze." },
+      { ph: 3, hl: ["kosten"], dh: [2], f: loesung("a4", ["a4"]),
+        say: "Punkt 4: genau eine verantwortliche Person, die Mitarbeitenden, die Schnittstellen zu anderen Paketen, das Budget von 21'800 Franken und die Termine." },
+      { ph: 3, dh: [2], f: loesung("a5", ["a5"]),
+        say: "Punkt 5, die Methoden: Checkliste, Testprotokoll, Rücksicherungstest und Pikettplan. Damit ist das Paket ein vollständiger Auftrag." },
+      { ph: 4, hl: ["kosten"], dict: 5, dh: [4], f: loesung("pk", ["pk"]),
+        say: "Jetzt das Budget, Stufe 1. Die Summe der fünf Arbeitspakete ergibt die Projektkosten: 87'000 Franken." },
+      { ph: 4, hl: ["risiken"], dh: [3], f: loesung("rr", ["rr"]),
+        say: "Die Risikoreserve ist die Summe der Erwartungswerte: 10 Prozent von 20'000, 30 Prozent von 6'000 und 20 Prozent von 4'000. Zusammen 4'600 Franken." },
+      { ph: 4, dh: [4], f: loesung("gk", ["gk"]),
+        say: "Stufe 2: Projektkosten plus Risikoreserve ergeben die Gesamtkosten von 91'600 Franken. Dafür ist die Projektleitung verantwortlich." },
+      { ph: 4, hl: ["mr"], dh: [4], f: loesung("mr", ["mr"]),
+        say: "Die Managementreserve rechnest du auf der Basis, die die Aufgabe nennt: 5 Prozent der Gesamtkosten, also 4'580 Franken. Sie bleibt beim Gemeinderat." },
+      { ph: 4, dh: [4], f: loesung("gb", ["gb"]),
+        say: "Stufe 3: Gesamtkosten plus Managementreserve ergeben das Gesamtbudget von 96'180 Franken. Das ist der Betrag des Kreditantrags." },
+      { ph: 5, dh: [0, 1], f: loesung("gb"),
+        say: "Prüf zum Schluss: Hat jedes Lieferobjekt ein Abnahmekriterium? Steht Out of Scope ausdrücklich da? Hat das Arbeitspaket genau eine verantwortliche Person?" },
+      { ph: 5, dh: [3, 4], f: loesung("gb"),
+        say: "Und beim Budget: Stimmt die Summe der Pakete? Ist die Risikoreserve aus Erwartungswerten gerechnet und nicht aus dem schlimmsten Fall? Liegt die Managementreserve beim Gemeinderat? Ja, dreimal." },
+      { ph: 5, f: loesung("gb", ["gb"]),
+        say: "Fertig: Leistungsumfang mit Grenzen, fünf Lieferobjekte, fünf Arbeitspakete, Paket 4 vollständig beschrieben und ein Gesamtbudget von 96'180 Franken. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t06-film-loesung").innerHTML = loesung("gb");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t06-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.03</span> Was beschreibt der Leistungsumfang eines Projekts?',
+        o: ["Nur die Liste der Arbeitspakete", "Inhalt und Grenzen des Projekts, also auch, was ausdrücklich nicht dazugehört", "Das Budget und die Termine", "Die Organisation des Projektteams"], a: 1,
+        e: "Leistungsumfang = Inhalt + Grenzen: Ergebnisse, Nutzen, die nötige Arbeit und was nicht dazugehört (Swiss ICB 4.5.3, Definition). ICB 3.03." },
+      { q: '<span class="icb">ICB 3.03</span> Welche Aussage ist ein Lieferobjekt und kein Ziel?',
+        o: ["Die Bearbeitungszeit der Baugesuche sinkt um 20&nbsp;%.", "Die Bauwilligen sind zufriedener.", "Onlineschalter, im Pilot getestet und vom Bauamt abgenommen", "Wolkenried wird eine digitale Gemeinde."], a: 2,
+        e: "Ein Lieferobjekt ist ein konkretes, prüfbares und abnehmbares Ergebnis. Die anderen Aussagen beschreiben Ziele, Nutzen oder eine Vision. ICB 3.03.01: Unterschied zwischen Zielen und Lieferobjekten." },
+      { q: '<span class="icb">ICB 3.03</span> Was ist ein Planungspaket?',
+        o: ["Ein Arbeitspaket, bei dem Dauer, Kosten oder Ressourcen noch nicht geklärt sind", "Das Arbeitspaket der Projektleitung", "Eine Gruppe von Arbeitspaketen für das Reporting", "Der Projektplan einer Phase"], a: 0,
+        e: "So definiert es die Swiss ICB (4.5.3.3). Eine Gruppe von Arbeitspaketen für das Reporting ist ein Control Account. ICB 3.03.03." },
+      { q: '<span class="icb">ICB 3.03</span> Projektkosten CHF 120\'000, Risikoreserve CHF 9\'000, Managementreserve CHF 6\'000. Für welchen Betrag ist die Projektleitung verantwortlich?',
+        o: ["CHF 120\'000", "CHF 129\'000", "CHF 135\'000", "CHF 126\'000"], a: 1,
+        e: "Gesamtkosten = Projektkosten + Risikoreserve = 129'000. Die Managementreserve (Gesamtbudget 135'000) bleibt beim Management (LB 3 F.16). Bezug ICB 3.03 und 3.07." },
+      { q: '<span class="icb">ICB 3.03</span> Wer verfügt über die Managementreserve?',
+        o: ["Die Projektleitung", "Die verantwortliche Person des Arbeitspakets", "Das Management, also Auftraggeber oder Steuerung", "Der Lieferant"], a: 2,
+        e: "Die Managementreserve bleibt in der Hand des Managements und deckt Unvorhersehbares. Die Projektleitung braucht einen Entscheid, um sie zu nutzen (LB 3 F.16). ICB 3.03, Bezug ICB 3.07." },
+      { q: '<span class="icb">ICB 3.03</span> Was beschreibt das Anfangsereignis im Fünf-Punkte-Schema?',
+        o: ["Den Kalendertag, an dem das Paket beginnt", "Was vorliegen muss, damit die Arbeit beginnen kann, mit Ziel und Rahmenbedingungen", "Das Kick-off-Meeting des Projekts", "Die erste Aktivität im Paket"], a: 1,
+        e: "Leitfrage von LB 3 F.15: Was brauche ich, um anfangen zu können? Im Arbeitsblatt 3.1 gehören Zielsetzung, Aufgabenstellung und Rahmenbedingungen dazu. ICB 3.03.03 Arbeitspakete definieren." },
+      { q: '<span class="icb">ICB 3.03</span> Welche Reihenfolge verhindert Scope Creep?',
+        o: ["Umsetzen, dann informieren", "Änderungsantrag, Auswirkungsanalyse, Entscheid, Eintrag in der Änderungsstatusliste", "Entscheid der Projektleitung, dann Änderungsantrag", "Auswirkungsanalyse nach der Abnahme"], a: 1,
+        e: "Erst die Auswirkungen auf Aufwand, Kosten, Termin und Risiken kennen, dann entscheiden, dann nachführen. ICB 3.03.04 Konfiguration des Leistungsumfangs, HERMES 4.4.1.2 und 4.4.1.3." },
+      { q: '<span class="icb">ICB 3.03</span> Was ergibt die Summe aller Arbeitspakete?',
+        o: ["Die Projektkosten", "Die Gesamtkosten", "Das Gesamtbudget", "Die Risikoreserve"], a: 0,
+        e: "Bottom-up: Arbeitspakete schätzen und hochrechnen ergibt die Projektkosten. Erst mit den Reserven entstehen Gesamtkosten und Gesamtbudget (LB 3 F.16). ICB 3.03, Bezug 3.07." },
+      { q: '<span class="icb">ICB 3.03</span> Was gilt für den HERMES-Arbeitsauftrag?',
+        o: ["Ihn erteilt der Auftraggeber direkt an den Lieferanten.", "Er ersetzt den Projektauftrag.", "Die Projektleitung erteilt damit Arbeiten an Mitarbeitende; er enthält unter anderem Ziele, Ergebnisse und Abgrenzung.", "Er wird erst bei der Abnahme erstellt."], a: 2,
+        e: "HERMES-Ergebnis 4.4.1.7: Die Projektleitung vergibt Aufträge intern oder extern, für jedes Arbeitspaket einen. ICB 3.03.03 (Arbeitspakete) und ICB 3.05 (Organisation)." },
+      { q: '<span class="icb">ICB 3.03</span> Was ist eine Baseline?',
+        o: ["Die erste Idee für das Projekt", "Der freigegebene Stand von Umfang, Terminen und Kosten, gegen den Abweichungen und Änderungen gemessen werden", "Die Liste der Out-of-Scope-Punkte", "Die unterste Ebene im PSP"], a: 1,
+        e: "Mit der Baseline arbeiten alle mit derselben Version. Änderungen laufen über Anträge und führen zu einer neuen Baseline. ICB 3.03.04, Bezug ICB 3.10 (Earned Value misst gegen den Basisplan)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
