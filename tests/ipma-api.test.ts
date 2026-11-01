@@ -302,7 +302,7 @@ describe("Free-Konto: Simulator ohne 403, Claude-Bewertung 403", () => {
     assert.equal((await call(handleOverview(req("GET"), ctx.deps))).status, 200)
   })
 
-  test("assess: Free → 403 PRO_REQUIRED; Pro → Vorbedingungen, dann 502 AI_UNAVAILABLE", async () => {
+  test("assess: Free → 403 PRO_REQUIRED; Pro ohne Claude-Abhängigkeit → Vorbedingungen, dann 502 AI_UNAVAILABLE", async () => {
     const free = context({ pro: false })
     const id = await start(free, { mode: "training", competences: ["1.01"], type: "offen", count: 5 })
     const res = await call(handleAssess(req("POST"), params(id, 1), free.deps))

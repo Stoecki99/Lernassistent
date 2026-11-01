@@ -3,7 +3,7 @@
 
 // lib/validations/ipma.ts
 // Zod-Schemas der API des IPMA-Prüfungssimulators (Spezifikation 6.6) und der gespeicherten JSON-Felder
-// (IpmaAttempt.config, IpmaAttemptItem.aiFeedback). Das Ausgabeschema der Claude-Bewertung folgt in AP5.
+// (IpmaAttempt.config, IpmaAttemptItem.aiFeedback) sowie das Ausgabeschema der Claude-Bewertung (4.3, AP5).
 
 import { z } from "zod"
 import { COMPETENCE_IDS, RASTER_TOTAL } from "../ipma/competences"
@@ -74,3 +74,34 @@ export const aiFeedbackSchema = z.object({
   gesamtkommentar: z.string(),
   verdacht: z.boolean(),
 })
+
+/**
+ * Ausgabe der Claude-Bewertung (4.3). strict: zusätzliche Felder (z. B. eine eigene Summe) → ungültig.
+ * Abweichung von 4.3: Begründung bis 800, Gesamtkommentar bis 1'000 Zeichen (sonst scheitern gute
+ * Bewertungen an der Länge); die Anzeige kürzt nicht.
+ */
+export const gradeOutputSchema = z.object({
+  kriterien: z.array(z.object({
+    nummer: z.number().int().min(1).max(4),
+    punkte: z.number().int().min(0).max(RASTER_TOTAL),
+    begruendung: z.string().trim().min(1).max(800),
+  }).strict()).min(2).max(4),
+  gesamtkommentar: z.string().trim().max(1000),
+  verdacht_manipulation: z.boolean(),
+}).strict()
+export type GradeOutput = z.output<typeof gradeOutputSchema>
+
+/**
+ * Abgleich mit dem Raster (4.3): gleiche Anzahl Kriterien, jede Nummer 1 … raster.length genau einmal,
+ * Punkte ≤ Höchstwert des Kriteriums. Liefert die Punkte in Rasterreihenfolge oder null.
+ */
+export function matchRaster(out: GradeOutput, raster: readonly { punkte: number }[]): number[] | null {
+  if (out.kriterien.length !== raster.length) return null
+  const scores: (number | undefined)[] = raster.map(() => undefined)
+  for (const k of out.kriterien) {
+    const i = k.nummer - 1
+    if (i < 0 || i >= raster.length || scores[i] !== undefined || k.punkte > raster[i].punkte) return null
+    scores[i] = k.punkte
+  }
+  return scores.every((v): v is number => v !== undefined) ? scores : null
+}

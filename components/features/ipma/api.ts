@@ -106,13 +106,16 @@ export function startErrorMessage(error: unknown): string {
   return "Der Versuch konnte nicht gestartet werden. Bitte später erneut versuchen."
 }
 
+/** Codes der Claude-Bewertung (502), deren Meldung für die Oberfläche bestimmt ist */
+const AI_CODES = new Set(["AI_UNAVAILABLE", "AI_INVALID", "AI_REFUSED"])
+
 /** Allgemeine Meldung für einen Fehler (Status 500 nie mit Details) */
 export function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof IpmaApiError) {
     if (error.status === 401) return "Deine Anmeldung ist abgelaufen. Bitte neu anmelden."
     if (error.status === 0) return "Keine Verbindung zum Server."
-    if (error.status === 429) return "Zu viele Anfragen. Bitte kurz warten."
-    if (error.status < 500 || error.code === "AI_UNAVAILABLE" || error.code === "AI_INVALID") return error.message
+    if (error.status === 429) return error.code === "BUDGET" || error.code === "DAILY_LIMIT" ? error.message : "Zu viele Anfragen. Bitte kurz warten."
+    if (error.status < 500 || (error.code !== null && AI_CODES.has(error.code))) return error.message
   }
   return fallback
 }

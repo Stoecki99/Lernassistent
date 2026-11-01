@@ -7,7 +7,8 @@
 // Claude-Bewertung einer offenen Antwort (Spezifikation 4.2, 4.3, 6.8 AiAssessment): Knopf erst nach der
 // Selbstbewertung, Ladezustand, Vergleich Selbst/Claude je Kriterium mit Begründung.
 // Free-Konten: kurzer Hinweis statt Anfrage (Zugang 5), «Mehr erfahren» öffnet den Upgrade-Hinweis.
-// Bis AP5 antwortet die Route mit 502 AI_UNAVAILABLE; die Meldung des Servers wird freundlich angezeigt.
+// Fehler der Route (502 AI_UNAVAILABLE/AI_INVALID/AI_REFUSED, 429 BUDGET/DAILY_LIMIT) zeigen die Meldung des
+// Servers; nach «failed» ist ein neuer Versuch möglich. «Alle bewerten» steht in AiAssessAll.
 
 import type { SolvedItem } from "@/lib/ipma/types"
 import { useState } from "react"

@@ -5,7 +5,8 @@
 
 // components/features/ipma/ResultApp.tsx
 // Auswertung /ipma/[attemptId]/auswertung (Spezifikation 4.2, 4.4, 6.8):
-// - Prüfung abgegeben: Pflichtschritt Selbstbewertung aller beantworteten offenen Fragen, danach «Abschliessen»
+// - Prüfung abgegeben: Pflichtschritt Selbstbewertung aller beantworteten offenen Fragen, optional Claude (einzeln
+//   oder «Alle offenen Antworten bewerten», AiAssessAll), danach «Abschliessen»
 //   (POST finish); das vorläufige Ergebnis rechnet der Server bei jedem Laden neu (Nachtrag 8.5 Nr. 6)
 // - Ergebnis, Kompetenz-Landkarte des Versuchs, «Lücken schliessen» mit Vorher/Nachher, Stationen, Durchsicht
 // - neue Abzeichen und Punkte aus dem Abschluss (FinishView)
@@ -15,6 +16,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import styles from "@/app/(ipma)/ipma.module.css"
 import { ipmaApi, IpmaApiError, beforeStorageKey, errorMessage, finishStorageKey, readSession } from "./api"
+import AiAssessAll from "./AiAssessAll"
 import AiAssessment from "./AiAssessment"
 import CompetenceMap, { type AttemptCompetence, type MasteryEntry, type StationTitles } from "./CompetenceMap"
 import { LEVEL, MODE_LABEL, dateTime, isSolved, needsSelfAssessment } from "./format"
@@ -89,16 +91,21 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
     setView((v) => (v ? { ...v, items: v.items.map((i) => (i.position === next.position ? next : i)) } : v))
   }, [])
 
-  // Nach einer Selbstbewertung das vorläufige Ergebnis neu laden (der Server rechnet es bei GET)
+  // Vorläufiges Ergebnis neu laden (der Server rechnet es bei GET)
+  const refresh = useCallback(() => {
+    ipmaApi
+      .get(attemptId)
+      .then((v) => setView(v))
+      .catch(() => undefined)
+  }, [attemptId])
+
+  // Nach einer Selbst- oder Claude-Bewertung
   const onSelfSaved = useCallback(
     (next: SolvedItem) => {
       replaceItem(next)
-      ipmaApi
-        .get(attemptId)
-        .then((v) => setView(v))
-        .catch(() => undefined)
+      refresh()
     },
-    [attemptId, replaceItem],
+    [replaceItem, refresh],
   )
 
   async function doFinish() {
@@ -199,6 +206,7 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
               ? "Du hast keine offene Frage beantwortet; unbeantwortete zählen 0 Punkte."
               : `${openItems.length - pendingSelf} von ${openItems.length} bewertet.`}
           </p>
+          <AiAssessAll attemptId={attemptId} items={openItems} canUseAi={view.canUseAi} onItem={replaceItem} onDone={refresh} onAnnounce={announce} />
           <ul className={styles.durchsicht}>
             {openItems.map((item) => (
               <li key={item.position}>
@@ -208,7 +216,7 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
                 }}>
                   <summary>
                     <strong>Frage {item.position}</strong>
-                    <span>{needsSelfAssessment(item) ? "○ noch nicht bewertet" : `✓ bewertet (${item.rasterPoints ?? 0} von 4 Rasterpunkten)`}</span>
+                    <span>{needsSelfAssessment(item) ? "○ noch nicht bewertet" : `✓ bewertet (${item.rasterPoints ?? 0} von 4 Rasterpunkten${item.scoreSource === "ai" ? ", Claude" : ""})`}</span>
                     <span className="hint">Kompetenz {item.competence}</span>
                   </summary>
                   <div className={styles.durchsichtInhalt}>

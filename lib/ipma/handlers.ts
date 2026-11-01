@@ -23,7 +23,7 @@ import {
   IpmaError,
   NO_CACHE,
   abortAttempt,
-  assertAssessable,
+  assessItem,
   checkItem,
   createAttempt,
   errorResponse,
@@ -149,9 +149,10 @@ export function handleSelfAssess(request: Request, params: ParamsInput, deps: Ip
 }
 
 /**
- * POST /api/ipma/attempts/[id]/items/[position]/assess (4.3): Schnittstelle für AP5.
- * Reihenfolge wie 4.3: 401 → 403 PRO_REQUIRED (Free) → 429 → 404 → Vorbedingungen (409/422) →
- * bis AP5 502 AI_UNAVAILABLE (die Selbstbewertung bleibt massgebend).
+ * POST /api/ipma/attempts/[id]/items/[position]/assess (4.3, AP5): Claude-Bewertung einer offenen Antwort.
+ * Reihenfolge wie 4.3: 401 → 403 PRO_REQUIRED (Free) → 429 (10/min) → Tageszähler 429 DAILY_LIMIT →
+ * Monatsdeckel 429 BUDGET → 404 → Vorbedingungen (409/422) → Sperre «pending» (409) → Claude.
+ * Fehler von Claude → 502 (AI_UNAVAILABLE, AI_INVALID, AI_REFUSED), die Selbstbewertung bleibt massgebend.
  */
 export function handleAssess(request: Request, params: ParamsInput, deps: IpmaDeps): Promise<NextResponse> {
   return (async () => {
@@ -165,8 +166,7 @@ export function handleAssess(request: Request, params: ParamsInput, deps: IpmaDe
       if (!deps.rateLimit(user.id, "assess")) return rateLimitResponse()
       const { id, position } = await itemParams(params)
       await parseBody(request, emptyBodySchema, {})
-      await assertAssessable(deps, user.id, id, position)
-      throw new IpmaError(502, "AI_UNAVAILABLE", "Die Bewertung durch Claude ist gerade nicht möglich. Deine Selbstbewertung gilt.")
+      return ok(await assessItem(deps, user.id, id, position))
     } catch (error) {
       return errorResponse(error, "[ipma/items/assess/POST]", "Bewertung konnte nicht durchgeführt werden.")
     }

@@ -1440,6 +1440,24 @@ Danach geht der Simulator mit **Welle 2** am **So 29.11.** live (mit Fragenpool 
 ]*`). |
 | 10 | 5 Pro-Hinweis | Free: Knopf «Von Claude bewerten lassen» zeigt ohne Anfrage den Hinweis, «Mehr erfahren» öffnet `UpgradePrompt` im Dialog (helle Karte) | Wie 5 vorgeschlagen. |
 
+### 8.7 Nachtrag AP5 (01.11.2026): Abweichungen und Ergänzungen
+
+| Nr. | Stelle | Umsetzung | Begründung |
+|---|---|---|---|
+| 1 | 4.3 Modell | `IPMA_GRADER_MODEL = "claude-opus-5-5"`, `max_tokens` 2000, kein `temperature`, kein `thinking` (Opus 5.5 denkt immer adaptiv; `budget_tokens` und `disabled` geben 400), Aufwand `output_config.effort: "low"` | Vorgabe AP5; Sampling-Parameter werden auf Opus 5.5 abgelehnt. Denken zählt zu den Ausgabe-Tokens, darum 2000 statt 600. |
+| 2 | 4.3 Schritt 10, Schutz Nr. 3 | Strukturierte Ausgabe `output_config.format` (`json_schema`, `IPMA_GRADER_OUTPUT_SCHEMA`) statt Werkzeug `bewertung_abgeben` mit `tool_choice` | Erzwungene Werkzeuge (`any`/`tool`) geben auf Opus 5.5 einen 400. Zod (`gradeOutputSchema`, strict) und `matchRaster` prüfen weiterhin jede Zahl; die Summe rechnet der Server. |
+| 3 | 4.3 Schritt 12 | `stop_reason` vor dem Inhalt: `refusal` → `failed`, 502 `AI_REFUSED` («Bewertung nicht möglich, deine Selbstbewertung gilt.»); `max_tokens` → `failed`, 502 `AI_INVALID` | Neuer Code `AI_REFUSED` in `errors.ts`; die Oberfläche zeigt die Meldung des Servers. |
+| 4 | 4.3 Fehler | SDK-Fehlerklassen: `Anthropic.RateLimitError` → 502 `AI_UNAVAILABLE` («ausgelastet»), übrige `Anthropic.APIError` (inkl. Verbindung, Zeitlimit 40 s, 1 Wiederholung) → 502 `AI_UNAVAILABLE`; andere Fehler → `failed` und 500 generisch | Keine String-Vergleiche, keine internen Details an den Client. |
+| 5 | 4.3 Kosten | Opus 5.5 kostet USD 4 / 20 je Mio. Tokens (Sonnet 4.6: 3 / 15). `incrementApiUsage` erhält die Tokens × `IPMA_GRADER_COST_FACTOR` (4/3), Cache-Schreiben × 1.25, Cache-Lesen × 0.1; `aiTokens` speichert die rohe Summe | Der gemeinsame Monatsdeckel (USD 2, Sonnet-Preise) bildet so die echten Kosten ab. Schätzung je Bewertung rund USD 0.015–0.02, eine Prüfung mit 30 offenen Fragen rund USD 0.50. |
+| 6 | 4.3 Prompt-Caching | System-Prompt als Block mit `cache_control: { type: "ephemeral" }`, alles Variable in der Nachricht | Der Prompt ist kürzer als die Mindestlänge für den Cache; er greift erst, wenn der Prompt wächst (kein Fehler, nur keine Ersparnis). |
+| 7 | 4.3 Schritt 4 | Tageszähler 60 im Speicher je Konto und Schweizer Kalendertag (`dailyAssessQuota`), gezählt wird jeder Aufruf von Claude | Muster Rate-Limit; nach einem Neustart beginnt er neu, der Monatsdeckel bleibt in der Datenbank. |
+| 8 | 4.3 Schritt 8 | Sperre «pending» setzt `aiAssessedAt` (Startzeit); eine Sperre älter als 2 Minuten gilt als verwaist und darf übernommen werden | Sonst bliebe eine Antwort nach einem Absturz für immer «wird bewertet». |
+| 9 | 4.3 `gradeOutputSchema` | Begründung bis 800, Gesamtkommentar bis 1'000 Zeichen | Gute Bewertungen sollen nicht an der Länge scheitern. |
+| 10 | 4.2 «alle bewerten» | `AiAssessAll` in der Auswertung einer abgegebenen Prüfung: nacheinander (nicht 3 gleichzeitig), mit Fortschritt und «Anhalten»; Stopp bei 403/`BUDGET`/`DAILY_LIMIT`, beim Rate-Limit einmal 60 s Pause | Auftrag AP5; nacheinander bleibt sicher unter 10 je Minute. |
+| 11 | 4.3 Fallbacks | Kein `fallbacks: "default"` (Beta `server-side-fallback-2026-07-01`) | `@anthropic-ai/sdk` 0.82 kennt das Feld nicht (auch nicht in `beta.messages`); nachrüsten mit einem neueren SDK. |
+| 12 | 6.4 / Training | Im Training ersetzt die Claude-Bewertung Punkte und «richtig» der Position; Leitner und Trainingspunkt bleiben bei der Selbstbewertung | Leitner und Punkt zählen je Frage nur einmal (Nachtrag 8.5 Nr. 5). |
+| 13 | IpmaDeps | Neues optionales Feld `ai` (Client, Deckel, Token-Erfassung, Tageszähler); fehlt es, antwortet `assess` nach den Vorbedingungen 502 `AI_UNAVAILABLE` | Tests übergeben Attrappen (`tests/ipma-grader.test.ts`), bestehende Tests bleiben unverändert. |
+
 ---
 
 ## 9. Offene Fragen an Jan

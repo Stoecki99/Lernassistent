@@ -4,7 +4,7 @@
 // lib/ipma/server.ts
 // Serverlogik des IPMA-Prüfungssimulators (Spezifikation 5, 6.4, 6.6, 6.9, 6.10): Zugang, Rate-Limits,
 // Fehlerantworten, Körpergrenze, Versuche anlegen, Antworten speichern, Prüfen (Training), Selbstbewertung,
-// Pause, Abgabe, Abschluss (Punkte, Abzeichen, Station 24), Abbruch, Übersicht.
+// Claude-Bewertung (AP5), Pause, Abgabe, Abschluss (Punkte, Abzeichen, Station 24), Abbruch, Übersicht.
 // Alle Abläufe bekommen ihre Abhängigkeiten über IpmaDeps (Datenbank, Session, Uhr, Pool), damit
 // tests/ipma-api.test.ts sie mit einer Fake-Prisma-Schicht prüfen kann. NUR SERVER.
 
@@ -12,6 +12,8 @@ import { NextResponse } from "next/server"
 import { Prisma, type PrismaClient } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
+import { IPMA_GRADER_COST_FACTOR, anthropic } from "@/lib/claude"
+import { checkApiCostLimit, incrementApiUsage } from "@/lib/subscription"
 import { checkAndAwardBadges } from "@/lib/badges"
 import {
   LeitstandError,
@@ -26,6 +28,7 @@ import type { CreateAttemptInput, SaveItemInput } from "@/lib/validations/ipma"
 import { COMPETENCE_IDS, RASTER_TOTAL, type CompetenceId } from "./competences"
 import { CONFIG_VERSION, EXAM_CONFIG, configSnapshot, type ExamConfig } from "./config"
 import { IpmaError } from "./errors"
+import { billableTokens, gradeOpenAnswer, totalTokens, type GradeFailure, type GraderClient } from "./grader"
 import { loadPool, loadStationCatalog, type Pool } from "./pool"
 import { mastery, weakestCompetences, type Mastery } from "./review"
 import type { StationCatalog } from "./scoring"
@@ -105,6 +108,24 @@ export interface IpmaDeps {
   rateLimit: (userId: string, purpose: RatePurpose) => boolean
   awardBadges: (userId: string) => Promise<AwardedBadgeView[]>
   config: ExamConfig
+  /** Claude-Bewertung (4.3); fehlt sie, antwortet «assess» nach den Vorbedingungen 502 AI_UNAVAILABLE */
+  ai?: IpmaAiDeps
+}
+
+/** Abhängigkeiten der Claude-Bewertung (4.3); in den Tests Attrappen */
+export interface IpmaAiDeps {
+  client: GraderClient
+  /** Monatsdeckel (lib/subscription.ts, gemeinsam mit Chat und Quiz) noch nicht erreicht */
+  checkBudget: (userId: string) => Promise<boolean>
+  /** Tokens auf das Konto buchen (Sonnet-Preise, siehe billableTokens) */
+  recordUsage: (userId: string, inputTokens: number, outputTokens: number) => Promise<void>
+  /** Tageszähler (4.3 Schritt 4) */
+  quota: AssessQuota
+}
+
+export interface AssessQuota {
+  available: (userId: string, now: Date) => boolean
+  consume: (userId: string, now: Date) => void
 }
 
 let catalogCache: StationCatalog | null = null
@@ -133,6 +154,12 @@ export function defaultDeps(): IpmaDeps {
     rateLimit: checkRateLimit,
     awardBadges: checkAndAwardBadges,
     config: EXAM_CONFIG,
+    ai: {
+      client: anthropic,
+      checkBudget: checkApiCostLimit,
+      recordUsage: incrementApiUsage,
+      quota: dailyAssessQuota,
+    },
   }
 }
 
@@ -713,14 +740,44 @@ export async function selfAssess(
   return solvedOf(deps, attempt, await requireItem(db, id, position))
 }
 
-// ---------- Claude-Bewertung (POST items/[position]/assess): Schnittstelle für AP5 ----------
+// ---------- Claude-Bewertung (POST items/[position]/assess, 4.3, AP5) ----------
+
+/** Bewertungen mit Claude je Konto und Tag (4.3 Schritt 4) */
+export const ASSESS_DAILY_LIMIT = 60
+
+/** Eine Sperre «pending», die älter ist, gilt als verwaist (Prozess abgebrochen) und darf übernommen werden */
+export const AI_PENDING_STALE_MS = 2 * 60 * 1000
+
+const dailyAssessMap = new Map<string, number>()
+
+/** Kalendertag in der Schweiz (Tageszähler) */
+function zurichDay(now: Date): string {
+  return now.toLocaleDateString("sv-SE", { timeZone: "Europe/Zurich" })
+}
 
 /**
- * Vorbedingungen der Claude-Bewertung (4.3 Schritte 6–7) ohne Aufruf von Claude. Pro-Prüfung (403) und
- * Rate-Limit macht die Route. AP5 ergänzt Tageszähler, Kostendeckel, optimistische Sperre «pending», den
- * Aufruf (lib/ipma/grader.ts) und das Speichern; bis dahin antwortet die Route 502 AI_UNAVAILABLE.
+ * Tageszähler im Speicher je Konto (Muster Rate-Limit; nach einem Neustart beginnt er neu, der Monatsdeckel
+ * bleibt in der Datenbank). Gezählt wird jeder Aufruf von Claude, auch fehlgeschlagene.
  */
-export async function assertAssessable(deps: IpmaDeps, userId: string, id: string, position: number): Promise<StoredItem> {
+export const dailyAssessQuota: AssessQuota = {
+  available(userId, now) {
+    return (dailyAssessMap.get(`${zurichDay(now)}:${userId}`) ?? 0) < ASSESS_DAILY_LIMIT
+  },
+  consume(userId, now) {
+    const day = zurichDay(now)
+    if (dailyAssessMap.size > 5000) {
+      for (const key of dailyAssessMap.keys()) if (!key.startsWith(`${day}:`)) dailyAssessMap.delete(key)
+    }
+    const key = `${day}:${userId}`
+    dailyAssessMap.set(key, (dailyAssessMap.get(key) ?? 0) + 1)
+  },
+}
+
+function isStalePending(item: StoredItem, now: Date): boolean {
+  return item.aiStatus === "pending" && (item.aiAssessedAt === null || now.getTime() - item.aiAssessedAt.getTime() > AI_PENDING_STALE_MS)
+}
+
+async function loadAssessable(deps: IpmaDeps, userId: string, id: string, position: number): Promise<{ attempt: StoredAttempt; item: StoredItem }> {
   const attempt = await requireOwnAttempt(deps.db, userId, id)
   const exam = isExamMode(asMode(attempt.mode))
   const status = asStatus(attempt.status)
@@ -730,8 +787,134 @@ export async function assertAssessable(deps: IpmaDeps, userId: string, id: strin
   if (status === "finished" || status === "aborted") throw new IpmaError(409, "NOT_ACTIVE", "Dieser Versuch ist abgeschlossen.", { status })
   if (item.text === null || item.text.trim() === "") throw new IpmaError(422, "BAD_REQUEST", "Eine leere Antwort wird nicht bewertet.")
   if (item.selfAssessedAt === null) throw new IpmaError(422, "SELF_FIRST", "Bitte zuerst selbst bewerten.")
-  if (item.aiStatus !== "none" && item.aiStatus !== "failed") throw new IpmaError(409, "CONFLICT", "Diese Antwort ist schon bewertet oder wird gerade bewertet.")
-  return item
+  const retryable = item.aiStatus === "none" || item.aiStatus === "failed" || isStalePending(item, deps.now())
+  if (!retryable) throw new IpmaError(409, "CONFLICT", "Diese Antwort ist schon bewertet oder wird gerade bewertet.")
+  return { attempt, item }
+}
+
+/**
+ * Vorbedingungen der Claude-Bewertung (4.3 Schritte 6–7) ohne Aufruf von Claude: offene, gesperrte, nicht leere
+ * Antwort, Versuch abgegeben (Prüfung) bzw. aktiv (Training), Selbstbewertung vorhanden, aiStatus none/failed
+ * (oder eine verwaiste Sperre «pending»).
+ */
+export async function assertAssessable(deps: IpmaDeps, userId: string, id: string, position: number): Promise<StoredItem> {
+  return (await loadAssessable(deps, userId, id, position)).item
+}
+
+/** Antwort an den Client bei einer gescheiterten Bewertung; die Selbstbewertung bleibt massgebend */
+function assessFailure(reason: GradeFailure): IpmaError {
+  switch (reason) {
+    case "refusal":
+      return new IpmaError(502, "AI_REFUSED", "Bewertung nicht möglich, deine Selbstbewertung gilt.")
+    case "truncated":
+    case "invalid":
+      return new IpmaError(502, "AI_INVALID", "Die Bewertung durch Claude war unvollständig. Deine Selbstbewertung gilt; du kannst es erneut versuchen.")
+    case "busy":
+      return new IpmaError(502, "AI_UNAVAILABLE", "Claude ist gerade ausgelastet. Bitte in einer Minute erneut versuchen. Deine Selbstbewertung gilt.")
+    case "unavailable":
+      return new IpmaError(502, "AI_UNAVAILABLE", "Die Bewertung durch Claude ist gerade nicht möglich. Deine Selbstbewertung gilt.")
+  }
+}
+
+/**
+ * Claude-Bewertung einer offenen Antwort (4.3 Schritte 4–14, Entscheid 9 Nr. 4). Pro-Prüfung (403) und Rate-Limit
+ * macht die Route. Ablauf: Tageszähler → Monatsdeckel → Vorbedingungen → Sperre «pending» per updateMany (gegen
+ * Doppelauslösung) → Claude → Tokens buchen (immer, auch bei ungültiger Ausgabe) → Punkte selbst summieren und
+ * speichern (scoreSource «ai», massgebend). Fehler setzen «failed» (neuer Versuch erlaubt), nach «done» nicht mehr.
+ * Das Ergebnis einer abgegebenen Prüfung rechnet GET neu (Nachtrag 8.5 Nr. 6).
+ */
+export async function assessItem(deps: IpmaDeps, userId: string, id: string, position: number): Promise<SolvedItem> {
+  const db = deps.db
+  const now = deps.now()
+  const ai = deps.ai
+  if (!ai) {
+    await assertAssessable(deps, userId, id, position)
+    throw assessFailure("unavailable")
+  }
+  if (!ai.quota.available(userId, now)) {
+    throw new IpmaError(429, "DAILY_LIMIT", `Heute sind keine weiteren Bewertungen durch Claude möglich (höchstens ${ASSESS_DAILY_LIMIT} am Tag). Deine Selbstbewertung gilt.`)
+  }
+  if (!(await ai.checkBudget(userId))) {
+    throw new IpmaError(429, "BUDGET", "Das monatliche Kontingent für Claude ist aufgebraucht. Deine Selbstbewertung gilt.")
+  }
+  const { attempt, item } = await loadAssessable(deps, userId, id, position)
+  const question = deps.pool().byId.get(item.questionId) ?? null
+  if (!question || question.typ !== "offen") throw new IpmaError(422, "NOT_OPEN", "Zu dieser Frage gibt es kein Raster mehr.")
+
+  // Optimistische Sperre (4.3 Schritt 8): nur eine Anfrage gewinnt; verwaiste Sperren werden übernommen
+  let locked = await db.ipmaAttemptItem.updateMany({
+    where: { attemptId: id, position, aiStatus: { in: ["none", "failed"] } },
+    data: { aiStatus: "pending", aiAssessedAt: now },
+  })
+  if (locked.count === 0) {
+    locked = await db.ipmaAttemptItem.updateMany({
+      where: { attemptId: id, position, aiStatus: "pending", aiAssessedAt: { lt: new Date(now.getTime() - AI_PENDING_STALE_MS) } },
+      data: { aiStatus: "pending", aiAssessedAt: now },
+    })
+  }
+  if (locked.count === 0) throw new IpmaError(409, "CONFLICT", "Diese Antwort wird gerade bewertet.")
+
+  const markFailed = () =>
+    db.ipmaAttemptItem.updateMany({ where: { attemptId: id, position, aiStatus: "pending" }, data: { aiStatus: "failed" } })
+
+  ai.quota.consume(userId, now)
+  let result: Awaited<ReturnType<typeof gradeOpenAnswer>>
+  try {
+    result = await gradeOpenAnswer(ai.client, {
+      frage: question.frage,
+      musterloesung: question.musterloesung,
+      raster: question.bewertungsraster,
+      antwort: item.text ?? "",
+    })
+  } catch (error) {
+    await markFailed()
+    throw error
+  }
+
+  // Tokens immer buchen (4.3 Schritt 11); ein Fehler beim Buchen verhindert die Bewertung nicht
+  const tokens = totalTokens(result.usage)
+  if (tokens > 0) {
+    const billable = billableTokens(result.usage, IPMA_GRADER_COST_FACTOR)
+    try {
+      await ai.recordUsage(userId, billable.input, billable.output)
+    } catch (error) {
+      console.error("[ipma/assess] Token-Erfassung", error)
+    }
+  }
+
+  if (!result.ok) {
+    await markFailed()
+    if (result.reason !== "busy" && result.reason !== "unavailable") {
+      console.warn("[ipma/assess] Bewertung gescheitert", { attemptId: id, position, reason: result.reason })
+    }
+    throw assessFailure(result.reason)
+  }
+
+  // Punkte selbst summieren (4.3 Schritt 13), nie eine Summe von Claude übernehmen
+  const cfg = readConfig(attempt.config)
+  const total = result.scores.reduce((sum, v) => sum + v, 0)
+  const feedback: Prisma.InputJsonObject = {
+    kriterien: result.feedback.kriterien.map((k) => ({ nummer: k.nummer, punkte: k.punkte, begruendung: k.begruendung })),
+    gesamtkommentar: result.feedback.gesamtkommentar,
+    verdacht: result.feedback.verdacht,
+  }
+  const saved = await db.ipmaAttemptItem.updateMany({
+    where: { attemptId: id, position, aiStatus: "pending" },
+    data: {
+      aiStatus: "done",
+      aiScores: result.scores,
+      aiFeedback: feedback,
+      aiTokens: tokens,
+      aiAssessedAt: deps.now(),
+      scoreSource: "ai",
+      rasterPoints: total,
+      correct: total >= cfg.openCorrectRaster,
+      pointsQ: cfg.weights.offen * total,
+    },
+  })
+  if (saved.count === 0) throw new IpmaError(409, "CONFLICT", "Die Antwort wurde inzwischen verändert.")
+  if (result.feedback.verdacht) console.warn("[ipma/assess] Manipulationsverdacht", { attemptId: id, position })
+  return solvedOf(deps, attempt, await requireItem(db, id, position))
 }
 
 // ---------- Pause (POST /pause) ----------

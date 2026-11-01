@@ -22,6 +22,7 @@ export type IpmaErrorCode =
   | "BUDGET"
   | "DAILY_LIMIT"
   | "AI_INVALID"
+  | "AI_REFUSED"
   | "AI_UNAVAILABLE"
 
 /** Fachlicher Fehler mit HTTP-Status; die Meldung ist für die Oberfläche bestimmt (6.7). */
