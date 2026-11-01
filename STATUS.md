@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad AVSW ergänzt)
+**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad AVSW Verteilte Softwarearchitekturen, Baustein «modellieren»)
 
 ---
 
@@ -20,7 +20,7 @@
 | 10. Statistiken & Gamification | Fertig | Badges, Punkte, Streak, WochenChart |
 | 11. Deployment | Fertig | Dockerfile, Docker Compose, Caddy |
 | 12. Polish | Fertig | Skeletons, Error States, A11y, SEO |
-| 13. Lernpfad | Live seit 29.10.2026 | Reiter Lernseiten, Lernpfad MSTW mit 18 Stationen und AVSW mit 5 Stationen (fertige HTML-Seiten aus dem Baukasten `public/lernpfad/`), Fortschritt im Konto |
+| 13. Lernpfad | Live seit 29.10.2026 | Reiter Lernseiten, Lernpfad MSTW mit 18 Stationen und AVSW mit 6 Stationen (fertige HTML-Seiten aus dem Baukasten `public/lernpfad/`), Fortschritt im Konto |
 
 ## Security-Fixes (alle angewendet)
 
@@ -53,7 +53,7 @@
 
 ## Offene Punkte (Stand 2026-11-01)
 
-- **AVSW-Inhalte nicht mit Folien abgeglichen:** Die Folien lagen beim Erstellen nicht vor. Alle fünf Stationen tragen den Hinweis «Eigene Lösungen, nicht vom Dozenten bestätigt». Abzugleichen sind Begriffe (MTBF/MTTF, Standby-Arten, Archivbit, Generationenprinzip, aktive/passive Checks), Jahresbasis 8760 h, Write-Penalty-Werte, der Prüfungsrahmen und die lineare Notenschätzung im Prüfungstraining.
+- **AVSW-Inhalte nicht mit Folien abgeglichen:** Die Folien lagen beim Erstellen nicht vor. Alle Stationen tragen den Hinweis «Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt». Begriffe, Notation (C4/UML), Themenreihenfolge, Feld `vorlesung` (vorläufig «Thema 1–5») und Prüfungsrahmen mit den Modulunterlagen abgleichen.
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
 - **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
 - **Doppelte Statistik-Funktionen:** mehrere Themenseiten bringen eigene Fassungen von `erfc`, `invPhi`, `lnGamma`, `tCdf` u. a. mit. Kandidat für den Baukasten.
@@ -66,7 +66,8 @@
 
 ### 2026-11-01
 
-- **feat: Lernpfad AVSW (Verlässliche IT-Infrastruktur, FS26)** — `content/lernseiten/avsw/` mit `fach.json` und fünf Stationen: Redundanz und Verfügbarkeit, RAID, Backup-Strategien, Monitoring, Prüfungstraining mit Prüfungsmodus (Übungsprüfung 6 Aufgaben, 60 Punkte, 60-Minuten-Timer, Auswertung je Station). Navigation automatisch über den Fachordner (Kachel unter `/lernseiten`, Kurzlink `/avsw`). Test für `fach.json` in `tests/lernseiten.test.ts`
+- **feat: Lernpfad AVSW (Verteilte Softwarearchitekturen, FS26)** — `content/lernseiten/avsw/` mit sechs Stationen: Architekturstile, Kommunikation (REST, gRPC, Messaging), Container und Kubernetes, Resilienz und Konsistenz, Architektur modellieren, Prüfungstraining mit Prüfungsmodus. Navigation automatisch über den Fachordner (Kachel unter `/lernseiten`, Kurzlink `/avsw`). Test für `fach.json`. (Eine erste Fassung mit falschem Fach «Verlässliche IT-Infrastruktur» wurde ersetzt.)
+- **feat: Baukasten 1.1** — Baustein `Lernpfad.modellieren` (Architektur aus Anforderungstext modellieren: Bausteine legen, Verbindungen mit Art ziehen, prüfen mit Rückmeldung, Musterlösung mit Begründungen, ohne Ziehen per Maus bedienbar), `Lernpfad.piktogramm` (22 eigene SVG-Symbole statt Markenlogos), Codeblöcke `pre.code`. Doku in `docs/lernpfad-baukasten.md` (8.12, 9.12, 9.13), Muster in `content/lernseiten/avsw/_vorlage.html`
 
 ### 2026-10-29
 
