@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monitoring · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/avsw/05-pruefungstraining" title="Prüfungstraining">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t04-», nur Farben aus :root -->
+  <style>
+    .t04-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t04-ziele li{margin-bottom:2px}
+    .t04-z + .t04-z{margin-top:6px}
+    .t04-z{white-space:normal}
+    .t04-text{font-family:var(--f-body); font-size:1rem; line-height:1.5}
+
+    /* Zeitreihe mit Schwellwerten */
+    .t04-chart .t04-band-w{fill:var(--free); fill-opacity:.2}
+    .t04-chart .t04-band-c{fill:var(--bad); fill-opacity:.22}
+    .t04-chart .t04-linie-w{stroke:var(--free); stroke-width:2; stroke-dasharray:6 4; fill:none}
+    .t04-chart .t04-linie-c{stroke:var(--bad); stroke-width:2; stroke-dasharray:2 3; fill:none}
+    .t04-chart .t04-pkt{fill:var(--s1); stroke:var(--surface); stroke-width:1}
+    .t04-chart .t04-pkt.t04-w{fill:var(--free)}
+    .t04-chart .t04-pkt.t04-c{fill:var(--bad)}
+    .diagramm text.t04-ev-w{fill:var(--free); font-weight:700; font-size:11px}
+    .diagramm text.t04-ev-c{fill:var(--bad); font-weight:700; font-size:11px}
+    .t04-schalter{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .t04-zaehler{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(130px,100%),1fr)); gap:8px}
+    .t04-zaehler div{background:var(--board); border-radius:10px; padding:8px 12px}
+    .t04-zaehler b{display:block; font-family:var(--f-math); font-size:1.5rem; font-variant-numeric:tabular-nums}
+    .t04-zaehler .t04-zw b{color:var(--free)}
+    .t04-zaehler .t04-zc b{color:var(--bad)}
+    .t04-erkl{font-size:.95rem}
+
+    /* Fehlerbudget-Rechner */
+    .t04-form{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(160px,100%),1fr)); gap:10px}
+    .t04-form label{display:flex; flex-direction:column; gap:4px; font-weight:600; font-size:.92rem}
+    .t04-feld{font:inherit; font-family:var(--f-math); font-size:1.05rem; min-height:38px; padding:4px 8px; width:100%; max-width:12ch;
+      border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font-variant-numeric:tabular-nums}
+    .t04-feld[aria-invalid="true"]{border-color:var(--bad); background:var(--bad-bg)}
+    .t04-balken{height:14px; border-radius:7px; background:var(--board); border:1px solid var(--line); overflow:hidden}
+    .t04-balken span{display:block; height:100%; background:var(--accent); transition:width .3s}
+    .t04-balken.t04-leer span{background:var(--bad)}
+  </style>
+</head>
+<body data-fach="avsw" data-thema="04-monitoring">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">AVSW · Thema 4 · Monitoring</span>
+    <h1>Monitoring</h1>
+    <p class="lead">Ein Dienst, der ausfällt, ohne dass es jemand merkt, ist doppelt teuer: Er steht still, und niemand repariert ihn. Hier lernst du, was du überwachst, wie du sinnvolle Schwellwerte und Alarme festlegst und wie du mit SLO und Fehlerbudget rechnest. Am Schluss löst du eine ganze Prüfungsaufgabe: SLI definieren, Fehlerbudget berechnen, Restbudget nach zwei Störungen bestimmen, Alarmierung festlegen.</p>
+    <div class="note"><b>Hinweis:</b> Eigene Lösungen, nicht vom Dozenten bestätigt. Begriffe und Bezeichnungen mit den Vorlesungsfolien abgleichen.</div>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t04-ziele">
+        <li>Metriken, Logs und Traces unterscheiden und aktive von passiven Checks trennen,</li>
+        <li>Warning- und Critical-Schwellwerte setzen und Flapping mit Wiederholungen und Hysterese verhindern,</li>
+        <li>eine Alarmierung mit Eskalationsstufen entwerfen, ohne Alarmmüdigkeit zu erzeugen,</li>
+        <li>die Golden Signals sowie USE und RED nennen und anwenden,</li>
+        <li>SLA, SLO und SLI auseinanderhalten und das Fehlerbudget berechnen,</li>
+        <li>erklären, warum schnelleres Erkennen die MTTR senkt und die Verfügbarkeit erhöht.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#ueberwachen"><b>2</b>Was überwachen</a>
+    <a href="#budget"><b>3</b>Fehlerbudget</a>
+    <a href="#alarm"><b>4</b>Alarmierung</a>
+    <a href="#ausprobieren"><b>5</b>Ausprobieren</a>
+    <a href="#uebungen"><b>6</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die vier Grundbegriffe</h2>
+    <p class="prose">Monitoring heisst: Du misst laufend, wie es deinen Systemen geht, und lässt dich warnen, bevor die Benutzer es merken. Dafür brauchst du vier Dinge: etwas Messbares, eine Grenze, eine Meldung und ein Ziel.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Metrik = Messwert über Zeit</span><span class="ex">CPU 73 % um 10:02</span><p>Wie das Fieberthermometer: eine Zahl, regelmässig gemessen. Aus vielen Messungen entsteht eine Kurve.</p></div>
+      <div class="concept"><span class="tag">Schwellwert = Grenze</span><span class="ex">Warning ab 80 %</span><p>Wie das Tempolimit: Darüber wird es gefährlich. Meist gibt es zwei Stufen, Warning und Critical.</p></div>
+      <div class="concept"><span class="tag">Alarm = Meldung an Menschen</span><span class="ex">SMS an Bereitschaft</span><p>Wie der Rauchmelder: Er soll nur bei echtem Rauch piepen. Sonst hört bald niemand mehr hin.</p></div>
+      <div class="concept"><span class="tag">SLO = Qualitätsziel</span><span class="ex">99.9 % pro 30 Tage</span><p>Wie ein Pünktlichkeitsziel der Bahn: Ein kleiner Anteil Fehler ist erlaubt. Dieser Anteil heisst Fehlerbudget.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Metrik, Log oder Trace?</h3>
+      <p class="hint">Eine Metrik ist eine Zahl über Zeit. Ein Log ist ein einzelnes Ereignis als Textzeile. Ein Trace verfolgt eine Anfrage durch mehrere Dienste.</p>
+      <div id="t04-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Begriffe festlegen</span>
+    <h2>Das Wörterbuch des Monitorings</h2>
+    <p class="prose">Viele Begriffe stammen aus dem Englischen. Lern sie so, wie sie in der Praxis heissen. Die Tabelle scrollt auf schmalen Bildschirmen seitlich.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Begriff</th><th>Bedeutung</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Metrik</th><td>Zahl, die in festen Abständen gemessen wird</td><td>Antwortzeit in ms, jede Minute</td></tr>
+          <tr><th scope="row">Log</th><td>Textzeile zu einem einzelnen Ereignis mit Zeitstempel</td><td>«10:02 ERROR Zahlung abgelehnt»</td></tr>
+          <tr><th scope="row"><span lang="en">Trace</span></th><td>Weg einer Anfrage durch mehrere Dienste, mit Dauer je Station</td><td>Webserver → Warenkorb → Datenbank</td></tr>
+          <tr><th scope="row">Aktiver Check</th><td>Das Monitoring fragt selbst nach (<span lang="en">Polling</span>)</td><td>Ping, HTTP-Abfrage alle 60 s</td></tr>
+          <tr><th scope="row">Passiver Check</th><td>Das System meldet sich selbst beim Monitoring (<span lang="en">Push</span>)</td><td>SNMP-Trap, Agent schickt Werte</td></tr>
+          <tr><th scope="row">Warning / Critical</th><td>Zwei Schwellwerte: «bald handeln» und «sofort handeln»</td><td>Disk 80 % / 95 %</td></tr>
+          <tr><th scope="row"><span lang="en">Flapping</span></th><td>Zustand springt dauernd zwischen OK und Alarm hin und her</td><td>CPU pendelt um 80 %</td></tr>
+          <tr><th scope="row">Hysterese</th><td>Entwarnung erst deutlich unter der Alarmgrenze</td><td>Alarm ab 80 %, OK erst unter 75 %</td></tr>
+          <tr><th scope="row">Eskalation</th><td>Ungelöster Alarm geht an die nächste Stufe</td><td>nach 10 min an Stellvertretung</td></tr>
+          <tr><th scope="row">Alarmmüdigkeit</th><td>Zu viele unwichtige Alarme, darum werden auch wichtige übersehen</td><td>200 Mails pro Tag</td></tr>
+          <tr><th scope="row"><span lang="en">Golden Signals</span></th><td>Vier Kennzahlen jedes Dienstes</td><td>Latenz, Traffic, Fehler, Sättigung</td></tr>
+          <tr><th scope="row">SLI</th><td><span lang="en">Service Level Indicator</span>: gemessene Kennzahl</td><td>Anteil erfolgreicher Anfragen</td></tr>
+          <tr><th scope="row">SLO</th><td><span lang="en">Service Level Objective</span>: internes Ziel für den SLI</td><td>SLI ≥ 99.9 % pro 30 Tage</td></tr>
+          <tr><th scope="row">SLA</th><td><span lang="en">Service Level Agreement</span>: Vertrag mit Kunden, mit Folgen bei Verletzung</td><td>99.5 %, sonst Gutschrift</td></tr>
+          <tr><th scope="row">Fehlerbudget</th><td>Erlaubter Fehleranteil: 1 − SLO, mal Zeitraum</td><td>43.2 min pro 30 Tage</td></tr>
+          <tr><th scope="row">MTTR</th><td><span lang="en">Mean Time To Repair</span>: mittlere Zeit von Ausfall bis Betrieb</td><td>45 min</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> SLI ist die <b>Messung</b>, SLO das <b>Ziel</b>, SLA der <b>Vertrag</b>. Das SLO liegt strenger als das SLA, damit du intern reagieren kannst, bevor der Vertrag verletzt ist.</div>
+  </section>
+
+  <!-- ===== 2 · Was überwachen ===== -->
+  <section id="ueberwachen">
+    <span class="eyebrow">Schritt 2 · Was und wie überwachen</span>
+    <h2>Was überwachen und warum</h2>
+    <p class="prose">Monitoring hat drei Aufgaben: <b>Störungen früh erkennen</b> (bevor Benutzer anrufen), <b>Ursachen finden</b> (welcher Teil klemmt) und <b>Trends sehen</b> (die Disk ist in drei Wochen voll). Jede Aufgabe braucht andere Daten.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Metriken</span><span class="ex">Zahl + Zeit</span><p>Klein, billig zu speichern, gut für Kurven und Schwellwerte. Sagen dir, <b>dass</b> etwas nicht stimmt.</p></div>
+      <div class="concept"><span class="tag">Logs</span><span class="ex">Text + Zeit</span><p>Viele Details zu einzelnen Ereignissen. Sagen dir, <b>was</b> genau passiert ist.</p></div>
+      <div class="concept"><span class="tag"><span lang="en">Traces</span></span><span class="ex">Anfrage + Weg</span><p>Zeigen, <b>wo</b> eine Anfrage Zeit verliert, wenn sie mehrere Dienste durchläuft.</p></div>
+    </div>
+
+    <h3>Aktive und passive Checks</h3>
+    <p class="prose">Der Unterschied liegt darin, <b>wer das Gespräch beginnt</b>. Beim aktiven Check fragt der Monitoring-Server regelmässig nach (<span lang="en">Polling</span>): «Bist du da?». Beim passiven Check meldet sich das überwachte System selbst (<span lang="en">Push</span>), zum Beispiel ein Switch mit einem SNMP-Trap, wenn ein Port ausfällt, oder ein Agent, der laufend Messwerte schickt.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th></th><th>Aktiv (<span lang="en">Polling</span>)</th><th>Passiv (<span lang="en">Push</span>)</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Wer beginnt?</th><td>Monitoring-Server</td><td>überwachtes System</td></tr>
+          <tr><th scope="row">Beispiele</th><td>Ping, HTTP-Abfrage, Port-Test, SNMP-Get</td><td>SNMP-Trap, Syslog, Agent sendet Werte</td></tr>
+          <tr><th scope="row">Stärke</th><td>merkt auch ein totes System (keine Antwort)</td><td>sofortige Meldung, keine Abfragelast</td></tr>
+          <tr><th scope="row">Schwäche</th><td>Erkennung erst beim nächsten Abfragezyklus</td><td>ein totes System meldet nichts mehr</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Tipp:</b> Kombiniere beides. Passive Meldungen sind schnell, aber Schweigen ist kein Beweis für Gesundheit. Darum ergänzt man sie mit aktiven Checks oder einer Regel «Seit 5 Minuten keine Daten → Alarm».</div>
+    <div class="card stack">
+      <h3>Kurz üben: aktiv oder passiv?</h3>
+      <p class="hint">Frag dich: Wer schickt die erste Nachricht?</p>
+      <div id="t04-sortierer-2"></div>
+    </div>
+
+    <h3>Welche Metriken? Golden Signals, USE und RED</h3>
+    <p class="prose">Es gibt Tausende mögliche Messwerte. Drei bekannte Merklisten helfen dir, die wichtigen zu wählen. Die <b><span lang="en">Golden Signals</span></b> stammen aus der Praxis grosser Webdienste und gelten für jeden Dienst, der Anfragen beantwortet.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Latenz</span><span class="ex">p95 = 240 ms</span><p>Wie lange dauert eine Antwort? Erfolgreiche und fehlerhafte Anfragen getrennt messen.</p></div>
+      <div class="concept"><span class="tag">Traffic</span><span class="ex">420 Anfragen/s</span><p>Wie viel Last kommt herein? Ohne Traffic ist auch eine Fehlerquote von 0 % wertlos.</p></div>
+      <div class="concept"><span class="tag">Fehler</span><span class="ex">0.3 % HTTP 5xx</span><p>Welcher Anteil der Anfragen schlägt fehl? Auch «zu langsam» kann als Fehler zählen.</p></div>
+      <div class="concept"><span class="tag">Sättigung</span><span class="ex">Queue 90 % voll</span><p>Wie nah ist eine Ressource am Limit? Warnt, bevor Latenz und Fehler steigen.</p></div>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>USE für Ressourcen, RED für Dienste</caption>
+        <thead><tr><th>Methode</th><th>Wofür</th><th>Was messen</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">USE</th><td>Ressourcen: CPU, RAM, Disk, Netz</td><td><span lang="en">Utilization</span> (Auslastung), <span lang="en">Saturation</span> (Sättigung, Warteschlange), <span lang="en">Errors</span> (Fehler)</td></tr>
+          <tr><th scope="row">RED</th><td>Dienste: Webshop, API</td><td><span lang="en">Rate</span> (Anfragen pro Sekunde), <span lang="en">Errors</span> (fehlerhafte Anfragen), <span lang="en">Duration</span> (Dauer, Latenz)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle:</b> Ein Durchschnitt versteckt Spitzen. Antworten 95 von 100 Anfragen in 50 ms und 5 in 4 s, liegt der Mittelwert bei rund 0.25 s und sieht gut aus. Fünf Kunden warten aber 4 Sekunden. Für Latenz nimmst du darum Perzentile wie p95 oder p99.</div>
+    <details class="sol"><summary>Wie kommt der Mittelwert von rund 0.25 s zustande?</summary>
+      <div class="stack">
+        <p>\(\dfrac{95 \cdot 0.05\ \text{s} + 5 \cdot 4\ \text{s}}{100} = \dfrac{4.75 + 20}{100}\ \text{s} = 0.2475\ \text{s} \approx 0.25\ \text{s}\).</p>
+        <p>Das p95 ist der Wert, unter dem 95 % der Anfragen liegen. Hier sind es 50 ms. Das p99 liegt bei 4 s und zeigt das Problem sofort.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 3 · Fehlerbudget Schritt für Schritt ===== -->
+  <section id="budget">
+    <span class="eyebrow">Schritt 3 · SLO und Fehlerbudget</span>
+    <h2>Vom SLO zum Fehlerbudget</h2>
+    <p class="prose">Ein SLO von 100 % ist unmöglich und sinnlos teuer. Jedes SLO unter 100 % erlaubt also einen kleinen Anteil Fehler. Diesen Anteil kannst du in Minuten oder in Anfragen umrechnen. Das ist das <b>Fehlerbudget</b>. Klick dich mit «Weiter» durch und fahr über die unterstrichenen Satzteile.</p>
+    <div id="t04-stepper"></div>
+    <div class="board">
+      $$\text{Fehlerbudget} = (1 - \text{SLO}) \cdot \text{Zeitraum}$$
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Fehlerbudget als Ausfallzeit pro 30 Tage (43'200 min)</caption>
+        <thead><tr><th>SLO</th><th class="zahl">1 − SLO</th><th class="zahl">Budget</th></tr></thead>
+        <tbody>
+          <tr><td>99 %</td><td class="zahl">0.01</td><td class="zahl">432 min = 7.2 h</td></tr>
+          <tr><td>99.5 %</td><td class="zahl">0.005</td><td class="zahl">216 min = 3.6 h</td></tr>
+          <tr class="an"><td>99.9 %</td><td class="zahl">0.001</td><td class="zahl">43.2 min</td></tr>
+          <tr><td>99.95 %</td><td class="zahl">0.0005</td><td class="zahl">21.6 min</td></tr>
+          <tr><td>99.99 %</td><td class="zahl">0.0001</td><td class="zahl">4.32 min</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Das Fehlerbudget ist ein Werkzeug für Entscheidungen: Ist noch viel Budget übrig, darf das Team neue Versionen mutig ausrollen. Ist es fast aufgebraucht, hat Stabilität Vorrang, riskante Änderungen warten.</p>
+    <div class="note falle"><b>Falle 1 · SLA und SLO verwechseln:</b> Das SLA ist der Vertrag mit dem Kunden (zum Beispiel 99.5 %, sonst Gutschrift). Das SLO ist dein internes, strengeres Ziel (zum Beispiel 99.9 %). Rechnest du das Fehlerbudget mit dem SLA, merkst du Probleme erst, wenn es schon Geld kostet.</div>
+    <div class="note falle"><b>Falle 2 · Teilstörungen vergessen:</b> Schlagen während 120 Minuten 10 % der Anfragen fehl, ist das kein «kein Ausfall». Bei gleichmässigem Verkehr verbraucht es so viel Budget wie 12 Minuten Totalausfall: \(120 \cdot 0.1 = 12\) min.</div>
+    <details class="sol"><summary>Wie viel Fehlerbudget gibt ein SLO von 99.9 % pro Jahr (365 Tage)?</summary>
+      <div class="stack">
+        <p>\(365 \cdot 24 \cdot 60 = 525{\char39}600\) min, davon \(0.001\) ergibt \(525.6\) min, also rund 8.76 Stunden.</p>
+        <p>Über ein Jahr klingt das grosszügig. Ein einziger Ausfall von 9 Stunden würde das SLO trotzdem für das ganze Jahr verletzen.</p>
+      </div>
+    </details>
+
+    <h3>Verbindung zur Verfügbarkeit: Schneller erkennen senkt die MTTR</h3>
+    <p class="prose">Aus Station 1 kennst du die Verfügbarkeit \(A\). Die Reparaturzeit MTTR beginnt mit dem Ausfall, nicht mit dem Alarm. Sie setzt sich zusammen aus <b>Erkennen</b>, Melden, Diagnose, Reparatur und Prüfen. Gutes Monitoring verkürzt die ersten Teile.</p>
+    <div class="board">
+      $$A = \frac{\text{MTBF}}{\text{MTBF} + \text{MTTR}}, \qquad \text{MTTR} = t_{\text{Erkennen}} + t_{\text{Diagnose}} + t_{\text{Reparatur}}$$
+    </div>
+    <p class="prose">Beispiel: Ein Server fällt im Mittel alle 720 Stunden aus. Bisher dauert es 30 Minuten, bis jemand den Ausfall bemerkt, und weitere 30 Minuten bis zur Reparatur: MTTR = 60 min. Mit gutem Monitoring sinkt die Erkennungszeit auf 5 Minuten, MTTR = 35 min.</p>
+    <div class="board">
+      $$A_{\text{alt}} = \frac{720}{720 + 1} \approx 99.86\,\%, \qquad A_{\text{neu}} = \frac{720}{720 + 0.583} \approx 99.92\,\%$$
+    </div>
+  </section>
+
+  <!-- ===== 4 · Schwellwerte und Alarmierung ===== -->
+  <section id="alarm">
+    <span class="eyebrow">Schritt 4 · Das Verfahren</span>
+    <h2>Schwellwerte, Alarmierung und Eskalation</h2>
+    <p class="prose">Ein gutes Alarmkonzept beantwortet vier Fragen: Was messe ich? Ab wann ist es kritisch? Wer erfährt es auf welchem Weg? Was passiert, wenn niemand reagiert?</p>
+    <div class="board">
+      $$\text{Alarm, wenn } \underbrace{x_t \ge S,\ x_{t-1} \ge S,\ \dots,\ x_{t-n+1} \ge S}_{n \text{ Messungen in Folge}} \qquad \text{Entwarnung, wenn } x_t < S - h$$
+    </div>
+    <p class="prose">\(x_t\) ist der aktuelle Messwert, \(S\) der Schwellwert, \(n\) die Anzahl Messungen in Folge, \(h\) die Hysterese. Zwei Stufen sind üblich:</p>
+    <div class="grid2">
+      <div class="card stack"><h3>Warning</h3><p>Etwas läuft in die falsche Richtung, aber es brennt noch nicht. Bearbeitung in der Arbeitszeit, meist als Ticket oder Chat-Meldung.</p></div>
+      <div class="card stack"><h3>Critical</h3><p>Benutzer sind betroffen oder werden es gleich sein. Sofort eine Person wecken, zum Beispiel per Anruf oder Push.</p></div>
+    </div>
+    <h3>Flapping zähmen</h3>
+    <p class="prose">Pendelt die CPU um 80 % und liegt der Schwellwert genau bei 80 %, kommt jede Minute «Alarm» und «OK». Das heisst <span lang="en">Flapping</span>. Zwei Gegenmittel:</p>
+    <ul class="prose">
+      <li><b>Wiederholungen:</b> Alarm erst nach \(n\) Messungen in Folge über der Grenze. Einzelne Ausreisser lösen nichts aus. Preis: Der Alarm kommt bis zu \((n-1)\) Messintervalle später.</li>
+      <li><b>Hysterese:</b> Entwarnung erst, wenn der Wert deutlich unter die Grenze fällt, zum Beispiel 5 Prozentpunkte. Ein kurzes Abtauchen beendet den Alarm nicht.</li>
+    </ul>
+    <h3>Eskalation</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Stufe</th><th>Auslöser</th><th>Wer, wie</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">1</th><td>Warning</td><td>Ticket oder Team-Chat, Bearbeitung in der Arbeitszeit</td></tr>
+          <tr><th scope="row">2</th><td>Critical</td><td>Bereitschaft (<span lang="en">On-Call</span>) sofort per Anruf oder Push, muss quittieren</td></tr>
+          <tr><th scope="row">3</th><td>Keine Quittierung nach 10 min</td><td>Stellvertretung, danach Teamleitung</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle · Alarmmüdigkeit:</b> Wer jede Kleinigkeit als Critical meldet, erzieht das Team zum Wegklicken. Dann geht der echte Ausfall unter. Faustregel: Jeder Alarm, der einen Menschen weckt, muss dringend sein, eine Handlung verlangen und von einem echten Problem für Benutzer kommen.</div>
+    <div class="note tipp"><b>Tipp:</b> Alarmiere auf <b>Symptome</b> (Benutzer sehen Fehler, Latenz steigt), nicht auf jede mögliche Ursache. Ursachen wie hohe CPU oder ein voller Cache gehören auf das Dashboard oder als Warning ins Ticket.</div>
+    <details class="sol"><summary>Messintervall 1 min, Alarm nach 3 Messungen in Folge. Wie lange dauert es höchstens, bis ein Dauerausfall gemeldet wird?</summary>
+      <div class="stack">
+        <p>Der Ausfall kann kurz nach einer Messung beginnen. Bis zur ersten Messung, die ihn sieht, vergeht bis zu 1 Minute. Dann braucht es noch 2 weitere Messungen.</p>
+        <p>Also bis zu \(1 + 2 = 3\) Minuten. Allgemein: höchstens \(n\) Messintervalle. Diese Zeit zählt voll zur MTTR und zum Fehlerbudget.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Ausprobieren ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Schwellwerte am Live-Bild einstellen</h2>
+    <p class="prose">Die Kurve zeigt die CPU-Auslastung eines Servers, gemessen jede Minute während 48 Minuten. Ab Minute 33 gibt es eine echte Überlast. Vorher pendelt die CPU um 80 %, und in Minute 28 gibt es einen einzelnen Ausreisser. Stell die Regeln so ein, dass nur die echte Überlast alarmiert, aber möglichst früh.</p>
+    <div class="card rechner">
+      <div class="regler">
+        <label for="t04-w">Warning ab</label>
+        <input type="range" id="t04-w" min="60" max="95" step="1" value="80">
+        <output for="t04-w" id="t04-w-wert">80 %</output>
+      </div>
+      <div class="regler">
+        <label for="t04-c">Critical ab</label>
+        <input type="range" id="t04-c" min="70" max="100" step="1" value="90">
+        <output for="t04-c" id="t04-c-wert">90 %</output>
+      </div>
+      <div class="regler">
+        <label for="t04-n">Alarm nach n Messungen in Folge</label>
+        <input type="range" id="t04-n" min="1" max="5" step="1" value="1">
+        <output for="t04-n" id="t04-n-wert">1</output>
+      </div>
+      <div class="t04-schalter">
+        <button type="button" class="btn" id="t04-hyst" aria-pressed="false">Hysterese 5 Prozentpunkte: aus</button>
+        <button type="button" class="btn" id="t04-reset">Zurücksetzen</button>
+      </div>
+      <figure class="diagramm">
+        <svg id="t04-svg" class="t04-chart" viewBox="0 0 320 200" role="img" aria-labelledby="t04-svg-titel">
+          <title id="t04-svg-titel">Zeitreihe der CPU-Auslastung über 48 Minuten mit Warning- und Critical-Schwelle und den ausgelösten Alarmen</title>
+        </svg>
+        <figcaption>
+          <span class="legend"><span style="--sw:var(--free)">Warning-Schwelle und -Alarm (W)</span> <span style="--sw:var(--bad)">Critical-Schwelle und -Alarm (C)</span> <span style="--sw:var(--s1)">Messwert</span></span>
+          Farbige Flächen: Zeit, in der ein Alarm aktiv ist. Buchstaben oben: Moment, in dem ein Alarm neu ausgelöst wird.
+        </figcaption>
+      </figure>
+      <div class="t04-zaehler" aria-live="polite" id="t04-zaehler">
+        <div class="t04-zw"><span>Warning-Alarme</span><b id="t04-anz-w">0</b></div>
+        <div class="t04-zc"><span>Critical-Alarme</span><b id="t04-anz-c">0</b></div>
+      </div>
+      <p class="t04-erkl" id="t04-erkl" aria-live="polite"></p>
+    </div>
+    <div class="note"><b>Probier das:</b> Setz zuerst \(n = 3\). Dann schalte stattdessen die Hysterese ein und lass \(n = 1\). Vergleiche: Welches Mittel unterdrückt den Ausreisser in Minute 28, welches nur das Pendeln?</div>
+
+    <h3>Fehlerbudget-Rechner</h3>
+    <div class="card rechner">
+      <div class="t04-form">
+        <label for="t04-slo">SLO
+          <select id="t04-slo" class="btn">
+            <option value="0.99">99 %</option>
+            <option value="0.995">99.5 %</option>
+            <option value="0.999" selected>99.9 %</option>
+            <option value="0.9995">99.95 %</option>
+            <option value="0.9999">99.99 %</option>
+          </select>
+        </label>
+        <label for="t04-tage">Zeitraum
+          <select id="t04-tage" class="btn">
+            <option value="7">7 Tage</option>
+            <option value="28">28 Tage</option>
+            <option value="30" selected>30 Tage</option>
+            <option value="90">90 Tage</option>
+            <option value="365">365 Tage</option>
+          </select>
+        </label>
+        <label for="t04-verbraucht">Bereits verbraucht (min)
+          <input type="text" inputmode="decimal" id="t04-verbraucht" class="t04-feld" value="26">
+        </label>
+      </div>
+      <div class="rechner-ergebnis" id="t04-budget-erg" aria-live="polite"></div>
+      <div class="t04-balken" id="t04-budget-balken" role="img" aria-label="Restbudget"><span></span></div>
+      <p class="t04-erkl" id="t04-budget-text" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 6 · Selbst rechnen</span>
+    <h2>Übungen</h2>
+    <div id="t04-ue-zahl1"></div>
+    <div id="t04-ue-zahl2"></div>
+    <div id="t04-ue-wf"></div>
+    <div id="t04-ue-schritt"></div>
+    <div id="t04-ue-auswahl"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Die ganze Prüfungsaufgabe am Stück</h2>
+    <p class="prose">Drück auf «Abspielen». Der Film startet sofort, der farbige Balken zeigt, wann der nächste Schritt kommt. Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t04-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t04-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Metriken</b> zeigen, dass etwas nicht stimmt, <b>Logs</b>, was passiert ist, <b><span lang="en">Traces</span></b>, wo eine Anfrage Zeit verliert.</li>
+      <li><b>Aktiv</b> = Monitoring fragt nach (Ping, HTTP). <b>Passiv</b> = System meldet sich (SNMP-Trap, Agent). Entscheidend ist, wer beginnt.</li>
+      <li><b>Warning</b> heisst bald handeln, <b>Critical</b> sofort. Gegen <span lang="en">Flapping</span> helfen \(n\) Messungen in Folge und Hysterese. Zu viele Alarme erzeugen Alarmmüdigkeit.</li>
+      <li><b><span lang="en">Golden Signals</span>:</b> Latenz, Traffic, Fehler, Sättigung. <b>USE</b> für Ressourcen, <b>RED</b> für Dienste.</li>
+      <li><b>SLI</b> misst, <b>SLO</b> ist das interne Ziel, <b>SLA</b> der Vertrag. Fehlerbudget = (1 − SLO) · Zeitraum, bei 99.9 % über 30 Tage also 43.2 min.</li>
+      <li>Schneller erkennen senkt die <b>MTTR</b>, und damit steigt die Verfügbarkeit \(A = \tfrac{\text{MTBF}}{\text{MTBF} + \text{MTTR}}\).</li>
+    </ul>
+    <footer>Lernpfad AVSW · Station 4 · Eigene Erklärungen und Aufgaben, Begriffe mit den Vorlesungsfolien abgleichen.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const T = String.raw;
+  const L = window.Lernpfad;
+
+  /* ---------- Sortierer ---------- */
+  L.sortierer("#t04-sortierer", {
+    kategorien: ["Metrik", "Log", "Trace"],
+    elemente: [
+      { html: "CPU-Auslastung 73 % um 10:02", kategorie: "Metrik", erklaerung: "Eine Zahl mit Zeitstempel, jede Minute neu gemessen: Metrik." },
+      { html: "«10:02:17 ERROR Zahlung abgelehnt, Bestellung 4711»", kategorie: "Log", erklaerung: "Eine Textzeile zu einem einzelnen Ereignis: Log." },
+      { html: "Anfrage 9f3c: Webserver 12 ms → Warenkorb 40 ms → Datenbank 180 ms", kategorie: "Trace", erklaerung: "Eine einzelne Anfrage wird durch mehrere Dienste verfolgt: Trace. Du siehst sofort, dass die Datenbank bremst." },
+      { html: "420 Anfragen pro Sekunde", kategorie: "Metrik", erklaerung: "Traffic als Zahl über Zeit: Metrik." },
+      { html: "«Benutzer anna hat sich um 10:05 angemeldet»", kategorie: "Log", erklaerung: "Ein einzelnes Ereignis mit Details: Log." },
+      { html: "Freier Speicher auf /var: 12 GB", kategorie: "Metrik", erklaerung: "Ein Messwert, der regelmässig erhoben wird: Metrik." },
+      { html: "Ein Klick auf «Kaufen» durchläuft vier Dienste, jeder mit eigener Dauer", kategorie: "Trace", erklaerung: "Der Weg einer Anfrage über mehrere Stationen ist ein Trace." }
+    ]
+  });
+
+  L.sortierer("#t04-sortierer-2", {
+    kategorien: ["aktiv", "passiv"],
+    elemente: [
+      { html: "Der Monitoring-Server pingt den Router alle 60 s an.", kategorie: "aktiv", erklaerung: "Der Monitoring-Server beginnt: aktiver Check." },
+      { html: "Ein Switch sendet einen SNMP-Trap, weil Port 7 ausgefallen ist.", kategorie: "passiv", erklaerung: "Der Switch meldet sich von sich aus: passiv." },
+      { html: "Das Monitoring ruft alle 2 min die Startseite des Webshops ab und prüft den HTTP-Status.", kategorie: "aktiv", erklaerung: "Das Monitoring fragt nach: aktiver HTTP-Check." },
+      { html: "Ein Agent auf dem Server schickt alle 10 s CPU- und RAM-Werte an das Monitoring.", kategorie: "passiv", erklaerung: "Der Agent sendet selbst (Push): passiv. Wird ein Agent dagegen vom Server abgefragt, ist es ein aktiver Check." },
+      { html: "Alle Server schicken ihre Syslog-Meldungen an einen zentralen Log-Server.", kategorie: "passiv", erklaerung: "Die Server senden selbst: passiv." },
+      { html: "Das Monitoring prüft täglich, wie lange das TLS-Zertifikat noch gültig ist.", kategorie: "aktiv", erklaerung: "Das Monitoring baut die Verbindung auf und liest das Zertifikat: aktiv." }
+    ]
+  });
+
+  /* ---------- Stepper Fehlerbudget ---------- */
+  L.stepper("#t04-stepper", {
+    titel: "Beispiel",
+    text: 'Ein Webdienst hat das <span data-link="slo">SLO 99.9 %</span> Verfügbarkeit, gemessen über <span data-link="zr">30 Tage</span>. Wie viele Minuten Ausfall darf er sich leisten, ohne das SLO zu verletzen? Gesucht ist das <span data-link="fb">Fehlerbudget</span>.',
+    schritte: [
+      { html: T`$\htmlData{link=zr}{30 \cdot 24 \cdot 60 = 43{\char39}200\ \text{min}}$`,
+        warum: "Zuerst den Zeitraum in die Einheit umrechnen, in der du das Budget willst: 30 Tage zu 24 Stunden zu 60 Minuten." },
+      { html: T`$\htmlData{link=zr}{43{\char39}200\ \text{min}}$, &nbsp; $\htmlData{link=slo}{1 - 0.999 = 0.001}$`,
+        warum: "99.9 % der Zeit muss der Dienst laufen. Der Rest, 0.1 % oder 0.001, darf ausfallen. Rechne mit Dezimalzahlen, nicht mit Prozent." },
+      { html: T`$\htmlData{link=fb}{\text{Fehlerbudget}} = \htmlData{link=slo}{0.001} \cdot \htmlData{link=zr}{43{\char39}200\ \text{min}}$`,
+        warum: "Fehlerbudget = erlaubter Fehleranteil mal Zeitraum." },
+      { html: T`$\htmlData{link=fb}{\text{Fehlerbudget}} = \htmlData{link=slo}{0.001} \cdot \htmlData{link=zr}{43{\char39}200\ \text{min}} = \htmlData{link=fb}{43.2\ \text{min}}$`,
+        warum: "Ausrechnen: Ein Tausendstel von 43'200 ist 43.2." },
+      { html: T`$\htmlData{link=fb}{43.2\ \text{min}} = 43\ \text{min} + 0.2 \cdot 60\ \text{s} = 43\ \text{min}\ 12\ \text{s}$`,
+        warum: "Zur Kontrolle in Minuten und Sekunden: 0.2 Minuten sind 12 Sekunden. Das ist das ganze Budget für 30 Tage, für alle Störungen und Wartungen zusammen." }
+    ]
+  });
+
+  /* ---------- Zeitreihe mit Schwellwerten ---------- */
+  const DATEN = [52, 55, 58, 54, 57, 61, 56, 59, 63, 60, 74, 82, 79, 83, 78, 81, 84, 79, 82, 78,
+    81, 77, 64, 60, 58, 62, 59, 57, 96, 61, 58, 60, 63, 86, 91, 94, 96, 95, 93, 92, 88, 72, 64, 59, 57, 60, 55, 58];
+  const ECHT_START = 33, ECHT_ENDE = 40;
+  const svg = document.getElementById("t04-svg");
+  const NS = "http://www.w3.org/2000/svg";
+  const elW = document.getElementById("t04-w"), elC = document.getElementById("t04-c"), elN = document.getElementById("t04-n");
+  const outW = document.getElementById("t04-w-wert"), outC = document.getElementById("t04-c-wert"), outN = document.getElementById("t04-n-wert");
+  const knopfH = document.getElementById("t04-hyst"), knopfR = document.getElementById("t04-reset");
+  const anzW = document.getElementById("t04-anz-w"), anzC = document.getElementById("t04-anz-c");
+  const erkl = document.getElementById("t04-erkl");
+  let hysterese = false;
+
+  const X0 = 34, Y0 = 170, BR = 278, HO = 140, YMIN = 40, YMAX = 100;
+  const xVon = (i) => X0 + (i + 0.5) * BR / DATEN.length;
+  const yVon = (v) => Y0 - (v - YMIN) / (YMAX - YMIN) * HO;
+  const schritt = BR / DATEN.length;
+
+  function sEl(tag, attr, text) {
+    const e = document.createElementNS(NS, tag);
+    Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  // Alarmlogik: Alarm, sobald n Messungen in Folge >= Schwelle; Entwarnung, sobald Wert < Schwelle - h.
+  function simuliere(schwelle, n, h) {
+    let aktiv = false, folge = 0, start = 0;
+    const ereignisse = [], spannen = [];
+    DATEN.forEach((v, i) => {
+      if (!aktiv) {
+        folge = v >= schwelle ? folge + 1 : 0;
+        if (folge >= n) { aktiv = true; ereignisse.push(i); start = i; }
+      } else if (v < schwelle - h) {
+        aktiv = false; folge = 0; spannen.push([start, i - 1]);
+      }
+    });
+    if (aktiv) spannen.push([start, DATEN.length - 1]);
+    return { ereignisse: ereignisse, spannen: spannen };
+  }
+
+  const gBand = sEl("g", {}), gLinien = sEl("g", {}), gPunkte = sEl("g", {}), gEv = sEl("g", {});
+  // Achsen und Gitter einmal zeichnen
+  [40, 60, 80, 100].forEach((v) => {
+    svg.appendChild(sEl("line", { class: "gitter", x1: X0, y1: yVon(v), x2: X0 + BR, y2: yVon(v) }));
+    svg.appendChild(sEl("text", { x: X0 - 5, y: yVon(v) + 4, "text-anchor": "end" }, v + " %"));
+  });
+  svg.appendChild(gBand);
+  svg.appendChild(sEl("line", { class: "achse", x1: X0, y1: Y0, x2: X0 + BR, y2: Y0 }));
+  svg.appendChild(sEl("line", { class: "achse", x1: X0, y1: Y0, x2: X0, y2: Y0 - HO }));
+  [0, 10, 20, 30, 40].forEach((m) => {
+    svg.appendChild(sEl("text", { x: xVon(m), y: Y0 + 15, "text-anchor": "middle" }, String(m)));
+  });
+  svg.appendChild(sEl("text", { x: X0 + BR, y: Y0 + 28, "text-anchor": "end" }, "Minute"));
+  svg.appendChild(sEl("polyline", { class: "kurve s1", points: DATEN.map((v, i) => xVon(i).toFixed(1) + "," + yVon(v).toFixed(1)).join(" ") }));
+  svg.appendChild(gLinien);
+  svg.appendChild(gPunkte);
+  svg.appendChild(gEv);
+
+  function leeren(g) { while (g.firstChild) g.removeChild(g.firstChild); }
+
+  function zeichnen() {
+    let w = Number(elW.value), c = Number(elC.value);
+    const n = Number(elN.value), h = hysterese ? 5 : 0;
+    outW.textContent = w + " %"; outC.textContent = c + " %"; outN.textContent = String(n);
+    const resW = simuliere(w, n, h), resC = simuliere(c, n, h);
+    [gBand, gLinien, gPunkte, gEv].forEach(leeren);
+
+    resW.spannen.forEach((s) => gBand.appendChild(sEl("rect", { class: "t04-band-w", x: X0 + s[0] * schritt, y: Y0 - HO, width: (s[1] - s[0] + 1) * schritt, height: HO / 2 })));
+    resC.spannen.forEach((s) => gBand.appendChild(sEl("rect", { class: "t04-band-c", x: X0 + s[0] * schritt, y: Y0 - HO / 2, width: (s[1] - s[0] + 1) * schritt, height: HO / 2 })));
+    gLinien.appendChild(sEl("line", { class: "t04-linie-w", x1: X0, y1: yVon(w), x2: X0 + BR, y2: yVon(w) }));
+    gLinien.appendChild(sEl("line", { class: "t04-linie-c", x1: X0, y1: yVon(Math.min(c, YMAX)), x2: X0 + BR, y2: yVon(Math.min(c, YMAX)) }));
+    DATEN.forEach((v, i) => {
+      const kl = v >= c ? "t04-pkt t04-c" : (v >= w ? "t04-pkt t04-w" : "t04-pkt");
+      gPunkte.appendChild(sEl("circle", { class: kl, cx: xVon(i), cy: yVon(v), r: 2.6 }));
+    });
+    resW.ereignisse.forEach((i) => gEv.appendChild(sEl("text", { class: "t04-ev-w", x: xVon(i), y: Y0 - HO - 4, "text-anchor": "middle" }, "W")));
+    resC.ereignisse.forEach((i) => gEv.appendChild(sEl("text", { class: "t04-ev-c", x: xVon(i), y: Y0 - HO - 15, "text-anchor": "middle" }, "C")));
+
+    anzW.textContent = String(resW.ereignisse.length);
+    anzC.textContent = String(resC.ereignisse.length);
+
+    // Bewertung
+    const fehlW = resW.ereignisse.filter((i) => i < ECHT_START).length;
+    const fehlC = resC.ereignisse.filter((i) => i < ECHT_START).length;
+    const ersteC = DATEN.findIndex((v, i) => i >= ECHT_START && i <= ECHT_ENDE && v >= c);
+    const alarmC = resC.ereignisse.find((i) => i >= ECHT_START && i <= ECHT_ENDE);
+    let t = "";
+    if (c <= w) t += "Achtung: Critical liegt nicht über Warning. So sind die Stufen sinnlos. ";
+    if (fehlW + fehlC === 0) t += "Vor der echten Überlast kommt kein einziger Fehlalarm. ";
+    else t += "Vor der echten Überlast gibt es " + (fehlW + fehlC) + (fehlW + fehlC === 1 ? " Fehlalarm" : " Fehlalarme") + " (" + fehlW + " Warning, " + fehlC + " Critical). Das ist Flapping oder ein Ausreisser. ";
+    if (alarmC === undefined) {
+      t += ersteC < 0 ? "Die echte Überlast erreicht die Critical-Schwelle nie, niemand wird geweckt." : "Die echte Überlast löst keinen Critical-Alarm aus, weil zu wenige Messungen in Folge über der Schwelle liegen.";
+    } else {
+      const verz = alarmC - ersteC;
+      t += "Die echte Überlast meldet Critical in Minute " + alarmC + (verz === 0 ? ", ohne Verzögerung." : ", " + verz + (verz === 1 ? " Minute" : " Minuten") + " nach der ersten Messung über der Schwelle. Diese Zeit zählt zur MTTR.");
+    }
+    erkl.textContent = t;
+  }
+
+  [elW, elC, elN].forEach((e) => e.addEventListener("input", zeichnen));
+  knopfH.addEventListener("click", () => {
+    hysterese = !hysterese;
+    knopfH.setAttribute("aria-pressed", String(hysterese));
+    knopfH.classList.toggle("on", hysterese);
+    knopfH.textContent = "Hysterese 5 Prozentpunkte: " + (hysterese ? "ein" : "aus");
+    zeichnen();
+  });
+  knopfR.addEventListener("click", () => {
+    elW.value = "80"; elC.value = "90"; elN.value = "1";
+    hysterese = false;
+    knopfH.setAttribute("aria-pressed", "false");
+    knopfH.classList.remove("on");
+    knopfH.textContent = "Hysterese 5 Prozentpunkte: aus";
+    zeichnen();
+  });
+  zeichnen();
+
+  /* ---------- Fehlerbudget-Rechner ---------- */
+  const selSlo = document.getElementById("t04-slo"), selTage = document.getElementById("t04-tage");
+  const feldV = document.getElementById("t04-verbraucht");
+  const budErg = document.getElementById("t04-budget-erg"), budBalken = document.getElementById("t04-budget-balken");
+  const budText = document.getElementById("t04-budget-text");
+  function budget() {
+    const slo = Number(selSlo.value), tage = Number(selTage.value);
+    const minuten = tage * 24 * 60;
+    const b = Math.round((1 - slo) * minuten * 1e6) / 1e6;
+    let v = L.zahlLesen(feldV.value);
+    const ungueltig = !isFinite(v) || v < 0;
+    feldV.setAttribute("aria-invalid", ungueltig ? "true" : "false");
+    if (ungueltig) v = 0;
+    const rest = b - v;
+    const anteil = b > 0 ? Math.max(0, rest) / b : 0;
+    budErg.innerHTML = T`$\text{Budget} = ` + L.zahlText(1 - slo, 4) + T` \cdot ` + L.zahlText(minuten, 0).replace(/['\u2019]/g, T`{\char39}`) + T`\ \text{min} = ` + L.zahlText(b, 2).replace(/['\u2019]/g, T`{\char39}`) + T`\ \text{min}$`;
+    L.formeln(budErg);
+    budBalken.querySelector("span").style.width = (anteil * 100).toFixed(1) + "%";
+    budBalken.classList.toggle("t04-leer", rest < 0);
+    budBalken.setAttribute("aria-label", "Restbudget " + L.zahlText(anteil * 100, 1) + " %");
+    if (ungueltig) budText.textContent = "Gib eine Zahl ab 0 ein, zum Beispiel 26 oder 12.5.";
+    else if (rest >= 0) budText.textContent = "Restbudget: " + L.zahlText(rest, 2) + " min, das sind " + L.zahlText(anteil * 100, 1) + " % des Budgets." + (anteil < 0.25 ? " Weniger als ein Viertel übrig: Stabilität hat jetzt Vorrang." : "");
+    else budText.textContent = "Budget um " + L.zahlText(-rest, 2) + " min überzogen. Das SLO ist für diesen Zeitraum verletzt.";
+  }
+  [selSlo, selTage].forEach((e) => e.addEventListener("change", budget));
+  feldV.addEventListener("input", budget);
+  budget();
+
+  /* ---------- Übungen ---------- */
+  L.zahlAufgabe("#t04-ue-zahl1", {
+    titel: "Fehlerbudget berechnen",
+    frage: "Eine Datenbank hat das SLO 99.95 % Verfügbarkeit pro 30 Tage. Wie viele Minuten Ausfall erlaubt das Fehlerbudget? Auf eine Nachkommastelle.",
+    antwort: 21.6, toleranz: 0.05, einheit: "min", anzeige: "21.6 min",
+    hinweise: [
+      "Rechne zuerst die 30 Tage in Minuten um.",
+      T`Der erlaubte Fehleranteil ist $1 - 0.9995$.`
+    ],
+    loesungsweg: [
+      T`$30 \cdot 24 \cdot 60 = 43{\char39}200$ min`,
+      T`$1 - 0.9995 = 0.0005$`,
+      T`$0.0005 \cdot 43{\char39}200 = 21.6$ min`
+    ]
+  });
+
+  L.zahlAufgabe("#t04-ue-zahl2", {
+    titel: "Fehlerbudget in Anfragen",
+    frage: "Eine API beantwortet im Monat 4'000'000 Anfragen. Das SLO lautet: 99.9 % der Anfragen ohne Serverfehler. Bisher sind 2'600 Anfragen fehlgeschlagen. Wie viele fehlerhafte Anfragen darfst du in diesem Monat noch haben?",
+    antwort: 1400, toleranz: 0, einheit: "Anfragen", anzeige: "1'400",
+    hinweise: [
+      "Das Fehlerbudget lässt sich auch in Anfragen statt in Minuten ausdrücken.",
+      T`Budget $= (1 - 0.999) \cdot 4{\char39}000{\char39}000$.`
+    ],
+    loesungsweg: [
+      T`$1 - 0.999 = 0.001$`,
+      T`Budget $= 0.001 \cdot 4{\char39}000{\char39}000 = 4{\char39}000$ fehlerhafte Anfragen`,
+      T`Rest $= 4{\char39}000 - 2{\char39}600 = 1{\char39}400$ Anfragen`
+    ]
+  });
+
+  L.wahrFalsch("#t04-ue-wf", {
+    titel: "Monitoring-Grundlagen",
+    aussagen: [
+      { html: "Ein Ping vom Monitoring-Server zum Router ist ein passiver Check.", wahr: false,
+        erklaerung: "Der Monitoring-Server beginnt die Kommunikation. Das ist ein aktiver Check." },
+      { html: "Ein passiver Check allein erkennt nicht zuverlässig, dass ein Server komplett ausgefallen ist.", wahr: true,
+        erklaerung: "Ein toter Server sendet nichts mehr. Ohne Regel «keine Daten → Alarm» bleibt das Monitoring still." },
+      { html: "Das SLO ist normalerweise strenger als das SLA.", wahr: true,
+        erklaerung: "So bleibt Zeit zu reagieren, bevor der Vertrag mit dem Kunden verletzt ist." },
+      { html: "Je mehr Critical-Alarme, desto sicherer der Betrieb.", wahr: false,
+        erklaerung: "Zu viele Alarme erzeugen Alarmmüdigkeit. Wichtige Meldungen gehen dann unter." },
+      { html: "«Alarm erst nach 3 Messungen in Folge» verhindert Fehlalarme durch einzelne Ausreisser, verzögert aber echte Alarme.", wahr: true,
+        erklaerung: "Bei 1 Minute Messintervall kommt der Alarm bis zu 2 Minuten später als bei sofortigem Auslösen. Diese Zeit zählt zur MTTR." },
+      { html: "Für die Latenz ist der Mittelwert die beste Kennzahl.", wahr: false,
+        erklaerung: "Der Mittelwert versteckt langsame Ausreisser. Perzentile wie p95 oder p99 zeigen, was die langsamsten Benutzer erleben." }
+    ]
+  });
+
+  L.schrittAufgabe("#t04-ue-schritt", {
+    titel: "Monitoring und Verfügbarkeit",
+    aufgabe: "<p>Ein Server fällt im Mittel alle 720 Stunden aus (MTBF). Bisher dauert es 30 Minuten, bis jemand den Ausfall bemerkt, und weitere 30 Minuten bis zur Reparatur. Ein neues Monitoring verkürzt die Erkennung auf 5 Minuten. Berechne die Verfügbarkeit vorher und nachher, auf zwei Nachkommastellen in Prozent.</p>",
+    schritte: [
+      { html: T`$\text{MTTR}_{\text{alt}} = 30 + 30 = 60\ \text{min} = 1\ \text{h}$`,
+        warum: "Die MTTR beginnt mit dem Ausfall, nicht mit dem Alarm. Die Erkennungszeit gehört dazu." },
+      { html: T`$A_{\text{alt}} = \dfrac{720}{720 + 1} \approx 0.998613 \approx 99.86\,\%$`,
+        warum: "Verfügbarkeit = MTBF durch (MTBF + MTTR). Beide Zeiten in Stunden." },
+      { html: T`$\text{MTTR}_{\text{neu}} = 5 + 30 = 35\ \text{min} \approx 0.5833\ \text{h}$`,
+        warum: "Nur die Erkennung wird kürzer. Die Reparatur dauert gleich lang." },
+      { html: T`$A_{\text{neu}} = \dfrac{720}{720 + 0.5833} \approx 0.999190 \approx 99.92\,\%$`,
+        warum: "Allein das schnellere Erkennen hebt die Verfügbarkeit um rund 0.06 Prozentpunkte. Pro Ausfall spart es 25 Minuten." }
+    ]
+  });
+
+  L.auswahl("#t04-ue-auswahl", {
+    frage: "Die Warteschlange des Datenbankservers ist zu 90 % gefüllt, Latenz und Fehlerquote sind noch normal. Welches Golden Signal zeigt das Problem?",
+    optionen: ["Latenz", "Traffic", "Fehler", "Sättigung"],
+    richtig: 3,
+    erklaerung: "Eine fast volle Warteschlange heisst: Die Ressource ist nahe am Limit. Das ist Sättigung. Sie warnt, bevor Latenz und Fehler steigen."
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  // Zeilen einer Phase zusammensetzen; die Zeile mit Index «neu» leuchtet gelb.
+  const Z = (zeilen, neu) => zeilen.map((z, i) => '<div class="t04-z">' + (i === neu ? NW(z) : z) + "</div>").join("");
+
+  const P0 = [
+    '<span class="t04-text">Dienst: Webshop, Messpunkt Load Balancer</span>',
+    T`$\text{SLI} = \dfrac{\text{gute Anfragen}}{\text{alle Anfragen}}$`,
+    '<span class="t04-text">gut = Antwort ohne Serverfehler (kein HTTP 5xx)</span>',
+    T`$\text{SLO:}\ \text{SLI} \ge 99.9\,\%$ <span class="t04-text">über 30 Tage</span>`
+  ];
+  const P1 = [
+    T`$30 \cdot 24 \cdot 60 = 43{\char39}200\ \text{min}$`,
+    T`$1 - 0.999 = 0.001$`,
+    T`$\text{Budget} = 0.001 \cdot 43{\char39}200 = 43.2\ \text{min}$`,
+    '<span class="t04-text">43.2 min = 43 min 12 s</span>'
+  ];
+  const P2 = [
+    T`$\text{Budget} = 43.2\ \text{min}$`,
+    T`$\text{A:}\ 14\ \text{min} \cdot 100\,\% = 14\ \text{min}$`,
+    T`$\text{B:}\ 120\ \text{min} \cdot 10\,\% = 12\ \text{min}$`,
+    T`$\text{verbraucht} = 14 + 12 = 26\ \text{min}$`,
+    T`$\text{Rest} = 43.2 - 26 = 17.2\ \text{min}$`,
+    T`$\tfrac{17.2}{43.2} \approx 39.8\,\%$ <span class="t04-text">des Budgets übrig</span>`,
+    T`$\text{erreicht:}\ 1 - \tfrac{26}{43{\char39}200} \approx 99.94\,\% \ge 99.9\,\%$`
+  ];
+  const P3 = [
+    '<span class="t04-text">Metrik: Fehlerquote (Anteil 5xx) pro Minute</span>',
+    '<span class="t04-text">Warning ab 1 %, Critical ab 5 %</span>',
+    '<span class="t04-text">Alarm erst nach 3 Messungen in Folge</span>',
+    '<span class="t04-text">Entwarnung erst unter 0.5 % (Hysterese)</span>',
+    '<span class="t04-text">Stufe 1: Warning → Ticket, Arbeitszeit</span>',
+    '<span class="t04-text">Stufe 2: Critical → Bereitschaft sofort (Anruf, Push)</span>',
+    '<span class="t04-text">Stufe 3: 10 min ohne Quittierung → Stellvertretung</span>',
+    '<span class="t04-text">Restbudget unter 25 % (10.8 min) → keine riskanten Deployments</span>'
+  ];
+  const bis = (arr, k) => Z(arr.slice(0, k + 1), k);
+  const ganz = (arr) => Z(arr, -1);
+
+  L.film("#t04-film", {
+    phasen: ["1 · SLI", "2 · Budget", "3 · Störungen", "4 · Alarmierung"],
+    texte: [
+      'Ein <span data-ph="dienst">Webshop</span> hat das <span data-ph="slo">SLO 99.9 % Verfügbarkeit pro 30 Tage</span>. a) Definiere einen passenden <span data-ph="sli">SLI</span>. b) Berechne das <span data-ph="fb">Fehlerbudget</span> in Minuten. c) Im Monat gibt es zwei Störungen: <span data-ph="a">Störung A, 14 min Totalausfall</span>, und <span data-ph="b">Störung B, während 120 min schlagen 10 % der Anfragen fehl</span>. Wie viel <span data-ph="rest">Budget bleibt</span>? d) Lege <span data-ph="alarm">Schwellwerte und Eskalation</span> fest.'
+    ],
+    woerterbuch: [
+      "SLI: gute / alle Anfragen",
+      "SLO: Ziel 99.9 %",
+      "Fehlerbudget: erlaubte Fehler",
+      "Restbudget: Budget − verbraucht",
+      "Warning / Critical",
+      "Eskalation: nächste Stufe"
+    ],
+    beschriftung: { texte: "Die Aufgabe", formel: "Lösung" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So löst du jede solche Aufgabe: Erstens den SLI als Anteil guter Ereignisse an allen festlegen. Zweitens das Fehlerbudget berechnen: eins minus SLO, mal Zeitraum. Drittens jede Störung in Budget-Minuten umrechnen und abziehen. Viertens Schwellwerte und Eskalation so wählen, dass du Probleme bemerkst, bevor das Budget weg ist." },
+      { ph: 0, hl: ["dienst"], f: bis(P0, 0),
+        say: "Zuerst klären, was du misst und wo. Am Load Balancer siehst du jede Anfrage so, wie der Kunde sie erlebt." },
+      { hl: ["sli"], dict: 1, dh: [0], f: bis(P0, 1),
+        say: "Ein SLI ist fast immer ein Verhältnis: gute Ereignisse durch alle Ereignisse. So liegt er immer zwischen 0 und 100 Prozent." },
+      { hl: ["sli"], dh: [0], f: bis(P0, 2),
+        say: "Jetzt festlegen, was «gut» heisst. Hier: Die Antwort enthält keinen Serverfehler, also keinen HTTP-Status 5xx." },
+      { hl: ["slo"], dict: 2, dh: [1], f: bis(P0, 3),
+        say: "Das SLO ist das Ziel für diesen SLI: mindestens 99.9 Prozent gute Anfragen, gemessen über 30 Tage." },
+      { ph: 1, hl: ["slo"], f: bis(P1, 0),
+        say: "Teil b. Das Budget soll in Minuten herauskommen. Also zuerst 30 Tage in Minuten umrechnen: 43'200 Minuten." },
+      { hl: ["slo"], f: bis(P1, 1),
+        say: "Der erlaubte Fehleranteil ist eins minus SLO. 99.9 Prozent sind 0.999, der Rest ist 0.001, also 0.1 Prozent." },
+      { hl: ["fb"], dict: 3, dh: [2], f: bis(P1, 2),
+        say: "Fehlerbudget gleich Fehleranteil mal Zeitraum: 0.001 mal 43'200 ergibt 43.2 Minuten." },
+      { hl: ["fb"], dh: [2], f: bis(P1, 3),
+        say: "Zur Kontrolle: 0.2 Minuten sind 12 Sekunden. Für 30 Tage bleiben also nur 43 Minuten und 12 Sekunden für alle Störungen zusammen." },
+      { ph: 2, hl: ["fb"], f: bis(P2, 0),
+        say: "Teil c. Das Budget von 43.2 Minuten nehmen wir mit. Jetzt ziehen wir jede Störung davon ab." },
+      { hl: ["a"], f: bis(P2, 1),
+        say: "Störung A ist ein Totalausfall: Alle Anfragen schlagen fehl. 14 Minuten Totalausfall verbrauchen 14 Budget-Minuten." },
+      { hl: ["b"], f: bis(P2, 2),
+        say: "Störung B ist eine Teilstörung: Nur 10 Prozent der Anfragen schlagen fehl. Bei gleichmässigem Verkehr zählt das wie 120 mal 0.1, also 12 Minuten Totalausfall." },
+      { hl: ["a", "b"], f: bis(P2, 3),
+        say: "Zusammen sind 14 plus 12 gleich 26 Budget-Minuten verbraucht." },
+      { hl: ["rest"], dict: 4, dh: [3], f: bis(P2, 4),
+        say: "Restbudget: 43.2 minus 26 ergibt 17.2 Minuten." },
+      { hl: ["rest"], dh: [3], f: bis(P2, 5),
+        say: "Als Anteil: 17.2 durch 43.2 sind rund 39.8 Prozent. Gut 60 Prozent des Budgets sind schon weg." },
+      { hl: ["slo"], f: bis(P2, 6),
+        say: "Das SLO ist trotzdem eingehalten: Der Dienst war zu rund 99.94 Prozent verfügbar, und das ist mehr als 99.9 Prozent." },
+      { ph: 3, hl: ["alarm"], f: bis(P3, 0),
+        say: "Teil d. Alarmiere auf das Symptom, das der Kunde spürt: die Fehlerquote pro Minute, also genau das, was der SLI misst." },
+      { hl: ["alarm"], dict: 5, dh: [4], f: bis(P3, 1),
+        say: "Zwei Stufen. Warning ab 1 Prozent Fehler: Etwas stimmt nicht. Critical ab 5 Prozent: Kunden sind deutlich betroffen. Störung B mit 10 Prozent wäre Critical." },
+      { hl: ["alarm"], dh: [4], f: bis(P3, 2),
+        say: "Alarm erst nach 3 Messungen in Folge. Einzelne Ausreisser wecken niemanden. Der Preis: höchstens 3 Minuten bis zum Alarm, bei 17.2 Minuten Restbudget vertretbar." },
+      { hl: ["alarm"], dh: [4], f: bis(P3, 3),
+        say: "Hysterese: Entwarnung erst unter 0.5 Prozent. Pendelt die Fehlerquote um 1 Prozent, springt der Alarm nicht dauernd an und aus. So vermeidest du Flapping." },
+      { hl: ["alarm"], dict: 6, dh: [5], f: bis(P3, 4),
+        say: "Eskalation, Stufe 1: Ein Warning wird zum Ticket und wird in der Arbeitszeit bearbeitet. Niemand muss nachts aufstehen." },
+      { hl: ["alarm"], dh: [5], f: bis(P3, 5),
+        say: "Stufe 2: Ein Critical geht sofort an die Bereitschaft, per Anruf oder Push. Die Person muss den Alarm quittieren." },
+      { hl: ["alarm"], dh: [5], f: bis(P3, 6),
+        say: "Stufe 3: Quittiert nach 10 Minuten niemand, geht der Alarm an die Stellvertretung. So bleibt kein Critical liegen." },
+      { hl: ["rest"], dh: [3], f: bis(P3, 7),
+        say: "Zum Schluss eine Budgetregel: Fällt das Restbudget unter 25 Prozent, also unter 10.8 Minuten, gibt es keine riskanten Deployments mehr. Mit 17.2 Minuten ist das noch nicht der Fall." },
+      { hl: [], f: ganz(P3),
+        say: "Fertig. Merke: Jede Minute, die du schneller erkennst, senkt die MTTR und spart Fehlerbudget. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t04-selbsttest", {
+    fragen: [
+      { q: "Was unterscheidet ein SLA von einem SLO?",
+        o: ["Das SLA ist die Messgrösse, das SLO der Vertrag.",
+            "Das SLA ist ein Vertrag mit dem Kunden mit Folgen bei Verletzung, das SLO ein internes Ziel.",
+            "Beide meinen dasselbe, nur auf Englisch und Deutsch.",
+            "Das SLO ist immer lockerer als das SLA."], a: 1,
+        e: "SLA = Vertrag (z. B. Gutschrift bei Verletzung). SLO = internes, meist strengeres Ziel. Die Messgrösse selbst ist der SLI." },
+      { q: "Wie gross ist das Fehlerbudget bei einem SLO von 99.9 % über 30 Tage?",
+        o: ["4.32 min", "43.2 min", "432 min", "8.76 h"], a: 1,
+        e: T`$0.001 \cdot 43{\char39}200\ \text{min} = 43.2\ \text{min}$. 8.76 h wäre das Budget für ein ganzes Jahr.` },
+      { q: "Das Budget beträgt 43.2 min. Bisher gab es 20 min Totalausfall und 60 min, in denen 20 % der Anfragen fehlschlugen. Wie viel Budget bleibt?",
+        o: ["11.2 min", "23.2 min", "0 min, das SLO ist verletzt", "36.8 min"], a: 0,
+        e: T`Teilstörung: $60 \cdot 0.2 = 12$ min. Verbraucht: $20 + 12 = 32$ min. Rest: $43.2 - 32 = 11.2$ min.` },
+      { q: "Welcher Check ist passiv?",
+        o: ["Ping alle 60 s vom Monitoring-Server", "HTTP-Abfrage der Startseite", "SNMP-Trap eines Switches bei Port-Ausfall", "Prüfung des Zertifikat-Ablaufdatums"], a: 2,
+        e: "Beim SNMP-Trap meldet sich der Switch von sich aus. Bei den anderen fragt das Monitoring aktiv nach." },
+      { q: "Die CPU pendelt um 80 %, der Warning-Alarm geht jede Minute an und aus. Was hilft am besten?",
+        o: ["Messintervall auf 10 s verkürzen", "Alarm erst nach mehreren Messungen in Folge und Hysterese bei der Entwarnung", "Alle Alarme auf Critical setzen", "Schwellwert genau auf den Mittelwert legen"], a: 1,
+        e: "Das ist Flapping. Wiederholungen unterdrücken kurze Ausschläge, Hysterese verhindert das ständige Zurückspringen auf OK." },
+      { q: "Welche Liste nennt die vier Golden Signals?",
+        o: ["CPU, RAM, Disk, Netz", "Latenz, Traffic, Fehler, Sättigung", "Rate, Errors, Duration, Uptime", "Metriken, Logs, Traces, Alarme"], a: 1,
+        e: "Latenz, Traffic, Fehler und Sättigung. RED (Rate, Errors, Duration) ist eine verwandte Liste für Dienste, USE eine für Ressourcen." },
+      { q: "Was ist ein SLI?",
+        o: ["Ein Vertrag mit dem Kunden", "Ein gemessener Wert, z. B. der Anteil erfolgreicher Anfragen", "Die maximale Ausfallzeit pro Jahr", "Ein Eskalationsplan"], a: 1,
+        e: "SLI = Service Level Indicator, die Messgrösse. Das SLO setzt ein Ziel für diesen Wert." },
+      { q: "Ein Team bekommt täglich 300 Alarme, fast alle ohne Handlungsbedarf. Was droht?",
+        o: ["Höhere Verfügbarkeit", "Alarmmüdigkeit: Echte Alarme werden übersehen", "Ein grösseres Fehlerbudget", "Kürzere MTTR"], a: 1,
+        e: "Wer ständig unwichtige Alarme bekommt, klickt sie weg. Dann geht auch der echte Ausfall unter, und die MTTR steigt." },
+      { q: "Warum erhöht schnelleres Erkennen von Ausfällen die Verfügbarkeit?",
+        o: ["Weil die MTBF steigt", "Weil die MTTR sinkt, denn die Erkennungszeit gehört zur Reparaturzeit", "Weil das SLO strenger wird", "Gar nicht, Erkennen ändert nichts"], a: 1,
+        e: T`$A = \tfrac{\text{MTBF}}{\text{MTBF} + \text{MTTR}}$. Die MTTR beginnt mit dem Ausfall, nicht mit dem Alarm. Kürzere Erkennung, kleinere MTTR, höhere Verfügbarkeit.` }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
