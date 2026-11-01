@@ -1,0 +1,1252 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System verwalten · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/13-praxisprojekt-abschluss" title="Praxisprojekt und Abschlusstest">
+  <style>
+    .t12-ziele{margin:0; padding-left:1.3em}
+    .t12-ziele li{margin-bottom:4px}
+    .t12-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t12-st pre{font-style:normal}
+    .t12-adminmarke{display:inline-block; font-size:.78rem; font-weight:700; padding:2px 8px; border-radius:6px; border:1px solid var(--bad); color:var(--bad); background:var(--bad-bg); margin-bottom:4px}
+
+    /* Task-Manager in Text */
+    .t12-tm-kopf{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px}
+    .t12-tm-kopf h3{margin:0}
+    .t12-tm{font-size:.9rem}
+    .t12-tm td.t12-name{font-family:var(--ps-mono); font-size:.85rem; white-space:nowrap}
+    .t12-balken{display:block; height:.55em; border-radius:4px; background:var(--accent); min-width:2px; margin-top:3px}
+    .t12-tm tr.t12-fresser td{background:var(--free-bg)}
+    .t12-tm tr.t12-fresser .t12-name::after{content:"Speicherfresser"; display:block; font-family:var(--f-body); font-size:.75rem; font-weight:600; color:var(--ink)}
+    .t12-tm-stand{font-size:.88rem; color:var(--muted); margin:0}
+
+    /* Fehlermeldung zerlegen */
+    .t12-meldung td:first-child{font-family:var(--ps-mono); font-size:.85rem; overflow-wrap:anywhere}
+
+    /* Datums-Rechner */
+    .t12-richtung{display:flex; flex-wrap:wrap; gap:8px}
+    .t12-dateien{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+    .t12-datei{display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; border:1px solid var(--line); border-radius:8px; padding:6px 10px; background:var(--surface); font-size:.9rem}
+    .t12-datei b{font-family:var(--ps-mono); font-weight:600; font-size:.85rem; overflow-wrap:anywhere}
+    .t12-datei.alt{border-color:var(--bad); background:var(--bad-bg)}
+    .t12-datei .t12-marke{font-size:.8rem; font-weight:600}
+    .t12-datei.alt .t12-marke{color:var(--bad)}
+    .t12-datei.neu .t12-marke{color:var(--ok)}
+  </style>
+</head>
+<body data-fach="ps" data-thema="12-system-verwalten">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 5 · Praxis</span>
+    <h1>System verwalten</h1>
+    <p class="lead">Montagmorgen in der Informatik von Wolkenried: Leas Rechner ist langsam, und die Dateiablage synchronisiert nicht mehr. Mit PowerShell schaust du unter die Haube. Du findest Programme, die zu viel Speicher fressen, prüfst Dienste im Hintergrund, rechnest mit Datum und Zeit, testest das Netz und lernst, wie du PowerShell mit Modulen erweiterst.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t12-ziele">
+        <li>Du listest Prozesse mit <code class="ps">Get-Process</code> auf und sortierst sie nach Arbeitsspeicher und CPU-Zeit.</li>
+        <li>Du beendest einen Prozess sicher: zuerst mit <code class="ps">-WhatIf</code>, dann mit <code class="ps">Stop-Process -Id</code>.</li>
+        <li>Du liest Status und Starttyp von Diensten und weisst, warum <code class="ps">Start-Service</code> Adminrechte braucht.</li>
+        <li>Du rechnest mit <code class="ps">Get-Date</code> und <code class="ps">.AddDays(-30)</code> und findest damit alte Dateien.</li>
+        <li>Du prüfst mit <code class="ps">Test-Connection</code>, ob ein Computer antwortet, und liest Umgebungsvariablen.</li>
+        <li>Du weisst, was ein Modul ist und wie du eines mit <code class="ps">Install-Module -Scope CurrentUser</code> installierst.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#prozesse"><b>1</b>Prozesse</a>
+    <a href="#dienste"><b>2</b>Dienste</a>
+    <a href="#datum"><b>3</b>Datum</a>
+    <a href="#system"><b>4</b>System, Netz</a>
+    <a href="#module"><b>5</b>Module</a>
+    <a href="#ausprobieren"><b>6</b>Ausprobieren</a>
+    <a href="#taskmanager"><b>7</b>Task-Manager</a>
+    <a href="#detektiv"><b>8</b>Dienst-Detektiv</a>
+    <a href="#rechner"><b>9</b>Datums-Rechner</a>
+    <a href="#uebungen"><b>10</b>Übungen</a>
+    <a href="#tipp-training"><b>11</b>Tipp-Training</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Fehler</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Was auf einem Rechner alles läuft</h2>
+    <p class="prose">Stell dir Leas Computer als Gemeindehaus vor. In den Büros arbeiten Leute an ihren Aufgaben, sichtbar und mit offener Tür. Im Keller arbeitet der Hauswart, den niemand sieht, der aber Heizung und Lift am Laufen hält. Nur wer den Generalschlüssel hat, darf an die Heizung. Und für Spezialaufgaben holt man einen Werkzeugkoffer aus dem Lager.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Prozess</span><span class="ex"><code class="ps">Get-Process</code></span><p>Ein Programm, das gerade läuft, wie ein Büro mit Licht. Jeder Prozess hat eine Nummer, die <b>Id</b>. Läuft ein Programm dreimal, gibt es drei Prozesse.</p></div>
+      <div class="concept"><span class="tag">Dienst</span><span class="ex"><code class="ps">Get-Service</code></span><p>Ein Programm im Hintergrund, ohne Fenster, wie der Hauswart. Viele Dienste starten mit Windows von selbst.</p></div>
+      <div class="concept"><span class="tag">Adminrechte</span><span class="ex">«Als Administrator»</span><p>Der Generalschlüssel. Dienste starten oder fremde Prozesse beenden darfst du nur damit.</p></div>
+      <div class="concept"><span class="tag">Datum</span><span class="ex"><code class="ps">Get-Date</code></span><p>Ein Zeitpunkt mit Tag und Uhrzeit. Du kannst damit rechnen: 30 Tage zurück, 7 Tage vor.</p></div>
+      <div class="concept"><span class="tag">Modul</span><span class="ex"><code class="ps">Get-Module</code></span><p>Ein Werkzeugkoffer mit Befehlen. PowerShell bringt einige mit, weitere lädst du aus dem Internet nach.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Prozess, Dienst oder Modul?</h3>
+      <div id="t12-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Prozesse ===== -->
+  <section id="prozesse">
+    <span class="eyebrow">Schritt 1 · Get-Process und Stop-Process</span>
+    <h2>Prozesse: wer frisst den Speicher?</h2>
+
+    <div class="card stack">
+      <h3>Alle laufenden Prozesse</h3>
+      <p class="prose"><code class="ps">Get-Process</code> zeigt jedes laufende Programm in einer Zeile. Es liest nur und ändert nichts. Das ist dein Task-Manager in Textform.</p>
+      <pre class="ps-code"><code>Get-Process</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: alle Prozesse" data-ps-befehl="Get-Process"></pre>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Die Spalten von Get-Process</caption>
+          <thead><tr><th>Spalte</th><th>Bedeutung</th></tr></thead>
+          <tbody>
+            <tr><th><code>WS(M)</code></th><td>Arbeitsspeicher (<i lang="en">Working Set</i>), den der Prozess gerade belegt, in MB. Die wichtigste Spalte, wenn der Rechner langsam ist.</td></tr>
+            <tr><th><code>CPU(s)</code></th><td>Rechenzeit in Sekunden, die der Prozess seit seinem Start insgesamt gebraucht hat. Nicht die Last in diesem Moment.</td></tr>
+            <tr><th><code>Id</code></th><td>Die Nummer des Prozesses. Sie ist eindeutig, solange er läuft. Startest du das Programm neu, bekommt es eine neue Id.</td></tr>
+            <tr><th><code>ProcessName</code></th><td>Der Name des Programms, ohne <code>.exe</code>. Mehrere Prozesse können gleich heissen (dreimal <code>chrome</code>).</td></tr>
+            <tr><th><code>NPM(K)</code>, <code>PM(M)</code></th><td>Weitere Speicherwerte in KB bzw. MB. Für den Anfang unwichtig.</td></tr>
+            <tr><th><code>SI</code></th><td>Sitzungsnummer. 0 heisst: gehört zum System, nicht zu Lea.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card stack">
+      <h3>Nur bestimmte Prozesse</h3>
+      <p class="prose">Mit <code class="ps">-Name</code> holst du alle Prozesse mit diesem Namen, Platzhalter wie <code>*</code> sind erlaubt. Mit <code class="ps">-Id</code> holst du genau einen.</p>
+      <pre class="ps-code"><code>Get-Process -Name chrome</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Prozesse chrome" data-ps-befehl="Get-Process -Name chrome" data-ps-prompt="nein"></pre>
+      <pre class="ps-code"><code>Get-Process -Id 8840</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Prozess mit Id 8840" data-ps-befehl="Get-Process -Id 8840" data-ps-prompt="nein"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Sortieren nach Arbeitsspeicher und CPU</h3>
+      <p class="prose">Die Spalte <code>WS(M)</code> gehört zur Eigenschaft <code class="ps">WS</code>. Das ist die Kurzform von <code>WorkingSet64</code> und steht in <b>Bytes</b>. Sortiere absteigend und nimm die ersten fünf, dann siehst du die grössten Speicherfresser.</p>
+      <pre class="ps-code"><code>Get-Process | Sort-Object WS -Descending | Select-Object -First 5</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: die fünf grössten Prozesse" data-ps-befehl="Get-Process | Sort-Object WS -Descending | Select-Object -First 5" data-ps-prompt="nein"></pre>
+      <p class="prose">Ganz oben steht <code>berichtgenerator</code> mit 1920 MB, fast 2 GB. Das Programm erstellt Leas Monatsbericht und hängt offenbar fest. Mit der Eigenschaft <code class="ps">CPU</code> findest du die Prozesse, die am meisten gerechnet haben:</p>
+      <pre class="ps-code"><code>Get-Process | Sort-Object CPU -Descending | Select-Object -First 3 Name, Id, CPU</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: die drei Prozesse mit der meisten CPU-Zeit" data-ps-befehl="Get-Process | Sort-Object CPU -Descending | Select-Object -First 3 Name, Id, CPU" data-ps-prompt="nein"></pre>
+      <p class="prose">Hier steht <code>chrome</code> vorne. Er läuft schon lange und hat insgesamt viel gerechnet. Das heisst nicht, dass er den Rechner jetzt bremst.</p>
+      <p class="prose">Filtern geht wie in Station 07. Weil <code class="ps">WS</code> in Bytes zählt, nimmst du die Einheit <code class="ps">MB</code>:</p>
+      <pre class="ps-code"><code>Get-Process | Where-Object WS -gt 400MB</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Prozesse über 400 MB" data-ps-befehl="Get-Process | Where-Object WS -gt 400MB" data-ps-prompt="nein"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Schritt für Schritt: den Speicherfresser beenden</h3>
+      <p class="prose">Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Teil des Befehls leuchtet auf.</p>
+      <div id="t12-stepper"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stop-Process: -Name, -Id und -WhatIf</h3>
+      <p class="prose"><code class="ps">Stop-Process</code> beendet Prozesse sofort, ohne Rückfrage. Nicht gespeicherte Arbeit ist dann weg. Darum zuerst immer mit <code class="ps">-WhatIf</code> («was wäre, wenn») schauen, was passieren würde.</p>
+      <ul class="prose">
+        <li><code class="ps">-Name</code> trifft <b>alle</b> Prozesse mit diesem Namen.</li>
+        <li><code class="ps">-Id</code> trifft genau den einen Prozess mit dieser Nummer.</li>
+        <li><code class="ps">-WhatIf</code> zeigt nur, was passieren würde. <code class="ps">-Confirm</code> fragt vor jedem Prozess nach.</li>
+      </ul>
+      <pre class="ps-code"><code>Stop-Process -Name chrome -WhatIf</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Stop-Process -Name chrome -WhatIf" data-ps-befehl="Stop-Process -Name chrome -WhatIf" lang="en"></pre>
+      <p class="prose">Auf Deutsch: «Was wäre, wenn: Stop-Process würde chrome (4120), chrome (4388) und chrome (5012) beenden.» Mit <code class="ps">-Name chrome</code> wären alle drei Fenster zu. Willst du nur eines schliessen, nimm die Id.</p>
+      <p class="prose">Du kannst Prozesse auch über die Pipeline schicken. So siehst du zuerst, was du triffst, und beendest erst dann. Die Ausgabe stammt aus echtem pwsh 7.6 (der Simulator kann diese Pipeline noch nicht):</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Pipeline in Stop-Process" lang="en">PS C:\Users\lea&gt; Get-Process -Name notepad | Stop-Process -WhatIf
+What if: Performing the operation "Stop-Process" on target "notepad (8840)".</pre>
+      <p class="prose">Prozesse des Systems oder anderer Benutzer darfst du ohne Adminrechte nicht beenden. Manche, wie <code>lsass</code> (er prüft Anmeldungen), sind so wichtig, dass Windows sie schützt:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Zugriff verweigert" data-ps-befehl="Stop-Process -Name lsass" lang="en"></pre>
+      <p class="prose">Auf Deutsch: «Der Prozess kann nicht beendet werden: Zugriff verweigert.»</p>
+      <div class="note"><b>Merke:</b> Erst <code class="ps">Get-Process</code> (anschauen), dann <code class="ps">Stop-Process … -WhatIf</code> (probieren), dann ohne <code class="ps">-WhatIf</code> (wirklich). Und lieber <code class="ps">-Id</code> als <code class="ps">-Name</code>.</div>
+    </div>
+  </section>
+
+  <!-- ===== 2 · Dienste ===== -->
+  <section id="dienste">
+    <span class="eyebrow">Schritt 2 · Get-Service, Start-Service, Stop-Service</span>
+    <h2>Dienste: die Hauswarte im Hintergrund</h2>
+
+    <div class="card stack">
+      <h3>Alle Dienste</h3>
+      <p class="prose">Ein Dienst (englisch <i lang="en">service</i>) ist ein Programm ohne Fenster. Der Druckdienst <code>Spooler</code> wartet auf Druckaufträge, <code>WolkenriedSync</code> gleicht Leas Dateien mit dem Server ab. <code class="ps">Get-Service</code> listet sie auf.</p>
+      <pre class="ps-code"><code>Get-Service</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: alle Dienste" data-ps-befehl="Get-Service" data-ps-prompt="nein"></pre>
+      <p class="prose"><code>Name</code> ist der kurze Name für Befehle, <code>DisplayName</code> der Anzeigename für Menschen. In Befehlen nimmst du den kurzen Namen. Suchst du nach dem Anzeigenamen, gibt es <code class="ps">-DisplayName</code>:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Dienst nach Anzeigename" data-ps-befehl="Get-Service -DisplayName *Sync*"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Status und StartType</h3>
+      <p class="prose">Zwei Eigenschaften sagen dir fast alles über einen Dienst:</p>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Status und StartType</caption>
+          <thead><tr><th>Eigenschaft</th><th>Frage</th><th>Häufige Werte</th></tr></thead>
+          <tbody>
+            <tr><th><code>Status</code></th><td>Läuft er gerade?</td><td><code>Running</code> (läuft), <code>Stopped</code> (gestoppt), <code>Paused</code> (pausiert)</td></tr>
+            <tr><th><code>StartType</code></th><td>Wann startet er?</td><td><code>Automatic</code> (mit Windows), <code>Manual</code> (nur bei Bedarf), <code>Disabled</code> (nie)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Die Standardtabelle zeigt <code>StartType</code> nicht. Mit <code class="ps">Select-Object</code> holst du ihn dazu:</p>
+      <pre class="ps-code"><code>Get-Service -Name Wolk* | Select-Object Name, Status, StartType</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Wolkenried-Dienste mit StartType" data-ps-befehl="Get-Service -Name Wolk* | Select-Object Name, Status, StartType" data-ps-prompt="nein"></pre>
+      <p class="prose">Da ist der Verdächtige: <code>WolkenriedSync</code> soll automatisch starten (<code>Automatic</code>), ist aber gestoppt (<code>Stopped</code>). So etwas schaust du dir genauer an. Alle gestoppten Dienste findest du mit <code class="ps">Where-Object</code>:</p>
+      <pre class="ps-code"><code>Get-Service | Where-Object Status -eq Stopped</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: gestoppte Dienste" data-ps-befehl="Get-Service | Where-Object Status -eq Stopped" data-ps-prompt="nein"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Starten, stoppen, neu starten</h3>
+      <p class="prose">Drei Befehle mit dem gleichen Nomen <code>Service</code>: <code class="ps">Start-Service</code>, <code class="ps">Stop-Service</code> und <code class="ps">Restart-Service</code> (stoppen und wieder starten). Standardmässig dürfen das nur Mitglieder der Gruppe Administratoren, und zwar in einer Konsole, die «Als Administrator» gestartet wurde. Lea hat ohne diesen Schritt keine Adminrechte:</p>
+      <pre class="ps-code"><code>Start-Service -Name WolkenriedSync</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Dienst kann nicht gestartet werden" data-ps-befehl="Start-Service -Name WolkenriedSync" lang="en"></pre>
+      <p class="prose">Auf Deutsch: «Der Dienst kann nicht gestartet werden, weil er sich auf diesem Computer (<code>.</code> heisst «dieser Computer») nicht öffnen lässt.» Gemeint ist: Dir fehlen die Rechte. Im Dienst-Detektiv weiter unten zerlegst du die Meldung Stück für Stück.</p>
+      <p class="prose">In einer Konsole als Administrator klappt es. Ein erfolgreiches <code class="ps">Start-Service</code> gibt nichts aus. Mit <code class="ps">-PassThru</code> zeigt es den Dienst danach an:</p>
+      <div id="t12-admin-start"></div>
+      <div class="note tipp"><b>Tipp:</b> Auch die Dienst-Befehle kennen <code class="ps">-WhatIf</code>. <code class="ps">Restart-Service Spooler -WhatIf</code> zeigt nur, was passieren würde.</div>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Datum ===== -->
+  <section id="datum">
+    <span class="eyebrow">Schritt 3 · Get-Date und Datumsrechnung</span>
+    <h2>Mit Datum und Zeit rechnen</h2>
+
+    <div class="card stack">
+      <h3>Das aktuelle Datum</h3>
+      <p class="prose"><code class="ps">Get-Date</code> liefert Datum und Uhrzeit als Objekt. Im Simulator steht die Uhr still: Es ist immer Montag, 2. November 2026, 09:00 Uhr. So bekommst du dieselben Ergebnisse wie auf dieser Seite.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-Date" data-ps-befehl="Get-Date"></pre>
+      <p class="prose">Mit <code class="ps">-Format</code> bestimmst du, wie das Datum als Text aussieht. <code>dd</code> ist der Tag, <code>MM</code> der Monat (gross, klein <code>mm</code> wären Minuten), <code>yyyy</code> das Jahr, <code>dddd</code> der Wochentag.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-Date mit Format" data-ps-befehl="Get-Date -Format 'dd.MM.yyyy'; Get-Date -Format 'dddd, dd.MM.yyyy'"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Tage dazu oder weg: AddDays</h3>
+      <p class="prose">Ein Datumsobjekt hat Methoden zum Rechnen. <code class="ps">.AddDays(7)</code> geht sieben Tage vor, <code class="ps">.AddDays(-30)</code> dreissig Tage zurück. Die Klammern um <code class="ps">(Get-Date)</code> sind nötig: Zuerst holt PowerShell das Datum, dann ruft es die Methode auf.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: 30 Tage zurück" data-ps-befehl="(Get-Date).AddDays(-30)"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: 7 Tage vor und ein Monat vor" data-ps-befehl="(Get-Date).AddDays(7); (Get-Date).AddMonths(1)"></pre>
+      <p class="prose">Es gibt auch <code class="ps">AddHours</code>, <code class="ps">AddMonths</code> und <code class="ps">AddYears</code>. Den Regler zum Ausprobieren findest du im Datums-Rechner weiter unten.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Alte Dateien finden</h3>
+      <p class="prose">Jede Datei hat die Eigenschaft <code class="ps">LastWriteTime</code>: wann sie zuletzt geändert wurde. Zwei Zeitpunkte vergleichst du wie Zahlen. <code class="ps">-lt</code> («kleiner als») heisst bei Datum «früher als».</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Logdateien älter als 30 Tage" data-ps-befehl="Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)" data-ps-prompt="nein"></pre>
+      <p class="prose">Vier Dateien sind älter als der 3. Oktober 2026, 09:00 Uhr. Das ist der Grundstein für Leas Aufräumskript in Station 13.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Wie lange ist das her? Zeitspannen</h3>
+      <p class="prose">Ziehst du ein Datum von einem anderen ab, entsteht eine Zeitspanne (<code>TimeSpan</code>). Sie hat Eigenschaften wie <code>Days</code>, <code>Hours</code> und <code>TotalDays</code>.</p>
+      <pre class="ps-code"><code>((Get-Date) - (Get-Item Logs\backup-2026-06.log).LastWriteTime).Days</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Alter in Tagen" data-ps-befehl="((Get-Date) - (Get-Item Logs\backup-2026-06.log).LastWriteTime).Days" data-ps-prompt="nein"></pre>
+      <p class="prose">Die Sicherung vom 30. Juni, 03:00 Uhr ist 125 Tage alt (genau 125 Tage und 6 Stunden).</p>
+    </div>
+  </section>
+
+  <!-- ===== 4 · System, Netz, Umgebung ===== -->
+  <section id="system">
+    <span class="eyebrow">Schritt 4 · Systeminfos, Netzwerk, Umgebungsvariablen</span>
+    <h2>Den Rechner und das Netz befragen</h2>
+
+    <div class="card stack">
+      <h3>Systeminfos mit Get-CimInstance</h3>
+      <p class="prose">Windows führt einen grossen Katalog mit Infos über Hardware und System. Er heisst CIM (<i lang="en">Common Information Model</i>) und ist in Klassen eingeteilt. <code>Win32_OperatingSystem</code> beschreibt das Betriebssystem. Der Simulator kennt diesen Befehl nicht. So sieht es in echtem pwsh 7.6 aus (Werte von Leas Rechner, ausgedacht):</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-CimInstance Win32_OperatingSystem">PS C:\Users\lea&gt; Get-CimInstance Win32_OperatingSystem
+
+SystemDirectory     Organization        BuildNumber RegisteredUser SerialNumber            Version
+---------------     ------------        ----------- -------------- ------------            -------
+C:\WINDOWS\system32 Gemeinde Wolkenried 26100       lea            00330-80000-00000-AA123 10.0.26100</pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Name, Version und letzter Start">PS C:\Users\lea&gt; Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, LastBootUpTime
+
+Caption                  Version    LastBootUpTime
+-------                  -------    --------------
+Microsoft Windows 11 Pro 10.0.26100 02.11.2026 07:58:41</pre>
+      <p class="prose"><code>LastBootUpTime</code> ist der letzte Start des Rechners, ein echtes Datum. Du kannst also damit rechnen, zum Beispiel wie lange der Rechner schon läuft.</p>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In alten Anleitungen steht oft <code class="ps">Get-WmiObject</code>. Diesen Befehl gibt es nur in Windows PowerShell 5.1, in <span class="ps-version">7</span> wurde er entfernt. <code class="ps">Get-CimInstance</code> läuft in beiden.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Antwortet der Computer? Test-Connection</h3>
+      <p class="prose"><code class="ps">Test-Connection</code> schickt kleine Testpakete (ein «Ping») an einen Computer und misst, wie schnell die Antwort kommt. <code class="ps">-Count 2</code> schickt zwei statt der üblichen vier.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Test-Connection server" data-ps-befehl="Test-Connection server -Count 2"></pre>
+      <p class="prose"><code>Latency</code> ist die Antwortzeit in Millisekunden, <code>Status</code> sagt, ob es geklappt hat. Antwortet ein Computer nicht, steht dort <code>TimedOut</code> (Zeit abgelaufen):</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Test-Connection ohne Antwort" data-ps-befehl="Test-Connection sync.wolkenried.ch -Count 1"></pre>
+      <p class="prose">Für Skripte reicht oft ein Ja oder Nein. <code class="ps">-Quiet</code> gibt nur <code>True</code> oder <code>False</code> zurück:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Test-Connection -Quiet" data-ps-befehl="Test-Connection server -Count 1 -Quiet; Test-Connection sync.wolkenried.ch -Count 1 -Quiet"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Ist die Tür offen? Test-NetConnection -Port</h3>
+      <p class="prose">Ein Computer ist wie ein Haus mit vielen nummerierten Türen, den <b>Ports</b>. Webseiten kommen durch Tür 443, Dateifreigaben durch Tür 445. Ein Ping sagt nur, ob jemand zu Hause ist. <code class="ps">Test-NetConnection</code> mit <code class="ps">-Port</code> prüft, ob eine bestimmte Tür offen ist. Den Befehl gibt es nur unter Windows, und der Simulator kennt ihn nicht. So sieht er in echtem pwsh 7.6 aus (Werte ausgedacht):</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Test-NetConnection mit offenem Port">PS C:\Users\lea&gt; Test-NetConnection server -Port 443
+
+ComputerName     : server
+RemoteAddress    : 10.0.0.10
+RemotePort       : 443
+InterfaceAlias   : Ethernet
+SourceAddress    : 10.0.0.42
+TcpTestSucceeded : True</pre>
+      <p class="prose"><code>TcpTestSucceeded : True</code> heisst: Die Tür ist offen. Ist sie zu, kommt zuerst eine Warnung, und der Befehl prüft zusätzlich mit einem Ping:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Test-NetConnection mit geschlossenem Port" lang="en">PS C:\Users\lea&gt; Test-NetConnection server -Port 8443
+<span class="psk-warnung">WARNING: TCP connect to (10.0.0.10 : 8443) failed</span>
+
+ComputerName           : server
+RemoteAddress          : 10.0.0.10
+RemotePort             : 8443
+InterfaceAlias         : Ethernet
+SourceAddress          : 10.0.0.42
+PingSucceeded          : True
+PingReplyDetails (RTT) : 1 ms
+TcpTestSucceeded       : False</pre>
+      <p class="prose">Auf Deutsch: «Die Verbindung zu Port 8443 ist gescheitert.» Der Server antwortet zwar auf den Ping, aber diese Tür ist zu.</p>
+      <div class="note"><b>Unterschied <span class="ps-version">7</span>:</b> In PowerShell 7 kann auch <code class="ps">Test-Connection server -TcpPort 443</code> einen Port prüfen. Es antwortet nur mit <code>True</code> oder <code>False</code> und läuft auch unter Linux und macOS. Windows PowerShell <span class="ps-version">5.1</span> kennt <code class="ps">-TcpPort</code> nicht.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Umgebungsvariablen</h3>
+      <p class="prose">Umgebungsvariablen sind kleine Notizzettel, die Windows jedem Programm mitgibt: wer angemeldet ist, wie der Computer heisst, wo der Temp-Ordner liegt. In PowerShell liest du sie mit <code class="ps">$env:</code> und dem Namen.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Benutzer und Computer" data-ps-befehl="$env:USERNAME; $env:COMPUTERNAME"></pre>
+      <p class="prose">Alle zusammen liegen im Laufwerk <code>Env:</code>. Mit Platzhalter suchst du darin:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Umgebungsvariablen USER*" data-ps-befehl="Get-ChildItem Env:USER*"></pre>
+      <p class="prose">Die Variable <code>Path</code> listet die Ordner, in denen Windows nach Programmen sucht. Die Ordner sind mit Strichpunkt getrennt, <code class="ps">-split ';'</code> schreibt jeden auf eine eigene Zeile:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Path aufgeteilt" data-ps-befehl="$env:Path -split ';'"></pre>
+      <div class="note"><b>Merke:</b> Setzt du eine Umgebungsvariable selbst, zum Beispiel <code class="ps">$env:LEA_TEST = 'Hallo'</code>, gilt sie nur in dieser Konsole. Schliesst du sie, ist der Zettel weg.</div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Module ===== -->
+  <section id="module">
+    <span class="eyebrow">Schritt 5 · Get-Module und Install-Module</span>
+    <h2>Module: Werkzeugkoffer nachladen</h2>
+
+    <div class="card stack">
+      <h3>Was ist geladen?</h3>
+      <p class="prose">Jedes Cmdlet steckt in einem Modul. <code class="ps">Get-Process</code> und <code class="ps">Get-Service</code> kommen aus dem Modul <code>Microsoft.PowerShell.Management</code>. <code class="ps">Get-Module</code> zeigt, welche Module gerade geladen sind. Der Simulator kennt keine Module. In einem frischen pwsh 7.6 sieht es etwa so aus:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-Module">PS C:\Users\lea&gt; Get-Module
+
+ModuleType Version    PreRelease Name                                ExportedCommands
+---------- -------    ---------- ----                                ----------------
+Manifest   7.0.0.0               Microsoft.PowerShell.Management     {Add-Content, Clear-Content, Clear-Item, Clear-Ite…
+Manifest   7.0.0.0               Microsoft.PowerShell.Utility        {Add-Member, Add-Type, Clear-Variable, Compare-Obj…
+Script     2.4.5                 PSReadLine                          {Get-PSReadLineKeyHandler, Get-PSReadLineOption, R…</pre>
+      <p class="prose">Du musst Module selten von Hand laden. Rufst du zum ersten Mal einen Befehl aus einem installierten Modul auf, lädt PowerShell das Modul selbst (<i lang="en">autoloading</i>). Was in einem Koffer steckt, zeigt <code class="ps">Get-Command -Module</code>:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Befehle für Dienste im Modul Management">PS C:\Users\lea&gt; Get-Command -Module Microsoft.PowerShell.Management -Noun Service
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Cmdlet          Get-Service                                        7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          New-Service                                        7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          Remove-Service                                     7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          Restart-Service                                    7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          Resume-Service                                     7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          Set-Service                                        7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          Start-Service                                      7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          Stop-Service                                       7.0.0.0    Microsoft.PowerShell.Management
+Cmdlet          Suspend-Service                                    7.0.0.0    Microsoft.PowerShell.Management</pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Neue Module aus der PowerShell Gallery</h3>
+      <p class="prose">Die <a href="https://www.powershellgallery.com/">PowerShell Gallery</a> ist ein Online-Lager für Module, ähnlich einem App-Store. <code class="ps">Install-Module</code> holt ein Modul von dort und legt es auf deinen Rechner.</p>
+      <pre class="ps-code"><code>Install-Module -Name Microsoft.Graph -Scope CurrentUser</code></pre>
+      <ul class="prose">
+        <li><code class="ps">-Scope CurrentUser</code> installiert nur für dich, in deinen Benutzerordner. Dafür brauchst du keine Adminrechte.</li>
+        <li><code class="ps">-Scope AllUsers</code> installiert für alle Benutzer des Computers und braucht Adminrechte.</li>
+        <li>Beim ersten Mal fragt PowerShell meist nach, ob du der Quelle «PSGallery» vertraust. Lies die Frage und antworte bewusst.</li>
+      </ul>
+      <div class="note falle"><b>Vorsicht:</b> Ein Modul ist Code, der mit deinen Rechten läuft. Installiere nur Module, die du kennst und denen du vertraust, und auf einem Arbeitsrechner nur mit dem Okay deiner Informatik. Der Simulator installiert nichts.</div>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Ohne <code class="ps">-Scope</code> hängt die Standardwahl von der Version von PowerShellGet ab. Windows PowerShell 5.1 bringt die alte Version 1.0.0.1 mit; dort ist der Standard <code>AllUsers</code>, und das braucht Adminrechte. In <span class="ps-version">7</span> ist der Standard <code>CurrentUser</code>, in einer Konsole als Administrator aber <code>AllUsers</code>. Schreib <code class="ps">-Scope CurrentUser</code> darum immer aus. PowerShell 7.6 bringt zusätzlich den Nachfolger <code class="ps">Install-PSResource</code> mit.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Ausblick: Microsoft 365 mit PowerShell</h3>
+      <p class="prose">Die Gemeinde Wolkenried arbeitet mit Microsoft 365. Auch dafür gibt es Module in der Gallery. Hier nur, damit du die Namen kennst:</p>
+      <ul class="prose">
+        <li><code>Microsoft.Graph</code>: Benutzer, Gruppen, Teams und vieles mehr über Microsoft Graph verwalten.</li>
+        <li><code>ExchangeOnlineManagement</code>: Postfächer und E-Mail-Einstellungen in Exchange Online.</li>
+      </ul>
+      <p class="prose">Beide brauchen eine Anmeldung mit einem Konto, das die passenden Rechte hat. Alles, was du hier gelernt hast, gilt dort genauso: Verb-Nomen, Parameter, Pipeline, <code class="ps">-WhatIf</code>.</p>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">Jetzt tippst du selbst. Tippe <code>Get-Pro</code> und drücke Tab, mit ↑ holst du den letzten Befehl zurück und änderst ihn. Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t12-konsole"></div>
+  </section>
+
+  <!-- ===== 7 · Task-Manager ===== -->
+  <section id="taskmanager">
+    <span class="eyebrow">Schritt 7 · Task-Manager in Text</span>
+    <h2>Den Speicherfresser stellen</h2>
+    <p class="prose">Die Tabelle zeigt Leas Prozesse wie ein Task-Manager. Sie folgt dem Simulator darunter: Beendest du dort einen Prozess, verschwindet er hier. Arbeite die vier Aufgaben der Reihe nach ab: finden, probieren, beenden, kontrollieren.</p>
+    <div class="card stack">
+      <div class="t12-tm-kopf">
+        <h3>Task-Manager</h3>
+        <div class="modes" role="group" aria-label="Sortierung der Prozesse">
+          <button type="button" class="btn on" id="t12-tm-ws" aria-pressed="true">nach Arbeitsspeicher</button>
+          <button type="button" class="btn" id="t12-tm-cpu" aria-pressed="false">nach CPU-Zeit</button>
+        </div>
+      </div>
+      <div class="tablebox">
+        <table class="tabelle t12-tm">
+          <caption id="t12-tm-titel">Prozesse auf WR-LEA-01, sortiert nach Arbeitsspeicher</caption>
+          <thead><tr><th>Name</th><th class="zahl">Speicher (MB)</th><th class="zahl">CPU (s)</th><th class="zahl">Id</th></tr></thead>
+          <tbody id="t12-tm-zeilen"></tbody>
+        </table>
+      </div>
+      <p class="t12-tm-stand" id="t12-tm-stand" aria-live="polite"></p>
+    </div>
+    <div id="t12-tm-konsole"></div>
+  </section>
+
+  <!-- ===== 8 · Dienst-Detektiv ===== -->
+  <section id="detektiv">
+    <span class="eyebrow">Schritt 8 · Dienst-Detektiv</span>
+    <h2>Warum synchronisiert nichts?</h2>
+    <p class="prose">Leas Dateiablage gleicht sich nicht mehr ab. Irgendein Dienst ist schuld. Finde ihn, versuche ihn zu starten und lies die Fehlermeldung. Dann startest du die Konsole mit dem Knopf «Als Administrator neu starten» neu und versuchst es noch einmal.</p>
+    <div id="t12-dd-konsole"></div>
+    <div class="card stack">
+      <h3>Die Fehlermeldung zerlegt</h3>
+      <p class="prose">Fehlermeldungen von PowerShell sind lang, aber immer gleich gebaut. Lies sie Stück für Stück:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von Start-Service" lang="en"><span class="psk-fehler">Start-Service: Service 'Wolkenried Dateisynchronisation (WolkenriedSync)' cannot be started due to the following error: Cannot open 'WolkenriedSync' service on computer '.'.</span></pre>
+      <div class="tablebox">
+        <table class="tabelle t12-meldung">
+          <caption>Teil für Teil auf Deutsch</caption>
+          <thead><tr><th>Teil der Meldung</th><th>Bedeutung</th></tr></thead>
+          <tbody>
+            <tr><td lang="en">Start-Service:</td><td>Dieser Befehl hat den Fehler gemeldet.</td></tr>
+            <tr><td lang="en">Service 'Wolkenried Dateisynchronisation (WolkenriedSync)'</td><td>Um diesen Dienst geht es: Anzeigename, in Klammern der kurze Name.</td></tr>
+            <tr><td lang="en">cannot be started due to the following error:</td><td>Er konnte nicht gestartet werden, und zwar aus diesem Grund:</td></tr>
+            <tr><td lang="en">Cannot open 'WolkenriedSync' service on computer '.'.</td><td>Windows lässt den Dienst gar nicht erst öffnen. <code>.</code> heisst «dieser Computer». Der häufigste Grund: Die Konsole läuft ohne Adminrechte.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="t12-dd-frage"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Datums-Rechner ===== -->
+  <section id="rechner">
+    <span class="eyebrow">Schritt 9 · Datums-Rechner</span>
+    <h2>Wie viele Tage zurück?</h2>
+    <p class="prose">Schieb den Regler. Darunter siehst du den passenden Befehl, das Ergebnis aus dem Simulator und welche von Leas Logdateien älter als diese Grenze sind. Heute ist im Simulator Montag, 2. November 2026, 09:00 Uhr.</p>
+    <div class="card rechner stack">
+      <div class="t12-richtung" role="group" aria-label="Richtung">
+        <button type="button" class="btn on" id="t12-zurueck" aria-pressed="true">− in die Vergangenheit</button>
+        <button type="button" class="btn" id="t12-vor" aria-pressed="false">+ in die Zukunft</button>
+      </div>
+      <div class="regler">
+        <label for="t12-tage">Anzahl Tage</label>
+        <input type="range" id="t12-tage" min="1" max="400" step="1" value="30">
+        <output for="t12-tage" id="t12-tage-wert">30</output>
+      </div>
+      <div class="rechner-ergebnis stack" id="t12-ergebnis" aria-live="polite"></div>
+      <div class="stack" id="t12-dateien-box">
+        <p class="hint" id="t12-dateien-titel"></p>
+        <ul class="t12-dateien" id="t12-dateien"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 10 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 10 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Befehl selbst bauen</h3>
+      <p class="prose">Wie viele Bytes belegen Leas Logdateien, die älter als 30 Tage sind? Am Ende soll nur die Zahl dastehen. Tippe die ganze Pipeline selbst in die Konsole.</p>
+      <div id="t12-u1"></div>
+    </div>
+    <div class="card stack"><h3>Übung 2 · Ausgabe vorhersagen</h3><div id="t12-u2"></div></div>
+    <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t12-u3"></div></div>
+    <div class="card stack">
+      <h3>Übung 4 · Fehler korrigieren</h3>
+      <p class="prose">Lea will den Speicherfresser beenden und tippt <code class="ps">Stop-Process berichtgenerator</code>. In echtem pwsh 7.6 kommt:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Stop-Process ohne -Name" lang="en"><span class="psk-fehler">Stop-Process: Cannot bind parameter 'InputObject'. Cannot convert the "berichtgenerator" value of type "System.String" to type "System.Diagnostics.Process".</span></pre>
+      <p class="prose">Was ist falsch? Tippe den korrigierten Befehl in die Konsole, zur Sicherheit noch mit <code class="ps">-WhatIf</code>.</p>
+      <div id="t12-u4"></div>
+    </div>
+    <div class="card stack"><h3>Übung 5 · Fehler finden</h3><div id="t12-u5"></div></div>
+    <div class="card stack">
+      <h3>Übung 6 · Zuordnen</h3>
+      <p class="prose">Gehört der Wert zur Eigenschaft <code>Status</code> oder zu <code>StartType</code> eines Dienstes?</p>
+      <div id="t12-u6"></div>
+    </div>
+    <div class="card stack"><h3>Übung 7 · Wahr oder falsch?</h3><div id="t12-u7"></div></div>
+    <div class="card stack">
+      <h3>Übung 8 · Befehl selbst schreiben</h3>
+      <p class="prose">Zwei Aufträge ohne Vorlage. Schreib den Befehl selbst in den Simulator.</p>
+      <div id="t12-u8"></div>
+    </div>
+  </section>
+
+  <!-- ===== 11 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 11 · Selbst tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Befehle sitzen erst, wenn deine Finger sie kennen. Darum tippst du hier alles selbst, in drei Stufen: erst abtippen, dann abwandeln, dann ohne Vorlage. Jede Stufe hat ihre eigene Konsole mit Leas Rechner. Gross- und Kleinschreibung spielt keine Rolle, Aliase wie <code class="ps">gps</code> und abgekürzte Parameter gelten auch. Tab und Pfeiltasten brauchst du nicht, es geht auch auf dem Handy.</p>
+    <div class="card stack">
+      <h3>Stufe 1 · Nachtippen</h3>
+      <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn genau ab und drück Enter. Achte auf Bindestriche, Leerzeichen und Klammern.</p>
+      <div id="t12-tt1"></div>
+    </div>
+    <div class="card stack">
+      <h3>Stufe 2 · Abwandeln</h3>
+      <p class="prose">Jede Aufgabe zeigt einen Befehl von dieser Seite. Du passt ein Stück an: eine andere Eigenschaft, einen anderen Filter, einen anderen Ordner. Hast du aus Versehen einen Prozess beendet, stellt «↺ Zurücksetzen» den Rechner wieder her.</p>
+      <div id="t12-tt2"></div>
+    </div>
+    <div class="card stack">
+      <h3>Stufe 3 · Selber lösen</h3>
+      <p class="prose">Jetzt gibt es nur noch das Ziel. Den Befehl findest du selbst. Einige Aufgaben holen Stoff aus früheren Stationen dazu: messen, rechnen, exportieren und entscheiden mit <code class="ps">if</code>.</p>
+      <div id="t12-tt3"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Montagmorgen</h2>
+    <p class="prose">Der Rechner ist langsam, die Ablage synchronisiert nicht. Lea klärt drei Fragen: <b>(a)</b> Welcher Prozess bremst, und wie beendet sie ihn sicher? <b>(b)</b> Welcher Dienst ist schuld an der fehlenden Synchronisation, und läuft er danach wieder? <b>(c)</b> Antwortet der Sync-Server, und wie viel Platz belegen Logdateien, die älter als 30 Tage sind?</p>
+    <p class="prose">Jede Szene zeigt einen Befehl und die Ausgabe des Simulators auf Leas Rechner.</p>
+    <div id="t12-film"></div>
+    <details class="sol">
+      <summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <p class="prose"><b>(a)</b> <code>berichtgenerator</code> (Id 6612) belegt 1920 MB Arbeitsspeicher. Lea prüft mit <code class="ps">Stop-Process -Id 6612 -WhatIf</code> und beendet ihn mit <code class="ps">Stop-Process -Id 6612</code>.</p>
+        <p class="prose"><b>(b)</b> <code>WolkenriedSync</code> hat den Starttyp <code>Automatic</code>, ist aber gestoppt. Ohne Adminrechte scheitert <code class="ps">Start-Service</code>, in der Konsole als Administrator läuft der Dienst danach (<code>Running</code>).</p>
+        <p class="prose"><b>(c)</b> <code>server</code> antwortet, <code>sync.wolkenried.ch</code> nicht (<code>TimedOut</code>): Das meldet Lea dem Netzwerkteam. Vier Logdateien sind älter als 30 Tage, zusammen 21'076'378 Bytes, gerundet 20.1 MB.</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Befehle und Ausgaben im Simulator und, soweit ohne Systemänderung möglich, in PowerShell 7.6 geprüft.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine</h2>
+    <div class="note falle"><b>Name ohne <code class="ps">-Name</code>:</b> <code class="ps">Get-Process berichtgenerator</code> geht, weil der Name dort an erster Stelle stehen darf. Bei <code class="ps">Stop-Process</code> erwartet die erste Stelle aber eine Id oder ein Prozessobjekt. In echtem pwsh 7.6 kommt:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Stop-Process ohne -Name" lang="en">PS C:\Users\lea&gt; Stop-Process berichtgenerator
+<span class="psk-fehler">Stop-Process: Cannot bind parameter 'InputObject'. Cannot convert the "berichtgenerator" value of type "System.String" to type "System.Diagnostics.Process".</span></pre>
+      Auf Deutsch: «Der Text berichtgenerator lässt sich nicht in einen Prozess umwandeln.» Schreib <code class="ps">Stop-Process -Name berichtgenerator</code> oder <code class="ps">Stop-Process -Id 6612</code>.</div>
+    <div class="note falle"><b><code class="ps">-Name</code> trifft alle:</b> <code class="ps">Stop-Process -Name chrome</code> schliesst alle drei Chrome-Prozesse, nicht nur einen. Für einen einzelnen nimm <code class="ps">-Id</code>, und prüfe vorher mit <code class="ps">-WhatIf</code>.</div>
+    <div class="note falle"><b>Ohne Adminrechte:</b> <code class="ps">Start-Service</code>, <code class="ps">Stop-Service</code> und <code class="ps">Restart-Service</code> scheitern mit <span lang="en"><code>Cannot open '…' service on computer '.'</code></span>. Der Befehl ist richtig, nur die Konsole nicht: Starte sie «Als Administrator».</div>
+    <div class="note falle"><b>Klammern vergessen:</b> <code class="ps">Get-Date.AddDays(-30)</code> sucht einen Befehl mit dem Namen <code>Get-Date.AddDays</code> und meldet <span lang="en"><code>The term 'Get-Date.AddDays' is not recognized …</code></span> («Diesen Befehl gibt es nicht»). Richtig: <code class="ps">(Get-Date).AddDays(-30)</code>.</div>
+    <div class="note falle"><b>Plus statt Minus, <code class="ps">-gt</code> statt <code class="ps">-lt</code>:</b> <code class="ps">.AddDays(30)</code> geht in die Zukunft. Und <code class="ps">LastWriteTime -gt (Get-Date).AddDays(-30)</code> findet die <b>neuen</b> Dateien, nicht die alten. «Älter als» heisst «früher als», also <code class="ps">-lt</code>.</div>
+    <div class="note falle"><b>WS in Bytes:</b> Die Tabelle zeigt <code>WS(M)</code> in MB, die Eigenschaft <code class="ps">WS</code> zählt aber Bytes. <code class="ps">Where-Object WS -gt 400</code> trifft darum fast jeden Prozess. Schreib <code class="ps">400MB</code>.</div>
+    <div class="note falle"><b><code class="ps">Test-NetConnection</code> ausserhalb von Windows:</b> Unter Linux oder macOS gibt es den Befehl nicht. Nimm dort <code class="ps">Test-Connection -TcpPort</code> (nur PowerShell 7).</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Prozesse, Dienste, Datum</h2>
+    <p class="prose">Alle Fragen beziehen sich auf Leas Rechner, so wie du ihn aus dem Simulator kennst.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">Get-Process</code></th><td>laufende Prozesse anzeigen</td><td><code class="ps">Get-Process -Name chrome</code></td></tr>
+          <tr><th><code class="ps">Sort-Object WS</code></th><td>Prozesse nach Arbeitsspeicher sortieren</td><td><code class="ps">Get-Process | Sort-Object WS -Descending</code></td></tr>
+          <tr><th><code class="ps">Sort-Object CPU</code></th><td>Prozesse nach CPU-Zeit sortieren</td><td><code class="ps">Get-Process | Sort-Object CPU -Descending</code></td></tr>
+          <tr><th><code class="ps">Stop-Process</code></th><td>Prozess beenden, zuerst mit <code>-WhatIf</code></td><td><code class="ps">Stop-Process -Id 6612 -WhatIf</code></td></tr>
+          <tr><th><code class="ps">Get-Service</code></th><td>Dienste anzeigen</td><td><code class="ps">Get-Service -Name Wolk*</code></td></tr>
+          <tr><th><code class="ps">Select-Object … StartType</code></th><td>Starttyp eines Dienstes zeigen</td><td><code class="ps">Get-Service WolkenriedSync | Select-Object Name, Status, StartType</code></td></tr>
+          <tr><th><code class="ps">Start-Service</code></th><td>Dienst starten (Adminrechte)</td><td><code class="ps">Start-Service -Name WolkenriedSync</code></td></tr>
+          <tr><th><code class="ps">Stop-Service</code></th><td>Dienst stoppen (Adminrechte)</td><td><code class="ps">Stop-Service -Name Spooler -WhatIf</code></td></tr>
+          <tr><th><code class="ps">Restart-Service</code></th><td>Dienst stoppen und starten (Adminrechte)</td><td><code class="ps">Restart-Service -Name Spooler -WhatIf</code></td></tr>
+          <tr><th><code class="ps">Get-Date</code></th><td>aktuelles Datum, auch formatiert</td><td><code class="ps">Get-Date -Format 'dd.MM.yyyy'</code></td></tr>
+          <tr><th><code class="ps">.AddDays()</code></th><td>Tage dazu- oder abzählen</td><td><code class="ps">(Get-Date).AddDays(-30)</code></td></tr>
+          <tr><th><code class="ps">LastWriteTime -lt</code></th><td>Dateien, die früher geändert wurden</td><td><code class="ps">Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)</code></td></tr>
+          <tr><th><code class="ps">Get-CimInstance</code></th><td>Systeminfos (nur Windows)</td><td><code class="ps">Get-CimInstance Win32_OperatingSystem</code></td></tr>
+          <tr><th><code class="ps">Test-Connection</code></th><td>antwortet ein Computer?</td><td><code class="ps">Test-Connection server -Count 2</code></td></tr>
+          <tr><th><code class="ps">Test-NetConnection</code></th><td>ist ein Port offen? (nur Windows)</td><td><code class="ps">Test-NetConnection server -Port 443</code></td></tr>
+          <tr><th><code class="ps">$env:</code></th><td>Umgebungsvariable lesen</td><td><code class="ps">$env:COMPUTERNAME</code></td></tr>
+          <tr><th><code class="ps">Get-Module</code></th><td>geladene Module anzeigen</td><td><code class="ps">Get-Module</code></td></tr>
+          <tr><th><code class="ps">Install-Module</code></th><td>Modul aus der PowerShell Gallery installieren</td><td><code class="ps">Install-Module -Name Microsoft.Graph -Scope CurrentUser</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li><b>Anschauen, probieren, handeln:</b> <code class="ps">Get-Process</code>, dann <code class="ps">Stop-Process … -WhatIf</code>, dann ohne <code class="ps">-WhatIf</code>.</li>
+      <li><code class="ps">-Id</code> trifft genau einen Prozess, <code class="ps">-Name</code> alle mit diesem Namen.</li>
+      <li><code class="ps">WS</code> ist der Arbeitsspeicher in Bytes, <code class="ps">CPU</code> die gesamte Rechenzeit in Sekunden.</li>
+      <li>Ein Dienst mit <code>StartType Automatic</code> und <code>Status Stopped</code> ist verdächtig. Starten und Stoppen braucht Adminrechte.</li>
+      <li>Datum: <code class="ps">(Get-Date).AddDays(-30)</code> mit Klammern; «älter als» heisst <code class="ps">-lt</code>.</li>
+      <li>Module sind Werkzeugkoffer. Installiere mit <code class="ps">-Scope CurrentUser</code> und nur, was du kennst.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li><code class="ps">Get-Process</code> zeigt in 5.1 zusätzlich die Spalte <code>Handles</code> und Speicher in KB (<code>PM(K)</code>, <code>WS(K)</code>). In <span class="ps-version">7</span> stehen die Werte in MB (<code>PM(M)</code>, <code>WS(M)</code>).</li>
+        <li><code class="ps">Test-Connection</code> sieht in 5.1 anders aus (Spalten <code>Source</code>, <code>Destination</code>, <code>IPV4Address</code> …) und kennt weder <code class="ps">-TargetName</code> noch <code class="ps">-TcpPort</code>. Den Computer gibst du dort mit <code class="ps">-ComputerName</code> an; in 7 ist das ein Alias für <code class="ps">-TargetName</code>.</li>
+        <li>Dienste haben ab PowerShell 6 zusätzliche Eigenschaften wie <code>UserName</code>, <code>Description</code> und <code>BinaryPathName</code>. In 5.1 fehlen sie.</li>
+        <li><code class="ps">Get-WmiObject</code> gibt es nur in 5.1. Nimm in beiden Versionen <code class="ps">Get-CimInstance</code>.</li>
+        <li>5.1 bringt PowerShellGet 1.0.0.1 mit: <code class="ps">Install-Module</code> ohne <code class="ps">-Scope</code> installiert dort für alle Benutzer und braucht Adminrechte.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-process">Get-Process</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/stop-process">Stop-Process</a> (keine Rückfrage ohne <code>-Confirm</code>, fremde Prozesse nur als Administrator)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-service">Get-Service</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/start-service">Start-Service</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/stop-service">Stop-Service</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/restart-service">Restart-Service</a> (standardmässig nur Administratoren, nur Windows)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-date">Get-Date</a> (<code>-Format</code>, Datumsobjekt)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/test-connection">Test-Connection</a> (<code>-Count</code>, <code>-Quiet</code>, <code>-TcpPort</code>) und <a href="https://learn.microsoft.com/powershell/module/nettcpip/test-netconnection">Test-NetConnection</a> (<code>-Port</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/cimcmdlets/get-ciminstance">Get-CimInstance</a> und <a href="https://learn.microsoft.com/powershell/scripting/whats-new/differences-from-windows-powershell">Differences between Windows PowerShell 5.1 and PowerShell 7.x</a> (WMI-v1-Cmdlets entfernt)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_environment_variables">about_Environment_Variables</a> (Änderungen gelten nur für die aktuelle Sitzung)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_modules">about_Modules</a> (automatisches Laden), <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-module">Get-Module</a>, <a href="https://learn.microsoft.com/powershell/module/powershellget/install-module">Install-Module</a> (<code>-Scope</code>, Standard je nach PowerShellGet-Version)</li>
+        <li><a href="https://learn.microsoft.com/powershell/microsoftgraph/installation">Microsoft Graph PowerShell installieren</a> und <a href="https://learn.microsoft.com/powershell/exchange/exchange-online-powershell-v2">Exchange Online PowerShell</a> (nur als Ausblick)</li>
+      </ul>
+    </div>
+    <footer>Station 12 des Lernpfads PS · Weiter geht es mit «Praxisprojekt und Abschlusstest».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  // Code als gefärbter Inline-Code (ps-konsole.js färbt ihn beim Einfügen)
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+
+  // Hilfen für pruefe(ctx): Eigenschaften von Ausgabeobjekten lesen
+  const eig = (o, n) => (o && typeof o === "object" && typeof o.wert === "function") ? o.wert(n) : undefined;
+  const txt = (ctx, o, n) => { const w = eig(o, n); return w == null ? null : ctx.text(w); };
+  const nameVon = (ctx, o) => (typeof o === "string") ? o : (txt(ctx, o, "Name") != null ? txt(ctx, o, "Name") : ctx.text(o));
+  const namen = (ctx) => ctx.objekte.map((o) => nameVon(ctx, o));
+  const ids = (ctx) => ctx.objekte.map((o) => Number(txt(ctx, o, "Id")));
+  const gleicheListe = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+  const gleicheMenge = (a, b) => a.length === b.length && a.slice().sort().join("|") === b.slice().sort().join("|");
+  const fehlerText = (ctx) => [].concat(ctx.fehler || []).map(String).join("\n");
+  const alsZahl = (ctx) => ctx.objekte.length === 1 ? Number(ctx.text(ctx.objekte[0])) : NaN;
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t12-mini", {
+    kategorien: ["Prozess", "Dienst", "Modul"],
+    elemente: [
+      { html: "Das Notepad-Fenster, das Lea gerade offen hat", kategorie: "Prozess", erklaerung: "Ein laufendes Programm mit Fenster: ein Prozess mit eigener Id (8840)." },
+      { html: "Die Druckwarteschlange, die im Hintergrund auf Druckaufträge wartet", kategorie: "Dienst", erklaerung: "Kein Fenster, startet mit Windows: der Dienst Spooler." },
+      { html: "Ein Paket mit Befehlen für Microsoft 365, das man nachinstalliert", kategorie: "Modul", erklaerung: "Ein Werkzeugkoffer mit Befehlen, zum Beispiel Microsoft.Graph." },
+      { html: "Das zweite Chrome-Fenster mit der Nummer 4388", kategorie: "Prozess", erklaerung: "Jede Instanz eines Programms ist ein eigener Prozess mit eigener Id." },
+      { html: "WolkenriedSync, der beim Start von Windows automatisch loslegen soll", kategorie: "Dienst", erklaerung: "Starttyp Automatic: ein Dienst." },
+      { html: "Microsoft.PowerShell.Management mit Get-Process und Get-Service", kategorie: "Modul", erklaerung: "In diesem Modul stecken die Befehle dieser Station." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper ---------- */
+  const st = L.konsole.sitzung();
+  const sp = (link, code) => '<span data-link="' + link + '">' + C(code) + "</span>";
+  const pipe = " " + C("|") + " ";
+  const stufe = (teile, befehl) => '<div class="t12-st"><div>' + teile + "</div>" + st.html(befehl) + "</div>";
+  const a1 = "Get-Process", a2 = "Sort-Object WS -Descending", a3 = "Select-Object -First 1";
+  L.stepper("#t12-stepper", {
+    titel: "Leas Auftrag",
+    text: 'Finde unter <span data-link="a">allen laufenden Prozessen</span> den, der <span data-link="b">am meisten Arbeitsspeicher belegt</span>, und <span data-link="c">nur diesen einen</span>. Dann <span data-link="d">prüfe, was beim Beenden passieren würde</span>, und <span data-link="e">beende ihn</span>.',
+    schritte: [
+      { html: stufe(sp("a", a1), a1),
+        warum: "Zuerst alle Prozesse holen. Get-Process liest nur und ändert nichts." },
+      { html: stufe(sp("a", a1) + pipe + sp("b", a2), a1 + " | " + a2),
+        warum: "Nach WS (Arbeitsspeicher in Bytes) absteigend sortieren: Der grösste steht oben." },
+      { html: stufe(sp("a", a1) + pipe + sp("b", a2) + pipe + sp("c", a3), a1 + " | " + a2 + " | " + a3),
+        warum: "Nur das oberste Objekt behalten. Jetzt kennst du Name und Id: berichtgenerator, 6612." },
+      { html: stufe(sp("d", "Stop-Process -Id 6612 -WhatIf"), "Stop-Process -Id 6612 -WhatIf"),
+        warum: "Mit der Id triffst du genau diesen einen Prozess. -WhatIf zeigt nur, was passieren würde." },
+      { html: stufe(sp("e", "Stop-Process -Id 6612"), "Stop-Process -Id 6612"),
+        warum: "Jetzt ohne -WhatIf. Keine Ausgabe heisst: Es hat geklappt." },
+      { html: stufe(C("Get-Process -Id 6612"), "Get-Process -Id 6612"),
+        warum: "Zur Kontrolle: Den Prozess gibt es nicht mehr, darum die rote Meldung «Kein Prozess mit dieser Id»." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Start-Service als Administrator ---------- */
+  const adminSitzung = L.konsole.sitzung({ admin: true });
+  document.getElementById("t12-admin-start").innerHTML = '<span class="t12-adminmarke">Konsole als Administrator</span>' + adminSitzung.html("Start-Service -Name WolkenriedSync -PassThru");
+  const adminPre = document.querySelector("#t12-admin-start pre");
+  if (adminPre) { adminPre.setAttribute("tabindex", "0"); adminPre.setAttribute("aria-label", "Ausgabe: Start-Service als Administrator"); }
+
+  /* ---------- Schritt 6: Konsole mit Aufgaben ---------- */
+  const top5ws = ["berichtgenerator", "ms-teams", "chrome", "Code", "OUTLOOK"];
+  const alteLogs = ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log", "backup-2026-06.log"];
+  L.konsole("#t12-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Die fünf grössten Speicherfresser",
+        text: "<p>Zeige die fünf Prozesse, die am meisten Arbeitsspeicher belegen, den grössten zuerst.</p>",
+        hinweis: "<p>Sortiere " + C("Get-Process") + " nach " + C("WS") + " mit " + C("-Descending") + " und nimm mit " + C("Select-Object -First 5") + " die ersten fünf.</p>",
+        loesung: "Get-Process | Sort-Object WS -Descending | Select-Object -First 5",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && ctx.befehle.includes("Sort-Object") && !ctx.hatFehler && gleicheListe(namen(ctx), top5ws)
+      },
+      {
+        titel: "Am meisten gerechnet",
+        text: "<p>Zeige die drei Prozesse mit der meisten CPU-Zeit, den grössten zuerst.</p>",
+        hinweis: "<p>Wie oben, aber nach " + C("CPU") + " sortieren und nur drei nehmen.</p>",
+        loesung: "Get-Process | Sort-Object CPU -Descending | Select-Object -First 3",
+        pruefe: (ctx) => ctx.befehle.includes("Sort-Object") && !ctx.hatFehler && gleicheListe(ids(ctx), [4120, 6612, 7720])
+      },
+      {
+        titel: "Laufende Dienste zählen",
+        text: "<p>Wie viele Dienste haben den Status <code>Running</code>? Zähle sie mit einer Pipeline.</p>",
+        hinweis: "<p>" + C("Get-Service") + ", dann " + C("Where-Object Status -eq Running") + ", dann " + C("Measure-Object") + ".</p>",
+        loesung: "Get-Service | Where-Object Status -eq Running | Measure-Object",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Service") && ctx.befehle.includes("Where-Object") &&
+          (alsZahl(ctx) === 8 || ctx.objekte.length === 1 && Number(txt(ctx, ctx.objekte[0], "Count")) === 8)
+      },
+      {
+        titel: "30 Tage zurück",
+        text: "<p>Welches Datum war vor 30 Tagen? Lass PowerShell rechnen.</p>",
+        hinweis: "<p>Hol das Datum in Klammern und ruf die Methode " + C(".AddDays()") + " mit einer negativen Zahl auf.</p>",
+        loesung: "(Get-Date).AddDays(-30)",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /AddDays/i.test(ctx.eingabe) && /Samstag, 3\. Oktober 2026 09:00:00/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Alte Logdateien",
+        text: "<p>Zeige alle Dateien im Ordner <code>Logs</code>, die zuletzt vor mehr als 30 Tagen geändert wurden.</p>",
+        hinweis: "<p>" + C("Where-Object LastWriteTime -lt …") + " mit " + C("(Get-Date).AddDays(-30)") + " als Grenze.</p>",
+        loesung: "Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)",
+        pruefe: (ctx) => ctx.befehle.includes("Where-Object") && ctx.befehle.includes("Get-Date") && gleicheMenge(namen(ctx), alteLogs)
+      },
+      {
+        titel: "Wie heisst der Computer?",
+        text: "<p>Gib nur den Namen von Leas Computer aus, mit einer Umgebungsvariable.</p>",
+        hinweis: "<p>Umgebungsvariablen liest du mit " + C("$env:") + ". Der Computername steht in " + C("COMPUTERNAME") + ".</p>",
+        loesung: "$env:COMPUTERNAME",
+        pruefe: (ctx) => /\$env:computername/i.test(ctx.eingabe) && ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === "WR-LEA-01"
+      },
+      {
+        titel: "Antwortet der Server?",
+        text: "<p>Prüfe, ob der Computer <code>server</code> antwortet. Als Ergebnis soll nur <code>True</code> oder <code>False</code> erscheinen.</p>",
+        hinweis: "<p>" + C("Test-Connection") + " mit dem Schalter " + C("-Quiet") + ". Mit " + C("-Count 1") + " geht es schneller.</p>",
+        loesung: "Test-Connection server -Count 1 -Quiet",
+        pruefe: (ctx) => ctx.befehle.includes("Test-Connection") && /\bserver\b/i.test(ctx.eingabe) && ctx.objekte.length === 1 && ctx.objekte[0] === true
+      }
+    ]
+  });
+
+  /* ---------- Schritt 7: Task-Manager in Text ---------- */
+  (function taskManager() {
+    const el = document.getElementById("t12-tm-konsole");
+    const zeilen = document.getElementById("t12-tm-zeilen");
+    const stand = document.getElementById("t12-tm-stand");
+    const titel = document.getElementById("t12-tm-titel");
+    const bWs = document.getElementById("t12-tm-ws");
+    const bCpu = document.getElementById("t12-tm-cpu");
+    let nach = "ws";
+    let letzteIds = null;
+
+    const k = L.konsole(el, {
+      aufgabenTitel: "Task-Manager: vier Schritte",
+      befehle: ["Get-Process | Sort-Object WS -Descending | Select-Object -First 3"],
+      aufgaben: [
+        {
+          titel: "1 · Finden",
+          text: "<p>Zeige nur den <b>einen</b> Prozess, der am meisten Arbeitsspeicher belegt.</p>",
+          hinweis: "<p>Sortiere nach " + C("WS") + " absteigend und nimm mit " + C("Select-Object -First 1") + " das erste Objekt.</p>",
+          loesung: "Get-Process | Sort-Object WS -Descending | Select-Object -First 1",
+          pruefe: (ctx) => ctx.befehle.includes("Sort-Object") && gleicheListe(ids(ctx), [6612])
+        },
+        {
+          titel: "2 · Probieren",
+          text: "<p>Schau mit " + C("-WhatIf") + ", was beim Beenden von genau diesem Prozess passieren würde. Nimm seine Id.</p>",
+          hinweis: "<p>" + C("Stop-Process -Id …") + " mit der Id aus Schritt 1 und dem Schalter " + C("-WhatIf") + ".</p>",
+          loesung: "Stop-Process -Id 6612 -WhatIf",
+          pruefe: (ctx) => ctx.befehle.includes("Stop-Process") && /\b6612\b/.test(ctx.eingabe) && ctx.prozess(6612) !== null &&
+            (ctx.ausgabe.match(/What if:/g) || []).length === 1 && /What if: Performing the operation "Stop-Process" on target "berichtgenerator \(6612\)"/.test(ctx.ausgabe)
+        },
+        {
+          titel: "3 · Beenden",
+          text: "<p>Beende den Speicherfresser jetzt wirklich, wieder über seine Id. Alle anderen Programme sollen weiterlaufen.</p>",
+          hinweis: "<p>Derselbe Befehl wie in Schritt 2, nur ohne " + C("-WhatIf") + ".</p>",
+          loesung: "Stop-Process -Id 6612",
+          pruefe: (ctx) => ctx.befehle.includes("Stop-Process") && /\b6612\b/.test(ctx.eingabe) && ctx.prozess(6612) === null &&
+            ctx.prozess(4120) !== null && ctx.prozess(7720) !== null && ctx.prozess(8840) !== null
+        },
+        {
+          titel: "4 · Kontrollieren",
+          text: "<p>Frag nach dem Prozess mit der Id 6612. Was meldet PowerShell jetzt?</p>",
+          hinweis: "<p>" + C("Get-Process -Id 6612") + ". Die rote Meldung ist hier ein gutes Zeichen.</p>",
+          loesung: "Get-Process -Id 6612",
+          pruefe: (ctx) => ctx.befehle.includes("Get-Process") && ctx.prozess(6612) === null && /Cannot find a process/.test(fehlerText(ctx))
+        }
+      ]
+    });
+
+    const mb = (b) => b / 1048576;
+    function zeichnen() {
+      const welt = k && k.sitzung && k.sitzung.welt;
+      if (!welt) return;
+      const liste = welt.prozesse.slice().sort((a, b) => nach === "ws"
+        ? (b.ws - a.ws) || (a.id - b.id)
+        : ((b.cpu || 0) - (a.cpu || 0)) || (b.ws - a.ws) || (a.id - b.id));
+      const max = Math.max.apply(null, liste.map((p) => p.ws).concat([1]));
+      zeilen.innerHTML = "";
+      liste.forEach((p, i) => {
+        const tr = document.createElement("tr");
+        if (p.id === 6612 && nach === "ws" && i === 0) tr.className = "t12-fresser";
+        const tdName = document.createElement("td"); tdName.className = "t12-name"; tdName.textContent = p.name;
+        const tdId = document.createElement("td"); tdId.className = "zahl"; tdId.textContent = String(p.id);
+        const tdCpu = document.createElement("td"); tdCpu.className = "zahl"; tdCpu.textContent = p.cpu == null ? "–" : L.zahlText(p.cpu, 2);
+        const tdWs = document.createElement("td"); tdWs.className = "zahl";
+        tdWs.textContent = L.zahlText(mb(p.ws), 1);
+        const balken = document.createElement("span"); balken.className = "t12-balken"; balken.setAttribute("aria-hidden", "true");
+        balken.style.width = Math.max(1, Math.round(100 * p.ws / max)) + "%";
+        tdWs.appendChild(balken);
+        tr.append(tdName, tdWs, tdCpu, tdId);
+        zeilen.appendChild(tr);
+      });
+      titel.textContent = "Prozesse auf WR-LEA-01, sortiert nach " + (nach === "ws" ? "Arbeitsspeicher" : "CPU-Zeit");
+      const jetzt = liste.map((p) => p.id).sort((a, b) => a - b).join(",");
+      if (letzteIds !== null && jetzt !== letzteIds) {
+        const vorher = letzteIds.split(",").map(Number);
+        const weg = vorher.filter((id) => !liste.some((p) => p.id === id));
+        stand.textContent = weg.length ? "Beendet: Prozess " + weg.join(", ") + ". Es laufen noch " + liste.length + " Prozesse." : "Es laufen " + liste.length + " Prozesse.";
+      } else if (letzteIds === null) {
+        stand.textContent = "Es laufen " + liste.length + " Prozesse.";
+      }
+      letzteIds = jetzt;
+    }
+    function sortieren(w) {
+      nach = w;
+      bWs.classList.toggle("on", w === "ws"); bWs.setAttribute("aria-pressed", String(w === "ws"));
+      bCpu.classList.toggle("on", w === "cpu"); bCpu.setAttribute("aria-pressed", String(w === "cpu"));
+      zeichnen();
+    }
+    bWs.addEventListener("click", () => sortieren("ws"));
+    bCpu.addEventListener("click", () => sortieren("cpu"));
+    // Nach jeder Eingabe und nach «Zurücksetzen» neu zeichnen
+    el.addEventListener("keydown", (e) => { if (e.key === "Enter") setTimeout(zeichnen, 0); });
+    el.addEventListener("click", () => setTimeout(zeichnen, 0));
+    zeichnen();
+  })();
+
+  /* ---------- Schritt 8: Dienst-Detektiv ---------- */
+  L.konsole("#t12-dd-konsole", {
+    adminKnopf: true,
+    aufgabenTitel: "Dienst-Detektiv: fünf Spuren",
+    aufgaben: [
+      {
+        titel: "1 · Gestoppte Dienste",
+        text: "<p>Zeige alle Dienste, deren Status <code>Stopped</code> ist.</p>",
+        hinweis: "<p>" + C("Get-Service") + " und " + C("Where-Object Status -eq Stopped") + ".</p>",
+        loesung: "Get-Service | Where-Object Status -eq Stopped",
+        pruefe: (ctx) => ctx.befehle.includes("Where-Object") && gleicheMenge(namen(ctx), ["BITS", "Fax", "W32Time", "WolkenriedSync"])
+      },
+      {
+        titel: "2 · Steckbrief",
+        text: "<p>Vier Dienste sind gestoppt. Verdächtig ist einer, der eigentlich automatisch starten soll. Zeige von <code>WolkenriedSync</code> die Eigenschaften <code>Name</code>, <code>Status</code> und <code>StartType</code>.</p>",
+        hinweis: "<p>" + C("Get-Service WolkenriedSync") + " und danach " + C("Select-Object") + " mit den drei Namen, durch Kommas getrennt.</p>",
+        loesung: "Get-Service WolkenriedSync | Select-Object Name, Status, StartType",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Service") && ctx.objekte.length === 1 && nameVon(ctx, ctx.objekte[0]) === "WolkenriedSync" &&
+          txt(ctx, ctx.objekte[0], "StartType") === "Automatic" && /StartType/.test(ctx.ausgabe)
+      },
+      {
+        titel: "3 · Start versuchen",
+        text: "<p>Versuche, <code>WolkenriedSync</code> zu starten, noch <b>ohne</b> Adminrechte. Lies die Fehlermeldung.</p>",
+        hinweis: "<p>" + C("Start-Service") + " mit dem kurzen Namen des Dienstes.</p>",
+        loesung: "Start-Service -Name WolkenriedSync",
+        pruefe: (ctx) => !ctx.admin && ctx.befehle.includes("Start-Service") && /WolkenriedSync/.test(fehlerText(ctx)) && /cannot be started/.test(fehlerText(ctx))
+      },
+      {
+        titel: "4 · Als Administrator",
+        text: "<p>Drück oben im Fenster «Als Administrator neu starten» und starte den Dienst noch einmal.</p>",
+        hinweis: "<p>Der Knopf steht in der Leiste der Konsole. Danach denselben Befehl wie in Spur 3.</p>",
+        loesung: "Start-Service -Name WolkenriedSync",
+        pruefe: (ctx) => ctx.admin && ctx.befehle.includes("Start-Service") && ctx.dienst("WolkenriedSync") && ctx.dienst("WolkenriedSync").status === "Running"
+      },
+      {
+        titel: "5 · Kontrolle",
+        text: "<p>Zeige den Dienst <code>WolkenriedSync</code> an. Läuft er jetzt?</p>",
+        hinweis: "<p>" + C("Get-Service WolkenriedSync") + ". In der Spalte Status sollte Running stehen.</p>",
+        loesung: "Get-Service WolkenriedSync",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Service") && ctx.objekte.length === 1 && nameVon(ctx, ctx.objekte[0]) === "WolkenriedSync" &&
+          txt(ctx, ctx.objekte[0], "Status") === "Running"
+      }
+    ]
+  });
+  L.auswahl("#t12-dd-frage", {
+    frage: "Lea bekommt die Meldung oben. Was ist der beste nächste Schritt?",
+    optionen: [
+      "Den Dienstnamen anders schreiben, zum Beispiel in Anführungszeichen.",
+      "Die Konsole «Als Administrator» starten und denselben Befehl noch einmal ausführen.",
+      "Den Rechner sofort neu starten.",
+      C("Stop-Process -Name WolkenriedSync") + " ausführen."
+    ],
+    richtig: 1,
+    erklaerung: "Der Befehl ist richtig, und den Dienst gibt es (sonst käme «Cannot find any service»). Es fehlen nur die Rechte. Ein Neustart des ganzen Rechners ist unnötig, und Stop-Process beendet Prozesse, keine Dienste."
+  });
+
+  /* ---------- Schritt 9: Datums-Rechner ---------- */
+  (function datumsRechner() {
+    const dr = L.konsole.sitzung();
+    const regler = document.getElementById("t12-tage");
+    const wert = document.getElementById("t12-tage-wert");
+    const ergebnis = document.getElementById("t12-ergebnis");
+    const liste = document.getElementById("t12-dateien");
+    const listeTitel = document.getElementById("t12-dateien-titel");
+    const box = document.getElementById("t12-dateien-box");
+    const bZurueck = document.getElementById("t12-zurueck");
+    const bVor = document.getElementById("t12-vor");
+    let zurueck = true;
+
+    // Logdateien mit Datum, einmal aus dem Simulator gelesen
+    const dateien = dr.ausfuehren("Get-ChildItem Logs | Sort-Object LastWriteTime | ForEach-Object { $_.Name + '|' + $_.LastWriteTime.ToString('dd.MM.yyyy HH:mm') }")
+      .split("\n").filter(Boolean).map((z) => { const t = z.split("|"); return { name: t[0], datum: t[1] }; });
+
+    function rechnen() {
+      const n = Number(regler.value);
+      wert.textContent = String(n);
+      const tage = zurueck ? -n : n;
+      const befehl = "(Get-Date).AddDays(" + tage + ")";
+      let html = dr.html(befehl);
+      html += dr.html("(Get-Date).AddDays(" + tage + ").ToString('dd.MM.yyyy')");
+      ergebnis.innerHTML = html;
+      ergebnis.querySelectorAll("pre").forEach((p) => { p.setAttribute("tabindex", "0"); p.setAttribute("aria-label", "Ausgabe des Simulators"); });
+      box.hidden = !zurueck;
+      liste.innerHTML = "";
+      if (!zurueck) return;
+      const alt = new Set(dr.ausfuehren("Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(" + tage + ") | Select-Object -ExpandProperty Name").split("\n").filter(Boolean));
+      listeTitel.textContent = "Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(" + tage + ") findet " + alt.size + " von " + dateien.length + " Dateien:";
+      dateien.forEach((d) => {
+        const li = document.createElement("li");
+        const istAlt = alt.has(d.name);
+        li.className = "t12-datei " + (istAlt ? "alt" : "neu");
+        const b = document.createElement("b"); b.textContent = d.name;
+        const s = document.createElement("span"); s.textContent = d.datum;
+        const m = document.createElement("span"); m.className = "t12-marke"; m.textContent = istAlt ? "✓ älter, wird gefunden" : "jünger, bleibt draussen";
+        li.append(b, s, m);
+        liste.appendChild(li);
+      });
+    }
+    function richtung(z) {
+      zurueck = z;
+      bZurueck.classList.toggle("on", z); bZurueck.setAttribute("aria-pressed", String(z));
+      bVor.classList.toggle("on", !z); bVor.setAttribute("aria-pressed", String(!z));
+      rechnen();
+    }
+    bZurueck.addEventListener("click", () => richtung(true));
+    bVor.addEventListener("click", () => richtung(false));
+    regler.addEventListener("input", rechnen);
+    rechnen();
+  })();
+
+  /* ---------- Übungen ---------- */
+  // Übung 1: Pipeline selbst tippen (früher Sortierer)
+  L.konsole("#t12-u1", {
+    begruessung: false,
+    aufgabenTitel: "Selbst bauen",
+    aufgaben: [
+      {
+        titel: "Nur die Zahl",
+        text: "<p>Zeige die Summe der Grössen (in Bytes) aller Dateien in <code>Logs</code>, die zuletzt vor mehr als 30 Tagen geändert wurden. Ausgegeben wird nur die Zahl, keine Tabelle.</p>",
+        hinweis: "<p>Vier Bausteine: Dateien holen, die alten mit " + C("Where-Object") + " durchlassen, mit " + C("Measure-Object") + " die Eigenschaft " + C("Length") + " summieren und zum Schluss mit " + C("-ExpandProperty") + " nur die Summe herausholen.</p>",
+        loesung: "Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30) | Measure-Object -Property Length -Sum | Select-Object -ExpandProperty Sum  # erst die alten filtern, dann messen, dann nur Sum auspacken",
+        // Ergebnis zählt: genau eine Zahl 21'076'378 (auch über (… ).Sum)
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && !ctx.hatFehler && alsZahl(ctx) === 21076378
+      }
+    ]
+  });
+  L.auswahl("#t12-u2", {
+    frage: "Was gibt " + C("Get-Service | Where-Object Status -eq Stopped | Measure-Object | Select-Object -ExpandProperty Count") + " auf Leas Rechner aus?",
+    optionen: ["12", "8", "4", "1"],
+    richtig: 2,
+    erklaerung: "Gestoppt sind BITS, Fax, W32Time und WolkenriedSync: 4. Es laufen 8, insgesamt sind es 12 Dienste."
+  });
+  L.auswahl("#t12-u3", {
+    frage: "Was gibt " + C("Get-Process | Sort-Object CPU -Descending | Select-Object -First 1 -ExpandProperty Name") + " aus?",
+    optionen: [C("berichtgenerator"), C("ms-teams"), C("Idle"), C("chrome")],
+    richtig: 3,
+    erklaerung: "chrome (Id 4120) hat mit 1534 Sekunden am meisten gerechnet. berichtgenerator belegt am meisten Arbeitsspeicher, hat aber nur 812 Sekunden CPU-Zeit."
+  });
+  // Übung 4: korrigierten Befehl tippen (früher Auswahl)
+  L.konsole("#t12-u4", {
+    begruessung: false,
+    aufgabenTitel: "Korrigieren",
+    aufgaben: [
+      {
+        titel: "Richtig adressiert, nur probiert",
+        text: "<p>Tippe den Befehl so, dass PowerShell den Prozess <code>berichtgenerator</code> findet. Mit " + C("-WhatIf") + " zeigt er nur, was passieren würde. Beendet wird noch nichts. Ist der Prozess doch weg, holt «↺ Zurücksetzen» ihn zurück.</p>",
+        hinweis: "<p>Ohne Parameternamen erwartet " + C("Stop-Process") + " an erster Stelle eine Id oder ein Prozessobjekt, keinen Namen. Sag PowerShell ausdrücklich, dass es ein Name ist, oder nimm die Id aus dem Task-Manager.</p>",
+        loesung: "Stop-Process -Name berichtgenerator -WhatIf  # -Name sagt, dass berichtgenerator ein Name ist; -Id 6612 geht auch",
+        // genau eine Probe-Meldung für berichtgenerator, ohne Fehler, Prozess läuft noch
+        pruefe: (ctx) => ctx.befehle.includes("Stop-Process") && !ctx.hatFehler && ctx.prozess(6612) !== null &&
+          (ctx.ausgabe.match(/What if:/g) || []).length === 1 && /What if: Performing the operation "Stop-Process" on target "berichtgenerator \(6612\)"/.test(ctx.ausgabe)
+      }
+    ]
+  });
+  L.auswahl("#t12-u5", {
+    frage: "Lea will die Logdateien, die <b>älter</b> als 30 Tage sind, und schreibt " + C("Get-ChildItem Logs | Where-Object LastWriteTime -gt (Get-Date).AddDays(-30)") + ". Was bekommt sie?",
+    optionen: [
+      "Die drei Dateien, die in den letzten 30 Tagen geändert wurden: app-2026-10.log, app.log und sync-fehler.log.",
+      "Die vier alten Dateien, wie gewünscht.",
+      "Eine Fehlermeldung, weil man Datum nicht mit -gt vergleichen kann.",
+      "Alle sieben Dateien."
+    ],
+    richtig: 0,
+    erklaerung: "-gt heisst bei Datum «später als». So kommen die neuen Dateien durch. Für «älter als» brauchst du -lt."
+  });
+  L.sortierer("#t12-u6", {
+    kategorien: ["Status", "StartType"],
+    elemente: [
+      { html: C("Running"), kategorie: "Status", erklaerung: "Der Dienst läuft gerade." },
+      { html: C("Automatic"), kategorie: "StartType", erklaerung: "Startet mit Windows." },
+      { html: C("Stopped"), kategorie: "Status", erklaerung: "Der Dienst läuft gerade nicht." },
+      { html: C("Manual"), kategorie: "StartType", erklaerung: "Startet nur bei Bedarf oder von Hand." },
+      { html: C("Disabled"), kategorie: "StartType", erklaerung: "Darf gar nicht starten." },
+      { html: C("Paused"), kategorie: "Status", erklaerung: "Der Dienst ist angehalten, aber nicht beendet." }
+    ]
+  });
+  L.wahrFalsch("#t12-u7", {
+    titel: "Prozesse, Dienste, Module",
+    aussagen: [
+      { html: C("Get-Process") + " verändert nichts am Rechner.", wahr: true, erklaerung: "Get-Befehle lesen nur." },
+      { html: C("Stop-Process -Id 6612") + " fragt vor dem Beenden nach.", wahr: false, erklaerung: "Stop-Process fragt nur mit -Confirm nach. Sonst beendet es sofort." },
+      { html: "Die Spalte " + C("CPU(s)") + " zeigt, wie stark ein Prozess den Prozessor in diesem Moment belastet.", wahr: false, erklaerung: "CPU(s) ist die gesamte Rechenzeit in Sekunden seit dem Start des Prozesses." },
+      { html: C("Install-Module -Name Microsoft.Graph -Scope CurrentUser") + " braucht keine Adminrechte.", wahr: true, erklaerung: "CurrentUser installiert in deinen Benutzerordner. Erst AllUsers braucht Adminrechte." },
+      { html: C("Test-NetConnection") + " gibt es in PowerShell 7 auch unter Linux und macOS.", wahr: false, erklaerung: "Test-NetConnection gibt es nur unter Windows. Unter Linux und macOS hilft Test-Connection -TcpPort." },
+      { html: "Eine Umgebungsvariable, die du mit " + C("$env:LEA_TEST = 'Hallo'") + " setzt, ist nach dem Schliessen der Konsole wieder weg.", wahr: true, erklaerung: "Änderungen an Umgebungsvariablen gelten in PowerShell nur für die aktuelle Sitzung." }
+    ]
+  });
+  L.konsole("#t12-u8", {
+    begruessung: false,
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Mehr als 400 MB",
+        text: "<p>Zeige alle Prozesse, die mehr als 400 MB Arbeitsspeicher belegen.</p>",
+        hinweis: "<p>" + C("Where-Object") + " mit der Eigenschaft " + C("WS") + ", dem Operator " + C("-gt") + " und der Einheit " + C("MB") + ".</p>",
+        loesung: "Get-Process | Where-Object WS -gt 400MB",
+        pruefe: (ctx) => ctx.befehle.includes("Where-Object") && gleicheMenge(ids(ctx).map(String), ["6612", "4120", "7720"])
+      },
+      {
+        titel: "Wie alt ist die Sicherung?",
+        text: "<p>Wie viele ganze Tage ist die Datei <code>Logs\\backup-2026-06.log</code> alt (gemessen an <code>LastWriteTime</code>)?</p>",
+        hinweis: "<p>Zieh " + C("(Get-Item Logs\\backup-2026-06.log).LastWriteTime") + " von " + C("(Get-Date)") + " ab und nimm von der Zeitspanne die Eigenschaft " + C("Days") + ".</p>",
+        loesung: "((Get-Date) - (Get-Item Logs\\backup-2026-06.log).LastWriteTime).Days",
+        pruefe: (ctx) => /backup-2026-06/i.test(ctx.eingabe) && (alsZahl(ctx) === 125 || /^Days\s+:\s+125$/m.test(ctx.ausgabe))
+      }
+    ]
+  });
+
+  /* ---------- Tipp-Training ---------- */
+  // Eigenschaftsnamen eines Ausgabeobjekts (klein geschrieben), z. B. nach Select-Object
+  const eigNamen = (o) => (o && typeof o === "object" && typeof o.namen === "function") ? o.namen().map((n) => String(n).toLowerCase()) : [];
+  const whatIf = (ctx) => ctx.ausgabe.match(/What if: Performing the operation "Stop-Process" on target "[^"]+"/g) || [];
+
+  // Stufe 1: Nachtippen (Ergebnis und Cmdlet zählen, Gross/Klein und Leerzeichen egal)
+  L.konsole("#t12-tt1", {
+    begruessung: false,
+    aufgabenTitel: "Abtippen",
+    aufgaben: [
+      {
+        titel: "Alle Chrome-Fenster",
+        text: "<p>Tippe ab: " + C("Get-Process -Name chrome") + "</p>",
+        hinweis: "<p>Zwischen " + C("Get-Process") + " und " + C("-Name") + " steht ein Leerzeichen, ebenso vor " + C("chrome") + ". Vor dem Parameternamen steht ein Bindestrich.</p>",
+        loesung: "Get-Process -Name chrome  # holt alle drei Prozesse mit dem Namen chrome",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && !ctx.hatFehler && gleicheMenge(ids(ctx).map(String), ["4120", "4388", "5012"])
+      },
+      {
+        titel: "Steckbrief der Wolkenried-Dienste",
+        text: "<p>Tippe ab: " + C("Get-Service -Name Wolk* | Select-Object Name, Status, StartType") + "</p>",
+        hinweis: "<p>Der senkrechte Strich " + C("|") + " ist die Pipeline (auf der Schweizer Tastatur Alt Gr + 7). Die drei Eigenschaften trennst du mit Kommas.</p>",
+        loesung: "Get-Service -Name Wolk* | Select-Object Name, Status, StartType  # beide Wolkenried-Dienste, nur mit drei Eigenschaften",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Service") && ctx.befehle.includes("Select-Object") && !ctx.hatFehler &&
+          gleicheMenge(namen(ctx), ["WolkenriedBackup", "WolkenriedSync"]) &&
+          ctx.objekte.every((o) => gleicheMenge(eigNamen(o), ["name", "status", "starttype"]))
+      },
+      {
+        titel: "Eine Woche vorwärts",
+        text: "<p>Tippe ab: " + C("(Get-Date).AddDays(7)") + "</p>",
+        hinweis: "<p>Zuerst die runden Klammern um " + C("Get-Date") + ", dann direkt ohne Leerzeichen der Punkt und " + C("AddDays(7)") + ".</p>",
+        loesung: "(Get-Date).AddDays(7)  # zuerst das Datum holen, dann sieben Tage dazuzählen",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /adddays/i.test(ctx.eingabe) && !ctx.hatFehler &&
+          ctx.objekte.length === 1 && /^Montag, 9\. November 2026 09:00:00$/m.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  // Stufe 2: Abwandeln
+  L.konsole("#t12-tt2", {
+    begruessung: false,
+    aufgabenTitel: "Abwandeln",
+    aufgaben: [
+      {
+        titel: "Die drei Kleinsten",
+        text: "<p>Vorlage: " + C("Get-Process | Sort-Object WS -Descending | Select-Object -First 5") + "</p><p>Wie oben, aber du willst die <b>drei</b> Prozesse mit dem <b>kleinsten</b> Arbeitsspeicher, den kleinsten zuerst.</p>",
+        hinweis: "<p>Zwei Stellen ändern sich: Ohne " + C("-Descending") + " sortiert " + C("Sort-Object") + " aufsteigend, also klein vor gross. Und die Zahl hinter " + C("-First") + ".</p>",
+        loesung: "Get-Process | Sort-Object WS | Select-Object -First 3  # aufsteigend sortiert stehen die kleinsten oben",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && ctx.befehle.includes("Sort-Object") && !ctx.hatFehler && gleicheListe(ids(ctx), [0, 4, 1088])
+      },
+      {
+        titel: "Dienste, die nur bei Bedarf starten",
+        text: "<p>Vorlage: " + C("Get-Service | Where-Object Status -eq Stopped") + "</p><p>Wie oben, aber du suchst alle Dienste mit dem Starttyp <code>Manual</code>, egal ob sie laufen.</p>",
+        hinweis: "<p>Tausche die Eigenschaft und den Wert im Filter aus. Der Starttyp steht in der Eigenschaft " + C("StartType") + ".</p>",
+        loesung: "Get-Service | Where-Object StartType -eq Manual  # filtert nach dem Starttyp statt nach dem Status",
+        // Filter muss den Starttyp Manual nennen («-ne Automatic» trifft zufällig dasselbe, ist aber ein anderer Filter)
+        pruefe: (ctx) => ctx.befehle.includes("Get-Service") && /manual/i.test(ctx.eingabe) && !ctx.hatFehler && gleicheMenge(namen(ctx), ["BITS", "Fax", "W32Time", "wuauserv"])
+      },
+      {
+        titel: "Nur ein Chrome-Fenster",
+        text: "<p>Vorlage: " + C("Stop-Process -Name chrome -WhatIf") + "</p><p>Wie oben, aber die Probe soll nur das Chrome-Fenster mit der Id <code>4388</code> treffen. Die anderen zwei bleiben aussen vor.</p>",
+        hinweis: "<p>" + C("-Name") + " trifft alle Prozesse mit diesem Namen. Für genau einen nimmst du einen anderen Parameter. " + C("-WhatIf") + " bleibt stehen.</p>",
+        loesung: "Stop-Process -Id 4388 -WhatIf  # -Id trifft genau einen Prozess, -WhatIf probiert nur",
+        // genau eine Probe für 4388, und alle Chrome-Prozesse laufen noch
+        pruefe: (ctx) => ctx.befehle.includes("Stop-Process") && !ctx.hatFehler && ctx.prozess(4388) !== null &&
+          whatIf(ctx).length === 1 && /"chrome \(4388\)"/.test(whatIf(ctx)[0])
+      },
+      {
+        titel: "Alte Downloads",
+        text: "<p>Vorlage: " + C("Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)") + "</p><p>Wie oben, aber im Ordner <code>Downloads</code>, und die Dateien sollen zuletzt vor mehr als <b>60</b> Tagen geändert worden sein.</p>",
+        hinweis: "<p>Der Ordnername steht gleich hinter " + C("Get-ChildItem") + ". Die Zahl der Tage steckt in der Klammer von " + C("AddDays()") + ", mit Minus für die Vergangenheit.</p>",
+        loesung: "Get-ChildItem Downloads | Where-Object LastWriteTime -lt (Get-Date).AddDays(-60)  # anderer Ordner, Grenze 60 Tage zurück",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && ctx.befehle.includes("Where-Object") && !ctx.hatFehler &&
+          gleicheMenge(namen(ctx), ["handbuch-drucker.pdf", "setup-alt.exe"])
+      }
+    ]
+  });
+
+  // Stufe 3: Selber lösen (mit Wiederholung aus den Stationen 07 bis 10)
+  const csvZeilen = (t) => String(t || "").split("\n").map((z) => z.trim()).filter((z) => z && !/^#TYPE/i.test(z))
+    .map((z) => z.split(/[,;]/).map((f) => f.trim().replace(/^"|"$/g, "")));
+  L.konsole("#t12-tt3", {
+    begruessung: false,
+    aufgabenTitel: "Ohne Vorlage",
+    aufgaben: [
+      {
+        titel: "Wie viele svchost?",
+        text: "<p>Windows startet den Prozess <code>svchost</code> mehrmals. Wie viele laufen auf Leas Rechner? Am Ende soll die Anzahl dastehen.</p>",
+        hinweis: "<p>Hol nur die Prozesse mit diesem Namen und zähl sie. Zählen kannst du mit " + C("Measure-Object") + " aus Station 07 oder mit der Eigenschaft " + C("Count") + ".</p>",
+        loesung: "Get-Process -Name svchost | Measure-Object  # Count zeigt die Anzahl: 3",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && !ctx.hatFehler &&
+          (alsZahl(ctx) === 3 || ctx.objekte.length === 1 && Number(txt(ctx, ctx.objekte[0], "Count")) === 3)
+      },
+      {
+        titel: "Chrome zusammen in MB",
+        text: "<p>Wie viel Arbeitsspeicher belegen alle Chrome-Prozesse zusammen, in MB? Am Ende soll nur die Zahl dastehen.</p>",
+        hinweis: "<p>Summiere " + C("WS") + " mit " + C("Measure-Object") + ". Die Summe ist in Bytes. Hol sie mit Klammern und " + C(".Sum") + " heraus und teile durch " + C("1MB") + " (Station 09).</p>",
+        loesung: "(Get-Process -Name chrome | Measure-Object -Property WS -Sum).Sum / 1MB  # Summe in Bytes, geteilt durch 1MB ergibt 693.5",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && !ctx.hatFehler && alsZahl(ctx) === 693.5
+      },
+      {
+        titel: "Gestoppte Dienste als CSV",
+        text: "<p>Speichere alle gestoppten Dienste als CSV-Datei <code>gestoppt.csv</code> in Leas Benutzerordner <code>C:\\Users\\lea</code>. In der Datei stehen nur die Spalten <code>Name</code> und <code>StartType</code>.</p>",
+        hinweis: "<p>Filtern wie im Dienst-Detektiv, dann mit " + C("Select-Object") + " die zwei Spalten wählen. Eine CSV-Datei schreibt " + C("Export-Csv") + " aus Station 08.</p>",
+        loesung: "Get-Service | Where-Object Status -eq Stopped | Select-Object Name, StartType | Export-Csv gestoppt.csv  # filtern, zwei Spalten wählen, als CSV speichern",
+        // Zustand zählt: Kopfzeile Name/StartType und genau die vier gestoppten Dienste
+        pruefe: (ctx) => {
+          const z = csvZeilen(ctx.inhalt("C:\\Users\\lea\\gestoppt.csv"));
+          return z.length === 5 && gleicheMenge(z[0].map((f) => f.toLowerCase()), ["name", "starttype"]) &&
+            gleicheMenge(z.slice(1).map((r) => { const n = z[0].map((f) => f.toLowerCase()).indexOf("name"); return r[n] + "|" + r[1 - n]; }),
+              ["BITS|Manual", "Fax|Manual", "W32Time|Manual", "WolkenriedSync|Automatic"]);
+        }
+      },
+      {
+        titel: "Läuft die Synchronisation?",
+        text: "<p>Lass PowerShell entscheiden: Läuft der Dienst <code>WolkenriedSync</code>, soll der Text <code>Sync läuft</code> erscheinen, sonst <code>Sync gestoppt</code>. Nur dieser eine Text soll ausgegeben werden.</p>",
+        hinweis: "<p>Eine Bedingung mit " + C("if") + " und " + C("else") + " aus Station 10. In die Klammer kommt der Vergleich von " + C("(Get-Service WolkenriedSync).Status") + " mit " + C("'Running'") + ".</p>",
+        loesung: "if ((Get-Service WolkenriedSync).Status -eq 'Running') { 'Sync läuft' } else { 'Sync gestoppt' }  # der Status entscheidet, welcher Text erscheint",
+        // die Antwort muss zum tatsächlichen Zustand des Dienstes passen
+        pruefe: (ctx) => {
+          const d = ctx.dienst("WolkenriedSync");
+          const soll = d && d.status === "Running" ? "sync läuft" : "sync gestoppt";
+          return ctx.befehle.includes("Get-Service") && /\bif\b|\bswitch\b|\?[^:]*:/i.test(ctx.eingabe) && !ctx.hatFehler &&
+            ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]).trim().toLowerCase() === soll;
+        }
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const film = L.konsole.sitzung();
+  const filmAdmin = L.konsole.sitzung({ admin: true });
+  filmAdmin.ausfuehren("Stop-Process -Id 6612");   // gleicher Stand wie in der ersten Konsole
+  const f = (code) => film.html(code);
+  const fa = (code) => '<span class="t12-adminmarke">Konsole als Administrator</span>' + filmAdmin.html(code);
+  const alt30 = "Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)";
+  L.film("#t12-film", {
+    phasen: ["a · Speicherfresser", "b · Dienst", "c · Netz und Logs"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Leas Rechner ist langsam, und die Ablage synchronisiert nicht. Sie geht Schritt für Schritt vor: erst anschauen, dann probieren, dann handeln." },
+      { ph: 0, f: f("Get-Process | Sort-Object WS -Descending | Select-Object -First 5"), say: "Sie sortiert alle Prozesse nach Arbeitsspeicher. Ganz oben: berichtgenerator mit 1920 MB." },
+      { ph: 0, f: f("Get-Process | Sort-Object CPU -Descending | Select-Object -First 3 Name, Id, CPU"), say: "Nach CPU-Zeit liegt chrome vorne. Das ist die Rechenzeit seit dem Start, nicht die Last von jetzt. Der Speicher ist das Problem." },
+      { ph: 0, f: f("Get-Process -Name berichtgenerator"), say: "Sie schaut sich den Verdächtigen allein an. Seine Id ist 6612." },
+      { ph: 0, say: "Bevor sie etwas beendet, probiert sie es mit -WhatIf. Und sie nimmt die Id, damit sie sicher nur diesen einen Prozess trifft." },
+      { ph: 0, f: f("Stop-Process -Id 6612 -WhatIf"), say: "What if heisst: Das würde passieren. Beendet ist noch nichts." },
+      { ph: 0, f: f("Stop-Process -Id 6612"), say: "Jetzt ohne -WhatIf. Keine Ausgabe heisst: Es hat geklappt." },
+      { ph: 0, f: f("Get-Process -Id 6612"), say: "Zur Kontrolle fragt sie nach der Id 6612. Die rote Meldung sagt: Diesen Prozess gibt es nicht mehr. Teil a ist erledigt." },
+      { ph: 1, f: f("Get-Service -Name Wolk*"), say: "Jetzt zur Synchronisation. Lea sucht die Dienste der Gemeinde. WolkenriedSync ist gestoppt." },
+      { ph: 1, f: f("Get-Service WolkenriedSync | Select-Object Name, Status, StartType"), say: "StartType Automatic, Status Stopped: Der Dienst sollte laufen, tut es aber nicht." },
+      { ph: 1, f: f("Get-Content Logs\\sync-fehler.log"), say: "Die Logdatei verrät: Der Dienst wurde gestern Abend unerwartet beendet." },
+      { ph: 1, f: f("Start-Service -Name WolkenriedSync"), say: "Sie versucht, ihn zu starten. Rote Meldung: Der Dienst lässt sich nicht öffnen." },
+      { ph: 1, say: "Der Befehl stimmt, aber ihrer Konsole fehlen die Adminrechte. Lea öffnet PowerShell mit «Als Administrator ausführen»." },
+      { ph: 1, f: fa("Start-Service -Name WolkenriedSync"), say: "In der Konsole als Administrator klappt es. Wieder heisst keine Ausgabe: Erfolg." },
+      { ph: 1, f: fa("Get-Service WolkenriedSync"), say: "Kontrolle: Status Running. Teil b ist erledigt." },
+      { ph: 2, f: fa("Test-Connection server -Count 2"), say: "Läuft das Netz? Der Server der Gemeinde antwortet in 1 bis 2 Millisekunden." },
+      { ph: 2, f: fa("Test-Connection sync.wolkenried.ch -Count 1"), say: "Der Sync-Server dagegen antwortet nicht: TimedOut. Das erklärt die Fehlermeldung in app.log. Lea meldet es dem Netzwerkteam." },
+      { ph: 2, f: fa(alt30), say: "Zum Schluss die alten Logdateien. Vier wurden vor mehr als 30 Tagen zuletzt geändert." },
+      { ph: 2, f: fa(alt30 + " | Measure-Object -Property Length -Sum"), say: "Measure-Object zählt ihre Grösse zusammen: 21'076'378 Bytes." },
+      { ph: 2, f: fa("[math]::Round((" + alt30 + " | Measure-Object -Property Length -Sum).Sum / 1MB, 1)"), say: "Geteilt durch 1MB und gerundet sind das 20.1 MB. Die räumt sie in Station 13 mit einem Skript auf." },
+      { ph: -1, say: "Fertig: (a) berichtgenerator beendet, (b) WolkenriedSync läuft wieder, (c) Sync-Server meldet TimedOut, alte Logs belegen 20.1 MB. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Welche Spalte von " + C("Get-Process") + " zeigt, wie viel Arbeitsspeicher ein Prozess gerade belegt?", o: [C("WS(M)"), C("CPU(s)"), C("Id"), C("SI")], a: 0,
+        e: "WS steht für Working Set, den belegten Arbeitsspeicher, hier in MB." },
+      { q: "Was macht " + C("Stop-Process -Id 6612 -WhatIf") + "?", o: ["Es beendet den Prozess und meldet es.", "Es zeigt nur, was passieren würde, und beendet nichts.", "Es fragt nach und beendet nach einem Ja.", "Es beendet alle Prozesse mit dem gleichen Namen."], a: 1,
+        e: "-WhatIf ist die Probe: «What if: Performing the operation …». Nach einem Ja fragt -Confirm." },
+      { q: "Auf Leas Rechner laufen drei Chrome-Prozesse. Was macht " + C("Stop-Process -Name chrome") + "?", o: ["Es beendet nur den ersten.", "Es meldet einen Fehler, weil der Name mehrdeutig ist.", "Es fragt, welchen du meinst.", "Es beendet alle drei."], a: 3,
+        e: "-Name trifft alle Prozesse mit diesem Namen. Für einen einzelnen nimmst du -Id." },
+      { q: "Was gibt " + C("Get-Process | Sort-Object WS -Descending | Select-Object -First 1 -ExpandProperty Id") + " auf Leas Rechner aus?", o: ["4120", "7720", "6612", "9120"], a: 2,
+        e: "Am meisten Arbeitsspeicher belegt berichtgenerator mit der Id 6612." },
+      { q: "Ein Dienst hat " + C("StartType") + " Automatic und " + C("Status") + " Stopped. Was heisst das?", o: ["Er ist abgeschaltet und darf nie starten.", "Er sollte mit Windows starten, läuft aber gerade nicht.", "Er läuft und startet nur bei Bedarf.", "Er ist pausiert."], a: 1,
+        e: "Automatic heisst «startet mit Windows», Stopped heisst «läuft gerade nicht». Das ist verdächtig." },
+      { q: "Lea startet einen Dienst und bekommt " + '<span lang="en">' + C("Cannot open 'WolkenriedSync' service on computer '.'") + "</span>" + ". Was fehlt ihr meistens?", o: ["Adminrechte: die Konsole «Als Administrator»", "Der richtige Dienstname", "Eine Netzwerkverbindung", "Das Modul für Dienste"], a: 0,
+        e: "Starten, Stoppen und Neustarten von Diensten dürfen standardmässig nur Administratoren in einer Konsole mit erhöhten Rechten." },
+      { q: "Im Simulator ist es Montag, 2. November 2026, 09:00 Uhr. Was liefert " + C("(Get-Date).AddDays(-30)") + "?", o: ["Freitag, 2. Oktober 2026 09:00:00", "Mittwoch, 2. Dezember 2026 09:00:00", "Samstag, 3. Oktober 2026 09:00:00", "eine Fehlermeldung"], a: 2,
+        e: "Der Oktober hat 31 Tage. 30 Tage vor dem 2. November ist der 3. Oktober, ein Samstag." },
+      { q: "Welche Dateien findet " + C("Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)") + "?", o: ["Dateien, die in den letzten 30 Tagen geändert wurden", "Dateien, die genau 30 Tage alt sind", "Dateien, die grösser als 30 MB sind", "Dateien, die vor mehr als 30 Tagen zuletzt geändert wurden"], a: 3,
+        e: "-lt heisst bei Datum «früher als»: Die letzte Änderung liegt vor der Grenze von vor 30 Tagen." },
+      { q: "Was gibt " + C("Test-Connection server -Count 1 -Quiet") + " zurück?", o: ["eine Tabelle mit Latency und Status", "nur True oder False", "die IP-Adresse des Servers", "nichts, wenn alles klappt"], a: 1,
+        e: "-Quiet macht aus dem Ping ein einfaches Ja (True) oder Nein (False)." },
+      { q: "Wofür steht " + C("-Scope CurrentUser") + " bei " + C("Install-Module") + "?", o: ["Das Modul wird nur für dich installiert, ohne Adminrechte.", "Das Modul wird für alle Benutzer installiert.", "Das Modul wird nur für diese Konsole geladen.", "Das Modul wird nur heruntergeladen, nicht installiert."], a: 0,
+        e: "CurrentUser legt das Modul in deinen Benutzerordner. AllUsers wäre für alle und braucht Adminrechte." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

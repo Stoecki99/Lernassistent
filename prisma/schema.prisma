@@ -39,6 +39,7 @@ model User {
   chatMessages  ChatMessage[]
   userBadges    UserBadge[]
   lernfortschritte Lernfortschritt[]
+  simulationRuns   SimulationRun[]
 }
 
 model Account {
@@ -203,6 +204,37 @@ model Lernfortschritt {
 
   @@unique([userId, fach, thema])
   @@index([userId, fach])
+}
+
+// Lauf im Leitstand (Projektsimulator). Massgebend sind seed + actions;
+// summary und score berechnet der Server beim Nachspielen (lib/leitstand.ts).
+model SimulationRun {
+  id              String    @id @default(cuid())
+  userId          String
+  scenarioId      String    // "wolkenried" | "einfuehrung"
+  scenarioVersion String
+  engineVersion   Int
+  seed            Int       // 1 … 2'147'483'646, vom Server erzeugt
+  seedReused      Boolean   @default(false) // Wiederholung mit bekanntem Startwert
+  status          String    // "aktiv" | "abgeschlossen" | "abgebrochen" | "veraltet"
+  actions         Json      // Action[]
+  actionCount     Int       @default(0)
+  tick            Int       @default(0)
+  summary         Json?     // { tag, phase, spi, cpi, qi, motivation, si, rmi }
+  score           Int?
+  stars           Int?
+  scoreDetail     Json?     // RunResult
+  pointsAwarded   Int       @default(0) // Punkte ins Konto beim Abschluss (Bestwert-Verbesserung ÷ 10)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  finishedAt      DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, scenarioId, status])
+  @@index([userId, scenarioId, score])
+  // Zusätzlich Teil-Index «SimulationRun_aktiv_eindeutig» (userId, scenarioId) WHERE status = 'aktiv',
+  // nur in prisma/migrations/20261101100000_simulation_run_aktiv_eindeutig (Prisma kennt keine Teil-Indizes).
 }
 
 model ContactMessage {

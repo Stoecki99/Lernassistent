@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projektcontrolling und Earned Value · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/19-statusbericht" title="Statusbericht und Reporting">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t18-», nur Farben aus :root -->
+  <style>
+    .t18-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t18-ziele li{margin-bottom:3px}
+    .t18-quelle{font-size:.9rem; color:var(--muted)}
+
+    /* Ampel-Marke: immer Form + Text, Farbe nur als Zusatz */
+    .t18-sym{display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:.9em; padding:1px 8px; border-radius:999px; border:1px solid currentColor; white-space:nowrap}
+    .t18-gruen{color:var(--ok); background:var(--ok-bg)}
+    .t18-gelb{color:var(--free); background:var(--free-bg)}
+    .t18-rot{color:var(--bad); background:var(--bad-bg)}
+    .t18-leer{color:var(--muted)}
+
+    /* Formelzeilen auf der Tafel */
+    .t18-regeln{display:grid; grid-template-columns:minmax(0,1fr); gap:6px; font-family:var(--f-body); white-space:normal}
+    .t18-regel{display:flex; flex-wrap:wrap; gap:2px 12px; align-items:baseline}
+    .t18-regel b{min-width:8.5em; color:var(--accent)}
+
+    /* Vergleich nur Soll-Ist gegenüber Earned Value */
+    .t18-zitat{margin:0; padding:8px 12px; border-left:3px solid var(--accent); background:var(--board); border-radius:0 8px 8px 0}
+
+    /* EV-Rechner */
+    .t18-schnell{display:flex; flex-wrap:wrap; gap:8px}
+    .t18-kz td, .t18-kz th{vertical-align:middle}
+    .t18-kz td:nth-child(2){white-space:nowrap; font-variant-numeric:tabular-nums; text-align:right}
+    .t18-kz td:nth-child(3){white-space:nowrap}
+    .t18-deutung{padding:12px 14px; border-radius:10px; background:var(--board); border-left:4px solid var(--accent); line-height:1.5}
+    .t18-deutung p{margin:0}
+    .t18-deutung p + p{margin-top:6px}
+    .diagramm .t18-gestrichelt{stroke-dasharray:6 4}
+    .diagramm .t18-gepunktet{stroke-dasharray:2 4}
+    .diagramm .t18-duenn{stroke-width:1.5}
+    .diagramm .t18-linie{stroke:currentColor; stroke-width:1.5; fill:none}
+    .diagramm .t18-label{fill:currentColor; font-weight:700}
+    .diagramm .t18-bac{stroke:var(--muted); stroke-width:1.2; stroke-dasharray:3 3; fill:none}
+
+    /* Diagnose: Massnahmen wählen */
+    .t18-mkarten{display:flex; flex-direction:column; gap:10px}
+    .t18-mkarte{border:1px solid var(--line); border-radius:10px; padding:10px 12px 12px; margin:0; min-width:0; background:var(--surface)}
+    .t18-mkarte legend{font-weight:700; padding:0 4px}
+    .t18-option{display:flex; gap:8px; align-items:flex-start; padding:4px 0; line-height:1.4}
+    .t18-option input{margin-top:4px; accent-color:var(--accent); flex:none}
+    .t18-rm{margin-top:8px; font-size:.95rem; line-height:1.5}
+    .t18-rm:empty{display:none}
+    .t18-rm.ok{border-left:3px solid var(--ok); padding-left:10px}
+    .t18-rm.bad{border-left:3px solid var(--bad); padding-left:10px}
+    .t18-rm .marke{font-weight:700}
+    .t18-rm.ok .marke{color:var(--ok)}
+    .t18-rm.bad .marke{color:var(--bad)}
+    .t18-stand{font-weight:600; margin:0}
+    .t18-stand:empty{display:none}
+
+    /* Lösungsfilm und Lösung */
+    .t18-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:4px}
+    .t18-fb{padding:3px 0; border-bottom:1px dashed var(--line)}
+    .t18-fb:last-child{border-bottom:0}
+    .t18-fb b{color:var(--accent)}
+    .t18-fb ul{margin:2px 0 0; padding-left:1.2em}
+    .t18-loesung{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t18-regel b{min-width:0}
+      .t18-fz{font-size:.93rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="18-earned-value">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 6 und LB 7 · Steuern und abschliessen</span>
+    <h1>Projektcontrolling und Earned Value</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.10</span><span class="icb">ICB 3.07</span>
+    </p>
+    <p class="lead">Ein Projekt hat bis heute CHF 103'900 ausgegeben, geplant waren 112'800. Gute Nachricht? Das weisst du erst, wenn du auch misst, wie viel Arbeit dafür erledigt ist. Genau das macht die Earned-Value-Analyse: Sie verbindet Plan, Leistung und Kosten in drei Zahlen und rechnet daraus Kennzahlen und eine Prognose. Roter Faden ist der Onlineschalter Wolkenried bis Tag 40.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t18-ziele">
+        <li>Du erklärst, warum ein Soll-Ist-Vergleich der Kosten allein nichts über den Projektstand sagt.</li>
+        <li>Du misst den Fertigstellungsgrad mit einer passenden Methode und erkennst das 90-%-Syndrom.</li>
+        <li>Du rechnest PV, EV und AC, daraus SV, CV, SPI und CPI, und deutest jede Kombination.</li>
+        <li>Du prognostizierst Gesamtkosten (EAC), Restkosten (ETC) und den Endtermin und kennst die Grenzen dieser Prognosen.</li>
+        <li>Du liest S-Kurven, Burn-down und relative Abweichung und ordnest Kontrollen den Kontrollbereichen zu.</li>
+      </ul>
+      <p class="t18-quelle">Quellen: Skript LB 6 F.11–16 (Earned Value, Szenarien, Burn-down, relative Abweichung, Controlling-Tabelle), LB 7 S.11 (Kontrollbereiche), Swiss ICB 4.5.10 «Planung und Steuerung» und 4.5.7 «Kosten und Finanzierung», Gubelmann/Sommer Kap. 13 «Kosten und Finanzierung» (S. 166–176, laut LB 6). Zahlen des Onlineschalters aus der Leitstand-Spezifikation, gleich wie in Station 19. Alle Texte in eigenen Worten.</p>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der Projektsimulation am 14.11. sind CPI und SPI die Kennzahlen für Kosten und Termine; über 100&nbsp;% heisst dort gut. In der IPMA-Prüfung kommen Formeln, Deutungen und offene Fragen zur Lage eines Projekts (<span class="icb">ICB 3.10</span>, <span class="icb">ICB 3.07</span>). In der Modulschlussprüfung rechnest du EV-Aufgaben. Genau so eine zeigt der Lösungsfilm.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#soll-ist"><b>1</b>Soll-Ist</a>
+    <a href="#fortschritt"><b>2</b>Fortschritt messen</a>
+    <a href="#kennzahlen"><b>3</b>Kennzahlen</a>
+    <a href="#prognose"><b>4</b>Prognose</a>
+    <a href="#kurven"><b>5</b>Kurven</a>
+    <a href="#kontrolle"><b>6</b>Kontrollbereiche</a>
+    <a href="#rechner"><b>7</b>EV-Rechner</a>
+    <a href="#diagnose"><b>8</b>Diagnose</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir vor, du lässt einen Gartenzaun streichen: 100 Meter, CHF 1'000, zehn Tage. Nach fünf Tagen sollten 50 Meter fertig sein (Plan: CHF 500). Gestrichen sind 40 Meter (Wert der Leistung: CHF 400). Der Maler verlangt bis jetzt CHF 450. Mit diesen drei Zahlen weisst du alles: Du bist im Rückstand, und jeder gestrichene Meter war teurer als geplant.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">BAC = Gesamtbudget der Arbeit</span><span class="ex">Zaun: 1'000</span><p>Was die ganze Arbeit laut Plan kostet (Budget at Completion). Beim Onlineschalter CHF 162'240, die Summe der Plankosten aller Vorgänge.</p></div>
+      <div class="concept"><span class="tag">PV = Planwert, das Soll</span><span class="ex">Zaun: 500</span><p>So viel Arbeit, in Franken bewertet, sollte bis heute erledigt sein (Planned Value). Kommt aus dem Terminplan.</p></div>
+      <div class="concept"><span class="tag">EV = Fertigstellungswert, die Leistung</span><span class="ex">Zaun: 40 % × 1'000 = 400</span><p>So viel Arbeit ist wirklich erledigt, bewertet zu Plankosten (Earned Value). Fertigstellungsgrad mal Plankosten.</p></div>
+      <div class="concept"><span class="tag">AC = Istkosten, das Ausgegebene</span><span class="ex">Zaun: 450</span><p>So viel hat die erledigte Arbeit tatsächlich gekostet (Actual Cost). Kommt aus der Zeiterfassung und der Buchhaltung.</p></div>
+      <div class="concept"><span class="tag">Index = Wirkungsgrad</span><span class="ex">400 ÷ 500 = 0.8</span><p>Ein Verhältnis zweier Werte. Über 1 ist gut, unter 1 schlecht. Wie der Verbrauch im Auto: Erst im Vergleich mit dem Normwert sagt die Zahl etwas.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: PV, EV oder AC?</h3>
+      <p class="hint">Frag dich: Ist das ein Soll aus dem Plan (PV), der Wert der erledigten Arbeit zu Plankosten (EV) oder bezahltes Geld (AC)?</p>
+      <div id="t18-sortierer-grund"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Soll-Ist ===== -->
+  <section id="soll-ist">
+    <span class="eyebrow">Schritt 1 · Soll-Ist-Vergleich (ICB 3.10, Indikator 3.10.03)</span>
+    <h2>Warum Kosten allein nichts sagen</h2>
+    <p class="prose">Controlling heisst: Plan und Ist vergleichen, Abweichungen erkennen, Massnahmen treffen. Die ICB nennt das «Projektleistung mit dem Projektplan abgleichen und gegebenenfalls Korrekturmassnahmen treffen» (Swiss ICB 4.5.10.3). Der einfachste Vergleich sind die Kosten: geplante Kosten bis heute gegen Istkosten bis heute. Der Haken: Er vergleicht Geld mit Geld, aber nicht mit der Leistung.</p>
+    <p class="prose">Wolkenried, Freitag, Tag 20, Ende der Realisierung. Die Buchhaltung meldet CHF 103'900 Istkosten. Laut Plan sollten bis heute Arbeiten für CHF 112'800 erledigt sein. Zwei Berichte über dieselben Zahlen:</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Nur Soll-Ist der Kosten</h3>
+        <p class="t18-zitat">«Wir haben 103'900 ausgegeben, geplant waren 112'800. Wir liegen CHF 8'900 unter Budget.»</p>
+        <p class="hint">Klingt gut, sagt aber nichts. Vielleicht ist das Projekt günstig. Vielleicht ist es nur langsam: Wer wenig arbeitet, gibt wenig aus.</p>
+      </div>
+      <div class="card stack">
+        <h3>Mit Earned Value</h3>
+        <p class="t18-zitat">«Erledigt ist Arbeit im Planwert von 96'624. Geplant waren 112'800, bezahlt haben wir 103'900. Wir sind im Rückstand, und die erledigte Arbeit hat CHF 7'276 mehr gekostet als geplant.»</p>
+        <p class="hint">Erst die dritte Zahl, der Fertigstellungswert EV, trennt «langsam» von «teuer».</p>
+      </div>
+    </div>
+    <div class="note"><b>Merke:</b> PV und AC allein vergleichen zwei Dinge, die nichts miteinander zu tun haben: was laut Kalender passieren sollte und was die Buchhaltung bezahlt hat. Erst EV verbindet beides mit dem, was wirklich fertig ist. LB 6 F.11 zeigt das als Bild mit drei Kurven: Der Abstand zwischen Plan und Leistung ist der Rückstand, der Abstand zwischen Leistung und Istkosten sind die Mehrkosten.</div>
+    <div class="note falle"><b>Falle:</b> «Istkosten unter Planwert» wird in Prüfungen gern als «unter Budget» angeboten. Ohne EV ist diese Aussage nicht zulässig. Beim Onlineschalter ist sie sogar falsch: Die Kosten liegen über dem Wert der Leistung.</div>
+  </section>
+
+  <!-- ===== 2 · Fortschritt messen ===== -->
+  <section id="fortschritt">
+    <span class="eyebrow">Schritt 2 · Fertigstellungsgrad und Messmethoden</span>
+    <h2>Wie viel ist wirklich fertig?</h2>
+    <p class="prose">Der Fertigstellungswert steht und fällt mit dem <b>Fertigstellungsgrad</b> jedes Vorgangs: EV = Fertigstellungsgrad × Plankosten. Wer den Grad nach Gefühl schätzt, rechnet mit falschen Zahlen weiter. Darum legt das Projekt vorher fest, wie gemessen wird. Die Methoden 0/100, 50/50, Meilensteine und Restaufwand stehen nicht auf den Folien; sie sind eine Ergänzung aus der gängigen Literatur zum Earned Value. Die Stufen 20 bis 100&nbsp;% kommen aus der Vorlage zum Statusbericht.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Messmethoden am Beispiel Schnittstelle V05, Stand Tag 20 (Plankosten CHF 24'960)</caption>
+        <thead><tr><th>Methode</th><th>So funktioniert sie</th><th>V05 an Tag 20</th></tr></thead>
+        <tbody>
+          <tr><th>0/100 (Ergänzung)</th><td>0&nbsp;% bis der Vorgang fertig und abgenommen ist, dann 100&nbsp;%. Streng, gut für kurze Vorgänge.</td><td>0&nbsp;% → EV 0</td></tr>
+          <tr><th>50/50 (Ergänzung)</th><td>50&nbsp;% beim Start, 100&nbsp;% beim Abschluss. Einfach, für Vorgänge von wenigen Tagen.</td><td>50&nbsp;% → EV 12'480</td></tr>
+          <tr><th>Meilensteine (Ergänzung)</th><td>Der Vorgang hat gewichtete Teilergebnisse. Zählt erst, wenn ein Teilergebnis abgenommen ist. Gut für lange Vorgänge.</td><td>Gesuche (40&nbsp;%) und Status (30&nbsp;%) abgenommen, Dokumente offen → 70&nbsp;%, EV 17'472</td></tr>
+          <tr><th>Restaufwand (Ergänzung)</th><td>geleistete Stunden ÷ (geleistete + geschätzte Reststunden). Die Rest-Schätzung muss ehrlich sein.</td><td>144 ÷ (144 + 16) = 90&nbsp;% → EV 22'464</td></tr>
+          <tr><th>Stufen der Vorlage Statusbericht</th><td>20&nbsp;% eingearbeitet, 40&nbsp;% in vollem Gang, 60&nbsp;% erste Resultate, 80&nbsp;% aus Sicht der Verantwortlichen fertig, 100&nbsp;% abgenommen (sinngemäss).</td><td>60&nbsp;% (erste Resultate nachvollziehbar, Elena schätzt noch Rest) → EV 14'976</td></tr>
+          <tr><th>Freie Schätzung</th><td>Die verantwortliche Person schätzt einen Prozentwert. Schnell, aber anfällig für Wunschdenken.</td><td>«fast fertig, 95&nbsp;%»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die Methode ändert das Ergebnis deutlich: Für dieselbe Schnittstelle liegt der EV zwischen 0 und 22'464 Franken. Wolkenried misst nach Restaufwand, wie der Leitstand (Fortschritt = erledigt ÷ (erledigt + Rest)). Darum ist der EV an Tag 20 96'624 und nicht weniger.</p>
+    <div class="note falle"><b>Das 90-%-Syndrom (Ergänzung, nicht auf den Folien):</b> Ein Vorgang meldet wochenlang «90&nbsp;% fertig». Die letzten 10&nbsp;% dauern so lange wie die ersten 90&nbsp;%. Ursache: Gemessen wird verbrauchte Zeit statt erledigter Ergebnisse, und der Restaufwand wird unterschätzt. Gegenmittel: 0/100 oder Meilensteine für kritische Vorgänge, Restaufwand jede Woche neu schätzen lassen, fertig heisst abgenommen.</div>
+    <div class="note"><b>Merke:</b> Eine ehrliche Neuschätzung kann den EV senken. Beim Onlineschalter schätzt Elena an Tag 12 die Schnittstelle neu: 160 statt 128 Stunden. Ihre 72 geleisteten Stunden sind dann nicht mehr 56&nbsp;%, sondern 45&nbsp;% des Vorgangs. Das ist kein Rückschritt, sondern endlich die Wahrheit. Im EV-Rechner siehst du den Knick an Tag 12.</div>
+  </section>
+
+  <!-- ===== 3 · Kennzahlen ===== -->
+  <section id="kennzahlen">
+    <span class="eyebrow">Schritt 3 · Die Kennzahlen (LB 6 F.12)</span>
+    <h2>Drei Grundwerte, zwei Abweichungen, zwei Indizes</h2>
+    <p class="prose">LB 6 F.12 definiert die Grössen in zwei Tabellen. In eigenen Worten: Der Planwert verteilt die Plankosten der Arbeitspakete über die Projektdauer. Die Istkosten sind, was bisher aufgelaufen ist («budget burned»). Der Fertigstellungswert misst den echten Fortschritt, bewertet zu Plankosten. Daraus entstehen vier Kennzahlen. Die Folie nennt SV «Planabweichung», CPI «Kosteneffizienz» und SPI «Zeiteffizienz».</p>
+    <div class="board t18-regeln" aria-label="Formeln der Earned-Value-Analyse">
+      <div class="t18-regel"><b>Fertigstellungswert</b><span>EV = Fertigstellungsgrad × Plankosten (summiert über alle Vorgänge)</span></div>
+      <div class="t18-regel"><b>Kostenabweichung</b><span>CV = EV − AC &nbsp;(unter 0: Mehrkosten)</span></div>
+      <div class="t18-regel"><b>Planabweichung</b><span>SV = EV − PV &nbsp;(unter 0: Verzug)</span></div>
+      <div class="t18-regel"><b>Kosteneffizienz</b><span>CPI = EV ÷ AC &nbsp;(unter 1: teurer als geplant)</span></div>
+      <div class="t18-regel"><b>Zeiteffizienz</b><span>SPI = EV ÷ PV &nbsp;(unter 1: langsamer als geplant)</span></div>
+    </div>
+    <p class="prose">Eselsbrücke: <b>EV steht immer vorne</b>, bei Abweichungen als Erstes, bei Indizes im Zähler. Dann heisst negativ oder unter 1 immer schlecht, positiv oder über 1 immer gut. Für Kosten vergleichst du EV mit AC (C wie Cost), für Termine EV mit PV (S wie Schedule).</p>
+
+    <h3>EV am Onlineschalter, Tag 20</h3>
+    <p class="prose">Klick dich durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="t18-stepper-ev"></div>
+
+    <h3>Abweichungen und Indizes, Tag 20</h3>
+    <div id="t18-stepper-index"></div>
+
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>So liest du SPI und CPI</caption>
+        <thead><tr><th>Wert</th><th>SPI (Termine)</th><th>CPI (Kosten)</th></tr></thead>
+        <tbody>
+          <tr><th>über 1</th><td>mehr erledigt als geplant: vor dem Plan</td><td>Leistung günstiger als geplant: Minderkosten</td></tr>
+          <tr><th>gleich 1</th><td>genau im Terminplan</td><td>genau im Kostenplan</td></tr>
+          <tr><th>unter 1</th><td>weniger erledigt als geplant: Verzug</td><td>Leistung teurer als geplant: Mehrkosten</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Spannend wird es bei den Kombinationen. LB 6 F.11 und F.13 zeigen neun Lagen von «schneller und teurer» bis «hinter Plan und günstiger», je mit möglichen Gründen und Lösungen. Ein Beispiel: SPI unter 1 und CPI über 1 kann heissen, dass Leute ausgefallen sind. Es wird weniger gearbeitet, darum ist es langsam, aber nicht teurer. Diese Lagen übst du in Schritt 8.</p>
+    <div class="note tipp"><b>Simulation:</b> Die Projektsimulation zeigt CPI und SPI als Prozent: 93&nbsp;% heisst CPI 0.93. Über 100&nbsp;% ist gut. Die Wirkung deiner Massnahmen siehst du dort als Trend über die Wochen.</div>
+  </section>
+
+  <!-- ===== 4 · Prognose ===== -->
+  <section id="prognose">
+    <span class="eyebrow">Schritt 4 · Prognose: EAC, ETC, Endtermin</span>
+    <h2>Wohin läuft das Projekt?</h2>
+    <p class="prose">Die Steuerung will nicht nur wissen, wo das Projekt steht, sondern wo es landet. Die Swiss ICB verlangt, dass du mit den Leistungsindikatoren Prognosen erarbeitest und auf drohende Kostenüberschreitungen hinweist (Swiss ICB 4.5.7.5, Indikator 3.07.05). Die folgenden Formeln stehen nicht auf den Folien LB 6. Sie sind eine <b>Ergänzung</b> aus dem Standard zur Earned-Value-Analyse und werden im Leitstand und in Station 19 verwendet.</p>
+    <div class="board t18-regeln" aria-label="Formeln der Prognose">
+      <div class="t18-regel"><b>Gesamtkosten</b><span>EAC = BAC ÷ CPI &nbsp;(Estimate at Completion, wenn es so weiterläuft)</span></div>
+      <div class="t18-regel"><b>Restkosten</b><span>ETC = EAC − AC &nbsp;(Estimate to Complete)</span></div>
+      <div class="t18-regel"><b>Abweichung am Ende</b><span>VAC = BAC − EAC &nbsp;(unter 0: Überschreitung)</span></div>
+      <div class="t18-regel"><b>Variante einmalig</b><span>EAC = AC + (BAC − EV) &nbsp;(wenn die Abweichung einmalig war)</span></div>
+      <div class="t18-regel"><b>Endtermin (Näherung)</b><span>Dauer ≈ Plandauer ÷ SPI</span></div>
+    </div>
+    <div id="t18-stepper-prognose"></div>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Welche EAC-Formel?</h3>
+        <p><b>BAC ÷ CPI</b>, wenn die Ursache weiterwirkt, etwa weil das Team grundsätzlich langsamer arbeitet als geschätzt. Der Normalfall in Prüfungen.</p>
+        <p><b>AC + (BAC − EV)</b>, wenn die Abweichung einmalig war, etwa ein defekter Server, der ersetzt ist. Die Restarbeit kostet dann wieder Plan.</p>
+        <p class="hint">Beim Onlineschalter wirkt der Mehraufwand der Schnittstelle weiter (Integrationstest, Nacharbeit): BAC ÷ CPI ist die vorsichtigere und passendere Wahl.</p>
+      </div>
+      <div class="card stack">
+        <h3>Grenzen der Terminprognose</h3>
+        <p>Plandauer ÷ SPI ist eine grobe Näherung. Sie kennt den kritischen Pfad nicht: Verzug auf einem Vorgang mit Puffer zählt gleich wie Verzug auf dem kritischen Pfad.</p>
+        <p>Gegen Ende läuft der SPI gegen 1, auch bei Verspätung: Nach dem Planende ist PV = BAC, und jeder erledigte Franken hebt den SPI. Am Tag der echten Abnahme ist er genau 1.</p>
+        <p class="hint">Für Termine besser: Vorwärtsrechnung mit Restdauern im Netzplan (so rechnet der Leitstand) und die Meilenstein-Trendanalyse (Schritt 5).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Kurven ===== -->
+  <section id="kurven">
+    <span class="eyebrow">Schritt 5 · S-Kurven, Burn-down, relative Abweichung (LB 6 F.11, F.14–16)</span>
+    <h2>Den Verlauf sichtbar machen</h2>
+    <p class="prose">Eine Zahl zeigt den Stand, eine Kurve zeigt die Richtung. Vier Darstellungen helfen dir im Controlling.</p>
+
+    <h3>S-Kurven von PV, EV und AC</h3>
+    <p class="prose">Trägst du PV, EV und AC kumuliert über die Zeit auf, entstehen meist S-förmige Kurven: langsamer Start, steile Mitte, flaches Ende. Liegt EV unter PV, ist das Projekt im Verzug; liegt AC über EV, ist es teurer. Wie das genau aussieht, zeigt dir der EV-Rechner in Schritt 7.</p>
+
+    <h3>Burn-down: Restaufwand über die Zeit</h3>
+    <p class="prose">Das Burn-down-Diagramm (LB 6 F.14) zeigt nicht, was erledigt ist, sondern was noch zu tun ist, meist in Personentagen. Eine Gerade vom Startaufwand auf null am Planende ist der ideale Verlauf. Liegt der Ist-Restaufwand darüber, droht Verzug. Agile Teams nutzen es pro Sprint. Hier die Realisierung des Onlineschalters (92 Personentage, Tag 1 bis 20):</p>
+    <figure class="diagramm" id="t18-burndown"></figure>
+    <p class="prose">In den ersten acht Tagen liegt der Ist-Restaufwand über der Ideallinie, an den Tagen 9 bis 11 knapp darunter, ab Tag 12 wieder darüber: Die Neuschätzung der Schnittstelle hebt den Restaufwand. An Tag 20 sollte er null sein, es bleiben 14 Personentage. Achtung: Die Ideallinie nimmt gleichmässige Arbeit an. Der Basisplan ist am Anfang dünn (zuerst nur Kick-off, dann Soll-Ablauf und Plattform) und erst ab Tag 7 dicht. Darum liegt der Onlineschalter in den ersten Tagen über der Ideallinie, obwohl er laut EV genau im Plan ist (SPI 1.00 an Tag 5).</p>
+
+    <h3>Relative Kosten- und Planabweichung</h3>
+    <p class="prose">LB 6 F.15 trägt zwei Prozentwerte gegeneinander auf, beide bezogen auf den Plan: waagrecht, wie viel schon verbraucht ist, senkrecht, wie viel laut Prognose noch kommt. Bleibt alles im Plan, liegen die Punkte auf der gestrichelten Diagonale (verbraucht + Rest = 100&nbsp;%). Liegt ein Punkt darüber, wird das Projekt teurer oder länger. Hier der Onlineschalter an den Tagen 5, 10, 15 und 20 (eigene Auswertung mit Rest = ETC und Restdauer = Plandauer ÷ SPI − Tag):</p>
+    <div class="grid2">
+      <figure class="diagramm" id="t18-rel-kosten"></figure>
+      <figure class="diagramm" id="t18-rel-termin"></figure>
+    </div>
+
+    <h3>Meilenstein-Trendanalyse (Ergänzung)</h3>
+    <p class="prose">Die Meilenstein-Trendanalyse steht nicht auf den Folien. Sie ist einfach und in der Praxis beliebt: Bei jedem Bericht trägst du für jeden Meilenstein ein, wann er voraussichtlich erreicht wird. Waagrecht steht der Berichtstag, senkrecht der prognostizierte Termin. Eine waagrechte Linie heisst: Termin stabil. Steigt die Linie, rutscht der Meilenstein. Trifft sie die Diagonale, ist er erreicht. Wolkenried, Prognosen der Projektleitung (eigene Zahlen):</p>
+    <figure class="diagramm" id="t18-mta"></figure>
+
+    <h3>Die Controlling-Tabelle im Statusbericht</h3>
+    <p class="prose">LB 6 F.16 gibt als Praxistipp eine Tabelle für den Statusbericht vor: je Position (die Folie zeigt «Extern», freie Zeilen für weitere Positionen, «Diverses» und «Total») das Budget, die Kosten im Berichtsmonat, die Istkosten kumuliert, das Restbudget und das geplante Restbudget, je in Personentagen und Franken, dazu die Begründung jeder Abweichung mit Datum. Restbudget = Budget − Ist kumuliert. «Restbudget geplant» ist deine Schätzung, was noch nötig ist. Ist sie höher als das Restbudget, reicht das Geld nicht. Du füllst so eine Tabelle in Übung 9 aus.</p>
+  </section>
+
+  <!-- ===== 6 · Kontrollbereiche ===== -->
+  <section id="kontrolle">
+    <span class="eyebrow">Schritt 6 · Was wird kontrolliert? (LB 7 S.11)</span>
+    <h2>Kontrollbereiche: Planung und Realisierung</h2>
+    <p class="prose">LB 7 S.11 gliedert die Projektkontrolle in zwei Bereiche. Die Planungskontrolle prüft die Grössen, die du geplant hast. Die Realisierungskontrolle prüft, was dabei herauskommt.</p>
+    <ul class="baum">
+      <li><span class="baum-knoten">Projektkontrolle</span>
+        <ul>
+          <li class="an"><span class="baum-knoten">Planungskontrolle</span>
+            <ul>
+              <li><span class="baum-knoten">Kosten <span class="baum-p">CPI, CV, EAC</span></span></li>
+              <li><span class="baum-knoten">Ressourcen <span class="baum-p">Auslastung, Kapazität</span></span></li>
+              <li><span class="baum-knoten">Termine <span class="baum-p">SPI, SV, Meilensteine</span></span></li>
+            </ul>
+          </li>
+          <li><span class="baum-knoten">Realisierungskontrolle</span>
+            <ul>
+              <li><span class="baum-knoten">Sachfortschritt <span class="baum-p">Fertigstellungsgrad</span></span></li>
+              <li><span class="baum-knoten">Qualität <span class="baum-p">Review, Test, Audit</span></span></li>
+              <li><span class="baum-knoten">Dokumentation</span></li>
+              <li><span class="baum-knoten">Information</span></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <p class="prose">Die Earned-Value-Analyse deckt Kosten, Termine und den Sachfortschritt ab. Für die Qualität ist sie blind: Ein Vorgang mit 100&nbsp;% Fertigstellungsgrad kann voller Fehler sein. Beim Onlineschalter bestanden an Tag 20 nur 26 von 34 Komponententests (Station 19). Darum gehört neben die EV-Kennzahlen immer eine Qualitätskontrolle. Die Kontrollverfahren Review, Test und Audit vertieft Station 20.</p>
+    <div class="note"><b>Merke:</b> Die Swiss ICB zählt das Earned Value Management zum Wissen bei Leistungsumfang (3.03) und die Fertigstellungswertanalyse zu den Fertigkeiten von Planung und Steuerung (3.10). Bei Ablauf und Termine (3.04) vergleichst du Fortschritt und Earned Value mit den Planwerten, bei Kosten und Finanzierung (3.07) prognostizierst du die Kosten. Earned Value ist also eine Querschnittsmethode.</div>
+  </section>
+
+  <!-- ===== 7 · EV-Rechner ===== -->
+  <section id="rechner">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>EV-Rechner: der Onlineschalter Tag für Tag</h2>
+    <p class="prose">Wähle einen Stichtag. Die PV-Kurve kommt aus dem Basisplan (18 Vorgänge, BAC 162'240, Planende Tag 36, Terminziel Tag 40). EV und AC kommen aus einem hinterlegten Ist-Verlauf: Die Schnittstelle (V05) wird teurer und später fertig, die Vorabnahme rutscht auf Tag 26, die Abnahme auf Tag 42. Tag 20 ist der Stand des Statusberichts in Station 19.</p>
+    <p class="hint">Zählweise: Der Stichtag ist jeweils der Abend des gewählten Tages, Tag 1 ist der erste Arbeitstag wie in Station 10. Der Leitstand rechnet in Zeitpunkten: Zeitpunkt 20 ist das Ende von Tag 20, die Werte sind dieselben. Ampeln je Kennzahl mit den Schwellen aus Station 19 (dort verbindet die Bereichsampel Index und Prognose): Index ab 0.95 Grün, ab 0.85 Gelb; EAC bis Budget 180'000 Grün, bis 189'000 Gelb; Endtermin bis Tag 40 Grün, bis Tag 42 Gelb.</p>
+    <div class="card rechner">
+      <div class="regler">
+        <label for="t18-tag">Stichtag: Ende Tag</label>
+        <input type="range" id="t18-tag" min="0" max="40" step="1" value="20">
+        <output for="t18-tag" id="t18-tag-wert">20</output>
+      </div>
+      <div class="t18-schnell" role="group" aria-label="Stichtag direkt wählen">
+        <button type="button" class="btn" data-tag="10">Tag 10</button>
+        <button type="button" class="btn" data-tag="12">Tag 12 · Neuschätzung</button>
+        <button type="button" class="btn" data-tag="20">Tag 20 · Statusbericht</button>
+        <button type="button" class="btn" data-tag="36">Tag 36 · Planende</button>
+        <button type="button" class="btn" data-tag="40">Tag 40 · Terminziel</button>
+      </div>
+      <figure class="diagramm" id="t18-skurve"></figure>
+      <div class="tablebox">
+        <table class="tabelle t18-kz">
+          <caption id="t18-kz-titel">Kennzahlen</caption>
+          <thead><tr><th>Kennzahl</th><th>Wert</th><th>Ampel</th><th>Rechnung</th></tr></thead>
+          <tbody id="t18-kz"></tbody>
+        </table>
+      </div>
+      <div class="t18-deutung" id="t18-deutung" aria-live="polite"></div>
+    </div>
+    <details class="sol"><summary>So ist der Ist-Verlauf hinterlegt</summary>
+      <div class="stack">
+        <p>Jeder Vorgang schreitet zwischen Ist-Start und Ist-Ende gleichmässig fort, Kosten ebenso. Ausnahme Schnittstelle V05: Fortschritt = geleistete Stunden ÷ geschätzter Gesamtaufwand (128 Stunden bis Tag 11, ab Tag 12 neu 160 Stunden), Kosten 195 Franken je Stunde. Geleistet: 72 Stunden bis Tag 12, 104 bis Tag 15, 144 bis Tag 20, 160 an Tag 21. Zahlen frei erfunden, passend zur Leitstand-Spezifikation und zu Station 19.</p>
+        <div class="tablebox">
+          <table class="tabelle">
+            <thead><tr><th>Vorgang</th><th>Plan Tag</th><th>Ist Tag</th><th>Plankosten</th><th>Istkosten</th></tr></thead>
+            <tbody id="t18-ist-tabelle"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 8 · Diagnose ===== -->
+  <section id="diagnose">
+    <span class="eyebrow">Schritt 8 · Themeneigene Interaktion</span>
+    <h2>Diagnose-Karten: Was ist los, und was tust du?</h2>
+    <p class="prose">Sechs Projekte, sechs Kombinationen von SPI und CPI. Lege zuerst jede Karte in das Feld der passenden Lage. Als «etwa 1» gilt hier 0.95 bis 1.05. Die Anordnung folgt LB 6 F.11: oben vor dem Plan, unten im Verzug, links teurer, rechts günstiger.</p>
+    <div id="t18-matrix"></div>
+    <div class="card stack">
+      <h3>Massnahme wählen</h3>
+      <p class="hint">Jetzt zu jeder Karte die passende erste Massnahme. Grundlage sind die Gründe und Lösungen in LB 6 F.13, in eigenen Worten.</p>
+      <div class="t18-mkarten" id="t18-mkarten"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t18-m-pruefen">Massnahmen prüfen</button>
+        <button type="button" class="btn" id="t18-m-zurueck">Zurücksetzen</button>
+      </div>
+      <p class="t18-stand" id="t18-m-stand" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst rechnen, einordnen, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zehn Übungen in sechs Arten: rechnen, Schritt für Schritt lösen, zuordnen, wahr oder falsch, Fallentscheid und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung. Alle Fälle spielen in Wolkenried, die Zahlen sind eigene.</p>
+    <div id="t18-u1"></div>
+    <div id="t18-u2"></div>
+    <div id="t18-u3"></div>
+    <div id="t18-u4"></div>
+    <div id="t18-u5"></div>
+    <div id="t18-u6"></div>
+    <div id="t18-u7"></div>
+    <div id="t18-u8"></div>
+    <div id="t18-u9"></div>
+    <div id="t18-u10"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Earned-Value-Aufgabe am Stück</h2>
+    <p class="prose">Eine Aufgabe im Stil der Modulschlussprüfung, mit eigenem Fall und eigenen Zahlen: aus Arbeitspaketen PV, EV und AC bestimmen, alle Kennzahlen rechnen, prognostizieren, deuten und Massnahmen vorschlagen. Drück auf «Abspielen». Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t18-film"></div>
+    <details class="sol"><summary>Die ganze Lösung als Text</summary>
+      <div class="t18-loesung" id="t18-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>AC kleiner als PV heisst nicht «unter Budget».</b> Es kann auch heissen: weniger geschafft. Erst CPI = EV ÷ AC sagt, ob die Leistung zu teuer war.</div>
+    <div class="note falle"><b>Zähler und Nenner vertauscht.</b> EV steht immer vorne bzw. im Zähler: SPI = EV ÷ PV, CPI = EV ÷ AC. Wer PV ÷ EV rechnet, dreht die Deutung um.</div>
+    <div class="note falle"><b>PV und AC verwechselt.</b> PV ist ein Soll aus dem Terminplan, AC ist Geld aus der Buchhaltung. Für Termine vergleichst du EV mit PV, für Kosten EV mit AC.</div>
+    <div class="note falle"><b>EV mit dem Fertigstellungsgrad der Zeit rechnen.</b> EV = Fertigstellungsgrad der Arbeit × Plankosten, nicht «verbrauchte Tage ÷ Plandauer» und nicht «Istkosten ÷ Budget».</div>
+    <div class="note falle"><b>Fertigstellungsgrad nach Gefühl.</b> 90&nbsp;% ohne Restaufwand ist eine Hoffnung. Fertig heisst abgenommen.</div>
+    <div class="note falle"><b>EAC mit gerundetem CPI.</b> 162'240 ÷ 0.93 = 174'452, mit dem ungerundeten CPI sind es 174'457. In der Prüfung lieber BAC × AC ÷ EV rechnen.</div>
+    <div class="note falle"><b>Falsche EAC-Formel ohne Begründung.</b> BAC ÷ CPI gilt, wenn die Ursache weiterwirkt. AC + (BAC − EV) nur für einmalige Abweichungen, und dann mit Begründung.</div>
+    <div class="note falle"><b>SPI am Projektende.</b> Nach dem Planende läuft der SPI gegen 1, auch wenn das Projekt Wochen zu spät ist. Für den Endtermin zählen Meilensteine und Netzplan.</div>
+    <div class="note falle"><b>Earned Value für Qualität halten.</b> EV misst Menge, nicht Güte. Qualität gehört zur Realisierungskontrolle (Review, Test, Audit).</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t18-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Soll-Ist der Kosten allein sagt nichts.</b> Erst der Fertigstellungswert EV trennt «langsam» von «teuer».</li>
+      <li><b>EV = Fertigstellungsgrad × Plankosten.</b> Der Grad wird nach einer vorher festgelegten Methode gemessen (0/100, 50/50, Meilensteine, Restaufwand), nicht geschätzt. Vorsicht vor dem 90-%-Syndrom.</li>
+      <li><b>SV = EV − PV, CV = EV − AC, SPI = EV ÷ PV, CPI = EV ÷ AC.</b> EV steht vorne. Negativ oder unter 1 ist schlecht.</li>
+      <li><b>Prognose:</b> EAC = BAC ÷ CPI (Ursache wirkt weiter) oder AC + (BAC − EV) (einmalig), ETC = EAC − AC, Endtermin ≈ Plandauer ÷ SPI mit Grenzen.</li>
+      <li><b>Kurven zeigen die Richtung:</b> S-Kurven, Burn-down, relative Abweichung, Meilenstein-Trendanalyse.</li>
+      <li><b>Kontrollbereiche:</b> Planungskontrolle (Kosten, Ressourcen, Termine) und Realisierungskontrolle (Sachfortschritt, Qualität, Dokumentation, Information). Earned Value deckt die Qualität nicht ab.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t18-ziele">
+        <li><span class="icb">ICB 3.10</span> Planung und Steuerung: Indikatoren 3.10.03 «Projektleistung mit dem Projektplan abgleichen» und 3.10.04 «Bericht über den Projektfortschritt» (Swiss ICB 4.5.10.3–4.5.10.4, PDF S. 126–127); Fertigkeit «Fertigstellungswertanalyse».</li>
+        <li><span class="icb">ICB 3.07</span> Kosten und Finanzierung: Indikator 3.07.05 «Finanzen überwachen» mit SPI, CPI und Prognosen (Swiss ICB 4.5.7.5, PDF S. 115). Verwandt: 3.04.05 Fortschritt mit Earned Value gegen die Planwerte vergleichen.</li>
+        <li>Formelblatt: PV, EV, AC, SV, CV, SPI, CPI; EAC = BAC ÷ CPI, AC + (BAC − EV); ETC; VAC; Endtermin ≈ Plandauer ÷ SPI. Dazu die 3×3-Tabelle der Lagen mit je einer Massnahme.</li>
+        <li>Fundstellen: LB 6 F.11 (Kurvenbild, neun Lagen), F.12 (Definitionen und Formeln), F.13 (Szenarien, Gründe, Lösungen), F.14 (Burn-down), F.15 (relative Kosten- und Planabweichung), F.16 (Controlling-Tabelle); LB 7 S.11 (Kontrollbereiche, Kontrollverfahren).</li>
+        <li>Gubelmann/Sommer: Kapitel 13 «Kosten und Finanzierung», S. 166–176 (laut LB 6). Das Kapitel zu Planung und Steuerung nennen die bisherigen Folien nicht; im Inhaltsverzeichnis nachschlagen.</li>
+        <li>Ergänzungen ohne Folienquelle (als solche kennzeichnen): Messmethoden 0/100, 50/50, Meilensteine, Restaufwand; 90-%-Syndrom; EAC, ETC, VAC; Endtermin-Näherung; Meilenstein-Trendanalyse.</li>
+      </ul>
+    </div>
+    <footer>Station 18 des Lernpfads PMGT. Fall «Onlineschalter Wolkenried» und alle anderen Wolkenried-Projekte frei erfunden. Quellen: LB 6, LB 7, Swiss ICB 4.0, Leitstand-Spezifikation, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const SVGNS = "http://www.w3.org/2000/svg";
+
+  /* Zahl mit Hochkomma, Minus als «−» */
+  function fmt(x, stellen) {
+    const n = stellen ? Number(x.toFixed(stellen)) : Math.round(x);
+    const neg = n < 0;
+    const teile = Math.abs(n).toFixed(stellen || 0).split(".");
+    teile[0] = teile[0].replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+    return (neg ? "−" : "") + teile.join(".");
+  }
+  function f2(x) { return x.toFixed(2); }
+  function f3(x) { return x.toFixed(3); }
+
+  const SYM = {
+    gruen: '<span class="t18-sym t18-gruen">● Grün</span>',
+    gelb: '<span class="t18-sym t18-gelb">▲ Gelb</span>',
+    rot: '<span class="t18-sym t18-rot">■ Rot</span>',
+    leer: '<span class="t18-leer">–</span>'
+  };
+
+  /* ---------- Modell Onlineschalter: Basisplan (Leitstand-Spezifikation 2.4) ---------- */
+  // [ID, Name, Plankosten, FA (Zeitpunkt), Dauer]
+  const BASIS = [
+    ["V01", "Kick-off und Detailplanung", 7440, 0, 2], ["V02", "Soll-Ablauf und Formulare", 7680, 2, 4],
+    ["V03", "Plattform einrichten", 4680, 2, 3], ["V04", "Benutzerführung", 7200, 6, 3],
+    ["V05", "Schnittstelle", 24960, 6, 8], ["V06", "Gebühren und Zahlung", 5280, 6, 4],
+    ["V07", "Stammdaten", 7680, 5, 4], ["V08", "Datenschutz", 7920, 6, 3],
+    ["V09", "Formulare konfigurieren", 10560, 9, 4], ["V10", "Zirkulation", 5280, 13, 2],
+    ["V11", "Integrationstest", 7680, 15, 3], ["V12", "Vorabnahme", 6000, 18, 2],
+    ["V13", "Schulungsunterlagen", 7680, 13, 4], ["V14", "Merkblatt und Webseite", 2760, 9, 3],
+    ["V15", "Schulung", 5760, 20, 3], ["V16", "Betrieb und Support", 8320, 20, 4],
+    ["V17", "Pilotbetrieb", 20480, 24, 8], ["V18", "Produktivsetzung und Abnahme", 14880, 32, 4]
+  ];
+  // Ist-Verlauf (eigene Annahme): [Start, Ende, Istkosten]; V05 separat über Stunden
+  const IST = {
+    V01: [0, 2, 7440], V02: [2, 6, 7800], V03: [2, 5, 4680], V04: [6, 9, 7200], V06: [6, 10, 5280],
+    V07: [5, 10, 8040], V08: [6, 9, 7920], V09: [9, 14, 11550], V10: [14, 16, 5610], V13: [12, 17, 7560],
+    V14: [9, 12, 2740], V11: [21, 24, 8160], V12: [24, 26, 6250], V15: [26, 29, 5760], V16: [26, 30, 8740],
+    V17: [30, 38, 21600], V18: [38, 42, 15400]
+  };
+  const V05_STUNDEN = [[6, 0], [12, 72], [15, 104], [20, 144], [21, 160]];
+  const PLANSTUNDEN = { V01: 48, V02: 64, V03: 24, V04: 48, V05: 128, V06: 32, V07: 64, V08: 48, V09: 64, V10: 32, V11: 48, V12: 48, V13: 64, V14: 24 };
+  const BAC = 162240, BUDGET = 180000, PLANDAUER = 36;
+  const klemm = (x) => Math.max(0, Math.min(1, x));
+
+  function v05Stunden(t) {
+    if (t <= 6) return 0;
+    if (t >= 21) return 160;
+    for (let i = 1; i < V05_STUNDEN.length; i++) {
+      const a = V05_STUNDEN[i - 1], b = V05_STUNDEN[i];
+      if (t <= b[0]) return a[1] + (b[1] - a[1]) * (t - a[0]) / (b[0] - a[0]);
+    }
+    return 160;
+  }
+  const v05Schaetzung = (t) => (t < 12 ? 128 : 160);
+  function pv(t) { return BASIS.reduce((s, v) => s + v[2] * klemm((t - v[3]) / v[4]), 0); }
+  function ev(t) {
+    return BASIS.reduce(function (s, v) {
+      if (v[0] === "V05") return s + v[2] * Math.min(1, v05Stunden(t) / v05Schaetzung(t));
+      const i = IST[v[0]];
+      return s + v[2] * klemm((t - i[0]) / (i[1] - i[0]));
+    }, 0);
+  }
+  function ac(t) {
+    return BASIS.reduce(function (s, v) {
+      if (v[0] === "V05") return s + v05Stunden(t) * 195;
+      const i = IST[v[0]];
+      return s + i[2] * klemm((t - i[0]) / (i[1] - i[0]));
+    }, 0);
+  }
+  function kennzahlen(t) {
+    const P = pv(t), E = ev(t), A = ac(t);
+    const spi = P > 0 ? E / P : null, cpi = A > 0 ? E / A : null;
+    const eac = cpi ? BAC / cpi : null;
+    return { t: t, pv: P, ev: E, ac: A, sv: E - P, cv: E - A, spi: spi, cpi: cpi, eac: eac,
+      etc: eac !== null ? eac - A : null, ende: spi ? PLANDAUER / spi : null, fg: E / BAC };
+  }
+  function ampelIndex(x) { if (x === null) return "leer"; const r = Number(x.toFixed(2)); return r >= 0.95 ? "gruen" : r >= 0.85 ? "gelb" : "rot"; }
+  function ampelEac(x) { if (x === null) return "leer"; return x <= BUDGET ? "gruen" : x <= BUDGET * 1.05 ? "gelb" : "rot"; }
+  function ampelEnde(x) { if (x === null) return "leer"; const r = Number(x.toFixed(1)); return r <= 40 ? "gruen" : r <= 42 ? "gelb" : "rot"; }
+
+  /* ---------- kleines Diagramm-Werkzeug (nur Klassen, keine festen Farben) ---------- */
+  function el(name, attrs, eltern) {
+    const e = document.createElementNS(SVGNS, name);
+    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
+    if (eltern) eltern.appendChild(e);
+    return e;
+  }
+  function text(eltern, x, y, inhalt, attrs) {
+    const t = el("text", Object.assign({ x: x, y: y }, attrs || {}), eltern);
+    t.textContent = inhalt;
+    return t;
+  }
+  function achsen(cfg) {
+    // cfg: { id, titel, beschreibung, b, h, l, r, o, u, xmax, ymax, xticks, yticks, xlabel, ylabel, yfmt }
+    const fig = document.getElementById(cfg.id);
+    fig.innerHTML = "";
+    const tid = cfg.id + "-titel", did = cfg.id + "-desc";
+    const svg = el("svg", { viewBox: "0 0 " + cfg.b + " " + cfg.h, role: "img", "aria-labelledby": tid + " " + did }, fig);
+    el("title", { id: tid }, svg).textContent = cfg.titel;
+    el("desc", { id: did }, svg).textContent = cfg.beschreibung || "";
+    const X = (v) => cfg.l + v * (cfg.b - cfg.l - cfg.r) / cfg.xmax;
+    const Y = (v) => cfg.h - cfg.u - v * (cfg.h - cfg.u - cfg.o) / cfg.ymax;
+    cfg.yticks.forEach(function (v) {
+      el("line", { class: "gitter", x1: X(0), x2: X(cfg.xmax), y1: Y(v), y2: Y(v) }, svg);
+      text(svg, cfg.l - 4, Y(v) + 4, cfg.yfmt ? cfg.yfmt(v) : String(v), { "text-anchor": "end" });
+    });
+    cfg.xticks.forEach(function (v) {
+      text(svg, X(v), cfg.h - cfg.u + 15, String(v), { "text-anchor": "middle" });
+    });
+    el("line", { class: "achse", x1: X(0), x2: X(0), y1: Y(0), y2: Y(cfg.ymax) }, svg);
+    el("line", { class: "achse", x1: X(0), x2: X(cfg.xmax), y1: Y(0), y2: Y(0) }, svg);
+    if (cfg.xlabel) text(svg, X(cfg.xmax), cfg.h - 2, cfg.xlabel, { "text-anchor": "end" });
+    if (cfg.ylabel) text(svg, 2, 10, cfg.ylabel, {});
+    if (cfg.legende) {
+      const c = document.createElement("figcaption");
+      c.innerHTML = cfg.legende;
+      fig.appendChild(c);
+    }
+    return { svg: svg, X: X, Y: Y };
+  }
+  function pfad(pts, X, Y) { return pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join(" "); }
+
+  /* ---------- Schritt 0: Sortierer PV, EV, AC ---------- */
+  L.sortierer("#t18-sortierer-grund", {
+    kategorien: ["PV", "EV", "AC"],
+    elemente: [
+      { html: "Laut Terminplan sollten bis Tag 20 Arbeiten für CHF 112'800 erledigt sein.", kategorie: "PV", erklaerung: "Ein Soll aus dem Basisplan: Planwert." },
+      { html: "Die Buchhaltung meldet bis heute CHF 103'900 Kosten.", kategorie: "AC", erklaerung: "Bezahltes Geld: Istkosten." },
+      { html: "Die Schnittstelle ist zu 90&nbsp;% fertig, ihre Plankosten sind 24'960: das zählt 22'464.", kategorie: "EV", erklaerung: "Fertigstellungsgrad mal Plankosten: Fertigstellungswert." },
+      { html: "Zaun: 40 von 100 Metern gestrichen, Plan CHF 1'000, also 400.", kategorie: "EV", erklaerung: "Wert der erledigten Arbeit zu Plankosten." },
+      { html: "Zaun: Nach fünf von zehn Tagen hätten 50 Meter fertig sein sollen, also 500.", kategorie: "PV", erklaerung: "Was laut Plan bis heute erledigt sein sollte." },
+      { html: "Zaun: Der Maler hat bisher CHF 450 verrechnet.", kategorie: "AC", erklaerung: "Was die Arbeit tatsächlich gekostet hat." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper EV ---------- */
+  L.stepper("#t18-stepper-ev", {
+    titel: "Fertigstellungswert an Tag 20",
+    text: 'An Tag 20 sind <span data-link="fertig">alle Vorgänge der Realisierung ausser V05, V11 und V12 abgeschlossen</span>. Die <span data-link="v05">Schnittstelle V05 ist zu 90&nbsp;% fertig</span> (144 von neu 160 Stunden). <span data-link="offen">Integrationstest V11 und Vorabnahme V12 haben noch nicht begonnen</span>.',
+    schritte: [
+      { html: 'EV = Σ Fertigstellungsgrad × Plankosten',
+        warum: "Du gehst Vorgang für Vorgang durch. Jeder bringt seinen Anteil an den Plankosten ein, nicht an den Istkosten." },
+      { html: '<span data-link="fertig">V01 bis V04, V06 bis V10, V13, V14: 100&nbsp;% × 74\'160</span>',
+        warum: "Fertige Vorgänge zählen voll: 7'440 + 7'680 + 4'680 + 7'200 + 5'280 + 7'680 + 7'920 + 10'560 + 5'280 + 7'680 + 2'760 = 74'160." },
+      { html: '<span data-link="fertig">74\'160</span> + <span data-link="v05">0.9 × 24\'960 = 22\'464</span>',
+        warum: "V05 zählt mit 90&nbsp;% seiner Plankosten. Dass die Schnittstelle teurer wird, ändert den EV nicht: EV rechnet immer zu Plankosten." },
+      { html: '<span data-link="fertig">74\'160</span> + <span data-link="v05">22\'464</span> + <span data-link="offen">0 + 0</span> = <b>EV 96\'624</b>',
+        warum: "Nicht begonnene Vorgänge bringen nichts ein. Die Phase Einführung (V15 bis V18) ist noch nicht dran." },
+      { html: 'Fertigstellungsgrad Projekt = EV ÷ BAC = 96\'624 ÷ 162\'240 = 59.6&nbsp;% (Plan: 112\'800 ÷ 162\'240 = 69.5&nbsp;%)',
+        warum: "So entsteht der Fertigstellungsgrad im Statusbericht von Station 19: rund 60&nbsp;% statt 70&nbsp;%." }
+    ]
+  });
+
+  L.stepper("#t18-stepper-index", {
+    titel: "SV, CV, SPI, CPI an Tag 20",
+    text: 'Planwert bis Tag 20: <span data-link="pv">PV 112\'800</span>. Fertigstellungswert: <span data-link="ev">EV 96\'624</span>. Istkosten: <span data-link="ac">AC 103\'900</span>.',
+    schritte: [
+      { html: 'SV = <span data-link="ev">96\'624</span> − <span data-link="pv">112\'800</span> = −16\'176',
+        warum: "Planabweichung: Es ist Arbeit im Planwert von 16'176 Franken weniger erledigt als geplant. Negativ heisst Verzug. Achtung: SV misst den Verzug in Franken, nicht in Tagen." },
+      { html: 'CV = <span data-link="ev">96\'624</span> − <span data-link="ac">103\'900</span> = −7\'276',
+        warum: "Kostenabweichung: Die erledigte Arbeit hat 7'276 Franken mehr gekostet, als sie laut Plan wert ist. Negativ heisst Mehrkosten." },
+      { html: 'SPI = <span data-link="ev">96\'624</span> ÷ <span data-link="pv">112\'800</span> = 0.857',
+        warum: "Zeiteffizienz: Das Projekt hat knapp 86&nbsp;% dessen geschafft, was bis heute geplant war." },
+      { html: 'CPI = <span data-link="ev">96\'624</span> ÷ <span data-link="ac">103\'900</span> = 0.930',
+        warum: "Kosteneffizienz: Für jeden ausgegebenen Franken gibt es Leistung im Planwert von 93 Rappen." },
+      { html: 'Lage: SPI &lt; 1 und CPI &lt; 1 → hinter dem Plan und teurer',
+        warum: "Das ist die ungünstigste Lage (LB 6 F.13, Szenario 7). Mögliche Gründe laut Folie: unklarer Umfang, fehlende Erfahrung, viele kleine Änderungen. Hier: Die Schnittstelle braucht 25&nbsp;% mehr Aufwand." }
+    ]
+  });
+
+  L.stepper("#t18-stepper-prognose", {
+    titel: "Prognose an Tag 20",
+    text: 'Plankosten <span data-link="bac">BAC 162\'240</span>, Kosteneffizienz <span data-link="cpi">CPI 0.930</span>, Istkosten <span data-link="ac">AC 103\'900</span>, Zeiteffizienz <span data-link="spi">SPI 0.857</span>, Plandauer <span data-link="dauer">36 Tage</span>. Der Gemeinderat hat einen Kredit von 180\'000 gesprochen.',
+    schritte: [
+      { html: 'EAC = <span data-link="bac">162\'240</span> ÷ <span data-link="cpi">0.930</span> = 162\'240 × 103\'900 ÷ 96\'624 ≈ 174\'457',
+        warum: "Läuft es weiter wie bisher, kostet die ganze Arbeit rund 174'457 Franken. Rechne mit dem ungerundeten CPI oder direkt BAC × AC ÷ EV." },
+      { html: 'ETC = 174\'457 − <span data-link="ac">103\'900</span> = 70\'557',
+        warum: "So viel braucht es noch bis zum Ende. Das ist das «Restbudget geplant» der Controlling-Tabelle." },
+      { html: 'VAC = <span data-link="bac">162\'240</span> − 174\'457 = −12\'217 · Reserve: 180\'000 − 174\'457 ≈ 5\'543',
+        warum: "Die Plankosten werden um rund 12'200 überschritten. Der Kredit reicht noch, aber von der Reserve (17'760) bleibt nur noch rund ein Drittel." },
+      { html: 'Variante einmalig: <span data-link="ac">103\'900</span> + (<span data-link="bac">162\'240</span> − 96\'624) = 169\'516',
+        warum: "Wäre der Mehraufwand einmalig, kostete die Restarbeit wieder Plan. Das ist hier zu optimistisch: Der Integrationstest muss die schwierigere Schnittstelle prüfen." },
+      { html: 'Endtermin ≈ <span data-link="dauer">36</span> ÷ <span data-link="spi">0.857</span> ≈ 42.0 Tage → Terminziel 40 verfehlt',
+        warum: "Die Näherung trifft hier die Prognose der Projektleitung (Abnahme Tag 42, Station 19). Das ist Zufall: Die Näherung kennt den kritischen Pfad nicht." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Burn-down, relative Abweichung, MTA ---------- */
+  const REAL = ["V01", "V02", "V03", "V04", "V05", "V06", "V07", "V08", "V09", "V10", "V11", "V12", "V13", "V14"];
+  function restPT(t) {
+    return REAL.reduce(function (s, id) {
+      if (id === "V05") return s + Math.max(0, v05Schaetzung(t) - v05Stunden(t));
+      const i = IST[id];
+      return s + PLANSTUNDEN[id] * (1 - klemm((t - i[0]) / (i[1] - i[0])));
+    }, 0) / 8;
+  }
+  (function () {
+    const g = achsen({ id: "t18-burndown", titel: "Burn-down der Realisierung Onlineschalter",
+      beschreibung: "Restaufwand in Personentagen von Tag 0 bis 26. Idealer Verlauf gerade von 92 auf 0 an Tag 20. Ist-Restaufwand: Tag 5 77, Tag 10 42, Tag 15 24, Tag 20 14, null an Tag 26.",
+      b: 340, h: 210, l: 34, r: 10, o: 26, u: 30, xmax: 26, ymax: 100, xticks: [0, 5, 10, 15, 20, 25], yticks: [0, 25, 50, 75, 100],
+      xlabel: "Tag", ylabel: "Restaufwand PT",
+      legende: '<span class="legend"><span style="--sw:var(--s1)">idealer Verlauf (gestrichelt)</span> <span style="--sw:var(--s2)">Ist-Restaufwand</span> <span style="--sw:var(--bad)">heute, Tag 20</span></span>' });
+    el("path", { class: "kurve s1 t18-gestrichelt t18-duenn", d: pfad([[0, 92], [20, 0]], g.X, g.Y) }, g.svg);
+    const pts = [];
+    for (let t = 0; t <= 26; t += 0.5) pts.push([t, restPT(t)]);
+    el("path", { class: "kurve s2", d: pfad(pts, g.X, g.Y) }, g.svg);
+    el("line", { class: "markierung", x1: g.X(20), x2: g.X(20), y1: g.Y(0), y2: g.Y(100) }, g.svg);
+    el("circle", { class: "punkt s2", cx: g.X(20), cy: g.Y(restPT(20)), r: 4 }, g.svg);
+    text(g.svg, g.X(20) + 6, g.Y(restPT(20)) - 6, "14 PT");
+  })();
+
+  function relativ(id, titel, beschr, punkte, xlabel, ylabel) {
+    const g = achsen({ id: id, titel: titel, beschreibung: beschr, b: 320, h: 230, l: 34, r: 12, o: 26, u: 32, xmax: 100, ymax: 100,
+      xticks: [0, 20, 40, 60, 80, 100], yticks: [0, 20, 40, 60, 80, 100], xlabel: xlabel, ylabel: ylabel,
+      legende: titel + ". Punkte an den Tagen 5, 10, 15, 20; gestrichelt: im Plan." });
+    el("path", { class: "markierung", d: pfad([[0, 100], [100, 0]], g.X, g.Y) }, g.svg);
+    el("path", { class: "kurve s5", d: pfad([[0, 100]].concat(punkte), g.X, g.Y) }, g.svg);
+    punkte.forEach(function (p, i) {
+      el("circle", { class: "punkt s5", cx: g.X(p[0]), cy: g.Y(p[1]), r: 3.5 }, g.svg);
+      if (i === punkte.length - 1) text(g.svg, g.X(p[0]) + 6, g.Y(p[1]) - 4, "Tag 20");
+    });
+  }
+  const relK = [5, 10, 15, 20].map(function (t) { const k = kennzahlen(t); return [k.ac / BAC * 100, k.etc / BAC * 100]; });
+  const relT = [5, 10, 15, 20].map(function (t) { const k = kennzahlen(t); return [t / PLANDAUER * 100, (k.ende - t) / PLANDAUER * 100]; });
+  relativ("t18-rel-kosten", "Relative Kostenabweichung",
+    "Waagrecht Istkosten in Prozent von BAC, senkrecht prognostizierte Restkosten in Prozent von BAC. Tag 20: 64 Prozent verbraucht, 43.5 Prozent Rest, im Plan wären es 36.",
+    relK, "Ist % von BAC", "Rest %");
+  relativ("t18-rel-termin", "Relative Planabweichung",
+    "Waagrecht verstrichene Zeit in Prozent der Plandauer, senkrecht prognostizierte Restdauer in Prozent. Tag 20: 56 Prozent verstrichen, 61 Prozent Rest, im Plan wären es 44.",
+    relT, "Zeit % von 36 T", "Rest %");
+
+  (function () {
+    const g = achsen({ id: "t18-mta", titel: "Meilenstein-Trendanalyse Onlineschalter",
+      beschreibung: "Berichtstage 0, 5, 10, 15, 20. Vorabnahme: Prognose 20, 20, 20, 22, 26. Abnahme: Prognose 36, 36, 37, 38, 42. Beide Linien steigen ab Tag 10.",
+      b: 340, h: 230, l: 34, r: 10, o: 26, u: 30, xmax: 44, ymax: 44, xticks: [0, 10, 20, 30, 40], yticks: [0, 10, 20, 30, 40],
+      xlabel: "Berichtstag", ylabel: "Prognose Tag",
+      legende: '<span class="legend"><span style="--sw:var(--s1)">Vorabnahme (Plan Tag 20)</span> <span style="--sw:var(--s4)">Abnahme (Plan Tag 36), gestrichelt</span></span> Die Diagonale heisst: Berichtstag = Termin.' });
+    el("path", { class: "gitter", d: pfad([[0, 0], [44, 44]], g.X, g.Y) }, g.svg);
+    const tage = [0, 5, 10, 15, 20];
+    const vorab = [20, 20, 20, 22, 26], abn = [36, 36, 37, 38, 42];
+    [[vorab, "s1", ""], [abn, "s4", " t18-gestrichelt"]].forEach(function (r) {
+      el("path", { class: "kurve " + r[1] + r[2], d: pfad(tage.map((t, i) => [t, r[0][i]]), g.X, g.Y) }, g.svg);
+      tage.forEach(function (t, i) { el("circle", { class: "punkt " + r[1], cx: g.X(t), cy: g.Y(r[0][i]), r: 3.5 }, g.svg); });
+    });
+    text(g.svg, g.X(20) + 6, g.Y(26) + 4, "26");
+    text(g.svg, g.X(20) + 6, g.Y(42) + 4, "42");
+  })();
+
+  /* ---------- Schritt 7: EV-Rechner ---------- */
+  const regler = document.getElementById("t18-tag");
+  const reglerWert = document.getElementById("t18-tag-wert");
+  const kzBody = document.getElementById("t18-kz");
+  const kzTitel = document.getElementById("t18-kz-titel");
+  const deutung = document.getElementById("t18-deutung");
+
+  // Kurven einmal vorrechnen (halbe Tage)
+  const KURVE = [];
+  for (let t = 0; t <= 44; t += 0.5) KURVE.push(kennzahlen(t));
+
+  function lage(k) {
+    if (k.spi === null) return "Noch keine Leistung, keine Kosten: Die Indizes sind nicht definiert. Der Leitstand zeigt dann 1.0.";
+    const s = k.spi < 0.95 ? "hinter dem Plan" : k.spi > 1.05 ? "vor dem Plan" : "etwa im Terminplan";
+    const c = k.cpi < 0.95 ? "teurer als geplant" : k.cpi > 1.05 ? "günstiger als geplant" : "etwa im Kostenplan";
+    return "Lage: " + s + " und " + c + ". Für jeden Franken gibt es Leistung im Planwert von " + Math.round(k.cpi * 100) + " Rappen; erledigt ist " + Math.round(k.spi * 100) + "&nbsp;% der bis heute geplanten Arbeit.";
+  }
+  function hinweis(t) {
+    if (t === 0) return "Projektstart. Alles steht noch vor dir.";
+    if (t <= 5) return "Die ersten Tage laufen nach Plan. Kleine Abweichungen bei den Stammdaten fallen kaum ins Gewicht.";
+    if (t < 12) return "Ab Tag 8 fehlt die Schnittstellenbeschreibung des Herstellers. Die Schnittstelle kommt langsamer voran, der SPI sinkt leicht.";
+    if (t < 15) return "Tag 12: Elena schätzt die Schnittstelle neu auf 160 statt 128 Stunden. Der EV springt nach unten, SPI und CPI fallen sichtbar. Ehrliche Messung, kein Rückschritt.";
+    if (t < 20) return "Die Schnittstelle hängt, Formulare und Zirkulation sind je einen Tag später fertig. Der Rückstand wächst.";
+    if (t === 20) return "Stichtag des Statusberichts (Station 19): Termine und Kosten gelb. Die Werte stimmen mit dem Bericht überein.";
+    if (t < 26) return "Schnittstelle an Tag 21 fertig, danach Integrationstest und Vorabnahme. Die Vorabnahme ist erst an Tag 26 statt 20.";
+    if (t < 36) return "Einführung läuft, jeder Vorgang sechs Tage hinter dem Plan. Trotzdem steigt der SPI bis Tag 32 und sinkt danach wieder: Er misst Franken, nicht Tage. Arbeitet das Team gerade an einem dichten Teil des Plans, während der Plan selbst einen dünnen Teil hat, steigt er, sonst sinkt er.";
+    return "Nach dem Planende (Tag 36) ist PV = BAC. Jeder erledigte Franken hebt den SPI, die Prognose Plandauer ÷ SPI wird zu optimistisch. Im hinterlegten Verlauf ist die Abnahme erst an Tag 42. Für den Endtermin taugt hier nur die Vorwärtsrechnung im Netzplan oder die Meilenstein-Trendanalyse.";
+  }
+
+  function zeichnen(t) {
+    const k = kennzahlen(t);
+    const g = achsen({ id: "t18-skurve", titel: "S-Kurven PV, EV und AC des Onlineschalters",
+      beschreibung: "Stichtag Ende Tag " + t + ": PV " + fmt(k.pv) + ", EV " + fmt(k.ev) + ", AC " + fmt(k.ac) + " Franken. Planwert über den ganzen Basisplan, EV und AC bis zum Stichtag.",
+      b: 340, h: 250, l: 46, r: 10, o: 26, u: 30, xmax: 44, ymax: 190000, xticks: [0, 10, 20, 30, 40], yticks: [0, 50000, 100000, 150000],
+      yfmt: (v) => (v ? fmt(v / 1000) + "k" : "0"), xlabel: "Tag", ylabel: "CHF",
+      legende: '<span class="legend"><span style="--sw:var(--s1)">PV Planwert (dünn)</span> <span style="--sw:var(--s3)">EV Fertigstellungswert (dick)</span> <span style="--sw:var(--s2)">AC Istkosten (gestrichelt)</span> <span style="--sw:var(--bad)">Stichtag</span></span> Dazu BAC 162\'240 und Budget 180\'000 als graue Linien, die Kostenprognose als gepunktete Linie von AC zu EAC.' });
+    const X = g.X, Y = g.Y, svg = g.svg;
+    [[BAC, "BAC"], [BUDGET, "Budget"]].forEach(function (b) {
+      el("line", { class: "t18-bac", x1: X(0), x2: X(44), y1: Y(b[0]), y2: Y(b[0]) }, svg);
+      text(svg, X(1), Y(b[0]) - 3, b[1]);
+    });
+    el("path", { class: "kurve s1 t18-duenn", d: pfad(KURVE.map((q) => [q.t, q.pv]), X, Y) }, svg);
+    const bis = KURVE.filter((q) => q.t <= t);
+    el("path", { class: "kurve s2 t18-gestrichelt", d: pfad(bis.map((q) => [q.t, q.ac]), X, Y) }, svg);
+    el("path", { class: "kurve s3", d: pfad(bis.map((q) => [q.t, q.ev]), X, Y), "stroke-width": "3.5" }, svg);
+    if (k.eac !== null && k.ende !== null) {
+      el("path", { class: "kurve s2 t18-gepunktet t18-duenn", d: pfad([[t, k.ac], [Math.min(44, Math.max(k.ende, t)), k.eac]], X, Y) }, svg);
+    }
+    el("line", { class: "markierung", x1: X(t), x2: X(t), y1: Y(0), y2: Y(190000) }, svg);
+    // Abstände SV (zwischen EV und PV) und CV (zwischen EV und AC)
+    if (t > 0) {
+      const gSv = el("g", { class: "an" }, svg);
+      el("line", { class: "t18-linie", x1: X(t) - 5, x2: X(t) - 5, y1: Y(k.pv), y2: Y(k.ev) }, gSv);
+      const gCv = el("g", { class: "an" }, svg);
+      el("line", { class: "t18-linie", x1: X(t) + 5, x2: X(t) + 5, y1: Y(k.ac), y2: Y(k.ev) }, gCv);
+    }
+    [["s1", k.pv, "PV"], ["s2", k.ac, "AC"], ["s3", k.ev, "EV"]].forEach(function (p, i) {
+      el("circle", { class: "punkt " + p[0], cx: X(t), cy: Y(p[1]), r: 4 }, svg);
+    });
+    // Beschriftung rechts vom Stichtag, ohne Überlappung
+    const lab = [["s1", k.pv, "PV"], ["s2", k.ac, "AC"], ["s3", k.ev, "EV"]].sort((a, b) => b[1] - a[1]);
+    let letzte = -100;
+    const links = t > 34;
+    lab.forEach(function (p) {
+      let y = Y(p[1]) + 4;
+      if (y - letzte < 13) y = letzte + 13;
+      letzte = y;
+      const gl = el("g", { class: p[0] }, svg);
+      text(gl, links ? X(t) - 10 : X(t) + 10, y, p[2], { class: "t18-label", "text-anchor": links ? "end" : "start" });
+    });
+
+    // Tabelle
+    const z = (x) => (x === null ? "–" : fmt(x));
+    const zeilen = [
+      ["PV Planwert", z(k.pv), SYM.leer, "aus dem Basisplan bis Ende Tag " + t],
+      ["EV Fertigstellungswert", z(k.ev), SYM.leer, "Σ Fertigstellungsgrad × Plankosten"],
+      ["AC Istkosten", z(k.ac), SYM.leer, "gebuchte Kosten"],
+      ["SV = EV − PV", z(k.sv), SYM[ampelIndex(k.spi)], fmt(k.ev) + " − " + fmt(k.pv)],
+      ["CV = EV − AC", z(k.cv), SYM[ampelIndex(k.cpi)], fmt(k.ev) + " − " + fmt(k.ac)],
+      ["SPI = EV ÷ PV", k.spi === null ? "–" : f3(k.spi), SYM[ampelIndex(k.spi)], k.spi === null ? "PV = 0" : fmt(k.ev) + " ÷ " + fmt(k.pv)],
+      ["CPI = EV ÷ AC", k.cpi === null ? "–" : f3(k.cpi), SYM[ampelIndex(k.cpi)], k.cpi === null ? "AC = 0" : fmt(k.ev) + " ÷ " + fmt(k.ac)],
+      ["EAC = BAC ÷ CPI", z(k.eac), SYM[ampelEac(k.eac)], k.eac === null ? "–" : "162'240 × " + fmt(k.ac) + " ÷ " + fmt(k.ev)],
+      ["ETC = EAC − AC", z(k.etc), SYM.leer, k.etc === null ? "–" : fmt(k.eac) + " − " + fmt(k.ac)],
+      ["Endtermin ≈ 36 ÷ SPI", k.ende === null ? "–" : "Tag " + k.ende.toFixed(1), SYM[ampelEnde(k.ende)], "Näherung, Terminziel Tag 40"],
+      ["Fertigstellungsgrad EV ÷ BAC", (k.fg * 100).toFixed(1) + "&nbsp;%", SYM.leer, "Plan: " + (k.pv / BAC * 100).toFixed(1) + "&nbsp;%"]
+    ];
+    kzTitel.textContent = "Kennzahlen am Ende von Tag " + t;
+    kzBody.innerHTML = zeilen.map((r) => "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td><td>" + r[2] + "</td><td>" + r[3] + "</td></tr>").join("");
+    deutung.innerHTML = "<p><b>Tag " + t + ":</b> " + lage(k) + "</p><p>" + hinweis(t) + "</p>";
+  }
+  function setzeTag(t) {
+    regler.value = String(t);
+    reglerWert.textContent = String(t);
+    zeichnen(t);
+  }
+  regler.addEventListener("input", function () { setzeTag(Number(regler.value)); });
+  document.querySelectorAll("#rechner [data-tag]").forEach(function (b) {
+    b.addEventListener("click", function () { setzeTag(Number(b.dataset.tag)); });
+  });
+  setzeTag(20);
+
+  // Tabelle des Ist-Verlaufs
+  document.getElementById("t18-ist-tabelle").innerHTML = BASIS.map(function (v) {
+    const plan = (v[3] + 1) + "–" + (v[3] + v[4]);
+    let ist, kosten;
+    if (v[0] === "V05") { ist = "7–21"; kosten = 31200; }
+    else { const i = IST[v[0]]; ist = (i[0] + 1) + "–" + i[1]; kosten = i[2]; }
+    return "<tr><th>" + v[0] + " " + v[1] + "</th><td>" + plan + "</td><td>" + ist + "</td><td class=\"zahl\">" + fmt(v[2]) + "</td><td class=\"zahl\">" + fmt(kosten) + "</td></tr>";
+  }).join("") + "<tr><th>Total</th><td>1–36</td><td>1–42</td><td class=\"zahl\">162'240</td><td class=\"zahl\">" + fmt(ac(44)) + "</td></tr>";
+
+  /* ---------- Schritt 8: Diagnose ---------- */
+  const KARTEN = [
+    { html: "A · SPI 0.80 · CPI 1.10", ziel: [2, 2], erkl: "SPI unter 1: Verzug. CPI über 1: Die Leistung ist günstiger als geplant. Verspätet, aber günstig (Szenario 9)." },
+    { html: "B · SPI 1.15 · CPI 0.85", ziel: [0, 0], erkl: "SPI über 1: vor dem Plan. CPI unter 1: teurer. Schneller, aber teurer (Szenario 1)." },
+    { html: "C · Onlineschalter Tag 20: SPI 0.86 · CPI 0.93", ziel: [2, 0], erkl: "Beide unter 0.95: Verzug und Mehrkosten (Szenario 7)." },
+    { html: "D · SPI 1.00 · CPI 0.80", ziel: [1, 0], erkl: "Termin im Plan, aber jede Leistung kostet 25&nbsp;% mehr als geplant (Szenario 4)." },
+    { html: "E · SPI 1.20 · CPI 1.15", ziel: [0, 2], erkl: "Schneller und günstiger (Szenario 3). Klingt super, ist aber verdächtig." },
+    { html: "F · SPI 0.80 · CPI 1.00", ziel: [2, 1], erkl: "Verzug bei Kosten im Plan (Szenario 8): Es wird einfach weniger gearbeitet." }
+  ];
+  L.matrix("#t18-matrix", {
+    titel: "Diagnose: Lage aus SPI und CPI", icb: ["ICB 3.10", "ICB 3.07"],
+    frage: "<p>Lege jede Karte in das passende Feld. Zeilen: Termine (SPI). Spalten: Kosten (CPI).</p>",
+    zeilen: ["SPI über 1", "SPI etwa 1", "SPI unter 1"],
+    spalten: ["CPI unter 1", "CPI etwa 1", "CPI über 1"],
+    achseY: "Termine", achseX: "Kosten",
+    feldnamen: [
+      ["schneller, teurer", "schneller, Kosten im Plan", "schneller, günstiger"],
+      ["Termin im Plan, teurer", "voll im Plan", "Termin im Plan, günstiger"],
+      ["verspätet, teurer", "verspätet, Kosten im Plan", "verspätet, aber günstig"]
+    ],
+    stufen: [["mittel", "tief", "mittel"], ["mittel", "tief", "tief"], ["hoch", "mittel", "mittel"]],
+    elemente: KARTEN.map((k) => ({ html: k.html, ziel: k.ziel, erklaerung: k.erkl }))
+  });
+
+  const MASSNAHMEN = [
+    { titel: "A · verspätet, aber günstig (SPI 0.80, CPI 1.10)", richtig: 1, optionen: [
+        "Überstunden streichen, damit es noch günstiger wird.",
+        "Prüfen, ob Leute ausgefallen sind oder fehlen, und zusätzliche Ressourcen einsetzen. Das Geld dafür ist vorhanden.",
+        "Nichts tun. Die Kosten stimmen ja."],
+      erkl: "Die Leistung ist günstig, aber es passiert zu wenig. Typisch sind ausgefallene Leute oder ein Team, das zuerst die einfachen Aufgaben macht. Die Kostenreserve erlaubt Verstärkung (LB 6 F.13, Szenario 9)." },
+    { titel: "B · schneller, teurer (SPI 1.15, CPI 0.85)", richtig: 0, optionen: [
+        "Überstunden und Zeiterfassung prüfen, Überstunden begrenzen, nicht mehr Fachleute als nötig auf einen Vorgang setzen.",
+        "Noch mehr Leute einsetzen, damit es noch schneller geht.",
+        "Den Terminplan nach vorne verschieben."],
+      erkl: "Tempo wird mit Geld erkauft, oft über Überstunden oder zu viele Fachleute auf einem Vorgang. Wenn der Termin nicht drängt, zurück auf das geplante Tempo (Szenario 1)." },
+    { titel: "C · Onlineschalter Tag 20 (SPI 0.86, CPI 0.93)", richtig: 2, optionen: [
+        "Abwarten bis zum nächsten Bericht in Woche 8. Vielleicht holt das Team auf.",
+        "Im Bericht Grün melden, weil die Istkosten unter dem Planwert liegen.",
+        "Ursache klären (Mehraufwand Schnittstelle), den Integrationstest verstärken, den Umfang mit der Auftraggeberin prüfen und einen Änderungsantrag stellen."],
+      erkl: "Verzug und Mehrkosten zugleich verlangen Handeln: Ursache, Verstärkung auf dem kritischen Pfad, Entscheid der Steuerung über den Umfang (Szenario 7, Station 19)." },
+    { titel: "D · Termin im Plan, teurer (SPI 1.00, CPI 0.80)", richtig: 0, optionen: [
+        "Effizienz verbessern: Überstunden überwachen, unerfahrene Leute coachen oder schulen, Terminplan straffen.",
+        "Mehr Leute einsetzen, damit es sicher im Plan bleibt.",
+        "Den Termin vorziehen, weil das Team so gut im Plan ist."],
+      erkl: "Das Team hält den Termin, braucht dafür aber zu viel Aufwand. Typisch: unerfahrenes Team oder ein zu grosszügiger Plan, der jede Reserve aufbraucht (Szenario 4)." },
+    { titel: "E · schneller, günstiger (SPI 1.20, CPI 1.15)", richtig: 2, optionen: [
+        "Die Reserve sofort an den Gemeinderat zurückgeben.",
+        "Das Team sofort verkleinern.",
+        "Stichproben nehmen: Sind die Ergebnisse wirklich fertig und vollständig, oder wurde abgekürzt und Arbeit verschoben?"],
+      erkl: "Zu gut, um wahr zu sein? Oft ist der Umfang falsch verstanden oder Schwieriges wurde auf später geschoben. Erst prüfen, dann freuen (Szenario 3)." },
+    { titel: "F · verspätet, Kosten im Plan (SPI 0.80, CPI 1.00)", richtig: 1, optionen: [
+        "Die Qualitätsprüfungen kürzen.",
+        "Zusätzliche Ressourcen beantragen, weil zu wenig Leute im Projekt arbeiten, und die Zeiterfassung prüfen.",
+        "Die Kosten senken."],
+      erkl: "Pro Stunde arbeitet das Team wie geplant, es sind nur zu wenige Stunden. Mehr Kapazität löst das Problem (Szenario 8)." }
+  ];
+  const mBox = document.getElementById("t18-mkarten");
+  MASSNAHMEN.forEach(function (m, i) {
+    const fs = document.createElement("fieldset");
+    fs.className = "t18-mkarte";
+    let h = "<legend>" + m.titel + "</legend>";
+    m.optionen.forEach(function (o, j) {
+      const id = "t18-m" + i + "-" + j;
+      h += '<label class="t18-option" for="' + id + '"><input type="radio" name="t18-m' + i + '" id="' + id + '" value="' + j + '"><span>' + o + "</span></label>";
+    });
+    h += '<div class="t18-rm" id="t18-mrm' + i + '" aria-live="polite"></div>';
+    fs.innerHTML = h;
+    fs.addEventListener("change", function () {
+      const rm = document.getElementById("t18-mrm" + i);
+      rm.className = "t18-rm"; rm.innerHTML = "";
+      document.getElementById("t18-m-stand").textContent = "";
+    });
+    mBox.appendChild(fs);
+  });
+  document.getElementById("t18-m-pruefen").addEventListener("click", function () {
+    let richtig = 0, offen = 0;
+    MASSNAHMEN.forEach(function (m, i) {
+      const rm = document.getElementById("t18-mrm" + i);
+      const w = mBox.querySelector('input[name="t18-m' + i + '"]:checked');
+      if (!w) { offen++; rm.className = "t18-rm bad"; rm.innerHTML = '<span class="marke">?</span> Noch keine Massnahme gewählt.'; return; }
+      if (Number(w.value) === m.richtig) { richtig++; rm.className = "t18-rm ok"; rm.innerHTML = '<span class="marke">✓ Passt.</span> ' + m.erkl; }
+      else { rm.className = "t18-rm bad"; rm.innerHTML = '<span class="marke">✗ Nicht die beste Wahl.</span> ' + m.erkl; }
+    });
+    document.getElementById("t18-m-stand").textContent = richtig + " von " + MASSNAHMEN.length + " Massnahmen passend" + (offen ? " · " + offen + " noch offen." : ".");
+  });
+  document.getElementById("t18-m-zurueck").addEventListener("click", function () {
+    mBox.querySelectorAll("input").forEach(function (x) { x.checked = false; });
+    MASSNAHMEN.forEach(function (m, i) { const rm = document.getElementById("t18-mrm" + i); rm.className = "t18-rm"; rm.innerHTML = ""; });
+    document.getElementById("t18-m-stand").textContent = "";
+    const erster = mBox.querySelector("input");
+    if (erster) erster.focus();
+  });
+
+  /* ---------- Übungen ---------- */
+  L.zahlAufgabe("#t18-u1", {
+    titel: "Übung 1 · Fertigstellungswert rechnen",
+    frage: "<p>Projekt «Neue Gemeindewebseite Wolkenried». Plankosten der ganzen Arbeit (BAC) CHF 80'000. Am Stichtag ist die Arbeit zu 45&nbsp;% fertig, ausgegeben sind CHF 41'000, geplant waren bis heute CHF 40'000. Wie hoch ist der Fertigstellungswert EV? Auf ganze Franken.</p>",
+    antwort: 36000, einheit: "CHF", anzeige: "0.45 × 80'000 = 36'000",
+    hinweise: ["EV = Fertigstellungsgrad × Plankosten.", "Die Istkosten (41'000) und der Planwert (40'000) brauchst du hier nicht."],
+    loesungsweg: ["EV = 45&nbsp;% × 80'000 = 36'000", "Zum Vergleich: SPI = 36'000 ÷ 40'000 = 0.90 und CPI = 36'000 ÷ 41'000 ≈ 0.88. Verzug und Mehrkosten.", "Falle: 41'000 (AC) oder 40'000 (PV) sind keine Leistung. Leistung misst nur EV."]
+  });
+
+  L.sortierer("#t18-u2", {
+    frage: "Übung 2 · Welche Messmethode für den Fertigstellungsgrad ist beschrieben?",
+    kategorien: ["0/100", "50/50", "Meilensteine", "Restaufwand"],
+    elemente: [
+      { html: "Das Merkblatt zählt erst, wenn die Gemeindekanzlei es abgenommen hat. Vorher zählt es nichts.", kategorie: "0/100", erklaerung: "Alles oder nichts: 0&nbsp;% bis fertig, dann 100&nbsp;%." },
+      { html: "Die Schulung zählt halb, sobald sie begonnen hat, und ganz, wenn sie vorbei ist.", kategorie: "50/50", erklaerung: "Halber Wert beim Start, voller Wert beim Abschluss." },
+      { html: "Die Migration hat drei Teilergebnisse mit 30, 30 und 40&nbsp;%. Zwei sind abgenommen: 60&nbsp;%.", kategorie: "Meilensteine", erklaerung: "Gewichtete Teilergebnisse, die erst nach Abnahme zählen." },
+      { html: "Elena hat 144 Stunden geleistet und schätzt 16 Stunden Rest: 90&nbsp;%.", kategorie: "Restaufwand", erklaerung: "Geleistet ÷ (geleistet + Rest)." },
+      { html: "Für einen Vorgang von einem einzigen Tag will der Projektleiter keinen Zwischenstand messen.", kategorie: "0/100", erklaerung: "Bei kurzen Vorgängen lohnt keine feinere Messung: 0/100 ist streng und einfach." },
+      { html: "Der Integrationstest hat 50 Testfälle zu je 2&nbsp;%; 30 davon sind durchgeführt und dokumentiert.", kategorie: "Meilensteine", erklaerung: "Jeder Testfall ist ein kleines, prüfbares Teilergebnis mit festem Gewicht: 30 × 2&nbsp;% = 60&nbsp;%." }
+    ]
+  });
+
+  L.zahlAufgabe("#t18-u3", {
+    titel: "Übung 3 · EV nach der 50/50-Methode",
+    frage: "<p>Projekt «Friedhofverwaltung digital». Vier Arbeitspakete mit Plankosten: AP1 CHF 10'000 (abgeschlossen), AP2 CHF 16'000 (begonnen), AP3 CHF 6'000 (begonnen), AP4 CHF 8'000 (nicht begonnen). Die Gemeinde misst nach 50/50. Wie hoch ist der EV? Auf ganze Franken.</p>",
+    antwort: 21000, einheit: "CHF", anzeige: "10'000 + 8'000 + 3'000 + 0 = 21'000",
+    hinweise: ["Abgeschlossen: 100&nbsp;%. Begonnen: 50&nbsp;%. Nicht begonnen: 0&nbsp;%."],
+    loesungsweg: ["AP1: 100&nbsp;% × 10'000 = 10'000", "AP2: 50&nbsp;% × 16'000 = 8'000", "AP3: 50&nbsp;% × 6'000 = 3'000", "AP4: 0", "EV = 21'000. Nach 0/100 wären es nur 10'000: Die Methode ändert das Bild stark, darum legt man sie vorher fest."]
+  });
+
+  L.schrittAufgabe("#t18-u4", {
+    titel: 'Übung 4 · Alle Kennzahlen auf einmal <span class="icb">ICB 3.10</span>',
+    aufgabe: "<p>Projekt «Schulraumplanung Wolkenried», Plandauer 30 Wochen, BAC CHF 120'000. Stichtag: PV CHF 60'000, EV CHF 54'000, AC CHF 48'000. Rechne SV, CV, SPI, CPI, EAC, ETC und den Endtermin nach der Näherung. Deute die Lage. Überleg zuerst selbst, dann deck auf.</p>",
+    schritte: [
+      { html: "SV = 54'000 − 60'000 = −6'000 · CV = 54'000 − 48'000 = +6'000", warum: "Verzug von Arbeit im Wert von 6'000, aber 6'000 weniger Kosten als die Leistung wert ist." },
+      { html: "SPI = 54'000 ÷ 60'000 = 0.90 · CPI = 54'000 ÷ 48'000 = 1.125", warum: "90&nbsp;% der geplanten Arbeit sind erledigt, und jeder Franken bringt 1.125 Franken Leistung." },
+      { html: "EAC = 120'000 ÷ 1.125 ≈ 106'667 · ETC = 106'667 − 48'000 ≈ 58'667", warum: "Läuft es so weiter, wird das Projekt rund 13'300 günstiger als geplant." },
+      { html: "Endtermin ≈ 30 ÷ 0.90 ≈ 33.3 Wochen", warum: "Grobe Näherung: gut drei Wochen Verzug, falls der Verzug auf dem kritischen Pfad liegt." },
+      { html: "Lage: verspätet, aber günstig (LB 6 F.13, Szenario 9)", warum: "Typisch: Leute fehlen oder arbeiten an einfachen Aufgaben zuerst. Massnahme: Kapazität prüfen und mit dem Kostenvorsprung verstärken." }
+    ]
+  });
+
+  L.wahrFalsch("#t18-u5", {
+    titel: 'Übung 5 · Wahr oder falsch? <span class="icb">ICB 3.10</span> <span class="icb">ICB 3.07</span>',
+    aussagen: [
+      { html: "Der Fertigstellungswert EV wird mit den Plankosten bewertet, nicht mit den Istkosten.", wahr: true, erklaerung: "EV = Fertigstellungsgrad × Plankosten. Nur so lässt er sich mit PV und AC vergleichen (LB 6 F.12)." },
+      { html: "Ein SPI von 1.1 bedeutet, dass das Projekt 10&nbsp;% teurer ist als geplant.", wahr: false, erklaerung: "Der SPI betrifft Termine: 10&nbsp;% mehr erledigt als geplant. Für Kosten gilt der CPI." },
+      { html: "Eine negative Kostenabweichung CV bedeutet Mehrkosten.", wahr: true, erklaerung: "CV = EV − AC &lt; 0: Die Leistung hat mehr gekostet, als sie laut Plan wert ist (LB 6 F.12)." },
+      { html: "Liegen die Istkosten unter dem Planwert, ist das Projekt günstiger als geplant.", wahr: false, erklaerung: "AC &lt; PV kann auch bloss heissen, dass weniger gearbeitet wurde. Erst CPI = EV ÷ AC zeigt die Kosteneffizienz." },
+      { html: "Gegen Projektende nähert sich der SPI dem Wert 1, auch wenn das Projekt verspätet ist.", wahr: true, erklaerung: "Nach dem Planende ist PV = BAC, und EV erreicht BAC am echten Ende. Dann ist SPI = 1, egal wie spät." },
+      { html: "Die Earned-Value-Analyse zeigt auch, ob die Qualität der Lieferobjekte stimmt.", wahr: false, erklaerung: "EV misst Menge zu Plankosten. Qualität prüfst du mit Review, Test und Audit (Realisierungskontrolle, LB 7 S.11)." }
+    ]
+  });
+
+  L.auswahl("#t18-u6", {
+    frage: '<p><b>Übung 6 · Fallentscheid</b> <span class="icb">ICB 3.10</span> <span class="icb">ICB 3.07</span></p><p>Projekt «Neue Telefonie» der Gemeindeverwaltung, Ende Woche 6 von 12: SPI 1.10, CPI 0.80. Der Termin ist für die Gemeinde nicht kritisch, das Budget schon. Was tust du zuerst?</p>',
+    optionen: [
+      "Noch mehr Leute einsetzen, um den Vorsprung auszubauen.",
+      "Prüfen, woher die Mehrkosten kommen (Überstunden, zu viele Fachleute je Vorgang), und das Tempo auf den Plan zurücknehmen.",
+      "Die Kostenampel auf Grün setzen, weil das Projekt vor dem Plan ist.",
+      "Die Qualitätsprüfungen streichen, um Geld zu sparen."
+    ],
+    richtig: 1,
+    erklaerung: "Schneller, aber teurer (LB 6 F.13, Szenario 1). Der Vorsprung ist hier wertlos, die Mehrkosten nicht. Ursache klären und den Aufwand senken. Mehr Leute verschärfen die Kosten, Grün wäre geschönt, gestrichene Qualitätsprüfungen schieben Kosten nur in die Nacharbeit (ICB 3.07 Finanzen überwachen, ICB 3.10 Korrekturmassnahmen)."
+  });
+
+  L.zahlAufgabe("#t18-u7", {
+    titel: "Übung 7 · EAC für eine einmalige Abweichung",
+    frage: "<p>Projekt «Archivserver Wolkenried», BAC CHF 200'000. Stichtag: EV CHF 50'000, AC CHF 70'000. Die Mehrkosten von 20'000 stammen allein aus einem defekten Server, der ersetzt ist. Die übrige Arbeit läuft genau nach Plan. Wie hoch ist die passende Prognose der Gesamtkosten EAC? Auf ganze Franken.</p>",
+    antwort: 220000, einheit: "CHF", anzeige: "70'000 + (200'000 − 50'000) = 220'000",
+    hinweise: ["Die Ursache wirkt nicht weiter. Dann kostet die Restarbeit wieder Plan.", "EAC = AC + (BAC − EV)."],
+    loesungsweg: ["Restarbeit zu Plankosten: BAC − EV = 200'000 − 50'000 = 150'000", "EAC = 70'000 + 150'000 = 220'000", "Mit BAC ÷ CPI wären es 200'000 ÷ (50'000 ÷ 70'000) = 280'000. Das würde den einmaligen Schaden auf das ganze Projekt hochrechnen.", "Diese Variante ist eine Ergänzung, sie steht nicht auf den Folien. In der Prüfung die Wahl begründen."]
+  });
+
+  L.sortierer("#t18-u8", {
+    frage: 'Übung 8 · Planungskontrolle oder Realisierungskontrolle? <span class="icb">ICB 3.10</span>',
+    kategorien: ["Planungskontrolle", "Realisierungskontrolle"],
+    elemente: [
+      { html: "CPI und Kostenprognose EAC im Monatsbericht", kategorie: "Planungskontrolle", erklaerung: "Kosten gehören zur Planungskontrolle (LB 7 S.11)." },
+      { html: "Review der Gesuchsformulare durch das Bauamt", kategorie: "Realisierungskontrolle", erklaerung: "Qualität der Ergebnisse: Realisierungskontrolle." },
+      { html: "Auslastung von Martin und Thomas in den nächsten zwei Wochen", kategorie: "Planungskontrolle", erklaerung: "Ressourcen gehören zur Planungskontrolle." },
+      { html: "Fertigstellungsgrad der Schnittstelle aus geleisteten und restlichen Stunden", kategorie: "Realisierungskontrolle", erklaerung: "Sachfortschritt: Wie weit ist das Ergebnis wirklich?" },
+      { html: "Meilenstein «Vorabnahme» Plan gegen Prognose", kategorie: "Planungskontrolle", erklaerung: "Termine gehören zur Planungskontrolle." },
+      { html: "Sind Abnahmeprotokoll und Betriebshandbuch abgelegt und aktuell?", kategorie: "Realisierungskontrolle", erklaerung: "Dokumentation gehört zur Realisierungskontrolle." },
+      { html: "Haben die Fachstellen die Information zur neuen Zirkulation erhalten?", kategorie: "Realisierungskontrolle", erklaerung: "Information gehört laut LB 7 S.11 zur Realisierungskontrolle." }
+    ]
+  });
+
+  L.schrittAufgabe("#t18-u9", {
+    titel: "Übung 9 · Vorlage ausfüllen: Controlling-Tabelle (LB 6 F.16)",
+    aufgabe: '<p>Projekt «Neue Telefonie Wolkenried», Stand Ende Oktober. Interne Leistungen werden mit CHF 1\'200 je Personentag (PT) verrechnet.</p><div class="tablebox"><table class="tabelle"><thead><tr><th>Position</th><th>Budget</th><th>Ist kumuliert</th><th>Restbudget</th><th>Restbudget geplant</th></tr></thead><tbody><tr><th>Intern</th><td>60 PT · 72\'000</td><td>38 PT · 45\'600</td><td>?</td><td>28 PT · ?</td></tr><tr><th>Extern (Lieferant)</th><td>40\'000</td><td>30\'000</td><td>?</td><td>10\'000</td></tr><tr><th>Total</th><td>?</td><td>?</td><td>?</td><td>?</td></tr></tbody></table></div><p>Füll die Fragezeichen aus, berechne die Kostenprognose und formuliere die Begründung der Abweichung. Überleg zuerst selbst, dann deck auf.</p>',
+    schritte: [
+      { html: "Intern: Restbudget = 60 − 38 = 22 PT · 72'000 − 45'600 = 26'400; Restbudget geplant 28 × 1'200 = 33'600", warum: "Restbudget = Budget − Ist kumuliert. Das geplante Restbudget ist deine Schätzung des Restaufwands." },
+      { html: "Extern: Restbudget = 40'000 − 30'000 = 10'000; geplant 10'000", warum: "Beim Lieferanten passt es." },
+      { html: "Total: Budget 112'000 · Ist 75'600 · Restbudget 36'400 · Restbudget geplant 43'600", warum: "Zeilen addieren." },
+      { html: "Prognose = Ist + Restbudget geplant = 75'600 + 43'600 = 119'200 → 7'200 über Budget", warum: "Das geplante Restbudget ist um 7'200 höher als das verfügbare. Das gehört mit Begründung in den Bericht." },
+      { html: "Begründung (Beispiel): «31.10.: Interne Leistungen +6 PT (CHF 7'200), weil die Rufnummernplanung der Schulhäuser nicht im Umfang war. Antrag auf Änderung folgt.»", warum: "LB 6 F.16 verlangt zu jeder Abweichung Datum und Begründung. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.reflexion("#t18-u10", {
+    titel: "Übung 10 · Offene Frage: Lage beurteilen",
+    icb: ["ICB 3.10", "ICB 3.07"],
+    frage: "<p>Projekt «E-Umzug Wolkenried», BAC CHF 90'000, Plandauer 20 Wochen, Budget CHF 95'000. Ende Woche 10: PV CHF 45'000, EV CHF 48'600, AC CHF 57'900. Die Projektleiterin meldet: «Wir sind vor dem Plan, alles gut.» Beurteile die Lage mit Kennzahlen, nenne mögliche Ursachen und zwei Massnahmen. Fünf bis acht Sätze.</p>",
+    musterloesung:
+      "<p><b>Kennzahlen:</b> SV = 48'600 − 45'000 = +3'600, SPI = 1.08: Das Projekt ist leicht vor dem Plan. CV = 48'600 − 57'900 = −9'300, CPI ≈ 0.84: Jede Leistung kostet rund 19&nbsp;% mehr als geplant. EAC = 90'000 × 57'900 ÷ 48'600 ≈ 107'222, also rund 12'200 über dem Budget von 95'000.</p>" +
+      "<p><b>Beurteilung:</b> Die Meldung «alles gut» stimmt nicht. Das Projekt ist schneller, aber teurer (LB 6 F.13, Szenario 1). Ohne Gegenmassnahme reicht der Kredit nicht.</p>" +
+      "<p><b>Mögliche Ursachen:</b> Überstunden, zu viele Fachleute auf einzelnen Vorgängen, Zeit wird nicht effizient genutzt.</p>" +
+      "<p><b>Massnahmen:</b> (1) Überstunden und Zeiterfassung prüfen, Überstunden begrenzen, Tempo auf den Plan zurücknehmen (Projektleiterin, sofort). (2) Die Auftraggeberin mit Zahlen informieren und, falls die Ursache bleibt, einen Antrag stellen: Umfang kürzen oder Nachtragskredit (bis zum nächsten Bericht).</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Zahlen: 48\'600 ÷ 45\'000 = 1.08; 48\'600 ÷ 57\'900 = 0.839; 90\'000 ÷ 0.839 ≈ 107\'222.</p>',
+    kriterien: [
+      { text: "SPI und CPI (oder SV und CV) richtig gerechnet", punkte: 2 },
+      { text: "Kostenprognose EAC gerechnet und mit dem Budget verglichen", punkte: 1 },
+      { text: "Lage richtig gedeutet: vor dem Plan, aber teurer; Aussage «alles gut» widerlegt", punkte: 2 },
+      { text: "Mindestens eine plausible Ursache genannt", punkte: 1 },
+      { text: "Zwei Massnahmen mit Wer und Wann, davon eine zur Steuerung (Information, Antrag)", punkte: 2 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const B = {
+    plan: "<b>Plan bis Ende Woche 6:</b> A (W1–2) und B (W3–4) fertig, C (W5–8) zur Hälfte, D und E noch nicht",
+    pv: "<b>PV</b> = 8'000 + 12'000 + 50&nbsp;% × 20'000 = 30'000",
+    fg: "<b>Fertigstellungsgrad C</b> = 3 von 10 Masken abgenommen = 30&nbsp;% (Meilensteinmethode)",
+    ev: "<b>EV</b> = 8'000 + 12'000 + 30&nbsp;% × 20'000 = 26'000",
+    ac: "<b>AC</b> = 9'000 + 12'600 + 7'400 = 29'000",
+    sv: "<b>SV</b> = EV − PV = 26'000 − 30'000 = −4'000 (Verzug)",
+    cv: "<b>CV</b> = EV − AC = 26'000 − 29'000 = −3'000 (Mehrkosten)",
+    spi: "<b>SPI</b> = 26'000 ÷ 30'000 = 0.867",
+    cpi: "<b>CPI</b> = 26'000 ÷ 29'000 = 0.897",
+    fgp: "<b>Fertigstellungsgrad Projekt</b> = 26'000 ÷ 60'000 = 43.3&nbsp;% (Plan 50&nbsp;%)",
+    eac: "<b>EAC</b> = 60'000 ÷ 0.897 = 60'000 × 29'000 ÷ 26'000 ≈ 66'923",
+    etc: "<b>ETC</b> = 66'923 − 29'000 ≈ 37'923",
+    vac: "<b>VAC</b> = 60'000 − 66'923 ≈ −6'923 · Budget 66'000 um rund 923 überschritten",
+    eac2: "<b>Variante einmalig</b> (Ergänzung): 29'000 + (60'000 − 26'000) = 63'000, hier nicht passend",
+    ende: "<b>Endtermin</b> ≈ 12 ÷ 0.867 ≈ 13.8 Wochen, also rund 2 Wochen Verzug",
+    lage: "<b>Lage:</b> hinter dem Plan und teurer (LB 6 F.13, Szenario 7)",
+    urs: "<b>Ursachen:</b> C kommt langsamer voran als geplant (30&nbsp;% statt 50&nbsp;%), A und B waren teurer (+1'600)",
+    mass: "<b>Massnahmen:</b><ul><li>Restaufwand von C mit dem Lieferanten neu schätzen, erfahrene Fachperson als Mentor einsetzen (Projektleitung, sofort).</li><li>Umfang von C prüfen: Sind alle 10 Masken nötig, oder reichen 8 für den Start? (Werkhofleiter, bis Woche 7)</li><li>Gemeinderat informieren: Prognose über Budget, Entscheid über Umfang oder Nachtrag (bis Woche 8).</li></ul>"
+  };
+  const REIHE = ["plan", "pv", "fg", "ev", "ac", "sv", "cv", "spi", "cpi", "fgp", "eac", "etc", "vac", "eac2", "ende", "lage", "urs", "mass"];
+  function loesung(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t18-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      return '<div class="t18-fb">' + (neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k]) + "</div>";
+    }).join("") + "</div>";
+  }
+  L.film("#t18-film", {
+    phasen: ["1 · Sichten", "2 · Grundwerte", "3 · Abweichungen", "4 · Indizes", "5 · Prognose", "6 · Deuten"],
+    texte: [
+      'Projekt «Zeiterfassung Werkhof Wolkenried». <span data-ph="bac">Plankosten (BAC) CHF 60\'000, Budget CHF 66\'000, Plandauer 12 Wochen.</span> Stichtag Ende Woche 6. <span data-ph="a">A Analyse (Woche 1–2): Plan 8\'000, fertig, Ist 9\'000.</span> <span data-ph="b">B Konzept (Woche 3–4): Plan 12\'000, fertig, Ist 12\'600.</span> <span data-ph="c">C Software anpassen (Woche 5–8): Plan 20\'000, 3 von 10 Masken abgenommen, Ist 7\'400. Der Entwickler meldet «fast die Hälfte».</span> <span data-ph="de">D Test und E Schulung (Woche 9–12): je Plan 10\'000, nicht begonnen.</span> <span data-ph="frage">Berechne PV, EV, AC, SV, CV, SPI, CPI, EAC, ETC und den Endtermin. Beurteile die Lage und schlag Massnahmen vor.</span>'
+    ],
+    woerterbuch: [
+      "<b>PV</b> = Plan bis Stichtag",
+      "<b>EV</b> = Grad × Plankosten",
+      "<b>AC</b> = Istkosten",
+      "<b>SV</b> = EV − PV · <b>CV</b> = EV − AC",
+      "<b>SPI</b> = EV ÷ PV · <b>CPI</b> = EV ÷ AC",
+      "<b>EAC</b> = BAC ÷ CPI · <b>ETC</b> = EAC − AC",
+      "<b>Endtermin</b> ≈ Dauer ÷ SPI"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Formeln", formel: "Lösung", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So löst du eine Earned-Value-Aufgabe: sichten, drei Grundwerte, zwei Abweichungen, zwei Indizes, Prognose, Deutung mit Massnahmen." },
+      { ph: 0, hl: ["bac"], f: "", say: "Zuerst die Eckwerte: Die ganze Arbeit kostet laut Plan 60'000 Franken. Das Budget mit Reserve ist 66'000. Geplant sind 12 Wochen, Stichtag ist Ende Woche 6." },
+      { ph: 0, hl: ["a", "b", "c", "de"], f: loesung("plan", ["plan"]),
+        say: "Dann der Plan bis zum Stichtag: A und B sollten fertig sein, C läuft von Woche 5 bis 8 und sollte zur Hälfte stehen. D und E kommen erst später." },
+      { ph: 1, dict: 1, dh: [0], f: loesung("pv", ["pv"]),
+        say: "Planwert: 8'000 plus 12'000 plus die Hälfte von 20'000. Das gibt 30'000 Franken." },
+      { ph: 1, hl: ["c"], f: loesung("fg", ["fg"]),
+        say: "Für C zählt nicht das Gefühl des Entwicklers. Abgenommen sind 3 von 10 Masken, also 30 Prozent. Fast die Hälfte ist ein Fall für das 90-Prozent-Syndrom." },
+      { ph: 1, dict: 2, dh: [1], f: loesung("ev", ["ev"]),
+        say: "Fertigstellungswert: A und B voll, C mit 30 Prozent seiner Plankosten. 8'000 plus 12'000 plus 6'000 gibt 26'000." },
+      { ph: 1, hl: ["a", "b", "c"], dict: 3, dh: [2], f: loesung("ac", ["ac"]),
+        say: "Istkosten: einfach alles zusammenzählen, was ausgegeben ist. 9'000 plus 12'600 plus 7'400 gibt 29'000." },
+      { ph: 2, dict: 4, dh: [3], f: loesung("sv", ["sv"]),
+        say: "Planabweichung: EV minus PV, 26'000 minus 30'000. Minus 4'000 heisst Verzug." },
+      { ph: 2, dh: [3], f: loesung("cv", ["cv"]),
+        say: "Kostenabweichung: EV minus AC, 26'000 minus 29'000. Minus 3'000 heisst Mehrkosten." },
+      { ph: 3, dict: 5, dh: [4], f: loesung("spi", ["spi"]),
+        say: "Zeiteffizienz: SPI gleich EV durch PV, 26'000 durch 30'000, also 0.867. Erledigt sind knapp 87 Prozent des Geplanten." },
+      { ph: 3, dh: [4], f: loesung("cpi", ["cpi"]),
+        say: "Kosteneffizienz: CPI gleich EV durch AC, 26'000 durch 29'000, also 0.897. Für jeden Franken gibt es knapp 90 Rappen Leistung." },
+      { ph: 3, hl: ["bac"], f: loesung("fgp", ["fgp"]),
+        say: "Zur Kontrolle der Fertigstellungsgrad des Projekts: 26'000 durch 60'000 sind 43 Prozent. Geplant waren 50." },
+      { ph: 4, dict: 6, dh: [5], f: loesung("eac", ["eac"]),
+        say: "Kostenprognose: BAC durch CPI. Rechne ohne Rundung: 60'000 mal 29'000 durch 26'000 gibt rund 66'923 Franken." },
+      { ph: 4, dh: [5], f: loesung("etc", ["etc"]),
+        say: "Restkosten: EAC minus AC, 66'923 minus 29'000, also rund 37'923 Franken bis zum Ende." },
+      { ph: 4, hl: ["bac"], f: loesung("vac", ["vac"]),
+        say: "Abweichung am Ende: rund 6'923 über den Plankosten. Damit reicht auch das Budget von 66'000 knapp nicht mehr." },
+      { ph: 4, hl: ["a", "b"], f: loesung("eac2", ["eac2"]),
+        say: "Wäre die Abweichung einmalig, rechnetest du AC plus Restarbeit zu Plan, also 63'000. Hier wirkt die Ursache aber weiter: C ist langsam. Also bleibt BAC durch CPI." },
+      { ph: 4, dict: 7, dh: [6], f: loesung("ende", ["ende"]),
+        say: "Endtermin, grob: 12 Wochen durch 0.867 gibt 13.8. Das Projekt endet rund zwei Wochen zu spät, falls C auf dem kritischen Pfad liegt." },
+      { ph: 5, dh: [4], f: loesung("lage", ["lage"]),
+        say: "Jetzt deuten. SPI unter 1 und CPI unter 1: hinter dem Plan und teurer. Das ist die ungünstigste Lage." },
+      { ph: 5, hl: ["a", "b", "c"], f: loesung("urs", ["urs"]),
+        say: "Die Ursachen findest du in den Arbeitspaketen: C hinkt, A und B haben zusammen 1'600 mehr gekostet." },
+      { ph: 5, hl: ["frage"], f: loesung("mass", ["mass"]),
+        say: "Massnahmen mit Wer und Bis-wann: Restaufwand von C neu schätzen und verstärken, Umfang prüfen, und weil die Prognose über dem Budget liegt, den Gemeinderat informieren." },
+      { ph: 5, f: loesung("mass"),
+        say: "Prüf zum Schluss: EV steht überall vorne, der Grad von C ist gemessen, die EAC-Formel ist begründet. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  document.getElementById("t18-film-loesung").innerHTML = loesung("mass");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t18-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.10</span> Was misst der Fertigstellungswert (Earned Value)?',
+        o: ["Die bisher bezahlten Kosten", "Den Wert der tatsächlich erledigten Arbeit, bewertet zu Plankosten", "Die bis heute geplanten Kosten", "Die Kosten, die bis zum Ende noch anfallen"], a: 1,
+        e: "EV = Fertigstellungsgrad × Plankosten. Bezahlt ist AC, geplant ist PV, noch offen ist ETC. ICB 3.10, Fertigkeit Fertigstellungswertanalyse; LB 6 F.12." },
+      { q: '<span class="icb">ICB 3.07</span> Wie lautet der Kosten-Leistungsindex CPI?',
+        o: ["AC ÷ EV", "EV ÷ PV", "EV ÷ AC", "PV ÷ AC"], a: 2,
+        e: "CPI = EV ÷ AC, EV steht im Zähler. EV ÷ PV ist der SPI. ICB 3.07 (Finanzen überwachen mit SPI, CPI); LB 6 F.12." },
+      { q: '<span class="icb">ICB 3.10</span> Die Planabweichung SV ist −8\'000. Was heisst das?',
+        o: ["Das Projekt ist um 8'000 Franken teurer als geplant.", "Es ist Arbeit im Planwert von 8'000 Franken weniger erledigt als geplant.", "Das Projekt ist 8 Tage zu spät.", "Das Budget ist um 8'000 Franken zu hoch angesetzt."], a: 1,
+        e: "SV = EV − PV misst den Verzug in Franken, nicht in Tagen und nicht die Kosten. ICB 3.10 (Projektleistung mit dem Plan abgleichen)." },
+      { q: '<span class="icb">ICB 3.10</span> PV 50\'000, EV 45\'000, AC 40\'000. Wie gross ist der SPI?',
+        o: ["0.80", "0.89", "0.90", "1.125"], a: 2,
+        e: "SPI = EV ÷ PV = 45'000 ÷ 50'000 = 0.90. 1.125 wäre der CPI (45'000 ÷ 40'000). ICB 3.10; LB 6 F.12." },
+      { q: '<span class="icb">ICB 3.10</span> SPI 0.8 und CPI 1.1. Welche Lage passt?',
+        o: ["Hinter dem Plan, aber günstiger", "Vor dem Plan und teurer", "Hinter dem Plan und teurer", "Vor dem Plan und günstiger"], a: 0,
+        e: "SPI unter 1: Verzug. CPI über 1: Leistung günstiger als geplant. Typisch: ausgefallene Leute (LB 6 F.13, Szenario 9). ICB 3.10." },
+      { q: '<span class="icb">ICB 3.07</span> Istkosten 90\'000, Planwert bis heute 100\'000. Was darfst du ohne weitere Angaben sagen?',
+        o: ["Das Projekt ist 10'000 unter Budget.", "Das Projekt ist günstiger als geplant.", "Nichts Sicheres über die Kosteneffizienz, dafür fehlt der EV.", "Das Projekt ist im Verzug."], a: 2,
+        e: "PV und AC allein sagen nichts über die Leistung. Ohne EV kein CPI und kein SPI. ICB 3.07: Kosten mit dem Fortschritt in Verbindung bringen (Swiss ICB 4.5.7.5)." },
+      { q: '<span class="icb">ICB 3.07</span> BAC 100\'000, EV 40\'000, AC 50\'000, die Ursache wirkt weiter. Wie hoch ist die Kostenprognose EAC?',
+        o: ["90'000", "110'000", "150'000", "125'000"], a: 3,
+        e: "CPI = 40'000 ÷ 50'000 = 0.8; EAC = 100'000 ÷ 0.8 = 125'000. 110'000 wäre die Variante für eine einmalige Abweichung (AC + BAC − EV). ICB 3.07, Prognose auf Grund der Kennzahlen." },
+      { q: '<span class="icb">ICB 3.10</span> Ein Vorgang steht seit drei Wochen bei «90&nbsp;% fertig». Welche Messmethode verhindert das am wirksamsten?',
+        o: ["Freie Schätzung durch die verantwortliche Person", "Fertigstellungsgrad = verbrauchte Zeit ÷ Plandauer", "Gewichtete Meilensteine, die erst nach Abnahme zählen", "Fertigstellungsgrad = Istkosten ÷ Plankosten"], a: 2,
+        e: "Nur abgenommene Teilergebnisse zählen: Wunschdenken hat keinen Platz. Zeit- und Kostenanteile messen den Verbrauch, nicht die Leistung. ICB 3.10, Fortschritt messen." },
+      { q: '<span class="icb">ICB 3.10</span> Zu welchem Kontrollbereich gehört die Qualität laut LB 7?',
+        o: ["Planungskontrolle", "Realisierungskontrolle", "Kostenkontrolle", "Ressourcenkontrolle"], a: 1,
+        e: "Realisierungskontrolle: Sachfortschritt, Qualität, Dokumentation, Information. Planungskontrolle: Kosten, Ressourcen, Termine (LB 7 S.11). ICB 3.10 Steuerung." },
+      { q: '<span class="icb">ICB 3.10</span> Warum ist «Endtermin ≈ Plandauer ÷ SPI» gegen Projektende unzuverlässig?',
+        o: ["Weil der CPI dann über 1 steigt", "Weil nach dem Planende PV = BAC ist und der SPI auch bei Verspätung gegen 1 läuft", "Weil der EV gegen Ende sinkt", "Weil die Formel nur für agile Projekte gilt"], a: 1,
+        e: "Ist der Plan durchgelaufen, wächst PV nicht mehr. Am echten Ende ist EV = BAC = PV, also SPI = 1, egal wie spät. Für Termine besser Netzplan und Meilenstein-Trendanalyse. ICB 3.10 (Prognose)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

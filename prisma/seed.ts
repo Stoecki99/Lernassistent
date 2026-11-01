@@ -66,6 +66,63 @@ const BADGES = [
     condition: "cards_studied_500",
     points: 200,
   },
+  // Leitstand (Projektsimulator), Spezifikation 3.13 / 4.7
+  {
+    name: "Erster Schichtwechsel",
+    description: "Leitstand: Einführungslauf abgeschlossen",
+    icon: "🎛️",
+    condition: "leitstand_einfuehrung",
+    points: 25,
+  },
+  {
+    name: "Onlineschalter eröffnet",
+    description: "Leitstand: Ernstfall abgeschlossen",
+    icon: "🏛️",
+    condition: "leitstand_ernstfall",
+    points: 75,
+  },
+  {
+    name: "Leitstand-Profi",
+    description: "Leitstand: Ernstfall mit mindestens 820 Punkten",
+    icon: "⭐",
+    condition: "leitstand_drei_sterne",
+    points: 150,
+  },
+  {
+    name: "Punktlandung",
+    description: "Leitstand: Abnahme bis Tag 40 und Kosten im Budget ohne Nachträge",
+    icon: "🎯",
+    condition: "leitstand_punktlandung",
+    points: 100,
+  },
+  {
+    name: "Klartext",
+    description: "Leitstand: alle Statusberichte mit Ehrlichkeit von mindestens 85",
+    icon: "📣",
+    condition: "leitstand_klartext",
+    points: 75,
+  },
+  {
+    name: "Teamgeist",
+    description: "Leitstand: Teammotivation nie unter 80, kein Ausfall durch Überlastung",
+    icon: "🤝",
+    condition: "leitstand_teamgeist",
+    points: 75,
+  },
+  {
+    name: "Risikoprofi",
+    description: "Leitstand: Risikomanagement-Index im Mittel mindestens 100 und drei Risiken früh behandelt",
+    icon: "🛡️",
+    condition: "leitstand_risikoprofi",
+    points: 75,
+  },
+  {
+    name: "Null-Fehler-Abnahme",
+    description: "Leitstand: höchstens 3 Restmängel bei der Abnahme",
+    icon: "✅",
+    condition: "leitstand_null_fehler",
+    points: 100,
+  },
 ]
 
 async function seed() {

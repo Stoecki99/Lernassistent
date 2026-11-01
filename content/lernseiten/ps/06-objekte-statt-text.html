@@ -1,0 +1,1095 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Objekte statt Text · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/07-pipeline-filtern-sortieren" title="Pipeline: filtern, sortieren, auswählen">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t06-», nur Farben aus :root -->
+  <style>
+    .t06-ziele{margin:6px 0 0; padding-left:1.2em}
+    .t06-ziele li{margin-bottom:2px}
+    .t06-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t06-st pre{font-style:normal}
+    .t06-tabelle td, .t06-tabelle th{vertical-align:top}
+    .t06-tabelle code{white-space:nowrap}
+
+    /* Objekt-Röntgen */
+    .t06-wahl{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end}
+    .t06-wahl .t06-feld{display:flex; flex-direction:column; gap:4px; min-width:0; flex:1 1 200px}
+    .t06-wahl label{font-size:.88rem; color:var(--muted)}
+    .t06-wahl select{width:100%; max-width:100%}
+    .t06-liste{width:100%; border-collapse:collapse; font-family:var(--ps-mono); font-size:.85rem}
+    .t06-liste th{font-weight:600; text-align:left; color:var(--muted); border-bottom:1px solid var(--line); padding:4px 8px 4px 0; white-space:nowrap}
+    .t06-liste td{padding:2px 8px 2px 0; white-space:nowrap; border-bottom:1px dashed var(--line)}
+    .t06-liste td.t06-zahl, .t06-liste th.t06-zahl{text-align:right}
+    .t06-liste tr.an td{background:var(--accent-soft)}
+    .t06-zeile{font-family:var(--ps-mono); font-size:.85rem; padding:3px 8px; text-align:left; min-height:0}
+    .t06-karte{border:1px solid var(--line); border-left:6px solid var(--accent); border-radius:12px; background:var(--surface); padding:12px 14px; min-width:0}
+    .t06-karte-kopf{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; margin-bottom:8px}
+    .t06-karte-kopf h3{margin:0; font-family:var(--ps-mono); font-size:1.05rem; overflow-wrap:anywhere}
+    .t06-typ{font-family:var(--ps-mono); font-size:.82rem; color:var(--muted); overflow-wrap:anywhere}
+    .t06-felder{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
+    .t06-feld-knopf{display:grid; grid-template-columns:minmax(7.5em, 11em) 1fr; gap:2px 10px; width:100%; text-align:left; align-items:baseline;
+      font-family:var(--ps-mono); font-size:.82rem; padding:4px 8px; border:1px solid transparent; border-radius:6px; background:none; color:var(--ink); cursor:pointer}
+    .t06-feld-knopf:hover{border-color:var(--line); background:var(--board)}
+    .t06-feld-knopf[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+    .t06-feld-name{font-weight:600; overflow-wrap:anywhere}
+    .t06-feld-wert{overflow-wrap:anywhere; color:var(--ink)}
+    .t06-feld-wert.leer{color:var(--muted); font-style:italic}
+    .t06-std .t06-feld-knopf{border-left:4px solid var(--free); background:var(--free-bg)}
+    .t06-std .t06-feld-name::before{content:"★ "; color:var(--ink)}
+    .t06-karte.nur-std .t06-felder li:not(.t06-std){display:none}
+    .t06-stand{font-size:.88rem; color:var(--muted); margin:8px 0 0}
+    .t06-legende{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:.85rem; color:var(--muted)}
+    .t06-legende span{border-left:4px solid var(--free); background:var(--free-bg); color:var(--ink); padding:0 6px}
+    .t06-punkt{min-height:3em}
+    @media (max-width:420px){
+      .t06-feld-knopf{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body data-fach="ps" data-thema="06-objekte-statt-text">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 3 · Pipeline und Objekte</span>
+    <h1>Objekte statt Text</h1>
+    <p class="lead">Bisher hast du Befehle getippt und Tabellen gelesen. Jetzt schaust du hinter die Tabelle: Jede Zeile ist ein Objekt mit vielen Feldern, viel mehr, als die Konsole zeigt. Lea braucht für ihren Wochenbericht ein paar genaue Angaben zu ihren Dateien und zum Datum. Mit Get-Member und dem Punkt holst du sie dir direkt aus dem Objekt.</p>
+    <div class="note"><b>Danach kannst du:</b>
+      <ul class="t06-ziele">
+        <li>erklären, warum PowerShell Objekte statt Textzeilen liefert.</li>
+        <li>Eigenschaften und Methoden unterscheiden und den Typ eines Objekts bestimmen.</li>
+        <li>mit <code class="ps">Get-Member</code> herausfinden, was in einem Objekt steckt.</li>
+        <li>alle Eigenschaften mit <code class="ps">Select-Object *</code> oder <code class="ps">Format-List *</code> ansehen und weisst, dass die Konsole nur eine Auswahl zeigt.</li>
+        <li>mit der Punktnotation einzelne Werte holen, zum Beispiel <code class="ps">(Get-Date).DayOfWeek</code>, und Methoden wie <code class="ps">.ToUpper()</code> aufrufen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#vergleich"><b>1</b>Text oder Objekt</a>
+    <a href="#schritt"><b>2</b>Punktnotation</a>
+    <a href="#ansicht"><b>3</b>Standardansicht</a>
+    <a href="#member"><b>4</b>Get-Member, Typen</a>
+    <a href="#methoden"><b>5</b>Methoden</a>
+    <a href="#ausprobieren"><b>6</b>Ausprobieren</a>
+    <a href="#roentgen"><b>7</b>Objekt-Röntgen</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#tipp-training"><b>9</b>Tipp-Training</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Fehler</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Eine Karteikarte für jedes Ding</h2>
+    <p class="prose">Denk an die Kartei in einer Bibliothek. Für jedes Buch gibt es eine Karte. Alle Karten haben dieselben Felder: Titel, Autorin, Seiten, Standort. Die Werte sind auf jeder Karte anders. Dazu gibt es Dinge, die man mit einem Buch <i>tun</i> kann: ausleihen, zurückgeben, verlängern.</p>
+    <p class="prose">PowerShell arbeitet genau so. Für jede Datei, jeden Prozess und jedes Datum legt es eine Karteikarte an. Diese Karte heisst <b>Objekt</b>. Die Tabelle in der Konsole ist nur eine kurze Übersicht dieser Karten.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Objekt</span><span class="ex"><code class="ps">Get-Item Dokumente\notizen.txt</code></span><p>Eine Karteikarte für genau ein Ding, hier die Datei <code>notizen.txt</code>.</p></div>
+      <div class="concept"><span class="tag">Eigenschaft</span><span class="ex"><code class="ps">Length</code></span><p>Ein Feld auf der Karte mit einem Wert, zum Beispiel die Grösse 197 Bytes. Englisch <i>property</i>.</p></div>
+      <div class="concept"><span class="tag">Methode</span><span class="ex"><code class="ps">ToUpper()</code></span><p>Etwas, das das Objekt tun kann. Erkennst du an den runden Klammern. Englisch <i>method</i>.</p></div>
+      <div class="concept"><span class="tag">Typ</span><span class="ex"><code class="ps">System.IO.FileInfo</code></span><p>Die Kartenvorlage. Alle Objekte desselben Typs haben dieselben Felder, aber eigene Werte.</p></div>
+      <div class="concept"><span class="tag">Punkt</span><span class="ex"><code class="ps">(Get-Date).DayOfWeek</code></span><p>Der Griff in die Karte: Objekt, Punkt, Name des Felds. Liefert nur diesen einen Wert.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Objekt, Eigenschaft oder Methode?</h3>
+      <div id="t06-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Text oder Objekt ===== -->
+  <section id="vergleich">
+    <span class="eyebrow">Schritt 1 · Der grosse Unterschied</span>
+    <h2>Text oder Objekt?</h2>
+    <p class="prose">Klassische Konsolen wie die Eingabeaufforderung <code>cmd</code> unter Windows oder die Shell <code>bash</code> unter Linux geben <b>Text</b> aus. So sieht Leas Ordner <code>Logs</code> mit <code>dir</code> in <code>cmd</code> aus (gekürzt):</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Textausgabe von dir in cmd">C:\Users\lea\Logs&gt;dir
+ Verzeichnis von C:\Users\lea\Logs
+
+31.07.2026  23:59         8’912’896 app-2026-07.log
+31.08.2026  23:59         6’291’456 app-2026-08.log
+30.09.2026  23:59         4’718’592 app-2026-09.log
+31.10.2026  23:59         3’407’872 app-2026-10.log
+02.11.2026  08:59               270 app.log
+30.06.2026  03:00         1’153’434 backup-2026-06.log
+01.11.2026  22:14               151 sync-fehler.log
+               7 Datei(en),     24’484’671 Bytes</pre>
+    <p class="prose">Für dich ist das gut lesbar. Für ein Programm sind es nur Zeichen. Willst du mit der Grösse rechnen, musst du die Zeile zerschneiden: «ab Zeichen 20 bis zum Leerzeichen, Hochkommas entfernen, in eine Zahl umwandeln». Ändert sich die Spaltenbreite oder die Sprache von Windows, bricht dein Skript.</p>
+    <p class="prose">PowerShell zeigt fast dasselbe an:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem Logs" data-ps-befehl="Get-ChildItem Logs"></pre>
+    <p class="prose">Doch hinter jeder Zeile steht ein Objekt. Die Grösse ist dort keine Zeichenkette, sondern eine echte Zahl in der Eigenschaft <code>Length</code>. Du musst nichts zerschneiden. Du fragst einfach danach und kannst sofort rechnen:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Grösse in MB" data-ps-befehl="(Get-Item Logs\app-2026-07.log).Length / 1MB"></pre>
+    <div class="note"><b>Merke:</b> Die Tabelle in der Konsole entsteht erst ganz am Schluss, wenn PowerShell die Objekte für dich auf den Bildschirm schreibt. Solange die Objekte durch Befehle wandern, sind es Karteikarten mit Feldern, kein Text.</div>
+    <div class="note tipp"><b>Gut zu wissen:</b> Startest du in PowerShell ein klassisches Programm wie <code class="ps">cmd /c dir</code> oder <code class="ps">ping</code>, kommt dessen Ausgabe als Textzeilen an (Typ <code>System.String</code>). Nur die Cmdlets liefern reiche Objekte.</div>
+  </section>
+
+  <!-- ===== 2 · Stepper Punktnotation ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 2 · Vom Auftrag zum Befehl</span>
+    <h2>Mit dem Punkt in die Karte greifen</h2>
+    <p class="prose">Lea will für ihren Bericht nur eine Zahl: Wie gross ist ihre Datei <code>notizen.txt</code>? Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Teil des Befehls leuchtet auf.</p>
+    <div id="t06-stepper"></div>
+    <div class="note"><b>Merke:</b> Die runden Klammern sagen: «Führe das zuerst aus.» Danach steht dort das Objekt, und der Punkt greift hinein. Ohne Klammern hält PowerShell <code>notizen.txt.Length</code> für einen Dateinamen.</div>
+
+    <div class="card stack">
+      <h3>Felder von Feldern</h3>
+      <p class="prose">Ein Wert kann selbst wieder ein Objekt sein. <code>LastWriteTime</code> (letzte Änderung) ist ein Datum, und ein Datum hat seinerseits Felder, zum Beispiel <code>DayOfWeek</code> (Wochentag). Mit einem zweiten Punkt greifst du weiter hinein:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: letzte Änderung" data-ps-befehl="(Get-Item Dokumente\notizen.txt).LastWriteTime"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Wochentag der letzten Änderung" data-ps-befehl="(Get-Item Dokumente\notizen.txt).LastWriteTime.DayOfWeek"></pre>
+      <p class="prose">Lies die Kette von links nach rechts: die Datei holen, davon die letzte Änderung, davon den Wochentag. Lea hat ihre Notizen an einem Freitag zuletzt geändert.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Das heutige Datum</h3>
+      <p class="prose"><code class="ps">Get-Date</code> liefert ein Datum-Objekt für jetzt. Im Simulator ist es immer Montag, 2. November 2026, 09:00 Uhr. Mit dem Punkt holst du einzelne Teile:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Teile des Datums" data-ps-befehl="(Get-Date).DayOfWeek; (Get-Date).Day; (Get-Date).Month; (Get-Date).Year"></pre>
+      <p class="prose">Der Wochentag kommt englisch (<code>Monday</code>), weil er ein fester Wert aus einer Liste ist, keine übersetzte Beschriftung.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Ein Feld von vielen Karten auf einmal</h3>
+      <p class="prose">Liefert ein Befehl mehrere Objekte, holt der Punkt das Feld von jeder Karte. Hier die Namen aller sieben Logdateien:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Namen aller Logdateien" data-ps-befehl="(Get-ChildItem Logs).Name"></pre>
+      <p class="prose">Achtung: Das klappt nur, wenn die Liste selbst kein Feld mit demselben Namen hat. Eine Liste hat ein eigenes Feld <code>Length</code> (ihre Länge). Darum liefert <code class="ps">(Get-ChildItem Logs).Length</code> nicht sieben Grössen, sondern die Anzahl:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Länge der Liste" data-ps-befehl="(Get-ChildItem Logs).Length"></pre>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Standardansicht ===== -->
+  <section id="ansicht">
+    <span class="eyebrow">Schritt 3 · Was die Konsole verschweigt</span>
+    <h2>Die Standardansicht ist nur eine Auswahl</h2>
+    <p class="prose">Schau dir <code>notizen.txt</code> an. Die Konsole zeigt vier Spalten: <code>Mode</code>, <code>LastWriteTime</code>, <code>Length</code> und <code>Name</code>.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Standardansicht einer Datei" data-ps-befehl="Get-Item Dokumente\notizen.txt"></pre>
+    <p class="prose">Das ist die <b>Standardansicht</b>. PowerShell hat für bekannte Typen wie Dateien, Prozesse und Dienste gespeichert, welche Felder es zeigen soll. Für Typen ohne gespeicherte Ansicht gilt eine Faustregel: bis vier Eigenschaften als Tabelle, ab fünf als Liste. Das Objekt hat aber viel mehr Felder. Alle siehst du mit dem Platzhalter <code>*</code>:</p>
+    <pre class="ps-code"><code>Get-Item Dokumente\notizen.txt | Select-Object *</code></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Alle Eigenschaften einer Datei, wie in pwsh 7" lang="en" id="t06-alle"></pre>
+    <p class="hint">So zeigt es echtes PowerShell 7.6. Der Simulator lässt das Feld <code>VersionInfo</code> weg (Versionsangaben von Programmen, bei Textdateien leer).</p>
+    <p class="prose">Du findest alte Bekannte wieder: <code>Name</code>, <code>Length</code>, <code>LastWriteTime</code>. Dazu kommen viele neue: <code>FullName</code> (ganzer Pfad), <code>Extension</code> (Endung), <code>CreationTime</code> (erstellt am), <code>IsReadOnly</code> (schreibgeschützt?). Die Felder, deren Name mit <code>PS</code> beginnt, hängt PowerShell selbst an.</p>
+    <div class="grid2">
+      <div class="stack">
+        <p class="hint">Alle Felder ansehen</p>
+        <pre class="ps-code"><code>Get-Item Dokumente\notizen.txt | Format-List *</code></pre>
+        <p class="prose">Zeigt dieselbe Liste. <code class="ps">Format-List</code> ist nur zum Anschauen da. Danach kannst du nicht mehr weiterrechnen (mehr dazu in Station 08).</p>
+      </div>
+      <div class="stack">
+        <p class="hint">Nur die Felder, die du brauchst</p>
+        <pre class="ps-code"><code>Get-Item Dokumente\notizen.txt | Select-Object Name, Length, LastWriteTime, FullName</code></pre>
+        <p class="prose"><code class="ps">Select-Object</code> mit Namen baut eine neue, schlanke Karte nur mit diesen Feldern.</p>
+      </div>
+    </div>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: vier ausgewählte Eigenschaften" data-ps-befehl="Get-Item Dokumente\notizen.txt | Select-Object Name, Length, LastWriteTime, FullName"></pre>
+    <div class="note falle"><b>Falle:</b> Eine Spalte, die in der Tabelle fehlt, gibt es trotzdem. Die Standardansicht ist eine Auswahl, kein Inhaltsverzeichnis. Bevor du sagst «das Objekt hat kein Feld für den Pfad», schau mit <code class="ps">Select-Object *</code> oder <code class="ps">Get-Member</code> nach.</div>
+  </section>
+
+  <!-- ===== 4 · Get-Member und Typen ===== -->
+  <section id="member">
+    <span class="eyebrow">Schritt 4 · Get-Member</span>
+    <h2>Welche Felder hat die Karte?</h2>
+    <p class="prose"><code class="ps">Get-Member</code> (Alias <code class="ps">gm</code>) ist das Inhaltsverzeichnis einer Karteikarte. Du schickst ein Objekt mit der Pipeline <code class="ps">|</code> hinein und bekommst alle Felder und Methoden, alphabetisch nach Art geordnet. Die Werte wie Grösse oder Datum zeigt es nicht, nur Namen, Art und Typ der Felder. Mit <code class="ps">-MemberType Property</code> siehst du nur die Eigenschaften:</p>
+    <pre class="ps-code"><code>Get-Item Dokumente\notizen.txt | Get-Member -MemberType Property</code></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Eigenschaften einer Datei" data-ps-befehl="Get-Item Dokumente\notizen.txt | Get-Member -MemberType Property" data-ps-prompt="nein"></pre>
+    <p class="prose">So liest du die Ausgabe:</p>
+    <ul class="prose">
+      <li><b><code>TypeName</code></b> ganz oben ist der Typ, also die Kartenvorlage: <code>System.IO.FileInfo</code>, eine Datei-Info. Oft sagt man kurz <code>FileInfo</code>.</li>
+      <li><b><code>Name</code></b> ist der Name des Felds, so wie du ihn nach dem Punkt schreibst.</li>
+      <li><b><code>MemberType</code></b> sagt, was es ist: <code>Property</code> (Eigenschaft) oder <code>Method</code> (Methode). Ohne <code class="ps">-MemberType</code> siehst du auch Arten wie <code>NoteProperty</code> oder <code>ScriptProperty</code>; für dich sind das ebenfalls Eigenschaften.</li>
+      <li><b><code>Definition</code></b> nennt den Typ des Werts: <code>long Length</code> heisst «eine ganze Zahl», <code>datetime</code> ein Datum, <code>string</code> ein Text, <code>bool</code> wahr oder falsch. <code>{get;}</code> heisst «nur lesen», <code>{get;set;}</code> «lesen und ändern».</li>
+    </ul>
+
+    <div class="card stack">
+      <h3>Jeder Typ hat seine eigene Vorlage</h3>
+      <p class="prose">Eine Datei hat andere Felder als ein Ordner, ein Datum oder ein Prozess. Den Typ eines Objekts liefert die Methode <code class="ps">GetType()</code>, den vollen Namen ihr Feld <code>FullName</code>:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Typen verschiedener Objekte" data-ps-befehl="(Get-Item Dokumente\notizen.txt).GetType().FullName; (Get-Item Dokumente).GetType().FullName; (Get-Date).GetType().FullName; (Get-Process notepad).GetType().FullName; 'Lea'.GetType().FullName"></pre>
+      <div class="tablebox">
+        <table class="tabelle t06-tabelle">
+          <caption>Fünf Typen, die dir oft begegnen</caption>
+          <thead><tr><th>Typ</th><th>steht für</th><th>kommt von</th><th>typische Eigenschaften</th></tr></thead>
+          <tbody>
+            <tr><th><code>System.IO.FileInfo</code></th><td>eine Datei</td><td><code class="ps">Get-Item Dokumente\notizen.txt</code></td><td><code>Name</code>, <code>Length</code>, <code>Extension</code>, <code>LastWriteTime</code></td></tr>
+            <tr><th><code>System.IO.DirectoryInfo</code></th><td>ein Ordner</td><td><code class="ps">Get-Item Dokumente</code></td><td><code>Name</code>, <code>Parent</code>, <code>Root</code>, <code>LastWriteTime</code></td></tr>
+            <tr><th><code>System.DateTime</code></th><td>ein Zeitpunkt</td><td><code class="ps">Get-Date</code></td><td><code>DayOfWeek</code>, <code>Day</code>, <code>Month</code>, <code>Year</code></td></tr>
+            <tr><th><code>System.Diagnostics.Process</code></th><td>ein laufendes Programm</td><td><code class="ps">Get-Process notepad</code></td><td><code>Id</code>, <code>ProcessName</code>, <code>StartTime</code>, <code>WorkingSet64</code></td></tr>
+            <tr><th><code>System.String</code></th><td>ein Text</td><td><code class="ps">'Lea'</code></td><td><code>Length</code> (Anzahl Zeichen)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Ein Ordner hat kein <code>Length</code>, dafür <code>Parent</code> (der Ordner darüber). Schickst du einen gemischten Ordnerinhalt in <code class="ps">Get-Member</code>, bekommst du für jeden Typ eine eigene Liste mit eigenem <code>TypeName</code>.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Das Datum unter der Lupe</h3>
+      <p class="prose">Auch ein Datum ist eine Karte. Diese Felder kannst du mit dem Punkt abfragen:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Eigenschaften eines Datums" data-ps-befehl="Get-Date | Get-Member -MemberType Property" data-ps-prompt="nein"></pre>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 baut auf dem älteren .NET Framework auf. Dort fehlen beim Datum <code>Microsecond</code> und <code>Nanosecond</code> (13 statt 15 Eigenschaften), bei Dateien <code>LinkTarget</code> und <code>UnixFileMode</code> (15 statt 17). Die Grundfelder wie <code>Name</code>, <code>Length</code> und <code>DayOfWeek</code> sind überall gleich.</div>
+    </div>
+
+    <div class="note falle"><b>Spaltenkopf ist nicht Feldname:</b> <code class="ps">Get-Process</code> zeigt Spalten wie <code>WS(M)</code> und <code>CPU(s)</code>. Das sind gerechnete Beschriftungen für die Anzeige. Die echten Felder heissen <code>WorkingSet64</code> (Kurzname <code>WS</code>) und <code>CPU</code>. Den richtigen Namen verrät dir <code class="ps">Get-Member</code>.</div>
+  </section>
+
+  <!-- ===== 5 · Methoden ===== -->
+  <section id="methoden">
+    <span class="eyebrow">Schritt 5 · Methoden</span>
+    <h2>Was eine Karte tun kann</h2>
+    <p class="prose">Eine <b>Eigenschaft</b> ist ein Wert, den du liest. Eine <b>Methode</b> ist eine Handlung: Sie rechnet etwas aus oder tut etwas mit dem Objekt. Du rufst sie wie eine Eigenschaft mit dem Punkt auf, aber immer mit runden Klammern dahinter. Braucht sie eine Angabe, steht die in den Klammern.</p>
+    <div class="tablebox">
+      <table class="tabelle t06-tabelle">
+        <caption>Eigenschaft oder Methode</caption>
+        <thead><tr><th></th><th>Eigenschaft</th><th>Methode</th></tr></thead>
+        <tbody>
+          <tr><th>Was ist es?</th><td>ein gespeicherter Wert</td><td>eine Handlung</td></tr>
+          <tr><th>Schreibweise</th><td><code class="ps">.Length</code> ohne Klammern</td><td><code class="ps">.ToUpper()</code> immer mit Klammern</td></tr>
+          <tr><th>mit Angabe</th><td>gibt es nicht</td><td><code class="ps">.AddDays(7)</code></td></tr>
+          <tr><th>in Get-Member</th><td><code>Property</code></td><td><code>Method</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card stack">
+      <h3>Texte umwandeln</h3>
+      <p class="prose">Ein Name ist ein Text (<code>System.String</code>). Texte haben Methoden wie <code class="ps">ToUpper()</code> (alles gross) und <code class="ps">ToLower()</code> (alles klein). Lea braucht den Dateinamen für die Betreffzeile in Grossbuchstaben:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Name in Grossbuchstaben" data-ps-befehl="(Get-Item Dokumente\notizen.txt).Name.ToUpper()"></pre>
+      <p class="prose">Wieder von links nach rechts: die Datei, davon der Name (ein Text), davon die Grossschreibung. Die Methode ändert die Datei nicht. Sie liefert einen neuen Text.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Mit Daten rechnen</h3>
+      <p class="prose">Ein Datum hat Methoden wie <code class="ps">AddDays()</code>. In die Klammern schreibst du, wie viele Tage dazukommen. Eine negative Zahl geht zurück:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Datum in sieben Tagen" data-ps-befehl="(Get-Date).AddDays(7)"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Datum vor dreissig Tagen" data-ps-befehl="(Get-Date).AddDays(-30)"></pre>
+      <p class="prose">Mit <code class="ps">ToString()</code> und einem Muster machst du aus dem Datum einen kurzen Text: <code>dd</code> Tag, <code>MM</code> Monat, <code>yyyy</code> Jahr.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Datum als Text" data-ps-befehl="(Get-Date).AddDays(7).ToString('dd.MM.yyyy')"></pre>
+      <div class="note"><b>Merke:</b> <code class="ps">AddDays(7)</code> verstellt nicht die Uhr deines Computers. Die Methode liefert ein neues Datum zurück, das heutige bleibt, wie es ist.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Klammern vergessen?</h3>
+      <p class="prose">Schreibst du eine Methode ohne Klammern, ruft PowerShell sie nicht auf. Es zeigt dir stattdessen, wie man sie aufrufen kann (englisch <i lang="en">overload definitions</i>, die erlaubten Schreibweisen):</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von pwsh 7: Methode ohne Klammern" lang="en">PS C:\Users\lea&gt; 'notizen.txt'.ToUpper
+
+<span class="psk-kopf">OverloadDefinitions</span>
+<span class="psk-kopf">-------------------</span>
+string ToUpper()
+string ToUpper(cultureinfo culture)</pre>
+      <p class="hint">Ausgabe von echtem PowerShell 7.6. Der Simulator zeigt hier nichts an.</p>
+      <p class="prose">Das ist praktisch zum Nachschlagen: <code>string ToUpper()</code> heisst «ohne Angabe aufrufen, liefert einen Text». Für den Aufruf selbst brauchst du die Klammern: <code class="ps">'notizen.txt'.ToUpper()</code>.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Ausblick: das aktuelle Objekt <code class="ps">$_</code></h3>
+      <p class="prose">In der nächsten Station schickst du viele Objekte nacheinander über die Pipeline. Dort brauchst du einen Namen für «die Karte, die gerade dran ist». Dieser Name ist <code class="ps">$_</code>, ausgeschrieben <code class="ps">$PSItem</code>. Beide meinen dasselbe. Mit dem Punkt greifst du wie gewohnt hinein: <code class="ps">$_.Length</code> ist die Grösse der aktuellen Datei.</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Where-Object { $_.Length -lt 1KB }
+Get-ChildItem Logs | Where-Object { $PSItem.Length -lt 1KB }</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Dateien kleiner als 1 KB" data-ps-befehl="Get-ChildItem Logs | Where-Object { $PSItem.Length -lt 1KB }" data-ps-prompt="nein"></pre>
+      <p class="prose">Beide Zeilen liefern dieselben zwei kleinen Dateien. <code class="ps">Where-Object</code> und <code class="ps">-lt</code> («kleiner als») lernst du in Station 07 genau kennen.</p>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">Jetzt greifst du selbst in die Karten. Du startest in Leas Benutzerordner <code>C:\Users\lea</code>. Tippe <code>Get-It</code> und drücke Tab, mit ↑ holst du den letzten Befehl zurück und hängst etwas an. Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t06-konsole"></div>
+  </section>
+
+  <!-- ===== 7 · Objekt-Röntgen ===== -->
+  <section id="roentgen">
+    <span class="eyebrow">Schritt 7 · Hinter die Tabelle schauen</span>
+    <h2>Das Objekt-Röntgen</h2>
+    <p class="prose">Oben siehst du eine Tabelle wie in der Konsole. Tippe eine Zeile an: Darunter erscheint die ganze Karteikarte dieses Objekts mit allen Eigenschaften aus dem Simulator. Die Felder mit ★ zeigt die Standardansicht, alle anderen bleiben in der Tabelle verborgen. Tippe ein Feld an, um es mit der Punktnotation abzufragen.</p>
+    <div class="card stack">
+      <div class="t06-wahl">
+        <div class="t06-feld">
+          <label for="t06-ordner">Ordner</label>
+          <select id="t06-ordner" class="btn">
+            <option value="Dokumente" selected>Dokumente</option>
+            <option value="Logs">Logs</option>
+            <option value="Downloads">Downloads</option>
+            <option value="Berichte">Berichte</option>
+            <option value=".">Benutzerordner (C:\Users\lea)</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint" id="t06-befehl-liste"></p>
+      <div class="tablebox" tabindex="0" aria-label="Tabelle des Ordners, seitlich scrollbar">
+        <table class="t06-liste" id="t06-liste">
+          <caption class="sr-only">Inhalt des Ordners in der Standardansicht. Jede Zeile hat einen Knopf, der die Karteikarte zeigt.</caption>
+          <thead><tr><th scope="col">Mode</th><th scope="col">LastWriteTime</th><th scope="col" class="t06-zahl">Length</th><th scope="col">Name</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="info" id="t06-meldung" aria-live="polite"></p>
+      <div id="t06-karte"></div>
+    </div>
+    <div class="note tipp"><b>Forschungsauftrag:</b> Vergleiche die Karte eines Ordners (zum Beispiel <code>Archiv</code>) mit der Karte einer Datei. Welche Felder hat nur der Ordner, welche nur die Datei? Die Lösung steckt auch in Übung 2.</div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Zuordnen: Eigenschaft oder Methode?</h3>
+      <div id="t06-u1"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 2 · Zuordnen: Wo steht das Feld?</h3>
+      <p class="prose">Ordne jedes Feld zu: Haben es nur Dateien (<code>FileInfo</code>), nur Ordner (<code>DirectoryInfo</code>) oder beide?</p>
+      <div id="t06-u2"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 3 · Befehl zusammenbauen und tippen</h3>
+      <p class="prose">Lea will ihre Notizen 12 Tage nach der letzten Änderung wieder anschauen. Auf welchen Wochentag fällt das? Die Kette hat vier Teile: die Datei in Klammern, die letzte Änderung, 12 Tage dazu, der Wochentag. Tippe sie als einen Befehl in die Konsole.</p>
+      <div id="t06-u3"></div>
+    </div>
+    <div class="card stack"><h3>Übung 4 · Ausgabe vorhersagen</h3><div id="t06-u4"></div></div>
+    <div class="card stack"><h3>Übung 5 · Ausgabe vorhersagen</h3><div id="t06-u5"></div></div>
+    <div class="card stack">
+      <h3>Übung 6 · Fehler finden und korrigieren</h3>
+      <p class="prose">Lea wollte nur den Namen ihrer Datei sehen. Die Konsole zeigt ihren Versuch und die rote Meldung. Finde den Fehler und tippe den korrigierten Befehl.</p>
+      <div id="t06-u6"></div>
+    </div>
+    <div class="card stack"><h3>Übung 7 · Fehler finden</h3><div id="t06-u7"></div></div>
+    <div class="card stack"><h3>Übung 8 · Wahr oder falsch?</h3><div id="t06-u8"></div></div>
+    <div class="card stack">
+      <h3>Übung 9 · Befehl selbst schreiben</h3>
+      <p class="prose">Drei Aufträge ohne Vorlage. Schreib den Befehl selbst in den Simulator.</p>
+      <div id="t06-u9"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 9 · Selbst tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Lesen ist gut, tippen ist besser. Hier schreibst du jeden Befehl selbst, Zeichen für Zeichen. So gehen dir Klammern, Punkt und Feldnamen in die Finger. Es gibt drei Stufen: zuerst abtippen, dann abwandeln, dann ganz allein.</p>
+    <p class="hint">Jede Stufe hat ihre eigene Konsole, und jede startet in Leas Benutzerordner <code>C:\Users\lea</code>. Gross- und Kleinschreibung spielen keine Rolle. Aliase wie <code class="ps">gi</code> und abgekürzte Parameter sind erlaubt. «Hinweis» gibt dir einen Denkanstoss, «Lösung» zeigt den ganzen Befehl.</p>
+
+    <div class="card stack">
+      <h3>Stufe 1 · Nachtippen</h3>
+      <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn ab und drück Enter. Schau dir dann die Ausgabe an: Was kommt genau heraus?</p>
+      <div id="t06-tipp1"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 2 · Abwandeln</h3>
+      <p class="prose">Jede Aufgabe zeigt einen Befehl, den du von dieser Seite kennst. Du änderst ein Stück: eine andere Datei, einen anderen Ordner, ein anderes Feld oder eine andere Methode.</p>
+      <div id="t06-tipp2"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 3 · Selber lösen</h3>
+      <p class="prose">Jetzt bekommst du nur noch das Ziel. Den Befehl baust du selbst. Drei Aufgaben holen Stoff aus früheren Stationen dazu: versteckte Dateien und den Ort wechseln (Station 04), eine Datei schreiben (Station 05).</p>
+      <p class="hint">Die letzte Aufgabe wechselt den Ort. Mit <code class="ps">cd ~</code> kommst du zurück in den Benutzerordner, «↺ Zurücksetzen» stellt den ganzen Rechner wieder her.</p>
+      <div id="t06-tipp3"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Angaben für den Wochenbericht</h2>
+    <p class="prose">Der Leiter Informatik will im Wochenbericht vier Angaben zu Leas Datei <code>notizen.txt</code>: <b>(a)</b> Was für ein Objekt ist die Datei? <b>(b)</b> Wie gross ist sie, und an welchem Wochentag wurde sie zuletzt geändert? <b>(c)</b> Wann ist die Wiedervorlage in 7 Tagen (als <code>TT.MM.JJJJ</code>)? <b>(d)</b> Wie heisst die Datei in Grossbuchstaben (für die Betreffzeile)?</p>
+    <p class="prose">Jede Szene zeigt einen Befehl und die Ausgabe des Simulators auf Leas Rechner.</p>
+    <div id="t06-film"></div>
+    <details class="sol">
+      <summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <p class="prose"><b>(a)</b> Ein Objekt vom Typ <code>System.IO.FileInfo</code>.</p>
+        <p class="prose"><b>(b)</b> 197 Bytes, zuletzt geändert am Freitag, 30. Oktober 2026, 17:05 Uhr (<code>Friday</code>).</p>
+        <p class="prose"><b>(c)</b> <code>09.11.2026</code> (Montag, 9. November 2026).</p>
+        <p class="prose"><b>(d)</b> <code>NOTIZEN.TXT</code>.</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Alle Befehle in PowerShell 7.6 in einem nachgebauten Ordner geprüft.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine</h2>
+    <div class="note falle"><b>Klammern um den Befehl vergessen:</b> Ohne Klammern liest PowerShell alles nach <code class="ps">Get-Item</code> als einen Pfad. Es sucht eine Datei, die wirklich <code>notizen.txt.Length</code> heisst.
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Klammern vergessen" lang="en" data-ps-befehl="Get-Item Dokumente\notizen.txt.Length"></pre>
+      Auf Deutsch: «Den Pfad gibt es nicht.» Richtig ist <code class="ps">(Get-Item Dokumente\notizen.txt).Length</code>.</div>
+    <div class="note falle"><b>Punkt direkt am Cmdlet:</b> <code class="ps">Get-Date.DayOfWeek</code> hält PowerShell für den Namen eines Befehls.
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Punkt am Cmdlet" lang="en" data-ps-befehl="Get-Date.DayOfWeek"></pre>
+      Auf Deutsch: «Einen Befehl mit diesem Namen gibt es nicht.» Erst Klammern, dann Punkt: <code class="ps">(Get-Date).DayOfWeek</code>.</div>
+    <div class="note falle"><b>Leerzeichen vor dem Punkt:</b> Der Punkt muss direkt an der Klammer kleben.
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Leerzeichen vor dem Punkt" lang="en" data-ps-befehl="(Get-Date) .DayOfWeek"></pre>
+      Auf Deutsch: «Unerwartetes Zeichen .DayOfWeek.» PowerShell sieht nach dem Leerzeichen einen neuen, sinnlosen Teil.</div>
+    <div class="note falle"><b>Tippfehler im Feldnamen:</b> <code class="ps">(Get-Item Dokumente\notizen.txt).Lenght</code> liefert einfach <b>nichts</b>, ohne rote Meldung. Ein Feld, das es nicht gibt, ist für PowerShell leer. Siehst du keine Ausgabe, prüfe die Schreibweise mit <code class="ps">Get-Member</code>.</div>
+    <div class="note falle"><b>Methode ohne Klammern:</b> <code class="ps">'notizen.txt'.ToUpper</code> wandelt nichts um, sondern zeigt nur die Liste <code>OverloadDefinitions</code>. Methoden brauchen immer <code>()</code>, auch ohne Angabe.</div>
+    <div class="note falle"><b>Methode ohne nötige Angabe:</b> <code class="ps">AddDays</code> muss wissen, wie viele Tage. Leere Klammern ergeben in pwsh 7 einen Fehler:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7: AddDays ohne Wert" lang="en">PS C:\Users\lea&gt; (Get-Date).AddDays()
+<span class="psk-fehler">MethodException: Cannot find an overload for "AddDays" and the argument count: "0".</span></pre>
+      Auf Deutsch: «Es gibt keine Schreibweise von AddDays mit null Angaben.» Die Liste <code>OverloadDefinitions</code> zeigt dir, was in die Klammern gehört: <code>AddDays(double value)</code>, also eine Zahl. (Der Simulator meldet diesen Fehler nicht.)</div>
+    <div class="note falle"><b>Standardansicht für alles halten:</b> «Die Datei hat keinen Pfad» stimmt nicht, nur weil die Tabelle ihn nicht zeigt. <code class="ps">Select-Object *</code> zeigt alle Felder.</div>
+    <div class="note falle"><b>Length einer Liste:</b> <code class="ps">(Get-ChildItem Logs).Length</code> ergibt <code>7</code>, die Anzahl der Dateien, nicht ihre Grössen. Die Liste hat selbst ein Feld <code>Length</code>, und das gewinnt.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Eigenschaft, Methode, Standardansicht</h2>
+    <p class="prose">Alle Fragen beziehen sich auf Leas Rechner, so wie du ihn aus dem Simulator kennst.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle t06-tabelle">
+        <caption>Befehle und Schreibweisen dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">Get-Member</code></th><td>Typ, Eigenschaften und Methoden eines Objekts anzeigen</td><td><code class="ps">Get-Item Dokumente\notizen.txt | Get-Member</code></td></tr>
+          <tr><th><code class="ps">Get-Member -MemberType Property</code></th><td>nur die Eigenschaften anzeigen</td><td><code class="ps">Get-Date | Get-Member -MemberType Property</code></td></tr>
+          <tr><th><code class="ps">Select-Object *</code></th><td>alle Eigenschaften mit Werten, als neues Objekt</td><td><code class="ps">Get-Item Dokumente\notizen.txt | Select-Object *</code></td></tr>
+          <tr><th><code class="ps">Format-List *</code></th><td>alle Eigenschaften mit Werten anzeigen (nur zum Lesen)</td><td><code class="ps">Get-Item Logs\app.log | Format-List *</code></td></tr>
+          <tr><th><code class="ps">(Befehl).Eigenschaft</code></th><td>einen Wert holen (Punktnotation)</td><td><code class="ps">(Get-Item Dokumente\notizen.txt).Length</code></td></tr>
+          <tr><th><code class="ps">.Eigenschaft.Eigenschaft</code></th><td>in einen Wert weitergreifen</td><td><code class="ps">(Get-Item Dokumente\notizen.txt).LastWriteTime.DayOfWeek</code></td></tr>
+          <tr><th><code class="ps">(Befehl).Methode()</code></th><td>eine Methode aufrufen, immer mit Klammern</td><td><code class="ps">(Get-Item Dokumente\notizen.txt).Name.ToUpper()</code></td></tr>
+          <tr><th><code class="ps">.AddDays(n)</code></th><td>neues Datum n Tage später (negativ: früher)</td><td><code class="ps">(Get-Date).AddDays(7)</code></td></tr>
+          <tr><th><code class="ps">.GetType().FullName</code></th><td>den vollen Typnamen eines Objekts</td><td><code class="ps">(Get-Date).GetType().FullName</code></td></tr>
+          <tr><th><code class="ps">$_</code>, <code class="ps">$PSItem</code></th><td>das aktuelle Objekt in der Pipeline</td><td><code class="ps">Where-Object { $_.Length -lt 1KB }</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Cmdlets liefern <b>Objekte</b>, keine Textzeilen. Ein Objekt ist eine Karteikarte mit Feldern.</li>
+      <li><b>Eigenschaften</b> sind Werte (<code class="ps">.Length</code>), <b>Methoden</b> sind Handlungen und haben immer Klammern (<code class="ps">.ToUpper()</code>).</li>
+      <li>Der <b>Typ</b> ist die Vorlage: alle <code>FileInfo</code>-Objekte haben dieselben Felder, aber eigene Werte.</li>
+      <li>Die Konsole zeigt nur die <b>Standardansicht</b>. Alles siehst du mit <code class="ps">Select-Object *</code> oder <code class="ps">Format-List *</code>.</li>
+      <li><code class="ps">Get-Member</code> verrät Typ und Feldnamen, aber nicht die Werte wie Grösse oder Datum.</li>
+      <li>Punktnotation: erst Klammern um den Befehl, dann ohne Leerzeichen <code>.Name</code>.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li>Datum: <code>Microsecond</code> und <code>Nanosecond</code> gibt es nur in <span class="ps-version">7</span>. In 5.1 hat ein Datum 13 statt 15 Eigenschaften.</li>
+        <li>Datei: <code>LinkTarget</code> und <code>UnixFileMode</code> gibt es nur in <span class="ps-version">7</span> (17 statt 15 Eigenschaften). Bei <code class="ps">Select-Object *</code> fehlen in 5.1 zusätzlich <code>ModeWithoutHardLink</code> und <code>ResolvedTarget</code>.</li>
+        <li>Prozess: Das Objekt heisst in beiden <code>System.Diagnostics.Process</code>, aber <code class="ps">(Get-Process -Id $PID).Name</code> ist in 7 <code>pwsh</code>, in 5.1 <code>powershell</code>.</li>
+        <li>Punktnotation, Methoden, <code class="ps">Get-Member</code> und <code class="ps">$_</code> funktionieren in beiden Versionen gleich.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_objects">about_Objects</a> (Typ, Methoden, Eigenschaften; Objekte in der Pipeline)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_properties">about_Properties</a> (Punktnotation, Klammern um den Befehl, <code>Select-Object *</code>, Feld der Liste gewinnt)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_methods">about_Methods</a> (Klammern bei jedem Aufruf, Methodendefinitionen lesen)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-member">Get-Member</a> (<code>-MemberType</code>, eine Liste je Typ)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_member-access_enumeration">about_Member-Access_Enumeration</a> (Punkt auf einer Liste)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_psitem">about_PSItem</a> (<code>$_</code> und <code>$PSItem</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/learn/ps101/03-discovering-objects">PowerShell 101, Kapitel 3: Discovering objects, properties, and methods</a> (Standardansicht, bis vier Eigenschaften als Tabelle, gerechnete Spalten bei Get-Process)</li>
+      </ul>
+    </div>
+    <footer>Station 06 des Lernpfads PS · Weiter geht es mit «Pipeline: filtern, sortieren, auswählen».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const R = String.raw;
+  // Code als gefärbter Inline-Code (ps-konsole.js färbt ihn beim Einfügen)
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+
+  // Hilfen für pruefe(ctx)
+  const einzig = (ctx) => (ctx.objekte.length === 1 ? ctx.objekte[0] : undefined);
+  const textVon = (ctx, o) => (o === undefined || o === null ? "" : ctx.text(o));
+  // Datei oder Ordner geholt? (Aliase wie gi, gci, ls sind schon aufgelöst)
+  const holt = (ctx) => ctx.befehle.includes("Get-Item") || ctx.befehle.includes("Get-ChildItem");
+  // Wert einer Eigenschaft eines Ausgabeobjekts als Text
+  const feld = (ctx, o, n) => (o && typeof o === "object" && typeof o.wert === "function" ? textVon(ctx, o.wert(n)) : undefined);
+  const gleicheMenge = (a, b) => a.length === b.length && a.slice().sort().join("|") === b.slice().sort().join("|");
+  // Get-Member-Ausgabe: genau anzahl Zeilen, alle vom Typ typ und von der Art Property
+  const nurEigenschaften = (ctx, typ, anzahl) => ctx.befehle.includes("Get-Member") && ctx.objekte.length === anzahl &&
+    ctx.objekte.every((o) => feld(ctx, o, "TypeName") === typ && feld(ctx, o, "MemberType") === "Property");
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t06-mini", {
+    kategorien: ["Objekt", "Eigenschaft", "Methode"],
+    elemente: [
+      { html: "die Datei <code>notizen.txt</code>", kategorie: "Objekt", erklaerung: "Ein einzelnes Ding: eine ganze Karteikarte." },
+      { html: "ihre Grösse: 197 Bytes", kategorie: "Eigenschaft", erklaerung: "Ein Feld auf der Karte mit einem Wert (Length)." },
+      { html: "den Namen in Grossbuchstaben umwandeln", kategorie: "Methode", erklaerung: "Eine Handlung: ToUpper()." },
+      { html: "das Datum von heute", kategorie: "Objekt", erklaerung: "Get-Date liefert eine Karte für den jetzigen Zeitpunkt." },
+      { html: "der Wochentag: Montag", kategorie: "Eigenschaft", erklaerung: "Ein Feld des Datums (DayOfWeek)." },
+      { html: "sieben Tage dazuzählen", kategorie: "Methode", erklaerung: "Eine Handlung mit Angabe: AddDays(7)." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper ---------- */
+  const st = L.konsole.sitzung();
+  const sp = (link, code) => '<span data-link="' + link + '">' + C(code) + "</span>";
+  const stufe = (teile, befehl) => '<div class="t06-st"><div>' + teile + "</div>" + st.html(befehl) + "</div>";
+  const gi = R`Get-Item Dokumente\notizen.txt`;
+  L.stepper("#t06-stepper", {
+    titel: "Leas Auftrag",
+    text: 'Hol <span data-link="a">die Datei notizen.txt</span>, <span data-link="b">nimm sie als Ganzes</span> und lies davon nur <span data-link="c">die Grösse</span>.',
+    schritte: [
+      { html: stufe(sp("a", gi), gi),
+        warum: "Get-Item holt genau ein Objekt: die Karteikarte der Datei. Die Konsole zeigt davon die Standardansicht mit vier Spalten." },
+      { html: stufe('<span data-link="b">' + C("(") + "</span>" + sp("a", gi) + '<span data-link="b">' + C(")") + "</span>", "(" + gi + ")"),
+        warum: "Runde Klammern heissen «zuerst ausführen». Die Ausgabe bleibt gleich. Aber jetzt steht dort ein fertiges Objekt, in das du hineingreifen kannst." },
+      { html: stufe('<span data-link="b">' + C("(") + "</span>" + sp("a", gi) + '<span data-link="b">' + C(")") + "</span>" + sp("c", ".Length"), "(" + gi + ").Length"),
+        warum: "Der Punkt greift in die Karte, Length ist der Name des Felds. Übrig bleibt nur der Wert: 197, eine echte Zahl." }
+    ]
+  });
+
+  /* ---------- Schritt 3: alle Eigenschaften, wie in echtem pwsh 7 ---------- */
+  (function alleEigenschaften() {
+    const pre = document.getElementById("t06-alle");
+    const s = L.konsole.sitzung();
+    const befehl = gi + " | Select-Object *";
+    const zeilen = s.ausfuehren(befehl).split("\n");
+    // Der Simulator kennt VersionInfo nicht. pwsh 7.6 zeigt es nach ModeWithoutHardLink (bei Textdateien leer).
+    if (!zeilen.some((z) => /^VersionInfo\s/.test(z))) {
+      const i = zeilen.findIndex((z) => /^ModeWithoutHardLink\s/.test(z));
+      const e = " ".repeat(22);
+      const vi = ["VersionInfo         : File:             C:\\Users\\lea\\Dokumente\\notizen.txt",
+        e + "InternalName:", e + "OriginalFilename:", e + "FileVersion:", e + "FileDescription:", e + "Product:", e + "ProductVersion:",
+        e + "Debug:            False", e + "Patched:          False", e + "PreRelease:       False", e + "PrivateBuild:     False",
+        e + "SpecialBuild:     False", e + "Language:", ""];
+      if (i >= 0) zeilen.splice(i + 1, 0, ...vi);
+    }
+    pre.textContent = "";
+    const p = document.createElement("span");
+    p.className = "psk-prompt";
+    p.textContent = s.prompt();
+    pre.appendChild(p);
+    pre.appendChild(document.createTextNode(befehl + "\n" + zeilen.join("\n").replace(/\n+$/, "")));
+  })();
+
+  /* ---------- Schritt 6: Konsole mit Aufgaben ---------- */
+  L.konsole("#t06-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Was für ein Objekt ist das?",
+        text: "<p>Finde heraus, von welchem <b>Typ</b> das Objekt der Datei <code>Dokumente\\notizen.txt</code> ist.</p>",
+        hinweis: "<p>Hol die Datei mit " + C("Get-Item") + " und schick sie mit " + C("|") + " in " + C("Get-Member") + ". Ganz oben steht TypeName. Oder: " + C(".GetType().FullName") + ".</p>",
+        loesung: R`Get-Item Dokumente\notizen.txt | Get-Member`,
+        pruefe: (ctx) => /notizen\.txt/i.test(ctx.eingabe) && !ctx.hatFehler &&
+          ((ctx.befehle.includes("Get-Member") && /TypeName: System\.IO\.FileInfo/.test(ctx.ausgabe)) ||
+           (/GetType\(\)/i.test(ctx.eingabe) && /FileInfo/.test(ctx.ausgabe)))
+      },
+      {
+        titel: "Wie gross ist die Datei?",
+        text: "<p>Gib mit der Punktnotation <b>nur die Zahl</b> aus: die Grösse (<code>Length</code>) von <code>Dokumente\\notizen.txt</code>.</p>",
+        hinweis: "<p>Klammern um den Befehl, dann Punkt und Feldname: " + C("(Get-Item …).Length") + ".</p>",
+        loesung: R`(Get-Item Dokumente\notizen.txt).Length`,
+        pruefe: (ctx) => /\.Length\b/i.test(ctx.eingabe) && typeof einzig(ctx) === "number" && einzig(ctx) === 197
+      },
+      {
+        titel: "Welcher Wochentag ist heute?",
+        text: "<p>Lea braucht den Wochentag von heute. Hol ihn mit der Punktnotation aus dem Datum von " + C("Get-Date") + ".</p>",
+        hinweis: "<p>Das Feld heisst " + C("DayOfWeek") + ". Klammern nicht vergessen: " + C("(Get-Date)") + ".</p>",
+        loesung: "(Get-Date).DayOfWeek",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /\.DayOfWeek\b/i.test(ctx.eingabe) && textVon(ctx, einzig(ctx)) === "Monday"
+      },
+      {
+        titel: "Dateiname in Grossbuchstaben",
+        text: "<p>Hol den Namen (<code>Name</code>) der Datei <code>Dokumente\\notizen.txt</code> und gib ihn mit einer Methode in Grossbuchstaben aus.</p>",
+        hinweis: "<p>Erst " + C("(Get-Item …).Name") + ", dann die Methode " + C(".ToUpper()") + " mit Klammern.</p>",
+        loesung: R`(Get-Item Dokumente\notizen.txt).Name.ToUpper()`,
+        pruefe: (ctx) => (ctx.befehle.includes("Get-Item") || ctx.befehle.includes("Get-ChildItem")) && /ToUpper\(\s*\)/i.test(ctx.eingabe) &&
+          textVon(ctx, einzig(ctx)) === "NOTIZEN.TXT"
+      },
+      {
+        titel: "Alle Eigenschaften einer Logdatei",
+        text: "<p>Zeige <b>alle</b> Eigenschaften mit ihren Werten für die eine Datei <code>Logs\\app.log</code>.</p>",
+        hinweis: "<p>Hol die Datei und schick sie in " + C("Format-List *") + " oder " + C("Select-Object *") + ". Der Stern heisst «alle».</p>",
+        loesung: R`Get-Item Logs\app.log | Format-List *`,
+        pruefe: (ctx) => /\*/.test(ctx.eingabe) && (ctx.befehle.includes("Format-List") || ctx.befehle.includes("Select-Object")) &&
+          (ctx.ausgabe.match(/^FullName\s+:/gm) || []).length === 1 && /^FullName\s+: C:\\Users\\lea\\Logs\\app\.log\s*$/m.test(ctx.ausgabe) &&
+          /^CreationTime\s+:/m.test(ctx.ausgabe)
+      },
+      {
+        titel: "Wiedervorlage in einer Woche",
+        text: "<p>Welches Datum ist heute in 7 Tagen? Rufe dafür eine Methode des heutigen Datums auf.</p>",
+        hinweis: "<p>Die Methode heisst " + C("AddDays()") + ". Die Anzahl Tage gehört in die Klammern.</p>",
+        loesung: "(Get-Date).AddDays(7)",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /AddDays\(\s*7\s*\)/i.test(ctx.eingabe) && ctx.objekte.length === 1 &&
+          /9\. November 2026|11\/09\/2026|09\.11\.2026/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Schritt 7: Objekt-Röntgen ---------- */
+  (function roentgen() {
+    const sitz = L.konsole.sitzung();
+    const wahl = document.getElementById("t06-ordner");
+    const tbody = document.querySelector("#t06-liste tbody");
+    const box = document.getElementById("t06-karte");
+    const meldung = document.getElementById("t06-meldung");
+    const befehlListe = document.getElementById("t06-befehl-liste");
+    const STANDARD = ["Mode", "LastWriteTime", "Length", "Name"];
+    // Felder mit einfachem Wert: hier zeigt die Karte die Ausgabe der Punktnotation (gleich wie in pwsh 7)
+    const EINFACH = ["Name", "Length", "Extension", "FullName", "DirectoryName", "BaseName", "LastWriteTime", "CreationTime",
+      "LastAccessTime", "IsReadOnly", "Exists", "Mode", "Attributes", "PSIsContainer", "PSChildName"];
+    let nurStd = false;
+
+    const pfadText = (ordner, name) => (ordner === "." ? name : ordner + "\\" + name);
+    const quote = (p) => "'" + p.replace(/'/g, "''") + "'";
+
+    // Format-List * des Simulators in Felder zerlegen (Reihenfolge bleibt)
+    function felderLesen(pfad) {
+      const roh = sitz.ausfuehren("Get-Item " + quote(pfad) + " -Force | Format-List *");
+      const felder = [];
+      roh.split("\n").forEach((z) => {
+        const m = /^(\w+)\s*: ?(.*)$/.exec(z);
+        if (m) felder.push({ name: m[1], wert: m[2].replace(/\s+$/, "") });
+      });
+      return felder;
+    }
+
+    function ordnerZeigen() {
+      const ordner = wahl.value;
+      const ziel = ordner === "." ? "" : " " + ordner;
+      befehlListe.innerHTML = "Befehl: " + C("Get-ChildItem" + ziel);
+      L.psFaerben(befehlListe);
+      const namen = sitz.ausfuehren("(Get-ChildItem" + ziel + ").Name").split("\n").filter((x) => x !== "");
+      tbody.innerHTML = "";
+      box.innerHTML = "";
+      namen.forEach((name) => {
+        const f = felderLesen(pfadText(ordner, name));
+        const w = (n) => { const x = f.find((y) => y.name === n); return x ? x.wert : ""; };
+        const tr = document.createElement("tr");
+        const zelle = (t, kl) => { const td = document.createElement("td"); td.textContent = t; if (kl) td.className = kl; return td; };
+        tr.appendChild(zelle(w("Mode")));
+        tr.appendChild(zelle(w("LastWriteTime").replace(/:\d\d$/, "")));
+        tr.appendChild(zelle(w("Length"), "t06-zahl"));
+        const td = document.createElement("td");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn t06-zeile";
+        b.textContent = name;
+        b.setAttribute("aria-pressed", "false");
+        b.setAttribute("aria-label", name + ": Karteikarte zeigen");
+        b.addEventListener("click", () => karteZeigen(ordner, name, f, tr, b));
+        td.appendChild(b);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      });
+      meldung.textContent = namen.length + " Objekte. Tippe einen Namen an, um die ganze Karteikarte zu sehen.";
+    }
+
+    function karteZeigen(ordner, name, felder, tr, knopf) {
+      tbody.querySelectorAll("tr").forEach((x) => x.classList.remove("an"));
+      tbody.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      tr.classList.add("an");
+      knopf.setAttribute("aria-pressed", "true");
+      const pfad = pfadText(ordner, name);
+      const typ = sitz.ausfuehren("(Get-Item " + quote(pfad) + " -Force).GetType().FullName").trim();
+      const istDatei = typ === "System.IO.FileInfo";
+      const std = felder.filter((f) => STANDARD.includes(f.name));
+
+      box.innerHTML = "";
+      const karte = document.createElement("div");
+      karte.className = "t06-karte" + (nurStd ? " nur-std" : "");
+      karte.setAttribute("role", "region");
+      karte.setAttribute("aria-label", "Karteikarte von " + name);
+
+      const kopf = document.createElement("div");
+      kopf.className = "t06-karte-kopf";
+      const h = document.createElement("h3"); h.textContent = name;
+      const t = document.createElement("span"); t.className = "t06-typ"; t.textContent = "TypeName: " + typ;
+      kopf.append(h, t);
+
+      const befehl = document.createElement("p");
+      befehl.className = "hint";
+      befehl.innerHTML = "Alle Felder: " + C("Get-Item " + pfad + " | Select-Object *");
+
+      const modi = document.createElement("div");
+      modi.className = "modes";
+      modi.setAttribute("role", "group");
+      modi.setAttribute("aria-label", "Ansicht der Karte");
+      const bAlle = document.createElement("button");
+      const bStd = document.createElement("button");
+      [[bAlle, "Alle Eigenschaften"], [bStd, "Nur ★ Standardansicht"]].forEach(([b, txt]) => {
+        b.type = "button"; b.className = "btn"; b.textContent = txt;
+      });
+      const modusSetzen = (std) => {
+        nurStd = std;
+        karte.classList.toggle("nur-std", std);
+        bAlle.classList.toggle("on", !std); bAlle.setAttribute("aria-pressed", String(!std));
+        bStd.classList.toggle("on", std); bStd.setAttribute("aria-pressed", String(std));
+      };
+      bAlle.addEventListener("click", () => modusSetzen(false));
+      bStd.addEventListener("click", () => modusSetzen(true));
+      modi.append(bAlle, bStd);
+
+      const legende = document.createElement("p");
+      legende.className = "t06-legende";
+      legende.innerHTML = "<span>★ Feld</span> erscheint in der Tabelle von Get-ChildItem";
+
+      const ul = document.createElement("ul");
+      ul.className = "t06-felder";
+      const punkt = document.createElement("div");
+      punkt.className = "t06-punkt";
+      punkt.setAttribute("aria-live", "polite");
+
+      felder.forEach((f) => {
+        const li = document.createElement("li");
+        if (STANDARD.includes(f.name)) li.className = "t06-std";
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "t06-feld-knopf";
+        b.setAttribute("aria-pressed", "false");
+        const n = document.createElement("span"); n.className = "t06-feld-name"; n.textContent = f.name;
+        const v = document.createElement("span"); v.className = "t06-feld-wert" + (f.wert === "" ? " leer" : ""); v.textContent = f.wert === "" ? "(leer)" : f.wert;
+        b.append(n, v);
+        if (STANDARD.includes(f.name)) {
+          const sr = document.createElement("span"); sr.className = "sr-only"; sr.textContent = " (in der Standardansicht)";
+          b.appendChild(sr);
+        }
+        b.addEventListener("click", () => {
+          ul.querySelectorAll(".t06-feld-knopf").forEach((x) => x.setAttribute("aria-pressed", "false"));
+          b.setAttribute("aria-pressed", "true");
+          const code = "(Get-Item " + pfad + ")." + f.name;
+          punkt.innerHTML = "";
+          const p = document.createElement("p");
+          p.className = "prose";
+          if (EINFACH.includes(f.name)) {
+            p.innerHTML = "Punktnotation für dieses Feld:";
+            punkt.appendChild(p);
+            const tmp = document.createElement("div");
+            tmp.innerHTML = sitz.html(code);
+            const pre = tmp.querySelector("pre");
+            if (pre) { pre.setAttribute("tabindex", "0"); pre.setAttribute("aria-label", "Ausgabe des Simulators für " + code); punkt.appendChild(pre); }
+          } else {
+            p.innerHTML = "Punktnotation für dieses Feld: " + C(code) + ". Der Wert ist selbst ein Objekt oder ein Sonderfall. Probier es im Simulator oben aus.";
+            punkt.appendChild(p);
+          }
+          L.psFaerben(punkt);
+        });
+        li.appendChild(b);
+        ul.appendChild(li);
+      });
+
+      const stand = document.createElement("p");
+      stand.className = "t06-stand";
+      stand.textContent = felder.length + " Eigenschaften im Simulator, " + std.length + " davon in der Standardansicht." +
+        (istDatei ? " Echtes pwsh 7 kennt zusätzlich VersionInfo (" + (felder.length + 1) + " Eigenschaften)." : " Ordner haben kein Length, darum bleibt diese Spalte in der Tabelle leer.");
+
+      karte.append(kopf, befehl, modi, legende, ul, stand, punkt);
+      box.appendChild(karte);
+      modusSetzen(nurStd);
+      L.psFaerben(box);
+      meldung.textContent = "Karteikarte von " + name + ": " + typ + ", " + felder.length + " Eigenschaften.";
+    }
+
+    wahl.addEventListener("change", ordnerZeigen);
+    ordnerZeigen();
+  })();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t06-u1", {
+    kategorien: ["Eigenschaft", "Methode"],
+    elemente: [
+      { html: C(".Length"), kategorie: "Eigenschaft", erklaerung: "Ein gespeicherter Wert ohne Klammern: die Grösse." },
+      { html: C(".ToUpper()"), kategorie: "Methode", erklaerung: "Runde Klammern: eine Handlung, die einen neuen Text liefert." },
+      { html: C(".DayOfWeek"), kategorie: "Eigenschaft", erklaerung: "Der Wochentag ist ein Feld des Datums." },
+      { html: C(".AddDays(7)"), kategorie: "Methode", erklaerung: "Eine Handlung mit Angabe in den Klammern." },
+      { html: C(".LastWriteTime"), kategorie: "Eigenschaft", erklaerung: "Das Datum der letzten Änderung, ein Feld der Datei." },
+      { html: C(".GetType()"), kategorie: "Methode", erklaerung: "Klammern: Die Methode liefert den Typ des Objekts." },
+      { html: C(".FullName"), kategorie: "Eigenschaft", erklaerung: "Der ganze Pfad, ein Feld der Datei." },
+      { html: C(".ToString('dd.MM.yyyy')"), kategorie: "Methode", erklaerung: "Wandelt das Datum mit einem Muster in Text um." }
+    ]
+  });
+  L.sortierer("#t06-u2", {
+    kategorien: ["nur Datei", "nur Ordner", "beide"],
+    elemente: [
+      { html: C("Length"), kategorie: "nur Datei", erklaerung: "Nur Dateien haben eine Grösse in Bytes. Bei Ordnern bleibt die Spalte leer." },
+      { html: C("Parent"), kategorie: "nur Ordner", erklaerung: "DirectoryInfo hat Parent (der Ordner darüber). Eine Datei hat dafür Directory." },
+      { html: C("Name"), kategorie: "beide", erklaerung: "Jede Datei und jeder Ordner hat einen Namen." },
+      { html: C("IsReadOnly"), kategorie: "nur Datei", erklaerung: "Schreibschutz gibt es als Feld nur bei FileInfo." },
+      { html: C("Root"), kategorie: "nur Ordner", erklaerung: "Root ist das Laufwerk, auf dem der Ordner liegt, zum Beispiel C:\\." },
+      { html: C("LastWriteTime"), kategorie: "beide", erklaerung: "Auch Ordner haben ein Datum der letzten Änderung." },
+      { html: C("DirectoryName"), kategorie: "nur Datei", erklaerung: "Der Pfad des Ordners, in dem die Datei liegt." }
+    ]
+  });
+  L.konsole("#t06-u3", {
+    begruessung: false,
+    aufgabenTitel: "Befehl tippen",
+    aufgaben: [
+      {
+        titel: "Wochentag 12 Tage nach der letzten Änderung",
+        text: "<p>Hol die Datei <code>Dokumente\\notizen.txt</code>, nimm ihre letzte Änderung, zähl 12 Tage dazu und gib nur den Wochentag aus.</p>",
+        hinweis: "<p>Lies die Kette von links nach rechts: " + C("(Get-Item …)") + ", dann " + C(".LastWriteTime") + ", dann eine Methode mit der Zahl in den Klammern, ganz rechts das Feld für den Wochentag.</p>",
+        loesung: R`(Get-Item Dokumente\notizen.txt).LastWriteTime.AddDays(12).DayOfWeek  # Freitag, 30.10., plus 12 Tage: Mittwoch, 11.11.`,
+        // Ergebnis prüfen; die 12 muss vorkommen, denn +5 Tage ergäben auch Mittwoch
+        pruefe: (ctx) => holt(ctx) && /notizen\.txt/i.test(ctx.eingabe) && /LastWriteTime/i.test(ctx.eingabe) && /\b12\b/.test(ctx.eingabe) &&
+          ["Wednesday", "Mittwoch"].includes(textVon(ctx, einzig(ctx)))
+      }
+    ]
+  });
+  L.auswahl("#t06-u4", {
+    frage: "Was gibt " + C(R`(Get-Item Logs\app.log).Length`) + " auf Leas Rechner aus?",
+    optionen: [C("270"), C("app.log"), "eine Tabelle mit Mode, LastWriteTime, Length und Name", C("7")],
+    richtig: 0,
+    erklaerung: "Die Punktnotation holt nur den Wert des Felds Length: 270 Bytes. Die Tabelle käme ohne .Length, die 7 bei (Get-ChildItem Logs).Length."
+  });
+  L.auswahl("#t06-u5", {
+    frage: "Im Simulator ist heute Montag, 2. November 2026. Was gibt " + C("(Get-Date).AddDays(-2).DayOfWeek") + " aus?",
+    optionen: [C("Saturday"), C("Wednesday"), C("Samstag"), "eine Fehlermeldung, weil die Zahl negativ ist"],
+    richtig: 0,
+    erklaerung: "AddDays(-2) geht zwei Tage zurück, auf Samstag, 31. Oktober. DayOfWeek liefert den Wochentag englisch: Saturday."
+  });
+  L.konsole("#t06-u6", {
+    begruessung: false,
+    befehle: [R`Get-Item Dokumente\notizen.txt.Name`],
+    aufgabenTitel: "Korrigieren",
+    aufgaben: [
+      {
+        titel: "Nur der Name von notizen.txt",
+        text: "<p>Oben steht Leas Versuch mit der Meldung <span lang=\"en\">" + C("Cannot find path …notizen.txt.Name…") + "</span>. Tippe den korrigierten Befehl, der nur den Text " + C("notizen.txt") + " ausgibt.</p>",
+        hinweis: "<p>Lies die Meldung genau: Welchen Pfad sucht PowerShell? Was fehlt, damit zuerst die Datei geholt wird und erst danach der Punkt hineingreift?</p>",
+        loesung: R`(Get-Item Dokumente\notizen.txt).Name  # Klammern: erst die Datei holen, dann greift .Name hinein`,
+        pruefe: (ctx) => holt(ctx) && !ctx.hatFehler && ctx.objekte.length === 1 && einzig(ctx) === "notizen.txt"
+      }
+    ]
+  });
+  L.auswahl("#t06-u7", {
+    frage: "Lea tippt " + C("(Get-Date).ToString") + " und erwartet das Datum als Text. Stattdessen erscheint eine Liste mit der Überschrift " + C("OverloadDefinitions") + ". Warum?",
+    optionen: [
+      "ToString ist eine Methode. Ohne Klammern ruft PowerShell sie nicht auf, sondern zeigt die erlaubten Schreibweisen.",
+      "Ein Datum kann man nicht in Text umwandeln.",
+      "Get-Date braucht zuerst den Parameter -Format.",
+      "Die Klammern um Get-Date sind zu viel."
+    ],
+    richtig: 0,
+    erklaerung: "Methoden brauchen immer runde Klammern: (Get-Date).ToString() oder mit Muster (Get-Date).ToString('dd.MM.yyyy')."
+  });
+  L.wahrFalsch("#t06-u8", {
+    titel: "Objekte und Standardansicht",
+    aussagen: [
+      { html: "Zeigt die Tabelle von " + C("Get-ChildItem") + " keine Spalte für den Pfad, haben die Objekte auch kein Feld dafür.", wahr: false, erklaerung: "Die Standardansicht ist nur eine Auswahl. Den ganzen Pfad hat jede Datei im Feld FullName." },
+      { html: "Alle Objekte vom Typ " + C("System.IO.FileInfo") + " haben dieselben Eigenschaften, aber verschiedene Werte.", wahr: true, erklaerung: "Der Typ ist die Vorlage. Jede Datei füllt die Felder mit eigenen Werten." },
+      { html: C("Get-Member") + " zeigt dir, wie gross " + C("notizen.txt") + " ist.", wahr: false, erklaerung: "Get-Member listet Namen, Art und Definition der Felder, keine Werte. Die Grösse zeigt (Get-Item …).Length oder Select-Object *." },
+      { html: C("(Get-Date).AddDays(7)") + " stellt die Uhr des Computers eine Woche vor.", wahr: false, erklaerung: "Die Methode liefert ein neues Datum zurück. Am Computer ändert sich nichts." },
+      { html: "Ein Tippfehler im Feldnamen wie " + C(".Lenght") + " ergibt eine rote Fehlermeldung.", wahr: false, erklaerung: "PowerShell gibt einfach nichts aus. Darum: Schreibweise mit Get-Member prüfen." },
+      { html: "Startest du in PowerShell " + C("cmd /c dir") + ", kommen Textzeilen an, keine Datei-Objekte.", wahr: true, erklaerung: "Klassische Programme liefern Text. Jede Zeile ist ein System.String." }
+    ]
+  });
+  L.konsole("#t06-u9", {
+    begruessung: false,
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Wochentag der letzten Änderung",
+        text: "<p>An welchem Wochentag hat Lea die Datei <code>Dokumente\\einkaufsliste.txt</code> zuletzt geändert? Gib nur den Wochentag aus.</p>",
+        hinweis: "<p>Zwei Punkte hintereinander: zuerst " + C("LastWriteTime") + ", davon " + C("DayOfWeek") + ".</p>",
+        loesung: R`(Get-Item Dokumente\einkaufsliste.txt).LastWriteTime.DayOfWeek`,
+        pruefe: (ctx) => /einkaufsliste\.txt/i.test(ctx.eingabe) && /\.DayOfWeek\b/i.test(ctx.eingabe) && textVon(ctx, einzig(ctx)) === "Thursday"
+      },
+      {
+        titel: "Der ganze Pfad",
+        text: "<p>Gib den vollständigen Pfad der Datei <code>Berichte\\mitarbeitende.csv</code> als reinen Text aus, ohne Tabelle.</p>",
+        hinweis: "<p>Das Feld mit dem ganzen Pfad heisst " + C("FullName") + ". Hol es mit der Punktnotation.</p>",
+        loesung: R`(Get-Item Berichte\mitarbeitende.csv).FullName`,
+        pruefe: (ctx) => /\.FullName\b/i.test(ctx.eingabe) && typeof einzig(ctx) === "string" && einzig(ctx) === "C:\\Users\\lea\\Berichte\\mitarbeitende.csv"
+      },
+      {
+        titel: "Wie viele Felder hat ein Datum?",
+        text: "<p>Zähle, wie viele Eigenschaften (<code>Property</code>) ein Datum-Objekt von " + C("Get-Date") + " hat.</p>",
+        hinweis: "<p>" + C("Get-Date | Get-Member -MemberType Property") + " listet sie auf. Zählen kannst du mit Klammern und " + C(".Count") + " oder mit " + C("| Measure-Object") + ".</p>",
+        loesung: "(Get-Date | Get-Member -MemberType Property).Count",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && ctx.befehle.includes("Get-Member") && /Property/i.test(ctx.eingabe) &&
+          (einzig(ctx) === 15 || /^Count\s+:\s*15\s*$/m.test(ctx.ausgabe))
+      }
+    ]
+  });
+
+  /* ---------- Tipp-Training ---------- */
+  const berichte = ["budget-2027.xlsx", "mitarbeitende.csv", "quartalsbericht-q3.xlsx"];
+  const appLogs = ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log", "app-2026-10.log", "app.log"];
+
+  // Stufe 1: abtippen. Geprüft wird das Ergebnis, dazu Datei und Methode aus der Vorlage.
+  L.konsole("#t06-tipp1", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 1 · Nachtippen",
+    aufgaben: [
+      {
+        titel: "Die Felder einer Logdatei",
+        text: "<p>Tippe ab: " + C(R`Get-Item Logs\app.log | Get-Member -MemberType Property`) + "</p><p>Welcher Typ steht ganz oben?</p>",
+        hinweis: "<p>Den senkrechten Strich " + C("|") + " tippst du auf der Schweizer Tastatur mit AltGr und 7, den Rückstrich " + C("\\") + " mit AltGr und der Taste &lt; links unten.</p>",
+        loesung: R`Get-Item Logs\app.log | Get-Member -MemberType Property  # Typ System.IO.FileInfo mit 17 Eigenschaften`,
+        pruefe: (ctx) => holt(ctx) && /app\.log/i.test(ctx.eingabe) && nurEigenschaften(ctx, "System.IO.FileInfo", 17)
+      },
+      {
+        titel: "Grösse in Megabyte",
+        text: "<p>Tippe ab: " + C(R`(Get-Item Downloads\setup-alt.exe).Length / 1MB`) + "</p><p>Wie viele MB hat die alte Setup-Datei?</p>",
+        hinweis: "<p>Zwischen der Klammer zu und " + C(".Length") + " steht kein Leerzeichen. " + C("1MB") + " schreibst du ohne Leerzeichen zwischen Zahl und Einheit.</p>",
+        loesung: R`(Get-Item Downloads\setup-alt.exe).Length / 1MB  # 52 428 800 Bytes geteilt durch 1 MB ergibt 50`,
+        pruefe: (ctx) => holt(ctx) && /setup-alt/i.test(ctx.eingabe) && ctx.objekte.length === 1 && typeof einzig(ctx) === "number" && einzig(ctx) === 50
+      },
+      {
+        titel: "Datum vor 30 Tagen als Text",
+        text: "<p>Tippe ab: " + C("(Get-Date).AddDays(-30).ToString('dd.MM.yyyy')") + "</p><p>Welches Datum war vor 30 Tagen?</p>",
+        hinweis: "<p>Drei Paar runde Klammern: um " + C("Get-Date") + ", um die Zahl und um das Muster. Das Muster steht in einfachen Anführungszeichen " + C("'…'") + ", grosses " + C("MM") + " heisst Monat.</p>",
+        loesung: "(Get-Date).AddDays(-30).ToString('dd.MM.yyyy')  # 30 Tage vor dem 2.11.2026: 03.10.2026",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /AddDays/i.test(ctx.eingabe) && ctx.objekte.length === 1 && textVon(ctx, einzig(ctx)) === "03.10.2026"
+      }
+    ]
+  });
+
+  // Stufe 2: einen bekannten Befehl abwandeln. Geprüft wird das Ergebnis, nicht der Wortlaut.
+  L.konsole("#t06-tipp2", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 2 · Abwandeln",
+    aufgaben: [
+      {
+        titel: "Anderes Feld, andere Datei",
+        text: "<p>Gezeigt: " + C(R`(Get-Item Dokumente\notizen.txt).LastWriteTime`) + "</p><p>Wie oben, aber für die Datei <code>Bilder\\logo-wolkenried.png</code>, und gib <b>nur das Jahr</b> der letzten Änderung aus.</p>",
+        hinweis: "<p>Ein Datum ist selbst eine Karte. Hängst du noch einen Punkt an, kommst du an seine Felder. Wie heisst «Jahr» auf Englisch?</p>",
+        loesung: R`(Get-Item Bilder\logo-wolkenried.png).LastWriteTime.Year  # zweiter Punkt: vom Datum nur das Jahr, 2025`,
+        pruefe: (ctx) => holt(ctx) && /logo/i.test(ctx.eingabe) && ctx.objekte.length === 1 && textVon(ctx, einzig(ctx)) === "2025"
+      },
+      {
+        titel: "Anderer Ordner, andere Felder",
+        text: "<p>Gezeigt: " + C(R`Get-Item Dokumente\notizen.txt | Select-Object Name, Length, LastWriteTime, FullName`) + "</p><p>Wie oben, aber für <b>alle Dateien im Ordner</b> <code>Berichte</code> und nur mit den Feldern <code>Name</code> und <code>Extension</code> (Endung).</p>",
+        hinweis: "<p>Für alle Dateien eines Ordners brauchst du ein anderes Cmdlet als " + C("Get-Item") + ". Hinter " + C("Select-Object") + " stehen dann nur noch zwei Namen.</p>",
+        loesung: "Get-ChildItem Berichte | Select-Object Name, Extension  # drei schlanke Karten mit Name und Endung",
+        pruefe: (ctx) => holt(ctx) && ctx.befehle.includes("Select-Object") && ctx.objekte.length === 3 &&
+          ctx.objekte.every((o) => o && typeof o === "object" && typeof o.namen === "function" &&
+            gleicheMenge(o.namen().map((n) => n.toLowerCase()), ["extension", "name"])) &&
+          gleicheMenge(ctx.objekte.map((o) => feld(ctx, o, "Name")), berichte)
+      },
+      {
+        titel: "Ein Ordner statt einer Datei",
+        text: "<p>Gezeigt: " + C(R`Get-Item Dokumente\notizen.txt | Get-Member -MemberType Property`) + "</p><p>Wie oben, aber für den <b>Ordner</b> <code>Dokumente</code> selbst. Welcher Typ erscheint jetzt, und welche Felder hat nur der Ordner?</p>",
+        hinweis: "<p>Du änderst nur den Pfad hinter " + C("Get-Item") + ". Kein " + C("Get-ChildItem") + ": Das würde die Dateien im Ordner holen, nicht den Ordner.</p>",
+        loesung: "Get-Item Dokumente | Get-Member -MemberType Property  # Typ System.IO.DirectoryInfo, dazu Parent und Root",
+        pruefe: (ctx) => holt(ctx) && /Dokumente/i.test(ctx.eingabe) && !/Archiv/i.test(ctx.eingabe) && nurEigenschaften(ctx, "System.IO.DirectoryInfo", 15)
+      },
+      {
+        titel: "Andere Methode",
+        text: "<p>Gezeigt: " + C(R`(Get-Item Dokumente\notizen.txt).Name.ToUpper()`) + "</p><p>Wie oben, aber für die Datei <code>Downloads\\WolkenriedSync-setup.exe</code>, und der Name soll ganz in <b>Kleinbuchstaben</b> erscheinen.</p>",
+        hinweis: "<p>Upper heisst «gross», das Gegenteil von upper ist lower. Die Klammern der Methode bleiben.</p>",
+        loesung: R`(Get-Item Downloads\WolkenriedSync-setup.exe).Name.ToLower()  # ToLower() liefert den Namen klein geschrieben`,
+        pruefe: (ctx) => holt(ctx) && /ToLower\(\s*\)/i.test(ctx.eingabe) && ctx.objekte.length === 1 && einzig(ctx) === "wolkenriedsync-setup.exe"
+      }
+    ]
+  });
+
+  // Stufe 3: nur das Ziel. Aufgaben 2 bis 4 wiederholen Station 04 und 05.
+  L.konsole("#t06-tipp3", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 3 · Selber lösen",
+    aufgaben: [
+      {
+        titel: "Speicher von notepad",
+        text: "<p>Wie viel Arbeitsspeicher belegt der Prozess <code>notepad</code> gerade? Gib <b>nur die Zahl</b> in Bytes aus, ohne Tabelle.</p>",
+        hinweis: "<p>Die Spalte " + C("WS(M)") + " in der Tabelle ist nur eine Beschriftung. Wie das echte Feld heisst, verrät dir " + C("Get-Member") + ".</p>",
+        loesung: "(Get-Process notepad).WorkingSet64  # das echte Feld hinter der Spalte WS(M), in Bytes",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && /WorkingSet64|\bWS\b/i.test(ctx.eingabe) && ctx.objekte.length === 1 &&
+          typeof einzig(ctx) === "number" && textVon(ctx, einzig(ctx)) === "14680064"
+      },
+      {
+        titel: "Die versteckte Datei im Archiv",
+        text: "<p>Im Ordner <code>Dokumente\\Archiv</code> liegt eine versteckte Datei. Wie gross ist sie? Gib <b>nur die Zahl</b> aus (Wiederholung aus Station 04).</p>",
+        hinweis: "<p>Versteckte Dateien zeigt " + C("Get-ChildItem") + " nur mit einem bestimmten Schalter. Kennst du den Namen, greifst du mit Klammern und Punkt nach der Grösse. Auch " + C("Get-Item") + " braucht bei versteckten Dateien diesen Schalter.</p>",
+        loesung: R`(Get-Item Dokumente\Archiv\schatz.txt -Force).Length  # -Force findet auch versteckte Dateien, die Grösse ist 53`,
+        pruefe: (ctx) => holt(ctx) && /Archiv|schatz/i.test(ctx.eingabe) && ctx.objekte.length === 1 && typeof einzig(ctx) === "number" && einzig(ctx) === 53
+      },
+      {
+        titel: "Wiedervorlage in eine Datei schreiben",
+        text: "<p>Lege im Benutzerordner die Datei <code>wiedervorlage.txt</code> an. Ihr Inhalt ist das Datum in 7 Tagen im Format <code>TT.MM.JJJJ</code> (Wiederholung aus Station 05).</p>",
+        hinweis: "<p>Zuerst das Datum als Text bauen, wie im Lösungsfilm. Dann mit " + C("Set-Content") + ", " + C("Out-File") + " oder " + C(">") + " in die Datei schreiben. Ein Ausdruck als Wert eines Parameters steht in runden Klammern.</p>",
+        loesung: "Set-Content wiedervorlage.txt (Get-Date).AddDays(7).ToString('dd.MM.yyyy')  # schreibt 09.11.2026 in die neue Datei",
+        // Zustand prüfen; das Datum muss mit Get-Date plus 7 Tage gerechnet sein (auch in einer früheren Zeile, z. B. über eine Variable),
+        // ein von Hand getipptes 09.11.2026 nach einem blossen Get-Date zählt nicht
+        pruefe: (ctx) => (ctx.inhalt(R`C:\Users\lea\wiedervorlage.txt`) || "").trim() === "09.11.2026" &&
+          ctx.verlauf.some((z) => /Get-Date|\[datetime\]::(Now|Today)/i.test(z) && /AddDays\(\s*7\s*\)|New-TimeSpan/i.test(z))
+      },
+      {
+        titel: "In Logs wechseln und Namen holen",
+        text: "<p>Wechsle in den Ordner <code>Logs</code>. Gib dort die Namen aller Dateien, die mit <code>app</code> beginnen, als reinen Text aus, ohne Tabelle (Wiederholung aus Station 04).</p>",
+        hinweis: "<p>Zwei Schritte, gern in zwei Eingaben: erst den Ort wechseln, dann mit dem Platzhalter " + C("*") + " die passenden Dateien holen und mit Klammern und Punkt nur das Feld " + C("Name") + " nehmen.</p>",
+        loesung: "Set-Location Logs; (Get-ChildItem app*).Name  # erst wechseln, dann von fünf Dateien nur den Namen",
+        pruefe: (ctx) => /\\Logs$/i.test(ctx.ort) && ctx.objekte.length === 5 && ctx.objekte.every((o) => typeof o === "string") &&
+          gleicheMenge(ctx.objekte.slice(), appLogs)
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  L.film("#t06-film", {
+    phasen: ["a · Objekt", "b · Eigenschaften", "c · Datum", "d · Name"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Lea braucht vier Angaben zu ihrer Datei notizen.txt. Sie startet in ihrem Benutzerordner und holt sich alles direkt aus dem Objekt." },
+      { ph: 0, f: f(gi), say: "Zuerst holt sie die Datei mit Get-Item. Die Konsole zeigt die Standardansicht: Mode, LastWriteTime, Length und Name." },
+      { ph: 0, say: "Vier Spalten sind nur die Übersicht. Was für eine Karte steckt dahinter, und welche Felder hat sie?" },
+      { ph: 0, f: f(gi + " | Get-Member -MemberType Property"), say: "Get-Member listet die Eigenschaften. Ganz oben steht der Typ: System.IO.FileInfo. Das ist Antwort a." },
+      { ph: 0, f: f("(" + gi + ").GetType().FullName"), say: "Dasselbe kurz mit der Methode GetType() und ihrem Feld FullName: System.IO.FileInfo." },
+      { ph: 1, f: f(gi + " | Select-Object Name, Length, LastWriteTime, FullName"), say: "Für Frage b wählt sie vier Felder aus. Unter den Feldern ist auch FullName, das die Standardansicht nicht zeigt." },
+      { ph: 1, say: "Für den Bericht braucht sie aber die nackten Werte, nicht eine Tabelle. Dafür nimmt sie die Punktnotation." },
+      { ph: 1, f: f(gi + ".Length"), say: "Sie vergisst die Klammern. PowerShell sucht eine Datei namens notizen.txt.Length und findet sie nicht." },
+      { ph: 1, f: f("(" + gi + ").Length"), say: "Mit Klammern klappt es: Erst wird die Datei geholt, dann greift der Punkt hinein. Die Datei hat 197 Bytes." },
+      { ph: 1, f: f("(" + gi + ").LastWriteTime"), say: "LastWriteTime ist das Datum der letzten Änderung: Freitag, 30. Oktober 2026, 17:05 Uhr." },
+      { ph: 1, f: f("(" + gi + ").LastWriteTime.DayOfWeek"), say: "Ein Datum ist selbst eine Karte. Mit einem zweiten Punkt holt sie den Wochentag: Friday." },
+      { ph: 1, say: "Antwort b: 197 Bytes, zuletzt geändert an einem Freitag." },
+      { ph: 2, f: f("Get-Date"), say: "Für die Wiedervorlage braucht sie das heutige Datum. Im Simulator ist es Montag, 2. November 2026." },
+      { ph: 2, f: f("(Get-Date).DayOfWeek"), say: "Zur Kontrolle der Wochentag von heute: Monday." },
+      { ph: 2, f: f("(Get-Date).AddDays(7)"), say: "Die Methode AddDays(7) rechnet sieben Tage dazu. Die Klammern mit der 7 gehören zur Methode." },
+      { ph: 2, f: f("(Get-Date).AddDays(7).ToString('dd.MM.yyyy')"), say: "ToString() mit dem Muster dd.MM.yyyy macht daraus einen kurzen Text: 09.11.2026. Das ist Antwort c." },
+      { ph: 3, f: f("(" + gi + ").Name"), say: "Für die Betreffzeile holt sie zuerst den Namen. Er ist ein Text, also ein Objekt vom Typ System.String." },
+      { ph: 3, f: f("(" + gi + ").Name.ToUpper()"), say: "Die Methode ToUpper() mit Klammern liefert den Namen in Grossbuchstaben: NOTIZEN.TXT. Das ist Antwort d." },
+      { ph: -1, say: "Fertig: (a) System.IO.FileInfo, (b) 197 Bytes und Freitag, (c) 09.11.2026, (d) NOTIZEN.TXT. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Was ist " + C("Length") + " bei einer Datei?", o: ["eine Eigenschaft", "eine Methode", "ein Typ", "ein Cmdlet"], a: 0,
+        e: "Length ist ein Feld mit einem Wert (der Grösse in Bytes), also eine Eigenschaft." },
+      { q: "Woran erkennst du in " + C("(Get-Date).AddDays(7)") + ", dass " + C("AddDays") + " eine Methode ist?", o: ["am grossen Anfangsbuchstaben", "an den runden Klammern dahinter", "am Punkt davor", "an der Zahl 7"], a: 1,
+        e: "Methoden haben immer runde Klammern. Einen Punkt davor haben auch Eigenschaften." },
+      { q: C(R`Get-Item Dokumente\notizen.txt`) + " zeigt die Spalten Mode, LastWriteTime, Length und Name. Was stimmt?", o: ["Das Objekt hat genau diese vier Eigenschaften.", "Das ist die Standardansicht, eine Auswahl. Das Objekt hat viel mehr Eigenschaften.", "Die übrigen Eigenschaften gibt es nur mit Administratorrechten."], a: 1,
+        e: "Für Dateien ist eine Ansicht mit vier Spalten hinterlegt. Alle Felder zeigt Select-Object * oder Format-List *." },
+      { q: "Mit welchem Befehl siehst du <b>alle</b> Eigenschaften von " + C("notizen.txt") + " mit ihren Werten?", o: [C(R`Get-Item Dokumente\notizen.txt | Select-Object *`), C(R`Get-Item Dokumente\notizen.txt | Get-Member`), C(R`Get-Item Dokumente\notizen.txt -All`), C(R`Get-Item Dokumente\notizen.txt | Format-Table`)], a: 0,
+        e: "Der Stern heisst «alle Eigenschaften». Get-Member zeigt nur Namen und Arten, keine Werte. -All gibt es bei Get-Item nicht." },
+      { q: "Was gibt " + C("(Get-Date).DayOfWeek") + " auf Leas Rechner aus (Montag, 2. November 2026)?", o: [C("Monday"), C("Montag"), C("1"), "eine Fehlermeldung"], a: 0,
+        e: "DayOfWeek ist ein fester Wert aus einer englischen Liste: Monday." },
+      { q: "Was zeigt die Zeile " + C("TypeName:") + " ganz oben in der Ausgabe von " + C("Get-Member") + "?", o: ["den Namen der Datei", "den Typ des Objekts, also die Vorlage", "den Namen des Cmdlets", "die Anzahl Eigenschaften"], a: 1,
+        e: "Zum Beispiel System.IO.FileInfo für eine Datei oder System.DateTime für ein Datum." },
+      { q: "Was ergibt " + C(R`Get-Item Dokumente\notizen.txt.Length`) + "?", o: [C("197"), "eine Fehlermeldung: Pfad nicht gefunden", "die Standardansicht der Datei", "nichts, ohne Fehlermeldung"], a: 1,
+        e: "Ohne Klammern gehört .Length zum Pfad. Eine Datei notizen.txt.Length gibt es nicht. Richtig: (Get-Item Dokumente\\notizen.txt).Length." },
+      { q: "Was ergibt " + C("(Get-ChildItem Logs).Length") + " auf Leas Rechner?", o: [C("7"), "die sieben Grössen untereinander", "die Summe aller Grössen", "eine Fehlermeldung"], a: 0,
+        e: "Die Liste selbst hat ein Feld Length (ihre Länge). Dieses gewinnt: 7 Dateien." },
+      { q: "Wofür steht " + C("$_") + " in " + C("Where-Object { $_.Length -gt 1MB }") + "?", o: ["für die erste Datei im Ordner", "für das aktuelle Objekt, das gerade durch die Pipeline kommt", "für alle Dateien auf einmal", "für den letzten Fehler"], a: 1,
+        e: C("$_") + " (ausgeschrieben " + C("$PSItem") + ") ist die Karte, die gerade dran ist. Mehr dazu in Station 07." },
+      { q: "Von welchem Typ ist das Objekt von " + C("Get-Process notepad") + "?", o: [C("System.IO.FileInfo"), C("System.String"), C("System.Diagnostics.Process"), C("System.DateTime")], a: 2,
+        e: "Laufende Programme sind Process-Objekte mit Feldern wie Id, ProcessName und WorkingSet64." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

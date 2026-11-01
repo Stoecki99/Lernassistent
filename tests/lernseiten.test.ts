@@ -294,6 +294,33 @@ describe("Pflicht-Geruest einer Themenseite", () => {
     assert.match(pruefe({ js: '<!-- <script src="/lernpfad/lernpfad.js"></script> -->' }), /lernpfad\.js/)
   })
 
+  test("Erweiterung PS: ps-konsole.css und ps-konsole.js aus /lernpfad/ sind erlaubt", () => {
+    const html = seite("test", "01-erstes", {
+      css: '<link rel="stylesheet" href="/lernpfad/lernpfad.css">\n<link rel="stylesheet" href="/lernpfad/ps-konsole.css">',
+      js: '<script src="/lernpfad/lernpfad.js"></script>\n<script src="/lernpfad/ps-konsole.js"></script>',
+    })
+    assert.deepEqual(pruefeThemaHtml(html, "test", "01-erstes"), [])
+  })
+
+  test("Erweiterung PS: ps-konsole.js vor lernpfad.js ist ein Fehler", () => {
+    const fehler = pruefe({ js: '<script src="/lernpfad/ps-konsole.js"></script>\n<script src="/lernpfad/lernpfad.js"></script>' })
+    assert.match(fehler, /ps-konsole\.js"> gehört nach <script src="\/lernpfad\/lernpfad\.js">/)
+  })
+
+  test("Erweiterung PS: ps-konsole.css vor lernpfad.css ist ein Fehler", () => {
+    const fehler = pruefe({ css: '<link rel="stylesheet" href="/lernpfad/ps-konsole.css">\n<link rel="stylesheet" href="/lernpfad/lernpfad.css">' })
+    assert.match(fehler, /ps-konsole\.css"> gehört nach <link rel="stylesheet" href="\/lernpfad\/lernpfad\.css">/)
+  })
+
+  test("Erweiterung PS: ps-konsole.css ersetzt lernpfad.css nicht", () => {
+    assert.match(pruefe({ css: '<link rel="stylesheet" href="/lernpfad/ps-konsole.css">' }), /lernpfad\.css/)
+  })
+
+  test("Erweiterung PS: ps-konsole.js von einem fremden Server ist eine externe Ressource", () => {
+    const fehler = pruefe({ js: '<script src="/lernpfad/lernpfad.js"></script>\n<script src="https://cdn.example.org/ps-konsole.js"></script>' })
+    assert.match(fehler, /externe Ressource <script src="https:\/\/cdn\.example\.org\/ps-konsole\.js">/)
+  })
+
   test("lernpfad.js gehoert ans Ende von <body>", () => {
     const fehler = pruefe({ js: "", kopf: '<script src="/lernpfad/lernpfad.js"></script>' })
     assert.match(fehler, /Ende von <body>/)

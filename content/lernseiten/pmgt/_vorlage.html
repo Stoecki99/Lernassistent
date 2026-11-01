@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Muster-Thema: Kritischer Pfad im Projekt Wolkenried · PMGT</title>
+  <!-- Farbschema vor dem Zeichnen setzen (kein Flackern im Dunkelmodus). Pflicht, unverändert übernehmen. -->
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <!-- Nächste Station laut fach.json (optional). Daraus baut lernpfad.js den Knopf «Nächste Station» in der Abschluss-Box.
+       Bei der letzten Station weglassen. -->
+  <link rel="next" href="/lernseiten/pmgt/01-projekte-und-projektmanagement" title="Projekte und Projektmanagement">
+  <!-- Seiteneigene Stile: nur Klassen mit Themen-Präfix (hier «t00-»), nur Farben aus :root -->
+  <style>
+    .t00-ziele{margin:0; padding-left:1.3em}
+    .t00-ziele li{margin-bottom:4px}
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="_vorlage">
+<!-- VORLAGE: Kopiere diese Datei nach content/lernseiten/pmgt/<slug>.html.
+     Ändere <title>, <link rel="next">, data-thema (= slug) und alle Inhalte.
+     Die Kopfleiste (← Lernpfad PMGT, hell/dunkel) und die Abschluss-Box fügt lernpfad.js selbst ein.
+     Die Akzentfarbe (Orange) kommt aus body[data-fach="pmgt"] in lernpfad.css. -->
+<main class="wrap">
+
+  <!-- ===== Kopf: Überzeile, Titel, ICB-Kennzeichen, Lernziele ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · Vorlage · Planen</span>
+    <h1>Muster-Thema: Kritischer Pfad im Projekt Wolkenried</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.04</span><span class="icb">ICB 3.11</span><span class="icb">ICB 3.12</span>
+    </p>
+    <p class="lead">Diese Seite zeigt alle Bausteine des Lernpfads PMGT an einem kleinen Beispiel aus dem Projekt «Onlineschalter Wolkenried». Du lernst, wie du aus Vorgängen und Dauern den kritischen Pfad findest, und übst offene Fragen wie in der IPMA-Prüfung.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t00-ziele">
+        <li>Du rechnest FA, FE, SA und SE eines Vorgangs vorwärts und rückwärts.</li>
+        <li>Du bestimmst Gesamtpuffer und kritischen Pfad.</li>
+        <li>Du ordnest Stakeholder und Risiken in eine Matrix ein.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation: ein Eintrag pro section mit id ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Begriffe</a>
+    <a href="#schritt"><b>2</b>Schritt für Schritt</a>
+    <a href="#formel"><b>3</b>Puffer</a>
+    <a href="#netzplan"><b>4</b>Netzplan und Gantt</a>
+    <a href="#matrizen"><b>5</b>Matrizen</a>
+    <a href="#uebungen"><b>6</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Konzeptkarten und Sortierer ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die vier Grundbegriffe</h2>
+    <p class="prose">Stell dir einen Umzug vor: Erst packst du, dann fährt der Lastwagen, dann räumst du ein. Manches geht gleichzeitig, manches muss warten. Genau das bildet ein Netzplan ab.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Vorgang</span><span class="ex">A · Analyse</span><p>Eine Tätigkeit mit Dauer, zum Beispiel «Anforderungen erheben».</p></div>
+      <div class="concept"><span class="tag">Meilenstein</span><span class="ex">◆ Abnahme</span><p>Ein Zeitpunkt ohne Dauer, an dem ein Ergebnis vorliegt.</p></div>
+      <div class="concept"><span class="tag">Abhängigkeit</span><span class="ex">A → B</span><p>B beginnt erst, wenn A fertig ist (Normalfolge).</p></div>
+      <div class="concept"><span class="tag">Puffer</span><span class="ex">GP = 1 Tag</span><p>So viel darf ein Vorgang sich verschieben, ohne dass das Projektende rutscht.</p></div>
+    </div>
+    <!-- Baustein: Sortierer (Inhalt im Script unten) -->
+    <div class="card stack">
+      <h3>Kurz üben: Vorgang oder Meilenstein?</h3>
+      <p class="hint">Frag dich: Dauert es, oder ist es ein Zeitpunkt?</p>
+      <div id="sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Begriffstabelle ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Begriffe festlegen</span>
+    <h2>Die Felder eines Vorgangsknotens</h2>
+    <p class="prose">Jeder Vorgang im Netzplan ist ein Kästchen mit sechs Zahlen. Oben stehen die frühesten Zeiten, unten die spätesten.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Kürzel</th><th>Bedeutung</th><th>Rechnung</th></tr></thead>
+        <tbody>
+          <tr><th>FA</th><td>frühester Anfang</td><td>grösstes FE aller Vorgänger</td></tr>
+          <tr><th>FE</th><td>frühestes Ende</td><td>FA + Dauer</td></tr>
+          <tr><th>SE</th><td>spätestes Ende</td><td>kleinstes SA aller Nachfolger</td></tr>
+          <tr><th>SA</th><td>spätester Anfang</td><td>SE − Dauer</td></tr>
+          <tr><th>GP</th><td>Gesamtpuffer</td><td>SA − FA</td></tr>
+          <tr><th>FP</th><td>freier Puffer</td><td>kleinstes FA der Nachfolger − FE</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Vorwärts rechnest du FA und FE, rückwärts SE und SA. Vorgänge mit Gesamtpuffer 0 bilden den kritischen Pfad.</div>
+  </section>
+
+  <!-- ===== 2 · Stepper mit Zuordnung Text ↔ Formel ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 2 · Vom Text zur Rechnung</span>
+    <h2>Einen Vorgang vorwärts rechnen</h2>
+    <p class="prose">Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="stepper-1"></div>
+  </section>
+
+  <!-- ===== 3 · Tafel, Hinweisboxen, Lösungs-Aufklapper ===== -->
+  <section id="formel">
+    <span class="eyebrow">Schritt 3 · Die Formel</span>
+    <h2>Wie viel Luft hat ein Vorgang?</h2>
+    <p class="prose">Der <b>Gesamtpuffer</b> sagt, um wie viele Tage ein Vorgang sich verschieben darf, ohne dass das Projektende rutscht.</p>
+    <div class="board">
+      $$GP = SA - FA = SE - FE$$
+    </div>
+    <div class="note falle"><b>Falle:</b> Puffer gehört nicht einem einzelnen Vorgang allein. Verbraucht ein Vorgang den Gesamtpuffer, fehlt er den Nachfolgern auf demselben Weg.</div>
+    <div class="note tipp"><b>Tipp:</b> Setz die besten Leute auf die Vorgänge mit Gesamtpuffer 0. Dort kostet jeder Tag Verzug einen Tag am Projektende.</div>
+    <details class="sol"><summary>Warum kann es mehr als einen kritischen Pfad geben?</summary>
+      <div class="stack">
+        <p>Wenn zwei Wege durch den Netzplan genau gleich lang sind, haben alle Vorgänge auf beiden Wegen Gesamtpuffer 0. Dann sind beide Wege kritisch.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 4 · Netzplan-Knoten und Gantt (Hilfsklassen) ===== -->
+  <section id="netzplan">
+    <span class="eyebrow">Schritt 4 · Ausprobieren</span>
+    <h2>Netzplan und Gantt für vier Vorgänge</h2>
+    <p class="prose">Analyse (A, 5 Tage), dann parallel Konzept (B, 3 Tage) und Beschaffung (C, 4 Tage), danach Umsetzung (D, 6 Tage). D beginnt erst, wenn B und C fertig sind.</p>
+    <div class="card stack">
+      <h3>Netzplan</h3>
+      <p class="hint">Auf schmalen Bildschirmen seitlich wischen. Kritische Knoten haben einen dicken Rahmen und die Marke «kritisch».</p>
+      <div class="tablebox">
+        <div class="netzplan" id="t00-netzplan" style="--np-spalten:5">
+          <!-- Knoten von Hand (A) und per Lernpfad.netzplanKnoten (B, C, D, im Script unten) -->
+          <div class="np-knoten kritisch" style="grid-column:1; grid-row:1 / span 2" role="group"
+               aria-label="Vorgang A Analyse: Dauer 5, FA 0, FE 5, SA 0, SE 5, Gesamtpuffer 0, kritisch">
+            <span class="np-fa" data-kurz="FA">0</span><span class="np-vorgang" data-kurz="Vorgang">A Analyse</span><span class="np-fe" data-kurz="FE">5</span>
+            <span class="np-sa" data-kurz="SA">0</span><span class="np-dauer" data-kurz="Dauer">5</span><span class="np-se" data-kurz="SE">5</span>
+            <span class="np-puffer">GP 0 · FP 0</span>
+          </div>
+          <span class="np-pfeil" style="grid-column:2; grid-row:1" aria-hidden="true">↗</span>
+          <span class="np-pfeil" style="grid-column:2; grid-row:2" aria-hidden="true">↘</span>
+          <span class="np-pfeil" style="grid-column:4; grid-row:1" aria-hidden="true">↘</span>
+          <span class="np-pfeil" style="grid-column:4; grid-row:2" aria-hidden="true">↗</span>
+        </div>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3>Gantt-Diagramm</h3>
+      <div class="gantt-legende">
+        <span><span class="gantt-balken" aria-hidden="true"></span>Vorgang</span>
+        <span><span class="gantt-balken kritisch" aria-hidden="true"></span>kritisch (Rahmen und Schraffur)</span>
+        <span><span class="gantt-puffer" aria-hidden="true"></span>Puffer</span>
+        <span><span class="gantt-meilenstein" aria-hidden="true"></span>Meilenstein</span>
+      </div>
+      <div class="tablebox">
+        <div class="gantt" style="--gantt-einheiten:16" role="img"
+             aria-label="Gantt: A Tag 0 bis 5 kritisch, B Tag 5 bis 8 mit 1 Tag Puffer, C Tag 5 bis 9 kritisch, D Tag 9 bis 15 kritisch, Meilenstein Abnahme an Tag 15">
+          <div class="gantt-kopf"><span class="gantt-name">Vorgang</span>
+            <div class="gantt-skala"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span><span>13</span><span>14</span><span>15</span></div>
+          </div>
+          <div class="gantt-zeile"><span class="gantt-name">A Analyse</span><div class="gantt-spur"><span class="gantt-balken kritisch" style="--start:0; --dauer:5">5 T</span></div></div>
+          <div class="gantt-zeile"><span class="gantt-name">B Konzept</span><div class="gantt-spur"><span class="gantt-balken" style="--start:5; --dauer:3">3 T</span><span class="gantt-puffer" style="--start:8; --dauer:1"></span></div></div>
+          <div class="gantt-zeile"><span class="gantt-name">C Beschaffung</span><div class="gantt-spur"><span class="gantt-balken kritisch" style="--start:5; --dauer:4">4 T</span></div></div>
+          <div class="gantt-zeile"><span class="gantt-name">D Umsetzung</span><div class="gantt-spur"><span class="gantt-balken kritisch" style="--start:9; --dauer:6">6 T</span></div></div>
+          <div class="gantt-zeile"><span class="gantt-name">◆ Abnahme</span><div class="gantt-spur"><span class="gantt-meilenstein kritisch" style="--start:15"></span></div></div>
+        </div>
+      </div>
+      <p class="hint">Kritischer Pfad: A → C → D, Projektdauer 15 Tage. B hat 1 Tag Puffer.</p>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Matrizen ===== -->
+  <section id="matrizen">
+    <span class="eyebrow">Schritt 5 · Einordnen</span>
+    <h2>Stakeholder-Karte und Risikomatrix</h2>
+    <p class="prose">Wähle eine Karte und dann ein Feld. Mit der Tastatur: Tab zur Karte, Enter (der Fokus springt ins Raster), Pfeiltasten, Enter.</p>
+    <div id="matrix-stakeholder"></div>
+    <div id="matrix-risiko"></div>
+  </section>
+
+  <!-- ===== 6 · Übungsbausteine ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 6 · Selbst rechnen und formulieren</span>
+    <h2>Übungen</h2>
+    <div id="uebung-zahl"></div>
+    <div id="uebung-wf"></div>
+    <div id="uebung-schritt"></div>
+    <div id="uebung-auswahl"></div>
+    <div id="uebung-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Den kritischen Pfad am Stück bestimmen</h2>
+    <p class="prose">Drück auf «Abspielen». Der Film startet sofort, der farbige Balken zeigt, wann der nächste Schritt kommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="film-1"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Vorwärts</b> FA und FE rechnen (FE = FA + Dauer), <b>rückwärts</b> SE und SA (SA = SE − Dauer).</li>
+      <li><b>Gesamtpuffer</b> GP = SA − FA. Alle Vorgänge mit GP = 0 bilden den <b>kritischen Pfad</b>.</li>
+      <li>Stakeholder mit hohem Einfluss und hohem Interesse <b>eng einbinden</b>.</li>
+      <li>Risikowert = Wahrscheinlichkeit × Auswirkung.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b> Formeln FA/FE/SA/SE und GP (<span class="icb">ICB 3.04</span>), Quadranten der Stakeholder-Karte (<span class="icb">ICB 3.12</span>), Risikowert (<span class="icb">ICB 3.11</span>). Fundstellen: Skript LB 4, Gubelmann/Sommer laut Folien.</div>
+    <footer>Vorlage für die Themenseiten des Lernpfads PMGT. Baukasten und Regeln: docs/lernpfad-baukasten.md.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  // String.raw: Backslashes für KaTeX nur einmal schreiben. Achtung: nie «${» im Text (Interpolation).
+  const T = String.raw;
+  const L = window.Lernpfad;
+
+  /* ---------- Sortierer ---------- */
+  L.sortierer("#sortierer", {
+    kategorien: ["Vorgang", "Meilenstein"],
+    elemente: [
+      { html: "Anforderungen erheben", kategorie: "Vorgang", erklaerung: "Das dauert mehrere Tage, also ein Vorgang." },
+      { html: "Projektauftrag unterschrieben", kategorie: "Meilenstein", erklaerung: "Ein Zeitpunkt: ab hier ist das Projekt freigegeben." },
+      { html: "Testfälle durchführen", kategorie: "Vorgang", erklaerung: "Testen braucht Zeit und Personen." },
+      { html: "Go-live des Onlineschalters", kategorie: "Meilenstein", erklaerung: "Der Tag, an dem der Schalter online geht. Keine Dauer." }
+    ]
+  });
+
+  /* ---------- Stepper mit Zuordnung (data-link im Text, \htmlData{link=…} in der Formel) ---------- */
+  L.stepper("#stepper-1", {
+    titel: "Vorgang B",
+    text: 'Das <span data-link="b">Konzept (B)</span> dauert <span data-link="d">3 Tage</span> und beginnt, sobald die <span data-link="a">Analyse (A) nach 5 Tagen</span> fertig ist.',
+    schritte: [
+      { html: T`$\htmlData{link=a}{FE_A = 5}$`,
+        warum: "Zuerst das Ende des Vorgängers notieren. A endet frühestens nach 5 Tagen." },
+      { html: T`$\htmlData{link=b}{FA_B} = \htmlData{link=a}{FE_A} = 5$`,
+        warum: "B hat nur einen Vorgänger. Darum beginnt B frühestens dann, wenn A endet." },
+      { html: T`$FE_B = \htmlData{link=b}{FA_B} + \htmlData{link=d}{3} = 8$`,
+        warum: "Frühestes Ende = frühester Anfang + Dauer." }
+    ]
+  });
+
+  /* ---------- Netzplan-Knoten per Hilfsfunktion (die Zahlen rechnet die Station selbst) ---------- */
+  const np = document.getElementById("t00-netzplan");
+  const lage = (k, spalte, zeile) => { k.style.gridColumn = spalte; k.style.gridRow = zeile; return k; };
+  np.appendChild(lage(L.netzplanKnoten({ vorgang: "B Konzept", dauer: 3, fa: 5, fe: 8, sa: 6, se: 9, gp: 1, fp: 1 }), "3", "1"));
+  np.appendChild(lage(L.netzplanKnoten({ vorgang: "C Beschaffung", dauer: 4, fa: 5, fe: 9, sa: 5, se: 9, gp: 0, fp: 0, kritisch: true }), "3", "2"));
+  np.appendChild(lage(L.netzplanKnoten({ vorgang: "D Umsetzung", dauer: 6, fa: 9, fe: 15, sa: 9, se: 15, gp: 0, fp: 0, kritisch: true }), "5", "1 / span 2"));
+
+  /* ---------- Matrix: Stakeholder-Karte 2×2 ---------- */
+  L.matrix("#matrix-stakeholder", {
+    titel: "Stakeholder-Karte Wolkenried",
+    icb: "ICB 3.12",
+    frage: "<p>Ordne jede Gruppe nach Interesse am Projekt und Einfluss auf das Projekt ein.</p>",
+    zeilen: ["hoch", "tief"],          // von oben nach unten
+    spalten: ["tief", "hoch"],         // von links nach rechts
+    achseY: "Interesse",
+    achseX: "Einfluss",
+    feldnamen: [["Informieren", "Eng einbinden"], ["Beobachten", "Zufriedenstellen"]],
+    elemente: [
+      { html: "Gemeinderat (Auftraggeber)", ziel: ["hoch", "hoch"], erklaerung: "Er entscheidet und will das Ergebnis: eng einbinden." },
+      { html: "Einwohnerinnen und Einwohner", ziel: ["hoch", "tief"], erklaerung: "Sie nutzen den Schalter, entscheiden aber nicht mit: regelmässig informieren." },
+      { html: "Kantonale Datenschutzstelle", ziel: ["tief", "hoch"], erklaerung: "Sie kann das Projekt stoppen, interessiert sich aber nur für den Datenschutz: zufriedenstellen." },
+      { html: "Lokalzeitung", ziel: ["tief", "tief"], erklaerung: "Wenig Einfluss, wenig Interesse: beobachten." }
+    ]
+  });
+
+  /* ---------- Matrix: Risikomatrix 5×5 mit Stufen ---------- */
+  const W = ["5", "4", "3", "2", "1"], A = ["1", "2", "3", "4", "5"];
+  const stufe = (w, a) => (w * a <= 4 ? "tief" : w * a <= 10 ? "mittel" : "hoch");
+  L.matrix("#matrix-risiko", {
+    titel: "Risikomatrix",
+    icb: ["ICB 3.11"],
+    frage: "<p>Setz jedes Risiko nach seiner Einschätzung ins Feld (W = Wahrscheinlichkeit, A = Auswirkung, je 1 bis 5). Die Zahl im Feld ist der Risikowert W × A.</p>",
+    zeilen: W,
+    spalten: A,
+    achseY: "Wahrscheinlichkeit",
+    achseX: "Auswirkung",
+    feldnamen: W.map((w) => A.map((a) => String(Number(w) * Number(a)))),
+    stufen: W.map((w) => A.map((a) => stufe(Number(w), Number(a)))),
+    elemente: [
+      { html: "Lieferant liefert das Formularmodul zu spät (W 4, A 3)", ziel: ["4", "3"], erklaerung: "Risikowert 12: hoch, Massnahme nötig." },
+      { html: "Datenschutzprüfung verlangt Nacharbeit (W 3, A 4)", ziel: ["3", "4"], erklaerung: "Risikowert 12: früh mit der Datenschutzstelle reden." },
+      { html: "Schlüsselperson fällt eine Woche aus (W 2, A 2)", ziel: ["2", "2"], erklaerung: "Risikowert 4: tief, beobachten." },
+      { html: "Serverausfall am Go-live-Tag (W 1, A 5)", ziel: ["1", "5"], erklaerung: "Risikowert 5: selten, aber teuer. Notfallplan bereithalten." }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.zahlAufgabe("#uebung-zahl", {
+    titel: "Gesamtpuffer von B",
+    frage: "Vorgang B hat FA = 5, Dauer 3 und SE = 9. Wie gross ist sein Gesamtpuffer in Tagen?",
+    antwort: 1,
+    einheit: "Tage",
+    hinweise: ["Rechne zuerst FE = FA + Dauer.", "GP = SE − FE."],
+    loesungsweg: ["FE = 5 + 3 = 8", "GP = SE − FE = 9 − 8 = 1 Tag"]
+  });
+
+  L.wahrFalsch("#uebung-wf", {
+    titel: "Kritischer Pfad",
+    aussagen: [
+      { html: "Ein Vorgang auf dem kritischen Pfad hat Gesamtpuffer 0.", wahr: true,
+        erklaerung: "Genau so ist der kritische Pfad definiert." },
+      { html: "Der kritische Pfad ist immer der Weg mit den meisten Vorgängen.", wahr: false,
+        erklaerung: "Entscheidend ist die Summe der Dauern, nicht die Anzahl Vorgänge." },
+      { html: "Ein Meilenstein hat die Dauer 0.", wahr: true,
+        erklaerung: "Ein Meilenstein ist ein Zeitpunkt." }
+    ]
+  });
+
+  L.schrittAufgabe("#uebung-schritt", {
+    titel: "Rückwärts rechnen",
+    aufgabe: "<p>D (6 Tage) endet spätestens an Tag 15. D hat die Vorgänger B (3 Tage) und C (4 Tage). Berechne SA von B und von C.</p>",
+    schritte: [
+      { html: "SA<sub>D</sub> = SE<sub>D</sub> − 6 = 15 − 6 = 9", warum: "Spätester Anfang = spätestes Ende − Dauer." },
+      { html: "SE<sub>B</sub> = SE<sub>C</sub> = SA<sub>D</sub> = 9", warum: "B und C müssen spätestens fertig sein, wenn D spätestens beginnt." },
+      { html: "SA<sub>B</sub> = 9 − 3 = 6, &nbsp; SA<sub>C</sub> = 9 − 4 = 5", warum: "Wieder SE − Dauer." }
+    ]
+  });
+
+  L.auswahl("#uebung-auswahl", {
+    frage: '<span class="icb">ICB 3.04</span> Welcher Vorgang verschiebt das Projektende, wenn er einen Tag später fertig wird?',
+    optionen: ["B Konzept (GP 1)", "C Beschaffung (GP 0)", "Keiner, es gibt genug Reserve"],
+    richtig: 1,
+    erklaerung: "C liegt auf dem kritischen Pfad. Jeder Tag Verzug dort verschiebt das Ende."
+  });
+
+  /* ---------- Reflexion: offene Frage im IPMA-Stil ---------- */
+  L.reflexion("#uebung-reflexion", {
+    titel: "Der Gemeinderat will früher live gehen",
+    icb: ["ICB 3.04", "ICB 3.13"],
+    frage: "<p>Der Gemeinderat verlangt, den Go-live des Onlineschalters um zwei Wochen vorzuziehen. Beschreibe in vier bis sechs Sätzen, wie du als Projektleiterin oder Projektleiter vorgehst.</p>",
+    musterloesung:
+      "<p>Ich prüfe zuerst die Auswirkungen auf Termine, Kosten, Qualität und Risiken, vor allem auf dem kritischen Pfad.</p>" +
+      "<p>Dann zeige ich Optionen auf: Vorgänge parallel ausführen, zusätzliche Leute auf kritische Vorgänge setzen oder den Umfang für den ersten Go-live verkleinern.</p>" +
+      "<p>Die Optionen lege ich dem Auftraggeber als Änderungsantrag mit Folgen vor. Er entscheidet.</p>" +
+      "<p>Nach dem Entscheid passe ich Plan und Risikoregister an und informiere Team und Stakeholder.</p>",
+    kriterien: [
+      { text: "Auswirkungen auf Termin, Kosten und Qualität analysiert", punkte: 2 },
+      { text: "Mindestens zwei Optionen genannt (z. B. parallelisieren, Ressourcen erhöhen, Umfang kürzen)", punkte: 2 },
+      { text: "Entscheid beim Auftraggeber, über einen Änderungsantrag", punkte: 2 },
+      { text: "Plan nachgeführt und Stakeholder informiert", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  L.film("#film-1", {
+    phasen: ["1 · Vorwärts", "2 · Rückwärts", "3 · Puffer"],
+    texte: ['A (5 Tage), dann <span data-ph="bc">B (3) und C (4) parallel</span>, dann <span data-ph="d">D (6)</span>.'],
+    woerterbuch: [],
+    beschriftung: { texte: "Die Aufgabe", formel: "Rechnung" },
+    szenen: [
+      { ph: -1, f: "", say: "Einen Netzplan rechnest du in drei Schritten: vorwärts, rückwärts, dann die Puffer." },
+      { ph: 0, hl: ["bc"], f: NW("FE<sub>A</sub> = 5, FE<sub>B</sub> = 8, FE<sub>C</sub> = 9"),
+        say: "Vorwärts: A endet an Tag 5. B und C beginnen dort. B endet an Tag 8, C an Tag 9." },
+      { ph: 0, hl: ["d"], f: "FE<sub>B</sub> = 8, FE<sub>C</sub> = 9 → " + NW("FA<sub>D</sub> = 9, FE<sub>D</sub> = 15"),
+        say: "D wartet auf den späteren Vorgänger, also auf C. D beginnt an Tag 9 und endet an Tag 15." },
+      { ph: 1, hl: ["d"], f: NW("SA<sub>D</sub> = 9, SA<sub>B</sub> = 6, SA<sub>C</sub> = 5"),
+        say: "Rückwärts: D muss spätestens an Tag 9 beginnen. Also muss B spätestens an Tag 6 beginnen, C an Tag 5." },
+      { ph: 2, hl: ["bc"], f: NW("GP<sub>B</sub> = 6 − 5 = 1, GP<sub>C</sub> = 5 − 5 = 0"),
+        say: "Puffer: B hat einen Tag Luft, C keinen. Der kritische Pfad ist A, C, D. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest (ICB-Kennzeichen direkt in der Frage) ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.04</span> Wie berechnest du das früheste Ende?',
+        o: ["FA + Dauer", "SE − Dauer", "SA − FA"], a: 0,
+        e: "FE = FA + Dauer. SE − Dauer ist der späteste Anfang, SA − FA der Gesamtpuffer." },
+      { q: '<span class="icb">ICB 3.04</span> Was gilt für Vorgänge auf dem kritischen Pfad?',
+        o: ["Sie dauern am längsten", "Ihr Gesamtpuffer ist 0", "Sie haben keinen Vorgänger"], a: 1,
+        e: "Kritisch heisst: kein Puffer. Jeder Tag Verzug verschiebt das Projektende." },
+      { q: '<span class="icb">ICB 3.12</span> Ein Stakeholder hat hohen Einfluss und wenig Interesse. Welche Strategie passt?',
+        o: ["Eng einbinden", "Zufriedenstellen", "Beobachten"], a: 1,
+        e: "Hoher Einfluss, wenig Interesse: zufriedenstellen, damit er nicht zum Gegner wird." },
+      { q: '<span class="icb">ICB 3.11</span> Wahrscheinlichkeit 3, Auswirkung 4. Wie gross ist der Risikowert?',
+        o: ["7", "12", "34"], a: 1,
+        e: "Risikowert = Wahrscheinlichkeit × Auswirkung = 3 × 4 = 12." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statusbericht und Reporting · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/20-qualitaet-und-aenderungen" title="Qualität, Änderungen, Abschluss">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t19-», nur Farben aus :root -->
+  <style>
+    .t19-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t19-ziele li{margin-bottom:3px}
+
+    /* Ampel-Marke: immer Form + Text, Farbe nur als Zusatz */
+    .t19-sym{display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:.92em; padding:1px 8px; border-radius:999px; border:1px solid currentColor; white-space:nowrap}
+    .t19-gruen{color:var(--ok); background:var(--ok-bg)}
+    .t19-gelb{color:var(--free); background:var(--free-bg)}
+    .t19-rot{color:var(--bad); background:var(--bad-bg)}
+
+    /* Ablauf als nummerierte Kette */
+    .t19-fluss{margin:0; padding:0; list-style:none; counter-reset:t19f; display:flex; flex-direction:column; gap:8px}
+    .t19-fluss > li{counter-increment:t19f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t19-fluss > li::before{content:counter(t19f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t19-fluss .hint{margin:2px 0 0}
+
+    /* Gliederung des Statusberichts */
+    .t19-gliederung{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(230px,100%),1fr)); gap:10px}
+    .t19-teil{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface)}
+    .t19-teil b{display:block; margin-bottom:2px}
+    .t19-teil p{margin:0; font-size:.95rem}
+
+    /* Werkstatt: Ampeln setzen */
+    .t19-dims{display:flex; flex-direction:column; gap:10px}
+    .t19-dim{border:1px solid var(--line); border-radius:10px; padding:10px 12px 12px; margin:0; min-width:0; background:var(--surface)}
+    .t19-dim legend{font-weight:700; padding:0 4px}
+    .t19-dim .hint{margin:0 0 8px}
+    .t19-knoepfe{display:flex; flex-wrap:wrap; gap:8px}
+    .t19-ampel[aria-pressed="true"][data-wert="gruen"]{color:var(--ok); background:var(--ok-bg); border-color:var(--ok); font-weight:700}
+    .t19-ampel[aria-pressed="true"][data-wert="gelb"]{color:var(--free); background:var(--free-bg); border-color:var(--free); font-weight:700}
+    .t19-ampel[aria-pressed="true"][data-wert="rot"]{color:var(--bad); background:var(--bad-bg); border-color:var(--bad); font-weight:700}
+    .t19-rm{margin-top:8px; font-size:.95rem; line-height:1.5}
+    .t19-rm:empty{display:none}
+    .t19-rm.ok{color:var(--ink); border-left:3px solid var(--ok); padding-left:10px}
+    .t19-rm.bad{color:var(--ink); border-left:3px solid var(--bad); padding-left:10px}
+    .t19-rm .marke{font-weight:700}
+    .t19-rm.ok .marke{color:var(--ok)}
+    .t19-rm.bad .marke{color:var(--bad)}
+    .t19-stand{font-weight:600; margin:0}
+    .t19-stand:empty{display:none}
+
+    /* Berichtskopf-Vorschau */
+    .t19-vorschau td:nth-child(2){white-space:nowrap}
+    .t19-offen{color:var(--muted); font-style:italic}
+
+    /* Wassermelonen-Detektor */
+    .t19-berichte{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(250px,100%),1fr)); gap:12px}
+    .t19-bericht{display:flex; flex-direction:column; gap:8px; min-width:0}
+    .t19-bericht h3{margin:0; font-size:1.05rem}
+    .t19-bericht .hint{margin:0}
+    .t19-zitat{margin:0; padding:8px 12px; border-left:3px solid var(--accent); background:var(--board); border-radius:0 8px 8px 0; font-style:italic}
+    .t19-roh{margin:0; padding-left:1.2em; font-size:.93rem}
+    .t19-roh li{margin-bottom:2px}
+
+    /* Eskalationsstufen */
+    .t19-stufen{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px}
+    .t19-stufen li{display:flex; gap:10px; align-items:baseline; padding:6px 10px; border-radius:8px; background:var(--board)}
+    .t19-stufen li span:first-child{font-weight:700; color:var(--accent); min-width:4.5em}
+
+    /* Statusbericht im Lösungsfilm und in der Lösung */
+    .t19-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t19-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t19-fb:last-child{border-bottom:0}
+    .t19-fb b{color:var(--accent)}
+    .t19-fb ul{margin:2px 0 0; padding-left:1.2em}
+    .t19-bericht-fertig{background:var(--board); border-radius:12px; padding:12px 14px}
+    .t19-bericht-fertig .t19-fz{font-size:1rem}
+
+    @media (max-width: 480px){
+      .t19-fluss > li{padding-left:40px}
+      .t19-fz{font-size:.93rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="19-statusbericht">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 5 und LB 7 · Steuern und abschliessen</span>
+    <h1>Statusbericht und Reporting</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.10</span><span class="icb">ICB 3.05</span>
+    </p>
+    <p class="lead">Ein Statusbericht sagt der Steuerung in wenigen Minuten: Wo steht das Projekt, was weicht ab, was tut die Projektleitung dagegen, und was muss die Steuerung entscheiden? Hier lernst du, Ampeln nach klaren Schwellen zu setzen, Abweichungen mit Zahlen zu begründen und zu eskalieren, bevor es zu spät ist. Roter Faden ist der Onlineschalter Wolkenried am Ende der Woche 4.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t19-ziele">
+        <li>das Berichtswesen eines Projekts beschreiben: wer wem wann berichtet und wie Teilprojekte zum Gesamtbericht zusammenfliessen,</li>
+        <li>einen Statusbericht gliedern: Gesamtampel, Ampeln je Dimension, Fertigstellungsgrad, Meilensteine, Abweichungen, Massnahmen, Entscheidungsbedarf,</li>
+        <li>Ampeln aus Kennzahlen (SPI, CPI, EAC) nach festen Schwellen setzen statt nach Gefühl,</li>
+        <li>geschönte Berichte erkennen (Wassermelonen-Effekt) und erklären, warum sie schaden,</li>
+        <li>eine Eskalation richtig auslösen und Status-, Phasen- und Abschlussbericht unterscheiden.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der Projektsimulation am 14.11. hält die Simulation nach der ersten Periode (Woche 4) an, und du schreibst einen Statusbericht, bevor die Nachbesprechung beginnt. In der IPMA-Prüfung kommen offene Fragen zu Berichterstattung und Steuerung (<span class="icb">ICB 3.10</span>, <span class="icb">ICB 3.05</span>). In der Modulschlussprüfung kann ein Statusbericht aus Fallangaben verlangt sein. Genau das zeigt der Lösungsfilm.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#berichtswesen"><b>1</b>Berichtswesen</a>
+    <a href="#aufbau"><b>2</b>Aufbau</a>
+    <a href="#ampeln"><b>3</b>Ampellogik</a>
+    <a href="#ehrlich"><b>4</b>Ehrlich berichten</a>
+    <a href="#eskalation"><b>5</b>Eskalation</a>
+    <a href="#werkstatt"><b>6</b>Werkstatt</a>
+    <a href="#detektor"><b>7</b>Detektor</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir vor, du fährst mit dem Navi in die Ferien. Das Navi kennt den Plan (Ankunft 14 Uhr), misst den Ist-Stand (du stehst im Stau) und rechnet eine Prognose (Ankunft 14.40 Uhr). Es schlägt eine neue Route vor, und wenn die Fähre ausfällt, musst du selbst entscheiden. Ein Statusbericht macht dasselbe für ein Projekt.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Statusbericht = Lagebericht</span><span class="ex">Plan · Ist · Prognose</span><p>Ein kurzer, regelmässiger Bericht an die Steuerung: Wo steht das Projekt, wohin läuft es, was braucht es? Wie die Anzeige im Navi: Plan, aktueller Stand, voraussichtliche Ankunft.</p></div>
+      <div class="concept"><span class="tag">Ampel = Kontrollleuchte</span><span class="ex"><span class="t19-sym t19-gruen">● Grün</span> <span class="t19-sym t19-gelb">▲ Gelb</span> <span class="t19-sym t19-rot">■ Rot</span></span><p>Fasst eine Dimension in einem Zeichen zusammen, wie die Öllampe im Auto. Sie leuchtet nach festen Schwellen, nicht nach Laune.</p></div>
+      <div class="concept"><span class="tag">Abweichung = Umweg</span><span class="ex">Plan Tag 20, Prognose Tag 26</span><p>Der Unterschied zwischen Plan und Ist oder Prognose. Erst mit Ursache und Auswirkung wird sie für die Steuerung brauchbar.</p></div>
+      <div class="concept"><span class="tag">Massnahme = neue Route</span><span class="ex">wer · was · bis wann</span><p>Was die Projektleitung gegen die Abweichung tut. Ohne Verantwortliche und Termin ist sie nur ein guter Vorsatz.</p></div>
+      <div class="concept"><span class="tag">Eskalation = Problem nach oben geben</span><span class="ex">nach 5 Tagen eine Stufe höher</span><p>Wie der Hauswart, der den Wasserschaden nicht selbst beheben kann und die Verwaltung ruft. Kein Petzen, sondern eine vereinbarte Regel.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Plan, Ist oder Prognose?</h3>
+      <p class="hint">Frag dich: Wurde das vorher festgelegt (Plan), ist es schon passiert und gemessen (Ist), oder ist es eine Schätzung für die Zukunft (Prognose)? Alle Angaben stammen aus dem Projekt Wolkenried, Stand Ende Woche 4.</p>
+      <div id="t19-sortierer-pip"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Berichtswesen ===== -->
+  <section id="berichtswesen">
+    <span class="eyebrow">Schritt 1 · Wer berichtet wem, wann? (LB 7 S.7–8, Vorlage 5.4)</span>
+    <h2>Das Berichtswesen</h2>
+    <p class="prose">Berichte entstehen nicht zufällig. Das <b>Berichtswesen</b> (Reporting) legt fest, wer wem was in welchem Rhythmus meldet. Es steht im Projektmanagementplan, Kapitel Reporting, zusammen mit der Eskalationsregel (Vorlage 5.4). Die ICB zählt die Strukturen für die Berichterstattung zur Kompetenz <span class="icb">ICB 3.05</span> «Organisation, Information und Dokumentation» und das Berichten selbst zur Kompetenz <span class="icb">ICB 3.10</span> «Planung und Steuerung» (Indikator «Bericht über den Projektfortschritt erstatten»).</p>
+
+    <h3>Ein Berichtszeitplan</h3>
+    <p class="prose">LB 7 S.7 zeigt einen Monatsplan für die Berichterstattung (Quelle dort: Compendio). Sinngemäss läuft ein Berichtsmonat so ab:</p>
+    <ol class="t19-fluss">
+      <li><b>Anfang Monat:</b> Die Teilprojekte liefern ihre Statusberichte.<p class="hint">Rund am 4. Arbeitstag.</p></li>
+      <li><b>Wenige Tage später:</b> Die Finanzabteilung liefert die aktuellen Istkosten.<p class="hint">Rund am 8. Arbeitstag.</p></li>
+      <li><b>Mitte Monat:</b> Die Projektleitung verschickt den konsolidierten Statusbericht des Gesamtprojekts.<p class="hint">Rund am 12. Tag. Für dich als Projektleiterin oder Projektleiter der wichtigste Termin im Monat.</p></li>
+      <li><b>Danach:</b> Das Portfoliomanagement fasst die Statusberichte aller Projekte zusammen.<p class="hint">Rund am 15. Tag.</p></li>
+      <li><b>Zum Schluss:</b> Der Projektausschuss tagt und entscheidet auf Grund des Berichts.<p class="hint">Rund am 20. Tag.</p></li>
+    </ol>
+    <p class="prose">Die Zeit zwischen Schritt 1 und 3 ist knapp. Deshalb müssen die Teilprojekte pünktlich und in derselben Form liefern. In Wolkenried legt der Projektmanagementplan diesen Rhythmus fest (eigenes Beispiel im Stil der Übung «Meetingplan MOVE», LB 7 S.9):</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Berichtsplan Onlineschalter Wolkenried (Ausschnitt)</caption>
+        <thead><tr><th>Bericht</th><th>Von → an</th><th>Wann</th></tr></thead>
+        <tbody>
+          <tr><th>Wochenmeldung Teilprojekt</th><td>Teilprojektleitung → Projektleitung</td><td>jeden Donnerstag</td></tr>
+          <tr><th>Projektstandsitzung</th><td>Projektleitung mit Teilprojektleitungen</td><td>jeden Montag, Grundlage: Wochenmeldungen</td></tr>
+          <tr><th>Statusbericht Gesamtprojekt</th><td>Projektleitung → Projektausschuss (Vorsitz: Auftraggeberin Franziska Bühlmann)</td><td>alle 4 Wochen, Ende Woche 4 und 8</td></tr>
+          <tr><th>Phasenbericht mit Antrag</th><td>Projektleitung → Gemeinderat (über die Auftraggeberin)</td><td>Ende Realisierung, vor der Phasenfreigabe</td></tr>
+          <tr><th>Projektschlussbeurteilung</th><td>Projektleitung → Gemeinderat</td><td>nach der Abnahme</td></tr>
+          <tr><th>Sofortmeldung (Eskalation)</th><td>jede Stufe → nächsthöhere Stufe</td><td>wenn eine Toleranz überschritten ist oder nach 5 Arbeitstagen ohne Lösung</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Vom Teilprojekt zum Gesamtprojekt: konsolidieren</h3>
+    <p class="prose">Wolkenried hat drei Teilprojekte: «Plattform und Formulare», «Schnittstelle und Daten», «Einführung und Kommunikation». Die Projektleitung schreibt nicht einfach drei Berichte untereinander. Sie <b>konsolidiert</b>: Sie bewertet jede Meldung im Zusammenhang des Gesamtprojekts (LB 7 S.8, in eigenen Worten):</p>
+    <ol class="t19-fluss">
+      <li><b>Fortschritt bewerten:</b> Wie weit ist jedes Teilprojekt? Daraus entsteht der Fortschritt des Gesamtprojekts.</li>
+      <li><b>Abweichung bewerten:</b> Lässt sie sich innerhalb des Teilprojekts ausgleichen, zum Beispiel mit Puffer oder durch Umschichten?<p class="hint">Ja: Das Teilprojekt passt seinen Plan an, die Projektleitung prüft nur. Nein: Die Abweichung kommt in den Statusbericht des Gesamtprojekts.</p></li>
+      <li><b>Problem bewerten:</b> Lässt es sich im Projekt lösen?<p class="hint">Ja: Die Projektleitung legt projektinterne Massnahmen fest. Nein: Das Problem kommt mit einem Massnahmenvorschlag in den Statusbericht, die Steuerung entscheidet.</p></li>
+      <li><b>Plan nachführen</b> und die verbleibenden Abweichungen für das Gesamtprojekt beschreiben.</li>
+    </ol>
+    <div class="note"><b>Merke:</b> In den Gesamtbericht gehört, was die Steuerung wissen oder entscheiden muss. Was ein Teilprojekt selbst ausgleichen kann, bleibt dort. So bleibt der Bericht kurz, und die Steuerung führt nach dem Ausnahmeprinzip (Management by Exception, ICB 3.10).</div>
+  </section>
+
+  <!-- ===== 2 · Aufbau ===== -->
+  <section id="aufbau">
+    <span class="eyebrow">Schritt 2 · Was steht drin? (Vorlage 7.1, Vorlage Statusbericht, HERMES)</span>
+    <h2>Der Aufbau eines Statusberichts</h2>
+    <p class="prose">Die Vorlage zum LB 7 (Projektstatusbericht) und das HERMES-Ergebnis «Projektstatusbericht» (Referenzhandbuch, Ergebnis 4.4.1.37) gliedern ähnlich. Zusammengefasst in eigenen Worten hat ein guter Statusbericht diese Teile:</p>
+    <div class="t19-gliederung">
+      <div class="t19-teil"><b>1 · Kopf</b><p>Projekt, Berichtsnummer, Stichtag, Verfasser, Empfänger und wer ihn zur Kenntnis erhält.</p></div>
+      <div class="t19-teil"><b>2 · Gesamtampel und Kernaussage</b><p>Ein Zeichen und zwei, drei Sätze: Wie steht es, was ist das Wichtigste?</p></div>
+      <div class="t19-teil"><b>3 · Ampeln je Dimension</b><p>Termine, Kosten, Leistung und Qualität, Ressourcen und Team, Risiken. Jede Ampel mit Kennzahl. Bei Teilprojekten auch je Teilprojekt.</p></div>
+      <div class="t19-teil"><b>4 · Fertigstellungsgrad</b><p>Wie viel der geplanten Leistung ist erbracht? Gemessen, nicht geschätzt (zum Beispiel EV ÷ BAC).</p></div>
+      <div class="t19-teil"><b>5 · Meilensteine</b><p>Plan, Ist und Prognose nebeneinander. Die Prognose ist der wichtigste Wert für die Steuerung.</p></div>
+      <div class="t19-teil"><b>6 · Kosten</b><p>Budget, Ist im Berichtsmonat, Ist kumuliert, Restbudget, Prognose. Interne und externe Kosten getrennt.</p></div>
+      <div class="t19-teil"><b>7 · Abweichungen</b><p>Was weicht ab, warum (Ursache), was folgt daraus (Auswirkung auf Teilprojekt, Gesamtprojekt, Steuerung)?</p></div>
+      <div class="t19-teil"><b>8 · Risiken</b><p>Die wichtigsten Risiken mit Bewertung und Massnahme, aus dem Risikoregister.</p></div>
+      <div class="t19-teil"><b>9 · Massnahmen und Ausblick</b><p>Was die Projektleitung tut, mit Verantwortlichen und Termin. Nächste Meilensteine und Ergebnisse.</p></div>
+      <div class="t19-teil"><b>10 · Entscheidungsbedarf</b><p>Was die Steuerung entscheiden muss: Frage, Optionen mit Folgen, Empfehlung, Frist.</p></div>
+    </div>
+    <p class="prose">Die alte Vorlage zum LB 7 sieht zusätzlich Stellungnahmen der Qualitätsverantwortlichen und der Auftraggeberin vor. Sie nennt die Ampelstufen in drei Wörtern: «on track» (kein zusätzlicher Handlungsbedarf), «watch» (zusätzlicher Handlungsbedarf) und «critical» (dringender Handlungsbedarf). Das ist eine gute Übersetzung der Farben: Grün heisst nicht «alles super», sondern «kein zusätzlicher Handlungsbedarf».</p>
+
+    <h3>Fertigstellungsgrad: messen statt raten</h3>
+    <p class="prose">Die Vorlage gibt für den Fertigstellungsgrad feste Stufen vor. Sinngemäss: 20&nbsp;% = eingearbeitet, 40&nbsp;% = Arbeit in vollem Gang, 60&nbsp;% = erste Resultate sichtbar, 80&nbsp;% = aus Sicht der Verantwortlichen fertig, 100&nbsp;% = abgenommen. Wichtig ist der Sprung von 80&nbsp;% auf 100&nbsp;%: Fertig ist eine Arbeit erst, wenn jemand anders sie abgenommen hat. Noch genauer ist die Rechnung über den Restaufwand:</p>
+    <div class="board">Fertigstellungsgrad = geleistete Stunden ÷ (geleistete Stunden + geschätzte Reststunden)</div>
+    <p class="prose">Beispiel Wolkenried, Schnittstelle (V05): 144 Stunden geleistet, 16 Stunden Rest. Also 144 ÷ 160 = 90&nbsp;%. Den Gesamtwert liefert der Fertigstellungswert: EV ÷ BAC. Wie EV, PV und AC entstehen, lernst du in <a href="/lernseiten/pmgt/18-earned-value">Station 18 · Earned Value</a>. Hier wendest du die Kennzahlen nur an.</p>
+
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Kennzahlen, die du im Statusbericht brauchst (Herleitung in Station 18)</caption>
+        <thead><tr><th>Kennzahl</th><th>Formel</th><th>So liest du sie</th></tr></thead>
+        <tbody>
+          <tr><th>SPI</th><td>EV ÷ PV</td><td>unter 1: weniger erledigt als geplant</td></tr>
+          <tr><th>CPI</th><td>EV ÷ AC</td><td>unter 1: die erledigte Arbeit hat mehr gekostet als geplant</td></tr>
+          <tr><th>EAC</th><td>BAC ÷ CPI</td><td>Prognose der Gesamtkosten, wenn es so weiterläuft</td></tr>
+          <tr><th>Fertigstellungsgrad</th><td>EV ÷ BAC</td><td>Anteil der geplanten Leistung, der erbracht ist</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Statusbericht, Phasenbericht, Abschlussbericht</h3>
+    <p class="prose">HERMES kennt drei Berichte, die oft verwechselt werden (Referenzhandbuch, Ergebnisse 4.4.1.37, 4.4.1.30 und 4.4.1.36):</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Bericht</th><th>Wann</th><th>Wozu</th><th>Inhalt (Auswahl)</th></tr></thead>
+        <tbody>
+          <tr><th>Projektstatusbericht</th><td>periodisch (Rhythmus im PM-Plan)</td><td>über Stand, Fortschritt und Prognose informieren</td><td>Übersicht, Prognose der Zielerreichung, Soll-Ist bei Kosten, Aufwand, Terminen, Ergebnissen, Probleme und Massnahmen, Risiken, Ausblick</td></tr>
+          <tr><th>Phasenbericht</th><td>am Ende einer Phase</td><td>Grundlage für die Freigabe der nächsten Phase</td><td>Ergebnisse und Entscheide der Phase, Planung und Organisation der nächsten Phase, Prognose, Risiken, Anträge, Fazit</td></tr>
+          <tr><th>Projektschlussbeurteilung</th><td>am Projektende</td><td>Grundlage für den Entscheid zum Projektabschluss</td><td>Soll-Ist über das ganze Projekt, Zielerreichung, Erfahrungen (Lessons Learned), offene Punkte, Antrag</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">In Wolkenried fällt der erste Statusbericht (Ende Woche 4, Tag 20) auf das Ende der Realisierung. Er liegt dem Phasenbericht bei, mit dem der Gemeinderat die Einführung freigibt. LB 7 nennt das für die Freigabe der nächsten Phase auch «Phasenantrag».</p>
+  </section>
+
+  <!-- ===== 3 · Ampellogik ===== -->
+  <section id="ampeln">
+    <span class="eyebrow">Schritt 3 · Ampeln nach Schwellen</span>
+    <h2>Die Ampellogik: feste Schwellen statt Gefühl</h2>
+    <p class="prose">Eine Ampel ist nur dann etwas wert, wenn zwei Personen mit denselben Zahlen dieselbe Farbe setzen. Darum legt das Projekt die Schwellen im Voraus fest, am besten im Projektmanagementplan. Für Wolkenried gilt diese Regel. Termine, Kosten und Gesamt rechnet der Leitstand (Station 23) genau so; Qualität, Team und Risiken misst er dort mit eigenen Kennzahlen (Qualitäts-, Motivations- und Risiko-Index).</p>
+    <div class="card tablebox">
+      <table class="tabelle" id="t19-regel">
+        <caption>Ampelregel Onlineschalter Wolkenried (Budget CHF 180'000, Terminziel Tag 40)</caption>
+        <thead><tr><th>Dimension</th><th><span class="t19-sym t19-gruen">● Grün</span></th><th><span class="t19-sym t19-gelb">▲ Gelb</span></th><th><span class="t19-sym t19-rot">■ Rot</span></th></tr></thead>
+        <tbody>
+          <tr><th>Termine</th><td>SPI ≥ 0.95 und Prognose Abnahme bis Tag 40</td><td>SPI ≥ 0.85 oder Prognose bis Tag 42</td><td>sonst</td></tr>
+          <tr><th>Kosten</th><td>CPI ≥ 0.95 und EAC höchstens Budget (180'000)</td><td>CPI ≥ 0.85 oder EAC höchstens 105&nbsp;% des Budgets (189'000)</td><td>sonst</td></tr>
+          <tr><th>Leistung und Qualität</th><td>mindestens 95&nbsp;% der durchgeführten Testfälle bestanden</td><td>mindestens 80&nbsp;%</td><td>unter 80&nbsp;%</td></tr>
+          <tr><th>Ressourcen und Team</th><td>verfügbare Kapazität der nächsten zwei Wochen mindestens 95&nbsp;% des Plans</td><td>mindestens 85&nbsp;%</td><td>unter 85&nbsp;%</td></tr>
+          <tr><th>Risiken</th><td>jedes hohe Risiko (Wert ≥ 12) hat eine laufende Massnahme</td><td>genau ein hohes Risiko ohne Massnahme</td><td>zwei oder mehr hohe Risiken ohne Massnahme</td></tr>
+          <tr><th>Gesamt</th><td>Termine und Kosten grün, höchstens eine andere Dimension gelb</td><td>Termine und Kosten nicht rot, höchstens eine andere Dimension rot</td><td>sonst</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Die Gesamtampel ist kein Durchschnitt. Sie folgt einer eigenen Regel. Termine und Kosten wiegen schwerer, weil die Steuerung genau dafür Kredit und Terminziel festgelegt hat. Andere Projekte nehmen einfach die schlechteste Ampel. Wichtig ist nur: Die Regel steht vorher fest.</div>
+    <p class="prose">Klick dich durch, wie du aus den Zahlen der Woche 4 die Termin-Ampel setzt. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Rechnung leuchtet auf.</p>
+    <div id="t19-stepper-ampel"></div>
+    <div class="note falle"><b>Falle:</b> Wer nur Istkosten und Planwert vergleicht, sieht 103'900 &lt; 112'800 und meldet «unter Budget». Falsch. Weniger ausgegeben heisst hier nur: weniger geschafft. Ob das Geld gut eingesetzt ist, zeigt der CPI = EV ÷ AC = 96'624 ÷ 103'900 = 0.93. Für jeden Franken gibt es nur 93 Rappen Leistung.</div>
+  </section>
+
+  <!-- ===== 4 · Ehrlich berichten ===== -->
+  <section id="ehrlich">
+    <span class="eyebrow">Schritt 4 · Zahlen, Daten, Fakten (LB 5 F.17–18)</span>
+    <h2>Ehrlich berichten: ZDF und der Wassermelonen-Effekt</h2>
+    <p class="prose">LB 5 F.18 stellt zwei Berichte über dasselbe Projekt nebeneinander: einen ohne und einen mit Kennzahlen. Der erste klingt beruhigend und sagt nichts. Der zweite nennt Anteile, Überschreitungen und eine pessimistische Prognose. Die Regel dahinter heisst <b>ZDF: Zahlen, Daten, Fakten</b>. Dasselbe am Fall Wolkenried, in eigenen Worten:</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Ohne ZDF</h3>
+        <p class="t19-zitat">«Das Projekt ist gut unterwegs. Bei der Schnittstelle gab es kleinere Verzögerungen, die wir aufholen werden. Die Kosten sind im Rahmen. Wir sind zuversichtlich, den Termin zu halten.»</p>
+        <p class="hint">Kein Wert ist prüfbar. Die Steuerung kann nichts entscheiden und erfährt das Problem erst, wenn es zu spät ist.</p>
+      </div>
+      <div class="card stack">
+        <h3>Mit ZDF</h3>
+        <p class="t19-zitat">«60&nbsp;% der geplanten Leistung sind erbracht (Plan 70&nbsp;%, SPI 0.86). Die Schnittstelle ist 7 Tage später fertig als geplant (Tag 21 statt 14), weil der Aufwand 25&nbsp;% höher ist und der Hersteller die Beschreibung 4 Tage zu spät geliefert hat. Prognose Abnahme Tag 42, Terminziel Tag 40. CPI 0.93, Kostenprognose rund CHF 174'500 von 180'000 Budget.»</p>
+        <p class="hint">Jede Aussage ist prüfbar. Die Steuerung sieht Ursache, Auswirkung und Spielraum.</p>
+      </div>
+    </div>
+
+    <h3>Der Wassermelonen-Effekt: aussen grün, innen rot</h3>
+    <p class="prose">Eine Wassermelone ist aussen grün und innen rot. Genauso sehen geschönte Projekte aus: Alle Berichte sind grün, die Zahlen darunter sind rot. Meist passiert das nicht aus Bosheit, sondern aus Hoffnung («das holen wir auf»), aus Angst vor Ärger oder weil niemand die Ampelregel kennt. Typische Zeichen:</p>
+    <ul class="prose">
+      <li>Grün ohne eine einzige Zahl.</li>
+      <li>Der Fertigstellungsgrad steht seit Wochen bei 90&nbsp;% (das 90-%-Syndrom: Die letzten 10&nbsp;% dauern so lange wie die ersten 90&nbsp;%).</li>
+      <li>Ein Planende ist überschritten, die Ampel bleibt grün.</li>
+      <li>Mehr Stunden gebucht als geplant, aber kein Restaufwand genannt.</li>
+      <li>Jede Ampel ist grün, und trotzdem fragen die Fachleute im Gang besorgt nach.</li>
+    </ul>
+    <p class="prose"><b>Warum Schönfärberei schadet:</b> Ein Statusbericht ist eine Entscheidungsgrundlage. Wer zu spät die Wahrheit sagt, nimmt der Steuerung die Optionen weg. In Woche 4 lässt sich ein Verzug noch mit einem kleineren Pilot oder einer zusätzlichen Person auffangen. In Woche 8 bleibt nur noch, den Termin zu verschieben oder Geld nachzuschiessen. Dazu kommt der Vertrauensverlust: Wer einmal geschönt hat, dem glaubt der Gemeinderat auch die grünen Ampeln nicht mehr. Ehrlichkeit gehört zur persönlichen Integrität (<span class="icb">ICB 2.02</span>).</p>
+    <div class="note tipp"><b>Tipp:</b> Ehrlich heisst nicht schwarzmalen. Wer Rot meldet, wo die Regel Gelb sagt, verliert ebenfalls Glaubwürdigkeit. Ein guter Bericht ist so gut oder so schlecht wie die Zahlen, und er kommt mit Massnahmen. Bespreche einen gelben oder roten Bericht vorher mit der Auftraggeberin: keine Überraschungen in der Sitzung.</div>
+
+    <h3>Eine Abweichung in einen Berichtssatz übersetzen</h3>
+    <p class="prose">Eine gute Abweichungsmeldung folgt immer derselben Kette: Was weicht ab (mit Zahl)? Warum? Was folgt daraus? Was tun wir? Was muss die Steuerung entscheiden? Klick dich durch:</p>
+    <div id="t19-stepper-abweichung"></div>
+  </section>
+
+  <!-- ===== 5 · Eskalation ===== -->
+  <section id="eskalation">
+    <span class="eyebrow">Schritt 5 · Wann, an wen, wie (Vorlage 5.4, HERMES)</span>
+    <h2>Eskalation: das Problem an die richtige Stelle geben</h2>
+    <p class="prose">HERMES beschreibt es so (Modul Projektführung, in eigenen Worten): Probleme werden auf der Stufe gelöst, auf der sie entstehen. Kann die bearbeitende Person ein Problem nicht oder nicht rechtzeitig lösen, gibt sie es umgehend an die nächsthöhere Stufe der Projektorganisation weiter. Wie das genau läuft, legt der Projektmanagementplan fest.</p>
+    <p class="prose">Die Vorlage zum Projektmanagementplan (Vorlage 5.4, Kapitel Eskalation) gibt eine einfache Regel vor: <b>Kann ein Problem auf einer Stufe nicht innerhalb von 5 Tagen gelöst werden, geht es an die nächste Stufe.</b> In Wolkenried sind das diese Stufen:</p>
+    <ol class="t19-stufen">
+      <li><span>Stufe 1</span><span>Teammitglied (zum Beispiel Elena, Schnittstelle)</span></li>
+      <li><span>Stufe 2</span><span>Teilprojektleitung (Luca, Schnittstelle und Daten)</span></li>
+      <li><span>Stufe 3</span><span>Projektleitung (du)</span></li>
+      <li><span>Stufe 4</span><span>Auftraggeberin und Projektausschuss (Vorsitz Franziska Bühlmann)</span></li>
+      <li><span>Stufe 5</span><span>Gemeinderat (Phasenfreigabe, Budgetnachtrag, Änderungen über CHF 5'000)</span></li>
+    </ol>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Wann eskalieren?</h3>
+        <ul class="t19-roh">
+          <li>nach Ablauf der Frist ohne Lösung (hier 5 Arbeitstage je Stufe),</li>
+          <li>sofort, wenn eine Toleranz überschritten ist, etwa wenn ein Meilenstein, das Terminziel oder das Budget gefährdet ist,</li>
+          <li>sofort, wenn die Lösung die eigene Kompetenz übersteigt (Geld, Umfang, Vertrag mit Dritten).</li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3>Wie eskalieren?</h3>
+        <ul class="t19-roh">
+          <li>schriftlich und mit Zahlen: Problem, Ursache, Auswirkung,</li>
+          <li>mit Optionen, ihren Folgen und einer Empfehlung,</li>
+          <li>mit Frist: bis wann braucht es den Entscheid?</li>
+          <li>die nächste Stufe überspringst du nicht, und die betroffene Person weiss Bescheid.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="prose">Hinter der Eskalation steckt das Ausnahmeprinzip (Management by Exception, ICB 3.10): Die Steuerung gibt der Projektleitung Toleranzen, zum Beispiel ±2 Tage beim Meilenstein. Innerhalb der Toleranz steuert die Projektleitung selbst, ausserhalb meldet sie sich. Wer eskaliert, gibt die Verantwortung nicht ab. Er holt den Entscheid dort, wo die Kompetenz liegt, und setzt ihn danach um.</p>
+    <div class="note falle"><b>Falle:</b> Zu spät eskalieren ist die häufigste Fehlform («ich wollte es zuerst selbst lösen»). Die zweite ist die Umgehung: direkt zum Gemeindepräsidenten statt zur Auftraggeberin. Das kostet Vertrauen auf beiden Stufen.</div>
+  </section>
+
+  <!-- ===== 6 · Werkstatt ===== -->
+  <section id="werkstatt">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>Statusbericht-Werkstatt: Wolkenried, Ende Woche 4</h2>
+    <p class="prose">Es ist Freitag, Tag 20. Die Realisierung sollte heute mit der Vorabnahme enden, und der Statusbericht an den Projektausschuss und den Gemeinderat ist fällig. Lies die Rohdaten, setz je Dimension die Ampel nach der Regel in Schritt 3, dann prüft die Seite. Danach formulierst du Abweichung, Massnahmen und Entscheidungsbedarf.</p>
+
+    <div class="card stack">
+      <h3>Rohdaten 1 · Kennzahlen (Stichtag Tag 20)</h3>
+      <div class="tablebox">
+        <table class="tabelle">
+          <tbody>
+            <tr><th>Budget (Kredit Gemeinderat)</th><td class="zahl">CHF 180'000</td></tr>
+            <tr><th>Plankosten aller Vorgänge (BAC)</th><td class="zahl">CHF 162'240</td></tr>
+            <tr><th>Planwert bis Tag 20 (PV)</th><td class="zahl">CHF 112'800</td></tr>
+            <tr><th>Fertigstellungswert (EV)</th><td class="zahl">CHF 96'624</td></tr>
+            <tr><th>Istkosten (AC)</th><td class="zahl">CHF 103'900</td></tr>
+            <tr><th>SPI = EV ÷ PV</th><td class="zahl">0.86</td></tr>
+            <tr><th>CPI = EV ÷ AC</th><td class="zahl">0.93</td></tr>
+            <tr><th>EAC = BAC ÷ CPI</th><td class="zahl">rund CHF 174'500</td></tr>
+            <tr><th>Fertigstellungsgrad EV ÷ BAC</th><td class="zahl">60&nbsp;% (Plan 70&nbsp;%)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3>Rohdaten 2 · Meilensteine</h3>
+      <div class="tablebox">
+        <table class="tabelle">
+          <thead><tr><th>Meilenstein</th><th>Plan</th><th>Ist oder Prognose</th></tr></thead>
+          <tbody>
+            <tr><th>Plattform eingerichtet (V03)</th><td>Tag 5</td><td>erreicht Tag 5</td></tr>
+            <tr><th>Benutzerführung getestet (V04)</th><td>Tag 9</td><td>erreicht Tag 9</td></tr>
+            <tr><th>Schnittstelle fertig (V05)</th><td>Tag 14</td><td>Prognose Tag 21</td></tr>
+            <tr><th>Vorabnahme, Ende Realisierung (V12)</th><td>Tag 20</td><td>Prognose Tag 26</td></tr>
+            <tr><th>Abnahme (V18), Terminziel Tag 40</th><td>Tag 36</td><td>Prognose Tag 42</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3>Rohdaten 3 · Ereignisse, Qualität, Team, Risiken</h3>
+      <ul class="t19-roh">
+        <li><b>Tag 8:</b> Der Hersteller der Bauverwaltungssoftware liefert die Schnittstellenbeschreibung 4 Tage später als zugesagt (Risiko R03 eingetreten).</li>
+        <li><b>Tag 12:</b> Elena schätzt die Schnittstelle neu: 160 statt 128 Stunden, also 25&nbsp;% mehr (Risiko R02 eingetreten).</li>
+        <li><b>Stand Tag 20:</b> Schnittstelle zu 90&nbsp;% fertig (144 Stunden geleistet, 16 Stunden Rest). Integrationstest (V11) und Vorabnahme (V12) noch nicht begonnen. Alle anderen Vorgänge der Realisierung sind abgeschlossen.</li>
+        <li><b>Qualität:</b> Komponententests (Formulare, Gebühren, Schnittstelle): 34 durchgeführt, 26 bestanden. Zwei schwere Mängel offen: Gebühr bei Umbauten falsch berechnet, Upload von Planbeilagen über 20 MB bricht ab.</li>
+        <li><b>Team:</b> In den nächsten zwei Wochen sind 384 von 400 geplanten Stunden verfügbar (Martin zwei Tage Ferien, Jonas einen Tag Weiterbildung). Elena hat 12 Überstunden. Die Stimmung ist gut.</li>
+        <li><b>Risiken:</b> R04 Linienvorgesetzte ziehen Leute ab (W 4 × A 3 = 12): Ressourcenvereinbarung unterschrieben. R08 Seraina fällt aus (W 3 × A 4 = 12): noch keine Stellvertretung. R07 Datenschutzauflagen kommen spät (W 3 × A 3 = 9): Vorprüfung geplant.</li>
+      </ul>
+    </div>
+
+    <div class="card stack" id="t19-werkstatt">
+      <h3>Ampeln setzen</h3>
+      <p class="hint">Wähle je Dimension eine Farbe. Die Regel steht in Schritt 3. Die Gesamtampel zuletzt.</p>
+      <div class="t19-dims" id="t19-dims"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t19-pruefen">Ampeln prüfen</button>
+        <button type="button" class="btn" id="t19-zuruecksetzen">Zurücksetzen</button>
+      </div>
+      <p class="t19-stand" id="t19-stand" aria-live="polite"></p>
+    </div>
+
+    <div class="card stack">
+      <h3>Dein Statusbericht · Kopf und Ampeln</h3>
+      <p class="hint">Die Vorschau füllt sich mit deinen Ampeln. So würde der obere Teil des Berichts an den Projektausschuss aussehen.</p>
+      <p><b>Statusbericht Nr. 1 · Onlineschalter Wolkenried · Stichtag Tag 20 (Ende Woche 4)</b><br>Von: Projektleitung · An: Projektausschuss, Gemeinderat · Zur Kenntnis: Teilprojektleitungen</p>
+      <div class="tablebox">
+        <table class="tabelle t19-vorschau">
+          <thead><tr><th>Dimension</th><th>Ampel</th><th>Kennzahl</th></tr></thead>
+          <tbody id="t19-vorschau"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="t19-reflexion-werkstatt"></div>
+  </section>
+
+  <!-- ===== 7 · Wassermelonen-Detektor ===== -->
+  <section id="detektor">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Wassermelonen-Detektor: drei Teilprojekte, Ende Woche 3</h2>
+    <p class="prose">Eine Woche früher, Tag 15. Die drei Teilprojektleitungen liefern ihre Wochenmeldungen. Du musst sie zum Gesamtbild konsolidieren. Lies Meldung und Rohdaten. Eine Meldung schönt.</p>
+    <div class="t19-berichte">
+      <div class="card t19-bericht">
+        <h3>A · Plattform und Formulare</h3>
+        <p class="hint">Dario Pfister (Lieferant Lärchwerk) · gemeldet: <span class="t19-sym t19-gelb">▲ Gelb</span></p>
+        <p class="t19-zitat">«Die Formulare (V09) waren an Tag 14 fertig statt an Tag 13, weil der Test mit den Planungsbüros zwei unklare Schritte zeigte. Darum endet die Zirkulation (V10) an Tag 16 statt 15. Ohne Massnahme kostet das einen Tag auf dem kritischen Pfad. Massnahme: Jonas und Thomas arbeiten an V10 parallel, Ziel wieder Tag 15.»</p>
+        <ul class="t19-roh">
+          <li>V03, V04, V09 abgeschlossen</li>
+          <li>V10 zu 50&nbsp;% (Plan: 100&nbsp;%)</li>
+          <li>gebuchte Stunden im Plan</li>
+        </ul>
+      </div>
+      <div class="card t19-bericht">
+        <h3>B · Schnittstelle und Daten</h3>
+        <p class="hint">Luca Bernasconi (Informatik Gemeinde) · gemeldet: <span class="t19-sym t19-gruen">● Grün</span></p>
+        <p class="t19-zitat">«Läuft gut. Die Schnittstelle ist zu 90&nbsp;% fertig. Der Hersteller hat die Beschreibung etwas später geliefert, das holen wir nächste Woche auf. Kein Handlungsbedarf.»</p>
+        <ul class="t19-roh">
+          <li>V05 Planende Tag 14, nicht fertig</li>
+          <li>V05: 104 Stunden geleistet, Rest laut Elena 56 Stunden</li>
+          <li>gemeldeter Fertigstellungsgrad Woche 2: 90&nbsp;%, Woche 3: 90&nbsp;%</li>
+          <li>V07 Stammdaten abgeschlossen</li>
+        </ul>
+      </div>
+      <div class="card t19-bericht">
+        <h3>C · Einführung und Kommunikation</h3>
+        <p class="hint">Aylin Demir (Gemeindekanzlei) · gemeldet: <span class="t19-sym t19-gruen">● Grün</span></p>
+        <p class="t19-zitat">«Merkblatt für Bauwillige (V14) an Tag 12 fertig, wie geplant. Schulungsunterlagen (V13) zu 60&nbsp;% fertig, Plan 50&nbsp;%: 38 Stunden geleistet, 25 Stunden Rest.»</p>
+        <ul class="t19-roh">
+          <li>V14 abgeschlossen und von Seraina abgenommen</li>
+          <li>V13 läuft, Planende Tag 17</li>
+          <li>gebuchte Stunden im Plan</li>
+        </ul>
+      </div>
+    </div>
+    <div id="t19-detektor-frage"></div>
+    <details class="sol"><summary>Gemeldet gegenüber gemessen: die Auflösung</summary>
+      <div class="stack">
+        <div class="tablebox">
+          <table class="tabelle">
+            <thead><tr><th>Teilprojekt</th><th>gemeldet</th><th>gemessen</th><th>Begründung</th></tr></thead>
+            <tbody>
+              <tr><th>A Plattform</th><td><span class="t19-sym t19-gelb">▲ Gelb</span></td><td><span class="t19-sym t19-gelb">▲ Gelb</span></td><td>1 Tag Verzug auf dem kritischen Pfad, mit Ursache, Auswirkung und Massnahme. Ehrlich.</td></tr>
+              <tr><th>B Schnittstelle</th><td><span class="t19-sym t19-gruen">● Grün</span></td><td><span class="t19-sym t19-rot">■ Rot</span></td><td>Planende überschritten. Fertigstellungsgrad aus dem Restaufwand: 104 ÷ (104 + 56) = 65&nbsp;%, nicht 90&nbsp;%. Aufwand 160 statt 128 Stunden. Puffer von V05 (1 Tag) ist weg, die Vorabnahme rutscht. Wassermelone.</td></tr>
+              <tr><th>C Einführung</th><td><span class="t19-sym t19-gruen">● Grün</span></td><td><span class="t19-sym t19-gruen">● Grün</span></td><td>Vor Plan, mit Zahlen und Restaufwand belegt. Ehrlich.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><b>Konsolidieren:</b> Die Abweichung von A kann das Teilprojekt selbst ausgleichen, sie bleibt dort. Die Abweichung von B kann es nicht: Sie verschiebt Integrationstest und Vorabnahme. Sie gehört sofort in den Gesamtbericht, mit Restaufwand, Ursache und Auswirkung. Und du führst mit Luca ein Gespräch: Ab jetzt meldet sein Teilprojekt den Fertigstellungsgrad aus geleisteten und restlichen Stunden.</p>
+      </div>
+    </details>
+    <div class="card stack">
+      <h3>Warnsignal oder ehrliches Zeichen?</h3>
+      <p class="hint">Ordne jede Beobachtung ein. Ein Warnsignal deutet auf einen geschönten Bericht hin.</p>
+      <div id="t19-sortierer-melone"></div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst rechnen, einordnen, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Acht Übungen in sechs Arten: rechnen, zuordnen, wahr oder falsch, Fallentscheid, Einzelfrage und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest.</p>
+    <div id="t19-u-eac"></div>
+    <div id="t19-u-ampel"></div>
+    <div id="t19-u-eskalation-zahl"></div>
+    <div id="t19-u-berichtsart"></div>
+    <div id="t19-u-wf"></div>
+    <div id="t19-u-fall"></div>
+    <div id="t19-u-90"></div>
+    <div id="t19-u-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein Statusbericht aus Fallangaben, am Stück</h2>
+    <p class="prose">Eine Aufgabe im Stil der Modulschlussprüfung (eigener Fall, eigene Zahlen): Aus Fallangaben einen vollständigen Statusbericht erstellen. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t19-film"></div>
+    <details class="sol"><summary>Der fertige Statusbericht als Text</summary>
+      <div class="t19-bericht-fertig" id="t19-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>Istkosten unter Planwert heisst nicht «unter Budget».</b> AC &lt; PV entsteht oft nur, weil weniger geschafft wurde. Die Kostenampel richtet sich nach CPI = EV ÷ AC und nach der Prognose EAC.</div>
+    <div class="note falle"><b>Die Gesamtampel ist kein Durchschnitt.</b> Sie folgt der Regel im Projektmanagementplan. Zwei rote Nebendimensionen können die Gesamtampel rot machen, obwohl Termine und Kosten grün oder gelb sind.</div>
+    <div class="note falle"><b>Grün ohne Zahl ist keine Aussage.</b> Jede Ampel braucht eine Kennzahl oder einen prüfbaren Fakt daneben (ZDF).</div>
+    <div class="note falle"><b>Abweichung ohne Ursache und Auswirkung.</b> «Schnittstelle verspätet» reicht nicht. Verlangt sind: Wie viel? Warum? Was folgt für Meilensteine, Endtermin und Kosten?</div>
+    <div class="note falle"><b>Massnahme ohne Wer und Bis-wann.</b> «Wir geben Gas» ist keine Massnahme. Nenne Verantwortliche, Termin und erwartete Wirkung.</div>
+    <div class="note falle"><b>Entscheidungsbedarf ohne Optionen.</b> Die Steuerung braucht eine klare Frage, Optionen mit Folgen, deine Empfehlung und eine Frist.</div>
+    <div class="note falle"><b>Fertigstellungsgrad nach Gefühl.</b> Wer «90&nbsp;%» schätzt, ohne Restaufwand zu kennen, landet im 90-%-Syndrom. Rechne: geleistet ÷ (geleistet + Rest).</div>
+    <div class="note falle"><b>Status-, Phasen- und Abschlussbericht verwechseln.</b> Statusbericht: periodisch informieren. Phasenbericht: Freigabe der nächsten Phase. Projektschlussbeurteilung: Entscheid zum Abschluss.</div>
+    <div class="note falle"><b>Zu spät oder an der falschen Stelle eskalieren.</b> Die Regel (zum Beispiel 5 Tage je Stufe) gilt auch für dich als Projektleitung. Keine Stufe überspringen.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t19-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Der <b>Statusbericht</b> informiert die Steuerung periodisch über Stand, Abweichungen, Prognose, Massnahmen und <b>Entscheidungsbedarf</b>. Er ist eine Entscheidungsgrundlage, kein Stimmungsbericht.</li>
+      <li>Das <b>Berichtswesen</b> (wer, wem, wann, was) und die <b>Eskalationsregel</b> stehen im Projektmanagementplan. Teilprojektberichte werden <b>konsolidiert</b>: In den Gesamtbericht kommt, was das Teilprojekt nicht selbst ausgleichen kann.</li>
+      <li><b>Ampeln nach festen Schwellen</b> setzen, zum Beispiel Termine über SPI und Prognose, Kosten über CPI und EAC. Die Gesamtampel folgt einer eigenen Regel.</li>
+      <li><b>ZDF:</b> Jede Aussage mit Zahl. Eine Abweichung hat immer Ursache und Auswirkung, eine Massnahme immer Verantwortliche und Termin.</li>
+      <li><b>Wassermelonen-Effekt:</b> aussen grün, innen rot. Schönfärberei nimmt der Steuerung die Optionen und kostet Vertrauen.</li>
+      <li><b>Eskalieren</b>, wenn eine Toleranz überschritten ist oder die Frist abläuft (zum Beispiel 5 Tage je Stufe): mit Fakten, Optionen, Empfehlung und Frist, ohne Stufen zu überspringen.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t19-ziele">
+        <li><span class="icb">ICB 3.10</span> Planung und Steuerung: Indikator «Bericht über den Projektfortschritt erstatten» (Swiss ICB 4.5.10.4), Ausnahmeprinzip, Abweichungsbericht. Ampelregel dieser Station (Tabelle aus Schritt 3) und die Formeln SPI = EV ÷ PV, CPI = EV ÷ AC, EAC = BAC ÷ CPI, Fertigstellungsgrad = EV ÷ BAC.</li>
+        <li><span class="icb">ICB 3.05</span> Organisation, Information und Dokumentation: Strukturen für die Berichterstattung (Swiss ICB 4.5.5). Berichtsplan mit Rhythmus und Empfängern, Eskalationsstufen.</li>
+        <li>Gliederung des Statusberichts (zehn Teile aus Schritt 2) und die Kette Abweichung → Ursache → Auswirkung → Massnahme → Entscheid.</li>
+        <li>Tabelle Status-, Phasen- und Abschlussbericht (HERMES-Ergebnisse 4.4.1.37, 4.4.1.30, 4.4.1.36).</li>
+        <li>Fundstellen: LB 7 S.7 (Berichtszeitplan), S.8 (Konsolidierung), S.9 (Statusbericht, Übung Meetingplan MOVE); LB 5 F.17 (Projektstatusbericht), F.18 (ZDF), F.19–20 (Projektstandsitzung, Steuerungsausschuss); Vorlage 7.1 Projektstatusbericht; Vorlage 5.4 Projektmanagementplan, Kapitel Reporting und Eskalation; Vorlage Statusbericht (Kennzahlenliste für die Simulation).</li>
+        <li>Gubelmann/Sommer: Kapitel 9 «Organisation, Information und Dokumentation», S. 105–124 (laut LB 5). Das Kapitel zu Planung und Steuerung (ICB 3.10) nennen die bisherigen Folien nicht; im Inhaltsverzeichnis nachschlagen.</li>
+      </ul>
+    </div>
+    <footer>Station 19 des Lernpfads PMGT. Fall «Onlineschalter Wolkenried» und «Digitale Schule Wolkenried» frei erfunden. Quellen: LB 5, LB 7, Vorlagen 5.4 und 7.1, HERMES-Referenzhandbuch, Swiss ICB 4.0, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* Ampel-Marken: immer Form + Text */
+  const SYM = {
+    gruen: '<span class="t19-sym t19-gruen">● Grün</span>',
+    gelb: '<span class="t19-sym t19-gelb">▲ Gelb</span>',
+    rot: '<span class="t19-sym t19-rot">■ Rot</span>'
+  };
+  const NAME = { gruen: "Grün", gelb: "Gelb", rot: "Rot" };
+
+  /* ---------- Schritt 0: Plan, Ist oder Prognose ---------- */
+  L.sortierer("#t19-sortierer-pip", {
+    kategorien: ["Plan", "Ist", "Prognose"],
+    elemente: [
+      { html: "Vorabnahme an Tag 20 laut Terminplan", kategorie: "Plan", erklaerung: "Der Termin wurde vor dem Start festgelegt. Das ist der Plan (die Baseline)." },
+      { html: "Bis heute gebuchte Kosten: CHF 103'900", kategorie: "Ist", erklaerung: "Gemessen aus der Buchhaltung: Istkosten (AC)." },
+      { html: "Abnahme voraussichtlich an Tag 42", kategorie: "Prognose", erklaerung: "Eine Schätzung für die Zukunft auf Grund des heutigen Stands." },
+      { html: "Plankosten aller Vorgänge (BAC): CHF 162'240", kategorie: "Plan", erklaerung: "Das geplante Budget der Arbeit, festgelegt vor dem Start." },
+      { html: "Erwartete Gesamtkosten (EAC): rund CHF 174'500", kategorie: "Prognose", erklaerung: "EAC = BAC ÷ CPI ist eine Hochrechnung: So viel kostet das Projekt, wenn es so weiterläuft." },
+      { html: "Schnittstelle zu 90&nbsp;% fertig (144 von jetzt 160 Stunden)", kategorie: "Ist", erklaerung: "Geleistete Stunden sind gemessen. Der Rest von 16 Stunden ist zwar geschätzt, der Fertigstellungsgrad beschreibt aber den heutigen Stand." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper Termin-Ampel ---------- */
+  L.stepper("#t19-stepper-ampel", {
+    titel: "Termin-Ampel Ende Woche 4",
+    text: 'Bis Tag 20 ist Arbeit im <span data-link="ev">Wert von CHF 96\'624 erledigt</span>. Geplant war bis dahin Arbeit im <span data-link="pv">Wert von CHF 112\'800</span>. Die <span data-link="prog">Abnahme ist auf Tag 42 prognostiziert</span>, das <span data-link="ziel">Terminziel ist Tag 40</span>.',
+    schritte: [
+      { html: 'SPI = <span data-link="ev">EV</span> ÷ <span data-link="pv">PV</span>',
+        warum: "Für Termine zählt der Termin-Leistungsindex SPI: erledigte Arbeit geteilt durch geplante Arbeit, beides in Franken." },
+      { html: 'SPI = <span data-link="ev">96\'624</span> ÷ <span data-link="pv">112\'800</span> = 0.86',
+        warum: "Das Projekt hat 86&nbsp;% dessen geschafft, was bis heute geplant war." },
+      { html: 'Grün? SPI 0.86 ≥ 0.95 ✗ &nbsp;·&nbsp; <span data-link="prog">Prognose 42</span> ≤ <span data-link="ziel">40</span> ✗',
+        warum: "Grün braucht beides: SPI mindestens 0.95 und Prognose bis Tag 40. Beides ist nicht erfüllt." },
+      { html: 'Gelb? SPI 0.86 ≥ 0.85 ✓ &nbsp;·&nbsp; <span data-link="prog">Prognose 42</span> ≤ 42 ✓',
+        warum: "Für Gelb reicht eine der beiden Bedingungen. Hier sind sogar beide erfüllt." },
+      { html: 'Termine: ' + SYM.gelb + ' &nbsp;SPI 0.86, Abnahme <span data-link="prog">Prognose Tag 42</span> (<span data-link="ziel">Ziel 40</span>)',
+        warum: "So steht es im Bericht: Ampel plus Kennzahl. Wer nur «Gelb» schreibt, lässt die Steuerung raten." }
+    ]
+  });
+
+  /* ---------- Schritt 4: Stepper Abweichung formulieren ---------- */
+  L.stepper("#t19-stepper-abweichung", {
+    titel: "Vom Ereignis zum Berichtssatz",
+    text: 'Elena meldet: Die <span data-link="was">Schnittstelle wird erst an Tag 21 fertig statt an Tag 14</span>. Der <span data-link="urs">Aufwand liegt bei 160 statt 128 Stunden, und der Hersteller lieferte die Beschreibung 4 Tage zu spät</span>. Dadurch <span data-link="ausw">verschieben sich Integrationstest und Vorabnahme</span>.',
+    schritte: [
+      { html: '<b>Abweichung:</b> <span data-link="was">Schnittstelle (V05) 7 Tage hinter Plan: fertig Tag 21 statt 14.</span>',
+        warum: "Zuerst das Was, mit Zahl und Bezug zum Plan." },
+      { html: '<b>Ursache:</b> <span data-link="urs">Aufwand 25&nbsp;% höher (160 statt 128 h, Risiko R02), Beschreibung des Herstellers 4 Tage zu spät (R03).</span>',
+        warum: "Die Ursache zeigt, ob das Problem einmalig ist oder wiederkommt. Hier: zwei Risiken aus dem Register sind eingetreten." },
+      { html: '<b>Auswirkung:</b> <span data-link="ausw">Puffer von V05 (1 Tag) aufgebraucht, Vorabnahme Tag 26 statt 20, Abnahme Prognose Tag 42, Terminziel 40 um 2 Tage verfehlt.</span>',
+        warum: "Die Auswirkung auf Meilensteine und Endtermin entscheidet, ob die Steuerung handeln muss." },
+      { html: '<b>Massnahme:</b> Integrationstest mit drei statt zwei Personen (Jasmin zusätzlich), Dauer 2 statt 3 Tage. Verantwortlich Elena, ab Tag 21. Wirkung: 1 Tag.',
+        warum: "Was du in deiner Kompetenz selbst tun kannst, mit Wer, Bis-wann und Wirkung." },
+      { html: '<b>Entscheidungsbedarf:</b> Gemeinderat genehmigt bis Tag 22 den Änderungsantrag «Pilot mit zwei statt drei Planungsbüros» (−32 h, −CHF 5\'120, Wirkung 2 Tage). Empfehlung: annehmen. Damit Prognose Tag 39.',
+        warum: "Was deine Kompetenz übersteigt (Umfang ändern), legst du der Steuerung mit Optionen, Folgen, Empfehlung und Frist vor. 42 − 1 − 2 = 39, also wieder innerhalb des Terminziels." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Statusbericht-Werkstatt ---------- */
+  const DIMS = [
+    { id: "termine", name: "Termine", hinweis: "SPI, Meilensteine, Prognose der Abnahme", soll: "gelb",
+      kz: "SPI 0.86 · Abnahme Prognose Tag 42 (Ziel 40)",
+      ok: "SPI 0.86 ist unter 0.95, und die Prognose liegt nach Tag 40: kein Grün. SPI ist aber mindestens 0.85, und die Prognose liegt nicht nach Tag 42: Gelb.",
+      falsch: {
+        gruen: "Für Grün braucht es SPI ≥ 0.95 und eine Prognose bis Tag 40. Beides fehlt: SPI 0.86, Prognose Tag 42. Richtig ist Gelb.",
+        rot: "Für Rot müsste der SPI unter 0.85 liegen und die Prognose nach Tag 42. Mit SPI 0.86 und Prognose Tag 42 ist es Gelb."
+      } },
+    { id: "kosten", name: "Kosten", hinweis: "CPI, EAC gegenüber Budget", soll: "gelb",
+      kz: "CPI 0.93 · EAC rund 174'500 (Budget 180'000)",
+      ok: "CPI 0.93 liegt unter 0.95: kein Grün, auch wenn die Prognose noch ins Budget passt. CPI ist mindestens 0.85: Gelb.",
+      falsch: {
+        gruen: "Die Falle: Die Istkosten (103'900) liegen unter dem Planwert (112'800). Das heisst nur, dass weniger geschafft wurde. Massgebend ist CPI = EV ÷ AC = 0.93: unter 0.95, also kein Grün. Richtig ist Gelb.",
+        rot: "CPI 0.93 ist mindestens 0.85, und die Prognose von rund 174'500 liegt sogar im Budget von 180'000. Das reicht für Gelb, nicht Rot."
+      } },
+    { id: "qualitaet", name: "Leistung und Qualität", hinweis: "Anteil bestandener Testfälle", soll: "rot",
+      kz: "26 von 34 Testfällen bestanden (76&nbsp;%), 2 schwere Mängel",
+      ok: "26 ÷ 34 = 76&nbsp;% liegt unter 80&nbsp;%: Rot. Zwei schwere Mängel sind offen.",
+      falsch: {
+        gruen: "26 von 34 bestanden sind 76&nbsp;%. Grün verlangt mindestens 95&nbsp;%, Gelb mindestens 80&nbsp;%. Richtig ist Rot.",
+        gelb: "26 ÷ 34 = 0.765, also 76&nbsp;%. Das liegt knapp unter der Grenze für Gelb (80&nbsp;%). Richtig ist Rot."
+      } },
+    { id: "team", name: "Ressourcen und Team", hinweis: "verfügbare Kapazität der nächsten zwei Wochen", soll: "gruen",
+      kz: "384 von 400 h verfügbar (96&nbsp;%)",
+      ok: "384 ÷ 400 = 96&nbsp;%, mindestens 95&nbsp;%: Grün. Elenas 12 Überstunden gehören als Beobachtung in den Bericht, ändern die Ampel nach der Regel aber nicht.",
+      falsch: {
+        gelb: "384 ÷ 400 = 96&nbsp;% liegt über 95&nbsp;%: Grün. Die Überstunden von Elena und die Ferien sind ein Grund zum Beobachten, aber nach der Regel kein Gelb. Schwarzmalen schadet der Glaubwürdigkeit ebenso wie Schönfärben.",
+        rot: "384 ÷ 400 = 96&nbsp;%, mindestens 95&nbsp;%: Grün. Rot wäre erst unter 85&nbsp;%."
+      } },
+    { id: "risiken", name: "Risiken", hinweis: "hohe Risiken (Wert ≥ 12) mit oder ohne Massnahme", soll: "gelb",
+      kz: "R08 (12) ohne Massnahme, R04 (12) mit Massnahme",
+      ok: "Hohe Risiken (≥ 12) sind R04 und R08. R04 hat eine Massnahme, R08 nicht. Genau eines ohne Massnahme: Gelb. R07 (9) ist kein hohes Risiko.",
+      falsch: {
+        gruen: "R08 (Seraina fällt aus, 3 × 4 = 12) ist ein hohes Risiko ohne Massnahme. Damit ist Grün ausgeschlossen. Genau eines: Gelb.",
+        rot: "Rot verlangt zwei hohe Risiken ohne Massnahme. Ohne Massnahme ist nur R08; R04 ist abgesichert, R07 hat nur den Wert 9. Richtig ist Gelb."
+      } },
+    { id: "gesamt", name: "Gesamt", hinweis: "nach der Gesamtregel, nicht als Durchschnitt", soll: "gelb",
+      kz: "Termine und Kosten gelb, Qualität rot",
+      ok: "Termine und Kosten sind nicht grün, also kein Grün. Sie sind auch nicht rot, und ausserhalb von Termine und Kosten ist nur eine Dimension rot (Qualität). Gelb.",
+      falsch: {
+        gruen: "Grün verlangt, dass Termine und Kosten grün sind. Beide sind gelb. Richtig ist Gelb.",
+        rot: "Rot wäre richtig, wenn Termine oder Kosten rot wären oder zwei andere Dimensionen rot. Hier ist nur die Qualität rot. Nach der Regel: Gelb. Die rote Qualität gehört trotzdem prominent in die Abweichungen."
+      } }
+  ];
+
+  const wahl = {};
+  const dimsBox = document.getElementById("t19-dims");
+  const vorschau = document.getElementById("t19-vorschau");
+  const stand = document.getElementById("t19-stand");
+
+  function vorschauZeichnen() {
+    vorschau.innerHTML = DIMS.map(function (d) {
+      const w = wahl[d.id];
+      return "<tr><th>" + d.name + "</th><td>" + (w ? SYM[w] : '<span class="t19-offen">offen</span>') + "</td><td>" + d.kz + "</td></tr>";
+    }).join("");
+  }
+
+  DIMS.forEach(function (d) {
+    const fs = document.createElement("fieldset");
+    fs.className = "t19-dim";
+    fs.innerHTML = "<legend>" + d.name + "</legend><p class=\"hint\">" + d.hinweis + "</p>";
+    const knoepfe = document.createElement("div");
+    knoepfe.className = "t19-knoepfe";
+    ["gruen", "gelb", "rot"].forEach(function (w) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn t19-ampel";
+      b.dataset.wert = w;
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", d.name + ": " + NAME[w]);
+      b.textContent = { gruen: "● Grün", gelb: "▲ Gelb", rot: "■ Rot" }[w];
+      b.addEventListener("click", function () {
+        wahl[d.id] = w;
+        knoepfe.querySelectorAll("button").forEach(function (x) {
+          x.setAttribute("aria-pressed", x === b ? "true" : "false");
+        });
+        rm.className = "t19-rm";
+        rm.innerHTML = "";
+        stand.textContent = "";
+        vorschauZeichnen();
+      });
+      knoepfe.appendChild(b);
+    });
+    const rm = document.createElement("div");
+    rm.className = "t19-rm";
+    rm.id = "t19-rm-" + d.id;
+    rm.setAttribute("aria-live", "polite");
+    fs.append(knoepfe, rm);
+    dimsBox.appendChild(fs);
+  });
+
+  document.getElementById("t19-pruefen").addEventListener("click", function () {
+    let richtig = 0, offen = 0;
+    DIMS.forEach(function (d) {
+      const rm = document.getElementById("t19-rm-" + d.id);
+      const w = wahl[d.id];
+      if (!w) {
+        offen++;
+        rm.className = "t19-rm bad";
+        rm.innerHTML = '<span class="marke">?</span> Noch keine Ampel gewählt.';
+        return;
+      }
+      if (w === d.soll) {
+        richtig++;
+        rm.className = "t19-rm ok";
+        rm.innerHTML = '<span class="marke">✓ Richtig, ' + NAME[w] + ".</span> " + d.ok;
+      } else {
+        rm.className = "t19-rm bad";
+        rm.innerHTML = '<span class="marke">✗ Nicht ' + NAME[w] + ".</span> " + d.falsch[w];
+      }
+    });
+    stand.textContent = richtig + " von " + DIMS.length + " Ampeln richtig" +
+      (offen ? " · " + offen + " noch offen" : "") +
+      (richtig === DIMS.length ? ". Dein Bericht stimmt mit den Zahlen überein. Jetzt fehlen Abweichung, Massnahmen und Entscheid: unten formulieren." : ".");
+  });
+
+  document.getElementById("t19-zuruecksetzen").addEventListener("click", function () {
+    DIMS.forEach(function (d) {
+      delete wahl[d.id];
+      const rm = document.getElementById("t19-rm-" + d.id);
+      rm.className = "t19-rm";
+      rm.innerHTML = "";
+    });
+    dimsBox.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+    stand.textContent = "";
+    vorschauZeichnen();
+    const erster = dimsBox.querySelector("button");
+    if (erster) erster.focus();
+  });
+  vorschauZeichnen();
+
+  L.reflexion("#t19-reflexion-werkstatt", {
+    titel: "Abweichung, Massnahmen, Entscheidungsbedarf formulieren",
+    icb: ["ICB 3.10", "ICB 3.05"],
+    frage: "<p>Schreib für den Statusbericht Ende Woche 4 (a) die wichtigste Abweichung mit Zahl, Ursache und Auswirkung, (b) zwei Massnahmen in deiner Kompetenz mit Verantwortlichen, Termin und Wirkung und (c) den Entscheidungsbedarf an den Gemeinderat mit Optionen, Empfehlung und Frist. Fünf bis acht Sätze.</p>",
+    musterloesung:
+      "<p><b>Abweichung:</b> Die Schnittstelle zur Bauverwaltungssoftware (V05) wird an Tag 21 statt an Tag 14 fertig. Ursache: Der Aufwand liegt bei 160 statt 128 Stunden (+25&nbsp;%, Risiko R02), und der Hersteller lieferte die Schnittstellenbeschreibung 4 Tage zu spät (R03). Auswirkung: Der Puffer von V05 ist aufgebraucht, Integrationstest und Vorabnahme verschieben sich um 6 Tage (Vorabnahme Tag 26 statt 20), die Abnahme ist auf Tag 42 prognostiziert, 2 Tage nach dem Terminziel. Der Fertigstellungsgrad liegt bei 60&nbsp;% statt 70&nbsp;% (SPI 0.86). CPI 0.93, Kostenprognose rund CHF 174'500, die Reserve schrumpft auf rund CHF 5'500. Dazu kommen 8 fehlgeschlagene Komponententests mit 2 schweren Mängeln.</p>" +
+      "<p><b>Massnahmen:</b> (1) Integrationstest mit drei statt zwei Personen, Jasmin zusätzlich; Dauer 2 statt 3 Tage; verantwortlich Elena, ab Tag 21; Wirkung 1 Tag. (2) Die zwei schweren Mängel behebt Dario bis Tag 22, Nachtest im Integrationstest. (3) Aylin arbeitet sich bis Tag 25 als Stellvertretung für Seraina ein (Risiko R08).</p>" +
+      "<p><b>Entscheidungsbedarf an den Gemeinderat bis Tag 22:</b> Änderungsantrag «Pilot mit zwei statt drei Planungsbüros». Option A annehmen: −32 Stunden, −CHF 5'120, Abnahme 2 Tage früher, zusammen mit Massnahme 1 Prognose Tag 39; dafür weniger Rückmeldungen aus dem Pilot (Risiko R06 «Formulare unverständlich» steigt leicht). Option B ablehnen: Prognose Tag 41, Terminziel verfehlt. Empfehlung: A. Zudem: Phasenfreigabe der Einführung unter der Auflage, dass die Vorabnahme bis Tag 26 bestanden ist.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Zahlen: 42 − 1 − 2 = 39; 162\'240 ÷ 0.93 ≈ 174\'500; 180\'000 − 174\'457 ≈ 5\'500.</p>',
+    kriterien: [
+      { text: "Abweichung mit Zahl und Planbezug (Tag 21 statt 14 oder 6 Tage Verzug Vorabnahme)", punkte: 2 },
+      { text: "Ursache genannt (Mehraufwand, verspätete Beschreibung)", punkte: 1 },
+      { text: "Auswirkung auf Meilensteine, Endtermin oder Kosten mit Kennzahl (SPI, CPI, Prognose)", punkte: 2 },
+      { text: "Mindestens zwei Massnahmen mit Verantwortlichen und Termin", punkte: 2 },
+      { text: "Entscheidungsbedarf mit Frage, Optionen mit Folgen, Empfehlung und Frist", punkte: 2 },
+      { text: "Sachlich, ohne Schönfärberei oder Schwarzmalerei", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Schritt 7: Wassermelonen-Detektor ---------- */
+  L.auswahl("#t19-detektor-frage", {
+    frage: '<span class="icb">ICB 3.10</span> Welche Meldung ist eine Wassermelone, also aussen grün und innen rot?',
+    optionen: ["A · Plattform und Formulare", "B · Schnittstelle und Daten", "C · Einführung und Kommunikation", "Keine, alle drei passen zu den Zahlen"],
+    richtig: 1,
+    erklaerung: "B meldet Grün, obwohl das Planende überschritten ist. Der Fertigstellungsgrad steht seit zwei Wochen auf 90&nbsp;%, aus dem Restaufwand gerechnet sind es 104 ÷ 160 = 65&nbsp;%. Die Verspätung des Herstellers wird kleingeredet, eine Auswirkung fehlt. A meldet Gelb mit Ursache, Auswirkung und Massnahme. C belegt Grün mit Zahlen."
+  });
+
+  L.sortierer("#t19-sortierer-melone", {
+    kategorien: ["Warnsignal", "Ehrliches Zeichen"],
+    elemente: [
+      { html: "Der Fertigstellungsgrad steht drei Wochen hintereinander bei 90&nbsp;%.", kategorie: "Warnsignal", erklaerung: "Das 90-%-Syndrom: Ohne Restaufwand ist die Zahl ein Gefühl." },
+      { html: "Gelb, mit Ursache, Auswirkung auf den kritischen Pfad und Massnahme.", kategorie: "Ehrliches Zeichen", erklaerung: "So sieht eine brauchbare Abweichungsmeldung aus." },
+      { html: "Planende überschritten, Ampel trotzdem grün.", kategorie: "Warnsignal", erklaerung: "Ein verpasster Termin ohne Auswirkung im Bericht ist geschönt." },
+      { html: "«Das holen wir nächste Woche auf», ohne Plan, wie.", kategorie: "Warnsignal", erklaerung: "Hoffnung ist keine Massnahme. Es fehlen Wer, Was und Bis-wann." },
+      { html: "Fertigstellungsgrad aus geleisteten und restlichen Stunden gerechnet.", kategorie: "Ehrliches Zeichen", erklaerung: "Messbar und nachprüfbar: geleistet ÷ (geleistet + Rest)." },
+      { html: "Mehr Stunden gebucht als geplant, kein Restaufwand genannt.", kategorie: "Warnsignal", erklaerung: "Die Kosten laufen davon, und niemand weiss, wie viel noch kommt." },
+      { html: "Rot gemeldet und am selben Tag mit der Auftraggeberin besprochen.", kategorie: "Ehrliches Zeichen", erklaerung: "Keine Überraschungen in der Sitzung: so entsteht Vertrauen." },
+      { html: "Alle Teilprojekte grün, aber die Gesamtprognose rutscht jede Woche.", kategorie: "Warnsignal", erklaerung: "Wenn die Teile grün sind und das Ganze nicht, stimmen die Teile nicht." }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.zahlAufgabe("#t19-u-eac", {
+    titel: "Übung 1 · Kostenprognose für den Bericht",
+    frage: "<p>Projekt «Neue Telefonie» der Gemeindeverwaltung Wolkenried. Plankosten (BAC) CHF 200'000, Budget CHF 210'000. Stand heute: PV CHF 80'000, EV CHF 72'000, AC CHF 80'000. Wie hoch ist die Kostenprognose EAC = BAC ÷ CPI? Auf ganze Franken.</p>",
+    antwort: 222222,
+    toleranz: 2,
+    einheit: "CHF",
+    anzeige: "200'000 ÷ 0.9 = 222'222",
+    hinweise: ["Rechne zuerst CPI = EV ÷ AC.", "CPI = 72'000 ÷ 80'000 = 0.9. Jetzt BAC durch CPI teilen."],
+    loesungsweg: [
+      "CPI = EV ÷ AC = 72'000 ÷ 80'000 = 0.90",
+      "EAC = BAC ÷ CPI = 200'000 ÷ 0.90 = 222'222",
+      "Im Bericht: Kostenprognose rund CHF 222'200, das sind rund CHF 12'200 über dem Budget von 210'000. Nach der Wolkenried-Regel: CPI 0.90 ≥ 0.85, also Gelb, und die Überschreitung gehört mit Ursache und Entscheidungsbedarf in die Abweichungen.",
+      "Achtung: AC = PV (80'000 = 80'000) sieht nach «genau im Plan» aus. Für das Geld wurde aber nur Arbeit im Wert von 72'000 erbracht."
+    ]
+  });
+
+  L.schrittAufgabe("#t19-u-ampel", {
+    titel: "Übung 2 · Zwei Ampeln aus Zahlen setzen",
+    aufgabe: "<p>Projekt «Archiv digital» in Wolkenried. Es gilt die Ampelregel aus Schritt 3, mit Terminziel Tag 60 und Budget CHF 160'000. Stand: PV CHF 50'000, EV CHF 47'000, AC CHF 45'000, BAC CHF 150'000, Prognose Projektende Tag 61. Setz die Ampeln für Termine und Kosten. Überleg zuerst selbst, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "SPI = 47'000 ÷ 50'000 = 0.94", warum: "Termin-Leistungsindex: erledigte durch geplante Arbeit." },
+      { html: "Termine: SPI 0.94 &lt; 0.95, Prognose 61 &gt; 60 → kein Grün. SPI ≥ 0.85 → " + SYM.gelb, warum: "Grün verlangt beides. Schon eine knappe Verfehlung reicht für Gelb: Gelb heisst Handlungsbedarf, nicht Katastrophe." },
+      { html: "CPI = 47'000 ÷ 45'000 = 1.04", warum: "Kosten-Leistungsindex: Die erledigte Arbeit hat weniger gekostet als geplant." },
+      { html: "EAC = 150'000 ÷ (47'000 ÷ 45'000) = 150'000 × 45'000 ÷ 47'000 ≈ 143'600", warum: "Mit dem ungerundeten CPI rechnen, sonst wird die Prognose ungenau." },
+      { html: "Kosten: CPI 1.04 ≥ 0.95 und EAC 143'600 ≤ 160'000 → " + SYM.gruen, warum: "Beide Bedingungen für Grün sind erfüllt. Ein Projekt kann gleichzeitig bei den Kosten grün und bei den Terminen gelb sein." }
+    ]
+  });
+
+  L.zahlAufgabe("#t19-u-eskalation-zahl", {
+    titel: "Übung 3 · Eskalationsregel anwenden",
+    frage: "<p>Es gilt die Regel aus der Vorlage 5.4, in Wolkenried in Arbeitstagen gezählt: Wird ein Problem auf einer Stufe nicht innerhalb von 5 Arbeitstagen gelöst, geht es an die nächste Stufe. Luca (Teilprojektleitung) kennt das Problem «Hersteller liefert keine Testdaten» seit Arbeitstag 3. Niemand löst es. An welchem Arbeitstag liegt es spätestens bei der Auftraggeberin und dem Projektausschuss?</p>",
+    antwort: 13,
+    einheit: "Arbeitstag",
+    hinweise: ["Stufen: Teilprojektleitung → Projektleitung → Auftraggeberin und Projektausschuss.", "Je Stufe höchstens 5 Arbeitstage."],
+    loesungsweg: [
+      "Tag 3: Problem bei Luca (Teilprojektleitung).",
+      "Tag 3 + 5 = Tag 8: ungelöst, also an die Projektleitung.",
+      "Tag 8 + 5 = Tag 13: ungelöst, also an Auftraggeberin und Projektausschuss.",
+      "Das ist die späteste Grenze. Gefährdet das Problem einen Meilenstein, eskalierst du sofort."
+    ]
+  });
+
+  L.sortierer("#t19-u-berichtsart", {
+    frage: "Übung 4 · Welcher Bericht ist gemeint?",
+    kategorien: ["Statusbericht", "Phasenbericht", "Projektschlussbeurteilung"],
+    elemente: [
+      { html: "Geht alle vier Wochen an den Projektausschuss: Stand, Ampeln, Prognose.", kategorie: "Statusbericht", erklaerung: "Periodische Berichterstattung über den Projektstand (HERMES 4.4.1.37)." },
+      { html: "Grundlage für den Entscheid des Gemeinderats, die Einführung freizugeben.", kategorie: "Phasenbericht", erklaerung: "Der Phasenbericht ist die Grundlage für die Phasenfreigabe (HERMES 4.4.1.30)." },
+      { html: "Soll-Ist über das ganze Projekt, Erfahrungen und Antrag auf Abschluss.", kategorie: "Projektschlussbeurteilung", erklaerung: "Grundlage für den Entscheid zum Projektabschluss (HERMES 4.4.1.36)." },
+      { html: "Fasst Ergebnisse und Entscheide einer Phase zusammen und zeigt die Organisation der nächsten.", kategorie: "Phasenbericht", erklaerung: "Genau das beschreibt HERMES für den Phasenbericht." },
+      { html: "Zeigt Probleme, Massnahmen und den Ausblick auf die nächsten Wochen.", kategorie: "Statusbericht", erklaerung: "Probleme und Massnahmen, Risiken, Ausblick: Kerninhalt des Statusberichts." },
+      { html: "Legt Inhalt und Termine der Erfolgskontrolle nach dem Projekt fest.", kategorie: "Projektschlussbeurteilung", erklaerung: "Die Projekterfolgskontrolle folgt nach dem Abschluss; die Schlussbeurteilung bestimmt sie." }
+    ]
+  });
+
+  L.wahrFalsch("#t19-u-wf", {
+    titel: 'Übung 5 · Wahr oder falsch? <span class="icb">ICB 3.10</span> <span class="icb">ICB 3.05</span>',
+    aussagen: [
+      { html: "Eine gelbe oder rote Ampel ohne Massnahme ist unvollständig.", wahr: true,
+        erklaerung: "Gelb heisst zusätzlicher, Rot dringender Handlungsbedarf. Ohne Massnahme weiss die Steuerung nicht, was passiert (ICB 3.10, Korrekturmassnahmen)." },
+      { html: "Liegen die Istkosten unter dem Planwert, ist die Kostenampel grün.", wahr: false,
+        erklaerung: "AC < PV kann einfach heissen, dass weniger geschafft wurde. Massgebend sind CPI = EV ÷ AC und die Prognose EAC." },
+      { html: "In HERMES ist der Phasenbericht die Grundlage für die Freigabe der nächsten Phase.", wahr: true,
+        erklaerung: "So beschreibt das Referenzhandbuch den Phasenbericht (Ergebnis 4.4.1.30)." },
+      { html: "Wer ein Problem eskaliert, gibt die Verantwortung dafür vollständig ab.", wahr: false,
+        erklaerung: "Die Eskalation holt den Entscheid dort, wo die Kompetenz liegt. Die Projektleitung liefert Fakten und Optionen und setzt den Entscheid danach um." },
+      { html: "Rhythmus, Empfänger und Eskalationsregel des Reportings legt man im Projektmanagementplan fest.", wahr: true,
+        erklaerung: "Die Vorlage 5.4 hat dafür die Kapitel Reporting und Eskalation; HERMES verweist ebenfalls auf den Projektmanagementplan (ICB 3.05)." },
+      { html: "Die Gesamtampel ist immer der Durchschnitt der einzelnen Ampeln.", wahr: false,
+        erklaerung: "Die Gesamtampel folgt einer vorher festgelegten Regel. Ein Durchschnitt würde ein rotes Problem verwässern." }
+    ]
+  });
+
+  L.auswahl("#t19-u-fall", {
+    frage: '<p><b>Übung 6 · Fallentscheid</b> <span class="icb">ICB 3.10</span> <span class="icb">ICB 3.05</span></p><p>Der Hersteller der Bauverwaltungssoftware hat die zugesagte Schnittstellenbeschreibung seit 5 Arbeitstagen nicht geliefert. Luca hat zweimal nachgefragt, ohne Antwort. Der Vertrag mit dem Hersteller läuft über die Gemeinde. Ohne Beschreibung steht die Schnittstelle, die nur 1 Tag Puffer hat, in 2 Tagen still. Was tust du als Projektleitung?</p>',
+    optionen: [
+      "Noch eine Woche warten. Der Hersteller hat bisher immer geliefert.",
+      "Elena soll ohne Beschreibung weiterprogrammieren und später anpassen.",
+      "Sofort an die Auftraggeberin eskalieren: Problem, Auswirkung (Puffer weg, Vorabnahme gefährdet), Empfehlung, dass die Gemeinde als Vertragspartnerin den Hersteller schriftlich auffordert. Das Team arbeitet an anderen Teilen weiter.",
+      "Den Gemeindepräsidenten direkt anrufen, damit er beim Hersteller Druck macht."
+    ],
+    richtig: 2,
+    erklaerung: "Die 5-Tage-Frist auf Stufe Teilprojekt ist abgelaufen, und der Puffer ist bald weg: Eskalieren ist Pflicht. Die Auftraggeberin ist die nächste Stufe und vertritt die Gemeinde gegenüber dem Hersteller. Folgen der anderen Optionen: Warten verbraucht den Puffer und verschiebt die Vorabnahme. Ohne Beschreibung programmieren verschiebt das Risiko in den Integrationstest, wo jeder Fehler mehr kostet. Der direkte Anruf beim Präsidenten überspringt eine Stufe und beschädigt das Vertrauen der Auftraggeberin (ICB 3.05 Struktur und Rollen, ICB 3.10 Steuerung)."
+  });
+
+  L.auswahl("#t19-u-90", {
+    frage: '<p><b>Übung 7</b> <span class="icb">ICB 3.10</span></p><p>Ein Teilprojektleiter meldet zum dritten Mal in Folge «90&nbsp;% fertig». Was tust du zuerst?</p>',
+    optionen: [
+      "Die 90&nbsp;% übernehmen. Er kennt sein Teilprojekt am besten.",
+      "Die Ampel des Teilprojekts sofort auf Rot setzen und den Projektausschuss informieren.",
+      "Den Restaufwand in Stunden schätzen lassen und den Fertigstellungsgrad aus geleisteten und restlichen Stunden neu berechnen.",
+      "Ihm mehr Leute geben, damit die letzten 10&nbsp;% schneller gehen."
+    ],
+    richtig: 2,
+    erklaerung: "Zuerst brauchst du eine messbare Grundlage. Mit geleistet ÷ (geleistet + Rest) siehst du, wo das Teilprojekt wirklich steht. Erst dann setzt du die Ampel und entscheidest über Massnahmen. Mehr Leute ohne Diagnose kann sogar bremsen (Einarbeitung, Abstimmung)."
+  });
+
+  L.reflexion("#t19-u-reflexion", {
+    titel: "Übung 8 · Offene Frage: «Melden Sie doch Grün»",
+    icb: ["ICB 3.10", "ICB 2.02"],
+    frage: "<p>Die Auftraggeberin Franziska Bühlmann bittet dich eine Woche vor der Gemeinderatssitzung: «Der Präsident sucht Gründe, bei der Digitalisierung zu sparen. Können Sie im Statusbericht nicht Grün melden? Die paar Tage holen Sie sicher auf.» Nach der Ampelregel ist der Bericht gelb. Wie reagierst du, und warum? Vier bis sechs Sätze.</p>",
+    musterloesung:
+      "<p>Ich melde, was die Zahlen nach der vereinbarten Regel zeigen: Gelb. Der Statusbericht ist die Entscheidungsgrundlage des Gemeinderats. Ein geschöntes Grün nimmt ihm die Möglichkeit, jetzt noch günstig zu korrigieren, und spätestens in der Einführung kommt die Wahrheit heraus (Wassermelonen-Effekt).</p>" +
+      "<p>Ich nehme die Sorge der Auftraggeberin ernst: Ich biete an, den Bericht vor der Sitzung mit ihr durchzugehen, damit es keine Überraschung gibt.</p>" +
+      "<p>Der Bericht zeigt nicht nur das Problem, sondern auch die Lösung: Ursache und Auswirkung mit Zahlen, Massnahmen in meiner Kompetenz und einen klaren Antrag mit Optionen. So wird Gelb zu einem Zeichen, dass das Projekt geführt ist.</p>" +
+      "<p>Damit bleibe ich integer und erhalte das Vertrauen von Auftraggeberin und Gemeinderat.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt.</p>',
+    kriterien: [
+      { text: "Klare Haltung: Gelb nach der Regel melden, nicht schönen", punkte: 2 },
+      { text: "Begründung: Bericht ist Entscheidungsgrundlage, Schönfärberei verschiebt das Problem und kostet Vertrauen", punkte: 2 },
+      { text: "Auftraggeberin einbinden: Bericht vorbesprechen, keine Überraschung", punkte: 1 },
+      { text: "Massnahmen und Antrag mitliefern (Gelb mit Lösung)", punkte: 1 },
+      { text: "Bezug zur Integrität oder Ethik (ICB 2.02)", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Bausteine des Berichts; jede Szene zeigt eine Auswahl, Neues leuchtet auf.
+  const B = {
+    kopf: "<b>Statusbericht Nr. 3</b> · Digitale Schule Wolkenried · Stand Ende Woche 13 · an die Schulpflege (Auftraggeberin)",
+    kz1: "<b>SPI</b> = 115'200 ÷ 120'000 = 0.96",
+    kz2: "<b>CPI</b> = 115'200 ÷ 132'000 = 0.87",
+    kz3: "<b>EAC</b> = 240'000 × 132'000 ÷ 115'200 = 275'000 (Budget 260'000: 15'000 darüber)",
+    kz4: "<b>Fertigstellungsgrad</b> = 115'200 ÷ 240'000 = 48&nbsp;% (Plan 50&nbsp;%)",
+    aT: "Termine " + SYM.gruen + " SPI 0.96, Abschluss Woche 26 haltbar",
+    aK: "Kosten " + SYM.gelb + " CPI 0.87, EAC 275'000 über dem Budget",
+    aQ: "Qualität " + SYM.gruen + " 46 von 48 Zimmern voll abgedeckt (96&nbsp;%)",
+    aR: "Ressourcen und Team " + SYM.rot + " 128 von 160 h verfügbar (80&nbsp;%)",
+    aRi: "Risiken " + SYM.rot + " zwei hohe Risiken ohne Massnahme",
+    aG: "<b>Gesamt</b> " + SYM.rot + " Termine halten, aber Kosten über Budget und zwei rote Bereiche",
+    ab1: "<b>Abweichung Kosten:</b> Verkabelung im Altbau Schulhaus Dorf teurer (Brandschutzdurchbrüche). CPI 0.87, Prognose 275'000, also 15'000 über dem Budget von 260'000.",
+    ab2: "<b>Abweichung Team:</b> Informatikverantwortlicher der Schule zwei Wochen ausgefallen, Kapazität 80&nbsp;%. Meilenstein «WLAN Schulhaus Egg» Prognose Woche 19 statt 18, Abschluss Woche 26 noch haltbar.",
+    m: "<b>Massnahmen:</b><ul><li>Asbestabklärung Schulhaus Egg sofort beauftragen (Projektleitung, bis Woche 14).</li><li>Pilotklasse und Weiterbildung für Lehrpersonen planen (Teilprojekt Pädagogik, bis Woche 15).</li><li>Konfiguration übernimmt der Lieferant, eine Lehrperson mit IT-Kenntnissen erfasst die Geräte (Projektleitung, ab Woche 14).</li></ul>",
+    e: "<b>Entscheidungsbedarf bis Woche 15:</b> Option A Nachtragskredit CHF 15'000. Option B Tablet-Zubehör ins nächste Budgetjahr verschieben (−15'000). Empfehlung: B, der Unterricht startet auch ohne Zubehör.",
+    ms: "<b>Meilensteine (Plan → Ist oder Prognose):</b> Konzept W4 → W4 · WLAN Dorf W12 → W13 · WLAN Egg W18 → W19 · Tablets übergeben W22 → W22 · Abschluss W26 → W26"
+  };
+  const REIHE = ["kopf", "kz1", "kz2", "kz3", "kz4", "aT", "aK", "aQ", "aR", "aRi", "aG", "ab1", "ab2", "m", "e", "ms"];
+  function bericht(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t19-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k];
+      return '<div class="t19-fb">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t19-film", {
+    phasen: ["1 · Sichten", "2 · Rechnen", "3 · Ampeln", "4 · Abweichungen", "5 · Massnahmen", "6 · Prüfen"],
+    texte: [
+      'Projekt «Digitale Schule Wolkenried»: WLAN in zwei Schulhäusern, Tablets für alle Klassen. Laufzeit 26 Wochen. <span data-ph="budget">Budget CHF 260\'000, davon Plankosten (BAC) CHF 240\'000.</span> Stand Ende Woche 13: <span data-ph="pv">PV CHF 120\'000</span>, <span data-ph="ev">EV CHF 115\'200</span>, <span data-ph="ac">AC CHF 132\'000</span>. <span data-ph="ms">Meilensteine (Plan): Konzept W4, erreicht W4 · WLAN Schulhaus Dorf W12, erreicht erst W13 · WLAN Schulhaus Egg W18 · Tablets übergeben W22 · Abschluss W26 (Terminziel). Wegen des Ausfalls im Team rechnet die Bauleitung für «WLAN Schulhaus Egg» mit Woche 19; die übrigen Prognosen sind im Plan.</span> <span data-ph="urs">Mehrkosten, weil die Verkabelung im Altbau aufwendiger war.</span> <span data-ph="q">Abnahmemessung Schulhaus Dorf: 46 von 48 Zimmern voll abgedeckt.</span> <span data-ph="team">Der Informatikverantwortliche der Schule fällt zwei Wochen aus: 128 von 160 geplanten Stunden verfügbar.</span> <span data-ph="zub">Im Budget sind CHF 15\'000 für Tablet-Zubehör eingeplant, das erst im nächsten Schuljahr gebraucht wird.</span> <span data-ph="ri">Risiken: Lieferverzug Tablets (W 4, A 4, Ersatzlieferant angefragt), Asbest im Schulhaus Egg (W 3, A 5, keine Massnahme), Lehrpersonen lehnen Tablets ab (W 3, A 4, keine Massnahme).</span> Erstelle den Statusbericht an die Schulpflege nach der Ampelregel aus Schritt 3, mit Budget CHF 260\'000 und Terminziel Woche 26.'
+    ],
+    woerterbuch: [
+      "<b>SPI</b> = EV ÷ PV",
+      "<b>CPI</b> = EV ÷ AC",
+      "<b>EAC</b> = BAC ÷ CPI",
+      "<b>Ampelregel</b> aus dem PM-Plan",
+      "<b>Abweichung</b> = Was + Ursache + Auswirkung",
+      "<b>Entscheid</b> = Frage + Optionen + Empfehlung + Frist"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Statusbericht", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So baust du einen Statusbericht aus Fallangaben: sichten, rechnen, Ampeln setzen, Abweichungen formulieren, Massnahmen und Entscheid, zum Schluss prüfen." },
+      { ph: 0, hl: ["budget", "pv", "ev", "ac"], f: bericht("kopf", ["kopf"]),
+        say: "Zuerst der Kopf: Projekt, Nummer, Stichtag, Empfänger. Dann markierst du alle Zahlen: Budget, Plankosten, PV, EV und AC." },
+      { ph: 0, hl: ["ms", "q", "team", "ri"], f: bericht("kopf"),
+        say: "Die übrigen Angaben sortierst du nach Dimension: Meilensteine zu Terminen, Abnahmemessung zur Qualität, Ausfall zum Team, Risiken zu den Risiken." },
+      { ph: 1, hl: ["pv", "ev"], dict: 1, dh: [0], f: bericht("kz1", ["kz1"]),
+        say: "Termin-Leistungsindex: SPI gleich EV durch PV, also 115'200 durch 120'000. Das ergibt 0.96." },
+      { ph: 1, hl: ["ev", "ac"], dict: 2, dh: [1], f: bericht("kz2", ["kz2"]),
+        say: "Kosten-Leistungsindex: CPI gleich EV durch AC, also 115'200 durch 132'000. Das ergibt 0.87. Die erledigte Arbeit war teurer als geplant." },
+      { ph: 1, hl: ["budget"], dict: 3, dh: [2], f: bericht("kz3", ["kz3"]),
+        say: "Kostenprognose: EAC gleich BAC durch CPI. Rechne mit dem ungerundeten CPI: 240'000 mal 132'000 durch 115'200 gibt 275'000. Das sind 15'000 über dem Budget." },
+      { ph: 1, f: bericht("kz4", ["kz4"]),
+        say: "Fertigstellungsgrad: EV durch BAC, 115'200 durch 240'000, also 48 Prozent. Geplant waren 50 Prozent." },
+      { ph: 2, dict: 4, dh: [3], f: bericht("kz4"),
+        say: "Jetzt die Ampeln. Du nimmst die Regel aus dem Projektmanagementplan, nicht dein Bauchgefühl." },
+      { ph: 2, hl: ["ms"], dh: [0, 3], f: bericht("aT", ["aT"]),
+        say: "Termine: SPI 0.96 ist mindestens 0.95, und der Abschluss in Woche 26 hält. Beide Bedingungen erfüllt: Grün." },
+      { ph: 2, hl: ["ac", "budget"], dh: [1, 3], f: bericht("aK", ["aK"]),
+        say: "Kosten: CPI 0.87 liegt unter 0.95, also kein Grün. Er liegt über 0.85, das reicht für Gelb. Die Überschreitung des Budgets kommt trotzdem in die Abweichungen." },
+      { ph: 2, hl: ["q"], f: bericht("aQ", ["aQ"]),
+        say: "Qualität: 46 von 48 Zimmern sind 96 Prozent. Mindestens 95 Prozent: Grün." },
+      { ph: 2, hl: ["team"], f: bericht("aR", ["aR"]),
+        say: "Ressourcen und Team: 128 von 160 Stunden sind 80 Prozent. Unter 85 Prozent: Rot." },
+      { ph: 2, hl: ["ri"], f: bericht("aRi", ["aRi"]),
+        say: "Risiken: Hoch heisst Wert 12 oder mehr. Lieferverzug 16 hat eine Massnahme. Asbest 15 und Akzeptanz 12 haben keine. Zwei hohe Risiken ohne Massnahme: Rot." },
+      { ph: 2, dh: [3], f: bericht("aG", ["aG"]),
+        say: "Gesamt: Termine grün, Kosten gelb, also kein Grün. Für Gelb dürfte ausserhalb von Termine und Kosten höchstens eine Dimension rot sein. Es sind zwei. Gesamtampel Rot." },
+      { ph: 3, hl: ["urs", "budget"], dict: 5, dh: [4], f: bericht("ab1", ["ab1"]),
+        say: "Erste Abweichung, die Kosten: was, warum, mit welcher Folge. Mehrkosten durch die Verkabelung im Altbau, Prognose 15'000 über dem Budget." },
+      { ph: 3, hl: ["team", "ms"], dh: [4], f: bericht("ab2", ["ab2"]),
+        say: "Zweite Abweichung, das Team: Ausfall, Kapazität 80 Prozent. Folge: Der Meilenstein im Schulhaus Egg rutscht um eine Woche, der Abschluss hält noch." },
+      { ph: 4, hl: ["ri", "team"], f: bericht("m", ["m"]),
+        say: "Massnahmen in deiner Kompetenz, je mit Wer und Bis-wann: Asbest sofort abklären, Lehrpersonen mit Pilotklasse und Weiterbildung gewinnen, Konfiguration an den Lieferanten geben." },
+      { ph: 4, hl: ["budget", "zub"], dict: 6, dh: [5], f: bericht("e", ["e"]),
+        say: "Was über deine Kompetenz geht, kommt als Entscheidungsbedarf: Nachtragskredit oder Umfang kürzen. Mit Folgen, Empfehlung und Frist bis Woche 15." },
+      { ph: 4, hl: ["ms"], f: bericht("ms", ["ms"]),
+        say: "Die Meilensteine mit Plan und Prognose nebeneinander. So sieht die Schulpflege auf einen Blick, was gerutscht ist." },
+      { ph: 5, dh: [3, 4, 5], f: bericht("ms"),
+        say: "Prüf zum Schluss: Hat jede Ampel eine Zahl? Hat jede gelbe und rote Ampel eine Massnahme oder einen Antrag? Steht der Entscheid mit Frist drin? Ja, dreimal." },
+      { ph: 5, f: bericht("ms", ["aG"]),
+        say: "Fertig. Der Bericht ist ehrlich: Die Termine sind grün, und trotzdem ist die Gesamtampel rot, weil Team und Risiken das Projekt gefährden. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t19-film-loesung").innerHTML = bericht("ms");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t19-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.10</span> Was gehört <b>nicht</b> zwingend in einen Statusbericht an den Projektausschuss?',
+        o: ["Ampeln je Dimension mit Kennzahl", "Abweichungen mit Ursache, Auswirkung und Massnahme", "Entscheidungsbedarf mit Frist", "Das Stundenprotokoll jedes Teammitglieds"], a: 3,
+        e: "Die Steuerung braucht Lage, Abweichungen, Massnahmen und Entscheide, keine Einzelbuchungen. ICB 3.10 (Indikator Bericht über den Projektfortschritt) und ICB 3.05 (Stakeholder erhalten nur, was sie brauchen)." },
+      { q: '<span class="icb">ICB 3.10</span> SPI 0.86 und CPI 0.93. Welche Aussage stimmt?',
+        o: ["Das Projekt ist vor Plan und günstiger als geplant.", "Das Projekt ist hinter Plan, und die erledigte Arbeit hat mehr gekostet als geplant.", "Das Projekt ist hinter Plan, aber günstiger als geplant.", "Ohne Budget lässt sich nichts sagen."], a: 1,
+        e: "SPI unter 1: weniger erledigt als geplant. CPI unter 1: Für die erledigte Arbeit wurde mehr ausgegeben als geplant. ICB 3.10, Fertigstellungswertanalyse (Herleitung Station 18)." },
+      { q: '<span class="icb">ICB 3.10</span> Ein anderes Projekt nutzt die Wolkenried-Regel: Budget CHF 180\'000, CPI 0.97, EAC CHF 183\'000. Welche Kostenampel?',
+        o: ["Grün, weil der CPI über 0.95 liegt", "Gelb", "Rot, weil das Budget überschritten wird", "Keine, weil EAC und CPI widersprüchlich sind"], a: 1,
+        e: "Grün verlangt CPI ≥ 0.95 <b>und</b> EAC höchstens Budget. Die Prognose liegt darüber, also kein Grün. CPI ≥ 0.85 reicht für Gelb. ICB 3.10: Ampeln nach vorher festgelegten Schwellen." },
+      { q: '<span class="icb">ICB 3.05</span> Wer erhält in Wolkenried den konsolidierten Statusbericht des Gesamtprojekts?',
+        o: ["Nur das Projektteam", "Der Projektausschuss mit der Auftraggeberin als Vorsitz", "Die Bevölkerung über die Gemeindewebseite", "Nur der Lieferant"], a: 1,
+        e: "Der Statusbericht geht an die Steuerungsebene. Die Strukturen für die Berichterstattung gehören zu ICB 3.05 (Organisation, Information und Dokumentation)." },
+      { q: '<span class="icb">ICB 3.10</span> Was beschreibt der Wassermelonen-Effekt?',
+        o: ["Ein Projekt wächst über seinen Umfang hinaus.", "Die Berichte sind grün, die Zahlen darunter rot.", "Die Ampeln wechseln jede Woche die Farbe.", "Ein Projekt ist innen grün, wird aber von aussen schlecht geredet."], a: 1,
+        e: "Aussen grün, innen rot: geschönte Berichte. Sie nehmen der Steuerung die Optionen. ICB 3.10 (Berichterstattung) und ICB 2.02 (Integrität)." },
+      { q: '<span class="icb">ICB 3.10</span> Ein Teilprojekt meldet: 120 Stunden geleistet, Restaufwand 80 Stunden. Wie hoch ist der Fertigstellungsgrad?',
+        o: ["40&nbsp;%", "60&nbsp;%", "67&nbsp;%", "150&nbsp;%"], a: 1,
+        e: "Geleistet ÷ (geleistet + Rest) = 120 ÷ 200 = 60&nbsp;%. So vermeidest du das 90-%-Syndrom. ICB 3.10, Fortschritt messen." },
+      { q: '<span class="icb">ICB 3.05</span> Eskalationsregel 5 Arbeitstage je Stufe. Ein Problem liegt seit Arbeitstag 10 ungelöst bei der Teilprojektleitung. Wann geht es spätestens an die Projektleitung?',
+        o: ["Arbeitstag 11", "Arbeitstag 15", "Arbeitstag 20", "Erst wenn ein Meilenstein verpasst ist"], a: 1,
+        e: "10 + 5 = 15. Die Regel steht im Projektmanagementplan (Vorlage 5.4). Gefährdet das Problem einen Meilenstein, eskalierst du sofort. ICB 3.05 Struktur und Verantwortlichkeiten, ICB 3.10 Steuerung." },
+      { q: '<span class="icb">ICB 3.10</span> Worin unterscheidet sich der Phasenbericht vom Statusbericht?',
+        o: ["Der Phasenbericht ist die Grundlage für die Freigabe der nächsten Phase.", "Der Phasenbericht enthält keine Risiken.", "Der Phasenbericht geht nur an das Team.", "Es gibt keinen Unterschied, nur einen anderen Namen."], a: 0,
+        e: "Der Statusbericht informiert periodisch, der Phasenbericht dient dem Entscheid über die nächste Phase (HERMES 4.4.1.30, ICB 3.10 Indikator «Übergang in eine neue Phase»)." },
+      { q: '<span class="icb">ICB 3.10</span> Welcher Satz folgt dem Prinzip Zahlen, Daten, Fakten?',
+        o: ["«Wir sind gut unterwegs und zuversichtlich.»", "«Kleinere Verzögerungen holen wir auf.»", "«Abnahme Prognose Tag 42, Terminziel Tag 40, SPI 0.86.»", "«Die Kosten sind im Rahmen.»"], a: 2,
+        e: "Nur dieser Satz ist prüfbar: Prognose, Ziel und Kennzahl. LB 5 F.18 und ICB 3.10 (Berichterstattung)." },
+      { q: '<span class="icb">ICB 3.10</span> Was gehört zu einem guten Entscheidungsbedarf im Statusbericht?',
+        o: ["Nur die Bitte um mehr Geld", "Frage, Optionen mit Folgen, Empfehlung und Frist", "Eine Liste aller offenen Arbeiten", "Die Ampel, sonst nichts"], a: 1,
+        e: "Die Steuerung entscheidet schnell, wenn sie Optionen, Folgen und eine Empfehlung mit Frist bekommt. ICB 3.10 (Entscheidungsbefugnis, Änderungsanträge) und LB 5 F.21 (Entscheidungsprozess)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

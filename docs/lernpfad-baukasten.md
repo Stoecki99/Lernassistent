@@ -4,7 +4,7 @@ Der Baukasten liefert Design und Bausteine für alle Themenseiten des Lernpfads.
 
 Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lernpfad-format.md`. Dieses Dokument ist der Vertrag für das Schreiben einer Themenseite.
 
-**Schnellstart:** Kopiere `content/lernseiten/mstw/_vorlage.html` nach `content/lernseiten/mstw/<slug>.html`, passe Kopf und Inhalte an, prüfe in der Vorschau, arbeite die [Prüfliste](#13-prüfliste-vor-der-abgabe) ab.
+**Schnellstart:** Kopiere die Vorlage deines Fachs (`content/lernseiten/mstw/_vorlage.html` oder `content/lernseiten/pmgt/_vorlage.html`) nach `content/lernseiten/<fach>/<slug>.html`, passe Kopf und Inhalte an, prüfe in der Vorschau, arbeite die [Prüfliste](#13-prüfliste-vor-der-abgabe) ab.
 
 ## Inhalt
 
@@ -30,8 +30,11 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 | `public/lernpfad/lernpfad.js` | Vanilla-JS ohne Abhängigkeiten, globales Objekt `window.Lernpfad` |
 | `public/lernpfad/fonts.css`, `fonts/` | Bricolage Grotesque (Titel), Source Sans 3 (Text), STIX Two Text (Formeln), selbst gehostet, SIL Open Font License 1.1 (`fonts/OFL.txt`) |
 | `public/lernpfad/katex/` | KaTeX 0.16 (CSS, JS, auto-render, woff2-Schriften), lädt `lernpfad.js` nur bei Bedarf |
-| `content/lernseiten/mstw/_vorlage.html` | Muster-Themenseite mit allen Bausteinen (keine Station) |
+| `content/lernseiten/mstw/_vorlage.html` | Muster-Themenseite MSTW mit allen Bausteinen (keine Station) |
+| `content/lernseiten/pmgt/_vorlage.html` | Muster-Themenseite PMGT: alle Bausteine plus ICB-Kennzeichen, Matrix, Reflexion, Netzplan und Gantt (keine Station) |
 | `scripts/lernpfad-vorschau.mjs` | Lokaler Vorschau-Server ohne App und Login |
+| `public/lernpfad/ps-konsole.css`, `ps-konsole.js` | Erweiterung Lernpfad PS: Konsolen-Simulator, Syntaxfärbung, Ausgabeblöcke. Nur für PS-Seiten, Doku in `docs/lernpfad-powershell.md` |
+| `content/lernseiten/ps/_vorlage.html` | Muster-Themenseite PS mit Simulator, Code- und Ausgabeblöcken (keine Station) |
 
 Ändere diese Dateien nicht für eine einzelne Themenseite. Was nur deine Seite braucht, gehört in die Seite (siehe [Abschnitt 11](#11-themeneigene-interaktionen)).
 
@@ -70,8 +73,8 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 
 Regeln:
 
-- `data-fach` = Fachordner (`mstw`), `data-thema` = Dateiname ohne `.html` (der Slug aus `fach.json`).
-- `<title>`: Titel der Station aus `fach.json`, dann ` · MSTW`.
+- `data-fach` = Fachordner (`mstw`, `pmgt`), `data-thema` = Dateiname ohne `.html` (der Slug aus `fach.json`). `data-fach` bestimmt auch Kopfleiste, Fortschritt und Akzentfarbe ([Abschnitt 7](#7-design-tokens)).
+- `<title>`: Titel der Station aus `fach.json`, dann ` · ` und das Kürzel in Grossbuchstaben (` · MSTW`, ` · PMGT`).
 - Theme-Startskript: die `<script>`-Zeile im `<head>` unverändert aus `_vorlage.html` übernehmen. Sie setzt das gespeicherte Farbschema (`html[data-theme]`), bevor die Seite gezeichnet wird; ohne sie flackert der Dunkelmodus beim Laden. Gesperrter Speicher bricht nichts. Die Prüfung verlangt sie.
 - `<link rel="next">`: nächste Station laut `pfad` in `fach.json`, `title` = deren Titel. Daraus baut die Abschluss-Box den Knopf «Nächste Station». Bei der letzten Station weglassen. Die Prüfung vergleicht `href` und `title` mit `fach.json`.
 - `lernpfad.js` steht am Ende von `<body>`, **danach** das seiteneigene Script. Vorher gibt es `window.Lernpfad` noch nicht.
@@ -88,8 +91,8 @@ node scripts/lernpfad-vorschau.mjs --port 3301
 | Adresse | Inhalt |
 |---------|--------|
 | `http://127.0.0.1:3301/` | Liste aller Fächer und Seiten |
-| `/lernseiten/mstw/<slug>` | deine Themenseite (auch `_vorlage`) |
-| `/lernseiten/mstw` | einfache Stationenliste (Ersatz für die Lernpfad-Seite der App) |
+| `/lernseiten/<fach>/<slug>` | deine Themenseite (auch `_vorlage`), für jedes Fach unter `content/lernseiten/<fach>/` |
+| `/lernseiten/<fach>` | einfache Stationenliste (Ersatz für die Lernpfad-Seite der App) |
 | `/lernpfad/*` | Baukasten-Dateien |
 | `/api/lernfortschritt` | Attrappe: GET → `[]`, POST → `{ "ok": true }`. Meldungen erscheinen im Terminal. |
 
@@ -101,14 +104,14 @@ Bewährte Reihenfolge (wie Vorbild und Vorlage). Lass weg, was zum Thema nicht p
 
 | Abschnitt | Inhalt | Bausteine |
 |-----------|--------|-----------|
-| Kopf | `.eyebrow` (MSTW · Vorlesung · Thema), `h1`, `.lead` (2–4 Sätze: worum geht es, was kann ich danach) | – |
+| Kopf | `.eyebrow` (MSTW · Vorlesung · Thema), `h1`, `.lead` (2–4 Sätze: worum geht es, was kann ich danach); bei PMGT zusätzlich ICB-Kennzeichen und Lernziele | `.icb-liste` + `.icb` |
 | Navigation | `nav.steps` mit einem Link pro `section` (`<a href="#id"><b>1</b>Name</a>`) | lernpfad.js markiert den aktiven Eintrag |
 | 0 · Ohne Vorwissen | Grundbegriffe in Konzeptkarten, kurze Übung | `.grid4` + `.concept`, `sortierer` |
 | 1 · Wörterbuch | Symbole und Begriffe festlegen | `.symtab` mit `.kind`-Badges, `.note` |
 | 2 · Schritt für Schritt | Beispiel von der Aufgabe zur Lösung | `stepper` mit Zuordnung |
 | 3 · Formel / Verfahren | Formel auf der Tafel, Fallen, Lösungen | `.board`, `.note.falle`, `details.sol` |
 | Ausprobieren | themeneigene Interaktion (Baum, Tafel, Rechner, Diagramm) | Hilfsklassen aus [8.11](#811-hilfsklassen-für-themeneigene-interaktionen) |
-| Übungen | selbst rechnen | `zahlAufgabe`, `wahrFalsch`, `schrittAufgabe`, `auswahl` |
+| Übungen | selbst rechnen, einordnen, formulieren | `zahlAufgabe`, `wahrFalsch`, `schrittAufgabe`, `auswahl`, `matrix`, `reflexion` (offene Frage) |
 | ▶ Lösungsfilm | ganze Prüfungsaufgabe am Stück | `film` (endet mit Link `#test`) |
 | ✓ Selbsttest | 6–10 Fragen | `selbsttest` in `<section id="test">` |
 | Auf einen Blick | 4–6 Merksätze | `ul.summary.prose`, `footer` |
@@ -193,6 +196,17 @@ Alle Farben kommen aus Tokens auf `:root`. Hell und dunkel setzt `lernpfad.css` 
 | `--bad`, `--bad-bg` | falsch, Fallen |
 | `--s1` … `--s5` | Reihenfarben für Diagramme (blau, orange, grün, violett, Akzent) |
 | `--f-display`, `--f-body`, `--f-math` | Schriften: Titel, Text, Formeln |
+
+**Akzent pro Fach.** `lernpfad.css` setzt `--accent` und `--accent-soft` je Fach über `body[data-fach="…"]`, hell und dunkel. Alles, was den Akzent nutzt (Links, Überzeilen, primäre Knöpfe, Navigation, Fokusringe, `--s5`), wechselt mit. Ohne eigenen Eintrag gilt der Standard (Weinrot, MSTW).
+
+| Fach | Schema | `--accent` | `--accent-soft` | Kontrast Akzent auf `--bg` / `--surface` / `--accent-soft` |
+|------|--------|-----------|-----------------|------------------------------------------|
+| MSTW (Standard) | hell | `#7a1f5c` | `#f3e3ee` | 8.96 / 9.64 / 7.82 |
+| MSTW (Standard) | dunkel | `#e683c0` | `#3a2033` | 7.52 / 6.97 / 5.84 |
+| PMGT (Kachel `#FF9600`) | hell | `#a64b00` | `#fdebd6` | 5.38 / 5.79 / 4.97 |
+| PMGT | dunkel | `#ff9f40` | `#3d2610` | 9.24 / 8.56 / 6.93 |
+
+Neues Fach: drei Regeln in `lernpfad.css` ergänzen (hell, `prefers-color-scheme: dark` mit `:root:not([data-theme="light"])`, `:root[data-theme="dark"]`), `--s5:var(--accent)` in der hellen Regel mitsetzen und den Kontrast nachrechnen (WCAG, mindestens 4.5:1 auf `--bg` und `--surface`; `.btn.primary` nutzt `--surface` als Schrift auf dem Akzent, also dasselbe Verhältnis).
 
 ## 8. CSS-Klassen
 
@@ -338,9 +352,78 @@ Alle Farben kommen aus Tokens auf `:root`. Hell und dunkel setzt `lernpfad.css` 
 
 Keine `fill="#…"`- oder `stroke="#…"`-Attribute. Wähle einen `viewBox` um 320 Einheiten Breite, dann bleibt die Schrift auf dem Handy lesbar.
 
-### 8.12 Code-Beispiele
+**Netzplan-Knoten** (Vorgangsknoten): oben FA, Vorgang, FE; unten SA, Dauer, SE; darunter optional der Puffer. Die kleinen Beschriftungen kommen aus `data-kurz`. Die Zahlen rechnet die Station selbst; Knoten von Hand oder mit [`Lernpfad.netzplanKnoten`](#914-lernpfadnetzplanknotendaten).
 
-`<pre class="code" data-sprache="Dockerfile"><code>…</code></pre>`: Codeblock mit Überschrift aus `data-sprache`, scrollt seitlich in sich. Hervorhebung von Hand, nur mit diesen Klassen: `.k` Schlüsselwort, `.s` Zeichenkette, `.n` Zahl, `.c` Kommentar, `<mark>` für die Stelle, um die es gerade geht. Achtung: Innerhalb von `pre.code` sind `.k`, `.s`, `.n`, `.c` Code-Farben (`.c` hier nicht «Konstante»). `<` und `&` im Code als `&lt;` und `&amp;` schreiben. Inline-Code mit `<code>`. Formeln werden in `pre` und `code` nicht gesetzt (`$` in Shell-Code ist sicher).
+```html
+<div class="tablebox">
+  <div class="netzplan" style="--np-spalten:3">
+    <div class="np-knoten kritisch" style="grid-column:1; grid-row:1" role="group"
+         aria-label="Vorgang A Analyse: Dauer 5, FA 0, FE 5, SA 0, SE 5, Gesamtpuffer 0, kritisch">
+      <span class="np-fa" data-kurz="FA">0</span><span class="np-vorgang" data-kurz="Vorgang">A Analyse</span><span class="np-fe" data-kurz="FE">5</span>
+      <span class="np-sa" data-kurz="SA">0</span><span class="np-dauer" data-kurz="Dauer">5</span><span class="np-se" data-kurz="SE">5</span>
+      <span class="np-puffer">GP 0 · FP 0</span>
+    </div>
+    <span class="np-pfeil" style="grid-column:2; grid-row:1" aria-hidden="true">→</span>
+    …
+  </div>
+</div>
+```
+
+| Klasse | Zweck |
+|--------|-------|
+| `.netzplan` | Raster für Knoten, Spaltenzahl `--np-spalten` (Standard 4), Lage je Knoten per `style="grid-column:…; grid-row:…"`. Ist so breit wie nötig: immer in `.tablebox` legen, dann scrollt er seitlich. |
+| `.np-knoten` | Kästchen mit sechs Feldern `.np-fa`, `.np-vorgang`, `.np-fe`, `.np-sa`, `.np-dauer`, `.np-se` (in dieser Reihenfolge) und optional `.np-puffer` |
+| `.np-knoten.kritisch` | dicker Rahmen in `--bad` und Marke «kritisch» (nicht nur Farbe) |
+| `.np-knoten.an` | hervorgehoben (gelber Schein), z. B. aktueller Rechenschritt |
+| `.np-pfeil` | einfacher Pfeil zwischen Knoten (`aria-hidden="true"`; Abhängigkeiten im Text nennen) |
+
+**Gantt-Balken:** eine Zeile pro Vorgang, Balken per CSS-Variablen `--start` (ab 0) und `--dauer` in Zeiteinheiten, Anzahl Einheiten in `--gantt-einheiten`.
+
+```html
+<div class="tablebox">
+  <div class="gantt" style="--gantt-einheiten:16" role="img" aria-label="Gantt: A Tag 0 bis 5 kritisch, B Tag 5 bis 8 …">
+    <div class="gantt-kopf"><span class="gantt-name">Vorgang</span><div class="gantt-skala"><span>0</span>…<span>15</span></div></div>
+    <div class="gantt-zeile"><span class="gantt-name">A Analyse</span>
+      <div class="gantt-spur"><span class="gantt-balken kritisch" style="--start:0; --dauer:5">5 T</span></div></div>
+    <div class="gantt-zeile"><span class="gantt-name">B Konzept</span>
+      <div class="gantt-spur"><span class="gantt-balken" style="--start:5; --dauer:3">3 T</span><span class="gantt-puffer" style="--start:8; --dauer:1"></span></div></div>
+    <div class="gantt-zeile"><span class="gantt-name">◆ Abnahme</span>
+      <div class="gantt-spur"><span class="gantt-meilenstein" style="--start:15"></span></div></div>
+  </div>
+</div>
+```
+
+| Klasse | Zweck |
+|--------|-------|
+| `.gantt` | Behälter; `--gantt-einheiten` (Standard 10), `--gantt-einheit` (Breite einer Einheit, Standard 2rem), `--gantt-name` (Namensspalte, 7.8rem). Eigene Werte nur in `rem` oder `px` setzen: Eine `em`-Angabe würde je Element mit dessen Schriftgrösse aufgelöst, Skala, Balken und Rauten liefen auseinander. In `.tablebox` legen. |
+| `.gantt-kopf`, `.gantt-skala` | Kopfzeile mit Zeitskala (ein `span` je Einheit) |
+| `.gantt-zeile`, `.gantt-name`, `.gantt-spur` | Zeile, Name, Spur mit Gitter |
+| `.gantt-balken` | Balken (`--start`, `--dauer`); Text darin kurz halten |
+| `.gantt-balken.kritisch` | dicker Rahmen in `--bad` und Schraffur (nicht nur Farbe) |
+| `.gantt-puffer` | gestrichelter Puffer hinter dem Balken (`--start`, `--dauer`) |
+| `.gantt-meilenstein` (`.kritisch`) | Raute an `--start` |
+| `.gantt-legende` | Legende; die Klassen oben darin als kleine Muster nutzbar |
+
+Das Diagramm ist eine Grafik: Gib dem `.gantt` `role="img"` und ein `aria-label` mit den Zeiten, oder zeig die Werte zusätzlich in einer Tabelle.
+
+### 8.12 ICB-Kennzeichen
+
+`<span class="icb">ICB 3.04</span>`: kleines Badge in Akzentfarbe für die ICB4-Kompetenz. Im Kopf einer Station mehrere in `.icb-liste` (umbrechend), in Fragen direkt im HTML der Frage (`q`, `frage`). `reflexion` und `matrix` setzen es selbst über das Feld `icb`.
+
+```html
+<p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+  <span class="icb">ICB 3.04</span><span class="icb">ICB 3.11</span></p>
+```
+
+Schreibweise wie im Konzept: «ICB» plus Bereich und zweistellige Nummer (`ICB 3.04` = Practice, Zeit; `ICB 3.12` = Stakeholder).
+
+### 8.13 Klassen von Reflexion und Matrix
+
+Erzeugt von `reflexion` und `matrix`, nicht von Hand schreiben: `.rf-frage`, `.rf-eingabe`, `.rf-feld`, `.rf-rueckfrage`, `.rf-loesung`, `.rf-muster`, `.rf-raster`, `.rf-kriterien`, `.rf-punkte`, `.rf-summe`, `.rf-ohne`; `.mx-rahmen`, `.mx-achse-x`, `.mx-achse-y`, `.mx-raster`, `.mx-kopf`, `.mx-feld` (`.mx-tief`, `.mx-mittel`, `.mx-hoch`, `.belegt`), `.mx-name`, `.mx-marke` (`.right`, `.wrong`), `.mx-karten`, `.mx-karte`, `.mx-nr`, `.mx-ort`, `.mx-erkl`, `.mx-waehlt`.
+
+### 8.14 Code-Beispiele
+
+`<pre class="code" data-sprache="Dockerfile"><code>…</code></pre>`: Codeblock mit Überschrift aus `data-sprache`, scrollt seitlich in sich. Hervorhebung von Hand, nur mit diesen Klassen: `.k` Schlüsselwort, `.s` Zeichenkette, `.n` Zahl, `.c` Kommentar, `<mark>` für die Stelle, um die es gerade geht. Achtung: Innerhalb von `pre.code` sind `.k`, `.s`, `.n`, `.c` Code-Farben (`.c` hier nicht «Konstante»). `<` und `&` im Code als `&lt;` und `&amp;` schreiben. Inline-Code mit `<code>` (gestaltet nur in AVSW-Seiten, `body[data-fach="avsw"]`, damit bestehende Fächer unverändert bleiben). Formeln werden in `pre` und `code` nicht gesetzt (`$` in Shell-Code ist sicher).
 
 ## 9. JavaScript: window.Lernpfad
 
@@ -350,7 +433,7 @@ Alle Bausteine nehmen als erstes Argument ein Element oder einen CSS-Selektor (`
 
 Ohne Aufruf, sobald das DOM bereit ist:
 
-- Kopfleiste oben einfügen: «← Lernpfad MSTW» nach `/lernseiten/<fach>`, Umschalter Hell / Dunkel / Auto (gespeichert in `localStorage`, funktioniert auch bei gesperrtem Speicher). Das gespeicherte Schema setzt schon das Theme-Startskript im `<head>`, `lernpfad.js` übernimmt es.
+- Kopfleiste oben einfügen: «← Lernpfad <FACH>» (Kürzel aus `data-fach` in Grossbuchstaben, z. B. «← Lernpfad PMGT») nach `/lernseiten/<fach>`, Umschalter Hell / Dunkel / Auto (gespeichert in `localStorage`, funktioniert auch bei gesperrtem Speicher). Das gespeicherte Schema setzt schon das Theme-Startskript im `<head>`, `lernpfad.js` übernimmt es.
 - Aktiven Abschnitt in `nav.steps` markieren (`.aktiv`, `aria-current`).
 - Formeln setzen, alle `[data-link]` verknüpfen.
 - Fortschritt «begonnen» melden (ausser schon erledigt).
@@ -579,7 +662,78 @@ Lernpfad.auswahl("#frage-1", {
 });
 ```
 
-### 9.12 `Lernpfad.modellieren(el, cfg)`
+### 9.12 `Lernpfad.reflexion(el, cfg)`
+
+Offene Frage im IPMA-Stil: Antwort selbst schreiben, dann Musterlösung ansehen und sich nach einem Raster selbst bewerten. Die Antwort bleibt auf der Seite: kein `localStorage`, keine Übermittlung an den Server, keine Meldung an den Fortschritt.
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel` | HTML | nein | Titel |
+| `icb` | Text oder Text[] | nein | ICB-Kennzeichen im Kopf, z. B. `"ICB 3.04"` |
+| `frage` | HTML | ja | Fragestellung |
+| `musterloesung` | HTML | ja | Musterlösung (mehrere `<p>` möglich) |
+| `kriterien` | Objekt[] | nein | Bewertungsraster `{ text, punkte }`; `punkte` ganze Zahl ≥ 0, Standard 1. Ohne: kein Raster |
+| `hinweis` | HTML | nein | ersetzt den Standard-Hinweis über dem Textfeld |
+
+Ablauf: Textfeld mit `label`. «Musterlösung zeigen» zeigt die Lösung, wenn etwas geschrieben ist; sonst fragt eine Rückfrage «Ohne Antwort ansehen» oder «Zuerst schreiben» (Fokus zurück ins Textfeld). Danach Musterlösung (Fokus springt darauf), Raster mit Kästchen je Kriterium und «x von y Punkten» (`aria-live`), «Zurücksetzen» leert alles und setzt den Fokus ins Textfeld. Rückgabe: `{ zeigen(), zuruecksetzen() }`.
+
+```js
+Lernpfad.reflexion("#reflexion-1", {
+  titel: "Früherer Go-live",
+  icb: ["ICB 3.04", "ICB 3.13"],
+  frage: "<p>Der Auftraggeber will zwei Wochen früher live gehen. Wie gehst du vor?</p>",
+  musterloesung: "<p>Auswirkungen analysieren, Optionen aufzeigen, Entscheid über einen Änderungsantrag beim Auftraggeber, Plan nachführen.</p>",
+  kriterien: [
+    { text: "Auswirkungen auf Termin, Kosten, Qualität analysiert", punkte: 2 },
+    { text: "Entscheid beim Auftraggeber", punkte: 1 }
+  ]
+});
+```
+
+### 9.13 `Lernpfad.matrix(el, cfg)`
+
+Raster von 2×2 bis 5×5 mit Achsen; Karten werden Feldern zugeordnet (Stakeholder-Karte, Risikomatrix, Portfolio). Bedienung: Karte antippen (`aria-pressed`), dann Feld antippen. Mit der Tastatur: Karte mit Enter wählen, der Fokus springt ins Raster, Pfeiltasten (auch Home/End) bewegen, Enter legt ab, Escape hebt die Wahl auf. Nach dem Ablegen geht der Fokus zur nächsten offenen Karte. Das Raster skaliert mit der Breite, die Karten stehen darunter; im Feld erscheint nur die Nummer der Karte.
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel` | HTML | nein | Titel |
+| `icb` | Text oder Text[] | nein | ICB-Kennzeichen im Kopf |
+| `frage` | HTML | nein | Aufgabenstellung |
+| `zeilen` | Text[] | ja | 2–5 Zeilenbeschriftungen **von oben nach unten** (z. B. `["hoch", "tief"]`) |
+| `spalten` | Text[] | ja | 2–5 Spaltenbeschriftungen von links nach rechts |
+| `achseY`, `achseX` | Text | nein | Achsennamen (z. B. `"Interesse"`, `"Einfluss"`); erscheinen am Rand und im Namen jedes Felds |
+| `feldnamen` | HTML[][] | nein | kurzer Text pro Feld `[zeile][spalte]`, z. B. Strategie oder Risikowert |
+| `stufen` | Text[][] | nein | Hintergrund pro Feld `"tief"`, `"mittel"`, `"hoch"` (grün, orange, rot); die Stufe steht auch im Feldnamen für Screenreader. Farbe nie allein: Werte zusätzlich in `feldnamen` |
+| `elemente` | Objekt[] | ja | Karten `{ html, ziel, erklaerung }`. `html` ohne Knöpfe oder Links (steht in einem Knopf). `ziel` optional `[zeile, spalte]`: Zahl = Index ab 0, Text = Beschriftung |
+
+Hat mindestens ein Element ein `ziel`, gibt es «Prüfen»: je Karte ✓/✗ mit Erklärung, in den Feldern ✓/✗ vor der Nummer, Stand «x von n richtig» (`aria-live`). Rückgabe: `{ pruefen(), zuruecksetzen(), stand() }`; `stand()` liefert je Karte `[zeile, spalte]` oder `null`.
+
+```js
+Lernpfad.matrix("#stakeholder", {
+  titel: "Stakeholder-Karte", icb: "ICB 3.12",
+  zeilen: ["hoch", "tief"], spalten: ["tief", "hoch"],
+  achseY: "Interesse", achseX: "Einfluss",
+  feldnamen: [["Informieren", "Eng einbinden"], ["Beobachten", "Zufriedenstellen"]],
+  elemente: [
+    { html: "Gemeinderat (Auftraggeber)", ziel: ["hoch", "hoch"], erklaerung: "Entscheidet und will das Ergebnis." },
+    { html: "Lokalzeitung", ziel: [1, 0], erklaerung: "Wenig Einfluss, wenig Interesse." }
+  ]
+});
+```
+
+Risikomatrix 5×5: `zeilen: ["5","4","3","2","1"]` (Wahrscheinlichkeit), `spalten: ["1","2","3","4","5"]` (Auswirkung), Risikowert als `feldnamen`, Stufen nach Risikowert. Beispiel in `content/lernseiten/pmgt/_vorlage.html`.
+
+### 9.14 `Lernpfad.netzplanKnoten(daten)`
+
+Baut einen Netzplan-Knoten ([8.11](#811-hilfsklassen-für-themeneigene-interaktionen)) als Element und gibt ihn zurück; einfügen und platzieren macht die Seite. Felder: `vorgang` (HTML), `dauer`, `fa`, `fe`, `sa`, `se`, optional `gp`, `fp` (Puffer-Zeile erscheint, sobald eines gesetzt ist), `kritisch` (`true`). Fehlende Werte erscheinen als «–». Der Knoten bekommt `role="group"` und ein `aria-label` mit allen Werten.
+
+```js
+const k = Lernpfad.netzplanKnoten({ vorgang: "C Beschaffung", dauer: 4, fa: 5, fe: 9, sa: 5, se: 9, gp: 0, fp: 0, kritisch: true });
+k.style.gridColumn = "3";
+document.getElementById("t10-netzplan").appendChild(k);
+```
+
+### 9.15 `Lernpfad.modellieren(el, cfg)`
 
 Modellierungsübung: Anforderungstext lesen, passende Bausteine auf die Fläche legen, Verbindungen mit Art ziehen, prüfen. Ohne Ziehen mit der Maus: alles per Antippen und Tastatur (Palette-Knopf legt hin oder entfernt, Startbaustein antippen, Zielbaustein antippen). Eine Verbindungsliste unter der Fläche zeigt dasselbe als Text (Screenreader, sich kreuzende Linien) und hat je einen Knopf «Entfernen». Muster: `content/lernseiten/avsw/_vorlage.html`.
 
@@ -588,7 +742,7 @@ Modellierungsübung: Anforderungstext lesen, passende Bausteine auf die Fläche 
 | `titel` | HTML | nein | Titel |
 | `aufgabe` | HTML | nein | Anforderungstext. `<span data-baustein="id">` markiert die Textstelle zu einem Baustein: Sie wird unterstrichen, sobald der Baustein liegt, und leuchtet mit ihm zusammen auf. |
 | `schichten` | Objekt[] | nein | `{ id, name }`: Bänder auf der Fläche (z. B. Client, Zugang, Dienste, Daten). Ohne: ein Band. |
-| `bausteine` | Objekt[] | ja | `{ id, name, art, schicht, info }`. `art` = Piktogramm (siehe 9.13), `schicht` = `id` aus `schichten`. Ablenker (nicht in der Lösung) sind erwünscht. |
+| `bausteine` | Objekt[] | ja | `{ id, name, art, schicht, info }`. `art` = Piktogramm (siehe 9.16), `schicht` = `id` aus `schichten`. Ablenker (nicht in der Lösung) sind erwünscht. |
 | `verbindungsarten` | Objekt[] | nein | `{ id, name }`, höchstens vier. Standard: `sync` «synchron (Request/Response)», `async` «asynchron (Nachricht/Event)», `daten` «liest/schreibt Daten». Linienstil je Position: voll, gestrichelt, gepunktet, Strich-Punkt. |
 | `loesung` | Objekt | ja | `{ bausteine: [id], verbindungen: [{ von, nach, art, warum, gerichtet }] }`. `warum` erscheint nach dem Lösen. `gerichtet: false` akzeptiert beide Richtungen. |
 | `richtungEgal` | Bool | nein | `true`: Richtung zählt nirgends, Linien ohne Pfeil (z. B. Deployment-Sicht «läuft auf»). |
@@ -601,13 +755,13 @@ Ereignis `lernpfad:modell` (bubbelt) nach jedem Prüfen: `detail: { richtig, ges
 
 Regeln für gute Aufgaben: Jede Verbindung der Lösung muss aus dem Text folgen (Signalwörter wie «fragt synchron», «veröffentlicht», «abonniert», «speichert»). Mindestens ein Ablenker in der Palette. Schichten so wählen, dass die Fläche bei 320 px lesbar bleibt (höchstens etwa vier Bausteine pro Schicht).
 
-### 9.13 `Lernpfad.piktogramm(art, titel)`
+### 9.16 `Lernpfad.piktogramm(art, titel)`
 
 Gibt ein eigenes Inline-SVG (24 × 24, `currentColor`, Klasse `.pikto`) als HTML-Text zurück, für Konzeptkarten, Tabellen, Bilder von Architekturen und den Baustein `modellieren`. Mit `titel` bekommt es `role="img"` und `<title>`, sonst `aria-hidden`. **Keine Markenlogos** (Kubernetes, Docker, Kafka …): Werkzeuge werden mit diesen Piktogrammen und echten Code-Beispielen gezeigt.
 
 Arten: `client`, `mobile`, `user`, `gateway`, `lb`, `service`, `function`, `db`, `cache`, `queue`, `topic`, `storage`, `extern`, `container`, `pod`, `node`, `cluster`, `auth`, `cdn`, `monitor`, `config`, `code`. Galerie in `content/lernseiten/avsw/_vorlage.html`.
 
-### 9.14 Hilfsfunktionen
+### 9.17 Hilfsfunktionen
 
 | Funktion | Zweck |
 |----------|-------|
@@ -645,7 +799,7 @@ Für Dinge, die der Baukasten nicht hat (Baum zum Durchklicken, Vierfeldertafel 
 2. **Eigene Klassen und IDs mit Themen-Präfix** `t<NN>-` (Stationsnummer), z. B. `.t08-ast`, `#t08-rechner`. Nie Baukasten-Klassen umdefinieren.
 3. **Eigenes CSS** in einem `<style>` im `<head>`, nur für Präfix-Klassen.
 4. **Nur Farben aus `:root`** (`var(--accent)`, `var(--ok)`, `var(--s2)` …), keine festen Farben, kein `fill="#…"`. Dann funktionieren hell und dunkel ohne Zusatzarbeit.
-5. **Zuerst Hilfsklassen nutzen** ([8.11](#811-hilfsklassen-für-themeneigene-interaktionen)): `.baum`, `.vierfelder`, `.wahrheitstabelle`, `.tabelle`, `.rechner`/`.regler`, `.diagramm`.
+5. **Zuerst Hilfsklassen nutzen** ([8.11](#811-hilfsklassen-für-themeneigene-interaktionen)): `.baum`, `.vierfelder`, `.wahrheitstabelle`, `.tabelle`, `.rechner`/`.regler`, `.diagramm`, `.netzplan`/`.np-knoten`, `.gantt`.
 6. **Nach dynamischem Inhalt** `Lernpfad.formeln(element)` aufrufen (setzt Formeln und Verknüpfungen).
 7. **Keine Bibliotheken, keine externen Ressourcen**, kein `fetch` ausser über `Lernpfad.fortschritt`. Kein `localStorage` für Lerninhalte. Die Prüfung meldet externe Adressen in Inline-Scripts (`fetch`, `import`, `.src` …), und die Content-Security-Policy der Themenseiten blockiert fremde Server im Browser.
 8. **Breite:** alles muss bei 320 px ohne seitliches Scrollen funktionieren. Breite Tabellen in `.tablebox`, breite Formeln auf `.board`, SVG mit `viewBox` (skaliert mit).
@@ -681,14 +835,18 @@ Die Bausteine erfüllen das bereits. Für eigenen Inhalt gilt dasselbe:
 
 ## 13. Prüfliste vor der Abgabe
 
-- [ ] Datei heisst `content/lernseiten/mstw/<slug>.html`, Slug wie in `fach.json`.
-- [ ] Pflicht-Gerüst vollständig: doctype, `lang="de-CH"`, charset, viewport, `<title>`, Theme-Startskript im `<head>`, `lernpfad.css`, `data-fach="mstw"`, `data-thema="<slug>"`, `lernpfad.js` am Ende von `<body>`, danach das eigene Script.
+- [ ] Datei heisst `content/lernseiten/<fach>/<slug>.html`, Slug wie in `fach.json`.
+- [ ] Pflicht-Gerüst vollständig: doctype, `lang="de-CH"`, charset, viewport, `<title>` mit ` · <KÜRZEL>`, Theme-Startskript im `<head>`, `lernpfad.css`, `data-fach="<fach>"`, `data-thema="<slug>"`, `lernpfad.js` am Ende von `<body>`, danach das eigene Script.
 - [ ] `<link rel="next">` zeigt auf die nächste Station aus `fach.json`, `title` = deren Titel (bei der letzten Station weggelassen).
 - [ ] Keine externen Ressourcen, keine Folien-Screenshots, keine wörtlichen Folientexte.
 - [ ] `npm run lernseiten:pruefen` meldet für die Seite keine Fehler.
 - [ ] Vorschau (`node scripts/lernpfad-vorschau.mjs --port <port>`): keine Fehler in der Konsole, keine `[Lernpfad]`-Meldungen.
 - [ ] Alle Formeln gesetzt (kein roher `$…$`-Text, keine roten KaTeX-Fehler).
 - [ ] Alle Bausteine durchgeklickt: Sortierer, Stepper (Zuordnung leuchtet), Übungen (richtige und falsche Eingabe), Film läuft bis zum Ende, Selbsttest vollständig beantwortet (Ergebnis in der Abschluss-Box).
+- [ ] Reflexion: leer «Musterlösung zeigen» (Rückfrage erscheint), mit Text zeigen, Kriterien ankreuzen (Summe stimmt), Zurücksetzen.
+- [ ] Matrix: Karten per Tipp und per Tastatur ablegen (Enter, Pfeiltasten, Escape), «Prüfen» mit richtiger und falscher Zuordnung; Ziele stimmen fachlich.
+- [ ] Netzplan und Gantt: Zahlen nachgerechnet, kritische Knoten und Balken markiert, scrollen bei 320 px in `.tablebox` statt die Seite zu verbreitern.
+- [ ] PMGT: ICB-Kennzeichen im Kopf und bei den IPMA-Fragen, Akzentfarbe Orange (kommt von selbst über `data-fach="pmgt"`).
 - [ ] Hell und dunkel geprüft (Umschalter oben rechts); eigene Elemente gut lesbar.
 - [ ] Bei 360 px und 320 px kein seitliches Scrollen, auch mit aufgedeckten Lösungen.
 - [ ] Mit der Tastatur bedienbar (Tab, Enter, Leertaste), Fokus immer sichtbar.

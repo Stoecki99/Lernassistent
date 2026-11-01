@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skripte, Funktionen und Fehler · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/12-system-verwalten" title="System verwalten">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t11-», nur Farben aus :root -->
+  <style>
+    .t11-ziele{margin:0; padding-left:1.3em}
+    .t11-ziele li{margin-bottom:4px}
+    .t11-quellen{margin:0; padding-left:1.2em}
+    .t11-quellen li{margin-bottom:4px}
+    .t11-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t11-st pre{font-style:normal}
+    .t11-datei{margin:0; font-size:.85rem; color:var(--muted)}
+    .t11-datei b{font-family:var(--ps-mono); font-weight:600; color:var(--ink)}
+    .t11-richtlinien td:first-child, .t11-richtlinien th:first-child{white-space:nowrap}
+    /* Fehlermeldungs-Anatomie */
+    .t11-anatomie{white-space:pre}
+    .t11-teil{font:inherit; color:inherit; background:transparent; border:0; border-bottom:2px dotted var(--psk-hinweis);
+      padding:0 1px; margin:0; cursor:pointer; border-radius:3px; white-space:pre; text-align:left}
+    .t11-teil:hover{background:var(--psk-leiste)}
+    .t11-teil:focus-visible{outline:2px solid var(--psk-fokus); outline-offset:1px}
+    .t11-teil.an{background:var(--psk-leiste); border-bottom-style:solid; border-bottom-color:var(--psk-fokus)}
+    .t11-erkl{min-height:5.5em}
+    .t11-erkl h3{margin:0 0 4px; font-size:1rem}
+    .t11-erkl p{margin:0}
+    .t11-stand{font-size:.85rem; color:var(--muted)}
+    .t11-jagd{border-left:4px solid var(--bad); padding-left:12px}
+    /* Übung 1: Bausteine dürfen auf schmalen Bildschirmen umbrechen */
+    .t11-bausteine{margin:0; padding-left:1.2em}
+    .t11-bausteine li{margin-bottom:6px}
+    .t11-bausteine code{overflow-wrap:anywhere}
+  </style>
+</head>
+<body data-fach="ps" data-thema="11-skripte-funktionen-fehler">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 4 · Skripte</span>
+    <h1>Skripte, Funktionen und Fehler</h1>
+    <p class="lead">Lea tippt jeden Montag dieselben drei Befehle, um alte Logdateien zu finden. Das geht besser: Sie speichert die Befehle als Skript, gibt ihm Parameter und baut daraus eigene Befehle. Und wenn etwas schiefgeht, liest sie die rote Meldung wie ein Profi und fängt Fehler gezielt ab.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t11-ziele">
+        <li>Du speicherst Befehle als Skript <code>.ps1</code> und startest es mit <code class="ps">.\name.ps1</code>.</li>
+        <li>Du erklärst, was die Ausführungsrichtlinie tut und was nicht, und setzt sie für dich selbst.</li>
+        <li>Du gibst Skripten und Funktionen Parameter mit Typ und Standardwert.</li>
+        <li>Du schreibst eine eigene Funktion in der Form Verb-Nomen.</li>
+        <li>Du unterscheidest abbrechende und nicht abbrechende Fehler und fängst sie mit <code class="ps">try</code>/<code class="ps">catch</code> ab.</li>
+        <li>Du liest eine Fehlermeldung von PowerShell 7 und findest Befehl, Zeile und Ursache.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#skript"><b>1</b>Skriptdatei</a>
+    <a href="#schritt"><b>2</b>Parameter</a>
+    <a href="#funktion"><b>3</b>Funktionen</a>
+    <a href="#fehlerarten"><b>4</b>Fehler</a>
+    <a href="#ausprobieren"><b>5</b>Ausprobieren</a>
+    <a href="#editor"><b>6</b>Skript-Editor</a>
+    <a href="#anatomie"><b>7</b>Meldung lesen</a>
+    <a href="#jagd"><b>8</b>Fehlerjagd</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#tipp-training"><b>10</b>Tipp-Training</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Stolpersteine</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Vom Zettel zum Rezept</h2>
+    <p class="prose">Bisher hast du jeden Befehl neu getippt. Das ist wie Kochen ohne Rezept: Du musst dir jedes Mal merken, was in welcher Reihenfolge kommt. Ein <b>Skript</b> ist das aufgeschriebene Rezept. Du schreibst die Befehle einmal in eine Textdatei und lässt PowerShell sie später Zeile für Zeile abarbeiten, so oft du willst.</p>
+    <p class="prose">Ein gutes Rezept hat Lücken für Dinge, die sich ändern: «für <i>4</i> Personen». Diese Lücken heissen <b>Parameter</b>. Ein Teilrezept, das du immer wieder brauchst («Grundteig»), bekommt einen eigenen Namen: Das ist eine <b>Funktion</b>. Und wenn in der Küche etwas schiefgeht, brauchst du einen Plan B: die <b>Fehlerbehandlung</b>.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Skript</span><span class="ex"><code class="ps">.\logbericht.ps1</code></span><p>Eine Textdatei mit der Endung <code>.ps1</code> voller Befehle. Das Rezept.</p></div>
+      <div class="concept"><span class="tag">Parameter</span><span class="ex"><code class="ps">param([int]$Tage = 30)</code></span><p>Eine Lücke im Rezept, die du beim Start füllst. Ohne Angabe gilt der Standardwert.</p></div>
+      <div class="concept"><span class="tag">Funktion</span><span class="ex"><code class="ps">function Get-AlteLogdatei { }</code></span><p>Ein eigener Befehl mit Namen. Das Teilrezept, das du immer wieder aufrufst.</p></div>
+      <div class="concept"><span class="tag">Fehlerbehandlung</span><span class="ex"><code class="ps">try { } catch { }</code></span><p>Plan B: Geht im <code class="ps">try</code>-Teil etwas schief, springt PowerShell in den <code class="ps">catch</code>-Teil.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Baustein ist das?</h3>
+      <div id="t11-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Skriptdatei ===== -->
+  <section id="skript">
+    <span class="eyebrow">Schritt 1 · Die Skriptdatei</span>
+    <h2>Ein Skript schreiben und starten</h2>
+
+    <div class="card stack">
+      <h3>Eine Textdatei mit der Endung .ps1</h3>
+      <p class="prose">Ein Skript ist eine gewöhnliche Textdatei. Ihr Name endet auf <code>.ps1</code>. Darin stehen Befehle, je einer pro Zeile, genau so, wie du sie in der Konsole tippen würdest. Leas erstes Skript heisst <code>begruessung.ps1</code> und hat zwei Zeilen:</p>
+      <p class="t11-datei">Datei <b>begruessung.ps1</b></p>
+      <pre class="ps-code"><code>param([string]$Name = 'Lea')
+"Guten Morgen, $Name!"</code></pre>
+      <p class="prose">Schreiben kannst du Skripte mit jedem Texteditor, sogar mit dem Windows-Editor. Viel bequemer ist <b>Visual Studio Code</b> mit der Erweiterung <b>PowerShell</b> von Microsoft: Sie färbt den Code, vervollständigt Befehle mit Tab, unterstreicht Tippfehler, bevor du startest, und führt das Skript mit <kbd>F5</kbd> aus. Beides ist kostenlos.</p>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 bringt den Editor «Windows PowerShell ISE» mit. Er kennt nur 5.1, nicht PowerShell <span class="ps-version">7</span>, und Microsoft entwickelt ihn nicht weiter. Nimm darum Visual Studio Code.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Starten mit .\</h3>
+      <p class="prose">Ein Skript startest du über seinen Pfad. Liegt es im aktuellen Ordner, schreibst du <code class="ps">.\</code> davor. Der Punkt heisst «hier», der Backslash trennt Ordner und Datei. <code class="ps">.\begruessung.ps1</code> heisst also «die Datei begruessung.ps1 genau hier».</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Skript starten" id="t11-start1"></pre>
+      <p class="prose">Ohne <code class="ps">.\</code> findet PowerShell das Skript nicht, obwohl es direkt vor ihm liegt:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7: Skript ohne Punkt und Backslash" lang="en">PS C:\Users\lea&gt; begruessung.ps1
+<span class="psk-fehler">begruessung.ps1: The term 'begruessung.ps1' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</span></pre>
+      <p class="prose">Auf Deutsch: «Einen Befehl mit diesem Namen kenne ich nicht.» Das ist Absicht und eine Schutzmassnahme. PowerShell sucht Befehle von sich aus nicht im aktuellen Ordner. Sonst könnte ein Programm namens <code>ping.exe</code>, das jemand in deinen Downloads versteckt, statt des echten <code class="ps">ping</code> laufen. Mit <code class="ps">.\</code> sagst du ausdrücklich: «Ja, ich meine diese Datei.» Echtes pwsh zeigt darunter zusätzlich einen Vorschlag, es mit <code class="ps">.\begruessung.ps1</code> zu versuchen.</p>
+      <p class="prose">Parameter schreibst du wie bei einem Cmdlet hinter den Namen:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Skript mit Parameter" id="t11-start2"></pre>
+      <div class="note"><b>Doppelklick:</b> Ein Doppelklick auf eine <code>.ps1</code>-Datei im Explorer startet sie nicht, sondern öffnet sie meist im Editor. Auch das ist eine Schutzmassnahme. Starte Skripte in der Konsole oder in Visual Studio Code.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Die Ausführungsrichtlinie</h3>
+      <p class="prose">Vielleicht kennst du das Schild «Betreten auf eigene Gefahr» an einer Baustelle. Es hält niemanden mit Gewalt ab, aber es verhindert, dass jemand aus Versehen hineinläuft. Genau so arbeitet die <b>Ausführungsrichtlinie</b> (englisch <i>execution policy</i>) unter Windows: Sie legt fest, ob und welche Skripte starten dürfen. Mit <code class="ps">Get-ExecutionPolicy</code> fragst du sie ab.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-ExecutionPolicy" data-ps-befehl="Get-ExecutionPolicy"></pre>
+      <div class="tablebox">
+        <table class="tabelle t11-richtlinien">
+          <caption>Die wichtigsten Richtlinien (Quelle: about_Execution_Policies)</caption>
+          <thead><tr><th>Richtlinie</th><th>Was ist erlaubt?</th></tr></thead>
+          <tbody>
+            <tr><th>Restricted</th><td>einzelne Befehle in der Konsole, aber keine Skripte. Gilt auf Windows-Clients, wenn nirgends etwas eingestellt ist.</td></tr>
+            <tr><th>RemoteSigned</th><td>eigene Skripte vom eigenen Rechner laufen. Skripte aus dem Internet (Download, Mail-Anhang, Chat) brauchen eine digitale Signatur. Die übliche Einstellung.</td></tr>
+            <tr><th>AllSigned</th><td>nur signierte Skripte, auch die eigenen</td></tr>
+            <tr><th>Unrestricted</th><td>alle Skripte; bei Skripten aus dem Internet fragt PowerShell nach</td></tr>
+            <tr><th>Bypass</th><td>nichts wird blockiert, keine Warnung. Gedacht für Programme, die PowerShell einbauen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Die Richtlinie kann an mehreren Orten (Bereichen, englisch <i>scopes</i>) stehen. <code class="ps">Get-ExecutionPolicy -List</code> zeigt alle. Der oberste Eintrag, der nicht <code>Undefined</code> ist, gewinnt. Auf Leas Rechner steht <code>RemoteSigned</code> für den ganzen Computer (<code>LocalMachine</code>):</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-ExecutionPolicy -List" data-ps-befehl="Get-ExecutionPolicy -List"></pre>
+      <p class="prose">Laufen auf deinem Rechner keine Skripte, stellst du RemoteSigned <b>nur für dich</b> ein. Dafür brauchst du keine Adminrechte:</p>
+      <pre class="ps-code"><code>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser</code></pre>
+      <p class="prose">Ohne <code class="ps">-Scope</code> würde PowerShell den Bereich <code>LocalMachine</code> ändern, und das geht nur in einer Konsole «als Administrator». Den Bereich <code>Process</code> vergisst PowerShell beim Schliessen des Fensters. Damit kannst du gefahrlos ausprobieren, was <code>Restricted</code> bewirkt:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Restricted ausprobieren" id="t11-richtlinie"></pre>
+      <p class="prose">Auf Deutsch: «Die Datei kann nicht geladen werden, weil das Ausführen von Skripten auf diesem System deaktiviert ist.» Danach stellt Lea für diese Sitzung wieder RemoteSigned ein, und das Skript läuft.</p>
+      <div class="note falle"><b>Keine Sicherheitsgrenze:</b> Microsoft sagt es selbst: Die Ausführungsrichtlinie ist ein Sicherheitsgurt gegen Versehen, kein Schloss gegen Angreifer. Wer will, kopiert den Inhalt eines Skripts einfach in die Konsole. Stell sie darum nicht auf <code>Unrestricted</code> oder <code>Bypass</code>, «damit es endlich geht». <code>RemoteSigned</code> reicht für eigene Skripte.</div>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 und PowerShell <span class="ps-version">7</span> speichern ihre Richtlinien getrennt (5.1 in der Registry, 7 in der Datei <code>powershell.config.json</code>). Was du in der einen einstellst, gilt nicht für die andere. Ausserhalb von Windows (macOS, Linux) gilt fest <code>Unrestricted</code>, und das lässt sich nicht ändern.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Kommentare: Notizen für Menschen</h3>
+      <p class="prose">Alles nach einem <code class="ps">#</code> bis zum Zeilenende ist ein <b>Kommentar</b>. PowerShell überliest ihn. Für längere Notizen gibt es den Block-Kommentar von <code class="ps">&lt;#</code> bis <code class="ps">#&gt;</code>, er darf über viele Zeilen gehen. Schreib in Kommentare, <i>warum</i> etwas so ist. Was der Code tut, sieht man im Code.</p>
+      <pre class="ps-code"><code>&lt;#
+  logbericht.ps1 · Lea, Informatik Wolkenried
+  Zählt Dateien, die älter als eine bestimmte Anzahl Tage sind.
+#&gt;
+$Tage = 30   # Archiv-Regel der Gemeinde: 30 Tage</code></pre>
+      <div class="note"><b>Merke:</b> Block-Kommentare lassen sich nicht verschachteln: Der erste <code class="ps">#&gt;</code> beendet den Kommentar. In Anführungszeichen ist <code>#</code> kein Kommentar: <code class="ps">'Text # kein Kommentar'</code> gibt den ganzen Text aus.</div>
+    </div>
+  </section>
+
+  <!-- ===== 2 · Stepper und Parameter ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 2 · Vom Befehl zum Skript mit Parametern</span>
+    <h2>Leas Montagsbefehl wird ein Skript</h2>
+    <p class="prose">Lea baut ihr Skript in fünf kleinen Schritten. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Teil leuchtet auf. Unter jedem Skript siehst du, was der Simulator beim Start ausgibt.</p>
+    <div id="t11-stepper"></div>
+
+    <div class="card stack">
+      <h3>param(): Typ, Name, Standardwert</h3>
+      <p class="prose">Im Block <code class="ps">param( )</code> stehen die Parameter, durch Komma getrennt. Jeder hat bis zu drei Teile:</p>
+      <pre class="ps-code"><code>param(
+  [string]$Ordner = 'Logs',
+  [int]$Tage = 30
+)</code></pre>
+      <ul class="prose">
+        <li><b>Typ</b> in eckigen Klammern: <code class="ps">[string]</code> für Text, <code class="ps">[int]</code> für ganze Zahlen. Der Typ ist freiwillig, aber er schützt dich vor Unsinn.</li>
+        <li><b>Name</b> mit <code class="ps">$</code>: Im Skript ist er eine Variable, beim Start ein Parameter <code class="ps">-Ordner</code>.</li>
+        <li><b>Standardwert</b> nach <code class="ps">=</code>: Gibst du den Parameter nicht an, gilt er.</li>
+      </ul>
+      <p class="prose"><code class="ps">param( )</code> muss die <b>erste Anweisung</b> im Skript sein. Davor dürfen nur Kommentare stehen. Beim Start kannst du die Parameter benannt in beliebiger Reihenfolge oder ohne Namen in der Reihenfolge von <code class="ps">param( )</code> angeben:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Parameter benannt und nach Position" id="t11-param1"></pre>
+      <p class="prose">Und wenn Lea statt einer Zahl ein Wort eintippt? Dann greift der Typ <code class="ps">[int]</code>, und das Skript startet gar nicht erst:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: falscher Typ" id="t11-param2"></pre>
+      <p class="prose">Auf Deutsch: «Den Wert "zehn" kann ich nicht in eine ganze Zahl (System.Int32) umwandeln.» Besser eine klare Meldung am Anfang als ein Skript, das mit Unsinn weiterrechnet.</p>
+      <div class="note tipp"><b>Ausblick:</b> Mit <code class="ps">[Parameter(Mandatory)]</code> vor dem Typ wird ein Parameter zur Pflicht. Fehlt er beim Start, fragt PowerShell in der Konsole nach dem Wert. Mehr dazu in about_Functions_Advanced_Parameters.</div>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Funktionen ===== -->
+  <section id="funktion">
+    <span class="eyebrow">Schritt 3 · Eigene Befehle</span>
+    <h2>Funktionen: dein eigenes Cmdlet</h2>
+    <p class="prose">Eine <b>Funktion</b> ist ein Stück Code mit einem Namen. Du schreibst <code class="ps">function</code>, den Namen und in geschweiften Klammern den Inhalt. Der Parameterblock steht als Erstes in den Klammern. Danach rufst du die Funktion auf wie jedes Cmdlet. Gib ihr einen Namen in der Form <b>Verb-Nomen</b> mit einem genehmigten Verb (Station 02), dann versteht jeder sofort, was sie tut.</p>
+    <pre class="ps-code" id="t11-fkt-code"><code>function Get-AlteLogdatei {
+  param(
+    [string]$Ordner = 'Logs',
+    [int]$Tage = 30
+  )
+  $grenze = (Get-Date).AddDays(-$Tage)
+  Get-ChildItem -Path $Ordner -File | Where-Object LastWriteTime -lt $grenze
+}
+
+Get-AlteLogdatei -Tage 90 | Select-Object -ExpandProperty Name</code></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe der Funktion" id="t11-fkt-aus"></pre>
+    <p class="prose">Die Funktion gibt Dateiobjekte aus. Darum kannst du sie weiter in die Pipeline schicken, hier an <code class="ps">Select-Object</code>. Älter als 90 Tage sind nur zwei Logdateien.</p>
+
+    <div class="card stack">
+      <h3>Ausgabe statt return</h3>
+      <p class="prose">In vielen Programmiersprachen gibt eine Funktion nur das zurück, was nach <code class="ps">return</code> steht. In PowerShell ist das anders: <b>Alles, was in der Funktion eine Ausgabe erzeugt, kommt heraus.</b> Jeder Text, jede Zahl, jedes Objekt, das nicht in einer Variable landet. <code class="ps">return</code> beendet die Funktion nur früher.</p>
+      <pre class="ps-code"><code>function Test-Zahl { 'eins'; return 'zwei'; 'drei' }
+Test-Zahl</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Test-Zahl" data-ps-befehl="function Test-Zahl { 'eins'; return 'zwei'; 'drei' }; Test-Zahl" data-ps-prompt="nein"></pre>
+      <p class="prose"><code>eins</code> kommt heraus, obwohl kein <code class="ps">return</code> davor steht. <code>drei</code> fehlt, weil <code class="ps">return</code> die Funktion vorher beendet. Schreib darum einfach das hin, was herauskommen soll. <code class="ps">return</code> brauchst du nur, wenn du früher aufhören willst.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Aufrufen wie ein Cmdlet</h3>
+      <pre class="ps-code"><code>function Get-Gruss { param([string]$Name = 'Lea') "Hallo $Name" }</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-Gruss aufrufen" id="t11-gruss"></pre>
+      <div class="note"><b>Merke:</b> Im Skript muss eine Funktion <b>oben</b> stehen, bevor du sie aufrufst. PowerShell liest das Skript von oben nach unten und kennt sie sonst noch nicht.</div>
+    </div>
+  </section>
+
+  <!-- ===== 4 · Fehler ===== -->
+  <section id="fehlerarten">
+    <span class="eyebrow">Schritt 4 · Wenn etwas schiefgeht</span>
+    <h2>Zwei Arten von Fehlern</h2>
+    <p class="prose">Denk an eine Ampel. Bei <b>gelbem Blinklicht</b> fährst du vorsichtig weiter. Bei <b>Rot</b> bleibst du stehen. PowerShell kennt genau diese zwei Arten von Fehlern.</p>
+    <div class="grid2">
+      <div class="concept"><span class="tag">nicht abbrechend</span><span class="ex">gelb blinkend</span><p>Der Befehl meldet das Problem in Rot und macht mit dem Rest weiter. Typisch: eine von mehreren Dateien fehlt.</p></div>
+      <div class="concept"><span class="tag">abbrechend</span><span class="ex">rot</span><p>Die Anweisung bricht ab. Typisch: ein unbekannter Befehl, ein falscher Typ. Bei <code class="ps">throw</code> und <code class="ps">-ErrorAction Stop</code> hält sogar das ganze Skript an, wenn kein <code class="ps">catch</code> den Fehler fängt.</p></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Nicht abbrechend: weitermachen</h3>
+      <p class="prose">Lea will zwei Dateien sehen. Die erste gibt es nicht. <code class="ps">Get-ChildItem</code> meldet das und zeigt trotzdem die zweite:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: nicht abbrechender Fehler" data-ps-befehl="Get-ChildItem Logs\fehlt.log, Logs\app.log"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>-ErrorAction: wie soll der Befehl reagieren?</h3>
+      <p class="prose">Jedes Cmdlet hat den gemeinsamen Parameter <code class="ps">-ErrorAction</code> (kurz <code class="ps">-ea</code>). Er sagt, was bei einem nicht abbrechenden Fehler passieren soll:</p>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Werte von -ErrorAction (Quelle: about_CommonParameters)</caption>
+          <thead><tr><th>Wert</th><th>Wirkung</th></tr></thead>
+          <tbody>
+            <tr><th><code>Continue</code></th><td>Standard: Meldung zeigen, weitermachen</td></tr>
+            <tr><th><code>SilentlyContinue</code></th><td>keine Meldung, weitermachen. Der Fehler landet trotzdem in <code class="ps">$Error</code>.</td></tr>
+            <tr><th><code>Ignore</code></th><td>keine Meldung, weitermachen, nicht in <code class="ps">$Error</code></td></tr>
+            <tr><th><code>Stop</code></th><td>Meldung und anhalten: Aus dem gelben wird ein roter Fehler. Den kann <code class="ps">catch</code> abfangen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Mit <code>SilentlyContinue</code> bleibt der Bildschirm ruhig:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: SilentlyContinue" data-ps-befehl="Get-ChildItem Logs\fehlt.log, Logs\app.log -ErrorAction SilentlyContinue"></pre>
+      <p class="prose">Mit <code>Stop</code> hält der Befehl beim ersten Fehler an. <code>app.log</code> erscheint nicht mehr:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Stop" data-ps-befehl="Get-ChildItem Logs\fehlt.log, Logs\app.log -ErrorAction Stop"></pre>
+      <div class="note falle"><b>Vorsicht mit SilentlyContinue:</b> Wer alle Fehler verschluckt, merkt nicht, dass etwas nicht klappt. Nimm es nur, wenn ein Fehler wirklich egal ist, zum Beispiel «Datei löschen, falls es sie gibt».</div>
+    </div>
+
+    <div class="card stack">
+      <h3>try, catch, finally: Plan B</h3>
+      <p class="prose">Was im <code class="ps">try</code>-Block steht, versucht PowerShell. Tritt dort ein <b>abbrechender</b> Fehler auf, springt es sofort in den <code class="ps">catch</code>-Block. Der Rest von <code class="ps">try</code> wird übersprungen. Der <code class="ps">finally</code>-Block läuft am Schluss immer, mit oder ohne Fehler. Er ist freiwillig und gut zum Aufräumen.</p>
+      <pre class="ps-code"><code>try {
+  'Ich lese die Datei ...'
+  Get-Content -Path Logs\fehlt.log -ErrorAction Stop
+  'Gelesen.'
+}
+catch {
+  "Fehler: $($_.Exception.Message)"
+}
+finally {
+  'Fertig.'
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: try, catch, finally" id="t11-try1"></pre>
+      <p class="prose">Im <code class="ps">catch</code>-Block steht <code class="ps">$_</code> für den Fehler, den PowerShell gerade gefangen hat. <code class="ps">$_.Exception.Message</code> ist nur der Text der Meldung, ohne rote Farbe und ohne Befehlsname. Den kannst du in eine eigene, freundliche Meldung einbauen.</p>
+      <div class="note falle"><b>Die wichtigste Falle:</b> <code class="ps">catch</code> fängt nur <b>abbrechende</b> Fehler. Ohne <code class="ps">-ErrorAction Stop</code> ist «Datei fehlt» bei <code class="ps">Get-Content</code> nur gelb blinkend. PowerShell zeigt die rote Meldung, macht im <code class="ps">try</code>-Block weiter, und <code class="ps">catch</code> läuft nie:</div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: try ohne ErrorAction Stop" id="t11-try2"></pre>
+      <p class="prose">Abbrechend sind dagegen schon von sich aus: <code class="ps">throw 'Text'</code>, ein Befehl, den es nicht gibt, und ein Wert, der nicht in den Typ passt (<code class="ps">[int]'zehn'</code>). Die fängt <code class="ps">catch</code> auch ohne <code class="ps">-ErrorAction Stop</code>.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>$Error: das Fehlertagebuch</h3>
+      <p class="prose">PowerShell merkt sich jeden Fehler der Sitzung in der automatischen Variable <code class="ps">$Error</code>, den neusten zuoberst. <code class="ps">$Error[0]</code> ist also der letzte Fehler, auch wenn du ihn mit <code>SilentlyContinue</code> versteckt oder mit <code class="ps">catch</code> gefangen hast.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: $Error[0]" id="t11-error"></pre>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Nur PowerShell <span class="ps-version">7</span> hat das Cmdlet <code class="ps">Get-Error</code>, das den letzten Fehler mit allen Einzelheiten zeigt. Windows PowerShell 5.1 kennt es nicht.</div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">In Leas Benutzerordner liegen zwei Skripte: <code>begruessung.ps1</code> und <code>logbericht.ps1</code>. Mit <code class="ps">Get-Content logbericht.ps1</code> schaust du hinein. Mit ↑ holst du den letzten Befehl zurück, mit Tab vervollständigst du Namen. Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t11-konsole"></div>
+  </section>
+
+  <!-- ===== 6 · Skript-Editor ===== -->
+  <section id="editor">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>Skript-Editor: Leas Logbericht</h2>
+    <p class="prose">Hier ist der Simulator ein kleiner Editor. Oben steht das Skript <code>logbericht.ps1</code>. Ins Feld «Parameter» schreibst du, was beim Start hinter den Namen kommt, zum Beispiel <code class="ps">-Tage 60</code>. «▶ Ausführen» (oder <kbd>Ctrl</kbd> + <kbd>Enter</kbd> im Editor) speichert das Skript und startet es. Du darfst das Skript verändern, so oft du willst. «Ins Skript übernehmen» bei einer Lösung ersetzt deinen Text.</p>
+    <div id="t11-editor"></div>
+  </section>
+
+  <!-- ===== 7 · Fehlermeldungs-Anatomie ===== -->
+  <section id="anatomie">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Eine Fehlermeldung lesen</h2>
+    <p class="prose">Rote Meldungen wirken bedrohlich. Dabei sind sie ein Wegweiser: Sie sagen dir, <b>welcher Befehl</b> sich beschwert, <b>wo</b> das passiert ist und <b>warum</b>. Wähle ein Beispiel und tippe auf die unterstrichenen Teile.</p>
+    <div class="card stack">
+      <div class="modes" role="group" aria-label="Beispiel wählen">
+        <button type="button" class="btn on" aria-pressed="true" data-t11-bsp="skript">Fehler im Skript</button>
+        <button type="button" class="btn" aria-pressed="false" data-t11-bsp="parser">Parserfehler</button>
+        <button type="button" class="btn" aria-pressed="false" data-t11-bsp="eingabe">Fehler an der Eingabe</button>
+      </div>
+      <p class="prose" id="t11-bsp-text"></p>
+      <pre class="ps-ausgabe t11-anatomie" tabindex="0" aria-label="Fehlermeldung mit anklickbaren Teilen" lang="en" id="t11-anatomie"></pre>
+      <div class="row">
+        <button type="button" class="btn" id="t11-vor">Nächster Teil →</button>
+        <span class="t11-stand" id="t11-stand" aria-live="polite"></span>
+      </div>
+      <div class="info t11-erkl" id="t11-erkl" aria-live="polite"></div>
+    </div>
+    <div class="note tipp"><b>So liest du jede Meldung:</b> Zuerst die <b>letzte Zeile</b>: Das ist die Ursache. Dann die <b>Zeilennummer</b> und die <b>Unterstreichung</b>: Dort suchst du. Zum Schluss der <b>Befehl</b> ganz vorne: Er sagt, wer sich beschwert hat.</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 zeigt Fehler länger und auf einem deutschen Windows auf Deutsch: «Get-Content : Der Pfad … kann nicht gefunden werden, da er nicht vorhanden ist.», dann «In C:\Users\lea\bericht.ps1:4 Zeichen:1», die Zeile mit <code>+ ~~~~</code> darunter und zwei Zeilen <code>CategoryInfo</code> und <code>FullyQualifiedErrorId</code>. Die Teile sind dieselben, nur anders angeordnet. PowerShell <span class="ps-version">7</span> zeigt die kurze Ansicht <code>ConciseView</code>.</div>
+  </section>
+
+  <!-- ===== 8 · Fehlerjagd ===== -->
+  <section id="jagd">
+    <span class="eyebrow">Schritt 8 · Themeneigene Interaktion</span>
+    <h2>Fehlerjagd: drei kaputte Skripte</h2>
+    <p class="prose">Leas Kollege Marco hat drei Skripte geschrieben, und alle drei haben einen Fehler. Für jedes gilt dasselbe Vorgehen: <b>ausführen</b>, <b>Meldung lesen</b>, <b>Fehler finden</b>, im Editor <b>korrigieren</b> und <b>nochmals ausführen</b>.</p>
+
+    <div class="card stack t11-jagd">
+      <h3>Skript 1 · Wie gross ist sync-fehler.log?</h3>
+      <p class="prose">Das Skript soll ausgeben: <code>sync-fehler.log hat … Bytes.</code></p>
+      <div id="t11-jagd1"></div>
+      <div id="t11-jagd1-frage"></div>
+    </div>
+
+    <div class="card stack t11-jagd">
+      <h3>Skript 2 · Welche Logdateien sind alt?</h3>
+      <p class="prose">Das Skript soll für jede Logdatei, die älter als 30 Tage ist, eine Zeile <code>alt: …</code> ausgeben.</p>
+      <div id="t11-jagd2"></div>
+      <div id="t11-jagd2-frage"></div>
+    </div>
+
+    <div class="card stack t11-jagd">
+      <h3>Skript 3 · Zeilen zählen mit Plan B</h3>
+      <p class="prose">Das Skript soll die Zeilen der Datei zählen. Fehlt die Datei, soll statt der roten Meldung der freundliche Text aus dem <code class="ps">catch</code>-Block erscheinen.</p>
+      <div id="t11-jagd3"></div>
+      <div id="t11-jagd3-frage"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Funktion zusammenbauen</h3>
+      <p class="prose">Lea will eine Funktion, die alte Logdateien zeigt, und sie danach mit 60 Tagen aufrufen. Diese fünf Bausteine braucht sie, aber nicht in dieser Reihenfolge:</p>
+      <ul class="prose t11-bausteine">
+        <li><code class="ps">Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-$Tage)</code></li>
+        <li><code class="ps">Get-AlteLogdatei -Tage 60</code></li>
+        <li><code class="ps">function Get-AlteLogdatei {</code></li>
+        <li><code class="ps">}</code></li>
+        <li><code class="ps">param([int]$Tage = 30)</code></li>
+      </ul>
+      <p class="prose">Tippe sie in der richtigen Reihenfolge in die Konsole, alles in einer Zeile. Zwischen der schliessenden Klammer und dem Aufruf steht ein <code class="ps">;</code>.</p>
+      <div id="t11-u1"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 2 · Fängt catch diesen Fehler?</h3>
+      <p class="prose">Jeder Befehl steht allein in einem <code class="ps">try</code>-Block: <code class="ps">try { … } catch { 'gefangen' }</code>. Erscheint «gefangen»?</p>
+      <div id="t11-u2"></div>
+    </div>
+    <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t11-u3"></div></div>
+    <div class="card stack"><h3>Übung 4 · Ausgabe vorhersagen</h3><div id="t11-u4"></div></div>
+    <div class="card stack">
+      <h3>Übung 5 · Fehler finden und richtig tippen</h3>
+      <p class="prose">In der Konsole ist diese Funktion schon definiert:</p>
+      <pre class="ps-code"><code>function Get-Gruss { param([string]$Name = 'Lea', [int]$Anzahl = 1) "Hallo $Name x $Anzahl" }</code></pre>
+      <p class="prose">Lea ruft sie mit <code class="ps">Get-Gruss('Tom', 3)</code> auf und erwartet <code>Hallo Tom x 3</code>. Probier ihren Aufruf aus, finde den Fehler und tippe den Aufruf richtig.</p>
+      <div id="t11-u5"></div>
+    </div>
+    <div class="card stack"><h3>Übung 6 · Wahr oder falsch?</h3><div id="t11-u6"></div></div>
+    <div class="card stack">
+      <h3>Übung 7 · Selbst schreiben</h3>
+      <p class="prose">Zwei Aufträge ohne Vorlage. Du darfst die Funktion in einer Zeile schreiben, Anweisungen trennst du mit <code class="ps">;</code>.</p>
+      <div id="t11-u7"></div>
+    </div>
+  </section>
+
+  <!-- ===== 10 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 10 · Selber tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Lesen ist gut, tippen ist besser. Hier schreibst du jeden Befehl selbst in die Konsole und drückst Enter. Es geht in drei Stufen: erst abschreiben, dann abwandeln, am Schluss ganz ohne Vorlage. Gross- und Kleinschreibung spielt keine Rolle. Gibt es mehrere richtige Wege, zählt jeder davon, auch Aliase und abgekürzte Parameter.</p>
+    <div class="note tipp"><b>Ohne Tab und Pfeiltasten:</b> Alle Aufgaben gehen auch auf dem Handy. Mehrere Anweisungen in einer Zeile trennst du mit <code class="ps">;</code>. Ist der Rechner durcheinander, klick auf «↺ Zurücksetzen». Dann ist alles wieder wie am Anfang, gelöste Aufgaben bleiben gelöst.</div>
+
+    <div class="card stack">
+      <h3>Stufe 1 · Nachtippen</h3>
+      <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn genau ab und schau dir die Ausgabe an. So lernen deine Finger die Schreibweise: Punkt und Backslash vor dem Skript, Bindestrich vor dem Parameter, geschweifte Klammern um <code class="ps">try</code> und <code class="ps">catch</code>.</p>
+      <div id="t11-tipp1"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 2 · Abwandeln</h3>
+      <p class="prose">Jetzt siehst du einen fertigen Befehl, aber er macht noch nicht ganz das Richtige. Du änderst einen Teil: einen Wert, einen Text, eine Einstellung. Der Rest bleibt gleich.</p>
+      <div id="t11-tipp2"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Stufe 3 · Selber lösen</h3>
+      <p class="prose">Nur noch das Ziel, kein Befehl. Drei Aufgaben holen Stoff aus früheren Stationen zurück und verbinden ihn mit Funktionen und Fehlern. Bleibst du hängen, hilft dir der Hinweis weiter, ohne gleich alles zu verraten.</p>
+      <div id="t11-tipp3"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Skript alte-logs.ps1 entsteht</h2>
+    <p class="prose">Der Auftrag: Lea braucht ein Skript <code>alte-logs.ps1</code>, das die alten Dateien in einem Ordner zählt. Ordner und Anzahl Tage soll sie beim Start wählen können (Standard: Logs, 30 Tage). Gibt es den Ordner nicht, soll eine freundliche Meldung statt der roten erscheinen. Jede Szene zeigt das Skript im Editor und die Ausgabe des Simulators.</p>
+    <div id="t11-film"></div>
+    <details class="sol">
+      <summary>Fertiges Skript zum Nachlesen</summary>
+      <div class="stack">
+        <pre class="ps-code" id="t11-film-loesung"><code></code></pre>
+        <p class="prose">Ergebnisse auf Leas Rechner: ohne Parameter 4 Dateien (30 Tage), mit <code class="ps">-Tage 90</code> 2 Dateien, mit <code class="ps">-Ordner Downloads -Tage 100</code> 2 Dateien, mit <code class="ps">-Ordner Protokolle</code> die Meldung «Fehler: Cannot find path …».</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Alle Schritte in PowerShell 7.6 in einem nachgebauten Ordner geprüft (mit festem Datum 2.11.2026).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine</h2>
+    <div class="note falle"><b>Skript ohne <code class="ps">.\</code>:</b> <code class="ps">logbericht.ps1</code> ergibt «is not recognized». PowerShell sucht von sich aus nicht im aktuellen Ordner. Richtig: <code class="ps">.\logbericht.ps1</code>.</div>
+    <div class="note falle"><b>Leerzeichen im Pfad:</b> <code class="ps">.\Meine Skripte\hallo.ps1</code> zerfällt am Leerzeichen, PowerShell sucht einen Befehl <code>.\Meine</code>. Nur Anführungszeichen helfen auch nicht, dann ist es bloss ein Text, den PowerShell ausgibt. Richtig ist der Aufrufoperator <code class="ps">&amp;</code> vor dem Pfad in Anführungszeichen:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Pfad mit Leerzeichen" lang="en">PS C:\Users\lea&gt; .\Meine Skripte\hallo.ps1
+<span class="psk-fehler">.\Meine: The term '.\Meine' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</span>
+PS C:\Users\lea&gt; &amp; '.\Meine Skripte\hallo.ps1'
+Hallo von Lea</pre></div>
+    <div class="note falle"><b>try/catch ohne <code class="ps">-ErrorAction Stop</code>:</b> Fehlt bei <code class="ps">Get-Content</code> oder <code class="ps">Get-ChildItem</code> die Datei, ist das ein nicht abbrechender Fehler. <code class="ps">catch</code> bleibt stumm, das Skript rechnet mit leeren Werten weiter («0 Zeilen»). Schreib <code class="ps">-ErrorAction Stop</code> an jeden Befehl im <code class="ps">try</code>-Block, dessen Fehler du fangen willst.</div>
+    <div class="note falle"><b>Funktion mit Klammern und Komma aufrufen:</b> <code class="ps">Get-Gruss('Tom', 3)</code> sieht aus wie in anderen Sprachen, ist in PowerShell aber falsch. PowerShell übergibt <code class="ps">('Tom', 3)</code> als <b>eine</b> Liste an den ersten Parameter. Richtig: <code class="ps">Get-Gruss -Name Tom -Anzahl 3</code>, mit Leerzeichen, ohne Klammern, ohne Komma.</div>
+    <div class="note falle"><b>Funktion zu spät definiert:</b> Rufst du im Skript eine Funktion auf, bevor ihr <code class="ps">function</code>-Block kommt, meldet PowerShell «The term '…' is not recognized». Funktionen gehören nach oben, direkt unter <code class="ps">param( )</code>.</div>
+    <div class="note falle"><b>param() nicht zuoberst:</b> Steht vor <code class="ps">param( )</code> schon ein Befehl, erkennt PowerShell den Block nicht mehr als Parameter. Echtes pwsh 7.6 hält <code>param</code> dann für einen unbekannten Befehl, und dein Parameter wird nicht übernommen:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: param nicht zuoberst" lang="en">PS C:\Users\lea&gt; .\spaet.ps1 -Tage 60
+Start
+<span class="psk-fehler">param: C:\Users\lea\spaet.ps1:2
+Line |
+   2 |  param([int]$Tage = 30)
+     |  ~~~~~
+     | The term 'param' is not recognized as a name of a cmdlet, function, script file, or executable program. Check
+     | the spelling of the name, or if a path was included, verify that the path is correct and try again.</span>
+Tage: 30</pre>
+      Nur Kommentare dürfen vor <code class="ps">param( )</code> stehen.</div>
+    <div class="note falle"><b>Funktion aus einem Skript fehlt danach:</b> Ein Skript läuft in seinem eigenen Bereich. Eine Funktion, die <code>werkzeuge.ps1</code> definiert, kennt die Konsole nach dem Start mit <code class="ps">.\werkzeuge.ps1</code> nicht mehr. Willst du sie behalten, startest du das Skript mit einem Punkt und Leerzeichen davor: <code class="ps">. .\werkzeuge.ps1</code> (englisch <i>dot sourcing</i>). Der Simulator vereinfacht das: Dort bleibt die Funktion auch ohne Punkt bekannt.</div>
+    <div class="note falle"><b>Richtlinie «aufmachen», bis es geht:</b> <code class="ps">Set-ExecutionPolicy Unrestricted</code> oder <code>Bypass</code> ist nicht nötig. Für eigene Skripte reicht <code class="ps">Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code>.</div>
+    <div class="note falle"><b>Nur die erste Zeile lesen:</b> Die erste Zeile einer Meldung nennt Befehl und Ort, die Ursache steht ganz unten. Lies immer bis zur letzten Zeile.</div>
+    <div class="note"><b>Umlaute in Skripten <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 liest Skripte ohne BOM (unsichtbare Kennung am Dateianfang) als ANSI. Aus «älter» wird dann «Ã¤lter». Speichere Skripte für 5.1 als «UTF-8 with BOM» (in Visual Studio Code unten rechts). PowerShell <span class="ps-version">7</span> liest beides richtig.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen zu Ausführungsrichtlinie, Parametern, Funktionen und Fehlerbehandlung. Alle beziehen sich auf PowerShell 7 und Leas Rechner.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle und Bausteine dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">.\name.ps1</code></th><td>Skript im aktuellen Ordner starten</td><td><code class="ps">.\logbericht.ps1 -Tage 60</code></td></tr>
+          <tr><th><code class="ps">&amp; 'Pfad'</code></th><td>Skript mit Leerzeichen im Pfad starten</td><td><code class="ps">&amp; '.\Meine Skripte\hallo.ps1'</code></td></tr>
+          <tr><th><code class="ps">Get-ExecutionPolicy</code></th><td>gültige Ausführungsrichtlinie anzeigen</td><td><code class="ps">Get-ExecutionPolicy -List</code></td></tr>
+          <tr><th><code class="ps">Set-ExecutionPolicy</code></th><td>Richtlinie setzen, für dich ohne Adminrechte</td><td><code class="ps">Set-ExecutionPolicy RemoteSigned -Scope CurrentUser</code></td></tr>
+          <tr><th><code class="ps">#</code>, <code class="ps">&lt;# #&gt;</code></th><td>Kommentar bis Zeilenende; Block-Kommentar über mehrere Zeilen</td><td><code class="ps">$Tage = 30   # Archiv-Regel</code></td></tr>
+          <tr><th><code class="ps">param()</code></th><td>Parameter mit Typ und Standardwert, als erste Anweisung</td><td><code class="ps">param([string]$Ordner = 'Logs', [int]$Tage = 30)</code></td></tr>
+          <tr><th><code class="ps">function</code></th><td>eigenen Befehl Verb-Nomen definieren</td><td><code class="ps">function Get-Gruss { param([string]$Name = 'Lea') "Hallo $Name" }</code></td></tr>
+          <tr><th><code class="ps">-ErrorAction Stop</code></th><td>nicht abbrechenden Fehler abbrechend machen (für catch)</td><td><code class="ps">Get-Content $Datei -ErrorAction Stop</code></td></tr>
+          <tr><th><code class="ps">-ErrorAction SilentlyContinue</code></th><td>Fehlermeldung unterdrücken, weitermachen</td><td><code class="ps">Get-ChildItem Logs\fehlt.log -ErrorAction SilentlyContinue</code></td></tr>
+          <tr><th><code class="ps">try { } catch { } finally { }</code></th><td>abbrechende Fehler abfangen; finally läuft immer</td><td><code class="ps">try { Get-Item x -ErrorAction Stop } catch { 'fehlt' }</code></td></tr>
+          <tr><th><code class="ps">$_.Exception.Message</code></th><td>Text des gefangenen Fehlers im catch-Block</td><td><code class="ps">catch { "Fehler: $($_.Exception.Message)" }</code></td></tr>
+          <tr><th><code class="ps">$Error[0]</code></th><td>der letzte Fehler der Sitzung</td><td><code class="ps">$Error[0].Exception.Message</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Ein <b>Skript</b> ist eine Textdatei <code>.ps1</code>. Im aktuellen Ordner startest du es mit <code class="ps">.\</code> davor.</li>
+      <li>Die <b>Ausführungsrichtlinie</b> schützt vor Versehen, nicht vor Angreifern. <code>RemoteSigned</code> für dich: <code class="ps">-Scope CurrentUser</code>.</li>
+      <li><code class="ps">param( )</code> steht zuoberst. <b>Typ</b> schützt vor Unsinn, <b>Standardwert</b> gilt ohne Angabe.</li>
+      <li>Eine <b>Funktion</b> heisst Verb-Nomen und gibt alles aus, was in ihr eine Ausgabe erzeugt. <code class="ps">return</code> beendet sie nur.</li>
+      <li><code class="ps">catch</code> fängt nur <b>abbrechende</b> Fehler. Für «Datei fehlt» braucht es <code class="ps">-ErrorAction Stop</code>.</li>
+      <li>Fehlermeldung von unten lesen: <b>Ursache</b>, dann <b>Zeile</b> und <b>Unterstreichung</b>, dann <b>Befehl</b>.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li>Fehleransicht: <span class="ps-version">7</span> zeigt die kurze <code>ConciseView</code> mit <code>Line |</code>. 5.1 zeigt die lange Ansicht mit «In Zeile … Zeichen …», <code>CategoryInfo</code> und <code>FullyQualifiedErrorId</code>, auf deutschem Windows in Deutsch.</li>
+        <li><code class="ps">Get-Error</code> gibt es nur in <span class="ps-version">7</span>.</li>
+        <li>Ausführungsrichtlinien von 5.1 (Registry) und 7 (<code>powershell.config.json</code>) sind getrennt.</li>
+        <li>5.1 liest Skripte ohne BOM als ANSI: Umlaute gehen kaputt. Speichere sie als UTF-8 mit BOM.</li>
+        <li>Editor: Die ISE gibt es nur für 5.1. Für 7 nimmst du Visual Studio Code mit der PowerShell-Erweiterung.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="t11-quellen prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_scripts">about_Scripts</a> (Starten mit <code>.\</code>, Doppelklick, <code>param</code> als erste Anweisung, Bereich und Dot-Sourcing)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_execution_policies">about_Execution_Policies</a> (Richtlinien, Bereiche, «isn't a security boundary»)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comments">about_Comments</a> (<code>#</code>, <code>&lt;# #&gt;</code>, nicht verschachtelbar)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions">about_Functions</a> (Syntax, Verb-Nomen, Standardwerte, Definition vor dem Aufruf, <code>return</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters">about_Functions_Advanced_Parameters</a> (nur Grundlagen: Typ, <code>Mandatory</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_try_catch_finally">about_Try_Catch_Finally</a> (abbrechende Fehler, <code>$_</code>, <code>finally</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters">about_CommonParameters</a> (<code>-ErrorAction</code> mit Continue, SilentlyContinue, Ignore, Stop)</li>
+      </ul>
+    </div>
+    <footer>Station 11 des Lernpfads PS · Weiter geht es mit «System verwalten».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  const CODE = (t) => '<pre class="ps-code"><code>' + esc(t) + "</code></pre>";
+  const H = "C:\\Users\\lea\\";
+
+  /* ---------- Skripte auf Leas Rechner ---------- */
+  const BEGRUESSUNG = "param([string]$Name = 'Lea')\n\"Guten Morgen, $Name!\"";
+  const LOGBERICHT = [
+    "<#",
+    "  logbericht.ps1 · Lea, Informatik Wolkenried",
+    "  Zählt Dateien, die älter als eine bestimmte Anzahl Tage sind.",
+    "#>",
+    "param(",
+    "  [string]$Ordner = 'Logs',",
+    "  [int]$Tage = 30",
+    ")",
+    "",
+    "$grenze = (Get-Date).AddDays(-$Tage)",
+    "try {",
+    "  $alt = Get-ChildItem -Path $Ordner -File -ErrorAction Stop |",
+    "    Where-Object LastWriteTime -lt $grenze",
+    "  \"In $Ordner sind $($alt.Count) Dateien älter als $Tage Tage.\"",
+    "}",
+    "catch {",
+    "  \"Fehler: $($_.Exception.Message)\"",
+    "}"
+  ].join("\n");
+  const UMG = {
+    dateien: [
+      { pfad: H + "begruessung.ps1", inhalt: BEGRUESSUNG, zeit: "2026-10-30T16:20:00" },
+      { pfad: H + "logbericht.ps1", inhalt: LOGBERICHT, zeit: "2026-10-30T16:45:00" }
+    ]
+  };
+
+  // Simulator-Ausgabe in ein vorhandenes pre.ps-ausgabe schreiben (mehrere Befehle auf einem Rechner)
+  function fuellen(id, sitzung, befehle) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = befehle.map((b) => sitzung.html(b)).join("");
+    el.innerHTML = Array.prototype.map.call(tmp.querySelectorAll("pre"), (p) => p.innerHTML.replace(/\n+$/, "")).join("\n");
+  }
+  // Hinweiszeilen des Simulators («[Simulator] …») aus Film- und Stepper-HTML entfernen
+  const ohneHinweis = (html) => html.replace(/\n?<span class="psk-hinweis">\[Simulator\][^<]*<\/span>/g, "");
+  // Datei im Spiel-Rechner einer Sitzung schreiben
+  const schreiben = (s, name, text) => s.ausfuehren("Set-Content -Path " + name + " -Value @'\n" + text + "\n'@");
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t11-mini", {
+    kategorien: ["Skript", "Parameter", "Funktion", "Fehlerbehandlung"],
+    elemente: [
+      { html: "Die Datei " + C("aufraeumen.ps1"), kategorie: "Skript", erklaerung: "Eine Textdatei mit der Endung .ps1 ist ein Skript." },
+      { html: C("[int]$Tage = 30") + " in " + C("param( )"), kategorie: "Parameter", erklaerung: "Eine Lücke mit Typ int und Standardwert 30." },
+      { html: C("function Get-Gruss { … }"), kategorie: "Funktion", erklaerung: "function plus Name: ein eigener Befehl." },
+      { html: C("catch { 'Datei fehlt' }"), kategorie: "Fehlerbehandlung", erklaerung: "Plan B, wenn im try-Block etwas schiefgeht." },
+      { html: "Beim Start " + C("-Ordner Downloads") + " angeben", kategorie: "Parameter", erklaerung: "Du füllst die Lücke Ordner mit dem Wert Downloads." },
+      { html: C("-ErrorAction Stop"), kategorie: "Fehlerbehandlung", erklaerung: "Macht aus einem gelb blinkenden einen roten Fehler, den catch fängt." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Ausgaben ---------- */
+  const s1 = L.konsole.sitzung(UMG);
+  fuellen("t11-start1", s1, [".\\begruessung.ps1"]);
+  fuellen("t11-start2", s1, [".\\begruessung.ps1 -Name Tom"]);
+  const sr = L.konsole.sitzung(UMG);
+  fuellen("t11-richtlinie", sr, [
+    "Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope Process",
+    ".\\begruessung.ps1",
+    "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process",
+    ".\\begruessung.ps1"
+  ]);
+
+  /* ---------- Schritt 2: Stepper ---------- */
+  const st = L.konsole.sitzung(UMG);
+  const v = {
+    zeile: "Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)",
+    var: "$Tage = 30\n$grenze = (Get-Date).AddDays(-$Tage)\nGet-ChildItem Logs | Where-Object LastWriteTime -lt $grenze",
+    param: "param([int]$Tage = 30)\n$grenze = (Get-Date).AddDays(-$Tage)\nGet-ChildItem Logs | Where-Object LastWriteTime -lt $grenze",
+    komm: "<#\n  alte-logs.ps1 · Lea, Informatik Wolkenried\n  Zeigt Logdateien, die älter als -Tage Tage sind.\n#>\nparam(\n  [int]$Tage = 30   # Archiv-Regel: 30 Tage\n)\n$grenze = (Get-Date).AddDays(-$Tage)\nGet-ChildItem Logs | Where-Object LastWriteTime -lt $grenze"
+  };
+  const datei = (name) => '<p class="t11-datei">Datei <b>' + esc(name) + "</b></p>";
+  const lk = (link, html) => '<div data-link="' + link + '">' + html + "</div>";
+  const stufe = (teile) => '<div class="t11-st">' + teile.join("") + "</div>";
+  const st1 = st.html(v.zeile);
+  schreiben(st, "alte-logs.ps1", v.zeile);
+  const st2 = st.html(".\\alte-logs.ps1");
+  schreiben(st, "alte-logs.ps1", v.var);
+  const st3 = st.html(".\\alte-logs.ps1");
+  schreiben(st, "alte-logs.ps1", v.param);
+  const st4 = st.html(".\\alte-logs.ps1 -Tage 60");
+  schreiben(st, "alte-logs.ps1", v.komm);
+  const st5 = st.html(".\\alte-logs.ps1");
+  L.stepper("#t11-stepper", {
+    titel: "Leas Auftrag",
+    text: 'Lea will <span data-link="a">die Logdateien finden, die älter als 30 Tage sind</span>, <span data-link="b">das jeden Montag mit einem kurzen Befehl tun</span>, <span data-link="c">die Anzahl Tage beim Start wählen</span> und <span data-link="d">in einem Jahr noch wissen, was das Skript macht</span>.',
+    schritte: [
+      { html: stufe([lk("a", CODE(v.zeile)), st1]),
+        warum: "Am Anfang steht ein Befehl, den Lea in der Konsole tippt. Er zeigt die vier alten Logdateien." },
+      { html: stufe([datei("alte-logs.ps1"), lk("b", CODE(v.zeile)), st2]),
+        warum: "Sie speichert genau diese Zeile in der Datei alte-logs.ps1. Mit .\\alte-logs.ps1 läuft sie wie getippt." },
+      { html: stufe([datei("alte-logs.ps1"), CODE(v.var), st3]),
+        warum: "Die 30 wandert in eine Variable ganz oben. So sieht man sofort, welche Zahl man anpassen müsste. Die Ausgabe bleibt gleich." },
+      { html: stufe([datei("alte-logs.ps1"), lk("c", CODE(v.param)), st4]),
+        warum: "Aus der Variable wird ein Parameter mit Typ [int] und Standardwert 30. Jetzt wählt Lea die Tage beim Start: -Tage 60 findet nur noch drei Dateien." },
+      { html: stufe([datei("alte-logs.ps1"), lk("d", CODE(v.komm)), st5]),
+        warum: "Zum Schluss ein Block-Kommentar oben und ein Zeilenkommentar beim Parameter. PowerShell überliest beide, Menschen verstehen das Skript schneller. Ohne Parameter gelten wieder 30 Tage." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Parameter-Beispiele ---------- */
+  const sp = L.konsole.sitzung(UMG);
+  fuellen("t11-param1", sp, [".\\logbericht.ps1", ".\\logbericht.ps1 -Tage 60 -Ordner Downloads", ".\\logbericht.ps1 Bilder 100"]);
+  fuellen("t11-param2", sp, [".\\logbericht.ps1 -Tage zehn"]);
+
+  /* ---------- Schritt 3: Funktionen ---------- */
+  const sf = L.konsole.sitzung(UMG);
+  const fktCode = document.querySelector("#t11-fkt-code code").textContent;
+  document.getElementById("t11-fkt-aus").textContent = sf.ausfuehren(fktCode);
+  sf.ausfuehren("function Get-Gruss { param([string]$Name = 'Lea') \"Hallo $Name\" }");
+  fuellen("t11-gruss", sf, ["Get-Gruss", "Get-Gruss -Name Tom", "Get-Gruss Mia"]);
+
+  /* ---------- Schritt 4: Fehler ---------- */
+  const se = L.konsole.sitzung(UMG);
+  const tryCode = document.querySelector("#fehlerarten pre.ps-code code").textContent;
+  document.getElementById("t11-try1").textContent = se.ausfuehren(tryCode);
+  fuellen("t11-try2", se, ["try { Get-Content -Path Logs\\fehlt.log; 'Gelesen.' } catch { 'Fehler gefangen' }"]);
+  fuellen("t11-error", se, ["Get-ChildItem Protokolle -ErrorAction SilentlyContinue", "$Error[0]", "$Error[0].Exception.Message"]);
+
+  /* ---------- Schritt 5: Konsole mit Aufgaben ---------- */
+  const fehltLog = "Cannot find path 'C:\\Users\\lea\\Logs\\fehlt.log' because it does not exist.";
+  const skriptLief = (ctx, name) => ctx.befehle.some((b) => b.toLowerCase().endsWith(name));
+  L.konsole("#t11-konsole", {
+    umgebung: UMG,
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Welche Richtlinie gilt?",
+        text: "<p>Zeige die Ausführungsrichtlinie an, die auf Leas Rechner gerade gilt. Nur den einen Wert, keine Liste.</p>",
+        hinweis: "<p>Verb Get, Nomen ExecutionPolicy, ohne Parameter.</p>",
+        loesung: "Get-ExecutionPolicy",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ExecutionPolicy") && ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === "RemoteSigned"
+      },
+      {
+        titel: "Das erste Skript starten",
+        text: "<p>Starte das Skript <code>begruessung.ps1</code> im aktuellen Ordner.</p>",
+        hinweis: "<p>Ohne " + C(".\\") + " davor findet PowerShell es nicht.</p>",
+        loesung: ".\\begruessung.ps1",
+        pruefe: (ctx) => skriptLief(ctx, "begruessung.ps1") && !ctx.hatFehler && ctx.ausgabe.includes("Guten Morgen, Lea!")
+      },
+      {
+        titel: "Mit Parameter",
+        text: "<p>Starte <code>begruessung.ps1</code> so, dass es Tom begrüsst.</p>",
+        hinweis: "<p>Das Skript hat den Parameter " + C("-Name") + ". Schreib ihn mit dem Wert hinter den Skriptnamen.</p>",
+        loesung: ".\\begruessung.ps1 -Name Tom",
+        pruefe: (ctx) => skriptLief(ctx, "begruessung.ps1") && !ctx.hatFehler && ctx.ausgabe.includes("Guten Morgen, Tom!")
+      },
+      {
+        titel: "Der Logbericht für 60 Tage",
+        text: "<p>Starte <code>logbericht.ps1</code> so, dass es die Logdateien zählt, die älter als <b>60</b> Tage sind.</p>",
+        hinweis: "<p>Schau mit " + C("Get-Content logbericht.ps1") + " in den param-Block. Der Parameter heisst " + C("-Tage") + ".</p>",
+        loesung: ".\\logbericht.ps1 -Tage 60",
+        pruefe: (ctx) => skriptLief(ctx, "logbericht.ps1") && ctx.ausgabe.includes("In Logs sind 3 Dateien älter als 60 Tage.")
+      },
+      {
+        titel: "Eine eigene Funktion",
+        text: "<p>Schreibe die Funktion <code>Get-Quadrat</code> mit dem Parameter <code>Zahl</code> (Typ " + C("[int]") + ", Standardwert 2), die die Zahl mal sich selbst ausgibt. Rufe sie danach mit " + C("-Zahl 7") + " auf.</p>",
+        hinweis: "<p>" + C("function Get-Quadrat { param([int]$Zahl = 2) $Zahl * $Zahl }") + ", dann ein Strichpunkt und der Aufruf. Du kannst auch zwei Eingaben machen.</p>",
+        loesung: "function Get-Quadrat { param([int]$Zahl = 2) $Zahl * $Zahl }; Get-Quadrat -Zahl 7",
+        // Definition (Typ int, Standardwert 2) muss in einer der Eingaben stehen, Aufruf mit -Zahl 7
+        pruefe: (ctx) => ctx.befehle.includes("Get-Quadrat") && !ctx.hatFehler && ctx.objekte.length === 1 && Number(ctx.text(ctx.objekte[0])) === 49 &&
+          /-Zahl\s+7\b/i.test(ctx.eingabe) && /\[int\]\s*\$Zahl\s*=\s*2\b/i.test((ctx.verlauf || []).concat([ctx.eingabe]).join("\n"))
+      },
+      {
+        titel: "Ruhe bitte",
+        text: "<p>Lies die Datei <code>Logs\\fehlt.log</code> mit " + C("Get-Content") + ", aber so, dass <b>keine</b> rote Meldung erscheint. Nimm dafür einen gemeinsamen Parameter.</p>",
+        hinweis: "<p>Der gemeinsame Parameter " + C("-ErrorAction") + " mit dem Wert, der still weitermacht.</p>",
+        loesung: "Get-Content Logs\\fehlt.log -ErrorAction SilentlyContinue",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Content") && /fehlt\.log/i.test(ctx.eingabe) &&
+          /-(ErrorAction|ea)\s*:?\s*(SilentlyContinue|Ignore|0|4)\b/i.test(ctx.eingabe) && !ctx.hatFehler && ctx.objekte.length === 0
+      },
+      {
+        titel: "Plan B mit try/catch",
+        text: "<p>Lies <code>Logs\\fehlt.log</code> im " + C("try") + "-Block. Gib im " + C("catch") + "-Block den Text der Fehlermeldung aus, ohne rote Meldung.</p>",
+        hinweis: "<p>" + C("catch") + " fängt nur abbrechende Fehler: " + C("-ErrorAction Stop") + " gehört an " + C("Get-Content") + ". Den Text holst du mit " + C("$_.Exception.Message") + ".</p>",
+        loesung: "try { Get-Content Logs\\fehlt.log -ErrorAction Stop } catch { $_.Exception.Message }",
+        pruefe: (ctx) => /\btry\b/i.test(ctx.eingabe) && /\bcatch\b/i.test(ctx.eingabe) && ctx.befehle.includes("Get-Content") &&
+          !ctx.hatFehler && ctx.ausgabe.includes(fehltLog)
+      },
+      {
+        titel: "Im Fehlertagebuch nachlesen",
+        text: "<p>Gib nur den <b>Text</b> des letzten Fehlers der Sitzung aus.</p>",
+        hinweis: "<p>Der letzte Fehler ist " + C("$Error[0]") + ". Den Text liefert seine Eigenschaft " + C("Exception.Message") + ".</p>",
+        loesung: "$Error[0].Exception.Message",
+        pruefe: (ctx) => /\$Error\[0\]\.Exception\.Message/i.test(ctx.eingabe) && ctx.objekte.length === 1 && typeof ctx.objekte[0] === "string"
+      }
+    ]
+  });
+
+  /* ---------- Schritt 6: Skript-Editor ---------- */
+  const LOG_FILTER = LOGBERICHT
+    .replace("  [int]$Tage = 30\n", "  [int]$Tage = 30,\n  [string]$Filter = '*'\n")
+    .replace("-Path $Ordner -File", "-Path $Ordner -Filter $Filter -File");
+  L.konsole("#t11-editor", {
+    modus: "skript",
+    skriptName: "logbericht.ps1",
+    skript: LOGBERICHT,
+    argumente: "",
+    argumenteBeispiel: "z. B. -Tage 60",
+    begruessung: false,
+    aufgabenTitel: "Aufgaben im Editor",
+    aufgaben: [
+      {
+        titel: "Mit den Standardwerten",
+        text: "<p>Lass das Feld «Parameter» leer und führe das Skript aus. Welche Werte gelten?</p>",
+        hinweis: "<p>Feld leeren, dann «▶ Ausführen». Es gelten die Standardwerte aus " + C("param( )") + ": Logs und 30.</p>",
+        loesung: LOGBERICHT,
+        pruefe: (ctx) => !(ctx.argumente || "").trim() && ctx.ausgabe.includes("In Logs sind 4 Dateien älter als 30 Tage.")
+      },
+      {
+        titel: "Downloads, 100 Tage",
+        text: "<p>Wie viele Dateien im Ordner <code>Downloads</code> sind älter als 100 Tage? Ändere nur das Feld «Parameter».</p>",
+        hinweis: "<p>Zwei Parameter hintereinander: " + C("-Ordner Downloads -Tage 100") + ".</p>",
+        loesung: "# Ins Feld «Parameter»: -Ordner Downloads -Tage 100\n" + LOGBERICHT,
+        pruefe: (ctx) => !ctx.hatFehler && /-Ordner\s+'?Downloads/i.test(ctx.argumente || "") && /-Tage\s+100\b/i.test(ctx.argumente || "") &&
+          ctx.ausgabe.includes("In Downloads sind 2 Dateien älter als 100 Tage.")
+      },
+      {
+        titel: "Ordner, den es nicht gibt",
+        text: "<p>Starte das Skript mit dem Ordner <code>Protokolle</code>. Diesen Ordner gibt es nicht. Was zeigt der catch-Block?</p>",
+        hinweis: "<p>" + C("-Ordner Protokolle") + " ins Feld «Parameter».</p>",
+        loesung: "# Ins Feld «Parameter»: -Ordner Protokolle\n" + LOGBERICHT,
+        pruefe: (ctx) => !ctx.hatFehler && /Protokolle/i.test(ctx.argumente || "") && /Fehler: Cannot find path 'C:\\Users\\lea\\Protokolle'/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Neuer Standardwert",
+        text: "<p>Die Gemeinde ändert ihre Archiv-Regel auf <b>90</b> Tage. Ändere den Standardwert im Skript und führe es <b>ohne</b> Parameter aus.</p>",
+        hinweis: "<p>In " + C("param( )") + " wird aus " + C("[int]$Tage = 30") + " die Zeile " + C("[int]$Tage = 90") + ". Feld «Parameter» leer lassen.</p>",
+        loesung: LOGBERICHT.replace("[int]$Tage = 30", "[int]$Tage = 90"),
+        pruefe: (ctx) => !(ctx.argumente || "").trim() && /\$Tage\s*=\s*90/.test(ctx.skript || "") && ctx.ausgabe.includes("In Logs sind 2 Dateien älter als 90 Tage.")
+      },
+      {
+        titel: "Ein dritter Parameter",
+        text: "<p>Ergänze den Parameter " + C("[string]$Filter = '*'") + " und gib ihn an " + C("Get-ChildItem") + " weiter (" + C("-Filter $Filter") + "). Starte dann mit " + C("-Filter app-* -Tage 30") + ".</p>",
+        hinweis: "<p>Nach " + C("[int]$Tage = 30") + " ein Komma, in der nächsten Zeile der neue Parameter. Bei " + C("Get-ChildItem") + " kommt " + C("-Filter $Filter") + " dazu. Ergebnis: 3 Dateien (backup-2026-06.log fällt weg).</p>",
+        loesung: "# Ins Feld «Parameter»: -Filter app-* -Tage 30\n" + LOG_FILTER,
+        pruefe: (ctx) => /\$Filter/.test(ctx.skript || "") && /-Filter\s+'?app-\*'?/i.test(ctx.argumente || "") && !ctx.hatFehler &&
+          ctx.ausgabe.includes("In Logs sind 3 Dateien älter als 30 Tage.")
+      }
+    ]
+  });
+
+  /* ---------- Schritt 7: Fehlermeldungs-Anatomie ---------- */
+  (function anatomie() {
+    const sa = L.konsole.sitzung(UMG);
+    schreiben(sa, "bericht.ps1", "param([string]$Pfad = 'Logs\\app.lgo')\n# Zeigt die ersten Zeilen einer Logdatei\n'Erste Zeilen:'\nGet-Content -Path $Pfad -TotalCount 3");
+    schreiben(sa, "frist.ps1", "param([int]$Tage = 30)\nif ($Tage -gt 60) {\n  'Lange Frist'\n'Fertig'");
+    const BSP = {
+      skript: {
+        befehl: ".\\bericht.ps1",
+        text: "Lea startet ihr Skript <code>bericht.ps1</code>. Es soll die ersten drei Zeilen einer Logdatei zeigen. Die erste Zeile «Erste Zeilen:» kommt noch, dann wird es rot.",
+        teile: {
+          befehl: ["Der Befehl", "Get-Content hat sich beschwert. Das ist der Befehl, bei dem es klemmt, nicht unbedingt der, den du gestartet hast."],
+          datei: ["Die Datei", "In diesem Skript ist es passiert: C:\\Users\\lea\\bericht.ps1."],
+          zeile: ["Die Zeilennummer", "Nach dem Doppelpunkt steht die Zeile im Skript: Zeile 4. In Visual Studio Code springst du mit Ctrl+G direkt dorthin."],
+          rahmen: ["Der Rahmen", "«Line |» kündigt den Ausschnitt aus deinem Skript an. Links vom Strich stehen Zeilennummern, rechts der Code."],
+          code: ["Die betroffene Zeile", "So steht Zeile 4 wörtlich im Skript. Du musst nicht suchen."],
+          strich: ["Die Unterstreichung", "Die Wellenlinie markiert genau den Teil der Zeile, der den Fehler ausgelöst hat: den ganzen Aufruf von Get-Content."],
+          ursache: ["Die Ursache", "Die letzte Zeile sagt warum: «Pfad nicht gefunden, weil er nicht existiert.» Darin steht der volle Pfad, den PowerShell gesucht hat: …\\Logs\\app.lgo. Da ist der Tippfehler: .lgo statt .log, im Standardwert von $Pfad."]
+        }
+      },
+      parser: {
+        befehl: ".\\frist.ps1",
+        text: "Das Skript <code>frist.ps1</code> läuft gar nicht erst los. PowerShell liest vor dem Start das ganze Skript (es «parst» es) und findet einen Fehler im Aufbau.",
+        teile: {
+          befehl: ["ParserError", "Kein Cmdlet beschwert sich, sondern der Parser: der Teil von PowerShell, der den Text liest, bevor irgendetwas läuft. Darum gibt es keine Ausgabe, nicht einmal von den Zeilen davor."],
+          datei: ["Die Datei", "Der Fehler steckt in C:\\Users\\lea\\frist.ps1."],
+          zeile: ["Die Zeilennummer", "Zeile 2. Achtung: Bei fehlenden Klammern nennt PowerShell die Zeile, in der die Klammer aufgeht. Das Problem liegt weiter unten, wo sie zugehen müsste."],
+          rahmen: ["Der Rahmen", "Wie beim anderen Beispiel: Ausschnitt aus dem Skript, links die Zeilennummer."],
+          code: ["Die betroffene Zeile", "Zeile 2 im Wortlaut: die if-Bedingung mit der öffnenden geschweiften Klammer."],
+          strich: ["Die Unterstreichung", "Eine einzelne Welle zeigt auf die Klammer {, zu der das Gegenstück fehlt."],
+          ursache: ["Die Ursache", "«Missing closing '}'»: Die schliessende geschweifte Klammer fehlt. Nach 'Lange Frist' gehört ein } hin."]
+        }
+      },
+      eingabe: {
+        befehl: "Get-Content Logs\\app.lgo",
+        text: "Tippst du einen Befehl direkt in die Konsole, ist die Meldung kurz. Es gibt keinen Ausschnitt mit «Line |», denn du hast den Befehl ja gerade selbst vor Augen.",
+        teile: {
+          befehl: ["Der Befehl", "Get-Content hat sich beschwert."],
+          ursache: ["Die Ursache", "Den Pfad C:\\Users\\lea\\Logs\\app.lgo gibt es nicht. Tippfehler: .lgo statt .log. Tipp: Mit Tab vervollständigen statt selbst tippen, dann passiert das nicht."]
+        }
+      }
+    };
+    const box = document.getElementById("t11-anatomie");
+    const erkl = document.getElementById("t11-erkl");
+    const stand = document.getElementById("t11-stand");
+    const bspText = document.getElementById("t11-bsp-text");
+    const vor = document.getElementById("t11-vor");
+    const reihenfolge = ["befehl", "datei", "zeile", "rahmen", "code", "strich", "ursache"];
+    let aktuell = null, knoepfe = [];
+
+    function teilKnopf(art, text) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "t11-teil";
+      b.dataset.teil = art;
+      b.textContent = text;
+      b.setAttribute("aria-label", aktuell.teile[art][0] + ": " + text.trim());
+      b.addEventListener("click", () => waehlen(art));
+      return b;
+    }
+    // Fehlerzeilen rot wie in der Konsole (Klasse aus ps-konsole.css)
+    function zeile(teile, normal) {
+      const z = document.createElement("span");
+      if (!normal) z.className = "psk-fehler";
+      teile.forEach((t) => z.appendChild(typeof t === "string" ? document.createTextNode(t) : t));
+      box.appendChild(z);
+      box.appendChild(document.createTextNode("\n"));
+    }
+    function zeichnen(name) {
+      aktuell = BSP[name];
+      const roh = sa.ausfuehren(aktuell.befehl).split("\n");
+      box.textContent = "";
+      const p = document.createElement("span");
+      p.className = "psk-prompt";
+      p.textContent = "PS C:\\Users\\lea> ";
+      box.appendChild(p);
+      box.appendChild(document.createTextNode(aktuell.befehl + "\n"));
+      let ok = false;
+      roh.forEach((z) => {
+        let m;
+        if ((m = z.match(/^(\S+): (C:\\.+?\.ps1)(:\d+)$/))) { zeile([teilKnopf("befehl", m[1]), ": ", teilKnopf("datei", m[2]), teilKnopf("zeile", m[3])]); ok = true; }
+        else if (z === "Line |") zeile([teilKnopf("rahmen", "Line |")]);
+        else if ((m = z.match(/^(\s+\d+ \|  )(.*)$/))) zeile([m[1], teilKnopf("code", m[2])]);
+        else if ((m = z.match(/^(\s+\|\s+)(~+)\s*$/))) zeile([m[1], teilKnopf("strich", m[2])]);
+        else if ((m = z.match(/^(\s+\| )(.+)$/))) zeile([m[1], teilKnopf("ursache", m[2])]);
+        else if ((m = z.match(/^(Get-Content): (.+)$/))) { zeile([teilKnopf("befehl", m[1]), ": ", teilKnopf("ursache", m[2])]); ok = true; }
+        else if (z) zeile([z], true);
+      });
+      box.lastChild && box.lastChild.nodeType === 3 && box.lastChild.textContent === "\n" && box.removeChild(box.lastChild);
+      if (!ok) console.error("[t11] Anatomie: unerwartete Simulator-Ausgabe", roh);
+      knoepfe = Array.prototype.slice.call(box.querySelectorAll(".t11-teil"));
+      bspText.innerHTML = aktuell.text;
+      erkl.innerHTML = "<p>Tippe auf einen unterstrichenen Teil oder auf «Nächster Teil».</p>";
+      stand.textContent = "";
+      L.psFaerben(bspText);
+    }
+    function waehlen(art) {
+      knoepfe.forEach((k) => k.classList.toggle("an", k.dataset.teil === art));
+      const t = aktuell.teile[art];
+      erkl.innerHTML = "";
+      const h = document.createElement("h3"); h.textContent = t[0];
+      const p = document.createElement("p"); p.textContent = t[1];
+      erkl.append(h, p);
+      const arten = reihenfolge.filter((a) => aktuell.teile[a]);
+      stand.textContent = "Teil " + (arten.indexOf(art) + 1) + " von " + arten.length;
+    }
+    vor.addEventListener("click", () => {
+      const arten = reihenfolge.filter((a) => aktuell.teile[a]);
+      const an = knoepfe.find((k) => k.classList.contains("an"));
+      const i = an ? arten.indexOf(an.dataset.teil) : -1;
+      waehlen(arten[(i + 1) % arten.length]);
+    });
+    document.querySelectorAll("[data-t11-bsp]").forEach((b) => b.addEventListener("click", () => {
+      document.querySelectorAll("[data-t11-bsp]").forEach((x) => { const an = x === b; x.classList.toggle("on", an); x.setAttribute("aria-pressed", String(an)); });
+      zeichnen(b.dataset.t11Bsp);
+    }));
+    zeichnen("skript");
+  })();
+
+  /* ---------- Schritt 8: Fehlerjagd ---------- */
+  const JAGD1 = "function Get-Groesse {\n  param([string]$Pfad)\n  (Get-Item $Pfad).Length\n}\n$bytes = Get-Groese -Pfad Logs\\sync-fehler.log\n\"sync-fehler.log hat $bytes Bytes.\"";
+  const JAGD2 = "param([int]$Tage = 30)\n$grenze = (Get-Date).AddDays(-$Tage)\nforeach ($datei in Get-ChildItem Logs) {\n  if ($datei.LastWriteTime -lt $grenze) {\n    \"alt: $($datei.Name)\"\n}";
+  const JAGD3 = "param([string]$Datei = 'Logs\\sync.log')\ntry {\n  $zeilen = Get-Content -Path $Datei\n  \"$Datei hat $($zeilen.Count) Zeilen.\"\n}\ncatch {\n  \"Konnte $Datei nicht lesen: $($_.Exception.Message)\"\n}";
+  const leer = (ctx) => !(ctx.argumente || "").trim();
+  L.konsole("#t11-jagd1", {
+    modus: "skript", skriptName: "groesse.ps1", skript: JAGD1, begruessung: false,
+    aufgabenTitel: "Fehlerjagd 1",
+    aufgaben: [
+      { titel: "Ausführen und Meldung lesen", text: "<p>Führe das Skript unverändert aus. Lies die rote Meldung von unten nach oben.</p>",
+        hinweis: "<p>Einfach «▶ Ausführen».</p>", loesung: JAGD1,
+        pruefe: (ctx) => ctx.fehler.some((f) => /not recognized/.test(f)) },
+      { titel: "Korrigieren", text: "<p>Finde den Fehler, korrigiere ihn im Editor und führe das Skript nochmals aus. Ohne rote Meldung soll die Grösse dastehen.</p>",
+        hinweis: "<p>Vergleiche den Namen in der Unterstreichung mit dem Namen nach " + C("function") + ". Ein Buchstabe fehlt.</p>",
+        loesung: JAGD1.replace("Get-Groese", "Get-Groesse"),
+        pruefe: (ctx) => !ctx.hatFehler && ctx.ausgabe.includes("sync-fehler.log hat 151 Bytes.") }
+    ]
+  });
+  L.auswahl("#t11-jagd1-frage", {
+    frage: "Was sagt dir die Meldung von Skript 1?",
+    optionen: [
+      "Die Datei sync-fehler.log gibt es nicht.",
+      "In Zeile 5 ruft das Skript einen Befehl " + C("Get-Groese") + " auf, den es nicht gibt. Definiert ist " + C("Get-Groesse") + ".",
+      "Der Parameter " + C("-Pfad") + " ist falsch geschrieben.",
+      "Die Funktion muss nach dem Aufruf stehen."
+    ],
+    richtig: 1,
+    erklaerung: "«The term 'Get-Groese' is not recognized» heisst: Diesen Befehl kenne ich nicht. Die Unterstreichung zeigt genau auf den Namen. Ein unbekannter Befehl bricht nur diese eine Anweisung ab, das Skript macht mit der nächsten Zeile weiter. Darum läuft die letzte Zeile trotzdem und gibt «hat  Bytes» mit leerem Wert aus."
+  });
+  const altZeilen = ["alt: app-2026-07.log", "alt: app-2026-08.log", "alt: app-2026-09.log", "alt: backup-2026-06.log"];
+  L.konsole("#t11-jagd2", {
+    modus: "skript", skriptName: "alt-zeigen.ps1", skript: JAGD2, begruessung: false,
+    aufgabenTitel: "Fehlerjagd 2",
+    aufgaben: [
+      { titel: "Ausführen und Meldung lesen", text: "<p>Führe das Skript unverändert aus. Welche Art von Fehler ist es?</p>",
+        hinweis: "<p>Einfach «▶ Ausführen».</p>", loesung: JAGD2,
+        pruefe: (ctx) => ctx.fehler.some((f) => /Missing closing '\}'/.test(f)) },
+      { titel: "Korrigieren", text: "<p>Ergänze, was fehlt, und führe das Skript nochmals aus. Es soll vier Zeilen <code>alt: …</code> ausgeben.</p>",
+        hinweis: "<p>Zähle die geschweiften Klammern: Zwei öffnen sich (bei " + C("foreach") + " und bei " + C("if") + "), aber nur eine schliesst. Die vorhandene schliesst den if-Block. Für " + C("foreach") + " fehlt die schliessende Klammer ganz am Schluss.</p>",
+        loesung: "param([int]$Tage = 30)\n$grenze = (Get-Date).AddDays(-$Tage)\nforeach ($datei in Get-ChildItem Logs) {\n  if ($datei.LastWriteTime -lt $grenze) {\n    \"alt: $($datei.Name)\"\n  }\n}",
+        pruefe: (ctx) => !ctx.hatFehler && altZeilen.every((z) => ctx.ausgabe.includes(z)) && ctx.objekte.length === 4 }
+    ]
+  });
+  L.auswahl("#t11-jagd2-frage", {
+    frage: "Warum gibt Skript 2 gar nichts aus, nicht einmal die erste Zeile?",
+    optionen: [
+      "Weil keine Logdatei älter als 30 Tage ist.",
+      "Weil es ein Parserfehler ist: PowerShell liest das Skript vor dem Start ganz durch und startet es nicht, wenn der Aufbau kaputt ist.",
+      "Weil " + C("param( )") + " fehlt.",
+      "Weil " + C("foreach") + " in Skripten verboten ist."
+    ],
+    richtig: 1,
+    erklaerung: "ParserError heisst: Das Skript ist kein gültiger PowerShell-Code. Zeile 3 ist die Zeile mit der Klammer, die nie geschlossen wird: Die einzige } gehört zum inneren if-Block, für foreach fehlt eine."
+  });
+  L.konsole("#t11-jagd3", {
+    modus: "skript", skriptName: "zeilen.ps1", skript: JAGD3, begruessung: false,
+    aufgabenTitel: "Fehlerjagd 3",
+    aufgaben: [
+      { titel: "Ausführen und Meldung lesen", text: "<p>Führe das Skript unverändert aus. Läuft der catch-Block?</p>",
+        hinweis: "<p>Einfach «▶ Ausführen». Achte auf die Zeile nach der roten Meldung.</p>", loesung: JAGD3,
+        pruefe: (ctx) => ctx.hatFehler && /Logs\\sync\.log hat 0 Zeilen\./.test(ctx.ausgabe) },
+      { titel: "Plan B einschalten", text: "<p>Ändere das Skript so, dass bei der fehlenden Datei der Text aus dem catch-Block erscheint und keine rote Meldung. Feld «Parameter» leer lassen.</p>",
+        hinweis: "<p>" + C("catch") + " fängt nur abbrechende Fehler. Welcher gemeinsame Parameter macht den Fehler von " + C("Get-Content") + " abbrechend?</p>",
+        loesung: JAGD3.replace("Get-Content -Path $Datei", "Get-Content -Path $Datei -ErrorAction Stop"),
+        pruefe: (ctx) => leer(ctx) && !ctx.hatFehler && /Konnte Logs\\sync\.log nicht lesen: Cannot find path/.test(ctx.ausgabe) },
+      { titel: "Den eigentlichen Fehler beheben", text: "<p>Die Meldung verrät jetzt, welcher Pfad falsch ist. Korrigiere den Standardwert auf die richtige Datei im Ordner Logs (mit " + C("-ErrorAction Stop") + ") und führe ohne Parameter aus.</p>",
+        hinweis: "<p>Im Ordner Logs heisst die Datei <code>sync-fehler.log</code>. Sie hat 2 Zeilen.</p>",
+        loesung: JAGD3.replace("Logs\\sync.log", "Logs\\sync-fehler.log").replace("Get-Content -Path $Datei", "Get-Content -Path $Datei -ErrorAction Stop"),
+        pruefe: (ctx) => leer(ctx) && !ctx.hatFehler && /-ErrorAction\s+Stop/i.test(ctx.skript || "") && ctx.ausgabe.includes("Logs\\sync-fehler.log hat 2 Zeilen.") }
+    ]
+  });
+  L.auswahl("#t11-jagd3-frage", {
+    frage: "Warum erscheint bei Skript 3 die rote Meldung und danach «hat 0 Zeilen», obwohl es einen catch-Block gibt?",
+    optionen: [
+      "Weil der catch-Block falsch geschrieben ist.",
+      "Weil «Datei fehlt» bei Get-Content ein nicht abbrechender Fehler ist. PowerShell macht im try-Block weiter, catch läuft nie.",
+      "Weil try und catch nur in Funktionen gehen.",
+      "Weil " + C("$zeilen.Count") + " einen Fehler auslöst."
+    ],
+    richtig: 1,
+    erklaerung: "Ohne -ErrorAction Stop ist der Fehler nur gelb blinkend: Meldung zeigen und weitermachen. " + C("$zeilen") + " bleibt leer, Count ist 0. Mit -ErrorAction Stop wird er abbrechend, und catch übernimmt."
+  });
+
+  /* ---------- Übungen ---------- */
+  // Prüfhilfen für Tipp-Aufgaben: Ergebnis prüfen, nicht den genauen Text
+  const klein = (t) => String(t).toLowerCase();
+  const eig = (o, n) => (o && typeof o === "object" && typeof o.wert === "function") ? o.wert(n) : undefined;
+  const namenVon = (ctx) => ctx.objekte.map((o) => (typeof o === "string" ? o : (eig(o, "Name") != null ? ctx.text(eig(o, "Name")) : ctx.text(o))));
+  const gleicheMenge = (a, b) => a.length === b.length && a.map(klein).sort().join("|") === b.map(klein).sort().join("|");
+  const einText = (ctx, soll) => ctx.objekte.length === 1 && klein(ctx.text(ctx.objekte[0])).trim() === klein(soll);
+  const alleEingaben = (ctx) => (ctx.verlauf || []).concat([ctx.eingabe]).join("\n");
+  const mitTry = (ctx) => /\btry\b/i.test(ctx.eingabe) && /\bcatch\b/i.test(ctx.eingabe);
+  // Eigene Funktionen behalten die Schreibweise der Definition, darum ohne Gross/Klein vergleichen
+  const rief = (ctx, name) => ctx.befehle.some((b) => klein(b) === klein(name));
+  const alt60 = ["app-2026-07.log", "app-2026-08.log", "backup-2026-06.log"];
+  L.konsole("#t11-u1", {
+    umgebung: UMG,
+    begruessung: false,
+    aufgabenTitel: "Befehl zusammenbauen",
+    aufgaben: [
+      {
+        titel: "Get-AlteLogdatei definieren und aufrufen",
+        text: "<p>Definiere die Funktion aus den fünf Bausteinen und rufe sie mit 60 Tagen auf. Es sollen drei Logdateien erscheinen.</p>",
+        hinweis: "<p>Zuerst " + C("function") + " mit Name und öffnender Klammer, dann " + C("param( )") + ", dann die Pipeline, dann die schliessende Klammer. Erst danach kommt der Aufruf, sonst kennt PowerShell die Funktion noch nicht.</p>",
+        loesung: "function Get-AlteLogdatei { param([int]$Tage = 30) Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-$Tage) }; Get-AlteLogdatei -Tage 60   # param steht als Erstes in der Funktion, der Aufruf nach der Definition",
+        // Eigene Funktion aufgerufen, Typ int mit Standardwert 30 in der Definition, Ergebnis: genau die drei Dateien älter als 60 Tage
+        pruefe: (ctx) => rief(ctx, "Get-AlteLogdatei") && !ctx.hatFehler && gleicheMenge(namenVon(ctx), alt60) &&
+          /function\s+Get-AlteLogdatei[\s\S]*\[int\]\s*\$Tage\s*=\s*30\b/i.test(alleEingaben(ctx))
+      }
+    ]
+  });
+  L.sortierer("#t11-u2", {
+    kategorien: ["«gefangen» erscheint", "rote Meldung, catch läuft nicht"],
+    elemente: [
+      { html: C("Get-Content fehlt.txt"), kategorie: 1, erklaerung: "Eine fehlende Datei ist ein nicht abbrechender Fehler. catch läuft nicht." },
+      { html: C("Get-Content fehlt.txt -ErrorAction Stop"), kategorie: 0, erklaerung: "-ErrorAction Stop macht den Fehler abbrechend." },
+      { html: C("throw 'Kaputt'"), kategorie: 0, erklaerung: "throw erzeugt immer einen abbrechenden Fehler." },
+      { html: C("Get-Groese") + " (Tippfehler im Befehlsnamen)", kategorie: 0, erklaerung: "Ein unbekannter Befehl ist abbrechend, catch fängt ihn." },
+      { html: C("[int]'zehn'"), kategorie: 0, erklaerung: "Die Umwandlung scheitert mit einem abbrechenden Fehler." },
+      { html: C("Get-ChildItem Logs\\fehlt.log, Logs\\app.log"), kategorie: 1, erklaerung: "Nicht abbrechend: Meldung für fehlt.log, app.log erscheint trotzdem." }
+    ]
+  });
+  L.auswahl("#t11-u3", {
+    frage: "Was gibt dieser Code aus?" + CODE("function Get-Gruss { param([string]$Name = 'Lea') \"Hallo $Name\" }\nGet-Gruss\nGet-Gruss Mia"),
+    optionen: [C("Hallo Lea") + " und " + C("Hallo Mia"), C("Hallo") + " und " + C("Hallo Mia"), "nur " + C("Hallo Mia"), "eine Fehlermeldung, weil beim ersten Aufruf der Name fehlt"],
+    richtig: 0,
+    erklaerung: "Ohne Angabe gilt der Standardwert Lea. Beim zweiten Aufruf landet Mia nach Position im ersten Parameter Name."
+  });
+  L.auswahl("#t11-u4", {
+    frage: "Was gibt " + C("function Test-Zahl { 'eins'; return 'zwei'; 'drei' }; Test-Zahl") + " aus?",
+    optionen: ["nur " + C("zwei"), C("eins") + " und " + C("zwei"), C("eins") + ", " + C("zwei") + " und " + C("drei"), "nur " + C("eins")],
+    richtig: 1,
+    erklaerung: "Jede Ausgabe in der Funktion kommt heraus, nicht nur die nach return. return beendet die Funktion, darum fehlt drei."
+  });
+  const GRUSS2 = "function Get-Gruss { param([string]$Name = 'Lea', [int]$Anzahl = 1) \"Hallo $Name x $Anzahl\" }";
+  L.konsole("#t11-u5", {
+    umgebung: UMG,
+    begruessung: false,
+    befehle: [GRUSS2],
+    aufgabenTitel: "Fehler finden",
+    aufgaben: [
+      {
+        titel: "Leas Aufruf nachstellen",
+        text: "<p>Tippe Leas Aufruf " + C("Get-Gruss('Tom', 3)") + " ab. Was kommt heraus?</p>",
+        hinweis: "<p>Genau so abtippen, mit Klammern und Komma.</p>",
+        loesung: "Get-Gruss('Tom', 3)   # ergibt Hallo Tom 3 x 1: die Liste landet ganz im Parameter Name",
+        pruefe: (ctx) => rief(ctx, "Get-Gruss") && einText(ctx, "Hallo Tom 3 x 1")
+      },
+      {
+        titel: "Richtig aufrufen",
+        text: "<p>Rufe " + C("Get-Gruss") + " so auf, dass genau <code>Hallo Tom x 3</code> erscheint.</p>",
+        hinweis: "<p>Klammern und Komma machen aus " + C("'Tom', 3") + " eine einzige Liste. Eine Funktion rufst du auf wie ein Cmdlet: Name, Leerzeichen, Parameter.</p>",
+        loesung: "Get-Gruss -Name Tom -Anzahl 3   # wie ein Cmdlet: Leerzeichen statt Klammern und Komma",
+        // Ergebnis zählt: benannt, abgekürzt oder nach Position, alles richtig
+        pruefe: (ctx) => rief(ctx, "Get-Gruss") && !ctx.hatFehler && einText(ctx, "Hallo Tom x 3")
+      }
+    ]
+  });
+  L.wahrFalsch("#t11-u6", {
+    titel: "Skripte, Richtlinie, Fehler",
+    aussagen: [
+      { html: "Mit " + C("RemoteSigned") + " laufen Skripte, die Lea selbst auf ihrem Rechner geschrieben hat.", wahr: true, erklaerung: "Eine Signatur verlangt RemoteSigned nur für Skripte aus dem Internet." },
+      { html: "Die Ausführungsrichtlinie schützt zuverlässig vor Angreifern.", wahr: false, erklaerung: "Laut Microsoft ist sie keine Sicherheitsgrenze, sondern ein Schutz vor Versehen." },
+      { html: C("Set-ExecutionPolicy RemoteSigned -Scope CurrentUser") + " braucht keine Adminrechte.", wahr: true, erklaerung: "CurrentUser betrifft nur dich. Adminrechte braucht nur LocalMachine." },
+      { html: "Ein Skript im aktuellen Ordner startest du mit seinem Namen allein, zum Beispiel " + C("logbericht.ps1") + ".", wahr: false, erklaerung: "PowerShell sucht von sich aus nicht im aktuellen Ordner. Es braucht .\\logbericht.ps1." },
+      { html: "Block-Kommentare " + C("<# … #>") + " darf man ineinander verschachteln.", wahr: false, erklaerung: "Der erste #> beendet den Kommentar. Der Rest wäre wieder Code." },
+      { html: C("param( )") + " muss die erste Anweisung im Skript sein, nur Kommentare dürfen davor stehen.", wahr: true, erklaerung: "So steht es in about_Scripts." },
+      { html: "Ohne " + C("-ErrorAction Stop") + " springt PowerShell bei " + C("Get-Content") + " mit fehlender Datei in den catch-Block.", wahr: false, erklaerung: "Die fehlende Datei ist nicht abbrechend. catch läuft erst mit -ErrorAction Stop." }
+    ]
+  });
+  L.konsole("#t11-u7", {
+    umgebung: UMG,
+    begruessung: false,
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Funktion Get-Dateigroesse",
+        text: "<p>Schreibe die Funktion <code>Get-Dateigroesse</code> mit dem Parameter <code>Pfad</code> (Typ " + C("[string]") + "). Sie gibt die Grösse der Datei in Bytes aus. Rufe sie für <code>Logs\\sync-fehler.log</code> auf.</p>",
+        hinweis: "<p>Die Grösse liefert " + C("(Get-Item $Pfad).Length") + ". Definition und Aufruf trennst du mit " + C(";") + ".</p>",
+        loesung: "function Get-Dateigroesse { param([string]$Pfad) (Get-Item $Pfad).Length }; Get-Dateigroesse -Pfad Logs\\sync-fehler.log",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Dateigroesse") && !ctx.hatFehler && ctx.objekte.length === 1 && Number(ctx.text(ctx.objekte[0])) === 151
+      },
+      {
+        titel: "Datei fehlt",
+        text: "<p>Hole mit " + C("Get-Item") + " die Datei <code>Dokumente\\fehlt.txt</code>. Fehlt sie, soll nur der Text <code>Datei fehlt</code> erscheinen, keine rote Meldung.</p>",
+        hinweis: "<p>" + C("try { … } catch { 'Datei fehlt' }") + ", und an " + C("Get-Item") + " gehört " + C("-ErrorAction Stop") + ".</p>",
+        loesung: "try { Get-Item Dokumente\\fehlt.txt -ErrorAction Stop } catch { 'Datei fehlt' }",
+        pruefe: (ctx) => /\btry\b/i.test(ctx.eingabe) && /\bcatch\b/i.test(ctx.eingabe) && ctx.befehle.includes("Get-Item") && /fehlt\.txt/i.test(ctx.eingabe) &&
+          !ctx.hatFehler && ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === "Datei fehlt"
+      }
+    ]
+  });
+
+  /* ---------- Tipp-Training ---------- */
+  // Stufe 1: abtippen. Geprüft wird das Ergebnis, Gross/Klein und Leerzeichen sind egal.
+  L.konsole("#t11-tipp1", {
+    umgebung: UMG,
+    begruessung: false,
+    aufgabenTitel: "Stufe 1 · Nachtippen",
+    aufgaben: [
+      {
+        titel: "Richtlinie in allen Bereichen",
+        text: "<p>Tippe ab: " + C("Get-ExecutionPolicy -List") + ". In welchem Bereich steht auf Leas Rechner ein Wert?</p>",
+        hinweis: "<p>Verb " + C("Get") + ", Bindestrich, Nomen " + C("ExecutionPolicy") + ", Leerzeichen, dann der Schalter " + C("-List") + ".</p>",
+        loesung: "Get-ExecutionPolicy -List   # fünf Bereiche, nur LocalMachine hat einen Wert: RemoteSigned",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ExecutionPolicy") && !ctx.hatFehler && ctx.objekte.length === 5
+      },
+      {
+        titel: "Skript mit Parameter",
+        text: "<p>Tippe ab: " + C(".\\begruessung.ps1 -Name Mia") + "</p>",
+        hinweis: "<p>Punkt, Backslash, Dateiname mit Endung, Leerzeichen, " + C("-Name") + ", Leerzeichen, " + C("Mia") + ".</p>",
+        loesung: ".\\begruessung.ps1 -Name Mia   # .\\ heisst: die Datei genau hier im aktuellen Ordner",
+        pruefe: (ctx) => skriptLief(ctx, "begruessung.ps1") && !ctx.hatFehler && einText(ctx, "Guten Morgen, Mia!")
+      },
+      {
+        titel: "Plan B in einer Zeile",
+        text: "<p>Tippe ab: " + C("try { Get-Item Logs\\alt.log -ErrorAction Stop } catch { 'Nicht gefunden' }") + "</p>",
+        hinweis: "<p>Achte auf die geschweiften Klammern und die einfachen Anführungszeichen um den Text. Die Datei " + C("alt.log") + " gibt es nicht, darum springt PowerShell in den catch-Block.</p>",
+        loesung: "try { Get-Item Logs\\alt.log -ErrorAction Stop } catch { 'Nicht gefunden' }   # Stop macht den Fehler abbrechend, catch fängt ihn",
+        pruefe: (ctx) => mitTry(ctx) && ctx.befehle.includes("Get-Item") && !ctx.hatFehler && einText(ctx, "Nicht gefunden")
+      }
+    ]
+  });
+
+  // Stufe 2: einen gezeigten Befehl abwandeln
+  L.konsole("#t11-tipp2", {
+    umgebung: UMG,
+    begruessung: false,
+    aufgabenTitel: "Stufe 2 · Abwandeln",
+    aufgaben: [
+      {
+        titel: "Anderer Ordner, andere Frist",
+        text: "<p>Dieser Aufruf zählt alte Dateien in den Downloads:</p>" + CODE(".\\logbericht.ps1 -Ordner Downloads -Tage 100") +
+          "<p>Wie oben, aber für den Ordner <code>Bilder</code> und <b>60</b> Tage.</p>",
+        hinweis: "<p>Nur die beiden Werte hinter " + C("-Ordner") + " und " + C("-Tage") + " ändern sich.</p>",
+        loesung: ".\\logbericht.ps1 -Ordner Bilder -Tage 60   # benannte Parameter dürfen in beliebiger Reihenfolge stehen",
+        pruefe: (ctx) => skriptLief(ctx, "logbericht.ps1") && !ctx.hatFehler && klein(ctx.ausgabe).includes("in bilder sind 4 dateien älter als 60 tage.")
+      },
+      {
+        titel: "Gleicher Bauplan, anderer Text",
+        text: "<p>Diese Funktion begrüsst:</p>" + CODE("function Get-Gruss { param([string]$Name = 'Lea') \"Hallo $Name\" }") +
+          "<p>Schreibe nach demselben Bauplan die Funktion " + C("Get-Abschied") + " mit demselben Parameter. Rufe sie danach mit " + C("-Name Tom") + " auf, sodass genau <code>Adieu Tom</code> erscheint.</p>",
+        hinweis: "<p>Name der Funktion und Text in den Anführungszeichen ändern sich. Der param-Block bleibt gleich. Definition und Aufruf trennst du mit " + C(";") + ".</p>",
+        loesung: "function Get-Abschied { param([string]$Name = 'Lea') \"Adieu $Name\" }; Get-Abschied -Name Tom   # doppelte Anführungszeichen setzen den Namen ein",
+        pruefe: (ctx) => rief(ctx, "Get-Abschied") && !ctx.hatFehler && einText(ctx, "Adieu Tom") &&
+          // Parameter Name im param-Block oder in Klammern hinter dem Funktionsnamen (beides gleichwertig)
+          /function\s+Get-Abschied\s*(\(|\{\s*param\s*\()[^)]*\$Name/i.test(alleEingaben(ctx))
+      },
+      {
+        titel: "Anhalten statt schweigen",
+        text: "<p>Dieser Befehl verschweigt, dass eine Datei fehlt:</p>" + CODE("Get-ChildItem Logs\\fehlt.log, Logs\\app.log -ErrorAction SilentlyContinue") +
+          "<p>Wie oben, aber der Befehl soll beim ersten Fehler <b>anhalten</b>. " + C("app.log") + " erscheint dann nicht mehr.</p>",
+        hinweis: "<p>Nur der Wert von " + C("-ErrorAction") + " ändert sich. Welcher Wert macht den Fehler abbrechend?</p>",
+        loesung: "Get-ChildItem Logs\\fehlt.log, Logs\\app.log -ErrorAction Stop   # Stop hält beim ersten Fehler an",
+        // Nur Stop liefert «Fehler und kein Objekt»; Continue zeigt app.log, SilentlyContinue keinen Fehler
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /fehlt\.log/i.test(ctx.eingabe) && /app\.log/i.test(ctx.eingabe) &&
+          ctx.hatFehler && ctx.objekte.length === 0
+      },
+      {
+        titel: "Die Meldung im Klartext",
+        text: "<p>Dieser Plan B sagt nur «Datei fehlt»:</p>" + CODE("try { Get-Content Logs\\fehlt.log -ErrorAction Stop } catch { 'Datei fehlt' }") +
+          "<p>Wie oben, aber der catch-Block soll <code>Fehler: </code> und danach den <b>Text der Fehlermeldung</b> ausgeben.</p>",
+        hinweis: "<p>Im catch-Block steht " + C("$_") + " für den gefangenen Fehler. Seinen Text liefert " + C("$_.Exception.Message") + ". In doppelten Anführungszeichen brauchst du dafür " + C("$( )") + ".</p>",
+        loesung: "try { Get-Content Logs\\fehlt.log -ErrorAction Stop } catch { \"Fehler: $($_.Exception.Message)\" }   # $( ) setzt einen ganzen Ausdruck in den Text ein",
+        pruefe: (ctx) => mitTry(ctx) && ctx.befehle.includes("Get-Content") && !ctx.hatFehler && einText(ctx, "Fehler: " + fehltLog)
+      }
+    ]
+  });
+
+  // Stufe 3: nur das Ziel. Drei Aufgaben wiederholen Stationen 05, 06 und 07.
+  const gross4 = ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log"];
+  const loeschBefehl = /(^|[\s;{(|])(Remove-Item|ri|rm|del|erase)\s/i;
+  L.konsole("#t11-tipp3", {
+    umgebung: UMG,
+    begruessung: false,
+    aufgabenTitel: "Stufe 3 · Selber lösen",
+    aufgaben: [
+      {
+        titel: "Wiederholung Station 07 · Grosse Logdateien als Funktion",
+        text: "<p>Schreibe die Funktion " + C("Get-GrossesLog") + " mit dem Parameter " + C("MB") + " (ganze Zahl, Standardwert 5). Sie gibt alle Dateien im Ordner <code>Logs</code> aus, die grösser als so viele Megabyte sind. Rufe sie für <b>4</b> MB auf.</p>",
+        hinweis: "<p>Filtern geht mit " + C("Where-Object") + " und " + C("-gt") + ". Die Grenze rechnest du mit " + C("1MB") + " aus. Setz die Rechnung in runde Klammern, sonst liest PowerShell sie als Text.</p>",
+        loesung: "function Get-GrossesLog { param([int]$MB = 5) Get-ChildItem Logs | Where-Object Length -gt ($MB * 1MB) }; Get-GrossesLog -MB 4   # drei Logdateien sind grösser als 4 MB",
+        pruefe: (ctx) => rief(ctx, "Get-GrossesLog") && !ctx.hatFehler && gleicheMenge(namenVon(ctx), gross4) &&
+          /function\s+Get-GrossesLog[\s\S]*\[int\]\s*\$MB\s*=\s*5\b/i.test(alleEingaben(ctx))
+      },
+      {
+        titel: "Wiederholung Station 06 · Wochentag in ein paar Tagen",
+        text: "<p>Schreibe die Funktion " + C("Get-Wochentag") + " mit dem Parameter " + C("Tage") + " (ganze Zahl, Standardwert 0). Sie gibt den Wochentag aus, der so viele Tage nach heute liegt. Rufe sie für <b>3</b> Tage auf.</p>",
+        hinweis: "<p>" + C("Get-Date") + " liefert ein Datumsobjekt. Es hat eine Methode, die Tage dazuzählt, und eine Eigenschaft für den Wochentag. Mit Klammern und Punkt kommst du an beide heran.</p>",
+        loesung: "function Get-Wochentag { param([int]$Tage = 0) (Get-Date).AddDays($Tage).DayOfWeek }; Get-Wochentag -Tage 3   # Methode AddDays, dann Eigenschaft DayOfWeek",
+        // Leas Rechner: heute Montag, in 3 Tagen Donnerstag (englisch über DayOfWeek, deutsch über das Format dddd)
+        pruefe: (ctx) => rief(ctx, "Get-Wochentag") && !ctx.hatFehler &&
+          (einText(ctx, "Thursday") || einText(ctx, "Donnerstag")) && /function\s+Get-Wochentag[\s\S]*\[int\]\s*\$Tage\s*=\s*0\b/i.test(alleEingaben(ctx))
+      },
+      {
+        titel: "Wiederholung Station 05 · Löschen, falls vorhanden",
+        text: "<p>Lea will die Datei <code>Logs\\fehlt.log</code> löschen, falls es sie gibt. Es gibt sie nicht. Lösche sie trotzdem so, dass <b>keine</b> rote Meldung erscheint.</p>",
+        hinweis: "<p>Gelöscht wird mit dem Cmdlet aus Station 05. Ein gemeinsamer Parameter sagt ihm, dass ein Fehler hier egal ist. Nimm den Wert als Wort, nicht als Zahl.</p>",
+        loesung: "Remove-Item Logs\\fehlt.log -ErrorAction SilentlyContinue   # keine Meldung, der Fehler landet nur in $Error",
+        // Löschbefehl auf fehlt.log (auch mit Test-Path davor), ohne Fehler, und die anderen Logs sind noch da
+        pruefe: (ctx) => /fehlt\.log/i.test(ctx.eingabe) && !ctx.hatFehler && ctx.existiert("Logs\\app.log") &&
+          (ctx.befehle.includes("Remove-Item") || (ctx.befehle.includes("Test-Path") && loeschBefehl.test(ctx.eingabe)))
+      },
+      {
+        titel: "Nur dein Bereich",
+        text: "<p>Zeige die Ausführungsrichtlinie, die im Bereich <code>CurrentUser</code> eingetragen ist. Nur diesen einen Wert, keine Liste.</p>",
+        hinweis: "<p>" + C("Get-ExecutionPolicy") + " hat neben " + C("-List") + " einen Parameter, der einen einzelnen Bereich auswählt.</p>",
+        loesung: "Get-ExecutionPolicy -Scope CurrentUser   # Undefined heisst: hier ist nichts eingetragen",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ExecutionPolicy") && /CurrentUser/i.test(ctx.eingabe) && !ctx.hatFehler &&
+          einText(ctx, ((ctx.welt.richtlinien || {}).CurrentUser) || "Undefined")
+      },
+      {
+        titel: "Für dich erlauben",
+        text: "<p>Lea hat keine Adminrechte. Erlaube eigene Skripte <b>dauerhaft nur für sie</b> mit der Richtlinie <code>RemoteSigned</code>.</p>",
+        hinweis: "<p>Das Verb ist " + C("Set") + ". Ohne Bereich ändert PowerShell den ganzen Computer, und dafür fehlen Lea die Rechte. Welcher Bereich gilt nur für sie und bleibt nach dem Schliessen erhalten?</p>",
+        loesung: "Set-ExecutionPolicy RemoteSigned -Scope CurrentUser   # CurrentUser braucht keine Adminrechte, Process wäre nach dem Schliessen weg",
+        pruefe: (ctx) => ctx.befehle.includes("Set-ExecutionPolicy") && !ctx.hatFehler && (ctx.welt.richtlinien || {}).CurrentUser === "RemoteSigned"
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const F = L.konsole.sitzung(UMG);
+  const NAME = "alte-logs.ps1";
+  const ed = (text, neu) => '<p class="t11-datei">Editor: <b>' + NAME + "</b>" + (neu ? " · " + neu : "") + "</p>" + CODE(text);
+  const lauf = (code) => ohneHinweis(F.html(code));
+  const V1 = "Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)";
+  const V2 = "param(\n  [int]$Tage = 30\n)\nGet-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-$Tage)";
+  const V3 = "param(\n  [string]$Ordner = 'Logs',\n  [int]$Tage = 30\n)\n$grenze = (Get-Date).AddDays(-$Tage)\n$dateien = Get-ChildItem -Path $Ordner -File\n$alt = $dateien | Where-Object LastWriteTime -lt $grenze\n\"In $Ordner sind $($alt.Count) Dateien älter als $Tage Tage.\"";
+  const V4 = "param(\n  [string]$Ordner = 'Logs',\n  [int]$Tage = 30\n)\n$grenze = (Get-Date).AddDays(-$Tage)\ntry {\n  $dateien = Get-ChildItem -Path $Ordner -File\n  $alt = $dateien | Where-Object LastWriteTime -lt $grenze\n  \"In $Ordner sind $($alt.Count) Dateien älter als $Tage Tage.\"\n}\ncatch {\n  \"Fehler: $($_.Exception.Message)\"\n}";
+  const V5 = V4.replace("Get-ChildItem -Path $Ordner -File", "Get-ChildItem -Path $Ordner -File -ErrorAction Stop");
+  const V6 = "<#\n  alte-logs.ps1 · Lea, Informatik Wolkenried\n  Zählt Dateien, die älter als -Tage Tage sind.\n#>\n" + V5;
+  const sz = [];
+  sz.push({ say: "Lea baut ihr Skript alte-logs.ps1 Schritt für Schritt. Nach jedem Schritt startet sie es und schaut, was herauskommt." });
+  sz.push({ ph: 0, f: lauf("Get-ExecutionPolicy"), say: "Zuerst prüft sie, ob Skripte überhaupt laufen dürfen. RemoteSigned: Eigene Skripte sind erlaubt." });
+  schreiben(F, NAME, V1);
+  sz.push({ ph: 0, f: ed(V1, "neu"), say: "Im Editor schreibt sie die erste Zeile: alle Logdateien, die älter als 30 Tage sind. Sie speichert die Datei als alte-logs.ps1." });
+  sz.push({ ph: 0, f: ed(V1) + lauf(NAME), say: "Sie tippt nur den Namen. PowerShell kennt keinen Befehl alte-logs.ps1, denn es sucht von sich aus nicht im aktuellen Ordner." });
+  sz.push({ ph: 0, f: ed(V1) + lauf(".\\" + NAME), say: "Mit Punkt und Backslash davor klappt es: vier alte Logdateien." });
+  schreiben(F, NAME, V2);
+  sz.push({ ph: 1, f: ed(V2, "Parameter Tage"), say: "Die 30 soll beim Start wählbar sein. Lea schreibt einen param-Block mit Typ int und Standardwert 30 und setzt $Tage ein." });
+  sz.push({ ph: 1, f: ed(V2) + lauf(".\\" + NAME + " -Tage 60"), say: "Mit -Tage 60 findet das Skript nur noch drei Dateien." });
+  sz.push({ ph: 1, f: ed(V2) + lauf(".\\" + NAME + " -Tage zehn"), say: "Ein Wort statt einer Zahl lehnt der Typ int sofort ab. Das Skript startet gar nicht erst." });
+  schreiben(F, NAME, V3);
+  sz.push({ ph: 1, f: ed(V3, "Parameter Ordner, Satz"), say: "Jetzt kommt ein zweiter Parameter für den Ordner dazu. Statt der Tabelle gibt das Skript einen Satz mit der Anzahl aus." });
+  sz.push({ ph: 1, f: ed(V3) + lauf(".\\" + NAME), say: "Ohne Parameter gelten die Standardwerte: In Logs sind 4 Dateien älter als 30 Tage." });
+  sz.push({ ph: 1, f: ed(V3) + lauf(".\\" + NAME + " -Ordner Downloads -Tage 100"), say: "Mit zwei Parametern prüft sie die Downloads: 2 Dateien sind älter als 100 Tage." });
+  sz.push({ ph: 2, f: ed(V3) + lauf(".\\" + NAME + " -Ordner Protokolle"), say: "Was passiert bei einem Ordner, den es nicht gibt? Eine rote Meldung, und danach behauptet das Skript, es gebe 0 alte Dateien. Das ist irreführend." });
+  sz.push({ ph: 2, say: "Die Meldung sagt: Zeile 6, Get-ChildItem findet den Pfad nicht. Das ist ein nicht abbrechender Fehler. Das Skript macht einfach weiter." });
+  schreiben(F, NAME, V4);
+  sz.push({ ph: 2, f: ed(V4, "try/catch"), say: "Lea packt die drei Zeilen in einen try-Block und schreibt einen catch-Block mit einer eigenen Meldung." });
+  sz.push({ ph: 2, f: ed(V4) + lauf(".\\" + NAME + " -Ordner Protokolle"), say: "Nichts hat sich geändert! catch fängt nur abbrechende Fehler, und dieser ist nicht abbrechend." });
+  schreiben(F, NAME, V5);
+  sz.push({ ph: 2, f: ed(V5, "-ErrorAction Stop"), say: "Darum hängt sie -ErrorAction Stop an Get-ChildItem. Jetzt hält der Befehl beim Fehler an." });
+  sz.push({ ph: 2, f: ed(V5) + lauf(".\\" + NAME + " -Ordner Protokolle"), say: "Jetzt springt PowerShell in den catch-Block. Statt Rot steht ein klarer Satz mit der Ursache da." });
+  sz.push({ ph: 2, f: ed(V5) + lauf(".\\" + NAME), say: "Der Normalfall läuft weiter wie vorher: 4 Dateien." });
+  schreiben(F, NAME, V6);
+  sz.push({ ph: 3, f: ed(V6, "Kommentar"), say: "Zum Schluss schreibt Lea einen Block-Kommentar oben hin. So weiss sie in einem Jahr noch, was das Skript tut. Vor param dürfen Kommentare stehen." });
+  sz.push({ ph: 3, f: ed(V6) + lauf(".\\" + NAME + " -Tage 90"), say: "Eine letzte Probe mit 90 Tagen: 2 Dateien." });
+  sz.push({ ph: 3, f: lauf("$Error[0].Exception.Message"), say: "Auch der gefangene Fehler steht im Fehlertagebuch. $Error[0] zeigt ihn noch einmal." });
+  sz.push({ ph: -1, say: "Fertig: ein Skript mit zwei Parametern, Standardwerten, Kommentar und Plan B. Jetzt kannst du dich im Selbsttest prüfen.", end: true });
+  // Im Filmtext kein Dollarzeichen ausserhalb von code (KaTeX): Variablen einpacken
+  sz.forEach((s) => { if (s.say) s.say = s.say.replace(/(\$[A-Za-z]+(\[0\])?)/g, "<code>$1</code>"); });
+  L.film("#t11-film", {
+    phasen: ["1 · Starten", "2 · Parameter", "3 · Plan B", "4 · Abschluss"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Editor und Konsole" },
+    szenen: sz
+  });
+  document.querySelector("#t11-film-loesung code").textContent = V6;
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Wie startest du das Skript <code>logbericht.ps1</code>, das im aktuellen Ordner liegt?", o: [C("logbericht.ps1"), C(".\\logbericht.ps1"), C("Start logbericht"), C("run logbericht.ps1")], a: 1,
+        e: "PowerShell sucht Befehle von sich aus nicht im aktuellen Ordner. Mit .\\ sagst du: genau diese Datei hier." },
+      { q: "Was erlaubt die Ausführungsrichtlinie <code>RemoteSigned</code>?", o: ["gar keine Skripte", "eigene Skripte vom Rechner; Skripte aus dem Internet nur mit Signatur", "nur signierte Skripte, auch die eigenen", "alles ohne jede Prüfung"], a: 1,
+        e: "Remote heisst hier: aus dem Internet. Nur diese Skripte brauchen eine Signatur." },
+      { q: "Was ist die Ausführungsrichtlinie?", o: ["eine Sicherheitsgrenze gegen Angreifer", "ein Schutz davor, Skripte aus Versehen auszuführen", "ein Virenscanner für Skripte"], a: 1,
+        e: "Microsoft schreibt ausdrücklich: keine Sicherheitsgrenze. Wer will, kopiert den Inhalt in die Konsole." },
+      { q: "Lea darf keine Adminrechte nutzen. Mit welchem Befehl erlaubt sie sich selbst eigene Skripte?", o: [C("Set-ExecutionPolicy Unrestricted"), C("Set-ExecutionPolicy RemoteSigned"), C("Set-ExecutionPolicy RemoteSigned -Scope CurrentUser"), C("Get-ExecutionPolicy -Scope CurrentUser")], a: 2,
+        e: "Ohne -Scope ändert PowerShell LocalMachine, das braucht Adminrechte. CurrentUser gilt nur für Lea." },
+      { q: "Ein Skript beginnt mit " + C("param([int]$Tage = 30)") + ". Welchen Wert hat " + C("$Tage") + " beim Start mit " + C(".\\x.ps1") + "?", o: ["0", "30", "leer", "eine Fehlermeldung, weil -Tage fehlt"], a: 1,
+        e: "Ohne Angabe gilt der Standardwert nach dem Gleichheitszeichen." },
+      { q: "Was passiert bei " + C(".\\x.ps1 -Tage zehn") + ", wenn " + C("$Tage") + " den Typ " + C("[int]") + " hat?", o: [C("$Tage") + " wird 0", C("$Tage") + " wird «zehn»", "Fehlermeldung «Cannot process argument transformation», das Skript startet nicht"], a: 2,
+        e: "Der Typ int lässt nur ganze Zahlen zu. Das Wort lässt sich nicht umwandeln." },
+      { q: "Was gibt " + C("try { Get-Content fehlt.txt } catch { 'Fehler' }") + " aus, wenn die Datei fehlt?", o: [C("Fehler"), "die rote Meldung von Get-Content, catch läuft nicht", "gar nichts"], a: 1,
+        e: "Ohne -ErrorAction Stop ist die fehlende Datei nicht abbrechend. catch fängt nur abbrechende Fehler." },
+      { q: "Wo steht in einer Fehlermeldung von PowerShell 7 die <b>Ursache</b>?", o: ["vor dem ersten Doppelpunkt", "in der Zeile «Line |»", "in der letzten Zeile unter der Wellenlinie", "nirgends"], a: 2,
+        e: "Vorne steht der Befehl, dann Datei und Zeile, dann der Ausschnitt. Die Ursache folgt ganz unten." },
+      { q: "Was liefert " + C("$_.Exception.Message") + " im catch-Block?", o: ["die Zeilennummer", "nur den Text der Fehlermeldung", "den Namen des Skripts", "alle Fehler der Sitzung"], a: 1,
+        e: C("$_") + " ist der gefangene Fehler, Exception.Message sein Text ohne Farbe und ohne Befehlsname." },
+      { q: "Was gibt " + C("function f { 'a'; return 'b'; 'c' }; f") + " aus?", o: ["nur b", "a und b", "a, b und c", "nur a"], a: 1,
+        e: "Jede Ausgabe in der Funktion kommt heraus. return beendet die Funktion nach b." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

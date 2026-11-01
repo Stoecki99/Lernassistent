@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Die Konsole: erste Schritte · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/02-cmdlets-verb-nomen" title="Cmdlets: Verb-Nomen und Parameter">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t01-», nur Farben aus :root -->
+  <style>
+    .t01-ziele{margin:6px 0 0; padding-left:1.2em}
+    .t01-ziele li{margin-bottom:2px}
+    .t01-quellen{margin:0; padding-left:1.2em}
+    .t01-quellen li{margin-bottom:2px}
+    .t01-vergleich td:first-child, .t01-vergleich th:first-child{white-space:nowrap}
+    .t01-tasten td:first-child{white-space:nowrap}
+    kbd{font-family:var(--ps-mono); font-size:.85em; border:1px solid var(--line); border-bottom-width:2px; border-radius:5px;
+      padding:0 5px; background:var(--surface); color:var(--ink); white-space:nowrap}
+    /* Geführte Tour */
+    .t01-tour{border-left:4px solid var(--accent)}
+    .t01-tour-stand{font-size:.9rem; color:var(--muted); margin:0}
+    .t01-tour-jetzt{margin:0; font-size:1.05rem}
+    /* Prompt-Anatomie: Terminal-Ausschnitt mit anklickbaren Teilen (immer dunkel wie die Konsole) */
+    .t01-anatomie{background:var(--psk-bg); color:var(--psk-ink); border-radius:12px; padding:12px 14px; overflow-x:auto; max-width:100%;
+      font-family:var(--ps-mono); font-size:.86rem; line-height:1.9; white-space:pre}
+    .t01-anatomie:focus-visible{outline:2px solid var(--psk-fokus); outline-offset:2px}
+    .t01-zeile{display:block}
+    .t01-teil{font:inherit; color:inherit; background:none; border:0; border-bottom:2px dotted var(--psk-gedaempft); border-radius:3px;
+      padding:0 1px; margin:0; cursor:pointer; white-space:pre}
+    .t01-teil:hover{background:var(--psk-leiste)}
+    .t01-teil:focus-visible{outline:2px solid var(--psk-fokus); outline-offset:1px}
+    .t01-teil[aria-pressed="true"]{background:var(--psk-ordner-bg); color:var(--psk-ordner-ink); border-bottom-style:solid}
+    .t01-teil.t01-richtig{border-bottom:3px solid var(--psk-kopf)}
+    .t01-teil.t01-falsch{border-bottom:3px solid var(--psk-fehler)}
+    .t01-kopf{color:var(--psk-kopf)}
+    .t01-gedaempft{color:var(--psk-gedaempft)}
+    .t01-cursor{display:inline-block; width:.6em; background:var(--psk-ink); color:var(--psk-bg)}
+    .t01-erkl{min-height:5.5em}
+    .t01-erkl h3{margin:0 0 4px}
+    .t01-quiz-frage{font-weight:600; margin:0}
+  </style>
+</head>
+<body data-fach="ps" data-thema="01-konsole-erste-schritte">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 1 · Erste Schritte</span>
+    <h1>Die Konsole: erste Schritte</h1>
+    <p class="lead">Montagmorgen in der Informatik der Gemeinde Wolkenried. Lea bekommt ihren ersten Auftrag: «Halte für die Inventarliste fest, welche PowerShell auf deinem Rechner läuft und was in deinem Benutzerordner liegt.» Dafür öffnet sie zum ersten Mal eine Konsole. Hier lernst du, was eine Shell ist, wie du einen Befehl eintippst und wie du mit Tab und Pfeiltasten schneller wirst.</p>
+    <div class="note"><b>Danach kannst du:</b>
+      <ul class="t01-ziele">
+        <li>erklären, was Shell, Terminal, Prompt und Cmdlet sind.</li>
+        <li>PowerShell 7 (<code class="ps">pwsh</code>) von Windows PowerShell 5.1 (<code class="ps">powershell.exe</code>) unterscheiden und die Version mit <code class="ps">$PSVersionTable</code> prüfen.</li>
+        <li>den Prompt lesen und deine ersten Befehle ausführen: <code class="ps">Get-Date</code>, <code class="ps">Get-Location</code>, <code class="ps">Get-ChildItem</code>.</li>
+        <li>mit <kbd>Tab</kbd>, <kbd>↑</kbd>, <code class="ps">Get-History</code>, <code class="ps">Clear-Host</code> und <kbd>Ctrl</kbd>+<kbd>C</kbd> umgehen.</li>
+        <li>entscheiden, wann du «Als Administrator ausführen» brauchst und wann nicht.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#shell"><b>1</b>Shell</a>
+    <a href="#versionen"><b>2</b>Zwei PowerShells</a>
+    <a href="#erster-befehl"><b>3</b>Erster Befehl</a>
+    <a href="#tasten"><b>4</b>Tasten</a>
+    <a href="#admin"><b>5</b>Administrator</a>
+    <a href="#ausprobieren"><b>6</b>Tour</a>
+    <a href="#anatomie"><b>7</b>Anatomie</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#tipp-training"><b>9</b>Tipp-Training</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Vier Wörter für den Anfang</h2>
+    <p class="prose">Stell dir ein Restaurant vor. Du schreibst deine Bestellung auf einen Zettel und gibst ihn der Kellnerin. Sie bringt den Zettel in die Küche und kommt mit dem Essen zurück. Du musst nicht wissen, wie die Küche arbeitet. Du musst nur die Bestellung so schreiben, dass sie verstanden wird. Genau so arbeitest du mit PowerShell.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Shell = Kellnerin</span><span class="ex"><code class="ps">pwsh</code></span><p>Ein Programm, das deine getippten Befehle entgegennimmt, ausführen lässt und dir das Ergebnis zeigt. PowerShell ist eine Shell.</p></div>
+      <div class="concept"><span class="tag">Terminal = Theke</span><span class="ex">Windows Terminal</span><p>Das Fenster, in dem du tippst und liest. Darin läuft eine Shell. Ein Terminal kann mehrere Shells in Tabs zeigen.</p></div>
+      <div class="concept"><span class="tag">Prompt = «Was darf's sein?»</span><span class="ex"><code>PS C:\Users\lea&gt;</code></span><p>Die Zeile, mit der die Shell sagt: «Ich bin bereit.» Sie zeigt auch, in welchem Ordner du gerade bist.</p></div>
+      <div class="concept"><span class="tag">Cmdlet = Gericht auf der Karte</span><span class="ex"><code class="ps">Get-Date</code></span><p>Ein Befehl von PowerShell. Er heisst immer Verb-Nomen: Get (holen) und Date (Datum). Sprich «Kommandlet».</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Was ist was?</h3>
+      <p class="hint">Ordne jedes Stück dem passenden Wort zu.</p>
+      <div id="t01-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Shell und Terminal ===== -->
+  <section id="shell">
+    <span class="eyebrow">Schritt 1 · Tippen statt klicken</span>
+    <h2>Was eine Shell kann, was die Maus nicht kann</h2>
+    <p class="prose">Im Explorer klickst du dich durch Ordner. Das ist bequem, solange es um eine Datei geht. In der Informatik geht es aber oft um hundert Dateien, um zwanzig Rechner oder um eine Aufgabe, die jeden Montag wiederkommt. Dann ist Tippen stärker als Klicken:</p>
+    <ul class="summary prose">
+      <li><b>Wiederholbar:</b> Ein Befehl macht jedes Mal genau dasselbe. Du kannst ihn aufschreiben und weitergeben.</li>
+      <li><b>Automatisierbar:</b> Viele Befehle hintereinander werden zu einem Skript, das von selbst läuft (Station 11).</li>
+      <li><b>Genau:</b> Ein Befehl sagt dir das Ergebnis schwarz auf weiss. Du musst nicht suchen, wo du klicken müsstest.</li>
+    </ul>
+    <p class="prose">PowerShell ist mehr als eine Shell. Microsoft beschreibt sie als Lösung für die Automatisierung aus drei Teilen: Shell, Skriptsprache und ein System für Konfigurationen. Eine Besonderheit merkst du dir schon jetzt: Die meisten Shells liefern nur Text. PowerShell liefert <b>Objekte</b>, also Datensätze mit Feldern wie Name, Grösse und Datum. Was das bringt, siehst du in Station 06.</p>
+
+    <h3>Das Fenster: Windows Terminal</h3>
+    <p class="prose">Das Programm, in dem du tippst, heisst <b>Terminal</b>. Unter Windows 11 nimmst du dafür meist <b>Windows Terminal</b>. Es zeigt mehrere Shells in Tabs nebeneinander: PowerShell 7, Windows PowerShell, die alte Eingabeaufforderung <code>cmd</code> oder eine Linux-Shell. Fehlt es auf deinem Rechner, gibt es Windows Terminal gratis im Microsoft Store.</p>
+    <div class="note tipp"><b>So öffnest du PowerShell 7:</b> Starttaste drücken, <code>PowerShell 7</code> tippen, Enter. Oder Windows Terminal öffnen und im Pfeil neben dem Plus-Tab das Profil «PowerShell» wählen. Ist PowerShell 7 installiert, startest du sie aus jeder Shell auch mit dem Befehl <code class="ps">pwsh</code>.</div>
+  </section>
+
+  <!-- ===== 2 · Zwei PowerShells ===== -->
+  <section id="versionen">
+    <span class="eyebrow">Schritt 2 · pwsh und powershell.exe</span>
+    <h2>Zwei PowerShells auf einem Rechner</h2>
+    <p class="prose">Auf Leas Rechner gibt es zwei PowerShells. Das verwirrt am Anfang fast alle. <b>Windows PowerShell 5.1</b> ist ein Teil von Windows, seit 2016 (Windows 10 und Windows Server 2016) fest eingebaut. <b>PowerShell 7</b> ist die neue Generation. Du installierst sie zusätzlich, und sie läuft <b>neben</b> 5.1, ohne sie zu ersetzen. Neue Funktionen kommen nur noch in PowerShell 7. Dieser Lernpfad arbeitet mit PowerShell 7.</p>
+    <div class="card tablebox">
+      <table class="tabelle t01-vergleich">
+        <caption>Windows PowerShell 5.1 und PowerShell 7 im Vergleich</caption>
+        <thead><tr><th>Merkmal</th><th>Windows PowerShell <span class="ps-version">5.1</span></th><th>PowerShell <span class="ps-version">7</span></th></tr></thead>
+        <tbody>
+          <tr><td>Programm</td><td><code>powershell.exe</code></td><td><code>pwsh.exe</code> (kurz <code class="ps">pwsh</code>)</td></tr>
+          <tr><td>Ordner</td><td><code>C:\Windows\System32\WindowsPowerShell\v1.0</code></td><td><code>C:\Program Files\PowerShell\7</code> (MSI-Paket); seit 7.6 installiert winget ein MSIX-Paket unter <code>C:\Program Files\WindowsApps\…</code></td></tr>
+          <tr><td>Installation</td><td>in Windows enthalten</td><td>separat, z. B. mit <code class="ps">winget install --id Microsoft.PowerShell --source winget</code></td></tr>
+          <tr><td>Grundlage</td><td>.NET Framework</td><td>.NET (früher .NET Core)</td></tr>
+          <tr><td>Läuft auf</td><td>nur Windows</td><td>Windows, macOS und Linux</td></tr>
+          <tr><td><code>PSEdition</code></td><td><code>Desktop</code></td><td><code>Core</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Welche PowerShell läuft gerade?</h3>
+    <p class="prose">Das verrät dir die Variable <code class="ps">$PSVersionTable</code>. Eine <b>Variable</b> ist ein beschrifteter Behälter für einen Wert. Ihr Name beginnt mit <code class="ps">$</code>. Diese hier füllt PowerShell beim Start selbst. Tippst du nur ihren Namen und drückst Enter, zeigt PowerShell den Inhalt:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von PSVersionTable in PowerShell 7" data-ps-befehl="$PSVersionTable"></pre>
+    <p class="prose">Wichtig sind die ersten zwei Zeilen: <code>PSVersion 7.6.1</code> ist die Version, <code>PSEdition Core</code> heisst PowerShell 7. Dieselbe Eingabe in Windows PowerShell 5.1 auf einem Testrechner:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von PSVersionTable in Windows PowerShell 5.1"><span class="psk-prompt">PS C:\Users\lea&gt; </span>$PSVersionTable
+
+Name                           Value
+----                           -----
+PSVersion                      5.1.28000.3231
+PSEdition                      Desktop
+PSCompatibleVersions           {1.0, 2.0, 3.0, 4.0...}
+BuildVersion                   10.0.28000.3231
+CLRVersion                     4.0.30319.42000
+WSManStackVersion              3.0
+PSRemotingProtocolVersion      2.3
+SerializationVersion           1.1.0.1</pre>
+    <p class="prose">Hier steht <code>Desktop</code>: Das ist Windows PowerShell 5.1. Willst du nur einen einzelnen Wert, hängst du seinen Namen mit einem Punkt an. Wie das genau funktioniert, lernst du in Station 06.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von PSVersionTable.PSEdition" data-ps-befehl="$PSVersionTable.PSEdition"></pre>
+    <div class="note"><b>Der Prompt sieht gleich aus.</b> Beide PowerShells zeigen <code>PS C:\Users\lea&gt;</code>. Am Prompt erkennst du die Version also nicht. Im Zweifel fragst du <code class="ps">$PSVersionTable</code>. Auch Windows Terminal hilft: Dort heisst das Profil für Version 7 «PowerShell» und das für 5.1 «Windows PowerShell».</div>
+  </section>
+
+  <!-- ===== 3 · Der erste Befehl ===== -->
+  <section id="erster-befehl">
+    <span class="eyebrow">Schritt 3 · Prompt, Befehl, Enter</span>
+    <h2>Dein erster Befehl, Schritt für Schritt</h2>
+    <p class="prose">Lea will wissen, welches Datum der Rechner kennt. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil leuchtet auf.</p>
+    <div id="t01-stepper"></div>
+
+    <h3>Gross oder klein? Egal.</h3>
+    <p class="prose">PowerShell unterscheidet bei Befehlsnamen nicht zwischen Gross- und Kleinbuchstaben. <code class="ps">get-date</code>, <code class="ps">GET-DATE</code> und <code class="ps">Get-Date</code> sind derselbe Befehl:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von get-date in Kleinbuchstaben" data-ps-befehl="get-date"></pre>
+    <p class="prose">Schreib trotzdem so wie Microsoft: jedes Wort mit grossem Anfangsbuchstaben. Dann liest du deine Befehle später leichter.</p>
+
+    <h3>Wo bin ich? Was liegt hier?</h3>
+    <p class="prose">Zwei weitere Befehle brauchst du ab jetzt täglich. <code class="ps">Get-Location</code> zeigt den Ordner, in dem du gerade arbeitest. Fachwort: <b>aktueller Ort</b>. Es ist derselbe Pfad, den auch der Prompt zeigt.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Location" data-ps-befehl="Get-Location" data-ps-sitzung="ort"></pre>
+    <p class="prose"><code class="ps">Get-ChildItem</code> zeigt, was in diesem Ordner liegt. <span lang="en">Child Item</span> heisst «Kind-Element»: die Einträge im Ordner. Das <code>d</code> in der Spalte <code>Mode</code> steht für <span lang="en">directory</span>, also Ordner.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem" data-ps-befehl="Get-ChildItem" data-ps-sitzung="ort"></pre>
+    <p class="prose">Schreibst du einen Ordnernamen dahinter, zeigt <code class="ps">Get-ChildItem</code> dessen Inhalt, zum Beispiel <code class="ps">Get-ChildItem Dokumente</code>. Mehr dazu in Station 04.</p>
+
+    <h3>Wenn PowerShell einen Befehl nicht kennt</h3>
+    <p class="prose">Ein Tippfehler, und PowerShell antwortet rot:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei GetDate ohne Bindestrich" data-ps-befehl="GetDate"></pre>
+    <p class="prose">Auf Deutsch: «Der Begriff ‹GetDate› ist nicht bekannt als Name eines Cmdlets, einer Funktion, einer Skriptdatei oder eines Programms. Prüfe die Schreibweise.» Hier fehlt der Bindestrich. Keine Sorge: Ein Fehler macht nichts kaputt. Du liest die Meldung, korrigierst und versuchst es nochmals. Fehlermeldungen von PowerShell 7 sind englisch, auch auf einem deutschen Windows.</p>
+  </section>
+
+  <!-- ===== 4 · Tasten ===== -->
+  <section id="tasten">
+    <span class="eyebrow">Schritt 4 · Weniger tippen, mehr erreichen</span>
+    <h2>Tab, Pfeiltasten, Verlauf und Abbrechen</h2>
+    <p class="prose">Profis tippen nicht schneller, sie tippen weniger. Die Bearbeitung der Eingabezeile übernimmt in PowerShell ein Modul namens <b>PSReadLine</b>. Es färbt deine Eingabe ein, merkt sich frühere Befehle und ergänzt Namen.</p>
+
+    <h3>Tab: PowerShell schreibt fertig</h3>
+    <p class="prose">Tippe den Anfang eines Namens und drück <kbd>Tab</kbd>. Aus <code class="ps">Get-Chi</code> wird <code class="ps">Get-ChildItem</code>. Das klappt auch für Ordner: <code class="ps">Get-ChildItem Do</code> und <kbd>Tab</kbd> ergibt <code class="ps">Get-ChildItem .\Dokumente</code>. Passen mehrere Namen, zeigt jedes weitere <kbd>Tab</kbd> den nächsten Treffer (hier <code class="ps">.\Downloads</code>), <kbd>Shift</kbd>+<kbd>Tab</kbd> geht zurück. Der Vorsatz <code>.\</code> heisst «im aktuellen Ordner».</p>
+    <div class="note tipp"><b>Tab ist auch eine Rechtschreibprüfung.</b> Ergänzt Tab nichts, gibt es keinen Namen mit diesem Anfang. Dann hast du dich vertippt, bevor du Enter drückst.</div>
+
+    <h3>Pfeiltasten und Verlauf</h3>
+    <p class="prose">Mit <kbd>↑</kbd> holst du den letzten Befehl zurück in die Eingabezeile, mit jedem weiteren <kbd>↑</kbd> den davor, mit <kbd>↓</kbd> wieder vorwärts. Du kannst ihn ändern und mit Enter erneut ausführen. Den Verlauf als Liste zeigt <code class="ps">Get-History</code>:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-History nach drei Befehlen"><span class="psk-prompt">PS C:\Users\lea&gt; </span>Get-History
+
+  Id     Duration CommandLine
+  --     -------- -----------
+   1        0.032 Get-Date
+   2        0.013 Get-Location
+   3        0.021 Get-ChildItem</pre>
+    <p class="prose"><code>Id</code> ist die laufende Nummer, <code>Duration</code> die Laufzeit in Sekunden, <code>CommandLine</code> der Befehl, so wie du ihn getippt hast. Ein Befehl kommt erst in den Verlauf, wenn er fertig ist. Darum fehlt <code class="ps">Get-History</code> selbst in dieser Liste.</p>
+    <div class="note"><b>Zwei Gedächtnisse.</b> <code class="ps">Get-History</code> kennt nur die aktuelle Sitzung. Schliesst du das Fenster, ist diese Liste weg. PSReadLine speichert deine Eingaben zusätzlich in einer Datei. Darum holt <kbd>↑</kbd> in einem neuen Fenster auch Befehle von gestern zurück, <code class="ps">Get-History</code> aber nicht.</div>
+
+    <h3>Bildschirm leeren und abbrechen</h3>
+    <p class="prose"><code class="ps">Clear-Host</code> (kurz <code class="ps">cls</code>) leert das Fenster. Der Verlauf bleibt dabei erhalten, <kbd>↑</kbd> und <code class="ps">Get-History</code> funktionieren weiter. Läuft ein Befehl zu lange, zum Beispiel ein endloser Ping mit <code class="ps">ping -t server</code>, brichst du ihn mit <kbd>Ctrl</kbd>+<kbd>C</kbd> ab. Auf einer deutschen Tastatur heisst die Taste <kbd>Strg</kbd>.</p>
+
+    <h3>Kopieren und einfügen</h3>
+    <p class="prose"><kbd>Ctrl</kbd>+<kbd>C</kbd> hat zwei Rollen: Ist Text markiert, kopiert es ihn. Ist nichts markiert, bricht es ab. Einfügen geht mit <kbd>Ctrl</kbd>+<kbd>V</kbd>. Windows Terminal kennt zusätzlich <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> und <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>, die nie abbrechen.</p>
+    <div class="card tablebox">
+      <table class="tabelle t01-tasten">
+        <caption>Die wichtigsten Tasten in pwsh 7</caption>
+        <thead><tr><th>Taste</th><th>Wirkung</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Enter</kbd></td><td>Befehl ausführen</td></tr>
+          <tr><td><kbd>Tab</kbd>, <kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>Namen ergänzen, nächster oder voriger Treffer</td></tr>
+          <tr><td><kbd>↑</kbd>, <kbd>↓</kbd></td><td>frühere Befehle zurückholen</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>Eingabezeile leeren, ohne auszuführen</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>markierten Text kopieren, sonst abbrechen</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>V</kbd></td><td>einfügen</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>L</kbd></td><td>Bildschirm leeren, wie <code class="ps">Clear-Host</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Administrator und Ausblick ===== -->
+  <section id="admin">
+    <span class="eyebrow">Schritt 5 · Mit Vorsicht</span>
+    <h2>Wann «Als Administrator ausführen»?</h2>
+    <p class="prose">Normalerweise arbeitet Lea mit ihren eigenen Rechten. Damit darf sie alles in ihrem Benutzerordner und kann fast alles anschauen. Für Änderungen am ganzen Computer braucht sie <b>Adminrechte</b> (Administratorrechte). Das ist wie der Generalschlüssel im Gemeindehaus: Man holt ihn nur, wenn man ihn wirklich braucht, und gibt ihn danach zurück.</p>
+    <div class="grid2">
+      <div class="card stack"><h3>Adminrechte nötig</h3>
+        <ul class="t01-ziele">
+          <li>Dienste starten oder stoppen (Station 12)</li>
+          <li>Programme für alle Benutzer installieren</li>
+          <li>Einstellungen für den ganzen Computer ändern</li>
+          <li>Dateien in geschützten Ordnern wie <code>C:\Windows</code> ändern</li>
+        </ul></div>
+      <div class="card stack"><h3>Geht ohne</h3>
+        <ul class="t01-ziele">
+          <li>Datum, Version und Ort anzeigen</li>
+          <li>Dateien im eigenen Benutzerordner anschauen und bearbeiten</li>
+          <li>Hilfe lesen und in pwsh 7 auch mit <code class="ps">Update-Help</code> aktualisieren</li>
+          <li>alles in diesem Lernpfad bis Station 11</li>
+        </ul></div>
+    </div>
+    <p class="prose">Ohne Adminrechte scheitert ein solcher Befehl mit einer Fehlermeldung. So sieht es aus, wenn Lea den Dienst <code>WolkenriedSync</code> starten will:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung beim Starten eines Dienstes ohne Adminrechte" data-ps-befehl="Start-Service WolkenriedSync"></pre>
+    <p class="prose">Auf Deutsch: «Der Dienst kann nicht gestartet werden: Er lässt sich auf diesem Computer nicht öffnen.» Der Grund sind die fehlenden Rechte. Für eine Konsole mit Adminrechten klickst du im Startmenü mit der rechten Maustaste auf «PowerShell 7» und wählst <b>Als Administrator ausführen</b>. Windows fragt dann nach (Benutzerkontensteuerung). Meist steht danach «Administrator» im Fenstertitel.</p>
+    <div class="note falle"><b>Nicht immer als Administrator arbeiten.</b> Mit Adminrechten führt PowerShell auch einen falschen Befehl ohne Widerspruch aus. Öffne die Admin-Konsole nur für die Aufgabe, die sie braucht, und schliesse sie danach.</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In Windows PowerShell 5.1 braucht <code class="ps">Update-Help</code> Adminrechte. In <span class="ps-version">7</span> nicht mehr, dort speichert es die Hilfe im eigenen Benutzerordner.</div>
+
+    <h3>Ausblick: PowerShell auf macOS und Linux</h3>
+    <p class="prose">PowerShell 7 läuft auch auf macOS und Linux. Du startest sie dort ebenfalls mit <code class="ps">pwsh</code>, und die Cmdlets heissen gleich. Zwei Dinge sind anders: Pfade schreibt man mit <code>/</code> statt <code>\</code>, und unter Linux zählen bei Dateinamen Gross- und Kleinbuchstaben (<code>Bericht.txt</code> und <code>bericht.txt</code> sind zwei Dateien). Wie man PowerShell dort installiert, steht in den Anleitungen auf Microsoft Learn (Quellen unten).</p>
+  </section>
+
+  <!-- ===== 6 · Geführte Tour im Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Geführte Tour: deine ersten Befehle</h2>
+    <p class="prose">Jetzt sitzt du an Leas Rechner. Tippe die Befehle selbst und drück Enter. Der Simulator ist ein Spiel-Rechner: Nichts davon ändert deinen eigenen Computer. Die Tour zeigt dir immer den nächsten Schritt. Die Uhr des Spiel-Rechners steht still: Es ist immer Montag, 2. November 2026, 09:00 Uhr.</p>
+    <div class="card stack t01-tour">
+      <p class="t01-tour-stand" id="t01-tour-stand"></p>
+      <p class="t01-tour-jetzt" id="t01-tour-jetzt" aria-live="polite"></p>
+    </div>
+    <div id="t01-konsole"></div>
+  </section>
+
+  <!-- ===== 7 · Prompt-Anatomie ===== -->
+  <section id="anatomie">
+    <span class="eyebrow">Schritt 7 · Genau hinschauen</span>
+    <h2>Prompt-Anatomie</h2>
+    <p class="prose">So sieht Leas Fenster aus, nachdem sie <code class="ps">Get-ChildItem Dokumente</code> eingegeben hat (gekürzt auf eine Datei). Jeder unterstrichene Teil ist ein Knopf. Tippe darauf, und du erfährst, was er bedeutet. Im Quiz suchst du danach selbst den richtigen Teil.</p>
+    <div class="row modes" role="group" aria-label="Ansicht">
+      <button type="button" class="btn on" id="t01-modus-erkunden" aria-pressed="true">Erkunden</button>
+      <button type="button" class="btn" id="t01-modus-quiz" aria-pressed="false">Quiz</button>
+    </div>
+    <div class="t01-anatomie" id="t01-anatomie" tabindex="-1" role="group" aria-label="Terminal-Ausschnitt mit anklickbaren Teilen"></div>
+    <div class="card stack t01-erkl" id="t01-anatomie-info" aria-live="polite"></div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 1 · Einordnen</span><h3>PowerShell 7 oder Windows PowerShell 5.1?</h3></div>
+      <div id="t01-u-version"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 2 · Zuordnen</span><h3>Welche Taste?</h3></div>
+      <div id="t01-u-tasten"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 3 · Einordnen</span><h3>Braucht das Adminrechte?</h3></div>
+      <div id="t01-u-admin"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 4 · Ausgabe vorhersagen</span><h3>Klein geschrieben</h3></div>
+      <div id="t01-u-klein"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 5 · Ausgabe vorhersagen</span><h3>Was steht im Verlauf?</h3></div>
+      <div id="t01-u-verlauf"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 6 · Fehler finden</span><h3>Drei Zeilen, die nicht laufen</h3></div>
+      <p class="hint">Lea hat drei Befehle aus Anleitungen übernommen, und jeder endet rot. Finde den Fehler und tippe den Befehl richtig in die Konsole.</p>
+      <div id="t01-u-fehler"></div>
+    </div>
+    <div id="t01-u-wf"></div>
+    <div class="stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 8 · Befehl selbst schreiben</span><h3>Zwei Angaben für die Inventarliste</h3></div>
+      <div id="t01-u-konsole"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 9 · Selbst tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Lesen ist gut, Tippen ist besser. Hier schreibst du jeden Befehl selbst, Buchstabe für Buchstabe. Das Training hat drei Stufen: Erst tippst du ab, dann wandelst du einen Befehl ab, am Schluss findest du den Befehl allein. Jede Stufe hat ihre eigene Konsole. Tab und Pfeiltasten brauchst du nicht, es geht also auch auf dem Handy.</p>
+    <div class="note tipp"><b>Verirrt?</b> «↺ Zurücksetzen» stellt Leas Rechner wieder her. Gelöste Aufgaben bleiben gelöst. Gross und Klein ist bei Befehlsnamen egal, und für die meisten Aufgaben gibt es mehr als einen richtigen Weg.</div>
+
+    <h3>Stufe 1 · Nachtippen</h3>
+    <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn genau ab und drück Enter. So gewöhnen sich deine Finger an Bindestrich, Backslash und Anführungszeichen.</p>
+    <div id="t01-tipp-1"></div>
+
+    <h3>Stufe 2 · Abwandeln</h3>
+    <p class="prose">Jetzt siehst du einen fertigen Befehl, brauchst aber etwas anderes. Ändere nur das, was sich ändern muss.</p>
+    <div id="t01-tipp-2"></div>
+
+    <h3>Stufe 3 · Selber lösen</h3>
+    <p class="prose">Hier steht nur noch, was Lea wissen will. Den Befehl findest du selbst. Brauchst du einen Anstoss, öffne den Hinweis. Die Lösung kommt erst ganz zum Schluss.</p>
+    <div id="t01-tipp-3"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas erster Auftrag: die Inventarliste</h2>
+    <p class="prose">Lea hält fest, welche PowerShell auf ihrem Rechner läuft, wie der Rechner heisst und was in ihrem Benutzerordner liegt. Jede Szene zeigt die Eingabe und die Ausgabe.</p>
+    <div id="t01-film"></div>
+    <details class="sol"><summary>Die Lösung als Text</summary>
+      <div class="stack">
+        <p>1. Version: <code class="ps">$PSVersionTable</code> zeigt <code>PSVersion 7.6.1</code> und <code>PSEdition Core</code>, also PowerShell 7. 2. Rechnername: <code class="ps">hostname</code> zeigt <code>WR-LEA-01</code>. 3. Ort: <code class="ps">Get-Location</code> zeigt <code>C:\Users\lea</code>. 4. Inhalt: <code class="ps">Get-ChildItem</code> zeigt die Ordner Berichte, Bilder, Dokumente, Downloads und Logs.</p>
+        <p>Leas Notiz: «WR-LEA-01: PowerShell 7.6.1 (Core). Benutzerordner C:\Users\lea mit Berichte, Bilder, Dokumente, Downloads, Logs.» Eigene Lösung, die Befehle in pwsh 7.6 nachgeprüft (Leas Rechner gibt es nur im Simulator).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Sechs Stolpersteine</h2>
+    <div class="note falle"><b>Den Prompt mitkopiert.</b> In Anleitungen steht oft <code>PS C:\Users\lea&gt; Get-ChildItem</code>. Kopierst du die ganze Zeile, liest PowerShell <code class="ps">PS</code> als Befehl. <code class="ps">ps</code> ist ein Kurzname für <code class="ps">Get-Process</code>, und so kommt eine unerwartete Meldung:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei mitkopiertem Prompt" lang="en"><span class="psk-prompt">PS C:\Users\lea&gt; </span>PS C:\Users\lea&gt; Get-ChildItem
+<span class="psk-fehler">Get-Process: A positional parameter cannot be found that accepts argument 'Get-ChildItem'.</span></pre>
+      Kopiere nur den Teil nach <code>&gt;</code>.</div>
+    <div class="note falle"><b>Bindestrich vergessen oder Leerzeichen eingebaut.</b> <code class="ps">GetDate</code> und <code class="ps">Get - Date</code> kennt PowerShell nicht (<span lang="en">«is not recognized»</span>). Verb und Nomen hängen ohne Leerzeichen mit einem Bindestrich zusammen: <code class="ps">Get-Date</code>.</div>
+    <div class="note falle"><b>Die falsche PowerShell geöffnet.</b> Im Startmenü stehen «Windows PowerShell» (5.1) und «PowerShell 7» untereinander. Verhält sich ein Befehl anders als hier beschrieben, prüfe mit <code class="ps">$PSVersionTable</code>, ob <code>PSEdition</code> wirklich <code>Core</code> zeigt.</div>
+    <div class="note falle"><b>Ctrl+C kopiert nicht.</b> Ohne markierten Text bricht <kbd>Ctrl</kbd>+<kbd>C</kbd> die Eingabe ab, statt zu kopieren. Erst markieren, dann kopieren. Oder in Windows Terminal <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>.</div>
+    <div class="note falle"><b>Lange Namen von Hand tippen.</b> Wer <code class="ps">Get-ChildItme</code> tippt, bekommt <span lang="en">«is not recognized»</span>. Mit <kbd>Tab</kbd> passiert das nicht: Tippe <code class="ps">Get-Chi</code>, Tab, fertig.</div>
+    <div class="note falle"><b>Immer als Administrator.</b> Die Admin-Konsole ist bequem, weil nichts an fehlenden Rechten scheitert. Genau das ist gefährlich: Auch Fehler gehen dann ungebremst durch. Adminrechte nur, wenn eine Aufgabe sie verlangt.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je eine richtige Antwort. Das Ergebnis erscheint unten in der Abschluss-Box.</p>
+    <div id="t01-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">Get-Date</code></th><td>Datum und Uhrzeit anzeigen</td><td><code class="ps">Get-Date</code></td></tr>
+          <tr><th><code class="ps">$PSVersionTable</code></th><td>Version und Edition von PowerShell anzeigen</td><td><code class="ps">$PSVersionTable.PSEdition</code></td></tr>
+          <tr><th><code class="ps">Get-Location</code></th><td>aktuellen Ort (Ordner) anzeigen</td><td><code class="ps">Get-Location</code></td></tr>
+          <tr><th><code class="ps">Get-ChildItem</code></th><td>Inhalt eines Ordners anzeigen</td><td><code class="ps">Get-ChildItem Dokumente</code></td></tr>
+          <tr><th><code class="ps">Get-History</code></th><td>Befehle dieser Sitzung auflisten</td><td><code class="ps">Get-History</code></td></tr>
+          <tr><th><code class="ps">Clear-Host</code></th><td>Fenster leeren, Verlauf bleibt</td><td><code class="ps">cls</code></td></tr>
+          <tr><th><code class="ps">pwsh</code></th><td>PowerShell 7 aus einer anderen Shell starten</td><td><code class="ps">pwsh</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Eine <b>Shell</b> nimmt getippte Befehle entgegen und zeigt das Ergebnis. Das <b>Terminal</b> ist das Fenster dazu.</li>
+      <li>Der <b>Prompt</b> <code>PS C:\Users\lea&gt;</code> heisst: PowerShell ist bereit, du bist im Ordner <code>C:\Users\lea</code>.</li>
+      <li>Ein <b>Cmdlet</b> heisst Verb-Nomen, zum Beispiel <code class="ps">Get-Date</code>. Gross und klein ist egal.</li>
+      <li><code class="ps">pwsh</code> ist PowerShell 7 (<code>Core</code>), <code class="ps">powershell.exe</code> ist Windows PowerShell 5.1 (<code>Desktop</code>). Beide laufen nebeneinander.</li>
+      <li><kbd>Tab</kbd> ergänzt Namen, <kbd>↑</kbd> holt frühere Befehle, <kbd>Ctrl</kbd>+<kbd>C</kbd> bricht ab oder kopiert Markiertes.</li>
+      <li><code class="ps">Clear-Host</code> leert nur das Fenster, nicht den Verlauf.</li>
+      <li>Adminrechte nur für Änderungen am ganzen Computer, nie aus Bequemlichkeit.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="summary prose">
+        <li>Programm <code>powershell.exe</code> statt <code>pwsh.exe</code>; <code>PSEdition</code> ist <code>Desktop</code> statt <code>Core</code>.</li>
+        <li>Läuft nur unter Windows und ist dort schon eingebaut.</li>
+        <li><code class="ps">Get-History</code> zeigt nur <code>Id</code> und <code>CommandLine</code>, ohne Spalte <code>Duration</code>.</li>
+        <li><code class="ps">Update-Help</code> braucht Adminrechte.</li>
+        <li>Fehlermeldungen erscheinen auf einem deutschen Windows deutsch und über mehrere Zeilen. pwsh 7 meldet englisch und knapp.</li>
+        <li>Es bringt eine ältere PSReadLine-Version mit (2.0.0, in pwsh 7.6: 2.4.5).</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn)</h3>
+      <ul class="t01-quellen">
+        <li><a href="https://learn.microsoft.com/powershell/scripting/overview">What is PowerShell?</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/install/install-powershell-on-windows">Install PowerShell 7 on Windows</a> (neben 5.1, winget, Startmenü)</li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/whats-new/differences-from-windows-powershell">Differences between Windows PowerShell 5.1 and PowerShell 7.x</a> (pwsh.exe, .NET, Update-Help)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/psreadline/about/about_psreadline">about_PSReadLine</a> (Eingabezeile, Verlaufsdatei, Versionen)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_history">about_History</a> (Sitzungsverlauf, Tasten)</li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/install/powershell-support-lifecycle">PowerShell Support Lifecycle</a> (Windows PowerShell 5.1 als Teil von Windows)</li>
+        <li><a href="https://learn.microsoft.com/windows/terminal/">Windows Terminal</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/install/install-powershell-on-macos">Install PowerShell on macOS</a>, <a href="https://learn.microsoft.com/powershell/scripting/install/linux-overview">Install PowerShell on Linux</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-date">Get-Date</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-location">Get-Location</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-history">Get-History</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/clear-host">Clear-Host</a></li>
+      </ul>
+      <p class="hint">Alle Ausgaben, Fehlermeldungen und Tastenbelegungen auf dieser Seite sind in pwsh 7.6.1 und, bei den 5.1-Hinweisen, in Windows PowerShell 5.1 nachgeprüft. Leas Rechner gibt es nur im Simulator.</p>
+    </div>
+    <footer class="hint">Weiter geht es mit Station 02 «Cmdlets: Verb-Nomen und Parameter»: Dort zerlegst du Befehle in ihre Teile und baust eigene.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  // Code im HTML immer als Text in <code class="ps"> (wird von ps-konsole.js gefärbt)
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  const K = (t) => "<kbd>" + esc(t) + "</kbd>";
+  const PROMPT = '<span class="psk-prompt">PS C:\\Users\\lea&gt; </span>';
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t01-sortierer", {
+    kategorien: ["Shell", "Terminal", "Prompt", "Cmdlet"],
+    elemente: [
+      { html: C("pwsh"), kategorie: "Shell", erklaerung: "pwsh ist das Programm PowerShell 7, also eine Shell." },
+      { html: "Windows Terminal", kategorie: "Terminal", erklaerung: "Das Fenster mit Tabs, in dem Shells laufen." },
+      { html: "<code>PS C:\\Users\\lea&gt;</code>", kategorie: "Prompt", erklaerung: "So meldet PowerShell: Ich bin bereit, du bist in C:\\Users\\lea." },
+      { html: C("Get-Date"), kategorie: "Cmdlet", erklaerung: "Ein Befehl der Form Verb-Nomen: Datum holen." },
+      { html: C("powershell.exe"), kategorie: "Shell", erklaerung: "Das Programm Windows PowerShell 5.1, ebenfalls eine Shell." },
+      { html: C("Get-Location"), kategorie: "Cmdlet", erklaerung: "Verb Get, Nomen Location: den aktuellen Ort holen." },
+      { html: "<code>cmd</code> (alte Eingabeaufforderung)", kategorie: "Shell", erklaerung: "cmd ist eine ältere Shell von Windows. Auch sie läuft in Windows Terminal." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper ---------- */
+  const st = L.konsole.sitzung();
+  const stDatum = st.html("Get-Date");
+  const LP = (id, html) => '<span data-link="' + id + '">' + html + "</span>";
+  const pre = (inhalt) => '<pre class="ps-ausgabe">' + inhalt + "</pre>";
+  L.stepper("#t01-stepper", {
+    titel: "Leas erster Befehl",
+    text: 'Lea sieht, dass <span data-link="p">PowerShell bereit ist</span>, tippt <span data-link="b">den Befehl für das Datum</span>, <span data-link="e">drückt Enter</span> und liest <span data-link="a">die Antwort</span>.',
+    schritte: [
+      { html: pre(LP("p", '<span class="psk-prompt">PS C:\\Users\\lea&gt; </span>') + '<span class="t01-cursor" aria-hidden="true">&nbsp;</span>'),
+        warum: "Der Prompt PS C:\\Users\\lea> heisst: PowerShell wartet auf eine Eingabe. Der Pfad dazwischen ist der Ordner, in dem du gerade arbeitest." },
+      { html: pre(LP("p", '<span class="psk-prompt">PS C:\\Users\\lea&gt; </span>') + LP("b", '<span class="psk-t-befehl">Get-Date</span>')),
+        warum: "Lea tippt den Namen des Cmdlets: Get-Date, also «Datum holen». Noch passiert nichts. Solange du nicht Enter drückst, kannst du die Zeile korrigieren." },
+      { html: pre(LP("p", '<span class="psk-prompt">PS C:\\Users\\lea&gt; </span>') + LP("b", '<span class="psk-t-befehl">Get-Date</span>') + " " + LP("e", '<span class="psk-hinweis">⏎ Enter</span>')),
+        warum: "Mit Enter schickt Lea den Befehl ab. PowerShell sucht ein Cmdlet mit diesem Namen und führt es aus." },
+      { html: LP("a", stDatum),
+        warum: "Die Antwort erscheint unter der Eingabe: Wochentag, Datum und Uhrzeit des Rechners. Danach steht wieder ein neuer Prompt da, bereit für den nächsten Befehl." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Geführte Tour ---------- */
+  // Merker für Tasten, die der Simulator selbst nicht meldet (Tab, Pfeil nach oben)
+  const tour = { tabBefehl: false, tabPfad: false, pfeilWert: null };
+  const reHome = /Directory: C:\\Users\\lea\r?\n/;
+  const kons = L.konsole("#t01-konsole", {
+    aufgabenTitel: "Tour durch Leas Rechner",
+    aufgaben: [
+      { titel: "Datum und Uhrzeit",
+        text: "<p>Lass dir Datum und Uhrzeit des Rechners anzeigen.</p>",
+        hinweis: "<p>Verb Get (holen), Nomen Date (Datum), dazwischen ein Bindestrich. Dann Enter.</p>",
+        loesung: "Get-Date",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /Montag, 2\. November 2026 09:00:00/.test(ctx.ausgabe) },
+      { titel: "Welche PowerShell?",
+        text: "<p>Zeige die ganze Tabelle mit Version und Edition von PowerShell.</p>",
+        hinweis: "<p>Die Variable heisst PSVersionTable. Ihr Name beginnt mit einem Dollarzeichen.</p>",
+        loesung: "$PSVersionTable",
+        pruefe: (ctx) => /\$PSVersionTable/i.test(ctx.eingabe) && /PSVersion\s+7\.6\.1/.test(ctx.ausgabe) && /PSEdition\s+Core/.test(ctx.ausgabe) },
+      { titel: "Wo bin ich?",
+        text: "<p>Lass dir den aktuellen Ort anzeigen, also den Ordner, in dem du gerade bist.</p>",
+        hinweis: "<p>Ort heisst auf Englisch Location.</p>",
+        loesung: "Get-Location",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Location") && /C:\\Users\\lea/.test(ctx.ausgabe) },
+      { titel: "Tab ergänzt den Befehl",
+        text: "<p>Tippe nur <code>Get-Chi</code> und drück " + K("Tab") + ". PowerShell schreibt den Namen fertig. Dann Enter.</p>",
+        hinweis: "<p>Klicke in die Eingabezeile, tippe Get-Chi und drück die Tab-Taste (links neben Q). Auf dem Handy fehlt die Tab-Taste meist; tippe dann den ganzen Namen Get-ChildItem und lös die Aufgabe am Computer. Die Lösung unten zeigt nur das Ergebnis: Gelöst ist die Aufgabe erst, wenn du Tab benutzt.</p>",
+        loesung: "Get-ChildItem",
+        pruefe: (ctx) => tour.tabBefehl && ctx.befehle.includes("Get-ChildItem") && reHome.test(ctx.ausgabe) },
+      { titel: "Tab ergänzt den Ordner",
+        text: "<p>Tippe <code>Get-ChildItem Lo</code> und drück " + K("Tab") + ". Aus <code>Lo</code> wird der Ordner <code>.\\Logs</code>. Dann Enter.</p>",
+        hinweis: "<p>Tab funktioniert auch hinter dem Befehl für Ordner- und Dateinamen. Der Vorsatz .\\ heisst «im aktuellen Ordner». Gelöst ist die Aufgabe erst mit Tab.</p>",
+        loesung: "Get-ChildItem .\\Logs",
+        pruefe: (ctx) => tour.tabPfad && ctx.befehle.includes("Get-ChildItem") && /Directory: C:\\Users\\lea\\Logs/.test(ctx.ausgabe) },
+      { titel: "Pfeil nach oben",
+        text: "<p>Hol mit " + K("↑") + " einen früheren Befehl zurück und führe ihn mit Enter nochmals aus, ohne ihn neu zu tippen.</p>",
+        hinweis: "<p>Drück in der leeren Eingabezeile die Pfeiltaste nach oben. Der letzte Befehl steht wieder da. Enter. Abtippen zählt hier nicht: Gelöst ist die Aufgabe nur mit der Pfeiltaste.</p>",
+        loesung: "Get-ChildItem .\\Logs",
+        pruefe: (ctx) => tour.pfeilWert !== null && ctx.eingabe === tour.pfeilWert && ctx.verlauf.length >= 2 },
+      { titel: "Der Verlauf als Liste",
+        text: "<p>Zeige alle Befehle, die du in dieser Sitzung eingegeben hast.</p><p class=\"hint\">Der Simulator listet " + C("Get-History") + " selbst schon mit. Echtes pwsh 7 nimmt einen Befehl erst in den Verlauf auf, wenn er fertig ist (siehe Schritt 4).</p>",
+        hinweis: "<p>Verlauf heisst auf Englisch History. Verb Get.</p>",
+        loesung: "Get-History",
+        pruefe: (ctx) => ctx.befehle.includes("Get-History") && /CommandLine/.test(ctx.ausgabe) },
+      { titel: "Aufräumen",
+        text: "<p>Leere das Fenster. Danach kannst du mit " + K("↑") + " prüfen: Der Verlauf ist noch da.</p>",
+        hinweis: "<p>Clear-Host oder kurz cls.</p>",
+        loesung: "Clear-Host",
+        pruefe: (ctx) => ctx.befehle.includes("Clear-Host") }
+    ]
+  });
+  if (kons) {
+    const ein = kons.eingabe;
+    // Läuft nach dem Tastendruck-Handler des Simulators: Die Zeile ist schon ergänzt
+    ein.addEventListener("keydown", (e) => {
+      if (e.key === "Tab" && !e.ctrlKey && !e.altKey) {
+        if (/^\s*Get-ChildItem\s*$/i.test(ein.value)) tour.tabBefehl = true;
+        if (/^\s*Get-ChildItem\s+\.\\Logs\s*$/i.test(ein.value)) tour.tabPfad = true;
+      }
+      if (e.key === "ArrowUp") tour.pfeilWert = ein.value || null;
+    });
+    ein.addEventListener("input", () => { tour.pfeilWert = null; });
+    const tourStand = document.getElementById("t01-tour-stand");
+    const tourJetzt = document.getElementById("t01-tour-jetzt");
+    const TOUR_TEXT = [
+      "Tippe " + C("Get-Date") + " und drück " + K("Enter") + ".",
+      "Tippe " + C("$PSVersionTable") + " und drück " + K("Enter") + ". Achte auf PSEdition.",
+      "Tippe " + C("Get-Location") + ". Vergleiche die Antwort mit dem Prompt.",
+      "Tippe " + C("Get-Chi") + ", dann " + K("Tab") + ", dann " + K("Enter") + ".",
+      "Tippe " + C("Get-ChildItem Lo") + ", dann " + K("Tab") + ", dann " + K("Enter") + ".",
+      "Drück " + K("↑") + " und dann " + K("Enter") + ".",
+      "Tippe " + C("Get-History") + " und drück " + K("Enter") + ".",
+      "Tippe " + C("Clear-Host") + " oder " + C("cls") + " und drück " + K("Enter") + "."
+    ];
+    const tourZeigen = () => {
+      const stand = kons.aufgabenStand();
+      const n = stand.indexOf(false);
+      const fertig = stand.filter(Boolean).length;
+      tourStand.textContent = "Tour: " + fertig + " von " + stand.length + " Schritten geschafft";
+      tourJetzt.innerHTML = n < 0
+        ? "<b>Geschafft!</b> Du hast deine ersten acht Befehle ausgeführt. Weiter mit der Prompt-Anatomie."
+        : "<b>Schritt " + (n + 1) + ":</b> " + TOUR_TEXT[n];
+    };
+    document.getElementById("t01-konsole").addEventListener("lernpfad:aufgabe", tourZeigen);
+    tourZeigen();
+  }
+
+  /* ---------- Schritt 7: Prompt-Anatomie ---------- */
+  const TEILE = {
+    ps: { titel: "PS", text: "Kurz für PowerShell. Daran erkennst du, dass eine PowerShell wartet und nicht die alte Eingabeaufforderung cmd (deren Prompt sieht so aus: C:\\Users\\lea>). Ob 5.1 oder 7, zeigt der Prompt nicht." },
+    lw: { titel: "C:", text: "Das Laufwerk. Hier liegt Leas Benutzerordner auf dem Laufwerk C:." },
+    pfad: { titel: "\\Users\\lea", text: "Der Pfad zum aktuellen Ort: im Laufwerk C: der Ordner Users, darin der Ordner lea. Zusammen mit C: ist das C:\\Users\\lea, genau das, was Get-Location anzeigt." },
+    gt: { titel: ">", text: "Das Zeichen > schliesst den Prompt ab. Alles danach ist deine Eingabe." },
+    befehl: { titel: "Get-ChildItem", text: "Der Befehl, den Lea getippt hat: ein Cmdlet aus Verb (Get) und Nomen (ChildItem). Es zeigt die Einträge eines Ordners." },
+    wert: { titel: "Dokumente", text: "Eine Angabe zum Befehl: welcher Ordner gezeigt werden soll. Ohne sie zeigt Get-ChildItem den aktuellen Ort. In Station 02 heisst das Wert eines Parameters." },
+    dir: { titel: "Directory: C:\\Users\\lea\\Dokumente", text: "Die Kopfzeile der Ausgabe: Diese Einträge liegen im Ordner C:\\Users\\lea\\Dokumente (Directory heisst Verzeichnis, also Ordner)." },
+    kopf: { titel: "Spaltenköpfe", text: "Die Namen der Spalten, darunter eine Linie aus Strichen. PowerShell zeigt die Ausgabe als Tabelle." },
+    mode: { titel: "-a---", text: "Die Spalte Mode zeigt Eigenschaften als Buchstaben. d wäre ein Ordner (directory), a heisst archivbereit, eine ganz normale Datei. Ein Strich heisst: diese Eigenschaft fehlt." },
+    zeit: { titel: "30.10.2026 17:05", text: "LastWriteTime: wann die Datei zuletzt geändert wurde, im Schweizer Format Tag.Monat.Jahr." },
+    laenge: { titel: "197", text: "Length: die Grösse der Datei in Bytes. 197 Bytes sind ein kurzer Text. Ordner haben hier keinen Wert." },
+    name: { titel: "notizen.txt", text: "Name: der Dateiname mit Endung. .txt heisst Textdatei." },
+    prompt2: { titel: "neuer Prompt", text: "Nach der Ausgabe steht wieder ein Prompt. PowerShell ist fertig und wartet auf den nächsten Befehl. Der blinkende Strich ist die Schreibmarke." }
+  };
+  const anat = document.getElementById("t01-anatomie");
+  const anatInfo = document.getElementById("t01-anatomie-info");
+  // Aufbau: Text und Knöpfe; Leerzeichen bleiben dank white-space:pre erhalten
+  const AUFBAU = [
+    [["ps", "PS"], " ", ["lw", "C:"], ["pfad", "\\Users\\lea"], ["gt", ">"], " ", ["befehl", "Get-ChildItem"], " ", ["wert", "Dokumente"]],
+    [""],
+    ["    ", ["dir", "Directory: C:\\Users\\lea\\Dokumente"]],
+    [""],
+    [["kopf", "Mode                 LastWriteTime         Length Name"]],
+    [{ k: "t01-kopf", t: "----                 -------------         ------ ----" }],
+    [["mode", "-a---"], "          ", ["zeit", "30.10.2026    17:05"], "            ", ["laenge", "197"], " ", ["name", "notizen.txt"]],
+    [""],
+    [["prompt2", "PS C:\\Users\\lea> "], { cursor: true }]
+  ];
+  const knoepfe = [];
+  AUFBAU.forEach((zeile) => {
+    const z = document.createElement("span");
+    z.className = "t01-zeile";
+    zeile.forEach((stueck) => {
+      if (typeof stueck === "string") { z.appendChild(document.createTextNode(stueck || " ")); return; }
+      if (!Array.isArray(stueck)) {
+        const s = document.createElement("span");
+        if (stueck.cursor) { s.className = "t01-cursor"; s.setAttribute("aria-hidden", "true"); s.textContent = " "; }
+        else { s.className = stueck.k; s.textContent = stueck.t; }
+        z.appendChild(s);
+        return;
+      }
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "t01-teil" + (stueck[0] === "dir" || stueck[0] === "kopf" ? " t01-kopf" : "");
+      b.textContent = stueck[1];
+      b.dataset.teil = stueck[0];
+      b.setAttribute("aria-pressed", "false");
+      // Sichtbarer Text bleibt der Name des Knopfs; der Titel kommt nur im Erkunden-Modus als Beschreibung dazu
+      if (!document.getElementById("t01-tt-" + stueck[0])) {
+        const tt = document.createElement("span");
+        tt.id = "t01-tt-" + stueck[0];
+        tt.hidden = true;
+        tt.textContent = "Teil: " + TEILE[stueck[0]].titel;
+        anat.parentNode.appendChild(tt);
+      }
+      b.addEventListener("click", () => teilGewaehlt(b));
+      knoepfe.push(b);
+      z.appendChild(b);
+    });
+    anat.appendChild(z);
+  });
+  const QUIZ = [
+    { frage: "In welchem Ordner ist Lea gerade?", ok: ["pfad", "lw"], erkl: "C:\\Users\\lea: Laufwerk C: und Pfad \\Users\\lea im Prompt." },
+    { frage: "Woran erkennst du, dass eine PowerShell wartet und nicht cmd?", ok: ["ps"], erkl: "Das PS am Anfang des Prompts." },
+    { frage: "Welcher Teil ist der Name des Cmdlets?", ok: ["befehl"], erkl: "Get-ChildItem, Verb Get und Nomen ChildItem." },
+    { frage: "Wie gross ist die Datei notizen.txt?", ok: ["laenge"], erkl: "197 Bytes in der Spalte Length." },
+    { frage: "Wann wurde die Datei zuletzt geändert?", ok: ["zeit"], erkl: "30.10.2026 um 17:05 in der Spalte LastWriteTime." },
+    { frage: "Welcher Teil zeigt, dass PowerShell fertig ist und auf den nächsten Befehl wartet?", ok: ["prompt2"], erkl: "Der neue Prompt nach der Ausgabe." },
+    { frage: "Welcher Teil sagt PowerShell, welchen Ordner es zeigen soll?", ok: ["wert"], erkl: "Dokumente, die Angabe hinter dem Befehl." }
+  ];
+  const az = { modus: "erkunden", nr: 0, richtig: 0, beantwortet: false };
+  function markieren(b) { knoepfe.forEach((k) => { k.setAttribute("aria-pressed", String(k === b)); k.classList.remove("t01-richtig", "t01-falsch"); }); }
+  function erkundenStart() {
+    markieren(null);
+    anatInfo.innerHTML = "<h3>Erkunden</h3><p>Tippe auf einen unterstrichenen Teil im Fenster.</p>";
+  }
+  function quizFrage() {
+    markieren(null);
+    az.beantwortet = false;
+    if (az.nr >= QUIZ.length) {
+      anatInfo.innerHTML = "<h3>Quiz fertig</h3><p>" + az.richtig + " von " + QUIZ.length + " beim ersten Versuch richtig.</p>" +
+        '<div class="row"><button type="button" class="btn" id="t01-quiz-neu">Quiz neu starten</button></div>';
+      document.getElementById("t01-quiz-neu").addEventListener("click", () => { az.nr = 0; az.richtig = 0; quizFrage(); anat.focus(); });
+      return;
+    }
+    anatInfo.innerHTML = '<p class="hint">Frage ' + (az.nr + 1) + " von " + QUIZ.length + "</p>" +
+      '<p class="t01-quiz-frage">' + esc(QUIZ[az.nr].frage) + '</p><p class="hint">Tippe auf den passenden Teil im Fenster.</p>' +
+      '<div class="rueckmeldung leer" id="t01-quiz-rm"></div>';
+  }
+  function teilGewaehlt(b) {
+    const id = b.dataset.teil;
+    if (az.modus === "erkunden") {
+      markieren(b);
+      anatInfo.innerHTML = "<h3>" + esc(TEILE[id].titel) + "</h3><p>" + esc(TEILE[id].text) + "</p>";
+      return;
+    }
+    if (az.nr >= QUIZ.length) return;
+    const q = QUIZ[az.nr];
+    const rm = document.getElementById("t01-quiz-rm");
+    const richtig = q.ok.indexOf(id) >= 0;
+    markieren(b);
+    b.classList.add(richtig ? "t01-richtig" : "t01-falsch");
+    if (richtig) {
+      if (!az.beantwortet) az.richtig++;
+      rm.className = "rueckmeldung ok";
+      rm.innerHTML = '<span class="marke">✓</span> Richtig: ' + esc(q.erkl) +
+        ' <button type="button" class="btn primary" id="t01-quiz-weiter">' + (az.nr + 1 < QUIZ.length ? "Nächste Frage" : "Auswertung") + "</button>";
+      document.getElementById("t01-quiz-weiter").addEventListener("click", () => { az.nr++; quizFrage(); anat.focus(); });
+    } else {
+      rm.className = "rueckmeldung bad";
+      rm.innerHTML = '<span class="marke">✗</span> Das ist «' + esc(TEILE[id].titel) + "». " + esc(TEILE[id].text) + " Versuch einen anderen Teil.";
+    }
+    az.beantwortet = true;
+  }
+  const bErk = document.getElementById("t01-modus-erkunden");
+  const bQuiz = document.getElementById("t01-modus-quiz");
+  function modus(m) {
+    az.modus = m;
+    bErk.classList.toggle("on", m === "erkunden"); bErk.setAttribute("aria-pressed", String(m === "erkunden"));
+    bQuiz.classList.toggle("on", m === "quiz"); bQuiz.setAttribute("aria-pressed", String(m === "quiz"));
+    knoepfe.forEach((k) => {
+      if (m === "erkunden") k.setAttribute("aria-describedby", "t01-tt-" + k.dataset.teil);
+      else k.removeAttribute("aria-describedby");
+    });
+    if (m === "quiz") { az.nr = 0; az.richtig = 0; quizFrage(); } else erkundenStart();
+  }
+  bErk.addEventListener("click", () => modus("erkunden"));
+  bQuiz.addEventListener("click", () => modus("quiz"));
+  modus("erkunden");
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t01-u-version", {
+    frage: "Gehört die Angabe zu PowerShell 7 oder zu Windows PowerShell 5.1?",
+    kategorien: ["PowerShell 7", "Windows PowerShell 5.1"],
+    elemente: [
+      { html: C("pwsh.exe"), kategorie: "PowerShell 7", erklaerung: "Seit PowerShell 6 heisst das Programm pwsh, damit beide nebeneinander laufen können." },
+      { html: C("powershell.exe"), kategorie: "Windows PowerShell 5.1", erklaerung: "Der alte Programmname, er startet Windows PowerShell 5.1." },
+      { html: "<code>PSEdition</code> ist <code>Core</code>", kategorie: "PowerShell 7", erklaerung: "Core steht für die Grundlage .NET (früher .NET Core)." },
+      { html: "<code>PSEdition</code> ist <code>Desktop</code>", kategorie: "Windows PowerShell 5.1", erklaerung: "Desktop heisst: Windows PowerShell auf dem .NET Framework." },
+      { html: "läuft auch auf macOS und Linux", kategorie: "PowerShell 7", erklaerung: "Der Wechsel auf .NET (Core) machte PowerShell plattformübergreifend." },
+      { html: "ist in Windows schon eingebaut", kategorie: "Windows PowerShell 5.1", erklaerung: "5.1 gehört zu Windows. PowerShell 7 installierst du zusätzlich." },
+      { html: "liegt in <code>C:\\Program Files\\PowerShell\\7</code>", kategorie: "PowerShell 7", erklaerung: "Dorthin installiert das MSI-Paket PowerShell 7. Windows PowerShell 5.1 liegt unter C:\\Windows\\System32." },
+      { html: C("Get-History") + " zeigt eine Spalte <code>Duration</code>", kategorie: "PowerShell 7", erklaerung: "In 5.1 zeigt Get-History nur Id und CommandLine." }
+    ]
+  });
+  L.sortierer("#t01-u-tasten", {
+    frage: "Welche Taste macht das? Gilt für pwsh 7 in Windows Terminal.",
+    kategorien: ["Enter", "Tab", "↑", "Esc", "Ctrl+C"],
+    elemente: [
+      { html: "Den getippten Befehl ausführen", kategorie: "Enter", erklaerung: "Erst Enter schickt die Zeile ab." },
+      { html: "Aus <code>Get-Chi</code> wird <code>Get-ChildItem</code>", kategorie: "Tab", erklaerung: "Tab ergänzt Namen von Befehlen, Parametern und Pfaden." },
+      { html: "Beim zweiten Druck den nächsten passenden Namen zeigen", kategorie: "Tab", erklaerung: "Passen mehrere Namen, blättert jedes weitere Tab weiter." },
+      { html: "Den letzten Befehl zurück in die Zeile holen", kategorie: "↑", erklaerung: "Pfeil nach oben blättert im Verlauf rückwärts." },
+      { html: "Die Zeile leeren, ohne etwas auszuführen", kategorie: "Esc", erklaerung: "Esc verwirft die Eingabe." },
+      { html: "Einen endlos laufenden Befehl abbrechen", kategorie: "Ctrl+C", erklaerung: "Ohne markierten Text bricht Ctrl+C ab." },
+      { html: "Markierten Text kopieren", kategorie: "Ctrl+C", erklaerung: "Mit Markierung kopiert Ctrl+C, statt abzubrechen." }
+    ]
+  });
+  L.sortierer("#t01-u-admin", {
+    frage: "Braucht Lea für diese Aufgabe eine Konsole mit Adminrechten?",
+    kategorien: ["Adminrechte nötig", "geht ohne"],
+    elemente: [
+      { html: "Datum anzeigen mit " + C("Get-Date"), kategorie: "geht ohne", erklaerung: "Anzeigen ändert nichts am Computer." },
+      { html: "Den eigenen Ordner Dokumente auflisten", kategorie: "geht ohne", erklaerung: "Im eigenen Benutzerordner darf Lea alles anschauen." },
+      { html: "Den Dienst WolkenriedSync starten", kategorie: "Adminrechte nötig", erklaerung: "Dienste betreffen den ganzen Computer. Ohne Adminrechte kommt «Cannot open … service»." },
+      { html: "Ein Programm für alle Benutzer installieren", kategorie: "Adminrechte nötig", erklaerung: "Eine Installation für alle schreibt in geschützte Ordner." },
+      { html: "Eine Datei im Ordner <code>C:\\Windows</code> ändern", kategorie: "Adminrechte nötig", erklaerung: "C:\\Windows ist geschützt." },
+      { html: "Version prüfen mit " + C("$PSVersionTable"), kategorie: "geht ohne", erklaerung: "Die Variable lesen darf jede Person." },
+      { html: "Hilfe aktualisieren mit " + C("Update-Help") + " in pwsh 7", kategorie: "geht ohne", erklaerung: "In pwsh 7 speichert Update-Help im eigenen Benutzerordner. In Windows PowerShell 5.1 bräuchte es Adminrechte." }
+    ]
+  });
+  L.auswahl("#t01-u-klein", {
+    frage: "Lea tippt " + C("get-location") + " ganz in Kleinbuchstaben. Was erscheint?",
+    optionen: [
+      "Die Fehlermeldung «is not recognized», weil Get gross geschrieben werden muss",
+      "Path, darunter C:\\Users\\lea",
+      "Der Inhalt des Ordners C:\\Users\\lea",
+      "Nichts, PowerShell wartet auf mehr Eingabe"
+    ],
+    richtig: 1,
+    erklaerung: "Bei Befehlsnamen ist Gross und Klein egal. get-location ist Get-Location und zeigt den aktuellen Ort mit dem Spaltenkopf Path."
+  });
+  L.auswahl("#t01-u-verlauf", {
+    frage: "Lea öffnet ein neues Fenster und tippt nacheinander " + C("Get-Date") + ", " + C("Get-Location") + " und " + C("cls") + ". Danach " + C("Get-History") + ". Was steht in der Spalte CommandLine?",
+    optionen: [
+      "Nichts, cls hat den Verlauf gelöscht",
+      "Get-Date, Get-Location, cls",
+      "Get-Date, Get-Location, Clear-Host, Get-History",
+      "Nur Get-History"
+    ],
+    richtig: 1,
+    erklaerung: "cls leert nur das Fenster. Der Verlauf speichert den Befehl so, wie er getippt wurde, also cls und nicht Clear-Host. Get-History selbst kommt erst in den Verlauf, wenn es fertig ist."
+  });
+  /* ---------- Prüfhilfen für die Tipp-Aufgaben ---------- */
+  // Prüfen das Ergebnis, nicht den Text: Aliase (ls, dir, gci), .\, / statt \, -Path und -Name zählen gleich
+  const HOME = "C:\\Users\\lea";
+  // Sichtbare Einträge eines Ordners im Spiel-Rechner (ohne versteckte, wie Get-ChildItem ohne -Force)
+  const sichtbar = (ctx, pfad) => (ctx.kinder(pfad) || []).filter((n) => { const d = ctx.datei(pfad + "\\" + n); return d && !d.versteckt; });
+  // Genau der Inhalt dieses einen Ordners, mit Get-ChildItem geholt, ohne Fehler. -Recurse, -Force oder ein anderer Ordner liefern andere Einträge.
+  const zeigtOrdner = (ctx, pfad) => {
+    if (!ctx.befehle.includes("Get-ChildItem") || ctx.hatFehler || !ctx.objekte.length) return false;
+    const vorne = pfad.toLowerCase() + "\\";
+    const ist = ctx.objekte.map((o) => {
+      if (typeof o === "string") return o.toLowerCase();             // mit -Name: nur Namen
+      const voll = ctx.text(o).toLowerCase();                          // sonst Datei- und Ordnerobjekte mit vollem Pfad
+      return voll.startsWith(vorne) ? voll.slice(vorne.length) : "\u0000";
+    }).sort();
+    const soll = sichtbar(ctx, pfad).map((n) => n.toLowerCase()).sort();
+    return soll.length > 0 && ist.join("|") === soll.join("|");
+  };
+  // Stufe 1 (Abtippen): Text vergleichen, aber Kommentar, Gross/Klein, Leerzeichen und ' oder " egal
+  const norm = (t) => String(t).replace(/#.*$/, "").replace(/'/g, '"').replace(/\s+/g, " ").trim().toLowerCase();
+  const abgetippt = (ctx, soll) => norm(ctx.eingabe) === norm(soll);
+  const einWert = (ctx, wert) => !ctx.hatFehler && ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === wert;
+
+  /* ---------- Übung 6: Fehler finden und richtig tippen ---------- */
+  L.konsole("#t01-u-fehler", {
+    titel: "PowerShell 7 · Fehler finden",
+    begruessung: false,
+    aufgabenTitel: "Übung 6",
+    aufgaben: [
+      { titel: "Den Prompt mitkopiert",
+        text: "<p>In einer Anleitung steht diese Zeile. Lea kopiert sie ganz in ihre Konsole:</p>" +
+          '<pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei mitkopiertem Prompt" lang="en">' + PROMPT + "PS C:\\Users\\lea&gt; Get-ChildItem Downloads\n" +
+          '<span class="psk-fehler">Get-Process: A positional parameter cannot be found that accepts argument \'Get-ChildItem\'.</span></pre>' +
+          "<p>Die Meldung kommt von " + C("Get-Process") + ", obwohl Lea ihre Downloads sehen wollte. Tippe den Befehl so, wie er wirklich in die Konsole gehört.</p>",
+        hinweis: "<p>Welcher Teil der Zeile ist der Prompt, also die Meldung «Ich bin bereit»? Der gehört nie zum Befehl. PS am Anfang liest PowerShell sonst als Kurzname ps für Get-Process.</p>",
+        loesung: "Get-ChildItem Downloads   # nur der Teil nach dem Zeichen > ist der Befehl",
+        pruefe: (ctx) => !ctx.befehle.includes("Get-Process") && zeigtOrdner(ctx, HOME + "\\Downloads") },
+      { titel: "Zwei Buchstaben vertauscht",
+        text: "<p>Lea tippt " + C("Get-ChildItme Logs") + " und erhält <span lang=\"en\">«The term 'Get-ChildItme' is not recognized»</span>. Tippe den Befehl richtig.</p>",
+        hinweis: "<p>Lies den Namen des Cmdlets Buchstabe für Buchstabe: Child Item heisst Kind-Element. Am Computer hilft dir Tab: Get-Chi tippen, Tab drücken, PowerShell schreibt den Namen fehlerfrei fertig.</p>",
+        loesung: "Get-ChildItem Logs   # Item statt Itme: e und m waren vertauscht",
+        pruefe: (ctx) => zeigtOrdner(ctx, HOME + "\\Logs") },
+      { titel: "Getrennt geschrieben",
+        text: "<p>Lea tippt " + C("Get - Date") + " und erhält <span lang=\"en\">«The term 'Get' is not recognized»</span>. Tippe den Befehl richtig.</p>",
+        hinweis: "<p>PowerShell liest nur Get als Befehlsnamen, weil danach ein Leerzeichen kommt. Wie hängen Verb und Nomen in einem Cmdlet zusammen?</p>",
+        loesung: "Get-Date   # Verb und Nomen hängen ohne Leerzeichen mit einem Bindestrich zusammen",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && ctx.objekte.length === 1 && !ctx.hatFehler }
+    ]
+  });
+  L.wahrFalsch("#t01-u-wf", {
+    titel: "Übung 7 · Stimmt das?",
+    aussagen: [
+      { html: "PowerShell 7 und Windows PowerShell 5.1 können auf demselben Rechner nebeneinander laufen.", wahr: true, erklaerung: "PowerShell 7 installiert sich in einen eigenen Ordner und ersetzt 5.1 nicht." },
+      { html: C("Clear-Host") + " löscht den Verlauf.", wahr: false, erklaerung: "Clear-Host leert nur das Fenster. ↑ und Get-History funktionieren weiter." },
+      { html: C("Get-History") + " zeigt auch die Befehle von gestern.", wahr: false, erklaerung: "Get-History kennt nur die aktuelle Sitzung. Befehle von gestern holt ↑ aus der Verlaufsdatei von PSReadLine." },
+      { html: "Mit " + K("↑") + " holst du in pwsh 7 auch Befehle aus einer früheren Sitzung zurück.", wahr: true, erklaerung: "PSReadLine speichert die Eingaben in einer Datei, die alle Sitzungen teilen." },
+      { html: K("Ctrl") + "+" + K("C") + " ohne markierten Text kopiert die ganze Zeile.", wahr: false, erklaerung: "Ohne Markierung bricht Ctrl+C ab. Kopieren klappt nur mit markiertem Text." },
+      { html: "Für " + C("Get-Date") + " brauchst du Adminrechte.", wahr: false, erklaerung: "Anzeigen ändert nichts am Computer und geht ohne Adminrechte." },
+      { html: "Am Prompt <code>PS C:\\Users\\lea&gt;</code> erkennst du, ob PowerShell 7 oder 5.1 läuft.", wahr: false, erklaerung: "Beide zeigen denselben Prompt. Die Version zeigt " + C("$PSVersionTable") + "." }
+    ]
+  });
+  L.konsole("#t01-u-konsole", {
+    titel: "PowerShell 7 · Übung",
+    begruessung: false,
+    aufgabenTitel: "Übung 8",
+    aufgaben: [
+      { titel: "Nur die Edition",
+        text: "<p>Zeige aus <code>$PSVersionTable</code> nur den Wert <code>PSEdition</code>, nicht die ganze Tabelle.</p>",
+        hinweis: "<p>Häng den Namen des Werts mit einem Punkt an die Variable: zuerst die Variable, dann .PSEdition.</p>",
+        loesung: "$PSVersionTable.PSEdition",
+        pruefe: (ctx) => /PSEdition/i.test(ctx.eingabe) && ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === "Core" && !/PSVersion\s/.test(ctx.ausgabe) },
+      { titel: "Der Name des Rechners",
+        text: "<p>Für die Inventarliste braucht Lea den Namen ihres Computers. Lass ihn dir anzeigen, und zwar nur den Namen.</p>",
+        hinweis: "<p>Es gibt ein klassisches Programm, das genau so heisst wie das, was du suchst: Rechnername auf Englisch, in einem Wort (host name).</p>",
+        loesung: "hostname",
+        pruefe: (ctx) => ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === "WR-LEA-01" }
+    ]
+  });
+
+  /* ---------- Schritt 9: Tipp-Training ---------- */
+  L.konsole("#t01-tipp-1", {
+    titel: "PowerShell 7 · Stufe 1",
+    begruessung: false,
+    aufgabenTitel: "Stufe 1 · Nachtippen",
+    aufgaben: [
+      { titel: "Ein Ordner als Angabe",
+        text: "<p>Tippe ab und drück Enter:</p><pre class=\"ps-code\"><code>Get-ChildItem Downloads</code></pre><p>Du siehst, was Lea heruntergeladen hat.</p>",
+        hinweis: "<p>Zwischen Get und ChildItem steht ein Bindestrich ohne Leerzeichen. Nach dem Cmdlet folgt ein Leerzeichen, dann der Ordnername.</p>",
+        loesung: "Get-ChildItem Downloads   # Cmdlet, Leerzeichen, Ordnername",
+        pruefe: (ctx) => abgetippt(ctx, "Get-ChildItem Downloads") && zeigtOrdner(ctx, HOME + "\\Downloads") },
+      { titel: "Der ganze Pfad",
+        text: "<p>Statt nur des Ordnernamens geht auch der volle Pfad. Tippe ab:</p><pre class=\"ps-code\"><code>Get-ChildItem C:\\Users\\lea\\Logs</code></pre>",
+        hinweis: "<p>Nach C kommt ein Doppelpunkt. Die Teile des Pfads trennt der Backslash \\ (auf der Schweizer Tastatur AltGr und die Taste mit &lt;).</p>",
+        loesung: "Get-ChildItem C:\\Users\\lea\\Logs   # voller Pfad: Laufwerk, dann Ordner für Ordner",
+        pruefe: (ctx) => abgetippt(ctx, "Get-ChildItem C:\\Users\\lea\\Logs") && zeigtOrdner(ctx, HOME + "\\Logs") },
+      { titel: "Datum im Schweizer Format",
+        text: "<p>" + C("Get-Date") + " kennt eine Angabe für das Format. Tippe ab:</p><pre class=\"ps-code\"><code>Get-Date -Format \"dd.MM.yyyy\"</code></pre><p>Der Text in Anführungszeichen ist das Muster: <code>dd</code> Tag, <code>MM</code> Monat, <code>yyyy</code> Jahr.</p>",
+        hinweis: "<p>Vor Format steht ein Bindestrich und davor ein Leerzeichen. Im Muster zählt ausnahmsweise Gross und Klein: MM gross, dd und yyyy klein.</p>",
+        loesung: "Get-Date -Format \"dd.MM.yyyy\"   # das Muster in Anführungszeichen bestimmt die Darstellung",
+        pruefe: (ctx) => abgetippt(ctx, "Get-Date -Format \"dd.MM.yyyy\"") && ctx.befehle.includes("Get-Date") && einWert(ctx, "02.11.2026") }
+    ]
+  });
+  L.konsole("#t01-tipp-2", {
+    titel: "PowerShell 7 · Stufe 2",
+    begruessung: false,
+    aufgabenTitel: "Stufe 2 · Abwandeln",
+    aufgaben: [
+      { titel: "Anderer Ordner",
+        text: "<p>" + C("Get-ChildItem Downloads") + " zeigt Leas Downloads. Zeige genauso den Ordner <code>Bilder</code>.</p>",
+        hinweis: "<p>Das Cmdlet bleibt gleich. Nur die Angabe dahinter ändert sich.</p>",
+        loesung: "Get-ChildItem Bilder   # gleiches Cmdlet, anderer Ordnername",
+        pruefe: (ctx) => zeigtOrdner(ctx, HOME + "\\Bilder") },
+      { titel: "Eine Ebene tiefer",
+        text: "<p>" + C("Get-ChildItem Dokumente") + " zeigt im Ordner Dokumente auch einen Unterordner <code>Archiv</code>. Zeige den Inhalt von Archiv.</p>",
+        hinweis: "<p>Ein Pfad kann mehrere Ordner enthalten. Zuerst Dokumente, dann ein Backslash \\, dann der Unterordner.</p>",
+        loesung: "Get-ChildItem Dokumente\\Archiv   # Ordner und Unterordner mit \\ verbunden",
+        pruefe: (ctx) => zeigtOrdner(ctx, HOME + "\\Dokumente\\Archiv") },
+      { titel: "Anderer Wert aus der Tabelle",
+        text: "<p>" + C("$PSVersionTable.PSEdition") + " zeigt nur die Edition. Zeige auf dieselbe Art nur den Wert <code>Platform</code>, also das Betriebssystem, auf dem diese PowerShell läuft.</p>",
+        hinweis: "<p>Variable, Punkt, Name des Werts. Nur der Name nach dem Punkt ändert sich.</p>",
+        loesung: "$PSVersionTable.Platform   # Win32NT heisst: PowerShell läuft unter Windows",
+        pruefe: (ctx) => /\$PSVersionTable\b/i.test(ctx.eingabe) && einWert(ctx, "Win32NT") },
+      { titel: "Uhrzeit statt Datum",
+        text: "<p>" + C("Get-Date -Format \"dd.MM.yyyy\"") + " zeigt 02.11.2026. Zeige stattdessen nur Stunde und Minuten, also <code>09:00</code>.</p>",
+        hinweis: "<p>Stunden heissen im Muster HH (gross, 24-Stunden-Uhr), Minuten mm (klein). Achtung: MM gross wäre der Monat.</p>",
+        loesung: "Get-Date -Format \"HH:mm\"   # HH Stunden, mm Minuten, dazwischen ein Doppelpunkt",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && einWert(ctx, "09:00") }
+    ]
+  });
+  L.konsole("#t01-tipp-3", {
+    titel: "PowerShell 7 · Stufe 3",
+    begruessung: false,
+    aufgabenTitel: "Stufe 3 · Selber lösen",
+    aufgaben: [
+      { titel: "Wo bin ich?",
+        text: "<p>Lea hat die Konsole eben geöffnet. Lass dir anzeigen, in welchem Ordner sie gerade arbeitet.</p>",
+        hinweis: "<p>Der Ordner, in dem du arbeitest, heisst aktueller Ort. Ort heisst auf Englisch Location.</p>",
+        loesung: "Get-Location   # zeigt den aktuellen Ort, denselben Pfad wie der Prompt",
+        pruefe: (ctx) => (ctx.befehle.includes("Get-Location") || /\$PWD\b/i.test(ctx.eingabe)) && ctx.objekte.length === 1 && !ctx.hatFehler && ctx.ausgabe.includes(ctx.ort) },
+      { titel: "Wo wohnt PowerShell 7?",
+        text: "<p>Für die Inventarliste will Lea sehen, was im Installationsordner von PowerShell 7 liegt. Den Pfad findest du in Schritt 2 in der Tabelle.</p>",
+        hinweis: "<p>Der Pfad enthält ein Leerzeichen (Program Files). Ohne Anführungszeichen hält PowerShell ihn für zwei Angaben. Setz den ganzen Pfad darum in Anführungszeichen.</p>",
+        loesung: "Get-ChildItem \"C:\\Program Files\\PowerShell\\7\"   # Anführungszeichen halten den Pfad mit Leerzeichen zusammen",
+        pruefe: (ctx) => zeigtOrdner(ctx, "C:\\Program Files\\PowerShell\\7") },
+      { titel: "Datum für den Dateinamen",
+        text: "<p>Lea will ihre Inventarliste mit dem heutigen Datum benennen. Dafür braucht sie das Datum als Jahr-Monat-Tag mit Bindestrichen, ohne Uhrzeit.</p>",
+        hinweis: "<p>Du kennst das Cmdlet für das Datum und seine Angabe für das Muster. Jahr sind vier y, Monat zwei grosse M, Tag zwei kleine d. Dazwischen stehen Bindestriche.</p>",
+        loesung: "Get-Date -Format \"yyyy-MM-dd\"   # zeigt 2026-11-02, so sortieren sich Dateinamen richtig",
+        // Datum muss aus Get-Date oder [datetime] kommen, nicht als fertiger Text getippt
+        pruefe: (ctx) => (ctx.befehle.includes("Get-Date") || /\[datetime\]/i.test(ctx.eingabe)) && einWert(ctx, "2026-11-02") },
+      { titel: "Aufräumen",
+        text: "<p>Das Fenster ist voll. Leere es so, dass der Verlauf erhalten bleibt.</p>",
+        hinweis: "<p>Das Verb für Leeren ist Clear. Das Fenster, in dem die Konsole läuft, heisst Host. Es gibt auch einen kurzen Namen mit drei Buchstaben.</p>",
+        loesung: "Clear-Host   # leert nur das Fenster, Get-History kennt danach noch alles",
+        pruefe: (ctx) => ctx.befehle.includes("Clear-Host") }
+    ]
+  });
+
+  /* ---------- Lösungsfilm mit Simulator-Ausgaben ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  const leer = pre(PROMPT);
+  const fDatum = f("Get-Date");
+  const fTabelle = f("$PSVersionTable");
+  const fEdition = f("$PSVersionTable.PSEdition");
+  const fHost = f("hostname");
+  const fOrt = f("Get-Location");
+  const fTab = pre(PROMPT + "Get-Chi" + '<span class="psk-hinweis">   ← Tab drücken</span>\n' + PROMPT + '<span class="psk-t-befehl">Get-ChildItem</span>' + '<span class="psk-hinweis">   ← ergänzt</span>');
+  const fInhalt = f("Get-ChildItem");
+  const fTippfehler = f("Get-ChildItme Logs");
+  const fPfeil = pre(PROMPT + '<span class="psk-t-befehl">Get-ChildItme</span> Logs' + '<span class="psk-hinweis">   ← mit ↑ zurückgeholt</span>');
+  const fLogs = f("Get-ChildItem Logs");
+  const fKlein = f("get-childitem dokumente");
+  film.ausfuehren("Clear-Host");
+  // Get-History von Hand wie in pwsh 7 (der Simulator zählt den laufenden Befehl schon mit)
+  const fVerlauf = pre(PROMPT + '<span class="psk-t-befehl">Get-History</span>\n\n' +
+    '<span class="psk-kopf">  Id     Duration CommandLine\n  --     -------- -----------</span>\n' +
+    "   1        0.032 Get-Date\n   2        0.021 $PSVersionTable\n   3        0.009 $PSVersionTable.PSEdition\n" +
+    "   4        0.041 hostname\n   5        0.013 Get-Location\n   6        0.024 Get-ChildItem\n" +
+    "   7        0.018 Get-ChildItme Logs\n   8        0.022 Get-ChildItem Logs\n   9        0.020 get-childitem dokumente\n  10        0.047 Clear-Host");
+  L.film("#t01-film", {
+    phasen: ["1 · Öffnen", "2 · Version", "3 · Ordner", "4 · Aufräumen"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Auftrag: «Halte fest, welche PowerShell auf deinem Rechner läuft, wie er heisst und was in deinem Benutzerordner liegt.» Lea öffnet zum ersten Mal eine Konsole." },
+      { ph: 0, f: leer, say: "Sie startet PowerShell 7 aus dem Startmenü. Das Fenster zeigt den Prompt: PS, dann ihr Benutzerordner C:\\Users\\lea, dann das Zeichen >." },
+      { say: "Der Prompt heisst: PowerShell ist bereit. Lea kann jetzt einen Befehl tippen." },
+      { f: fDatum, say: "Zum Aufwärmen tippt sie Get-Date und drückt Enter. Der Rechner nennt Wochentag, Datum und Uhrzeit." },
+      { say: "Danach steht wieder ein Prompt da. So läuft es immer: Befehl tippen, Enter, Ausgabe lesen." },
+      { ph: 1, f: fTabelle, say: "Jetzt die Version. Lea tippt " + C("$PSVersionTable") + ". Das ist eine Variable, die PowerShell beim Start selbst füllt." },
+      { say: "PSVersion 7.6.1 ist die Versionsnummer. PSEdition Core heisst: Das ist PowerShell 7, nicht Windows PowerShell 5.1." },
+      { f: fEdition, say: "Mit einem Punkt holt sie nur einen Wert heraus: " + C("$PSVersionTable.PSEdition") + " zeigt Core." },
+      { f: fHost, say: "Für die Inventarliste braucht sie noch den Rechnernamen. Das klassische Programm hostname nennt ihn: WR-LEA-01." },
+      { ph: 2, f: fOrt, say: "Wo ist sie gerade? Get-Location zeigt C:\\Users\\lea, denselben Pfad wie der Prompt." },
+      { f: fTab, say: "Was liegt hier? Lea tippt nur Get-Chi und drückt Tab. PowerShell ergänzt den Namen zu Get-ChildItem." },
+      { f: fInhalt, say: "Nach Enter zeigt Get-ChildItem fünf Ordner. Das d in der Spalte Mode steht für Ordner." },
+      { f: fTippfehler, say: "Jetzt will sie in Logs schauen und tippt zu schnell: Get-ChildItme. Rot heisst Fehler: «is not recognized», den Namen kennt PowerShell nicht." },
+      { f: fPfeil, say: "Statt alles neu zu tippen, drückt Lea die Pfeiltaste nach oben. Die falsche Zeile steht wieder da." },
+      { f: fLogs, say: "Sie tauscht e und m und drückt Enter. Jetzt sieht sie die Logdateien mit Datum und Grösse." },
+      { f: fKlein, say: "Ein Test: alles klein geschrieben, get-childitem dokumente. Es klappt genauso. Gross und klein ist PowerShell egal." },
+      { ph: 3, f: leer, say: "Das Fenster ist voll. Lea tippt Clear-Host und drückt Enter. Der Bildschirm ist leer, nur der Prompt bleibt." },
+      { f: fVerlauf, say: "Ist jetzt alles weg? Nein: Get-History listet jeden Befehl dieser Sitzung, auch den Tippfehler und Clear-Host." },
+      { say: "Get-History selbst fehlt in der Liste. Ein Befehl kommt erst in den Verlauf, wenn er fertig ist." },
+      { say: "Lea notiert: «WR-LEA-01: PowerShell 7.6.1, Edition Core. Benutzerordner mit Berichte, Bilder, Dokumente, Downloads, Logs.» Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t01-selbsttest", {
+    fragen: [
+      { q: "Was ist eine Shell?", o: ["Ein Programm, das getippte Befehle entgegennimmt, ausführt und das Ergebnis zeigt", "Das Fenster mit den Tabs", "Ein einzelner PowerShell-Befehl", "Die Zeile PS C:\\Users\\lea&gt;"], a: 0,
+        e: "Die Shell ist die Kellnerin: Sie nimmt die Bestellung an und bringt das Ergebnis. Das Fenster ist das Terminal." },
+      { q: "Was ist Windows Terminal?", o: ["Eine neue Version von PowerShell", "Ein Fenster, in dem verschiedene Shells laufen, auch in Tabs", "Ein Cmdlet", "Der Ordner, in dem PowerShell installiert ist"], a: 1,
+        e: "Windows Terminal ist ein Terminal. Darin laufen PowerShell 7, Windows PowerShell, cmd oder Linux-Shells." },
+      { q: "Was sagt dir der Prompt <code>PS C:\\Users\\lea&gt;</code>?", o: ["Es ist PowerShell 7", "Ein Fehler ist aufgetreten", "PowerShell ist bereit, und der aktuelle Ort ist C:\\Users\\lea", "Lea hat Adminrechte"], a: 2,
+        e: "Der Prompt zeigt Bereitschaft und den aktuellen Ort. Die Version zeigt er nicht, das macht " + C("$PSVersionTable") + "." },
+      { q: "Was ist ein Cmdlet?", o: ["Ein Befehl von PowerShell mit einem Namen aus Verb und Nomen, z. B. Get-Date", "Ein Kurzname wie cls", "Eine Datei mit der Endung .exe", "Eine Taste auf der Tastatur"], a: 0,
+        e: "Cmdlets heissen Verb-Nomen. Mehr dazu in Station 02." },
+      { q: "Welches Programm startet PowerShell 7?", o: [C("powershell.exe"), C("pwsh.exe"), C("cmd.exe"), C("terminal.exe")], a: 1,
+        e: "PowerShell 7 heisst pwsh.exe. powershell.exe startet Windows PowerShell 5.1." },
+      { q: C("$PSVersionTable") + " zeigt <code>PSEdition Desktop</code>. Welche PowerShell läuft?", o: ["PowerShell 7", "Windows PowerShell 5.1", "PowerShell auf Linux", "Das lässt sich daraus nicht sagen"], a: 1,
+        e: "Desktop heisst Windows PowerShell 5.1, Core heisst PowerShell 7." },
+      { q: "Lea tippt " + C("GET-DATE") + ". Was passiert?", o: ["Fehler, weil nur Get-Date gültig ist", "Datum und Uhrzeit erscheinen wie bei Get-Date", "PowerShell fragt nach, ob Get-Date gemeint ist", "Es erscheint die Hilfe zu Get-Date"], a: 1,
+        e: "Bei Befehlsnamen ist Gross und Klein egal." },
+      { q: "Lea tippt " + C("Get-Chi") + " und drückt " + K("Tab") + ". Was passiert?", o: ["Der Befehl wird sofort ausgeführt", "Die Zeile wird gelöscht", "PowerShell ergänzt den Namen zu Get-ChildItem", "Der Fokus springt aus dem Fenster"], a: 2,
+        e: "Tab ergänzt. Ausgeführt wird erst mit Enter." },
+      { q: "Lea tippt " + C("cls") + " und danach " + C("Get-History") + ". Was zeigt Get-History?", o: ["Nichts, cls hat alles gelöscht", "Die Befehle dieser Sitzung, auch cls", "Nur die Befehle von gestern", "Eine Fehlermeldung"], a: 1,
+        e: "cls (Clear-Host) leert nur das Fenster. Der Verlauf bleibt." },
+      { q: "Wofür braucht Lea eine Konsole mit Adminrechten?", o: ["Um Get-Date auszuführen", "Um ihren Ordner Dokumente aufzulisten", "Um den Dienst WolkenriedSync zu starten", "Um " + C("$PSVersionTable") + " anzuzeigen"], a: 2,
+        e: "Dienste betreffen den ganzen Computer. Anzeigen und der eigene Benutzerordner gehen ohne Adminrechte." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

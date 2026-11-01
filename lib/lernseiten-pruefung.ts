@@ -21,6 +21,9 @@ export interface PruefErgebnis {
 
 const CSS_PFAD = "/lernpfad/lernpfad.css"
 const JS_PFAD = "/lernpfad/lernpfad.js"
+/** Erweiterung für den Lernpfad PS (Simulator und Syntaxfärbung), siehe docs/lernpfad-powershell.md. */
+const PS_KONSOLE_PFAD = "/lernpfad/ps-konsole.js"
+const PS_KONSOLE_CSS_PFAD = "/lernpfad/ps-konsole.css"
 
 /** Namen der Seiten auf oberster Ebene der App (inkl. Routen-Gruppen wie (dashboard)). */
 export function appSeiten(appPfad = path.join(process.cwd(), "app")): string[] {
@@ -358,13 +361,16 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
     fehler.push(`Theme-Startskript im <head> fehlt (setzt data-theme aus «${THEMA_SCHLUESSEL}», siehe _vorlage.html).`)
   }
 
-  const stylesheet = startTags(quelle, "link").some(
-    ({ tag }) =>
-      (attribut(tag, "rel") ?? "").toLowerCase().split(/\s+/).includes("stylesheet") &&
-      zeigtAuf(attribut(tag, "href"), CSS_PFAD),
-  )
+  const istStylesheet = (tag: string, ziel: string) =>
+    (attribut(tag, "rel") ?? "").toLowerCase().split(/\s+/).includes("stylesheet") && zeigtAuf(attribut(tag, "href"), ziel)
+  const stylesheet = startTags(quelle, "link").find(({ tag }) => istStylesheet(tag, CSS_PFAD))
   if (!stylesheet) {
     fehler.push(`<link rel="stylesheet" href="${CSS_PFAD}"> fehlt.`)
+  }
+  // ps-konsole.css überschreibt Farben aus lernpfad.css und gehört darum danach
+  const psStylesheet = startTags(quelle, "link").find(({ tag }) => istStylesheet(tag, PS_KONSOLE_CSS_PFAD))
+  if (psStylesheet && stylesheet && psStylesheet.index < stylesheet.index) {
+    fehler.push(`<link rel="stylesheet" href="${PS_KONSOLE_CSS_PFAD}"> gehört nach <link rel="stylesheet" href="${CSS_PFAD}">.`)
   }
 
   const body = startTags(quelle, "body")[0]
@@ -388,6 +394,12 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
     fehler.push(`<script src="${JS_PFAD}"></script> fehlt.`)
   } else if (body && skript.index < body.index) {
     fehler.push(`<script src="${JS_PFAD}"> gehört ans Ende von <body>, nicht in <head>.`)
+  }
+
+  // Zusätzliche Skripte aus /lernpfad/ (z. B. ps-konsole.js) erweitern window.Lernpfad und brauchen lernpfad.js davor
+  const erweiterung = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), PS_KONSOLE_PFAD))
+  if (erweiterung && skript && erweiterung.index < skript.index) {
+    fehler.push(`<script src="${PS_KONSOLE_PFAD}"> gehört nach <script src="${JS_PFAD}">.`)
   }
 
   fehler.push(...externeRessourcen(quelle))

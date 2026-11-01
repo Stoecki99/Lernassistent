@@ -1,0 +1,1032 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dateien und Ordner verwalten · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/06-objekte-statt-text" title="Objekte statt Text">
+  <style>
+    .t05-ziele{margin:0; padding-left:1.3em}
+    .t05-ziele li{margin-bottom:4px}
+    .t05-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t05-st pre{font-style:normal}
+
+    /* Vorher-Nachher-Ansicht des Ordnerbaums */
+    .t05-vergleich{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px}
+    .t05-spalte{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:10px 12px; min-width:0}
+    .t05-spalte h4{margin:0 0 6px; font-size:.95rem}
+    .t05-baum, .t05-baum ul{list-style:none; margin:0; padding:0}
+    .t05-baum ul{padding-left:1.1em; border-left:1px dashed var(--line); margin-left:.45em}
+    .t05-baum li{padding:2px 0; min-width:0}
+    .t05-eintrag{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px}
+    .t05-name{font-family:var(--ps-mono); font-size:.86rem; overflow-wrap:anywhere}
+    .t05-ordner > .t05-eintrag .t05-name{font-weight:700}
+    .t05-groesse{font-size:.78rem; color:var(--muted)}
+    .t05-marke{font-size:.72rem; font-weight:700; border-radius:6px; padding:0 6px; border:1px solid currentColor}
+    .t05-marke.neu{color:var(--ok); background:var(--ok-bg)}
+    .t05-marke.weg{color:var(--bad); background:var(--bad-bg)}
+    .t05-marke.warn{color:var(--ink); background:var(--free-bg); border-color:var(--free)}
+    .t05-weg > .t05-eintrag .t05-name{text-decoration:line-through; color:var(--muted)}
+    .t05-leer{font-size:.85rem; color:var(--muted)}
+    .t05-stand{margin:0}
+  </style>
+</head>
+<body data-fach="ps" data-thema="05-dateien-ordner-verwalten">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 2 · Dateisystem</span>
+    <h1>Dateien und Ordner verwalten</h1>
+    <p class="lead">Leas Downloads-Ordner ist ein Durcheinander: Rechnungen, Fotos und alte Installationsdateien liegen bunt gemischt. In dieser Station legst du Ordner und Dateien an, kopierst, verschiebst, benennst um und löschst, mit einem Sicherheitsnetz, das dich vor bösen Überraschungen schützt. Danach liest und schreibst du den Inhalt von Textdateien.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t05-ziele">
+        <li>Du legst Ordner und Dateien mit <code class="ps">New-Item</code> an.</li>
+        <li>Du kopierst, verschiebst und benennst um mit <code class="ps">Copy-Item</code>, <code class="ps">Move-Item</code> und <code class="ps">Rename-Item</code> und weisst, wann du <code class="ps">-Recurse</code> brauchst.</li>
+        <li>Du löschst mit <code class="ps">Remove-Item</code> und prüfst vorher mit <code class="ps">-WhatIf</code> oder <code class="ps">-Confirm</code>.</li>
+        <li>Du liest Dateien mit <code class="ps">Get-Content</code> und unterscheidest <code class="ps">Set-Content</code>, <code class="ps">Add-Content</code>, <code class="ps">Out-File</code>, <code class="ps">&gt;</code> und <code class="ps">&gt;&gt;</code>.</li>
+        <li>Du kennst den Unterschied beim Encoding zwischen PowerShell 7 und Windows PowerShell 5.1.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#schritt"><b>1</b>Sicher löschen</a>
+    <a href="#anlegen"><b>2</b>Anlegen</a>
+    <a href="#kopieren"><b>3</b>Kopieren, verschieben</a>
+    <a href="#loeschen"><b>4</b>Löschen</a>
+    <a href="#inhalt"><b>5</b>Inhalte</a>
+    <a href="#ausprobieren"><b>6</b>Ausprobieren</a>
+    <a href="#mission"><b>7</b>Aufräum-Mission</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#tipp-training"><b>9</b>Tipp-Training</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Fehler</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Ein Aktenschrank, fünf Handgriffe</h2>
+    <p class="prose">Stell dir einen Aktenschrank im Gemeindehaus vor. Darin hängen Mappen (Ordner), in den Mappen liegen Blätter (Dateien). Mit einer Mappe oder einem Blatt kannst du fünf Dinge tun: neu anlegen, kopieren, an einen anderen Ort legen, neu beschriften und wegwerfen. Für jeden Handgriff gibt es ein Cmdlet. Alle enden auf <b>-Item</b>, englisch für «Element». Ein Element ist eine Datei oder ein Ordner.</p>
+    <p class="prose">Ein Unterschied zum echten Büro ist wichtig: PowerShell hat <b>keinen Papierkorb</b>. Was <code class="ps">Remove-Item</code> löscht, ist weg. Darum gibt es eine Probefahrt: <code class="ps">-WhatIf</code> zeigt dir, was passieren <i>würde</i>, und tut nichts.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Element (Item)</span><span class="ex"><code class="ps">Dokumente\notizen.txt</code></span><p>Eine Datei oder ein Ordner. Wie ein Blatt oder eine Mappe im Aktenschrank.</p></div>
+      <div class="concept"><span class="tag">Ziel (Destination)</span><span class="ex"><code class="ps">Dokumente\Archiv</code></span><p>Wohin du kopierst oder verschiebst. Gibt es den Zielordner nicht, entsteht etwas anderes als gedacht.</p></div>
+      <div class="concept"><span class="tag">Mit Inhalt (-Recurse)</span><span class="ex"><code class="ps">-Recurse</code></span><p>«Samt allem, was drin ist». Ohne diesen Schalter nimmt PowerShell bei Ordnern nur die leere Mappe.</p></div>
+      <div class="concept"><span class="tag">Probefahrt (-WhatIf)</span><span class="ex"><code class="ps">-WhatIf</code></span><p>Zeigt, was der Befehl tun würde, und tut nichts. Dein Sicherheitsnetz vor jedem Löschen.</p></div>
+      <div class="concept"><span class="tag">Inhalt (Content)</span><span class="ex"><code class="ps">Get-Content</code></span><p>Der Text in einer Datei, Zeile für Zeile. Wie das, was auf dem Blatt steht.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Handgriff passt?</h3>
+      <div id="t05-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Stepper ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 1 · Das Muster für jedes Löschen</span>
+    <h2>Erst schauen, dann proben, dann löschen</h2>
+    <p class="prose">Bevor du die einzelnen Cmdlets kennenlernst, siehst du das wichtigste Muster dieser Station. Lea braucht die beiden Word-Dateien im Ordner Dokumente nicht mehr. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Teil des Befehls leuchtet auf.</p>
+    <div id="t05-stepper"></div>
+    <div class="note"><b>Merke:</b> Schauen mit <code class="ps">Get-ChildItem</code>, proben mit <code class="ps">-WhatIf</code>, erst dann löschen. Den Befehl für das echte Löschen holst du mit ↑ zurück und entfernst nur <code class="ps">-WhatIf</code>. So löschst du genau das, was du geprüft hast.</div>
+  </section>
+
+  <!-- ===== 2 · Anlegen ===== -->
+  <section id="anlegen">
+    <span class="eyebrow">Schritt 2 · New-Item</span>
+    <h2>Ordner und Dateien anlegen</h2>
+    <div class="card stack">
+      <h3>Einen Ordner anlegen</h3>
+      <p class="prose"><code class="ps">New-Item</code> legt ein neues Element an. Der Parameter <code class="ps">-ItemType</code> sagt, was es sein soll: <code class="ps">Directory</code> für einen Ordner, <code class="ps">File</code> für eine Datei. Lea legt im Ordner Dokumente einen Ordner für das Wolkenrieder Dorffest an.</p>
+      <pre class="ps-code"><code>New-Item -Path Dokumente\Fest -ItemType Directory</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Ordner angelegt" data-ps-sitzung="anlegen" data-ps-befehl="New-Item -Path Dokumente\Fest -ItemType Directory"></pre>
+      <p class="prose">PowerShell zeigt das neue Element gleich an. Das <code>d</code> in der Spalte Mode steht für <i>directory</i>, also Ordner. Kürzer geht es mit <code class="ps">mkdir Dokumente\Fest</code>: <code class="ps">mkdir</code> ist eine eingebaute Abkürzung für genau diesen Befehl.</p>
+    </div>
+    <div class="card stack">
+      <h3>Eine Datei mit Text anlegen</h3>
+      <p class="prose">Mit <code class="ps">-ItemType File</code> entsteht eine Datei. <code class="ps">-Value</code> schreibt gleich einen Text hinein. Ohne <code class="ps">-Value</code> ist die Datei leer (Length 0).</p>
+      <pre class="ps-code"><code>New-Item -Path Dokumente\Fest\helfer.txt -ItemType File -Value 'Helferliste Dorffest'</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Datei angelegt" data-ps-sitzung="anlegen" data-ps-befehl="New-Item -Path Dokumente\Fest\helfer.txt -ItemType File -Value 'Helferliste Dorffest'"></pre>
+      <p class="prose">Die Datei ist 20 Bytes gross: 20 Buchstaben und Leerzeichen, sonst nichts. Merk dir das «sonst nichts», es wird bei <a href="#fehler">den typischen Fehlern</a> wichtig.</p>
+    </div>
+    <div class="card stack">
+      <h3>Gibt es das schon?</h3>
+      <p class="prose">Existiert das Element bereits, legt <code class="ps">New-Item</code> nichts an und meldet einen Fehler. Das schützt dich davor, eine Datei aus Versehen zu ersetzen.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Ordner existiert" data-ps-sitzung="anlegen" data-ps-befehl="New-Item -Path Dokumente\Fest -ItemType Directory" lang="en"></pre>
+      <p class="prose">Auf Deutsch: «Ein Element mit diesem Namen gibt es schon.» Bei einer Datei lautet die Meldung <span lang="en"><code>The file '…' already exists.</code></span> Der Schalter <code class="ps">-Force</code> würde eine bestehende Datei überschreiben. Nimm ihn nur, wenn du das wirklich willst.</p>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Kopieren, verschieben, umbenennen ===== -->
+  <section id="kopieren">
+    <span class="eyebrow">Schritt 3 · Copy-Item, Move-Item, Rename-Item</span>
+    <h2>Kopieren, verschieben, umbenennen</h2>
+    <div class="card stack">
+      <h3>Eine Datei kopieren</h3>
+      <p class="prose"><code class="ps">Copy-Item</code> braucht zwei Angaben: was du kopierst (<code class="ps">-Path</code>, an erster Stelle) und wohin (<code class="ps">-Destination</code>, an zweiter Stelle). Die Parameternamen darfst du weglassen, wenn die Reihenfolge stimmt.</p>
+      <pre class="ps-code"><code>Copy-Item Dokumente\notizen.txt Dokumente\notizen-sicherung.txt
+Get-ChildItem Dokumente -Filter notizen*</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Datei kopiert" data-ps-sitzung="kopieren" data-ps-befehl="Copy-Item Dokumente\notizen.txt Dokumente\notizen-sicherung.txt"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: beide Dateien" data-ps-sitzung="kopieren" data-ps-befehl="Get-ChildItem Dokumente -Filter notizen*"></pre>
+      <p class="prose"><code class="ps">Copy-Item</code> meldet nichts, wenn es klappt. Die Kopie behält Grösse und Änderungsdatum des Originals.</p>
+    </div>
+    <div class="card stack">
+      <h3>Einen Ordner kopieren: -Recurse nicht vergessen</h3>
+      <p class="prose">Lea will den ganzen Ordner Dokumente sichern. Ohne <code class="ps">-Recurse</code> kopiert PowerShell nur die leere Mappe, nicht ihren Inhalt:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: ohne Recurse" data-ps-sitzung="kopieren" data-ps-befehl="Copy-Item Dokumente Dokumente-Kopie"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: leerer Ordner" data-ps-sitzung="kopieren" data-ps-befehl="Get-ChildItem Dokumente-Kopie"></pre>
+      <p class="prose">Keine Fehlermeldung, aber der Ordner <code>Dokumente-Kopie</code> ist leer. Mit <code class="ps">-Recurse</code> kommt alles mit, auch der Unterordner Archiv. <code class="ps">-Name</code> zeigt nur die Namen, mit Unterordner davor:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: mit Recurse" data-ps-sitzung="kopieren" data-ps-befehl="Copy-Item Dokumente Dokumente-Sicherung -Recurse"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Sicherung mit Inhalt" data-ps-sitzung="kopieren" data-ps-befehl="Get-ChildItem Dokumente-Sicherung -Recurse -Name"></pre>
+      <div class="note tipp"><b>Tipp:</b> Gibt es den Zielordner schon, legt <code class="ps">Copy-Item -Recurse</code> den Ordner <i>darin</i> an. Ein zweites <code class="ps">Copy-Item Dokumente Dokumente-Sicherung -Recurse</code> ergibt also <code>Dokumente-Sicherung\Dokumente</code>.</div>
+    </div>
+    <div class="card stack">
+      <h3>Verschieben</h3>
+      <p class="prose"><code class="ps">Move-Item</code> funktioniert wie <code class="ps">Copy-Item</code>, nur bleibt am alten Ort nichts zurück. Ist das Ziel ein bestehender Ordner, landet die Datei darin. Ordner verschiebt <code class="ps">Move-Item</code> immer mit Inhalt, ein <code class="ps">-Recurse</code> braucht es nicht.</p>
+      <pre class="ps-code"><code>Move-Item Dokumente\bewerbung-alt.docx Dokumente\Archiv
+Get-ChildItem Dokumente\Archiv</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: verschoben" data-ps-sitzung="verschieben" data-ps-befehl="Move-Item Dokumente\bewerbung-alt.docx Dokumente\Archiv"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Archiv" data-ps-sitzung="verschieben" data-ps-befehl="Get-ChildItem Dokumente\Archiv"></pre>
+      <p class="prose">Gibst du als Ziel einen neuen Dateinamen an, verschiebt und benennt <code class="ps">Move-Item</code> in einem Zug:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: verschieben und umbenennen" data-ps-sitzung="verschieben" data-ps-befehl="Move-Item Dokumente\einkaufsliste.txt Dokumente\Archiv\einkauf-oktober.txt"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Archiv danach" data-ps-sitzung="verschieben" data-ps-befehl="Get-ChildItem Dokumente\Archiv -Name"></pre>
+      <div class="note falle"><b>Achtung:</b> Gibt es den Zielordner <i>nicht</i>, hält PowerShell den Namen für einen neuen Dateinamen. <code class="ps">Move-Item Downloads\foto-apero.jpg Fotos</code> erzeugt dann eine <b>Datei</b> namens <code>Fotos</code> ohne Endung, keinen Ordner. Leg den Ordner immer zuerst an.</div>
+    </div>
+    <div class="card stack">
+      <h3>Umbenennen</h3>
+      <p class="prose"><code class="ps">Rename-Item</code> gibt einem Element einen neuen Namen und lässt es, wo es ist. Der neue Name (<code class="ps">-NewName</code>, an zweiter Stelle) ist nur ein Name, kein Pfad.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: umbenannt" data-ps-sitzung="verschieben" data-ps-befehl="Rename-Item Dokumente\notizen.txt notizen-2026.txt"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Dokumente danach" data-ps-sitzung="verschieben" data-ps-befehl="Get-ChildItem Dokumente -Name"></pre>
+      <p class="prose">Mit einem Pfad im neuen Namen weigert sich <code class="ps">Rename-Item</code>:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Rename-Item mit Pfad" lang="en" data-ps-sitzung="verschieben" data-ps-befehl="Rename-Item Dokumente\notizen-2026.txt Dokumente\Archiv\notizen-2026.txt"></pre>
+      <p class="prose">Auf Deutsch: «Das Ziel ist ein Pfad, damit kann ich nicht umbenennen.» Zum Verschieben nimmst du <code class="ps">Move-Item</code>.</p>
+    </div>
+  </section>
+
+  <!-- ===== 4 · Löschen ===== -->
+  <section id="loeschen">
+    <span class="eyebrow">Schritt 4 · Remove-Item mit Sicherheitsnetz</span>
+    <h2>Löschen, ohne es zu bereuen</h2>
+    <p class="prose"><code class="ps">Remove-Item</code> löscht Dateien und Ordner endgültig. Es gibt keinen Papierkorb und kein «Rückgängig». Zwei Sicherheitsparameter helfen dir (die meisten Cmdlets, die etwas verändern, bieten sie an): <code class="ps">-WhatIf</code> und <code class="ps">-Confirm</code>.</p>
+    <div class="card stack">
+      <h3>-WhatIf: die Probefahrt</h3>
+      <p class="prose">Mit <code class="ps">-WhatIf</code> schreibt PowerShell für jedes Element eine Zeile «What if: …» (was wäre, wenn) und löscht nichts. Platzhalter wie <code>*</code> kennst du aus Station 04.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: WhatIf" lang="en" data-ps-sitzung="loeschen" data-ps-befehl="Remove-Item Downloads\*.exe -WhatIf"></pre>
+      <p class="prose">Auf Deutsch: «Was wäre, wenn: Ich würde die Datei setup-alt.exe löschen.» Und genauso für die zweite Datei. Danach sind beide noch da.</p>
+    </div>
+    <div class="card stack">
+      <h3>-Confirm: einzeln nachfragen</h3>
+      <p class="prose"><code class="ps">-Confirm</code> fragt vor jedem Element nach. <kbd>Y</kbd> (Yes) löscht dieses Element, <kbd>A</kbd> (Yes to All) alle weiteren, <kbd>N</kbd> (No) überspringt es, <kbd>L</kbd> (No to All) überspringt alle. Hier hat Lea <kbd>N</kbd> getippt:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Confirm" lang="en" data-ps-sitzung="loeschen" data-ps-befehl="Remove-Item Downloads\setup-alt.exe -Confirm"></pre>
+      <p class="prose">Auf Deutsch: «Bist du sicher? Ich würde die Datei setup-alt.exe löschen.» Nach <kbd>N</kbd> bleibt die Datei liegen.</p>
+    </div>
+    <div class="card stack">
+      <h3>Ordner mit Inhalt: -Recurse</h3>
+      <p class="prose">Löschst du einen Ordner, in dem noch etwas liegt, fragt PowerShell von selbst nach. So schützt es dich vor einem zu grossen Löschen. Lea tippt auch hier <kbd>N</kbd>:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Rückfrage bei Ordner mit Inhalt" lang="en" data-ps-sitzung="loeschen" data-ps-befehl="Remove-Item Dokumente\Archiv"></pre>
+      <p class="prose">Auf Deutsch: «Der Ordner hat Inhalt, und du hast -Recurse nicht angegeben. Wenn du weitermachst, ist alles darin weg.» Mit <code class="ps">-Recurse</code> fragt PowerShell nicht mehr und löscht den Ordner samt Inhalt. Darum zuerst die Probefahrt:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Recurse mit WhatIf" lang="en" data-ps-sitzung="loeschen" data-ps-befehl="Remove-Item Dokumente\Archiv -Recurse -WhatIf"></pre>
+      <p class="prose">Nur eine Zeile, obwohl zwei Dateien im Ordner liegen (eine davon versteckt). Bei <code class="ps">-Recurse</code> nennt <code class="ps">-WhatIf</code> nur den Ordner. Was alles darin ist, zeigt dir <code class="ps">Get-ChildItem Dokumente\Archiv -Recurse -Force</code> (mit <code class="ps">-Force</code> auch versteckte Dateien). Schau also beides an.</p>
+      <div class="note"><b>Versteckte Dateien:</b> Ohne <code class="ps">-Force</code> löscht auch <code class="ps">-Recurse</code> keine versteckten Dateien. Auf Leas Rechner liegt in <code>Dokumente\Archiv</code> die versteckte <code>schatz.txt</code>. Echtes pwsh 7 löscht bei <code class="ps">Remove-Item Dokumente\Archiv -Recurse</code> alles andere, lässt <code>schatz.txt</code> und damit den Ordner stehen und meldet:
+        <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7: versteckte Datei" lang="en"><span class="psk-fehler">Remove-Item: You do not have sufficient access rights to perform this operation or the item is hidden, system, or read only.
+Remove-Item: Directory C:\Users\lea\Dokumente\Archiv cannot be removed because it is not empty.</span></pre>
+        Auf Deutsch: «Die Datei ist versteckt, darum darf ich sie nicht löschen. Der Ordner ist darum nicht leer.» Erst <code class="ps">-Recurse -Force</code> nimmt alles mit. Der Simulator vereinfacht hier und löscht versteckte Dateien auch ohne <code class="ps">-Force</code>.</div>
+    </div>
+    <div class="note falle"><b>Vor jedem -Recurse:</b> Prüf mit <code class="ps">Get-Location</code>, wo du bist. <code class="ps">Remove-Item * -Recurse</code> löscht alles am aktuellen Ort, was nicht versteckt ist. Im falschen Ordner ist das ein Unglück.</div>
+  </section>
+
+  <!-- ===== 5 · Inhalte lesen und schreiben ===== -->
+  <section id="inhalt">
+    <span class="eyebrow">Schritt 5 · Get-Content, Set-Content, Add-Content, Out-File</span>
+    <h2>Inhalte lesen und schreiben</h2>
+    <div class="card stack">
+      <h3>Lesen mit Get-Content</h3>
+      <p class="prose"><code class="ps">Get-Content</code> liest eine Textdatei und gibt jede Zeile als eigenen Text aus.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Get-Content" data-ps-sitzung="inhalt" data-ps-befehl="Get-Content Dokumente\notizen.txt"></pre>
+      <p class="prose">Bei langen Dateien willst du oft nur den Anfang oder das Ende. <code class="ps">-TotalCount 2</code> liest die ersten zwei Zeilen, <code class="ps">-Tail 2</code> die letzten zwei. Das Ende einer Logdatei zeigt die neusten Einträge.</p>
+      <div class="grid2">
+        <div class="stack">
+          <p class="hint">Die ersten zwei Zeilen</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: TotalCount" data-ps-sitzung="inhalt" data-ps-befehl="Get-Content Logs\app.log -TotalCount 2"></pre>
+        </div>
+        <div class="stack">
+          <p class="hint">Die letzten zwei Zeilen</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Tail" data-ps-sitzung="inhalt" data-ps-befehl="Get-Content Logs\app.log -Tail 2"></pre>
+        </div>
+      </div>
+      <p class="hint">Statt <code class="ps">-TotalCount</code> darfst du auch <code class="ps">-First</code> oder <code class="ps">-Head</code> schreiben, statt <code class="ps">-Tail</code> auch <code class="ps">-Last</code>.</p>
+    </div>
+    <div class="card stack">
+      <h3>Schreiben: ersetzen oder anhängen?</h3>
+      <p class="prose"><code class="ps">Set-Content</code> ersetzt den ganzen Inhalt. <code class="ps">Add-Content</code> hängt eine Zeile ans Ende. Beide legen die Datei an, wenn es sie noch nicht gibt.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Set-Content" data-ps-sitzung="inhalt" data-ps-befehl="Set-Content Dokumente\gruss.txt 'Hallo Team'; Get-Content Dokumente\gruss.txt"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Add-Content" data-ps-sitzung="inhalt" data-ps-befehl="Add-Content Dokumente\gruss.txt 'Gruss Lea'; Get-Content Dokumente\gruss.txt"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Set-Content ersetzt" data-ps-sitzung="inhalt" data-ps-befehl="Set-Content Dokumente\gruss.txt 'Alles neu'; Get-Content Dokumente\gruss.txt"></pre>
+      <p class="prose">Das dritte <code class="ps">Set-Content</code> hat beide Zeilen ersetzt. Eine Rückfrage gibt es dabei nicht.</p>
+    </div>
+    <div class="card stack">
+      <h3>Out-File und die Umleitung &gt; und &gt;&gt;</h3>
+      <p class="prose"><code class="ps">Out-File</code> schreibt in eine Datei, was sonst auf dem Bildschirm erscheinen würde, mit Tabelle und Kopfzeilen. Die Umleitung <code class="ps">&gt;</code> macht dasselbe kürzer: <code class="ps">Befehl &gt; datei.txt</code> ist gleichwertig zu <code class="ps">Befehl | Out-File datei.txt</code>. <code class="ps">&gt;&gt;</code> hängt an, wie <code class="ps">Out-File -Append</code>.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Umleitung" data-ps-sitzung="inhalt" data-ps-befehl="Get-ChildItem Bilder > Dokumente\bilder.txt; Get-Content Dokumente\bilder.txt"></pre>
+      <p class="prose"><code class="ps">Set-Content</code> schreibt dagegen nur den Text jedes Objekts, bei Dateien den vollen Pfad. Sieh den Unterschied:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Set-Content mit Objekten" data-ps-sitzung="inhalt" data-ps-befehl="Get-ChildItem Bilder | Set-Content Dokumente\bilder.txt; Get-Content Dokumente\bilder.txt"></pre>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Fünf Wege, in eine Datei zu schreiben (in pwsh 7.6 geprüft)</caption>
+          <thead><tr><th>Befehl</th><th>Was passiert mit dem alten Inhalt?</th><th>Was steht danach drin?</th></tr></thead>
+          <tbody>
+            <tr><th><code class="ps">Set-Content</code></th><td>wird ersetzt</td><td>der Text jedes Objekts (bei Dateien der Pfad)</td></tr>
+            <tr><th><code class="ps">Add-Content</code></th><td>bleibt, Neues kommt ans Ende</td><td>der Text jedes Objekts</td></tr>
+            <tr><th><code class="ps">Out-File</code></th><td>wird ersetzt</td><td>die Bildschirmansicht (Tabelle mit Kopf)</td></tr>
+            <tr><th><code class="ps">&gt;</code></th><td>wird ersetzt</td><td>wie <code class="ps">Out-File</code></td></tr>
+            <tr><th><code class="ps">&gt;&gt;</code></th><td>bleibt, Neues kommt ans Ende</td><td>wie <code class="ps">Out-File -Append</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note tipp"><b>Faustregel:</b> Für Text, den du selbst schreibst (Notizen, Listen), nimm <code class="ps">Set-Content</code> und <code class="ps">Add-Content</code>. Willst du festhalten, was ein Befehl auf dem Bildschirm zeigt, nimm <code class="ps">Out-File</code> oder <code class="ps">&gt;</code>.</div>
+    </div>
+    <div class="card stack">
+      <h3>Encoding: wie Buchstaben als Bytes gespeichert werden</h3>
+      <p class="prose">Eine Datei speichert keine Buchstaben, sondern Zahlen (Bytes). Das <b>Encoding</b> ist die Tabelle, die festlegt, welche Bytes welcher Buchstabe sind. Für A bis Z sind sich fast alle Tabellen einig, für ä, ö, ü nicht. Liest ein Programm eine Datei mit der falschen Tabelle, erscheinen statt «ä» seltsame Zeichen.</p>
+      <p class="prose">PowerShell <span class="ps-version">7</span> schreibt mit allen Befehlen dieser Station <b>UTF-8 ohne BOM</b>, das heute übliche Format. (Die BOM ist ein kleines Kennzeichen am Dateianfang, das die Tabelle verrät.) Windows PowerShell <span class="ps-version">5.1</span> ist uneinheitlich:</p>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Standard-Encoding beim Schreiben von «ä» (in pwsh 7.6.1 und powershell.exe 5.1 nachgeprüft)</caption>
+          <thead><tr><th>Befehl</th><th>PowerShell 7</th><th>Windows PowerShell 5.1</th></tr></thead>
+          <tbody>
+            <tr><th><code class="ps">Out-File</code>, <code class="ps">&gt;</code>, <code class="ps">&gt;&gt;</code></th><td>UTF-8 ohne BOM (<code>C3 A4</code>)</td><td>UTF-16 LE mit BOM (<code>FF FE E4 00</code>)</td></tr>
+            <tr><th><code class="ps">Set-Content</code>, <code class="ps">Add-Content</code></th><td>UTF-8 ohne BOM (<code>C3 A4</code>)</td><td>ANSI, die Windows-Codepage (<code>E4</code>)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Wer in Windows PowerShell 5.1 eine Datei mit <code class="ps">Set-Content</code> anlegt und dann mit <code class="ps">&gt;&gt;</code> ergänzt, mischt zwei Encodings in einer Datei. Die angehängte Zeile erscheint danach als «z w e i» mit Lücken. Brauchst du ein bestimmtes Format, gib es mit <code class="ps">-Encoding utf8</code> ausdrücklich an. Prüfen kannst du das nur in <code>powershell.exe</code>, der Simulator verhält sich wie PowerShell 7.</div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">Jetzt tippst du selbst. Lea bereitet eine Teamsitzung vor und räumt dabei ihren Ordner Dokumente auf. Die Aufgaben bauen aufeinander auf. Mit einer Tastatur geht es schneller: <code>Dok</code> und Tab ergibt <code>.\Dokumente</code>, ↑ holt den letzten Befehl zurück. Nötig ist beides nicht, du kannst alles ausschreiben. Ist etwas schiefgegangen, setzt «↺ Zurücksetzen» den Rechner zurück. Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t05-konsole"></div>
+  </section>
+
+  <!-- ===== 7 · Aufräum-Mission ===== -->
+  <section id="mission">
+    <span class="eyebrow">Schritt 7 · Aufräum-Mission</span>
+    <h2>Leas Downloads-Ordner aufräumen</h2>
+    <p class="prose">Im Ordner <code>Downloads</code> liegen zwei Rechnungen, ein Foto vom Apéro, ein Druckerhandbuch und zwei Installationsdateien (<code>.exe</code>), die Lea nicht mehr braucht: Die Programme sind längst installiert. Räum für sie auf. Neben der Konsole siehst du den Ordner vorher und jetzt. Er wandert mit jedem Befehl mit.</p>
+    <div id="t05-mission"></div>
+    <div class="card stack">
+      <h3>Vorher und jetzt</h3>
+      <div class="t05-vergleich">
+        <div class="t05-spalte"><h4>Vorher</h4><div id="t05-vorher"></div></div>
+        <div class="t05-spalte"><h4>Jetzt</h4><div id="t05-jetzt"></div></div>
+      </div>
+      <p class="info t05-stand" id="t05-stand" aria-live="polite"></p>
+      <p class="hint">Grün markiert, was neu an seinem Platz ist. Rot markiert, was nicht mehr dort liegt. Hast du dich vertan, hilft «↺ Zurücksetzen» in der Konsole.</p>
+    </div>
+    <div class="card stack">
+      <h3>Spiel: gefährlich oder harmlos?</h3>
+      <p class="prose">Kreuze «wahr», wenn der Befehl auf Leas Rechner sofort und ohne Rückfrage Daten löscht oder überschreibt. Kreuze «falsch», wenn er harmlos ist oder zuerst nachfragt.</p>
+      <div id="t05-spiel"></div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Zuordnen</h3>
+      <p class="prose">Was macht der Befehl mit der Datei <code>liste.txt</code>?</p>
+      <div id="t05-u1"></div>
+    </div>
+    <div class="card stack"><h3>Übung 2 · Ausgabe vorhersagen</h3><div id="t05-u2"></div></div>
+    <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t05-u3"></div></div>
+    <div class="card stack">
+      <h3>Übung 4 · Fehler finden und beheben</h3>
+      <p class="prose">Lea sichert ihre Fotos mit <code class="ps">Copy-Item Bilder Bilder-Sicherung</code>. Es gibt keine Fehlermeldung, aber <code class="ps">Get-ChildItem Bilder-Sicherung</code> zeigt nichts. Was fehlt? Tippe den korrigierten Befehl in die Konsole.</p>
+      <div id="t05-u4"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 5 · Fehler finden und beheben</h3>
+      <p class="prose">Lea hat <code class="ps">Move-Item Downloads\foto-apero.jpg Fotos</code> getippt. Die Konsole unten zeigt, was dabei herausgekommen ist: kein Ordner, sondern eine <b>Datei</b> namens <code>Fotos</code>. Warum? Repariere es in drei Schritten.</p>
+      <div id="t05-u5"></div>
+    </div>
+    <div class="card stack"><h3>Übung 6 · Wahr oder falsch?</h3><div id="t05-u6"></div></div>
+    <div class="card stack">
+      <h3>Übung 7 · Befehl selbst schreiben</h3>
+      <p class="prose">Zwei Aufträge ohne Vorlage. Schreib die Befehle selbst in den Simulator.</p>
+      <div id="t05-u7"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Schritt 9 · Selbst tippen</span>
+    <h2>Tipp-Training</h2>
+    <p class="prose">Hier tippst du jeden Befehl selbst, in drei Stufen: zuerst abtippen, dann abwandeln, zum Schluss ganz ohne Vorlage. Jede Stufe hat eine eigene Konsole mit einem frischen Rechner von Lea. Die Aufgaben einer Stufe bauen zum Teil aufeinander auf, löse sie darum der Reihe nach. Hast du dich vertan, stellt «↺ Zurücksetzen» den Rechner wieder her. Gelöste Aufgaben bleiben gelöst.</p>
+    <div class="card stack">
+      <h3>Stufe 1 · Nachtippen</h3>
+      <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn ab und schau dir die Ausgabe an. Gross- und Kleinschreibung spielt keine Rolle, ein Leerzeichen zu viel auch nicht. Auf die Schreibweise der Namen und das Leerzeichen zwischen den Teilen kommt es aber an.</p>
+      <div id="t05-tipp1"></div>
+    </div>
+    <div class="card stack">
+      <h3>Stufe 2 · Abwandeln</h3>
+      <p class="prose">Jede Aufgabe zeigt einen Befehl, den du schon kennst. Du passt ihn an: anderer Ordner, andere Dateien, anderer Parameter.</p>
+      <div id="t05-tipp2"></div>
+    </div>
+    <div class="card stack">
+      <h3>Stufe 3 · Selber lösen</h3>
+      <p class="prose">Jetzt steht nur noch das Ziel da. Den Befehl findest du selbst. Einige Aufgaben brauchen auch, was du in Station 04 über <code class="ps">Get-ChildItem</code> und <code class="ps">Set-Location</code> gelernt hast. Alle Aufgaben gehen von Leas Benutzerordner aus. Bist du woanders, bringt dich <code class="ps">Set-Location ~</code> zurück.</p>
+      <div id="t05-tipp3"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Logarchiv</h2>
+    <p class="prose">Der Leiter Informatik gibt Lea einen Auftrag: <b>(a)</b> Lege im Ordner <code>Logs</code> einen Ordner <code>Archiv</code> an. <b>(b)</b> Verschiebe die Monatslogs von Juli bis September und das Backup-Log vom Juni hinein. <b>(c)</b> Schreib eine Datei <code>liesmich.txt</code> mit zwei Zeilen ins Archiv. <b>(d)</b> Das Juli-Log darf weg, aber prüf zuerst. <b>(e)</b> Benenne das Archiv in <code>Archiv-2026</code> um.</p>
+    <p class="prose">Jede Szene zeigt einen Befehl und die Ausgabe des Simulators auf Leas Rechner.</p>
+    <div id="t05-film"></div>
+    <details class="sol">
+      <summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <pre class="ps-code"><code>New-Item Logs\Archiv -ItemType Directory
+Move-Item Logs\app-2026-0*.log Logs\Archiv
+Move-Item Logs\backup-2026-06.log Logs\Archiv
+Set-Content Logs\Archiv\liesmich.txt 'Archiv vom 2.11.2026'
+Add-Content Logs\Archiv\liesmich.txt 'Logs älter als 30 Tage'
+Remove-Item Logs\Archiv\app-2026-07.log -WhatIf
+Remove-Item Logs\Archiv\app-2026-07.log
+Rename-Item Logs\Archiv Archiv-2026</code></pre>
+        <p class="prose">Endstand: Im Ordner <code>Logs</code> liegen der Ordner <code>Archiv-2026</code>, <code>app-2026-10.log</code>, <code>app.log</code> und <code>sync-fehler.log</code>. Im Archiv liegen <code>app-2026-08.log</code>, <code>app-2026-09.log</code>, <code>backup-2026-06.log</code> und <code>liesmich.txt</code> (47 Bytes).</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Alle Befehle in PowerShell 7.6 in einem nachgebauten Ordner geprüft.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine</h2>
+    <div class="note falle"><b>Ordner ohne -Recurse kopiert:</b> <code class="ps">Copy-Item Dokumente Sicherung</code> legt nur einen leeren Ordner an, ohne Fehlermeldung. Für den Inhalt brauchst du <code class="ps">-Recurse</code>.</div>
+    <div class="note falle"><b>Zielordner fehlt:</b> <code class="ps">Move-Item foto.jpg Fotos</code> ohne bestehenden Ordner <code>Fotos</code> benennt die Datei in <code>Fotos</code> um. Bei mehreren Dateien (<code class="ps">Move-Item *.jpg Fotos</code>) wird die erste zur Datei <code>Fotos</code>, für alle weiteren meldet PowerShell <span lang="en"><code>Cannot create a file when that file already exists.</code></span> («Eine Datei mit diesem Namen gibt es schon»; auf einem deutschen Windows steht die Meldung auf Deutsch). Zuerst <code class="ps">New-Item Fotos -ItemType Directory</code>.</div>
+    <div class="note falle"><b>Zweimal mit -Recurse kopiert:</b> Gibt es den Zielordner schon, landet die Kopie darin: <code>Sicherung\Dokumente</code> statt <code>Sicherung</code>.</div>
+    <div class="note falle"><b><code class="ps">&gt;</code> statt <code class="ps">&gt;&gt;</code>:</b> Ein einziges Zeichen entscheidet, ob die alte Datei weg ist. <code class="ps">'Neu' &gt; notizen.txt</code> ersetzt den ganzen Inhalt, <code class="ps">'Neu' &gt;&gt; notizen.txt</code> hängt an.</div>
+    <div class="note falle"><b>Zusammengeklebte Zeilen:</b> <code class="ps">New-Item -Value</code> schreibt den Text ohne Zeilenende. Ein folgendes <code class="ps">Add-Content</code> klebt direkt daran:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: zusammengeklebte Zeilen" data-ps-sitzung="kleben" data-ps-befehl="New-Item gruss.txt -Value 'Hallo' | Out-Null; Add-Content gruss.txt 'Welt'; Get-Content gruss.txt"></pre>
+      Willst du danach Zeilen anhängen, lege die Datei mit <code class="ps">Set-Content</code> an. <code class="ps">Set-Content</code> und <code class="ps">Add-Content</code> schliessen jede Zeile ab.</div>
+    <div class="note falle"><b>Rename-Item mit Pfad:</b> Der neue Name ist nur ein Name. <code class="ps">Rename-Item a.txt Archiv\b.txt</code> scheitert. Verschieben ist Sache von <code class="ps">Move-Item</code>.</div>
+    <div class="note falle"><b>Copy-Item überschreibt still:</b> Gibt es die Zieldatei schon, ersetzt <code class="ps">Copy-Item</code> sie ohne Rückfrage. <code class="ps">Move-Item</code> dagegen meldet einen Fehler und lässt beide Dateien, wie sie sind.</div>
+    <div class="note falle"><b>-WhatIf vergessen und am falschen Ort:</b> <code class="ps">Remove-Item *.txt</code> löscht alle Textdateien am <i>aktuellen</i> Ort. Prüf zuerst mit <code class="ps">Get-Location</code>, wo du bist, und probe mit <code class="ps">-WhatIf</code>.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Alle Fragen beziehen sich auf PowerShell 7 und Leas Rechner, so wie du ihn aus dem Simulator kennst.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">New-Item -ItemType Directory</code></th><td>Ordner anlegen</td><td><code class="ps">New-Item Dokumente\Fest -ItemType Directory</code></td></tr>
+          <tr><th><code class="ps">New-Item -ItemType File -Value</code></th><td>Datei mit Text anlegen</td><td><code class="ps">New-Item a.txt -ItemType File -Value 'Hallo'</code></td></tr>
+          <tr><th><code class="ps">Copy-Item</code></th><td>Datei kopieren</td><td><code class="ps">Copy-Item notizen.txt notizen-sicherung.txt</code></td></tr>
+          <tr><th><code class="ps">Copy-Item -Recurse</code></th><td>Ordner samt Inhalt kopieren</td><td><code class="ps">Copy-Item Dokumente Dokumente-Sicherung -Recurse</code></td></tr>
+          <tr><th><code class="ps">Move-Item</code></th><td>verschieben (in einen bestehenden Ordner)</td><td><code class="ps">Move-Item Downloads\*.jpg Downloads\Bilder</code></td></tr>
+          <tr><th><code class="ps">Rename-Item</code></th><td>umbenennen, am selben Ort</td><td><code class="ps">Rename-Item notizen.txt notizen-2026.txt</code></td></tr>
+          <tr><th><code class="ps">Remove-Item</code></th><td>endgültig löschen, kein Papierkorb</td><td><code class="ps">Remove-Item Downloads\setup-alt.exe</code></td></tr>
+          <tr><th><code class="ps">Remove-Item -Recurse</code></th><td>Ordner samt Inhalt löschen, ohne Rückfrage (versteckte Dateien nur mit <code class="ps">-Force</code>)</td><td><code class="ps">Remove-Item Dokumente-Kopie -Recurse</code></td></tr>
+          <tr><th><code class="ps">-WhatIf</code></th><td>Probefahrt: zeigen statt tun</td><td><code class="ps">Remove-Item Downloads\*.exe -WhatIf</code></td></tr>
+          <tr><th><code class="ps">-Confirm</code></th><td>vor jedem Element nachfragen</td><td><code class="ps">Remove-Item Downloads\*.exe -Confirm</code></td></tr>
+          <tr><th><code class="ps">Get-Content</code></th><td>Datei lesen, Zeile für Zeile</td><td><code class="ps">Get-Content Dokumente\notizen.txt</code></td></tr>
+          <tr><th><code class="ps">Get-Content -TotalCount</code> / <code class="ps">-Tail</code></th><td>erste bzw. letzte Zeilen</td><td><code class="ps">Get-Content Logs\app.log -Tail 2</code></td></tr>
+          <tr><th><code class="ps">Set-Content</code></th><td>Inhalt ersetzen (oder Datei anlegen)</td><td><code class="ps">Set-Content gruss.txt 'Hallo Team'</code></td></tr>
+          <tr><th><code class="ps">Add-Content</code></th><td>Zeile anhängen</td><td><code class="ps">Add-Content gruss.txt 'Gruss Lea'</code></td></tr>
+          <tr><th><code class="ps">Out-File</code> / <code class="ps">&gt;</code></th><td>Bildschirmansicht in Datei, ersetzt</td><td><code class="ps">Get-ChildItem Bilder &gt; bilder.txt</code></td></tr>
+          <tr><th><code class="ps">Out-File -Append</code> / <code class="ps">&gt;&gt;</code></th><td>Bildschirmansicht anhängen</td><td><code class="ps">Get-Date &gt;&gt; protokoll.txt</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Alle Handgriffe enden auf <b>-Item</b>: New, Copy, Move, Rename, Remove.</li>
+      <li><b>Ordner kopieren</b> heisst <code class="ps">Copy-Item -Recurse</code>. Ohne entsteht nur eine leere Mappe.</li>
+      <li><b>Zielordner zuerst anlegen</b>, sonst wird aus dem Verschieben ein Umbenennen.</li>
+      <li><b>Kein Papierkorb:</b> erst schauen, dann <code class="ps">-WhatIf</code>, dann löschen.</li>
+      <li><code class="ps">Set-Content</code> und <code class="ps">&gt;</code> <b>ersetzen</b>, <code class="ps">Add-Content</code> und <code class="ps">&gt;&gt;</code> <b>hängen an</b>.</li>
+      <li><code class="ps">Out-File</code> und <code class="ps">&gt;</code> schreiben die Bildschirmansicht, <code class="ps">Set-Content</code> den Text der Objekte.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li><code class="ps">Out-File</code>, <code class="ps">&gt;</code> und <code class="ps">&gt;&gt;</code> schreiben in 5.1 UTF-16 LE mit BOM, in <span class="ps-version">7</span> UTF-8 ohne BOM.</li>
+        <li><code class="ps">Set-Content</code> und <code class="ps">Add-Content</code> schreiben in 5.1 ANSI (die Windows-Codepage), in <span class="ps-version">7</span> UTF-8 ohne BOM.</li>
+        <li>Mischst du in 5.1 <code class="ps">Set-Content</code> und <code class="ps">&gt;&gt;</code> in einer Datei, entstehen kaputte Zeilen. Mit <code class="ps">-Encoding utf8</code> legst du das Format fest (in 5.1 mit BOM).</li>
+        <li><code class="ps">Get-ChildItem Bilder | Set-Content bilder.txt</code> schreibt in 5.1 nur die Dateinamen, in <span class="ps-version">7</span> die vollen Pfade.</li>
+        <li>Die Cmdlets <code class="ps">New-Item</code>, <code class="ps">Copy-Item</code>, <code class="ps">Move-Item</code>, <code class="ps">Rename-Item</code> und <code class="ps">Remove-Item</code> verhalten sich in den Beispielen dieser Station gleich.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/new-item">New-Item</a> (<code>-ItemType</code>, <code>-Value</code>, <code>-Force</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/copy-item">Copy-Item</a> (<code>-Recurse</code>, Kopieren in einen bestehenden Ordner)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/move-item">Move-Item</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/rename-item">Rename-Item</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/remove-item">Remove-Item</a> (<code>-Recurse</code>, <code>-WhatIf</code>, <code>-Confirm</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-content">Get-Content</a> (<code>-TotalCount</code>, <code>-Tail</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-content">Set-Content</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/add-content">Add-Content</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/out-file">Out-File</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_redirection">about_Redirection</a> (<code>&gt;</code> entspricht <code>Out-File</code>, <code>&gt;&gt;</code> hängt an)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_character_encoding">about_Character_Encoding</a> (UTF-8 ohne BOM in 7, UTF-16 LE und ANSI in 5.1)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters">about_CommonParameters</a> (<code>-WhatIf</code>, <code>-Confirm</code>)</li>
+      </ul>
+    </div>
+    <footer>Station 05 des Lernpfads PS · Weiter geht es mit «Objekte statt Text».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  const H = "C:\\Users\\lea\\";
+  const ziel = (p) => H + p;
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t05-mini", {
+    kategorien: ["New-Item", "Copy-Item", "Move-Item", "Rename-Item", "Remove-Item"],
+    elemente: [
+      { html: "Einen Ordner «Fest» neu anlegen", kategorie: "New-Item", erklaerung: "Etwas Neues entsteht: New-Item -ItemType Directory." },
+      { html: "Eine Sicherung der Notizen machen, das Original bleibt", kategorie: "Copy-Item", erklaerung: "Danach gibt es die Datei zweimal: kopieren." },
+      { html: "Die Rechnung aus Downloads in den Ordner Rechnungen legen", kategorie: "Move-Item", erklaerung: "Die Datei wechselt den Ort, am alten Ort bleibt nichts: verschieben." },
+      { html: "Aus notizen.txt wird notizen-2026.txt, am selben Ort", kategorie: "Rename-Item", erklaerung: "Nur der Name ändert sich: umbenennen." },
+      { html: "Die alte Installationsdatei endgültig wegwerfen", kategorie: "Remove-Item", erklaerung: "Löschen, ohne Papierkorb. Vorher mit -WhatIf proben." },
+      { html: "Eine leere Datei protokoll.txt erstellen", kategorie: "New-Item", erklaerung: "New-Item -ItemType File legt eine leere Datei an." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper ---------- */
+  const st = L.konsole.sitzung();
+  const sp = (link, code) => '<span data-link="' + link + '">' + C(code) + "</span>";
+  const stufe = (teile, befehl) => '<div class="t05-st"><div>' + teile + "</div>" + st.html(befehl) + "</div>";
+  L.stepper("#t05-stepper", {
+    titel: "Leas Auftrag",
+    text: 'Lösche <span data-link="a">im Ordner Dokumente</span> <span data-link="b">alle Word-Dateien</span>, aber <span data-link="c">prüf zuerst, was gelöscht würde</span>.',
+    schritte: [
+      { html: stufe(C("Get-ChildItem") + " " + sp("a", "Dokumente") + " " + C("-Filter") + " " + sp("b", "*.docx"), "Get-ChildItem Dokumente -Filter *.docx"),
+        warum: "Zuerst schauen. Word-Dateien enden auf .docx. Der Platzhalter * steht für einen beliebigen Namen. Zwei Dateien passen." },
+      { html: stufe(C("Remove-Item") + " " + sp("a", "Dokumente\\") + sp("b", "*.docx") + " " + sp("c", "-WhatIf"), "Remove-Item Dokumente\\*.docx -WhatIf"),
+        warum: "Dann proben. -WhatIf zeigt für jede Datei, was passieren würde. Es sind genau die zwei von vorher. Gelöscht ist noch nichts." },
+      { html: stufe(C("Remove-Item") + " " + sp("a", "Dokumente\\") + sp("b", "*.docx"), "Remove-Item Dokumente\\*.docx"),
+        warum: "Jetzt wirklich löschen: derselbe Befehl ohne -WhatIf. PowerShell meldet nichts, wenn es klappt." },
+      { html: stufe(C("Get-ChildItem") + " " + sp("a", "Dokumente"), "Get-ChildItem Dokumente"),
+        warum: "Zum Schluss kontrollieren. Die beiden .docx-Dateien sind weg, der Rest ist noch da." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Konsole mit Aufgaben ---------- */
+  const zeilen = (t) => (t == null ? null : t.split("\n"));
+  const nutzt = (ctx, ...namen) => namen.some((n) => ctx.befehle.includes(n));
+  const appLog = ["2026-11-02 08:00:01 INFO  Dienst gestartet", "2026-11-02 08:15:42 INFO  Benutzer lea angemeldet",
+    "2026-11-02 08:31:07 WARN  Speicher knapp (85 %)", "2026-11-02 08:44:19 ERROR Verbindung zu sync.wolkenried.ch fehlgeschlagen",
+    "2026-11-02 08:59:13 INFO  Sicherung abgeschlossen"];
+  const texte = (ctx) => ctx.objekte.map((o) => ctx.text(o));
+  const gleicheListe = (a, b) => !!a && !!b && a.length === b.length && a.every((x, i) => x === b[i]);
+  L.konsole("#t05-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Ein Ordner für die Sitzung",
+        text: "<p>Lege im Ordner <code>Dokumente</code> einen neuen Ordner <code>Sitzung</code> an.</p>",
+        hinweis: "<p>" + C("New-Item") + " mit dem Pfad " + C("Dokumente\\Sitzung") + " und " + C("-ItemType Directory") + ". Kürzer: " + C("mkdir") + ".</p>",
+        loesung: "New-Item Dokumente\\Sitzung -ItemType Directory",
+        pruefe: (ctx) => nutzt(ctx, "New-Item", "mkdir") && !!ctx.datei(ziel("Dokumente\\Sitzung")) && ctx.datei(ziel("Dokumente\\Sitzung")).ordner
+      },
+      {
+        titel: "Eine Traktandenliste schreiben",
+        text: "<p>Schreib mit " + C("Set-Content") + " die Zeile <code>Budget 2027</code> in die Datei <code>Dokumente\\Sitzung\\traktanden.txt</code>. Die Datei gibt es noch nicht.</p>",
+        hinweis: "<p>" + C("Set-Content") + " legt die Datei selbst an. Zuerst der Pfad, dann der Text in Anführungszeichen: " + C("'Budget 2027'") + ".</p>",
+        loesung: "Set-Content Dokumente\\Sitzung\\traktanden.txt 'Budget 2027'",
+        pruefe: (ctx) => nutzt(ctx, "Set-Content") && ctx.inhalt(ziel("Dokumente\\Sitzung\\traktanden.txt")) === "Budget 2027"
+      },
+      {
+        titel: "Ein Traktandum ergänzen",
+        text: "<p>Hänge die Zeile <code>Dorffest</code> an die Datei <code>traktanden.txt</code> an. Die erste Zeile muss stehen bleiben.</p>",
+        hinweis: "<p>" + C("Add-Content") + " hängt an, " + C("Set-Content") + " würde ersetzen. Steht in der Datei «Budget 2027Dorffest» in einer Zeile? Dann hast du sie mit " + C("New-Item -Value") + " angelegt. Schreib sie mit " + C("Set-Content") + " neu und häng nochmals an.</p>",
+        loesung: "Add-Content Dokumente\\Sitzung\\traktanden.txt 'Dorffest'",
+        pruefe: (ctx) => nutzt(ctx, "Add-Content") && gleicheListe(zeilen(ctx.inhalt(ziel("Dokumente\\Sitzung\\traktanden.txt"))), ["Budget 2027", "Dorffest"])
+      },
+      {
+        titel: "Der Anfang der Logdatei",
+        text: "<p>Zeige nur die <b>ersten zwei Zeilen</b> von <code>Logs\\app.log</code>. Nimm dafür einen Parameter von " + C("Get-Content") + ", kein " + C("Select-Object") + ".</p>",
+        hinweis: "<p>" + C("Get-Content") + " mit " + C("-TotalCount 2") + ".</p>",
+        loesung: "Get-Content Logs\\app.log -TotalCount 2",
+        pruefe: (ctx) => nutzt(ctx, "Get-Content") && !nutzt(ctx, "Select-Object") && gleicheListe(texte(ctx), appLog.slice(0, 2))
+      },
+      {
+        titel: "Der neuste Eintrag",
+        text: "<p>Zeige nur die <b>letzte Zeile</b> von <code>Logs\\app.log</code>, wieder ohne " + C("Select-Object") + ".</p>",
+        hinweis: "<p>Das Ende einer Datei liest " + C("-Tail") + ".</p>",
+        loesung: "Get-Content Logs\\app.log -Tail 1",
+        pruefe: (ctx) => nutzt(ctx, "Get-Content") && !nutzt(ctx, "Select-Object") && gleicheListe(texte(ctx), appLog.slice(4))
+      },
+      {
+        titel: "Die Einkaufsliste umbenennen",
+        text: "<p>Benenne <code>Dokumente\\einkaufsliste.txt</code> in <code>einkauf-montag.txt</code> um. Sie bleibt im Ordner Dokumente.</p>",
+        hinweis: "<p>" + C("Rename-Item") + ": zuerst der alte Pfad, dann nur der neue Name, ohne Ordner davor.</p>",
+        loesung: "Rename-Item Dokumente\\einkaufsliste.txt einkauf-montag.txt",
+        pruefe: (ctx) => nutzt(ctx, "Rename-Item") && ctx.existiert(ziel("Dokumente\\einkauf-montag.txt")) && !ctx.existiert(ziel("Dokumente\\einkaufsliste.txt"))
+      },
+      {
+        titel: "Eine Sicherung von Dokumente",
+        text: "<p>Kopiere den ganzen Ordner <code>Dokumente</code> samt Inhalt nach <code>Dokumente-Sicherung</code> (in Leas Benutzerordner). Auch der Unterordner <code>Archiv</code> muss mit.</p>",
+        hinweis: "<p>" + C("Copy-Item") + " mit Quelle, Ziel und " + C("-Recurse") + ". Gibt es <code>Dokumente-Sicherung</code> schon (zum Beispiel leer von einem Versuch ohne " + C("-Recurse") + "), landet die Kopie darin. Lösche den Ordner dann zuerst mit " + C("Remove-Item Dokumente-Sicherung -Recurse -Force") + " (" + C("-Force") + " wegen der versteckten Datei im Archiv) oder setz den Rechner zurück.</p>",
+        loesung: "Copy-Item Dokumente Dokumente-Sicherung -Recurse",
+        pruefe: (ctx) => nutzt(ctx, "Copy-Item") && ctx.existiert(ziel("Dokumente-Sicherung\\Archiv\\vertrag-2020.pdf")) && ctx.existiert(ziel("Dokumente\\Archiv\\vertrag-2020.pdf"))
+      }
+    ]
+  });
+
+  /* ---------- Schritt 7: Aufräum-Mission ---------- */
+  const DL = ziel("Downloads");
+  let geprobt = false;
+  const exe = ["setup-alt.exe", "WolkenriedSync-setup.exe"];
+  const ordnerDa = (ctx, n) => { const d = ctx.datei(DL + "\\" + n); return !!d && d.ordner; };
+  const drin = (ctx, n) => ctx.kinder(DL + "\\" + n) || [];
+  const enthaelt = (liste, n) => liste.some((x) => x.toLowerCase() === n.toLowerCase());
+  const mission = L.konsole("#t05-mission", {
+    titel: "PowerShell 7 · Aufräum-Mission",
+    aufgabenTitel: "Mission: Downloads aufräumen",
+    aufgaben: [
+      {
+        titel: "Ordner Rechnungen anlegen",
+        text: "<p>Lege im Ordner <code>Downloads</code> einen Ordner <code>Rechnungen</code> an.</p>",
+        hinweis: "<p>" + C("New-Item Downloads\\Rechnungen -ItemType Directory") + ". Bist du schon mit " + C("Set-Location Downloads") + " im Ordner, reicht " + C("Rechnungen") + " als Pfad.</p>",
+        loesung: "New-Item Downloads\\Rechnungen -ItemType Directory",
+        pruefe: (ctx) => nutzt(ctx, "New-Item", "mkdir") && ordnerDa(ctx, "Rechnungen")
+      },
+      {
+        titel: "Ordner Bilder anlegen",
+        text: "<p>Lege im Ordner <code>Downloads</code> auch einen Ordner <code>Bilder</code> an. Achtung: Leas Benutzerordner hat schon einen Ordner <code>Bilder</code>. Du brauchst einen neuen <i>in</i> Downloads.</p>",
+        hinweis: "<p>Der Pfad muss mit " + C("Downloads\\") + " beginnen, sonst meldet PowerShell, dass es <code>Bilder</code> schon gibt. Ist <code>Downloads\\Bilder</code> eine <b>Datei</b> geworden (weil du das Foto zu früh verschoben hast), benenne sie zurück: " + C("Rename-Item Downloads\\Bilder foto-apero.jpg") + ".</p>",
+        loesung: "New-Item Downloads\\Bilder -ItemType Directory",
+        pruefe: (ctx) => nutzt(ctx, "New-Item", "mkdir") && ordnerDa(ctx, "Bilder")
+      },
+      {
+        titel: "Rechnungen einordnen",
+        text: "<p>Verschiebe die beiden Rechnungen (<code>rechnung-…pdf</code>) mit einem einzigen Befehl in den Ordner <code>Downloads\\Rechnungen</code>. Das Druckerhandbuch ist keine Rechnung und bleibt liegen.</p>",
+        hinweis: "<p>Ein Platzhalter erfasst beide: " + C("Downloads\\rechnung-*.pdf") + ". Das Ziel ist der Ordner aus Aufgabe 1.</p>",
+        loesung: "Move-Item Downloads\\rechnung-*.pdf Downloads\\Rechnungen",
+        pruefe: (ctx) => nutzt(ctx, "Move-Item") && ordnerDa(ctx, "Rechnungen") &&
+          enthaelt(drin(ctx, "Rechnungen"), "rechnung-2026-09.pdf") && enthaelt(drin(ctx, "Rechnungen"), "rechnung-2026-10.pdf") &&
+          ctx.existiert(DL + "\\handbuch-drucker.pdf")
+      },
+      {
+        titel: "Fotos einordnen",
+        text: "<p>Verschiebe alle <code>.jpg</code>-Dateien aus Downloads in den Ordner <code>Downloads\\Bilder</code>.</p>",
+        hinweis: "<p>" + C("Move-Item Downloads\\*.jpg Downloads\\Bilder") + ". Der Ordner muss vorher existieren (Aufgabe 2), sonst wird das Foto zu einer Datei namens <code>Bilder</code>.</p>",
+        loesung: "Move-Item Downloads\\*.jpg Downloads\\Bilder",
+        pruefe: (ctx) => nutzt(ctx, "Move-Item") && ordnerDa(ctx, "Bilder") && enthaelt(drin(ctx, "Bilder"), "foto-apero.jpg")
+      },
+      {
+        titel: "Setup-Dateien: zuerst die Probefahrt",
+        text: "<p>Die beiden <code>.exe</code>-Dateien sollen weg. Prüfe zuerst mit " + C("-WhatIf") + ", was " + C("Remove-Item") + " löschen würde.</p>",
+        hinweis: "<p>" + C("Remove-Item Downloads\\*.exe -WhatIf") + ". Es müssen genau zwei Zeilen «What if» erscheinen.</p>",
+        loesung: "Remove-Item Downloads\\*.exe -WhatIf",
+        pruefe: (ctx) => {
+          const ok = nutzt(ctx, "Remove-Item") && /-wh|-wi\b/i.test(ctx.eingabe) &&
+            exe.every((n) => ctx.existiert(DL + "\\" + n) && ctx.ausgabe.indexOf(n) >= 0) && (ctx.ausgabe.match(/What if:/g) || []).length === 2;
+          if (ok) geprobt = true;
+          return ok;
+        }
+      },
+      {
+        titel: "Setup-Dateien wirklich löschen",
+        text: "<p>Jetzt lösche die beiden <code>.exe</code>-Dateien wirklich. Alles andere bleibt.</p>",
+        hinweis: "<p>Hol den letzten Befehl mit ↑ zurück und entferne " + C("-WhatIf") + ". Hast du ohne Probefahrt gelöscht, zählt die Aufgabe nicht: Setz den Rechner zurück, probe zuerst und lösche dann.</p>",
+        loesung: "Remove-Item Downloads\\*.exe",
+        pruefe: (ctx) => geprobt && nutzt(ctx, "Remove-Item") && !/-wh|-wi\b/i.test(ctx.eingabe) && exe.every((n) => !ctx.existiert(DL + "\\" + n)) &&
+          ctx.existiert(DL + "\\handbuch-drucker.pdf")
+      }
+    ]
+  });
+
+  // Ordnerbaum: Zustand über den Aufgaben-Kontext der Sitzung lesen
+  const LEER = { code: "", befehle: [], objekte: [], text: "", fehler: [] };
+  function baumLesen(sitzung) {
+    try {
+      const ctx = sitzung.kontext(LEER);
+      const lesen = (pfad) => (ctx.kinder(pfad) || []).map((n) => {
+        const d = ctx.datei(pfad + "\\" + n);
+        return { name: n, ordner: !!(d && d.ordner), groesse: d ? d.groesse : null, kinder: d && d.ordner ? lesen(pfad + "\\" + n) : [] };
+      }).sort((a, b) => (a.ordner === b.ordner ? a.name.toLowerCase().localeCompare(b.name.toLowerCase()) : a.ordner ? -1 : 1));
+      return lesen(DL);
+    } catch (e) { return null; }
+  }
+  const pfade = (baum, vor, menge) => { (baum || []).forEach((k) => { const p = (vor ? vor + "\\" : "") + k.name.toLowerCase() + (k.ordner ? "\\" : ""); menge.add(p); pfade(k.kinder, p.replace(/\\$/, ""), menge); }); return menge; };
+  const groesseText = (b) => (b == null ? "" : b >= 1048576 ? L.zahlText(b / 1048576, 1) + " MB" : b >= 1024 ? Math.round(b / 1024) + " KB" : b + " Bytes");
+  function baumZeichnen(box, baum, vergleich, art) {
+    box.innerHTML = "";
+    if (!baum) { const p = document.createElement("p"); p.className = "t05-leer"; p.textContent = "Ordner nicht lesbar."; box.appendChild(p); return; }
+    const wurzel = document.createElement("ul");
+    wurzel.className = "t05-baum";
+    const li0 = document.createElement("li"); li0.className = "t05-ordner";
+    li0.innerHTML = '<span class="t05-eintrag"><span aria-hidden="true">📁</span><span class="t05-name">Downloads</span></span>';
+    const bauen = (liste, vor) => {
+      const ul = document.createElement("ul");
+      if (!liste.length) { const li = document.createElement("li"); li.className = "t05-leer"; li.textContent = "(leer)"; ul.appendChild(li); }
+      liste.forEach((k) => {
+        const p = (vor ? vor + "\\" : "") + k.name.toLowerCase() + (k.ordner ? "\\" : "");
+        const li = document.createElement("li");
+        const anders = vergleich && !vergleich.has(p);
+        li.className = (k.ordner ? "t05-ordner" : "t05-datei") + (anders && art === "vorher" ? " t05-weg" : "");
+        const z = document.createElement("span"); z.className = "t05-eintrag";
+        const sym = document.createElement("span"); sym.setAttribute("aria-hidden", "true"); sym.textContent = k.ordner ? "📁" : "📄";
+        const nm = document.createElement("span"); nm.className = "t05-name"; nm.textContent = k.name;
+        z.append(sym, nm);
+        const g = document.createElement("span"); g.className = "t05-groesse"; g.textContent = k.ordner ? "Ordner" : "Datei, " + groesseText(k.groesse);
+        z.appendChild(g);
+        if (anders) {
+          const m = document.createElement("span");
+          m.className = "t05-marke " + (art === "vorher" ? "weg" : "neu");
+          m.textContent = art === "vorher" ? "✗ nicht mehr hier" : "✓ neu hier";
+          z.appendChild(m);
+        }
+        if (!k.ordner && /^(bilder|rechnungen)$/i.test(k.name)) {
+          const w = document.createElement("span"); w.className = "t05-marke warn"; w.textContent = "⚠ Datei statt Ordner";
+          z.appendChild(w);
+        }
+        li.appendChild(z);
+        if (k.ordner) li.appendChild(bauen(k.kinder, p.replace(/\\$/, "")));
+        ul.appendChild(li);
+      });
+      return ul;
+    };
+    li0.appendChild(bauen(baum, ""));
+    wurzel.appendChild(li0);
+    box.appendChild(wurzel);
+  }
+  const vorherBaum = baumLesen(L.konsole.sitzung().sitzung);
+  const vorherPfade = pfade(vorherBaum, "", new Set());
+  const boxVorher = document.getElementById("t05-vorher");
+  const boxJetzt = document.getElementById("t05-jetzt");
+  const standEl = document.getElementById("t05-stand");
+  let letzterStand = "";
+  function jetztZeigen() {
+    if (!mission) return;
+    const jetzt = baumLesen(mission.sitzung);
+    const jetztPfade = pfade(jetzt, "", new Set());
+    baumZeichnen(boxVorher, vorherBaum, jetztPfade, "vorher");
+    baumZeichnen(boxJetzt, jetzt, vorherPfade, "jetzt");
+    const hat = (p) => jetztPfade.has(p);
+    const fertig = hat("bilder\\") && hat("rechnungen\\") && hat("bilder\\foto-apero.jpg") && hat("rechnungen\\rechnung-2026-09.pdf") &&
+      hat("rechnungen\\rechnung-2026-10.pdf") && hat("handbuch-drucker.pdf") && !hat("setup-alt.exe") && !hat("wolkenriedsync-setup.exe") && jetztPfade.size === 6;
+    const n = jetzt ? jetzt.length : 0;
+    const text = fertig ? "✓ Aufgeräumt: zwei Ordner und das Druckerhandbuch, keine Installationsdateien mehr."
+      : "Downloads enthält " + n + (n === 1 ? " Element" : " Elemente") + " auf oberster Ebene.";
+    if (text !== letzterStand) { standEl.textContent = text; letzterStand = text; }
+  }
+  let geplant = false;
+  const beobachter = new MutationObserver(() => {
+    if (geplant) return;
+    geplant = true;
+    requestAnimationFrame(() => { geplant = false; jetztZeigen(); });
+  });
+  beobachter.observe(document.getElementById("t05-mission"), { childList: true, subtree: true, characterData: true });
+  jetztZeigen();
+
+  /* ---------- Spiel: gefährlich oder harmlos? ---------- */
+  L.wahrFalsch("#t05-spiel", {
+    titel: "Löscht oder überschreibt dieser Befehl sofort Daten?",
+    aussagen: [
+      { html: C("Remove-Item Downloads\\*.exe -WhatIf"), wahr: false, erklaerung: "Harmlos. -WhatIf zeigt nur, was passieren würde." },
+      { html: C("Remove-Item Downloads\\*.exe"), wahr: true, erklaerung: "Gefährlich. Beide .exe-Dateien sind ohne Rückfrage und ohne Papierkorb weg." },
+      { html: C("Get-ChildItem Downloads -Recurse"), wahr: false, erklaerung: "Harmlos. Get-Befehle lesen nur." },
+      { html: C("Remove-Item Dokumente"), wahr: false, erklaerung: "Fragt zuerst nach, weil der Ordner Inhalt hat und -Recurse fehlt. Antwortest du Y, ist aber alles weg." },
+      { html: C("Remove-Item Dokumente -Recurse"), wahr: true, erklaerung: "Gefährlich. Mit -Recurse fragt PowerShell nicht mehr und löscht alles darin, was nicht versteckt ist. Nur die versteckte schatz.txt bleibt mit einer Fehlermeldung stehen, sie bräuchte -Force." },
+      { html: C("Remove-Item Downloads\\setup-alt.exe -Confirm"), wahr: false, erklaerung: "-Confirm fragt vor dem Löschen nach. Erst dein Y löscht." },
+      { html: C("'Neu' > Dokumente\\notizen.txt"), wahr: true, erklaerung: "Gefährlich. > ersetzt den ganzen Inhalt der Notizen durch das Wort Neu." },
+      { html: C("'Neu' >> Dokumente\\notizen.txt"), wahr: false, erklaerung: "Harmlos. >> hängt eine Zeile an, der alte Inhalt bleibt." },
+      { html: C("Copy-Item Dokumente\\notizen.txt Dokumente\\einkaufsliste.txt"), wahr: true, erklaerung: "Gefährlich. Die Einkaufsliste gibt es schon. Copy-Item ersetzt sie ohne Rückfrage durch die Notizen." },
+      { html: C("Get-ChildItem Downloads -Filter *.exe | Remove-Item"), wahr: true, erklaerung: "Gefährlich. Get-ChildItem sucht nur, aber Remove-Item am Ende der Pipeline löscht alles, was ankommt." }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t05-u1", {
+    kategorien: ["ersetzt den Inhalt", "hängt an", "liest nur"],
+    elemente: [
+      { html: C("Set-Content liste.txt 'A'"), kategorie: "ersetzt den Inhalt", erklaerung: "Set-Content schreibt die Datei neu." },
+      { html: C("Add-Content liste.txt 'A'"), kategorie: "hängt an", erklaerung: "Add-Content setzt die Zeile ans Ende." },
+      { html: C("'A' > liste.txt"), kategorie: "ersetzt den Inhalt", erklaerung: "> entspricht Out-File: ersetzen." },
+      { html: C("'A' >> liste.txt"), kategorie: "hängt an", erklaerung: ">> entspricht Out-File -Append." },
+      { html: C("Get-Content liste.txt -Tail 3"), kategorie: "liest nur", erklaerung: "Get-Content verändert nichts." },
+      { html: C("'A' | Out-File liste.txt"), kategorie: "ersetzt den Inhalt", erklaerung: "Out-File ohne -Append ersetzt." },
+      { html: C("'A' | Out-File liste.txt -Append"), kategorie: "hängt an", erklaerung: "-Append heisst anhängen." }
+    ]
+  });
+  L.auswahl("#t05-u2", {
+    frage: "Lea tippt nacheinander " + C("Set-Content t.txt 'A'") + ", " + C("Add-Content t.txt 'B'") + ", " + C("Set-Content t.txt 'C'") + " und " + C("Add-Content t.txt 'D'") + ". Was zeigt danach " + C("Get-Content t.txt") + "?",
+    optionen: ["A, B, C und D (vier Zeilen)", "C und D (zwei Zeilen)", "nur D", "A und B (zwei Zeilen)"],
+    richtig: 1,
+    erklaerung: "Das zweite Set-Content ersetzt A und B durch C. Add-Content hängt D an. Übrig bleiben C und D."
+  });
+  L.auswahl("#t05-u3", {
+    frage: "Was zeigt " + C("Get-Content gruss.txt") + " nach " + C("New-Item gruss.txt -Value 'Hallo'") + " und " + C("Add-Content gruss.txt 'Welt'") + "?",
+    optionen: ["eine Zeile: HalloWelt", "zwei Zeilen: Hallo und Welt", "nur Welt", "eine Fehlermeldung, weil die Datei schon existiert"],
+    richtig: 0,
+    erklaerung: "New-Item -Value schreibt Hallo ohne Zeilenende. Add-Content hängt Welt direkt dahinter. In pwsh 7.6 geprüft."
+  });
+  // Übung 4 und 5: Fehler im Simulator beheben statt auswählen
+  const istOrdner = (ctx, p) => { const d = ctx.datei(ziel(p)); return !!d && d.ordner; };
+  const istDatei = (ctx, p) => { const d = ctx.datei(ziel(p)); return !!d && !d.ordner; };
+  const bilder = ["ferien-01.jpg", "ferien-02.jpg", "gemeindehaus.png", "logo-wolkenried.png"];
+  L.konsole("#t05-u4", {
+    begruessung: false,
+    aufgabenTitel: "Fehler beheben",
+    aufgaben: [
+      {
+        titel: "Die Fotos richtig sichern",
+        text: "<p>Kopiere den Ordner <code>Bilder</code> samt allen vier Bildern nach <code>Bilder-Sicherung</code>.</p>",
+        hinweis: "<p>Bei einem Ordner kopiert " + C("Copy-Item") + " nur die leere Mappe, solange ein bestimmter Schalter fehlt. Welcher Schalter heisst «samt allem, was drin ist»? Hast du Leas fehlerhaften Befehl schon ausprobiert, gibt es <code>Bilder-Sicherung</code> bereits und die neue Kopie landet darin. Setz den Rechner dann zurück.</p>",
+        loesung: "Copy-Item Bilder Bilder-Sicherung -Recurse  # -Recurse nimmt den Inhalt des Ordners mit",
+        pruefe: (ctx) => nutzt(ctx, "Copy-Item") && istOrdner(ctx, "Bilder-Sicherung") &&
+          bilder.every((n) => istDatei(ctx, "Bilder-Sicherung\\" + n) && istDatei(ctx, "Bilder\\" + n))
+      }
+    ]
+  });
+  // Die Konsole startet mit Leas Fehler: Aus foto-apero.jpg ist die Datei «Fotos» geworden
+  const fotoDa = (ctx) => istDatei(ctx, "foto-apero.jpg") || istDatei(ctx, "Downloads\\foto-apero.jpg");
+  L.konsole("#t05-u5", {
+    begruessung: false,
+    befehle: ["Move-Item Downloads\\foto-apero.jpg Fotos", "Get-ChildItem Fotos"],
+    aufgabenTitel: "Fehler beheben",
+    aufgaben: [
+      {
+        titel: "Das Foto zurückholen",
+        text: "<p>Die Datei <code>Fotos</code> ist in Wahrheit das Apéro-Foto. Gib ihr den Namen <code>foto-apero.jpg</code> zurück. Sie darf dabei im Benutzerordner bleiben.</p>",
+        hinweis: "<p>Den Namen eines Elements ändert ein Cmdlet, das auf <b>-Item</b> endet. Der neue Name kommt ohne Ordner davor.</p>",
+        loesung: "Rename-Item Fotos foto-apero.jpg  # gibt der Datei ihren alten Namen zurück",
+        pruefe: (ctx) => nutzt(ctx, "Rename-Item", "Move-Item") && !istDatei(ctx, "Fotos") && fotoDa(ctx)
+      },
+      {
+        titel: "Den Ordner Fotos anlegen",
+        text: "<p>Lege jetzt im Benutzerordner einen <b>Ordner</b> <code>Fotos</code> an. Das ist der Schritt, den Lea vergessen hat.</p>",
+        hinweis: "<p>Ohne " + C("-ItemType") + " legt " + C("New-Item") + " eine Datei an. Meldet PowerShell, dass es <code>Fotos</code> schon gibt, ist Aufgabe 1 noch offen.</p>",
+        loesung: "New-Item Fotos -ItemType Directory  # legt den Zielordner an",
+        pruefe: (ctx) => nutzt(ctx, "New-Item", "mkdir") && istOrdner(ctx, "Fotos")
+      },
+      {
+        titel: "Das Foto in den Ordner verschieben",
+        text: "<p>Verschiebe <code>foto-apero.jpg</code> in den Ordner <code>Fotos</code>.</p>",
+        hinweis: "<p>Jetzt gibt es den Zielordner, also landet die Datei darin und heisst weiter <code>foto-apero.jpg</code>. Liegt das Foto bei dir in Downloads, beginnt der Pfad mit " + C("Downloads\\") + ".</p>",
+        loesung: "Move-Item foto-apero.jpg Fotos  # Fotos ist jetzt ein Ordner, die Datei landet darin",
+        pruefe: (ctx) => nutzt(ctx, "Move-Item") && istOrdner(ctx, "Fotos") && istDatei(ctx, "Fotos\\foto-apero.jpg") && !fotoDa(ctx)
+      }
+    ]
+  });
+  L.wahrFalsch("#t05-u6", {
+    titel: "Dateien und Inhalte",
+    aussagen: [
+      { html: C("Set-Content") + " legt die Datei an, wenn es sie noch nicht gibt.", wahr: true, erklaerung: "Ja, ebenso Add-Content, Out-File und >." },
+      { html: C("Rename-Item a.txt Archiv\\a.txt") + " verschiebt die Datei in den Ordner Archiv.", wahr: false, erklaerung: "Rename-Item akzeptiert nur einen Namen. Mit Pfad meldet es einen Fehler. Verschieben: Move-Item." },
+      { html: C("Copy-Item") + " ersetzt eine bestehende Zieldatei ohne Rückfrage.", wahr: true, erklaerung: "Ja. Prüf vorher mit Test-Path oder -WhatIf." },
+      { html: C("Move-Item") + " ersetzt eine bestehende Zieldatei ohne Rückfrage.", wahr: false, erklaerung: "Move-Item meldet «Cannot create a file when that file already exists» und lässt beide Dateien stehen. Erst -Force würde ersetzen." },
+      { html: C("Get-Content Logs\\app.log -TotalCount 3") + " zeigt die letzten drei Zeilen.", wahr: false, erklaerung: "-TotalCount nimmt die ersten Zeilen. Die letzten liefert -Tail." },
+      { html: C("Befehl > datei.txt") + " schreibt dasselbe wie " + C("Befehl | Out-File datei.txt") + ".", wahr: true, erklaerung: "Laut about_Redirection ist > gleichwertig zu Out-File ohne weitere Parameter." },
+      { html: "In Windows PowerShell 5.1 schreiben " + C("Set-Content") + " und " + C("Out-File") + " standardmässig dasselbe Encoding.", wahr: false, erklaerung: "5.1: Set-Content ANSI, Out-File UTF-16 LE. Erst PowerShell 7 schreibt überall UTF-8 ohne BOM." }
+    ]
+  });
+  const ende3 = appLog.slice(2);
+  L.konsole("#t05-u7", {
+    begruessung: false,
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Das Ende der Logdatei sichern",
+        text: "<p>Schreib die <b>letzten drei Zeilen</b> von <code>Logs\\app.log</code> in eine neue Datei <code>Dokumente\\app-ende.txt</code>. Ein einziger Befehl genügt.</p>",
+        hinweis: "<p>" + C("Get-Content") + " mit " + C("-Tail 3") + " liest die Zeilen. Mit " + C(">") + " oder " + C("| Set-Content") + " schreibst du sie in die Datei.</p>",
+        loesung: "Get-Content Logs\\app.log -Tail 3 > Dokumente\\app-ende.txt",
+        pruefe: (ctx) => nutzt(ctx, "Get-Content") && gleicheListe(zeilen(ctx.inhalt(ziel("Dokumente\\app-ende.txt"))), ende3)
+      },
+      {
+        titel: "Die alte Bewerbung archivieren",
+        text: "<p>Verschiebe <code>Dokumente\\bewerbung-alt.docx</code> in den bestehenden Ordner <code>Dokumente\\Archiv</code>.</p>",
+        hinweis: "<p>" + C("Move-Item") + ": zuerst die Datei, dann der Zielordner. Meldet PowerShell <span lang=\"en\">«Cannot create a file when that file already exists»</span>, liegt schon eine Kopie im Archiv (etwa von " + C("Copy-Item") + "). Lösche sie oder setz den Rechner zurück.</p>",
+        loesung: "Move-Item Dokumente\\bewerbung-alt.docx Dokumente\\Archiv",
+        pruefe: (ctx) => nutzt(ctx, "Move-Item") && ctx.existiert(ziel("Dokumente\\Archiv\\bewerbung-alt.docx")) && !ctx.existiert(ziel("Dokumente\\bewerbung-alt.docx")) &&
+          !!ctx.datei(ziel("Dokumente\\Archiv")) && ctx.datei(ziel("Dokumente\\Archiv")).ordner &&
+          ctx.existiert(ziel("Dokumente\\protokoll-teamsitzung.docx"))
+      }
+    ]
+  });
+
+  /* ---------- Tipp-Training ---------- */
+  // Geprüft wird das Ergebnis auf Leas Rechner, nicht der genaue Text: Aliase, Abkürzungen und andere richtige Wege zählen.
+  const notizenText = "Notizen von Lea\n- Logdateien im Ordner Logs aufräumen (älter als 30 Tage)\n" +
+    "- Dienst WolkenriedSync prüfen, er läuft seit Sonntag nicht mehr\n- Mitarbeitendenliste an das Personalamt schicken";
+  const notizenZeilen = notizenText.split("\n");
+  const zeilenOhneRand = (t) => (t == null ? null : t.split("\n").map((z) => z.replace(/\s+$/, "")));
+  const logNamen = ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log", "app-2026-10.log", "app.log", "backup-2026-06.log", "sync-fehler.log"];
+  const pdfs = ["handbuch-drucker.pdf", "rechnung-2026-09.pdf", "rechnung-2026-10.pdf"];
+  const downloadsStart = ["setup-alt.exe", "WolkenriedSync-setup.exe", "foto-apero.jpg"].concat(pdfs);
+
+  // Stufe 1: abtippen
+  L.konsole("#t05-tipp1", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 1 · Nachtippen",
+    aufgaben: [
+      {
+        titel: "Einen Ordner für Ideen",
+        text: "<p>Tippe ab: " + C("New-Item Dokumente\\Ideen -ItemType Directory") + "</p>",
+        hinweis: "<p>Der Befehl beginnt mit " + C("New-Item") + ", dann ein Leerzeichen, der Pfad mit Backslash <code>\\</code>, ein Leerzeichen und " + C("-ItemType Directory") + ".</p>",
+        loesung: "New-Item Dokumente\\Ideen -ItemType Directory  # legt den Ordner Ideen in Dokumente an",
+        pruefe: (ctx) => nutzt(ctx, "New-Item", "mkdir") && istOrdner(ctx, "Dokumente\\Ideen")
+      },
+      {
+        titel: "Eine erste Idee notieren",
+        text: "<p>Tippe ab: " + C("Set-Content Dokumente\\Ideen\\liste.txt 'Velotour'") + "</p><p>Schau danach mit " + C("Get-Content Dokumente\\Ideen\\liste.txt") + " nach, was in der Datei steht.</p>",
+        hinweis: "<p>Der Text steht in einfachen Anführungszeichen " + C("'…'") + ". Meldet PowerShell, dass ein Teil des Pfads fehlt, ist Aufgabe 1 noch offen.</p>",
+        loesung: "Set-Content Dokumente\\Ideen\\liste.txt 'Velotour'  # legt die Datei an und schreibt eine Zeile hinein",
+        pruefe: (ctx) => istDatei(ctx, "Dokumente\\Ideen\\liste.txt") && ctx.inhalt(ziel("Dokumente\\Ideen\\liste.txt")) === "Velotour"
+      },
+      {
+        titel: "Die Notizen dazulegen",
+        text: "<p>Tippe ab: " + C("Copy-Item Dokumente\\notizen.txt Dokumente\\Ideen") + "</p><p>Kontrolliere mit " + C("Get-ChildItem Dokumente\\Ideen") + ".</p>",
+        hinweis: "<p>Zuerst kommt die Datei, die du kopierst, dann der Zielordner. Der Ordner <code>Ideen</code> muss schon existieren (Aufgabe 1), sonst entsteht eine Datei namens <code>Ideen</code>.</p>",
+        loesung: "Copy-Item Dokumente\\notizen.txt Dokumente\\Ideen  # kopiert die Notizen in den Ordner Ideen",
+        pruefe: (ctx) => nutzt(ctx, "Copy-Item") && istOrdner(ctx, "Dokumente\\Ideen") &&
+          ctx.inhalt(ziel("Dokumente\\Ideen\\notizen.txt")) === notizenText && istDatei(ctx, "Dokumente\\notizen.txt") &&
+          (ctx.kinder(ziel("Dokumente\\Ideen")) || []).every((n) => n === "notizen.txt" || n === "liste.txt")
+      }
+    ]
+  });
+
+  // Stufe 2: einen bekannten Befehl abwandeln
+  L.konsole("#t05-tipp2", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 2 · Abwandeln",
+    aufgaben: [
+      {
+        titel: "Das Ende der Notizen",
+        text: "<p>Vorlage: " + C("Get-Content Logs\\app.log -TotalCount 2") + " zeigt die ersten zwei Zeilen der Logdatei.</p><p>Wie die Vorlage, aber zeige die <b>letzten</b> zwei Zeilen von <code>Dokumente\\notizen.txt</code>.</p>",
+        hinweis: "<p>Zwei Dinge ändern sich: der Pfad und der Parameter. Für das Ende einer Datei gibt es einen eigenen Parameter, kein " + C("-TotalCount") + ".</p>",
+        loesung: "Get-Content Dokumente\\notizen.txt -Tail 2  # -Tail liest vom Ende her",
+        pruefe: (ctx) => nutzt(ctx, "Get-Content") && gleicheListe(texte(ctx), notizenZeilen.slice(2))
+      },
+      {
+        titel: "Probefahrt für die PDF-Dateien",
+        text: "<p>Vorlage: " + C("Remove-Item Downloads\\*.exe -WhatIf") + " probt das Löschen der Installationsdateien.</p><p>Wie die Vorlage, aber probe das Löschen aller <b>PDF-Dateien</b> in Downloads. Gelöscht wird nichts.</p>",
+        hinweis: "<p>Nur der Platzhalter ändert sich. PDF-Dateien enden auf <code>.pdf</code>. Es müssen drei Zeilen «What if» erscheinen. Hast du die Rechnungen schon verschoben (Aufgabe 4), setz den Rechner zurück.</p>",
+        loesung: "Remove-Item Downloads\\*.pdf -WhatIf  # zeigt drei Dateien und löscht nichts",
+        pruefe: (ctx) => nutzt(ctx, "Remove-Item") && (ctx.ausgabe.match(/What if:/g) || []).length === 3 &&
+          pdfs.every((n) => ctx.ausgabe.indexOf("Downloads\\" + n) >= 0 && istDatei(ctx, "Downloads\\" + n))
+      },
+      {
+        titel: "Die Logs sichern",
+        text: "<p>Vorlage: " + C("Copy-Item Dokumente Dokumente-Sicherung -Recurse") + " sichert den Ordner Dokumente.</p><p>Wie die Vorlage, aber sichere den Ordner <code>Logs</code> samt Inhalt nach <code>Logs-Sicherung</code>.</p>",
+        hinweis: "<p>Quelle und Ziel ändern sich, der Schalter für den Inhalt bleibt. Liegt bei dir ein Ordner <code>Logs-Sicherung\\Logs</code>, gab es das Ziel schon: Setz den Rechner zurück.</p>",
+        loesung: "Copy-Item Logs Logs-Sicherung -Recurse  # kopiert den Ordner Logs mit allen sieben Dateien",
+        pruefe: (ctx) => nutzt(ctx, "Copy-Item") && istOrdner(ctx, "Logs-Sicherung") &&
+          logNamen.every((n) => istDatei(ctx, "Logs-Sicherung\\" + n) && istDatei(ctx, "Logs\\" + n))
+      },
+      {
+        titel: "Die Rechnungen zu den Dokumenten",
+        text: "<p>Vorlage aus der Aufräum-Mission: " + C("Move-Item Downloads\\*.jpg Downloads\\Bilder") + " verschiebt die Fotos in den Ordner <code>Bilder</code>, den du dort zuerst angelegt hast.</p><p>Wie die Vorlage, aber verschiebe die beiden <b>Rechnungen</b> (<code>rechnung-…pdf</code>) aus Downloads in den bestehenden Ordner <code>Dokumente</code>. Das Druckerhandbuch bleibt liegen.</p>",
+        hinweis: "<p>Ein Platzhalter nur für die Rechnungen: Alle beginnen gleich. " + C("*.pdf") + " allein wäre zu breit, er erfasst auch das Handbuch.</p>",
+        loesung: "Move-Item Downloads\\rechnung-*.pdf Dokumente  # verschiebt nur die beiden Rechnungen",
+        pruefe: (ctx) => nutzt(ctx, "Move-Item") && istDatei(ctx, "Downloads\\handbuch-drucker.pdf") &&
+          ["rechnung-2026-09.pdf", "rechnung-2026-10.pdf"].every((n) => istDatei(ctx, "Dokumente\\" + n) && !ctx.existiert(ziel("Downloads\\" + n)))
+      }
+    ]
+  });
+
+  // Stufe 3: nur das Ziel, dazu Wiederholung aus Station 04
+  L.konsole("#t05-tipp3", {
+    begruessung: false,
+    aufgabenTitel: "Stufe 3 · Selber lösen",
+    aufgaben: [
+      {
+        titel: "Die Notizen ins Archiv, mit neuem Namen",
+        text: "<p>Die Notizen sollen ins Archiv: Danach liegt <code>notizen.txt</code> nicht mehr in <code>Dokumente</code>, sondern als <code>notizen-alt.txt</code> in <code>Dokumente\\Archiv</code>.</p>",
+        hinweis: "<p>Ein Cmdlet kann verschieben und dabei umbenennen, wenn du als Ziel einen Pfad mit neuem Dateinamen angibst. " + C("Rename-Item") + " allein kann das nicht.</p>",
+        loesung: "Move-Item Dokumente\\notizen.txt Dokumente\\Archiv\\notizen-alt.txt  # verschiebt und benennt in einem Zug um",
+        pruefe: (ctx) => ctx.inhalt(ziel("Dokumente\\Archiv\\notizen-alt.txt")) === notizenText && !ctx.existiert(ziel("Dokumente\\notizen.txt"))
+      },
+      {
+        titel: "Eine Einkaufsliste mit zwei Zeilen",
+        text: "<p>Lea braucht eine neue Datei <code>Dokumente\\einkauf.txt</code> mit genau zwei Zeilen: <code>Brot</code> und darunter <code>Milch</code>.</p>",
+        hinweis: "<p>Ein Cmdlet schreibt die erste Zeile und legt die Datei an, ein zweites hängt an. Oder du gibst dem ersten gleich beide Texte, durch ein Komma getrennt.</p>",
+        loesung: "Set-Content Dokumente\\einkauf.txt 'Brot', 'Milch'  # zwei Texte ergeben zwei Zeilen",
+        pruefe: (ctx) => gleicheListe(zeilen(ctx.inhalt(ziel("Dokumente\\einkauf.txt"))), ["Brot", "Milch"])
+      },
+      {
+        titel: "Eine Liste der Logdateien",
+        text: "<p>Halte in der Datei <code>Dokumente\\logliste.txt</code> fest, welche Dateien im Ordner <code>Logs</code> liegen: nur die Namen, einer pro Zeile, ohne Tabellenkopf. (Wiederholung aus Station 04)</p>",
+        hinweis: "<p>" + C("Get-ChildItem") + " hat einen Schalter, der nur die Namen ausgibt. Das Ergebnis leitest du mit " + C(">") + " in die Datei um.</p>",
+        loesung: "Get-ChildItem Logs -Name > Dokumente\\logliste.txt  # -Name liefert nur die Namen, > schreibt sie in die Datei",
+        pruefe: (ctx) => nutzt(ctx, "Get-ChildItem") && gleicheListe(zeilenOhneRand(ctx.inhalt(ziel("Dokumente\\logliste.txt"))), logNamen)
+      },
+      {
+        titel: "Den Vertrag finden und kopieren",
+        text: "<p>Lea weiss nicht mehr, wo <code>vertrag-2020.pdf</code> liegt. Irgendwo unter ihrem Benutzerordner. Lege eine Kopie davon in den Ordner <code>Downloads</code>. Das Original bleibt, wo es ist. (Wiederholung aus Station 04)</p>",
+        hinweis: "<p>Zuerst suchen: " + C("Get-ChildItem") + " mit " + C("-Recurse") + " und " + C("-Filter") + ". Dann kopierst du die gefundene Datei mit ihrem Pfad. Oder du hängst " + C("Copy-Item -Destination Downloads") + " direkt mit " + C("|") + " an die Suche.</p>",
+        loesung: "Get-ChildItem -Recurse -Filter vertrag-2020.pdf | Copy-Item -Destination Downloads  # findet die Datei und kopiert sie",
+        // Nur der Vertrag kommt neu dazu: «alle PDF kopieren» zählt nicht
+        pruefe: (ctx) => nutzt(ctx, "Copy-Item") && istDatei(ctx, "Downloads\\vertrag-2020.pdf") && istDatei(ctx, "Dokumente\\Archiv\\vertrag-2020.pdf") &&
+          (ctx.kinder(ziel("Downloads")) || []).every((n) => n === "vertrag-2020.pdf" || downloadsStart.includes(n))
+      },
+      {
+        titel: "Im Ordner Logs eine leere Notiz",
+        text: "<p>Wechsle in den Ordner <code>Logs</code> und lege dort eine leere Datei <code>notiz.txt</code> an. Am Schluss muss dein Prompt <code>PS C:\\Users\\lea\\Logs&gt;</code> zeigen. (Wiederholung aus Station 04)</p>",
+        hinweis: "<p>Zwei Befehle: einer wechselt den Ort, einer legt das Element an. Ohne " + C("-ItemType") + " und ohne " + C("-Value") + " entsteht eine leere Datei. Du darfst beide Befehle mit " + C(";") + " in eine Zeile schreiben.</p>",
+        loesung: "Set-Location Logs; New-Item notiz.txt  # zuerst in Logs wechseln, dann die leere Datei anlegen",
+        pruefe: (ctx) => ctx.ort.toLowerCase() === ziel("Logs").toLowerCase() && istDatei(ctx, "Logs\\notiz.txt") && ctx.datei(ziel("Logs\\notiz.txt")).groesse === 0
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  L.film("#t05-film", {
+    phasen: ["a · Archiv anlegen", "b · Verschieben", "c · Notiz schreiben", "d · Löschen", "e · Umbenennen"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Lea hat fünf Teilaufträge. Sie startet in ihrem Benutzerordner und schaut zuerst, was im Ordner Logs liegt." },
+      { ph: 0, f: f("Get-ChildItem Logs"), say: "Sieben Logdateien. Juli, August und September sowie das Backup vom Juni sind älter als 30 Tage." },
+      { ph: 0, f: f("New-Item Logs\\Archiv -ItemType Directory"), say: "New-Item mit -ItemType Directory legt den Ordner Archiv an. Das d in der Spalte Mode heisst: Ordner." },
+      { ph: 0, say: "Erst jetzt gibt es das Ziel. Würde Lea vorher verschieben, entstünde eine Datei namens Archiv." },
+      { ph: 1, f: f("Move-Item Logs\\app-2026-0*.log Logs\\Archiv -WhatIf"), say: "Der Platzhalter app-2026-0*.log passt auf Juli, August und September. Mit -WhatIf prüft Lea das zuerst." },
+      { ph: 1, say: "Drei Zeilen «What if». app-2026-10.log ist nicht dabei: Nach 2026- steht dort eine 1, keine 0. Genau so will es Lea." },
+      { ph: 1, f: f("Move-Item Logs\\app-2026-0*.log Logs\\Archiv"), say: "Jetzt derselbe Befehl ohne -WhatIf. Move-Item meldet nichts, wenn es klappt." },
+      { ph: 1, f: f("Move-Item Logs\\backup-2026-06.log Logs\\Archiv"), say: "Das Backup-Log vom Juni verschiebt sie einzeln." },
+      { ph: 1, f: f("Get-ChildItem Logs\\Archiv"), say: "Kontrolle: Vier Dateien liegen im Archiv, Grösse und Datum sind unverändert." },
+      { ph: 1, f: f("Get-ChildItem Logs"), say: "Im Ordner Logs bleiben der Ordner Archiv und die drei neueren Dateien." },
+      { ph: 2, f: f("Set-Content Logs\\Archiv\\liesmich.txt 'Archiv vom 2.11.2026'"), say: "Set-Content legt die Datei liesmich.txt an und schreibt die erste Zeile hinein." },
+      { ph: 2, f: f("Add-Content Logs\\Archiv\\liesmich.txt 'Logs älter als 30 Tage'"), say: "Add-Content hängt die zweite Zeile an. Mit Set-Content wäre die erste Zeile jetzt weg." },
+      { ph: 2, f: f("Get-Content Logs\\Archiv\\liesmich.txt"), say: "Get-Content zeigt beide Zeilen. Die Notiz steht." },
+      { ph: 3, f: f("Remove-Item Logs\\Archiv\\app-2026-07.log -WhatIf"), say: "Das Juli-Log darf weg. Zuerst die Probefahrt mit -WhatIf: genau eine Datei." },
+      { ph: 3, f: f("Remove-Item Logs\\Archiv\\app-2026-07.log"), say: "Jetzt ohne -WhatIf. Die Datei ist endgültig gelöscht, es gibt keinen Papierkorb." },
+      { ph: 4, f: f("Rename-Item Logs\\Archiv Archiv-2026 -WhatIf"), say: "Zum Schluss das Umbenennen. Auch Rename-Item kennt -WhatIf. Der neue Name ist nur ein Name, ohne Pfad." },
+      { ph: 4, f: f("Rename-Item Logs\\Archiv Archiv-2026"), say: "Jetzt wirklich: Aus Archiv wird Archiv-2026." },
+      { ph: 4, f: f("Get-ChildItem Logs -Recurse"), say: "Get-ChildItem mit -Recurse zeigt den Endstand mit allen Unterordnern." },
+      { ph: -1, say: "Fertig: Archiv-2026 enthält August, September, das Backup vom Juni und liesmich.txt. Das Juli-Log ist gelöscht. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Wie legst du im aktuellen Ordner einen <b>Ordner</b> namens Fest an?", o: [C("New-Item Fest"), C("New-Item Fest -ItemType Directory"), C("New-Item Fest -Value Directory"), C("Copy-Item Fest")], a: 1,
+        e: "-ItemType Directory macht daraus einen Ordner. Ohne -ItemType legt New-Item im Dateisystem eine Datei an." },
+      { q: "Die Datei notizen.txt hat drei Zeilen. Was steht nach " + C("Set-Content notizen.txt 'neu'") + " darin?", o: ["nur neu", "die drei alten Zeilen und neu", "neu und die drei alten Zeilen", "nichts, Set-Content fragt zuerst nach"], a: 0,
+        e: "Set-Content ersetzt den ganzen Inhalt ohne Rückfrage. Zum Anhängen gibt es Add-Content." },
+      { q: "Was tut " + C("Remove-Item Downloads\\*.exe -WhatIf") + "?", o: ["Es löscht die .exe-Dateien und zeigt sie an.", "Es legt die Dateien in den Papierkorb.", "Es fragt vor jeder Datei nach.", "Es zeigt, welche Dateien gelöscht würden, und löscht nichts."], a: 3,
+        e: "-WhatIf ist die Probefahrt. Nachfragen tut -Confirm." },
+      { q: "Wohin kommt eine Datei, die du mit " + C("Remove-Item") + " löschst?", o: ["in den Papierkorb", "in den Ordner AppData\\Local\\Temp", "nirgends hin, sie ist endgültig weg", "in einen versteckten Ordner, bis du die Konsole schliesst"], a: 2,
+        e: "Remove-Item kennt keinen Papierkorb. Darum vorher -WhatIf." },
+      { q: "Lea will den Ordner Bilder <b>samt Inhalt</b> nach Bilder-Sicherung kopieren. Welcher Befehl ist richtig?", o: [C("Copy-Item Bilder Bilder-Sicherung -Recurse"), C("Copy-Item Bilder Bilder-Sicherung"), C("Move-Item Bilder Bilder-Sicherung"), C("Copy-Item Bilder\\* -Destination Bilder-Sicherung -Force")], a: 0,
+        e: "Ohne -Recurse entsteht nur ein leerer Ordner. Move-Item würde das Original wegnehmen." },
+      { q: "Welcher Befehl hängt die aktuelle Uhrzeit an protokoll.txt an, ohne den alten Inhalt zu löschen?", o: [C("Get-Date > protokoll.txt"), C("Get-Date | Set-Content protokoll.txt"), C("Get-Date | Out-File protokoll.txt"), C("Get-Date >> protokoll.txt")], a: 3,
+        e: ">> hängt an. Dagegen ersetzen >, Set-Content und Out-File ohne -Append den Inhalt." },
+      { q: "Was passiert bei " + C("Remove-Item Dokumente") + ", wenn im Ordner noch Dateien liegen?", o: ["Nichts, ohne -Recurse geht das nie.", "PowerShell fragt nach, ob alles darin mitgelöscht werden soll.", "Nur die Dateien werden gelöscht, der Ordner bleibt.", "Der Ordner wird sofort samt Inhalt gelöscht."], a: 1,
+        e: "Ohne -Recurse fragt PowerShell bei einem Ordner mit Inhalt nach. Mit -Recurse löscht es ohne Rückfrage." },
+      { q: "Was liefert " + C("Get-Content Logs\\app.log -Tail 2") + "?", o: ["die letzten zwei Zeilen", "die ersten zwei Zeilen", "die Zeilen ab der zweiten", "die Anzahl Zeilen"], a: 0,
+        e: "-Tail liest vom Ende her. Die ersten Zeilen liefert -TotalCount." },
+      { q: "Im Benutzerordner gibt es keinen Ordner Archiv. Was bewirkt " + C("Move-Item notizen.txt Archiv") + "?", o: ["einen Fehler «Archiv nicht gefunden»", "einen neuen Ordner Archiv mit notizen.txt darin", "eine Datei namens Archiv (die umbenannten Notizen)", "eine Kopie von notizen.txt"], a: 2,
+        e: "Ohne bestehenden Zielordner gilt Archiv als neuer Dateiname." },
+      { q: "Mit welchem Encoding schreibt " + C("Out-File") + " in PowerShell 7 standardmässig?", o: ["UTF-16 LE mit BOM", "UTF-8 ohne BOM", "ANSI (Windows-Codepage)", "ASCII"], a: 1,
+        e: "PowerShell 7 schreibt überall UTF-8 ohne BOM. UTF-16 LE ist der Standard von Out-File in Windows PowerShell 5.1." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
