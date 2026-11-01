@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live; Lernpfad PS mit 13 Stationen live)
+**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live; Lernpfad PS mit 13 Stationen live; Baukasten 1.2.0 auf Branch feat/lernpfad-mstw-ueberarbeitung)
 
 ---
 
@@ -24,6 +24,7 @@
 | 14. Lernpfad PMGT | Welle 1 live seit 01.11.2026 | 7 von 25 Stationen (10, 11, 13, 18, 19, 22, 23), Baukasten 1.1.0; Konzept im Vault «02 Projekte/Lernpfad PMGT» |
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
 | 16. Lernpfad PS | Live seit 01.11.2026 | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
+| 17. Lernpfad MSTW Überarbeitung | In Arbeit (Branch `feat/lernpfad-mstw-ueberarbeitung`) | Baukasten 1.2.0 fertig: Eingabe-Bausteine `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`, Stufen, Farben als Opt-in `body[data-farbig][data-sektion]`, Sektionsfarben in `fach.json` auf der Lernpfad-Seite, Tests `tests/lernpfad-auswertung.test.ts`. Offen: Probeseiten 03 und 12, dann Wellen Logik und Wahrscheinlichkeit/Statistik; Konzept im Vault «02 Projekte/Lernpfad MSTW Überarbeitung» |
 
 ## Security-Fixes (alle angewendet)
 

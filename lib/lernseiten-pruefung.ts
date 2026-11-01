@@ -24,6 +24,8 @@ const JS_PFAD = "/lernpfad/lernpfad.js"
 /** Erweiterung für den Lernpfad PS (Simulator und Syntaxfärbung), siehe docs/lernpfad-powershell.md. */
 const PS_KONSOLE_PFAD = "/lernpfad/ps-konsole.js"
 const PS_KONSOLE_CSS_PFAD = "/lernpfad/ps-konsole.css"
+/** Werte von <body data-sektion> mit eigenem Akzent in lernpfad.css (Abschnitt «Akzent pro Sektion»). */
+export const SEKTIONEN = ["logik", "wahrscheinlichkeit", "statistik", "abschluss"]
 
 /** Namen der Seiten auf oberster Ebene der App (inkl. Routen-Gruppen wie (dashboard)). */
 export function appSeiten(appPfad = path.join(process.cwd(), "app")): string[] {
@@ -386,6 +388,11 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
       fehler.push(
         `<body data-thema="${slug}"> fehlt (gefunden: ${datenThema === null ? "nichts" : `«${kurz(datenThema)}»`}).`,
       )
+    }
+    // Farb-Opt-in (Baukasten 1.2.0): data-sektion nur mit bekannten Werten, sonst fehlt der Akzent still
+    const datenSektion = attribut(body.tag, "data-sektion")
+    if (datenSektion !== null && !SEKTIONEN.includes(datenSektion)) {
+      fehler.push(`<body data-sektion="${kurz(datenSektion)}"> ist unbekannt (erlaubt: ${SEKTIONEN.join(", ")}).`)
     }
   }
 

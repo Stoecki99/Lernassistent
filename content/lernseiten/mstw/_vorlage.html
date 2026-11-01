@@ -16,9 +16,11 @@
     .t00-schwelle b{color:var(--accent)}
   </style>
 </head>
-<body data-fach="mstw" data-thema="_vorlage">
+<body data-fach="mstw" data-thema="_vorlage" data-farbig data-sektion="wahrscheinlichkeit">
 <!-- VORLAGE: Kopiere diese Datei nach content/lernseiten/mstw/<slug>.html.
-     Ändere <title>, <link rel="next">, data-thema (= slug) und alle Inhalte.
+     Ändere <title>, <link rel="next">, data-thema (= slug), data-sektion und alle Inhalte.
+     data-farbig schaltet die Farben je Sektion und Aufgabentyp ein (MSTW immer setzen).
+     data-sektion: logik (Stationen 01–06), wahrscheinlichkeit (07–13), statistik (14–17), abschluss (18).
      Die Kopfleiste (← Lernpfad MSTW, hell/dunkel) und die Abschluss-Box fügt lernpfad.js selbst ein. -->
 <main class="wrap">
 
@@ -37,6 +39,7 @@
     <a href="#formel"><b>3</b>Formel</a>
     <a href="#ausprobieren"><b>4</b>Ausprobieren</a>
     <a href="#uebungen"><b>5</b>Übungen</a>
+    <a href="#eingaben"><b>6</b>Eingaben</a>
     <a href="#film"><b>▶</b>Lösungsfilm</a>
     <a href="#test"><b>✓</b>Selbsttest</a>
     <a href="#blick"><b>Σ</b>Auf einen Blick</a>
@@ -106,6 +109,11 @@
         <p>Also gilt \(P(\text{Summe } 2) = \tfrac{1}{36}\), aber \(P(\text{Summe } 7) = \tfrac{6}{36}\). Mit \(\Omega = \{2, \dots, 12\}\) und der Laplace-Formel käme für beide fälschlich \(\tfrac{1}{11}\) heraus.</p>
       </div>
     </details>
+    <!-- Kasten «Du bist dran» nach jedem Erklärblock: 1–3 kurze Eingaben zum eben Gelernten -->
+    <div class="dran">
+      <div id="dran-zahl"></div>
+      <div id="dran-text"></div>
+    </div>
   </section>
 
   <!-- ===== 4 · Themeneigene Interaktion: Rechner mit Schieberegler und SVG-Diagramm ===== -->
@@ -138,6 +146,32 @@
     <div id="uebung-wf"></div>
     <div id="uebung-schritt"></div>
     <div id="uebung-auswahl"></div>
+  </section>
+
+  <!-- ===== 6 · Eingabe-Bausteine 1.2.0 und Sektionsfarben ===== -->
+  <section id="eingaben">
+    <span class="eyebrow">Schritt 6 · Selbst eintippen</span>
+    <h2>Formeln, Tabellen, Rechenwege, Kurzantworten</h2>
+    <p class="prose">Diese Bausteine prüfen, was du eintippst. Die Stufe im Kopf zeigt die Schwierigkeit: <span class="stufe stufe-1">Aufwärmen</span>, <span class="stufe stufe-2">Prüfungsniveau</span>, <span class="stufe stufe-3">Knacknuss</span>.</p>
+    <!-- Themeneigene Interaktion nur für die Vorlage: Sektionsfarbe umschalten -->
+    <div class="card stack">
+      <h3>Sektionsfarbe ausprobieren</h3>
+      <p class="hint">Die Vorlage setzt <code>data-farbig</code> und <code>data-sektion="wahrscheinlichkeit"</code>. Wähle eine andere Sektion oder schalte die Farben aus (so sehen PMGT und PS aus).</p>
+      <div class="modes" role="group" aria-label="Sektionsfarbe" id="t00-farbwahl">
+        <button type="button" class="btn" data-sektion-wahl="logik">Logik</button>
+        <button type="button" class="btn" data-sektion-wahl="wahrscheinlichkeit">Wahrscheinlichkeit</button>
+        <button type="button" class="btn" data-sektion-wahl="statistik">Statistik</button>
+        <button type="button" class="btn" data-sektion-wahl="abschluss">Abschluss</button>
+        <button type="button" class="btn" data-sektion-wahl="">ohne Farben</button>
+      </div>
+    </div>
+    <div id="eingabe-formel-knf"></div>
+    <div id="eingabe-formel-muster"></div>
+    <div id="eingabe-tabelle"></div>
+    <div id="eingabe-wahrheitstafel"></div>
+    <div id="eingabe-luecken"></div>
+    <div id="eingabe-menge"></div>
+    <div id="eingabe-hypothese"></div>
   </section>
 
   <!-- ===== Lösungsfilm ===== -->
@@ -259,6 +293,7 @@
   /* ---------- Übungen ---------- */
   L.zahlAufgabe("#uebung-zahl", {
     titel: "Augensumme 7",
+    stufe: 2,                      // optional: 1 Aufwärmen, 2 Prüfungsniveau, 3 Knacknuss
     frage: "Du wirfst zwei faire Würfel. Wie gross ist die Wahrscheinlichkeit, dass die Augensumme 7 beträgt? Gib das Resultat als Dezimalzahl auf vier Stellen an.",
     antwort: 1 / 6,
     toleranz: 0.0005,
@@ -291,6 +326,7 @@
 
   L.schrittAufgabe("#uebung-schritt", {
     titel: "Mindestens eine 6",
+    stufe: 2,
     aufgabe: "<p>Du wirfst zwei faire Würfel. Berechne die Wahrscheinlichkeit, dass mindestens eine 6 fällt.</p>",
     schritte: [
       { html: T`$B$ = «mindestens eine 6», Gegenereignis $\bar B$ = «keine 6»`,
@@ -308,6 +344,139 @@
     richtig: 0,
     erklaerung: "Eine Münze zeigt Kopf ($K$) oder Zahl ($Z$). $0.5$ ist eine Wahrscheinlichkeit, kein Ergebnis."
   });
+
+  /* ---------- «Du bist dran»: kurze Eingaben nach dem Erklärblock ---------- */
+  L.zahlAufgabe("#dran-zahl", {
+    titel: "Wie viele Paare?",
+    stufe: 1,
+    frage: "Du wirfst zwei unterscheidbare Würfel. Wie viele gleich wahrscheinliche Paare $(i, j)$ gibt es?",
+    antwort: 36,
+    hinweise: ["Jeder Würfel zeigt eine von sechs Zahlen."],
+    loesungsweg: [T`$|\Omega| = 6 \cdot 6 = 36$`]
+  });
+
+  L.kurzAntwort("#dran-text", {
+    titel: "Wie heisst das Modell?",
+    stufe: 1,
+    typ: "text",
+    frage: "Wie heisst ein Zufallsexperiment, bei dem alle Ergebnisse gleich wahrscheinlich sind?",
+    antwort: ["Laplace-Experiment", "Laplace", "Laplaceexperiment", "Laplace-Modell"],
+    hinweise: ["Der Name des französischen Mathematikers, nach dem die Formel heisst."],
+    loesungsweg: ["Laplace-Experiment: Dann gilt $P(A) = |A| / |\\Omega|$."]
+  });
+
+  /* ---------- Eingabe-Bausteine 1.2.0 ---------- */
+  // Formel eintippen, Modus «aequivalent»: Wahrheitstafel entscheidet, «form» verlangt zusätzlich die Normalform
+  L.formelAufgabe("#eingabe-formel-knf", {
+    titel: "Implikation in KNF",
+    stufe: 2,
+    modus: "aequivalent",
+    frage: T`<p>Forme $A \to (B \land C)$ in eine konjunktive Normalform (KNF) um.</p>`,
+    loesung: "A -> (B & C)",
+    form: "knf",
+    hinweise: [T`Ersetze zuerst den Pfeil: $X \to Y \equiv \lnot X \lor Y$.`, T`Verteile dann $\lor$ über $\land$.`],
+    loesungsweg: [
+      T`$A \to (B \land C) \equiv \lnot A \lor (B \land C)$`,
+      T`$\equiv (\lnot A \lor B) \land (\lnot A \lor C)$`
+    ]
+  });
+
+  // Formel eintippen, Modus «muster»: Vergleich mit akzeptierten Formeln (Namen gebundener Variablen egal)
+  L.formelAufgabe("#eingabe-formel-muster", {
+    titel: "Satz in Prädikatenlogik",
+    stufe: 1,
+    modus: "muster",
+    frage: T`<p>Übersetze: «Jeder Würfel im Becher ist fair.» Nutze $B(x)$: $x$ liegt im Becher, $F(x)$: $x$ ist fair.</p>`,
+    loesungen: ["∀x (B(x) → F(x))"],
+    hinweise: ["«Jeder …, der …» wird zu ∀x mit einem Pfeil.", "Klammere den Pfeil ein, sonst bindet ∀ nur B(x)."],
+    loesungsweg: [T`$\forall x\, (B(x) \to F(x))$`]
+  });
+
+  // Tabelle ausfüllen: Zahlzellen mit Toleranz wie zahlAufgabe
+  L.tabellenAufgabe("#eingabe-tabelle", {
+    titel: "Ereignisse beim Würfeln",
+    stufe: 1,
+    frage: "Ein fairer Würfel. Trage die Anzahl günstiger Ergebnisse und die Wahrscheinlichkeit ein (Dezimalzahl auf drei Stellen oder Bruch).",
+    kopf: ["Ereignis", "günstig", "$P$"],
+    zeilenKopf: true,
+    zeilen: [
+      ["gerade Zahl", { antwort: 3 }, { antwort: 0.5, toleranz: 0.0005 }],
+      ["grösser als 4", { antwort: 2 }, { antwort: 1 / 3, toleranz: 0.0005, anzeige: "1/3 ≈ 0.333" }],
+      ["keine 6", { antwort: 5 }, { antwort: 5 / 6, toleranz: 0.0005, anzeige: "5/6 ≈ 0.833" }]
+    ],
+    hinweise: ["Zähle die günstigen Augenzahlen und teile durch 6."]
+  });
+
+  // Tabelle mit Textzellen: jede Zelle mit Liste akzeptierter Antworten
+  const W = { antwort: ["1", "W", "wahr"], typ: "text" }, F = { antwort: ["0", "F", "falsch"], typ: "text" };
+  L.tabellenAufgabe("#eingabe-wahrheitstafel", {
+    titel: "Wahrheitstafel",
+    stufe: 1,
+    frage: T`Fülle die Spalte $A \land \lnot B$ aus (1 oder 0).`,
+    kopf: ["$A$", "$B$", T`$A \land \lnot B$`],
+    zeilen: [["1", "1", F], ["1", "0", W], ["0", "1", F], ["0", "0", F]]
+  });
+
+  // Rechenweg mit Lücken; folgefehler erlaubt Weiterrechnen mit dem eigenen Vorwert
+  L.lueckenRechnung("#eingabe-luecken", {
+    titel: "Mindestens eine 6 in drei Würfen",
+    stufe: 2,
+    aufgabe: "<p>Du wirfst einen fairen Würfel dreimal. Wie gross ist die Wahrscheinlichkeit für mindestens eine 6? Runde auf vier Stellen.</p>",
+    schritte: [
+      { label: "Wahrscheinlichkeit für «keine 6» in einem Wurf", antwort: 5 / 6, toleranz: 0.0005, anzeige: "0.8333",
+        hinweis: "Fünf der sechs Augenzahlen sind keine 6.", erklaerung: T`$P(\text{keine 6}) = \tfrac{5}{6}$` },
+      { label: "«keine 6» in allen drei Würfen", antwort: Math.pow(5 / 6, 3), toleranz: 0.0005, anzeige: "0.5787",
+        hinweis: "Die Würfe sind unabhängig: multiplizieren.", erklaerung: T`$\left(\tfrac{5}{6}\right)^3 \approx 0.5787$`,
+        folgefehler: (v) => Math.pow(v[0], 3) },
+      { label: "mindestens eine 6", antwort: 1 - Math.pow(5 / 6, 3), toleranz: 0.0005, anzeige: "0.4213",
+        hinweis: "Gegenereignis von «keine 6 in allen drei Würfen».", erklaerung: T`$1 - 0.5787 = 0.4213$`,
+        folgefehler: (v) => 1 - v[1] }
+    ]
+  });
+
+  // Kurzantwort als Menge: Reihenfolge und Doppelte egal
+  L.kurzAntwort("#eingabe-menge", {
+    titel: "Ereignis als Menge",
+    stufe: 1,
+    typ: "menge",
+    frage: "Schreib das Ereignis «Augenzahl grösser als 3» als Menge.",
+    antwort: "{4, 5, 6}",
+    hinweise: ["Welche Augenzahlen sind grösser als 3?"],
+    loesungsweg: [T`$A = \{4, 5, 6\}$`]
+  });
+
+  // Kurzantwort als Hypothesen: Zeichen und Schreibweisen von μ, σ frei
+  L.kurzAntwort("#eingabe-hypothese", {
+    titel: "Hypothesen aufstellen",
+    stufe: 3,
+    typ: "hypothese",
+    frage: "<p>Eine Maschine soll im Mittel 500 g abfüllen. Du vermutest, dass sie zu wenig abfüllt. Schreib Nullhypothese und Alternativhypothese, getrennt mit Strichpunkt.</p>",
+    antwort: ["H0: μ ≥ 500; H1: μ < 500", "H0: μ = 500; H1: μ < 500"],
+    hinweise: ["Die Vermutung, die du belegen willst, gehört in H1.", "H0 enthält das Gleichheitszeichen."],
+    loesungsweg: [T`$H_0: \mu \ge 500$, $H_1: \mu < 500$`]
+  });
+
+  // Nur Vorlage: Sektionsfarbe umschalten (data-sektion, data-farbig am body)
+  const farbwahl = document.getElementById("t00-farbwahl");
+  function farbeMarkieren() {
+    const aktiv = document.body.hasAttribute("data-farbig") ? document.body.dataset.sektion : "";
+    farbwahl.querySelectorAll("button").forEach((b) => {
+      b.classList.toggle("on", b.dataset.sektionWahl === aktiv);
+      b.setAttribute("aria-pressed", String(b.dataset.sektionWahl === aktiv));
+    });
+  }
+  farbwahl.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-sektion-wahl]");
+    if (!b) return;
+    if (b.dataset.sektionWahl) {
+      document.body.setAttribute("data-farbig", "");
+      document.body.dataset.sektion = b.dataset.sektionWahl;
+    } else {
+      document.body.removeAttribute("data-farbig");
+    }
+    farbeMarkieren();
+  });
+  farbeMarkieren();
 
   /* ---------- Lösungsfilm ---------- */
   // Felder pro Szene: ph (Phase, Index), sent (Text-Index, "all" oder null), hl (data-ph im Text hervorheben),

@@ -7,6 +7,719 @@
 (function () {
   "use strict";
 
+  /* ==========================================================================
+     Reine Auswertung ohne DOM (Zahlen, Logikformeln, Mengen, Hypothesen, Text).
+     Läuft auch unter Node: tests/lernpfad-auswertung.test.ts lädt diese Datei mit require().
+     ========================================================================== */
+
+  /* ---------- Zahlen lesen und schreiben ---------- */
+
+  // Liest «0,25», «0.25», «1'234.5», «1/4», «25%» (ohne Umrechnung), «−3», «1e-3»
+  function zahlLesen(text) {
+    if (typeof text === "number") return text;
+    if (typeof text !== "string") return NaN;
+    let t = text.trim().replace(/[\s'’  ]/g, "").replace(/[−–]/g, "-");
+    if (t.endsWith("%")) t = t.slice(0, -1);
+    if (!t) return NaN;
+    const bruch = t.match(/^([+-]?[0-9.,]+)\/([+-]?[0-9.,]+)$/);
+    if (bruch) {
+      const z = zahlLesen(bruch[1]);
+      const n = zahlLesen(bruch[2]);
+      return n === 0 ? NaN : z / n;
+    }
+    if (t.includes(",") && t.includes(".")) {
+      // Der hintere Trenner ist der Dezimaltrenner
+      t = t.lastIndexOf(",") > t.lastIndexOf(".") ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, "");
+    } else {
+      t = t.replace(",", ".");
+    }
+    if (!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(t)) return NaN;
+    return Number(t);
+  }
+
+  // Zahl als Text: höchstens «stellen» Nachkommastellen, Dezimalpunkt, ab 10 000 mit Hochkomma
+  function zahlText(wert, stellen) {
+    if (!Number.isFinite(wert)) return "–";
+    const s = stellen === undefined ? 4 : stellen;
+    const gerundet = Number(wert.toFixed(s));
+    let [ganz, rest] = Math.abs(gerundet).toFixed(s).split(".");
+    rest = (rest || "").replace(/0+$/, "");
+    if (ganz.length > 4) ganz = ganz.replace(/\B(?=(\d{3})+(?!\d))/g, "’");
+    return (gerundet < 0 ? "−" : "") + ganz + (rest ? "." + rest : "");
+  }
+
+  function vergleichen(x, soll, toleranz) {
+    let grenze;
+    if (toleranz && typeof toleranz === "object") {
+      if (typeof toleranz.relativ === "number") grenze = Math.abs(soll) * toleranz.relativ;
+      else if (typeof toleranz.absolut === "number") grenze = toleranz.absolut;
+    } else if (typeof toleranz === "number") grenze = Math.abs(toleranz);
+    if (grenze === undefined) grenze = 1e-9 * Math.max(1, Math.abs(soll));
+    const abw = Math.abs(x - soll);
+    const eps = 1e-12 * Math.max(1, Math.abs(soll));
+    return { ok: abw <= grenze + eps, knapp: abw <= Math.max(grenze * 10, Math.abs(soll) * 0.01) + eps };
+  }
+
+  // Eingabe einer Zahlaufgabe bewerten (gemeinsame Logik von zahlAufgabe, tabellenAufgabe, lueckenRechnung).
+  // art: "leer" (keine Zahl), "ok", "faktor100", "knapp", "falsch"; wert: gelesene Zahl
+  function zahlBewerten(text, sollListe, toleranz) {
+    const x = zahlLesen(text);
+    if (!Number.isFinite(x)) return { art: "leer", wert: x };
+    // «25%» passt sowohl zu 25 als auch zu 0.25
+    const kandidaten = /%\s*$/.test(String(text)) ? [x, x / 100] : [x];
+    const tests = [];
+    sollListe.forEach((soll) => kandidaten.forEach((k) => tests.push(vergleichen(k, soll, toleranz))));
+    if (tests.some((t) => t.ok)) return { art: "ok", wert: x };
+    if (sollListe.some((soll) => vergleichen(x / 100, soll, toleranz).ok || vergleichen(x * 100, soll, toleranz).ok)) {
+      return { art: "faktor100", wert: x };
+    }
+    return { art: tests.some((t) => t.knapp) ? "knapp" : "falsch", wert: x };
+  }
+
+  const ZAHL_TEXTE = {
+    leer: "Gib eine Zahl ein. Komma oder Punkt sind beide erlaubt, Brüche wie 1/4 und Prozent wie 25% auch.",
+    faktor100: "✗ Die Ziffern stimmen, der Faktor 100 nicht. Prozent oder Dezimalzahl?",
+    knapp: "✗ Knapp daneben. Prüfe die Rundung und die Zwischenresultate.",
+    falsch: "✗ Das stimmt noch nicht.",
+  };
+
+  /* ---------- Logikformeln: lesen, anzeigen, vergleichen ---------- */
+
+  // Zeichen und ihre ASCII-Ersatzschreibweisen (längste zuerst)
+  const LOGIK_ZEICHEN = [
+    ["<->", "aeq"], ["<=>", "aeq"], ["->", "impl"], ["=>", "impl"], ["&&", "und"], ["||", "oder"],
+    ["/\\", "und"], ["\\/", "oder"], ["!=", "ungleich"],
+    ["↔", "aeq"], ["⇔", "aeq"], ["→", "impl"], ["⇒", "impl"], ["∧", "und"], ["&", "und"], ["∨", "oder"], ["|", "oder"],
+    ["¬", "nicht"], ["!", "nicht"], ["~", "nicht"], ["∀", "alle"], ["∃", "ex"], ["⊤", "wahr"], ["⊥", "falsch"],
+    ["≠", "ungleich"], ["=", "gleich"], ["(", "auf"], [")", "zu"], [",", "komma"], [".", "punkt"], [":", "punkt"],
+  ];
+  const SYMBOL = { aeq: "↔", impl: "→", und: "∧", oder: "∨", nicht: "¬", alle: "∀", ex: "∃", wahr: "⊤", falsch: "⊥" };
+
+  function lesefehler(meldung, stelle) {
+    const e = new Error(meldung);
+    e.lesefehler = true;
+    e.stelle = stelle;
+    return e;
+  }
+
+  function formelZerlegen(text) {
+    const tokens = [];
+    let i = 0;
+    while (i < text.length) {
+      const c = text[i];
+      if (/\s/.test(c)) { i++; continue; }
+      const z = LOGIK_ZEICHEN.find(([s]) => text.startsWith(s, i));
+      if (z) {
+        tokens.push({ art: z[1], roh: z[0], pos: i });
+        i += z[0].length;
+        continue;
+      }
+      const name = text.slice(i).match(/^[\p{L}_][\p{L}\p{N}_']*/u);
+      if (name) {
+        const roh = name[0];
+        const art = roh === "forall" ? "alle" : roh === "exists" ? "ex" : "name";
+        tokens.push({ art: art, roh: roh, pos: i });
+        i += roh.length;
+        continue;
+      }
+      const zahl = text.slice(i).match(/^\d+(?:\.\d+)?/);
+      if (zahl) {
+        tokens.push({ art: "zahl", roh: zahl[0], pos: i });
+        i += zahl[0].length;
+        continue;
+      }
+      throw lesefehler("Das Zeichen «" + c + "» an Stelle " + (i + 1) + " kenne ich nicht.", i);
+    }
+    return tokens;
+  }
+
+  // Liest eine Formel der Aussagen- oder Prädikatenlogik.
+  // Bindung: ¬ und Quantoren am stärksten, dann ∧, ∨, → (rechtsassoziativ), ↔.
+  // Ergebnis: { ok: true, baum } oder { ok: false, fehler, stelle }
+  function formelLesen(text) {
+    text = String(text === undefined || text === null ? "" : text);
+    try {
+      const tokens = formelZerlegen(text);
+      if (!tokens.length) throw lesefehler("Die Eingabe ist leer.", 0);
+      let i = 0;
+      const jetzt = () => tokens[i];
+      const zeig = (t) => "«" + (SYMBOL[t.art] || t.roh) + "»";
+      const istTermStart = (t) => t && (t.art === "name" || t.art === "zahl");
+      function fehlt(nach) {
+        const t = jetzt();
+        if (!t) throw lesefehler("Nach " + zeig(nach) + " fehlt noch eine Teilformel.", text.length);
+      }
+      function aeq() {
+        let a = impl();
+        while (jetzt() && jetzt().art === "aeq") {
+          const op = tokens[i++];
+          fehlt(op);
+          a = { t: "aeq", a: a, b: impl() };
+        }
+        return a;
+      }
+      function impl() {
+        const a = oder();
+        if (jetzt() && jetzt().art === "impl") {
+          const op = tokens[i++];
+          fehlt(op);
+          return { t: "impl", a: a, b: impl() };
+        }
+        return a;
+      }
+      function oder() {
+        let a = und();
+        while (jetzt() && jetzt().art === "oder") {
+          const op = tokens[i++];
+          fehlt(op);
+          a = { t: "oder", a: a, b: und() };
+        }
+        return a;
+      }
+      function und() {
+        let a = unaer();
+        while (jetzt() && jetzt().art === "und") {
+          const op = tokens[i++];
+          fehlt(op);
+          a = { t: "und", a: a, b: unaer() };
+        }
+        return a;
+      }
+      function unaer() {
+        const t = jetzt();
+        if (t.art === "nicht") {
+          i++;
+          fehlt(t);
+          return { t: "nicht", a: unaer() };
+        }
+        if (t.art === "alle" || t.art === "ex") {
+          i++;
+          const v = jetzt();
+          if (!v || v.art !== "name") {
+            throw lesefehler("Nach " + zeig(t) + " fehlt eine Variable, zum Beispiel " + SYMBOL[t.art] + "x.", v ? v.pos : text.length);
+          }
+          i++;
+          // «∀P(x)»: direkt angehängte Klammer mit nur Termen = Prädikat statt Variable
+          const auf = jetzt();
+          if (auf && auf.art === "auf" && auf.pos === v.pos + v.roh.length) {
+            let k = i + 1;
+            while (tokens[k] && (tokens[k].art === "name" || tokens[k].art === "zahl" || tokens[k].art === "komma")) k++;
+            if (k > i + 1 && tokens[k] && tokens[k].art === "zu") {
+              throw lesefehler("Nach " + zeig(t) + " fehlt eine Variable: «" + v.roh + "(…)» ist ein Prädikat. Schreib zum Beispiel " +
+                SYMBOL[t.art] + "x " + v.roh + "(x).", v.pos);
+            }
+          }
+          const vars = [v.roh];
+          while (jetzt() && jetzt().art === "komma" && tokens[i + 1] && tokens[i + 1].art === "name" &&
+            !(tokens[i + 2] && tokens[i + 2].art === "auf")) {
+            i++;
+            vars.push(tokens[i++].roh);
+          }
+          if (jetzt() && jetzt().art === "punkt") i++;
+          if (!jetzt()) throw lesefehler("Nach " + SYMBOL[t.art] + vars.join(", ") + " fehlt noch die Formel.", text.length);
+          let rumpf = unaer();
+          for (let k = vars.length - 1; k >= 0; k--) rumpf = { t: "quant", q: t.art === "alle" ? "A" : "E", v: vars[k], a: rumpf };
+          return rumpf;
+        }
+        return atom();
+      }
+      function atom() {
+        const t = jetzt();
+        if (t.art === "auf") {
+          i++;
+          if (!jetzt()) throw lesefehler("Die Klammer «(» an Stelle " + (t.pos + 1) + " wird nicht geschlossen.", text.length);
+          const f = aeq();
+          const z = jetzt();
+          if (!z) throw lesefehler("Die Klammer «(» an Stelle " + (t.pos + 1) + " wird nicht geschlossen.", text.length);
+          if (z.art !== "zu") throw nachFormel(z);
+          i++;
+          return f;
+        }
+        if (t.art === "wahr" || t.art === "falsch") { i++; return { t: "k", w: t.art === "wahr" }; }
+        if (istTermStart(t)) {
+          const naechstes = tokens[i + 1];
+          const vergleich = naechstes && (naechstes.art === "gleich" || naechstes.art === "ungleich");
+          if (t.art === "zahl" && (t.roh === "0" || t.roh === "1") && !vergleich) { i++; return { t: "k", w: t.roh === "1" }; }
+          const term = termLesen();
+          if (jetzt() && (jetzt().art === "gleich" || jetzt().art === "ungleich")) {
+            const op = tokens[i++];
+            if (!istTermStart(jetzt())) {
+              throw lesefehler("Nach «" + (op.art === "gleich" ? "=" : "≠") + "» fehlt ein Term.", jetzt() ? jetzt().pos : text.length);
+            }
+            const b = termLesen();
+            const g = { t: "gleich", a: term, b: b };
+            return op.art === "ungleich" ? { t: "nicht", a: g } : g;
+          }
+          if (term.t === "zahl") throw lesefehler("Die Zahl «" + term.n + "» allein ist keine Formel.", t.pos);
+          return { t: "p", n: term.n, args: term.args };
+        }
+        if (t.art === "zu") throw lesefehler("Die Klammer «)» an Stelle " + (t.pos + 1) + " hat kein Gegenstück.", t.pos);
+        throw lesefehler("An Stelle " + (t.pos + 1) + " erwarte ich eine Teilformel, nicht " + zeig(t) + ".", t.pos);
+      }
+      function termLesen() {
+        const t = jetzt();
+        if (!istTermStart(t)) {
+          throw lesefehler("Hier erwarte ich einen Term (Variable, Konstante oder f(x)).", t ? t.pos : text.length);
+        }
+        i++;
+        if (t.art === "zahl") return { t: "zahl", n: t.roh };
+        if (jetzt() && jetzt().art === "auf") {
+          const auf = tokens[i++];
+          const args = [termLesen()];
+          while (jetzt() && jetzt().art === "komma") { i++; args.push(termLesen()); }
+          if (!jetzt() || jetzt().art !== "zu") {
+            throw lesefehler("Nach den Argumenten von «" + t.roh + "(» an Stelle " + (auf.pos + 1) + " fehlt «)».",
+              jetzt() ? jetzt().pos : text.length);
+          }
+          i++;
+          return { t: "term", n: t.roh, args: args };
+        }
+        return { t: "term", n: t.roh, args: [] };
+      }
+      // Fehler für ein Token, das nach einer vollständigen Teilformel steht
+      function nachFormel(z) {
+        if (z.art === "zu") return lesefehler("Die Klammer «)» an Stelle " + (z.pos + 1) + " hat kein Gegenstück.", z.pos);
+        if (istTermStart(z) || z.art === "auf" || z.art === "nicht" || z.art === "alle" || z.art === "ex" || z.art === "wahr" || z.art === "falsch") {
+          return lesefehler("Vor " + zeig(z) + " an Stelle " + (z.pos + 1) + " fehlt ein Junktor (∧, ∨, →, ↔).", z.pos);
+        }
+        return lesefehler("Unerwartetes " + zeig(z) + " an Stelle " + (z.pos + 1) + ".", z.pos);
+      }
+      const baum = aeq();
+      if (i < tokens.length) throw nachFormel(tokens[i]);
+      return { ok: true, baum: baum };
+    } catch (e) {
+      if (e && e.lesefehler) return { ok: false, fehler: e.message, stelle: e.stelle };
+      throw e;
+    }
+  }
+
+  const BINAER = { und: "∧", oder: "∨", impl: "→", aeq: "↔" };
+
+  // Formel als Liste von Teilen [text, art] mit klärenden Klammern.
+  // art: "op", "q", "v" (Variable), "c" (Konstante), "fn", "p" (Prädikat), "a" (Aussagenvariable), "k" (⊤/⊥), ""
+  function formelTeile(baum) {
+    const teile = [];
+    const push = (text, art) => teile.push([text, art || ""]);
+    function klammerNoetig(kind, eltern, seite) {
+      if (!BINAER[kind.t]) return false;
+      if (eltern.t === "nicht" || eltern.t === "quant") return true;
+      if (kind.t === eltern.t) {
+        if (kind.t === "und" || kind.t === "oder") return false;
+        if (kind.t === "impl") return seite === "a";
+        return true;
+      }
+      return true;
+    }
+    function teil(kind, eltern, seite, gebunden) {
+      if (klammerNoetig(kind, eltern, seite)) { push("("); f(kind, gebunden); push(")"); }
+      else f(kind, gebunden);
+    }
+    function term(t, gebunden) {
+      if (t.t === "zahl") { push(t.n, "c"); return; }
+      if (t.args.length) {
+        push(t.n, "fn");
+        push("(");
+        t.args.forEach((a, k) => { if (k) push(", "); term(a, gebunden); });
+        push(")");
+        return;
+      }
+      push(t.n, gebunden.indexOf(t.n) >= 0 || /^[u-z]\d*'*$/.test(t.n) ? "v" : "c");
+    }
+    function f(b, gebunden) {
+      switch (b.t) {
+        case "k": push(b.w ? "⊤" : "⊥", "k"); break;
+        case "p":
+          if (!b.args.length) { push(b.n, "a"); break; }
+          push(b.n, "p");
+          push("(");
+          b.args.forEach((a, k) => { if (k) push(", "); term(a, gebunden); });
+          push(")");
+          break;
+        case "gleich": term(b.a, gebunden); push(" = ", "op"); term(b.b, gebunden); break;
+        case "nicht":
+          if (b.a.t === "gleich") { term(b.a.a, gebunden); push(" ≠ ", "op"); term(b.a.b, gebunden); break; }
+          push("¬", "op");
+          teil(b.a, b, "a", gebunden);
+          break;
+        case "quant": {
+          push(b.q === "A" ? "∀" : "∃", "q");
+          push(b.v, "v");
+          const innen = gebunden.concat([b.v]);
+          if (b.a.t !== "quant") push(" ");
+          teil(b.a, b, "a", innen);
+          break;
+        }
+        default:
+          teil(b.a, b, "a", gebunden);
+          push(" " + BINAER[b.t] + " ", "op");
+          teil(b.b, b, "b", gebunden);
+      }
+    }
+    f(baum, []);
+    return teile;
+  }
+
+  function formelText(baum) {
+    return formelTeile(baum).map((t) => t[0]).join("");
+  }
+
+  // Kommt etwas aus der Prädikatenlogik vor (Quantor, Prädikat mit Argumenten, Gleichheit)?
+  function istAussagenlogisch(baum) {
+    switch (baum.t) {
+      case "k": return true;
+      case "p": return baum.args.length === 0;
+      case "nicht": return istAussagenlogisch(baum.a);
+      case "quant": case "gleich": return false;
+      default: return istAussagenlogisch(baum.a) && istAussagenlogisch(baum.b);
+    }
+  }
+
+  function aussagenVariablen(baum, menge) {
+    menge = menge || new Set();
+    if (baum.t === "p" && !baum.args.length) menge.add(baum.n);
+    if (baum.a && baum.t !== "gleich") aussagenVariablen(baum.a, menge);
+    if (baum.b && baum.t !== "gleich") aussagenVariablen(baum.b, menge);
+    return menge;
+  }
+
+  function formelWert(baum, belegung) {
+    switch (baum.t) {
+      case "k": return baum.w;
+      case "p": return !!belegung[baum.n];
+      case "nicht": return !formelWert(baum.a, belegung);
+      case "und": return formelWert(baum.a, belegung) && formelWert(baum.b, belegung);
+      case "oder": return formelWert(baum.a, belegung) || formelWert(baum.b, belegung);
+      case "impl": return !formelWert(baum.a, belegung) || formelWert(baum.b, belegung);
+      case "aeq": return formelWert(baum.a, belegung) === formelWert(baum.b, belegung);
+      default: throw new Error("Nur Aussagenlogik auswertbar.");
+    }
+  }
+
+  const sortiertDeutsch = (a, b) => a.localeCompare(b, "de");
+
+  // Wahrheitstafel über die Vereinigung der Variablen. Ergebnis:
+  // { gleich, variablen, gegenbeispiel: { belegung, wertA, wertB } | null }
+  function aequivalent(a, b) {
+    const vars = Array.from(new Set([...aussagenVariablen(a), ...aussagenVariablen(b)])).sort(sortiertDeutsch);
+    if (vars.length > 14) throw new Error("Zu viele Variablen für eine Wahrheitstafel.");
+    for (let m = 0; m < 1 << vars.length; m++) {
+      const bel = {};
+      vars.forEach((v, k) => { bel[v] = !!(m & (1 << (vars.length - 1 - k))); });
+      const wa = formelWert(a, bel), wb = formelWert(b, bel);
+      if (wa !== wb) return { gleich: false, variablen: vars, gegenbeispiel: { belegung: bel, wertA: wa, wertB: wb } };
+    }
+    return { gleich: true, variablen: vars, gegenbeispiel: null };
+  }
+
+  // Glieder einer Kette gleicher Junktoren: A ∧ (B ∧ C) → [A, B, C]
+  function glieder(b, op) {
+    return b.t === op ? glieder(b.a, op).concat(glieder(b.b, op)) : [b];
+  }
+  const istAtom = (b) => b.t === "p" && !b.args.length;
+  const istLiteral = (b) => istAtom(b) || b.t === "k" || (b.t === "nicht" && istAtom(b.a));
+  function enthaelt(b, pruef) {
+    if (pruef(b)) return true;
+    return !!((b.a && b.t !== "gleich" && enthaelt(b.a, pruef)) || (b.b && b.t !== "gleich" && enthaelt(b.b, pruef)));
+  }
+
+  const FORM_NAMEN = { knf: "KNF", dnf: "DNF", nnf: "NNF", horn: "Hornform" };
+
+  // Prüft eine aussagenlogische Formel auf KNF, DNF, NNF oder Hornform.
+  // Ergebnis: { ok, grund } (grund: kurzer Satz, warum die Form noch nicht stimmt)
+  function formPruefen(baum, form) {
+    const knf = (b) => glieder(b, "und").every((k) => glieder(k, "oder").every(istLiteral));
+    const dnf = (b) => glieder(b, "oder").every((k) => glieder(k, "und").every(istLiteral));
+    const nnf = (b) => istLiteral(b) || ((b.t === "und" || b.t === "oder") && nnf(b.a) && nnf(b.b));
+    const positiv = (l) => istAtom(l) || (l.t === "k" && l.w);
+    const hornKlausel = (k) => {
+      const l = glieder(k, "oder");
+      return l.every(istLiteral) && l.filter(positiv).length <= 1;
+    };
+    // Implikationsform: A ∧ B → C, ⊤ → C, A ∧ B → ⊥
+    const hornImpl = (k) => k.t === "impl" && (istAtom(k.b) || k.b.t === "k") &&
+      glieder(k.a, "und").every((x) => istAtom(x) || x.t === "k");
+    let ok;
+    if (form === "knf") ok = knf(baum);
+    else if (form === "dnf") ok = dnf(baum);
+    else if (form === "nnf") ok = nnf(baum);
+    else if (form === "horn") ok = glieder(baum, "und").every((k) => hornKlausel(k) || hornImpl(k));
+    else throw new Error("Unbekannte Form «" + form + "».");
+    if (ok) return { ok: true, grund: "" };
+
+    const pfeil = form === "horn"
+      ? glieder(baum, "und").some((k) => !hornImpl(k) && enthaelt(k, (x) => x.t === "impl" || x.t === "aeq"))
+      : enthaelt(baum, (x) => x.t === "impl" || x.t === "aeq");
+    let grund;
+    if (pfeil) grund = "Es kommen noch → oder ↔ vor. Löse sie zuerst auf.";
+    else if (enthaelt(baum, (x) => x.t === "nicht" && !istAtom(x.a))) grund = "Ein ¬ steht noch vor einer Klammer. Zieh es mit De Morgan nach innen.";
+    else if (form === "knf") grund = "Aussen müssen ∧ stehen, innen nur ∨ zwischen Literalen.";
+    else if (form === "dnf") grund = "Aussen müssen ∨ stehen, innen nur ∧ zwischen Literalen.";
+    else if (form === "horn") {
+      grund = knf(baum)
+        ? "Mindestens eine Klausel hat mehr als ein positives Literal."
+        : "Eine Hornformel ist eine KNF: aussen ∧, innen ∨ zwischen Literalen.";
+    } else grund = "In der NNF stehen nur ∧, ∨ und ¬ direkt vor Variablen.";
+    return { ok: false, grund: grund };
+  }
+
+  // Kanonische Form für den Mustervergleich: Klammern über den Baum, ∧/∨/↔/= ohne Reihenfolge,
+  // gebundene Variablen nach Tiefe des Quantors (Umbenennung egal), gleiche Quantoren hintereinander ohne Reihenfolge.
+  function permutationen(liste) {
+    if (liste.length <= 1) return [liste];
+    const aus = [];
+    liste.forEach((x, k) => permutationen(liste.slice(0, k).concat(liste.slice(k + 1))).forEach((p) => aus.push([x].concat(p))));
+    return aus;
+  }
+  function kanonisch(baum) {
+    function term(t, bindung) {
+      if (t.t === "zahl") return "z:" + Number(t.n);
+      if (!t.args.length && bindung.has(t.n)) return "#" + bindung.get(t.n);
+      return "c:" + t.n + (t.args.length ? "(" + t.args.map((a) => term(a, bindung)).join(",") + ")" : "");
+    }
+    function f(b, tiefe, bindung) {
+      switch (b.t) {
+        case "k": return b.w ? "⊤" : "⊥";
+        case "p": return "p:" + b.n + "(" + b.args.map((a) => term(a, bindung)).join(",") + ")";
+        case "gleich": return "=(" + [term(b.a, bindung), term(b.b, bindung)].sort().join(",") + ")";
+        case "nicht": return "¬" + f(b.a, tiefe, bindung);
+        case "und": case "oder":
+          return "(" + glieder(b, b.t).map((x) => f(x, tiefe, bindung)).sort().join(b.t === "und" ? "∧" : "∨") + ")";
+        case "impl": return "(" + f(b.a, tiefe, bindung) + "→" + f(b.b, tiefe, bindung) + ")";
+        case "aeq": return "(" + [f(b.a, tiefe, bindung), f(b.b, tiefe, bindung)].sort().join("↔") + ")";
+        case "quant": {
+          const vars = [];
+          let rumpf = b;
+          while (rumpf.t === "quant" && rumpf.q === b.q && vars.length < 4) { vars.push(rumpf.v); rumpf = rumpf.a; }
+          let best = null;
+          permutationen(vars.map((_, k) => k)).forEach((p) => {
+            const neu = new Map(bindung);
+            vars.forEach((v, k) => neu.set(v, tiefe + p[k]));
+            const s = f(rumpf, tiefe + vars.length, neu);
+            if (best === null || s < best) best = s;
+          });
+          return b.q + vars.length + "[" + best + "]";
+        }
+      }
+      return "?";
+    }
+    return f(baum, 0, new Map());
+  }
+
+  // Namen freier Terme ohne Argumente (Variablen ohne Quantor oder Konstanten)
+  function freieNamen(baum) {
+    const frei = new Set();
+    function term(t, gebunden) {
+      if (t.t !== "term") return;
+      if (!t.args.length) { if (gebunden.indexOf(t.n) < 0) frei.add(t.n); }
+      else t.args.forEach((a) => term(a, gebunden));
+    }
+    function f(b, gebunden) {
+      if (b.t === "p") b.args.forEach((a) => term(a, gebunden));
+      else if (b.t === "gleich") { term(b.a, gebunden); term(b.b, gebunden); }
+      else if (b.t === "quant") f(b.a, gebunden.concat([b.v]));
+      else { if (b.a) f(b.a, gebunden); if (b.b) f(b.b, gebunden); }
+    }
+    f(baum, []);
+    return frei;
+  }
+
+  // Prädikate mit Stelligkeit: Map name → Anzahl Argumente
+  function praedikate(baum, karte) {
+    karte = karte || new Map();
+    if (baum.t === "p") karte.set(baum.n, baum.args.length);
+    else if (baum.t !== "gleich") { if (baum.a) praedikate(baum.a, karte); if (baum.b) praedikate(baum.b, karte); }
+    return karte;
+  }
+
+  // Quantor mit Junktor direkt darunter: "A:und", "E:impl" …
+  function quantorJunktoren(baum, menge) {
+    menge = menge || new Set();
+    if (baum.t === "quant") {
+      let r = baum.a;
+      while (r.t === "quant" && r.q === baum.q) r = r.a;
+      menge.add(baum.q + ":" + r.t);
+    }
+    if (baum.a && baum.t !== "gleich") quantorJunktoren(baum.a, menge);
+    if (baum.b && baum.t !== "gleich") quantorJunktoren(baum.b, menge);
+    return menge;
+  }
+
+  // Eingabe gegen akzeptierte Formeln vergleichen (Modus «muster»). Ergebnis: { gleich, hinweis }
+  function musterVergleichen(eingabe, loesungen) {
+    const k = kanonisch(eingabe);
+    if (loesungen.some((l) => kanonisch(l) === k)) return { gleich: true, hinweis: "" };
+    const soll = praedikate(loesungen[0]);
+    const ist = praedikate(eingabe);
+    for (const [name, stellen] of ist) {
+      if (!loesungen.some((l) => praedikate(l).has(name))) {
+        return { gleich: false, hinweis: (stellen ? "Das Prädikat «" : "Das Symbol «") + name + "» kommt in der Lösung nicht vor. Prüfe die Namen aus dem Wörterbuch." };
+      }
+      if (soll.has(name) && soll.get(name) !== stellen) {
+        return { gleich: false, hinweis: "«" + name + "» hat in der Lösung " + soll.get(name) + (soll.get(name) === 1 ? " Argument" : " Argumente") + ", bei dir " + stellen + "." };
+      }
+    }
+    const freiSoll = new Set();
+    loesungen.forEach((l) => freieNamen(l).forEach((n) => freiSoll.add(n)));
+    const freiZuViel = Array.from(freieNamen(eingabe)).filter((n) => !freiSoll.has(n));
+    if (freiZuViel.length) {
+      return { gleich: false, hinweis: "«" + freiZuViel[0] + "» ist bei dir nicht durch einen Quantor gebunden. Fehlt ein Quantor oder eine Klammer?" };
+    }
+    const qIst = quantorJunktoren(eingabe);
+    const qSoll = new Set();
+    loesungen.forEach((l) => quantorJunktoren(l).forEach((x) => qSoll.add(x)));
+    if (qIst.has("A:und") && !qSoll.has("A:und")) return { gleich: false, hinweis: "Typischer Fehler: Nach ∀ folgt meist →, nicht ∧." };
+    if (qIst.has("E:impl") && !qSoll.has("E:impl")) return { gleich: false, hinweis: "Typischer Fehler: Nach ∃ folgt meist ∧, nicht →." };
+    return { gleich: false, hinweis: "" };
+  }
+
+  /* ---------- Kurzantworten: Text, Mengen, Hypothesen ---------- */
+
+  const ANFUEHRUNG = /["'«»„“”‚‘’`´]/g;
+
+  function textNormal(text) {
+    return String(text === undefined || text === null ? "" : text)
+      .normalize("NFC").toLowerCase().replace(ANFUEHRUNG, "").replace(/\s+/g, "").replace(/\.+$/, "");
+  }
+
+  // Menge lesen: {1, 3, 5}, verschachtelt {{A, ¬B}, {C}}, Tupel (1, 2), leer {} ∅ □.
+  // Ergebnis: { ok, wert (kanonischer Text), baum } oder { ok: false, fehler }
+  function mengeLesen(text, optionen) {
+    const grossKlein = !!(optionen && optionen.grossKlein);
+    const s = String(text === undefined || text === null ? "" : text);
+    let pos = 0;
+    const leer = () => { while (pos < s.length && /\s/.test(s[pos])) pos++; };
+    function atomNormal(roh) {
+      let a = roh.replace(/\s+/g, "").replace(/^[!~]+/, (m) => "¬".repeat(m.length)).replace(ANFUEHRUNG, "");
+      const z = zahlLesen(a);
+      if (/\d/.test(a) && Number.isFinite(z) && !/^[¬]/.test(a)) return "z:" + z;
+      if (!grossKlein) a = a.toLowerCase();
+      return a;
+    }
+    function element() {
+      leer();
+      const c = s[pos];
+      if (c === undefined) throw lesefehler("Hier fehlt noch ein Element oder eine schliessende Klammer.", pos);
+      if (c === "{" || c === "(") {
+        const zu = c === "{" ? "}" : ")";
+        const start = pos++;
+        const kinder = [];
+        leer();
+        if (s[pos] === zu) { pos++; return { art: c === "{" ? "menge" : "tupel", kinder: kinder }; }
+        for (;;) {
+          kinder.push(element());
+          leer();
+          if (s[pos] === ",") { pos++; continue; }
+          if (s[pos] === zu) { pos++; break; }
+          if (pos >= s.length) throw lesefehler("Die Klammer «" + c + "» an Stelle " + (start + 1) + " wird nicht geschlossen.", pos);
+          throw lesefehler("An Stelle " + (pos + 1) + " erwarte ich ein Komma oder «" + zu + "», nicht «" + s[pos] + "».", pos);
+        }
+        return { art: c === "{" ? "menge" : "tupel", kinder: kinder };
+      }
+      if (c === "∅" || c === "□") { pos++; return { art: "menge", kinder: [] }; }
+      if (c === "," || c === "}" || c === ")") throw lesefehler("An Stelle " + (pos + 1) + " fehlt ein Element.", pos);
+      const start = pos;
+      while (pos < s.length && ",{}()".indexOf(s[pos]) < 0) pos++;
+      const roh = s.slice(start, pos).trim();
+      if (!roh) throw lesefehler("An Stelle " + (start + 1) + " fehlt ein Element.", start);
+      if (/[\p{L}\p{N}]\s+[\p{L}\p{N}]/u.test(roh.replace(/([¬!~])\s+/g, "$1"))) {
+        throw lesefehler("In «" + roh + "» fehlt ein Komma zwischen zwei Elementen.", start);
+      }
+      return { art: "atom", wert: atomNormal(roh) };
+    }
+    function kanon(e) {
+      if (e.art === "atom") return e.wert;
+      const k = e.kinder.map(kanon);
+      if (e.art === "tupel") return "(" + k.join(",") + ")";
+      return "{" + Array.from(new Set(k)).sort().join(",") + "}";
+    }
+    try {
+      leer();
+      if (pos >= s.length) throw lesefehler("Die Eingabe ist leer.", 0);
+      const baum = element();
+      leer();
+      if (pos < s.length) {
+        if (s[pos] === ",") throw lesefehler("Schreib die Menge mit geschweiften Klammern, zum Beispiel {1, 3, 5}.", pos);
+        throw lesefehler("Nach dem Ende an Stelle " + pos + " steht noch «" + s.slice(pos, pos + 8) + "».", pos);
+      }
+      return { ok: true, wert: kanon(baum), baum: baum, kinder: baum.art === "menge" ? Array.from(new Set(baum.kinder.map(kanon))) : null };
+    } catch (e) {
+      if (e && e.lesefehler) return { ok: false, fehler: e.message, stelle: e.stelle };
+      throw e;
+    }
+  }
+
+  // Hypothesen lesen: «H0: μ ≤ 50; H1: μ > 50». Zeichen auch als <=, >=, !=, <>; μ als mu, σ als sigma.
+  // Ergebnis: { ok, liste: [{ h, links, op, rechts, text }] } oder { ok: false, fehler }
+  const SPIEGEL = { "≤": "≥", "≥": "≤", "<": ">", ">": "<", "=": "=", "≠": "≠" };
+  function hypotheseLesen(text) {
+    let t = String(text === undefined || text === null ? "" : text).normalize("NFC").toLowerCase();
+    t = t.replace(/µ/g, "μ").replace(/₀/g, "0").replace(/₁/g, "1").replace(/²/g, "^2").replace(/_/g, "")
+      .replace(/sigma/g, "σ").replace(/mu/g, "μ")
+      .replace(/<=|=<|≦|⩽/g, "≤").replace(/>=|=>|≧|⩾/g, "≥").replace(/!=|<>|=\/=|≠/g, "≠");
+    const teile = t.split(/[;\n]|,(?!\d)|(?<!\d),|\bund\b/).map((x) => x.replace(/\s+/g, "")).filter(Boolean);
+    if (!teile.length) return { ok: false, fehler: "Die Eingabe ist leer." };
+    const liste = [];
+    for (const teil of teile) {
+      const m = teil.match(/^(?:h([01a]))?:?(.+?)(≤|≥|≠|<|>|=)(.+)$/);
+      if (!m || /[≤≥≠<>=]/.test(m[4])) {
+        return { ok: false, fehler: "«" + teil + "» kann ich nicht lesen. Schreib zum Beispiel H0: μ ≤ 50." };
+      }
+      const h = m[1] === undefined ? "" : m[1] === "a" ? "h1" : "h" + m[1];
+      const zahl = (x) => {
+        const z = zahlLesen(x);
+        return /\d/.test(x) && Number.isFinite(z) ? String(z) : x;
+      };
+      let links = zahl(m[2]), op = m[3], rechts = zahl(m[4]);
+      // «50 ≥ μ» wie «μ ≤ 50»
+      if (/^-?[\d.]+$/.test(links) && !/^-?[\d.]+$/.test(rechts)) { const x = links; links = rechts; rechts = x; op = SPIEGEL[op]; }
+      liste.push({ h: h, links: links, op: op, rechts: rechts, text: h + ":" + links + op + rechts });
+    }
+    return { ok: true, liste: liste };
+  }
+
+  // Vergleich zweier gelesener Hypothesen-Listen. Ergebnis: { gleich, hinweis }
+  function hypothesenVergleichen(ist, soll) {
+    const schluessel = (l, f) => l.map(f).sort().join("|");
+    const voll = (x) => x.text;
+    if (schluessel(ist, voll) === schluessel(soll, voll)) return { gleich: true, hinweis: "" };
+    const tausch = (x) => (x.h === "h0" ? "h1" : x.h === "h1" ? "h0" : "") + ":" + x.links + x.op + x.rechts;
+    if (schluessel(ist, tausch) === schluessel(soll, voll)) return { gleich: false, hinweis: "H0 und H1 sind vertauscht." };
+    const ohneH = (x) => x.links + x.op + x.rechts;
+    if (ist.some((x) => !x.h) && schluessel(ist, ohneH) === schluessel(soll, ohneH)) {
+      return { gleich: false, hinweis: "Schreib dazu, welche Hypothese das ist: H0 oder H1." };
+    }
+    const ohneOp = (x) => x.h + ":" + x.links + "?" + x.rechts;
+    if (schluessel(ist, ohneOp) === schluessel(soll, ohneOp)) return { gleich: false, hinweis: "Prüfe das Vergleichszeichen." };
+    if (ist.length !== soll.length) {
+      return { gleich: false, hinweis: "Gesucht " + (soll.length === 1 ? "ist eine Hypothese" : "sind " + soll.length + " Hypothesen") + ", du hast " + ist.length + " geschrieben." };
+    }
+    return { gleich: false, hinweis: "" };
+  }
+
+  const AUSWERTUNG = {
+    zahlLesen: zahlLesen,
+    zahlText: zahlText,
+    zahlBewerten: zahlBewerten,
+    formelLesen: formelLesen,
+    formelText: formelText,
+    formelTeile: formelTeile,
+    istAussagenlogisch: istAussagenlogisch,
+    aequivalent: aequivalent,
+    formPruefen: formPruefen,
+    kanonisch: kanonisch,
+    musterVergleichen: musterVergleichen,
+    textNormal: textNormal,
+    mengeLesen: mengeLesen,
+    hypotheseLesen: hypotheseLesen,
+    hypothesenVergleichen: hypothesenVergleichen,
+  };
+
+  // Unter Node (Tests): nur die Auswertung bereitstellen, kein DOM anfassen
+  if (typeof window === "undefined") {
+    if (typeof module === "object" && module && module.exports) module.exports = AUSWERTUNG;
+    return;
+  }
+
   if (window.Lernpfad && window.Lernpfad.version) return; // doppelt eingebunden
 
   /* ---------- Grundlagen ---------- */
@@ -72,42 +785,6 @@
       fach: ((b && b.dataset.fach) || "").trim(),
       thema: ((b && b.dataset.thema) || "").trim(),
     };
-  }
-
-  /* ---------- Zahlen lesen und schreiben ---------- */
-
-  // Liest «0,25», «0.25», «1'234.5», «1/4», «25%» (ohne Umrechnung), «−3», «1e-3»
-  function zahlLesen(text) {
-    if (typeof text === "number") return text;
-    if (typeof text !== "string") return NaN;
-    let t = text.trim().replace(/[\s'’\u00a0\u202f]/g, "").replace(/[−–]/g, "-");
-    if (t.endsWith("%")) t = t.slice(0, -1);
-    if (!t) return NaN;
-    const bruch = t.match(/^([+-]?[0-9.,]+)\/([+-]?[0-9.,]+)$/);
-    if (bruch) {
-      const z = zahlLesen(bruch[1]);
-      const n = zahlLesen(bruch[2]);
-      return n === 0 ? NaN : z / n;
-    }
-    if (t.includes(",") && t.includes(".")) {
-      // Der hintere Trenner ist der Dezimaltrenner
-      t = t.lastIndexOf(",") > t.lastIndexOf(".") ? t.replace(/\./g, "").replace(",", ".") : t.replace(/,/g, "");
-    } else {
-      t = t.replace(",", ".");
-    }
-    if (!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(t)) return NaN;
-    return Number(t);
-  }
-
-  // Zahl als Text: höchstens «stellen» Nachkommastellen, Dezimalpunkt, ab 10 000 mit Hochkomma
-  function zahlText(wert, stellen) {
-    if (!Number.isFinite(wert)) return "–";
-    const s = stellen === undefined ? 4 : stellen;
-    const gerundet = Number(wert.toFixed(s));
-    let [ganz, rest] = Math.abs(gerundet).toFixed(s).split(".");
-    rest = (rest || "").replace(/0+$/, "");
-    if (ganz.length > 4) ganz = ganz.replace(/\B(?=(\d{3})+(?!\d))/g, "’");
-    return (gerundet < 0 ? "−" : "") + ganz + (rest ? "." + rest : "");
   }
 
   /* ---------- Farbschema hell / dunkel / automatisch ---------- */
@@ -827,18 +1504,6 @@
 
   /* ---------- Baustein: Zahleneingabe ---------- */
 
-  function vergleichen(x, soll, toleranz) {
-    let grenze;
-    if (toleranz && typeof toleranz === "object") {
-      if (typeof toleranz.relativ === "number") grenze = Math.abs(soll) * toleranz.relativ;
-      else if (typeof toleranz.absolut === "number") grenze = toleranz.absolut;
-    } else if (typeof toleranz === "number") grenze = Math.abs(toleranz);
-    if (grenze === undefined) grenze = 1e-9 * Math.max(1, Math.abs(soll));
-    const abw = Math.abs(x - soll);
-    const eps = 1e-12 * Math.max(1, Math.abs(soll));
-    return { ok: abw <= grenze + eps, knapp: abw <= Math.max(grenze * 10, Math.abs(soll) * 0.01) + eps };
-  }
-
   function zahlAufgabe(el, cfg) {
     el = elementHolen(el, "zahlAufgabe");
     if (!el) return null;
@@ -856,7 +1521,7 @@
     el.innerHTML = "";
     el.classList.add("card", "stack", "uebung", "zahl-aufgabe");
     el.innerHTML =
-      '<div class="uebung-kopf"><span class="eyebrow">Übung · Rechnen</span>' + (cfg.titel ? "<h3>" + cfg.titel + "</h3>" : "") + "</div>" +
+      kopfHtml("Übung · Rechnen", cfg) +
       (cfg.frage ? '<div class="za-frage">' + cfg.frage + "</div>" : "") +
       '<form class="za-form row" novalidate>' +
       '<label for="' + id + '">Deine Antwort</label>' +
@@ -913,18 +1578,14 @@
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      const x = zahlLesen(feld.value);
+      const urteil = zahlBewerten(feld.value, sollListe, cfg.toleranz);
       feld.classList.remove("richtig");
-      if (!Number.isFinite(x)) {
+      if (urteil.art === "leer") {
         feld.setAttribute("aria-invalid", "true");
-        rueckmeldung("leer", "Gib eine Zahl ein. Komma oder Punkt sind beide erlaubt, Brüche wie 1/4 und Prozent wie 25% auch.");
+        rueckmeldung("leer", ZAHL_TEXTE.leer);
         return;
       }
-      // «25%» passt sowohl zu 25 als auch zu 0.25
-      const kandidaten = /%\s*$/.test(feld.value) ? [x, x / 100] : [x];
-      const tests = [];
-      sollListe.forEach((soll) => kandidaten.forEach((k) => tests.push(vergleichen(k, soll, cfg.toleranz))));
-      if (tests.some((t) => t.ok)) {
+      if (urteil.art === "ok") {
         feld.removeAttribute("aria-invalid");
         feld.classList.add("richtig");
         const genau = cfg.anzeige || zahlText(sollListe[0], 6) + einheit;
@@ -932,12 +1593,10 @@
         return;
       }
       feld.setAttribute("aria-invalid", "true");
-      const faktor100 = sollListe.some((soll) => vergleichen(x / 100, soll, cfg.toleranz).ok || vergleichen(x * 100, soll, cfg.toleranz).ok);
-      if (faktor100) rueckmeldung("bad", "✗ Die Ziffern stimmen, der Faktor 100 nicht. Prozent oder Dezimalzahl?");
-      else if (tests.some((t) => t.knapp)) rueckmeldung("bad", "✗ Knapp daneben. Prüfe die Rundung und die Zwischenresultate.");
+      if (urteil.art !== "falsch") rueckmeldung("bad", ZAHL_TEXTE[urteil.art]);
       else {
         const rat = tippsGezeigt < hinweise.length ? " Hol dir einen Tipp." : weg.length ? " Schau dir den Lösungsweg an." : "";
-        rueckmeldung("bad", "✗ Das stimmt noch nicht." + rat);
+        rueckmeldung("bad", ZAHL_TEXTE.falsch + rat);
       }
     });
     feld.addEventListener("input", () => {
@@ -1080,7 +1739,7 @@
     el.innerHTML = "";
     el.classList.add("card", "stack", "uebung", "schritt-aufgabe");
     el.innerHTML =
-      '<div class="uebung-kopf"><span class="eyebrow">Übung · Schritt für Schritt</span>' + (cfg.titel ? "<h3>" + cfg.titel + "</h3>" : "") + "</div>" +
+      kopfHtml("Übung · Schritt für Schritt", cfg) +
       (cfg.aufgabe ? '<div class="sa-aufgabe">' + cfg.aufgabe + "</div>" : "") +
       '<p class="hint">Versuch es zuerst selbst auf Papier. Deck dann Schritt für Schritt auf und vergleiche.</p>' +
       '<ol class="sa-schritte" aria-label="Lösungsschritte"></ol>';
@@ -1611,6 +2270,823 @@
     };
   }
 
+  /* ==========================================================================
+     Eingabe-Bausteine 1.2.0: formelAufgabe, tabellenAufgabe, lueckenRechnung, kurzAntwort
+     Benutzereingaben kommen nur als textContent ins DOM, nie als HTML.
+     ========================================================================== */
+
+  const STUFEN = { 1: "Aufwärmen", 2: "Prüfungsniveau", 3: "Knacknuss" };
+
+  // Kopf eines Übungsbausteins; ohne «stufe» genau wie bisher
+  function kopfHtml(ueberzeile, cfg) {
+    const titel = cfg.titel ? "<h3>" + cfg.titel + "</h3>" : "";
+    const stufe = STUFEN[cfg.stufe] ? '<span class="stufe stufe-' + cfg.stufe + '">' + STUFEN[cfg.stufe] + "</span>" : "";
+    if (!stufe) return '<div class="uebung-kopf"><span class="eyebrow">' + ueberzeile + "</span>" + titel + "</div>";
+    return '<div class="uebung-kopf"><span class="uebung-marken"><span class="eyebrow">' + ueberzeile + "</span>" + stufe + "</span>" + titel + "</div>";
+  }
+
+  // Tipps und Lösungsweg wie bei zahlAufgabe. Gibt { rat(), zuruecksetzen() } zurück.
+  function hilfenEinbauen(el, hinweise, weg, feld) {
+    const hilfen = erzeugen("div", "row za-hilfen");
+    const tipps = erzeugen("ul", "tipps");
+    tipps.setAttribute("aria-label", "Tipps");
+    const wegListe = erzeugen("ol", "loesungsweg");
+    wegListe.setAttribute("aria-label", "Lösungsweg");
+    wegListe.tabIndex = -1;
+    const ansage = ansageRegion();
+    el.append(hilfen, tipps, wegListe, ansage);
+
+    const bTipp = knopf("");
+    const bWeg = knopf("Lösungsweg: nächster Schritt");
+    const bAlles = knopf("Ganzer Lösungsweg");
+    if (hinweise.length) hilfen.appendChild(bTipp);
+    if (weg.length) hilfen.append(bWeg, bAlles);
+    if (!hinweise.length && !weg.length) hilfen.hidden = true;
+    let tippsGezeigt = 0, schritteGezeigt = 0;
+
+    function tippKnopf() {
+      bTipp.textContent = tippsGezeigt < hinweise.length
+        ? "Tipp anzeigen (" + tippsGezeigt + " / " + hinweise.length + ")"
+        : "Alle Tipps gezeigt";
+      setzeAktiv(bTipp, tippsGezeigt < hinweise.length, [bWeg, feld]);
+    }
+    function wegKnoepfe() {
+      const offen = schritteGezeigt < weg.length;
+      if (!offen && (document.activeElement === bWeg || document.activeElement === bAlles)) wegListe.focus();
+      bWeg.disabled = !offen;
+      bAlles.disabled = !offen;
+    }
+    function schrittZeigen() {
+      const li = erzeugen("li", null, weg[schritteGezeigt]);
+      wegListe.appendChild(li);
+      schritteGezeigt++;
+      formeln(li);
+    }
+    bTipp.addEventListener("click", () => {
+      if (tippsGezeigt >= hinweise.length) return;
+      const li = erzeugen("li", null, hinweise[tippsGezeigt]);
+      tipps.appendChild(li);
+      tippsGezeigt++;
+      formeln(li);
+      ansage.textContent = "Tipp " + tippsGezeigt + " von " + hinweise.length + " angezeigt.";
+      tippKnopf();
+    });
+    bWeg.addEventListener("click", () => {
+      if (schritteGezeigt >= weg.length) return;
+      schrittZeigen();
+      ansage.textContent = "Schritt " + schritteGezeigt + " von " + weg.length + " des Lösungswegs aufgedeckt.";
+      wegKnoepfe();
+    });
+    bAlles.addEventListener("click", () => {
+      while (schritteGezeigt < weg.length) schrittZeigen();
+      ansage.textContent = "Ganzer Lösungsweg aufgedeckt.";
+      wegKnoepfe();
+    });
+    tippKnopf();
+    return {
+      rat() {
+        return tippsGezeigt < hinweise.length ? " Hol dir einen Tipp." : weg.length ? " Schau dir den Lösungsweg an." : "";
+      },
+      zuruecksetzen() {
+        tipps.innerHTML = "";
+        wegListe.innerHTML = "";
+        tippsGezeigt = 0;
+        schritteGezeigt = 0;
+        tippKnopf();
+        wegKnoepfe();
+      },
+    };
+  }
+
+  // Rückmeldung nur als Text (enthält Benutzereingaben)
+  function textMelden(p, art, text) {
+    p.className = "rueckmeldung " + art;
+    p.textContent = text;
+  }
+
+  /* ---------- Symbolleiste (Einfügen an der Cursorposition) ---------- */
+
+  const SYMBOL_NAMEN = {
+    "¬": "nicht", "∧": "und", "∨": "oder", "→": "wenn, dann", "↔": "genau dann, wenn", "∀": "für alle", "∃": "es gibt",
+    "(": "Klammer auf", ")": "Klammer zu", "⊤": "wahr", "⊥": "falsch", "{": "Mengenklammer auf", "}": "Mengenklammer zu",
+    ",": "Komma", "∅": "leere Menge", "□": "leere Klausel", "μ": "my", "σ": "sigma", "≤": "kleiner gleich", "≥": "grösser gleich",
+    "≠": "ungleich", "<": "kleiner", ">": "grösser", "=": "gleich",
+  };
+
+  function symbolLeiste(feld, symbole) {
+    const leiste = erzeugen("div", "symbolleiste");
+    leiste.setAttribute("role", "toolbar");
+    leiste.setAttribute("aria-label", "Symbole einfügen");
+    leiste.setAttribute("aria-controls", feld.id);
+    const knoepfe = symbole.map((s, k) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "sym";
+      b.textContent = s;
+      b.tabIndex = k === 0 ? 0 : -1;
+      b.setAttribute("aria-label", (SYMBOL_NAMEN[s] || s) + " (" + s + ") einfügen");
+      // Maus und Finger: Fokus und Markierung im Feld lassen
+      b.addEventListener("mousedown", (e) => e.preventDefault());
+      b.addEventListener("click", () => {
+        const start = typeof feld.selectionStart === "number" ? feld.selectionStart : feld.value.length;
+        const ende = typeof feld.selectionEnd === "number" ? feld.selectionEnd : start;
+        feld.focus();
+        feld.setRangeText(s, start, ende, "end");
+        feld.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      b.addEventListener("keydown", (e) => {
+        let ziel = -1;
+        if (e.key === "ArrowRight") ziel = (k + 1) % symbole.length;
+        else if (e.key === "ArrowLeft") ziel = (k - 1 + symbole.length) % symbole.length;
+        else if (e.key === "Home") ziel = 0;
+        else if (e.key === "End") ziel = symbole.length - 1;
+        if (ziel < 0) return;
+        e.preventDefault();
+        knoepfe.forEach((x, j) => { x.tabIndex = j === ziel ? 0 : -1; });
+        knoepfe[ziel].focus();
+      });
+      leiste.appendChild(b);
+      return b;
+    });
+    return leiste;
+  }
+
+  /* ---------- Baustein: Formel eintippen ---------- */
+
+  const FORMEL_ERSATZ = [
+    [/<->|<=>|<→/g, "↔"], [/->|=>/g, "→"], [/[!~]/g, "¬"], [/¬=/g, "≠"], [/&&?|\/\\/g, "∧"], [/\|\|?|\\\//g, "∨"],
+    [/∧∧/g, "∧"], [/∨∨/g, "∨"],
+  ];
+  const asciiErsetzen = (t) => FORMEL_ERSATZ.reduce((s, [m, z]) => s.replace(m, z), t);
+
+  // Formel als Spans mit Farbcode (nur textContent)
+  function formelDom(baum) {
+    const box = erzeugen("span", "m fa-formel");
+    const KLASSE = { op: "op", q: "q", v: "v", c: "c", fn: "fn", p: "p", a: "fa-atom", k: "q" };
+    formelTeile(baum).forEach(([text, art]) => {
+      if (!art) { box.appendChild(document.createTextNode(text)); return; }
+      const s = document.createElement("span");
+      s.className = KLASSE[art] || "";
+      s.textContent = art === "op" ? text.trim() : text;
+      box.appendChild(s);
+    });
+    return box;
+  }
+
+  function formelAufgabe(el, cfg) {
+    el = elementHolen(el, "formelAufgabe");
+    if (!el) return null;
+    cfg = cfg || {};
+    const modus = cfg.modus === "muster" ? "muster" : "aequivalent";
+    const roh = [].concat(cfg.loesungen || [], cfg.loesung !== undefined ? [cfg.loesung] : []).filter((x) => typeof x === "string");
+    if (!roh.length) {
+      console.error("[Lernpfad] formelAufgabe: «loesung» oder «loesungen» (Formel als Text) ist Pflicht.");
+      return null;
+    }
+    const loesungen = [];
+    for (const r of roh) {
+      const g = formelLesen(r);
+      if (!g.ok) {
+        console.error("[Lernpfad] formelAufgabe: Lösung «" + r + "» ist nicht lesbar: " + g.fehler);
+        return null;
+      }
+      loesungen.push(g.baum);
+    }
+    const form = cfg.form ? String(cfg.form).toLowerCase() : "";
+    if (form && !FORM_NAMEN[form]) {
+      console.error("[Lernpfad] formelAufgabe: «form» muss knf, dnf, nnf oder horn sein.");
+      return null;
+    }
+    if (modus === "aequivalent" && !istAussagenlogisch(loesungen[0])) {
+      console.error("[Lernpfad] formelAufgabe: Modus «aequivalent» nur für Aussagenlogik. Für Quantoren modus: \"muster\".");
+      return null;
+    }
+    const symbole = Array.isArray(cfg.symbole) ? cfg.symbole
+      : modus === "muster" ? ["¬", "∧", "∨", "→", "↔", "∀", "∃", "(", ")", ","] : ["¬", "∧", "∨", "→", "↔", "(", ")", "⊤", "⊥"];
+    const hinweise = cfg.hinweise || [];
+    const weg = cfg.loesungsweg || [];
+    const id = neueId("fa");
+
+    el.innerHTML = "";
+    el.classList.add("card", "stack", "uebung", "eingabe", "formel-aufgabe");
+    el.innerHTML =
+      kopfHtml("Übung · Formel", cfg) +
+      (cfg.frage ? '<div class="za-frage">' + cfg.frage + "</div>" : "") +
+      '<form class="fa-form" novalidate>' +
+      '<label for="' + id + '">Deine Formel</label>' +
+      '<div class="fa-zeile"><input id="' + id + '" class="formel-feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"' +
+      ' aria-describedby="' + id + '-hilfe ' + id + '-fb">' +
+      '<button type="submit" class="btn primary">Prüfen</button></div></form>' +
+      '<p class="hint" id="' + id + '-hilfe">Tastatur: ! oder ~ für ¬, &amp; für ∧, | für ∨, -&gt; für →, &lt;-&gt; für ↔' +
+      (modus === "muster" ? ". ∀ und ∃ über die Knöpfe, Prädikate wie P(x, y)." : ".") + "</p>" +
+      '<div class="fa-vorschau"><span class="slabel">So lese ich deine Formel</span><div class="fa-anzeige"></div></div>' +
+      '<p class="rueckmeldung" id="' + id + '-fb" aria-live="polite"></p>';
+
+    const form_ = $(".fa-form", el);
+    const feld = $(".formel-feld", el);
+    const anzeige = $(".fa-anzeige", el);
+    const rm = $(".rueckmeldung", el);
+    if (symbole.length) form_.after(symbolLeiste(feld, symbole));
+    const hilfe = hilfenEinbauen(el, hinweise, weg, feld);
+
+    function vorschau() {
+      anzeige.textContent = "";
+      const t = feld.value.trim();
+      if (!t) { anzeige.appendChild(erzeugen("span", "platzhalter", "noch leer")); return null; }
+      const g = formelLesen(t);
+      if (!g.ok) { anzeige.appendChild(erzeugen("span", "platzhalter", "noch keine vollständige Formel")); return g; }
+      anzeige.appendChild(formelDom(g.baum));
+      return g;
+    }
+
+    feld.addEventListener("input", (e) => {
+      if (feld.getAttribute("aria-invalid")) feld.removeAttribute("aria-invalid");
+      feld.classList.remove("richtig");
+      if (cfg.ersetzen !== false && (!e.inputType || e.inputType.indexOf("insert") === 0)) {
+        const pos = feld.selectionStart;
+        const vorne = asciiErsetzen(feld.value.slice(0, pos));
+        const neu = vorne + asciiErsetzen(feld.value.slice(pos));
+        if (neu !== feld.value) {
+          feld.value = neu;
+          feld.setSelectionRange(vorne.length, vorne.length);
+        }
+      }
+      vorschau();
+    });
+
+    function gegenbeispielText(gb) {
+      const bel = Object.keys(gb.belegung).sort(sortiertDeutsch).map((v) => v + " = " + (gb.belegung[v] ? 1 : 0)).join(", ");
+      return " Gegenbeispiel: Bei " + (bel || "jeder Belegung") + " ergibt deine Formel " + (gb.wertA ? 1 : 0) + ", die gesuchte " + (gb.wertB ? 1 : 0) + ".";
+    }
+
+    form_.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const g = vorschau();
+      feld.classList.remove("richtig");
+      if (!g) {
+        feld.setAttribute("aria-invalid", "true");
+        textMelden(rm, "leer", "Tipp zuerst eine Formel ein.");
+        return;
+      }
+      if (!g.ok) {
+        feld.setAttribute("aria-invalid", "true");
+        textMelden(rm, "leer", "Die Formel ist noch nicht lesbar: " + g.fehler);
+        if (typeof g.stelle === "number") feld.setSelectionRange(g.stelle, g.stelle);
+        return;
+      }
+      let ok = false, text;
+      if (modus === "aequivalent") {
+        if (!istAussagenlogisch(g.baum)) {
+          feld.setAttribute("aria-invalid", "true");
+          textMelden(rm, "leer", "Hier sind nur Aussagenvariablen, Junktoren, ⊤ und ⊥ gefragt, keine Quantoren oder Prädikate mit Argumenten.");
+          return;
+        }
+        let v;
+        try { v = aequivalent(g.baum, loesungen[0]); } catch (fehler) {
+          textMelden(rm, "leer", "Deine Formel hat zu viele verschiedene Variablen.");
+          return;
+        }
+        const f = form ? formPruefen(g.baum, form) : { ok: true };
+        if (v.gleich && f.ok) {
+          ok = true;
+          text = "✓ Richtig. Deine Formel ist gleichwertig zur gesuchten" + (form ? " und in " + FORM_NAMEN[form] + "." : ".");
+        } else if (v.gleich) {
+          text = "✗ Gleichwertig, aber noch nicht in " + FORM_NAMEN[form] + ". " + f.grund;
+        } else {
+          text = "✗ Das stimmt noch nicht." + (cfg.gegenbeispiel === false ? "" : gegenbeispielText(v.gegenbeispiel)) + hilfe.rat();
+        }
+      } else {
+        const v = musterVergleichen(g.baum, loesungen);
+        if (v.gleich) { ok = true; text = "✓ Richtig."; }
+        else text = "✗ Das stimmt noch nicht." + (v.hinweis ? " " + v.hinweis : "") + hilfe.rat();
+      }
+      if (ok) { feld.removeAttribute("aria-invalid"); feld.classList.add("richtig"); }
+      else feld.setAttribute("aria-invalid", "true");
+      textMelden(rm, ok ? "ok" : "bad", text);
+    });
+
+    vorschau();
+    formeln(el);
+    return {
+      pruefen: () => form_.requestSubmit ? form_.requestSubmit() : form_.dispatchEvent(new Event("submit", { cancelable: true })),
+      zuruecksetzen() {
+        feld.value = "";
+        feld.removeAttribute("aria-invalid");
+        feld.classList.remove("richtig");
+        textMelden(rm, "", "");
+        hilfe.zuruecksetzen();
+        vorschau();
+      },
+    };
+  }
+
+  /* ---------- Baustein: Tabelle ausfüllen ---------- */
+
+  // Zelle lesen: Text/Zahl = vorgegeben (HTML), Objekt mit «antwort» = Eingabe
+  function zellePlan(z) {
+    if (z && typeof z === "object" && !Array.isArray(z) && z.antwort !== undefined) {
+      const liste = Array.isArray(z.antwort) ? z.antwort : [z.antwort];
+      const typ = z.typ === "text" || z.typ === "zahl" ? z.typ : liste.every((x) => typeof x === "number") ? "zahl" : "text";
+      const soll = typ === "zahl" ? liste.filter((x) => typeof x === "number" && Number.isFinite(x)) : liste.map(String);
+      if (!soll.length) return null;
+      return { eingabe: true, typ: typ, soll: soll, toleranz: z.toleranz, anzeige: z.anzeige };
+    }
+    if (z && typeof z === "object" && !Array.isArray(z)) return { eingabe: false, html: String(z.html === undefined ? "" : z.html), kopf: !!z.kopf };
+    return { eingabe: false, html: z === undefined || z === null ? "" : String(z) };
+  }
+
+  const formelLos = (html) => ohneTags(html).replace(/\$|\\[()[\]]/g, "").trim();
+
+  function tabellenAufgabe(el, cfg) {
+    el = elementHolen(el, "tabellenAufgabe");
+    if (!el) return null;
+    cfg = cfg || {};
+    const kopfZeilen = !cfg.kopf ? [] : Array.isArray(cfg.kopf[0]) ? cfg.kopf : [cfg.kopf];
+    const zeilen = cfg.zeilen || [];
+    if (!zeilen.length) {
+      console.error("[Lernpfad] tabellenAufgabe: «zeilen» fehlt.");
+      return null;
+    }
+    const plaene = zeilen.map((z, r) => (Array.isArray(z) ? z : []).map((c, k) => {
+      const p = zellePlan(c);
+      if (!p) console.error("[Lernpfad] tabellenAufgabe: Zelle " + (r + 1) + "/" + (k + 1) + " hat keine gültige «antwort».");
+      return p || { eingabe: false, html: "" };
+    }));
+    const anzahl = plaene.reduce((s, z) => s + z.filter((p) => p.eingabe).length, 0);
+    if (!anzahl) {
+      console.error("[Lernpfad] tabellenAufgabe: keine Eingabezelle ({ antwort: … }).");
+      return null;
+    }
+    const spaltenName = (k) => {
+      const letzte = kopfZeilen[kopfZeilen.length - 1];
+      return letzte && letzte[k] !== undefined ? formelLos(String(letzte[k])) : "Spalte " + (k + 1);
+    };
+    const hinweise = cfg.hinweise || [];
+    const weg = cfg.loesungsweg || [];
+    const id = neueId("tb");
+
+    el.innerHTML = "";
+    el.classList.add("card", "stack", "uebung", "eingabe", "tabellen-aufgabe");
+    el.innerHTML =
+      kopfHtml("Übung · Tabelle", cfg) +
+      (cfg.frage ? '<div class="za-frage">' + cfg.frage + "</div>" : "") +
+      '<p class="hint">Füll die leeren Felder aus und drück «Prüfen». ' +
+      (plaene.some((z) => z.some((p) => p.eingabe && p.typ === "zahl")) ? "Zahlen mit Punkt oder Komma, Brüche wie 1/4 gehen auch." : "") + "</p>";
+
+    const box = erzeugen("div", "tablebox tb-box");
+    const tab = erzeugen("table", "tabelle tb-tabelle");
+    if (cfg.beschriftung) tab.appendChild(erzeugen("caption", null, cfg.beschriftung));
+    if (kopfZeilen.length) {
+      const thead = document.createElement("thead");
+      kopfZeilen.forEach((reihe) => {
+        const tr = document.createElement("tr");
+        reihe.forEach((h) => {
+          const th = erzeugen("th", null, String(h));
+          th.scope = "col";
+          tr.appendChild(th);
+        });
+        thead.appendChild(tr);
+      });
+      tab.appendChild(thead);
+    }
+    const tbody = document.createElement("tbody");
+    const felder = [];
+    plaene.forEach((reihe, r) => {
+      const tr = document.createElement("tr");
+      const zeilenName = cfg.zeilenKopf && reihe[0] && !reihe[0].eingabe ? formelLos(reihe[0].html) : "";
+      reihe.forEach((p, k) => {
+        if (!p.eingabe) {
+          const kopfZelle = (cfg.zeilenKopf && k === 0) || p.kopf;
+          const c = erzeugen(kopfZelle ? "th" : "td", null, p.html);
+          if (kopfZelle) c.scope = "row";
+          tr.appendChild(c);
+          return;
+        }
+        const td = erzeugen("td", "tb-zelle");
+        const fid = id + "-" + r + "-" + k;
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.id = fid;
+        inp.className = "tb-feld";
+        inp.autocomplete = "off";
+        inp.spellcheck = false;
+        if (p.typ === "zahl") inp.inputMode = p.soll.some((x) => x < 0) ? "text" : "decimal";
+        inp.setAttribute("aria-label", (zeilenName ? zeilenName : "Zeile " + (r + 1)) + ", " + spaltenName(k));
+        const marke = erzeugen("span", "marke");
+        marke.setAttribute("aria-hidden", "true");
+        const status = erzeugen("span", "sr-only");
+        status.id = fid + "-status";
+        inp.setAttribute("aria-describedby", status.id);
+        td.append(inp, marke, status);
+        tr.appendChild(td);
+        const eintrag = { p: p, td: td, inp: inp, marke: marke, status: status };
+        inp.addEventListener("input", () => zelleLeeren(eintrag));
+        felder.push(eintrag);
+      });
+      tbody.appendChild(tr);
+    });
+    tab.appendChild(tbody);
+    box.appendChild(tab);
+    const reihe = erzeugen("div", "row");
+    const bPruefen = knopf("Prüfen", "primary");
+    const bLoesung = knopf("Lösung zeigen");
+    const bReset = knopf("Zurücksetzen");
+    reihe.append(bPruefen, bLoesung, bReset);
+    const stand = erzeugen("p", "score tb-stand");
+    stand.setAttribute("aria-live", "polite");
+    el.append(box, reihe, stand);
+    const hilfe = hilfenEinbauen(el, hinweise, weg, bPruefen);
+
+    function zelleLeeren(f) {
+      f.td.classList.remove("richtig", "falsch", "gezeigt");
+      f.inp.removeAttribute("aria-invalid");
+      f.marke.textContent = "";
+      f.status.textContent = "";
+    }
+    function zelleRichtig(f) {
+      const wert = f.inp.value;
+      if (!wert.trim()) return null;
+      if (f.p.typ === "zahl") return zahlBewerten(wert, f.p.soll, f.p.toleranz).art === "ok";
+      const n = textNormal(wert);
+      return f.p.soll.some((s) => textNormal(s) === n);
+    }
+    function loesungText(p) {
+      if (p.anzeige !== undefined) return String(p.anzeige);
+      return p.typ === "zahl" ? zahlText(p.soll[0], 6) : p.soll[0];
+    }
+
+    bPruefen.addEventListener("click", () => {
+      let richtig = 0, leer = 0;
+      felder.forEach((f) => {
+        zelleLeeren(f);
+        const ok = f.inp.readOnly ? null : zelleRichtig(f);
+        if (f.inp.readOnly) { f.td.classList.add("gezeigt"); f.status.textContent = "Lösung eingetragen"; return; }
+        if (ok === null) { leer++; f.marke.textContent = "–"; f.status.textContent = "leer"; return; }
+        if (ok) { richtig++; f.td.classList.add("richtig"); f.marke.textContent = "✓"; f.status.textContent = "richtig"; }
+        else { f.td.classList.add("falsch"); f.inp.setAttribute("aria-invalid", "true"); f.marke.textContent = "✗"; f.status.textContent = "falsch"; }
+      });
+      stand.textContent = richtig + " von " + anzahl + " richtig" + (leer ? ", " + leer + " leer" : "") +
+        (richtig === anzahl ? " · alles richtig" : richtig + leer < anzahl ? "." + hilfe.rat() : ".");
+    });
+    bLoesung.addEventListener("click", () => {
+      let vorher = 0;
+      felder.forEach((f) => {
+        const ok = f.inp.readOnly ? false : zelleRichtig(f);
+        if (ok) { vorher++; return; }
+        zelleLeeren(f);
+        f.inp.value = loesungText(f.p);
+        f.inp.readOnly = true;
+        f.td.classList.add("gezeigt");
+        f.status.textContent = "Lösung eingetragen";
+      });
+      stand.textContent = "Lösung eingetragen. Selbst richtig: " + vorher + " von " + anzahl + ".";
+    });
+    bReset.addEventListener("click", () => {
+      felder.forEach((f) => { zelleLeeren(f); f.inp.value = ""; f.inp.readOnly = false; });
+      stand.textContent = "Zurückgesetzt.";
+      hilfe.zuruecksetzen();
+    });
+    formeln(el);
+    return { pruefen: () => bPruefen.click(), loesungZeigen: () => bLoesung.click(), zuruecksetzen: () => bReset.click() };
+  }
+
+  /* ---------- Baustein: Rechenweg mit Lücken ---------- */
+
+  function lueckenRechnung(el, cfg) {
+    el = elementHolen(el, "lueckenRechnung");
+    if (!el) return null;
+    cfg = cfg || {};
+    const schritte = (cfg.schritte || []).map((s, k) => {
+      const soll = (Array.isArray(s.antwort) ? s.antwort : [s.antwort]).filter((x) => typeof x === "number" && Number.isFinite(x));
+      if (!soll.length) console.error("[Lernpfad] lueckenRechnung: Schritt " + (k + 1) + " braucht eine Zahl als «antwort».");
+      return Object.assign({}, s, { soll: soll });
+    });
+    if (!schritte.length || schritte.some((s) => !s.soll.length)) {
+      if (!schritte.length) console.error("[Lernpfad] lueckenRechnung: «schritte» fehlt.");
+      return null;
+    }
+    const id = neueId("lr");
+    el.innerHTML = "";
+    el.classList.add("card", "stack", "uebung", "eingabe", "luecken-rechnung");
+    el.innerHTML =
+      kopfHtml("Übung · Rechenweg", cfg) +
+      (cfg.aufgabe ? '<div class="za-frage">' + cfg.aufgabe + "</div>" : "") +
+      '<p class="hint">Rechne Schritt für Schritt. Der nächste Schritt öffnet sich, sobald der vorherige stimmt oder aufgedeckt ist.</p>';
+    const ol = erzeugen("ol", "lr-schritte");
+    const fuss = erzeugen("div", "stepbar");
+    const bReset = knopf("Zurücksetzen");
+    const zahl = erzeugen("span", "stepcount");
+    fuss.append(bReset, zahl);
+    const fazit = erzeugen("p", "score lr-fazit");
+    fazit.tabIndex = -1;
+    fazit.hidden = true;
+    const ansage = ansageRegion();
+    el.append(ol, fazit, fuss, ansage);
+
+    // Zustand je Schritt: "offen" | "richtig" | "folgerichtig" | "aufgedeckt" | "weiter" (falsch, mit eigenem Wert weiter)
+    const zustand = schritte.map(() => "offen");
+    const werte = schritte.map(() => NaN);
+    let sichtbar = 1;
+
+    const teile = schritte.map((s, k) => {
+      const fid = id + "-" + k;
+      const li = erzeugen("li", "lr-schritt");
+      li.innerHTML =
+        '<label class="lr-label" for="' + fid + '">' + (s.label || "Schritt " + (k + 1)) + "</label>" +
+        '<form class="za-form row lr-form" novalidate>' +
+        '<input id="' + fid + '" class="zahl-feld" type="text" inputmode="' + (s.soll[0] < 0 ? "text" : "decimal") +
+        '" autocomplete="off" spellcheck="false" aria-describedby="' + fid + '-fb">' +
+        (s.einheit ? '<span class="einheit">' + s.einheit + "</span>" : "") +
+        '<button type="submit" class="btn primary">Prüfen</button></form>' +
+        '<div class="row lr-knoepfe"></div>' +
+        '<p class="rueckmeldung" id="' + fid + '-fb" aria-live="polite"></p>' +
+        '<div class="note tipp lr-tipp" hidden></div>' +
+        '<div class="explain lr-erkl" hidden></div>';
+      const t = {
+        li: li,
+        form: $("form", li),
+        feld: $("input", li),
+        pruefen: $('button[type="submit"]', li),
+        knoepfe: $(".lr-knoepfe", li),
+        rm: $(".rueckmeldung", li),
+        tipp: $(".lr-tipp", li),
+        erkl: $(".lr-erkl", li),
+        bTipp: s.hinweis ? knopf("Tipp") : null,
+        bAuf: knopf("Aufdecken"),
+        bWeiter: knopf("Mit meinem Wert weiterrechnen"),
+      };
+      if (t.bTipp) t.knoepfe.appendChild(t.bTipp);
+      t.knoepfe.append(t.bAuf, t.bWeiter);
+      t.bWeiter.hidden = true;
+      li.hidden = k > 0;
+      ol.appendChild(li);
+      return t;
+    });
+
+    function zaehlen() {
+      zahl.textContent = "Schritt " + Math.min(sichtbar, schritte.length) + " von " + schritte.length;
+    }
+    function falscherVorgaenger(k) {
+      for (let j = 0; j < k; j++) if (zustand[j] === "weiter") return j;
+      return -1;
+    }
+    // Schritt k abschliessen und den nächsten öffnen; Fokus wandert mit
+    function abschliessen(k, neuerZustand, wert) {
+      const t = teile[k];
+      zustand[k] = neuerZustand;
+      werte[k] = wert;
+      t.li.classList.add("lr-" + neuerZustand);
+      t.feld.readOnly = true;
+      const hatteFokus = t.li.contains(document.activeElement);
+      if (schritte[k].erklaerung) {
+        t.erkl.innerHTML = schritte[k].erklaerung;
+        t.erkl.hidden = false;
+        formeln(t.erkl);
+      }
+      if (k + 1 < schritte.length) {
+        sichtbar = Math.max(sichtbar, k + 2);
+        teile[k + 1].li.hidden = false;
+        formeln(teile[k + 1].li);
+        if (hatteFokus) teile[k + 1].feld.focus();
+        ansage.textContent = "Schritt " + (k + 2) + " von " + schritte.length + " ist offen.";
+      } else {
+        const z = (x) => zustand.filter((y) => y === x).length;
+        fazit.textContent = "Fertig: " + z("richtig") + " von " + schritte.length + " selbst richtig" +
+          (z("folgerichtig") ? ", " + z("folgerichtig") + " folgerichtig" : "") +
+          (z("weiter") ? ", " + z("weiter") + " falsch" : "") +
+          (z("aufgedeckt") ? ", " + z("aufgedeckt") + " aufgedeckt" : "") + ".";
+        fazit.hidden = false;
+        if (hatteFokus) fazit.focus();
+        ansage.textContent = fazit.textContent;
+      }
+      t.pruefen.disabled = true;
+      t.knoepfe.hidden = true;
+      zaehlen();
+    }
+
+    schritte.forEach((s, k) => {
+      const t = teile[k];
+      t.form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (zustand[k] !== "offen") return;
+        t.bWeiter.hidden = true;
+        const urteil = zahlBewerten(t.feld.value, s.soll, s.toleranz);
+        if (urteil.art === "leer") {
+          t.feld.setAttribute("aria-invalid", "true");
+          textMelden(t.rm, "leer", ZAHL_TEXTE.leer);
+          return;
+        }
+        if (urteil.art === "ok") {
+          t.feld.removeAttribute("aria-invalid");
+          t.feld.classList.add("richtig");
+          textMelden(t.rm, "ok", "✓ Richtig.");
+          abschliessen(k, "richtig", urteil.wert);
+          return;
+        }
+        // Folgefehler: mit dem eigenen falschen Vorwert richtig weitergerechnet?
+        const vorher = falscherVorgaenger(k);
+        if (vorher >= 0 && typeof s.folgefehler === "function") {
+          let erwartet = NaN;
+          try { erwartet = Number(s.folgefehler(werte.slice(0, k))); } catch (fehler) {
+            console.error("[Lernpfad] lueckenRechnung: folgefehler von Schritt " + (k + 1) + " ist fehlerhaft:", fehler);
+          }
+          if (Number.isFinite(erwartet) && zahlBewerten(t.feld.value, [erwartet], s.toleranz).art === "ok") {
+            t.feld.removeAttribute("aria-invalid");
+            textMelden(t.rm, "ok", "✓ Folgerichtig gerechnet, aber Schritt " + (vorher + 1) + " war falsch. Richtig wäre hier " +
+              (s.anzeige || zahlText(s.soll[0], 6)) + ".");
+            abschliessen(k, "folgerichtig", urteil.wert);
+            return;
+          }
+        }
+        t.feld.setAttribute("aria-invalid", "true");
+        const naechster = schritte[k + 1];
+        const weiterGeht = !!(naechster && typeof naechster.folgefehler === "function");
+        const rat = t.bTipp && t.tipp.hidden ? " Hol dir den Tipp." : " Du kannst den Schritt auch aufdecken.";
+        textMelden(t.rm, "bad", ZAHL_TEXTE[urteil.art] + (urteil.art === "falsch" ? rat : "") +
+          (weiterGeht ? " Oder rechne mit deinem Wert weiter." : ""));
+        if (weiterGeht) {
+          t.bWeiter.hidden = false;
+          t.wertFalsch = urteil.wert;
+        }
+      });
+      t.feld.addEventListener("input", () => {
+        if (t.feld.getAttribute("aria-invalid")) t.feld.removeAttribute("aria-invalid");
+      });
+      if (t.bTipp) {
+        t.bTipp.addEventListener("click", () => {
+          t.tipp.innerHTML = "<p><b>Tipp:</b> " + s.hinweis + "</p>";
+          t.tipp.hidden = false;
+          formeln(t.tipp);
+          setzeAktiv(t.bTipp, false, [t.bAuf, t.feld]);
+          ansage.textContent = "Tipp zu Schritt " + (k + 1) + " angezeigt.";
+        });
+      }
+      t.bAuf.addEventListener("click", () => {
+        if (zustand[k] !== "offen") return;
+        t.feld.value = s.anzeige ? String(s.anzeige) : zahlText(s.soll[0], 6);
+        t.feld.removeAttribute("aria-invalid");
+        textMelden(t.rm, "leer", "Aufgedeckt: " + (s.anzeige || zahlText(s.soll[0], 6)) + (s.einheit ? " " + ohneTags(s.einheit) : "") + ".");
+        abschliessen(k, "aufgedeckt", s.soll[0]);
+      });
+      t.bWeiter.addEventListener("click", () => {
+        if (zustand[k] !== "offen" || !Number.isFinite(t.wertFalsch)) return;
+        textMelden(t.rm, "bad", "✗ Schritt " + (k + 1) + " bleibt falsch. Du rechnest mit deinem Wert " + zahlText(t.wertFalsch, 6) + " weiter.");
+        abschliessen(k, "weiter", t.wertFalsch);
+      });
+    });
+
+    bReset.addEventListener("click", () => {
+      zustand.fill("offen");
+      werte.fill(NaN);
+      sichtbar = 1;
+      teile.forEach((t, k) => {
+        t.li.className = "lr-schritt";
+        t.li.hidden = k > 0;
+        t.feld.value = "";
+        t.feld.readOnly = false;
+        t.feld.removeAttribute("aria-invalid");
+        t.feld.classList.remove("richtig");
+        t.pruefen.disabled = false;
+        t.knoepfe.hidden = false;
+        t.bWeiter.hidden = true;
+        if (t.bTipp) t.bTipp.disabled = false;
+        t.tipp.hidden = true;
+        t.erkl.hidden = true;
+        textMelden(t.rm, "", "");
+      });
+      fazit.hidden = true;
+      ansage.textContent = "Zurückgesetzt.";
+      zaehlen();
+    });
+    zaehlen();
+    formeln(el);
+    return { zuruecksetzen: () => bReset.click(), stand: () => zustand.slice() };
+  }
+
+  /* ---------- Baustein: Kurzantwort (Text, Menge, Hypothese) ---------- */
+
+  const KURZ = {
+    text: { ueberzeile: "Übung · Kurzantwort", symbole: [], format: "" },
+    menge: {
+      ueberzeile: "Übung · Menge",
+      symbole: ["{", "}", ",", "¬", "∅", "□"],
+      format: "Schreib die Menge mit geschweiften Klammern, zum Beispiel {1, 3, 5}. Reihenfolge egal. Für ¬ geht auch ! oder ~, die leere Menge als {} oder ∅.",
+    },
+    hypothese: {
+      ueberzeile: "Übung · Hypothesen",
+      symbole: ["μ", "σ", "≤", "≥", "≠", "<", ">", "="],
+      format: "Zum Beispiel H0: μ ≤ 50; H1: μ > 50. Statt ≤ geht auch <=, statt ≠ auch !=, statt μ auch mu.",
+    },
+  };
+
+  function kurzAntwort(el, cfg) {
+    el = elementHolen(el, "kurzAntwort");
+    if (!el) return null;
+    cfg = cfg || {};
+    const typ = KURZ[cfg.typ] ? cfg.typ : "text";
+    const roh = (Array.isArray(cfg.antwort) ? cfg.antwort : [cfg.antwort]).filter((x) => typeof x === "string" || typeof x === "number").map(String);
+    if (!roh.length) {
+      console.error("[Lernpfad] kurzAntwort: «antwort» ist Pflicht.");
+      return null;
+    }
+    const opt = { grossKlein: !!cfg.grossKlein };
+    let soll;
+    if (typ === "menge") soll = roh.map((r) => mengeLesen(r, opt));
+    else if (typ === "hypothese") soll = roh.map(hypotheseLesen);
+    else soll = roh.map((r) => ({ ok: true, wert: textNormal(r) }));
+    const kaputt = soll.findIndex((x) => !x.ok);
+    if (kaputt >= 0) {
+      console.error("[Lernpfad] kurzAntwort: Antwort «" + roh[kaputt] + "» ist nicht lesbar: " + soll[kaputt].fehler);
+      return null;
+    }
+    const art = KURZ[typ];
+    const symbole = Array.isArray(cfg.symbole) ? cfg.symbole : art.symbole;
+    const format = cfg.format !== undefined ? cfg.format : art.format;
+    const hinweise = cfg.hinweise || [];
+    const weg = cfg.loesungsweg || [];
+    const id = neueId("ka");
+
+    el.innerHTML = "";
+    el.classList.add("card", "stack", "uebung", "eingabe", "kurz-antwort");
+    el.innerHTML =
+      kopfHtml(art.ueberzeile, cfg) +
+      (cfg.frage ? '<div class="za-frage">' + cfg.frage + "</div>" : "") +
+      '<form class="fa-form" novalidate>' +
+      '<label for="' + id + '">Deine Antwort</label>' +
+      '<div class="fa-zeile"><input id="' + id + '" class="kurz-feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"' +
+      ' aria-describedby="' + (format ? id + "-hilfe " : "") + id + '-fb">' +
+      '<button type="submit" class="btn primary">Prüfen</button></div></form>' +
+      (format ? '<p class="hint" id="' + id + '-hilfe">' + format + "</p>" : "") +
+      '<p class="rueckmeldung" id="' + id + '-fb" aria-live="polite"></p>';
+    const form_ = $(".fa-form", el);
+    const feld = $(".kurz-feld", el);
+    const rm = $(".rueckmeldung", el);
+    if (symbole.length) form_.after(symbolLeiste(feld, symbole));
+    const hilfe = hilfenEinbauen(el, hinweise, weg, feld);
+
+    function bewerten(text) {
+      if (!text.trim()) return { art: "leer", text: "Gib zuerst eine Antwort ein." };
+      if (typ === "text") {
+        return soll.some((s) => s.wert === textNormal(text)) ? { art: "ok" } : { art: "bad", text: "" };
+      }
+      if (typ === "menge") {
+        const ist = mengeLesen(text, opt);
+        if (!ist.ok) return { art: "leer", text: ist.fehler };
+        if (soll.some((s) => s.wert === ist.wert)) return { art: "ok" };
+        const s0 = soll[0];
+        if (s0.kinder && !ist.kinder) return { art: "bad", text: "Gesucht ist eine Menge. Schreib sie mit geschweiften Klammern." };
+        if (s0.kinder && ist.kinder) {
+          const fehlen = s0.kinder.filter((x) => ist.kinder.indexOf(x) < 0).length;
+          const zuViel = ist.kinder.filter((x) => s0.kinder.indexOf(x) < 0).length;
+          const teile_ = [];
+          if (fehlen) teile_.push(fehlen === 1 ? "Ein Element fehlt" : fehlen + " Elemente fehlen");
+          if (zuViel) teile_.push(zuViel === 1 ? "eines ist zu viel" : zuViel + " sind zu viel");
+          if (teile_.length) {
+            let satz = teile_.join(", ") + ".";
+            satz = satz.charAt(0).toUpperCase() + satz.slice(1);
+            return { art: "bad", text: satz };
+          }
+        }
+        return { art: "bad", text: "" };
+      }
+      const ist = hypotheseLesen(text);
+      if (!ist.ok) return { art: "leer", text: ist.fehler };
+      for (const s of soll) {
+        const v = hypothesenVergleichen(ist.liste, s.liste);
+        if (v.gleich) return { art: "ok" };
+      }
+      return { art: "bad", text: hypothesenVergleichen(ist.liste, soll[0].liste).hinweis };
+    }
+
+    form_.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const u = bewerten(feld.value);
+      feld.classList.toggle("richtig", u.art === "ok");
+      if (u.art === "ok") {
+        feld.removeAttribute("aria-invalid");
+        textMelden(rm, "ok", "✓ Richtig.");
+        return;
+      }
+      feld.setAttribute("aria-invalid", "true");
+      if (u.art === "leer") textMelden(rm, "leer", u.text);
+      else textMelden(rm, "bad", "✗ Das stimmt noch nicht." + (u.text ? " " + u.text : "") + hilfe.rat());
+    });
+    feld.addEventListener("input", () => {
+      if (feld.getAttribute("aria-invalid")) feld.removeAttribute("aria-invalid");
+      feld.classList.remove("richtig");
+    });
+    formeln(el);
+    return {
+      zuruecksetzen() {
+        feld.value = "";
+        feld.removeAttribute("aria-invalid");
+        feld.classList.remove("richtig");
+        textMelden(rm, "", "");
+        hilfe.zuruecksetzen();
+      },
+    };
+  }
+
   /* ---------- Hilfsfunktion: Netzplan-Knoten ---------- */
 
   // Baut einen Knoten mit FA, Vorgang, FE / SA, Dauer, SE und Puffer. Rechnen tut die Station selbst.
@@ -1885,7 +3361,7 @@
   }
 
   window.Lernpfad = {
-    version: "1.1.0",
+    version: "1.2.0",
     formeln: formeln,
     verknuepfen: verknuepfen,
     sortierer: sortierer,
@@ -1898,11 +3374,16 @@
     auswahl: auswahl,
     reflexion: reflexion,
     matrix: matrix,
+    formelAufgabe: formelAufgabe,
+    tabellenAufgabe: tabellenAufgabe,
+    lueckenRechnung: lueckenRechnung,
+    kurzAntwort: kurzAntwort,
     netzplanKnoten: netzplanKnoten,
     fortschritt: fortschritt,
     zahlLesen: zahlLesen,
     zahlText: zahlText,
     makros: makros,
+    auswertung: AUSWERTUNG,
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
