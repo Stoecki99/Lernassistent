@@ -338,6 +338,10 @@ Alle Farben kommen aus Tokens auf `:root`. Hell und dunkel setzt `lernpfad.css` 
 
 Keine `fill="#…"`- oder `stroke="#…"`-Attribute. Wähle einen `viewBox` um 320 Einheiten Breite, dann bleibt die Schrift auf dem Handy lesbar.
 
+### 8.12 Code-Beispiele
+
+`<pre class="code" data-sprache="Dockerfile"><code>…</code></pre>`: Codeblock mit Überschrift aus `data-sprache`, scrollt seitlich in sich. Hervorhebung von Hand, nur mit diesen Klassen: `.k` Schlüsselwort, `.s` Zeichenkette, `.n` Zahl, `.c` Kommentar, `<mark>` für die Stelle, um die es gerade geht. Achtung: Innerhalb von `pre.code` sind `.k`, `.s`, `.n`, `.c` Code-Farben (`.c` hier nicht «Konstante»). `<` und `&` im Code als `&lt;` und `&amp;` schreiben. Inline-Code mit `<code>`. Formeln werden in `pre` und `code` nicht gesetzt (`$` in Shell-Code ist sicher).
+
 ## 9. JavaScript: window.Lernpfad
 
 Alle Bausteine nehmen als erstes Argument ein Element oder einen CSS-Selektor (`"#id"`), leeren es und füllen es neu. Sie funktionieren mehrfach pro Seite. Texte in Konfigurationen sind HTML und dürfen Formeln enthalten. Fehlerhafte Konfiguration meldet `[Lernpfad] …` in der Konsole und gibt `null` zurück, die Seite läuft weiter.
