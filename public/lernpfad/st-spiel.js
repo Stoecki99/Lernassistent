@@ -386,7 +386,7 @@
     const liste = o.figuren || [];
     const n = liste.length;
     liste.forEach((fg, i) => {
-      const a = typeof fg === "string" ? { art: fg } : fg;
+      const a = typeof fg === "string" ? { art: fg.split(":")[0], stimmung: fg.split(":")[1] } : fg;
       const x = n === 1 ? 300 : 60 + i * (480 / Math.max(1, n - 1));
       const s = a.groesse || 0.95;
       figs += '<g transform="translate(' + (x - 50 * s + (a.dx || 0)) + " " + (240 - 118 * s) + ") scale(" + s + ')">' + figurInhalt(a.art, a.stimmung) + "</g>";
@@ -769,8 +769,9 @@
     tf2t: { name: "Tit-for-Two-Tats (Geduldig)", kurz: "Geduldig", info: "Betrügt erst, wenn du zweimal hintereinander betrogen hast.",
       zug: (m, d) => (d.length >= 2 && d[d.length - 1] === "V" && d[d.length - 2] === "V" ? "V" : "K") },
     zufall: { name: "Würfel (zufällig)", kurz: "Würfel", info: "Wirft jede Runde eine Münze.", zug: (m, d, r) => (r() < 0.5 ? "K" : "V") },
-    pavlov: { name: "Pavlov (Gewinn: bleib, Verlust: wechsle)", kurz: "Pavlov", info: "Bleibt beim letzten Zug, wenn beide dasselbe taten; sonst wechselt er.",
-      zug: (m, d) => (!m.length ? "K" : m[m.length - 1] === d[d.length - 1] ? m[m.length - 1] : m[m.length - 1] === "K" ? "V" : "K") },
+    pavlov: { name: "Pavlov (Gewinn: bleib, Verlust: wechsle)", kurz: "Pavlov", info: "Gewinn: bleib, Verlust: wechsle. Heisst: ehrlich, wenn beide zuletzt dasselbe taten, sonst Betrug.",
+      // Gewinn (3 oder 5) heisst: bleib; Verlust (0 oder 1) heisst: wechsle. Ergibt: ehrlich, wenn beide zuletzt dasselbe taten.
+      zug: (m, d) => (!m.length ? "K" : m[m.length - 1] === d[d.length - 1] ? "K" : "V") },
     nachsichtig: { name: "Nachsichtiges Tit-for-Tat", kurz: "Nachsichtig", info: "Wie Tit-for-Tat, vergibt aber jeden zehnten Betrug.",
       zug: (m, d, r) => (!d.length ? "K" : d[d.length - 1] === "V" ? (r() < 0.1 ? "K" : "V") : "K") },
     misstrauisch: { name: "Misstrauisches Tit-for-Tat", kurz: "Misstrauisch", info: "Beginnt mit Betrug, macht dann den letzten Zug des anderen nach.",
