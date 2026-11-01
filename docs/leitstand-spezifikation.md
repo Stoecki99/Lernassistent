@@ -449,18 +449,35 @@ Kleines Szenario (`content/simulation/einfuehrung.json`, `kind: "intro"`), damit
 - **Auftrag:** Wolkenried stellt die jährliche Anmeldung von Hunden (Hundekontrolle, Gebühr) auf ein Online-Formular um.
 - **Zeit:** 1 Periode à 2 Wochen = 10 Tage = 20 Takte, Abschlussbericht am Ende (kein Gemeinderat, kein Phasentor).
 - **Personen:** Aylin (P03), Luca (P02), Jasmin (P07), Nadia (P06) mit denselben Werten wie im Ernstfall.
-- **Budget:** BAC CHF 14'960 (136 h × 110), Kredit CHF 16'500.
+- **Budget:** BAC CHF 12'320 (112 h × 110), Kredit CHF 15'500 (AP6, vorher 14'960 und 16'500).
 
 | ID | Name | Vorgänger | Aufwand h | Pers. | Dauer d | BAU | ENT | DAT | UX | KOM | FA | FE | GP |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| H1 | Auftakt und Ablauf klären | – | 16 | 2 | 1 | 3 | 0 | 1 | 1 | 3 | 0 | 1 | 0 |
-| H2 | Formular gestalten | H1 | 32 | 1 | 4 | 2 | 1 | 0 | 5 | 2 | 1 | 5 | 0 |
-| H3 | Formular und Zahlung einrichten | H1 | 32 | 2 | 2 | 1 | 3 | 3 | 1 | 0 | 1 | 3 | 2 |
-| H4 | Daten aus dem Hunderegister übernehmen | H1 | 16 | 1 | 2 | 3 | 0 | 5 | 0 | 0 | 1 | 3 | 2 |
-| H5 | Test mit Hundehaltenden | H2, H3, H4 | 24 | 2 | 1.5 | 3 | 2 | 2 | 3 | 2 | 5 | 6.5 | 0 |
-| H6 | Aufschalten und informieren | H5 | 16 | 2 | 1 | 2 | 1 | 1 | 1 | 5 | 6.5 | 7.5 | 0 |
+| H1 | Auftakt und Ablauf klären | – | 12 | 2 | 0.75 | 3 | 0 | 1 | 1 | 3 | 0 | 0.75 | 0 |
+| H2 | Formular gestalten | H1 | 32 | 1 | 4 | 2 | 1 | 0 | 5 | 2 | 0.75 | 4.75 | 0 |
+| H3 | Formular und Zahlung einrichten | H1 | 24 | 2 | 1.5 | 1 | 3 | 3 | 1 | 0 | 0.75 | 2.25 | 2.5 |
+| H4 | Daten aus dem Hunderegister übernehmen | H1 | 12 | 1 | 1.5 | 3 | 0 | 5 | 0 | 0 | 0.75 | 2.25 | 2.5 |
+| H5 | Test mit Hundehaltenden | H2, H3, H4 | 16 | 2 | 1 | 3 | 2 | 2 | 3 | 2 | 4.75 | 5.75 | 0 |
+| H6 | Aufschalten und informieren | H5 | 16 | 2 | 1 | 2 | 1 | 1 | 1 | 5 | 5.75 | 6.75 | 0 |
 
-Kritischer Pfad H1 → H2 → H5 → H6 = 7.5 Tage, Terminziel Tag 10.
+Kritischer Pfad H1 → H2 → H5 → H6 = 6.75 Tage, Terminziel Tag 10.
+
+**Abstimmung AP6 (31.10.2026).** Befund aus dem Browsertest: Prognose beim Start Tag 15.4, Abbruch an Tag 15, Qualitätsindex rund 20 %. Ursachen:
+
+1. *Plan nicht machbar.* Die alten Planwerte (136 h, Plan 7.5 Tage) setzten in H2 bis H4 vier Vollzeitstellen gleichzeitig voraus. Das Team hat zusammen 2.9 Stellen (Luca 100 %, Aylin 80 %, Jasmin 60 %, Nadia 50 %), und mit Lernkurve, Teamphase und Passung liefert es rund 18 effektive Stunden pro Tag. Selbst mit guter Besetzung endete der Lauf erst an Tag 11.5 bis 12.5 (Median 802 Punkte); eine Anfängerin mit Einzelbesetzung landete bei Tag 15 und mehr.
+2. *Reviews am Ende kurzer Vorgänge.* Ein Review läuft bei Fortschritt 1 und kostet auf kurzen Vorgängen einen Halbtag Nachlauf. Bei vier kritischen Vorgängen sind das bis 2 Tage. Am Rechenkern wird nichts geändert (Ernstfall abgestimmt); die kleineren Aufwände schaffen den nötigen Puffer.
+3. *Qualitätsindex.* Der Einführungslauf hat keine Tests; ohne Reviews bleibt jeder Fehler unentdeckt, und bei schlechter Passung (z. B. Nadia auf H3) sinkt der QI gegen 20 %. Die Formel bleibt; die Hinweise empfehlen jetzt 1 Review je Vorgang.
+4. *Hinweise zu allgemein.* HW01–HW04 nannten Regeln, aber keine Besetzung. Briefing und Hinweise geben jetzt konkrete Tipps (alle vier am Auftakt, H2 zu zweit mit Aylin und Nadia, Luca zuerst H4 und dann H3, Folgeaufgaben als Priorität B bis D, 1 Review je Vorgang).
+
+| Grösse | vorher | nachher |
+|---|---|---|
+| Σ Aufwand, BAC, Kredit | 136 h, CHF 14'960, CHF 16'500 | 112 h, CHF 12'320, CHF 15'500 |
+| Plan / Terminziel | 7.5 / 10 | 6.75 / 10 |
+| Roboter «gut» (Median 10 Startwerte) | Tag 11.5, 802 Punkte | Tag 9.5, 932 Punkte (★★★) |
+| Roboter «naiv» (Planpersonen nach Passung, ohne Pensum) | Tag 12.5, 758 Punkte | Tag 11.5, 816 Punkte (★★) |
+| Roboter «schlecht» | Abbruch Tag 15 | Abbruch Tag 15, rund 390 Punkte |
+
+Prüfung in `tests/simulation-balance.test.ts` (Abschnitt «Einführungslauf»): Roboter «gut» (`playIntroGut`, Besetzung `INTRO_BESETZUNG`) Median Endtag ≤ 10 und ≥ 680 Punkte; «naiv» (`playIntroNaiv`) ohne Abbruch, Median mindestens 80 Punkte tiefer und später fertig.
 
 **Ereignisse:** I01 T1 VM 🚪 Kick-off (wie E01, kürzer) · I02 T4 VM ☎ Jasmin 1 Tag krank · I03 T5 VM ✉ Zusatzwunsch der Gemeindeschreiberin «Robidog-Säcklein online bestellen» (Umfang, Änderungsantrag) · I04 Risiko «Export aus dem Hunderegister fehlerhaft» (W 3, A 2, Fenster 3–6, Massnahme «Testexport» 2 h Luca).
 
@@ -468,10 +485,10 @@ Kritischer Pfad H1 → H2 → H5 → H6 = 7.5 Tage, Terminziel Tag 10.
 
 | ID | Bedingung | Hinweis (Kurzfassung) |
 |---|---|---|
-| HW01 | Planung geöffnet | Jeder Vorgang braucht mindestens eine Person. Beginne mit dem kritischen Pfad (rot markiert). |
-| HW02 | erste Zuweisung | Priorität A arbeitet zuerst. Ist A blockiert, arbeitet die Person an B usw. |
-| HW03 | Person mit Pensum < 100 % zugewiesen | Achtung Pensum: Nadia arbeitet 50 %. Die Plandauer gilt für Vollzeit. |
-| HW04 | Passung einer Zuweisung < 0.8 | Das Profil passt schlecht. Eine Kollegin mit passendem Profil im selben Vorgang hilft (Kollegenhilfe). |
+| HW01 | Planung geöffnet | Jeder Vorgang braucht mindestens eine Person. Beginne mit dem kritischen Pfad H1 → H2 → H5 → H6; Teilzeitpersonen dort zu zweit (z. B. H2 mit Aylin und Nadia). |
+| HW02 | erste Zuweisung | Priorität A arbeitet zuerst. Ist A blockiert, arbeitet die Person an B usw. Folgeaufgaben (H5, H6) gleich als B bis D eintragen. |
+| HW03 | Team geöffnet | Achtung Pensum: Nadia 50 %, Jasmin 60 %, Aylin 80 %, Luca 100 %. Die Plandauer gilt für Vollzeit (Beispiel: 32 h dauern für Aylin allein 5 statt 4 Tage). |
+| HW04 | Vorgänge geöffnet | Passung unter 0.8: Kollegin mit passendem Profil hilft (Kollegenhilfe). 1 Review je Vorgang, sonst sinkt der QI unter 50 %. |
 | HW05 | Planung abgeschlossen | Zeit starten mit Leertaste oder ▶. Ereignisse halten die Zeit an. |
 | HW06 | erstes Ereignis | Lies den Text, wähle eine Option. Aufschieben geht, aber am Freitag entscheidet die Gemeindeschreiberin für dich. |
 | HW07 | erste Rückmeldung | Die Rückmeldung nennt das ICB-Element und die Station im Lernpfad. |

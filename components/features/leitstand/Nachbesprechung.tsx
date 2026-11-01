@@ -18,13 +18,18 @@ import { evCurves } from "./BudgetAnsicht"
 import type { FinishResponse } from "./api"
 
 const PARTS: Array<{ key: "termin" | "kosten" | "qualitaet" | "stakeholder" | "team" | "fuehrung"; label: string; max: number; text: string }> = [
-  { key: "termin", label: "Termin", max: 250, text: "Ende bis Tag 38 volle Punkte, danach Abzug je Tag." },
+  { key: "termin", label: "Termin", max: 250, text: "" }, // Text hängt vom Terminziel ab, siehe terminText
   { key: "kosten", label: "Kosten", max: 200, text: "Ist-Kosten gegen Budget (Nachträge zählen halb)." },
   { key: "qualitaet", label: "Qualität", max: 200, text: "Restmängel bei der Abnahme; 5 oder weniger gibt volle Punkte." },
   { key: "stakeholder", label: "Stakeholder", max: 150, text: "Zufriedenheit am Ende." },
   { key: "team", label: "Team", max: 100, text: "Mittlere Teammotivation über den ganzen Lauf." },
   { key: "fuehrung", label: "Führung", max: 100, text: "Ehrlichkeit der Berichte, Risiko-Index und Qualität der Entscheide." },
 ]
+
+/** Termin-Erklärung je Szenario (3.13): volle Punkte bis Ziel − 2 (Einführungslauf Ziel − 0.5) */
+function terminText(targetDay: number, intro: boolean): string {
+  return `Ende bis Tag ${intro ? targetDay - 0.5 : targetDay - 2} volle Punkte, danach Abzug je Tag.`
+}
 
 const KIND_ICON: Record<string, string> = {
   ereignis: "✉",
@@ -125,7 +130,7 @@ export default function Nachbesprechung({
               >
                 <span style={{ width: `${(result.score[p.key] / p.max) * 100}%` }} />
               </div>
-              <p className="hint">{p.text}</p>
+              <p className="hint">{p.key === "termin" ? terminText(scenario.calendar.targetDay, isIntro) : p.text}</p>
             </li>
           ))}
         </ul>

@@ -9,7 +9,7 @@ import { describe, test } from "node:test"
 import assert from "node:assert/strict"
 import { performance } from "node:perf_hooks"
 import { computeKpis, replay, type RunResult } from "@/lib/simulation"
-import { playBot, wolkenried, type BotName, type BotRun } from "./helpers/simulation-bots"
+import { einfuehrung, playBot, playIntroGut, playIntroNaiv, wolkenried, type BotName, type BotRun } from "./helpers/simulation-bots"
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => i + 1)
 const BOTS: BotName[] = ["gut", "naiv", "schlecht"]
@@ -131,6 +131,37 @@ describe("Abstimmung mit Strategie-Robotern (5.4)", () => {
   })
   test("kein Roboter erreicht 1000 Punkte", () => {
     check(allRows().every((r) => r.result.score.total < 1000), "ein Lauf erreicht 1000 Punkte")
+  })
+})
+
+describe("Einführungslauf «Hundeanmeldung online» (2.10, AP6)", () => {
+  const intro = einfuehrung()
+  const seeds = Array.from({ length: 10 }, (_, i) => i + 1)
+  const gut = seeds.map((seed) => playIntroGut(seed, intro).state)
+  const naiv = seeds.map((seed) => playIntroNaiv(seed, intro).state)
+  const line = (bot: string, s: (typeof gut)[number], i: number) =>
+    `${bot.padEnd(5)} ${String(i + 1).padStart(3)} ${s.result?.ended ?? "-"} Ende ${s.result?.endDay ?? "-"} ${JSON.stringify(s.result?.score ?? null)}`
+  const introTable = () => [...gut.map((s, i) => line("gut", s, i)), ...naiv.map((s, i) => line("naiv", s, i))].join("\n")
+  const pts = (xs: typeof gut) => xs.map((s) => s.result?.score.total ?? 0)
+
+  test("alle Läufe abgeschlossen, keiner mit Abbruch", () => {
+    for (const s of [...gut, ...naiv]) {
+      assert.equal(s.phase, "abgeschlossen", introTable())
+      assert.equal(s.result?.ended, "fertig", introTable())
+    }
+  })
+  test("gut: Median Endtag ≤ 10 (Terminziel)", () => {
+    const m = median(gut.map((s) => s.result?.endDay ?? 99))
+    assert.ok(m <= 10, `Median Endtag gut = ${m}\n${introTable()}`)
+  })
+  test("gut: Median Punkte ≥ 680 (★★)", () => {
+    const m = median(pts(gut))
+    assert.ok(m >= 680, `Median gut = ${m}\n${introTable()}`)
+  })
+  test("naiv: deutlich schlechter (Median mindestens 80 Punkte tiefer, später fertig)", () => {
+    const d = median(pts(gut)) - median(pts(naiv))
+    assert.ok(d >= 80, `Abstand = ${d}\n${introTable()}`)
+    assert.ok(median(naiv.map((s) => s.result?.endDay ?? 0)) > median(gut.map((s) => s.result?.endDay ?? 0)), introTable())
   })
 })
 

@@ -85,15 +85,15 @@ describe("Einführungslauf «Hundeanmeldung online» (2.10)", () => {
   const sc = scenario("einfuehrung")
   const rows = computeSchedule(sc)
 
-  test("Ende 7.5, kritischer Pfad H1, H2, H5, H6", () => {
-    near(Math.max(...rows.map((r) => r.ef)), 7.5, "Projektende")
+  test("Ende 6.75, kritischer Pfad H1, H2, H5, H6 (AP6)", () => {
+    near(Math.max(...rows.map((r) => r.ef)), 6.75, "Projektende")
     assert.deepEqual(rows.filter((r) => r.critical).map((r) => r.taskId).sort(), ["H1", "H2", "H5", "H6"])
-    near(sc.calendar.planEndDay, 7.5, "planEndDay")
+    near(sc.calendar.planEndDay, 6.75, "planEndDay")
   })
 
-  test("BAC 14'960 (136 h × 110), Kredit 16'500", () => {
-    assert.equal(sc.tasks.reduce((s, t) => s + t.effortHours, 0), 136)
-    assert.equal(sc.tasks.reduce((s, t) => s + t.effortHours * t.plannedRate, 0), 14_960)
-    assert.equal(sc.budget.total, 16_500)
+  test("BAC 12'320 (112 h × 110), Kredit 15'500 (AP6)", () => {
+    assert.equal(sc.tasks.reduce((s, t) => s + t.effortHours, 0), 112)
+    assert.equal(sc.tasks.reduce((s, t) => s + t.effortHours * t.plannedRate, 0), 12_320)
+    assert.equal(sc.budget.total, 15_500)
   })
 })

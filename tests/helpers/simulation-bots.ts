@@ -334,3 +334,88 @@ export function playBot(name: BotName, seed: number, scenario: Scenario = wolken
   if (name === "naiv") return playNaiv(seed, scenario)
   return playSchlecht(seed, scenario)
 }
+
+// ---------- Einführungslauf «Hundeanmeldung online» (2.10, AP6) ----------
+
+export function einfuehrung(): Scenario {
+  const s = loadScenario("einfuehrung")
+  if (!s) throw new Error("Szenario einfuehrung fehlt")
+  return s
+}
+
+/**
+ * Gute Besetzung des Einführungslaufs (2.10): alle vier am Auftakt H1, danach die drei parallelen
+ * Vorgänge so verteilt, dass niemand leer läuft (Aylin und Nadia auf H2, Luca auf H4 und H3,
+ * Jasmin auf H3), zum Schluss Test H5 und Aufschalten H6 mit den passenden Profilen.
+ */
+export const INTRO_BESETZUNG: Readonly<Record<string, readonly string[]>> = {
+  P02: ["H1", "H4", "H3", "H5", "H6"],
+  P03: ["H1", "H2", "H5", "H6"],
+  P06: ["H1", "H2", "H6"],
+  P07: ["H1", "H3", "H5", "H6"],
+}
+
+/**
+ * Roboter «gut» für den Einführungslauf: gute Besetzung, 1 Review je Vorgang, Risikomassnahme
+ * «Testexport», Register wöchentlich geprüft, Ereignisse mit der Option «gut», ehrlicher Abschlussbericht.
+ */
+export function playIntroGut(seed: number, scenario: Scenario = einfuehrung(), staffing: Readonly<Record<string, readonly string[]>> = INTRO_BESETZUNG): BotRun {
+  const r = new Runner(scenario, seed)
+  r.fill(staffing)
+  for (const t of scenario.tasks) r.act({ type: "setReviews", taskId: t.id, count: 1 })
+  for (const def of scenario.risks) {
+    for (const m of def.measures) r.tryAct({ type: "riskMeasure", riskId: def.id, measureId: m.id })
+  }
+  r.act({ type: "riskReview" })
+  r.act({ type: "startPeriod" })
+  let lastWeek = 1
+  for (let guard = 0; guard < MAX_STEPS && r.state.phase !== "abgeschlossen"; guard++) {
+    const s = r.state
+    const open = s.inbox.find((i) => i.status === "neu")
+    if (open) r.act(firstOption(scenario, open.eventId, "gut"))
+    else if (s.phase === "lauf") {
+      const week = Math.floor(Math.floor(s.tick / 2) / 5) + 1
+      if (week !== lastWeek && s.tick % 2 === 0) {
+        lastWeek = week
+        r.act({ type: "riskReview" })
+      }
+      r.act({ type: "advance", ticks: 1 })
+    } else r.act({ type: "submitReport", report: honestReport(s, scenario) })
+  }
+  return { state: r.state, actions: r.actions }
+}
+
+/**
+ * Besetzung einer Anfängerin ohne Planung (5.4 «naiv» wörtlich): je Vorgang die geplante Anzahl Personen
+ * nach bester Einzelpassung, ohne Pensum, Überschneidungen und Folgeaufgaben zu beachten.
+ */
+export function introNaivePlan(scenario: Scenario, state: SimState): Record<string, string[]> {
+  const plan: Record<string, string[]> = {}
+  const people = scenario.people.filter((p) => state.people[p.id].available).map((p) => p.id).sort()
+  for (const task of [...scenario.tasks].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+    const ranked = people
+      .filter((pid) => (plan[pid] ?? []).length < MAX_OPEN)
+      .map((pid) => ({ pid, fit: fitFor(state, scenario, pid, task.id) }))
+      .sort((a, b) => b.fit - a.fit || (a.pid < b.pid ? -1 : 1))
+    for (const { pid } of ranked.slice(0, task.plannedPersons)) (plan[pid] ??= []).push(task.id)
+  }
+  return plan
+}
+
+/**
+ * Roboter «naiv» für den Einführungslauf: Besetzung ohne Planung (introNaivePlan), keine Reviews,
+ * keine Massnahmen, Register nie geprüft, Ereignisse Option A, geschönter Abschlussbericht.
+ */
+export function playIntroNaiv(seed: number, scenario: Scenario = einfuehrung()): BotRun {
+  const r = new Runner(scenario, seed)
+  r.fill(introNaivePlan(scenario, r.state))
+  r.act({ type: "startPeriod" })
+  for (let guard = 0; guard < MAX_STEPS && r.state.phase !== "abgeschlossen"; guard++) {
+    const s = r.state
+    const open = s.inbox.find((i) => i.status === "neu")
+    if (open) r.act(firstOption(scenario, open.eventId, null))
+    else if (s.phase === "lauf") r.act({ type: "advance", ticks: 1 })
+    else r.act({ type: "submitReport", report: greenReport(s, scenario) })
+  }
+  return { state: r.state, actions: r.actions }
+}
