@@ -98,3 +98,52 @@ export interface AttemptView {
   result: AttemptResult | null
   canUseAi: boolean
 }
+
+/** Stufe der Beherrschung (4.4; Anzeige «sicher», «knapp», «Lücke», «noch nicht geübt») */
+export type MasteryLevelView = "secure" | "close" | "gap" | "untrained"
+
+/** Kopfdaten eines Versuchs für Listen (ohne Positionen) */
+export interface AttemptSummary {
+  id: string
+  mode: AttemptMode
+  variant: AttemptVariant
+  status: AttemptStatus
+  itemCount: number
+  startedAt: string
+  deadlineAt: string | null
+  submittedAt: string | null
+  finishedAt: string | null
+  pointsQ: number | null
+  maxPointsQ: number | null
+  percent: number | null // nur Anzeige, 1 Stelle
+  shownCount: number | null
+  passed: boolean | null
+  pointsAwarded: number
+}
+
+/** Antwort von GET /api/ipma/overview (6.6) */
+export interface OverviewView {
+  serverNow: string
+  canUseAi: boolean
+  mastery: { competence: CompetenceId; value: number | null; answers: number; level: MasteryLevelView }[]
+  dueCount: number // fällige Fragen (Leitner-Fach ≥ 1, dueAt ≤ jetzt)
+  pool: Record<string, { mc: number; offen: number }> // geprüfte Fragen je Kompetenz
+  active: AttemptSummary[] // höchstens einer je Modus
+  recent: Record<AttemptMode, AttemptSummary[]> // je Modus die letzten 10
+  bestExam: { attemptId: string; percent: number; pointsQ: number; maxPointsQ: number } | null
+}
+
+/** Neu vergebenes Abzeichen (lib/badges.ts) */
+export interface AwardedBadgeView {
+  name: string
+  icon: string
+  description: string
+  points: number
+}
+
+/** Antwort von POST /api/ipma/attempts/[id]/finish (6.6) */
+export interface FinishView {
+  result: AttemptResult
+  newBadges: AwardedBadgeView[]
+  pointsAwarded: number
+}

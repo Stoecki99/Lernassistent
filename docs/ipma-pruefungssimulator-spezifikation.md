@@ -1408,6 +1408,21 @@ Danach geht der Simulator mit **Welle 2** am **So 29.11.** live (mit Fragenpool 
 | 14 | 7 Fixture | Mini-Pool in `tests/helpers/ipma-mini.ts` im Code erzeugt, ungültige Fälle als Abwandlungen im Test; kein Ordner `tests/fixtures/ipma-mini/` | Weniger Dateien, passt sich an `COMPETENCES` an. |
 | 15 | 7.1 Längste Option | «längste» = echt länger als jede andere Option | Gleich lange Zahlenoptionen («0 Tage» … «5 Tage») zählen nicht. |
 
+### 8.5 Nachtrag AP3 (01.11.2026): Abweichungen und Ergänzungen
+
+| Nr. | Stelle | Umsetzung | Begründung |
+|---|---|---|---|
+| 1 | 6.4 `IpmaAttempt` | Zusätzliches Feld `resumedAt` (letzter Start bei «mit Pausen») | Ohne Startzeitpunkt des laufenden Abschnitts lässt sich `activeSeconds` bei «Pause» nicht nachführen. |
+| 2 | 6.4 Migration | Zwei Ordner statt `add_ipma`: `20261102090000_ipma_modelle` (Tabellen und die 6 Abzeichen per `INSERT … ON CONFLICT DO NOTHING`) und `20261102100000_ipma_aktiv_eindeutig` (Teil-Index) | Gleiches Vorgehen wie beim Leitstand; die Pipeline führt keinen Seed aus. |
+| 3 | 6.2 Dateien | `lib/ipma/server.ts` (Abläufe mit Datenbank) ergänzt um `lib/ipma/view.ts` (reine Hilfen, von `server.ts` weiter exportiert), `lib/ipma/handlers.ts` (HTTP-Abläufe; Route-Dateien rufen sie mit `defaultDeps()` auf) und `lib/ipma/achievements.ts` (Abzeichen-Bedingungen, rein) | Testbar mit der Fake-Prisma-Schicht `tests/helpers/ipma-fake-db.ts` (7.4); `lib/badges.ts` braucht die Bedingungen ohne Zyklus über `server.ts`. |
+| 4 | 6.6 `assess` | Route vorhanden: 401 → 403 `PRO_REQUIRED` → 429 → 404 → Vorbedingungen (`assertAssessable`, 409/422 inkl. `SELF_FIRST`) → **502 `AI_UNAVAILABLE`** bis AP5 | Schnittstelle für AP5; die Oberfläche kann den Fehlerfall schon behandeln. |
+| 5 | 6.6 `self` | Prüfung: änderbar, solange `submitted`. Training/Lücken: **einmal** (danach 409), mit Leitner und Punkt. Leere Antworten → 422 | Leitner und Punkt sollen je Frage nur einmal zählen. |
+| 6 | 6.6 Ergebnis `submitted` | `GET` rechnet das vorläufige Ergebnis aus den Positionen neu; `self` speichert nur die Position | Gleichzeitige Selbstbewertungen überschreiben sich sonst gegenseitig das gespeicherte Ergebnis. |
+| 7 | 3.5 / 6.5 Kontakt | `seenCount`/`lastSeenAt` beim **Start** eines Versuchs (alle Modi), Leitner-Fach erst bei der Bewertung | Auch eine abgebrochene Prüfung zählt als «gesehen»; die nächste Auswahl wiederholt sie nicht. |
+| 8 | 6.10 Punkte | `computePointsAward(oldBestPercent, newPercent)` mit ganzen Prozent (abgerundet); Bestwert über beide Varianten | Summe aller Verbesserungen bleibt ≤ 100 je Konto. |
+| 9 | 6.6 `finish` | Prüfung nach Ablauf der Uhr: `finish` gibt selbst ab; Training/Lücken: ungesperrte Positionen werden beim Abschluss gesperrt (unbewertet) | Kein Speichern in abgeschlossene Versuche. |
+| 10 | 6.6 `OverviewView` | Neu in `types.ts`: `OverviewView`, `AttemptSummary`, `FinishView`, `AwardedBadgeView`; Übersicht zusätzlich mit `pool` (geprüfte Fragen je Kompetenz) | AP4 kann Training-Auswahl und «Pool zu klein» ohne Lösungsdaten anzeigen. |
+
 ---
 
 ## 9. Offene Fragen an Jan

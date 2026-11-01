@@ -40,6 +40,8 @@ model User {
   userBadges    UserBadge[]
   lernfortschritte Lernfortschritt[]
   simulationRuns   SimulationRun[]
+  ipmaAttempts       IpmaAttempt[]
+  ipmaQuestionStates IpmaQuestionState[]
 }
 
 model Account {
@@ -235,6 +237,97 @@ model SimulationRun {
   @@index([userId, scenarioId, score])
   // Zusätzlich Teil-Index «SimulationRun_aktiv_eindeutig» (userId, scenarioId) WHERE status = 'aktiv',
   // nur in prisma/migrations/20261101100000_simulation_run_aktiv_eindeutig (Prisma kennt keine Teil-Indizes).
+}
+
+// Versuch im IPMA-Prüfungssimulator (Spezifikation docs/ipma-pruefungssimulator-spezifikation.md 6.4).
+// Die Auswahl der Fragen (inkl. Reihenfolge der Optionen) liegt nur hier und wird nie an den Client gegeben.
+// Ergebnis berechnet der Server (lib/ipma/scoring.ts, lib/ipma/server.ts).
+model IpmaAttempt {
+  id            String    @id @default(cuid())
+  userId        String
+  mode          String    // "exam" | "short" | "training" | "gaps"
+  variant       String    @default("strict") // "strict" (Echtbedingungen) | "pausable"
+  status        String    // "active" | "submitted" | "finished" | "aborted"
+  seed          Int       // 1 … 2'147'483'646, vom Server
+  poolVersion   String
+  configVersion Int
+  config        Json      // ConfigSnapshot (6.3)
+  competences   String[]  // Training: gewählte Kompetenzen; Lücken: die drei schwächsten
+  itemCount     Int
+  startedAt     DateTime  @default(now())
+  deadlineAt    DateTime? // nur strict bei exam/short
+  pausedAt      DateTime? // nur pausable, gesetzt während Pause
+  resumedAt     DateTime? // nur pausable: letzter Start (Beginn oder Weiter), Grundlage für activeSeconds
+  activeSeconds Int       @default(0)
+  submittedAt   DateTime?
+  finishedAt    DateTime?
+  pointsQ       Int?      // Viertelpunkte
+  maxPointsQ    Int?
+  shownCount    Int?
+  passed        Boolean?
+  result        Json?     // AttemptResult
+  pointsAwarded Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items IpmaAttemptItem[]
+
+  @@index([userId, mode, status])
+  @@index([userId, mode, finishedAt])
+  // Zusätzlich Teil-Index «IpmaAttempt_aktiv_eindeutig» (userId, mode) WHERE status = 'active',
+  // nur in prisma/migrations/20261102100000_ipma_aktiv_eindeutig (Prisma kennt keine Teil-Indizes).
+}
+
+model IpmaAttemptItem {
+  id              String    @id @default(cuid())
+  attemptId       String
+  position        Int       // 1 … itemCount
+  questionId      String    // "3.04-mc-01"
+  questionVersion Int
+  type            String    // "mc" | "offen"
+  competence      String    // "3.04"
+  optionOrder     Int[]     // MC: Anzeigeposition → Originalindex; nie an den Client
+  choice          Int?      // MC: Originalindex der Wahl
+  text            String?   // offen: höchstens 3'000 Zeichen
+  flagged         Boolean   @default(false)
+  answeredAt      DateTime?
+  locked          Boolean   @default(false) // Training/Lücken: nach «Prüfen»; Prüfung: nach Abgabe
+  selfScores      Int[]     // Rasterpunkte je Kriterium
+  selfAssessedAt  DateTime?
+  aiStatus        String    @default("none") // "none" | "pending" | "done" | "failed"
+  aiScores        Int[]
+  aiFeedback      Json?     // { kriterien: [{ nummer, punkte, begruendung }], gesamtkommentar, verdacht }
+  aiTokens        Int       @default(0)
+  aiAssessedAt    DateTime?
+  scoreSource     String?   // "mc" | "self" | "ai"
+  rasterPoints    Int?      // offen: massgebend 0 … 4
+  correct         Boolean?
+  pointsQ         Int?
+
+  attempt IpmaAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, position])
+  @@index([attemptId, competence])
+  @@index([questionId])
+}
+
+// Leitner-Fach und Kontakt je Konto und Frage (Lücken schliessen, Auswahl ohne Wiederholung)
+model IpmaQuestionState {
+  id           String    @id @default(cuid())
+  userId       String
+  questionId   String
+  box          Int       @default(0) // 0 = gesehen, nie bewertet; 1 … 5
+  dueAt        DateTime?
+  seenCount    Int       @default(0)
+  correctCount Int       @default(0)
+  lastCorrect  Boolean?
+  lastSeenAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, questionId])
+  @@index([userId, dueAt])
 }
 
 model ContactMessage {
