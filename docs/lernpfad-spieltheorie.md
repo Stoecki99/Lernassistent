@@ -226,7 +226,7 @@ Rückgabe `{ neuStarten() }`. Ereignis `lernpfad:szenario` mit `detail: { ende, 
 
 ### 5.7 `S.akteure(el, cfg)`
 
-`akteure: [{ name, figur, interessen, alternative, optionen: [Text], richtig: Index, begruendung }]`, dazu `titel`, `lage`, `hinweis`. Prüfen zeigt je Akteur ✓/✗ und Begründung.
+`akteure: [{ name, figur, interessen, alternative, optionen: [Text], richtig: Index, begruendung }]`, dazu `titel`, `lage`, `hinweis`, `erklaerung`. Prüfen zeigt je Akteur ✓/✗ und Begründung. `zaehlen: false` (für reale Krisen): keine Punkte und kein ✓/✗, nur «Vergleich mit dem Modell» und Begründung.
 
 ### 5.8 `S.mischer(el, cfg)`
 

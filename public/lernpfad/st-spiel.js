@@ -1267,7 +1267,7 @@
     });
     root.appendChild(liste);
     const steuer = neu("div", { class: "row" });
-    const p = knopf("Lage auswerten", "primary"), z = knopf("↺ Zurücksetzen");
+    const p = knopf(cfg.zaehlen === false ? "Mit dem Modell vergleichen" : "Lage auswerten", "primary"), z = knopf("↺ Zurücksetzen");
     const stand = neu("div", { class: "info", "aria-live": "polite" });
     steuer.appendChild(p); steuer.appendChild(z);
     root.appendChild(steuer); root.appendChild(stand);
@@ -1280,10 +1280,15 @@
         if (!sel) { offen++; u.innerHTML = '<p class="hint">Noch keine Wahl.</p>'; return; }
         const ok = Number(sel.value) === a.richtig;
         if (ok) richtig++;
+        if (cfg.zaehlen === false) {
+          u.innerHTML = '<div class="note">' + (ok ? "Deine Einschätzung deckt sich mit dem Modell. " : "Das Modell hält «" + ohneTags(a.optionen[a.richtig]) + "» für wahrscheinlicher. ") + (a.begruendung || "") + "</div>";
+          return;
+        }
         k.classList.add(ok ? "richtig" : "falsch");
         u.innerHTML = '<div class="rueckmeldung ' + (ok ? "ok" : "bad") + '"><span class="marke">' + (ok ? "✓" : "✗") + "</span> " + (ok ? "Passt. " : "Wahrscheinlicher: «" + ohneTags(a.optionen[a.richtig]) + "». ") + (a.begruendung || "") + "</div>";
       });
-      stand.innerHTML = richtig + " von " + cfg.akteure.length + " Zügen richtig vorhergesagt" + (offen ? " (" + offen + " offen)" : "") + "." + (cfg.erklaerung && !offen ? "<br>" + cfg.erklaerung : "");
+      if (cfg.zaehlen === false) stand.innerHTML = (offen ? offen + " Akteure noch ohne Einschätzung. " : "") + (cfg.erklaerung && !offen ? cfg.erklaerung : "Modell zum Üben, keine Prognose.");
+      else stand.innerHTML = richtig + " von " + cfg.akteure.length + " Zügen richtig vorhergesagt" + (offen ? " (" + offen + " offen)" : "") + "." + (cfg.erklaerung && !offen ? "<br>" + cfg.erklaerung : "");
       formeln(root);
       melde(root, "lernpfad:akteure", { richtig, gesamt: cfg.akteure.length });
     });
