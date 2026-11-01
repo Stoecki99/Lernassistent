@@ -173,7 +173,7 @@ Regeln: Wie Baukasten Abschnitt 11. Seiteneigene Klassen mit Präfix `t<NN>-`. F
 
 ### 5.2 `S.szene(art, opts)` → HTML-Text (SVG-Panorama)
 
-`art`: `hafen`, `see`, `festung`, `kerker`, `lagetisch`, `markt`, `klippen`. `opts`: `{ titel, figuren: [art, …] }` (Figuren stehen im Vordergrund). Breite 100 %, Höhe automatisch.
+`art`: `hafen`, `see`, `festung`, `kerker`, `lagetisch`, `markt`, `klippen`. `opts`: `{ titel, unterschrift, figuren: [art | "art:stimmung" | { art, stimmung, groesse, dx }, …] }` (Figuren stehen im Vordergrund; gilt auch für `figuren` in Szenario-Knoten). Breite 100 %, Höhe automatisch.
 
 ### 5.3 `S.spielbrett(el, cfg)`
 
@@ -230,7 +230,7 @@ Rückgabe `{ neuStarten() }`. Ereignis `lernpfad:szenario` mit `detail: { ende, 
 
 ### 5.8 `S.mischer(el, cfg)`
 
-`links`, `rechts` (Beschriftungen der zwei Optionen), `runden` (Standard 30), `titel`, `frage`, `rolle` (Text). Die Gegnerin lernt die Häufigkeit deiner letzten Züge und nutzt Muster. Ergebnis mit Verlauf und Merksatz.
+`links`, `rechts` (Beschriftungen der zwei Optionen), `runden` (Standard 30), `titel`, `frage`, `gegnerin` (Satzanfang, Standard «Die Küstenwache»), `start`, `erklaerung`. Ab 40 % Erfolg gilt die Mischung als gut (echter Zufall schwankt bei 30 Runden). Die Gegnerin lernt die Häufigkeit deiner letzten Züge und nutzt Muster. Ergebnis mit Verlauf und Merksatz.
 
 ## 6. Stand der Umsetzung
 

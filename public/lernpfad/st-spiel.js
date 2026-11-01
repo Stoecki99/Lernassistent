@@ -1336,7 +1336,7 @@
       zuege.push(x);
       const erwischt = v === x;
       treffer.push(erwischt ? 0 : 1);
-      if (!still) info.innerHTML = "Du nimmst die " + (x === "L" ? links : rechts) + ". Die Gegenseite " + (c.gegnerin || "Küstenwache") + " wartet bei der " + (v === "L" ? links : rechts) + ": " + (erwischt ? "<b>erwischt!</b>" : "<b>durchgekommen!</b>");
+      if (!still) info.innerHTML = "Du nimmst die " + (x === "L" ? links : rechts) + ". " + (c.gegnerin || "Die Küstenwache") + " wartet bei der " + (v === "L" ? links : rechts) + ": " + (erwischt ? "<b>erwischt!</b>" : "<b>durchgekommen!</b>");
       zeichne();
       if (zuege.length >= runden) fertig();
     }
@@ -1360,7 +1360,7 @@
     function fertig() {
       const ok = treffer.reduce((a, b) => a + b, 0);
       info.innerHTML = "<b>Ergebnis:</b> " + ok + " von " + runden + " Mal durchgekommen (" + Math.round((ok / runden) * 100) + " %). " +
-        (ok / runden >= 0.45 ? "Gut gemischt: Die Gegenseite fand kaum ein Muster." : "Die Gegenseite hat dein Muster erkannt. Wer berechenbar ist, wird ausgenutzt.") +
+        (ok / runden >= 0.4 ? "Gut gemischt: Die Gegenseite fand kaum ein Muster." : "Die Gegenseite hat ein Muster bei dir gefunden. Wer berechenbar ist, wird ausgenutzt. (Auch echter Zufall schwankt: Spiel nochmals und vergleiche.)") +
         (c.erklaerung ? " " + c.erklaerung : "");
       bL.disabled = true; bR.disabled = true;
       melde(root, "lernpfad:mischer", { durch: ok, runden });
