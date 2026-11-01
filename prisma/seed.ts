@@ -123,6 +123,35 @@ const BADGES = [
     condition: "leitstand_null_fehler",
     points: 100,
   },
+  // AVSW-Modellierspiele (Spielstand, docs/architektur-modell.md Abschnitt 8)
+  {
+    name: "Fehlerfrei",
+    description: "AVSW-Modellierspiel: ein Level mit 3 Sternen gelöst",
+    icon: "💎",
+    condition: "avsw_spiel_fehlerfrei",
+    points: 25,
+  },
+  {
+    name: "Architekt·in Bronze",
+    description: "AVSW-Modellierspiele: 10 Sterne gesammelt",
+    icon: "🥉",
+    condition: "avsw_spiel_sterne_10",
+    points: 25,
+  },
+  {
+    name: "Architekt·in Silber",
+    description: "AVSW-Modellierspiele: 25 Sterne gesammelt",
+    icon: "🥈",
+    condition: "avsw_spiel_sterne_25",
+    points: 50,
+  },
+  {
+    name: "Architekt·in Gold",
+    description: "AVSW-Modellierspiele: 45 Sterne gesammelt",
+    icon: "🥇",
+    condition: "avsw_spiel_sterne_45",
+    points: 100,
+  },
 ]
 
 async function seed() {

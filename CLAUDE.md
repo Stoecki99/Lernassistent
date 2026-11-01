@@ -33,7 +33,7 @@ KI-gestützte Lernplattform für Studierende. Karteikarten mit Spaced Repetition
 - Server Components als Default, `use client` nur wenn erforderlich
 - Zod-basierte Validierung bei API-Ein-/Ausgaben
 - UI-Texte Deutsch (Schweizer Rechtschreibung, ss statt ß), Code-Namen Englisch
-- Ausnahme Lernpfad (`lib/lernseiten*`, `lib/validations/lernseite.ts`, `lib/validations/lernfortschritt.ts`, `components/features/lernseiten/`, `app/(lernpfad)/`, `app/api/lernfortschritt/`): deutsche Namen passend zum Inhaltsformat (`docs/lernpfad-format.md`, Baukasten `docs/lernpfad-baukasten.md`)
+- Ausnahme Lernpfad (`lib/lernseiten*`, `lib/validations/lernseite.ts`, `lib/validations/lernfortschritt.ts`, `components/features/lernseiten/`, `app/(lernpfad)/`, `app/api/lernfortschritt/`, `app/api/spielstand/`, `lib/spielstand.ts`, `lib/validations/spielstand.ts`, `lib/archsim/`, Architektur-Leitstand): deutsche Namen passend zum Inhaltsformat (`docs/lernpfad-format.md`, Baukasten `docs/lernpfad-baukasten.md`)
 - Keine Umlaute in Variablen, Funktionen, CSS-Klassen, Dateinamen
 
 ### Commit-Konvention

@@ -201,13 +201,46 @@ Validierung: `lib/validations/lernfortschritt.ts`, Tests: `tests/lernfortschritt
 
 **Datenbank:** Modell `Lernfortschritt` (eine Zeile pro Konto, Fach und Thema; `@@unique([userId, fach, thema])`, Löschen des Kontos löscht den Fortschritt). Migration `prisma/migrations/20261028160000_add_lernfortschritt/`.
 
+## Spielstand-API
+
+Bestwerte der Modellierspiele (`Architektur.spiel`, Vertrag `docs/architektur-modell.md` Abschnitt 7 und 8). Die Engine ruft die API selbst auf. Login nötig, sonst `401`; Rate-Limit je Konto 60 Lese- und 60 Schreibanfragen pro Minute, sonst `429` mit `Retry-After: 60`.
+
+**Lesen:** `GET /api/spielstand?fach=avsw`
+
+```json
+[{ "spiel": "avsw-02-kommunikation", "level": "l1", "sterne": 2, "xp": 140, "aktualisiert": "2026-11-01T10:04:05.000Z" }]
+```
+
+Nur Einträge des eingeloggten Kontos, sortiert nach Spiel und Level. Levels ohne Eintrag fehlen.
+
+**Schreiben:** `POST /api/spielstand`
+
+```json
+{ "fach": "avsw", "spiel": "avsw-02-kommunikation", "level": "l1", "sterne": 2, "xp": 140 }
+```
+
+Antwort `200 {"ok": true, "verbessert": true, "punkte": 14, "abzeichen": []}`. Regeln:
+
+- `fach`: `^[a-z0-9]+$` und ein bestehender Fachordner unter `content/lernseiten/`, sonst `400`. `spiel`: `^[a-z0-9-]{1,60}$`, `level`: `^[a-z0-9-]{1,40}$`, `sterne`: ganze Zahl 0–3, `xp`: ganze Zahl 0–500.
+- Gespeichert wird der **Bestwert**: mehr Sterne, bei gleich vielen Sternen mehr XP. Gleiche oder schlechtere Werte ändern nichts (`verbessert: false`, `aktualisiert` bleibt).
+- `punkte` ins Konto (`User.points`) = (neue XP − bisher gespeicherte XP) ÷ 10, abgerundet, nie negativ; ohne bisherigen Stand zählt 0. Mehr Sterne mit weniger XP ergibt 0 Punkte.
+- Höchstens 300 verschiedene Levels je Konto und Fach (`409`), damit erfundene Spiel-Namen keine unbegrenzten Punkte bringen.
+- `abzeichen`: neu vergebene Abzeichen `{ name, icon, description, points }` (nur nach einer Verbesserung geprüft). Für das Fach `avsw`: «Fehlerfrei» (ein Level mit 3 Sternen), «Architekt·in Bronze/Silber/Gold» (10/25/45 Sterne als Summe der Bestwerte).
+- Die Werte kommen vom Browser und sind nicht fälschungssicher (wie Quiz-Ergebnisse); die Obergrenzen begrenzen den Schaden.
+
+Speichern in einer Transaktion: alten Stand lesen, bedingtes Update (nur wenn Sterne und XP noch dem gelesenen Stand entsprechen) bzw. Anlegen, Punkte per `increment`. Bei gleichzeitigen Anfragen läuft die Transaktion neu, jede Verbesserung wird genau einmal vergütet.
+
+Validierung und Bestwert-Regel: `lib/validations/spielstand.ts`, Speichern, Rate-Limit und Abzeichen-Bedingungen: `lib/spielstand.ts`, Tests: `tests/spielstand.test.ts`.
+
+**Datenbank:** Modell `Spielstand` (eine Zeile pro Konto, Fach, Spiel und Level; `@@unique([userId, fach, spiel, level])`, Löschen des Kontos löscht die Spielstände). Migration `prisma/migrations/20261101110000_add_spielstand/` (inkl. der vier Abzeichen).
+
 ## Vorschau ohne App
 
 ```
 node scripts/lernpfad-vorschau.mjs --port 4400
 ```
 
-Liefert `/lernpfad/*` und `/lernseiten/<fach>/<slug>` (jedes Fach unter `content/lernseiten/`) ohne Login aus, die Fortschritts-API als Attrappe. Details in `docs/lernpfad-baukasten.md`.
+Liefert `/lernpfad/*` und `/lernseiten/<fach>/<slug>` (jedes Fach unter `content/lernseiten/`) ohne Login aus, die Fortschritts-API als Attrappe und die Spielstand-API als Attrappe im Speicher (Bestwert wie die App, keine Punkte). Details in `docs/lernpfad-baukasten.md`.
 
 ## Urheberrecht
 

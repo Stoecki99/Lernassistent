@@ -40,6 +40,7 @@ model User {
   userBadges    UserBadge[]
   lernfortschritte Lernfortschritt[]
   simulationRuns   SimulationRun[]
+  spielstaende     Spielstand[]
 }
 
 model Account {
@@ -235,6 +236,25 @@ model SimulationRun {
   @@index([userId, scenarioId, score])
   // Zusätzlich Teil-Index «SimulationRun_aktiv_eindeutig» (userId, scenarioId) WHERE status = 'aktiv',
   // nur in prisma/migrations/20261101100000_simulation_run_aktiv_eindeutig (Prisma kennt keine Teil-Indizes).
+}
+
+// Bestwert eines Modellierspiel-Levels im Lernpfad (docs/architektur-modell.md, Abschnitt 8).
+// Bestwert = mehr Sterne, bei Gleichstand mehr XP; schlechtere Ergebnisse ändern nichts.
+model Spielstand {
+  id        String   @id @default(cuid())
+  userId    String
+  fach      String   // z.B. "avsw"
+  spiel     String   // spielId, z.B. "avsw-02-kommunikation"
+  level     String   // levelId, z.B. "l1"
+  sterne    Int      // 0–3
+  xp        Int      // 0–500
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Deckt auch die Abfrage je Konto und Fach ab (GET), daher kein zusätzlicher Index
+  @@unique([userId, fach, spiel, level])
 }
 
 model ContactMessage {

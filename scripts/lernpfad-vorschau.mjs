@@ -10,6 +10,7 @@
 //   /lernseiten/<fach>/<slug>      content/lernseiten/<fach>/<slug>.html
 //   /lernpfad/*                    Dateien aus public/lernpfad/
 //   /api/lernfortschritt           Attrappe: GET → [], POST → {ok:true}
+//   /api/spielstand                Attrappe im Speicher (Bestwert wie die App, keine Punkte, kein Login)
 
 import http from "node:http";
 import { readFile, readdir, stat } from "node:fs/promises";
@@ -199,6 +200,33 @@ async function fortschrittAttrappe(req, res) {
   }
 }
 
+// Bestwerte der Modellierspiele nur im Speicher, bis die Vorschau beendet wird
+const spielstaende = new Map();
+
+async function spielstandAttrappe(req, res, url) {
+  const json = TYPEN[".json"];
+  if (req.method === "GET" || req.method === "HEAD") {
+    const fach = url.searchParams.get("fach") || "";
+    const liste = [...spielstaende.values()].filter((eintrag) => eintrag.fach === fach).map(({ fach: _fach, ...rest }) => rest);
+    return senden(res, 200, json, JSON.stringify(liste), req.method === "HEAD");
+  }
+  if (req.method !== "POST") return senden(res, 405, json, JSON.stringify({ error: "Methode nicht erlaubt" }));
+  try {
+    const { fach, spiel, level, sterne, xp } = JSON.parse(await koerperLesen(req));
+    if (![fach, spiel, level].every((wert) => typeof wert === "string") || !Number.isInteger(sterne) || !Number.isInteger(xp)) {
+      return senden(res, 400, json, JSON.stringify({ error: "Ungültige Anfrage" }));
+    }
+    const schluessel = `${fach}/${spiel}/${level}`;
+    const alt = spielstaende.get(schluessel);
+    const verbessert = !alt || sterne > alt.sterne || (sterne === alt.sterne && xp > alt.xp);
+    if (verbessert) spielstaende.set(schluessel, { fach, spiel, level, sterne, xp, aktualisiert: new Date().toISOString() });
+    console.log(`[vorschau] Spielstand: ${schluessel} → ${sterne} Sterne, ${xp} XP${verbessert ? " (Bestwert)" : ""}`);
+    senden(res, 200, json, JSON.stringify({ ok: true, verbessert, punkte: 0, abzeichen: [] }));
+  } catch {
+    senden(res, 400, json, JSON.stringify({ error: "Ungültige Anfrage" }));
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", "http://127.0.0.1");
@@ -206,6 +234,7 @@ const server = http.createServer(async (req, res) => {
     const nurKopf = req.method === "HEAD";
 
     if (pfad === "/api/lernfortschritt") return await fortschrittAttrappe(req, res);
+    if (pfad === "/api/spielstand") return await spielstandAttrappe(req, res, url);
     if (req.method !== "GET" && req.method !== "HEAD") return senden(res, 405, TYPEN[".txt"], "Methode nicht erlaubt.");
 
     if (pfad === "/") return await startseite(res, nurKopf);

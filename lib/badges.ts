@@ -6,6 +6,12 @@
 
 import { prisma } from "@/lib/prisma"
 import { achievementStats, prismaErrorCode } from "@/lib/leitstand"
+import {
+  SPIEL_ABZEICHEN_BEDINGUNGEN,
+  ladeSpielAbzeichenStatistik,
+  spielAbzeichenErfuellt,
+  type SpielAbzeichenStatistik,
+} from "@/lib/spielstand"
 
 type BadgeDb = Pick<typeof prisma, "$transaction">
 
@@ -51,7 +57,31 @@ export async function checkAndAwardBadges(userId: string): Promise<AwardedBadge[
     select: { badgeId: true },
   })
   const userStats = await getUserStatsForBadges(userId)
+  return awardEarnedBadges(userId, badges, existingUserBadges, (condition) => evaluateCondition(condition, userStats))
+}
 
+/**
+ * Nur die Abzeichen der Modellierspiele (Spielstand) prüfen und vergeben: weniger Abfragen als
+ * checkAndAwardBadges, für POST /api/spielstand. Idempotent wie awardBadge.
+ */
+export async function checkAndAwardSpielBadges(userId: string): Promise<AwardedBadge[]> {
+  const badges = await prisma.badge.findMany({ where: { condition: { in: SPIEL_ABZEICHEN_BEDINGUNGEN } } })
+  if (badges.length === 0) return []
+  const existingUserBadges: Array<{ badgeId: string }> = await prisma.userBadge.findMany({
+    where: { userId, badgeId: { in: badges.map((badge) => badge.id) } },
+    select: { badgeId: true },
+  })
+  if (existingUserBadges.length === badges.length) return []
+  const stats = await ladeSpielAbzeichenStatistik(userId)
+  return awardEarnedBadges(userId, badges, existingUserBadges, (condition) => spielAbzeichenErfuellt(condition, stats) === true)
+}
+
+async function awardEarnedBadges(
+  userId: string,
+  badges: Array<{ id: string; name: string; icon: string; description: string; condition: string; points: number }>,
+  existingUserBadges: Array<{ badgeId: string }>,
+  isEarned: (condition: string) => boolean,
+): Promise<AwardedBadge[]> {
   const existingBadgeIds = new Set(
     existingUserBadges.map((ub: { badgeId: string }) => ub.badgeId)
   )
@@ -62,8 +92,7 @@ export async function checkAndAwardBadges(userId: string): Promise<AwardedBadge[
       continue
     }
 
-    const earned = evaluateCondition(badge.condition, userStats)
-    if (!earned) {
+    if (!isEarned(badge.condition)) {
       continue
     }
 
@@ -88,10 +117,12 @@ interface UserBadgeStats {
   hasPerfectQuiz: boolean
   /** Leitstand: achievements aller abgeschlossenen Läufe mit neuem Startwert (Spezifikation 4.7) */
   leitstandAchievements: Set<string>
+  /** Modellierspiele (Spielstand) im Fach avsw */
+  spielStats: SpielAbzeichenStatistik
 }
 
 async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
-  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns] = await Promise.all([
+  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns, spielStats] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { streak: true },
@@ -110,6 +141,7 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
       where: { userId, status: "abgeschlossen", seedReused: false },
       select: { status: true, seedReused: true, scoreDetail: true },
     }),
+    ladeSpielAbzeichenStatistik(userId),
   ])
 
   const totalQuizzes = quizStats.length
@@ -124,6 +156,7 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
     totalQuizzes,
     hasPerfectQuiz,
     leitstandAchievements: achievementStats(simulationRuns),
+    spielStats,
   }
 }
 
@@ -156,6 +189,7 @@ function evaluateCondition(condition: string, stats: UserBadgeStats): boolean {
     case "leitstand_null_fehler":
       return stats.leitstandAchievements.has(condition)
     default:
-      return false
+      // Modellierspiele (avsw_spiel_*), siehe SPIEL_ABZEICHEN in lib/spielstand.ts
+      return spielAbzeichenErfuellt(condition, stats.spielStats) ?? false
   }
 }
