@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live)
+**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live; Lernpfad PS mit 13 Stationen fertig)
 
 ---
 
@@ -23,6 +23,7 @@
 | 13. Lernpfad | Live seit 29.10.2026 | Reiter Lernseiten, Lernpfad MSTW mit 18 Stationen (fertige HTML-Seiten aus dem Baukasten `public/lernpfad/`), Fortschritt im Konto |
 | 14. Lernpfad PMGT | Welle 1 live seit 01.11.2026 | 7 von 25 Stationen (10, 11, 13, 18, 19, 22, 23), Baukasten 1.1.0; Konzept im Vault «02 Projekte/Lernpfad PMGT» |
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
+| 16. Lernpfad PS | Fertig, noch nicht live | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
 
 ## Security-Fixes (alle angewendet)
 
@@ -53,7 +54,7 @@
 | Badge-Seed | Erledigt | Alle Badges geseeded |
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
 
-## Offene Punkte (Stand 2026-10-29)
+## Offene Punkte (Stand 2026-11-01)
 
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
 - **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
@@ -62,11 +63,23 @@
 - **Redundanter Index im Modell `Lernfortschritt`:** `@@index([userId, fach])` ist durch `@@unique([userId, fach, thema])` abgedeckt.
 - **npm audit:** offene Meldungen u. a. für `next` 14.2 und `next-auth` (Update auf neue Hauptversionen nötig), dazu weitere Pakete.
 - **Alte Migrationen auf frischer Datenbank:** `prisma migrate deploy` scheitert (`20260405_add_contact_email` sortiert vor `20260405_add_contact_messages`). Produktion nicht betroffen, lokal `prisma db push` verwenden.
+- **Lernpfad PS, Simulator:** bekannte Lücken gegenüber pwsh (z. B. `Get-History`, `Remove-Item -Recurse` ohne `-Force`, `break` in `ForEach-Object`, Comment-based Help), Liste in `docs/lernpfad-powershell.md` Abschnitt 8. Keine Aufgabe baut darauf auf.
+- **Lernpfad PS, 360 px:** Inline-Code wie `-Confirm` bricht nach dem Bindestrich um (z. B. Lernziele Station 05). Kosmetisch.
+- **`.claude/settings.local.json` ist versioniert** und enthält neu sehr breite Freigaben (`Bash(bash:*)`, `git restore:*`) sowie Pfade zur alten OneDrive-Kopie. Nicht in den Lernpfad-Commit aufnehmen; Bereinigung und `.gitignore` entscheidet Jan.
 
 ## Changelog
 
 ### 2026-11-01
 
+- **feat: Lernpfad PS fertig** (Branch `feat/lernpfad-powershell`) — 13 Stationen von «Konsole, erste Schritte» bis «Praxisprojekt und Abschluss» in `content/lernseiten/ps/`, Lernpfad `/lernseiten/ps`, Kurzlink `/PS`, Kachel im Reiter Lernseiten. Jede Station mit Konsolen-Simulator, Aufgaben, Lösungsfilm und Selbsttest; Fortschritt im Konto wie bei MSTW. Konzept: Vault `02 Projekte/Lernpfad PS.md`
+- **test: Integrationstest bestanden** — Tests, `tsc`, Lint, Inhaltsprüfung (PS 13 von 13), Produktions-Build und Docker-Build; Ende-zu-Ende mit Wegwerf-Datenbank: ohne Login 307 auf `/login`, eingeloggt alle 13 Stationen 200 mit CSP, keine Konsolenfehler, kein waagrechter Scroll bei 360 px hell und dunkel
+- **fix: Befunde aus dem Code-Review**:
+  - Simulator: Arrays aus `*` und `+` höchstens 100 000 Elemente, Strings höchstens 10 Mio. Zeichen; Vervielfachen von Arrays in einem Schritt statt quadratisch mit `concat`
+  - Konsole: Ausgabe pro Befehl auf 200 000 Zeichen und 3000 Zeilen begrenzt (Hinweis «Ausgabe gekürzt (Simulator)»), alte Ausgabe wird auch nach Zeichenzahl gekürzt
+  - Simulator: `cd\` wechselt ins Stammverzeichnis (wurde als Pfad gelesen)
+  - Inhaltsprüfung: `ps-konsole.css` vor `lernpfad.css` ist ein Fehler (mit Test)
+  - Station 01: Knöpfe der Prompt-Anatomie heissen wie ihr sichtbarer Text (WCAG 2.5.3), der Titel kommt nur im Modus «Erkunden» als Beschreibung; kein leerer Tabstopp mehr
+  - Aufgeräumt: toter Code in `ps-konsole.js`, Doku-Verweise (`docs/lernpfad-baukasten.md` Abschnitt 1, `docs/lernpfad-format.md`), bekannte Lücken des Simulators in `docs/lernpfad-powershell.md` Abschnitt 8, `.playwright-cli/` in `.gitignore`
 - **feat: Lernpfad PMGT Welle 1 und Leitstand live** — Stationen 10, 11, 13, 18, 19, 22, 23; Projektsimulator `/leitstand` mit API `/api/simulation/runs`, Migrationen `20261101090000_add_simulation_run` (inkl. 8 Abzeichen) und `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, von Prisma nicht abbildbar: bei `migrate dev` den Vorschlag zum Löschen entfernen). Integrationstest im Browser bestanden (Punkte Browser = Server, Free 403, Station 23 «erledigt»). Projekt-Agenten in `.claude/agents/` repariert (Werkzeugnamen).
 - **fix: Review-Befunde Leitstand** (Branch `feat/lernpfad-pmgt`, live am 01.11.2026) — Client lädt nur `lib/simulation/core.ts`, Szenarien und Attrappe nur dynamisch; Sende-Logik `syncQueue.ts` (409 nach verlorener Antwort, 401 «Anmeldung abgelaufen», neue Versuche mit wachsendem Abstand / Retry-After, Sicherung mit Zod, Rest weiterverwenden); Fokusfalle mit inertem Hintergrund; Tastenkürzel nur im Leitstand und abschaltbar; Meldungen 10 s mit Pause; Rate-Limits auch für finish/GET/DELETE; Körpergrenze als Strom; `MAX_ACTIONS_PER_RUN` 900; Migration `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, vor Deploy nötig); finish «Serializable» mit Wiederholung; Abzeichen per create. Neue Tests `tests/leitstand-sync.test.ts`, `tests/leitstand-server.test.ts`. Doku: `docs/leitstand-spezifikation.md` (Nachträge 4.5–4.8, 5.7, Restrisiko).
 

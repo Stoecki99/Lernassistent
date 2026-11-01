@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Variablen, Typen und Operatoren · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/10-bedingungen-schleifen" title="Bedingungen und Schleifen">
+  <style>
+    .t09-ziele{margin:0; padding-left:1.3em}
+    .t09-ziele li{margin-bottom:4px}
+    .t09-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t09-st pre{font-style:normal}
+
+    /* Variablen-Tafel */
+    .t09-tafel-kopf{display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 12px}
+    .t09-tafel{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(165px, 1fr)); gap:10px}
+    .t09-leer{color:var(--muted); font-size:.92rem; padding:8px 0}
+    .t09-karte{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:10px 12px; display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t09-karte.neu{border-color:var(--ok); box-shadow:0 0 0 2px var(--ok-bg); animation:t09-auf .5s ease-out}
+    .t09-karte.anders{border-color:var(--free); box-shadow:0 0 0 2px var(--free-bg); animation:t09-auf .5s ease-out}
+    @keyframes t09-auf{from{transform:scale(.96); opacity:.4} to{transform:none; opacity:1}}
+    .t09-name{font-family:var(--ps-mono); font-weight:700; font-size:.95rem; overflow-wrap:anywhere}
+    .t09-zeile{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+    .t09-typ{display:inline-block; font-size:.78rem; font-weight:700; padding:1px 8px; border-radius:999px; background:var(--accent-soft); color:var(--accent)}
+    .t09-fest{display:inline-block; font-size:.74rem; padding:1px 7px; border-radius:999px; border:1px dashed var(--accent); color:var(--accent)}
+    .t09-marke{font-size:.74rem; font-weight:700; color:var(--ink)}
+    .t09-wert{font-family:var(--ps-mono); font-size:.84rem; background:var(--board); border-radius:8px; padding:6px 8px; margin:0;
+      white-space:pre-wrap; overflow-wrap:anywhere; max-height:9.5em; overflow:auto}
+
+    /* Operator-Wahrsager */
+    .t09-ws-kopf{display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 12px; align-items:baseline}
+    .t09-ws-stand{font-size:.9rem; color:var(--muted)}
+    .t09-ws-vorher{font-size:.9rem; color:var(--muted); margin:0}
+    .t09-ws-optionen{display:flex; flex-wrap:wrap; gap:8px}
+    .t09-ws-optionen .btn{font-family:var(--ps-mono); font-size:.92rem; white-space:normal; text-align:left}
+    .t09-ws-optionen .btn.richtig{border-color:var(--ok); background:var(--ok-bg)}
+    .t09-ws-optionen .btn.falsch{border-color:var(--bad); background:var(--bad-bg)}
+    .t09-ws-auf{display:flex; flex-direction:column; gap:10px}
+    .t09-ws-auf:focus{outline:2px solid var(--accent); outline-offset:4px; border-radius:6px}
+    .t09-ws-ergebnis{font-weight:700}
+    .t09-ws-fertig{font-weight:700}
+    @media (prefers-reduced-motion: reduce){
+      .t09-karte.neu, .t09-karte.anders{animation:none}
+    }
+  </style>
+</head>
+<body data-fach="ps" data-thema="09-variablen-operatoren">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 4 · Skripte</span>
+    <h1>Variablen, Typen und Operatoren</h1>
+    <p class="lead">Lea soll dem Leiter Informatik jede Woche einen kurzen Bericht über ihre Logdateien schicken. Dafür muss sie sich Zwischenergebnisse merken, damit rechnen und alles zu einem Satz zusammensetzen. Genau dafür gibt es Variablen. Danach weisst du, welche Art von Wert in einer Variable steckt, wie Anführungszeichen wirken und wie PowerShell rechnet und vergleicht.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t09-ziele">
+        <li>Du speicherst Werte und Ergebnisse von Befehlen in Variablen und rufst sie wieder ab.</li>
+        <li>Du erkennst die wichtigsten Typen (Text, ganze Zahl, Kommazahl, Wahrheitswert, <code class="ps">$null</code>, Datum, Array, Hashtable) und prüfst sie mit <code class="ps">.GetType()</code>.</li>
+        <li>Du wählst die richtigen Anführungszeichen und setzt Werte mit <code class="ps">"$name"</code> und <code class="ps">"$($datei.Length)"</code> in Texte ein.</li>
+        <li>Du arbeitest mit Arrays (Index, <code class="ps">.Count</code>, <code class="ps">+=</code>) und Hashtables (Schlüssel und Wert).</li>
+        <li>Du sagst voraus, was Rechen-, Vergleichs- und logische Operatoren liefern, und kennst die typischen Fallen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#schritt"><b>1</b>Variablen</a>
+    <a href="#typen"><b>2</b>Typen</a>
+    <a href="#texte"><b>3</b>Anführungszeichen</a>
+    <a href="#sammlungen"><b>4</b>Arrays, Hashtables</a>
+    <a href="#operatoren"><b>5</b>Operatoren</a>
+    <a href="#ausprobieren"><b>6</b>Ausprobieren</a>
+    <a href="#wahrsager"><b>7</b>Wahrsager</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Fehler</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Schachteln mit Etikett</h2>
+    <p class="prose">Stell dir Leas Pult vor. Darauf stehen Schachteln mit einem Etikett. In die Schachtel «Anzahl» legt sie einen Zettel mit der Zahl 7. Später schaut sie hinein, statt neu zu zählen. Braucht sie einen neuen Wert, wirft sie den alten Zettel weg und legt einen neuen hinein.</p>
+    <p class="prose">In PowerShell heisst so eine Schachtel <b>Variable</b>. Das Etikett beginnt immer mit einem Dollarzeichen, zum Beispiel <code class="ps">$anzahl</code>. Was in der Schachtel liegt, hat eine Art: Text, Zahl, Datum oder eine ganze Liste. Diese Art heisst <b>Typ</b>.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Variable</span><span class="ex"><code class="ps">$anzahl = 7</code></span><p>Schachtel mit Etikett. Das Gleichheitszeichen legt einen Wert hinein.</p></div>
+      <div class="concept"><span class="tag">Typ</span><span class="ex"><code class="ps">'Lea'</code> · <code class="ps">7</code></span><p>Die Art des Inhalts: Text, ganze Zahl, Kommazahl, wahr/falsch, Datum.</p></div>
+      <div class="concept"><span class="tag">Array</span><span class="ex"><code class="ps">'a', 'b', 'c'</code></span><p>Ein Eierkarton mit nummerierten Fächern. Die Nummern beginnen bei 0.</p></div>
+      <div class="concept"><span class="tag">Hashtable</span><span class="ex"><code class="ps">@{ Bauamt = 401 }</code></span><p>Ein Telefonbuch: Zu jedem Namen (Schlüssel) gehört ein Eintrag (Wert).</p></div>
+      <div class="concept"><span class="tag">Operator</span><span class="ex"><code class="ps">+</code> · <code class="ps">-eq</code> · <code class="ps">-and</code></span><p>Ein Zeichen, das rechnet, vergleicht oder Bedingungen verknüpft.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: eine Schachtel, ein Eierkarton oder ein Telefonbuch?</h3>
+      <p class="prose">Was braucht Lea, um sich das zu merken? Ein einzelner Wert gehört in eine einfache Variable, eine Liste in ein Array, Paare aus Name und Wert in eine Hashtable.</p>
+      <div id="t09-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Variablen (Stepper) ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 1 · Variablen anlegen und benutzen</span>
+    <h2>Merken, anschauen, einsetzen</h2>
+    <p class="prose">Eine Variable legst du mit einer <b>Zuweisung</b> an: links der Name mit <code class="ps">$</code>, dann <code class="ps">=</code>, rechts der Wert. Du musst sie nicht vorher anmelden. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Befehl leuchtet auf.</p>
+    <div id="t09-stepper"></div>
+    <div class="note"><b>Merke:</b> Eine Zuweisung gibt nichts aus. Willst du den Inhalt sehen, tippst du nur den Namen der Variable. Der Wert bleibt erhalten, bis du die Konsole schliesst oder einen neuen Wert zuweist.</div>
+
+    <div class="card stack">
+      <h3>Werte überschreiben und ergänzen</h3>
+      <p class="prose">Eine neue Zuweisung ersetzt den alten Inhalt. Mit <code class="ps">+=</code> zählst du etwas dazu, ohne den Namen zweimal zu schreiben: <code class="ps">$anzahl += 2</code> heisst dasselbe wie <code class="ps">$anzahl = $anzahl + 2</code>. Genauso gibt es <code class="ps">-=</code>, <code class="ps">*=</code> und <code class="ps">/=</code>. <code class="ps">$anzahl++</code> zählt um eins hoch.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Wert überschreiben" data-ps-sitzung="zaehlen" data-ps-befehl="$anzahl = 7"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: += und ++" data-ps-sitzung="zaehlen" data-ps-befehl="$anzahl += 2; $anzahl; $anzahl++; $anzahl"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Gute Namen</h3>
+      <p class="prose">Ein Name besteht am besten nur aus Buchstaben, Ziffern und dem Unterstrich <code>_</code>, zum Beispiel <code class="ps">$anzahlLogs</code> oder <code class="ps">$anzahl_logs</code>. Gross und klein spielt keine Rolle: <code class="ps">$Abteilung</code> und <code class="ps">$abteilung</code> sind dieselbe Schachtel. Leerzeichen und Bindestriche gehen nur mit geschweiften Klammern, etwa <code class="ps">${mein wert}</code>. Lass das lieber.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Gross und klein bei Namen" data-ps-befehl="$Abteilung = 'Bauamt'; $ABTEILUNG"></pre>
+      <div class="note tipp"><b>Tipp:</b> Wähle Namen, die sagen, was drin ist: <code class="ps">$logdateien</code> statt <code class="ps">$x</code>. In einem Monat liest du dein Skript wieder.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Variablen, die schon da sind</h3>
+      <p class="prose">PowerShell füllt einige Variablen selbst. Man nennt sie <b>automatische Variablen</b>. <code class="ps">$HOME</code> ist dein Benutzerordner. <code class="ps">$env:USERNAME</code> holt eine Umgebungsvariable von Windows, hier deinen Anmeldenamen. <code class="ps">$PSVersionTable</code> zeigt, welche PowerShell läuft. Auf Leas Rechner sieht das so aus:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: HOME und Umgebungsvariablen" data-ps-befehl="$HOME; $env:USERNAME; $env:COMPUTERNAME"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: PSVersionTable" data-ps-befehl="$PSVersionTable"></pre>
+      <p class="prose">Auf deinem Computer stehen dort dein Name und deine Version. <code class="ps">$true</code>, <code class="ps">$false</code> und <code class="ps">$null</code> sind ebenfalls automatische Variablen. Du kannst sie lesen, aber nicht überschreiben.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: true überschreiben" lang="en" data-ps-befehl="$true = 1"></pre>
+      <p class="prose">Auf Deutsch: «Die Variable true ist schreibgeschützt.»</p>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In Windows PowerShell 5.1 steht in <code class="ps">$PSVersionTable</code> bei <code>PSEdition</code> der Wert <code>Desktop</code> statt <code>Core</code>, und die Version beginnt mit 5.1. So erkennst du sofort, welche PowerShell vor dir läuft.</div>
+    </div>
+  </section>
+
+  <!-- ===== 2 · Typen ===== -->
+  <section id="typen">
+    <span class="eyebrow">Schritt 2 · Typen</span>
+    <h2>Was steckt in der Schachtel?</h2>
+    <p class="prose">Jeder Wert hat einen Typ. PowerShell bestimmt ihn selbst, du musst ihn nicht angeben. Mit <code class="ps">.GetType().Name</code> fragst du nach. Die Namen kommen aus .NET, der Bibliothek, auf der PowerShell aufbaut.</p>
+    <div class="tablebox">
+      <table class="tabelle">
+        <caption>Die wichtigsten Typen (Namen aus <code class="ps">.GetType().Name</code>, in pwsh 7.6 geprüft)</caption>
+        <thead><tr><th>Typ</th><th>Was ist das?</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code>String</code></th><td>Text, in Anführungszeichen</td><td><code class="ps">'Lea'</code></td></tr>
+          <tr><th><code>Int32</code></th><td>ganze Zahl</td><td><code class="ps">42</code></td></tr>
+          <tr><th><code>Double</code></th><td>Kommazahl, mit Punkt geschrieben</td><td><code class="ps">3.5</code></td></tr>
+          <tr><th><code>Boolean</code></th><td>Wahrheitswert: wahr oder falsch</td><td><code class="ps">$true</code></td></tr>
+          <tr><th><code>DateTime</code></th><td>Datum mit Uhrzeit</td><td><code class="ps">Get-Date</code></td></tr>
+          <tr><th><code>Object[]</code></th><td>Array, eine Liste von Werten</td><td><code class="ps">@(1, 2, 3)</code></td></tr>
+          <tr><th><code>Hashtable</code></th><td>Paare aus Schlüssel und Wert</td><td><code class="ps">@{ Bauamt = 401 }</code></td></tr>
+          <tr><th>kein Typ</th><td><code class="ps">$null</code> heisst «nichts drin»</td><td><code class="ps">$null</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Typen abfragen" data-ps-befehl="'Lea'.GetType().Name; (42).GetType().Name; (3.5).GetType().Name; $true.GetType().Name; (Get-Date).GetType().Name; @(1, 2, 3).GetType().Name; @{ Bauamt = 401 }.GetType().Name"></pre>
+    <p class="prose">Bei einer Zahl ohne Variable brauchst du Klammern: <code class="ps">(42).GetType()</code>. Bei <code class="ps">$null</code> gibt es gar keinen Typ, darum meldet PowerShell einen Fehler:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Methode auf null" lang="en" data-ps-befehl="$null.GetType()"></pre>
+    <p class="prose">Auf Deutsch: «Auf einem leeren Wert kannst du keine Methode aufrufen.» Diese Meldung siehst du oft, wenn du dich bei einem Variablennamen vertippt hast. Eine Variable, die es nicht gibt, ist nämlich einfach <code class="ps">$null</code>.</p>
+
+    <div class="card stack">
+      <h3>Typen umwandeln</h3>
+      <p class="prose">Manchmal hast du den falschen Typ. Ein Wert aus einer CSV-Datei ist zum Beispiel immer Text, auch wenn er wie eine Zahl aussieht. Mit dem Typnamen in eckigen Klammern davor wandelst du ihn um: <code class="ps">[int]</code> für ganze Zahlen, <code class="ps">[double]</code> für Kommazahlen, <code class="ps">[string]</code> für Text.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Typumwandlung" data-ps-befehl="'42' + 1; [int]'42' + 1; [double]'3.75'"></pre>
+      <p class="prose">Ohne Umwandlung hängt PowerShell die 1 an den Text an (<code>421</code>). Mit <code class="ps">[int]</code> rechnet es (<code>43</code>). Klappt die Umwandlung nicht, gibt es einen Fehler:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: Umwandlung gescheitert" lang="en" data-ps-befehl="[int]'abc'"></pre>
+      <p class="prose">Auf Deutsch: «Der Text abc lässt sich nicht in eine ganze Zahl verwandeln.»</p>
+      <div class="note"><b>Runden:</b> <code class="ps">[int]</code> rundet Kommazahlen. Bei genau .5 rundet es zur nächsten <i>geraden</i> Zahl: <code class="ps">[int]2.5</code> ergibt 2, <code class="ps">[int]3.5</code> ergibt 4. Willst du Nachkommastellen behalten, nimm <code class="ps">[math]::Round(wert, 2)</code>. Auch diese Methode rundet bei genau 5 zur geraden Ziffer: <code class="ps">[math]::Round(2.5)</code> ergibt ebenfalls 2.</div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Runden mit int" data-ps-befehl="[int]2.5; [int]3.5; [math]::Round(10 / 3, 2)"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Eine Variable auf einen Typ festlegen</h3>
+      <p class="prose">Schreibst du den Typ vor den Namen, nimmt die Variable nur noch Werte dieses Typs an. Passendes wandelt PowerShell selbst um, Unpassendes lehnt es ab. Das schützt vor Tippfehlern.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: festgelegter Typ" data-ps-befehl="[int]$pensum = 80; $pensum = '90'; $pensum; $pensum.GetType().Name"></pre>
+      <p class="prose">Der Text <code>'90'</code> wurde zur Zahl 90. Versuchst du <code class="ps">$pensum = 'achtzig'</code>, meldet pwsh 7:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7: festgelegter Typ" lang="en">PS C:\Users\lea&gt; $pensum = 'achtzig'
+<span class="psk-fehler">MetadataError: Cannot convert value "achtzig" to type "System.Int32". Error: "The input string 'achtzig' was not in a correct format."</span></pre>
+      <p class="prose">Auf Deutsch: «achtzig passt nicht in eine Variable, die nur ganze Zahlen nimmt.» Der alte Wert 90 bleibt erhalten.</p>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Anführungszeichen ===== -->
+  <section id="texte">
+    <span class="eyebrow">Schritt 3 · Texte und Anführungszeichen</span>
+    <h2>Einfach wörtlich, doppelt mit Einsetzen</h2>
+    <p class="prose">Text steht in Anführungszeichen. PowerShell kennt zwei Arten, und sie verhalten sich verschieden. Denk an einen Briefstempel und an ein Formular mit Lücken: Einfache Anführungszeichen <code class="ps">'…'</code> drucken genau, was dasteht. Doppelte Anführungszeichen <code class="ps">"…"</code> füllen die Lücken mit dem Inhalt von Variablen.</p>
+    <div class="grid2">
+      <div class="stack">
+        <p class="hint">Einfach: wörtlich</p>
+        <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: einfache Anführungszeichen" data-ps-sitzung="texte" data-ps-befehl="$name = 'Lea'; 'Hallo $name'"></pre>
+      </div>
+      <div class="stack">
+        <p class="hint">Doppelt: mit Einsetzen</p>
+        <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: doppelte Anführungszeichen" data-ps-sitzung="texte" data-ps-befehl="&quot;Hallo $name&quot;"></pre>
+      </div>
+    </div>
+    <div class="note tipp"><b>Faustregel:</b> Nimm einfache Anführungszeichen, wenn nichts eingesetzt werden soll. Dann gibt es keine Überraschungen. Doppelte nur dort, wo du bewusst eine Variable einsetzt.</div>
+
+    <div class="card stack">
+      <h3>Eigenschaften einsetzen: <code class="ps">$( … )</code></h3>
+      <p class="prose">Im doppelten Text setzt PowerShell nur den <i>einfachen</i> Namen ein. Alles nach einem Punkt oder einer eckigen Klammer bleibt gewöhnlicher Text. Willst du eine Eigenschaft wie <code class="ps">.Length</code> einsetzen, packst du sie in <code class="ps">$( … )</code>. Das heisst Teilausdruck: PowerShell rechnet zuerst aus, was in der Klammer steht, und setzt das Ergebnis ein.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Datei in Variable" data-ps-sitzung="datei" data-ps-befehl="$datei = Get-Item Logs\app.log"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: falsch eingesetzt" data-ps-sitzung="datei" data-ps-befehl="&quot;Die Datei $datei.Name hat $($datei.Length) Bytes.&quot;"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: richtig eingesetzt" data-ps-sitzung="datei" data-ps-befehl="&quot;Die Datei $($datei.Name) hat $($datei.Length) Bytes.&quot;"></pre>
+      <p class="prose">In der ersten Zeile setzt PowerShell <code class="ps">$datei</code> ein, also den ganzen Pfad, und hängt <code>.Name</code> als Text an. In der zweiten steht beides in <code class="ps">$( … )</code>. In <code class="ps">$( … )</code> darf jeder Befehl stehen, sogar eine Rechnung: <code class="ps">"Summe: $(2 + 3)"</code> ergibt <code>Summe: 5</code>.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Sonderzeichen mit dem Backtick</h3>
+      <p class="prose">Der Backtick <code>`</code> ist das Fluchtzeichen von PowerShell. Auf der Schweizer Tastatur tippst du ihn mit <kbd>Shift</kbd> + <kbd>^</kbd> und danach der Leertaste. Im doppelten Text gibt er dem nächsten Zeichen eine besondere Bedeutung.</p>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Backtick-Zeichen im doppelten Text</caption>
+          <thead><tr><th>Zeichen</th><th>Bedeutung</th><th>Beispiel</th></tr></thead>
+          <tbody>
+            <tr><th><code>`n</code></th><td>neue Zeile</td><td><code class="ps">"Zeile 1`nZeile 2"</code></td></tr>
+            <tr><th><code>`t</code></th><td>Tabulator (Einzug)</td><td><code class="ps">"Name:`tLea"</code></td></tr>
+            <tr><th><code>`$</code></th><td>ein echtes Dollarzeichen, nichts einsetzen</td><td><code class="ps">"Preis in `$"</code></td></tr>
+            <tr><th><code>`"</code></th><td>ein Anführungszeichen im Text</td><td><code class="ps">"Sie sagte `"Hallo`""</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Backtick-Zeichen" data-ps-befehl="&quot;Zeile 1`nZeile 2&quot;; &quot;Sie sagte `&quot;Hallo`&quot;&quot;; 'It''s'"></pre>
+      <p class="prose">Im einfachen Text gilt der Backtick nicht. Brauchst du dort ein Apostroph, schreibst du es doppelt: <code class="ps">'It''s'</code> ergibt <code>It's</code>.</p>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> <code class="ps">"`u{2713}"</code> setzt in <span class="ps-version">7</span> ein Unicode-Zeichen ein (hier ein Häkchen ✓). Windows PowerShell 5.1 kennt <code>`u</code> nicht und zeigt einfach <code>u{2713}</code>.</div>
+    </div>
+  </section>
+
+  <!-- ===== 4 · Arrays und Hashtables ===== -->
+  <section id="sammlungen">
+    <span class="eyebrow">Schritt 4 · Mehrere Werte in einer Variable</span>
+    <h2>Arrays und Hashtables</h2>
+
+    <div class="card stack">
+      <h3>Array: der Eierkarton</h3>
+      <p class="prose">Ein Array hält mehrere Werte in einer festen Reihenfolge. Du schreibst sie mit Komma getrennt. <code class="ps">@( … )</code> darum herum macht es deutlich und geht auch für null oder ein Element. Jedes Fach hat eine Nummer, den <b>Index</b>. Er beginnt bei <b>0</b>. Mit <code class="ps">[-1]</code> zählst du von hinten: das letzte Element.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Array anlegen" data-ps-sitzung="array" data-ps-befehl="$abteilungen = @('Informatik', 'Finanzen', 'Bauamt')"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Index und Count" data-ps-sitzung="array" data-ps-befehl="$abteilungen[0]; $abteilungen[-1]; $abteilungen.Count"></pre>
+      <p class="prose">Mit <code class="ps">+=</code> hängst du ein Element an. Ein Index, den es nicht gibt, liefert einfach nichts, ohne Fehlermeldung.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Element anhängen" data-ps-sitzung="array" data-ps-befehl="$abteilungen += 'Einwohnerdienste'; $abteilungen.Count; $abteilungen[1..2]"></pre>
+      <p class="prose"><code class="ps">[1..2]</code> nimmt die Fächer 1 bis 2. Auch die Ausgabe eines Befehls ist oft ein Array: <code class="ps">$dateien = Get-ChildItem Logs</code> legt alle sieben Dateien in einen Karton.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Dateien als Array" data-ps-befehl="$dateien = Get-ChildItem Logs; $dateien.Count; $dateien[0].Name; $dateien.GetType().Name"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Hashtable: das Telefonbuch</h3>
+      <p class="prose">Eine Hashtable speichert Paare. Links steht der <b>Schlüssel</b> (der Name im Telefonbuch), rechts der <b>Wert</b> (die Nummer). Die Paare stehen in <code class="ps">@{ … }</code> und sind durch Semikolon oder Zeilenumbruch getrennt. Text als Wert gehört in Anführungszeichen.</p>
+      <pre class="ps-code"><code>$telefon = @{ Informatik = 201; Finanzen = 301 }</code></pre>
+      <p class="prose">Den Wert holst du über den Schlüssel, entweder mit einem Punkt oder mit eckigen Klammern. Beides liefert dasselbe. Mit einer Zuweisung an einen neuen Schlüssel trägst du ein weiteres Paar ein.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Hashtable lesen und ergänzen" data-ps-befehl="$telefon = @{ Informatik = 201; Finanzen = 301 }; $telefon.Finanzen; $telefon['Informatik']; $telefon.Bauamt = 401; $telefon.Count"></pre>
+      <div class="note"><b>Keine feste Reihenfolge:</b> Eine Hashtable merkt sich nicht, in welcher Reihenfolge du die Paare eingetragen hast. Zeigst du sie an, können sie anders sortiert erscheinen, auch zwischen pwsh 7 und 5.1. Brauchst du die Reihenfolge, schreib <code class="ps">[ordered]</code> davor:</div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: geordnete Hashtable" data-ps-befehl="[ordered]@{ Informatik = 201; Finanzen = 301; Bauamt = 401 }"></pre>
+      <p class="prose">Ein Schlüssel, den es nicht gibt, liefert <code class="ps">$null</code>, also nichts. Ob er existiert, prüfst du mit <code class="ps">$telefon.ContainsKey('Bauamt')</code>.</p>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Operatoren ===== -->
+  <section id="operatoren">
+    <span class="eyebrow">Schritt 5 · Operatoren</span>
+    <h2>Rechnen, vergleichen, verknüpfen</h2>
+
+    <div class="card stack">
+      <h3>Rechnen</h3>
+      <p class="prose">Die Rechenzeichen kennst du: <code class="ps">+</code>, <code class="ps">-</code>, <code class="ps">*</code>, <code class="ps">/</code>. Dazu kommt <code class="ps">%</code>, der Rest einer Division (7 durch 3 ist 2, Rest 1). Punkt vor Strich gilt, Klammern zuerst. Eine Division liefert eine Kommazahl, wenn sie nicht aufgeht.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Rechnen" data-ps-befehl="7 / 2; 8 / 2; 7 % 3; 2 + 3 * 4; (2 + 3) * 4"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Der Typ links entscheidet</h3>
+      <p class="prose">Mischst du Text und Zahl, schaut PowerShell auf den Wert <b>links</b>. Ist er Text, wird <code class="ps">+</code> zum Aneinanderhängen und <code class="ps">*</code> zum Wiederholen. Ist er eine Zahl, wandelt PowerShell den rechten Wert in eine Zahl um und rechnet.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Typ links entscheidet" data-ps-befehl="'5' + 5; 5 + '5'; '5' * 3; 3 * '5'"></pre>
+      <p class="prose"><code class="ps">'5' + 5</code> ergibt den Text <code>55</code>, <code class="ps">5 + '5'</code> die Zahl <code>10</code>. Plus ist also nicht immer vertauschbar. Bei <code class="ps">-</code> und <code class="ps">/</code> gibt es kein Aneinanderhängen: <code class="ps">'5' - 2</code> rechnet und ergibt 3.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Vergleichen</h3>
+      <p class="prose">Vergleiche liefern <code class="ps">True</code> oder <code class="ps">False</code>. Alle beginnen mit einem Strich. Die ersten kennst du aus Station 07. Neu sind <code class="ps">-contains</code> und <code class="ps">-in</code>: Sie prüfen, ob ein Wert in einer Liste vorkommt.</p>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Vergleichsoperatoren (alle Ergebnisse in pwsh 7.6 geprüft)</caption>
+          <thead><tr><th>Operator</th><th>Bedeutung</th><th>Beispiel</th><th>Ergebnis</th></tr></thead>
+          <tbody>
+            <tr><th><code class="ps">-eq</code></th><td>gleich</td><td><code class="ps">'Lea' -eq 'LEA'</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-ne</code></th><td>ungleich</td><td><code class="ps">5 -ne 4</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-gt</code></th><td>grösser als</td><td><code class="ps">5 -gt 3</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-lt</code></th><td>kleiner als</td><td><code class="ps">5 -lt 3</code></td><td>False</td></tr>
+            <tr><th><code class="ps">-like</code></th><td>passt zum Muster mit <code>*</code> und <code>?</code></td><td><code class="ps">'Lea' -like 'L*'</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-match</code></th><td>enthält das Suchmuster irgendwo</td><td><code class="ps">'Lea' -match 'e'</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-contains</code></th><td>Liste links enthält den Wert rechts</td><td><code class="ps">'rot', 'blau' -contains 'blau'</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-in</code></th><td>Wert links steht in der Liste rechts</td><td><code class="ps">2 -in 1, 2, 3</code></td><td>True</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Vergleiche" data-ps-befehl="'Lea' -eq 'LEA'; 5 -lt 3; 'rot', 'blau' -contains 'blau'; 2 -in 1, 2, 3"></pre>
+      <p class="prose"><code class="ps">-contains</code> vergleicht ganze Elemente, keine Textteile: <code class="ps">'rotblau' -contains 'rot'</code> ist <code>False</code>. Für Textteile nimmst du <code class="ps">-like '*rot*'</code> oder <code class="ps">-match 'rot'</code>. Wie überall ignorieren die Vergleiche Gross und Klein; mit <code>c</code> davor (<code class="ps">-ceq</code>) beachten sie es.</p>
+      <div class="note"><b>Auch beim Vergleich zählt der Typ links:</b> PowerShell wandelt den rechten Wert in den Typ des linken um. <code class="ps">'10' -gt 9</code> vergleicht darum zwei Texte, Zeichen für Zeichen: <code>1</code> kommt vor <code>9</code>, das Ergebnis ist <code>False</code>. Stimmt der Typ nicht, wandle zuerst um: <code class="ps">[int]'10' -gt 9</code> ist <code>True</code>.</div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Textvergleich" data-ps-befehl="'10' -gt 9; [int]'10' -gt 9"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Liste links: Vergleich wird zum Filter</h3>
+      <p class="prose">Steht links eine Liste, liefern <code class="ps">-eq</code>, <code class="ps">-ne</code>, <code class="ps">-gt</code>, <code class="ps">-like</code> und ihre Geschwister kein <code>True</code> oder <code>False</code>. Sie geben die Elemente zurück, die passen. Das ist praktisch, aber eine Falle, wenn du ein Ja oder Nein erwartest.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Vergleich filtert" data-ps-befehl="1, 2, 3, 2 -eq 2; 'Informatik', 'Finanzen', 'Bauamt' -like '*amt'"></pre>
+      <p class="prose">Willst du wissen, <i>ob</i> etwas in der Liste ist, nimm <code class="ps">-contains</code> oder <code class="ps">-in</code>. Die liefern immer <code>True</code> oder <code>False</code>. Prüfst du auf leer, schreib <code class="ps">$null</code> nach links: <code class="ps">$null -eq $wert</code>.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Logisch verknüpfen</h3>
+      <p class="prose">Mit logischen Operatoren verbindest du mehrere Bedingungen. <code class="ps">-and</code>: beide müssen wahr sein. <code class="ps">-or</code>: mindestens eine. <code class="ps">-not</code> (oder kurz <code class="ps">!</code>) dreht wahr und falsch um. Klammern machen lange Bedingungen lesbar.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: logische Operatoren" data-ps-befehl="$true -and $false; $true -or $false; -not $true; (5 -gt 3) -and (2 -gt 1)"></pre>
+      <p class="prose">Ein Beispiel von Lea: Ist <code>app.log</code> kleiner als 1 KB <i>und</i> beginnt ihr Name mit <code>app</code>?</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: zwei Bedingungen" data-ps-befehl="$datei = Get-Item Logs\app.log; $datei.Length -lt 1KB -and $datei.Name -like 'app*'"></pre>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Für Kurzformen wie <code class="ps">$x -gt 5 ? 'gross' : 'klein'</code> (wenn, dann, sonst) und <code class="ps">$wert ?? 'Ersatz'</code> (Ersatz, wenn <code class="ps">$wert</code> gleich <code class="ps">$null</code> ist; ein leerer Text <code class="ps">''</code> bleibt stehen) brauchst du PowerShell <span class="ps-version">7</span>. Windows PowerShell 5.1 meldet «Unerwartetes Token».</div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Simulator mit Variablen-Tafel ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Leas Rechner mit Variablen-Tafel</h2>
+    <p class="prose">Jetzt tippst du selbst. Unter der Konsole hängt eine Tafel: Jede Variable, die du anlegst, erscheint dort als Kärtchen mit Name, Typ und Wert. Neue Kärtchen sind mit «neu» markiert, geänderte mit «geändert». So siehst du, was in den Schachteln liegt, ohne nachzufragen. Die Aufgaben bauen aufeinander auf. «↺ Zurücksetzen» leert alle Schachteln.</p>
+    <div id="t09-konsole"></div>
+    <div class="card stack keine-formel" id="t09-tafel-box">
+      <div class="t09-tafel-kopf">
+        <h3>Variablen-Tafel</h3>
+        <span class="hint" id="t09-tafel-stand">0 Variablen</span>
+      </div>
+      <ul class="t09-tafel" id="t09-tafel" aria-label="Deine Variablen im Simulator"></ul>
+      <p class="sr-only" id="t09-tafel-meldung" aria-live="polite"></p>
+      <p class="hint">Automatische Variablen wie <code class="ps">$HOME</code> oder <code class="ps">$PSVersionTable</code> zeigt die Tafel nicht. Sie sind immer da.</p>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Operator-Wahrsager ===== -->
+  <section id="wahrsager">
+    <span class="eyebrow">Schritt 7 · Vorhersagen</span>
+    <h2>Der Operator-Wahrsager</h2>
+    <p class="prose">Hier steht ein Ausdruck. Sag voraus, was PowerShell ausgibt, und tipp auf deine Antwort. Danach rechnet der Simulator den Ausdruck wirklich aus und du liest, warum. Einige Ausdrücke sind Fallen. Nimm dir Zeit.</p>
+    <div class="card stack keine-formel" id="t09-ws">
+      <div class="t09-ws-kopf">
+        <h3 id="t09-ws-titel">Ausdruck 1</h3>
+        <span class="t09-ws-stand" id="t09-ws-stand"></span>
+      </div>
+      <p class="t09-ws-vorher" id="t09-ws-vorher"></p>
+      <div id="t09-ws-ausdruck"></div>
+      <div class="t09-ws-optionen" id="t09-ws-optionen" role="group" aria-label="Deine Vorhersage"></div>
+      <div class="t09-ws-auf" id="t09-ws-auf" tabindex="-1" aria-live="polite"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t09-ws-weiter" hidden>Nächster Ausdruck →</button>
+        <button type="button" class="btn" id="t09-ws-neu">↺ Von vorn</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Befehle in die richtige Reihenfolge</h3>
+      <p class="prose">Lea will den Satz <code>Logs: 23.35 MB</code> erzeugen. Jede Zeile braucht eine Variable aus einer früheren Zeile. Gib jeder Zeile ihren Platz (1 bis 4).</p>
+      <div id="t09-u1"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 2 · Zuordnen: Welcher Typ?</h3>
+      <p class="prose">Welchen Namen liefert <code class="ps">.GetType().Name</code> für diese Werte?</p>
+      <div id="t09-u2"></div>
+    </div>
+    <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t09-u3"></div></div>
+    <div class="card stack"><h3>Übung 4 · Ausgabe vorhersagen</h3><div id="t09-u4"></div></div>
+    <div class="card stack"><h3>Übung 5 · Fehler finden</h3><div id="t09-u5"></div></div>
+    <div class="card stack"><h3>Übung 6 · Fehler finden</h3><div id="t09-u6"></div></div>
+    <div class="card stack"><h3>Übung 7 · Wahr oder falsch?</h3><div id="t09-u7"></div></div>
+    <div class="card stack">
+      <h3>Übung 8 · Befehl selbst schreiben</h3>
+      <p class="prose">Zwei Aufträge ohne Vorlage. Schreib die Befehle selbst in den Simulator. Mehrere Befehle in einer Zeile trennst du mit <code class="ps">;</code>.</p>
+      <div id="t09-u8"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Wochenbericht in einer Zeile</h2>
+    <p class="prose">Der Leiter Informatik will jeden Montag einen Satz von Lea: Wie viele Logdateien gibt es, wie viele MB belegen sie zusammen, und wie viele davon sind grösser als 4 MB? Lea sammelt die Werte in Variablen, rechnet damit und setzt sie in einen Text ein.</p>
+    <p class="prose">Jede Szene zeigt einen Befehl und die Ausgabe des Simulators auf Leas Rechner.</p>
+    <div id="t09-film"></div>
+    <details class="sol">
+      <summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <pre class="ps-code"><code>$dateien = Get-ChildItem Logs
+$summe = ($dateien | Measure-Object -Property Length -Sum).Sum
+$mb = [math]::Round($summe / 1MB, 2)
+$gross = $dateien | Where-Object Length -gt 4MB
+"Logs: $($dateien.Count) Dateien, $mb MB, davon $($gross.Count) über 4 MB."</code></pre>
+        <p class="prose">Ergebnis: <code>Logs: 7 Dateien, 23.35 MB, davon 3 über 4 MB.</code></p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Alle Befehle in PowerShell 7.6 in einem nachgebauten Ordner geprüft.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine</h2>
+    <div class="note falle"><b><code class="ps">=</code> statt <code class="ps">-eq</code>:</b> Das Gleichheitszeichen vergleicht nicht, es weist zu. In einer Bedingung wie <code class="ps">if ($anzahl = 10) { 'Zehn Dateien!' }</code> legt PowerShell 10 in die Variable und behandelt das als wahr. Echte pwsh 7 gibt <code>Zehn Dateien!</code> aus, und <code class="ps">$anzahl</code> ist danach 10, egal was vorher drin war. Vergleichen heisst <code class="ps">-eq</code>. (<code class="ps">if</code> lernst du in Station 10 genauer kennen.)</div>
+    <div class="note falle"><b><code class="ps">&gt;</code> statt <code class="ps">-gt</code>:</b> <code>&gt;</code> ist eine Umleitung in eine Datei. <code class="ps">$wert &gt; 3</code> vergleicht nicht, sondern schreibt den Inhalt von <code class="ps">$wert</code> still in eine neue Datei namens <code>3</code>.
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Umleitung statt Vergleich" data-ps-befehl="$wert = 5; $wert > 3; Get-Content .\3"></pre>
+      Auf dem Bildschirm erscheint beim zweiten Befehl nichts, aber im Ordner liegt jetzt die Datei <code>3</code> mit dem Inhalt 5.</div>
+    <div class="note falle"><b>Einfache statt doppelte Anführungszeichen:</b> <code class="ps">'Hallo $name'</code> setzt nichts ein. Willst du den Wert im Text, nimm <code class="ps">"Hallo $name"</code>.</div>
+    <div class="note falle"><b>Eigenschaft ohne <code class="ps">$( … )</code>:</b> <code class="ps">"Grösse: $datei.Length"</code> setzt nur <code class="ps">$datei</code> ein und hängt <code>.Length</code> als Text an. Richtig: <code class="ps">"Grösse: $($datei.Length)"</code>. Dasselbe gilt für Indexe: <code class="ps">"$liste[0]"</code> zeigt die ganze Liste und dann <code>[0]</code>.</div>
+    <div class="note falle"><b>Zahl als Text:</b> Werte aus CSV-Dateien und Eingaben sind Text. <code class="ps">'80' + 20</code> ergibt <code>8020</code>, und <code class="ps">'19.90' * 3</code> ergibt <code>19.9019.9019.90</code>. Wandle zuerst um: <code class="ps">[int]'80' + 20</code>, <code class="ps">[double]'19.90' * 3</code>.</div>
+    <div class="note falle"><b><code class="ps">-eq</code> mit einer Liste links:</b> <code class="ps">$abteilungen -eq 'Bauamt'</code> liefert nicht <code>True</code>, sondern das Element <code>Bauamt</code> selbst (oder nichts). Für ein Ja oder Nein nimm <code class="ps">$abteilungen -contains 'Bauamt'</code>.</div>
+    <div class="note falle"><b><code class="ps">-contains</code> für Textteile:</b> <code class="ps">'Informatik' -contains 'Info'</code> ist <code>False</code>. <code class="ps">-contains</code> sucht ganze Elemente in einer Liste. Für Textteile: <code class="ps">-like 'Info*'</code> oder <code class="ps">-match 'Info'</code>.</div>
+    <div class="note falle"><b>Komma in der Hashtable:</b> <code class="ps">@{ Informatik = 201, Finanzen = 301 }</code> ist ein Parserfehler (<span lang="en"><code>Missing expression after ','</code></span>, «nach dem Komma fehlt etwas»). Paare trennst du mit Semikolon: <code class="ps">@{ Informatik = 201; Finanzen = 301 }</code>. Das Komma gehört zu Arrays.</div>
+    <div class="note falle"><b>Index beginnt bei 0:</b> <code class="ps">$abteilungen[1]</code> ist das <i>zweite</i> Element. Das erste ist <code class="ps">$abteilungen[0]</code>, das letzte <code class="ps">$abteilungen[-1]</code>.</div>
+    <div class="note falle"><b>Tippfehler im Namen:</b> Eine Variable, die es nicht gibt, ist <code class="ps">$null</code> und erzeugt keinen Fehler. <code class="ps">"Anzahl: $anzhal"</code> ergibt still <code>Anzahl: </code>. Erst ein Methodenaufruf wie <code class="ps">$anzhal.GetType()</code> meldet <span lang="en"><code>You cannot call a method on a null-valued expression.</code></span></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Anführungszeichen, Typen, Operatoren</h2>
+    <p class="prose">Zehn Fragen. Jede hat genau eine richtige Antwort. Alle Ergebnisse stammen aus echter PowerShell 7.6.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Schreibweisen dieser Station</caption>
+        <thead><tr><th>Schreibweise</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">$name = …</code></th><td>Wert in einer Variable speichern</td><td><code class="ps">$anzahl = 7</code></td></tr>
+          <tr><th><code class="ps">+= -= *= /=</code></th><td>Wert verändern und wieder speichern</td><td><code class="ps">$anzahl += 2</code></td></tr>
+          <tr><th><code class="ps">.GetType().Name</code></th><td>Typ eines Werts anzeigen</td><td><code class="ps">$anzahl.GetType().Name</code></td></tr>
+          <tr><th><code class="ps">[int] [double] [string]</code></th><td>Typ umwandeln</td><td><code class="ps">[int]'80' + 20</code></td></tr>
+          <tr><th><code class="ps">'…'</code></th><td>Text wörtlich, nichts einsetzen</td><td><code class="ps">'Hallo $name'</code></td></tr>
+          <tr><th><code class="ps">"…"</code></th><td>Text mit eingesetzten Variablen</td><td><code class="ps">"Hallo $name"</code></td></tr>
+          <tr><th><code class="ps">$( … )</code></th><td>Eigenschaft oder Rechnung im Text</td><td><code class="ps">"$($datei.Length) Bytes"</code></td></tr>
+          <tr><th><code class="ps">`n `t `$ `"</code></th><td>neue Zeile, Tabulator, echtes Dollarzeichen, Anführungszeichen</td><td><code class="ps">"Zeile 1`nZeile 2"</code></td></tr>
+          <tr><th><code class="ps">@( … )</code>, <code class="ps">[0]</code>, <code class="ps">[-1]</code>, <code class="ps">.Count</code></th><td>Array anlegen, erstes und letztes Element, Anzahl</td><td><code class="ps">$abteilungen[-1]</code></td></tr>
+          <tr><th><code class="ps">@{ Schluessel = Wert }</code></th><td>Hashtable anlegen und lesen</td><td><code class="ps">$telefon.Finanzen</code>, <code class="ps">$telefon['Finanzen']</code></td></tr>
+          <tr><th><code class="ps">+ - * / %</code></th><td>rechnen (Typ links entscheidet)</td><td><code class="ps">7 % 3</code></td></tr>
+          <tr><th><code class="ps">-eq -ne -gt -lt -like -match</code></th><td>vergleichen; Liste links filtert</td><td><code class="ps">'Lea' -like 'L*'</code></td></tr>
+          <tr><th><code class="ps">-contains -in</code></th><td>kommt der Wert in der Liste vor?</td><td><code class="ps">2 -in 1, 2, 3</code></td></tr>
+          <tr><th><code class="ps">-and -or -not</code></th><td>Bedingungen verknüpfen oder umkehren</td><td><code class="ps">$a -gt 5 -and $b -lt 3</code></td></tr>
+          <tr><th><code class="ps">$HOME $env:USERNAME $PSVersionTable</code></th><td>automatische Variablen</td><td><code class="ps">$env:USERNAME</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Eine <b>Variable</b> beginnt mit <code class="ps">$</code>. <code class="ps">=</code> speichert, der Name allein zeigt den Inhalt.</li>
+      <li>Jeder Wert hat einen <b>Typ</b>. <code class="ps">.GetType().Name</code> verrät ihn, <code class="ps">[int]</code> und Co. wandeln um.</li>
+      <li><b>Einfache</b> Anführungszeichen sind wörtlich, <b>doppelte</b> setzen ein. Eigenschaften brauchen <code class="ps">$( … )</code>.</li>
+      <li><b>Arrays</b> zählen ab 0, <b>Hashtables</b> finden Werte über den Schlüssel.</li>
+      <li>Bei gemischten Typen entscheidet der Wert <b>links</b>: <code class="ps">'5' + 5</code> ist <code>55</code>, <code class="ps">5 + '5'</code> ist <code>10</code>.</li>
+      <li>Vergleiche beginnen mit Strich. <code class="ps">=</code> weist zu, <code class="ps">&gt;</code> leitet um. Mit einer Liste links filtert ein Vergleich.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li><code class="ps">$PSVersionTable</code> zeigt in 5.1 <code>PSEdition</code> <code>Desktop</code> und Version 5.1; in <span class="ps-version">7</span> <code>Core</code> und 7.x.</li>
+        <li>Das Zeichen <code class="ps">"`u{2713}"</code> für Unicode gibt es nur in <span class="ps-version">7</span>.</li>
+        <li>Die Kurzformen <code class="ps">? :</code> und <code class="ps">??</code> gibt es nur in <span class="ps-version">7</span>.</li>
+        <li>Fehlermeldungen sind in 5.1 mehrzeilig (mit <code>CategoryInfo</code>) und auf einem deutschen Windows deutsch, zum Beispiel «Die Eingabezeichenfolge hat das falsche Format».</li>
+        <li>Die Reihenfolge, in der eine Hashtable ihre Paare zeigt, kann sich zwischen 5.1 und 7 unterscheiden. <code class="ps">[ordered]</code> gilt in beiden.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_variables">about_Variables</a> (Zuweisung, Namen, Gross/Klein egal, Typ festlegen)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_automatic_variables">about_Automatic_Variables</a> (<code>$HOME</code>, <code>$PSVersionTable</code>, <code>$true</code>, <code>$null</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_quoting_rules">about_Quoting_Rules</a> (einfache und doppelte Anführungszeichen, <code>$( )</code>, Backtick)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_special_characters">about_Special_Characters</a> (<code>`n</code>, <code>`t</code>, <code>`u{…}</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_arrays">about_Arrays</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_hash_tables">about_Hash_Tables</a> (Index, <code>[ordered]</code>, Reihenfolge nicht festgelegt)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_operators">about_Operators</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_arithmetic_operators">about_Arithmetic_Operators</a> (der Typ ganz links entscheidet, Runden zur geraden Zahl)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comparison_operators">about_Comparison_Operators</a> (Liste links filtert, <code>-contains</code> und <code>-in</code>, <code>$null</code> nach links)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logical_operators">about_Logical_Operators</a> (<code>-and</code>, <code>-or</code>, <code>-not</code>)</li>
+      </ul>
+    </div>
+    <footer>Station 09 des Lernpfads PS · Weiter geht es mit «Bedingungen und Schleifen».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  const K = (t) => "<code>" + esc(t) + "</code>";
+  const gleichCI = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t09-mini", {
+    kategorien: ["Variable", "Array", "Hashtable"],
+    elemente: [
+      { html: "Leas Vorname", kategorie: "Variable", erklaerung: "Ein einzelner Wert: eine Schachtel genügt." },
+      { html: "Die Namen aller Abteilungen der Gemeinde", kategorie: "Array", erklaerung: "Mehrere Werte nacheinander: ein Eierkarton." },
+      { html: "Zu jeder Abteilung ihre interne Telefonnummer", kategorie: "Hashtable", erklaerung: "Paare aus Name und Nummer: ein Telefonbuch." },
+      { html: "Die Anzahl Logdateien", kategorie: "Variable", erklaerung: "Eine einzige Zahl." },
+      { html: "Die sieben Dateien im Ordner Logs", kategorie: "Array", erklaerung: "Get-ChildItem liefert mehrere Objekte, also ein Array." },
+      { html: "Einstellungen wie Server = sync01 und Intervall = 15", kategorie: "Hashtable", erklaerung: "Jede Einstellung hat einen Namen und einen Wert." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper ---------- */
+  const st = L.konsole.sitzung();
+  const sp = (link, code) => '<span data-link="' + link + '">' + C(code) + "</span>";
+  const stufe = (link, befehl) => '<div class="t09-st"><div>' + sp(link, befehl) + "</div>" + st.html(befehl) + "</div>";
+  L.stepper("#t09-stepper", {
+    titel: "Leas Abteilung",
+    text: 'Lea will <span data-link="a">ihre Abteilung in einer Variable merken</span>, <span data-link="b">den Inhalt anschauen</span>, <span data-link="c">die Art des Inhalts prüfen</span> und <span data-link="d">ihn in einen Satz einsetzen</span>.',
+    schritte: [
+      { html: stufe("a", "$abteilung = 'Informatik'"),
+        warum: "Die Zuweisung legt den Text Informatik in die Schachtel abteilung. Die Konsole zeigt dabei nichts an." },
+      { html: stufe("b", "$abteilung"),
+        warum: "Der Name allein holt den Inhalt wieder hervor." },
+      { html: stufe("c", "$abteilung.GetType().Name"),
+        warum: "GetType() fragt nach dem Typ. Informatik steht in Anführungszeichen, also ist es Text: String." },
+      { html: stufe("d", "\"Lea arbeitet in der Abteilung $abteilung.\""),
+        warum: "In doppelten Anführungszeichen setzt PowerShell den Inhalt der Variable an ihrer Stelle ein." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Konsole mit Aufgaben ---------- */
+  const arr = (ctx, n) => { const v = ctx.variable(n); return Array.isArray(v) ? v : null; };
+  const hatText = (ctx, t) => ctx.objekte.some((o) => ctx.text(o) === t);
+  const konsole = L.konsole("#t09-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Leas Name in einer Variable",
+        text: "<p>Speichere den Text <code>Lea</code> in der Variable " + C("$name") + ". Schau danach auf die Tafel unter der Konsole.</p>",
+        hinweis: "<p>Links der Name mit Dollarzeichen, dann " + C("=") + ", rechts der Text in Anführungszeichen.</p>",
+        loesung: "$name = 'Lea'",
+        pruefe: (ctx) => /\$\{?name\}?\s*=/i.test(ctx.eingabe) && ctx.variable("name") === "Lea"
+      },
+      {
+        titel: "Begrüssung mit Einsetzen",
+        text: "<p>Gib den Satz <code>Hallo Lea, willkommen in Wolkenried!</code> aus. Lea darf dabei nicht als Wort in deiner Eingabe stehen: Setz " + C("$name") + " ein.</p>",
+        hinweis: "<p>Doppelte Anführungszeichen setzen Variablen ein, einfache nicht.</p>",
+        loesung: "\"Hallo $name, willkommen in Wolkenried!\"",
+        pruefe: (ctx) => /\$\{?name/i.test(ctx.eingabe) && !/Lea/.test(ctx.eingabe) && hatText(ctx, "Hallo Lea, willkommen in Wolkenried!")
+      },
+      {
+        titel: "Satz mit der Anzahl Logdateien",
+        text: "<p>Speichere alle Dateien des Ordners <code>Logs</code> in " + C("$logs") + " und gib dann den Satz <code>Im Ordner Logs liegen 7 Dateien.</code> aus. Die 7 soll aus " + C("$logs.Count") + " kommen, nicht von dir.</p>",
+        hinweis: "<p>Zuerst " + C("$logs = Get-ChildItem Logs") + ". Im Text brauchst du für die Eigenschaft " + C("$( … )") + ". Zwei Befehle in einer Zeile trennst du mit " + C(";") + ".</p>",
+        loesung: "$logs = Get-ChildItem Logs; \"Im Ordner Logs liegen $($logs.Count) Dateien.\"",
+        pruefe: (ctx) => /\$\(\s*\$logs\.count\s*\)/i.test(ctx.eingabe) && !/\b7\b/.test(ctx.eingabe) &&
+          (arr(ctx, "logs") || []).length === 7 && hatText(ctx, "Im Ordner Logs liegen 7 Dateien.")
+      },
+      {
+        titel: "Welcher Typ ist das?",
+        text: "<p>Lass dir anzeigen, welchen Typ " + C("$logs") + " hat.</p>",
+        hinweis: "<p>Hänge " + C(".GetType().Name") + " an den Variablennamen.</p>",
+        loesung: "$logs.GetType().Name",
+        pruefe: (ctx) => /\$logs\.gettype\(\)/i.test(ctx.eingabe) && /Object\[\]/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Text in eine Zahl umwandeln",
+        text: "<p>Leas Pensum steht in einer CSV-Datei als Text <code>'80'</code>. Wandle den Text in eine ganze Zahl um und zähle 20 dazu. Das Ergebnis muss 100 sein, nicht 8020.</p>",
+        hinweis: "<p>Der Typname in eckigen Klammern vor dem Wert wandelt um: " + C("[int]") + ".</p>",
+        loesung: "[int]'80' + 20",
+        pruefe: (ctx) => /\[int\]/i.test(ctx.eingabe) && /'80'|"80"/.test(ctx.eingabe) && ctx.objekte.length === 1 && ctx.text(ctx.objekte[0]) === "100"
+      },
+      {
+        titel: "Ein Array erweitern",
+        text: "<p>Lege das Array " + C("$abteilungen") + " mit <code>Informatik</code>, <code>Finanzen</code> und <code>Bauamt</code> an. Hänge danach mit " + C("+=") + " <code>Einwohnerdienste</code> an.</p>",
+        hinweis: "<p>Werte mit Komma trennen: " + C("$abteilungen = 'Informatik', 'Finanzen', 'Bauamt'") + ". Dann " + C("$abteilungen += '…'") + ".</p>",
+        loesung: "$abteilungen = 'Informatik', 'Finanzen', 'Bauamt'; $abteilungen += 'Einwohnerdienste'",
+        pruefe: (ctx) => {
+          const a = arr(ctx, "abteilungen");
+          return /\$abteilungen\s*\+=/i.test(ctx.eingabe) && !!a && a.length === 4 &&
+            ["Informatik", "Finanzen", "Bauamt", "Einwohnerdienste"].every((x, i) => gleichCI(a[i], x));
+        }
+      },
+      {
+        titel: "Kommt das Bauamt vor?",
+        text: "<p>Prüfe, ob <code>Bauamt</code> in " + C("$abteilungen") + " vorkommt. Die Antwort soll <code>True</code> oder <code>False</code> sein, nicht das Element selbst.</p>",
+        hinweis: "<p>" + C("-eq") + " würde mit einer Liste links filtern. Für ein Ja oder Nein gibt es " + C("-contains") + " (Liste links) und " + C("-in") + " (Liste rechts).</p>",
+        loesung: "$abteilungen -contains 'Bauamt'",
+        pruefe: (ctx) => /-c?contains\b|-c?in\b/i.test(ctx.eingabe) && /\$abteilungen/i.test(ctx.eingabe) && /bauamt/i.test(ctx.eingabe) &&
+          ctx.objekte.length === 1 && ctx.objekte[0] === true
+      },
+      {
+        titel: "Leas Telefonbuch",
+        text: "<p>Lege die Hashtable " + C("$telefon") + " mit <code>Informatik = 201</code> und <code>Finanzen = 301</code> an. Frag danach die Nummer der Finanzen über den Schlüssel ab.</p>",
+        hinweis: "<p>" + C("@{ Schluessel = Wert; Schluessel = Wert }") + ", Paare mit Semikolon trennen. Abfragen mit " + C("$telefon.Finanzen") + " oder " + C("$telefon['Finanzen']") + ".</p>",
+        loesung: "$telefon = @{ Informatik = 201; Finanzen = 301 }; $telefon.Finanzen",
+        pruefe: (ctx) => {
+          const h = ctx.variable("telefon");
+          if (!h || typeof h !== "object" || Array.isArray(h)) return false;
+          const w = (k) => { const s = Object.keys(h).find((x) => gleichCI(x, k)); return s === undefined ? undefined : h[s]; };
+          return w("Informatik") === 201 && w("Finanzen") === 301 &&
+            /\$telefon\s*(\.\s*finanzen|\[\s*['"]finanzen['"]\s*\])\s*;?\s*$/i.test(ctx.eingabe) && hatText(ctx, "301");
+        }
+      }
+    ]
+  });
+
+  /* ---------- Variablen-Tafel ---------- */
+  (function tafel() {
+    const liste = document.getElementById("t09-tafel");
+    const stand = document.getElementById("t09-tafel-stand");
+    const meldung = document.getElementById("t09-tafel-meldung");
+    const box = document.getElementById("t09-konsole");
+    if (!konsole || !L.ps || !L.ps.Sitzung) return;
+    // Variablen, die PowerShell selbst anlegt, gehören nicht auf die Tafel
+    let basis;
+    try { basis = new Set(Array.from(new L.ps.Sitzung().i.global.vars.keys())); } catch (e) { basis = new Set(); }
+    ["_", "psitem", "matches", "args", "input", "error", "lastexitcode", "this", "foreach", "switch"].forEach((n) => basis.add(n));
+    let vorher = new Map();
+    let ersterLauf = true;
+
+    const kurz = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+    function wertText(ctx, w, tiefe) {
+      if (w === null || w === undefined) return "$null";
+      if (typeof w === "string") return "'" + w + "'";
+      if (typeof w === "boolean") return w ? "True" : "False";
+      if (Array.isArray(w)) {
+        if (tiefe > 0) return "(" + w.length + " Elemente)";
+        if (!w.length) return "leer: @()";
+        const teile = w.slice(0, 5).map((x, i) => "[" + i + "] " + kurz(wertText(ctx, x, 1), 48));
+        if (w.length > 5) teile.push("… und " + (w.length - 5) + " weitere");
+        return w.length + (w.length === 1 ? " Element" : " Elemente") + "\n" + teile.join("\n");
+      }
+      if (w && w.constructor && /Hashtable/.test(w.constructor.name)) return null;
+      return ctx.text(w);
+    }
+    function typVon(s, name) {
+      const z = s.schnappschuss();
+      try {
+        const r = s.zeile("${" + name + "}.GetType().Name", { ohneVerlauf: true });
+        return r.fehler.length ? "" : String(r.text || "").trim();
+      } catch (e) { return ""; } finally { s.wiederherstellen(z); }
+    }
+    function lesen() {
+      const s = konsole.sitzung;
+      const ctx = s.kontext({ code: "", befehle: [], objekte: [], text: "", fehler: [] });
+      const ergebnis = [];
+      s.i.global.vars.forEach((e, key) => {
+        if (basis.has(key)) return;
+        let wert = wertText(ctx, e.wert, 0);
+        if (wert === null) {
+          const h = ctx.variable(e.name) || {};
+          const k = Object.keys(h);
+          wert = k.length ? k.length + (k.length === 1 ? " Paar" : " Paare") + "\n" + k.slice(0, 6).map((x) => x + " = " + kurz(wertText(ctx, h[x], 1), 40)).join("\n") : "leer: @{}";
+        }
+        const typ = e.wert === null || e.wert === undefined ? "kein Typ" : (typVon(s, e.name) || "Objekt");
+        ergebnis.push({ name: e.name, typ: typ, wert: wert, fest: e.typ ? e.typ.name || e.typ.voll || "" : "" });
+      });
+      return ergebnis;
+    }
+    function zeichnen() {
+      let daten;
+      try { daten = lesen(); } catch (e) { console.error("[t09] Variablen-Tafel:", e); return; }
+      const jetzt = new Map();
+      const neu = [], anders = [];
+      liste.innerHTML = "";
+      if (!daten.length) {
+        const li = document.createElement("li");
+        li.className = "t09-leer";
+        li.textContent = "Noch keine Variablen. Tippe zum Beispiel $name = 'Lea'.";
+        liste.appendChild(li);
+      }
+      daten.forEach((d) => {
+        const sig = d.typ + "|" + d.wert;
+        jetzt.set(d.name.toLowerCase(), sig);
+        const alt = vorher.get(d.name.toLowerCase());
+        const istNeu = !ersterLauf && alt === undefined;
+        const istAnders = !ersterLauf && alt !== undefined && alt !== sig;
+        if (istNeu) neu.push(d); else if (istAnders) anders.push(d);
+        const li = document.createElement("li");
+        li.className = "t09-karte" + (istNeu ? " neu" : istAnders ? " anders" : "");
+        const name = document.createElement("span"); name.className = "t09-name"; name.textContent = "$" + d.name;
+        const zeile = document.createElement("div"); zeile.className = "t09-zeile";
+        const typ = document.createElement("span"); typ.className = "t09-typ"; typ.textContent = d.typ;
+        zeile.appendChild(typ);
+        if (d.fest) { const f = document.createElement("span"); f.className = "t09-fest"; f.textContent = "fest: [" + d.fest + "]"; zeile.appendChild(f); }
+        if (istNeu || istAnders) { const m = document.createElement("span"); m.className = "t09-marke"; m.textContent = istNeu ? "✚ neu" : "✎ geändert"; zeile.appendChild(m); }
+        const wert = document.createElement("pre"); wert.className = "t09-wert"; wert.textContent = d.wert;
+        wert.setAttribute("aria-label", "Wert von $" + d.name);
+        li.append(name, zeile, wert);
+        liste.appendChild(li);
+      });
+      stand.textContent = daten.length + (daten.length === 1 ? " Variable" : " Variablen");
+      const teile = neu.map((d) => "neu: $" + d.name + ", " + d.typ).concat(anders.map((d) => "geändert: $" + d.name + ", " + d.typ));
+      if (teile.length) meldung.textContent = "Variablen-Tafel, " + teile.join("; ") + ".";
+      else if (!ersterLauf && vorher.size && !daten.length) meldung.textContent = "Variablen-Tafel geleert.";
+      vorher = jetzt;
+      ersterLauf = false;
+    }
+    let geplant = false;
+    const beobachter = new MutationObserver(() => {
+      if (geplant) return;
+      geplant = true;
+      setTimeout(() => { geplant = false; zeichnen(); }, 0);
+    });
+    beobachter.observe(box, { childList: true, subtree: true, characterData: true });
+    zeichnen();
+  })();
+
+  /* ---------- Schritt 7: Operator-Wahrsager ---------- */
+  (function wahrsager() {
+    // erwartet: Ausgabe von pwsh 7.6 (Zeilen mit \n), geprüft; die Seite vergleicht beim Laden mit dem Simulator
+    const AUSDRUECKE = [
+      { code: "'5' + 5", erwartet: "55", optionen: ["10", "55", "eine Fehlermeldung"], richtig: 1,
+        warum: "Links steht Text. Dann hängt + an: aus '5' und 5 wird der Text 55." },
+      { code: "5 + '5'", erwartet: "10", optionen: ["10", "55", "eine Fehlermeldung"], richtig: 0,
+        warum: "Links steht eine Zahl. PowerShell wandelt '5' in eine Zahl um und rechnet 5 + 5." },
+      { code: "'5' * 3", erwartet: "555", optionen: ["15", "555", "eine Fehlermeldung"], richtig: 1,
+        warum: "Text mal Zahl wiederholt den Text: dreimal 5 hintereinander." },
+      { code: "7 / 2", erwartet: "3.5", optionen: ["3", "3.5", "4"], richtig: 1,
+        warum: "Geht die Division nicht auf, liefert PowerShell eine Kommazahl (Double). Es wird nicht abgeschnitten." },
+      { code: "[int]'80' + 20", erwartet: "100", optionen: ["100", "8020", "eine Fehlermeldung"], richtig: 0,
+        warum: "[int] macht aus dem Text '80' zuerst die Zahl 80. Dann steht links eine Zahl, und PowerShell rechnet." },
+      { code: "'Lea' -eq 'LEA'", erwartet: "True", optionen: ["True", "False"], richtig: 0,
+        warum: "-eq ignoriert Gross und Klein. Erst -ceq würde False liefern." },
+      { code: "'10' -gt 9", erwartet: "False", optionen: ["True", "False", "eine Fehlermeldung"], richtig: 1,
+        warum: "Links steht Text. PowerShell vergleicht darum Texte Zeichen für Zeichen: 1 kommt vor 9. Mit [int]'10' wäre es True." },
+      { code: "1, 2, 3, 2 -eq 2", erwartet: "2\n2", optionen: ["True", "zweimal 2, je auf einer Zeile", "2 (die Anzahl Treffer)"], richtig: 1,
+        warum: "Steht links eine Liste, filtert -eq: Es kommen alle Elemente heraus, die gleich 2 sind. Das sind zwei." },
+      { code: "'rotblau' -contains 'rot'", erwartet: "False", optionen: ["True", "False"], richtig: 1,
+        warum: "-contains sucht ein ganzes Element in einer Liste. 'rotblau' ist ein einziges Element, und es heisst nicht 'rot'." },
+      { code: "$true -and -not $false", erwartet: "True", optionen: ["True", "False"], richtig: 0,
+        warum: "-not $false ist $true. Beide Seiten von -and sind wahr, also ist das Ganze wahr." },
+      { vorher: "$name = 'Lea'", code: "'Hallo $name'", erwartet: "Hallo $name", optionen: ["Hallo Lea", "Hallo $name", "Hallo"], richtig: 1,
+        warum: "Einfache Anführungszeichen sind wörtlich. Nur doppelte setzen die Variable ein." },
+      { vorher: "$liste = 'x', 'y'", code: "\"Erstes: $liste[0]\"", erwartet: "Erstes: x y[0]", optionen: ["Erstes: x", "Erstes: x y[0]", "Erstes: [0]"], richtig: 1,
+        warum: "Im Text setzt PowerShell nur den einfachen Namen ein: die ganze Liste, durch Leerzeichen getrennt. [0] bleibt Text. Richtig wäre \"Erstes: $($liste[0])\"." }
+    ];
+    const titel = document.getElementById("t09-ws-titel");
+    const standEl = document.getElementById("t09-ws-stand");
+    const vorherEl = document.getElementById("t09-ws-vorher");
+    const ausdruck = document.getElementById("t09-ws-ausdruck");
+    const optionen = document.getElementById("t09-ws-optionen");
+    const auf = document.getElementById("t09-ws-auf");
+    const weiter = document.getElementById("t09-ws-weiter");
+    const neuKnopf = document.getElementById("t09-ws-neu");
+    let nr = 0, richtig = 0, beantwortet = 0;
+
+    // Simulator-Ergebnisse vorbereiten und mit den geprüften pwsh-Ergebnissen vergleichen
+    AUSDRUECKE.forEach((a) => {
+      const s = L.konsole.sitzung();
+      if (a.vorher) s.ausfuehren(a.vorher);
+      a.html = s.html(a.code);
+      const s2 = L.konsole.sitzung();
+      if (a.vorher) s2.ausfuehren(a.vorher);
+      const ist = s2.ausfuehren(a.code);
+      if (ist !== a.erwartet) console.error("[t09] Wahrsager: Simulator weicht ab bei", a.code, JSON.stringify(ist), "statt", JSON.stringify(a.erwartet));
+    });
+
+    function zeigen() {
+      const a = AUSDRUECKE[nr];
+      titel.textContent = "Ausdruck " + (nr + 1) + " von " + AUSDRUECKE.length;
+      standEl.textContent = richtig + " von " + beantwortet + " richtig";
+      vorherEl.innerHTML = a.vorher ? "Vorher ausgeführt: " + C(a.vorher) : "";
+      ausdruck.innerHTML = '<pre class="ps-code"><code>' + esc(a.code) + "</code></pre>";
+      optionen.innerHTML = "";
+      a.optionen.forEach((o, i) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn";
+        b.textContent = o;
+        b.addEventListener("click", () => antworten(i));
+        optionen.appendChild(b);
+      });
+      auf.innerHTML = "";
+      weiter.hidden = true;
+      L.psFaerben(ausdruck);
+    }
+
+    function antworten(i) {
+      const a = AUSDRUECKE[nr];
+      const ok = i === a.richtig;
+      beantwortet++;
+      if (ok) richtig++;
+      Array.from(optionen.children).forEach((b, k) => {
+        b.disabled = true;
+        if (k === a.richtig) { b.classList.add("richtig"); b.textContent = "✓ " + a.optionen[k]; }
+        else if (k === i) { b.classList.add("falsch"); b.textContent = "✗ " + a.optionen[k]; }
+      });
+      const kopf = '<p class="t09-ws-ergebnis">' + (ok ? "✓ Richtig vorhergesagt." : "✗ Nicht ganz. Richtig ist: " + esc(a.optionen[a.richtig]) + ".") + "</p>";
+      auf.innerHTML = kopf + '<p class="hint">So rechnet der Simulator (gleich wie pwsh 7.6):</p>' + a.html + '<div class="note"><b>Warum?</b> ' + esc(a.warum) + "</div>";
+      const pre = auf.querySelector("pre.ps-ausgabe");
+      if (pre) { pre.setAttribute("tabindex", "0"); pre.setAttribute("aria-label", "Ausgabe des Ausdrucks"); }
+      standEl.textContent = richtig + " von " + beantwortet + " richtig";
+      if (nr < AUSDRUECKE.length - 1) {
+        weiter.hidden = false;
+        weiter.focus();
+      } else {
+        auf.insertAdjacentHTML("beforeend", '<p class="t09-ws-fertig">Fertig: ' + richtig + " von " + AUSDRUECKE.length + " richtig vorhergesagt." +
+          (richtig === AUSDRUECKE.length ? " Kein Trick hat dich erwischt!" : " Lies die Fallen unten bei «Typische Fehler» nach.") + "</p>");
+        auf.focus();
+      }
+    }
+
+    weiter.addEventListener("click", () => { nr++; zeigen(); const b = optionen.querySelector("button"); if (b) b.focus(); });
+    neuKnopf.addEventListener("click", () => { nr = 0; richtig = 0; beantwortet = 0; zeigen(); });
+    zeigen();
+  })();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t09-u1", {
+    kategorien: ["1.", "2.", "3.", "4."],
+    elemente: [
+      { html: C("$mb = [math]::Round($summe / 1MB, 2)"), kategorie: "3.", erklaerung: "Rechnet aus der Summe in Bytes Megabytes. Braucht " + C("$summe") + " aus Zeile 2." },
+      { html: C("$dateien = Get-ChildItem Logs"), kategorie: "1.", erklaerung: "Zuerst die Dateien holen und merken. Alles andere baut darauf auf." },
+      { html: C("\"Logs: $mb MB\""), kategorie: "4.", erklaerung: "Zum Schluss den Satz bauen. Ergebnis: Logs: 23.35 MB." },
+      { html: C("$summe = ($dateien | Measure-Object -Property Length -Sum).Sum"), kategorie: "2.", erklaerung: "Summiert die Grössen der Dateien aus Zeile 1: 24484671 Bytes." }
+    ]
+  });
+  L.sortierer("#t09-u2", {
+    kategorien: ["String", "Int32", "Double", "Boolean", "Object[]", "Hashtable"],
+    elemente: [
+      { html: C("'42'"), kategorie: "String", erklaerung: "In Anführungszeichen ist es Text, auch wenn es wie eine Zahl aussieht." },
+      { html: C("42"), kategorie: "Int32", erklaerung: "Eine ganze Zahl ohne Anführungszeichen." },
+      { html: C("4.2"), kategorie: "Double", erklaerung: "Eine Kommazahl, mit Punkt geschrieben." },
+      { html: C("$false"), kategorie: "Boolean", erklaerung: "Ein Wahrheitswert." },
+      { html: C("@('a', 'b')"), kategorie: "Object[]", erklaerung: "Ein Array. Sein Typname ist Object[]." },
+      { html: C("@{ a = 1 }"), kategorie: "Hashtable", erklaerung: "Paare aus Schlüssel und Wert in @{ }." },
+      { html: C("7 / 2"), kategorie: "Double", erklaerung: "Das Ergebnis 3.5 ist eine Kommazahl." },
+      { html: C("'5' + 5"), kategorie: "String", erklaerung: "Links Text, also Aneinanderhängen: der Text 55." }
+    ]
+  });
+  L.auswahl("#t09-u3", {
+    frage: "Was gibt " + C("$abteilungen = 'Informatik', 'Finanzen', 'Bauamt'; $abteilungen[1]") + " aus?",
+    optionen: [K("Informatik"), K("Finanzen"), K("Bauamt"), "eine Fehlermeldung"],
+    richtig: 1,
+    erklaerung: "Der Index beginnt bei 0. [0] ist Informatik, [1] ist Finanzen, [-1] wäre Bauamt."
+  });
+  L.auswahl("#t09-u4", {
+    frage: "Lea hat " + C("$datei = Get-Item Logs\\app.log") + " ausgeführt. Was zeigt " + C("\"Grösse: $datei.Length\"") + "?",
+    optionen: [K("Grösse: 270"), K("Grösse: C:\\Users\\lea\\Logs\\app.log.Length"), K("Grösse: $datei.Length"), "eine Fehlermeldung"],
+    richtig: 1,
+    erklaerung: "Im Text setzt PowerShell nur " + C("$datei") + " ein, also den Pfad der Datei. .Length bleibt Text. Mit " + C("\"Grösse: $($datei.Length)\"") + " käme 270 heraus."
+  });
+  L.auswahl("#t09-u5", {
+    frage: "Lea tippt " + C("$anzahl = 7") + " und dann " + C("if ($anzahl = 10) { 'Zehn Dateien!' }") + ". PowerShell antwortet " + K("Zehn Dateien!") + ". Wo liegt der Fehler?",
+    optionen: [
+      "Nirgends: Es sind wirklich 10 Dateien.",
+      C("=") + " weist zu, statt zu vergleichen. Die Bedingung legt 10 in " + C("$anzahl") + " und gilt als wahr. Richtig ist " + C("-eq") + ".",
+      "Der Text braucht doppelte Anführungszeichen.",
+      C("if") + " kennt keine Variablen."
+    ],
+    richtig: 1,
+    erklaerung: "Mit = überschreibt Lea ihre Variable: Danach ist " + C("$anzahl") + " 10. Für einen Vergleich: " + C("if ($anzahl -eq 10)") + ". In pwsh 7.6 geprüft."
+  });
+  L.auswahl("#t09-u6", {
+    frage: "Der Preis kommt als Text: " + C("$preis = '19.90'") + ". Lea rechnet " + C("$preis * 3") + " und bekommt " + K("19.9019.9019.90") + ". Welche Zeile liefert 59.7?",
+    optionen: [C("$preis * '3'"), C("[double]$preis * 3"), C("[int]$preis * 3"), C("\"$preis\" * 3")],
+    richtig: 1,
+    erklaerung: "Links steht Text, darum wiederholt * den Text. [double] macht daraus die Kommazahl 19.9, dann rechnet PowerShell: 59.7. [int] würde auf 20 runden und 60 ergeben."
+  });
+  L.wahrFalsch("#t09-u7", {
+    titel: "Variablen, Texte, Operatoren",
+    aussagen: [
+      { html: C("$Name") + " und " + C("$name") + " sind zwei verschiedene Variablen.", wahr: false, erklaerung: "Variablennamen beachten Gross und Klein nicht. Es ist dieselbe Schachtel." },
+      { html: C("'Lea'.GetType().Name") + " ergibt " + K("String") + ".", wahr: true, erklaerung: "Text in Anführungszeichen hat den Typ String." },
+      { html: C("@()") + " ist ein leeres Array, " + C("@().Count") + " ergibt 0.", wahr: true, erklaerung: "@() ohne Inhalt ist ein Array ohne Elemente." },
+      { html: "Eine Hashtable zeigt ihre Paare immer in der Reihenfolge, in der du sie eingetragen hast.", wahr: false, erklaerung: "Die Reihenfolge ist nicht festgelegt. Für eine feste Reihenfolge brauchst du [ordered]." },
+      { html: C("[int]'2.5'") + " ergibt 3.", wahr: false, erklaerung: "[int] rundet bei .5 zur geraden Zahl: Das Ergebnis ist 2." },
+      { html: C("'Informatik', 'Finanzen' -contains 'Fin*'") + " ergibt True.", wahr: false, erklaerung: "-contains kennt keine Platzhalter. Es sucht ein Element, das wörtlich Fin* heisst. Für Muster: -like 'Fin*'." },
+      { html: C("4, 8, 15, 16 -gt 10") + " gibt 15 und 16 aus.", wahr: true, erklaerung: "Mit einer Liste links filtert der Vergleich: Übrig bleiben die Elemente grösser als 10." }
+    ]
+  });
+  L.konsole("#t09-u8", {
+    begruessung: false,
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Grosse Logdateien zählen",
+        text: "<p>Speichere alle Dateien im Ordner <code>Logs</code>, die grösser als 4 MB sind, in " + C("$gross") + ". Gib danach den Satz <code>Grosse Logdateien: 3</code> aus, wobei die Zahl aus " + C("$gross") + " kommt.</p>",
+        hinweis: "<p>Filtern kennst du aus Station 07: " + C("Where-Object Length -gt 4MB") + ". Im Text brauchst du " + C("$($gross.Count)") + ".</p>",
+        loesung: "$gross = Get-ChildItem Logs | Where-Object Length -gt 4MB; \"Grosse Logdateien: $($gross.Count)\"",
+        pruefe: (ctx) => (arr(ctx, "gross") || []).length === 3 && /\$\(\s*\$gross\.count\s*\)/i.test(ctx.eingabe) && !/:\s*3/.test(ctx.eingabe) &&
+          hatText(ctx, "Grosse Logdateien: 3")
+      },
+      {
+        titel: "Zwei Bedingungen auf einmal",
+        text: "<p>Speichere <code>Logs\\app.log</code> mit " + C("Get-Item") + " in " + C("$datei") + ". Prüfe dann in <b>einem</b> Ausdruck, ob die Datei kleiner als 1 KB ist <b>und</b> ihr Name mit <code>app</code> beginnt.</p>",
+        hinweis: "<p>Zwei Vergleiche, verbunden mit " + C("-and") + ": " + C("$datei.Length -lt 1KB") + " und " + C("$datei.Name -like 'app*'") + ".</p>",
+        loesung: "$datei = Get-Item Logs\\app.log; $datei.Length -lt 1KB -and $datei.Name -like 'app*'",
+        pruefe: (ctx) => /-and\b/i.test(ctx.eingabe) && /\$datei\.length\s+-(lt|le)\b/i.test(ctx.eingabe) && /\$datei\.name\s+-(like|match)\b/i.test(ctx.eingabe) &&
+          ctx.objekte.length === 1 && ctx.objekte[0] === true
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  const satz = "\"Logs: $($dateien.Count) Dateien, $mb MB, davon $($gross.Count) über 4 MB.\"";
+  L.film("#t09-film", {
+    phasen: ["1 · Sammeln", "2 · Rechnen", "3 · Prüfen", "4 · Satz bauen"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Lea baut ihren Wochenbericht Schritt für Schritt. Jedes Zwischenergebnis legt sie in eine Variable. Sie startet in ihrem Benutzerordner." },
+      { ph: 0, f: f("$ordner = 'Logs'"), say: "Zuerst merkt sie sich den Ordnernamen. Eine Zuweisung gibt nichts aus." },
+      { ph: 0, f: f("$ordner"), say: "Der Name der Variable allein zeigt den Inhalt: Logs." },
+      { ph: 0, f: f("$dateien = Get-ChildItem $ordner"), say: "Jetzt speichert sie das Ergebnis eines Befehls. Die Variable ordner steht dabei an der Stelle des Pfads." },
+      { ph: 0, f: f("$dateien.Count"), say: "Count zählt die Elemente: 7 Dateien." },
+      { ph: 0, f: f("$dateien.GetType().Name"), say: "Mehrere Dateien bilden ein Array, Typ Object[]." },
+      { ph: 0, f: f("$dateien[0].Name"), say: "Mit Index 0 holt sie das erste Element und davon den Namen." },
+      { ph: 0, f: f("$dateien[-1].Name"), say: "Index -1 zählt von hinten: das letzte Element." },
+      { ph: 1, f: f("$summe = ($dateien | Measure-Object -Property Length -Sum).Sum"), say: "Für die Grösse summiert sie Length aller Dateien und behält nur die Zahl Sum." },
+      { ph: 1, f: f("$summe"), say: "24484671 Bytes. Das ist schwer zu lesen." },
+      { ph: 1, f: f("$mb = [math]::Round($summe / 1MB, 2)"), say: "Sie teilt durch 1MB und rundet auf zwei Stellen. Das Ergebnis kommt in die Variable mb." },
+      { ph: 1, f: f("$mb"), say: "23.35 MB." },
+      { ph: 1, f: f("$mb.GetType().Name"), say: "Eine Kommazahl hat den Typ Double." },
+      { ph: 1, f: f("$gross = $dateien | Where-Object Length -gt 4MB"), say: "Aus dem Array filtert sie die Dateien über 4 MB heraus und merkt sie sich in gross." },
+      { ph: 1, f: f("$gross.Count"), say: "Es sind 3." },
+      { ph: 2, f: f("$gross.Count -ge 3 -and $mb -gt 20"), say: "Lea prüft zwei Bedingungen mit -and: mindestens drei grosse Dateien und mehr als 20 MB. Beides stimmt, das Ergebnis ist True. Sie muss bald aufräumen." },
+      { ph: 3, f: f("'Logs: $($dateien.Count) Dateien'"), say: "Jetzt der Satz. Ihr erster Versuch mit einfachen Anführungszeichen setzt nichts ein. Alles bleibt wörtlich stehen." },
+      { ph: 3, f: f(satz), say: "Mit doppelten Anführungszeichen klappt es. Count steht in " + C("$( )") + ", mb ist ein einfacher Name und braucht keine Klammer." },
+      { ph: 3, f: f("$bericht = " + satz), say: "Den fertigen Satz legt sie in die Variable bericht. So kann sie ihn später in eine Datei oder Mail schreiben." },
+      { ph: 3, f: f("$bericht -like '*über 4 MB*'"), say: "Zur Kontrolle prüft sie mit -like, ob der Teil über 4 MB im Satz steht. True." },
+      { ph: -1, say: "Fertig. Der Bericht lautet: Logs: 7 Dateien, 23.35 MB, davon 3 über 4 MB. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Nach " + C("$ort = 'Wolkenried'") + ": Welche Zeile gibt " + K("Gruss aus Wolkenried") + " aus?", o: [C("'Gruss aus $ort'"), C("\"Gruss aus $ort\""), C("Gruss aus $ort"), C("'Gruss aus ' $ort")], a: 1,
+        e: "Nur doppelte Anführungszeichen setzen Variablen ein. Die einfachen geben " + K("Gruss aus $ort") + " wörtlich aus." },
+      { q: "Was ergibt " + C("(3.5).GetType().Name") + "?", o: [K("Int32"), K("Double"), K("String"), K("Decimal")], a: 1,
+        e: "Eine Kommazahl hat den Typ Double." },
+      { q: "Was ergibt " + C("'7' + 3") + "?", o: [K("10"), K("73"), "eine Fehlermeldung"], a: 1,
+        e: "Links steht Text, also hängt + an: 73." },
+      { q: "Was ergibt " + C("[int]'7' + 3") + "?", o: [K("10"), K("73"), "eine Fehlermeldung"], a: 0,
+        e: "[int] macht aus dem Text die Zahl 7. Danach rechnet PowerShell: 10." },
+      { q: "Nach " + C("$liste = 'a', 'b', 'c'") + ": Was gibt " + C("$liste[-1]") + " aus?", o: [K("a"), K("c"), "nichts", "eine Fehlermeldung"], a: 1,
+        e: "Negative Indexe zählen von hinten. -1 ist das letzte Element." },
+      { q: "Nach " + C("$telefon = @{ Bauamt = 401 }") + ": Welcher Zugriff liefert " + K("401") + "?", o: [C("$telefon[0]"), C("$telefon['Bauamt']"), C("$telefon(Bauamt)"), C("$telefon.401")], a: 1,
+        e: "Hashtables findest du über den Schlüssel: " + C("$telefon['Bauamt']") + " oder " + C("$telefon.Bauamt") + "." },
+      { q: "Was ergibt " + C("'Informatik', 'Finanzen' -contains 'Fin*'") + "?", o: ["True", "False", K("Finanzen")], a: 1,
+        e: "-contains vergleicht ganze Elemente ohne Platzhalter. Ein Element namens Fin* gibt es nicht." },
+      { q: "Was gibt " + C("4, 8, 15, 16 -gt 10") + " aus?", o: ["True", "False", "15 und 16, je auf einer Zeile", "2"], a: 2,
+        e: "Mit einer Liste links filtert -gt und gibt die passenden Elemente zurück." },
+      { q: "Was passiert bei " + C("$wert = 5; $wert > 3") + "?", o: ["Es erscheint True.", "Es erscheint False.", "PowerShell schreibt 5 in eine neue Datei namens 3.", "Eine Fehlermeldung."], a: 2,
+        e: "> ist eine Umleitung in eine Datei, kein Vergleich. Vergleichen heisst -gt." },
+      { q: "Was ergibt " + C("-not ($true -and $false)") + "?", o: ["True", "False"], a: 0,
+        e: C("$true -and $false") + " ist False. " + C("-not") + " dreht es um: True." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

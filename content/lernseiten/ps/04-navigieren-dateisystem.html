@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Navigieren im Dateisystem · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/05-dateien-ordner-verwalten" title="Dateien und Ordner verwalten">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t04-», nur Farben aus :root -->
+  <style>
+    .t04-ziele{margin:6px 0 0; padding-left:1.2em}
+    .t04-ziele li{margin-bottom:2px}
+    .t04-quellen{margin:0; padding-left:1.2em}
+    .t04-quellen li{margin-bottom:2px}
+    .t04-pfad{font-family:var(--ps-mono); overflow-wrap:anywhere}
+    /* Arbeitsfläche: Ordnerbaum neben dem Simulator (schmal: untereinander) */
+    .t04-arbeit{display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:start}
+    @media (min-width:780px){ .t04-arbeit{grid-template-columns:minmax(190px,230px) minmax(0,1fr)} }
+    .t04-baumkarte{min-width:0}
+    .t04-baumkarte h3{margin:0 0 6px}
+    /* Ordnerbaum */
+    .t04-baum, .t04-baum ul{list-style:none; margin:0; padding:0}
+    .t04-baum ul{margin-left:9px; padding-left:9px; border-left:1px dashed var(--line)}
+    .t04-baum li{margin:1px 0}
+    .t04-knoten{display:inline-block; max-width:100%; box-sizing:border-box; font-family:var(--ps-mono); font-size:.86rem; line-height:1.35;
+      padding:2px 6px; border:1px solid transparent; border-radius:6px; background:none; color:var(--ink); text-align:left; overflow-wrap:anywhere}
+    button.t04-knoten{cursor:pointer}
+    button.t04-knoten:hover{border-color:var(--line); background:var(--surface)}
+    .t04-versteckt{color:var(--muted); font-style:italic; border-style:dashed; border-color:var(--line)}
+    .t04-klein{font-family:var(--f-body); font-size:.72rem; font-style:normal; color:var(--muted)}
+    .t04-weg > .t04-knoten{color:var(--accent); font-weight:600}
+    .t04-hier > .t04-knoten{background:var(--accent-soft); border:2px solid var(--accent); font-weight:700; color:var(--ink)}
+    .t04-start > .t04-knoten{border:2px solid var(--s1); font-weight:700}
+    .t04-ziel > .t04-knoten{border:2px solid var(--ok); background:var(--ok-bg); font-weight:700}
+    .t04-falsch > .t04-knoten{border:2px dashed var(--bad); background:var(--bad-bg)}
+    .t04-marke{display:inline-block; margin-left:4px; padding:0 6px; border:1px solid currentColor; border-radius:999px;
+      font-family:var(--f-body); font-size:.72rem; font-weight:700; line-height:1.4; vertical-align:middle; white-space:nowrap}
+    .t04-marke.t04-m-hier{color:var(--accent)}
+    .t04-marke.t04-m-start{color:var(--s1)}
+    .t04-marke.t04-m-ziel{color:var(--ok)}
+    .t04-marke.t04-m-falsch{color:var(--bad)}
+    .t04-ort{font-family:var(--ps-mono); font-size:.88rem; overflow-wrap:anywhere; margin:8px 0 0}
+    .t04-info{margin-top:8px; font-size:.92rem}
+    .t04-info code{overflow-wrap:anywhere}
+    /* Eingabezeilen */
+    .t04-eingabe{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end}
+    .t04-eingabe .t04-feld{flex:1 1 220px; min-width:0}
+    .t04-eingabe label{display:block; font-size:.9rem; margin-bottom:4px}
+    .t04-eingabe input{width:100%; box-sizing:border-box; font-family:var(--ps-mono); font-size:.95rem; padding:8px 10px;
+      border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink)}
+    .t04-aufgabe{font-size:1.05rem}
+    .t04-stand{font-size:.9rem; color:var(--muted)}
+    .t04-raetsel-grid{display:grid; grid-template-columns:minmax(0,1fr); gap:14px; align-items:start}
+    @media (min-width:700px){ .t04-raetsel-grid{grid-template-columns:minmax(0,1fr) minmax(190px,240px)} }
+    .t04-modus{font-family:var(--ps-mono); font-size:1.05rem; letter-spacing:.08em}
+    .t04-tab td:first-child, .t04-tab th:first-child{white-space:nowrap}
+  </style>
+</head>
+<body data-fach="ps" data-thema="04-navigieren-dateisystem">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 2 · Dateisystem</span>
+    <h1>Navigieren im Dateisystem</h1>
+    <p class="lead">Lea soll für den Leiter Informatik alle PDF-Dateien in ihrem Benutzerordner finden und den genauen Ort einer Logdatei melden. Ohne Explorer, nur mit der Konsole. Dafür muss sie wissen, wo sie gerade ist, wie man den Ort wechselt und wie man Dateien mit Platzhaltern sucht. Genau das lernst du hier, und am Schluss gehst du auf Schatzsuche.</p>
+    <div class="note"><b>Danach kannst du:</b>
+      <ul class="t04-ziele">
+        <li>mit <code class="ps">Get-Location</code> sagen, wo du bist, und mit <code class="ps">Set-Location</code> den Ort wechseln.</li>
+        <li>absolute und relative Pfade lesen und schreiben, auch mit <code class="ps">.</code>, <code class="ps">..</code>, <code class="ps">\</code> und <code class="ps">~</code>.</li>
+        <li>Ordner mit <code class="ps">Get-ChildItem</code> und den Schaltern <code class="ps">-File</code>, <code class="ps">-Directory</code>, <code class="ps">-Recurse</code> und <code class="ps">-Force</code> ansehen.</li>
+        <li>mit den Platzhaltern <code class="ps">*</code> und <code class="ps">?</code> und mit <code class="ps">-Filter</code> gezielt Dateien suchen.</li>
+        <li>mit <code class="ps">Test-Path</code> prüfen und mit <code class="ps">Join-Path</code> Pfade zusammensetzen.</li>
+        <li>dieselben Befehle in den Laufwerken <code class="ps">Env:</code> und <code class="ps">HKCU:</code> nutzen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#ort"><b>1</b>Wo bin ich?</a>
+    <a href="#schritt"><b>2</b>Schritt für Schritt</a>
+    <a href="#ansehen"><b>3</b>Ordner ansehen</a>
+    <a href="#platzhalter"><b>4</b>Platzhalter</a>
+    <a href="#laufwerke"><b>5</b>Laufwerke</a>
+    <a href="#ausprobieren"><b>6</b>Ausprobieren</a>
+    <a href="#raetsel"><b>7</b>Pfad-Rätsel</a>
+    <a href="#schatz"><b>8</b>Schatzsuche</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Begriffe für den Weg durch die Ordner</h2>
+    <p class="prose">Stell dir das Gemeindehaus von Wolkenried vor. Es hat einen Eingang, dahinter Stockwerke, auf jedem Stockwerk Büros, in jedem Büro Schränke. Wer einen Brief zustellt, braucht zwei Dinge: eine Adresse und das Wissen, wo er gerade steht. Auf einem Computer ist es genau so. Die Festplatte ist das Haus, die Ordner sind Stockwerke und Büros, die Dateien sind die Briefe.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Ordnerbaum = das Haus</span><span class="ex"><code class="ps">C:\Users\lea</code></span><p>Ordner stecken in Ordnern. Ganz oben steht die Wurzel <code class="ps">C:\</code>, wie der Haupteingang. Jeder Ordner darunter hat genau einen Elternordner.</p></div>
+      <div class="concept"><span class="tag">Aktueller Ort = «Sie sind hier»</span><span class="ex"><code class="ps">Get-Location</code></span><p>Die Konsole steht immer in genau einem Ordner, wie der rote Punkt auf dem Lageplan. Befehle ohne Ortsangabe arbeiten dort.</p></div>
+      <div class="concept"><span class="tag">Absoluter Pfad = volle Adresse</span><span class="ex"><code class="ps">C:\Users\lea\Logs</code></span><p>Beginnt beim Laufwerk und nennt jeden Ordner bis zum Ziel. Funktioniert von überall, wie eine Postadresse.</p></div>
+      <div class="concept"><span class="tag">Relativer Pfad = Wegbeschreibung</span><span class="ex"><code class="ps">..\Logs</code></span><p>Geht vom aktuellen Ort aus: «ein Stockwerk hinauf, dann ins Büro Logs». Kürzer, aber nur richtig, wenn du am richtigen Ort startest.</p></div>
+      <div class="concept"><span class="tag">Laufwerk = ein ganzes Haus</span><span class="ex"><code class="ps">C:</code>, <code class="ps">Env:</code>, <code class="ps">HKCU:</code></span><p>PowerShell kennt mehrere Häuser. Neben der Festplatte <code class="ps">C:</code> gibt es zum Beispiel die Umgebungsvariablen in <code class="ps">Env:</code>.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Was ist was?</h3>
+      <p class="hint">Alle Beispiele stammen von Leas Rechner.</p>
+      <div id="t04-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wo bin ich? ===== -->
+  <section id="ort">
+    <span class="eyebrow">Schritt 1 · Ort zeigen und wechseln</span>
+    <h2>Wo bin ich, und wie komme ich weiter?</h2>
+    <p class="prose">Den aktuellen Ort siehst du schon im <b>Prompt</b>, der Zeile vor deiner Eingabe. <code class="ps">PS C:\Users\lea&gt;</code> heisst: PowerShell, aktueller Ort <code class="ps">C:\Users\lea</code>, bereit für deinen Befehl. Ausdrücklich fragst du mit <code class="ps">Get-Location</code> (Alias <code class="ps">pwd</code>):</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Location" data-ps-befehl="Get-Location"></pre>
+    <p class="prose">Den Ort wechselst du mit <code class="ps">Set-Location</code>, meistens mit dem Alias <code class="ps">cd</code> (<span lang="en">change directory</span>, Ordner wechseln). Klappt der Wechsel, schreibt PowerShell nichts. Keine Nachricht ist eine gute Nachricht. Nur der Prompt zeigt den neuen Ort:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location Dokumente" data-ps-befehl="Set-Location Dokumente" data-ps-sitzung="t04-ort"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Get-Location nach dem Wechsel" data-ps-befehl="Get-Location" data-ps-sitzung="t04-ort"></pre>
+    <p class="prose"><code>Dokumente</code> ist ein <b>relativer Pfad</b>: PowerShell sucht den Ordner am aktuellen Ort. Ein <b>absoluter Pfad</b> beginnt mit dem Laufwerk und funktioniert von überall: <code class="ps">Set-Location C:\Users\lea\Logs</code>.</p>
+
+    <h3>Kurzzeichen für relative Pfade</h3>
+    <p class="prose">Vier Zeichen brauchst du ständig. Alle Beispiele gehen davon aus, dass Lea in <code class="ps">C:\Users\lea\Dokumente</code> steht.</p>
+    <div class="card tablebox">
+      <table class="tabelle t04-tab">
+        <caption>Kurzzeichen, ausgehend von C:\Users\lea\Dokumente</caption>
+        <thead><tr><th>Zeichen</th><th>bedeutet</th><th>Beispiel</th><th>führt nach</th></tr></thead>
+        <tbody>
+          <tr><td><code class="ps">.</code></td><td>der aktuelle Ort</td><td><code class="ps">.\Archiv</code></td><td class="t04-pfad">C:\Users\lea\Dokumente\Archiv</td></tr>
+          <tr><td><code class="ps">..</code></td><td>eine Ebene hinauf (Elternordner)</td><td><code class="ps">..</code></td><td class="t04-pfad">C:\Users\lea</td></tr>
+          <tr><td><code class="ps">..\</code> + Name</td><td>hinauf, dann in einen anderen Ordner hinein</td><td><code class="ps">..\Logs</code></td><td class="t04-pfad">C:\Users\lea\Logs</td></tr>
+          <tr><td><code class="ps">\</code></td><td>Wurzel des aktuellen Laufwerks</td><td><code class="ps">\</code></td><td class="t04-pfad">C:\</td></tr>
+          <tr><td><code class="ps">~</code></td><td>dein Benutzerordner (englisch <span lang="en">home</span>)</td><td><code class="ps">~\Bilder</code></td><td class="t04-pfad">C:\Users\lea\Bilder</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Zwischen den Ordnern steht ein Backslash <code class="ps">\</code>. PowerShell versteht auch den Schrägstrich <code class="ps">/</code>: <code class="ps">Set-Location Dokumente/Archiv</code> geht genauso. Gross- und Kleinschreibung spielt in Pfaden unter Windows keine Rolle: <code class="ps">cd dokumente</code> landet in <code>Dokumente</code>.</p>
+
+    <h3>Zurück, wo ich war</h3>
+    <p class="prose"><code class="ps">Set-Location -</code> (ein Bindestrich) springt an den vorherigen Ort zurück, <code class="ps">Set-Location +</code> wieder vor, wie die Pfeile im Browser. Lea war in <code>Logs</code>, ist dann ins Archiv gesprungen und will zurück:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location Logs" data-ps-befehl="Set-Location Logs" data-ps-sitzung="t04-zurueck"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location ins Archiv" data-ps-befehl="Set-Location ~\Dokumente\Archiv" data-ps-sitzung="t04-zurueck"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location zurück" data-ps-befehl="Set-Location -" data-ps-sitzung="t04-zurueck"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Get-Location nach Set-Location -" data-ps-befehl="Get-Location" data-ps-sitzung="t04-zurueck"></pre>
+    <p class="prose">Lea ist wieder in <code>Logs</code>. <code class="ps">Set-Location</code> ganz ohne Pfad führt in pwsh 7 nach Hause, also nach <code class="ps">~</code>. Wer von der alten Eingabeaufforderung kommt: <code class="ps">cd..</code> ohne Leerzeichen funktioniert in PowerShell auch.</p>
+
+    <h3>Pfade mit Leerzeichen</h3>
+    <p class="prose">PowerShell trennt die Teile einer Zeile an den Leerzeichen (Station 02). Ein Pfad mit Leerzeichen muss darum in Anführungszeichen stehen. Ohne geht es schief:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehler bei Pfad mit Leerzeichen ohne Anführungszeichen" data-ps-befehl="Set-Location C:\Program Files" data-ps-sitzung="t04-leer"></pre>
+    <p class="prose">Auf Deutsch: «Kein Positionsparameter nimmt das Argument ‹Files› an.» PowerShell hat <code>C:\Program</code> als Pfad genommen und weiss nicht, wohin mit <code>Files</code>. Mit Anführungszeichen ist es ein einziger Wert:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location mit Anführungszeichen" data-ps-befehl="Set-Location 'C:\Program Files'" data-ps-sitzung="t04-leer"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Get-Location in Program Files" data-ps-befehl="Get-Location" data-ps-sitzung="t04-leer"></pre>
+    <div class="note tipp"><b>Tab nimmt dir das ab.</b> Tippe <code class="ps">cd C:\Prog</code> und drück Tab. PowerShell ergänzt zu <code class="ps">cd 'C:\Program Files'</code>, samt Anführungszeichen.</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 kennt <code class="ps">Set-Location -</code> und <code class="ps">Set-Location +</code> nicht. Es sucht dann einen Ordner, der «-» heisst, und meldet einen Fehler. Auch <code class="ps">Set-Location</code> ohne Pfad bleibt in 5.1 einfach stehen, und die Abkürzung <code class="ps">cd~</code> gibt es dort nicht. In <span class="ps-version">7</span> geht alles drei.</div>
+  </section>
+
+  <!-- ===== 2 · Stepper ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 2 · Einen relativen Pfad bauen</span>
+    <h2>Vom Archiv zu den Logdateien, Stück für Stück</h2>
+    <p class="prose">Lea steht im Archiv und will zu ihren Logdateien. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil des Pfads leuchtet auf. Zu jedem Schritt siehst du, wo Lea danach steht.</p>
+    <div id="t04-stepper"></div>
+  </section>
+
+  <!-- ===== 3 · Ordner ansehen ===== -->
+  <section id="ansehen">
+    <span class="eyebrow">Schritt 3 · Get-ChildItem</span>
+    <h2>Was liegt in einem Ordner?</h2>
+    <p class="prose"><code class="ps">Get-ChildItem</code> zeigt den Inhalt eines Ordners, also seine «Kind-Elemente». Ohne Pfad zeigt es den aktuellen Ort, mit <code class="ps">-Path</code> (oder einfach dem Pfad dahinter) einen anderen. Die Aliase <code class="ps">ls</code>, <code class="ps">dir</code> und <code class="ps">gci</code> kennst du aus Station 02.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem -Path Dokumente" data-ps-befehl="Get-ChildItem -Path Dokumente"></pre>
+    <p class="prose">So liest du die Tabelle: Der Kopf <code>Directory:</code> nennt den Ordner. <code>LastWriteTime</code> ist die letzte Änderung, <code>Length</code> die Grösse in Bytes (bei Ordnern leer), <code>Name</code> der Name. Die Spalte <code>Mode</code> hat fünf Stellen. Jede steht für ein Merkmal, ein Strich heisst «nicht gesetzt».</p>
+    <div class="card tablebox">
+      <table class="tabelle t04-tab">
+        <caption>Die Stellen der Spalte Mode in pwsh 7</caption>
+        <thead><tr><th>Stelle</th><th>Buchstabe</th><th>bedeutet</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>d</code></td><td>Ordner (<span lang="en">directory</span>)</td><td><code class="t04-modus">d----</code> Archiv</td></tr>
+          <tr><td>2</td><td><code>a</code></td><td>Archiv-Merkmal: Datei wurde seit der letzten Sicherung geändert</td><td><code class="t04-modus">-a---</code> notizen.txt</td></tr>
+          <tr><td>3</td><td><code>r</code></td><td>schreibgeschützt (<span lang="en">read-only</span>)</td><td><code class="t04-modus">-ar--</code></td></tr>
+          <tr><td>4</td><td><code>h</code></td><td>versteckt (<span lang="en">hidden</span>)</td><td><code class="t04-modus">d--h-</code> AppData</td></tr>
+          <tr><td>5</td><td><code>s</code></td><td>Systemdatei (<span lang="en">system</span>)</td><td><code class="t04-modus">-a-hs</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Nur Dateien, nur Ordner, nur Namen</h3>
+    <p class="prose">Drei Schalter machen die Liste übersichtlicher. <code class="ps">-File</code> zeigt nur Dateien, <code class="ps">-Directory</code> nur Ordner:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem Dokumente -Directory" data-ps-befehl="Get-ChildItem Dokumente -Directory"></pre>
+    <p class="prose"><code class="ps">-Name</code> lässt Datum und Grösse weg und zeigt nur die Namen:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem Dokumente -Name" data-ps-befehl="Get-ChildItem Dokumente -Name"></pre>
+
+    <h3>Auch in Unterordnern: -Recurse</h3>
+    <p class="prose">Mit dem Schalter <code class="ps">-Recurse</code> («immer wieder hinein») schaut <code class="ps">Get-ChildItem</code> auch in jeden Unterordner, in deren Unterordner und so weiter. Für jeden Ordner erscheint ein eigener Kopf <code>Directory:</code>:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem Dokumente -Recurse" data-ps-befehl="Get-ChildItem Dokumente -Recurse"></pre>
+    <p class="prose">Zusammen mit <code class="ps">-Name</code> steht vor jedem Namen der Weg ab dem Startordner, und <code class="ps">-File</code> lässt den Ordner <code>Archiv</code> selbst weg:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem Dokumente -Recurse -File -Name" data-ps-befehl="Get-ChildItem Dokumente -Recurse -File -Name"></pre>
+
+    <h3>Versteckte Dateien: -Force</h3>
+    <p class="prose">Manche Dateien und Ordner sind <b>versteckt</b>, damit niemand sie aus Versehen löscht. Windows versteckt zum Beispiel <code>AppData</code>, wo Programme ihre Einstellungen ablegen. <code class="ps">Get-ChildItem</code> lässt Verstecktes weg. Erst der Schalter <code class="ps">-Force</code> («auch das, was sonst nicht gezeigt wird») holt es hervor. Vergleiche mit der Liste ganz oben in Leas Benutzerordner:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem -Force im Benutzerordner" data-ps-befehl="Get-ChildItem -Force"></pre>
+    <p class="prose">Neu ist <code>AppData</code> mit <code class="t04-modus">d--h-</code>: ein versteckter Ordner. Willst du <b>nur</b> Verstecktes sehen, nimm <code class="ps">-Hidden</code> statt <code class="ps">-Force</code>.</p>
+    <div class="note"><b>Merke:</b> <code class="ps">-Recurse</code> geht ohne <code class="ps">-Force</code> nicht in versteckte Ordner hinein. Eine Datei in <code>AppData</code> findest du mit <code class="ps">Get-ChildItem -Recurse</code> also nur, wenn auch <code class="ps">-Force</code> dabei ist. Das brauchst du gleich bei der Schatzsuche.</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In Windows PowerShell 5.1 hat die Spalte <code>Mode</code> sechs Stellen (<code class="t04-modus">d-----</code>, <code class="t04-modus">-a-h--</code>; die sechste steht für Verknüpfungen), und auf einem deutschen Windows heisst der Kopf <code>Verzeichnis:</code> statt <code>Directory:</code>. In <span class="ps-version">7</span> sind es fünf Stellen, die Beschriftung ist englisch.</div>
+  </section>
+
+  <!-- ===== 4 · Platzhalter ===== -->
+  <section id="platzhalter">
+    <span class="eyebrow">Schritt 4 · Suchen mit Platzhaltern</span>
+    <h2>Joker im Dateinamen</h2>
+    <p class="prose">Beim Jassen kann ein Joker für jede Karte stehen. In Pfaden gibt es solche Joker auch. Sie heissen <b>Platzhalter</b> (englisch <span lang="en">wildcards</span>). Damit beschreibst du ein Muster statt eines genauen Namens.</p>
+    <div class="card tablebox">
+      <table class="tabelle t04-tab">
+        <caption>Platzhalter in Pfaden</caption>
+        <thead><tr><th>Zeichen</th><th>steht für</th><th>Beispiel</th><th>findet in Leas Ordnern</th></tr></thead>
+        <tbody>
+          <tr><td><code class="ps">*</code></td><td>beliebig viele Zeichen, auch keines</td><td><code class="ps">Logs\app*</code></td><td>app.log und die vier app-2026-….log</td></tr>
+          <tr><td><code class="ps">?</code></td><td>ein einzelnes Zeichen</td><td><code class="ps">Bilder\ferien-0?.jpg</code></td><td>ferien-01.jpg, ferien-02.jpg</td></tr>
+          <tr><td><code class="ps">[78]</code></td><td>eines der Zeichen in der Klammer</td><td><code class="ps">Logs\app-2026-0[78].log</code></td><td>app-2026-07.log, app-2026-08.log</td></tr>
+          <tr><td><code class="ps">[a-g]</code></td><td>ein Zeichen aus einem Bereich</td><td><code class="ps">Bilder\[a-g]*</code></td><td>ferien-01.jpg, ferien-02.jpg, gemeindehaus.png</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe mit Platzhalter Fragezeichen" data-ps-befehl="Get-ChildItem Bilder\ferien-0?.jpg"></pre>
+    <p class="prose">Gross und klein spielt bei Platzhaltern keine Rolle: <code class="ps">Logs\APP*.LOG</code> findet dieselben fünf Dateien wie <code class="ps">Logs\app*.log</code>.</p>
+
+    <h3>-Filter: schnell und auch beim Suchen in Unterordnern</h3>
+    <p class="prose">Statt das Muster an den Pfad zu hängen, kannst du es dem Parameter <code class="ps">-Filter</code> geben. Dann filtert schon Windows beim Lesen des Ordners, und das ist schneller. <code class="ps">-Filter</code> ist der zweite Positionsparameter (Station 02), <code class="ps">Get-ChildItem Logs *fehler*</code> wäre also dasselbe.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem Logs -Filter *fehler*" data-ps-befehl="Get-ChildItem Logs -Filter *fehler*"></pre>
+    <p class="prose">Richtig stark wird <code class="ps">-Filter</code> zusammen mit <code class="ps">-Recurse</code>. So durchsucht Lea ihren ganzen Benutzerordner nach Textdateien:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem -Recurse -Filter *.txt" data-ps-befehl="Get-ChildItem -Recurse -Filter *.txt"></pre>
+    <div class="note"><b>Grenzen von -Filter:</b> Es kennt nur <code class="ps">*</code> und <code class="ps">?</code>, keine eckigen Klammern, und nimmt genau ein Muster. Für mehrere Muster hängst du sie an Pfade: <code class="ps">Get-ChildItem Bilder\*.jpg, Bilder\*.png</code>. Eine Besonderheit von Windows: Mit <code class="ps">-Filter</code> darf <code class="ps">?</code> direkt vor dem Punkt auch für gar kein Zeichen stehen. <code class="ps">Get-ChildItem Logs -Filter app?.log</code> findet in pwsh darum auch <code>app.log</code>, das Muster im Pfad <code class="ps">Logs\app?.log</code> dagegen nicht. Der Simulator kennt diese Sonderregel nicht.</div>
+
+    <h3>Gibt es das? Test-Path</h3>
+    <p class="prose"><code class="ps">Test-Path</code> beantwortet eine Ja-Nein-Frage: Gibt es diesen Pfad? Die Antwort heisst <code>True</code> (ja) oder <code>False</code> (nein). Das ist praktisch, bevor du etwas tust, und später in Skripten (Station 10). Platzhalter gehen auch: Dann heisst <code>True</code> «mindestens etwas passt».</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Test-Path Logs" data-ps-befehl="Test-Path Logs" data-ps-sitzung="t04-test"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Test-Path Protokolle" data-ps-befehl="Test-Path Protokolle" data-ps-sitzung="t04-test"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Test-Path mit Platzhalter" data-ps-befehl="Test-Path Logs\*.txt" data-ps-sitzung="t04-test"></pre>
+    <p class="prose">Im Ordner <code>Logs</code> liegt keine einzige .txt-Datei, darum <code>False</code>. Mit <code class="ps">-PathType Leaf</code> fragst du «ist das eine Datei?», mit <code class="ps">-PathType Container</code> «ist das ein Ordner?»:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Test-Path mit PathType" data-ps-befehl="Test-Path Dokumente -PathType Leaf" data-ps-sitzung="t04-test"></pre>
+
+    <h3>Pfade zusammensetzen: Join-Path</h3>
+    <p class="prose"><code class="ps">Join-Path</code> klebt zwei Teile mit genau einem Backslash zusammen. Es prüft nicht, ob es den Pfad gibt. Es baut nur den Text.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Join-Path Dokumente Archiv" data-ps-befehl="Join-Path Dokumente Archiv" data-ps-sitzung="t04-join"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Join-Path mit HOME" data-ps-befehl="Join-Path $HOME Logs\sync-fehler.log" data-ps-sitzung="t04-join"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Join-Path mit nicht vorhandenem Ordner" data-ps-befehl="Join-Path Gibtsnicht datei.txt" data-ps-sitzung="t04-join"></pre>
+    <p class="prose"><code class="ps">$HOME</code> ist eine Variable mit dem Pfad deines Benutzerordners. Variablen kommen in Station 09. Wozu <code class="ps">Join-Path</code>, wenn man den Backslash auch selbst tippen kann? In Skripten setzt du oft Teile aus Variablen zusammen, und dann vergisst man leicht einen Backslash oder hat zwei.</p>
+  </section>
+
+  <!-- ===== 5 · Laufwerke ===== -->
+  <section id="laufwerke">
+    <span class="eyebrow">Schritt 5 · Laufwerke (PSDrives)</span>
+    <h2>Mehr als die Festplatte</h2>
+    <p class="prose">PowerShell kann auch Daten, die gar keine Dateien sind, wie Ordner zeigen. Das erledigen <b>Provider</b> (Anbieter): kleine Übersetzer, die zum Beispiel die Umgebungsvariablen oder die Registrierung von Windows als Laufwerk anbieten. Der Gewinn: Du brauchst keine neuen Befehle. <code class="ps">Set-Location</code>, <code class="ps">Get-ChildItem</code> und <code class="ps">Test-Path</code> funktionieren überall. Welche Laufwerke es gibt, zeigt <code class="ps">Get-PSDrive</code>:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-PSDrive" data-ps-befehl="Get-PSDrive"></pre>
+    <div class="note"><b>Simulator und echte PowerShell:</b> Der Simulator kennt drei Laufwerke. In echtem pwsh 7.6 unter Windows sind es mehr, unter anderem <code>Alias</code>, <code>Cert</code> (Zertifikate), <code>Function</code>, <code>HKLM</code> (Registrierung für den ganzen Computer), <code>Temp</code>, <code>Variable</code> und <code>WSMan</code>, dazu weitere Laufwerksbuchstaben wie <code>D</code>, falls vorhanden.</div>
+
+    <h3>Env: die Umgebungsvariablen</h3>
+    <p class="prose">Umgebungsvariablen sind Notizzettel, die Windows jedem Programm mitgibt: wie der Computer heisst, wer angemeldet ist, wo der Benutzerordner liegt. Im Laufwerk <code class="ps">Env:</code> liegen sie wie Dateien in einem Ordner:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-ChildItem Env:" data-ps-befehl="Get-ChildItem Env:"></pre>
+    <p class="prose">Eine einzelne Variable holst du wie eine Datei mit ihrem Namen, zum Beispiel <code class="ps">Get-ChildItem Env:USERNAME</code>. Du kannst auch ins Laufwerk wechseln und dort arbeiten. Achte auf den Prompt:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location Env:" data-ps-befehl="Set-Location Env:" data-ps-sitzung="t04-lw"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Get-ChildItem USERPROFILE im Laufwerk Env:" data-ps-befehl="Get-ChildItem USERPROFILE" data-ps-sitzung="t04-lw"></pre>
+    <p class="prose"><code>USERPROFILE</code> zeigt auf <code class="ps">C:\Users\lea</code>. Daher weiss PowerShell, wohin <code class="ps">~</code> führt.</p>
+
+    <h3>HKCU: Leas Einstellungen in der Registrierung</h3>
+    <p class="prose">Die <b>Registrierung</b> (englisch <span lang="en">registry</span>) ist die grosse Einstellungsdatenbank von Windows. <code class="ps">HKCU:</code> steht für <span lang="en">HKEY_CURRENT_USER</span>, die Einstellungen der angemeldeten Person. Statt Ordnern gibt es Schlüssel. Lea schaut nach, wie die Wolkenried-Synchronisation eingestellt ist:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location HKCU:" data-ps-befehl="Set-Location HKCU:" data-ps-sitzung="t04-lw"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Get-ChildItem Software\Wolkenried" data-ps-befehl="Get-ChildItem Software\Wolkenried" data-ps-sitzung="t04-lw"></pre>
+    <p class="prose">Der Schlüssel <code>Sync</code> hat zwei Werte: den Server und ein Intervall von 15. Hier gilt: nur anschauen. Eine falsche Änderung in der Registrierung kann Programme lahmlegen.</p>
+    <h3>Zurück auf C:</h3>
+    <p class="prose">PowerShell merkt sich für jedes Laufwerk den letzten Ort. <code class="ps">Set-Location C:</code> ohne Backslash führt darum nicht zur Wurzel, sondern dorthin, wo Lea auf C: zuletzt war:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Set-Location C:" data-ps-befehl="Set-Location C:" data-ps-sitzung="t04-lw"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Get-Location nach Set-Location C:" data-ps-befehl="Get-Location" data-ps-sitzung="t04-lw"></pre>
+    <div class="note"><b>Merke:</b> <code class="ps">C:</code> heisst «zurück auf Laufwerk C, an den letzten Ort». <code class="ps">C:\</code> heisst «zur Wurzel von C». Der Backslash macht den Unterschied.</div>
+  </section>
+
+  <!-- ===== 6 · Ausprobieren mit Ordnerbaum ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator, mit Lageplan</h2>
+    <p class="prose">Links (auf dem Handy oben) siehst du Leas Ordnerbaum. Er markiert, wo die Konsole gerade steht, und wandert bei jedem <code class="ps">Set-Location</code> mit. Tippe auf einen Ordner im Baum: Dann zeigt er dir den absoluten und den relativen Pfad dorthin. Der Simulator ist ein Spiel-Rechner, nichts davon ändert deinen Computer.</p>
+    <div class="t04-arbeit">
+      <div class="card t04-baumkarte">
+        <h3 id="t04-baum-titel">Lageplan C:</h3>
+        <div id="t04-baum" role="group" aria-labelledby="t04-baum-titel"></div>
+        <p class="t04-ort" id="t04-ort" aria-live="polite"></p>
+        <div class="t04-info" id="t04-info" aria-live="polite"></div>
+      </div>
+      <div id="t04-konsole"></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Pfad-Rätsel ===== -->
+  <section id="raetsel">
+    <span class="eyebrow">Schritt 7 · Pfade im Kopf bauen</span>
+    <h2>Das Pfad-Rätsel</h2>
+    <p class="prose">Lea steht im Ordner A und will nach B. Schreib den Pfad, den sie nach <code class="ps">Set-Location</code> tippen muss. «Prüfen» lässt deinen Pfad im Simulator laufen: Du siehst, wo Lea damit wirklich landet.</p>
+    <div class="card stack" id="t04-r">
+      <p class="t04-stand" id="t04-r-stand"></p>
+      <div class="t04-raetsel-grid">
+        <div class="stack">
+          <p class="t04-aufgabe" id="t04-r-aufgabe"></p>
+          <div class="t04-eingabe">
+            <div class="t04-feld">
+              <label for="t04-r-feld" id="t04-r-label">Pfad</label>
+              <input id="t04-r-feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </div>
+            <button type="button" class="btn primary" id="t04-r-pruefen">Prüfen</button>
+          </div>
+          <div class="row">
+            <button type="button" class="btn" id="t04-r-loesung">Lösung zeigen</button>
+            <button type="button" class="btn" id="t04-r-weiter">Nächstes Rätsel</button>
+            <button type="button" class="btn" id="t04-r-neu">Von vorn</button>
+          </div>
+          <div class="rueckmeldung leer" id="t04-r-rm" aria-live="polite"></div>
+        </div>
+        <div>
+          <p class="hint">A = Start, B = Ziel</p>
+          <div id="t04-r-baum"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Schatzsuche ===== -->
+  <section id="schatz">
+    <span class="eyebrow">Schritt 8 · Schatzsuche</span>
+    <h2>Ruedis Schnitzeljagd</h2>
+    <p class="prose">Ruedi aus Leas Team hat zum Einstand eine Schnitzeljagd auf ihrem Rechner versteckt. Auf seinem Zettel steht nur: «Der erste Hinweis ist eine versteckte Textdatei irgendwo in deinem Benutzerordner. Viel Glück!» Löse die Aufgaben der Reihe nach. Du brauchst <code class="ps">-Recurse</code>, <code class="ps">-Filter</code>, <code class="ps">-Force</code> und am Ende <code class="ps">Get-Content</code>, das den Inhalt einer Textdatei zeigt (mehr dazu in Station 05).</p>
+    <div id="t04-schatz"></div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 1 · Einordnen</span><h3>Absolut oder relativ?</h3></div>
+      <div id="t04-u-art"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 2 · Ausgabe vorhersagen</span><h3>Wo landet Lea?</h3></div>
+      <div id="t04-u-wo"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 3 · Ausgabe vorhersagen</span><h3>Ein Fragezeichen im Muster</h3></div>
+      <div id="t04-u-muster"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 4 · Fehler finden</span><h3>Lea tippt schnell</h3></div>
+      <div id="t04-u-fehler1"></div>
+      <div id="t04-u-fehler2"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 5 · Befehl zusammenbauen</span><h3>Welcher Schalter erfüllt den Wunsch?</h3></div>
+      <div id="t04-u-schalter"></div>
+    </div>
+    <div id="t04-u-wf"></div>
+    <div class="stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 7 · Befehl selbst schreiben</span><h3>Unterwegs in anderen Laufwerken</h3></div>
+      <div id="t04-u-konsole"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Auftrag: PDF-Dateien und eine Logdatei finden</h2>
+    <p class="prose">Der Leiter Informatik will zwei Dinge wissen: Welche PDF-Dateien liegen in Leas Benutzerordner, und wo genau liegt <code>sync-fehler.log</code>? Lea löst es Befehl für Befehl. Jede Szene zeigt die Eingabe und die Ausgabe des Simulators.</p>
+    <div id="t04-film"></div>
+    <details class="sol"><summary>Die Lösung als Text</summary>
+      <div class="stack">
+        <p>1. Alle PDF-Dateien, auch in Unterordnern: <code class="ps">Get-ChildItem -Recurse -Filter *.pdf -Name</code> im Benutzerordner. Ergebnis: vier Dateien, nämlich <code>Dokumente\Archiv\vertrag-2020.pdf</code>, <code>Downloads\handbuch-drucker.pdf</code>, <code>Downloads\rechnung-2026-09.pdf</code> und <code>Downloads\rechnung-2026-10.pdf</code>. Mit <code class="ps">-Force</code> kommt keine weitere dazu.</p>
+        <p>2. Die Logdatei: <code class="ps">Get-ChildItem -Recurse -Filter sync-fehler.log</code> zeigt den Ordner <code>Logs</code>, <code class="ps">Test-Path Logs\sync-fehler.log</code> bestätigt mit <code>True</code>. Voller Pfad: <code class="ps">C:\Users\lea\Logs\sync-fehler.log</code>.</p>
+        <p class="hint">Eigene Lösung, in pwsh 7.6 mit einem nachgebauten Ordner geprüft. Leas Rechner gibt es nur im Simulator.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Sechs Stolpersteine</h2>
+    <div class="note falle"><b>Leerzeichen ohne Anführungszeichen.</b> <code class="ps">Set-Location C:\Program Files\PowerShell</code> meldet <span lang="en">«A positional parameter cannot be found that accepts argument 'Files\PowerShell'»</span>. Der Pfad wurde am Leerzeichen zerschnitten. Lösung: <code class="ps">Set-Location 'C:\Program Files\PowerShell'</code> oder Tab drücken.</div>
+    <div class="note falle"><b>Relativer Pfad vom falschen Ort.</b> Lea steht in <code>Logs</code> und tippt <code class="ps">cd Downloads</code>. PowerShell sucht <code>C:\Users\lea\Logs\Downloads</code> und meldet <span lang="en">«Cannot find path … because it does not exist»</span>. Ein relativer Pfad gilt immer ab dem aktuellen Ort. Schau auf den Prompt oder frag <code class="ps">Get-Location</code>. Richtig wäre hier <code class="ps">cd ..\Downloads</code>.</div>
+    <div class="note falle"><b>Versteckt heisst unsichtbar, auch für -Recurse.</b> <code class="ps">Get-ChildItem -Recurse -Filter schatz.txt</code> findet nichts, obwohl die Datei da ist. Ohne <code class="ps">-Force</code> zeigt PowerShell keine versteckten Dateien und geht nicht in versteckte Ordner hinein.</div>
+    <div class="note falle"><b>-Filter mit zwei Mustern.</b> <code class="ps">-Filter</code> nimmt genau ein Muster. In pwsh kommt bei zwei Mustern ein Fehler:</div>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7 bei -Filter mit zwei Mustern" lang="en">PS C:\Users\lea&gt; Get-ChildItem Bilder -Filter *.jpg, *.png
+<span class="psk-fehler">Get-ChildItem: Cannot convert 'System.Object[]' to the type 'System.String' required by parameter 'Filter'. Specified method is not supported.</span></pre>
+    <p class="prose">Auf Deutsch: «Eine Liste lässt sich nicht in den einen Text umwandeln, den -Filter verlangt.» Nimm zwei Pfade mit Platzhalter: <code class="ps">Get-ChildItem Bilder\*.jpg, Bilder\*.png</code>. (Diese Meldung ist von Hand aus pwsh 7.6 übernommen, der Simulator zeigt sie nicht.)</p>
+    <div class="note falle"><b>In eine Datei wechseln.</b> <code class="ps">Set-Location</code> geht nur in Ordner. Bei einer Datei meldet pwsh, den Pfad gebe es nicht, obwohl die Datei existiert:</div>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7 bei Set-Location auf eine Datei" lang="en">PS C:\Users\lea&gt; Set-Location Dokumente\notizen.txt
+<span class="psk-fehler">Set-Location: Cannot find path 'Dokumente\notizen.txt' because it does not exist.</span></pre>
+    <p class="prose">Die Meldung führt in die Irre: Gemeint ist «einen Ordner mit diesem Pfad gibt es nicht». Wechsle in den Ordner der Datei (<code class="ps">cd Dokumente</code>) oder schau die Datei mit <code class="ps">Get-ChildItem Dokumente\notizen.txt</code> an.</p>
+    <div class="note falle"><b><code class="ps">C:</code> ist nicht <code class="ps">C:\</code>.</b> Wer aus <code class="ps">Env:</code> oder <code class="ps">HKCU:</code> mit <code class="ps">cd C:</code> zurückkehrt, landet am letzten Ort auf C:, nicht in der Wurzel. Für die Wurzel braucht es den Backslash: <code class="ps">cd C:\</code>.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen zu Pfaden, Platzhaltern und Laufwerken, je eine richtige Antwort. Alle beziehen sich auf Leas Rechner. Das Ergebnis erscheint unten in der Abschluss-Box.</p>
+    <div id="t04-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">Get-Location</code></th><td>aktuellen Ort zeigen</td><td><code class="ps">Get-Location</code></td></tr>
+          <tr><th><code class="ps">Set-Location</code></th><td>Ort wechseln, absolut oder relativ</td><td><code class="ps">Set-Location ..\Logs</code></td></tr>
+          <tr><th><code class="ps">Set-Location -</code></th><td>zurück an den vorherigen Ort</td><td><code class="ps">Set-Location -</code></td></tr>
+          <tr><th><code class="ps">Get-ChildItem</code></th><td>Inhalt eines Ordners zeigen</td><td><code class="ps">Get-ChildItem -Path Dokumente</code></td></tr>
+          <tr><th><code class="ps">-File</code>, <code class="ps">-Directory</code></th><td>nur Dateien bzw. nur Ordner</td><td><code class="ps">Get-ChildItem Dokumente -Directory</code></td></tr>
+          <tr><th><code class="ps">-Recurse</code></th><td>auch alle Unterordner durchsuchen</td><td><code class="ps">Get-ChildItem Dokumente -Recurse</code></td></tr>
+          <tr><th><code class="ps">-Force</code></th><td>auch Verstecktes zeigen</td><td><code class="ps">Get-ChildItem -Force</code></td></tr>
+          <tr><th><code class="ps">-Filter</code></th><td>schnell nach einem Muster filtern (nur <code class="ps">*</code> und <code class="ps">?</code>)</td><td><code class="ps">Get-ChildItem -Recurse -Filter *.pdf</code></td></tr>
+          <tr><th><code class="ps">Test-Path</code></th><td>prüfen, ob es einen Pfad gibt (True/False)</td><td><code class="ps">Test-Path Logs\sync-fehler.log</code></td></tr>
+          <tr><th><code class="ps">Join-Path</code></th><td>Pfad aus Teilen zusammensetzen, ohne Prüfung</td><td><code class="ps">Join-Path Dokumente Archiv</code></td></tr>
+          <tr><th><code class="ps">Get-PSDrive</code></th><td>alle Laufwerke zeigen</td><td><code class="ps">Get-PSDrive</code></td></tr>
+          <tr><th><code class="ps">Get-ChildItem Env:</code></th><td>Umgebungsvariablen zeigen</td><td><code class="ps">Get-ChildItem Env:USERNAME</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Der <b>Prompt</b> und <code class="ps">Get-Location</code> zeigen, wo du bist. Relative Pfade gelten immer ab dort.</li>
+      <li><b>Absolut</b> beginnt mit dem Laufwerk (<code class="ps">C:\…</code>) und funktioniert überall. <b>Relativ</b> ist eine Wegbeschreibung ab dem aktuellen Ort.</li>
+      <li><code class="ps">.</code> hier, <code class="ps">..</code> eine Ebene hinauf, <code class="ps">\</code> Wurzel des Laufwerks, <code class="ps">~</code> Benutzerordner.</li>
+      <li>Pfade mit Leerzeichen gehören in <b>Anführungszeichen</b>, oder du nimmst Tab.</li>
+      <li><code class="ps">*</code> steht für beliebig viele Zeichen, <code class="ps">?</code> für ein einzelnes. Zum Suchen in allen Unterordnern: <code class="ps">-Recurse -Filter</code>.</li>
+      <li>Verstecktes erscheint erst mit <code class="ps">-Force</code>, auch beim Suchen mit <code class="ps">-Recurse</code>.</li>
+      <li>Dieselben Befehle funktionieren in <code class="ps">Env:</code> und <code class="ps">HKCU:</code>. Zurück geht es mit <code class="ps">C:</code> (letzter Ort) oder <code class="ps">C:\</code> (Wurzel).</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="summary prose">
+        <li><code class="ps">Set-Location -</code> und <code class="ps">Set-Location +</code> gibt es erst ab PowerShell 6.2. 5.1 sucht einen Ordner namens «-».</li>
+        <li><code class="ps">Set-Location</code> ohne Pfad führt in 7 in den Benutzerordner, in 5.1 passiert nichts. <code class="ps">cd~</code> fehlt in 5.1.</li>
+        <li>Die Spalte <code>Mode</code> hat in 5.1 sechs Stellen (<code class="t04-modus">d-----</code>), und auf einem deutschen Windows heisst der Kopf <code>Verzeichnis:</code>.</li>
+        <li>Fehlermeldungen erscheinen in 5.1 deutsch und über mehrere Zeilen, zum Beispiel «Der Pfad … kann nicht gefunden werden, da er nicht vorhanden ist».</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn)</h3>
+      <ul class="t04-quellen">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_locations">about_Locations</a> (aktueller Ort, ein Ort pro Laufwerk, <code>.</code>, <code>..</code>, <code>\</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_path_syntax">about_Path_Syntax</a> (absolute und relative Pfade, Backslash und Schrägstrich)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_providers">about_Providers</a> (Provider und ihre Laufwerke)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_wildcards">about_Wildcards</a> (<code>*</code>, <code>?</code>, <code>[ ]</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-childitem">Get-ChildItem</a> (<code>-Filter</code>, <code>-Recurse</code>, <code>-Force</code>, <code>-File</code>, <code>-Directory</code>, <code>-Hidden</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/set-location">Set-Location</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-location">Get-Location</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/test-path">Test-Path</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/join-path">Join-Path</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/get-psdrive">Get-PSDrive</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_environment_provider">about_Environment_Provider</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_registry_provider">about_Registry_Provider</a></li>
+      </ul>
+      <p class="hint">Alle Ausgaben, Fehlermeldungen und Lösungen auf dieser Seite sind in pwsh 7.6.1 mit einem nachgebauten Ordner geprüft, die 5.1-Hinweise in Windows PowerShell 5.1. Leas Rechner gibt es nur im Simulator.</p>
+    </div>
+    <footer class="hint">Weiter geht es mit Station 05 «Dateien und Ordner verwalten»: Dort legst du Ordner an, kopierst, verschiebst und löschst, natürlich zuerst mit <code class="ps">-WhatIf</code>.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  // Code im HTML immer als Text in <code class="ps"> (wird von ps-konsole.js gefärbt)
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  const LINK = (id, t) => '<span data-link="' + id + '">' + C(t) + "</span>";
+  const gleich = (a, b) => String(a || "").toLowerCase() === String(b || "").toLowerCase();
+  const HOME = "C:\\Users\\lea";
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t04-sortierer", {
+    kategorien: ["Laufwerk", "Ordner", "Datei", "absoluter Pfad", "relativer Pfad"],
+    elemente: [
+      { html: C("C:"), kategorie: "Laufwerk", erklaerung: "Ein Laufwerk erkennst du am Doppelpunkt am Ende des Namens." },
+      { html: C("Env:"), kategorie: "Laufwerk", erklaerung: "Auch Env: ist ein Laufwerk, darin liegen die Umgebungsvariablen." },
+      { html: "Archiv (enthält vertrag-2020.pdf)", kategorie: "Ordner", erklaerung: "Archiv enthält Dateien, also ist es ein Ordner." },
+      { html: C("notizen.txt"), kategorie: "Datei", erklaerung: "Eine Datei mit der Endung .txt. Die Endung verrät die Art der Datei." },
+      { html: C("C:\\Users\\lea\\Logs"), kategorie: "absoluter Pfad", erklaerung: "Beginnt mit dem Laufwerk C: und nennt jeden Ordner bis zum Ziel." },
+      { html: C("..\\Logs"), kategorie: "relativer Pfad", erklaerung: "Beginnt mit .., also beim aktuellen Ort: eine Ebene hinauf, dann in Logs." },
+      { html: C("Dokumente\\Archiv"), kategorie: "relativer Pfad", erklaerung: "Kein Laufwerk am Anfang: PowerShell sucht Dokumente am aktuellen Ort." },
+      { html: C("app.log"), kategorie: "Datei", erklaerung: "Eine Logdatei (Protokoll) mit der Endung .log." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper ---------- */
+  const ARCHIV = HOME + "\\Dokumente\\Archiv";
+  // Jeder Schritt startet frisch im Archiv und zeigt den Befehl und danach Get-Location
+  const ab = (befehl) => { const s = L.konsole.sitzung({ ort: ARCHIV }); return s.html(befehl) + s.html("Get-Location"); };
+  L.stepper("#t04-stepper", {
+    titel: "Leas Weg",
+    text: 'Lea steht <span data-link="a">im Archiv</span>. Sie geht <span data-link="b">eine Ebene hinauf nach Dokumente</span>, <span data-link="c">noch eine hinauf nach lea</span> und dann <span data-link="d">hinein in Logs</span>.',
+    schritte: [
+      { html: LINK("a", "Get-Location") + L.konsole.sitzung({ ort: ARCHIV }).html("Get-Location"),
+        warum: "Zuerst klären, wo Lea steht. Der Prompt zeigt es auch: C:\\Users\\lea\\Dokumente\\Archiv. Von hier aus gilt jeder relative Pfad." },
+      { html: C("Set-Location ") + LINK("b", "..") + ab("Set-Location .."),
+        warum: "Zwei Punkte heissen «eine Ebene hinauf», also in den Elternordner. Der Elternordner von Archiv ist Dokumente." },
+      { html: C("Set-Location ") + LINK("b", "..") + C("\\") + LINK("c", "..") + ab("Set-Location ..\\.."),
+        warum: "Noch einmal hinauf: Zwischen den Schritten steht ein Backslash. ..\\.. heisst «zwei Ebenen hinauf» und führt nach C:\\Users\\lea." },
+      { html: C("Set-Location ") + LINK("b", "..") + C("\\") + LINK("c", "..") + C("\\") + LINK("d", "Logs") + ab("Set-Location ..\\..\\Logs"),
+        warum: "Jetzt hinein: Nach dem Backslash folgt der Ordnername Logs. Ein Befehl, ein relativer Pfad, und Lea ist am Ziel." },
+      { html: C("Set-Location C:\\Users\\lea\\Logs") + ab("Set-Location C:\\Users\\lea\\Logs"),
+        warum: "Dasselbe Ziel mit einem absoluten Pfad. Er ist länger, funktioniert aber von jedem Ort aus, egal wo Lea gerade steht." },
+      { html: C("Set-Location ~\\Logs") + ab("Set-Location ~\\Logs"),
+        warum: "Die Abkürzung über den Benutzerordner: ~ steht für C:\\Users\\lea. Auch das funktioniert von überall, solange das Ziel im Benutzerordner liegt." }
+    ]
+  });
+
+  /* ---------- Ordnerbaum (für Ausprobieren und Rätsel) ---------- */
+  // Alle Ordner des Spiel-Rechners auf C: (gleich wie Get-ChildItem C:\ -Recurse -Directory -Force)
+  const ORDNER = ["Program Files", "Program Files\\PowerShell", "Program Files\\PowerShell\\7", "Users", "Users\\lea",
+    "Users\\lea\\AppData", "Users\\lea\\AppData\\Local", "Users\\lea\\AppData\\Local\\Temp", "Users\\lea\\AppData\\Roaming",
+    "Users\\lea\\Berichte", "Users\\lea\\Bilder", "Users\\lea\\Dokumente", "Users\\lea\\Dokumente\\Archiv",
+    "Users\\lea\\Downloads", "Users\\lea\\Logs", "Users\\Public", "Windows", "Windows\\System32"];
+  const VERSTECKT = { "users\\lea\\appdata": true };
+  const teileVon = (p) => String(p).replace(/\//g, "\\").replace(/^c:\\?/i, "").split("\\").filter((x) => x !== "");
+  const schluessel = (p) => "c:\\" + teileVon(p).join("\\").toLowerCase();
+
+  function baum(el, opt) {
+    const ziel = typeof el === "string" ? document.querySelector(el) : el;
+    const wurzel = { name: "C:\\", pfad: "C:\\", kinder: [] };
+    const index = {};
+    index[schluessel("C:\\")] = wurzel;
+    ORDNER.forEach((rel) => {
+      const t = rel.split("\\");
+      const eltern = index[schluessel(t.slice(0, -1).join("\\"))];
+      const k = { name: t[t.length - 1], pfad: "C:\\" + rel, kinder: [], versteckt: !!VERSTECKT[rel.toLowerCase()] };
+      eltern.kinder.push(k);
+      index[schluessel(k.pfad)] = k;
+    });
+    function zeichne(k) {
+      const li = document.createElement("li");
+      const n = document.createElement(opt.klick ? "button" : "span");
+      if (opt.klick) {
+        n.type = "button";
+        n.addEventListener("click", () => opt.klick(k.pfad));
+      }
+      n.className = "t04-knoten" + (k.versteckt ? " t04-versteckt" : "");
+      n.textContent = k.name;
+      if (k.versteckt) {
+        const v = document.createElement("span");
+        v.className = "t04-klein";
+        v.textContent = " (versteckt)";
+        n.appendChild(v);
+      }
+      li.appendChild(n);
+      const marken = document.createElement("span");
+      li.appendChild(marken);
+      k.li = li; k.marken = marken;
+      if (k.kinder.length) {
+        const ul = document.createElement("ul");
+        k.kinder.forEach((c) => ul.appendChild(zeichne(c)));
+        li.appendChild(ul);
+      }
+      return li;
+    }
+    const ul = document.createElement("ul");
+    ul.className = "t04-baum";
+    ul.setAttribute("aria-label", opt.label || "Ordnerbaum von Laufwerk C:");
+    ul.appendChild(zeichne(wurzel));
+    ziel.innerHTML = "";
+    ziel.appendChild(ul);
+    // Nächster bekannter Ordner (für Orte tiefer als der Baum)
+    function finde(p) {
+      let t = teileVon(p);
+      while (t.length && !index[schluessel(t.join("\\"))]) t = t.slice(0, -1);
+      return index[schluessel(t.join("\\"))] || wurzel;
+    }
+    return {
+      // marken: [{ pfad, art: "hier"|"start"|"ziel"|"falsch", text }]
+      markieren(marken) {
+        Object.keys(index).forEach((s) => {
+          const k = index[s];
+          k.li.classList.remove("t04-hier", "t04-weg", "t04-start", "t04-ziel", "t04-falsch");
+          k.marken.innerHTML = "";
+        });
+        (marken || []).forEach((m) => {
+          const k = finde(m.pfad);
+          k.li.classList.add("t04-" + m.art);
+          const s = document.createElement("span");
+          s.className = "t04-marke t04-m-" + m.art;
+          s.textContent = m.text;
+          k.marken.appendChild(s);
+          if (m.art === "hier") {
+            // Weg von der Wurzel bis zum Ort hervorheben
+            const t = teileVon(k.pfad);
+            for (let i = 0; i < t.length; i++) index[schluessel(t.slice(0, i).join("\\"))].li.classList.add("t04-weg");
+          }
+        });
+      },
+      gibt: (p) => !!index[schluessel(p)]
+    };
+  }
+
+  // Relativen Pfad von einem Ordner zu einem anderen berechnen (beide auf C:)
+  function relativ(von, nach) {
+    const a = teileVon(von), b = teileVon(nach);
+    let i = 0;
+    while (i < a.length && i < b.length && gleich(a[i], b[i])) i++;
+    const teile = a.slice(i).map(() => "..").concat(b.slice(i));
+    return teile.length ? teile.join("\\") : ".";
+  }
+  const zitiert = (p) => /\s/.test(p) ? "'" + p + "'" : p;
+
+  /* ---------- Schritt 6: Simulator mit Ordnerbaum ---------- */
+  // absoluter Anteil in der Eingabe: Laufwerk, ~ oder führender Backslash
+  const reAbsolut = /[a-z]:|~|(^|\s)['"]?\\/i;
+  const k6 = L.konsole("#t04-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Wo bist du?",
+        text: "<p>Lass dir den aktuellen Ort anzeigen.</p>",
+        hinweis: "<p>Das Verb heisst Get, das Nomen Location.</p>",
+        loesung: "Get-Location",
+        // -Stack zeigt in pwsh den Ortsstapel, nicht den Ort (der Simulator weicht hier ab)
+        pruefe: (ctx) => ctx.befehle.includes("Get-Location") && !ctx.hatFehler && !/\s-st/i.test(ctx.eingabe) && /^Path\s*$/m.test(ctx.ausgabe)
+      },
+      {
+        titel: "Ab in die Dokumente",
+        text: "<p>Wechsle in den Ordner <code>Dokumente</code>. Schau dabei auf den Ordnerbaum.</p>",
+        hinweis: "<p>Set-Location und der Ordnername. Dokumente liegt direkt in deinem Benutzerordner, also genügt der Name.</p>",
+        loesung: "Set-Location Dokumente",
+        pruefe: (ctx) => ctx.befehle.includes("Set-Location") && gleich(ctx.ort, HOME + "\\Dokumente")
+      },
+      {
+        titel: "Eine Ebene tiefer",
+        text: "<p>Wechsle von <code>Dokumente</code> aus mit einem <b>relativen</b> Pfad ins <code>Archiv</code>.</p>",
+        hinweis: "<p>Archiv liegt direkt in Dokumente. Der Name allein ist schon ein relativer Pfad.</p>",
+        loesung: "Set-Location Archiv",
+        pruefe: (ctx) => ctx.befehle.includes("Set-Location") && gleich(ctx.ort, ARCHIV) && !reAbsolut.test(ctx.eingabe)
+      },
+      {
+        titel: "Zwei hinauf, eins hinein",
+        text: "<p>Lea steht im Archiv. Wechsle mit <b>einem</b> Befehl und einem relativen Pfad in den Ordner <code>Logs</code>.</p>",
+        hinweis: "<p>Zweimal .. bringt dich nach lea. Dazwischen und danach je ein Backslash, dann Logs.</p>",
+        loesung: "Set-Location ..\\..\\Logs",
+        pruefe: (ctx) => ctx.befehle.includes("Set-Location") && gleich(ctx.ort, HOME + "\\Logs") && /\.\.[\\/]\.\.[\\/]logs/i.test(ctx.eingabe)
+      },
+      {
+        titel: "Nach Hause",
+        text: "<p>Kehre mit dem Kurzzeichen für den Benutzerordner nach Hause zurück.</p>",
+        hinweis: "<p>Das Kurzzeichen ist die Tilde ~ (auf der Schweizer Tastatur AltGr und die Taste mit ^ und ~, danach die Leertaste).</p>",
+        loesung: "Set-Location ~",
+        pruefe: (ctx) => ctx.befehle.some((b) => /^(Set-Location|cd~)$/i.test(b)) && gleich(ctx.ort, HOME) && /~/.test(ctx.eingabe)
+      },
+      {
+        titel: "Nur Unterordner",
+        text: "<p>Zeige im Ordner <code>Dokumente</code> nur die Ordner, keine Dateien.</p>",
+        hinweis: "<p>Get-ChildItem hat einen Schalter, der nur Ordner (englisch directories) durchlässt.</p>",
+        loesung: "Get-ChildItem Dokumente -Directory",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /Directory: C:\\Users\\lea\\Dokumente\r?\n/.test(ctx.ausgabe) &&
+          /Archiv/.test(ctx.ausgabe) && !/notizen\.txt/.test(ctx.ausgabe) && !/Directory: C:\\Users\\lea\r?\n/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Alle PDF-Dateien",
+        text: "<p>Finde im ganzen Benutzerordner alle PDF-Dateien, auch in Unterordnern, und nur diese.</p>",
+        hinweis: "<p>Get-ChildItem mit -Recurse und -Filter. Das Muster für «endet auf .pdf» ist *.pdf.</p>",
+        loesung: "Get-ChildItem -Recurse -Filter *.pdf",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && ["vertrag-2020.pdf", "handbuch-drucker.pdf", "rechnung-2026-09.pdf", "rechnung-2026-10.pdf"].every((n) => ctx.ausgabe.indexOf(n) >= 0) &&
+          !/\.(jpg|png|txt|exe|docx|xlsx|csv|log)\b/i.test(ctx.ausgabe)
+      },
+      {
+        titel: "Ein Ordner mit Leerzeichen",
+        text: "<p>Wechsle in den Ordner <code>C:\\Program Files</code>.</p>",
+        hinweis: "<p>Der Name enthält ein Leerzeichen. Setz den ganzen Pfad in Anführungszeichen oder nimm Tab.</p>",
+        loesung: "Set-Location 'C:\\Program Files'",
+        pruefe: (ctx) => ctx.befehle.includes("Set-Location") && gleich(ctx.ort, "C:\\Program Files")
+      }
+    ]
+  });
+
+  const ortEl = document.getElementById("t04-ort");
+  const infoEl = document.getElementById("t04-info");
+  let aktOrt = HOME;
+  const lageplan = baum("#t04-baum", { label: "Ordnerbaum von Laufwerk C:, der aktuelle Ort ist markiert", klick: zielZeigen });
+  function ortLesen() {
+    const p = k6 && k6.sitzung ? k6.sitzung.prompt() : "";
+    const m = /^PS (.*)> ?$/.exec(p);
+    return m ? m[1] : HOME;
+  }
+  function lageAktualisieren() {
+    const ort = ortLesen();
+    if (ort === aktOrt && ortEl.textContent) return;
+    aktOrt = ort;
+    if (/^c:/i.test(ort)) {
+      lageplan.markieren([{ pfad: ort, art: "hier", text: "du bist hier" }]);
+      ortEl.textContent = "Aktueller Ort: " + ort;
+    } else {
+      lageplan.markieren([]);
+      ortEl.textContent = "Aktueller Ort: " + ort + " (ein anderes Laufwerk, darum ist im Baum nichts markiert)";
+    }
+  }
+  function zielZeigen(pfad) {
+    let html = "<p><b>Ziel:</b> " + C(pfad) + "</p>";
+    if (/^c:/i.test(aktOrt)) {
+      const rel = relativ(aktOrt, pfad);
+      html += "<p>Absolut: " + C("Set-Location " + zitiert(pfad)) + "</p>";
+      html += "<p>Relativ von " + C(aktOrt) + " aus: " + C("Set-Location " + zitiert(rel)) + "</p>";
+      infoEl.innerHTML = html + '<p><button type="button" class="btn" id="t04-uebernehmen">Relativen Befehl in die Eingabe</button></p>';
+      document.getElementById("t04-uebernehmen").addEventListener("click", () => {
+        k6.eingabe.value = "Set-Location " + zitiert(rel);
+        k6.eingabe.focus();
+      });
+    } else {
+      infoEl.innerHTML = html + "<p>Von einem anderen Laufwerk aus geht nur der absolute Pfad: " + C("Set-Location " + zitiert(pfad)) + "</p>";
+    }
+  }
+  // Der Baum wandert mit: nach jeder Ausgabe der Konsole den Ort neu lesen
+  let geplant = false;
+  new MutationObserver(() => {
+    if (geplant) return;
+    geplant = true;
+    window.requestAnimationFrame(() => { geplant = false; lageAktualisieren(); });
+  }).observe(document.getElementById("t04-konsole"), { childList: true, subtree: true, characterData: true });
+  lageAktualisieren();
+
+  /* ---------- Schritt 7: Pfad-Rätsel ---------- */
+  const RAETSEL = [
+    { von: HOME, nach: HOME + "\\Logs", art: "relativ", loesung: "Logs", erkl: "Logs liegt direkt in lea. Der Name allein genügt (.\\Logs geht auch)." },
+    { von: HOME + "\\Dokumente", nach: ARCHIV, art: "relativ", loesung: "Archiv", erkl: "Archiv liegt direkt in Dokumente." },
+    { von: ARCHIV, nach: HOME + "\\Dokumente", art: "relativ", loesung: "..", erkl: "Dokumente ist der Elternordner von Archiv: eine Ebene hinauf." },
+    { von: ARCHIV, nach: HOME, art: "relativ", loesung: "..\\..", erkl: "Zwei Ebenen hinauf: Archiv → Dokumente → lea." },
+    { von: HOME + "\\Logs", nach: HOME + "\\Downloads", art: "relativ", loesung: "..\\Downloads", erkl: "Downloads liegt neben Logs. Also zuerst hinauf nach lea, dann hinein." },
+    { von: ARCHIV, nach: HOME + "\\Bilder", art: "relativ", loesung: "..\\..\\Bilder", erkl: "Zwei Ebenen hinauf nach lea, dann in Bilder." },
+    { von: HOME + "\\Downloads", nach: "C:\\Users\\Public", art: "relativ", loesung: "..\\..\\Public", erkl: "Hinauf nach lea, hinauf nach Users, dann in Public." },
+    { von: HOME + "\\Bilder", nach: HOME + "\\AppData\\Local\\Temp", art: "relativ", loesung: "..\\AppData\\Local\\Temp", erkl: "Hinauf nach lea, dann drei Ebenen hinein. Auch in versteckte Ordner kannst du mit Set-Location wechseln, wenn du den Namen kennst." },
+    { von: HOME + "\\Logs", nach: "C:\\Program Files\\PowerShell\\7", art: "absolut", loesung: "'C:\\Program Files\\PowerShell\\7'", erkl: "Ein absoluter Pfad beginnt mit C:\\. Wegen des Leerzeichens in Program Files braucht er Anführungszeichen." }
+  ];
+  const r = { nr: 0, geloest: [] };
+  const rAufgabe = document.getElementById("t04-r-aufgabe");
+  const rFeld = document.getElementById("t04-r-feld");
+  const rLabel = document.getElementById("t04-r-label");
+  const rRm = document.getElementById("t04-r-rm");
+  const rStand = document.getElementById("t04-r-stand");
+  const rBaum = baum("#t04-r-baum", { label: "Ordnerbaum mit Start A und Ziel B" });
+  const kurz = (p) => gleich(p, HOME) ? "lea" : p.replace(/^C:\\Users\\lea\\/i, "");
+  function rZeigen() {
+    const x = RAETSEL[r.nr];
+    rStand.textContent = "Rätsel " + (r.nr + 1) + " von " + RAETSEL.length + " · " + r.geloest.length + " gelöst";
+    rAufgabe.innerHTML = "A: " + C(x.von) + "<br>B: " + C(x.nach) + "<br>Gesucht: ein <b>" + x.art + "er</b> Pfad von A nach B.";
+    rLabel.textContent = (x.art === "relativ" ? "Relativer" : "Absoluter") + " Pfad nach Set-Location";
+    rFeld.value = "";
+    rRm.className = "rueckmeldung leer"; rRm.innerHTML = "";
+    rBaum.markieren([{ pfad: x.von, art: "start", text: "A" }, { pfad: x.nach, art: "ziel", text: "B" }]);
+  }
+  function rPruefen() {
+    const x = RAETSEL[r.nr];
+    // «cd», «Set-Location» oder «sl» am Anfang darf stehen, gezählt wird der Pfad
+    const pfad = rFeld.value.trim().replace(/^(set-location|cd|sl|chdir)\s+/i, "");
+    const marken = [{ pfad: x.von, art: "start", text: "A" }, { pfad: x.nach, art: "ziel", text: "B" }];
+    if (!pfad) { rRm.className = "rueckmeldung bad"; rRm.innerHTML = '<span class="marke">✗</span> Schreib zuerst einen Pfad ins Feld.'; return; }
+    const s = L.konsole.sitzung({ ort: x.von });
+    const aus = s.ausfuehren("Set-Location " + pfad);
+    const fehler = aus.split(/\r?\n/).filter((z) => /^\S+: /.test(z) || /Line \|/.test(z));
+    if (fehler.length) {
+      let tipp = "Lies die Meldung: Wohin wollte PowerShell?";
+      if (/positional parameter/i.test(aus)) tipp = "Ein Leerzeichen hat den Pfad zerschnitten. Setz ihn in Anführungszeichen.";
+      else if (/Cannot find path/i.test(aus)) tipp = "Diesen Ordner gibt es auf diesem Weg nicht. Die Meldung zeigt, wo PowerShell gesucht hat. Prüfe, ob du an A gedacht hast und wie viele Ebenen es hinauf geht.";
+      rRm.className = "rueckmeldung bad";
+      rRm.innerHTML = '<span class="marke">✗</span> PowerShell meldet einen Fehler. ' + esc(tipp) +
+        '<pre class="ps-ausgabe" lang="en" tabindex="0" aria-label="Fehlermeldung">' + esc(fehler.join("\n")) + "</pre>";
+      rBaum.markieren(marken);
+      return;
+    }
+    const ziel = s.ausfuehren("(Get-Location).Path").trim();
+    const mAbs = /^['"]?([a-z]:|\\|~|\$\w*)/i.exec(pfad);
+    const istAbsolut = !!mAbs;
+    const beginn = mAbs ? mAbs[1] : "";
+    if (!gleich(ziel, x.nach)) {
+      marken.push({ pfad: ziel, art: "falsch", text: "✗ hier gelandet" });
+      rBaum.markieren(marken);
+      rRm.className = "rueckmeldung bad";
+      rRm.innerHTML = '<span class="marke">✗</span> Damit landet Lea in ' + C(ziel) + ", nicht in B. Zähle die Ebenen im Baum nach: Wie oft musst du von A aus hinauf, bevor es wieder hinein geht?";
+      return;
+    }
+    if (x.art === "relativ" && istAbsolut) {
+      rBaum.markieren(marken);
+      rRm.className = "rueckmeldung bad";
+      rRm.innerHTML = '<span class="marke">✗</span> Lea kommt an, aber das ist kein relativer Pfad: Er beginnt mit ' + C(beginn) + " und nicht bei A. Gesucht ist die Wegbeschreibung ab A.";
+      return;
+    }
+    if (x.art === "absolut" && !/^['"]?[a-z]:\\/i.test(pfad)) {
+      rBaum.markieren(marken);
+      rRm.className = "rueckmeldung bad";
+      rRm.innerHTML = '<span class="marke">✗</span> Lea kommt an, aber gesucht ist ein absoluter Pfad, der mit dem Laufwerk ' + C("C:\\") + " beginnt.";
+      return;
+    }
+    if (r.geloest.indexOf(r.nr) < 0) r.geloest.push(r.nr);
+    rBaum.markieren([{ pfad: x.von, art: "start", text: "A" }, { pfad: x.nach, art: "ziel", text: "B ✓ angekommen" }]);
+    rStand.textContent = "Rätsel " + (r.nr + 1) + " von " + RAETSEL.length + " · " + r.geloest.length + " gelöst";
+    rRm.className = "rueckmeldung ok";
+    rRm.innerHTML = '<span class="marke">✓</span> Richtig, Lea ist in ' + C(ziel) + ". " + esc(x.erkl) +
+      (gleich(pfad, x.loesung) ? "" : " Kürzeste Schreibweise: " + C(x.loesung) + ".");
+  }
+  document.getElementById("t04-r-pruefen").addEventListener("click", rPruefen);
+  rFeld.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); rPruefen(); } });
+  document.getElementById("t04-r-loesung").addEventListener("click", () => {
+    const x = RAETSEL[r.nr];
+    rRm.className = "rueckmeldung";
+    rRm.innerHTML = "Lösung: " + C("Set-Location " + x.loesung) + ". " + esc(x.erkl);
+  });
+  document.getElementById("t04-r-weiter").addEventListener("click", () => { r.nr = (r.nr + 1) % RAETSEL.length; rZeigen(); rFeld.focus(); });
+  document.getElementById("t04-r-neu").addEventListener("click", () => { r.nr = 0; r.geloest = []; rZeigen(); rFeld.focus(); });
+  rZeigen();
+
+  /* ---------- Schritt 8: Schatzsuche ---------- */
+  L.konsole("#t04-schatz", {
+    titel: "PowerShell 7 · Schatzsuche",
+    aufgabenTitel: "Ruedis Schnitzeljagd",
+    umgebung: {
+      ordner: [{ pfad: "C:\\Users\\lea\\AppData\\Roaming\\Wolkenried", zeit: "2026-10-30T16:44:00" }],
+      dateien: [
+        { pfad: "C:\\Users\\lea\\Dokumente\\Archiv\\schatz.txt", versteckt: true, zeit: "2026-03-12T10:16:00",
+          inhalt: "Hinweis 1: Gut gemacht, du hast eine versteckte Datei gefunden!\nDer Schatz liegt in einem versteckten Ordner.\nSuche überall nach einer Datei, deren Name mit karte beginnt." },
+        { pfad: "C:\\Users\\lea\\AppData\\Roaming\\Wolkenried\\karte-zum-schatz.txt", zeit: "2026-10-30T16:44:00",
+          inhalt: "Gratuliere! Du hast den Schatz gefunden.\nCode für das Znüni-Fach: 2611" }
+      ]
+    },
+    aufgaben: [
+      {
+        titel: "Erster Versuch, ohne -Force",
+        text: "<p>Suche im ganzen Benutzerordner nach Textdateien (Endung <code>.txt</code>), auch in Unterordnern. Noch ohne <code>-Force</code>.</p>",
+        hinweis: "<p>Get-ChildItem mit -Recurse und -Filter *.txt. Du findest zwei Dateien, aber keine versteckte.</p>",
+        loesung: "Get-ChildItem -Recurse -Filter *.txt",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /notizen\.txt/.test(ctx.ausgabe) && !/schatz\.txt/.test(ctx.ausgabe) &&
+          /\s-(r|s|re|rec|recu|recur|recurs|recurse)(\s|$)/i.test(ctx.eingabe) && /\.txt/i.test(ctx.eingabe)
+      },
+      {
+        titel: "Versteckte Dateien sichtbar machen",
+        text: "<p>Wiederhole die Suche so, dass auch versteckte Dateien erscheinen.</p>",
+        hinweis: "<p>Hänge den Schalter -Force an. Drück ↑, um den letzten Befehl zurückzuholen.</p>",
+        loesung: "Get-ChildItem -Recurse -Filter *.txt -Force",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /schatz\.txt/.test(ctx.ausgabe) && /\s-fo(r(ce?)?)?(\s|$)/i.test(ctx.eingabe)
+      },
+      {
+        titel: "Den ersten Hinweis lesen",
+        text: "<p>Lies den Inhalt der versteckten Datei. Ihren Ordner zeigt dir der Kopf <code>Directory:</code> über der Datei.</p>",
+        hinweis: "<p>Get-Content mit dem Pfad der Datei, zum Beispiel ab deinem Benutzerordner: Dokumente\\Archiv\\schatz.txt.</p>",
+        loesung: "Get-Content Dokumente\\Archiv\\schatz.txt",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Content") && /versteckten Ordner/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Die Karte suchen",
+        text: "<p>Folge dem Hinweis: Suche überall, auch in versteckten Ordnern, nach einer Datei, deren Name mit <code>karte</code> beginnt.</p>",
+        hinweis: "<p>Das Muster «beginnt mit karte» heisst karte*. Ohne -Force geht -Recurse nicht in versteckte Ordner wie AppData.</p>",
+        loesung: "Get-ChildItem -Recurse -Filter karte* -Force",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /karte-zum-schatz\.txt/.test(ctx.ausgabe) && /karte[^\s'"]*\*/i.test(ctx.eingabe)
+      },
+      {
+        titel: "Den Schatz heben",
+        text: "<p>Lies die Schatzkarte. Wie heisst der Code für das Znüni-Fach?</p>",
+        hinweis: "<p>Get-Content mit dem ganzen Pfad: AppData\\Roaming\\Wolkenried\\karte-zum-schatz.txt. Tab hilft beim Tippen.</p>",
+        loesung: "Get-Content AppData\\Roaming\\Wolkenried\\karte-zum-schatz.txt",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Content") && /2611/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Bonus: nur das Versteckte",
+        text: "<p>Zeige im ganzen Benutzerordner <b>nur</b> versteckte Dateien und Ordner, sonst nichts.</p>",
+        hinweis: "<p>Statt -Force gibt es einen Schalter, der nur Verstecktes zeigt. Er heisst wie das englische Wort für versteckt. Dazu -Recurse.</p>",
+        loesung: "Get-ChildItem -Recurse -Hidden",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /schatz\.txt/.test(ctx.ausgabe) && /AppData/.test(ctx.ausgabe) &&
+          !/notizen\.txt/.test(ctx.ausgabe) && !/karte-zum-schatz/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t04-u-art", {
+    frage: "Beginnt der Pfad beim Laufwerk (absolut) oder beim aktuellen Ort (relativ)?",
+    kategorien: ["absolut", "relativ"],
+    elemente: [
+      { html: C("C:\\Users\\lea\\Bilder"), kategorie: "absolut", erklaerung: "Laufwerk C: am Anfang, jeder Ordner bis zum Ziel genannt." },
+      { html: C("..\\Bilder"), kategorie: "relativ", erklaerung: "Beginnt mit .. und hängt davon ab, wo du gerade bist." },
+      { html: C(".\\Logs\\app.log"), kategorie: "relativ", erklaerung: "Der Punkt steht für den aktuellen Ort." },
+      { html: C("Downloads"), kategorie: "relativ", erklaerung: "Nur ein Name: PowerShell sucht ihn am aktuellen Ort." },
+      { html: C("HKCU:\\Software\\Wolkenried"), kategorie: "absolut", erklaerung: "Auch HKCU: ist ein Laufwerk. Der Pfad nennt es am Anfang." },
+      { html: C("'C:\\Program Files'"), kategorie: "absolut", erklaerung: "Die Anführungszeichen ändern nichts: Der Pfad beginnt mit C:\\." },
+      { html: C("Dokumente\\Archiv"), kategorie: "relativ", erklaerung: "Zwei Ordner, aber kein Laufwerk am Anfang: relativ zum aktuellen Ort." }
+    ]
+  });
+  L.auswahl("#t04-u-wo", {
+    frage: "Lea steht in " + C("C:\\Users\\lea\\Dokumente\\Archiv") + " und tippt " + C("Set-Location ..\\..\\Logs") + ". Was zeigt danach " + C("Get-Location") + "?",
+    optionen: [C("C:\\Users\\lea\\Dokumente\\Logs"), C("C:\\Users\\lea\\Logs"), C("C:\\Users\\Logs"), "Eine Fehlermeldung, weil es Logs im Archiv nicht gibt"],
+    richtig: 1,
+    erklaerung: "Zweimal .. führt von Archiv über Dokumente nach lea. Dort liegt Logs. Ein .. allein hätte nach Dokumente geführt, und dort gibt es keinen Ordner Logs."
+  });
+  L.auswahl("#t04-u-muster", {
+    frage: "Im Ordner Logs liegen app.log, app-2026-07.log bis app-2026-10.log, backup-2026-06.log und sync-fehler.log. Welche Dateien zeigt " + C("Get-ChildItem Logs\\app-2026-0?.log -Name") + "?",
+    optionen: [
+      "app-2026-07.log, app-2026-08.log, app-2026-09.log",
+      "app-2026-07.log bis app-2026-10.log",
+      "app.log und alle app-2026-….log",
+      "Keine, weil ? nur im Parameter -Filter erlaubt ist"
+    ],
+    richtig: 0,
+    erklaerung: "Nach app-2026-0 steht genau ein Platz für ? und dann .log. Auf 07, 08 und 09 passt das. Bei app-2026-10.log steht an dieser Stelle eine 1, nicht eine 0."
+  });
+  L.auswahl("#t04-u-fehler1", {
+    frage: "Lea tippt " + C("Set-Location C:\\Program Files\\PowerShell") + " und erhält «A positional parameter cannot be found that accepts argument 'Files\\PowerShell'». Was ist falsch?",
+    optionen: [
+      "Der Pfad enthält ein Leerzeichen und braucht Anführungszeichen",
+      "Set-Location kann nicht in Ordner unter C:\\ wechseln",
+      "Statt Backslash braucht es Schrägstriche",
+      "Der Ordner PowerShell existiert nicht"
+    ],
+    richtig: 0,
+    erklaerung: "PowerShell hat am Leerzeichen getrennt: C:\\Program ist der Pfad, Files\\PowerShell ein zweites Argument ohne Platz. Richtig: Set-Location 'C:\\Program Files\\PowerShell'."
+  });
+  L.auswahl("#t04-u-fehler2", {
+    frage: "Ruedi sagt: «Im Archiv liegt eine Datei schatz.txt.» Lea tippt im Benutzerordner " + C("Get-ChildItem -Recurse -Filter schatz.txt") + " und es erscheint nichts. Warum?",
+    optionen: [
+      "Weil -Filter keine ganzen Namen kann, nur Platzhalter",
+      "Weil die Datei versteckt ist und -Force fehlt",
+      "Weil -Recurse nur eine Ebene tief sucht",
+      "Weil Lea zuerst ins Archiv wechseln muss"
+    ],
+    richtig: 1,
+    erklaerung: "Get-ChildItem zeigt versteckte Dateien nur mit -Force (oder nur Verstecktes mit -Hidden). -Recurse sucht in allen Ebenen, und -Filter darf auch einen genauen Namen enthalten."
+  });
+  L.sortierer("#t04-u-schalter", {
+    frage: "Welchen Schalter hängt Lea an " + C("Get-ChildItem") + ", um den Wunsch zu erfüllen?",
+    kategorien: ["-File", "-Directory", "-Recurse", "-Force", "-Name"],
+    elemente: [
+      { html: "«Ich will nur die Ordner sehen.»", kategorie: "-Directory", erklaerung: "-Directory lässt nur Ordner durch." },
+      { html: "«Zeig auch, was in den Unterordnern liegt.»", kategorie: "-Recurse", erklaerung: "-Recurse geht in jeden Unterordner hinein." },
+      { html: "«Ich will auch versteckte Dateien sehen.»", kategorie: "-Force", erklaerung: "-Force zeigt auch Verstecktes." },
+      { html: "«Nur Dateien, keine Ordner.»", kategorie: "-File", erklaerung: "-File lässt nur Dateien durch." },
+      { html: "«Datum und Grösse brauche ich nicht, nur die Namen.»", kategorie: "-Name", erklaerung: "-Name gibt nur die Namen aus." },
+      { html: "«Finde AppData, auch wenn es versteckt ist.»", kategorie: "-Force", erklaerung: "AppData ist ein versteckter Ordner. Er erscheint mit -Force." }
+    ]
+  });
+  L.wahrFalsch("#t04-u-wf", {
+    titel: "Übung 6 · Stimmt das?",
+    aussagen: [
+      { html: C("cd dokumente") + " wechselt auf Windows in den Ordner Dokumente.", wahr: true, erklaerung: "Pfade auf Windows unterscheiden nicht zwischen Gross- und Kleinschreibung." },
+      { html: C("Set-Location Dokumente/Archiv") + " ist ein Fehler, weil Windows Backslashes braucht.", wahr: false, erklaerung: "PowerShell versteht beide Trennzeichen, den Backslash und den Schrägstrich." },
+      { html: "Klappt " + C("Set-Location") + ", schreibt PowerShell «OK».", wahr: false, erklaerung: "Bei Erfolg kommt keine Ausgabe. Nur der Prompt zeigt den neuen Ort." },
+      { html: C("Join-Path Gibtsnicht datei.txt") + " meldet einen Fehler, weil es den Ordner nicht gibt.", wahr: false, erklaerung: "Join-Path baut nur den Text Gibtsnicht\\datei.txt zusammen und prüft nichts." },
+      { html: C("Test-Path Logs\\*.log") + " gibt auf Leas Rechner " + C("True") + " aus.", wahr: true, erklaerung: "Mit Platzhalter heisst True: Mindestens eine Datei passt auf das Muster." },
+      { html: C("-Filter") + " versteht auch eckige Klammern wie " + C("[78]") + ".", wahr: false, erklaerung: "-Filter kennt nur * und ?. Eckige Klammern gehen nur als Platzhalter im Pfad." },
+      { html: C("Set-Location C:") + " führt immer in die Wurzel C:\\.", wahr: false, erklaerung: "Ohne Backslash führt C: an den letzten Ort auf Laufwerk C. Für die Wurzel schreibst du C:\\." }
+    ]
+  });
+  L.konsole("#t04-u-konsole", {
+    titel: "PowerShell 7 · Übung",
+    begruessung: false,
+    aufgabenTitel: "Übung 7",
+    aufgaben: [
+      {
+        titel: "Alle Laufwerke",
+        text: "<p>Zeige alle Laufwerke an, die PowerShell kennt.</p>",
+        hinweis: "<p>Laufwerk heisst hier PSDrive. Das Verb ist Get.</p>",
+        loesung: "Get-PSDrive",
+        pruefe: (ctx) => ctx.befehle.includes("Get-PSDrive") && /HKCU/.test(ctx.ausgabe) && /Env/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Wie heisst der Computer?",
+        text: "<p>Zeige mit <code>Get-ChildItem</code> nur die Umgebungsvariable <code>COMPUTERNAME</code>.</p>",
+        hinweis: "<p>Laufwerk Env:, direkt dahinter der Name der Variable, ohne Leerzeichen.</p>",
+        loesung: "Get-ChildItem Env:COMPUTERNAME",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /WR-LEA-01/.test(ctx.ausgabe) && !/USERNAME/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Ab in die Registrierung",
+        text: "<p>Wechsle ins Laufwerk <code>HKCU:</code>.</p>",
+        hinweis: "<p>Set-Location mit dem Namen des Laufwerks samt Doppelpunkt.</p>",
+        loesung: "Set-Location HKCU:",
+        pruefe: (ctx) => ctx.befehle.includes("Set-Location") && /^HKCU:/i.test(ctx.ort)
+      },
+      {
+        titel: "Leas Sync-Einstellungen",
+        text: "<p>Zeige den Inhalt des Schlüssels <code>Software\\Wolkenried</code>. Welcher Server ist eingetragen?</p>",
+        hinweis: "<p>Get-ChildItem mit dem Pfad Software\\Wolkenried, wie bei einem Ordner.</p>",
+        loesung: "Get-ChildItem Software\\Wolkenried",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /sync\.wolkenried\.ch/.test(ctx.ausgabe) && !/Console/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Zurück auf C:",
+        text: "<p>Kehre mit nur dem Laufwerksnamen auf Laufwerk C zurück, an deinen letzten Ort dort.</p>",
+        hinweis: "<p>Set-Location C: (ohne Backslash).</p>",
+        loesung: "Set-Location C:",
+        pruefe: (ctx) => ctx.befehle.includes("Set-Location") && /^C:\\/i.test(ctx.ort) && /\sc:\s*$/i.test(ctx.eingabe)
+      },
+      {
+        titel: "Gibt es Programme zum Installieren?",
+        text: "<p>Prüfe mit einem Befehl, ob im Ordner <code>Downloads</code> mindestens eine Datei mit der Endung <code>.exe</code> liegt. Die Antwort soll True oder False sein.</p>",
+        hinweis: "<p>Test-Path mit einem Platzhalter: Downloads\\*.exe.</p>",
+        loesung: "Test-Path Downloads\\*.exe",
+        pruefe: (ctx) => ctx.befehle.includes("Test-Path") && /\*/.test(ctx.eingabe) && /\.exe/i.test(ctx.eingabe) && /^True\s*$/m.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm mit echten Simulator-Ausgaben ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  const f1 = f("Get-Location");
+  const f2 = f("Get-ChildItem");
+  const f3 = f("Set-Location Downloads");
+  const f4 = f("Get-ChildItem");
+  const f5 = f("Get-ChildItem -Filter *.pdf");
+  const f6 = f("Get-ChildItem -Filter rechnung-2026-1?.pdf");
+  const f7 = f("Set-Location ..\\Dokumente");
+  const f8 = f("Get-ChildItem -Recurse -Filter *.pdf");
+  const f9 = f("Set-Location ~");
+  const f10 = f("Get-ChildItem -Recurse -Filter *.pdf -Name");
+  const f11 = f("Get-ChildItem -Recurse -Filter *.pdf -Force -Name");
+  const f12 = f("Get-ChildItem -Recurse -Filter sync-fehler.log");
+  const f13 = f("Test-Path Logs\\sync-fehler.log");
+  const f14 = f("Join-Path $HOME Logs\\sync-fehler.log");
+  const f15 = f("Set-Location Env:");
+  const f16 = f("Get-ChildItem USERPROFILE");
+  const f17 = f("Set-Location C:");
+  const f18 = f("Get-Location");
+  L.film("#t04-film", {
+    phasen: ["1 · Umschauen", "2 · PDF-Dateien", "3 · Logdatei", "4 · Woher kommt ~?"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Auftrag vom Leiter Informatik: «Welche PDF-Dateien liegen in deinem Benutzerordner? Und wo genau liegt sync-fehler.log?» Lea arbeitet nur mit der Konsole." },
+      { ph: 0, f: f1, say: "Zuerst die wichtigste Frage: Wo bin ich? Get-Location zeigt C:\\Users\\lea, Leas Benutzerordner." },
+      { f: f2, say: "Get-ChildItem ohne Pfad zeigt den aktuellen Ort. Alle fünf Einträge beginnen in der Spalte Mode mit d: lauter Ordner." },
+      { say: "Rechnungen und Handbücher landen meistens in Downloads. Dort schaut Lea zuerst nach." },
+      { ph: 1, f: f3, say: "Downloads liegt direkt hier, also genügt der Name als relativer Pfad. Keine Ausgabe heisst: Der Wechsel hat geklappt. Der Prompt zeigt den neuen Ort." },
+      { f: f4, say: "Sechs Dateien: ein Foto, drei PDF-Dateien und zwei Installationsprogramme." },
+      { f: f5, say: "Mit -Filter *.pdf bleiben nur Namen, die auf .pdf enden. Der Stern steht für beliebig viele Zeichen davor." },
+      { f: f6, say: "Nur die Rechnung vom Oktober? Das Fragezeichen steht für ein einzelnes Zeichen: rechnung-2026-1?.pdf passt auf 10, nicht auf 09." },
+      { f: f7, say: "Jetzt hinüber nach Dokumente. Zwei Punkte führen hinauf nach lea, dann geht es hinein in Dokumente. Ein Befehl, ein relativer Pfad." },
+      { f: f8, say: "-Recurse sucht auch in den Unterordnern. Im Archiv liegt ein alter Vertrag als PDF." },
+      { say: "Ordner für Ordner absuchen dauert, und Lea könnte einen vergessen. Besser: vom Benutzerordner aus alles auf einmal." },
+      { f: f9, say: "Die Tilde ~ führt nach Hause, egal wo Lea gerade steht." },
+      { f: f10, say: "-Recurse, -Filter und -Name zusammen: Vor jedem Namen steht der Weg ab dem aktuellen Ort. Vier PDF-Dateien." },
+      { f: f11, say: "In versteckte Ordner wie AppData schaut -Recurse nur mit -Force. Lea prüft das: Es bleiben vier. Teil eins des Auftrags ist erledigt." },
+      { ph: 2, f: f12, say: "Jetzt die Logdatei. Lea sucht sie mit ihrem ganzen Namen im Filter. Der Kopf Directory: verrät den Ordner: Logs." },
+      { f: f13, say: "Test-Path bestätigt: Diesen Pfad gibt es. Die Antwort heisst True." },
+      { f: f14, say: "Join-Path setzt den vollen Pfad für die Antwort zusammen. <code>$HOME</code> enthält Leas Benutzerordner." },
+      { say: "Die Antwort an den Leiter steht: vier PDF-Dateien und C:\\Users\\lea\\Logs\\sync-fehler.log. Eine Frage bleibt noch: Woher weiss PowerShell, wohin ~ führt?" },
+      { ph: 3, f: f15, say: "Aus einer Umgebungsvariable. Die liegen im Laufwerk Env:. Lea wechselt hinein. Der Prompt zeigt jetzt Env:\\." },
+      { f: f16, say: "Dieselben Befehle wie auf C:. Get-ChildItem USERPROFILE zeigt: Der Benutzerordner ist C:\\Users\\lea. Dorthin führt ~." },
+      { f: f17, say: "Zurück auf C: geht es mit dem Laufwerksnamen. PowerShell merkt sich für jedes Laufwerk den letzten Ort." },
+      { f: f18, say: "Get-Location bestätigt: Lea ist wieder in C:\\Users\\lea, wo sie zuletzt auf C: war." },
+      { say: "Zusammengefasst: Get-Location zeigt den Ort, Set-Location wechselt ihn, Get-ChildItem mit -Recurse und -Filter sucht. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t04-selbsttest", {
+    fragen: [
+      { q: "Welcher Pfad ist absolut?", o: [C("..\\Logs"), C(".\\Logs"), C("C:\\Users\\lea\\Logs"), C("Logs")], a: 2,
+        e: "Ein absoluter Pfad beginnt mit dem Laufwerk. Die anderen gehen vom aktuellen Ort aus." },
+      { q: "Lea steht in " + C("C:\\Users\\lea\\Dokumente") + ". Wohin führt " + C("Set-Location ..\\Bilder") + "?", o: [C("C:\\Users\\lea\\Dokumente\\Bilder"), C("C:\\Users\\lea\\Bilder"), C("C:\\Bilder"), C("C:\\Users\\Bilder")], a: 1,
+        e: ".. führt von Dokumente hinauf nach lea, dann geht es in Bilder." },
+      { q: "Lea steht in " + C("C:\\Users\\lea\\Logs") + " und tippt " + C("Set-Location \\") + ". Wo ist sie danach?", o: [C("C:\\Users\\lea"), C("C:\\Users"), C("C:\\"), "Sie bleibt in Logs"], a: 2,
+        e: "Ein Backslash allein ist die Wurzel des aktuellen Laufwerks, hier C:\\." },
+      { q: "Was bedeutet der einzelne Punkt in " + C(".\\Archiv") + "?", o: ["Den Elternordner", "Den aktuellen Ort", "Den Benutzerordner", "Die Wurzel des Laufwerks"], a: 1,
+        e: "Ein Punkt ist der aktuelle Ort, zwei Punkte der Elternordner, ~ der Benutzerordner." },
+      { q: "Welches Muster passt auf ferien-01.jpg und ferien-02.jpg, aber nicht auf foto-apero.jpg?", o: [C("*.jpg"), C("f*.jpg"), C("?.jpg"), C("ferien-0?.jpg")], a: 3,
+        e: "f*.jpg passt auch auf foto-apero.jpg, *.jpg auf alle drei. ?.jpg passt auf keinen der drei Namen, denn vor .jpg steht mehr als ein Zeichen." },
+      { q: "Warum findet " + C("Get-ChildItem -Recurse -Filter schatz.txt") + " die versteckte Datei nicht?", o: ["-Recurse geht nur eine Ebene tief", "Ohne -Force zeigt Get-ChildItem nichts Verstecktes", "-Filter braucht einen Stern", "Man muss zuerst Test-Path aufrufen"], a: 1,
+        e: "Versteckte Dateien erscheinen erst mit -Force (oder mit -Hidden)." },
+      { q: "Was gibt " + C("Test-Path Logs\\*.txt") + " auf Leas Rechner aus?", o: [C("True"), C("False"), "Eine Liste der Textdateien", "Eine Fehlermeldung"], a: 1,
+        e: "Im Ordner Logs liegen nur .log-Dateien. Keine passt auf *.txt, also False." },
+      { q: "Welcher Befehl wechselt korrekt nach C:\\Program Files?", o: [C("Set-Location C:\\Program Files"), C("Set-Location 'C:\\Program Files'"), C("Set-Location -Path C:\\Program Files"), C("Set-Location C:\\Program_Files")], a: 1,
+        e: "Ein Pfad mit Leerzeichen gehört in Anführungszeichen, sonst wird er zerschnitten." },
+      { q: "Wie zeigst du alle Umgebungsvariablen?", o: [C("Get-ChildItem Env:"), C("Get-PSDrive Env"), C("Set-Location Env"), C("Get-ChildItem HKCU:")], a: 0,
+        e: "Die Umgebungsvariablen liegen im Laufwerk Env:, und Get-ChildItem zeigt den Inhalt wie bei einem Ordner." },
+      { q: "Was macht " + C("Join-Path Dokumente Archiv") + "?", o: ["Es wechselt nach Dokumente\\Archiv", "Es gibt den Text Dokumente\\Archiv aus, ohne zu prüfen, ob es ihn gibt", "Es gibt True aus, wenn der Ordner existiert", "Es legt den Ordner Archiv an"], a: 1,
+        e: "Join-Path setzt nur Teile zu einem Pfad zusammen. Ob es ihn gibt, prüft Test-Path." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

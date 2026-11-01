@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hilfe finden · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/04-navigieren-dateisystem" title="Navigieren im Dateisystem">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t03-», nur Farben aus :root -->
+  <style>
+    .t03-ziele{margin:6px 0 0; padding-left:1.2em}
+    .t03-ziele li{margin-bottom:2px}
+    .t03-quellen{margin:0; padding-left:1.2em}
+    .t03-quellen li{margin-bottom:2px}
+    .t03-fragen{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px}
+    .t03-frage{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:10px 12px; min-width:0}
+    .t03-frage b{display:block; color:var(--accent); margin-bottom:4px}
+    .t03-frage p{margin:4px 0 0}
+    /* Stepper: Syntaxzeile mit markiertem Teil */
+    .t03-st{display:flex; flex-direction:column; gap:8px; min-width:0; font-family:var(--f-body); font-style:normal; font-size:1rem; white-space:normal}
+    .t03-zeile{font-family:var(--ps-mono); font-size:.92rem; line-height:1.7; overflow-wrap:anywhere; background:var(--board); border:1px solid var(--line); border-radius:8px; padding:6px 10px}
+    .t03-zeile .t03-mark{background:var(--accent-soft); outline:2px solid var(--accent); border-radius:4px; padding:0 2px}
+    .t03-zeile .t03-blass{color:var(--muted)}
+    .t03-st pre{font-style:normal}
+    /* Syntax-Leser */
+    .t03-wahl{display:flex; flex-wrap:wrap; gap:6px}
+    .t03-syntax{display:flex; flex-wrap:wrap; gap:6px; align-items:center; padding:10px; border:1px solid var(--line); border-radius:10px; background:var(--board)}
+    .t03-teil{font-family:var(--ps-mono); font-size:.9rem; padding:5px 8px; border:1px solid var(--line); border-radius:7px; background:var(--surface); color:var(--ink);
+      cursor:pointer; max-width:100%; overflow-wrap:anywhere; text-align:left; line-height:1.3}
+    .t03-teil:hover{border-color:var(--accent)}
+    .t03-teil.t03-name{font-weight:700; color:var(--ps-befehl)}
+    .t03-teil.t03-gewaehlt{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); background:var(--accent-soft)}
+    .t03-teil.t03-an{border-color:var(--free); background:var(--free-bg); border-style:solid; border-width:2px}
+    .t03-teil.t03-an::after{content:" ●"; color:var(--ink); font-size:.75em}
+    .t03-filter{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+    .t03-filter span{font-size:.9rem; color:var(--muted)}
+    .t03-info{min-height:7em; border-left:4px solid var(--accent); padding:8px 12px; background:var(--surface); border-radius:0 10px 10px 0}
+    .t03-info h3{margin:0 0 6px; font-family:var(--ps-mono); font-size:1rem; overflow-wrap:anywhere}
+    .t03-info ul{margin:6px 0; padding-left:1.2em}
+    .t03-info li{margin-bottom:4px}
+    .t03-eig{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 8px; padding:0; list-style:none}
+    .t03-eig li{font-size:.8rem; font-weight:600; border:1px solid var(--line); border-radius:999px; padding:2px 9px; background:var(--board); margin:0}
+    /* Spiel gültig oder nicht */
+    .t03-spiel-kopf{display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; align-items:baseline}
+    .t03-stand{font-size:.9rem; color:var(--muted)}
+    .t03-aufruf{font-size:1.05rem}
+    .t03-aufruf pre{margin:0}
+    .t03-knoepfe{display:flex; flex-wrap:wrap; gap:8px}
+    .t03-ergebnis{display:flex; flex-direction:column; gap:8px}
+    .t03-liste{margin:0; padding-left:1.4em}
+    .t03-liste li{margin-bottom:4px}
+    .t03-liste code{overflow-wrap:anywhere}
+    .t03-symbole td:first-child{white-space:nowrap}
+  </style>
+</head>
+<body data-fach="ps" data-thema="03-hilfe-finden">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 1 · Erste Schritte</span>
+    <h1>Hilfe finden</h1>
+    <p class="lead">Lea hat zwei neue Tickets: «Kopier bitte meine Notizen in den Ordner Berichte» und «Der Berichtgenerator hängt, beende ihn». Die Befehle dafür kennt sie noch nicht. Muss sie auch nicht: PowerShell erklärt sich selbst. Hier lernst du, Befehle zu finden, ihre Hilfe zu lesen und die rätselhafte Syntaxzeile mit den vielen Klammern zu entschlüsseln.</p>
+    <div class="note"><b>Danach kannst du:</b>
+      <ul class="t03-ziele">
+        <li>mit <code class="ps">Get-Command</code> und dem Platzhalter <code class="ps">*</code> einen passenden Befehl finden.</li>
+        <li>mit <code class="ps">Get-Help</code> Beispiele, einzelne Parameter oder die ganze Hilfe anzeigen.</li>
+        <li>erklären, warum die Hilfe ohne <code class="ps">Update-Help</code> gekürzt ist.</li>
+        <li>eine Syntaxzeile lesen: Pflicht oder optional, mit oder ohne Namen, ein Wert oder mehrere, Schalter, Parametersätze.</li>
+        <li>vor dem Ausführen sagen, ob ein Aufruf zur Syntax passt.</li>
+        <li>mit <code class="ps">Get-Member</code> sehen, was ein Befehl ausgibt, und about-Themen lesen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#finden"><b>1</b>Befehl finden</a>
+    <a href="#hilfe"><b>2</b>Get-Help</a>
+    <a href="#syntax"><b>3</b>Syntax lesen</a>
+    <a href="#ausgabe"><b>4</b>Was kommt heraus?</a>
+    <a href="#ausprobieren"><b>5</b>Ausprobieren</a>
+    <a href="#leser"><b>6</b>Syntax-Leser</a>
+    <a href="#spiel"><b>7</b>Gültig?</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Drei Fragen, drei Werkzeuge</h2>
+    <p class="prose">Niemand kennt alle PowerShell-Befehle auswendig. Auch Profis nicht. Sie wissen aber, wie sie nachschlagen. Stell dir eine grosse Bibliothek vor: Zuerst suchst du im Katalog das passende Buch. Dann liest du darin, wie es geht. Am Schluss schaust du nach, was du in den Händen hältst. Für jede dieser drei Fragen hat PowerShell ein Werkzeug.</p>
+    <div class="t03-fragen">
+      <div class="t03-frage"><b>1 · Welcher Befehl?</b><code class="ps">Get-Command</code><p>Der Katalog. Er sucht Befehle nach Namen, Verb oder Nomen.</p></div>
+      <div class="t03-frage"><b>2 · Wie benutze ich ihn?</b><code class="ps">Get-Help</code><p>Die Bedienungsanleitung: Beschreibung, Parameter, Beispiele.</p></div>
+      <div class="t03-frage"><b>3 · Was kommt heraus?</b><code class="ps">Get-Member</code><p>Das Etikett auf dem Ergebnis: Welche Art Objekt ist es, was steckt darin?</p></div>
+    </div>
+    <p class="prose">Dazu kommen fünf Begriffe, die du auf dieser Seite immer wieder brauchst:</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Platzhalter = Joker</span><span class="ex"><code class="ps">*Content*</code></span><p>Der Stern steht für beliebig viele Zeichen, auch für keines. Wie ein Joker im Kartenspiel passt er überall.</p></div>
+      <div class="concept"><span class="tag">Hilfeartikel = Anleitung</span><span class="ex"><code class="ps">Get-Help Copy-Item</code></span><p>Zu jedem Cmdlet gibt es einen Text mit Abschnitten wie NAME, SYNTAX und EXAMPLES (Beispiele).</p></div>
+      <div class="concept"><span class="tag">Syntax = Formular</span><span class="ex"><code>[-Filter &lt;string&gt;]</code></span><p>Der Bauplan eines Befehls. Wie ein Formular mit Pflichtfeldern und freiwilligen Feldern. Klammern zeigen, was was ist.</p></div>
+      <div class="concept"><span class="tag">Typ = Art des Werts</span><span class="ex"><code>&lt;string&gt;</code>, <code>&lt;int&gt;</code></span><p>Sagt, was du einfüllen musst: <code>string</code> heisst Text, <code>int</code> heisst ganze Zahl.</p></div>
+      <div class="concept"><span class="tag">about-Thema = Lexikonartikel</span><span class="ex"><code class="ps">about_Wildcards</code></span><p>Ein Hilfeartikel nicht zu einem Befehl, sondern zu einem Thema, etwa zu Platzhaltern.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welche Frage beantwortet der Befehl?</h3>
+      <div id="t03-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Befehl finden ===== -->
+  <section id="finden">
+    <span class="eyebrow">Schritt 1 · Welcher Befehl?</span>
+    <h2>Get-Command: der Katalog</h2>
+    <p class="prose">Aus Station 02 kennst du <code class="ps">Get-Command -Noun Service</code>. Oft weisst du aber nur ein Stichwort. Dann hilft der Platzhalter <code class="ps">*</code>. Lea will etwas mit dem Inhalt (englisch <span lang="en">content</span>) von Dateien machen. Sie setzt das Stichwort zwischen zwei Sterne:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Command *Content*" data-ps-befehl="Get-Command *Content*"></pre>
+    <p class="prose"><code class="ps">*Content*</code> heisst: «beliebige Zeichen, dann Content, dann beliebige Zeichen». Ohne Sterne sucht <code class="ps">Get-Command</code> einen Befehl, der genau <code>Content</code> heisst, und findet keinen. Der Stern darf auch nur auf einer Seite stehen: <code class="ps">Get-Command Get-*</code> findet alles, was mit <code>Get-</code> beginnt, <code class="ps">Get-Command *-Item</code> alles, was auf <code>-Item</code> endet.</p>
+    <h3>Nach Verb und Nomen suchen</h3>
+    <p class="prose">Weil jedes Cmdlet Verb-Nomen heisst, kannst du die beiden Teile auch einzeln angeben. Für Leas zweites Ticket sucht sie das Verb für «beenden» und das Nomen für «Prozess». Beides zusammen lässt genau einen Befehl übrig:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Command -Verb Stop -Noun Process" data-ps-befehl="Get-Command -Verb Stop -Noun Process"></pre>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>So sucht Get-Command</caption>
+        <thead><tr><th>Du weisst …</th><th>Befehl</th><th>findet zum Beispiel</th></tr></thead>
+        <tbody>
+          <tr><td>ein Stichwort irgendwo im Namen</td><td><code class="ps">Get-Command *Content*</code></td><td><code class="ps">Get-Content</code>, <code class="ps">Set-Content</code></td></tr>
+          <tr><td>wie der Name endet</td><td><code class="ps">Get-Command *-Item</code></td><td><code class="ps">Copy-Item</code>, <code class="ps">New-Item</code></td></tr>
+          <tr><td>das Verb</td><td><code class="ps">Get-Command -Verb Stop</code></td><td><code class="ps">Stop-Process</code>, <code class="ps">Stop-Service</code></td></tr>
+          <tr><td>das Nomen</td><td><code class="ps">Get-Command -Noun Process</code></td><td><code class="ps">Get-Process</code>, <code class="ps">Stop-Process</code></td></tr>
+          <tr><td>Verb und Nomen</td><td><code class="ps">Get-Command -Verb Stop -Noun Process</code></td><td>nur <code class="ps">Stop-Process</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Simulator und echte PowerShell:</b> Für Nomen wie <code>Process</code>, <code>Item</code> oder <code>Service</code> listet der Simulator dieselben Cmdlets wie pwsh 7.6. Sonst kennt er nur die rund 80 Befehle, die er nachbaut. Echtes pwsh findet viel mehr: Auf dem Testrechner lieferte <code class="ps">Get-Command -Verb Stop</code> über zwanzig Befehle, und <code class="ps">Get-Command *Content*</code> fand auch Befehle aus anderen Modulen. Wie viele es genau sind, hängt davon ab, was auf dem Rechner installiert ist.</div>
+    <div class="note tipp"><b>Lieber zu breit als zu eng:</b> Suchst du mit <code class="ps">*Services*</code> (Mehrzahl), findest du kein einziges Cmdlet, denn Cmdlet-Nomen stehen in der Einzahl. Echtes pwsh zeigt dann höchstens Windows-Programme wie <code>services.exe</code>. <code class="ps">*Service*</code> findet alles, was du brauchst.</div>
+  </section>
+
+  <!-- ===== 2 · Get-Help ===== -->
+  <section id="hilfe">
+    <span class="eyebrow">Schritt 2 · Wie benutze ich ihn?</span>
+    <h2>Get-Help: die Bedienungsanleitung</h2>
+    <p class="prose">Lea hat <code class="ps">Copy-Item</code> gefunden. Jetzt will sie wissen, wie man es benutzt. <code class="ps">Get-Help</code> mit dem Namen des Befehls zeigt die Kurzhilfe. Hier am Beispiel von <code class="ps">Get-ChildItem</code>, das du schon kennst:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Help Get-ChildItem" data-ps-befehl="Get-Help Get-ChildItem"></pre>
+    <p class="prose">Lies von oben nach unten: <b>NAME</b> ist der Befehl, <b>SYNOPSIS</b> ein Satz dazu, <b>SYNTAX</b> der Bauplan (Schritt 3), <b>DESCRIPTION</b> die Beschreibung, <b>ALIASES</b> die Spitznamen. <b>REMARKS</b> verrät, wie du mehr erfährst. Die Überschriften sind englisch wie im Original.</p>
+    <div class="note"><b>Simulator:</b> Die Texte unter den Überschriften sind kurze deutsche Texte des Simulators. Die Syntax stammt aus echtem pwsh 7.6. In echter PowerShell sind die Hilfetexte englisch und viel länger.</div>
+
+    <h3>Nur das, was du brauchst</h3>
+    <p class="prose">Ein ganzer Hilfeartikel ist lang. Mit Parametern holst du gezielt einen Teil heraus. Jeder dieser Parameter ist ein Schalter oder braucht genau einen Wert:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Get-Help mit Parametern</caption>
+        <thead><tr><th>Befehl</th><th>zeigt</th></tr></thead>
+        <tbody>
+          <tr><td><code class="ps">Get-Help Copy-Item -Examples</code></td><td>nur Name, Kurzbeschreibung und Beispiele</td></tr>
+          <tr><td><code class="ps">Get-Help Copy-Item -Detailed</code></td><td>Kurzhilfe plus Beschreibung der Parameter und Beispiele</td></tr>
+          <tr><td><code class="ps">Get-Help Copy-Item -Full</code></td><td>alles: auch Angaben zu jedem Parameter, Ein- und Ausgabe, Hinweise</td></tr>
+          <tr><td><code class="ps">Get-Help Copy-Item -Parameter Destination</code></td><td>einen einzigen Parameter mit Pflicht, Position, Standardwert</td></tr>
+          <tr><td><code class="ps">Get-Help Copy-Item -Online</code></td><td>die aktuelle Hilfe von Microsoft Learn im Browser</td></tr>
+          <tr><td><code class="ps">help Copy-Item</code></td><td>dasselbe wie <code class="ps">Get-Help</code>, aber seitenweise: Leertaste blättert, <kbd>Q</kbd> beendet</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Am häufigsten brauchst du <code class="ps">-Parameter</code>. Es beantwortet die Frage «Muss ich das angeben, und darf ich den Namen weglassen?»:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Help Get-ChildItem -Parameter Path" data-ps-befehl="Get-Help Get-ChildItem -Parameter Path"></pre>
+    <p class="prose"><code>Required? false</code> heisst: nicht Pflicht. <code>Position? 0</code> heisst: Du darfst den Namen <code class="ps">-Path</code> weglassen, dann gehört der erste Wert ohne Namen zu diesem Parameter. Steht dort <code>Named</code>, musst du den Namen immer schreiben.</p>
+
+    <h3>Ohne Update-Help ist die Hilfe gekürzt</h3>
+    <p class="prose">Windows und PowerShell bringen die langen Hilfetexte nicht mit. Du lädst sie einmal aus dem Internet. Bis dahin baut <code class="ps">Get-Help</code> nur eine Notfall-Hilfe aus dem, was es selbst weiss: Name, Syntax, Aliase. So sieht das in einem frischen pwsh 7.6 aus:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Gekürzte Hilfe ohne Update-Help in pwsh 7" lang="en">PS C:\Users\lea&gt; Get-Help Copy-Item -Examples
+
+NAME
+    Copy-Item
+
+ALIASES
+    cpi
+    cp
+    copy
+
+
+REMARKS
+    Get-Help cannot find the Help files for this cmdlet on this computer. It is displaying only partial help.
+        -- To download and install Help files for the module that includes this cmdlet, use Update-Help.
+        -- To view the Help topic for this cmdlet online, type: "Get-Help Copy-Item -Online" or
+           go to https://go.microsoft.com/fwlink/?LinkID=2096990.</pre>
+    <p class="prose">Kein einziges Beispiel! Auf Deutsch steht unter REMARKS: «Get-Help findet die Hilfedateien nicht und zeigt nur einen Teil. Lade sie mit Update-Help herunter oder lies online.» Die Lösung ist ein einziger Befehl, den du einmal ausführst (Internet nötig):</p>
+    <pre class="ps-code"><code># Hilfetexte herunterladen und installieren
+Update-Help</code></pre>
+    <ul class="t03-liste prose">
+      <li>In pwsh 7 installiert <code class="ps">Update-Help</code> die Texte für dein eigenes Konto (<code class="ps">-Scope CurrentUser</code> ist der Standard). Für alle Konten auf dem Rechner brauchst du <code class="ps">Update-Help -Scope AllUsers</code> in einer Konsole «Als Administrator».</li>
+      <li>Der Befehl läuft nur einmal pro 24 Stunden. Mit <code class="ps">-Force</code> geht es sofort noch einmal.</li>
+      <li>Die Texte sind englisch. Meldet <code class="ps">Update-Help</code> auf einem deutschen Windows einen Fehler wegen der Sprache, empfiehlt Microsoft <code class="ps">Update-Help -UICulture en-US</code>.</li>
+      <li>Fehlen dir die Rechte oder klappt <code class="ps">Update-Help</code> nicht, hilft <code class="ps">-Online</code>: Es öffnet die immer aktuelle Hilfe auf Microsoft Learn im Browser. Dafür brauchst du Internet.</li>
+    </ul>
+    <div class="note"><b>Der Simulator tut so, als liefe Update-Help schon:</b> Er zeigt Beispiele und Parameter. <code class="ps">Update-Help</code> selbst baut er nicht nach. Probier ihn in deiner echten PowerShell aus.</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In Windows PowerShell 5.1 braucht <code class="ps">Update-Help</code> immer eine Konsole «Als Administrator», den Parameter <code class="ps">-Scope</code> gibt es dort nicht. Die Hilfe von 5.1 und 7 ist getrennt: Du aktualisierst sie in jeder Version einzeln. Ohne Update zeigt 5.1 auf einem deutschen Windows deutsche Überschriften (<code>ALIASE</code>, <code>HINWEISE</code>) und eine noch kürzere Syntax.</div>
+  </section>
+
+  <!-- ===== 3 · Syntax lesen ===== -->
+  <section id="syntax">
+    <span class="eyebrow">Schritt 3 · Den Bauplan lesen</span>
+    <h2>Die Syntaxzeile Stück für Stück</h2>
+    <p class="prose">Der wichtigste Teil der Hilfe ist die Syntax. Sie sieht zuerst aus wie Buchstabensalat mit Klammern. Dabei gibt es nur wenige Zeichen, und jedes hat eine feste Bedeutung. Lea liest die Syntax von <code class="ps">Copy-Item</code> (gekürzt auf die Teile, die sie braucht). Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Stück oder tippe darauf: Derselbe Teil leuchtet unten auf.</p>
+    <div id="t03-stepper"></div>
+    <p class="prose">Die volle Syntax zeigt dir <code class="ps">Get-Command Copy-Item -Syntax</code>. Das ist die Kurzform: nur die Syntax, ohne den Rest der Hilfe.</p>
+
+    <h3>Alle Zeichen auf einen Blick</h3>
+    <div class="card tablebox">
+      <table class="tabelle t03-symbole">
+        <caption>Zeichen in der Syntax</caption>
+        <thead><tr><th>Zeichen</th><th>Bedeutung</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><td><code>-Name</code></td><td>Name eines Parameters. Den Bindestrich tippst du direkt davor, ohne Leerzeichen.</td><td><code>-Destination</code></td></tr>
+          <tr><td><code>&lt; &gt;</code></td><td>Platzhalter für deinen Wert. Darin steht der Typ. Die spitzen Klammern tippst du <b>nicht</b> mit.</td><td><code>&lt;string&gt;</code> → <code class="ps">Berichte</code></td></tr>
+          <tr><td><code>[ ]</code> um Name und Wert</td><td>freiwillig: Du darfst den ganzen Parameter weglassen.</td><td><code>[-Filter &lt;string&gt;]</code></td></tr>
+          <tr><td><code>[ ]</code> nur um den Namen</td><td>Positionsparameter: Der Name darf fehlen, dann zählt die Reihenfolge.</td><td><code>[-Path] &lt;string[]&gt;</code></td></tr>
+          <tr><td><code>[[ ] ]</code> doppelt</td><td>freiwillig und Positionsparameter</td><td><code>[[-Destination] &lt;string&gt;]</code></td></tr>
+          <tr><td><code>[]</code> hinter dem Typ</td><td>mehrere Werte erlaubt, mit Komma getrennt</td><td><code>&lt;string[]&gt;</code> → <code class="ps">Logs, Bilder</code></td></tr>
+          <tr><td>ohne <code>&lt; &gt;</code></td><td>Schalter: kein Wert, hinschreiben heisst einschalten</td><td><code>[-Recurse]</code></td></tr>
+          <tr><td>ohne äussere <code>[ ]</code></td><td>Pflicht: muss im Befehl stehen</td><td><code>-LiteralPath &lt;string[]&gt;</code></td></tr>
+          <tr><td><code>{ a | b }</code></td><td>Auswahl: einer der festen Werte (nur in <code class="ps">Get-Help</code> mit installierter Hilfe)</td><td><code>-Option {None | ReadOnly | Constant | Private | AllScope}</code> (bei <code class="ps">New-Alias</code>)</td></tr>
+          <tr><td><code>[&lt;CommonParameters&gt;]</code></td><td>die gemeinsamen Parameter, die fast jedes Cmdlet hat</td><td><code class="ps">-ErrorAction</code>, <code class="ps">-Verbose</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Häufige Typen</caption>
+        <thead><tr><th>Typ</th><th>heisst</th><th>Beispielwert</th></tr></thead>
+        <tbody>
+          <tr><td><code>string</code></td><td>Text</td><td><code class="ps">Berichte</code>, <code class="ps">'C:\Program Files'</code></td></tr>
+          <tr><td><code>int</code></td><td>ganze Zahl</td><td><code class="ps">8840</code></td></tr>
+          <tr><td><code>uint</code></td><td>ganze Zahl ohne Vorzeichen (0 oder grösser)</td><td><code class="ps">2</code></td></tr>
+          <tr><td><code>string[]</code>, <code>int[]</code></td><td>ein oder mehrere Texte bzw. Zahlen</td><td><code class="ps">Logs, Bilder</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Mehrere Zeilen: Parametersätze</h3>
+    <p class="prose">Manche Befehle haben mehrere Syntaxzeilen. Jede Zeile ist ein <b>Parametersatz</b>: eine Kombination von Parametern, die zusammenpassen. Du wählst eine Zeile und bleibst in ihr. Wie bei einem Menü: Du nimmst Menü A oder Menü B, aber nicht die Vorspeise von A mit dem Dessert von B.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Command Get-ChildItem -Syntax" data-ps-befehl="Get-Command Get-ChildItem -Syntax"></pre>
+    <p class="prose">Die erste Zeile arbeitet mit <code class="ps">-Path</code>, die zweite mit <code class="ps">-LiteralPath</code> (Pfad wörtlich, ohne Platzhalter). Beide zusammen geht nicht. Dasselbe gilt für <code class="ps">Get-Help</code>: <code class="ps">-Detailed</code>, <code class="ps">-Examples</code>, <code class="ps">-Full</code>, <code class="ps">-Parameter</code> und <code class="ps">-Online</code> stehen je in einer eigenen Zeile. Mischst du sie, bricht PowerShell ab:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei gemischten Parametersätzen" data-ps-befehl="Get-Help Get-ChildItem -Detailed -Full"></pre>
+    <p class="prose">Auf Deutsch: «Der Parametersatz lässt sich mit diesen Parametern nicht bestimmen. Einige passen nicht zusammen, oder es fehlen welche.» Wenn du diese Meldung siehst, vergleiche deine Parameter mit den Syntaxzeilen.</p>
+    <div class="note tipp"><b>Get-Help oder Get-Command -Syntax?</b> Beide zeigen dieselben Parameter. <code class="ps">Get-Command -Syntax</code> ist kurz und schreibt den Typ (<code>&lt;FlagsExpression[FileAttributes]&gt;</code>). <code class="ps">Get-Help</code> mit installierter Hilfe zählt bei Parametern mit festen Werten die erlaubten Werte in geschweiften Klammern auf, zum Beispiel bei <code class="ps">New-Alias</code>: <code>-Option {None | ReadOnly | Constant | Private | AllScope}</code>.</div>
+  </section>
+
+  <!-- ===== 4 · Was kommt heraus? ===== -->
+  <section id="ausgabe">
+    <span class="eyebrow">Schritt 4 · Was kommt heraus? Und was gibt es sonst?</span>
+    <h2>Get-Member und about-Themen</h2>
+    <p class="prose">PowerShell-Befehle geben keine Textzeilen aus, sondern <b>Objekte</b>: Datenpakete mit Feldern, wie eine Karteikarte. <code class="ps">Get-Member</code> liest das Etikett. Du schickst ihm die Ausgabe mit dem senkrechten Strich <code class="ps">|</code> (der Pipeline, Station 07):</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Date | Get-Member -MemberType Property" data-ps-befehl="Get-Date | Get-Member -MemberType Property"></pre>
+    <p class="prose">Die Zeile <code>TypeName</code> nennt die Art des Objekts: <code>System.DateTime</code>, ein Datum mit Uhrzeit. Darunter stehen seine Eigenschaften (<span lang="en">Property</span>), zum Beispiel <code>DayOfWeek</code> für den Wochentag. <code class="ps">-MemberType Property</code> blendet die Methoden aus, damit die Liste kurz bleibt. Mehr dazu in Station 06.</p>
+
+    <h3>Themen statt Befehle: about_</h3>
+    <p class="prose">Nicht jede Frage betrifft einen Befehl. Wie funktionieren Platzhalter? Was ist eine Variable? Dafür gibt es Themenartikel, die alle mit <code>about_</code> beginnen. Den Katalog holst du dir mit einem Platzhalter:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Help about_*" data-ps-befehl="Get-Help about_*" data-ps-sitzung="about"></pre>
+    <p class="prose">Einen Artikel liest du mit seinem vollen Namen. Der Name ist immer englisch, auch auf einem deutschen Windows:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Help about_Wildcards" data-ps-befehl="Get-Help about_Wildcards" data-ps-sitzung="about"></pre>
+    <div class="note"><b>Simulator und echte PowerShell:</b> Der Simulator kennt 18 Themen mit kurzen deutschen Texten. Echte PowerShell hat über hundert, aber erst nach <code class="ps">Update-Help</code>. Vorher fand pwsh 7.6 auf dem Testrechner nur fünf Themen eines mitgelieferten Testmoduls, und <code class="ps">Get-Help about_Wildcards</code> meldete <span lang="en">«could not find about_Wildcards in a help file»</span>. Die about-Themen gibt es auch online, siehe Quellen unten.</div>
+  </section>
+
+  <!-- ===== 5 · Ausprobieren ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">Jetzt hilfst du dir selbst. Tippe die Befehle und drück Enter. Mit ↑ holst du den letzten Befehl zurück, mit Tab ergänzt du Namen. Der Simulator ist ein Spiel-Rechner: Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t03-konsole"></div>
+  </section>
+
+  <!-- ===== 6 · Syntax-Leser ===== -->
+  <section id="leser">
+    <span class="eyebrow">Schritt 6 · Syntax röntgen</span>
+    <h2>Der Syntax-Leser</h2>
+    <p class="prose">Hier ist die echte Syntax von <code class="ps">Get-ChildItem</code> aus pwsh 7.6, beide Zeilen. Tippe auf einen Teil: Darunter erscheint, was jedes Zeichen bedeutet, und ein Beispiel. Mit den Knöpfen «Zeige …» leuchten alle Teile einer Art auf.</p>
+    <div class="card stack">
+      <div class="t03-wahl" role="group" aria-label="Syntaxzeile wählen">
+        <button type="button" class="btn on" aria-pressed="true" data-t03-satz="0">Zeile 1: mit -Path</button>
+        <button type="button" class="btn" aria-pressed="false" data-t03-satz="1">Zeile 2: mit -LiteralPath</button>
+      </div>
+      <div class="t03-syntax" id="t03-syntax" role="group" aria-label="Teile der Syntaxzeile"></div>
+      <div class="t03-filter" role="group" aria-label="Teile einer Art hervorheben">
+        <span>Zeige:</span>
+        <button type="button" class="btn" aria-pressed="false" data-t03-filter="pflicht">Pflicht</button>
+        <button type="button" class="btn" aria-pressed="false" data-t03-filter="position">Positionsparameter</button>
+        <button type="button" class="btn" aria-pressed="false" data-t03-filter="schalter">Schalter</button>
+        <button type="button" class="btn" aria-pressed="false" data-t03-filter="mehrere">mehrere Werte</button>
+      </div>
+      <p class="hint" id="t03-filter-info" aria-live="polite"></p>
+      <div class="t03-info" id="t03-info" aria-live="polite"><p class="hint">Tippe oben auf einen Teil der Syntaxzeile.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Spiel gültig oder nicht ===== -->
+  <section id="spiel">
+    <span class="eyebrow">Schritt 7 · Spiel</span>
+    <h2>Gültig oder nicht?</h2>
+    <p class="prose">Zehn Aufrufe von <code class="ps">Get-ChildItem</code>. Entscheide nur mit der Syntax oben: Nimmt PowerShell den Aufruf an, oder kommt eine Fehlermeldung? «Gültig» heisst hier: Die Parameter passen zur Syntax. Die Begründung zeigt dir die Stelle in der Syntax und, falls es scheitert, die echte Meldung von pwsh 7.6.</p>
+    <div class="card stack" id="t03-spiel">
+      <div class="t03-spiel-kopf"><span class="t03-stand" id="t03-sp-nr"></span><span class="t03-stand" id="t03-sp-stand" aria-live="polite"></span></div>
+      <div class="t03-aufruf" id="t03-sp-aufruf"></div>
+      <div class="t03-knoepfe">
+        <button type="button" class="btn" id="t03-sp-gueltig">✓ gültig</button>
+        <button type="button" class="btn" id="t03-sp-ungueltig">✗ ungültig</button>
+      </div>
+      <div aria-live="polite" class="t03-ergebnis"><div class="rueckmeldung leer" id="t03-sp-rm"></div><div class="t03-ergebnis" id="t03-sp-erkl"></div></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t03-sp-weiter" hidden>Nächster Aufruf</button>
+        <button type="button" class="btn" id="t03-sp-neu" hidden>Nochmals spielen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 1 · Zuordnen</span><h3>Was sagt das Syntaxstück?</h3></div>
+      <div id="t03-u-zuordnen"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 2 · Ausgabe vorhersagen</span><h3>Ein frischer Rechner</h3></div>
+      <div id="t03-u-frisch"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 3 · Befehl wählen</span><h3>Gezielt suchen</h3></div>
+      <div id="t03-u-suchen"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 4 · Fehler finden</span><h3>Zu viel auf einmal</h3></div>
+      <div id="t03-u-fehler1"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 5 · Fehler finden</span><h3>Der Berichtgenerator hängt</h3></div>
+      <pre class="ps-code"><code>Stop-Process [-Id] &lt;int[]&gt; [-PassThru] [-Force] [-WhatIf] [-Confirm] [&lt;CommonParameters&gt;]
+Stop-Process -Name &lt;string[]&gt; [-PassThru] [-Force] [-WhatIf] [-Confirm] [&lt;CommonParameters&gt;]
+Stop-Process [-InputObject] &lt;Process[]&gt; [-PassThru] [-Force] [-WhatIf] [-Confirm] [&lt;CommonParameters&gt;]</code></pre>
+      <div id="t03-u-fehler2"></div>
+    </div>
+    <div id="t03-u-wf"></div>
+    <div class="stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 7 · Befehl selbst schreiben</span><h3>Zwei Fragen an die Hilfe</h3></div>
+      <div id="t03-u-konsole"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Ticket: Notizen nach Berichte kopieren</h2>
+    <p class="prose">Lea kennt den Befehl zum Kopieren nicht. Sie findet ihn, liest die Syntax, testet mit <code class="ps">-WhatIf</code>, kopiert und prüft das Ergebnis. Jede Szene zeigt die Eingabe und die echte Ausgabe des Simulators.</p>
+    <div id="t03-film"></div>
+    <details class="sol"><summary>Die Lösung als Text</summary>
+      <div class="stack">
+        <p>1. Befehl finden: <code class="ps">Get-Command -Verb Copy</code> liefert <code class="ps">Copy-Item</code>. 2. Syntax lesen: <code class="ps">Get-Command Copy-Item -Syntax</code>. <code>[-Path] &lt;string[]&gt;</code> ist Pflicht, Position 0, mehrere Werte erlaubt. <code>[[-Destination] &lt;string&gt;]</code> ist Position 1, ein Wert. 3. Testen: <code class="ps">Copy-Item -Path Dokumente\notizen.txt, Dokumente\einkaufsliste.txt -Destination Berichte -WhatIf</code>. 4. Ausführen: derselbe Befehl ohne <code class="ps">-WhatIf</code>. 5. Prüfen: <code class="ps">Get-ChildItem Berichte</code> zeigt beide Dateien.</p>
+        <p>Endstand: Im Ordner <code>Berichte</code> liegen jetzt auch <code>notizen.txt</code> und <code>einkaufsliste.txt</code>. Eigene Lösung, Verhalten von <code class="ps">Copy-Item</code> in pwsh 7.6 nachgeprüft (Leas Ordner gibt es nur im Simulator).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Sieben Stolpersteine</h2>
+    <div class="note falle"><b>Hilfe nie aktualisiert.</b> <code class="ps">Get-Help Copy-Item -Examples</code> zeigt keine Beispiele, und unter REMARKS steht <span lang="en">«displaying only partial help»</span>. Das ist kein Fehler des Befehls: Die Hilfetexte fehlen. Einmal <code class="ps">Update-Help</code>, oder sofort <code class="ps">-Online</code>.</div>
+    <div class="note falle"><b>Spitze Klammern mittippen.</b> <code class="ps">Get-ChildItem -Path &lt;Logs&gt;</code> ergibt einen roten <span lang="en">ParserError</span>. <code>&lt;string&gt;</code> ist nur ein Platzhalter für deinen Wert. Richtig: <code class="ps">Get-ChildItem -Path Logs</code>.</div>
+    <div class="note falle"><b>Name weglassen, wo es nicht geht.</b> <code class="ps">Stop-Process notepad</code> scheitert. Bei <code class="ps">Stop-Process</code> steht <code>-Name &lt;string[]&gt;</code> ohne Klammern um den Namen: <code class="ps">-Name</code> ist benannt, nicht positional. Den Wert ohne Namen versucht PowerShell an einen Positionsparameter zu binden und meldet <span lang="en">«Cannot bind parameter 'InputObject'»</span>. Richtig: <code class="ps">Stop-Process -Name notepad</code>.</div>
+    <div class="note falle"><b>Ein Wert, wo nur einer erlaubt ist.</b> <code class="ps">Get-ChildItem -Filter *.log, *.txt</code> scheitert, denn <code>-Filter &lt;string&gt;</code> hat kein <code>[]</code> hinter dem Typ. Für mehrere Muster gibt es <code class="ps">-Include</code> mit <code>&lt;string[]&gt;</code>.</div>
+    <div class="note falle"><b>Parametersätze mischen.</b> <code class="ps">-Path</code> mit <code class="ps">-LiteralPath</code> oder <code class="ps">-Detailed</code> mit <code class="ps">-Full</code> stehen in verschiedenen Syntaxzeilen. Die Meldung beginnt mit <span lang="en">«Parameter set cannot be resolved»</span>. Nimm alle Parameter aus einer Zeile.</div>
+    <div class="note falle"><b>Ohne Platzhalter gesucht.</b> <code class="ps">Get-Command process</code> sucht einen Befehl, der genau <code>process</code> heisst, und meldet <span lang="en">«The term 'process' is not recognized»</span>. Mit Sternen klappt es: <code class="ps">Get-Command *process*</code>.</div>
+    <div class="note falle"><b>-Name ist nicht immer ein Name.</b> Bei <code class="ps">Get-ChildItem</code> steht <code>[-Name]</code> ohne Typ: ein Schalter. <code class="ps">Get-ChildItem -Name Logs</code> heisst also «nur die Namen ausgeben, im Ordner Logs». Lies den Typ, nicht nur den Parameternamen.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je eine richtige Antwort. Das Ergebnis erscheint unten in der Abschluss-Box.</p>
+    <div id="t03-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">Get-Command</code></th><td>Befehl finden, mit Platzhalter</td><td><code class="ps">Get-Command *Content*</code></td></tr>
+          <tr><th><code class="ps">Get-Command -Verb -Noun</code></th><td>Befehl nach Verb und Nomen finden</td><td><code class="ps">Get-Command -Verb Stop -Noun Process</code></td></tr>
+          <tr><th><code class="ps">Get-Command -Syntax</code></th><td>nur die Syntax eines Befehls</td><td><code class="ps">Get-Command Copy-Item -Syntax</code></td></tr>
+          <tr><th><code class="ps">Get-Help</code></th><td>Kurzhilfe zu einem Befehl</td><td><code class="ps">Get-Help Copy-Item</code></td></tr>
+          <tr><th><code class="ps">Get-Help -Examples</code></th><td>nur die Beispiele</td><td><code class="ps">Get-Help Copy-Item -Examples</code></td></tr>
+          <tr><th><code class="ps">Get-Help -Parameter</code></th><td>ein Parameter: Pflicht? Position?</td><td><code class="ps">Get-Help Get-ChildItem -Parameter Path</code></td></tr>
+          <tr><th><code class="ps">Get-Help -Detailed</code>, <code class="ps">-Full</code></th><td>mehr bzw. die ganze Hilfe</td><td><code class="ps">Get-Help Copy-Item -Full</code></td></tr>
+          <tr><th><code class="ps">Get-Help -Online</code></th><td>aktuelle Hilfe im Browser</td><td><code class="ps">Get-Help Copy-Item -Online</code></td></tr>
+          <tr><th><code class="ps">help</code></th><td>Hilfe seitenweise (Leertaste, Q)</td><td><code class="ps">help Copy-Item</code></td></tr>
+          <tr><th><code class="ps">Get-Help about_*</code></th><td>Themenartikel auflisten und lesen</td><td><code class="ps">Get-Help about_Wildcards</code></td></tr>
+          <tr><th><code class="ps">Update-Help</code></th><td>Hilfetexte herunterladen (einmal, Internet nötig)</td><td><code class="ps">Update-Help</code></td></tr>
+          <tr><th><code class="ps">Get-Member</code></th><td>Art und Inhalt der Ausgabe</td><td><code class="ps">Get-Date | Get-Member -MemberType Property</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Drei Fragen, drei Werkzeuge: <b>welcher Befehl</b> (<code class="ps">Get-Command</code>), <b>wie benutzen</b> (<code class="ps">Get-Help</code>), <b>was kommt heraus</b> (<code class="ps">Get-Member</code>).</li>
+      <li>Suche breit mit Sternen: <code class="ps">*Stichwort*</code>, Nomen in der Einzahl.</li>
+      <li>Ohne <code class="ps">Update-Help</code> ist die Hilfe gekürzt. Notlösung: <code class="ps">-Online</code>.</li>
+      <li><code>[ ]</code> heisst freiwillig, <code>[-Name]</code> heisst «Name darf fehlen», <code>&lt;Typ&gt;</code> ist der Platzhalter für deinen Wert, <code>[]</code> hinter dem Typ erlaubt mehrere Werte.</li>
+      <li>Ein Parameter ohne <code>&lt;Typ&gt;</code> ist ein Schalter. Ohne äussere Klammern ist er Pflicht.</li>
+      <li>Jede Syntaxzeile ist ein Parametersatz. Nimm alle Parameter aus derselben Zeile.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="summary prose">
+        <li><code class="ps">Update-Help</code> braucht in 5.1 immer eine Konsole «Als Administrator» und kennt kein <code class="ps">-Scope</code>. In 7 reicht dein eigenes Konto.</li>
+        <li>5.1 und 7 haben getrennte Hilfedateien. Du aktualisierst beide einzeln.</li>
+        <li>Ohne Update zeigt 5.1 auf einem deutschen Windows deutsche Überschriften (<code>ALIASE</code>, <code>HINWEISE</code>) und nur einen Teil der Syntax.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn)</h3>
+      <ul class="t03-quellen">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-help">Get-Help</a> (Parameter, Hilfe ohne Hilfedateien, Required und Position)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_command_syntax">about_Command_Syntax</a> (Zeichen in Syntaxdiagrammen, Parametersätze)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/update-help">Update-Help</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_updatable_help">about_Updatable_Help</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/learn/ps101/02-help-system">PowerShell 101: The Help system</a> (die drei Kernbefehle; ersetzt das zurückgezogene Learn-Modul «Discover PowerShell»)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-command">Get-Command</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-member">Get-Member</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_parameters">about_Parameters</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_wildcards">about_Wildcards</a></li>
+      </ul>
+      <p class="hint">Alle Ausgaben und Fehlermeldungen auf dieser Seite sind in pwsh 7.6.1 und, bei den 5.1-Hinweisen, in Windows PowerShell 5.1 nachgeprüft. Leas Rechner gibt es nur im Simulator.</p>
+    </div>
+    <footer class="hint">Weiter geht es mit Station 04 «Navigieren im Dateisystem»: Dort bewegst du dich mit Pfaden durch Leas Ordner und nutzt die Parameter von <code class="ps">Get-ChildItem</code>, die du hier gelesen hast.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  // Code im HTML immer als Text in <code class="ps"> (wird von ps-konsole.js gefärbt)
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  // Syntaxstücke ohne Färbung (sie sind kein ausführbarer Code)
+  const S = (t) => "<code>" + esc(t) + "</code>";
+  const EN = (t) => '<span lang="en">' + esc(t) + "</span>";
+  const istHilfe = (ctx) => ctx.befehle.some((b) => /^(Get-Help|help|man)$/i.test(b));
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t03-sortierer", {
+    kategorien: ["Welcher Befehl?", "Wie benutze ich ihn?", "Was kommt heraus?"],
+    elemente: [
+      { html: C("Get-Command *Content*"), kategorie: 0, erklaerung: "Sucht Befehle mit «Content» im Namen: der Katalog." },
+      { html: C("Get-Help Copy-Item -Examples"), kategorie: 1, erklaerung: "Zeigt Beispiele, wie man Copy-Item benutzt." },
+      { html: C("Get-Date | Get-Member"), kategorie: 2, erklaerung: "Liest das Etikett der Ausgabe von Get-Date: System.DateTime mit seinen Eigenschaften." },
+      { html: C("Get-Command -Verb Stop"), kategorie: 0, erklaerung: "Findet alle Befehle mit dem Verb Stop." },
+      { html: C("Get-Help Get-ChildItem -Parameter Path"), kategorie: 1, erklaerung: "Erklärt einen einzelnen Parameter: Pflicht? Position?" },
+      { html: C("Get-Process | Get-Member"), kategorie: 2, erklaerung: "Zeigt, dass Get-Process Objekte vom Typ System.Diagnostics.Process liefert." },
+      { html: C("Get-Command -Noun Process"), kategorie: 0, erklaerung: "Findet alle Befehle mit dem Nomen Process." },
+      { html: C("Get-Command Copy-Item -Syntax"), kategorie: 1, erklaerung: "Get-Command, aber mit -Syntax: Es zeigt den Bauplan, also wie man den Befehl benutzt." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper zur Syntax von Copy-Item ---------- */
+  const TEILE = [
+    { id: "n", t: "Copy-Item" },
+    { id: "p", t: "[-Path] <string[]>" },
+    { id: "d", t: "[[-Destination] <string>]" },
+    { id: "r", t: "[-Recurse]" },
+    { id: "w", t: "[-WhatIf]" },
+    { id: "c", t: "[<CommonParameters>]" }
+  ];
+  // Syntaxzeile mit hervorgehobenem Teil (data-link verbindet mit dem Text oben)
+  function zeile(markId, bisIndex) {
+    return '<div class="t03-zeile">' + TEILE.map((x, i) => {
+      const kl = x.id === markId ? "t03-mark" : (i > bisIndex ? "t03-blass" : "");
+      return '<span data-link="' + x.id + '" class="' + kl + '">' + esc(x.t) + "</span>";
+    }).join(" ") + "</div>";
+  }
+  const st = L.konsole.sitzung();
+  const stAusgabe = st.html("Copy-Item -Path Dokumente\\notizen.txt -Destination Berichte -WhatIf");
+  const BSP = (t) => '<p>Beispiel: ' + C(t) + "</p>";
+  const stepperCfg = {
+    titel: "Syntax von Copy-Item (gekürzt)",
+    text: '<span data-link="n">Copy-Item</span> <span data-link="p">[-Path] &lt;string[]&gt;</span> <span data-link="d">[[-Destination] &lt;string&gt;]</span> <span data-link="r">[-Recurse]</span> <span data-link="w">[-WhatIf]</span> <span data-link="c">[&lt;CommonParameters&gt;]</span>',
+    schritte: [
+      { html: '<div class="t03-st">' + zeile("n", 0) + BSP("Copy-Item") + "</div>",
+        warum: "Vorne steht immer der Name des Befehls. Danach folgen alle Parameter, die er kennt, je mit Leerzeichen getrennt." },
+      { html: '<div class="t03-st">' + zeile("p", 1) + BSP("Copy-Item Dokumente\\notizen.txt") + "</div>",
+        warum: "Um [-Path] <string[]> stehen keine äusseren Klammern: Pflicht. Die Klammern nur um -Path heissen: Den Namen darfst du weglassen, der erste Wert ohne Namen landet hier (Position 0). <string[]>: Text, die [] erlauben mehrere Werte mit Komma." },
+      { html: '<div class="t03-st">' + zeile("d", 2) + BSP("Copy-Item Dokumente\\notizen.txt Berichte") + "</div>",
+        warum: "Doppelte Klammern: Die äusseren machen den ganzen Parameter freiwillig, die inneren den Namen. -Destination ist Position 1, also der zweite Wert ohne Namen. <string> ohne []: genau ein Ziel." },
+      { html: '<div class="t03-st">' + zeile("r", 3) + BSP("Copy-Item Bilder Bilder-Sicherung -Recurse") + "</div>",
+        warum: "[-Recurse] hat keinen Typ in spitzen Klammern: ein Schalter. Hinschreiben heisst einschalten. Bei Copy-Item kopiert er Ordner mit allem Inhalt." },
+      { html: '<div class="t03-st">' + zeile("w", 4) + BSP("Copy-Item Dokumente\\notizen.txt Berichte -WhatIf") + "</div>",
+        warum: "Auch [-WhatIf] ist ein freiwilliger Schalter. Er steht bei Befehlen, die etwas verändern: Sie zeigen damit nur, was sie tun würden." },
+      { html: '<div class="t03-st">' + zeile("c", 5) + BSP("Copy-Item Dokumente\\notizen.txt Berichte -Verbose") + "</div>",
+        warum: "[<CommonParameters>] steht für die gemeinsamen Parameter, die fast jedes Cmdlet hat: -Verbose, -ErrorAction und weitere. Sie werden nicht einzeln aufgezählt." },
+      { html: '<div class="t03-st">' + zeile("", 5) + "<p>Zusammengebaut, mit Namen:</p>" + stAusgabe + "</div>",
+        warum: "Lea schreibt die Namen aus, damit sie den Befehl später noch versteht. Mit -WhatIf passiert nichts: PowerShell beschreibt nur, welche Datei wohin kopiert würde." }
+    ]
+  };
+  // Begründungen sind reiner Text mit spitzen Klammern: maskieren
+  stepperCfg.schritte.forEach((s) => { s.warum = esc(s.warum); });
+  L.stepper("#t03-stepper", stepperCfg);
+
+  /* ---------- Schritt 5: Konsole mit Aufgaben ---------- */
+  L.konsole("#t03-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Welcher Befehl beendet Prozesse?",
+        text: "<p>Finde mit <code>Get-Command</code> den Befehl, der Prozesse (laufende Programme) beendet. Nutze <code>-Verb</code>, <code>-Noun</code> oder einen Platzhalter.</p>",
+        hinweis: "<p>Beenden heisst Stop, Prozess heisst Process. Du kannst beides angeben: -Verb und -Noun.</p>",
+        loesung: "Get-Command -Verb Stop -Noun Process",
+        // nacktes Get-Command listet alles, darum darf Get-ChildItem nicht in der Ausgabe stehen
+        pruefe: (ctx) => ctx.befehle.includes("Get-Command") && /Cmdlet\s+Stop-Process/.test(ctx.ausgabe) && !/Get-ChildItem|Copy-Item|Get-Date/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Beispiele zu Copy-Item",
+        text: "<p>Lass dir nur die Beispiele zu <code>Copy-Item</code> anzeigen, nicht die ganze Hilfe.</p>",
+        hinweis: "<p>Get-Help mit dem Befehlsnamen und dem Schalter -Examples.</p>",
+        loesung: "Get-Help Copy-Item -Examples",
+        pruefe: (ctx) => istHilfe(ctx) && /(^|\s)-ex/i.test(ctx.eingabe) && /NAME\s+Copy-Item/.test(ctx.ausgabe) && /Example 1/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Ist -Path ein Positionsparameter?",
+        text: "<p>Finde heraus, ob du bei <code>Get-ChildItem</code> den Namen <code>-Path</code> weglassen darfst. Zeige dazu nur die Angaben zu diesem einen Parameter und lies die Zeile <code>Position?</code>.</p>",
+        hinweis: "<p>Get-Help Get-ChildItem mit dem Parameter -Parameter und dem Wert Path. Eine Zahl bei Position? heisst: Name darf fehlen. Named heisst: Name nötig.</p>",
+        loesung: "Get-Help Get-ChildItem -Parameter Path",
+        pruefe: (ctx) => istHilfe(ctx) && /(^|\s)-par/i.test(ctx.eingabe) && /^-Path <string\[\]>/m.test(ctx.ausgabe) && /Position\?\s+0/.test(ctx.ausgabe) && !/^-Filter /m.test(ctx.ausgabe)
+      },
+      {
+        titel: "Mit Platzhalter suchen",
+        text: "<p>Finde alle Befehle, die <code>Content</code> irgendwo im Namen haben. Nimm dafür den Platzhalter <code>*</code>.</p>",
+        hinweis: "<p>Setz das Stichwort zwischen zwei Sterne: *Content*.</p>",
+        loesung: "Get-Command *Content*",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Command") && /\*/.test(ctx.eingabe) && /Add-Content/.test(ctx.ausgabe) && /Set-Content/.test(ctx.ausgabe) && !/Get-ChildItem/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Nur die Syntax",
+        text: "<p>Zeige die Syntax von <code>Copy-Item</code>, ohne den Rest der Hilfe.</p>",
+        hinweis: "<p>Get-Command kennt dafür einen Schalter. Er heisst wie das, was du willst.</p>",
+        loesung: "Get-Command Copy-Item -Syntax",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Command") && /(^|\s)-syn/i.test(ctx.eingabe) && /Copy-Item \[-Path\] <string\[\]>/.test(ctx.ausgabe) && !/New-Item|Get-ChildItem/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Alle about-Themen",
+        text: "<p>Liste alle Themenartikel auf, deren Name mit <code>about_</code> beginnt.</p>",
+        hinweis: "<p>Get-Help mit einem Platzhalter: about_ und dann ein Stern.</p>",
+        loesung: "Get-Help about_*",
+        pruefe: (ctx) => istHilfe(ctx) && /about_\*/i.test(ctx.eingabe) && /about_Pipelines/.test(ctx.ausgabe) && /about_Wildcards/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Ein Thema lesen",
+        text: "<p>Lies den Themenartikel über Platzhalter (englisch <span lang=\"en\">wildcards</span>).</p>",
+        hinweis: "<p>Get-Help mit dem vollen Namen des Themas: about_Wildcards.</p>",
+        loesung: "Get-Help about_Wildcards",
+        pruefe: (ctx) => istHilfe(ctx) && /TOPIC\s+about_Wildcards/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Was kommt heraus?",
+        text: "<p>Finde heraus, welche Art Objekt (<code>TypeName</code>) <code>Get-Process</code> ausgibt.</p>",
+        hinweis: "<p>Schick die Ausgabe von Get-Process mit | an Get-Member.</p>",
+        loesung: "Get-Process | Get-Member",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Process") && ctx.befehle.includes("Get-Member") && /TypeName: System\.Diagnostics\.Process/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Schritt 6: Syntax-Leser ---------- */
+  const SAETZE = [
+    "Get-ChildItem [[-Path] <string[]>] [[-Filter] <string>] [-Include <string[]>] [-Exclude <string[]>] [-Recurse] [-Depth <uint>] [-Force] [-Name] [-Attributes <FlagsExpression[FileAttributes]>] [-FollowSymlink] [-Directory] [-File] [-Hidden] [-ReadOnly] [-System] [<CommonParameters>]",
+    "Get-ChildItem [[-Filter] <string>] -LiteralPath <string[]> [-Include <string[]>] [-Exclude <string[]>] [-Recurse] [-Depth <uint>] [-Force] [-Name] [-Attributes <FlagsExpression[FileAttributes]>] [-FollowSymlink] [-Directory] [-File] [-Hidden] [-ReadOnly] [-System] [<CommonParameters>]"
+  ];
+  // Positionen laut Get-Help Get-ChildItem -Parameter … (pwsh 7.6)
+  const POSITION = { Path: 0, Filter: 1 };
+  const PARAM = {
+    Path: { was: "Ordner oder Pfad, dessen Inhalt du sehen willst. Platzhalter wie * sind erlaubt. Fehlt er, nimmt Get-ChildItem den aktuellen Ort.", bsp: "Get-ChildItem Logs, Bilder" },
+    Filter: { was: "Lässt nur Namen durch, die auf ein Muster passen, zum Beispiel *.log.", bsp: "Get-ChildItem Logs *.log" },
+    LiteralPath: { was: "Pfad wörtlich, ohne Platzhalter. Nötig für Namen mit eckigen Klammern wie bericht[1].txt, die sonst als Platzhalter gelten.", bsp: "Get-ChildItem -LiteralPath Dokumente" },
+    Include: { was: "Nur Elemente, deren Name auf eines der Muster passt. Wirkt zusammen mit -Recurse oder einem Pfad, der auf \\* endet.", bsp: "Get-ChildItem Logs\\* -Include *.log, *.txt" },
+    Exclude: { was: "Lässt Elemente weg, deren Name auf eines der Muster passt.", bsp: "Get-ChildItem Logs -Exclude app*" },
+    Recurse: { was: "Durchsucht auch alle Unterordner.", bsp: "Get-ChildItem Dokumente -Recurse" },
+    Depth: { was: "Wie -Recurse, aber nur so viele Ebenen tief, wie die Zahl sagt.", bsp: "Get-ChildItem Dokumente -Depth 1" },
+    Force: { was: "Zeigt auch versteckte Elemente.", bsp: "Get-ChildItem -Force" },
+    Name: { was: "Achtung, ein Schalter: Gibt nur die Namen als Text aus, ohne Datum und Grösse. Er erwartet keinen Namen als Wert.", bsp: "Get-ChildItem Bilder -Name" },
+    Attributes: { was: "Nur Elemente mit bestimmten Dateiattributen, etwa Hidden (versteckt) oder ReadOnly (schreibgeschützt). Der Typ ist ein Ausdruck aus solchen Attributen; Get-Help zählt die erlaubten Werte in { } auf.", bsp: "Get-ChildItem -Attributes Hidden" },
+    FollowSymlink: { was: "Folgt beim Durchsuchen mit -Recurse auch symbolischen Verknüpfungen (Verweisen auf andere Ordner).", bsp: "Get-ChildItem -Recurse -FollowSymlink" },
+    Directory: { was: "Nur Ordner.", bsp: "Get-ChildItem -Directory" },
+    File: { was: "Nur Dateien.", bsp: "Get-ChildItem Logs -File" },
+    Hidden: { was: "Nur versteckte Elemente.", bsp: "Get-ChildItem -Hidden" },
+    ReadOnly: { was: "Nur schreibgeschützte Elemente.", bsp: "Get-ChildItem -ReadOnly" },
+    System: { was: "Nur Systemdateien.", bsp: "Get-ChildItem -System" }
+  };
+  const TYP = {
+    "string": "Text, genau ein Wert",
+    "string[]": "Text, ein oder mehrere Werte mit Komma getrennt",
+    "uint": "ganze Zahl ohne Vorzeichen, also 0 oder grösser",
+    "FlagsExpression[FileAttributes]": "ein Ausdruck aus Dateiattributen wie Hidden oder ReadOnly"
+  };
+  // Teile auf oberster Ebene trennen (Leerzeichen in [ ] und < > gehören zum Teil)
+  function zerlege(zeile) {
+    const teile = [];
+    let akt = "", tiefe = 0;
+    for (const ch of zeile) {
+      if (ch === "[" || ch === "<") tiefe++;
+      if (ch === "]" || ch === ">") tiefe--;
+      if (ch === " " && tiefe === 0) { if (akt) teile.push(akt); akt = ""; continue; }
+      akt += ch;
+    }
+    if (akt) teile.push(akt);
+    // Pflichtparameter ohne Klammern («-LiteralPath <string[]>»): Typ an den Namen hängen
+    return teile.reduce((liste, t) => {
+      if (t.charAt(0) === "<" && liste.length && /^(\[-\w+\]|-\w+)$/.test(liste[liste.length - 1])) liste[liste.length - 1] += " " + t;
+      else liste.push(t);
+      return liste;
+    }, []);
+  }
+  // Ein Syntaxstück deuten: Name, Pflicht, Position, Typ, Schalter
+  function deute(t) {
+    let m;
+    if (t === "[<CommonParameters>]") return { art: "common" };
+    if ((m = /^\[\[-(\w+)\] <(.+)>\]$/.exec(t))) return { name: m[1], typ: m[2], pflicht: false, position: true };
+    if ((m = /^\[-(\w+)\] <(.+)>$/.exec(t))) return { name: m[1], typ: m[2], pflicht: true, position: true };
+    if ((m = /^\[-(\w+) <(.+)>\]$/.exec(t))) return { name: m[1], typ: m[2], pflicht: false, position: false };
+    if ((m = /^-(\w+) <(.+)>$/.exec(t))) return { name: m[1], typ: m[2], pflicht: true, position: false };
+    if ((m = /^\[-(\w+)\]$/.exec(t))) return { name: m[1], schalter: true, pflicht: false, position: false };
+    return { art: "befehl" };
+  }
+  const synEl = document.getElementById("t03-syntax");
+  const infoEl = document.getElementById("t03-info");
+  const filterInfo = document.getElementById("t03-filter-info");
+  let satz = 0, filter = null;
+  function erklaere(t, d, nr) {
+    let h = "<h3>" + esc(t) + "</h3>";
+    if (d.art === "befehl") {
+      h += '<ul class="t03-eig"><li>Name des Befehls</li></ul>';
+      h += "<p>Vorne steht immer das Cmdlet. Alles danach sind seine Parameter. Diese Zeile ist " + (nr === 0 ? "die erste" : "die zweite") + " von zwei Syntaxzeilen (Parametersätzen). Du nimmst alle Parameter aus derselben Zeile.</p>";
+      h += "<p>" + (nr === 0 ? "Erkennungszeichen dieser Zeile: " + C("-Path") + ". Sie gilt, solange du nicht " + C("-LiteralPath") + " schreibst." : "Erkennungszeichen dieser Zeile: " + C("-LiteralPath") + ". Es ist hier Pflicht, " + C("-Path") + " gibt es in dieser Zeile nicht.") + "</p>";
+      return h;
+    }
+    if (d.art === "common") {
+      h += '<ul class="t03-eig"><li>freiwillig</li><li>gemeinsame Parameter</li></ul>';
+      h += "<ul><li>" + S("[ ]") + " aussen: freiwillig.</li><li>" + S("<CommonParameters>") + ": Platzhalter für die gemeinsamen Parameter, die fast jedes Cmdlet hat, etwa " + C("-ErrorAction") + " und " + C("-Verbose") + ".</li></ul>";
+      return h + "<p>Beispiel: " + C("Get-ChildItem Protokolle -ErrorAction SilentlyContinue") + " (unterdrückt die Fehlermeldung, wenn der Ordner fehlt).</p>";
+    }
+    const p = PARAM[d.name] || { was: "", bsp: "" };
+    const eig = [d.pflicht ? "Pflicht" : "freiwillig"];
+    if (d.schalter) eig.push("Schalter");
+    else eig.push(d.position ? "Positionsparameter, Position " + POSITION[d.name] : "benannt: Name nötig");
+    if (d.typ) eig.push(/\[\]$/.test(d.typ) ? "mehrere Werte" : "ein Wert");
+    h += '<ul class="t03-eig">' + eig.map((e) => "<li>" + esc(e) + "</li>").join("") + "</ul>";
+    h += "<p>" + esc(p.was) + "</p><ul>";
+    if (d.pflicht) h += "<li>Keine äusseren " + S("[ ]") + ": Pflicht in dieser Zeile. Ohne diesen Parameter passt der Befehl nicht zu dieser Zeile.</li>";
+    else h += "<li>" + S("[ ]") + " aussen: freiwillig, du darfst den ganzen Parameter weglassen.</li>";
+    if (d.schalter) h += "<li>Kein " + S("< >") + " nach dem Namen: ein Schalter. Hinschreiben heisst einschalten, ein Wert folgt nicht.</li>";
+    else if (d.position) {
+      h += "<li>" + S("[-" + d.name + "]") + ": Der Name steht in eigenen Klammern und darf fehlen. Position " + POSITION[d.name] + ": ";
+      h += POSITION[d.name] === 0 ? "Der erste Wert ohne Namen landet hier.</li>" : (nr === 0 ? "Der zweite Wert ohne Namen landet hier (nach " + C("-Path") + ").</li>" : "In dieser Zeile gibt es keine Position 0, darum landet schon der erste Wert ohne Namen hier.</li>");
+    } else h += "<li>Der Name steht ohne eigene Klammern: Du musst " + C("-" + d.name) + " immer hinschreiben.</li>";
+    if (d.typ) h += "<li>" + S("<" + d.typ + ">") + ": Platzhalter für deinen Wert. " + esc(TYP[d.typ] || d.typ) + ". Die spitzen Klammern tippst du nicht mit.</li>";
+    h += "</ul>";
+    if (p.bsp) h += "<p>Beispiel: " + C(p.bsp) + "</p>";
+    return h;
+  }
+  function passtFilter(d) {
+    if (!filter || !d.name) return false;
+    if (filter === "pflicht") return d.pflicht;
+    if (filter === "position") return d.position;
+    if (filter === "schalter") return !!d.schalter;
+    if (filter === "mehrere") return !!d.typ && /\[\]$/.test(d.typ);
+    return false;
+  }
+  const FILTER_TEXT = { pflicht: "Pflicht", position: "Positionsparameter", schalter: "Schalter", mehrere: "mit mehreren Werten" };
+  function zeichneSyntax() {
+    synEl.innerHTML = "";
+    let treffer = [];
+    zerlege(SAETZE[satz]).forEach((t, i) => {
+      const d = deute(t);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "t03-teil" + (d.art === "befehl" ? " t03-name" : "") + (passtFilter(d) ? " t03-an" : "");
+      b.textContent = t;
+      if (passtFilter(d)) treffer.push("-" + d.name);
+      b.setAttribute("aria-label", t + (passtFilter(d) ? " (hervorgehoben)" : ""));
+      b.addEventListener("click", () => {
+        Array.from(synEl.children).forEach((k) => k.classList.remove("t03-gewaehlt"));
+        b.classList.add("t03-gewaehlt");
+        infoEl.innerHTML = erklaere(t, d, satz);
+      });
+      synEl.appendChild(b);
+    });
+    filterInfo.textContent = filter ? (treffer.length ? FILTER_TEXT[filter] + ": " + treffer.join(", ") : "In dieser Zeile gibt es keine Parameter dieser Art.") : "";
+  }
+  document.querySelectorAll("[data-t03-satz]").forEach((b) => b.addEventListener("click", () => {
+    satz = Number(b.getAttribute("data-t03-satz"));
+    document.querySelectorAll("[data-t03-satz]").forEach((k) => { const an = k === b; k.classList.toggle("on", an); k.setAttribute("aria-pressed", an ? "true" : "false"); });
+    infoEl.innerHTML = '<p class="hint">Tippe oben auf einen Teil der Syntaxzeile.</p>';
+    zeichneSyntax();
+  }));
+  document.querySelectorAll("[data-t03-filter]").forEach((b) => b.addEventListener("click", () => {
+    const f = b.getAttribute("data-t03-filter");
+    filter = filter === f ? null : f;
+    document.querySelectorAll("[data-t03-filter]").forEach((k) => { const an = k.getAttribute("data-t03-filter") === filter; k.classList.toggle("on", an); k.setAttribute("aria-pressed", an ? "true" : "false"); });
+    zeichneSyntax();
+  }));
+  zeichneSyntax();
+
+  /* ---------- Schritt 7: Spiel «gültig oder nicht?» ---------- */
+  // Jede Antwort in pwsh 7.6.1 nachgeprüft (Leas Ordner im Temp-Verzeichnis nachgebaut)
+  const AUFRUFE = [
+    { cmd: "Get-ChildItem Logs *.log", ok: true, stelle: "[[-Path] <string[]>] [[-Filter] <string>]",
+      warum: "Zwei Werte ohne Namen: Logs landet an Position 0 (-Path), *.log an Position 1 (-Filter)." },
+    { cmd: "Get-ChildItem -Filter *.log Logs", ok: true, stelle: "[[-Path] <string[]>]",
+      warum: "-Filter ist mit Namen gebunden. Der übrige Wert Logs geht an die erste freie Position, also Position 0: -Path. Benannte Parameter dürfen überall stehen." },
+    { cmd: "Get-ChildItem -Path Logs, Bilder", ok: true, stelle: "[[-Path] <string[]>]",
+      warum: "<string[]> erlaubt mehrere Werte. Das Komma macht aus Logs und Bilder eine Liste. Get-ChildItem zeigt beide Ordner." },
+    { cmd: "Get-ChildItem -Filter *.log, *.txt", ok: false, stelle: "[[-Filter] <string>]",
+      warum: "Hinter string fehlt []: -Filter nimmt genau einen Wert. Für mehrere Muster gibt es -Include <string[]>.",
+      fehler: "Get-ChildItem: Cannot convert 'System.Object[]' to the type 'System.String' required by parameter 'Filter'. Specified method is not supported." },
+    { cmd: "Get-ChildItem -Depth", ok: false, stelle: "[-Depth <uint>]",
+      warum: "Hinter -Depth steht <uint>: Es braucht eine Zahl. Nur Schalter stehen ohne Wert.",
+      fehler: "Get-ChildItem: Missing an argument for parameter 'Depth'. Specify a parameter of type 'System.UInt32' and try again." },
+    { cmd: "Get-ChildItem -Path Logs -LiteralPath Bilder", ok: false, stelle: "Zeile 1: [[-Path] …] · Zeile 2: -LiteralPath <string[]>",
+      warum: "-Path steht nur in Zeile 1, -LiteralPath nur in Zeile 2. Parameter aus zwei Parametersätzen passen nicht zusammen.",
+      fehler: "Get-ChildItem: Parameter set cannot be resolved using the specified named parameters. One or more parameters issued cannot be used together or an insufficient number of parameters were provided." },
+    { cmd: "Get-ChildItem Logs *.log Bilder", ok: false, stelle: "[[-Path] <string[]>] [[-Filter] <string>]",
+      warum: "Get-ChildItem hat nur zwei Positionen (0 und 1). Für den dritten Wert ohne Namen gibt es keinen Platz. Mehrere Ordner gehören mit Komma in -Path: Logs, Bilder.",
+      fehler: "Get-ChildItem: A positional parameter cannot be found that accepts argument 'Bilder'." },
+    { cmd: "Get-ChildItem -Depth 1 Dokumente", ok: true, stelle: "[-Depth <uint>] [[-Path] <string[]>]",
+      warum: "-Depth bekommt die Zahl 1. Dokumente hat keinen Namen und landet an Position 0, also in -Path." },
+    { cmd: "Get-ChildItem -LiteralPath Logs *.log", ok: true, stelle: "Zeile 2: [[-Filter] <string>] -LiteralPath <string[]>",
+      warum: "-LiteralPath wählt Zeile 2. Dort ist -Filter der einzige Positionsparameter, darum landet *.log in -Filter." },
+    { cmd: "Get-ChildItem -Depth zwei", ok: false, stelle: "[-Depth <uint>]",
+      warum: "<uint> verlangt eine ganze Zahl. Das Wort «zwei» lässt sich nicht in eine Zahl umwandeln.",
+      fehler: "Get-ChildItem: Cannot bind parameter 'Depth'. Cannot convert value \"zwei\" to type \"System.UInt32\". Error: \"The input string 'zwei' was not in a correct format.\"" }
+  ];
+  const sp = { nr: 0, richtig: 0, beantwortet: false };
+  const spNr = document.getElementById("t03-sp-nr"), spStand = document.getElementById("t03-sp-stand");
+  const spAufruf = document.getElementById("t03-sp-aufruf"), spRm = document.getElementById("t03-sp-rm"), spErkl = document.getElementById("t03-sp-erkl");
+  const spG = document.getElementById("t03-sp-gueltig"), spU = document.getElementById("t03-sp-ungueltig");
+  const spWeiter = document.getElementById("t03-sp-weiter"), spNeu = document.getElementById("t03-sp-neu");
+  function spZeigen() {
+    const a = AUFRUFE[sp.nr];
+    sp.beantwortet = false;
+    spNr.textContent = "Aufruf " + (sp.nr + 1) + " von " + AUFRUFE.length;
+    spStand.textContent = sp.richtig + " richtig";
+    spAufruf.innerHTML = '<pre class="ps-code"><code>' + esc(a.cmd) + "</code></pre>";
+    spRm.className = "rueckmeldung leer"; spRm.innerHTML = ""; spErkl.innerHTML = "";
+    spG.disabled = false; spU.disabled = false;
+    spWeiter.hidden = true; spNeu.hidden = true;
+  }
+  function spAntwort(gueltig) {
+    if (sp.beantwortet) return;
+    sp.beantwortet = true;
+    const a = AUFRUFE[sp.nr];
+    const stimmt = gueltig === a.ok;
+    if (stimmt) sp.richtig++;
+    const urteil = '<span class="marke">' + (stimmt ? "✓" : "✗") + "</span> " + (stimmt ? "Richtig" : "Nicht ganz") + ": Der Aufruf ist " + (a.ok ? "gültig" : "ungültig") + ".";
+    let h = "<p>Stelle in der Syntax: " + S(a.stelle) + "</p><p>" + esc(a.warum) + "</p>";
+    if (a.fehler) h += '<pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7.6" lang="en"><span class="psk-fehler">' + esc(a.fehler) + "</span></pre>";
+    spRm.className = "rueckmeldung " + (stimmt ? "ok" : "bad");
+    spRm.innerHTML = urteil;
+    spErkl.innerHTML = h;
+    spStand.textContent = sp.richtig + " richtig";
+    const letzter = sp.nr === AUFRUFE.length - 1;
+    // Fokus auf den nächsten Knopf setzen, bevor die Antwortknöpfe deaktiviert werden
+    const ziel = letzter ? spNeu : spWeiter;
+    ziel.hidden = false;
+    if (letzter) spStand.textContent = "Fertig: " + sp.richtig + " von " + AUFRUFE.length + " richtig";
+    ziel.focus();
+    spG.disabled = true; spU.disabled = true;
+  }
+  spG.addEventListener("click", () => spAntwort(true));
+  spU.addEventListener("click", () => spAntwort(false));
+  spWeiter.addEventListener("click", () => { sp.nr++; spZeigen(); spG.focus(); });
+  spNeu.addEventListener("click", () => { sp.nr = 0; sp.richtig = 0; spZeigen(); spG.focus(); });
+  spZeigen();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t03-u-zuordnen", {
+    frage: "Ordne jedes Stück aus einer echten Syntaxzeile ein.",
+    kategorien: ["Pflicht, Name nötig", "Pflicht, Name darf fehlen", "freiwillig, Name nötig", "freiwillig, Name darf fehlen", "Schalter"],
+    elemente: [
+      { html: S("-LiteralPath <string[]>"), kategorie: 0, erklaerung: "Keine Klammern: Pflicht, und der Name steht nicht in eigenen Klammern." },
+      { html: S("-Name <string[]>") + " (Stop-Process)", kategorie: 0, erklaerung: "Pflicht in seiner Zeile, Name nötig. Darum scheitert Stop-Process notepad." },
+      { html: S("[-Path] <string[]>") + " (Copy-Item)", kategorie: 1, erklaerung: "Keine äusseren Klammern: Pflicht. Klammern um -Path: Name darf fehlen (Position 0)." },
+      { html: S("[-Id] <int[]>") + " (Stop-Process)", kategorie: 1, erklaerung: "Pflicht, aber positional: Stop-Process 8840 geht." },
+      { html: S("[-Filter <string>]") + " (Copy-Item)", kategorie: 2, erklaerung: "Äussere Klammern: freiwillig. Der Name hat keine eigenen Klammern: Name nötig." },
+      { html: S("[-Depth <uint>]"), kategorie: 2, erklaerung: "Freiwillig, aber wenn, dann mit Namen: -Depth 1." },
+      { html: S("[[-Destination] <string>]"), kategorie: 3, erklaerung: "Doppelte Klammern: freiwillig und Position 1." },
+      { html: S("[-Recurse]"), kategorie: 4, erklaerung: "Kein Typ in spitzen Klammern: ein Schalter." },
+      { html: S("[-WhatIf]"), kategorie: 4, erklaerung: "Ebenfalls ein Schalter: nur zeigen, was passieren würde." }
+    ]
+  });
+  L.auswahl("#t03-u-frisch", {
+    frage: "Auf Leas neuem Laptop lief noch nie " + C("Update-Help") + ". Was zeigt " + C("Get-Help Copy-Item -Examples") + " in pwsh 7?",
+    optionen: [
+      "Alle Beispiele, aber nur auf Englisch",
+      "Nur Name, Aliase und den Hinweis, dass die Hilfedateien fehlen",
+      "Eine rote Fehlermeldung, weil -Examples unbekannt ist",
+      "Gar nichts"
+    ],
+    richtig: 1,
+    erklaerung: "Ohne Hilfedateien baut Get-Help eine Notfall-Hilfe aus dem, was es selbst weiss. Beispiele gehören nicht dazu. Unter REMARKS steht «displaying only partial help» mit dem Tipp Update-Help oder -Online."
+  });
+  L.auswahl("#t03-u-suchen", {
+    frage: "Lea will alle Befehle sehen, die etwas mit Diensten (Services) machen, egal mit welchem Verb. Welcher Befehl passt am besten?",
+    optionen: [C("Get-Command Service"), C("Get-Command *Services*"), C("Get-Command -Noun Service"), C("Get-Help Service -Examples")],
+    richtig: 2,
+    erklaerung: "-Noun Service findet alle Cmdlets mit dem Nomen Service. Ohne Sterne sucht Get-Command einen Befehl, der genau Service heisst. *Services* (Mehrzahl) findet kein Cmdlet, weil Cmdlet-Nomen in der Einzahl stehen (echtes pwsh zeigt höchstens Programme wie services.exe)."
+  });
+  L.auswahl("#t03-u-fehler1", {
+    frage: "Lea will die Beispiele und die Angaben zu -Path auf einmal: " + C("Get-Help Get-ChildItem -Examples -Parameter Path") + ". Es kommt «Parameter set cannot be resolved». Warum?",
+    optionen: [
+      "-Examples und -Parameter stehen in verschiedenen Syntaxzeilen von Get-Help",
+      "Path muss in Anführungszeichen stehen",
+      "-Parameter braucht den Namen mit Bindestrich: -Parameter -Path",
+      "Get-ChildItem hat keinen Parameter Path"
+    ],
+    richtig: 0,
+    erklaerung: "Get-Help hat für -Examples, -Detailed, -Full, -Parameter und -Online je einen eigenen Parametersatz. Lea muss zwei Befehle nacheinander eingeben."
+  });
+  L.auswahl("#t03-u-fehler2", {
+    frage: "Lea tippt " + C("Stop-Process berichtgenerator -WhatIf") + " und bekommt einen roten Fehler. Was ist laut der Syntax oben falsch?",
+    optionen: [
+      "Stop-Process kennt kein -WhatIf",
+      "-Name ist ein benannter Parameter. Ein Wert ohne Namen landet bei -Id oder -InputObject",
+      "Prozessnamen müssen in Anführungszeichen stehen",
+      "Man muss zuerst Update-Help ausführen"
+    ],
+    richtig: 1,
+    erklaerung: "In der Zeile mit -Name stehen keine Klammern um den Namen: Er ist nötig. Positional sind nur [-Id] (eine Zahl) und [-InputObject] (ein Prozess-Objekt). pwsh 7.6 meldet: «Cannot bind parameter 'InputObject'». Richtig: Stop-Process -Name berichtgenerator -WhatIf."
+  });
+  L.wahrFalsch("#t03-u-wf", {
+    titel: "Übung 6 · Stimmt das?",
+    aussagen: [
+      { html: "In " + S("[-Filter <string>]") + " tippst du die spitzen Klammern mit: " + C("-Filter <*.log>") + ".", wahr: false, erklaerung: "< > zeigen nur, wo dein Wert hinkommt. Mitgetippt ergibt das einen Parserfehler." },
+      { html: C("Get-Command *Item*") + " findet auch " + C("Get-ChildItem") + ".", wahr: true, erklaerung: "Der Platzhalter * steht auch für «Child». Item steht irgendwo im Namen." },
+      { html: "Parameter aus zwei verschiedenen Syntaxzeilen darfst du frei mischen.", wahr: false, erklaerung: "Jede Zeile ist ein Parametersatz. Gemischt meldet PowerShell «Parameter set cannot be resolved»." },
+      { html: C("Get-ChildItem -Name") + " erwartet einen Dateinamen als Wert.", wahr: false, erklaerung: "[-Name] hat keinen Typ: ein Schalter. Er gibt nur die Namen aus." },
+      { html: "Steht bei " + C("Get-Help … -Parameter") + " die Angabe " + S("Position? Named") + ", musst du den Parameternamen immer hinschreiben.", wahr: true, erklaerung: "Named heisst: nur mit Namen. Eine Zahl heisst: Name darf fehlen." },
+      { html: C("Get-Help -Online") + " funktioniert auch ohne " + C("Update-Help") + ".", wahr: true, erklaerung: "Die Online-Hilfe öffnet die Seite auf Microsoft Learn im Browser. Dafür braucht es nur Internet." }
+    ]
+  });
+  L.konsole("#t03-u-konsole", {
+    titel: "PowerShell 7 · Übung",
+    begruessung: false,
+    aufgabenTitel: "Übung 7",
+    aufgaben: [
+      {
+        titel: "Wo steht das Ziel?",
+        text: "<p>Ist <code>-Destination</code> bei <code>Copy-Item</code> ein Positionsparameter, und an welcher Stelle? Zeige nur die Angaben zu diesem Parameter.</p>",
+        hinweis: "<p>Wie in Aufgabe 3 oben, aber mit Copy-Item und Destination.</p>",
+        loesung: "Get-Help Copy-Item -Parameter Destination",
+        pruefe: (ctx) => istHilfe(ctx) && /(^|\s)-par/i.test(ctx.eingabe) && /^-Destination <string>/m.test(ctx.ausgabe) && /Position\?\s+1/.test(ctx.ausgabe) && !/^-Path /m.test(ctx.ausgabe)
+      },
+      {
+        titel: "Alles mit Item",
+        text: "<p>Finde alle Befehle, deren Nomen genau <code>Item</code> ist. <code>Get-ChildItem</code> soll nicht dabei sein.</p>",
+        hinweis: "<p>Get-Command mit -Noun und dem Wert Item, ohne Sterne.</p>",
+        loesung: "Get-Command -Noun Item",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Command") && /Copy-Item/.test(ctx.ausgabe) && /Rename-Item/.test(ctx.ausgabe) && !/Get-ChildItem/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm mit echten Simulator-Ausgaben ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  const f1 = f("Get-Command -Verb Copy");
+  const f2 = f("Get-Command *copy*");
+  const f3 = f("Get-Help Copy-Item");
+  const f4 = f("Get-Command Copy-Item -Syntax");
+  const f5 = f("Get-Help Copy-Item -Parameter Path");
+  const f6 = f("Get-Help Copy-Item -Parameter Destination");
+  const f7 = f("Get-Help Copy-Item -Examples");
+  const f8 = f("Copy-Item -Path Dokumente\\notizen.txt, Dokumente\\einkaufsliste.txt -Destination Berichte -WhatIf");
+  const f9 = f("Copy-Item Dokumente\\notizen.txt, Dokumente\\einkaufsliste.txt Berichte -WhatIf");
+  const f10 = f("Copy-Item -Path Dokumente\\notizen.txt, Dokumente\\einkaufsliste.txt -Destination Berichte");
+  const f11 = f("Get-ChildItem Berichte");
+  const f13 = f("Copy-Item Dokumente\\notizen.txt Berichte -PassThru");
+  const f14 = f("Copy-Item Dokumente\\notizen.txt Berichte -PassThru | Get-Member -MemberType Property");
+  L.film("#t03-film", {
+    phasen: ["1 · Befehl finden", "2 · Syntax lesen", "3 · Testen und kopieren", "4 · Ausgabe prüfen"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Ticket: «Kopier bitte notizen.txt und einkaufsliste.txt aus Dokumente in den Ordner Berichte.» Lea kennt den Befehl zum Kopieren nicht. Sie fragt PowerShell." },
+      { ph: 0, f: f1, say: "Kopieren heisst auf Englisch copy, und Copy ist ein genehmigtes Verb. Also: Get-Command -Verb Copy." },
+      { say: "Der Simulator kennt nur Copy-Item. Echtes pwsh findet mehr, etwa Copy-ItemProperty. Für Dateien ist Copy-Item richtig, denn Item heisst Element: Datei oder Ordner." },
+      { f: f2, say: "Zur Kontrolle sucht sie mit Platzhaltern: Get-Command *copy*. Dabei taucht auch der Alias copy auf. Er zeigt auf Copy-Item." },
+      { ph: 1, f: f3, say: "Jetzt die Anleitung: Get-Help Copy-Item. Oben Name und Kurzbeschreibung, dann zwei Syntaxzeilen, unten die Aliase copy, cp und cpi." },
+      { f: f4, say: "Get-Command Copy-Item -Syntax zeigt nur die Syntax. Zwei Zeilen heisst zwei Parametersätze: mit -Path oder mit -LiteralPath. Lea nimmt die erste Zeile." },
+      { say: "Sie liest das erste Stück: [-Path] &lt;string[]&gt;. Keine äusseren Klammern, also Pflicht. Klammern um den Namen, also darf -Path fehlen. Und die [] hinter string erlauben mehrere Werte." },
+      { f: f5, say: "Get-Help mit -Parameter Path bestätigt es: Required true heisst Pflicht, Position 0 heisst erster Wert ohne Namen." },
+      { f: f6, say: "Dann das Ziel: -Destination ist freiwillig und hat Position 1. Ein einziger Text, denn hinter string steht kein []." },
+      { f: f7, say: "Zum Schluss die Beispiele. Beispiel 1 passt fast genau zu Leas Ticket. Im echten pwsh erscheinen Beispiele erst nach Update-Help." },
+      { ph: 2, f: f8, say: "Lea baut den Befehl mit Namen: zwei Dateien mit Komma in -Path, das Ziel in -Destination. Dazu -WhatIf. Zwei Zeilen «What if»: eine pro Datei." },
+      { say: "Passiert ist noch nichts. -WhatIf hat nur beschrieben, was Copy-Item tun würde." },
+      { f: f9, say: "Dasselbe ohne Parameternamen: Die Liste landet an Position 0, Berichte an Position 1. Gleiches Ergebnis. Für das Ticket schreibt Lea trotzdem die Namen aus." },
+      { f: f10, say: "Jetzt ohne -WhatIf. Copy-Item meldet nichts. Keine Ausgabe heisst hier: Es hat geklappt." },
+      { f: f11, say: "Der Beweis: Get-ChildItem Berichte zeigt notizen.txt und einkaufsliste.txt neben den alten Dateien. Die Kopien behalten das Datum des Originals." },
+      { ph: 3, say: "Noch eine Frage: Was kommt bei Copy-Item heraus? Gerade eben gar nichts. Lässt sich das ändern?" },
+      { f: f4, say: "In der Syntax steht der freiwillige Schalter [-PassThru], auf Deutsch «durchreichen». Laut der Hilfe von Microsoft gibt Copy-Item damit die Kopie als Objekt aus." },
+      { f: f13, say: "Lea kopiert notizen.txt noch einmal mit -PassThru. Die vorhandene Kopie wird dabei ersetzt. Diesmal zeigt die Konsole die neue Datei." },
+      { f: f14, say: "Und mit Get-Member liest sie das Etikett: TypeName System.IO.FileInfo, eine Datei mit Eigenschaften wie Name, Length und LastWriteTime." },
+      { say: "Zusammengefasst: Get-Command hat den Befehl gefunden, Get-Help und die Syntax haben gezeigt, wie er geht, Get-Member, was herauskommt. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t03-selbsttest", {
+    fragen: [
+      { q: "Was bedeuten in " + S("[[-Filter] <string>]") + " die inneren Klammern um " + S("-Filter") + "?", o: ["Der Parameter ist Pflicht", "Der Name -Filter darf fehlen (Positionsparameter)", "Der Wert darf mehrere Texte enthalten", "Der Parameter ist ein Schalter"], a: 1,
+        e: "Klammern nur um den Namen heissen: Name darf fehlen, dann zählt die Position. Die äusseren Klammern machen den ganzen Parameter freiwillig." },
+      { q: "Copy-Item hat " + S("[-Path] <string[]>") + ". Was gilt?", o: ["Freiwillig, Name nötig", "Pflicht, Name darf fehlen", "Freiwillig, Name darf fehlen", "Ein Schalter"], a: 1,
+        e: "Keine äusseren Klammern: Pflicht. Klammern um -Path: Name darf fehlen." },
+      { q: "Was heisst " + S("<string[]>") + "?", o: ["Genau ein Text", "Eine Liste von Zahlen", "Ein oder mehrere Texte, mit Komma getrennt", "Ein Text in eckigen Klammern"], a: 2,
+        e: "string ist Text, [] hinter dem Typ erlaubt mehrere Werte." },
+      { q: "Woran erkennst du einen Schalter in der Syntax?", o: ["Am Typ <switch>", "Es folgt kein Typ in spitzen Klammern, wie bei [-Recurse]", "Er steht immer am Ende der Zeile", "Er ist immer Pflicht"], a: 1,
+        e: "Ein Schalter hat keinen Wert, also auch keinen Platzhalter < >." },
+      { q: "Welcher Befehl zeigt nur die Beispiele zu Copy-Item?", o: [C("Get-Help Copy-Item -Full"), C("Get-Help Copy-Item -Examples"), C("Get-Command Copy-Item -Syntax"), C("Get-Help -Examples")], a: 1,
+        e: "-Examples zeigt Name, Kurzbeschreibung und Beispiele. -Full zeigt alles." },
+      { q: "Warum zeigt " + C("Get-Help") + " auf einem frischen Windows kaum Text?", o: ["Weil PowerShell 7 keine Hilfe kennt", "Weil die Hilfedateien fehlen, bis Update-Help sie herunterlädt", "Weil Get-Help nur in 5.1 funktioniert", "Weil man Get-Help als Administrator starten muss"], a: 1,
+        e: "Windows liefert die Hilfetexte nicht mit. Update-Help lädt sie einmal herunter. Bis dahin hilft -Online." },
+      { q: "Was findet " + C("Get-Command *Service*") + "?", o: ["Nur den Befehl, der genau Service heisst", "Alle Befehle mit Service irgendwo im Namen", "Alle laufenden Dienste", "Nichts, Sterne sind nur bei Get-Help erlaubt"], a: 1,
+        e: "Der Stern steht für beliebige Zeichen vor und nach Service." },
+      { q: "Warum scheitert " + C("Get-ChildItem -Path Logs -LiteralPath Bilder") + "?", o: ["Weil Bilder in Anführungszeichen stehen muss", "Weil -Path und -LiteralPath in verschiedenen Parametersätzen stehen", "Weil -LiteralPath ein Schalter ist", "Weil Get-ChildItem nur einen Ordner zeigen kann"], a: 1,
+        e: "-Path gibt es nur in Zeile 1, -LiteralPath nur in Zeile 2. Gemischt: «Parameter set cannot be resolved»." },
+      { q: "Lea tippt " + C("Get-ChildItem Logs *.log") + ". Zu welchem Parameter gehört " + C("*.log") + "?", o: [C("-Path"), C("-Filter"), C("-Include"), C("-Name")], a: 1,
+        e: "Der zweite Wert ohne Namen landet an Position 1, und das ist bei Get-ChildItem -Filter." },
+      { q: "Mit welchem Befehl findest du heraus, welche Art Objekt " + C("Get-Process") + " ausgibt?", o: [C("Get-Help Get-Process"), C("Get-Command Get-Process -Syntax"), C("Get-Process | Get-Member"), C("Get-Process -Type")], a: 2,
+        e: "Get-Member liest das Etikett der Ausgabe: TypeName System.Diagnostics.Process." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

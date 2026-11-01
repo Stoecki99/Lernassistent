@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bedingungen und Schleifen · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/11-skripte-funktionen-fehler" title="Skripte, Funktionen und Fehler">
+  <style>
+    .t10-ziele{margin:0; padding-left:1.3em}
+    .t10-ziele li{margin-bottom:4px}
+    .t10-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t10-st pre{font-style:normal}
+    .t10-zeilen{background:var(--board); border:1px solid var(--line); border-radius:10px; padding:8px 10px; overflow-x:auto; min-width:0}
+    .t10-zeile{display:block; white-space:pre; line-height:1.55}
+    .t10-zeile code{white-space:pre; background:none; padding:0}
+    .t10-tabelle td, .t10-tabelle th{vertical-align:top}
+
+    /* Schleifen-Tracer */
+    .t10-wahl{display:flex; flex-wrap:wrap; gap:8px}
+    .t10-raster{display:grid; grid-template-columns:minmax(0, 3fr) minmax(0, 2fr); gap:12px; align-items:start}
+    @media (max-width: 640px){ .t10-raster{grid-template-columns:minmax(0, 1fr)} }
+    .t10-code{list-style:none; margin:0; padding:8px 0; background:var(--board); border:1px solid var(--line); border-radius:10px;
+      overflow-x:auto; font-family:var(--ps-mono); font-size:.86rem; min-width:0}
+    .t10-code li{display:flex; align-items:baseline; gap:8px; padding:1px 10px 1px 0; border-left:4px solid transparent; white-space:pre; min-width:max-content}
+    .t10-code li.an{background:var(--accent-soft); border-left-color:var(--accent)}
+    .t10-nr{flex:0 0 3.2em; text-align:right; color:var(--muted); user-select:none}
+    .t10-code li.an .t10-nr{color:var(--accent); font-weight:700}
+    .t10-code code{background:none; padding:0; white-space:pre}
+    .t10-seite{display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t10-seite h4{margin:0; font-size:.9rem; color:var(--muted); font-weight:600}
+    .t10-vars{width:100%}
+    .t10-vars td.t10-wert{font-family:var(--ps-mono); font-size:.85rem; overflow-wrap:anywhere}
+    .t10-vars tr.t10-neu td{background:var(--lit)}
+    .t10-ausgabe{min-height:4.5em; margin:0}
+    .t10-stand{font-size:.85rem; color:var(--muted); margin:0}
+    @media (prefers-reduced-motion: no-preference){ .t10-vars tr td{transition:background .4s} }
+  </style>
+</head>
+<body data-fach="ps" data-thema="10-bedingungen-schleifen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 4 · Skripte</span>
+    <h1>Bedingungen und Schleifen</h1>
+    <p class="lead">Bisher hast du jeden Befehl selbst getippt. Jetzt lässt du PowerShell entscheiden und wiederholen: «Wenn die Datei grösser als 1 MB ist, dann …» und «Mach das für jede Datei im Ordner». Damit schreibt Lea ihre ersten kleinen Skripte, die Logdateien einteilen und Dienste zählen.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t10-ziele">
+        <li>Du erklärst, was ein Block <code class="ps">{ }</code> ist und wann PowerShell ihn ausführt.</li>
+        <li>Du schreibst Entscheidungen mit <code class="ps">if</code>, <code class="ps">elseif</code>, <code class="ps">else</code> und <code class="ps">switch</code> (auch mit <code class="ps">-Wildcard</code>).</li>
+        <li>Du wiederholst Befehle mit <code class="ps">foreach</code>, <code class="ps">for</code> und <code class="ps">while</code> und steuerst sie mit <code class="ps">break</code> und <code class="ps">continue</code>.</li>
+        <li>Du unterscheidest das <code class="ps">foreach</code>-Statement von <code class="ps">ForEach-Object</code> in der Pipeline.</li>
+        <li>Du liest ein kleines Skript Zeile für Zeile und sagst voraus, was es ausgibt.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#schritt"><b>1</b>Erstes Skript</a>
+    <a href="#bedingungen"><b>2</b>if und else</a>
+    <a href="#switch"><b>3</b>switch</a>
+    <a href="#schleifen"><b>4</b>Schleifen</a>
+    <a href="#ausprobieren"><b>5</b>Ausprobieren</a>
+    <a href="#tracer"><b>6</b>Tracer</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Fehler</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Entscheiden und wiederholen</h2>
+    <p class="prose">Denk an Lea am Montagmorgen. Auf ihrem Pult liegt ein Stapel Briefe. Sie nimmt einen Brief nach dem anderen (das ist eine <b>Schleife</b>). Bei jedem Brief fragt sie sich: «Ist das eine Rechnung?» (das ist eine <b>Bedingung</b>). Ist die Antwort ja, legt sie ihn in die Ablage Finanzen, sonst in die Ablage Post (das ist eine <b>Verzweigung</b>). Was sie mit jedem Brief tut, steht auf einem Merkzettel (das ist ein <b>Block</b>).</p>
+    <p class="prose">PowerShell kennt genau diese Bausteine. Ein Skript ist nichts anderes als eine Reihe von Befehlen, die PowerShell von oben nach unten abarbeitet. Bedingungen und Schleifen ändern diesen Weg: Sie überspringen Zeilen oder wiederholen sie.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Block</span><span class="ex"><code class="ps">{ 'Hallo' }</code></span><p>Der Merkzettel. Befehle in geschweiften Klammern gehören zusammen und laufen gemeinsam.</p></div>
+      <div class="concept"><span class="tag">Bedingung</span><span class="ex"><code class="ps">($x -gt 5)</code></span><p>Die Ja-Nein-Frage in runden Klammern. Ihr Ergebnis ist <code class="ps">$true</code> oder <code class="ps">$false</code>.</p></div>
+      <div class="concept"><span class="tag">Verzweigung</span><span class="ex"><code class="ps">if</code> · <code class="ps">switch</code></span><p>Die Weggabelung. Je nach Antwort läuft der eine oder der andere Block.</p></div>
+      <div class="concept"><span class="tag">Schleife</span><span class="ex"><code class="ps">foreach</code> · <code class="ps">for</code> · <code class="ps">while</code></span><p>Der Stapel. Derselbe Block läuft mehrmals, einmal pro Element oder solange eine Bedingung gilt.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Verzweigung oder Schleife?</h3>
+      <div id="t10-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Stepper ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 1 · Vom Auftrag zum Skript</span>
+    <h2>Leas erstes Skript Stück für Stück</h2>
+    <p class="prose">Der Leiter Informatik will wissen, welche Logdateien gross sind. Lea baut ein kleines Skript in vier Schritten. Nach jedem Schritt siehst du, was PowerShell 7 ausgibt. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Die passende Zeile des Skripts leuchtet auf.</p>
+    <div id="t10-stepper"></div>
+    <div class="note"><b>Merke:</b> Die Schleife <code class="ps">foreach</code> nimmt sich eine Datei nach der anderen. In jeder Runde steht die aktuelle Datei in <code class="ps">$datei</code>. Das <code class="ps">if</code> darin entscheidet für genau diese eine Datei.</div>
+  </section>
+
+  <!-- ===== 2 · if ===== -->
+  <section id="bedingungen">
+    <span class="eyebrow">Schritt 2 · Bedingungen mit if</span>
+    <h2>Wenn, sonst wenn, sonst</h2>
+
+    <div class="card stack">
+      <h3>Der Block <code class="ps">{ }</code></h3>
+      <p class="prose">Geschweifte Klammern fassen Befehle zu einem Block zusammen. Den Block kennst du schon aus <code class="ps">Where-Object { $_.Length -gt 1MB }</code>. Dort heisst er <b>Skriptblock</b>: ein Stück Code, das du wie einen Wert weitergeben und später ausführen kannst. Speicherst du einen Skriptblock in einer Variable, führt ihn der Aufrufoperator <code class="ps">&amp;</code> aus, so oft du willst.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Skriptblock zweimal ausführen" data-ps-befehl="$sb = { 'Hallo aus dem Skriptblock' }; &amp; $sb; &amp; $sb"></pre>
+      <p class="prose">Bei <code class="ps">if</code>, <code class="ps">foreach</code> und den anderen Schlüsselwörtern dieser Station sieht der Block gleich aus. PowerShell gibt ihn aber nicht weiter, sondern führt ihn an Ort und Stelle aus, sobald er an der Reihe ist (bei <code class="ps">if</code> nur, wenn die Bedingung passt). Microsoft nennt ihn darum genauer einen Anweisungsblock.</p>
+    </div>
+
+    <div class="card stack">
+      <h3><code class="ps">if</code> und <code class="ps">else</code></h3>
+      <p class="prose">Nach <code class="ps">if</code> steht die Bedingung in <b>runden</b> Klammern, danach der Block in <b>geschweiften</b>. Ist die Bedingung wahr, läuft der Block. Sonst läuft der Block nach <code class="ps">else</code>. Das <code class="ps">else</code> darfst du auch weglassen: Dann passiert bei «falsch» einfach nichts.</p>
+      <pre class="ps-code"><code>$x = 7
+if ($x -gt 5) {
+    'gross'
+}
+else {
+    'klein'
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: if und else" data-ps-befehl="$x = 7; if ($x -gt 5) { 'gross' } else { 'klein' }" data-ps-prompt="nein"></pre>
+      <p class="prose">Die Bedingung ist ein Vergleich aus Station 07 und 09: <code class="ps">-gt</code>, <code class="ps">-eq</code>, <code class="ps">-like</code>, verbunden mit <code class="ps">-and</code> oder <code class="ps">-or</code>. Auch ein Befehl darf drinstehen. <code class="ps">Test-Path</code> liefert zum Beispiel <code class="ps">$true</code>, wenn ein Ordner existiert:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: if mit Test-Path" data-ps-befehl="if (Test-Path Dokumente\Archiv) { 'Archiv vorhanden' } else { 'Archiv fehlt' }"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Mehrere Stufen mit <code class="ps">elseif</code></h3>
+      <p class="prose">Mit <code class="ps">elseif</code> hängst du weitere Fragen an. PowerShell prüft sie von oben nach unten und nimmt den <b>ersten</b> Block, dessen Bedingung wahr ist. Alle späteren überspringt es, auch wenn sie ebenfalls wahr wären.</p>
+      <pre class="ps-code"><code>$z = 15
+if ($z -gt 10) {
+    'über 10'
+}
+elseif ($z -gt 5) {
+    'über 5'
+}
+else {
+    'klein'
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: elseif" data-ps-befehl="$z = 15; if ($z -gt 10) { 'über 10' } elseif ($z -gt 5) { 'über 5' } else { 'klein' }" data-ps-prompt="nein"></pre>
+      <p class="prose">15 ist auch grösser als 5. Trotzdem erscheint nur «über 10»: Die erste passende Stufe gewinnt.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Was zählt als wahr?</h3>
+      <p class="prose">In der Klammer muss nicht unbedingt <code class="ps">$true</code> oder <code class="ps">$false</code> stehen. PowerShell wandelt jeden Wert in wahr oder falsch um. Die Regel: Leer, null und die Zahl 0 sind falsch. Fast alles andere ist wahr, auch der Text <code class="ps">'False'</code>.</p>
+      <div class="tablebox">
+        <table class="tabelle t10-tabelle">
+          <caption>Wert in der Bedingung (alle Ergebnisse in pwsh 7.6 mit <code class="ps">[bool]</code> geprüft)</caption>
+          <thead><tr><th>Wert</th><th>gilt als</th><th>Warum</th></tr></thead>
+          <tbody>
+            <tr><th><code class="ps">0</code></th><td>falsch</td><td>die Zahl null</td></tr>
+            <tr><th><code class="ps">''</code></th><td>falsch</td><td>leerer Text</td></tr>
+            <tr><th><code class="ps">$null</code></th><td>falsch</td><td>gar kein Wert</td></tr>
+            <tr><th><code class="ps">@()</code></th><td>falsch</td><td>leere Liste, zum Beispiel wenn ein Befehl nichts findet</td></tr>
+            <tr><th><code class="ps">'0'</code></th><td>wahr</td><td>ein Text mit einem Zeichen, nicht die Zahl 0</td></tr>
+            <tr><th><code class="ps">'False'</code></th><td>wahr</td><td>ein Text mit fünf Zeichen</td></tr>
+            <tr><th><code class="ps">' '</code></th><td>wahr</td><td>ein Leerzeichen ist auch ein Zeichen</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Darum funktioniert dieser kurze Test: Findet <code class="ps">Get-ChildItem</code> nichts, ist das Ergebnis leer und damit falsch.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: leeres Ergebnis ist falsch" data-ps-befehl="if (Get-ChildItem Dokumente -Filter *.xyz) { 'gefunden' } else { 'nichts gefunden' }"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Einrückung und Lesbarkeit</h3>
+      <p class="prose">Ob du einen Block auf eine Zeile schreibst oder über mehrere Zeilen verteilst und einrückst, spielt für PowerShell keine Rolle. Beide Fassungen unten tun dasselbe. Für dich und deine Kolleginnen ist die rechte viel leichter zu lesen: Jeder Block ist um vier Leerzeichen eingerückt, jede schliessende Klammer steht unter dem Wort, das den Block geöffnet hat.</p>
+      <div class="grid2">
+        <div class="stack">
+          <p class="hint">Läuft, ist aber schwer zu lesen</p>
+          <pre class="ps-code"><code>foreach ($datei in $dateien) { if ($datei.Length -gt 1MB) { "$($datei.Name): gross" } else { "$($datei.Name): klein" } }</code></pre>
+        </div>
+        <div class="stack">
+          <p class="hint">Gleich, aber eingerückt</p>
+          <pre class="ps-code"><code>foreach ($datei in $dateien) {
+    if ($datei.Length -gt 1MB) {
+        "$($datei.Name): gross"
+    }
+    else {
+        "$($datei.Name): klein"
+    }
+}</code></pre>
+        </div>
+      </div>
+      <div class="note tipp"><b>Tipp:</b> In der Konsole sind Einzeiler praktisch. In einer Skriptdatei schreibst du eingerückt. Fehlt eine schliessende Klammer, wartet die Konsole mit <code>&gt;&gt;</code> auf den Rest. Tippe die Klammer nach oder brich mit <kbd>Ctrl</kbd> + <kbd>C</kbd> ab.</div>
+    </div>
+  </section>
+
+  <!-- ===== 3 · switch ===== -->
+  <section id="switch">
+    <span class="eyebrow">Schritt 3 · Viele Fälle mit switch</span>
+    <h2>switch: die Sortierstation</h2>
+    <p class="prose">Stell dir die Sortieranlage der Post vor: Ein Brief kommt an, die Anlage liest die Postleitzahl und schickt ihn in das passende Fach. <code class="ps">switch</code> macht dasselbe mit einem Wert. Statt einer langen Kette aus <code class="ps">if</code> und <code class="ps">elseif</code> schreibst du die Fälle untereinander.</p>
+
+    <div class="card stack">
+      <h3>Einfacher switch</h3>
+      <p class="prose">In den runden Klammern steht der Wert, den <code class="ps">switch</code> prüft. Im Block folgt Fall für Fall: links der Vergleichswert, rechts in <code class="ps">{ }</code> was passieren soll. <code class="ps">default</code> ist das Fach «alles andere», wie <code class="ps">else</code>.</p>
+      <pre class="ps-code"><code>switch (3) {
+    1       { 'eins' }
+    3       { 'drei' }
+    default { 'andere Zahl' }
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: einfacher switch" data-ps-befehl="switch (3) { 1 { 'eins' } 3 { 'drei' } default { 'andere Zahl' } }" data-ps-prompt="nein"></pre>
+      <p class="prose">Texte vergleicht <code class="ps">switch</code> ohne Rücksicht auf Gross- und Kleinschreibung, genau wie <code class="ps">-eq</code>. Willst du sie beachten, schreibst du <code class="ps">switch -CaseSensitive</code>.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Gross und klein im switch" data-ps-befehl="switch ('Running') { 'running' { 'passt' } }; switch -CaseSensitive ('Running') { 'running' { 'passt' } default { 'passt nicht' } }"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Mehrere Treffer und <code class="ps">break</code></h3>
+      <p class="prose">Anders als <code class="ps">if</code>/<code class="ps">elseif</code> hört <code class="ps">switch</code> nach dem ersten Treffer <b>nicht</b> auf. Es prüft alle Fälle und führt jeden passenden Block aus. Willst du nach dem ersten Treffer aufhören, schreibst du <code class="ps">break</code> in den Block.</p>
+      <div class="grid2">
+        <div class="stack">
+          <p class="hint">ohne break: beide Fälle laufen</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: zwei Treffer" data-ps-befehl="switch (3) { 3 { 'drei' } 3 { 'nochmals drei' } }"></pre>
+        </div>
+        <div class="stack">
+          <p class="hint">mit break: Schluss nach dem ersten</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: mit break" data-ps-befehl="switch (3) { 3 { 'drei'; break } 3 { 'nochmals drei' } }"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="card stack">
+      <h3>Muster mit <code class="ps">-Wildcard</code></h3>
+      <p class="prose">Mit <code class="ps">switch -Wildcard</code> dürfen die Fälle Platzhalter enthalten, wie bei <code class="ps">-like</code>: <code>*</code> für beliebig viele Zeichen, <code>?</code> für genau eines. So teilt Lea Dateien nach Namen ein. Auch hier laufen alle passenden Fälle:</p>
+      <pre class="ps-code"><code>switch -Wildcard ('app-2026-07.log') {
+    'app*'  { 'App' }
+    '*.log' { 'Log' }
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: switch -Wildcard mit zwei Treffern" data-ps-befehl="switch -Wildcard ('app-2026-07.log') { 'app*' { 'App' } '*.log' { 'Log' } }" data-ps-prompt="nein"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Eine ganze Liste prüfen</h3>
+      <p class="prose">Gibst du <code class="ps">switch</code> eine Liste, prüft es jedes Element einzeln, wie eine kleine Schleife. Im Block steht das aktuelle Element in <code class="ps">$_</code>. Hier bekommt <code class="ps">switch</code> alle Namen aus dem Ordner <code>Downloads</code>:</p>
+      <pre class="ps-code"><code>switch -Wildcard ((Get-ChildItem Downloads).Name) {
+    '*.pdf' { "Dokument: $_" }
+    '*.exe' { "Programm: $_" }
+    default { "Anderes:  $_" }
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: switch über eine Liste" data-ps-befehl="switch -Wildcard ((Get-ChildItem Downloads).Name) { '*.pdf' { &quot;Dokument: $_&quot; } '*.exe' { &quot;Programm: $_&quot; } default { &quot;Anderes:  $_&quot; } }" data-ps-prompt="nein"></pre>
+      <div class="note"><b>Merke:</b> <code class="ps">(Get-ChildItem Downloads).Name</code> holt die Namen aller Dateien als Liste (Member-Aufzählung aus Station 06). Die runden Klammern sorgen dafür, dass der Befehl zuerst läuft.</div>
+    </div>
+  </section>
+
+  <!-- ===== 4 · Schleifen ===== -->
+  <section id="schleifen">
+    <span class="eyebrow">Schritt 4 · Wiederholen</span>
+    <h2>Schleifen: foreach, ForEach-Object, for, while</h2>
+
+    <div class="card stack">
+      <h3><code class="ps">foreach</code>: für jedes Element</h3>
+      <p class="prose">Das <code class="ps">foreach</code>-Statement geht eine Sammlung Element für Element durch. In der Klammer steht zuerst ein Name für das aktuelle Element, dann <code class="ps">in</code>, dann die Sammlung. Den Namen wählst du selbst; <code class="ps">$datei</code> für Dateien, <code class="ps">$dienst</code> für Dienste macht das Skript lesbar.</p>
+      <pre class="ps-code"><code>foreach ($datei in Get-ChildItem Downloads) {
+    $datei.Name
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: foreach" data-ps-befehl="foreach ($datei in Get-ChildItem Downloads) { $datei.Name }" data-ps-prompt="nein"></pre>
+      <p class="prose">Du kannst Variablen von ausserhalb der Schleife benutzen, zum Beispiel einen Zähler. <code class="ps">$gross++</code> zählt eins dazu:</p>
+      <pre class="ps-code"><code>$gross = 0
+foreach ($datei in Get-ChildItem Logs) {
+    if ($datei.Length -gt 1MB) {
+        $gross++
+    }
+}
+"Grosse Dateien: $gross"</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Zähler" data-ps-befehl="$gross = 0; foreach ($datei in Get-ChildItem Logs) { if ($datei.Length -gt 1MB) { $gross++ } }; &quot;Grosse Dateien: $gross&quot;" data-ps-prompt="nein"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3><code class="ps">ForEach-Object</code>: dasselbe in der Pipeline</h3>
+      <p class="prose"><code class="ps">ForEach-Object</code> ist ein Cmdlet. Es steht hinter einem <code class="ps">|</code> und bekommt die Objekte aus der Pipeline. Das aktuelle Objekt heisst hier immer <code class="ps">$_</code>, wie bei <code class="ps">Where-Object</code>.</p>
+      <pre class="ps-code"><code>Get-ChildItem Downloads | ForEach-Object { $_.Name }</code></pre>
+      <p class="prose">Die Ausgabe ist dieselbe wie oben. Für eine einzelne Eigenschaft gibt es eine Kurzform ohne Klammern: <code class="ps">Get-ChildItem Downloads | ForEach-Object Name</code>. Achtung: In der Pipeline ist <code class="ps">foreach</code> eine Abkürzung (Alias) für <code class="ps">ForEach-Object</code>. Am Anfang eines Befehls (am Zeilenanfang oder nach <code class="ps">;</code>) ist es das Statement.</p>
+      <div class="tablebox">
+        <table class="tabelle t10-tabelle">
+          <caption>foreach-Statement und ForEach-Object im Vergleich</caption>
+          <thead><tr><th></th><th><code class="ps">foreach ($x in …) { }</code></th><th><code class="ps">… | ForEach-Object { }</code></th></tr></thead>
+          <tbody>
+            <tr><th>Art</th><td>Schlüsselwort der Sprache</td><td>Cmdlet in der Pipeline</td></tr>
+            <tr><th>aktuelles Element</th><td>dein Name, z. B. <code class="ps">$datei</code></td><td>immer <code class="ps">$_</code></td></tr>
+            <tr><th>Ablauf</th><td>holt zuerst die ganze Sammlung, dann beginnt die erste Runde</td><td>verarbeitet jedes Objekt, sobald es ankommt</td></tr>
+            <tr><th>weitergeben mit <code class="ps">|</code></th><td>nicht direkt (Fehler), nur mit <code class="ps">$( … )</code> darum</td><td>ja, wie jedes Cmdlet</td></tr>
+            <tr><th><code class="ps">break</code></th><td>beendet die Schleife</td><td>beendet die ganze Pipeline und alles danach in der Zeile (vermeiden)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Den Unterschied im Ablauf siehst du mit <code class="ps">Write-Host</code>, das sofort auf den Bildschirm schreibt. Beim Statement holt PowerShell zuerst alle drei Zahlen. In der Pipeline wandert jede Zahl gleich weiter:</p>
+      <div class="grid2">
+        <div class="stack">
+          <p class="hint">foreach-Statement</p>
+          <pre class="ps-code"><code>foreach ($n in (1..3 | ForEach-Object { Write-Host "hole $_"; $_ })) {
+    Write-Host "verarbeite $n"
+}</code></pre>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe in pwsh 7: zuerst alles holen">hole 1
+hole 2
+hole 3
+verarbeite 1
+verarbeite 2
+verarbeite 3</pre>
+        </div>
+        <div class="stack">
+          <p class="hint">ForEach-Object in der Pipeline</p>
+          <pre class="ps-code"><code>1..3 | ForEach-Object { Write-Host "hole $_"; $_ } |
+    ForEach-Object { Write-Host "verarbeite $_" }</code></pre>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe in pwsh 7: abwechselnd">hole 1
+verarbeite 1
+hole 2
+verarbeite 2
+hole 3
+verarbeite 3</pre>
+        </div>
+      </div>
+      <p class="hint">Beide Ausgaben stammen aus echtem pwsh 7.6. Der Simulator arbeitet die Pipeline Stufe für Stufe ab und zeigt rechts zuerst alle «hole»-Zeilen.</p>
+      <div class="note"><b>Faustregel:</b> Kommen die Objekte sowieso aus einer Pipeline, nimm <code class="ps">ForEach-Object</code>. Hast du die Daten schon in einer Variable und brauchst <code class="ps">break</code> oder <code class="ps">continue</code>, nimm das <code class="ps">foreach</code>-Statement.</div>
+      <div class="note"><b>Nur in <span class="ps-version">7</span>:</b> <code class="ps">ForEach-Object -Parallel { … }</code> verarbeitet mehrere Objekte gleichzeitig. Das lohnt sich bei langsamen Aufgaben, zum Beispiel vielen Netzwerkabfragen. Die Reihenfolge der Ausgabe ist dann nicht mehr fest. Windows PowerShell <span class="ps-version">5.1</span> kennt <code class="ps">-Parallel</code> nicht und meldet einen Fehler. Für den Lernpfad brauchst du es nicht.</div>
+    </div>
+
+    <div class="card stack">
+      <h3><code class="ps">for</code>: zählen</h3>
+      <p class="prose">Die <code class="ps">for</code>-Schleife ist ein Zählwerk. In der Klammer stehen drei Teile, getrennt durch Strichpunkte: der <b>Start</b> (<code class="ps">$i = 3</code>), die <b>Bedingung</b> (<code class="ps">$i -gt 0</code>, solange wahr, geht es weiter) und der <b>Schritt</b> nach jeder Runde (<code class="ps">$i--</code> zählt eins ab).</p>
+      <pre class="ps-code"><code>for ($i = 3; $i -gt 0; $i--) {
+    "Noch $i"
+}
+'Start!'</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: for" data-ps-befehl="for ($i = 3; $i -gt 0; $i--) { &quot;Noch $i&quot; }; 'Start!'" data-ps-prompt="nein"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3><code class="ps">while</code>: solange</h3>
+      <p class="prose"><code class="ps">while</code> wiederholt den Block, solange die Bedingung wahr ist. Es prüft <b>vor</b> jeder Runde. Ist die Bedingung schon am Anfang falsch, läuft der Block kein einziges Mal. Wichtig: Im Block muss sich etwas ändern, sonst läuft die Schleife ewig.</p>
+      <pre class="ps-code"><code>$i = 0
+while ($i -lt 3) {
+    $i++
+    "Runde $i"
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: while" data-ps-befehl="$i = 0; while ($i -lt 3) { $i++; &quot;Runde $i&quot; }" data-ps-prompt="nein"></pre>
+      <p class="prose">Verwandt ist <code class="ps">do { … } while (…)</code>. Es prüft erst <b>nach</b> der Runde und läuft darum mindestens einmal:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: do while" data-ps-befehl="$i = 5; do { &quot;Runde $i&quot;; $i++ } while ($i -lt 3)"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3><code class="ps">break</code> und <code class="ps">continue</code></h3>
+      <p class="prose"><code class="ps">break</code> heisst «Schluss, raus aus der Schleife». <code class="ps">continue</code> heisst «diese Runde überspringen, weiter mit der nächsten».</p>
+      <div class="grid2">
+        <div class="stack">
+          <p class="hint">continue bei 3: die 3 fehlt</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: continue" data-ps-befehl="foreach ($z in 1..5) { if ($z -eq 3) { continue }; $z }"></pre>
+        </div>
+        <div class="stack">
+          <p class="hint">break bei 3: Schluss</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: break" data-ps-befehl="foreach ($z in 1..5) { if ($z -eq 3) { break }; $z }"></pre>
+        </div>
+      </div>
+      <p class="prose">Typischer Einsatz von <code class="ps">break</code>: die <b>erste</b> passende Datei suchen. Sobald sie gefunden ist, muss die Schleife nicht weiter suchen.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: erste Datei über 5 MB" data-ps-befehl="foreach ($datei in Get-ChildItem Logs) { if ($datei.Length -gt 5MB) { $datei.Name; break } }"></pre>
+      <p class="prose">Bei zwei Schleifen ineinander verlässt <code class="ps">break</code> nur die innere. Die äussere läuft weiter:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: verschachtelte Schleifen" data-ps-befehl="foreach ($n in 'a','b') { foreach ($m in 1,2) { if ($m -eq 2) { break }; &quot;$n$m&quot; } }"></pre>
+      <div class="note"><b>Achtung im switch:</b> Steht <code class="ps">break</code> in einem <code class="ps">switch</code>, verlässt es nur den <code class="ps">switch</code>, nicht die Schleife darum herum. Im Selbsttest kommt das vor.</div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">In der Konsole schreibst du Bedingungen und Schleifen als Einzeiler: alles auf eine Zeile, mehrere Befehle mit <code class="ps">;</code> getrennt. Mit ↑ holst du den letzten Befehl zurück und änderst ihn. Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t10-konsole"></div>
+
+    <div class="card stack">
+      <h3>Im Skript-Editor</h3>
+      <p class="prose">Längere Abläufe schreibst du besser als Skript, eingerückt und über mehrere Zeilen. Der Editor speichert dein Skript als <code>einteilen.ps1</code> in Leas Benutzerordner und startet es mit «▶ Ausführen» (oder <kbd>Ctrl</kbd> + <kbd>Enter</kbd>).</p>
+      <div id="t10-skript"></div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Tracer ===== -->
+  <section id="tracer">
+    <span class="eyebrow">Schritt 6 · Zuschauen, wie PowerShell denkt</span>
+    <h2>Der Schleifen-Tracer</h2>
+    <p class="prose">Hier läuft ein kleines Skript in Zeitlupe. Bei jedem Schritt leuchtet die Zeile, die PowerShell gerade bearbeitet. Daneben (auf dem Handy darunter) siehst du, welchen Wert die Variablen haben und was bisher ausgegeben wurde. Sag vor jedem Klick voraus, welche Zeile als Nächstes kommt.</p>
+    <div class="card stack" id="t10-tracer">
+      <div class="t10-wahl" role="group" aria-label="Beispielskript wählen" id="t10-wahl"></div>
+      <p class="prose" id="t10-beschreibung"></p>
+      <div class="t10-raster">
+        <ol class="t10-code" id="t10-code" aria-label="Skript, aktuelle Zeile markiert"></ol>
+        <div class="t10-seite">
+          <h4 id="t10-vars-titel">Variablen</h4>
+          <div class="tablebox">
+            <table class="tabelle t10-vars" aria-labelledby="t10-vars-titel">
+              <thead><tr><th>Variable</th><th>Wert</th></tr></thead>
+              <tbody id="t10-vars"></tbody>
+            </table>
+          </div>
+          <h4>Ausgabe bisher</h4>
+          <pre class="ps-ausgabe t10-ausgabe" id="t10-ausgabe" tabindex="0" aria-label="Ausgabe des Skripts bis zu diesem Schritt"></pre>
+        </div>
+      </div>
+      <p class="info" id="t10-erkl" aria-live="polite"></p>
+      <p class="t10-stand" id="t10-stand"></p>
+      <div class="row">
+        <button type="button" class="btn" id="t10-zurueck">◀ Zurück</button>
+        <button type="button" class="btn primary" id="t10-weiter">Nächster Schritt ▶</button>
+        <button type="button" class="btn" id="t10-play" aria-pressed="false">▶ Abspielen</button>
+        <button type="button" class="btn" id="t10-ende">Zum Ende</button>
+        <button type="button" class="btn" id="t10-neu">↺ Von vorn</button>
+      </div>
+      <p class="hint">Variablen, Bedingungen und Ausgabe stammen aus dem Simulator: Das Skript läuft dort wirklich, mit denselben Daten wie in der Konsole oben.</p>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Zuordnen</h3>
+      <p class="prose">Welches Werkzeug passt am besten zu Leas Auftrag?</p>
+      <div id="t10-u1"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 2 · Skript zusammenbauen</h3>
+      <p class="prose">Lea will für jede Logdatei «gross» oder «klein» ausgeben. Die Zeilen sind durcheinandergeraten. Gib jeder Zeile ihren Platz (1 bis 5).</p>
+      <div id="t10-u2"></div>
+    </div>
+    <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t10-u3"></div></div>
+    <div class="card stack"><h3>Übung 4 · Ausgabe vorhersagen</h3><div id="t10-u4"></div></div>
+    <div class="card stack"><h3>Übung 5 · Fehler finden</h3><div id="t10-u5"></div></div>
+    <div class="card stack"><h3>Übung 6 · Fehler finden</h3><div id="t10-u6"></div></div>
+    <div class="card stack"><h3>Übung 7 · Wahr oder falsch?</h3><div id="t10-u7"></div></div>
+    <div class="card stack">
+      <h3>Übung 8 · Befehl selbst schreiben</h3>
+      <p class="prose">Zwei Aufträge ohne Vorlage. Schreib den Einzeiler selbst in den Simulator.</p>
+      <div id="t10-u8"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Montagsbericht</h2>
+    <p class="prose">Der Leiter Informatik will von Lea drei Antworten: <b>(a)</b> Welche Logdateien sind gross (über 1 MB), welche klein, und wie viele sind gross? <b>(b)</b> Wie viele Dienste laufen, wie viele sind gestoppt, und welche sind gestoppt? <b>(c)</b> Welches ist die erste Logdatei über 5 MB?</p>
+    <p class="prose">Jede Szene zeigt einen Befehl und die Ausgabe des Simulators auf Leas Rechner.</p>
+    <div id="t10-film"></div>
+    <details class="sol">
+      <summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <p class="prose"><b>(a)</b> Gross sind <code>app-2026-07.log</code>, <code>app-2026-08.log</code>, <code>app-2026-09.log</code>, <code>app-2026-10.log</code> und <code>backup-2026-06.log</code>, also 5 Dateien. Klein sind <code>app.log</code> und <code>sync-fehler.log</code>.</p>
+        <p class="prose"><b>(b)</b> 8 Dienste laufen, 4 sind gestoppt: <code>BITS</code>, <code>Fax</code>, <code>W32Time</code> und <code>WolkenriedSync</code>.</p>
+        <p class="prose"><b>(c)</b> <code>app-2026-07.log</code>.</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Die Logik aller Befehle ist in PowerShell 7.6 mit nachgebauten Dateien und Diensten geprüft.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine</h2>
+    <div class="note falle"><b><code class="ps">=</code> statt <code class="ps">-eq</code>:</b> In <code class="ps">if ($anzahl = 10)</code> vergleicht PowerShell nicht, sondern weist zu. <code class="ps">$anzahl</code> ist danach 10, und weil 10 als wahr gilt, läuft der Block immer. Für «ist gleich» schreibst du <code class="ps">-eq</code>.</div>
+    <div class="note falle"><b><code class="ps">&gt;</code> statt <code class="ps">-gt</code>:</b> <code class="ps">if ($x &gt; 3)</code> ist kein Vergleich, sondern eine Umleitung. PowerShell schreibt den Wert von <code class="ps">$x</code> still in eine neue Datei namens <code>3</code>, und die Bedingung ist leer, also falsch. Lösche die Datei danach mit <code class="ps">Remove-Item 3</code>.
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Umleitung statt Vergleich" data-ps-befehl="$x = 5; if ($x &gt; 3) { 'gross' } else { 'nicht gross' }"></pre>
+    </div>
+    <div class="note falle"><b><code class="ps">$_</code> im foreach-Statement:</b> <code class="ps">foreach ($datei in Get-ChildItem Logs) { $_.Name }</code> gibt nichts aus. <code class="ps">$_</code> gehört zur Pipeline. Im Statement heisst das aktuelle Element so, wie du es in der Klammer genannt hast: <code class="ps">$datei.Name</code>.</div>
+    <div class="note falle"><b>foreach-Statement in die Pipeline:</b> Hinter die schliessende Klammer eines Statements darfst du kein <code class="ps">|</code> setzen.
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7" lang="en">PS C:\Users\lea&gt; foreach ($z in 1..3) { $z * 10 } | Measure-Object
+<span class="psk-fehler">ParserError:
+Line |
+   1 |  foreach ($z in 1..3) { $z * 10 } | Measure-Object
+     |                                   ~
+     | An empty pipe element is not allowed.</span></pre>
+      Auf Deutsch: «Vor dem Strich steht nichts, was in die Pipeline gehört.» Pack das Statement in <code class="ps">$( … )</code> oder nimm <code class="ps">ForEach-Object</code>:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Statement in Unterausdruck" data-ps-befehl="$(foreach ($z in 1..3) { $z * 10 }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum"></pre>
+    </div>
+    <div class="note falle"><b><code class="ps">break</code> in <code class="ps">ForEach-Object</code>:</b> In der Pipeline gibt es keine Schleife, die <code class="ps">break</code> verlassen könnte. PowerShell bricht darum die ganze Pipeline ab und alles, was in der Zeile oder im Skript danach kommt. In pwsh 7 gibt <code class="ps">1..5 | ForEach-Object { if ($_ -eq 3) { break }; $_ }; 'danach'</code> nur 1 und 2 aus, «danach» erscheint nie. Willst du in <code class="ps">ForEach-Object</code> nur ein Objekt überspringen, nimm <code class="ps">return</code>. Das wirkt dort wie <code class="ps">continue</code>.</div>
+    <div class="note falle"><b>Endlosschleife:</b> <code class="ps">$i = 0; while ($i -lt 3) { "Runde $i" }</code> hört nie auf, weil sich <code class="ps">$i</code> nie ändert. Im Block muss etwas die Bedingung irgendwann falsch machen (<code class="ps">$i++</code>). In echter PowerShell stoppst du eine hängende Schleife mit <kbd>Ctrl</kbd> + <kbd>C</kbd>.</div>
+    <div class="note falle"><b>switch mit mehreren Treffern:</b> <code class="ps">switch -Wildcard ('rechnung-2026-09.pdf') { 'rechnung*' { 'Rechnung' } '*.pdf' { 'PDF' } }</code> gibt beides aus. Soll nur der erste Treffer zählen, gehört <code class="ps">break</code> in den Block.</div>
+    <div class="note falle"><b><code class="ps">else</code> auf neuer Zeile in der Konsole:</b> In einer Skriptdatei darf <code class="ps">else</code> auf der nächsten Zeile stehen. Tippst du in der Konsole <code class="ps">if (…) { … }</code> und drückst Enter, ist der Befehl aber fertig und läuft. Ein <code class="ps">else</code> in der nächsten Eingabe kennt PowerShell dann nicht: <span lang="en"><code>The term 'else' is not recognized …</code></span>. In der Konsole schreibst du <code class="ps">} else {</code> auf dieselbe Zeile.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Was gibt dieses Skript aus?</h2>
+    <p class="prose">Lies jedes Skript Zeile für Zeile, wie der Tracer. Die Fragen beziehen sich auf Leas Rechner, so wie du ihn aus dem Simulator kennst.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Bausteine dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">{ }</code></th><td>Befehle zu einem Block zusammenfassen</td><td><code class="ps">$sb = { 'Hallo' }; &amp; $sb</code></td></tr>
+          <tr><th><code class="ps">if / else</code></th><td>einen von zwei Blöcken ausführen</td><td><code class="ps">if ($x -gt 5) { 'gross' } else { 'klein' }</code></td></tr>
+          <tr><th><code class="ps">elseif</code></th><td>weitere Stufe; die erste wahre gewinnt</td><td><code class="ps">elseif ($z -gt 5) { 'über 5' }</code></td></tr>
+          <tr><th><code class="ps">switch</code></th><td>einen Wert mit vielen Fällen vergleichen, alle Treffer laufen</td><td><code class="ps">switch ($d.Status) { 'Running' { 'läuft' } default { 'anders' } }</code></td></tr>
+          <tr><th><code class="ps">switch -Wildcard</code></th><td>Fälle mit Platzhaltern <code>*</code> und <code>?</code></td><td><code class="ps">switch -Wildcard ($name) { '*.pdf' { 'Dokument' } }</code></td></tr>
+          <tr><th><code class="ps">foreach</code></th><td>jedes Element einer Sammlung bearbeiten</td><td><code class="ps">foreach ($datei in $dateien) { $datei.Name }</code></td></tr>
+          <tr><th><code class="ps">ForEach-Object</code></th><td>jedes Objekt in der Pipeline bearbeiten</td><td><code class="ps">Get-ChildItem Logs | ForEach-Object { $_.Name }</code></td></tr>
+          <tr><th><code class="ps">for</code></th><td>mit Start, Bedingung und Schritt zählen</td><td><code class="ps">for ($i = 1; $i -le 5; $i++) { $i }</code></td></tr>
+          <tr><th><code class="ps">while</code></th><td>wiederholen, solange die Bedingung wahr ist (prüft vorher)</td><td><code class="ps">while ($i -lt 3) { $i++ }</code></td></tr>
+          <tr><th><code class="ps">do … while</code></th><td>wiederholen, prüft nachher, läuft mindestens einmal</td><td><code class="ps">do { $i++ } while ($i -lt 3)</code></td></tr>
+          <tr><th><code class="ps">break</code></th><td>Schleife oder switch sofort verlassen</td><td><code class="ps">if ($z -eq 3) { break }</code></td></tr>
+          <tr><th><code class="ps">continue</code></th><td>diese Runde überspringen</td><td><code class="ps">if ($z -eq 3) { continue }</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li><b>Runde Klammern</b> für die Bedingung, <b>geschweifte</b> für den Block.</li>
+      <li><code class="ps">if</code>/<code class="ps">elseif</code> nimmt die <b>erste</b> wahre Stufe, <code class="ps">switch</code> führt <b>alle</b> Treffer aus, ausser du schreibst <code class="ps">break</code>.</li>
+      <li>0, leerer Text, <code class="ps">$null</code> und leere Listen sind falsch. Der Text <code class="ps">'False'</code> ist wahr.</li>
+      <li>Im <code class="ps">foreach</code>-Statement heisst das Element, wie du es nennst; in <code class="ps">ForEach-Object</code> heisst es <code class="ps">$_</code>.</li>
+      <li><code class="ps">break</code> verlässt die innerste Schleife (oder den switch), <code class="ps">continue</code> springt zur nächsten Runde.</li>
+      <li>Im Block muss sich etwas ändern, sonst läuft <code class="ps">while</code> ewig.</li>
+      <li>Rücke jeden Block um vier Leerzeichen ein. Das liest sich wie ein Inhaltsverzeichnis.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li><code class="ps">ForEach-Object -Parallel</code> gibt es nur in <span class="ps-version">7</span>. In 5.1 meldet <code class="ps">ForEach-Object</code> einen Fehler zu den Parametern.</li>
+        <li>Die Kurzform <code class="ps">$x -gt 5 ? 'gross' : 'klein'</code> (ternärer Operator, ein if/else in einer Zeile) gibt es erst ab <span class="ps-version">7</span>. In 5.1 meldet PowerShell <span lang="en">«Unexpected token '?'»</span>; dort schreibst du <code class="ps">if</code> und <code class="ps">else</code> aus.</li>
+        <li><code class="ps">if</code>, <code class="ps">switch</code>, <code class="ps">foreach</code>, <code class="ps">for</code>, <code class="ps">while</code>, <code class="ps">break</code> und <code class="ps">continue</code> funktionieren in 5.1 gleich.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_if">about_If</a> (if, elseif, else; die erste wahre Stufe gewinnt)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_switch">about_Switch</a> (alle Treffer laufen, <code>break</code>, <code>default</code>, <code>-Wildcard</code>, <code>-CaseSensitive</code>, Listen als Eingabe)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_foreach">about_Foreach</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/foreach-object">ForEach-Object</a> (Statement und Cmdlet, Alias <code>foreach</code>, <code>-Parallel</code> ab PowerShell 7.0)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_for">about_For</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_while">about_While</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_do">about_Do</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_break">about_Break</a> (innerste Schleife, <code>break</code> in einer Pipeline vermeiden) und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_continue">about_Continue</a> (in <code>for</code> läuft der Schritt trotzdem)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_script_blocks">about_Script_Blocks</a> (Skriptblock als Wert, Aufruf mit <code>&amp;</code>, Anweisungsblöcke von if und for)</li>
+      </ul>
+    </div>
+    <footer>Station 10 des Lernpfads PS · Weiter geht es mit «Skripte, Funktionen und Fehler».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  // Code als gefärbter Inline-Code (ps-konsole.js färbt ihn beim Einfügen)
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  // Ausgabe eines Skripts auf einem frischen Rechner als Ausgabeblock (ohne Prompt)
+  const ausgabeBlock = (code, label) => {
+    const text = L.konsole.ausfuehren(code);
+    return '<pre class="ps-ausgabe" tabindex="0" aria-label="' + esc(label || "Ausgabe in pwsh 7") + '">' +
+      (text ? esc(text) : '<span class="psk-hinweis">(keine Ausgabe)</span>') + "</pre>";
+  };
+  // Skriptzeilen mit Verknüpfung zum Satz: [[link, code], …]
+  const zeilen = (liste) => '<div class="t10-zeilen">' + liste.map((z) =>
+    '<span class="t10-zeile">' + (z[0] ? '<span data-link="' + z[0] + '">' + C(z[1]) + "</span>" : C(z[1])) + "</span>").join("") + "</div>";
+
+  // Hilfen für pruefe(ctx)
+  const texte = (ctx) => ctx.objekte.map((o) => typeof o === "string" ? o : ctx.text(o));
+  const gleicheListe = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t10-mini", {
+    kategorien: ["Verzweigung", "Schleife"],
+    elemente: [
+      { html: "Wenn der Ordner Archiv fehlt, eine Warnung ausgeben", kategorie: "Verzweigung", erklaerung: "Eine Ja-Nein-Frage entscheidet, ob etwas passiert: if." },
+      { html: "Jede Datei im Ordner Logs umbenennen", kategorie: "Schleife", erklaerung: "Dasselbe für viele Dateien: foreach oder ForEach-Object." },
+      { html: "Je nach Endung .pdf, .exe oder .jpg in eine andere Ablage", kategorie: "Verzweigung", erklaerung: "Ein Wert, mehrere Fälle: switch." },
+      { html: "Den Server anpingen, bis er antwortet", kategorie: "Schleife", erklaerung: "Wiederholen, solange eine Bedingung gilt: while." },
+      { html: "Von 10 auf 1 herunterzählen", kategorie: "Schleife", erklaerung: "Ein Zählwerk mit Start, Bedingung und Schritt: for." },
+      { html: "Bei mehr als 1 MB «gross», sonst «klein»", kategorie: "Verzweigung", erklaerung: "Zwei Wege je nach Bedingung: if und else." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper ---------- */
+  const z1 = ["a", "$dateien = Get-ChildItem Logs"];
+  const s1 = [z1, ["a", "$dateien.Count"]];
+  const kopf = ["b", "foreach ($datei in $dateien) {"];
+  const zu = ["b", "}"];
+  const s2 = [z1, kopf, ["b", "    $datei.Name"], zu];
+  const s3 = [z1, kopf, ["c", "    if ($datei.Length -gt 1MB) {"], ["c", "        \"$($datei.Name): gross\""], ["c", "    }"], zu];
+  const s4 = [z1, kopf, ["c", "    if ($datei.Length -gt 1MB) {"], ["c", "        \"$($datei.Name): gross\""], ["c", "    }"],
+    ["d", "    else {"], ["d", "        \"$($datei.Name): klein\""], ["d", "    }"], zu];
+  const stufe = (liste) => '<div class="t10-st">' + zeilen(liste) + ausgabeBlock(liste.map((z) => z[1]).join("\n"), "Ausgabe dieses Schritts in pwsh 7") + "</div>";
+  L.stepper("#t10-stepper", {
+    titel: "Leas Auftrag",
+    text: 'Nimm <span data-link="a">alle Dateien im Ordner Logs</span>, gehe sie <span data-link="b">eine nach der anderen</span> durch und schreib <span data-link="c">«gross», wenn eine Datei mehr als 1 MB hat</span>, <span data-link="d">sonst «klein»</span>.',
+    schritte: [
+      { html: stufe(s1), warum: "Zuerst die Dateien holen und in einer Variable speichern. Die Zuweisung selbst gibt nichts aus. Die zweite Zeile zeigt: In der Variable stecken 7 Dateien." },
+      { html: stufe(s2), warum: "Die Schleife nimmt eine Datei nach der anderen. In jeder Runde steht sie in " + C("$datei") + ". Der Block gibt vorerst nur den Namen aus: 7 Runden, 7 Namen." },
+      { html: stufe(s3), warum: "Im Block entscheidet if für die aktuelle Datei: Ist sie grösser als 1MB, erscheint «Name: gross». Die zwei kleinen Dateien fallen weg, weil noch nichts sagt, was mit ihnen passieren soll." },
+      { html: stufe(s4), warum: "else fängt alle übrigen Dateien auf. Jetzt bekommt jede der 7 Dateien genau eine Zeile: 5 gross, 2 klein." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Konsole mit Aufgaben ---------- */
+  const downloadsGross = ["FOTO-APERO.JPG", "HANDBUCH-DRUCKER.PDF", "RECHNUNG-2026-09.PDF", "RECHNUNG-2026-10.PDF", "SETUP-ALT.EXE", "WOLKENRIEDSYNC-SETUP.EXE"];
+  const istForeachStatement = (e) => /(^|[;{(]\s*|^\s*)foreach\s*\(/i.test(e);
+  L.konsole("#t10-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Läuft der Sync-Dienst?",
+        text: "<p>Prüfe mit " + C("if") + " und " + C("else") + ", ob der Dienst <code>WolkenriedSync</code> läuft. Gib <code>läuft</code> oder <code>gestoppt</code> aus.</p>",
+        hinweis: "<p>" + C("(Get-Service WolkenriedSync).Status") + " liefert den Status. Vergleiche ihn mit " + C("-eq 'Running'") + ".</p>",
+        loesung: "if ((Get-Service WolkenriedSync).Status -eq 'Running') { 'läuft' } else { 'gestoppt' }",
+        pruefe: (ctx) => /^\s*if\s*\(/i.test(ctx.eingabe) && /\belse\b/i.test(ctx.eingabe) && ctx.befehle.includes("Get-Service") &&
+          !ctx.hatFehler && gleicheListe(texte(ctx), ["gestoppt"])
+      },
+      {
+        titel: "Namen in Grossbuchstaben mit foreach",
+        text: "<p>Gib mit dem " + C("foreach") + "-Statement den Namen jeder Datei im Ordner <code>Downloads</code> in Grossbuchstaben aus.</p>",
+        hinweis: "<p>" + C("foreach ($d in Get-ChildItem Downloads) { … }") + ". Im Block macht " + C("$d.Name.ToUpper()") + " Grossbuchstaben.</p>",
+        loesung: "foreach ($d in Get-ChildItem Downloads) { $d.Name.ToUpper() }",
+        pruefe: (ctx) => istForeachStatement(ctx.eingabe) && !ctx.befehle.includes("ForEach-Object") && gleicheListe(texte(ctx), downloadsGross)
+      },
+      {
+        titel: "Dasselbe mit ForEach-Object",
+        text: "<p>Jetzt dasselbe in der Pipeline: " + C("Get-ChildItem Downloads") + ", dann " + C("ForEach-Object") + ".</p>",
+        hinweis: "<p>In " + C("ForEach-Object { }") + " heisst die aktuelle Datei " + C("$_") + ".</p>",
+        loesung: "Get-ChildItem Downloads | ForEach-Object { $_.Name.ToUpper() }",
+        pruefe: (ctx) => ctx.befehle.includes("ForEach-Object") && gleicheListe(texte(ctx), downloadsGross)
+      },
+      {
+        titel: "Fünf Durchgänge mit for",
+        text: "<p>Gib mit einer " + C("for") + "-Schleife die Zeilen <code>Durchgang 1</code> bis <code>Durchgang 5</code> aus.</p>",
+        hinweis: "<p>Start " + C("$i = 1") + ", Bedingung " + C("$i -le 5") + ", Schritt " + C("$i++") + ". Im Block " + C("\"Durchgang $i\"") + " mit doppelten Anführungszeichen.</p>",
+        loesung: "for ($i = 1; $i -le 5; $i++) { \"Durchgang $i\" }",
+        pruefe: (ctx) => /\bfor\s*\(/i.test(ctx.eingabe) && gleicheListe(texte(ctx), ["Durchgang 1", "Durchgang 2", "Durchgang 3", "Durchgang 4", "Durchgang 5"])
+      },
+      {
+        titel: "Verdoppeln mit while",
+        text: "<p>Setze " + C("$n = 1") + ". Gib mit " + C("while") + " die Zahl aus und verdopple sie, solange sie kleiner als 100 ist. Ergebnis: 1, 2, 4 … 64.</p>",
+        hinweis: "<p>Zwei Befehle im Block, getrennt mit " + C(";") + ": zuerst " + C("$n") + " ausgeben, dann " + C("$n *= 2") + ".</p>",
+        loesung: "$n = 1; while ($n -lt 100) { $n; $n *= 2 }",
+        pruefe: (ctx) => /\bwhile\s*\(/i.test(ctx.eingabe) && gleicheListe(texte(ctx), ["1", "2", "4", "8", "16", "32", "64"])
+      },
+      {
+        titel: "Downloads mit switch -Wildcard einteilen",
+        text: "<p>Teile die Namen im Ordner <code>Downloads</code> mit " + C("switch -Wildcard") + " ein: <code>*.pdf</code> → <code>Dokument</code>, <code>*.exe</code> → <code>Programm</code>, alles andere → <code>Anderes</code>.</p>",
+        hinweis: "<p>" + C("switch -Wildcard ((Get-ChildItem Downloads).Name) { … }") + " prüft jeden Namen einzeln. Für «alles andere» gibt es " + C("default") + ".</p>",
+        loesung: "switch -Wildcard ((Get-ChildItem Downloads).Name) { '*.pdf' { 'Dokument' } '*.exe' { 'Programm' } default { 'Anderes' } }",
+        pruefe: (ctx) => /\bswitch\s+-wildcard\b/i.test(ctx.eingabe) &&
+          gleicheListe(texte(ctx), ["Anderes", "Dokument", "Dokument", "Dokument", "Programm", "Programm"])
+      }
+    ]
+  });
+
+  const logsZeilen = ["app-2026-07.log: gross", "app-2026-08.log: gross", "app-2026-09.log: gross", "app-2026-10.log: gross",
+    "app.log: klein", "backup-2026-06.log: gross", "sync-fehler.log: klein"];
+  L.konsole("#t10-skript", {
+    modus: "skript",
+    titel: "PowerShell 7 · einteilen.ps1",
+    skriptName: "einteilen.ps1",
+    begruessung: false,
+    skript: "# Für jede Logdatei «gross» oder «klein» ausgeben\n$dateien = Get-ChildItem Logs\nforeach ($datei in $dateien) {\n    # Ergänze hier if und else:\n    # mehr als 1MB: \"<Name>: gross\", sonst \"<Name>: klein\"\n}",
+    aufgabenTitel: "Aufgaben im Skript",
+    aufgaben: [
+      {
+        titel: "Logdateien einteilen",
+        text: "<p>Ergänze das Skript: Für jede Datei im Ordner <code>Logs</code> soll eine Zeile wie <code>app.log: klein</code> erscheinen. Über 1 MB heisst <code>gross</code>, sonst <code>klein</code>.</p>",
+        hinweis: "<p>Im Block der Schleife: " + C("if ($datei.Length -gt 1MB) { … } else { … }") + ". Den Text baust du mit " + C("\"$($datei.Name): gross\"") + ".</p>",
+        loesung: "# Für jede Logdatei «gross» oder «klein» ausgeben\n$dateien = Get-ChildItem Logs\nforeach ($datei in $dateien) {\n    if ($datei.Length -gt 1MB) {\n        \"$($datei.Name): gross\"\n    }\n    else {\n        \"$($datei.Name): klein\"\n    }\n}",
+        pruefe: (ctx) => /\bforeach\b/i.test(ctx.skript || "") && /\bif\s*\(/i.test(ctx.skript || "") && /\belse\b/i.test(ctx.skript || "") &&
+          !ctx.hatFehler && gleicheListe(texte(ctx), logsZeilen)
+      },
+      {
+        titel: "Dienste nach Status zählen",
+        text: "<p>Schreib ein neues Skript: Geh mit " + C("foreach") + " alle Dienste durch und zähle mit " + C("switch") + " nach Status. Am Schluss sollen genau zwei Zeilen erscheinen: <code>Laufend: …</code> und <code>Gestoppt: …</code>.</p>",
+        hinweis: "<p>Zwei Zähler auf 0 setzen. Im " + C("switch ($dienst.Status)") + " die Fälle " + C("'Running' { $laufend++ }") + " und " + C("'Stopped' { $gestoppt++ }") + ". Nach der Schleife beide Zähler in Texten ausgeben.</p>",
+        loesung: "$laufend = 0\n$gestoppt = 0\nforeach ($dienst in Get-Service) {\n    switch ($dienst.Status) {\n        'Running' { $laufend++ }\n        'Stopped' { $gestoppt++ }\n    }\n}\n\"Laufend: $laufend\"\n\"Gestoppt: $gestoppt\"",
+        pruefe: (ctx) => /\bswitch\b/i.test(ctx.skript || "") && /\bforeach\b/i.test(ctx.skript || "") && !ctx.hatFehler &&
+          gleicheListe(texte(ctx), ["Laufend: 8", "Gestoppt: 4"])
+      }
+    ]
+  });
+
+  /* ---------- Schritt 6: Schleifen-Tracer ---------- */
+  (function tracer() {
+    // m: "nach" = Messpunkt nach der Zeile (bzw. am Anfang des Blocks), "vor" = vor der Zeile
+    // b: Bedingung, deren Wert im Messpunkt mitgemessen wird
+    // e(w, b): Erklärung; w = Werte der Variablen als Text, b = Wert der Bedingung
+    const SKRIPTE = [
+      {
+        name: "foreach mit if/else",
+        beschreibung: "Lea teilt ihre Logdateien in gross und klein ein. Achte auf die Bedingung: Bei welcher Datei springt PowerShell zum else?",
+        vars: [{ n: "$dateien.Count", x: "$dateien.Count" }, { n: "$datei.Name", x: "$datei.Name" }, { n: "$datei.Length", x: "if ($datei) { $datei.Length }" }],
+        zeilen: [
+          { c: "$dateien = Get-ChildItem Logs", m: "nach", e: (w) => "Get-ChildItem holt die Dateien und legt sie in " + C("$dateien") + ". Es sind " + w[0] + " Stück." },
+          { c: "foreach ($datei in $dateien) {", m: "nach", e: (w) => "Neue Runde: " + C("$datei") + " ist jetzt die Datei " + C(w[1]) + "." },
+          { c: "    if ($datei.Length -gt 1MB) {", m: "vor", b: "$datei.Length -gt 1MB",
+            e: (w, b) => "Bedingung: Ist " + w[2] + " Bytes mehr als 1MB (1'048'576 Bytes)? " + (b === "True" ? "Ja, " + C("True") + ": Der if-Block läuft." : "Nein, " + C("False") + ": PowerShell überspringt den if-Block und nimmt den else-Block.") },
+          { c: "        \"$($datei.Name): gross\"", m: "nach", e: (w) => C(w[1] + ": gross") + " erscheint in der Ausgabe. Danach ist die Runde zu Ende." },
+          { c: "    }" },
+          { c: "    else {" },
+          { c: "        \"$($datei.Name): klein\"", m: "nach", e: (w) => C(w[1] + ": klein") + " erscheint in der Ausgabe. Danach ist die Runde zu Ende." },
+          { c: "    }" },
+          { c: "}" }
+        ],
+        start: "Noch ist nichts passiert. Klick auf «Nächster Schritt»: PowerShell beginnt mit der ersten Zeile.",
+        ende: "Fertig: Die Schleife hat alle 7 Dateien bearbeitet, 5 gross und 2 klein. Nach der letzten Datei gibt es keine weitere Runde."
+      },
+      {
+        name: "for mit continue und break",
+        beschreibung: "Lea zählt Zahlen zusammen. Vielfache von 3 überspringt sie mit continue. Sobald die Summe über 10 liegt, hört sie mit break auf. Wann genau?",
+        vars: [{ n: "$i", x: "$i" }, { n: "$summe", x: "$summe" }],
+        zeilen: [
+          { c: "$summe = 0", m: "nach", e: () => "Die Summe beginnt bei 0." },
+          { c: "for ($i = 1; $i -le 10; $i++) {", m: "nach",
+            e: (w) => (w[0] === "1" ? "Start der for-Schleife: " + C("$i = 1") + "." : C("$i++") + " zählt eins hoch: " + C("$i") + " ist jetzt " + w[0] + ".") + " Die Bedingung " + C("$i -le 10") + " ist wahr, also läuft der Block." },
+          { c: "    if ($i % 3 -eq 0) {", m: "vor", b: "$i % 3 -eq 0",
+            e: (w, b) => "Ist " + w[0] + " durch 3 teilbar (Rest " + C("%") + " gleich 0)? " + (b === "True" ? "Ja: Als Nächstes kommt continue." : "Nein: weiter zur nächsten Zeile.") },
+          { c: "        continue", m: "vor", e: () => C("continue") + " bricht nur diese Runde ab. PowerShell springt zurück zum Kopf der for-Schleife, der Schritt " + C("$i++") + " läuft trotzdem." },
+          { c: "    }" },
+          { c: "    if ($summe -gt 10) {", m: "vor", b: "$summe -gt 10",
+            e: (w, b) => "Ist die Summe " + w[1] + " grösser als 10? " + (b === "True" ? "Ja: Als Nächstes kommt break." : "Nein: weiter.") },
+          { c: "        break", m: "vor", e: () => C("break") + " beendet die ganze Schleife. PowerShell macht nach ihrer schliessenden Klammer weiter." },
+          { c: "    }" },
+          { c: "    $summe += $i", m: "nach", e: (w) => C("+=") + " zählt " + w[0] + " zur Summe dazu. Sie ist jetzt " + w[1] + "." },
+          { c: "    \"i = $i, Summe = $summe\"", m: "nach", e: (w) => "Die Zeile " + C("i = " + w[0] + ", Summe = " + w[1]) + " erscheint in der Ausgabe." },
+          { c: "}" },
+          { c: "\"Fertig: $summe\"", m: "nach", e: (w) => "Nach der Schleife gibt das Skript die Summe aus: " + w[1] + "." }
+        ],
+        start: "Noch ist nichts passiert. Klick auf «Nächster Schritt»: PowerShell beginnt mit der ersten Zeile.",
+        ende: "Fertig: Die 3 und die 6 hat continue übersprungen. Bei 7 war die Summe schon 12, darum hat break die Schleife beendet. 8, 9 und 10 kommen nie dran."
+      },
+      {
+        name: "while mit switch",
+        beschreibung: "Lea prüft vier Dienste. Ein Zähler zeigt auf den nächsten Namen in der Liste, switch entscheidet nach dem Status.",
+        vars: [{ n: "$i", x: "$i" }, { n: "$dienst.Name", x: "$dienst.Name" }, { n: "$dienst.Status", x: "$dienst.Status" }],
+        zeilen: [
+          { c: "$namen = 'Spooler', 'Fax', 'WolkenriedSync', 'WinDefend'", m: "nach", e: () => "Vier Dienstnamen landen in der Liste " + C("$namen") + "." },
+          { c: "$i = 0", m: "nach", e: () => "Der Zähler beginnt bei 0, denn das erste Element einer Liste hat den Index 0." },
+          { c: "while ($i -lt $namen.Count) {", m: "nach", e: (w) => "Die Bedingung " + C("$i -lt $namen.Count") + " (" + w[0] + " kleiner als 4) ist wahr: Der Block läuft." },
+          { c: "    $dienst = Get-Service -Name $namen[$i]", m: "nach", e: (w) => C("$namen[" + w[0] + "]") + " ist " + C(w[1]) + ". Get-Service holt diesen Dienst, sein Status ist " + C(w[2]) + "." },
+          { c: "    switch ($dienst.Status) {", m: "vor", e: (w) => C("switch") + " vergleicht den Status " + C(w[2]) + " mit jedem Fall." },
+          { c: "        'Running' {", m: "nach", e: () => "Der Fall " + C("'Running'") + " passt, sein Block läuft." },
+          { c: "            \"$($dienst.Name): läuft\"", m: "nach", e: (w) => C(w[1] + ": läuft") + " erscheint in der Ausgabe." },
+          { c: "        }" },
+          { c: "        'Stopped' {", m: "nach", e: () => "Der Fall " + C("'Stopped'") + " passt, sein Block läuft." },
+          { c: "            \"$($dienst.Name): gestoppt\"", m: "nach", e: (w) => C(w[1] + ": gestoppt") + " erscheint in der Ausgabe." },
+          { c: "        }" },
+          { c: "    }" },
+          { c: "    $i++", m: "nach", e: (w) => "Der Zähler steigt auf " + w[0] + ". Zurück zur Bedingung von while." },
+          { c: "}" }
+        ],
+        start: "Noch ist nichts passiert. Klick auf «Nächster Schritt»: PowerShell beginnt mit der ersten Zeile.",
+        ende: "Fertig: " + "Der Zähler ist 4, die Bedingung «4 kleiner als 4» ist falsch. Die Schleife endet nach vier Runden."
+      }
+    ];
+
+    const MARKE = "@@T";
+    // Skript mit Messpunkten versehen: jeder Messpunkt gibt Zeile, Variablen und Bedingung als Text aus
+    function instrumentieren(s) {
+      const out = [];
+      s.zeilen.forEach((z, n) => {
+        const teile = s.vars.map((v) => "$(" + v.x + ")");
+        if (z.b) teile.push("$(" + z.b + ")");
+        const mk = '"' + MARKE + n + "|" + teile.join("|") + '"';
+        if (z.m === "vor") out.push(mk);
+        out.push(z.c);
+        if (z.m === "nach") out.push(mk);
+      });
+      return out.join("\n");
+    }
+    // Schritte aus dem echten Lauf im Simulator berechnen
+    function schritteBerechnen(s) {
+      const roh = L.konsole.ausfuehren(instrumentieren(s)).split("\n");
+      const schritte = [{ zeile: -1, w: s.vars.map(() => ""), b: "", ausgabe: [], text: s.start }];
+      const ausgabe = [];
+      roh.forEach((r) => {
+        if (r.indexOf(MARKE) === 0) {
+          const t = r.slice(MARKE.length).split("|");
+          const zeile = Number(t[0]);
+          const w = t.slice(1, 1 + s.vars.length);
+          const b = s.zeilen[zeile].b ? t[1 + s.vars.length] : "";
+          schritte.push({ zeile: zeile, w: w, b: b, ausgabe: ausgabe.slice(), text: s.zeilen[zeile].e(w.map(String), b) });
+        } else {
+          ausgabe.push(r);
+          // Ausgabe gehört zum letzten Schritt (Messpunkt «nach» kommt nach der Ausgabe)
+        }
+      });
+      const letzte = schritte[schritte.length - 1];
+      schritte.push({ zeile: -1, w: letzte.w, b: "", ausgabe: ausgabe.slice(), text: s.ende });
+      // Kontrolle: Ausgabe ohne Messpunkte = Ausgabe des sauberen Skripts
+      const sauber = L.konsole.ausfuehren(s.zeilen.map((z) => z.c).join("\n"));
+      if (ausgabe.join("\n") !== sauber) console.error("[t10] Tracer und Simulator weichen ab:", ausgabe, sauber);
+      return schritte;
+    }
+
+    const wahl = document.getElementById("t10-wahl");
+    const beschreibung = document.getElementById("t10-beschreibung");
+    const codeListe = document.getElementById("t10-code");
+    const varsBox = document.getElementById("t10-vars");
+    const ausgabeBox = document.getElementById("t10-ausgabe");
+    const erkl = document.getElementById("t10-erkl");
+    const standBox = document.getElementById("t10-stand");
+    const bZurueck = document.getElementById("t10-zurueck");
+    const bWeiter = document.getElementById("t10-weiter");
+    const bPlay = document.getElementById("t10-play");
+    const bEnde = document.getElementById("t10-ende");
+    const bNeu = document.getElementById("t10-neu");
+
+    let aktiv = 0, schritte = [], pos = 0, timer = null;
+    const cache = {};
+
+    function stoppen() {
+      if (timer) { clearInterval(timer); timer = null; }
+      bPlay.textContent = "▶ Abspielen";
+      bPlay.setAttribute("aria-pressed", "false");
+    }
+
+    function zeichnen() {
+      const s = SKRIPTE[aktiv];
+      const st = schritte[pos];
+      const vorher = pos > 0 ? schritte[pos - 1] : null;
+      Array.prototype.forEach.call(codeListe.children, (li, n) => {
+        const an = n === st.zeile;
+        li.classList.toggle("an", an);
+        li.querySelector(".t10-nr").textContent = (an ? "▶ " : "") + (n + 1);
+        if (an) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+      });
+      const aktuell = codeListe.children[st.zeile];
+      if (aktuell && codeListe.scrollHeight > codeListe.clientHeight) aktuell.scrollIntoView({ block: "nearest", inline: "nearest" });
+      varsBox.innerHTML = "";
+      s.vars.forEach((v, i) => {
+        const tr = document.createElement("tr");
+        const neu = vorher && vorher.w[i] !== st.w[i];
+        if (neu) tr.className = "t10-neu";
+        const th = document.createElement("th");
+        const c = document.createElement("code"); c.className = "ps"; c.textContent = v.n;
+        th.appendChild(c);
+        const td = document.createElement("td");
+        td.className = "t10-wert";
+        td.textContent = st.w[i] === "" ? "– (leer)" : st.w[i];
+        if (neu) { const sr = document.createElement("span"); sr.className = "sr-only"; sr.textContent = " (geändert)"; td.appendChild(sr); }
+        tr.append(th, td);
+        varsBox.appendChild(tr);
+      });
+      ausgabeBox.textContent = st.ausgabe.length ? st.ausgabe.join("\n") : "";
+      if (!st.ausgabe.length) {
+        const leer = document.createElement("span"); leer.className = "psk-hinweis"; leer.textContent = "(noch keine Ausgabe)";
+        ausgabeBox.appendChild(leer);
+      }
+      erkl.innerHTML = (st.zeile >= 0 ? "<b>Zeile " + (st.zeile + 1) + ":</b> " : "") + st.text;
+      standBox.textContent = "Schritt " + pos + " von " + (schritte.length - 1);
+      bZurueck.disabled = pos === 0;
+      bWeiter.disabled = pos >= schritte.length - 1;
+      bEnde.disabled = pos >= schritte.length - 1;
+      if (bWeiter.disabled && document.activeElement === bWeiter) bNeu.focus();
+    }
+
+    function laden(n) {
+      stoppen();
+      aktiv = n;
+      const s = SKRIPTE[n];
+      if (!cache[n]) cache[n] = schritteBerechnen(s);
+      schritte = cache[n];
+      pos = 0;
+      beschreibung.textContent = s.beschreibung;
+      codeListe.innerHTML = "";
+      s.zeilen.forEach((z, i) => {
+        const li = document.createElement("li");
+        const nr = document.createElement("span"); nr.className = "t10-nr"; nr.textContent = String(i + 1);
+        const c = document.createElement("code"); c.className = "ps"; c.textContent = z.c;
+        li.append(nr, c);
+        codeListe.appendChild(li);
+      });
+      L.psFaerben(codeListe);
+      Array.prototype.forEach.call(wahl.children, (b, i) => {
+        b.classList.toggle("on", i === n);
+        b.setAttribute("aria-pressed", String(i === n));
+      });
+      zeichnen();
+    }
+
+    SKRIPTE.forEach((s, i) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "btn"; b.textContent = (i + 1) + " · " + s.name;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => laden(i));
+      wahl.appendChild(b);
+    });
+
+    function weiter() {
+      if (pos < schritte.length - 1) { pos++; zeichnen(); }
+      if (pos >= schritte.length - 1) stoppen();
+    }
+    bWeiter.addEventListener("click", () => { stoppen(); weiter(); });
+    bZurueck.addEventListener("click", () => { stoppen(); if (pos > 0) { pos--; zeichnen(); } });
+    bEnde.addEventListener("click", () => { stoppen(); pos = schritte.length - 1; zeichnen(); bNeu.focus(); });
+    bNeu.addEventListener("click", () => { stoppen(); pos = 0; zeichnen(); });
+    bPlay.addEventListener("click", () => {
+      if (timer) { stoppen(); return; }
+      if (pos >= schritte.length - 1) { pos = 0; zeichnen(); }
+      bPlay.textContent = "⏸ Anhalten";
+      bPlay.setAttribute("aria-pressed", "true");
+      timer = setInterval(weiter, 1800);
+    });
+    laden(0);
+  })();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t10-u1", {
+    kategorien: ["if", "switch", "foreach", "while"],
+    elemente: [
+      { html: "Nur wenn die Datei <code>notizen.txt</code> existiert, ihren Inhalt anzeigen", kategorie: "if", erklaerung: "Eine einzige Ja-Nein-Frage: if mit Test-Path." },
+      { html: "Den Status Running, Stopped oder Paused je mit einer eigenen Meldung beantworten", kategorie: "switch", erklaerung: "Ein Wert, mehrere mögliche Fälle: switch." },
+      { html: "Für jeden Dienst in einer Liste eine Zeile ausgeben", kategorie: "foreach", erklaerung: "Jedes Element einer Sammlung bearbeiten: foreach." },
+      { html: "Weiter versuchen, solange weniger als 3 Versuche gemacht wurden", kategorie: "while", erklaerung: "Wiederholen, solange eine Bedingung gilt: while." },
+      { html: "Dateinamen nach Muster <code>*.pdf</code>, <code>*.exe</code>, <code>*.jpg</code> einteilen", kategorie: "switch", erklaerung: "Mehrere Muster: switch -Wildcard." },
+      { html: "Jede Logdatei im Ordner Logs in den Ordner Archiv kopieren", kategorie: "foreach", erklaerung: "Dasselbe für jede Datei: foreach (oder ForEach-Object in der Pipeline)." }
+    ]
+  });
+  L.sortierer("#t10-u2", {
+    kategorien: ["1.", "2.", "3.", "4.", "5."],
+    elemente: [
+      { html: C("    else { \"$($datei.Name): klein\" }"), kategorie: "4.", erklaerung: "else steht direkt nach dem Block von if, noch innerhalb der Schleife." },
+      { html: C("foreach ($datei in $dateien) {"), kategorie: "2.", erklaerung: "Die Schleife beginnt, nachdem die Dateien geholt sind." },
+      { html: C("}"), kategorie: "5.", erklaerung: "Diese Klammer schliesst den Block der Schleife." },
+      { html: C("$dateien = Get-ChildItem Logs"), kategorie: "1.", erklaerung: "Zuerst die Dateien holen." },
+      { html: C("    if ($datei.Length -gt 1MB) { \"$($datei.Name): gross\" }"), kategorie: "3.", erklaerung: "Im Block entscheidet if für die aktuelle Datei." }
+    ]
+  });
+  L.auswahl("#t10-u3", {
+    frage: "Was gibt " + C("switch (3) { 1 { 'eins' } 3 { 'drei' } 3 { 'nochmals drei' } default { 'andere' } }") + " aus?",
+    optionen: ["nur <code>drei</code>", "<code>drei</code> und <code>nochmals drei</code>", "<code>drei</code> und <code>andere</code>", "eine Fehlermeldung, weil 3 doppelt vorkommt"],
+    richtig: 1,
+    erklaerung: "switch prüft alle Fälle und führt jeden passenden aus. default läuft nur, wenn kein Fall passt. Mit break im ersten Block käme nur «drei»."
+  });
+  L.auswahl("#t10-u4", {
+    frage: "Was gibt " + C("for ($i = 0; $i -lt 3; $i++) { $i }; \"danach: $i\"") + " aus?",
+    optionen: ["0, 1, 2 und <code>danach: 2</code>", "0, 1, 2 und <code>danach: 3</code>", "1, 2, 3 und <code>danach: 3</code>", "0, 1, 2, 3 und <code>danach: 3</code>"],
+    richtig: 1,
+    erklaerung: "Die Schleife läuft für 0, 1 und 2. Danach zählt " + C("$i++") + " auf 3, die Bedingung " + C("3 -lt 3") + " ist falsch, und die Schleife endet. " + C("$i") + " bleibt 3."
+  });
+  L.auswahl("#t10-u5", {
+    frage: "Lea schreibt " + C("$anzahl = 0; if ($anzahl = 10) { 'zehn' } else { 'nicht zehn' }") + ". In pwsh 7 erscheint <code>zehn</code>. Warum?",
+    optionen: [
+      "Weil 0 und 10 bei if gleich behandelt werden.",
+      C("=") + " weist 10 zu, statt zu vergleichen. Der Wert 10 gilt als wahr, also läuft der if-Block. Richtig wäre " + C("-eq") + ".",
+      "Weil else immer auf einer eigenen Zeile stehen muss.",
+      "Weil Zahlen in der Bedingung in Anführungszeichen stehen müssen."
+    ],
+    richtig: 1,
+    erklaerung: "In PowerShell ist = immer eine Zuweisung, auch in der Klammer von if. Danach ist " + C("$anzahl") + " 10. Vergleichen heisst " + C("-eq") + "."
+  });
+  L.auswahl("#t10-u6", {
+    frage: "Lea will die Namen aller Logdateien und schreibt " + C("foreach ($datei in Get-ChildItem Logs) { $_.Name }") + ". Es erscheint nichts. Was ist falsch?",
+    optionen: [
+      "Get-ChildItem darf nicht in der Klammer von foreach stehen.",
+      "Im foreach-Statement heisst die Datei " + C("$datei") + ", nicht " + C("$_") + ". Richtig: " + C("$datei.Name") + ".",
+      "Es fehlt " + C("Write-Host") + " vor dem Namen.",
+      "foreach funktioniert nur mit Zahlen."
+    ],
+    richtig: 1,
+    erklaerung: C("$_") + " gibt es in der Pipeline (Where-Object, ForEach-Object) und im switch. Im foreach-Statement nennst du das Element selbst."
+  });
+  L.wahrFalsch("#t10-u7", {
+    titel: "Stimmt das?",
+    aussagen: [
+      { html: "In einem " + C("switch") + " läuft höchstens ein Block.", wahr: false, erklaerung: "Alle passenden Fälle laufen, ausser ein Block enthält break." },
+      { html: C("switch") + " beachtet Gross- und Kleinschreibung nur mit " + C("-CaseSensitive") + ".", wahr: true, erklaerung: "Ohne den Schalter vergleicht switch Texte ohne Rücksicht auf Gross und Klein." },
+      { html: "Eine " + C("while") + "-Schleife kann null Mal laufen.", wahr: true, erklaerung: "while prüft vor der ersten Runde. Ist die Bedingung schon falsch, läuft der Block nie. Nur do … while läuft mindestens einmal." },
+      { html: "Ein " + C("foreach") + "-Statement kannst du direkt mit " + C("|") + " an " + C("Measure-Object") + " weitergeben.", wahr: false, erklaerung: "PowerShell meldet «An empty pipe element is not allowed». Abhilfe: " + C("$( … )") + " darum oder ForEach-Object." },
+      { html: C("ForEach-Object -Parallel") + " gibt es auch in Windows PowerShell 5.1.", wahr: false, erklaerung: "-Parallel gibt es erst ab PowerShell 7.0." },
+      { html: "In einer " + C("for") + "-Schleife läuft der Schritt (" + C("$i++") + ") auch nach " + C("continue") + ".", wahr: true, erklaerung: "continue springt zum Schritt und dann zur Bedingung. Darum gibt es keine Endlosschleife." }
+    ]
+  });
+  L.konsole("#t10-u8", {
+    begruessung: false,
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Die erste grosse Logdatei",
+        text: "<p>Finde mit " + C("foreach") + " und " + C("break") + " die <b>erste</b> Datei im Ordner <code>Logs</code>, die grösser als 5 MB ist. Gib nur ihren Namen aus.</p>",
+        hinweis: "<p>Im Block: " + C("if ($datei.Length -gt 5MB) { … }") + ". Gib dort den Namen aus und beende danach die Schleife mit " + C("break") + ".</p>",
+        loesung: "foreach ($datei in Get-ChildItem Logs) { if ($datei.Length -gt 5MB) { $datei.Name; break } }",
+        pruefe: (ctx) => istForeachStatement(ctx.eingabe) && /\bbreak\b/i.test(ctx.eingabe) && gleicheListe(texte(ctx), ["app-2026-07.log"])
+      },
+      {
+        titel: "Countdown",
+        text: "<p>Zähle mit einer " + C("for") + "-Schleife rückwärts von 3 bis 1 und gib danach <code>Start!</code> aus. Erwartet: 3, 2, 1, Start!</p>",
+        hinweis: "<p>Start " + C("$i = 3") + ", Bedingung " + C("$i -ge 1") + ", Schritt " + C("$i--") + ". Nach der Schleife mit " + C(";") + " den Text anhängen.</p>",
+        loesung: "for ($i = 3; $i -ge 1; $i--) { $i }; 'Start!'",
+        pruefe: (ctx) => /\bfor\s*\(/i.test(ctx.eingabe) && gleicheListe(texte(ctx), ["3", "2", "1", "Start!"])
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  const einteilen = "foreach ($datei in $dateien) { if ($datei.Length -gt 1MB) { \"$($datei.Name): gross\" } else { \"$($datei.Name): klein\" } }";
+  L.film("#t10-film", {
+    phasen: ["a · Logdateien", "b · Dienste", "c · Erste grosse Datei"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Lea hat drei Fragen zu beantworten. Für jede baut sie eine kleine Schleife, Befehl für Befehl. Sie startet in ihrem Benutzerordner." },
+      { ph: 0, f: f("Get-ChildItem Logs"), say: "Zuerst schaut sie, was im Ordner Logs liegt: sieben Dateien mit ihrer Grösse in Bytes." },
+      { ph: 0, f: f("$dateien = Get-ChildItem Logs"), say: "Sie speichert die Dateien in einer Variable. Eine Zuweisung gibt nichts aus." },
+      { ph: 0, f: f("$dateien.Count"), say: "Count bestätigt: Es sind 7 Dateien." },
+      { ph: 0, f: f("foreach ($datei in $dateien) { $datei.Name }"), say: "Eine erste Schleife: Sie nimmt jede Datei und gibt ihren Namen aus. So sieht Lea, dass die Schleife jede Datei einmal erwischt." },
+      { ph: 0, f: f(einteilen), say: "Jetzt entscheidet if in jeder Runde: mehr als 1MB heisst gross, sonst übernimmt else und schreibt klein." },
+      { ph: 0, say: "Fünf Dateien sind gross. Lea will die Zahl aber nicht von Hand zählen. Ein Zähler soll das machen." },
+      { ph: 0, f: f("$gross = 0; foreach ($datei in $dateien) { if ($datei.Length -gt 1MB) { $gross++ } }; \"Grosse Dateien: $gross\""), say: "Der Zähler startet bei 0. Bei jeder grossen Datei zählt ++ eins dazu. Nach der Schleife steht das Ergebnis: 5." },
+      { ph: 0, say: "Antwort a: 5 grosse Dateien. Klein sind nur app.log und sync-fehler.log." },
+      { ph: 1, f: f("Get-Service"), say: "Für Frage b holt Lea alle Dienste. Die Spalte Status zeigt Running oder Stopped." },
+      { ph: 1, f: f("$laufend = 0; $gestoppt = 0"), say: "Zwei Zähler, beide auf 0. Auch das gibt nichts aus." },
+      { ph: 1, f: f("foreach ($dienst in Get-Service) { switch ($dienst.Status) { 'Running' { $laufend++ } 'Stopped' { $gestoppt++ } } }"), say: "Die Schleife nimmt jeden Dienst. Der switch schaut auf den Status und zählt den passenden Zähler hoch. Ausgegeben wird noch nichts." },
+      { ph: 1, f: f("\"Laufend: $laufend, gestoppt: $gestoppt\""), say: "Ein Text mit beiden Zählern zeigt das Ergebnis: 8 laufen, 4 sind gestoppt." },
+      { ph: 1, f: f("foreach ($dienst in Get-Service) { switch ($dienst.Status) { 'Stopped' { $dienst.Name } } }"), say: "Welche sind gestoppt? Ein switch mit nur einem Fall gibt die Namen der gestoppten Dienste aus." },
+      { ph: 1, say: "Antwort b: 8 laufen, 4 sind gestoppt, nämlich BITS, Fax, W32Time und WolkenriedSync." },
+      { ph: 2, f: f("foreach ($datei in $dateien) { if ($datei.Length -gt 5MB) { $datei.Name } }"), say: "Für Frage c sucht Lea Dateien über 5MB. Ohne break findet die Schleife zwei: Sie läuft bis zum Schluss weiter." },
+      { ph: 2, f: f("foreach ($datei in $dateien) { if ($datei.Length -gt 5MB) { $datei.Name; break } }"), say: "Mit break hört die Schleife beim ersten Treffer auf. Es bleibt nur app-2026-07.log." },
+      { ph: 2, say: "Zum Vergleich baut Lea die Einteilung aus Frage a noch einmal in der Pipeline, mit ForEach-Object und <code>$_</code>." },
+      { ph: 2, f: f("$dateien | ForEach-Object { if ($_.Length -gt 1MB) { \"$($_.Name): gross\" } else { \"$($_.Name): klein\" } }"), say: "Gleiche Ausgabe wie in Szene 6. Statt <code>$datei</code> heisst die aktuelle Datei hier <code>$_</code>." },
+      { ph: -1, say: "Fertig: (a) 5 grosse Logdateien, (b) 8 laufende und 4 gestoppte Dienste, (c) app-2026-07.log. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Was gibt " + C("$x = 15; if ($x -gt 10) { 'A' } elseif ($x -gt 5) { 'B' } else { 'C' }") + " aus?", o: ["A", "A und B", "B", "C"], a: 0,
+        e: "Die erste wahre Stufe gewinnt. 15 -gt 10 ist wahr, also A. elseif und else prüft PowerShell danach gar nicht mehr." },
+      { q: "Was gibt " + C("switch -Wildcard ('rechnung-2026-09.pdf') { 'rechnung*' { 'Rechnung' } '*.pdf' { 'PDF' } }") + " aus?", o: ["nur Rechnung", "nur PDF", "Rechnung und PDF", "nichts, weil -Wildcard nur * am Ende erlaubt"], a: 2,
+        e: "Beide Muster passen, und switch führt alle Treffer aus. Mit break im ersten Block käme nur «Rechnung»." },
+      { q: "Was gibt " + C("for ($i = 1; $i -le 3; $i++) { $i * 2 }") + " aus?", o: ["1, 2, 3", "2, 4, 6", "2, 4, 6, 8", "0, 2, 4"], a: 1,
+        e: C("$i") + " läuft von 1 bis 3. Jede Runde gibt das Doppelte aus." },
+      { q: "Was gibt " + C("$i = 10; while ($i -lt 5) { \"Runde $i\" }") + " aus?", o: ["Runde 10", "nichts", "Runde 10, dann endlos weiter", "eine Fehlermeldung"], a: 1,
+        e: "while prüft vor der ersten Runde: 10 -lt 5 ist falsch. Der Block läuft kein einziges Mal." },
+      { q: "Was gibt " + C("foreach ($z in 1..5) { if ($z -eq 3) { continue }; $z }") + " aus?", o: ["1, 2", "1, 2, 4, 5", "3", "1, 2, 3, 4, 5"], a: 1,
+        e: "continue überspringt nur die Runde mit 3. Danach geht es mit 4 und 5 weiter." },
+      { q: "Was gibt " + C("if ('False') { 'wahr' } else { 'falsch' }") + " aus?", o: ["wahr", "falsch", "eine Fehlermeldung"], a: 0,
+        e: "'False' ist ein Text mit fünf Zeichen, nicht der Wert " + C("$false") + ". Jeder nicht leere Text gilt als wahr." },
+      { q: "Was gibt " + C("foreach ($n in 'a','b') { foreach ($m in 1,2) { if ($m -eq 2) { break }; \"$n$m\" } }") + " aus?", o: ["a1", "a1, b1", "a1, a2, b1, b2", "a1, a2"], a: 1,
+        e: "break verlässt nur die innere Schleife. Die äussere macht mit b weiter, darum kommt auch b1." },
+      { q: "Was gibt " + C("foreach ($i in 1..3) { switch ($i) { 2 { break } }; \"nach $i\" }") + " aus?", o: ["nach 1", "nach 1, nach 3", "nach 1, nach 2, nach 3", "nichts"], a: 2,
+        e: "break im switch verlässt nur den switch. Die Schleife läuft weiter, und «nach 2» erscheint trotzdem." },
+      { q: "Wie viele Zeilen gibt " + C("Get-ChildItem Logs | ForEach-Object { if ($_.Length -lt 1KB) { $_.Name } }") + " auf Leas Rechner aus?", o: ["0", "2", "5", "7"], a: 1,
+        e: "Kleiner als 1 KB sind nur app.log (270 Bytes) und sync-fehler.log (151 Bytes)." },
+      { q: "Lea will in der Pipeline ein Objekt überspringen. Was schreibt sie in " + C("ForEach-Object { }") + "?", o: [C("continue"), C("break"), C("return"), C("exit")], a: 2,
+        e: "In ForEach-Object wirkt return wie continue: Dieses Objekt ist erledigt, das nächste kommt. break und continue würden die ganze Pipeline abbrechen." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

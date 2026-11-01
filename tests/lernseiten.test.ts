@@ -307,6 +307,11 @@ describe("Pflicht-Geruest einer Themenseite", () => {
     assert.match(fehler, /ps-konsole\.js"> gehört nach <script src="\/lernpfad\/lernpfad\.js">/)
   })
 
+  test("Erweiterung PS: ps-konsole.css vor lernpfad.css ist ein Fehler", () => {
+    const fehler = pruefe({ css: '<link rel="stylesheet" href="/lernpfad/ps-konsole.css">\n<link rel="stylesheet" href="/lernpfad/lernpfad.css">' })
+    assert.match(fehler, /ps-konsole\.css"> gehört nach <link rel="stylesheet" href="\/lernpfad\/lernpfad\.css">/)
+  })
+
   test("Erweiterung PS: ps-konsole.css ersetzt lernpfad.css nicht", () => {
     assert.match(pruefe({ css: '<link rel="stylesheet" href="/lernpfad/ps-konsole.css">' }), /lernpfad\.css/)
   })

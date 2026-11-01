@@ -24,7 +24,7 @@
 
    Sicherheit: Eingaben werden nur interpretiert, nie als JavaScript ausgeführt
    (kein eval, kein new Function). Ausgaben gelangen nur per textContent ins DOM.
-   Doku: docs/lernpfad-baukasten.md, Abschnitt 14
+   Doku: docs/lernpfad-powershell.md
    ========================================================================== */
 (function (wurzel, fabrik) {
   "use strict";
@@ -209,6 +209,18 @@
     };
   }
   const datumAus = (j, m, t, h, min, s) => new PSDatum(Date.UTC(j, m - 1, t, h || 0, min || 0, s || 0));
+
+  // Zeitzone des Spiel-Rechners: Europe/Zurich (MEZ UTC+1, Sommerzeit MESZ UTC+2 nach EU-Regel:
+  // vom letzten Sonntag im März 01:00 UTC bis zum letzten Sonntag im Oktober 01:00 UTC)
+  const STUNDE_MS = 3600000;
+  const letzterSonntag = (j, m) => { const d = new Date(Date.UTC(j, m, 0)); return d.getUTCDate() - d.getUTCDay(); }; // m = 1…12
+  function sommerzeit(utcMs) {
+    const j = new Date(utcMs).getUTCFullYear();
+    return utcMs >= Date.UTC(j, 2, letzterSonntag(j, 3), 1) && utcMs < Date.UTC(j, 9, letzterSonntag(j, 10), 1);
+  }
+  // Lokale Zeit → UTC; die doppelte Stunde im Oktober gilt wie in .NET als Winterzeit
+  const nachUtc = (lokalMs) => (sommerzeit(lokalMs - 2 * STUNDE_MS) && sommerzeit(lokalMs - STUNDE_MS) ? lokalMs - 2 * STUNDE_MS : lokalMs - STUNDE_MS);
+  const ausUtc = (utcMs) => utcMs + (sommerzeit(utcMs) ? 2 : 1) * STUNDE_MS;
   const zwei = (n) => String(n).padStart(2, "0");
 
   const DATUM_STANDARD = {
@@ -602,8 +614,141 @@
   "Get-Culture [-NoUserOverrides] [<CommonParameters>]",
   "Get-Culture [[-Name] <string[]>] [-NoUserOverrides] [<CommonParameters>]",
   "Get-Culture [-ListAvailable] [<CommonParameters>]"
+ ],
+ "New-Service": [
+  "New-Service [-Name] <string> [-BinaryPathName] <string> [-DisplayName <string>] [-Description <string>] [-StartupType <ServiceStartupType>] [-Credential <pscredential>] [-SecurityDescriptorSddl <string>] [-DependsOn <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Remove-Service": [
+  "Remove-Service [-Name] <string> [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Remove-Service [-InputObject <ServiceController>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Resume-Service": [
+  "Resume-Service [-InputObject] <ServiceController[]> [-PassThru] [-Include <string[]>] [-Exclude <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Resume-Service [-Name] <string[]> [-PassThru] [-Include <string[]>] [-Exclude <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Resume-Service -DisplayName <string[]> [-PassThru] [-Include <string[]>] [-Exclude <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Set-Service": [
+  "Set-Service [-Name] <string> [-DisplayName <string>] [-Credential <pscredential>] [-Description <string>] [-StartupType <ServiceStartupType>] [-SecurityDescriptorSddl <string>] [-Status <string>] [-Force] [-PassThru] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Set-Service [-InputObject] <ServiceController> [-DisplayName <string>] [-Credential <pscredential>] [-Description <string>] [-StartupType <ServiceStartupType>] [-SecurityDescriptorSddl <string>] [-Status <string>] [-Force] [-PassThru] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Suspend-Service": [
+  "Suspend-Service [-InputObject] <ServiceController[]> [-PassThru] [-Include <string[]>] [-Exclude <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Suspend-Service [-Name] <string[]> [-PassThru] [-Include <string[]>] [-Exclude <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Suspend-Service -DisplayName <string[]> [-PassThru] [-Include <string[]>] [-Exclude <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Clear-Item": [
+  "Clear-Item [-Path] <string[]> [-Force] [-Filter <string>] [-Include <string[]>] [-Exclude <string[]>] [-Credential <pscredential>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Clear-Item -LiteralPath <string[]> [-Force] [-Filter <string>] [-Include <string[]>] [-Exclude <string[]>] [-Credential <pscredential>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Invoke-Item": [
+  "Invoke-Item [-Path] <string[]> [-Filter <string>] [-Include <string[]>] [-Exclude <string[]>] [-Credential <pscredential>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Invoke-Item -LiteralPath <string[]> [-Filter <string>] [-Include <string[]>] [-Exclude <string[]>] [-Credential <pscredential>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Set-Item": [
+  "Set-Item [-Path] <string[]> [[-Value] <Object>] [-Force] [-PassThru] [-Filter <string>] [-Include <string[]>] [-Exclude <string[]>] [-Credential <pscredential>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Set-Item [[-Value] <Object>] -LiteralPath <string[]> [-Force] [-PassThru] [-Filter <string>] [-Include <string[]>] [-Exclude <string[]>] [-Credential <pscredential>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Debug-Process": [
+  "Debug-Process [-Name] <string[]> [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Debug-Process [-Id] <int[]> [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Debug-Process -InputObject <Process[]> [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Start-Process": [
+  "Start-Process [-FilePath] <string> [[-ArgumentList] <string[]>] [-Credential <pscredential>] [-WorkingDirectory <string>] [-LoadUserProfile] [-NoNewWindow] [-PassThru] [-RedirectStandardError <string>] [-RedirectStandardInput <string>] [-RedirectStandardOutput <string>] [-WindowStyle <ProcessWindowStyle>] [-Wait] [-UseNewEnvironment] [-Environment <hashtable>] [-WhatIf] [-Confirm] [<CommonParameters>]",
+  "Start-Process [-FilePath] <string> [[-ArgumentList] <string[]>] [-WorkingDirectory <string>] [-PassThru] [-Verb <string>] [-WindowStyle <ProcessWindowStyle>] [-Wait] [-Environment <hashtable>] [-WhatIf] [-Confirm] [<CommonParameters>]"
+ ],
+ "Wait-Process": [
+  "Wait-Process [-Name] <string[]> [[-Timeout] <int>] [-Any] [-PassThru] [<CommonParameters>]",
+  "Wait-Process [-Id] <int[]> [[-Timeout] <int>] [-Any] [-PassThru] [<CommonParameters>]",
+  "Wait-Process [[-Timeout] <int>] -InputObject <Process[]> [-Any] [-PassThru] [<CommonParameters>]"
+ ],
+ "Pop-Location": [
+  "Pop-Location [-PassThru] [-StackName <string>] [<CommonParameters>]"
+ ],
+ "Push-Location": [
+  "Push-Location [[-Path] <string>] [-PassThru] [-StackName <string>] [<CommonParameters>]",
+  "Push-Location [-LiteralPath <string>] [-PassThru] [-StackName <string>] [<CommonParameters>]"
  ]
 };
+  // Parameter aus pwsh 7.6.1 in dessen Reihenfolge, mit Zweitnamen ((Get-Command X).Parameters.Values, ohne gemeinsame
+  // Parameter). Reihenfolge und Zweitnamen zählen beim Abkürzen wie in pwsh: -P passt bei Get-ChildItem auch auf
+  // -LiteralPath (Zweitname PSPath) und wird darum als «-Path -ProgressAction -PipelineVariable -LiteralPath» gemeldet.
+  const PARAMETER_PWSH = {
+    "Get-ChildItem": "Path LiteralPath=PSPath,LP Filter Include Exclude Recurse=s,r Depth Force Name Attributes FollowSymlink Directory=ad File=af Hidden=ah,h ReadOnly=ar System=as",
+    "Get-Item": "Path LiteralPath=PSPath,LP Filter Include Exclude Force Credential Stream",
+    "Test-Path": "Path LiteralPath=PSPath,LP Filter Include Exclude PathType=Type IsValid Credential OlderThan NewerThan",
+    "Join-Path": "Path=PSPath ChildPath AdditionalChildPath Resolve Credential",
+    "Split-Path": "Path LiteralPath=PSPath,LP Qualifier NoQualifier Parent Leaf LeafBase Extension Resolve IsAbsolute Credential",
+    "Resolve-Path": "Path LiteralPath=PSPath,LP Relative RelativeBasePath Force Credential",
+    "Get-Location": "PSProvider PSDrive Stack StackName",
+    "Set-Location": "Path LiteralPath=PSPath,LP PassThru StackName",
+    "New-Item": "Path Name ItemType=Type Value=Target Force Credential",
+    "Copy-Item": "Path LiteralPath=PSPath,LP Destination Container Force Filter Include Exclude Recurse PassThru Credential FromSession ToSession",
+    "Move-Item": "Path LiteralPath=PSPath,LP Destination Force Filter Include Exclude PassThru Credential",
+    "Rename-Item": "Path LiteralPath=PSPath,LP NewName Force PassThru Credential",
+    "Remove-Item": "Path LiteralPath=PSPath,LP Filter Include Exclude Recurse Force Credential Stream",
+    "Get-Content": "ReadCount TotalCount=First,Head Tail=Last Path LiteralPath=PSPath,LP Filter Include Exclude Force Credential Delimiter Wait Raw Encoding AsByteStream Stream",
+    "Set-Content": "Value PassThru Path LiteralPath=PSPath,LP Filter Include Exclude Force Credential NoNewline Encoding AsByteStream Stream",
+    "Add-Content": "Value PassThru Path LiteralPath=PSPath,LP Filter Include Exclude Force Credential NoNewline Encoding AsByteStream Stream",
+    "Clear-Content": "Path LiteralPath=PSPath,LP Filter Include Exclude Force Credential Stream",
+    "Out-File": "FilePath=Path LiteralPath=PSPath,LP Encoding Append Force NoClobber=NoOverwrite Width NoNewline InputObject",
+    "Where-Object": "InputObject FilterScript Property Value EQ=IEQ CEQ NE=INE CNE GT=IGT CGT LT=ILT CLT GE=IGE CGE LE=ILE CLE Like=ILike CLike NotLike=INotLike CNotLike Match=IMatch CMatch NotMatch=INotMatch CNotMatch Contains=IContains CContains NotContains=INotContains CNotContains In=IIn CIn NotIn=INotIn CNotIn Is IsNot Not",
+    "ForEach-Object": "InputObject Begin Process End RemainingScripts MemberName ArgumentList=Args Parallel ThrottleLimit TimeoutSeconds AsJob UseNewRunspace",
+    "Sort-Object": "Stable Descending Unique Top Bottom InputObject Property Culture CaseSensitive",
+    "Select-Object": "InputObject Property ExcludeProperty ExpandProperty Unique CaseInsensitive Last First Skip SkipLast Wait Index SkipIndex",
+    "Measure-Object": "InputObject Property StandardDeviation Sum AllStats Average Maximum Minimum Line Word Character IgnoreWhiteSpace",
+    "Group-Object": "NoElement AsHashTable=AHT AsString InputObject Property Culture CaseSensitive",
+    "Format-Table": "AutoSize RepeatHeader HideTableHeaders Wrap Property GroupBy View ShowError DisplayError Force Expand InputObject",
+    "Format-List": "Property GroupBy View ShowError DisplayError Force Expand InputObject",
+    "Format-Wide": "Property AutoSize Column GroupBy View ShowError DisplayError Force Expand InputObject",
+    "Export-Csv": "InputObject Path LiteralPath=PSPath,LP Force NoClobber=NoOverwrite Encoding Append Delimiter UseCulture IncludeTypeInformation=ITI NoTypeInformation=NTI QuoteFields=QF UseQuotes=UQ NoHeader",
+    "ConvertTo-Csv": "InputObject Delimiter UseCulture IncludeTypeInformation=ITI NoTypeInformation=NTI QuoteFields=QF UseQuotes=UQ NoHeader",
+    "Import-Csv": "Delimiter Path LiteralPath=PSPath,LP UseCulture Header Encoding",
+    "ConvertFrom-Csv": "Delimiter UseCulture InputObject Header",
+    "ConvertTo-Json": "InputObject Depth Compress EnumsAsStrings AsArray EscapeHandling",
+    "ConvertFrom-Json": "InputObject AsHashtable Depth NoEnumerate DateKind",
+    "ConvertTo-Html": "InputObject Property Body Head Title As CssUri=cu,uri Fragment PostContent PreContent Meta Charset Transitional",
+    "Write-Host": "Object=Msg,Message NoNewline Separator ForegroundColor BackgroundColor",
+    "Write-Output": "InputObject NoEnumerate",
+    "Write-Error": "Exception Message=Msg ErrorRecord Category ErrorId TargetObject RecommendedAction CategoryActivity=Activity CategoryReason=Reason CategoryTargetName=TargetName CategoryTargetType=TargetType",
+    "Write-Warning": "Message=Msg",
+    "Write-Verbose": "Message=Msg",
+    "Out-Null": "InputObject",
+    "Out-Host": "Paging InputObject",
+    "Out-String": "Stream Width NoNewline InputObject",
+    "Start-Sleep": "Seconds Milliseconds=ms Duration=ts",
+    "Get-Date": "Date=LastWriteTime UnixTimeSeconds=UnixTime Year Month Day Hour Minute Second Millisecond DisplayHint UFormat Format AsUTC",
+    "New-TimeSpan": "Start=LastWriteTime End Days Hours Minutes Seconds Milliseconds",
+    "Get-Culture": "Name NoUserOverrides ListAvailable",
+    "Get-Member": "InputObject Name MemberType=Type View Static Force",
+    "Get-Command": "Name Verb Noun Module=PSSnapin ExcludeModule FullyQualifiedModule CommandType=Type TotalCount Syntax ShowCommandInfo ArgumentList=Args All ListImported ParameterName ParameterType UseFuzzyMatching FuzzyMinimumDistance UseAbbreviationExpansion",
+    "Get-Alias": "Name Exclude Scope Definition",
+    "Get-Verb": "Verb Group",
+    "Get-History": "Id Count",
+    "Get-Process": "Name=ProcessName Id=PID InputObject IncludeUserName Module FileVersionInfo=FV,FVI",
+    "Stop-Process": "Name=ProcessName Id InputObject PassThru Force",
+    "Get-Service": "Name=ServiceName DependentServices=DS RequiredServices=SDO,ServicesDependedOn DisplayName Include Exclude InputObject",
+    "Start-Service": "Name=ServiceName InputObject PassThru DisplayName Include Exclude",
+    "Stop-Service": "Force NoWait Name=ServiceName InputObject PassThru DisplayName Include Exclude",
+    "Restart-Service": "Force Name=ServiceName InputObject PassThru DisplayName Include Exclude",
+    "Test-Connection": "Ping IPv4 IPv6 ResolveDestination Source MaxHops=Ttl,TimeToLive,Hops Count Delay BufferSize=Size,Bytes,BS DontFragment Repeat=Continuous Quiet TimeoutSeconds TargetName=ComputerName MtuSize=MtuSizeDetect Traceroute TcpPort Detailed",
+    "Get-PSDrive": "Name LiteralName Scope PSProvider",
+    "Get-ExecutionPolicy": "Scope List",
+    "Set-ExecutionPolicy": "ExecutionPolicy Scope Force",
+    "Get-Help": "Name Path Category Detailed Full Examples Parameter Component Functionality Role Online ShowWindow"
+  };
+  // Dynamische Parameter (Laufwerk C:, FileSystem). pwsh zieht sie beim Abkürzen erst heran, wenn kein fester Parameter passt.
+  const DYNAMISCHE_PARAMETER = {
+    "Get-ChildItem": "Attributes,FollowSymlink,Directory,File,Hidden,ReadOnly,System",
+    "Get-Item": "Stream",
+    "Test-Path": "OlderThan,NewerThan",
+    "Copy-Item": "FromSession,ToSession",
+    "Remove-Item": "Stream",
+    "Get-Content": "Delimiter,Wait,Raw,Encoding,AsByteStream,Stream",
+    "Set-Content": "NoNewline,Encoding,AsByteStream,Stream",
+    "Add-Content": "NoNewline,Encoding,AsByteStream,Stream",
+    "Clear-Content": "Stream"
+  };
   const MEMBER_DATEN = {
  "System.String": "Clone|Method|System.Object Clone(), System.Object ICloneable.Clone()\nCompareTo|Method|int CompareTo(System.Object value), int CompareTo(string strB), int IComparable.CompareTo(System.Object obj), int IComparable[string].CompareTo(string other)\nContains|Method|bool Contains(string value), bool Contains(string value, System.StringComparison comparisonType), bool Contains(char value), bool Contains(char value, System.StringComparison comparisonType)\nCopyTo|Method|void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count), void CopyTo(System.Span[char] destination)\nEndsWith|Method|bool EndsWith(string value), bool EndsWith(string value, System.StringComparison comparisonType), bool EndsWith(string value, bool ignoreCase, cultureinfo culture), bool EndsWith(char value)\nEnumerateRunes|Method|System.Text.StringRuneEnumerator EnumerateRunes()\nEquals|Method|bool Equals(System.Object obj), bool Equals(string value), bool Equals(string value, System.StringComparison comparisonType), bool IEquatable[string].Equals(string other)\nGetEnumerator|Method|System.CharEnumerator GetEnumerator(), System.Collections.IEnumerator IEnumerable.GetEnumerator(), System.Collections.Generic.IEnumerator[char] IEnumerable[char].GetEnumerator()\nGetHashCode|Method|int GetHashCode(), int GetHashCode(System.StringComparison comparisonType)\nGetPinnableReference|Method|System.Char&, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e GetPinnableReference()\nGetType|Method|type GetType()\nGetTypeCode|Method|System.TypeCode GetTypeCode(), System.TypeCode IConvertible.GetTypeCode()\nIndexOf|Method|int IndexOf(char value), int IndexOf(char value, int startIndex), int IndexOf(char value, System.StringComparison comparisonType), int IndexOf(char value, int startIndex, int count), int IndexOf(string value), int IndexOf(string value, int startIndex), int IndexOf(string value, int startIndex, int count), int IndexOf(string value, System.StringComparison comparisonType), int IndexOf(string value, int startIndex, System.StringComparison comparisonType), int IndexOf(string value, int startIndex, int count, System.StringComparison comparisonType)\nIndexOfAny|Method|int IndexOfAny(char[] anyOf), int IndexOfAny(char[] anyOf, int startIndex), int IndexOfAny(char[] anyOf, int startIndex, int count)\nInsert|Method|string Insert(int startIndex, string value)\nIsNormalized|Method|bool IsNormalized(), bool IsNormalized(System.Text.NormalizationForm normalizationForm)\nLastIndexOf|Method|int LastIndexOf(char value), int LastIndexOf(char value, int startIndex), int LastIndexOf(char value, int startIndex, int count), int LastIndexOf(string value), int LastIndexOf(string value, int startIndex), int LastIndexOf(string value, int startIndex, int count), int LastIndexOf(string value, System.StringComparison comparisonType), int LastIndexOf(string value, int startIndex, System.StringComparison comparisonType), int LastIndexOf(string value, int startIndex, int count, System.StringComparison comparisonType)\nLastIndexOfAny|Method|int LastIndexOfAny(char[] anyOf), int LastIndexOfAny(char[] anyOf, int startIndex), int LastIndexOfAny(char[] anyOf, int startIndex, int count)\nNormalize|Method|string Normalize(), string Normalize(System.Text.NormalizationForm normalizationForm)\nPadLeft|Method|string PadLeft(int totalWidth), string PadLeft(int totalWidth, char paddingChar)\nPadRight|Method|string PadRight(int totalWidth), string PadRight(int totalWidth, char paddingChar)\nRemove|Method|string Remove(int startIndex, int count), string Remove(int startIndex)\nReplace|Method|string Replace(string oldValue, string newValue, bool ignoreCase, cultureinfo culture), string Replace(string oldValue, string newValue, System.StringComparison comparisonType), string Replace(char oldChar, char newChar), string Replace(string oldValue, string newValue)\nReplaceLineEndings|Method|string ReplaceLineEndings(), string ReplaceLineEndings(string replacementText)\nSplit|Method|string[] Split(char separator, System.StringSplitOptions options = System.StringSplitOptions.None), string[] Split(char separator, int count, System.StringSplitOptions options = System.StringSplitOptions.None), string[] Split(Params char[] separator), string[] Split(System.ReadOnlySpan[char] separator), string[] Split(char[] separator, int count), string[] Split(char[] separator, System.StringSplitOptions options), string[] Split(char[] separator, int count, System.StringSplitOptions options), string[] Split(string separator, System.StringSplitOptions options = System.StringSplitOptions.None), string[] Split(string separator, int count, System.StringSplitOptions options = System.StringSplitOptions.None), string[] Split(string[] separator, System.StringSplitOptions options), string[] Split(string[] separator, int count, System.StringSplitOptions options)\nStartsWith|Method|bool StartsWith(string value), bool StartsWith(string value, System.StringComparison comparisonType), bool StartsWith(string value, bool ignoreCase, cultureinfo culture), bool StartsWith(char value)\nSubstring|Method|string Substring(int startIndex), string Substring(int startIndex, int length)\nToBoolean|Method|bool IConvertible.ToBoolean(System.IFormatProvider provider)\nToByte|Method|byte IConvertible.ToByte(System.IFormatProvider provider)\nToChar|Method|char IConvertible.ToChar(System.IFormatProvider provider)\nToCharArray|Method|char[] ToCharArray(), char[] ToCharArray(int startIndex, int length)\nToDateTime|Method|datetime IConvertible.ToDateTime(System.IFormatProvider provider)\nToDecimal|Method|decimal IConvertible.ToDecimal(System.IFormatProvider provider)\nToDouble|Method|double IConvertible.ToDouble(System.IFormatProvider provider)\nToInt16|Method|short IConvertible.ToInt16(System.IFormatProvider provider)\nToInt32|Method|int IConvertible.ToInt32(System.IFormatProvider provider)\nToInt64|Method|long IConvertible.ToInt64(System.IFormatProvider provider)\nToLower|Method|string ToLower(), string ToLower(cultureinfo culture)\nToLowerInvariant|Method|string ToLowerInvariant()\nToSByte|Method|sbyte IConvertible.ToSByte(System.IFormatProvider provider)\nToSingle|Method|float IConvertible.ToSingle(System.IFormatProvider provider)\nToString|Method|string ToString(), string ToString(System.IFormatProvider provider), string IConvertible.ToString(System.IFormatProvider provider)\nToType|Method|System.Object IConvertible.ToType(type conversionType, System.IFormatProvider provider)\nToUInt16|Method|ushort IConvertible.ToUInt16(System.IFormatProvider provider)\nToUInt32|Method|uint IConvertible.ToUInt32(System.IFormatProvider provider)\nToUInt64|Method|ulong IConvertible.ToUInt64(System.IFormatProvider provider)\nToUpper|Method|string ToUpper(), string ToUpper(cultureinfo culture)\nToUpperInvariant|Method|string ToUpperInvariant()\nTrim|Method|string Trim(), string Trim(char trimChar), string Trim(Params char[] trimChars), string Trim(System.ReadOnlySpan[char] trimChars)\nTrimEnd|Method|string TrimEnd(), string TrimEnd(char trimChar), string TrimEnd(Params char[] trimChars), string TrimEnd(System.ReadOnlySpan[char] trimChars)\nTrimStart|Method|string TrimStart(), string TrimStart(char trimChar), string TrimStart(Params char[] trimChars), string TrimStart(System.ReadOnlySpan[char] trimChars)\nTryCopyTo|Method|bool TryCopyTo(System.Span[char] destination)\nChars|ParameterizedProperty|char Chars(int index) {get;}\nLength|Property|int Length {get;}",
  "System.Int32": "CompareTo|Method|int CompareTo(System.Object value), int CompareTo(int value), int IComparable.CompareTo(System.Object obj), int IComparable[int].CompareTo(int other)\nEquals|Method|bool Equals(System.Object obj), bool Equals(int obj), bool IEquatable[int].Equals(int other)\nGetHashCode|Method|int GetHashCode()\nGetType|Method|type GetType()\nToString|Method|string ToString(), string ToString(string format), string ToString(System.IFormatProvider provider), string ToString(string format, System.IFormatProvider provider), string IConvertible.ToString(System.IFormatProvider provider), string IFormattable.ToString(string format, System.IFormatProvider formatProvider)",
@@ -3002,13 +3147,15 @@
 
     befehlFinden(name) {
       const k = klein(name);
-      if (/[\\/]/.test(name) || /\.ps1$/i.test(name)) return { art: "pfad", name: name };
+      // Funktionen wie «cd\» enthalten einen Backslash und sind trotzdem kein Pfad
+      if ((/[\\/]/.test(name) && !CMDLETS[k]) || /\.ps1$/i.test(name)) return { art: "pfad", name: name };
       const alias = ALIASE[k];
       if (alias) {
         const ziel = this.befehlFinden(alias) || { art: "echt", name: alias };
         return Object.assign(ziel, { alias: name });
       }
       if (this.funktionen.has(k)) return { art: "funktion", f: this.funktionen.get(k), name: this.funktionen.get(k).name };
+      if (CMDLETS[k] && CMDLETS[k].nurBekannt) return { art: "echt", name: CMDLETS[k].name };
       if (CMDLETS[k]) return { art: "cmdlet", def: CMDLETS[k], name: CMDLETS[k].name };
       if (EXTERN[k] || EXTERN[k.replace(/\.exe$/, "")]) return { art: "extern", def: EXTERN[k] || EXTERN[k.replace(/\.exe$/, "")], name: name };
       if (ECHTE_BEFEHLE.has(k)) return { art: "echt", name: ECHTE_BEFEHLE.get(k) };
@@ -3358,26 +3505,56 @@
     const genannt = [];
     const positionell = [];
     const hatWhatIf = meta.alle.has("whatif");
-    const eigene = Array.from(meta.alle.values()).filter((p) => !(def.dynamisch || []).includes(p.name));
-    const alleNamen = eigene.map((p) => p.name).concat(COMMON_PARAMETER);
+    const befehlsId = "Microsoft.PowerShell.Commands." + def.name.replace("-", "") + "Command";
+    // Suchliste in der Reihenfolge von pwsh: eigene Parameter, gemeinsame, WhatIf/Confirm; dynamische getrennt
+    const eintrag = (name, aliase, eigen) => ({ name: name, aliase: aliase || [], eigen: eigen });
+    const dynamisch = def.dynamisch || [];
+    const rang = (p) => { const i = (def.reihenfolge || []).indexOf(p.name); return i < 0 ? 1e6 : i; };
+    const statisch = Array.from(meta.alle.values()).filter((p) => !dynamisch.includes(p.name) && !["whatif", "confirm"].includes(klein(p.name)))
+      .sort((a, b) => rang(a) - rang(b))
+      .map((p) => eintrag(p.name, def.paramAliase && def.paramAliase[p.name], true))
+      .concat(COMMON_PARAMETER.map((c) => eintrag(c, Object.keys(COMMON_ALIASE).filter((a) => COMMON_ALIASE[a] === c), false)))
+      .concat(hatWhatIf ? [eintrag("WhatIf", ["wi"], false)] : [], meta.alle.has("confirm") ? [eintrag("Confirm", ["cf"], false)] : []);
+    const dynListe = dynamisch.filter((d) => meta.alle.has(klein(d))).map((d) => eintrag(d, def.paramAliase && def.paramAliase[d], true));
+    // Wie MergedCommandParameterMetadata.GetMatchingParameter in pwsh: genauer Name oder Zweitname gewinnt,
+    // sonst alle Namen mit diesem Anfang und danach alle Zweitnamen mit diesem Anfang
+    const suchen = (n, liste) => {
+      const treffer = [];
+      for (const p of liste) {
+        if (klein(p.name) === n) return [p];
+        if (klein(p.name).startsWith(n)) treffer.push(p);
+      }
+      for (const p of liste) {
+        for (const a of p.aliase) {
+          if (klein(a) === n) return [p];
+          if (klein(a).startsWith(n) && !treffer.includes(p)) treffer.push(p);
+        }
+      }
+      return treffer;
+    };
+    // null: kein Parameter passt (pwsh meldet das erst bei der Bindung nach Position)
     const finde = (roh) => {
       const n = klein(roh);
-      if (meta.alle.has(n)) return meta.alle.get(n);
-      const pAlias = def.paramAliase && Object.keys(def.paramAliase).find((k) => def.paramAliase[k].some((a) => klein(a) === n));
-      if (pAlias) return meta.alle.get(klein(pAlias));
-      const c = COMMON_PARAMETER.find((x) => klein(x) === n) || (COMMON_ALIASE[n] && (hatWhatIf || !["wi", "cf"].includes(n)) ? COMMON_ALIASE[n] : null);
-      if (c) return { name: c, typ: COMMON_TYPEN[c] || "string", schalter: COMMON_TYPEN[c] === "switch", common: true };
-      let treffer = alleNamen.filter((x) => klein(x).startsWith(n));
-      const dyn = (def.dynamisch || []).filter((x) => klein(x).startsWith(n));
-      if (!treffer.length && dyn.length === 1) treffer = dyn;
-      if (treffer.length === 1) return finde(treffer[0]);
-      if (treffer.length > 1) throw fehler("Parameter cannot be processed because the parameter name '" + roh + "' is ambiguous. Possible matches include: " + treffer.map((x) => "-" + x).join(" ") + ".", "AmbiguousParameter,Microsoft.PowerShell.Commands." + def.name.replace("-", "") + "Command");
-      throw fehler("A parameter cannot be found that matches parameter name '" + roh + "'.", "NamedParameterNotFound,Microsoft.PowerShell.Commands." + def.name.replace("-", "") + "Command");
+      let treffer = suchen(n, statisch);
+      if (!treffer.length && dynListe.length) treffer = suchen(n, statisch.concat(dynListe));
+      if (treffer.length > 1) {
+        // Eigene Parameter gehen den gemeinsamen vor (-I ist bei Get-ChildItem -Include, nicht -InformationAction)
+        const eigen = treffer.filter((p) => p.eigen);
+        if (eigen.length === 1) treffer = eigen;
+        else throw fehler("Parameter cannot be processed because the parameter name '" + roh + "' is ambiguous. Possible matches include: " + treffer.map((x) => "-" + x.name).join(" ") + ".", "AmbiguousParameter," + befehlsId);
+      }
+      if (!treffer.length) return null;
+      const name = treffer[0].name;
+      if (meta.alle.has(klein(name))) return meta.alle.get(klein(name));
+      return { name: name, typ: COMMON_TYPEN[name] || "string", schalter: COMMON_TYPEN[name] === "switch", common: true };
     };
+    const unbekannt = (roh) => fehler("A parameter cannot be found that matches parameter name '" + roh + "'.", "NamedParameterNotFound," + befehlsId);
     for (let i = 0; i < argumente.length; i++) {
       const a = argumente[i];
       if (a.art !== "param") { positionell.push(a); continue; }
       const p = finde(a.name);
+      // Unbekannter Name: Platzhalter in der Reihe der Positionswerte (der folgende Wert bleibt ein Positionswert)
+      if (!p) { positionell.push({ art: "unbekannt", name: a.name }); continue; }
       let wert;
       if (p.schalter) wert = a.doppelpunkt ? alsBool(a.wert) : true;
       else if (a.doppelpunkt) wert = a.wert;
@@ -3393,6 +3570,7 @@
     const passend = meta.saetze.filter((s) => genannt.every((n) => s.params.some((p) => klein(p.name) === n)));
     if (!passend.length && genannt.length) throw fehler("Parameter set cannot be resolved using the specified named parameters. One or more parameters issued cannot be used together or an insufficient number of parameters were provided.", "AmbiguousParameterSet");
     const kandidaten = passend.length ? passend : meta.saetze;
+    const werte = positionell.filter((a) => a.art !== "unbekannt");
     const freiIn = (s) => s.params.filter((p) => p.position !== null && gebunden[klein(p.name)] === undefined).sort((a, b) => a.position - b.position);
     const kleinstePos = Math.min.apply(null, kandidaten.map((s) => (freiIn(s)[0] ? freiIn(s)[0].position : Infinity)));
     // Passt der Wert zum Typ? (Skriptblock nur an Skriptblock-Parameter, Text nicht an Skriptblock)
@@ -3405,20 +3583,24 @@
     };
     const satzOk = (s) => {
       const pos = freiIn(s);
-      if (positionell.length > pos.length && !(def.restParameter && pos.length)) return false;
-      if (positionell.length && pos[0].position !== kleinstePos) return false;
-      if (positionell.some((a, k) => pos[k] && !kompatibel(pos[k], a.wert))) return false;
+      if (werte.length > pos.length && !(def.restParameter && pos.length)) return false;
+      if (werte.length && pos[0].position !== kleinstePos) return false;
+      if (werte.some((a, k) => pos[k] && !kompatibel(pos[k], a.wert))) return false;
       return s.params.every((p) => !p.pflicht || p.position !== null || gebunden[klein(p.name)] !== undefined);
     };
-    const satz = kandidaten.find(satzOk) || kandidaten.find((s) => s.params.filter((p) => p.position !== null).length >= positionell.length) || kandidaten[0];
+    const satz = kandidaten.find(satzOk) || kandidaten.find((s) => s.params.filter((p) => p.position !== null).length >= werte.length) || kandidaten[0];
     const frei = satz ? satz.params.filter((p) => p.position !== null && gebunden[klein(p.name)] === undefined).sort((a, b) => a.position - b.position) : [];
+    const ersterUnbekannt = positionell.find((a) => a.art === "unbekannt");
+    if (def.restParameter && ersterUnbekannt) throw unbekannt(ersterUnbekannt.name);
     if (def.restParameter && positionell.length > 1 && gebunden[klein(def.restParameter)] === undefined) {
       // Write-Host 'a' 'b': übrige Argumente gehören zum Rest-Parameter
       gebunden[klein(def.restParameter)] = positionell.map((x) => x.wert);
       gebunden._rest = positionell.map((x) => x.wert);
       positionell.length = 0;
     }
+    // Wie pwsh in Reihenfolge: ein unbekannter Name fällt erst hier auf («x y z -foo» meldet zuerst «z»)
     for (const a of positionell) {
+      if (a.art === "unbekannt") throw unbekannt(a.name);
       const p = frei.shift();
       if (!p) throw fehler("A positional parameter cannot be found that accepts argument '" + textVon(Array.isArray(a.wert) ? a.wert.map(textVon).join(" ") : a.wert) + "'.", "PositionalParameterNotFound");
       gebunden[klein(p.name)] = paramUmwandeln(def, p, a.wert, fehler);
@@ -3439,7 +3621,7 @@
     const arr = kurz.endsWith("[]");
     const basis = arr ? kurz.slice(0, -2) : kurz;
     const info = typSuchen(basis);
-    const name = info ? info.voll : basis.includes(".") ? basis : basis.charAt(0).toUpperCase() + basis.slice(1);
+    const name = klein(basis) === "uint" ? "System.UInt32" : info ? info.voll : basis.includes(".") ? basis : basis.charAt(0).toUpperCase() + basis.slice(1);
     return name + (arr ? "[]" : "");
   }
 
@@ -3742,11 +3924,21 @@
       return out;
     }
     const x = konvertieren(a, T_INT), y = konvertieren(b, T_INT);
-    if (Math.abs(y - x) > 100000) throw ungueltig("Der Bereich " + x + ".." + y + " ist für den Simulator zu gross (höchstens 100000 Zahlen).");
+    if (Math.abs(y - x) > MAX_ELEMENTE) throw ungueltig("Der Bereich " + x + ".." + y + " ist für den Simulator zu gross (höchstens " + MAX_ELEMENTE + " Zahlen).");
     const out = [];
     const s = x <= y ? 1 : -1;
     for (let i = x; s > 0 ? i <= y : i >= y; i += s) out.push(i);
     return out;
+  }
+
+  // Grenzen für Arrays und Strings: schützen den Browser-Tab vor übergrossen Ergebnissen
+  const MAX_ELEMENTE = 100000;
+  const MAX_TEXTLAENGE = 10000000;
+  function elementeGrenze(n) {
+    if (n > MAX_ELEMENTE) throw ungueltig("Das Array hätte " + n + " Elemente und ist für den Simulator zu gross (höchstens " + MAX_ELEMENTE + ").");
+  }
+  function textGrenze(n) {
+    if (n > MAX_TEXTLAENGE) throw ungueltig("Der String hätte " + n + " Zeichen und ist für den Simulator zu gross (höchstens " + MAX_TEXTLAENGE + ").");
   }
 
   // + - * / % wie PowerShell (der linke Typ entscheidet)
@@ -3755,7 +3947,7 @@
     const kannNicht = (x) => ungueltig("Method invocation failed because [" + (Array.isArray(x) ? "System.Object[]" : typNameVon(x)) + "] does not contain a method named '" + opName + "'.", { id: "MethodNotFound" });
     if (op === "+") {
       if (a === null) return b;
-      if (Array.isArray(a)) return a.concat(Array.isArray(b) ? b : [b]);
+      if (Array.isArray(a)) { elementeGrenze(a.length + (Array.isArray(b) ? b.length : 1)); return a.concat(Array.isArray(b) ? b : [b]); }
       if (a instanceof PSHashtable) {
         if (!(b instanceof PSHashtable)) throw ungueltig("A hash table can only be added to another hash table.");
         const h = a.kopie();
@@ -3765,7 +3957,7 @@
         });
         return h;
       }
-      if (typeof a === "string") return a + textImString(b);
+      if (typeof a === "string") { const rechts = textImString(b); textGrenze(a.length + rechts.length); return a + rechts; }
       if (a instanceof PSDatum && b instanceof PSZeitspanne) return new PSDatum(a.ms + b.ms);
       if (a instanceof PSZeitspanne && b instanceof PSZeitspanne) return new PSZeitspanne(a.ms + b.ms);
     }
@@ -3775,8 +3967,21 @@
       if (a instanceof PSZeitspanne && b instanceof PSZeitspanne) return new PSZeitspanne(a.ms - b.ms);
     }
     if (op === "*") {
-      if (typeof a === "string") { const n = zahlWert(konvertieren(b, T_INT)); return n > 0 ? a.repeat(Math.min(n, 100000)) : ""; }
-      if (Array.isArray(a)) { const n = zahlWert(konvertieren(b, T_INT)); let out = []; for (let i = 0; i < n; i++) out = out.concat(a); return out; }
+      if (typeof a === "string") {
+        const n = Math.min(zahlWert(konvertieren(b, T_INT)), MAX_ELEMENTE);
+        if (n <= 0) return "";
+        textGrenze(a.length * n);
+        return a.repeat(n);
+      }
+      if (Array.isArray(a)) {
+        const n = zahlWert(konvertieren(b, T_INT));
+        if (n <= 0 || !a.length) return [];
+        elementeGrenze(a.length * n);
+        // in einem Schritt füllen statt concat in der Schleife (sonst quadratische Laufzeit)
+        const out = new Array(a.length * n);
+        for (let i = 0; i < out.length; i++) out[i] = a[i % a.length];
+        return out;
+      }
     }
     if (Array.isArray(a) || a instanceof PSHashtable || a instanceof PSObjekt || a instanceof PSDatum || a instanceof Skriptblock || a instanceof PSZeitspanne) throw kannNicht(a);
     if (a === null) a = 0;
@@ -4653,7 +4858,9 @@
   /* ======================================================================
      8. Cmdlet-Tabelle
      Jedes Cmdlet: { name, modul, syntax (echte Syntaxzeilen aus pwsh 7.6), pipeline (Parameter,
-     die Pipeline-Eingabe annehmen), dynamisch, paramAliase, run(ctx) → Ausgabeobjekte }.
+     die Pipeline-Eingabe annehmen), run(ctx) → Ausgabeobjekte }. Reihenfolge, Zweitnamen (paramAliase) und dynamische
+     Parameter (dynamisch) kommen aus PARAMETER_PWSH und DYNAMISCHE_PARAMETER. nurBekannt: echtes Cmdlet, das
+     Get-Command auflistet, das der Simulator aber nicht nachbaut (Aufruf → Hinweis).
      ctx: p (gebundene Parameter, Namen klein), eingabe (Pipeline), aus(), fehler(), abbruch(),
           sollen(operation, ziel) für -WhatIf/-Confirm, host(), hinweis(), warnung()
      ====================================================================== */
@@ -4666,6 +4873,15 @@
     def.version = modul === "C" ? "7.6.0.500" : modul === "F" ? "" : "7.0.0.0";
     def.art = modul === "F" ? "Function" : "Cmdlet";
     def.syntax = def.syntax || SYNTAX[name] || [name + " [<CommonParameters>]"];
+    // "Path LiteralPath=PSPath,LP" → reihenfolge ["Path", "LiteralPath"], paramAliase { LiteralPath: ["PSPath", "LP"] }
+    def.paramAliase = {};
+    def.reihenfolge = [];
+    (PARAMETER_PWSH[name] || "").split(" ").filter(Boolean).forEach((t) => {
+      const [p, a] = t.split("=");
+      def.reihenfolge.push(p);
+      if (a) def.paramAliase[p] = a.split(",");
+    });
+    def.dynamisch = DYNAMISCHE_PARAMETER[name] ? DYNAMISCHE_PARAMETER[name].split(",") : [];
     CMDLETS[klein(name)] = def;
     return def;
   }
@@ -4696,7 +4912,7 @@
     const attribute = [k.nurLesen ? "ReadOnly" : null, k.versteckt ? "Hidden" : null, ordner ? "Directory" : "Archive"].filter(Boolean);
     const attrWert = (k.nurLesen ? 1 : 0) + (k.versteckt ? 2 : 0) + (ordner ? 16 : 32);
     const zeit = new PSDatum(k.zeit), erstellt = new PSDatum(k.erstellt === undefined ? k.zeit : k.erstellt);
-    const utc = (d) => new PSDatum(d.ms - 3600000);
+    const utc = (d) => new PSDatum(nachUtc(d.ms));
     const ps = "Microsoft.PowerShell.Core\\FileSystem::";
     const paare = [
       ["PSPath", ps + voll], ["PSParentPath", teile.length ? ps + elternText : ""], ["PSChildName", name], ["PSDrive", "C"],
@@ -4905,8 +5121,6 @@
 
   cmdlet("Get-ChildItem", "M", {
     pipeline: ["Path", "LiteralPath"],
-    dynamisch: ["Attributes", "FollowSymlink", "Directory", "File", "Hidden", "ReadOnly", "System"],
-    paramAliase: { Recurse: ["s"], Directory: ["ad", "d"], File: ["af"], Hidden: ["ah", "h"] },
     run(ctx) {
       const s = ctx.sitzung;
       const force = ctx.schalter("Force");
@@ -5109,7 +5323,6 @@
 
   cmdlet("New-Item", "M", {
     pipeline: ["Path", "Value"],
-    paramAliase: { ItemType: ["Type"] },
     run(ctx) {
       const s = ctx.sitzung;
       const art = klein(textVon(ctx.wert("ItemType") || "File"));
@@ -5251,7 +5464,6 @@
 
   cmdlet("Remove-Item", "M", {
     pipeline: ["Path", "LiteralPath"],
-    paramAliase: { Recurse: ["r"] },
     run(ctx) {
       const s = ctx.sitzung;
       for (const p of pfadeAusCtx(ctx, "Path")) {
@@ -5294,7 +5506,6 @@
 
   cmdlet("Get-Content", "M", {
     pipeline: ["Path", "LiteralPath"],
-    paramAliase: { TotalCount: ["First", "Head"], Tail: ["Last"] },
     run(ctx) {
       const s = ctx.sitzung;
       const out = { push: (v) => ctx.aus(v) };
@@ -5358,7 +5569,6 @@
 
   cmdlet("Out-File", "U", {
     pipeline: ["InputObject"],
-    paramAliase: { FilePath: ["Path"] },
     run(ctx) {
       const s = ctx.sitzung;
       const objekte = ctx.hat("InputObject") ? alsListe(ctx.wert("InputObject")) : ctx.eingabe || [];
@@ -6108,7 +6318,7 @@
     },
   });
   cmdlet("Clear-Host", "F", { syntax: ["Clear-Host"], run(ctx) { ctx.sitzung.strom.push({ art: "leeren" }); return []; } });
-  cmdlet("Start-Sleep", "U", { paramAliase: { Seconds: ["s"], Milliseconds: ["ms"] }, run: () => [] });
+  cmdlet("Start-Sleep", "U", { run: () => [] });
 
   /* ---------- Get-Date, New-TimeSpan, Get-Culture ---------- */
 
@@ -6117,19 +6327,19 @@
     const tab = { Y: String(p.j), y: zwei(p.j % 100), m: zwei(p.m), d: zwei(p.t), e: String(p.t).padStart(2, " "), H: zwei(p.h), I: zwei(p.h % 12 || 12), M: zwei(p.min), S: zwei(p.s),
       A: TAGE[p.wt], a: TAGE_KURZ[p.wt], B: MONATE[p.m - 1], b: MONATE_KURZ[p.m - 1], h: MONATE_KURZ[p.m - 1], j: String(memberHolen(d, "DayOfYear")).padStart(3, "0"),
       u: String(p.wt || 7), w: String(p.wt), D: zwei(p.m) + "/" + zwei(p.t) + "/" + zwei(p.j % 100), F: p.j + "-" + zwei(p.m) + "-" + zwei(p.t), T: zwei(p.h) + ":" + zwei(p.min) + ":" + zwei(p.s),
-      R: zwei(p.h) + ":" + zwei(p.min), n: "\n", t: "\t", "%": "%", p: p.h < 12 ? "AM" : "PM", s: String(Math.floor(d.ms / 1000)) };
+      R: zwei(p.h) + ":" + zwei(p.min), n: "\n", t: "\t", "%": "%", p: p.h < 12 ? "AM" : "PM", s: String(Math.floor(nachUtc(d.ms) / 1000)) };
     return f.replace(/%(.)/g, (m, c) => (tab[c] !== undefined ? tab[c] : m));
   }
   cmdlet("Get-Date", "U", {
     run(ctx) {
       let d = ctx.hat("Date") ? ctx.wert("Date") : new PSDatum(JETZT.ms);
-      if (ctx.hat("UnixTimeSeconds")) d = new PSDatum(zahlWert(ctx.wert("UnixTimeSeconds")) * 1000 + 3600000);
+      if (ctx.hat("UnixTimeSeconds")) d = new PSDatum(ausUtc(zahlWert(ctx.wert("UnixTimeSeconds")) * 1000));
       const p = datumTeile(d);
       const teil = (n, alt) => (ctx.hat(n) ? zahlWert(ctx.wert(n)) : alt);
       d = new PSDatum(Date.UTC(teil("Year", p.j), teil("Month", p.m) - 1, teil("Day", p.t), teil("Hour", p.h), teil("Minute", p.min), teil("Second", p.s), teil("Millisecond", p.ms)));
       if (ctx.hat("Format")) return [datumFormat(d, textVon(ctx.wert("Format")))];
       if (ctx.hat("UFormat")) return [uFormat(d, textVon(ctx.wert("UFormat")))];
-      if (ctx.schalter("AsUTC")) d = new PSDatum(d.ms - 3600000);
+      if (ctx.schalter("AsUTC")) d = new PSDatum(nachUtc(d.ms));
       d._hinweis = true;
       d._anzeige = ctx.hat("DisplayHint") ? textVon(ctx.wert("DisplayHint")) : "DateTime";
       return [d];
@@ -6181,6 +6391,11 @@
   ECHTE_LISTE.split(",").forEach((n) => ECHTE_BEFEHLE.set(klein(n), n));
   ["ping", "ipconfig", "netstat", "tracert", "nslookup", "notepad", "explorer", "calc", "mspaint", "winget", "code", "git", "systeminfo", "tasklist", "taskkill", "robocopy", "xcopy"]
     .forEach((n) => ECHTE_BEFEHLE.set(n, n));
+
+  // Echte Cmdlets, die Get-Command wie pwsh auflistet (Get-Command -Noun Service, Item, Process, Location),
+  // die der Simulator aber nicht nachbaut: Aufruf und Get-Help geben den Hinweis «im Simulator nicht nachgebaut»
+  ["New-Service", "Remove-Service", "Resume-Service", "Set-Service", "Suspend-Service", "Clear-Item", "Invoke-Item", "Set-Item",
+    "Debug-Process", "Start-Process", "Wait-Process", "Pop-Location", "Push-Location"].forEach((n) => cmdlet(n, "M", { nurBekannt: true }));
 
   // Klassische Programme mit einfacher Ausgabe
   const EXTERN = {
@@ -6592,7 +6807,6 @@
   /* ---------- Netzwerk, Laufwerke, Ausführungsrichtlinie ---------- */
 
   cmdlet("Test-Connection", "M", {
-    paramAliase: { TargetName: ["ComputerName", "CN", "IPAddress", "__ComputerName"] },
     run(ctx) {
       const s = ctx.sitzung;
       const anzahl = ctx.hat("Count") ? zahlWert(ctx.wert("Count")) : 4;
@@ -7675,12 +7889,38 @@
 
     /* ---------- Ausgabe ---------- */
     const MAX_ZEILEN = 3000;
+    const MAX_ZEICHEN = 400000;          // ganze Konsole
+    const MAX_ZEICHEN_BEFEHL = 200000;   // Ausgabe eines Befehls
+    const umbrueche = (t) => (t.match(/\n/g) || []).length;
+    function ausgabeKuerzen(zeilen) {
+      let rest = MAX_ZEICHEN_BEFEHL;
+      for (let i = 0; i < zeilen.length; i++) {
+        const z = zeilen[i];
+        const laenge = z === "LEEREN" ? 0 : zeilenText(z).length + 1;
+        if (laenge <= rest && i < MAX_ZEILEN) { rest -= laenge; continue; }
+        const gekuerzt = zeilen.slice(0, i);
+        // angebrochene Zeile kürzen statt ganz weglassen
+        if (z !== "LEEREN" && rest > 0 && i < MAX_ZEILEN) {
+          let r = rest;
+          gekuerzt.push(z.map((t) => { const teil = t[0].slice(0, Math.max(r, 0)); r -= teil.length; return [teil, t[1]]; }));
+        }
+        gekuerzt.push([["… Ausgabe gekürzt (Simulator)", "warnung"]]);
+        return gekuerzt;
+      }
+      return zeilen;
+    }
     function zeilenAnzeigen(zeilen) {
-      zeilenEinfuegen(pre, zeilen);
-      // Alte Zeilen begrenzen
+      zeilenEinfuegen(pre, ausgabeKuerzen(zeilen));
+      // Alte Zeilen begrenzen (nach Zeichen und nach Zeilen)
       const text = pre.textContent;
-      if (text.length > 400000 || (text.match(/\n/g) || []).length > MAX_ZEILEN) {
-        while (pre.firstChild && (pre.textContent.match(/\n/g) || []).length > MAX_ZEILEN * 0.8) pre.removeChild(pre.firstChild);
+      let laenge = text.length, anzahl = umbrueche(text);
+      if (laenge > MAX_ZEICHEN || anzahl > MAX_ZEILEN) {
+        while (pre.firstChild && (laenge > MAX_ZEICHEN * 0.8 || anzahl > MAX_ZEILEN * 0.8)) {
+          const t = pre.firstChild.textContent;
+          laenge -= t.length;
+          anzahl -= umbrueche(t);
+          pre.removeChild(pre.firstChild);
+        }
       }
       fenster.scrollTop = fenster.scrollHeight;
       fenster.scrollLeft = 0;
@@ -7751,8 +7991,7 @@
         gruppenAnzeigen(r.gruppen.filter((g) => g.quelle !== -1), offen.gezeigt);
         const fragen = r.rueckfrage.split("\n");
         zeilenAnzeigen(fragen.map((t, k) => [[t, k === 0 ? "kopf" : null]]).concat([[['[Y] Yes  [A] Yes to All  [N] No  [L] No to All  [S] Suspend  [?] Help (default is "Y"): ', null]]]));
-        rueck = { code: offen.code, antworten: offen.antworten, gezeigt: n + offen.antworten.length - 1, zustand: zustand, extra: offen.extra };
-        rueck.gezeigt = n;
+        rueck = { code: offen.code, antworten: offen.antworten, gezeigt: n, zustand: zustand, extra: offen.extra };
         sitzung.wiederherstellen(zustand);
         return;
       }
@@ -7837,7 +8076,7 @@
       bLos.addEventListener("click", skriptAusfuehren);
       editor.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); skriptAusfuehren(); }
-        if (e.key === "Tab" && !e.shiftKey && !e.ctrlKey && !e.altKey && editor.selectionStart !== editor.selectionEnd) return;
+        // Tab bleibt absichtlich ohne Sonderfunktion: der Fokus verlässt den Editor (keine Tastaturfalle)
       });
       argFeld.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); skriptAusfuehren(); } });
     }
@@ -7906,7 +8145,6 @@
     };
     if (!anhaengen()) {
       console.error("[Lernpfad] ps-konsole.js: window.Lernpfad fehlt. Binde ps-konsole.js nach lernpfad.js ein.");
-      win.Lernpfad = win.Lernpfad || null;
     }
     const lauf = () => {
       anhaengen();

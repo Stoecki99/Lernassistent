@@ -139,7 +139,6 @@
     <h3>Befehle finden mit Get-Command</h3>
     <p class="prose">Weil Namen so regelmässig sind, kannst du nach Verb oder Nomen suchen. <code class="ps">Get-Command -Noun Service</code> zeigt alle Befehle, die mit Diensten arbeiten:</p>
     <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Command -Noun Service" data-ps-befehl="Get-Command -Noun Service"></pre>
-    <div class="note"><b>Simulator und echte PowerShell:</b> Der Simulator kennt nur die Befehle, die er nachbaut. In echtem pwsh 7.6 unter Windows listet derselbe Befehl neun Cmdlets: dazu kommen <code class="ps">New-Service</code>, <code class="ps">Remove-Service</code>, <code class="ps">Resume-Service</code>, <code class="ps">Set-Service</code> und <code class="ps">Suspend-Service</code>.</div>
     <p class="prose">Umgekehrt findet <code class="ps">Get-Command -Verb Stop</code> alles, was etwas beendet. Auf einem echten Windows sind das über zwanzig Befehle, darunter <code class="ps">Stop-Process</code>, <code class="ps">Stop-Service</code> und <code class="ps">Stop-Computer</code>.</p>
     <div class="note tipp"><b>Gross und klein:</b> Microsoft schreibt jedes Wort gross (<code class="ps">Get-ChildItem</code>, Fachwort <span lang="en">PascalCase</span>). PowerShell selbst ist das egal: <code class="ps">get-childitem</code> funktioniert genauso. Schreib trotzdem wie Microsoft, dann liest du deine Befehle später leichter.</div>
     <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 kennt 98 Verben, und <code class="ps">Get-Verb</code> zeigt dort nur die Spalten <code>Verb</code> und <code>Group</code>. In <span class="ps-version">7</span> kamen <code class="ps">Build</code> und <code class="ps">Deploy</code> sowie die Spalten <code>AliasPrefix</code> und <code>Description</code> dazu.</div>
@@ -528,11 +527,13 @@
       text.split(/\r?\n/).forEach((zeile) => {
         if (!/^\S+-\S+ /.test(zeile) && !/^\S+-\S+$/.test(zeile)) return;
         // Formen: [[-Path] <T>] und [-Name] <T> = Position; [-Filter <T>] und -Name <T> = benannt; [-Recurse] = Schalter
+        // Die Syntax zeigt nur, ob ein Parameter positionell ist und in welcher Reihenfolge (reihe).
+        // Die Positionsnummer selbst liefert Get-Help (position).
         const params = [];
         const re = /\[\[-(\w+)\] <[^>]+>\]|\[-(\w+)\] <[^>]+>|\[-(\w+) <[^>]+>\]|(?:^|\s)-(\w+) <[^>]+>|\[-(\w+)\]/g;
-        let m, pos = 0;
+        let m, reihe = 0;
         while ((m = re.exec(zeile))) {
-          if (m[1] || m[2]) params.push({ name: m[1] || m[2], schalter: false, pos: pos++ });
+          if (m[1] || m[2]) { const n = m[1] || m[2]; params.push({ name: n, schalter: false, reihe: reihe++, pos: position(name, n) }); }
           else if (m[3] || m[4]) params.push({ name: m[3] || m[4], schalter: false, pos: null });
           else if (m[5] && m[5] !== "CommonParameters") params.push({ name: m[5], schalter: true, pos: null });
         }
@@ -540,6 +541,35 @@
       });
       cache[k] = saetze;
       return saetze;
+    }
+
+    // Position eines Parameters wie in pwsh: Get-Help <Cmdlet> -Parameter <Name> meldet «Position?»
+    const positionen = {};
+    function position(befehl, param) {
+      const k = befehl.toLowerCase() + " " + param.toLowerCase();
+      if (!(k in positionen)) {
+        const t = ab.ausfuehren("Get-Help -Name '" + befehl.replace(/'/g, "''") + "' -Parameter " + param + " -ErrorAction SilentlyContinue");
+        const m = /Position\?\s+(\d+)/.exec(t);
+        positionen[k] = m ? Number(m[1]) : null;
+      }
+      return positionen[k];
+    }
+
+    // Parameternamen vom Simulator auflösen lassen, statt die Regeln von pwsh nachzubauen.
+    // Der Name steht zweimal da: Der Binder bricht vor der Ausführung ab und nennt den vollen Namen
+    // («specified more than once»), alle Treffer («is ambiguous») oder keinen («cannot be found»).
+    // Jede Probe läuft auf einem frischen Spiel-Rechner, es wird also nichts verändert.
+    const aufloesungen = {};
+    function loeseParameter(befehl, kurz) {
+      const k = befehl.toLowerCase() + " " + kurz.toLowerCase();
+      if (aufloesungen[k]) return aufloesungen[k];
+      const t = L.konsole.ausfuehren(befehl + " -" + kurz + ":$null -" + kurz + ":$null");
+      let m, r;
+      if ((m = /parameter '(\w+)' is specified more than once/.exec(t))) r = { name: m[1] };
+      else if ((m = /is ambiguous\. Possible matches include: ([^\r\n]+?)\.?\s*$/m.exec(t))) r = { mehrdeutig: m[1].trim().split(/\s+/).map((s) => s.replace(/^-/, "")) };
+      else r = { fehlt: true };
+      aufloesungen[k] = r;
+      return r;
     }
 
     function teil(art, klasse, text) { return { art: art, klasse: klasse, text: text }; }
@@ -599,7 +629,6 @@
       const alle = {};
       saetze.forEach((s) => s.forEach((p) => { const k = p.name.toLowerCase(); if (!alle[k]) alle[k] = { name: p.name, schalter: p.schalter }; }));
       if (bekannt) GEMEINSAM.forEach((g) => { const k = g.toLowerCase(); if (!alle[k]) alle[k] = { name: g, schalter: !!GEMEINSAM_SCHALTER[k], gemeinsam: true }; });
-      const namen = Object.keys(alle);
       const benutzt = [], freie = [];
       let i = 1;
       while (i < seg.length) {
@@ -607,22 +636,15 @@
         const pm = /^-([A-Za-z]\w*)(:(.*))?$/.exec(w);
         if (pm && bekannt) {
           const kurz = pm[1].toLowerCase();
-          // Zweitnamen von Parametern (wie in pwsh): -PSPath und -LP stehen für -LiteralPath
-          const zweit = alle.literalpath ? { pspath: "literalpath", lp: "literalpath" } : {};
-          let treffer = namen.filter((n) => n === kurz);
-          if (!treffer.length && zweit[kurz]) treffer = [zweit[kurz]];
-          if (!treffer.length) {
-            treffer = namen.filter((n) => n.indexOf(kurz) === 0);
-            Object.keys(zweit).forEach((a) => { if (a.indexOf(kurz) === 0 && treffer.indexOf(zweit[a]) < 0) treffer.push(zweit[a]); });
-          }
-          if (treffer.length !== 1) {
+          const r = loeseParameter(voll, pm[1]);
+          if (!r.name) {
             teile.push(teil("Parameter?", "t02-k-fehler", w));
-            erkl.push(["t02-k-fehler", w, treffer.length === 0
+            erkl.push(["t02-k-fehler", w, r.fehlt
               ? "Einen Parameter mit diesem Namen hat " + C(voll) + " nicht (Fehler «A parameter cannot be found»)."
-              : "Mehrdeutig: passt auf " + treffer.map((t) => C("-" + alle[t].name)).join(", ") + ". Schreib mehr Buchstaben (Fehler «is ambiguous»)."]);
+              : "Mehrdeutig: passt auf " + r.mehrdeutig.map((t) => C("-" + t)).join(", ") + ". Schreib mehr Buchstaben (Fehler «is ambiguous»)."]);
             i++; continue;
           }
-          const p = alle[treffer[0]];
+          const p = alle[r.name.toLowerCase()] || { name: r.name, schalter: !!GEMEINSAM_SCHALTER[r.name.toLowerCase()], gemeinsam: GEMEINSAM.indexOf(r.name) >= 0 };
           benutzt.push(p.name);
           const abgek = p.name.toLowerCase() !== kurz;
           const zusatz = abgek ? " Abgekürzt geschrieben, PowerShell ergänzt zu " + C("-" + p.name) + "." : "";
@@ -665,7 +687,7 @@
       if (freie.length) {
         let satz = null;
         const passt = saetze.filter((s) => benutzt.every((b) => s.some((p) => p.name === b) || GEMEINSAM.indexOf(b) >= 0 || b === "WhatIf" || b === "Confirm"));
-        const kandidaten = (passt.length ? passt : saetze).map((s) => s.filter((p) => p.pos !== null && benutzt.indexOf(p.name) < 0).sort((a, b) => a.pos - b.pos));
+        const kandidaten = (passt.length ? passt : saetze).map((s) => s.filter((p) => p.reihe !== undefined && benutzt.indexOf(p.name) < 0).sort((a, b) => (a.pos === null || b.pos === null || a.pos === b.pos) ? a.reihe - b.reihe : a.pos - b.pos));
         satz = kandidaten.find((k) => k.length >= freie.length && !(k[0] && k[0].name === "InputObject")) || kandidaten.find((k) => k.length >= freie.length) || kandidaten[0] || [];
         let n = 0;
         erkl.forEach((e) => {
@@ -673,7 +695,7 @@
           if (!mm) return;
           const p = satz[n++];
           if (!bekannt) e[2] = "Ein Wert ohne Parameternamen.";
-          else if (p) e[2] = "Wert ohne Parameternamen. PowerShell setzt ihn in den Positionsparameter " + C("-" + p.name) + " ein (Position " + p.pos + ")." + quoteHinweis(e[1]);
+          else if (p) e[2] = "Wert ohne Parameternamen. PowerShell setzt ihn in den Positionsparameter " + C("-" + p.name) + " ein" + (p.pos === null ? "" : " (Position " + p.pos + ")") + "." + quoteHinweis(e[1]);
           else { e[0] = "t02-k-fehler"; e[2] = "Für diesen Wert ist kein Positionsparameter mehr frei (Fehler «A positional parameter cannot be found that accepts argument»). Steht hier ein Wert mit Leerzeichen ohne Anführungszeichen?"; }
         });
         // Klasse des Teils ebenfalls auf Fehler setzen, wenn kein Platz frei war
@@ -869,7 +891,7 @@
       "Den Inhalt des aktuellen Ordners, -P wird ignoriert"
     ],
     richtig: 1,
-    erklaerung: "Get-ChildItem hat mehrere Parameter, die mit P beginnen (-Path, -ProgressAction, -PipelineVariable). PowerShell rät nicht, sondern bricht mit «is ambiguous» ab. -Pa wäre eindeutig."
+    erklaerung: "Bei Get-ChildItem passt P auf vier Parameter: -Path, -ProgressAction, -PipelineVariable und -LiteralPath (über seinen Zweitnamen PSPath). PowerShell rät nicht, sondern bricht mit «is ambiguous» ab. -Pa wäre eindeutig."
   });
   L.auswahl("#t02-u-pos", {
     frage: "Lea tippt " + C("Get-ChildItem Bilder *.jpg") + ". Was bedeutet " + C("*.jpg") + "?",
@@ -960,7 +982,7 @@
     szenen: [
       { say: "Ticket: «Die Dateisynchronisation läuft nicht.» Auf Windows-Rechnern laufen solche Aufgaben als Dienst. Lea kennt noch keinen einzigen Befehl für Dienste. Sie geht Schritt für Schritt vor." },
       { ph: 0, f: f1, say: "Dienst heisst auf Englisch Service. Also sucht Lea alle Befehle mit diesem Nomen: Get-Command -Noun Service." },
-      { say: "Die Liste zeigt Get, Restart, Start und Stop. Lauter genehmigte Verben vor demselben Nomen. In echter PowerShell sind es neun, etwa auch Set-Service." },
+      { say: "Die Liste zeigt neun Befehle, etwa Get, Set, Start und Stop. Lauter genehmigte Verben vor demselben Nomen." },
       { say: "Lea merkt sich: Anzeigen heisst Get, starten heisst Start. Die Namen kann man fast erraten." },
       { f: f2, say: "Zur Sicherheit fragt sie Get-Verb nach Start. Es ist ein genehmigtes Verb aus der Gruppe Lifecycle (Lebenszyklus): «Initiates an operation», also etwas in Gang setzen." },
       { ph: 1, f: f3, say: "Get-Service ohne Parameter zeigt alle Dienste. Das ist eine lange Liste. Lea sucht darin WolkenriedSync." },

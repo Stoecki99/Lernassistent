@@ -152,6 +152,19 @@ describe("Pipeline, Variablen, Operatoren", () => {
     const t = lauf("while ($true) { $i++ }")
     assert.match(t, /abgebrochen \(Endlosschleife\?\)/)
   })
+  test("Grössenschutz: Array vervielfachen und verketten", () => {
+    assert.equal(lauf("(@(1,2) * 3) -join ','; (@(1) * 40000).Count"), "1,2,1,2,1,2\n40000")
+    assert.match(lauf("@(1) * 1000000"), /Das Array hätte 1000000 Elemente/)
+    assert.match(lauf("$a = @(1) * 60000; $a += $a"), /Das Array hätte 120000 Elemente/)
+  })
+  test("Grössenschutz: Strings verketten", () => {
+    const t = lauf("$s = 'a' * 100000; foreach ($i in 1..12) { $s += $s }; $s.Length")
+    assert.match(t, /Der String hätte 12800000 Zeichen/)
+    assert.match(t, /\n6400000$/)
+  })
+  test("cd\\ wechselt ins Stammverzeichnis", () => {
+    assert.equal(lauf("cd\\; (Get-Location).Path"), "C:\\")
+  })
   test("$? zeigt den Erfolg der vorherigen Anweisung", () => {
     assert.equal(lauf("Get-Item nix -ErrorAction SilentlyContinue; $?; Get-Item Logs | Out-Null; $?"), "False\nTrue")
   })
@@ -321,6 +334,47 @@ describe("Aufgaben-Kontext, Umgebung und API ohne Oberfläche", () => {
     assert.deepEqual(s.vervollstaendigen("gci Logs\\app.").kandidaten, [".\\Logs\\app.log"])
     assert.deepEqual(s.vervollstaendigen("$PSV").kandidaten, ["$PSVersionTable"])
     assert.deepEqual(s.vervollstaendigen("Get-Service -Name Wo").kandidaten, ["WolkenriedBackup", "WolkenriedSync"])
+  })
+})
+
+describe("Befunde der Fachprüfung (gemessen in pwsh 7.6.1)", () => {
+  test("Abkürzungen: Zweitnamen zählen mit, eigene Parameter gehen gemeinsamen vor", () => {
+    assert.equal(lauf("Get-ChildItem -P Logs"),
+      "Get-ChildItem: Parameter cannot be processed because the parameter name 'P' is ambiguous. Possible matches include: -Path -ProgressAction -PipelineVariable -LiteralPath.")
+    assert.equal(lauf("Get-ChildItem -LP Logs -Name | Select-Object -First 1"), "app-2026-07.log")
+    assert.equal(lauf("Get-ChildItem -PSPath Logs -Name | Select-Object -First 1"), "app-2026-07.log")
+    // -I passt auf -Include, -InformationAction und -InformationVariable; nur -Include ist ein eigener Parameter
+    assert.equal(lauf("Get-ChildItem Logs\\* -I app.log -Name"), "app.log")
+    // dynamische Parameter erst, wenn kein fester passt: -d ist -Depth, -h ist -Hidden
+    assert.equal(lauf("Get-ChildItem -d"), "Get-ChildItem: Missing an argument for parameter 'Depth'. Specify a parameter of type 'System.UInt32' and try again.")
+    assert.equal(lauf("Get-ChildItem -h -Name"), "AppData")
+    assert.equal(lauf("Get-ChildItem Logs | Where-Object Length -igt 8MB | ForEach-Object Name"), "app-2026-07.log")
+  })
+  test("Where-Object mit -and: Parametersatz vor unbekanntem Parameter", () => {
+    assert.equal(lauf("Get-ChildItem Logs | Where-Object Length -gt 1MB -and Name -like 'app*'"),
+      "Where-Object: Parameter set cannot be resolved using the specified named parameters. One or more parameters issued cannot be used together or an insufficient number of parameters were provided.")
+    assert.equal(lauf("Get-ChildItem Logs | Where-Object Length -gt 1MB -and Name"), "Where-Object: A parameter cannot be found that matches parameter name 'and'.")
+    assert.equal(lauf("Get-ChildItem x y z -foo"), "Get-ChildItem: A positional parameter cannot be found that accepts argument 'z'.")
+    assert.equal(lauf("Get-ChildItem -foo x y z"), "Get-ChildItem: A parameter cannot be found that matches parameter name 'foo'.")
+    assert.equal(lauf("Get-Item -foo"), "Get-Item: A parameter cannot be found that matches parameter name 'foo'.")
+  })
+  test("Get-Command -Noun Service listet alle 9 Cmdlets, nicht nachgebaute geben einen Hinweis", () => {
+    assert.equal(lauf("(Get-Command -Noun Service).Count; (Get-Command -Noun Item).Count; (Get-Command -Noun Process).Count; (Get-Command -Noun Location).Count"), "9\n9\n5\n4")
+    assert.match(lauf("Set-Service -Name WolkenriedSync -StartupType Manual"), /^\[Simulator\] «Set-Service» gibt es in PowerShell, im Simulator ist der Befehl aber nicht nachgebaut/)
+    assert.match(lauf("pushd Logs"), /^\[Simulator\] «Push-Location» gibt es in PowerShell/)
+    assert.match(lauf("Get-Help Start-Process"), /^\[Simulator\] «Start-Process» gibt es in PowerShell, im Simulator ist dazu aber keine Hilfe hinterlegt/)
+    assert.match(lauf("Get-Command Set-Service -Syntax"), /^Set-Service \[-Name\] <string> \[-DisplayName <string>\]/)
+  })
+  test("LastWriteTimeUtc mit Sommerzeit (Europe/Zurich), doppelte Stunde im Oktober als Winterzeit", () => {
+    const zeiten = ["2026-07-31T23:59:00", "2026-11-02T09:00:00", "2026-03-29T03:30:00", "2026-10-25T01:30:00", "2026-10-25T02:30:00"]
+    const s = new PS.Sitzung({ umgebung: { dateien: zeiten.map((z, i) => ({ pfad: "C:\\Users\\lea\\z" + i + ".txt", inhalt: "x", zeit: z })) } })
+    assert.equal(norm(zeilen(s, "Get-ChildItem z*.txt | ForEach-Object { $_.LastWriteTimeUtc.ToString('dd.MM.yyyy HH:mm') }").text),
+      "31.07.2026 21:59\n02.11.2026 08:00\n29.03.2026 01:30\n24.10.2026 23:30\n25.10.2026 01:30")
+    assert.equal(lauf("(Get-Date -Date '2026-12-01T12:00:00' -AsUTC).Hour; (Get-Date -UnixTimeSeconds 1795000000).ToString('dd.MM.yyyy HH:mm:ss')"), "11\n18.11.2026 12:06:40")
+  })
+  test("Get-ChildItem mit -LiteralPath: -Filter ist Position 1", () => {
+    assert.match(lauf("Get-Help Get-ChildItem -Parameter Filter"), /Position\? {20}1/)
+    assert.equal(lauf("Get-ChildItem -LiteralPath Logs sync* -Name"), "sync-fehler.log")
   })
 })
 
