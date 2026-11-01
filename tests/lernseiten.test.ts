@@ -626,3 +626,25 @@ describe("AVSW fach.json im Repo", () => {
     assert.equal(reservierteNamen().includes("avsw"), false)
   })
 })
+
+describe("Spieltheorie fach.json im Repo", () => {
+  test("11 Stationen in Reihenfolge, Feldzug am Schluss", () => {
+    const ergebnis = ladeFach("spieltheorie")
+    assert.ok(ergebnis)
+    assert.equal(ergebnis.fach.kuerzel, "SPIELTHEORIE")
+    assert.deepEqual(
+      ergebnis.fach.sektionen.map((s) => s.id),
+      ["grundlagen", "dynamik", "strategeme", "anwendung", "abschluss"],
+    )
+    assert.equal(ergebnis.pfad.length, 11)
+    ergebnis.pfad.forEach((s, i) => {
+      assert.ok(s.slug.startsWith(String(i + 1).padStart(2, "0") + "-"), s.slug)
+    })
+    assert.equal(ergebnis.pfad[10].slug, "11-feldzug-abschluss")
+    assert.equal(ergebnis.pfad[10].sektion, "abschluss")
+  })
+
+  test("Fachordner kollidiert nicht mit reservierten Namen", () => {
+    assert.equal(reservierteNamen().includes("spieltheorie"), false)
+  })
+})
