@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Muster-Thema: Leas Logdateien aufräumen · PS</title>
+  <!-- Farbschema vor dem Zeichnen setzen (kein Flackern im Dunkelmodus). Pflicht, unverändert übernehmen. -->
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <!-- PS-Erweiterung: Akzent PowerShell-Blau, Syntaxfärbung, Ausgabeblöcke, Konsolen-Simulator. Nur im Fach ps, nach lernpfad.css. -->
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <!-- Nächste Station laut fach.json. Bei der letzten Station weglassen. -->
+  <link rel="next" href="/lernseiten/ps/01-konsole-erste-schritte" title="Die Konsole: erste Schritte">
+  <!-- Seiteneigene Stile: nur Klassen mit Themen-Präfix (hier «t00-»), nur Farben aus :root -->
+  <style>
+    .t00-ziele{margin:0; padding-left:1.3em}
+    .t00-ziele li{margin-bottom:4px}
+  </style>
+</head>
+<body data-fach="ps" data-thema="_vorlage">
+<!-- VORLAGE: Kopiere diese Datei nach content/lernseiten/ps/<slug>.html.
+     Ändere <title>, <link rel="next">, data-thema (= slug) und alle Inhalte.
+     Kopfleiste und Abschluss-Box fügt lernpfad.js ein. Akzent, Färbung und Konsole kommen aus ps-konsole.css/.js.
+     Doku: docs/lernpfad-powershell.md (PS-Erweiterung) und docs/lernpfad-baukasten.md (Baukasten). -->
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Vorlage · Pipeline</span>
+    <h1>Muster-Thema: Leas Logdateien aufräumen</h1>
+    <p class="lead">Diese Seite zeigt alle Bausteine des Lernpfads PS an einem kleinen Auftrag: Lea will wissen, welche Logdateien auf ihrem Rechner gross und alt sind. Du liest Befehle, probierst sie im Simulator aus und baust ein kleines Skript.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t00-ziele">
+        <li>Du liest einen PowerShell-Befehl und erkennst Cmdlet, Parameter und Wert.</li>
+        <li>Du verbindest Befehle mit der Pipeline <code class="ps">|</code>.</li>
+        <li>Du startest ein Skript mit Parametern.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#lesen"><b>1</b>Befehle lesen</a>
+    <a href="#schritt"><b>2</b>Schritt für Schritt</a>
+    <a href="#ausprobieren"><b>3</b>Ausprobieren</a>
+    <a href="#skript"><b>4</b>Skript</a>
+    <a href="#uebungen"><b>5</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Konzeptkarten und Sortierer ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Vier Bausteine jeder Befehlszeile</h2>
+    <p class="prose">Stell dir eine Kellnerin mit Bestellzettel vor: Sie schreibt auf, <i>was</i> passieren soll (das Cmdlet) und <i>wie genau</i> (die Parameter). Die Küche liefert keine Beschreibung, sondern echte Teller (Objekte).</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Cmdlet</span><span class="ex"><code class="ps">Get-ChildItem</code></span><p>Ein Befehl der Form Verb-Nomen. Das Verb sagt, was passiert.</p></div>
+      <div class="concept"><span class="tag">Parameter</span><span class="ex"><code class="ps">-Path Logs</code></span><p>Beginnt mit einem Strich und präzisiert den Befehl.</p></div>
+      <div class="concept"><span class="tag">Pipeline</span><span class="ex"><code class="ps">|</code></span><p>Reicht die Objekte an den nächsten Befehl weiter.</p></div>
+      <div class="concept"><span class="tag">Objekt</span><span class="ex"><code class="ps">$_.Length</code></span><p>Ein Ergebnis mit Eigenschaften, zum Beispiel Name und Grösse.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Cmdlet oder Parameter?</h3>
+      <div id="sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Codeblöcke, Ausgabeblöcke, Kennzeichen ===== -->
+  <section id="lesen">
+    <span class="eyebrow">Schritt 1 · Befehle lesen</span>
+    <h2>Ein Befehl und seine Ausgabe</h2>
+    <p class="prose">Codeblöcke färbt ps-konsole.js beim Laden selbst ein: Cmdlets, Parameter, Variablen, Texte und Zahlen haben je eine Farbe. Kurze Befehle im Text schreibst du als <code class="ps">Get-Date -Format 'dd.MM.yyyy'</code>.</p>
+    <pre class="ps-code"><code># Die drei grössten Logdateien
+Get-ChildItem -Path Logs -Filter *.log |
+  Sort-Object -Property Length -Descending |
+  Select-Object -First 3 Name, @{ Name = 'MB'; Expression = { [math]::Round($_.Length / 1MB, 1) } }</code></pre>
+    <p class="prose">Die Ausgabe darunter erzeugt der Simulator beim Laden selbst (<code>data-ps-befehl</code>). So stimmt sie immer mit dem Spiel-Rechner überein.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe des Befehls" data-ps-befehl="Get-ChildItem -Path Logs -Filter *.log | Sort-Object -Property Length -Descending | Select-Object -First 3 Name, @{ Name = 'MB'; Expression = { [math]::Round($_.Length / 1MB, 1) } }"></pre>
+    <p class="prose">Ein Ausgabeblock darf auch von Hand geschrieben sein, zum Beispiel für eine Fehlermeldung. Fremdsprachiges gehört in <code>lang="en"</code>.</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7" lang="en">PS C:\Users\lea&gt; Get-ChildItem Protokolle
+<span class="psk-fehler">Get-ChildItem: Cannot find path 'C:\Users\lea\Protokolle' because it does not exist.</span></pre>
+    <div class="note"><b>Merke:</b> Die rote Meldung heisst: «Den Pfad gibt es nicht.» Prüfe die Schreibweise oder wo du gerade bist (<code class="ps">Get-Location</code>).</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In Windows PowerShell 5.1 braucht <code class="ps">Export-Csv</code> zusätzlich <code class="ps">-NoTypeInformation</code>, sonst steht eine Typzeile in der Datei. In <span class="ps-version">7</span> ist das der Standard.</div>
+    <div class="note falle"><b>Falle:</b> <code class="ps">Import-Csv</code> liefert alle Werte als Text. <code class="ps">Where-Object Pensum -lt 100</code> vergleicht dann Texte («80» ist grösser als «100»).</div>
+  </section>
+
+  <!-- ===== 2 · Stepper ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 2 · Vom Auftrag zum Befehl</span>
+    <h2>Eine Pipeline Stück für Stück bauen</h2>
+    <p class="prose">Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Teil des Befehls leuchtet auf.</p>
+    <div id="stepper-1"></div>
+  </section>
+
+  <!-- ===== 3 · Konsolen-Simulator mit Aufgaben ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 3 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">Tippe die Befehle selbst. Mit den Pfeiltasten holst du frühere Befehle zurück, mit Tab vervollständigst du Namen. Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="konsole-1"></div>
+  </section>
+
+  <!-- ===== 4 · Skript-Modus ===== -->
+  <section id="skript">
+    <span class="eyebrow">Schritt 4 · Ein Skript ausführen</span>
+    <h2>Alte Logdateien finden</h2>
+    <p class="prose">Ein Skript ist eine Textdatei mit Befehlen. Der Knopf «Ausführen» speichert es als <code>aufraeumen.ps1</code> und startet es mit den Parametern daneben, wie <code class="ps">.\aufraeumen.ps1 -Tage 60</code>.</p>
+    <div id="konsole-skript"></div>
+  </section>
+
+  <!-- ===== 5 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 5 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div id="uebung-auswahl"></div>
+    <div id="uebung-wf"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Aufräumauftrag am Stück</h2>
+    <p class="prose">Jede Szene zeigt einen Befehl und die echte Ausgabe des Simulators (<code>Lernpfad.konsole.sitzung()</code>).</p>
+    <div id="film-1"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Seite</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">Get-ChildItem</code></th><td>Inhalt eines Ordners</td><td><code class="ps">Get-ChildItem Logs -Filter *.log</code></td></tr>
+          <tr><th><code class="ps">Sort-Object</code></th><td>sortieren</td><td><code class="ps">Sort-Object Length -Descending</code></td></tr>
+          <tr><th><code class="ps">Select-Object</code></th><td>auswählen</td><td><code class="ps">Select-Object -First 3</code></td></tr>
+          <tr><th><code class="ps">Where-Object</code></th><td>filtern</td><td><code class="ps">Where-Object Length -gt 1MB</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Ein Befehl besteht aus <b>Cmdlet</b>, <b>Parametern</b> und <b>Werten</b>.</li>
+      <li>Die <b>Pipeline</b> <code class="ps">|</code> reicht Objekte weiter, nicht Text.</li>
+      <li>Ein <b>Skript</b> im aktuellen Ordner startest du mit <code class="ps">.\name.ps1</code>.</li>
+    </ul>
+    <footer>Vorlage für die Themenseiten des Lernpfads PS. Regeln: docs/lernpfad-powershell.md und docs/lernpfad-baukasten.md.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  // Code im HTML immer als Text: im Script als String, auf der Seite in <code class="ps"> (wird gefärbt)
+  const C = (t) => '<code class="ps">' + t.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</code>";
+
+  /* ---------- Sortierer ---------- */
+  L.sortierer("#sortierer", {
+    kategorien: ["Cmdlet", "Parameter"],
+    elemente: [
+      { html: C("Get-Process"), kategorie: "Cmdlet", erklaerung: "Verb-Nomen: Get (holen) und Process (Prozess)." },
+      { html: C("-Recurse"), kategorie: "Parameter", erklaerung: "Beginnt mit einem Strich: ein Schalter-Parameter." },
+      { html: C("Sort-Object"), kategorie: "Cmdlet", erklaerung: "Sort (sortieren) und Object (Objekt)." },
+      { html: C("-Filter"), kategorie: "Parameter", erklaerung: "Der Parameter -Filter erwartet einen Wert wie *.log." }
+    ]
+  });
+
+  /* ---------- Stepper: Satz ↔ Teil des Befehls ---------- */
+  L.stepper("#stepper-1", {
+    titel: "Leas Auftrag",
+    text: 'Zeige <span data-link="a">alle Dateien im Ordner Logs</span>, <span data-link="b">die grösser als 4 MB sind</span>, <span data-link="c">die grösste zuerst</span>.',
+    schritte: [
+      { html: '<span data-link="a">' + C("Get-ChildItem Logs") + "</span>",
+        warum: "Zuerst die Dateien holen. Get-ChildItem liefert für jede Datei ein Objekt." },
+      { html: '<span data-link="a">' + C("Get-ChildItem Logs") + "</span> " + C("|") + ' <span data-link="b">' + C("Where-Object Length -gt 4MB") + "</span>",
+        warum: "Die Pipeline reicht die Objekte weiter. Where-Object lässt nur die grossen durch." },
+      { html: '<span data-link="a">' + C("Get-ChildItem Logs") + "</span> " + C("|") + ' <span data-link="b">' + C("Where-Object Length -gt 4MB") + "</span> " + C("|") + ' <span data-link="c">' + C("Sort-Object Length -Descending") + "</span>",
+        warum: "Zum Schluss sortieren: -Descending heisst absteigend, also die grösste zuerst." }
+    ]
+  });
+
+  /* ---------- Konsole mit drei Beispielaufgaben ---------- */
+  L.konsole("#konsole-1", {
+    aufgaben: [
+      {
+        titel: "Wo bist du?",
+        text: "<p>Zeige den aktuellen Ort an.</p>",
+        hinweis: "<p>Das Verb heisst Get, das Nomen Location.</p>",
+        loesung: "Get-Location",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Location") && !ctx.hatFehler
+      },
+      {
+        titel: "Leas Logdateien",
+        text: "<p>Liste den Inhalt des Ordners <code>Logs</code> auf.</p>",
+        hinweis: "<p>Get-ChildItem mit dem Ordnernamen. Tipp: Tippe <code>Get-Chi</code> und drücke Tab.</p>",
+        loesung: "Get-ChildItem Logs",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /Directory: C:\\Users\\lea\\Logs/i.test(ctx.ausgabe)
+      },
+      {
+        titel: "Die grösste Logdatei",
+        text: "<p>Gib mit einer Pipeline nur den <b>Namen</b> der grössten Datei im Ordner <code>Logs</code> aus.</p>",
+        hinweis: "<p>Sortiere nach Length absteigend und nimm mit Select-Object das erste Objekt. -ExpandProperty Name gibt nur den Namen aus.</p>",
+        loesung: "Get-ChildItem Logs | Sort-Object Length -Descending | Select-Object -First 1 -ExpandProperty Name",
+        pruefe: (ctx) => ctx.befehle.includes("Sort-Object") && ctx.objekte.some((o) => ctx.text(o) === "app-2026-07.log")
+      }
+    ]
+  });
+  // Ereignis bei gelöster Aufgabe (z. B. für eigene Rückmeldungen der Seite)
+  document.getElementById("konsole-1").addEventListener("lernpfad:aufgabe", (e) => {
+    if (e.detail.alleGeloest) console.info("[Vorlage] Alle Aufgaben der Konsole gelöst.");
+  });
+
+  /* ---------- Skript-Modus ---------- */
+  L.konsole("#konsole-skript", {
+    modus: "skript",
+    skriptName: "aufraeumen.ps1",
+    skript: "param([int]$Tage = 30)\n\n# Logdateien, die älter als $Tage Tage sind\n$grenze = (Get-Date).AddDays(-$Tage)\n$alt = Get-ChildItem Logs | Where-Object LastWriteTime -lt $grenze\n\"Gefunden: $($alt.Count) Dateien\"\n$alt | Select-Object Name, LastWriteTime",
+    argumente: "",
+    argumenteBeispiel: "z. B. -Tage 60",
+    aufgaben: [
+      {
+        titel: "Mit Parameter starten",
+        text: "<p>Starte das Skript so, dass es Dateien findet, die älter als <b>60</b> Tage sind.</p>",
+        hinweis: "<p>Schreib in das Feld «Parameter» den Namen und den Wert: -Tage 60.</p>",
+        loesung: "-Tage 60",
+        pruefe: (ctx) => /-Tage\s+60\b/i.test(ctx.argumente || "") && /Gefunden: 3 Dateien/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.auswahl("#uebung-auswahl", {
+    frage: "Was gibt " + C("Get-ChildItem Logs | Measure-Object | Select-Object -ExpandProperty Count") + " auf Leas Rechner aus?",
+    optionen: ["7", "1", "Eine Tabelle mit Count, Average und Sum"],
+    richtig: 0,
+    erklaerung: "Im Ordner Logs liegen 7 Dateien. -ExpandProperty Count gibt nur die Zahl aus."
+  });
+  L.wahrFalsch("#uebung-wf", {
+    titel: "Gefährlich oder harmlos?",
+    aussagen: [
+      { html: C("Remove-Item Downloads\\*.exe -WhatIf") + " löscht Dateien.", wahr: false, erklaerung: "-WhatIf zeigt nur, was passieren würde. Es wird nichts gelöscht." },
+      { html: C("Get-ChildItem -Recurse") + " ändert nichts am Rechner.", wahr: true, erklaerung: "Get-Befehle lesen nur." },
+      { html: C("Remove-Item Alt -Recurse") + " legt die Dateien in den Papierkorb.", wahr: false, erklaerung: "Remove-Item löscht endgültig, ohne Papierkorb." }
+    ]
+  });
+
+  /* ---------- Lösungsfilm mit echten Simulator-Ausgaben ---------- */
+  const film = L.konsole.sitzung();   // ein Rechner für alle Szenen (Zustand bleibt erhalten)
+  const szene = (code) => film.html(code);
+  const s1 = szene("Get-ChildItem Logs");
+  const s2 = szene("Get-ChildItem Logs | Sort-Object Length -Descending | Select-Object -First 3 Name, Length");
+  const s3 = szene("Get-ChildItem Logs | Measure-Object -Property Length -Sum");
+  const s4 = szene("$alt = Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)");
+  const s5 = szene("$alt | Move-Item -Destination Archiv -WhatIf");
+  L.film("#film-1", {
+    phasen: ["1 · Ansehen", "2 · Messen", "3 · Aufräumen"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Lea will wissen, welche Logdateien gross und alt sind. Wir gehen Befehl für Befehl vor." },
+      { ph: 0, f: s1, say: "Zuerst schaut sie in den Ordner Logs. Get-ChildItem zeigt jede Datei mit Datum und Grösse." },
+      { ph: 0, f: s2, say: "Sortiert und gekürzt sieht sie sofort die drei grössten Dateien." },
+      { ph: 1, f: s3, say: "Measure-Object zählt die Dateien und rechnet die Summe aller Grössen aus." },
+      { ph: 2, f: s4, say: "Jetzt merkt sie sich die Dateien, die älter als 30 Tage sind, in einer Variable. Eine Zuweisung gibt nichts aus." },
+      { ph: 2, f: s5, say: "Mit -WhatIf prüft sie, was verschoben würde, bevor sie es wirklich tut. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Welcher Teil von " + C("Get-ChildItem -Path Logs") + " ist der Parameter?", o: [C("Get-ChildItem"), C("-Path"), C("Logs")], a: 1,
+        e: "Parameter beginnen mit einem Strich. Logs ist der Wert dazu." },
+      { q: "Was reicht die Pipeline " + C("|") + " weiter?", o: ["Text", "Objekte", "Dateinamen als Liste"], a: 1,
+        e: "PowerShell reicht Objekte mit Eigenschaften weiter, keinen Text." },
+      { q: "Wie startest du das Skript " + C("aufraeumen.ps1") + " im aktuellen Ordner?", o: [C("aufraeumen.ps1"), C(".\\aufraeumen.ps1"), C("Start aufraeumen")], a: 1,
+        e: "Aus dem aktuellen Ordner startet PowerShell Skripte nur mit .\\ davor." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

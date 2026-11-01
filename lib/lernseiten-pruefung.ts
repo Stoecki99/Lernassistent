@@ -21,6 +21,8 @@ export interface PruefErgebnis {
 
 const CSS_PFAD = "/lernpfad/lernpfad.css"
 const JS_PFAD = "/lernpfad/lernpfad.js"
+/** Erweiterung für den Lernpfad PS (Simulator und Syntaxfärbung), siehe docs/lernpfad-powershell.md. */
+const PS_KONSOLE_PFAD = "/lernpfad/ps-konsole.js"
 
 /** Namen der Seiten auf oberster Ebene der App (inkl. Routen-Gruppen wie (dashboard)). */
 export function appSeiten(appPfad = path.join(process.cwd(), "app")): string[] {
@@ -388,6 +390,12 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
     fehler.push(`<script src="${JS_PFAD}"></script> fehlt.`)
   } else if (body && skript.index < body.index) {
     fehler.push(`<script src="${JS_PFAD}"> gehört ans Ende von <body>, nicht in <head>.`)
+  }
+
+  // Zusätzliche Skripte aus /lernpfad/ (z. B. ps-konsole.js) erweitern window.Lernpfad und brauchen lernpfad.js davor
+  const erweiterung = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), PS_KONSOLE_PFAD))
+  if (erweiterung && skript && erweiterung.index < skript.index) {
+    fehler.push(`<script src="${PS_KONSOLE_PFAD}"> gehört nach <script src="${JS_PFAD}">.`)
   }
 
   fehler.push(...externeRessourcen(quelle))

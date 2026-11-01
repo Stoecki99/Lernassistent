@@ -137,6 +137,8 @@ Loader (`lib/lernseiten.ts`, nur serverseitig):
 
 Auskommentierte Teile (`<!-- … -->`) zählen bei der Prüfung nicht. Code: `lib/lernseiten-pruefung.ts`, Tests: `tests/lernseiten.test.ts`.
 
+**Zusatz Lernpfad PS:** Weitere Dateien aus `/lernpfad/` sind erlaubt (sie sind keine externen Ressourcen), z. B. `<link rel="stylesheet" href="/lernpfad/ps-konsole.css">` nach `lernpfad.css` und `<script src="/lernpfad/ps-konsole.js"></script>` nach `lernpfad.js`. `lernpfad.css` und `lernpfad.js` bleiben Pflicht. Steht `ps-konsole.js` vor `lernpfad.js`, ist das ein Fehler. Details: `docs/lernpfad-powershell.md`.
+
 ## Auslieferung
 
 Route-Handler `app/(lernpfad)/lernseiten/[fach]/[thema]/route.ts`:

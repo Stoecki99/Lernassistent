@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cmdlets: Verb-Nomen und Parameter · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/03-hilfe-finden" title="Hilfe finden">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t02-», nur Farben aus :root -->
+  <style>
+    .t02-ziele{margin:6px 0 0; padding-left:1.2em}
+    .t02-ziele li{margin-bottom:2px}
+    .t02-quellen{margin:0; padding-left:1.2em}
+    .t02-quellen li{margin-bottom:2px}
+    /* Farben der Befehlsteile (aus den Tokens der Syntaxfärbung) */
+    .t02-k-verb{--t02-farbe:var(--ps-befehl)}
+    .t02-k-nomen{--t02-farbe:var(--ps-schluesselwort)}
+    .t02-k-param{--t02-farbe:var(--ps-variable)}
+    .t02-k-wert{--t02-farbe:var(--ps-string)}
+    .t02-k-switch{--t02-farbe:var(--ps-zahl)}
+    .t02-k-alias{--t02-farbe:var(--ps-typ)}
+    .t02-k-prog{--t02-farbe:var(--ps-kommentar)}
+    .t02-k-pipe{--t02-farbe:var(--ps-operator)}
+    .t02-k-fehler{--t02-farbe:var(--bad)}
+    .t02-eingabe{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end}
+    .t02-eingabe .t02-feld{flex:1 1 220px; min-width:0}
+    .t02-eingabe label{display:block; font-size:.9rem; margin-bottom:4px}
+    .t02-eingabe input, .t02-eingabe select{width:100%; box-sizing:border-box; font-family:var(--ps-mono); font-size:.95rem; padding:8px 10px;
+      border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink)}
+    .t02-teile{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0 0; padding:0; list-style:none}
+    .t02-teil{display:inline-flex; flex-direction:column; gap:2px; max-width:100%; min-width:0; border:1px solid var(--line);
+      border-bottom:4px solid var(--t02-farbe); border-radius:8px; padding:4px 8px; background:var(--surface)}
+    .t02-teil code{font-family:var(--ps-mono); color:var(--t02-farbe); font-weight:600; overflow-wrap:anywhere}
+    .t02-art{font-size:.74rem; color:var(--muted); font-weight:600}
+    .t02-erkl{margin:0; padding-left:1.3em}
+    .t02-erkl li{margin-bottom:6px}
+    .t02-erkl li::marker{color:var(--muted)}
+    .t02-erkl code{white-space:nowrap}
+    .t02-erkl b.t02-name{color:var(--t02-farbe)}
+    .t02-legende{display:flex; flex-wrap:wrap; gap:4px 12px; font-size:.85rem; color:var(--muted)}
+    .t02-legende span{border-bottom:3px solid var(--t02-farbe); padding-bottom:1px}
+    .t02-voll{font-family:var(--ps-mono); overflow-wrap:anywhere}
+    /* Verb-Nomen-Baukasten */
+    .t02-absicht{font-size:1.1rem; font-weight:600}
+    .t02-karten{display:flex; flex-wrap:wrap; gap:6px}
+    .t02-karten .btn{font-family:var(--ps-mono); font-size:.92rem}
+    .t02-bau{font-family:var(--ps-mono); font-size:1.15rem; padding:8px 12px; border:1px dashed var(--line); border-radius:8px;
+      background:var(--board); overflow-wrap:anywhere; min-height:1.6em}
+    .t02-bau .t02-luecke{color:var(--muted)}
+    .t02-stand{font-size:.9rem; color:var(--muted)}
+    .t02-verben td:first-child, .t02-verben th:first-child{white-space:nowrap}
+  </style>
+</head>
+<body data-fach="ps" data-thema="02-cmdlets-verb-nomen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 1 · Erste Schritte</span>
+    <h1>Cmdlets: Verb-Nomen und Parameter</h1>
+    <p class="lead">Lea arbeitet seit einer Woche in der Informatik der Gemeinde Wolkenried. Ihr erstes Ticket: «Die Dateisynchronisation läuft nicht. Schau bitte nach.» Dafür muss sie Befehle lesen und selbst bauen können. Hier lernst du, wie jeder PowerShell-Befehl aufgebaut ist, und probierst alles im Simulator aus.</p>
+    <div class="note"><b>Danach kannst du:</b>
+      <ul class="t02-ziele">
+        <li>einen Befehl in Verb, Nomen, Parameter, Wert und Schalter zerlegen.</li>
+        <li>aus einer Absicht wie «Dienst stoppen» den passenden Befehl bilden.</li>
+        <li>Parameter mit Namen, ohne Namen (Position) und abgekürzt schreiben.</li>
+        <li>Aliase wie <code class="ps">ls</code> oder <code class="ps">cd</code> auflösen und weisst, wann du sie besser nicht brauchst.</li>
+        <li>mit <code class="ps">Get-Command</code> Befehle finden und mit <code class="ps">-WhatIf</code> gefahrlos testen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#verb-nomen"><b>1</b>Verb-Nomen</a>
+    <a href="#parameter"><b>2</b>Parameter</a>
+    <a href="#aliase"><b>3</b>Aliase</a>
+    <a href="#ausprobieren"><b>4</b>Ausprobieren</a>
+    <a href="#zerleger"><b>5</b>Zerleger</a>
+    <a href="#baukasten"><b>6</b>Baukasten</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine jeder Befehlszeile</h2>
+    <p class="prose">Stell dir vor, du gibst in der Kantine eine Bestellung auf: «Bring Kaffee, gross, ohne Zucker.» Zuerst sagst du, <b>was</b> geschehen soll (bringen) und <b>womit</b> (Kaffee). Dann folgen Wünsche, die die Bestellung genauer machen. Ein PowerShell-Befehl ist genau so gebaut. PowerShell-Befehle heissen <b>Cmdlets</b> (sprich «Kommandlets», kleine Befehle).</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Cmdlet = Verb-Nomen</span><span class="ex"><code class="ps">Get-Service</code></span><p>Das Verb sagt, was passiert (Get = holen). Das Nomen sagt, womit (Service = Dienst). Dazwischen steht ein Bindestrich. Das Nomen steht immer in der Einzahl.</p></div>
+      <div class="concept"><span class="tag">Parameter = Zusatzwunsch</span><span class="ex"><code class="ps">-Name</code></span><p>Beginnt mit einem Bindestrich und macht den Befehl genauer, wie «gross» bei der Bestellung.</p></div>
+      <div class="concept"><span class="tag">Wert = die Angabe dazu</span><span class="ex"><code class="ps">-Name Spooler</code></span><p>Steht nach dem Parameter. Enthält ein Wert Leerzeichen, setzt du ihn in Anführungszeichen: <code class="ps">'C:\Program Files'</code>.</p></div>
+      <div class="concept"><span class="tag">Schalter = Lichtschalter</span><span class="ex"><code class="ps">-Recurse</code></span><p>Ein Parameter ohne Wert. Schreibst du ihn hin, ist er eingeschaltet. Fehlt er, ist er aus. Englisch heisst er <span lang="en">Switch</span>.</p></div>
+      <div class="concept"><span class="tag">Alias = Spitzname</span><span class="ex"><code class="ps">ls</code> → <code class="ps">Get-ChildItem</code></span><p>Ein Kurzname für ein Cmdlet. Praktisch beim Tippen, aber schwerer zu lesen.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Baustein ist das?</h3>
+      <p class="hint">Alle Teile stammen aus zwei Befehlen: <code class="ps">Stop-Service -Name Spooler -WhatIf</code> und <code class="ps">Get-ChildItem 'C:\Program Files' -Recurse</code>.</p>
+      <div id="t02-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Verb-Nomen ===== -->
+  <section id="verb-nomen">
+    <span class="eyebrow">Schritt 1 · Der Name eines Cmdlets</span>
+    <h2>Verb-Nomen: Namen, die man erraten kann</h2>
+    <p class="prose">Jedes Cmdlet heisst <b>Verb-Nomen</b>. Für die Verben gibt es eine feste Liste von «genehmigten Verben» (englisch <span lang="en">approved verbs</span>). Für «löschen» heisst es also immer <code class="ps">Remove</code>, nie <code class="ps">Delete</code>. Für «anlegen» immer <code class="ps">New</code>, nie <code class="ps">Create</code>. Das hat einen grossen Vorteil: Kennst du ein paar Verben und ein Nomen, kannst du Befehle erraten. Wer Dienste anzeigen kann (<code class="ps">Get-Service</code>), ahnt schon, dass es <code class="ps">Stop-Service</code> und <code class="ps">Start-Service</code> gibt.</p>
+    <div class="card tablebox">
+      <table class="tabelle t02-verben">
+        <caption>Die wichtigsten genehmigten Verben</caption>
+        <thead><tr><th>Verb</th><th>heisst</th><th>Beispiel auf Leas Rechner</th></tr></thead>
+        <tbody>
+          <tr><td><code class="ps">Get</code></td><td>holen, anzeigen (ändert nichts)</td><td><code class="ps">Get-Service</code></td></tr>
+          <tr><td><code class="ps">Set</code></td><td>ändern, festlegen</td><td><code class="ps">Set-Location</code></td></tr>
+          <tr><td><code class="ps">New</code></td><td>neu anlegen</td><td><code class="ps">New-Item</code></td></tr>
+          <tr><td><code class="ps">Remove</code></td><td>entfernen, löschen</td><td><code class="ps">Remove-Item</code></td></tr>
+          <tr><td><code class="ps">Start</code></td><td>starten</td><td><code class="ps">Start-Service</code></td></tr>
+          <tr><td><code class="ps">Stop</code></td><td>beenden, stoppen</td><td><code class="ps">Stop-Process</code></td></tr>
+          <tr><td><code class="ps">Restart</code></td><td>stoppen und neu starten</td><td><code class="ps">Restart-Service</code></td></tr>
+          <tr><td><code class="ps">Copy</code></td><td>kopieren</td><td><code class="ps">Copy-Item</code></td></tr>
+          <tr><td><code class="ps">Move</code></td><td>verschieben</td><td><code class="ps">Move-Item</code></td></tr>
+          <tr><td><code class="ps">Test</code></td><td>prüfen, Antwort ja oder nein</td><td><code class="ps">Test-Path</code></td></tr>
+          <tr><td><code class="ps">Export</code></td><td>in eine Datei schreiben</td><td><code class="ps">Export-Csv</code></td></tr>
+          <tr><td><code class="ps">Import</code></td><td>aus einer Datei lesen</td><td><code class="ps">Import-Csv</code></td></tr>
+          <tr><td><code class="ps">ConvertTo</code></td><td>in ein Format umwandeln</td><td><code class="ps">ConvertTo-Json</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die ganze Liste zeigt dir <code class="ps">Get-Verb</code>. In pwsh 7 sind es 100 Verben, in Gruppen eingeteilt (<span lang="en">Common</span>, <span lang="en">Lifecycle</span>, <span lang="en">Data</span> …). Mit einem Verb als Wert fragst du gezielt nach:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Verb für vier Verben" data-ps-befehl="Get-Verb Get, New, Remove, Stop"></pre>
+    <p class="prose">Die Beschreibungen sind englisch, wie in echter PowerShell. Die Spalte <code>AliasPrefix</code> brauchst du gleich bei den Aliasen: <code class="ps">g</code> für Get erklärt, warum <code class="ps">gci</code> für <code class="ps">Get-ChildItem</code> steht.</p>
+
+    <h3>Befehle finden mit Get-Command</h3>
+    <p class="prose">Weil Namen so regelmässig sind, kannst du nach Verb oder Nomen suchen. <code class="ps">Get-Command -Noun Service</code> zeigt alle Befehle, die mit Diensten arbeiten:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Command -Noun Service" data-ps-befehl="Get-Command -Noun Service"></pre>
+    <div class="note"><b>Simulator und echte PowerShell:</b> Der Simulator kennt nur die Befehle, die er nachbaut. In echtem pwsh 7.6 unter Windows listet derselbe Befehl neun Cmdlets: dazu kommen <code class="ps">New-Service</code>, <code class="ps">Remove-Service</code>, <code class="ps">Resume-Service</code>, <code class="ps">Set-Service</code> und <code class="ps">Suspend-Service</code>.</div>
+    <p class="prose">Umgekehrt findet <code class="ps">Get-Command -Verb Stop</code> alles, was etwas beendet. Auf einem echten Windows sind das über zwanzig Befehle, darunter <code class="ps">Stop-Process</code>, <code class="ps">Stop-Service</code> und <code class="ps">Stop-Computer</code>.</p>
+    <div class="note tipp"><b>Gross und klein:</b> Microsoft schreibt jedes Wort gross (<code class="ps">Get-ChildItem</code>, Fachwort <span lang="en">PascalCase</span>). PowerShell selbst ist das egal: <code class="ps">get-childitem</code> funktioniert genauso. Schreib trotzdem wie Microsoft, dann liest du deine Befehle später leichter.</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Windows PowerShell 5.1 kennt 98 Verben, und <code class="ps">Get-Verb</code> zeigt dort nur die Spalten <code>Verb</code> und <code>Group</code>. In <span class="ps-version">7</span> kamen <code class="ps">Build</code> und <code class="ps">Deploy</code> sowie die Spalten <code>AliasPrefix</code> und <code>Description</code> dazu.</div>
+  </section>
+
+  <!-- ===== 2 · Parameter ===== -->
+  <section id="parameter">
+    <span class="eyebrow">Schritt 2 · Parameter, Werte, Schalter</span>
+    <h2>Vom Auftrag zum Befehl, Stück für Stück</h2>
+    <p class="prose">Lea will alle Textdateien im Ordner <code>Dokumente</code> sehen, auch die in Unterordnern. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil des Befehls leuchtet auf.</p>
+    <div id="t02-stepper"></div>
+
+    <h3>Werte mit Leerzeichen</h3>
+    <p class="prose">PowerShell trennt die Teile einer Zeile an den Leerzeichen. Ein Pfad wie <code>C:\Program Files</code> zerfällt darum in zwei Teile, wenn du ihn nicht in Anführungszeichen setzt. Mit Anführungszeichen ist er ein einziger Wert:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe mit Pfad in Anführungszeichen" data-ps-befehl="Get-ChildItem 'C:\Program Files'"></pre>
+    <p class="prose">Ohne Anführungszeichen geht es schief, und zwar je nach Befehl anders. <code class="ps">Set-Location</code> hat nur einen Platz für einen Wert ohne Namen und meldet das übrige Wort <code>Files</code>:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei Pfad ohne Anführungszeichen" data-ps-befehl="Set-Location C:\Program Files"></pre>
+    <p class="prose">Auf Deutsch: «Es gibt keinen Positionsparameter, der den Wert ‹Files› annimmt.» Bei <code class="ps">Get-ChildItem</code> ist die Meldung noch verwirrender, siehe <a href="#fallen">Fallen</a>.</p>
+    <div class="note"><b>Einfach oder doppelt?</b> Für einen festen Text sind einfache Anführungszeichen <code class="ps">'…'</code> die sichere Wahl. Doppelte <code class="ps">"…"</code> gehen auch. Den Unterschied lernst du in Station 09.</div>
+
+    <h3>Abkürzen, solange es eindeutig ist</h3>
+    <p class="prose">Parameternamen darfst du abkürzen: <code class="ps">-Rec</code> reicht für <code class="ps">-Recurse</code>. Die Abkürzung muss aber genau einen Parameter treffen. <code class="ps">-P</code> passt bei <code class="ps">Get-ChildItem</code> auf mehrere Namen, darum bricht PowerShell ab:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei mehrdeutiger Abkürzung" lang="en">PS C:\Users\lea&gt; Get-ChildItem -P Logs
+<span class="psk-fehler">Get-ChildItem: Parameter cannot be processed because the parameter name 'P' is ambiguous. Possible matches include: -Path -ProgressAction -PipelineVariable -LiteralPath.</span></pre>
+    <p class="prose">Auf Deutsch: «Der Name ‹P› ist mehrdeutig. Möglich wären -Path, -ProgressAction, -PipelineVariable und -LiteralPath.» (<code class="ps">-LiteralPath</code> hat den Zweitnamen <code>PSPath</code>, darum taucht es hier auf.) Mit <code class="ps">-Pa</code> ist es eindeutig. Ein Tippfehler im Namen ergibt eine andere Meldung:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung bei unbekanntem Parameter" data-ps-befehl="Get-ChildItem -Pfad Logs"></pre>
+    <div class="note tipp"><b>Abkürzen oder Tab?</b> In der Konsole sind Abkürzungen bequem. Noch besser ist die Tab-Taste aus Station 01: <code class="ps">-Rec</code> und Tab ergänzt zu <code class="ps">-Recurse</code>. Dann steht der volle Name da, und niemand muss raten.</div>
+
+    <h3>Vorgeschmack: -WhatIf und -Confirm</h3>
+    <p class="prose">Manche Parameter gibt es bei vielen Cmdlets. Sie heissen <b>gemeinsame Parameter</b>. Zwei davon sind dein Sicherheitsnetz bei allem, was etwas verändert. <code class="ps">-WhatIf</code> («was wäre, wenn») führt nichts aus und sagt nur, was passieren würde:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Remove-Item mit WhatIf" data-ps-befehl="Remove-Item Downloads\setup-alt.exe -WhatIf"></pre>
+    <p class="prose">Die Datei ist danach noch da. <code class="ps">-Confirm</code> fragt vor jedem Schritt nach. Mit <kbd>Y</kbd> (<span lang="en">Yes</span>) geht es weiter, mit <kbd>N</kbd> (<span lang="en">No</span>) passiert nichts. Hier hat Lea mit N geantwortet:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Rückfrage von Remove-Item mit Confirm" data-ps-befehl="Remove-Item Downloads\setup-alt.exe -Confirm"></pre>
+    <div class="note"><b>Merke:</b> <code class="ps">-WhatIf</code> und <code class="ps">-Confirm</code> haben nur Befehle, die etwas verändern (Remove, Stop, Move …). <code class="ps">Get-ChildItem -WhatIf</code> ergibt den Fehler «A parameter cannot be found that matches parameter name 'WhatIf'». Ein Get-Befehl ändert ja nichts. Mehr dazu in Station 05.</div>
+  </section>
+
+  <!-- ===== 3 · Aliase ===== -->
+  <section id="aliase">
+    <span class="eyebrow">Schritt 3 · Spitznamen und alte Bekannte</span>
+    <h2>Aliase und klassische Programme</h2>
+    <p class="prose">Viele Leute kommen von der alten Eingabeaufforderung (<code>cmd</code>) oder von Linux. Damit sie sich zu Hause fühlen, hat PowerShell <b>Aliase</b>: Kurznamen, die auf ein Cmdlet zeigen. <code class="ps">dir</code>, <code class="ps">ls</code> und <code class="ps">gci</code> starten alle <code class="ps">Get-ChildItem</code>. Wofür ein Alias steht, verrät <code class="ps">Get-Alias</code>:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Alias für fünf Aliase" data-ps-befehl="Get-Alias ls, dir, gci, cd, cls"></pre>
+    <p class="prose">Den Pfeil liest du als «steht für». Umgekehrt fragst du mit <code class="ps">-Definition</code>, welche Aliase ein Cmdlet hat:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Alias -Definition Get-ChildItem" data-ps-befehl="Get-Alias -Definition Get-ChildItem"></pre>
+    <div class="note"><b>Aliase in die Konsole, nicht ins Skript.</b> Beim schnellen Arbeiten in der Konsole sind Aliase ideal. In einem Skript, das andere lesen, schreibst du den vollen Namen. <code class="ps">Get-ChildItem</code> versteht jede Person, <code class="ps">gci</code> nicht. Dazu kommt: Unter Linux und macOS ist <code class="ps">ls</code> kein Alias, sondern das Linux-Programm <code>ls</code>. Es liefert Text statt Objekten. Ein Skript mit vollen Namen läuft überall gleich.</div>
+    <h3>Klassische Programme laufen auch</h3>
+    <p class="prose">PowerShell startet auch gewöhnliche Programme. <code class="ps">ping</code> (Erreichbarkeit eines Rechners prüfen) und <code class="ps">ipconfig</code> (Netzwerkeinstellungen anzeigen) funktionieren wie in der alten Eingabeaufforderung. Sie sind keine Cmdlets und halten sich darum nicht an Verb-Nomen. Ihre Parameter schreiben sie oft anders, etwa <code class="ps">ping -n 2 server</code> oder <code class="ps">ipconfig /all</code>, und sie liefern Text statt Objekten. Im Simulator gibt es zwei solche Programme:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von hostname" data-ps-befehl="hostname" data-ps-sitzung="prog"></pre>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von whoami" data-ps-befehl="whoami" data-ps-sitzung="prog"></pre>
+    <p class="prose"><code class="ps">ping</code> und <code class="ps">ipconfig</code> baut der Simulator nicht nach. Probier sie in deiner echten PowerShell aus. Das PowerShell-Gegenstück zu ping ist <code class="ps">Test-Connection</code> (Station 12).</p>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In Windows PowerShell 5.1 sind <code class="ps">curl</code> und <code class="ps">wget</code> Aliase für <code class="ps">Invoke-WebRequest</code>. In <span class="ps-version">7</span> gibt es diese Aliase nicht mehr, dort starten die Namen die echten Programme. 5.1 kennt 151 Aliase, pwsh 7.6 unter Windows 140.</div>
+  </section>
+
+  <!-- ===== 4 · Ausprobieren ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 4 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">Jetzt bist du dran. Tippe die Befehle selbst und drück Enter. Mit ↑ holst du den letzten Befehl zurück, mit Tab ergänzt du Namen. Der Simulator ist ein Spiel-Rechner: Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t02-konsole"></div>
+  </section>
+
+  <!-- ===== 5 · Befehls-Zerleger ===== -->
+  <section id="zerleger">
+    <span class="eyebrow">Schritt 5 · Befehle röntgen</span>
+    <h2>Der Befehls-Zerleger</h2>
+    <p class="prose">Tippe einen Befehl ein oder wähle ein Beispiel. Der Zerleger zeigt jeden Teil in seiner Farbe und erklärt, was PowerShell daraus macht. Er löst Aliase und abgekürzte Parameter auf und setzt Werte ohne Namen in den richtigen Parameter ein. Die Angaben über Parameter holt er aus der Syntax der Befehle im Simulator.</p>
+    <div class="card stack">
+      <div class="t02-eingabe">
+        <div class="t02-feld">
+          <label for="t02-z-beispiel">Beispiel wählen</label>
+          <select id="t02-z-beispiel"></select>
+        </div>
+        <div class="t02-feld">
+          <label for="t02-z-eingabe">oder selbst eintippen</label>
+          <input id="t02-z-eingabe" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="Get-ChildItem -Path Dokumente -Recurse">
+        </div>
+        <button type="button" class="btn primary" id="t02-z-los">Zerlegen</button>
+      </div>
+      <p class="t02-legende" aria-hidden="true">
+        <span class="t02-k-verb">Verb</span><span class="t02-k-nomen">Nomen</span><span class="t02-k-param">Parameter</span><span class="t02-k-wert">Wert</span><span class="t02-k-switch">Schalter</span><span class="t02-k-alias">Alias</span><span class="t02-k-prog">Programm</span><span class="t02-k-fehler">Fehler</span>
+      </p>
+      <div id="t02-z-ergebnis" aria-live="polite"></div>
+      <div class="row">
+        <button type="button" class="btn" id="t02-z-ausfuehren" aria-expanded="false" aria-controls="t02-z-ausgabe">Im Simulator ausführen</button>
+      </div>
+      <div id="t02-z-ausgabe" hidden></div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Verb-Nomen-Baukasten ===== -->
+  <section id="baukasten">
+    <span class="eyebrow">Schritt 6 · Selbst bauen</span>
+    <h2>Der Verb-Nomen-Baukasten</h2>
+    <p class="prose">Zu jeder Absicht wählst du ein Verb-Kärtchen und ein Nomen-Kärtchen. Achtung: Unter den Kärtchen sind Verben, die nicht genehmigt sind, und Nomen in der Mehrzahl. Mit «Prüfen» erfährst du, ob es den Befehl gibt.</p>
+    <div class="card stack" id="t02-bk">
+      <p class="t02-stand" id="t02-bk-stand"></p>
+      <p class="t02-absicht" id="t02-bk-absicht"></p>
+      <div role="group" aria-labelledby="t02-bk-verb-titel" class="stack">
+        <h3 id="t02-bk-verb-titel">Verb</h3>
+        <div class="t02-karten" id="t02-bk-verben"></div>
+      </div>
+      <div role="group" aria-labelledby="t02-bk-nomen-titel" class="stack">
+        <h3 id="t02-bk-nomen-titel">Nomen</h3>
+        <div class="t02-karten" id="t02-bk-nomen"></div>
+      </div>
+      <p class="t02-bau" id="t02-bk-bau" aria-live="polite"></p>
+      <div class="row">
+        <button type="button" class="btn primary" id="t02-bk-pruefen">Prüfen</button>
+        <button type="button" class="btn" id="t02-bk-weiter">Nächste Absicht</button>
+        <button type="button" class="btn" id="t02-bk-neu">Von vorn</button>
+      </div>
+      <div class="rueckmeldung leer" id="t02-bk-rm" aria-live="polite"></div>
+      <div id="t02-bk-ausgabe"></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 1 · Einordnen</span><h3>Genehmigtes Verb oder nicht?</h3></div>
+      <div id="t02-u-verben"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 2 · Zuordnen</span><h3>Welches Cmdlet steckt hinter dem Alias?</h3></div>
+      <div id="t02-u-aliase"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 3 · Ausgabe vorhersagen</span><h3>Abgekürzt</h3></div>
+      <div id="t02-u-abk"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 4 · Ausgabe vorhersagen</span><h3>Ein Wert ohne Namen</h3></div>
+      <div id="t02-u-pos"></div>
+    </div>
+    <div class="card stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 5 · Fehler finden</span><h3>Lea tippt schnell</h3></div>
+      <div id="t02-u-fehler1"></div>
+      <div id="t02-u-fehler2"></div>
+    </div>
+    <div id="t02-u-wf"></div>
+    <div class="stack">
+      <div class="uebung-kopf"><span class="eyebrow">Übung 7 · Befehl selbst schreiben</span><h3>Zwei Aufträge für den Simulator</h3></div>
+      <div id="t02-u-konsole"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas erstes Ticket: die Dateisynchronisation</h2>
+    <p class="prose">Lea findet die Befehle für Dienste, prüft den Dienst <code>WolkenriedSync</code> und testet den Start gefahrlos. Jede Szene zeigt die Eingabe und die echte Ausgabe des Simulators.</p>
+    <div id="t02-film"></div>
+    <details class="sol"><summary>Die Lösung als Text</summary>
+      <div class="stack">
+        <p>1. Befehle finden: <code class="ps">Get-Command -Noun Service</code>. 2. Status prüfen: <code class="ps">Get-Service -Name WolkenriedSync</code> zeigt <code>Stopped</code> (gestoppt). 3. Start gefahrlos testen: <code class="ps">Start-Service -Name WolkenriedSync -WhatIf</code>.</p>
+        <p>Wirklich starten darf Lea den Dienst nur mit Adminrechten. Ohne sie meldet <code class="ps">Start-Service</code> «Cannot open 'WolkenriedSync' service». Wie man die Konsole als Administrator startet, kommt in Station 12. Eigene Lösung, in pwsh 7.6 nachgeprüft (der Dienst <code>WolkenriedSync</code> existiert nur im Simulator).</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Sechs Stolpersteine</h2>
+    <div class="note falle"><b>Leerzeichen ohne Anführungszeichen.</b> <code class="ps">Get-ChildItem C:\Program Files</code> meldet <span lang="en">«Cannot find path 'C:\Program' because it does not exist»</span>. Warum? <code class="ps">Get-ChildItem</code> hat zwei Plätze für Werte ohne Namen: zuerst <code class="ps">-Path</code>, dann <code class="ps">-Filter</code>. <code>C:\Program</code> landet in <code class="ps">-Path</code>, <code>Files</code> in <code class="ps">-Filter</code>. Den Ordner <code>C:\Program</code> gibt es nicht. Lösung: <code class="ps">Get-ChildItem 'C:\Program Files'</code>.</div>
+    <div class="note falle"><b>Nomen in der Mehrzahl.</b> <code class="ps">Get-Services</code> gibt es nicht, auch wenn du viele Dienste willst. Die Meldung beginnt mit <span lang="en">«The term 'Get-Services' is not recognized»</span>: «Den Namen kenne ich nicht.» Richtig ist <code class="ps">Get-Service</code>.</div>
+    <div class="note falle"><b>Erfundene oder deutsche Verben.</b> <code class="ps">Delete-Item</code>, <code class="ps">Create-Item</code> oder <code class="ps">Hole-Datei</code> gibt es nicht. Nimm das genehmigte Verb: <code class="ps">Remove-Item</code>, <code class="ps">New-Item</code>, <code class="ps">Get-Item</code>. Im Zweifel hilft <code class="ps">Get-Command -Noun Item</code>.</div>
+    <div class="note falle"><b>Abkürzung zu kurz.</b> <code class="ps">-P</code> passt auf mehrere Parameter (<span lang="en">«is ambiguous»</span>). Kürze nur so weit, dass genau ein Name passt, oder nimm Tab.</div>
+    <div class="note falle"><b>Parameter ohne Wert.</b> <code class="ps">Get-ChildItem -Path -Recurse Dokumente</code> meldet <span lang="en">«Missing an argument for parameter 'Path'»</span>. Nach <code class="ps">-Path</code> muss der Wert kommen, nicht der nächste Parameter. Richtig: <code class="ps">Get-ChildItem -Path Dokumente -Recurse</code>. Nur Schalter wie <code class="ps">-Recurse</code> stehen allein.</div>
+    <div class="note falle"><b>Aliase im Skript.</b> <code class="ps">gci</code>, <code class="ps">%</code> oder <code class="ps">?</code> sparen Tipparbeit, machen Skripte aber unlesbar, und unter Linux bedeutet <code class="ps">ls</code> etwas anderes. In Skripte gehören volle Namen.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen, je eine richtige Antwort. Das Ergebnis erscheint unten in der Abschluss-Box.</p>
+    <div id="t02-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">Get-Command</code></th><td>Befehle finden, nach Verb oder Nomen</td><td><code class="ps">Get-Command -Noun Service</code></td></tr>
+          <tr><th><code class="ps">Get-Verb</code></th><td>genehmigte Verben anzeigen</td><td><code class="ps">Get-Verb Stop</code></td></tr>
+          <tr><th><code class="ps">Get-Alias</code></th><td>Alias auflösen oder Aliase eines Cmdlets finden</td><td><code class="ps">Get-Alias ls</code>, <code class="ps">Get-Alias -Definition Get-ChildItem</code></td></tr>
+          <tr><th><code class="ps">Get-ChildItem</code></th><td>Inhalt eines Ordners</td><td><code class="ps">Get-ChildItem -Path Dokumente -Recurse</code></td></tr>
+          <tr><th><code class="ps">Get-Service</code></th><td>Dienste und ihren Status anzeigen</td><td><code class="ps">Get-Service -Name WolkenriedSync</code></td></tr>
+          <tr><th><code class="ps">-WhatIf</code></th><td>nur zeigen, was passieren würde</td><td><code class="ps">Stop-Service -Name Spooler -WhatIf</code></td></tr>
+          <tr><th><code class="ps">-Confirm</code></th><td>vor jedem Schritt nachfragen</td><td><code class="ps">Remove-Item Downloads\setup-alt.exe -Confirm</code></td></tr>
+          <tr><th><code class="ps">ping</code>, <code class="ps">ipconfig</code></th><td>klassische Programme, laufen auch in PowerShell</td><td><code class="ps">ipconfig /all</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Ein Cmdlet heisst <b>Verb-Nomen</b>: genehmigtes Verb (<code class="ps">Get-Verb</code>), Nomen in der <b>Einzahl</b>.</li>
+      <li>Ein <b>Parameter</b> beginnt mit <code class="ps">-</code>, der <b>Wert</b> folgt danach. Werte mit Leerzeichen stehen in Anführungszeichen.</li>
+      <li><b>Positionsparameter</b> darfst du ohne Namen schreiben: <code class="ps">Get-ChildItem Dokumente</code> heisst <code class="ps">Get-ChildItem -Path Dokumente</code>.</li>
+      <li>Ein <b>Schalter</b> wie <code class="ps">-Recurse</code> hat keinen Wert: hinschreiben heisst einschalten.</li>
+      <li>Parameternamen darfst du <b>abkürzen</b>, solange genau einer passt.</li>
+      <li><b>Aliase</b> (<code class="ps">ls</code>, <code class="ps">dir</code>, <code class="ps">gci</code>, <code class="ps">cd</code>, <code class="ps">cls</code>) für die Konsole, volle Namen für Skripte.</li>
+      <li>Bei allem, was etwas verändert: zuerst <code class="ps">-WhatIf</code>.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="summary prose">
+        <li><code class="ps">Get-Verb</code> zeigt in 5.1 nur Verb und Gruppe und kennt 98 Verben (in 7: 100, mit Beschreibung).</li>
+        <li><code class="ps">curl</code> und <code class="ps">wget</code> sind in 5.1 Aliase für <code class="ps">Invoke-WebRequest</code>, in 7 nicht mehr.</li>
+        <li>Fehlermeldungen erscheinen in 5.1 auf einem deutschen Windows deutsch und über mehrere Zeilen. pwsh 7 meldet englisch in einer Zeile.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn)</h3>
+      <ul class="t02-quellen">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_command_syntax">about_Command_Syntax</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_parameters">about_Parameters</a> (benannte und Positionsparameter, Werte mit Leerzeichen)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_aliases">about_Aliases</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters">about_CommonParameters</a> (WhatIf, Confirm)</li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/approved-verbs-for-windows-powershell-commands">Approved Verbs for PowerShell Commands</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/developer/cmdlet/strongly-encouraged-development-guidelines">Strongly Encouraged Development Guidelines</a> (Nomen in der Einzahl, Grossschreibung)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/get-command">Get-Command</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-alias">Get-Alias</a>, <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/get-verb">Get-Verb</a></li>
+      </ul>
+      <p class="hint">Alle Ausgaben und Fehlermeldungen auf dieser Seite sind in pwsh 7.6.1 und, bei den 5.1-Hinweisen, in Windows PowerShell 5.1 nachgeprüft. Leas Rechner gibt es nur im Simulator.</p>
+    </div>
+    <footer class="hint">Weiter geht es mit Station 03 «Hilfe finden»: Dort liest du die Syntax eines Befehls und findest selbst heraus, welche Parameter er hat.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  // Code im HTML immer als Text in <code class="ps"> (wird von ps-konsole.js gefärbt)
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  const LINK = (id, t) => '<span data-link="' + id + '">' + C(t) + "</span>";
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t02-sortierer", {
+    kategorien: ["Verb", "Nomen", "Parameter", "Wert", "Schalter"],
+    elemente: [
+      { html: C("Stop"), kategorie: "Verb", erklaerung: "Stop sagt, was passiert: beenden." },
+      { html: C("Service"), kategorie: "Nomen", erklaerung: "Service (Dienst) ist der Gegenstand, in der Einzahl." },
+      { html: C("-Name"), kategorie: "Parameter", erklaerung: "Beginnt mit einem Bindestrich und erwartet danach einen Wert." },
+      { html: C("Spooler"), kategorie: "Wert", erklaerung: "Der Wert zu -Name: der Druckerdienst Spooler." },
+      { html: C("-WhatIf"), kategorie: "Schalter", erklaerung: "Kein Wert nötig: hinschreiben heisst einschalten. Dann zeigt der Befehl nur, was er täte." },
+      { html: C("Get"), kategorie: "Verb", erklaerung: "Get heisst holen oder anzeigen." },
+      { html: C("ChildItem"), kategorie: "Nomen", erklaerung: "ChildItem heisst «Kind-Element»: die Einträge in einem Ordner." },
+      { html: C("'C:\\Program Files'"), kategorie: "Wert", erklaerung: "Ein Wert ohne Parameternamen. Die Anführungszeichen halten den Pfad mit Leerzeichen zusammen." },
+      { html: C("-Recurse"), kategorie: "Schalter", erklaerung: "Schalter: auch alle Unterordner durchsuchen." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper ---------- */
+  const st = L.konsole.sitzung();
+  const stAusgabe = st.html("Get-ChildItem -Path Dokumente -Filter *.txt -Recurse");
+  const teil1 = LINK("v", "Get") + C("-") + LINK("n", "ChildItem");
+  L.stepper("#t02-stepper", {
+    titel: "Leas Auftrag",
+    text: '<span data-link="v">Zeige</span> <span data-link="n">den Inhalt</span> <span data-link="p">des Ordners Dokumente</span>, aber nur <span data-link="f">die Textdateien</span>, <span data-link="r">auch in Unterordnern</span>.',
+    schritte: [
+      { html: teil1,
+        warum: "Zuerst das Cmdlet. Get heisst anzeigen, ChildItem sind die Einträge in einem Ordner. Zusammen mit Bindestrich: Get-ChildItem. Allein zeigt es den Ordner, in dem Lea gerade ist." },
+      { html: LINK("v", "Get-ChildItem") + " " + LINK("p", "-Path Dokumente"),
+        warum: "Der Parameter -Path sagt, welcher Ordner gemeint ist. Dokumente ist sein Wert. Parameter und Wert trennt ein Leerzeichen. Das heisst benannter Parameter: Der Name steht da." },
+      { html: LINK("v", "Get-ChildItem") + " " + LINK("p", "-Path Dokumente") + " " + LINK("f", "-Filter *.txt"),
+        warum: "Der Parameter -Filter lässt nur passende Namen durch. Der Stern * steht für beliebige Zeichen, also: alles, was auf .txt endet." },
+      { html: LINK("v", "Get-ChildItem") + " " + LINK("p", "-Path Dokumente") + " " + LINK("f", "-Filter *.txt") + " " + LINK("r", "-Recurse") + stAusgabe,
+        warum: "-Recurse ist ein Schalter: Er braucht keinen Wert. Hinschreiben heisst «auch in allen Unterordnern suchen». In Archiv liegt keine sichtbare Textdatei, darum erscheint nur Dokumente." },
+      { html: LINK("v", "Get-ChildItem") + " " + LINK("p", "Dokumente") + " " + LINK("f", "*.txt") + " " + LINK("r", "-Recurse"),
+        warum: "Kürzer, gleiche Wirkung: -Path und -Filter sind Positionsparameter. Ein Wert ohne Namen landet zuerst in -Path (Position 0), der zweite in -Filter (Position 1). Die Reihenfolge zählt!" },
+      { html: LINK("v", "gci") + " " + LINK("p", "Dokumente") + " " + LINK("f", "*.txt") + " " + LINK("r", "-Rec"),
+        warum: "Noch kürzer: gci ist ein Alias für Get-ChildItem, -Rec eine eindeutige Abkürzung von -Recurse. Gut zum schnellen Tippen in der Konsole. In einem Skript schreibst du die lange Form aus Schritt 4." }
+    ]
+  });
+
+  /* ---------- Schritt 4: Konsole mit Aufgaben ---------- */
+  const reDokumente = /Directory: C:\\Users\\lea\\Dokumente\r?\n/;
+  L.konsole("#t02-konsole", {
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Alle Befehle für Dienste",
+        text: "<p>Finde mit einem Befehl alle Cmdlets, deren Nomen <code>Service</code> ist.</p>",
+        hinweis: "<p>Get-Command kennt den Parameter -Noun. Sein Wert ist das Nomen.</p>",
+        loesung: "Get-Command -Noun Service",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Command") && /Restart-Service/.test(ctx.ausgabe) && /Stop-Service/.test(ctx.ausgabe) && !/Get-Process/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Wofür steht ls?",
+        text: "<p>Finde heraus, welches Cmdlet hinter dem Alias <code>ls</code> steckt.</p>",
+        hinweis: "<p>Das Nomen heisst Alias, das Verb Get. Den Alias gibst du als Wert mit.</p>",
+        loesung: "Get-Alias ls",
+        // ls muss in der Eingabe stehen: Get-Command allein listet auch alle Aliase
+        pruefe: (ctx) => /ls -> Get-ChildItem/.test(ctx.ausgabe) && /(^|[\s,'"])ls([\s,'"]|$)/i.test(ctx.eingabe)
+      },
+      {
+        titel: "Mit Parameternamen",
+        text: "<p>Zeige den Inhalt des Ordners <code>Dokumente</code>. Schreib den Parameter <code>-Path</code> ausdrücklich hin.</p>",
+        hinweis: "<p>Cmdlet, Leerzeichen, -Path, Leerzeichen, Ordnername.</p>",
+        loesung: "Get-ChildItem -Path Dokumente",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /(^|\s)-pa(th?)?(\s|:|$)/i.test(ctx.eingabe) && reDokumente.test(ctx.ausgabe)
+      },
+      {
+        titel: "Ohne Parameternamen",
+        text: "<p>Zeige denselben Ordner noch einmal, diesmal ohne <code>-Path</code>. Der Ordnername allein genügt.</p>",
+        hinweis: "<p>-Path ist ein Positionsparameter: Der erste Wert ohne Namen landet automatisch dort.</p>",
+        loesung: "Get-ChildItem Dokumente",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && !/(^|\s)-(pa|li|ps)/i.test(ctx.eingabe) && /^\s*\S+\s+[^-\s]/.test(ctx.eingabe) && reDokumente.test(ctx.ausgabe)
+      },
+      {
+        titel: "Mit allen Unterordnern",
+        text: "<p>Zeige den Ordner <code>Dokumente</code> mitsamt dem Inhalt seiner Unterordner.</p>",
+        hinweis: "<p>Dafür gibt es einen Schalter. Er beginnt mit -Rec und braucht keinen Wert.</p>",
+        loesung: "Get-ChildItem -Path Dokumente -Recurse",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && reDokumente.test(ctx.ausgabe) && /Directory: C:\\Users\\lea\\Dokumente\\Archiv/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Ein Pfad mit Leerzeichen",
+        text: "<p>Zeige den Inhalt von <code>C:\\Program Files</code>.</p>",
+        hinweis: "<p>Probier es zuerst ohne Anführungszeichen und lies die Fehlermeldung. Dann setz den ganzen Pfad in '…'.</p>",
+        loesung: "Get-ChildItem 'C:\\Program Files'",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /Directory: C:\\Program Files\r?\n/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Gefahrlos testen",
+        text: "<p>Was würde passieren, wenn Lea den Dienst <code>Spooler</code> (Druckerwarteschlange) stoppt? Lass es dir anzeigen, ohne den Dienst wirklich zu stoppen.</p>",
+        hinweis: "<p>Das Cmdlet heisst Stop-Service. Hänge den Schalter -WhatIf an.</p>",
+        loesung: "Stop-Service -Name Spooler -WhatIf",
+        pruefe: (ctx) => ctx.befehle.includes("Stop-Service") && /What if: Performing the operation "Stop-Service" on target "[^"]*\(Spooler\)"/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Schritt 5: Befehls-Zerleger ---------- */
+  const z = (function () {
+    const ab = L.konsole.sitzung();
+    const verbGruppe = {};
+    ab.ausfuehren("(Get-Verb | ForEach-Object { $_.Verb + ':' + $_.Group }) -join ','").split(",").forEach((p) => {
+      const i = p.indexOf(":");
+      if (i > 0) verbGruppe[p.slice(0, i).toLowerCase()] = { verb: p.slice(0, i), gruppe: p.slice(i + 1).trim() };
+    });
+    const GEMEINSAM = ["Verbose", "Debug", "ErrorAction", "WarningAction", "InformationAction", "ProgressAction", "ErrorVariable", "WarningVariable", "InformationVariable", "OutVariable", "OutBuffer", "PipelineVariable"];
+    const GEMEINSAM_SCHALTER = { verbose: 1, debug: 1 };
+    const PROGRAMME = { ping: "prüft, ob ein Rechner antwortet", ipconfig: "zeigt die Netzwerkeinstellungen", hostname: "zeigt den Namen des Computers", whoami: "zeigt das angemeldete Konto", notepad: "öffnet den Editor", tracert: "zeigt den Weg zu einem Rechner", nslookup: "fragt einen Namen im DNS ab" };
+    const VERB_DE = { get: "holen, anzeigen", set: "ändern, festlegen", new: "neu anlegen", remove: "entfernen", start: "starten", stop: "beenden", restart: "neu starten", copy: "kopieren", move: "verschieben", rename: "umbenennen", test: "prüfen (ja oder nein)", export: "in eine Datei schreiben", import: "aus einer Datei lesen", convertto: "in ein Format umwandeln", convertfrom: "aus einem Format zurückwandeln", clear: "leeren", add: "hinzufügen", measure: "messen, zählen", select: "auswählen", sort: "sortieren", where: "filtern", format: "darstellen", out: "ausgeben", write: "schreiben", join: "zusammenfügen", split: "aufteilen", resolve: "auflösen" };
+    const NOMEN_DE = { childitem: "die Einträge in einem Ordner", item: "ein Element, z. B. eine Datei oder ein Ordner", service: "ein Windows-Dienst", process: "ein laufendes Programm (Prozess)", location: "der aktuelle Ort", content: "der Inhalt einer Datei", command: "ein Befehl", alias: "ein Alias (Kurzname)", verb: "ein genehmigtes Verb", help: "die Hilfe", date: "Datum und Uhrzeit", path: "ein Pfad", csv: "eine CSV-Datei (Tabelle als Text)", json: "das Format JSON", object: "ein Objekt", member: "Eigenschaften und Methoden", host: "die Konsole", history: "der Verlauf", executionpolicy: "die Ausführungsrichtlinie", connection: "eine Netzwerkverbindung", psdrive: "ein Laufwerk" };
+    const cache = {};
+
+    // Zeile in Teile zerlegen (Anführungszeichen und Klammern zusammenhalten, | trennt Befehle)
+    function woerter(zeile) {
+      const segmente = [[]];
+      let akt = "", q = null, tiefe = 0;
+      const fertig = () => { if (akt) { segmente[segmente.length - 1].push(akt); akt = ""; } };
+      for (let i = 0; i < zeile.length; i++) {
+        const c = zeile.charAt(i);
+        if (q) { akt += c; if (c === q) q = null; continue; }
+        if (c === "'" || c === '"') { q = c; akt += c; continue; }
+        if (c === "(" || c === "{" || c === "@") { if (c !== "@") tiefe++; akt += c; continue; }
+        if ((c === ")" || c === "}") && tiefe > 0) { tiefe--; akt += c; continue; }
+        if (tiefe === 0 && c === "|") { fertig(); segmente.push([]); continue; }
+        if (tiefe === 0 && /\s/.test(c)) { fertig(); continue; }
+        akt += c;
+      }
+      fertig();
+      return segmente.filter((s) => s.length);
+    }
+
+    // Syntaxzeilen eines Cmdlets aus dem Simulator lesen
+    function syntax(name) {
+      const k = name.toLowerCase();
+      if (cache[k]) return cache[k];
+      const text = ab.ausfuehren("Get-Command -Name '" + name.replace(/'/g, "''") + "' -Syntax -ErrorAction SilentlyContinue");
+      const saetze = [];
+      text.split(/\r?\n/).forEach((zeile) => {
+        if (!/^\S+-\S+ /.test(zeile) && !/^\S+-\S+$/.test(zeile)) return;
+        // Formen: [[-Path] <T>] und [-Name] <T> = Position; [-Filter <T>] und -Name <T> = benannt; [-Recurse] = Schalter
+        const params = [];
+        const re = /\[\[-(\w+)\] <[^>]+>\]|\[-(\w+)\] <[^>]+>|\[-(\w+) <[^>]+>\]|(?:^|\s)-(\w+) <[^>]+>|\[-(\w+)\]/g;
+        let m, pos = 0;
+        while ((m = re.exec(zeile))) {
+          if (m[1] || m[2]) params.push({ name: m[1] || m[2], schalter: false, pos: pos++ });
+          else if (m[3] || m[4]) params.push({ name: m[3] || m[4], schalter: false, pos: null });
+          else if (m[5] && m[5] !== "CommonParameters") params.push({ name: m[5], schalter: true, pos: null });
+        }
+        saetze.push(params);
+      });
+      cache[k] = saetze;
+      return saetze;
+    }
+
+    function teil(art, klasse, text) { return { art: art, klasse: klasse, text: text }; }
+
+    function analysiere(seg) {
+      const teile = [], erkl = [];
+      const wort = seg[0];
+      const kn = wort.toLowerCase();
+      let voll = wort, aliasVon = null;
+      if (/^\.\\|\.ps1$/i.test(wort)) {
+        teile.push(teil("Skript", "t02-k-prog", wort));
+        erkl.push(["t02-k-prog", wort, "Ein Skript. Das kommt in Station 11."]);
+        seg.slice(1).forEach((w) => teile.push(teil(/^-/.test(w) ? "Parameter" : "Wert", /^-/.test(w) ? "t02-k-param" : "t02-k-wert", w)));
+        return { teile: teile, erkl: erkl, voll: null };
+      }
+      if (wort.indexOf("-") < 0) {
+        const def = ab.ausfuehren("(Get-Alias -Name '" + wort.replace(/'/g, "''") + "' -ErrorAction SilentlyContinue).Definition").trim();
+        if (def) { aliasVon = def; voll = def; }
+      }
+      if (!aliasVon && PROGRAMME[kn]) {
+        teile.push(teil("Programm", "t02-k-prog", wort));
+        erkl.push(["t02-k-prog", wort, "Ein klassisches Programm, kein Cmdlet: Es " + PROGRAMME[kn] + ". Es folgt nicht der Regel Verb-Nomen und liefert Text statt Objekten. Seine Parameter (z. B. -n oder /all) legt das Programm selbst fest."]);
+        seg.slice(1).forEach((w) => {
+          teile.push(teil("Argument", "t02-k-wert", w));
+          erkl.push(["t02-k-wert", w, "Ein Argument für das Programm. PowerShell reicht es unverändert weiter."]);
+        });
+        return { teile: teile, erkl: erkl, voll: null };
+      }
+      const saetze = syntax(voll);
+      const bekannt = saetze.length > 0;
+      if (aliasVon) {
+        teile.push(teil("Alias", "t02-k-alias", wort));
+        erkl.push(["t02-k-alias", wort, "Ein Alias. Er steht für " + C(aliasVon) + ". In der Konsole praktisch, in einem Skript schreibst du besser den vollen Namen."]);
+      }
+      const m = /^([A-Za-z]+)-([A-Za-z0-9]+)$/.exec(voll);
+      if (!aliasVon && m) {
+        const vg = verbGruppe[m[1].toLowerCase()];
+        teile.push(teil(vg ? "Verb" : "Verb?", vg ? "t02-k-verb" : "t02-k-fehler", m[1]));
+        teile.push(teil("Bindestrich", "t02-k-pipe", "-"));
+        teile.push(teil(bekannt ? "Nomen" : "Nomen?", bekannt ? "t02-k-nomen" : "t02-k-fehler", m[2]));
+      }
+      if (m) {
+        const vg = verbGruppe[m[1].toLowerCase()];
+        const vd = VERB_DE[m[1].toLowerCase()];
+        if (vg) erkl.push(["t02-k-verb", m[1], "Verb: genehmigt, Gruppe " + vg.gruppe + "." + (vd ? " Es heisst «" + vd + "»." : "")]);
+        else erkl.push(["t02-k-fehler", m[1], "Kein genehmigtes Verb. " + (({ delete: "Für löschen heisst es Remove.", create: "Für anlegen heisst es New.", kill: "Für beenden heisst es Stop.", show: "", hole: "Deutsche Verben gibt es nicht. Für holen heisst es Get.", zeige: "Deutsche Verben gibt es nicht. Für anzeigen heisst es Get.", check: "Für prüfen heisst es Test.", launch: "Für starten heisst es Start.", make: "Für anlegen heisst es New.", list: "Für anzeigen heisst es Get." })[m[1].toLowerCase()] || "Schau mit Get-Verb nach, welches Verb passt.")]);
+        const nd = NOMEN_DE[m[2].toLowerCase()];
+        if (bekannt) erkl.push(["t02-k-nomen", m[2], "Nomen: " + (nd || "der Gegenstand, mit dem das Verb arbeitet") + "."]);
+        else if (/[^s]s$/i.test(m[2])) erkl.push(["t02-k-fehler", m[2], "Diesen Befehl gibt es nicht. Das Nomen sieht nach Mehrzahl aus. Cmdlet-Nomen stehen immer in der Einzahl, z. B. " + C(m[1] + "-" + m[2].slice(0, -1)) + "."]);
+        else erkl.push(["t02-k-fehler", m[2], "Einen Befehl " + C(voll) + " kennt PowerShell nicht (Fehler «is not recognized»). Mit " + C("Get-Command -Noun " + m[2]) + (verbGruppe[m[1].toLowerCase()] ? " oder " + C("Get-Command -Verb " + m[1]) : "") + " findest du, was es gibt."]);
+      } else if (!aliasVon) {
+        teile.push(teil("unbekannt", "t02-k-fehler", wort));
+        erkl.push(["t02-k-fehler", wort, "Weder Cmdlet noch Alias noch bekanntes Programm. PowerShell meldet «is not recognized»."]);
+      }
+
+      // Parameter auflösen
+      const alle = {};
+      saetze.forEach((s) => s.forEach((p) => { const k = p.name.toLowerCase(); if (!alle[k]) alle[k] = { name: p.name, schalter: p.schalter }; }));
+      if (bekannt) GEMEINSAM.forEach((g) => { const k = g.toLowerCase(); if (!alle[k]) alle[k] = { name: g, schalter: !!GEMEINSAM_SCHALTER[k], gemeinsam: true }; });
+      const namen = Object.keys(alle);
+      const benutzt = [], freie = [];
+      let i = 1;
+      while (i < seg.length) {
+        const w = seg[i];
+        const pm = /^-([A-Za-z]\w*)(:(.*))?$/.exec(w);
+        if (pm && bekannt) {
+          const kurz = pm[1].toLowerCase();
+          // Zweitnamen von Parametern (wie in pwsh): -PSPath und -LP stehen für -LiteralPath
+          const zweit = alle.literalpath ? { pspath: "literalpath", lp: "literalpath" } : {};
+          let treffer = namen.filter((n) => n === kurz);
+          if (!treffer.length && zweit[kurz]) treffer = [zweit[kurz]];
+          if (!treffer.length) {
+            treffer = namen.filter((n) => n.indexOf(kurz) === 0);
+            Object.keys(zweit).forEach((a) => { if (a.indexOf(kurz) === 0 && treffer.indexOf(zweit[a]) < 0) treffer.push(zweit[a]); });
+          }
+          if (treffer.length !== 1) {
+            teile.push(teil("Parameter?", "t02-k-fehler", w));
+            erkl.push(["t02-k-fehler", w, treffer.length === 0
+              ? "Einen Parameter mit diesem Namen hat " + C(voll) + " nicht (Fehler «A parameter cannot be found»)."
+              : "Mehrdeutig: passt auf " + treffer.map((t) => C("-" + alle[t].name)).join(", ") + ". Schreib mehr Buchstaben (Fehler «is ambiguous»)."]);
+            i++; continue;
+          }
+          const p = alle[treffer[0]];
+          benutzt.push(p.name);
+          const abgek = p.name.toLowerCase() !== kurz;
+          const zusatz = abgek ? " Abgekürzt geschrieben, PowerShell ergänzt zu " + C("-" + p.name) + "." : "";
+          const gem = (p.name === "WhatIf") ? " Gemeinsamer Parameter: zeigt nur, was passieren würde, und führt nichts aus." :
+            (p.name === "Confirm") ? " Gemeinsamer Parameter: fragt vor jedem Schritt nach." : (p.gemeinsam ? " Ein gemeinsamer Parameter, den fast jedes Cmdlet hat." : "");
+          if (p.schalter) {
+            teile.push(teil("Schalter", "t02-k-switch", w));
+            erkl.push(["t02-k-switch", w, "Schalter " + C("-" + p.name) + ": kein Wert nötig, hinschreiben heisst einschalten." + zusatz + gem]);
+            i++; continue;
+          }
+          if (pm[2]) {
+            teile.push(teil("Parameter", "t02-k-param", "-" + pm[1] + ":"));
+            teile.push(teil("Wert", "t02-k-wert", pm[3]));
+            erkl.push(["t02-k-param", "-" + pm[1], "Benannter Parameter " + C("-" + p.name) + ", Wert direkt nach dem Doppelpunkt." + zusatz + gem]);
+            i++; continue;
+          }
+          teile.push(teil("Parameter", "t02-k-param", w));
+          erkl.push(["t02-k-param", w, "Benannter Parameter " + C("-" + p.name) + ": Der Name steht da, darum ist die Stelle in der Zeile egal." + zusatz + gem]);
+          const wert = seg[i + 1];
+          if (wert === undefined || /^-[A-Za-z]/.test(wert)) {
+            teile.push(teil("Wert fehlt", "t02-k-fehler", "␣"));
+            erkl.push(["t02-k-fehler", "-" + p.name, "Nach " + C("-" + p.name) + " fehlt der Wert (Fehler «Missing an argument for parameter»)."]);
+            i++; continue;
+          }
+          teile.push(teil("Wert", "t02-k-wert", wert));
+          erkl.push(["t02-k-wert", wert, "Wert zu " + C("-" + p.name) + "." + quoteHinweis(wert)]);
+          i += 2; continue;
+        }
+        if (pm) { // unbekannter Befehl: Parameter nur grob erkennen
+          teile.push(teil("Parameter", "t02-k-param", w));
+          erkl.push(["t02-k-param", w, "Beginnt mit einem Bindestrich, ist also ein Parameter."]);
+          i++; continue;
+        }
+        freie.push({ wert: w, idx: teile.length });
+        teile.push(teil("Wert", "t02-k-wert", w));
+        erkl.push(["t02-k-wert", w, "__POS__" + freie.length]);
+        i++;
+      }
+      // Werte ohne Namen den Positionsparametern zuordnen
+      if (freie.length) {
+        let satz = null;
+        const passt = saetze.filter((s) => benutzt.every((b) => s.some((p) => p.name === b) || GEMEINSAM.indexOf(b) >= 0 || b === "WhatIf" || b === "Confirm"));
+        const kandidaten = (passt.length ? passt : saetze).map((s) => s.filter((p) => p.pos !== null && benutzt.indexOf(p.name) < 0).sort((a, b) => a.pos - b.pos));
+        satz = kandidaten.find((k) => k.length >= freie.length && !(k[0] && k[0].name === "InputObject")) || kandidaten.find((k) => k.length >= freie.length) || kandidaten[0] || [];
+        let n = 0;
+        erkl.forEach((e) => {
+          const mm = /^__POS__(\d+)$/.exec(e[2]);
+          if (!mm) return;
+          const p = satz[n++];
+          if (!bekannt) e[2] = "Ein Wert ohne Parameternamen.";
+          else if (p) e[2] = "Wert ohne Parameternamen. PowerShell setzt ihn in den Positionsparameter " + C("-" + p.name) + " ein (Position " + p.pos + ")." + quoteHinweis(e[1]);
+          else { e[0] = "t02-k-fehler"; e[2] = "Für diesen Wert ist kein Positionsparameter mehr frei (Fehler «A positional parameter cannot be found that accepts argument»). Steht hier ein Wert mit Leerzeichen ohne Anführungszeichen?"; }
+        });
+        // Klasse des Teils ebenfalls auf Fehler setzen, wenn kein Platz frei war
+        let k = 0;
+        freie.forEach((f) => { if (bekannt && !satz[k]) teile[f.idx] = teil("Wert?", "t02-k-fehler", f.wert); k++; });
+      }
+      if (bekannt && erkl.some((e) => e[0] === "t02-k-fehler")) erkl.push(["t02-k-fehler", voll, "Wegen dieses Fehlers führt PowerShell den Befehl gar nicht aus. Die übrigen Erklärungen zeigen nur, wie PowerShell die Zeile liest."]);
+      return { teile: teile, erkl: erkl, voll: bekannt ? voll : null };
+    }
+
+    function quoteHinweis(w) {
+      if (/^'.*'$|^".*"$/.test(w)) return /\s/.test(w) ? " Die Anführungszeichen halten den Wert mit Leerzeichen zusammen." : " Die Anführungszeichen wären hier nicht nötig, schaden aber nicht.";
+      return "";
+    }
+
+    return function zerlege(zeile) {
+      return woerter(zeile).map(analysiere);
+    };
+  })();
+
+  const BEISPIELE = [
+    "Get-ChildItem -Path Dokumente -Recurse",
+    "Get-ChildItem Dokumente *.txt",
+    "ls Dokumente",
+    "gci -Pa Logs -Rec -File",
+    "Get-ChildItem 'C:\\Program Files'",
+    "Stop-Service -Name Spooler -WhatIf",
+    "Get-Command -Noun Service",
+    "Get-Alias -Definition Get-ChildItem",
+    "cd Downloads",
+    "ping server",
+    "Get-Services Spooler",
+    "Delete-Item Downloads\\setup-alt.exe",
+    "Set-Location C:\\Program Files",
+    "Get-ChildItem -P Logs",
+    "Get-ChildItem -Path -Recurse Dokumente"
+  ];
+  const zSel = document.getElementById("t02-z-beispiel");
+  const zIn = document.getElementById("t02-z-eingabe");
+  const zErg = document.getElementById("t02-z-ergebnis");
+  const zAusKnopf = document.getElementById("t02-z-ausfuehren");
+  const zAus = document.getElementById("t02-z-ausgabe");
+  const opt0 = document.createElement("option");
+  opt0.value = ""; opt0.textContent = "– Beispiel –";
+  zSel.appendChild(opt0);
+  BEISPIELE.forEach((b) => { const o = document.createElement("option"); o.value = b; o.textContent = b; zSel.appendChild(o); });
+
+  function zeigeZerlegung() {
+    const zeile = zIn.value.trim();
+    zAus.hidden = true; zAus.innerHTML = ""; zAusKnopf.setAttribute("aria-expanded", "false");
+    if (!zeile) { zErg.innerHTML = '<p class="hint">Tippe zuerst einen Befehl ein.</p>'; return; }
+    let html = "";
+    let segmente;
+    try { segmente = z(zeile); } catch (e) { console.error("[t02] Zerleger", e); segmente = []; }
+    if (!segmente.length) { zErg.innerHTML = '<p class="hint">Diesen Befehl kann der Zerleger nicht lesen.</p>'; return; }
+    segmente.forEach((s, si) => {
+      if (segmente.length > 1) html += "<h3>Befehl " + (si + 1) + " der Pipeline</h3>";
+      html += '<ul class="t02-teile" aria-hidden="true">' + s.teile.map((t) =>
+        '<li class="t02-teil ' + t.klasse + '"><code>' + esc(t.text) + '</code><span class="t02-art">' + esc(t.art) + "</span></li>").join("") + "</ul>";
+      html += '<ol class="t02-erkl">' + s.erkl.map((e) =>
+        '<li class="' + e[0] + '"><b class="t02-name t02-voll">' + esc(e[1]) + "</b>: " + e[2] + "</li>").join("") + "</ol>";
+      if (s.voll) html += '<p class="hint">Voller Befehlsname: ' + C(s.voll) + "</p>";
+    });
+    if (segmente.length > 1) html += '<p class="hint">Der senkrechte Strich | verbindet Befehle zu einer Pipeline (Station 07).</p>';
+    zErg.innerHTML = html;
+  }
+  zSel.addEventListener("change", () => { if (zSel.value) { zIn.value = zSel.value; zeigeZerlegung(); } });
+  document.getElementById("t02-z-los").addEventListener("click", zeigeZerlegung);
+  zIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); zeigeZerlegung(); } });
+  zAusKnopf.addEventListener("click", () => {
+    const offen = zAusKnopf.getAttribute("aria-expanded") === "true";
+    if (offen) { zAus.hidden = true; zAus.innerHTML = ""; zAusKnopf.setAttribute("aria-expanded", "false"); return; }
+    const zeile = zIn.value.trim();
+    if (!zeile) return;
+    zAus.innerHTML = L.konsole.sitzung().html(zeile);   // frischer Rechner, ändert nichts an den Aufgaben
+    zAus.hidden = false;
+    zAusKnopf.setAttribute("aria-expanded", "true");
+  });
+  zeigeZerlegung();
+
+  /* ---------- Schritt 6: Verb-Nomen-Baukasten ---------- */
+  const ABSICHTEN = [
+    { text: "Einen Dienst stoppen", loesung: "Stop-Service" },
+    { text: "Alle laufenden Programme (Prozesse) anzeigen", loesung: "Get-Process" },
+    { text: "Einen neuen Ordner anlegen", loesung: "New-Item" },
+    { text: "Einen Dienst neu starten", loesung: "Restart-Service" },
+    { text: "Prüfen, ob ein Pfad existiert", loesung: "Test-Path" },
+    { text: "Eine Datei löschen", loesung: "Remove-Item" },
+    { text: "Eine Tabelle als CSV-Datei speichern", loesung: "Export-Csv" },
+    { text: "Daten ins Format JSON umwandeln", loesung: "ConvertTo-Json" },
+    { text: "Einen Prozess beenden", loesung: "Stop-Process" },
+    { text: "Eine Datei in einen anderen Ordner verschieben", loesung: "Move-Item" }
+  ];
+  const VERBEN = ["Get", "Set", "New", "Remove", "Start", "Stop", "Restart", "Move", "Test", "Export", "ConvertTo", "Delete", "Create", "Kill", "Check"];
+  const NOMEN = ["Service", "Process", "Item", "Path", "Csv", "Json", "Services", "Processes", "Datei"];
+  const FALSCH_VERB = { Delete: "Delete ist kein genehmigtes Verb. Für löschen heisst es Remove.", Create: "Create ist kein genehmigtes Verb. Für anlegen heisst es New.", Kill: "Kill ist kein genehmigtes Verb. Für beenden heisst es Stop.", Check: "Check ist kein genehmigtes Verb. Für prüfen heisst es Test." };
+  const FALSCH_NOMEN = { Services: "Services ist Mehrzahl. Cmdlet-Nomen stehen immer in der Einzahl: Service.", Processes: "Processes ist Mehrzahl. Richtig ist Process, auch wenn du viele Prozesse willst.", Datei: "Cmdlet-Namen sind englisch. Eine Datei ist für PowerShell ein Item (Element)." };
+  const bk = { nr: 0, verb: null, nomen: null, richtig: 0, geloest: [] };
+  const bkVerben = document.getElementById("t02-bk-verben");
+  const bkNomen = document.getElementById("t02-bk-nomen");
+  const bkBau = document.getElementById("t02-bk-bau");
+  const bkRm = document.getElementById("t02-bk-rm");
+  const bkAus = document.getElementById("t02-bk-ausgabe");
+  function karten(ziel, liste, art) {
+    liste.forEach((w) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "btn"; b.textContent = w;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => {
+        bk[art] = bk[art] === w ? null : w;
+        Array.from(ziel.children).forEach((k) => { const an = k.textContent === bk[art]; k.classList.toggle("on", an); k.setAttribute("aria-pressed", an ? "true" : "false"); });
+        bauZeigen();
+      });
+      ziel.appendChild(b);
+    });
+  }
+  karten(bkVerben, VERBEN, "verb");
+  karten(bkNomen, NOMEN, "nomen");
+  function bauZeigen() {
+    bkBau.innerHTML = (bk.verb ? esc(bk.verb) : '<span class="t02-luecke">Verb</span>') + "-" + (bk.nomen ? esc(bk.nomen) : '<span class="t02-luecke">Nomen</span>');
+  }
+  function absichtZeigen() {
+    const a = ABSICHTEN[bk.nr];
+    document.getElementById("t02-bk-absicht").textContent = "Absicht " + (bk.nr + 1) + " von " + ABSICHTEN.length + ": «" + a.text + "»";
+    document.getElementById("t02-bk-stand").textContent = bk.geloest.length + " von " + ABSICHTEN.length + " richtig gebaut";
+    bk.verb = null; bk.nomen = null;
+    [bkVerben, bkNomen].forEach((z2) => Array.from(z2.children).forEach((k) => { k.classList.remove("on"); k.setAttribute("aria-pressed", "false"); }));
+    bkRm.className = "rueckmeldung leer"; bkRm.innerHTML = ""; bkAus.innerHTML = "";
+    bauZeigen();
+  }
+  document.getElementById("t02-bk-pruefen").addEventListener("click", () => {
+    const a = ABSICHTEN[bk.nr];
+    bkAus.innerHTML = "";
+    if (!bk.verb || !bk.nomen) { bkRm.className = "rueckmeldung bad"; bkRm.innerHTML = '<span class="marke">✗</span> Wähle zuerst ein Verb und ein Nomen.'; return; }
+    const name = bk.verb + "-" + bk.nomen;
+    if (name === a.loesung) {
+      if (bk.geloest.indexOf(bk.nr) < 0) bk.geloest.push(bk.nr);
+      bkRm.className = "rueckmeldung ok";
+      bkRm.innerHTML = '<span class="marke">✓</span> Richtig: ' + C(name) + ". Der Simulator kennt den Befehl:";
+      bkAus.innerHTML = L.konsole.sitzung().html("Get-Command " + name);
+      document.getElementById("t02-bk-stand").textContent = bk.geloest.length + " von " + ABSICHTEN.length + " richtig gebaut";
+      return;
+    }
+    const gruende = [];
+    if (FALSCH_VERB[bk.verb]) gruende.push(FALSCH_VERB[bk.verb]);
+    if (FALSCH_NOMEN[bk.nomen]) gruende.push(FALSCH_NOMEN[bk.nomen]);
+    const lv = a.loesung.split("-")[0], ln = a.loesung.split("-")[1];
+    if (!gruende.length) {
+      if (bk.verb !== lv) gruende.push("Das Verb " + bk.verb + " passt nicht zur Absicht. Überleg: Was soll passieren?");
+      if (bk.nomen !== ln) gruende.push("Das Nomen " + bk.nomen + " passt nicht. Womit soll etwas passieren?");
+    }
+    bkRm.className = "rueckmeldung bad";
+    bkRm.innerHTML = '<span class="marke">✗</span> ' + C(name) + " ist nicht der gesuchte Befehl. " + esc(gruende.join(" "));
+  });
+  document.getElementById("t02-bk-weiter").addEventListener("click", () => { bk.nr = (bk.nr + 1) % ABSICHTEN.length; absichtZeigen(); });
+  document.getElementById("t02-bk-neu").addEventListener("click", () => { bk.nr = 0; bk.geloest = []; absichtZeigen(); });
+  absichtZeigen();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t02-u-verben", {
+    frage: "Gehört das Wort zur Liste von <code class=\"ps\">Get-Verb</code>?",
+    kategorien: ["genehmigt", "nicht genehmigt"],
+    elemente: [
+      { html: C("Remove"), kategorie: "genehmigt", erklaerung: "Remove ist das Verb für entfernen und löschen." },
+      { html: C("Delete"), kategorie: "nicht genehmigt", erklaerung: "Delete ist ein Synonym von Remove und darum nicht genehmigt." },
+      { html: C("New"), kategorie: "genehmigt", erklaerung: "New legt etwas neu an, z. B. New-Item." },
+      { html: C("Create"), kategorie: "nicht genehmigt", erklaerung: "Create ist ein Synonym von New." },
+      { html: C("Test"), kategorie: "genehmigt", erklaerung: "Test prüft etwas und antwortet mit True oder False, z. B. Test-Path." },
+      { html: C("Kill"), kategorie: "nicht genehmigt", erklaerung: "Kill ist ein Synonym von Stop. Prozesse beendest du mit Stop-Process." },
+      { html: C("ConvertTo"), kategorie: "genehmigt", erklaerung: "ConvertTo wandelt in ein Format um, z. B. ConvertTo-Json." },
+      { html: C("Launch"), kategorie: "nicht genehmigt", erklaerung: "Launch ist ein Synonym von Start." },
+      { html: C("Restart"), kategorie: "genehmigt", erklaerung: "Restart stoppt und startet neu, z. B. Restart-Service." }
+    ]
+  });
+  L.sortierer("#t02-u-aliase", {
+    frage: "Ordne jeden Alias seinem Cmdlet zu. Prüfen kannst du später im Simulator mit <code class=\"ps\">Get-Alias</code>.",
+    kategorien: ["Get-ChildItem", "Set-Location", "Clear-Host", "Get-Content"],
+    elemente: [
+      { html: C("ls"), kategorie: "Get-ChildItem", erklaerung: "ls kommt von Linux (list) und zeigt den Ordnerinhalt." },
+      { html: C("dir"), kategorie: "Get-ChildItem", erklaerung: "dir kennst du aus der alten Eingabeaufforderung cmd." },
+      { html: C("gci"), kategorie: "Get-ChildItem", erklaerung: "g für Get, ci für ChildItem." },
+      { html: C("cd"), kategorie: "Set-Location", erklaerung: "change directory: den Ort wechseln." },
+      { html: C("cls"), kategorie: "Clear-Host", erklaerung: "clear screen: den Bildschirm leeren." },
+      { html: C("cat"), kategorie: "Get-Content", erklaerung: "cat zeigt den Inhalt einer Datei, wie unter Linux." }
+    ]
+  });
+  L.auswahl("#t02-u-abk", {
+    frage: "Was zeigt " + C("Get-ChildItem -P Logs") + " in pwsh 7?",
+    optionen: [
+      "Den Inhalt des Ordners Logs, weil -P für -Path steht",
+      "Eine Fehlermeldung: Der Parametername P ist mehrdeutig",
+      "Eine Fehlermeldung: Es gibt keinen Parameter P",
+      "Den Inhalt des aktuellen Ordners, -P wird ignoriert"
+    ],
+    richtig: 1,
+    erklaerung: "Get-ChildItem hat mehrere Parameter, die mit P beginnen (-Path, -ProgressAction, -PipelineVariable). PowerShell rät nicht, sondern bricht mit «is ambiguous» ab. -Pa wäre eindeutig."
+  });
+  L.auswahl("#t02-u-pos", {
+    frage: "Lea tippt " + C("Get-ChildItem Bilder *.jpg") + ". Was bedeutet " + C("*.jpg") + "?",
+    optionen: [
+      "Es ist der Wert für -Filter, weil -Filter der zweite Positionsparameter ist",
+      "Es ist ein zweiter Ordner, der auch angezeigt wird",
+      "Es ist ein Fehler, weil der Parametername fehlt",
+      "Es ist ein Schalter"
+    ],
+    richtig: 0,
+    erklaerung: "Get-ChildItem hat zwei Positionsparameter: Position 0 ist -Path, Position 1 ist -Filter. Der Befehl heisst ausgeschrieben Get-ChildItem -Path Bilder -Filter *.jpg und zeigt nur die JPG-Bilder."
+  });
+  L.auswahl("#t02-u-fehler1", {
+    frage: "Lea tippt " + C("Get-Services -Name Spooler") + " und erhält «The term 'Get-Services' is not recognized». Was ist falsch?",
+    optionen: [
+      "Das Nomen steht in der Mehrzahl. Richtig ist Get-Service",
+      "Es fehlen Anführungszeichen um Spooler",
+      "Statt -Name braucht es -Path",
+      "Get ist kein genehmigtes Verb"
+    ],
+    richtig: 0,
+    erklaerung: "Cmdlet-Nomen stehen immer in der Einzahl, auch wenn mehrere Objekte herauskommen. Spooler hat kein Leerzeichen und braucht keine Anführungszeichen."
+  });
+  L.auswahl("#t02-u-fehler2", {
+    frage: "Lea tippt " + C("Get-ChildItem -Path -Recurse Dokumente") + ". Es kommt «Missing an argument for parameter 'Path'». Welche Korrektur stimmt?",
+    optionen: [
+      C("Get-ChildItem -Path Dokumente -Recurse"),
+      C("Get-ChildItem -Path -Recurse 'Dokumente'"),
+      C("Get-ChildItem -Recurse -Path"),
+      C("Get-ChildItem -Path:-Recurse Dokumente")
+    ],
+    richtig: 0,
+    erklaerung: "Direkt nach -Path muss sein Wert stehen. -Recurse ist ein Schalter ohne Wert und darf irgendwo stehen, aber nicht zwischen -Path und Dokumente."
+  });
+  L.wahrFalsch("#t02-u-wf", {
+    titel: "Übung 6 · Stimmt das?",
+    aussagen: [
+      { html: C("get-childitem") + " und " + C("Get-ChildItem") + " sind derselbe Befehl.", wahr: true, erklaerung: "PowerShell unterscheidet bei Befehls- und Parameternamen nicht zwischen Gross- und Kleinschreibung." },
+      { html: "Der Schalter " + C("-Recurse") + " braucht den Wert " + C("$true") + ", sonst wirkt er nicht.", wahr: false, erklaerung: "Ein Schalter hat keinen Wert. Schon -Recurse allein schaltet ihn ein." },
+      { html: "In einem Skript, das andere lesen, ist " + C("gci") + " besser als " + C("Get-ChildItem") + ", weil es kürzer ist.", wahr: false, erklaerung: "Aliase gehören in die Konsole. Im Skript ist der volle Name lesbarer und läuft auf jedem System gleich." },
+      { html: C("Get-ChildItem Logs -WhatIf") + " zeigt, was der Befehl tun würde.", wahr: false, erklaerung: "Get-ChildItem verändert nichts und hat darum kein -WhatIf. PowerShell meldet «A parameter cannot be found that matches parameter name 'WhatIf'»." },
+      { html: C("ipconfig") + " funktioniert in PowerShell, obwohl es kein Cmdlet ist.", wahr: true, erklaerung: "PowerShell startet auch klassische Programme. Sie liefern Text statt Objekten." },
+      { html: C("Get-ChildItem Dokumente") + " und " + C("Get-ChildItem -Path Dokumente") + " liefern dasselbe.", wahr: true, erklaerung: "-Path ist der Positionsparameter an Position 0. Ein Wert ohne Namen landet dort." }
+    ]
+  });
+  L.konsole("#t02-u-konsole", {
+    titel: "PowerShell 7 · Übung",
+    begruessung: false,
+    aufgabenTitel: "Übung 7",
+    aufgaben: [
+      {
+        titel: "Nur die Namen",
+        text: "<p>Zeige im Ordner <code>Bilder</code> nur die Dateinamen, ohne Datum und Grösse. <code>Get-ChildItem</code> hat dafür einen Schalter, der genau so heisst wie das, was du willst.</p>",
+        hinweis: "<p>Der Schalter heisst -Name. Er braucht keinen Wert. Der Ordnername kann als Positionsparameter davor stehen.</p>",
+        loesung: "Get-ChildItem Bilder -Name",
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && ctx.objekte.some((o) => ctx.text(o) === "gemeindehaus.png") && !/Directory:/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Alle Spitznamen",
+        text: "<p>Finde alle Aliase, die für <code>Get-ChildItem</code> stehen.</p>",
+        hinweis: "<p>Get-Alias mit dem Parameter -Definition. Der Wert ist der volle Cmdlet-Name.</p>",
+        loesung: "Get-Alias -Definition Get-ChildItem",
+        pruefe: (ctx) => /dir -> Get-ChildItem/.test(ctx.ausgabe) && /gci -> Get-ChildItem/.test(ctx.ausgabe) && /ls -> Get-ChildItem/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm mit echten Simulator-Ausgaben ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  const f1 = f("Get-Command -Noun Service");
+  const f2 = f("Get-Verb -Verb Start");
+  const f3 = f("Get-Service");
+  const f4 = f("Get-Service -Name WolkenriedSync");
+  const f5 = f("Get-Service WolkenriedSync");
+  const f6 = f("Get-Alias -Definition Get-Service");
+  const f7 = f("gsv WolkenriedSync");
+  const f8 = f("Get-Command Start-Service -Syntax");
+  const f9 = f("Start-Service -Name WolkenriedSync -WhatIf");
+  const f10 = f("Get-Service -Name WolkenriedSync");
+  const f11 = f("Start-Service -Name WolkenriedSync");
+  const f12 = f("Start-Service -N WolkenriedSync -WhatIf");
+  const f13 = f("Start-Service -Name WolkenriedSync -WhatIf");
+  L.film("#t02-film", {
+    phasen: ["1 · Befehl finden", "2 · Status prüfen", "3 · Sicher handeln"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Ticket: «Die Dateisynchronisation läuft nicht.» Auf Windows-Rechnern laufen solche Aufgaben als Dienst. Lea kennt noch keinen einzigen Befehl für Dienste. Sie geht Schritt für Schritt vor." },
+      { ph: 0, f: f1, say: "Dienst heisst auf Englisch Service. Also sucht Lea alle Befehle mit diesem Nomen: Get-Command -Noun Service." },
+      { say: "Die Liste zeigt Get, Restart, Start und Stop. Lauter genehmigte Verben vor demselben Nomen. In echter PowerShell sind es neun, etwa auch Set-Service." },
+      { say: "Lea merkt sich: Anzeigen heisst Get, starten heisst Start. Die Namen kann man fast erraten." },
+      { f: f2, say: "Zur Sicherheit fragt sie Get-Verb nach Start. Es ist ein genehmigtes Verb aus der Gruppe Lifecycle (Lebenszyklus): «Initiates an operation», also etwas in Gang setzen." },
+      { ph: 1, f: f3, say: "Get-Service ohne Parameter zeigt alle Dienste. Das ist eine lange Liste. Lea sucht darin WolkenriedSync." },
+      { f: f4, say: "Mit dem Parameter -Name und dem Wert WolkenriedSync zeigt Get-Service nur noch diesen einen Dienst." },
+      { say: "Die Spalte Status sagt Stopped: Der Dienst ist gestoppt. Das erklärt das Ticket." },
+      { f: f5, say: "Kürzer geht es ohne Parameternamen. -Name ist bei Get-Service der Positionsparameter an erster Stelle. Das Ergebnis ist dasselbe." },
+      { f: f6, say: "Gibt es auch einen Spitznamen? Get-Alias mit -Definition verrät: gsv steht für Get-Service." },
+      { f: f7, say: "gsv WolkenriedSync funktioniert genauso. In der Konsole ist das bequem. In ihre Notiz zum Ticket schreibt Lea aber den vollen Namen." },
+      { ph: 2, f: f8, say: "Jetzt zum Starten. Get-Command mit dem Schalter -Syntax zeigt die Parameter von Start-Service. Die eckigen Klammern um -Name heissen: Den Namen darfst du weglassen. Mehr dazu in Station 03." },
+      { say: "Am Ende jeder Zeile stehen -WhatIf und -Confirm, danach nur noch der Platzhalter für die übrigen gemeinsamen Parameter. Das Cmdlet verändert etwas, darum hat es dieses Sicherheitsnetz." },
+      { f: f9, say: "Lea testet zuerst mit -WhatIf. Die Antwort beginnt mit «What if»: So würde PowerShell den Dienst starten. Passiert ist noch nichts." },
+      { f: f10, say: "Der Beweis: Get-Service zeigt immer noch Stopped. -WhatIf hat nur beschrieben, nicht gehandelt." },
+      { f: f11, say: "Jetzt ohne -WhatIf. Rot heisst Fehler. Die Meldung sagt: Der Dienst lässt sich nicht öffnen. Grund: Lea hat in dieser Konsole keine Adminrechte." },
+      { say: "Fehlermeldungen von pwsh 7 sind englisch. Lies sie trotzdem in Ruhe: Vorne steht das Cmdlet, dann die Ursache. Hier: «cannot be started», kann nicht gestartet werden." },
+      { f: f12, say: "Nebenbei: -N reicht als Abkürzung von -Name, denn kein anderer Parameter von Start-Service beginnt mit N. Lea schreibt im Ticket trotzdem den vollen Namen." },
+      { f: f13, say: "Ein letzter Probelauf mit vollem Parameternamen und -WhatIf. Für den Kollegen mit Adminrechten notiert Lea den Befehl ohne -WhatIf: Start-Service -Name WolkenriedSync. Als Administrator ausgeführt, startet er den Dienst." },
+      { say: "Zusammengefasst: Get-Command findet den Befehl, Get-Service prüft den Status, -WhatIf testet gefahrlos. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t02-selbsttest", {
+    fragen: [
+      { q: "Welcher Name folgt der Regel Verb-Nomen?", o: [C("Get-Services"), C("Get-Service"), C("Service-Get"), C("Hole-Dienst")], a: 1,
+        e: "Zuerst ein genehmigtes englisches Verb, dann das Nomen in der Einzahl." },
+      { q: "Lea will einen Dienst stoppen und gleich wieder starten. Welches Cmdlet passt?", o: [C("Reboot-Service"), C("Reset-Service"), C("Restart-Service"), C("Renew-Service")], a: 2,
+        e: "Restart ist das genehmigte Verb für «stoppen und neu starten». Restart-Service gibt es, die anderen nicht." },
+      { q: "Wofür steht der Alias " + C("gci") + "?", o: [C("Get-Command"), C("Get-ChildItem"), C("Get-Content"), C("Get-CimInstance")], a: 1,
+        e: "g ist das Kürzel für Get, ci für ChildItem. Nachprüfen mit Get-Alias gci." },
+      { q: "Mit welchem Befehl findest du alle Aliase für " + C("Get-ChildItem") + "?", o: [C("Get-Alias Get-ChildItem"), C("Get-Command -Noun Alias"), C("Get-Alias -Definition Get-ChildItem"), C("Get-ChildItem -Alias")], a: 2,
+        e: "-Definition sucht vom Cmdlet zum Alias. Get-Alias Get-ChildItem sucht dagegen einen Alias, der Get-ChildItem heisst, und findet keinen." },
+      { q: "Was ist " + C("Dokumente") + " in " + C("Get-ChildItem Dokumente") + "?", o: ["Ein Schalter", "Ein Alias", "Ein Wert für den Positionsparameter -Path", "Das Nomen des Cmdlets"], a: 2,
+        e: "-Path steht an Position 0. Ein Wert ohne Parameternamen landet dort." },
+      { q: "Was ist " + C("-Recurse") + "?", o: ["Ein Schalter: hinschreiben heisst einschalten", "Ein Parameter, der einen Wert wie 3 braucht", "Ein Alias für Get-ChildItem", "Ein Verb"], a: 0,
+        e: "Schalter haben keinen Wert. -Recurse heisst: auch in allen Unterordnern." },
+      { q: "Welcher Befehl zeigt den Inhalt von C:\\Program Files korrekt?", o: [C("Get-ChildItem C:\\Program Files"), C("Get-ChildItem -Path C:\\Program Files"), C("Get-ChildItem 'C:\\Program Files'"), C("Get-ChildItem -Path=C:\\Program_Files")], a: 2,
+        e: "Ein Wert mit Leerzeichen muss in Anführungszeichen stehen, sonst wird er an der Lücke zerschnitten." },
+      { q: "Was macht " + C("Remove-Item Downloads\\setup-alt.exe -WhatIf") + "?", o: ["Es löscht die Datei ohne Rückfrage", "Es zeigt nur an, was gelöscht würde, und löscht nichts", "Es legt die Datei in den Papierkorb", "Es fragt, ob die Datei gelöscht werden soll"], a: 1,
+        e: "-WhatIf beschreibt nur. Nachfragen würde -Confirm." },
+      { q: "Wie findest du alle Cmdlets, die mit Prozessen arbeiten?", o: [C("Get-Command -Noun Process"), C("Get-Command -Verb Process"), C("Get-Process -Command"), C("Get-Alias Process")], a: 0,
+        e: "Process ist ein Nomen. -Noun sucht nach dem Nomen, -Verb nach dem Verb." },
+      { q: "Warum scheitert " + C("Get-ChildItem -P Logs") + "?", o: ["Weil -P auf mehrere Parameter passt", "Weil Logs in Anführungszeichen stehen muss", "Weil Parameter nie abgekürzt werden dürfen", "Weil Get-ChildItem keinen Parameter -Path hat"], a: 0,
+        e: "Abkürzen ist erlaubt, aber nur eindeutig. -Pa würde funktionieren." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

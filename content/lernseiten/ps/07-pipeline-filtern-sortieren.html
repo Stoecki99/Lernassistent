@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pipeline: filtern, sortieren, auswählen · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <link rel="next" href="/lernseiten/ps/08-ausgeben-exportieren" title="Ausgeben, formatieren, exportieren">
+  <style>
+    .t07-ziele{margin:0; padding-left:1.3em}
+    .t07-ziele li{margin-bottom:4px}
+    .t07-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t07-st pre{font-style:normal}
+    .t07-ausgabe-titel{margin:4px 0 0; font-size:.85rem; color:var(--muted)}
+
+    /* Fliessband */
+    .t07-steuer{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:10px}
+    .t07-feld{display:flex; flex-direction:column; gap:4px; min-width:0}
+    .t07-feld label{font-size:.88rem; color:var(--muted)}
+    .t07-feld select{width:100%; max-width:100%}
+    .t07-stationen{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0}
+    .t07-station{border:1px solid var(--line); border-radius:12px; background:var(--surface); padding:10px 12px; min-width:0}
+    .t07-station.aus{opacity:.6; border-style:dashed}
+    .t07-station.aktiv{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft)}
+    .t07-pfeil{text-align:center; color:var(--muted); line-height:1; padding:4px 0; font-size:1.1rem}
+    .t07-kopf{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 10px; margin-bottom:8px}
+    .t07-nr{display:inline-flex; align-items:center; justify-content:center; width:1.6em; height:1.6em; border-radius:50%;
+      background:var(--accent-soft); color:var(--accent); font-weight:700; font-size:.85rem; flex:0 0 auto}
+    .t07-was{font-size:.85rem; color:var(--muted)}
+    .t07-ablage{list-style:none; margin:0; padding:8px; display:flex; flex-wrap:wrap; gap:6px; min-height:2.9em; border-radius:8px;
+      background:repeating-linear-gradient(90deg, var(--board) 0 14px, var(--bg) 14px 28px); background-size:28px 100%}
+    .t07-band.laeuft .t07-ablage{animation:t07-band 1.2s linear infinite}
+    @keyframes t07-band{from{background-position:0 0} to{background-position:28px 0}}
+    .t07-leer{font-size:.85rem; color:var(--muted); align-self:center}
+    .t07-karte{display:flex; flex-direction:column; padding:4px 8px; border-radius:7px; border:1px solid var(--line); background:var(--surface);
+      font-size:.82rem; line-height:1.25; max-width:100%}
+    .t07-karte b{font-family:var(--ps-mono); font-weight:600; font-size:.8rem; overflow-wrap:anywhere}
+    .t07-karte span{color:var(--muted)}
+    .t07-karte.neu{animation:t07-rein .45s ease-out}
+    @keyframes t07-rein{from{transform:translateX(-18px); opacity:0} to{transform:none; opacity:1}}
+    .t07-karte.raus{border-style:dashed; background:var(--bad-bg)}
+    .t07-karte.raus b{text-decoration:line-through}
+    .t07-karte.raus::before{content:"✗ fällt raus"; font-size:.72rem; color:var(--bad); font-weight:600}
+    .t07-karte.wartet{border-color:var(--free); background:var(--free-bg)}
+    .t07-karte.wartet::before{content:"⏸ wartet"; font-size:.72rem; color:var(--ink); font-weight:600}
+    .t07-karte.spaet{opacity:.55; border-style:dotted}
+    .t07-karte.spaet::before{content:"nie geholt"; font-size:.72rem; color:var(--muted)}
+    .t07-stand{font-size:.85rem; color:var(--muted); margin-top:6px}
+    @media (prefers-reduced-motion: reduce){
+      .t07-band.laeuft .t07-ablage{animation:none}
+      .t07-karte.neu{animation:none}
+    }
+  </style>
+</head>
+<body data-fach="ps" data-thema="07-pipeline-filtern-sortieren">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 3 · Pipeline und Objekte</span>
+    <h1>Pipeline: filtern, sortieren, auswählen</h1>
+    <p class="lead">Lea soll aufräumen: Welche Logdateien sind gross, wie viel Platz belegen sie, welche Dateitypen sammeln sich an? Mit der Pipeline schickst du Objekte durch eine Reihe von Befehlen, Stück für Stück. Danach filterst, sortierst, zählst und gruppierst du Dateien und Dienste mit einer einzigen Zeile.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t07-ziele">
+        <li>Du erklärst, wie Objekte einzeln durch die Pipeline <code class="ps">|</code> wandern.</li>
+        <li>Du filterst mit <code class="ps">Where-Object</code> in beiden Schreibweisen und wählst den passenden Vergleichsoperator.</li>
+        <li>Du sortierst mit <code class="ps">Sort-Object</code> und wählst mit <code class="ps">Select-Object</code> Objekte oder Eigenschaften aus.</li>
+        <li>Du zählst und rechnest mit <code class="ps">Measure-Object</code> und fasst mit <code class="ps">Group-Object</code> zusammen.</li>
+        <li>Du filterst «links», also so früh wie möglich in der Pipeline.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#schritt"><b>1</b>Pipeline bauen</a>
+    <a href="#filtern"><b>2</b>Filtern</a>
+    <a href="#sortieren"><b>3</b>Sortieren, auswählen</a>
+    <a href="#rechnen"><b>4</b>Zählen, gruppieren</a>
+    <a href="#ausprobieren"><b>5</b>Ausprobieren</a>
+    <a href="#fliessband"><b>6</b>Fliessband</a>
+    <a href="#uebungen"><b>7</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Fehler</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Ein Fliessband für Objekte</h2>
+    <p class="prose">Denk an das Paketzentrum der Post. Ein Fliessband bringt die Pakete einzeln vorbei. An der ersten Station sortiert jemand zu leichte Pakete aus. An der zweiten ordnet eine Maschine sie nach Gewicht. Am Schluss packt jemand nur die ersten drei in den Lieferwagen. Jede Station macht genau eine Sache und reicht das Paket weiter.</p>
+    <p class="prose">In PowerShell sind die Pakete <b>Objekte</b>, zum Beispiel Dateien mit Name, Grösse und Datum (das kennst du aus Station 06). Das Fliessband heisst <b>Pipeline</b>, das Zeichen dafür ist der senkrechte Strich <code class="ps">|</code>. Auf der Schweizer Tastatur tippst du ihn mit <kbd>AltGr</kbd> + <kbd>7</kbd>.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Pipeline</span><span class="ex"><code class="ps">A | B</code></span><p>Das Fliessband. Jedes Objekt aus A wandert einzeln weiter zu B.</p></div>
+      <div class="concept"><span class="tag">Filtern</span><span class="ex"><code class="ps">Where-Object</code></span><p>Das Sieb. Nur Objekte, die eine Bedingung erfüllen, kommen durch.</p></div>
+      <div class="concept"><span class="tag">Sortieren</span><span class="ex"><code class="ps">Sort-Object</code></span><p>Die Sortiermaschine. Sie wartet, bis alle Objekte da sind, und gibt sie geordnet weiter.</p></div>
+      <div class="concept"><span class="tag">Auswählen</span><span class="ex"><code class="ps">Select-Object</code></span><p>Der Abpacker. Er nimmt nur die ersten oder letzten paar Objekte oder nur bestimmte Eigenschaften.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welche Station erledigt das?</h3>
+      <div id="t07-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Stepper ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 1 · Vom Auftrag zum Befehl</span>
+    <h2>Eine Pipeline Stück für Stück bauen</h2>
+    <p class="prose">Lea braucht eine Liste der grössten Logdateien. Du baust die Pipeline von links nach rechts und schaust nach jedem Schritt, was herauskommt. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Teil des Befehls leuchtet auf.</p>
+    <div id="t07-stepper"></div>
+    <div class="note"><b>Merke:</b> Lies eine Pipeline wie einen Satz von links nach rechts. Jeder Befehl bekommt die Objekte des Befehls davor. Die Konsole zeigt am Schluss nur, was aus dem letzten Befehl herauskommt.</div>
+  </section>
+
+  <!-- ===== 2 · Filtern ===== -->
+  <section id="filtern">
+    <span class="eyebrow">Schritt 2 · Filtern mit Where-Object</span>
+    <h2>Nur durchlassen, was passt</h2>
+    <p class="prose"><code class="ps">Where-Object</code> prüft jedes Objekt mit einer Bedingung. Ist sie wahr, darf das Objekt weiter. Ist sie falsch, fällt es raus. Es gibt zwei Schreibweisen, die dasselbe tun.</p>
+
+    <div class="card stack">
+      <h3>Schreibweise 1: Skriptblock mit <code class="ps">$_</code></h3>
+      <p class="prose">In geschweiften Klammern <code class="ps">{ }</code> steht die Bedingung. <code class="ps">$_</code> heisst «das Objekt, das gerade auf dem Band liegt». <code class="ps">$_.Length</code> ist also die Grösse der aktuellen Datei. <code class="ps">-gt</code> heisst «grösser als» (englisch <i>greater than</i>).</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Where-Object { $_.Length -gt 1MB }</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Logdateien grösser als 1 MB" data-ps-befehl="Get-ChildItem Logs | Where-Object { $_.Length -gt 1MB }"></pre>
+      <p class="prose">Von sieben Dateien kommen fünf durch. <code>app.log</code> (270 Bytes) und <code>sync-fehler.log</code> (151 Bytes) fallen raus.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Schreibweise 2: vereinfachte Syntax</h3>
+      <p class="prose">Für eine einzelne Bedingung geht es kürzer: Eigenschaft, Operator, Wert. Ohne Klammern, ohne <code class="ps">$_</code>. Die Ausgabe ist genau dieselbe wie oben.</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Where-Object Length -gt 1MB</code></pre>
+      <p class="prose">Brauchst du zwei Bedingungen gleichzeitig, verbindest du sie mit <code class="ps">-and</code> (beide wahr) oder <code class="ps">-or</code> (mindestens eine wahr). Das geht nur im Skriptblock:</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Where-Object { $_.Length -gt 1MB -and $_.Name -like 'app*' } |
+  Select-Object -ExpandProperty Name</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: zwei Bedingungen" data-ps-befehl="Get-ChildItem Logs | Where-Object { $_.Length -gt 1MB -and $_.Name -like 'app*' } | Select-Object -ExpandProperty Name" data-ps-prompt="nein"></pre>
+      <p class="prose">In der vereinfachten Syntax versteht PowerShell <code class="ps">-and</code> nicht und meldet einen Fehler:</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung von pwsh 7" lang="en">PS C:\Users\lea&gt; Get-ChildItem Logs | Where-Object Length -gt 1MB -and Name -like 'app*'
+<span class="psk-fehler">Where-Object: Parameter set cannot be resolved using the specified named parameters. One or more parameters issued cannot be used together or an insufficient number of parameters were provided.</span></pre>
+      <p class="prose">Auf Deutsch: «Diese Parameter passen nicht zusammen.» Die vereinfachte Syntax kennt nur einen Vergleich. Für mehr nimmst du den Skriptblock.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Einheiten: 1KB, 1MB, 1GB</h3>
+      <p class="prose">Grössen von Dateien stehen in Bytes. Damit du nicht 1048576 tippen musst, kennt PowerShell Einheiten. Sie rechnen mit 1024, nicht mit 1000. Schreib Zahl und Einheit ohne Leerzeichen.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Einheiten" data-ps-befehl="1KB; 1MB; 1GB"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Vergleichsoperatoren</h3>
+      <p class="prose">Alle Operatoren beginnen mit einem Strich. Das Zeichen <code>&gt;</code> ist in PowerShell kein Vergleich, sondern eine Umleitung in eine Datei (dazu mehr bei den typischen Fehlern).</p>
+      <div class="tablebox">
+        <table class="tabelle">
+          <caption>Vergleichsoperatoren (alle Ergebnisse in pwsh 7.6 geprüft)</caption>
+          <thead><tr><th>Operator</th><th>Bedeutung</th><th>Beispiel</th><th>Ergebnis</th></tr></thead>
+          <tbody>
+            <tr><th><code class="ps">-eq</code></th><td>gleich (<i>equal</i>)</td><td><code class="ps">'Lea' -eq 'lea'</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-ne</code></th><td>ungleich (<i>not equal</i>)</td><td><code class="ps">'Lea' -ne 'Lea'</code></td><td>False</td></tr>
+            <tr><th><code class="ps">-gt</code></th><td>grösser als</td><td><code class="ps">5 -gt 3</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-ge</code></th><td>grösser oder gleich</td><td><code class="ps">5 -ge 5</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-lt</code></th><td>kleiner als</td><td><code class="ps">3 -lt 1KB</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-le</code></th><td>kleiner oder gleich</td><td><code class="ps">1MB -le 1048576</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-like</code></th><td>passt zum Muster mit Platzhaltern <code>*</code> (beliebig viele Zeichen) und <code>?</code> (genau ein Zeichen)</td><td><code class="ps">'app.log' -like 'app*'</code></td><td>True</td></tr>
+            <tr><th><code class="ps">-like</code></th><td>ohne Platzhalter: der ganze Text muss gleich sein, ein Teil reicht nicht</td><td><code class="ps">'app.log' -like 'app'</code></td><td>False</td></tr>
+            <tr><th><code class="ps">-match</code></th><td>enthält ein Suchmuster (regulärer Ausdruck)</td><td><code class="ps">'app-2026-07.log' -match '07'</code></td><td>True</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose"><code class="ps">-match</code> sucht irgendwo im Text. Sein Muster kann viel mehr als <code>*</code> und <code>?</code>; für den Anfang reicht <code class="ps">-like</code>.</p>
+      <div class="note"><b>Gross und klein:</b> Alle Vergleiche ignorieren die Gross- und Kleinschreibung. <code class="ps">'Lea' -eq 'lea'</code> ist wahr. Willst du sie beachten, setzt du ein <b>c</b> davor (<i>case-sensitive</i>): <code class="ps">-ceq</code>, <code class="ps">-clike</code>, <code class="ps">-cmatch</code>.</div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Gross und klein" data-ps-befehl="'Lea' -eq 'lea'; 'Lea' -ceq 'lea'"></pre>
+    </div>
+
+    <div class="card stack">
+      <h3>Links filtern: so früh wie möglich</h3>
+      <p class="prose">Viele Cmdlets können schon selbst filtern. <code class="ps">Get-ChildItem</code> hat <code class="ps">-Filter</code>, <code class="ps">Get-Service</code> hat <code class="ps">-Name</code>. Dann holt der erste Befehl gar nicht erst alles. Das ist schneller, besonders bei vielen Objekten. Die Faustregel heisst «links filtern»: Filtere am Anfang (links) der Pipeline, nicht erst hinten mit <code class="ps">Where-Object</code>.</p>
+      <div class="grid2">
+        <div class="stack">
+          <p class="hint">Langsamer: alles holen, dann sieben</p>
+          <pre class="ps-code"><code>Get-ChildItem Logs |
+  Where-Object Name -like 'app-*'</code></pre>
+        </div>
+        <div class="stack">
+          <p class="hint">Besser: gleich nur das Passende holen</p>
+          <pre class="ps-code"><code>Get-ChildItem Logs -Filter app-*</code></pre>
+        </div>
+      </div>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: links gefiltert" data-ps-befehl="Get-ChildItem Logs -Filter app-*"></pre>
+      <p class="prose">Bei Diensten ist es gleich: <code class="ps">Get-Service -Name Wolk*</code> statt <code class="ps">Get-Service | Where-Object Name -like 'Wolk*'</code>. Beide liefern Leas zwei Wolkenried-Dienste.</p>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Dienste links gefiltert" data-ps-befehl="Get-Service -Name Wolk*"></pre>
+      <div class="note tipp"><b>Tipp:</b> <code class="ps">Where-Object</code> brauchst du, wenn das Cmdlet keinen passenden Parameter hat, zum Beispiel für «grösser als 1 MB» oder «Status ist Running».</div>
+    </div>
+  </section>
+
+  <!-- ===== 3 · Sortieren und Auswählen ===== -->
+  <section id="sortieren">
+    <span class="eyebrow">Schritt 3 · Sort-Object und Select-Object</span>
+    <h2>Ordnen und das Nötige herauspicken</h2>
+
+    <div class="card stack">
+      <h3>Sortieren nach einer Eigenschaft</h3>
+      <p class="prose"><code class="ps">Sort-Object</code> sortiert nach der Eigenschaft, die du angibst (Parameter <code class="ps">-Property</code>, den Namen darfst du weglassen). Ohne weitere Angabe sortiert es aufsteigend, also klein vor gross, A vor Z, alt vor neu. <code class="ps">-Descending</code> dreht die Reihenfolge um.</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Sort-Object -Property Length -Descending</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: absteigend sortiert" data-ps-befehl="Get-ChildItem Logs | Sort-Object -Property Length -Descending"></pre>
+      <p class="prose">Wichtig für das Fliessband: <code class="ps">Sort-Object</code> kann erst sortieren, wenn alle Objekte da sind. Es sammelt sie und gibt sie dann geordnet weiter.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Mehrere Eigenschaften</h3>
+      <p class="prose">Mit Komma trennst du mehrere Eigenschaften. PowerShell sortiert zuerst nach der ersten. Bei Gleichstand entscheidet die zweite. Hier: zuerst nach Endung, innerhalb gleicher Endung nach Grösse.</p>
+      <pre class="ps-code"><code>Get-ChildItem Downloads | Sort-Object Extension, Length |
+  Select-Object Name, Extension, Length</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: nach zwei Eigenschaften sortiert" data-ps-befehl="Get-ChildItem Downloads | Sort-Object Extension, Length | Select-Object Name, Extension, Length" data-ps-prompt="nein"></pre>
+      <div class="note"><b>Merke:</b> <code class="ps">-Descending</code> gilt für alle Eigenschaften. Willst du die eine auf-, die andere absteigend, brauchst du eine Hashtable wie <code class="ps">@{ Expression = 'Length'; Descending = $true }</code>. Das kommt später.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Select-Object: Objekte auswählen</h3>
+      <p class="prose"><code class="ps">-First 3</code> nimmt die ersten drei Objekte, <code class="ps">-Last 2</code> die letzten zwei. Zusammen mit <code class="ps">Sort-Object</code> findest du so die grössten oder kleinsten.</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Sort-Object Length | Select-Object -Last 2 Name, Length</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: die zwei grössten" data-ps-befehl="Get-ChildItem Logs | Sort-Object Length | Select-Object -Last 2 Name, Length" data-ps-prompt="nein"></pre>
+      <p class="prose">Ein schöner Nebeneffekt: Bekommt <code class="ps">Select-Object -First</code> genug Objekte, stoppt es den Befehl ganz links. <code class="ps">Get-ChildItem</code> sucht dann nicht weiter. Das Fliessband weiter unten zeigt dir das.</p>
+    </div>
+
+    <div class="card stack">
+      <h3>Select-Object: Eigenschaften auswählen</h3>
+      <p class="prose">Mit Namen nach <code class="ps">Select-Object</code> (Parameter <code class="ps">-Property</code>) behältst du nur diese Eigenschaften. Es entstehen neue, schlanke Objekte. <code class="ps">-Unique</code> entfernt doppelte Objekte. Achtung: Anders als die Vergleichsoperatoren beachtet <code class="ps">Select-Object -Unique</code> Gross und Klein, <code>.PDF</code> und <code>.pdf</code> gelten als verschieden.</p>
+      <pre class="ps-code"><code>Get-ChildItem Downloads | Select-Object Extension -Unique</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Endungen ohne Doppelte" data-ps-befehl="Get-ChildItem Downloads | Select-Object Extension -Unique" data-ps-prompt="nein"></pre>
+      <p class="prose">Brauchst du nur die Werte selbst, ohne Spaltenkopf, nimmst du <code class="ps">-ExpandProperty</code>. Vergleiche:</p>
+      <div class="grid2">
+        <div class="stack">
+          <p class="hint">Objekte mit einer Eigenschaft Name</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Select-Object Name" data-ps-befehl="Get-ChildItem Logs | Select-Object -First 2 Name"></pre>
+        </div>
+        <div class="stack">
+          <p class="hint">Nur die Namen als Texte</p>
+          <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Select-Object -ExpandProperty Name" data-ps-befehl="Get-ChildItem Logs | Select-Object -First 2 -ExpandProperty Name"></pre>
+        </div>
+      </div>
+      <p class="prose">Links stehen immer noch Objekte (eine Tabelle mit Kopf <code>Name</code>). Rechts sind es reine Texte, eine Liste, die du weiterverwenden kannst, zum Beispiel in einer Datei oder einer Nachricht.</p>
+    </div>
+  </section>
+
+  <!-- ===== 4 · Measure und Group ===== -->
+  <section id="rechnen">
+    <span class="eyebrow">Schritt 4 · Measure-Object und Group-Object</span>
+    <h2>Zählen, rechnen, zusammenfassen</h2>
+
+    <div class="card stack">
+      <h3>Measure-Object: zählen und rechnen</h3>
+      <p class="prose"><code class="ps">Measure-Object</code> ist der Zähler am Ende des Bands. Ohne Parameter zählt es nur (<code>Count</code>). Mit <code class="ps">-Property Length</code> und <code class="ps">-Sum</code>, <code class="ps">-Average</code>, <code class="ps">-Maximum</code>, <code class="ps">-Minimum</code> rechnet es Summe, Durchschnitt, Grösstes und Kleinstes aus.</p>
+      <pre class="ps-code"><code>Get-ChildItem Logs | Measure-Object -Property Length -Sum -Average -Maximum -Minimum</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Measure-Object" data-ps-befehl="Get-ChildItem Logs | Measure-Object -Property Length -Sum -Average -Maximum -Minimum" data-ps-prompt="nein"></pre>
+      <p class="prose">Die sieben Logdateien belegen zusammen 24'484'671 Bytes. Die leere Zeile <code>StandardDeviation</code> gehört zu einem Wert, den du nicht verlangt hast.</p>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Die Zeile <code>StandardDeviation</code> (Standardabweichung) und die Schalter <code class="ps">-StandardDeviation</code> und <code class="ps">-AllStats</code> gibt es erst ab <span class="ps-version">7</span>. In Windows PowerShell 5.1 fehlt die Zeile in der Ausgabe.</div>
+    </div>
+
+    <div class="card stack">
+      <h3>Group-Object: in Fächer einteilen</h3>
+      <p class="prose"><code class="ps">Group-Object</code> wirft gleiche Objekte ins gleiche Fach, hier alle Dateien mit derselben Endung. Jedes Fach zeigt die Anzahl (<code>Count</code>), den Wert (<code>Name</code>) und die Objekte darin (<code>Group</code>).</p>
+      <pre class="ps-code"><code>Get-ChildItem Downloads | Group-Object Extension</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Group-Object" data-ps-befehl="Get-ChildItem Downloads | Group-Object Extension" data-ps-prompt="nein"></pre>
+      <p class="prose">Die Spalte <code>Group</code> ist oft zu lang. <code class="ps">-NoElement</code> lässt sie weg. Danach sortierst du die Fächer nach ihrer Grösse:</p>
+      <pre class="ps-code"><code>Get-ChildItem Downloads | Group-Object Extension -NoElement | Sort-Object Count -Descending</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Gruppen nach Anzahl" data-ps-befehl="Get-ChildItem Downloads | Group-Object Extension -NoElement | Sort-Object Count -Descending" data-ps-prompt="nein"></pre>
+      <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In <span class="ps-version">7</span> sortiert <code class="ps">Group-Object</code> die Fächer nach ihrem Namen (<code>.exe</code>, <code>.jpg</code>, <code>.pdf</code>). Windows PowerShell 5.1 zeigt sie in der Reihenfolge, in der sie zuerst vorkommen (<code>.jpg</code>, <code>.pdf</code>, <code>.exe</code>). Sortier selbst, wenn die Reihenfolge zählt.</div>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Leas Rechner im Simulator</h2>
+    <p class="prose">Jetzt tippst du selbst. Lea hat in diesen Tagen noch zwei Listen bekommen: <code>Berichte\telefonliste.csv</code> und <code>Dokumente\vereine-wolkenried.csv</code>. Tippe <code>Get-Ch</code> und drücke Tab, mit ↑ holst du den letzten Befehl zurück und änderst ihn. Nichts davon ändert deinen eigenen Computer.</p>
+    <div id="t07-konsole"></div>
+  </section>
+
+  <!-- ===== 6 · Fliessband ===== -->
+  <section id="fliessband">
+    <span class="eyebrow">Schritt 6 · Zuschauen, wie die Pipeline arbeitet</span>
+    <h2>Das Fliessband</h2>
+    <p class="prose">Hier liegen Leas sieben Logdateien als Kärtchen. Wähle Bedingung, Sortierung und Anzahl. Die Stationen zeigen sofort, was jede von ihnen weitergibt. Mit «Einzeln durchschicken» siehst du die Kärtchen nacheinander wandern. Achte darauf, wo eines wartet und wo die Pipeline früher aufhört.</p>
+    <div class="card stack t07-band" id="t07-band">
+      <div class="t07-steuer">
+        <div class="t07-feld">
+          <label for="t07-wo">Where-Object (Bedingung)</label>
+          <select id="t07-wo" class="btn">
+            <option value="">kein Filter</option>
+            <option value="Length -gt 1MB" selected>Length -gt 1MB</option>
+            <option value="Length -gt 4MB">Length -gt 4MB</option>
+            <option value="Length -lt 1KB">Length -lt 1KB</option>
+            <option value="Name -like 'app-*'">Name -like 'app-*'</option>
+            <option value="Name -like '*fehler*'">Name -like '*fehler*'</option>
+          </select>
+        </div>
+        <div class="t07-feld">
+          <label for="t07-sort">Sort-Object (Sortierung)</label>
+          <select id="t07-sort" class="btn">
+            <option value="">nicht sortieren</option>
+            <option value="Length -Descending" selected>Length -Descending</option>
+            <option value="Length">Length</option>
+            <option value="Name">Name</option>
+            <option value="LastWriteTime -Descending">LastWriteTime -Descending</option>
+          </select>
+        </div>
+        <div class="t07-feld">
+          <label for="t07-anz">Select-Object (Anzahl)</label>
+          <select id="t07-anz" class="btn">
+            <option value="">alle</option>
+            <option value="1">-First 1</option>
+            <option value="2">-First 2</option>
+            <option value="3" selected>-First 3</option>
+            <option value="4">-First 4</option>
+            <option value="5">-First 5</option>
+          </select>
+        </div>
+      </div>
+      <p class="hint">Der passende Befehl:</p>
+      <div id="t07-befehl"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t07-play" aria-pressed="false">▶ Einzeln durchschicken</button>
+        <button type="button" class="btn" id="t07-schritt">Ein Schritt</button>
+        <button type="button" class="btn" id="t07-ende">Endstand zeigen</button>
+      </div>
+      <p class="info" id="t07-meldung" aria-live="polite"></p>
+      <ol class="t07-stationen" id="t07-stationen" aria-label="Stationen der Pipeline"></ol>
+      <p class="t07-ausgabe-titel">So zeigt die Konsole das Ergebnis (Simulator, gleiche Daten):</p>
+      <div id="t07-ausgabe"></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Pipeline-Puzzle: Bausteine in die richtige Reihenfolge</h3>
+      <p class="prose">Lea will wissen, welcher Dateityp im Ordner <code>Downloads</code> am häufigsten vorkommt. Gib jedem Baustein seinen Platz in der Pipeline (1 bis 4).</p>
+      <div id="t07-puzzle"></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 7 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Befehl zusammenbauen</h3>
+      <p class="prose">Wie viele Bytes belegen Leas Logdateien, die grösser als 1 MB sind? Am Ende soll nur die Zahl dastehen. Gib jedem Baustein seinen Platz.</p>
+      <div id="t07-u1"></div>
+    </div>
+    <div class="card stack"><h3>Übung 2 · Ausgabe vorhersagen</h3><div id="t07-u2"></div></div>
+    <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t07-u3"></div></div>
+    <div class="card stack"><h3>Übung 4 · Fehler finden</h3><div id="t07-u4"></div></div>
+    <div class="card stack"><h3>Übung 5 · Fehler finden</h3><div id="t07-u5"></div></div>
+    <div class="card stack"><h3>Übung 6 · Wahr oder falsch?</h3><div id="t07-u6"></div></div>
+    <div class="card stack">
+      <h3>Übung 7 · Befehl selbst schreiben</h3>
+      <p class="prose">Zwei Aufträge ohne Vorlage. Schreib den Befehl selbst in den Simulator.</p>
+      <div id="t07-u7"></div>
+    </div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Leas Bericht an den Leiter Informatik</h2>
+    <p class="prose">Der Leiter Informatik will von Lea drei Antworten: <b>(a)</b> Wie viele Logdateien gibt es, und wie viele MB belegen sie zusammen? <b>(b)</b> Welche drei Logdateien über 1 MB sind am grössten? Nur die Namen. <b>(c)</b> Welche zwei Dateitypen kommen in ihrem Benutzerordner am häufigsten vor?</p>
+    <p class="prose">Jede Szene zeigt einen Befehl und die Ausgabe des Simulators auf Leas Rechner.</p>
+    <div id="t07-film"></div>
+    <details class="sol">
+      <summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <p class="prose"><b>(a)</b> 7 Logdateien, zusammen 24'484'671 Bytes, das sind gerundet 23.35 MB.</p>
+        <p class="prose"><b>(b)</b> <code>app-2026-07.log</code>, <code>app-2026-08.log</code>, <code>app-2026-09.log</code>.</p>
+        <p class="prose"><b>(c)</b> <code>.log</code> mit 7 Dateien und <code>.pdf</code> mit 4 Dateien.</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Alle Befehle in PowerShell 7.6 in einem nachgebauten Ordner geprüft.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine</h2>
+    <div class="note falle"><b><code class="ps">&gt;</code> statt <code class="ps">-gt</code>:</b> <code class="ps">Where-Object Length &gt; 1MB</code> vergleicht nicht. <code>&gt;</code> leitet die Ausgabe in eine Datei um. PowerShell legt still eine Datei namens <code>1048576</code> an, und auf dem Bildschirm erscheint nichts. Lösche sie danach mit <code class="ps">Remove-Item 1048576</code>.</div>
+    <div class="note falle"><b>Leerzeichen in <code>1 MB</code>:</b> Zahl und Einheit gehören zusammen. Mit Leerzeichen hält PowerShell <code>MB</code> für ein weiteres Argument.
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Fehlermeldung: 1 MB" lang="en">PS C:\Users\lea&gt; Get-ChildItem Logs | Where-Object Length -gt 1 MB
+<span class="psk-fehler">Where-Object: A positional parameter cannot be found that accepts argument 'MB'.</span></pre>
+      Auf Deutsch: «Für das Argument MB gibt es keinen Platz.»</div>
+    <div class="note falle"><b>Skriptblock ohne <code class="ps">$_.</code>:</b> In <code class="ps">{ Length -gt 1MB }</code> hält PowerShell <code>Length</code> für einen Befehl und meldet für jede Datei: <span lang="en"><code>The term 'Length' is not recognized as a name of a cmdlet …</code></span> («Den Befehl Length gibt es nicht»). Im Skriptblock immer <code class="ps">$_.Length</code>, in der vereinfachten Syntax nur <code class="ps">Length</code>.</div>
+    <div class="note falle"><b><code class="ps">-eq</code> mit Platzhalter:</b> <code class="ps">Where-Object Name -eq 'app*'</code> sucht eine Datei, die wirklich <code>app*</code> heisst, und findet nichts. Für Muster brauchst du <code class="ps">-like</code>.</div>
+    <div class="note falle"><b>Select-Object zu früh:</b> <code class="ps">Get-ChildItem Logs | Select-Object Name | Sort-Object Length</code> sortiert nichts. Nach <code class="ps">Select-Object Name</code> haben die Objekte keine Eigenschaft <code>Length</code> mehr. Erst filtern und sortieren, dann auswählen.</div>
+    <div class="note falle"><b>Reihenfolge von Sort und Select:</b> <code class="ps">Select-Object -First 2 | Sort-Object Length -Descending</code> nimmt zuerst irgendwelche zwei Dateien und sortiert erst dann. Für «die zwei grössten» kommt <code class="ps">Sort-Object</code> vor <code class="ps">Select-Object</code>.</div>
+    <div class="note falle"><b>Tabelle statt Text:</b> <code class="ps">"Datei: $(Get-ChildItem Logs | Select-Object -First 1 Name)"</code> ergibt <code>Datei: @{Name=app-2026-07.log}</code>. Das ist ein Objekt, in Text verwandelt. Mit <code class="ps">-ExpandProperty Name</code> steht nur der Name da.</div>
+    <div class="note"><b>Gleichstand beim Sortieren:</b> Haben zwei Objekte denselben Wert, ist ihre Reihenfolge nicht festgelegt. In <span class="ps-version">7</span> sorgt <code class="ps">-Stable</code> dafür, dass sie in der ursprünglichen Reihenfolge bleiben. Windows PowerShell <span class="ps-version">5.1</span> kennt <code class="ps">-Stable</code> nicht.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Was gibt diese Pipeline aus?</h2>
+    <p class="prose">Alle Fragen beziehen sich auf Leas Rechner, so wie du ihn aus dem Simulator kennst.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Befehle dieser Station</caption>
+        <thead><tr><th>Befehl</th><th>Zweck</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">|</code></th><td>Objekte einzeln an den nächsten Befehl reichen</td><td><code class="ps">Get-ChildItem Logs | Measure-Object</code></td></tr>
+          <tr><th><code class="ps">Where-Object</code></th><td>filtern (Skriptblock oder vereinfacht)</td><td><code class="ps">Where-Object { $_.Length -gt 1MB }</code><br><code class="ps">Where-Object Length -gt 1MB</code></td></tr>
+          <tr><th><code class="ps">Sort-Object</code></th><td>sortieren, auch nach mehreren Eigenschaften</td><td><code class="ps">Sort-Object Length -Descending</code></td></tr>
+          <tr><th><code class="ps">Select-Object</code></th><td>Objekte oder Eigenschaften auswählen</td><td><code class="ps">Select-Object -First 5 Name, Length</code></td></tr>
+          <tr><th><code class="ps">Select-Object -ExpandProperty</code></th><td>nur die Werte einer Eigenschaft</td><td><code class="ps">Select-Object -ExpandProperty Name</code></td></tr>
+          <tr><th><code class="ps">Select-Object -Unique</code></th><td>Doppelte entfernen</td><td><code class="ps">Select-Object Extension -Unique</code></td></tr>
+          <tr><th><code class="ps">Measure-Object</code></th><td>zählen, Summe, Durchschnitt, Maximum, Minimum</td><td><code class="ps">Measure-Object -Property Length -Sum</code></td></tr>
+          <tr><th><code class="ps">Group-Object</code></th><td>nach gleichem Wert gruppieren</td><td><code class="ps">Group-Object Extension -NoElement</code></td></tr>
+          <tr><th><code class="ps">-Filter</code></th><td>links filtern beim Holen</td><td><code class="ps">Get-ChildItem Logs -Filter *.log</code></td></tr>
+          <tr><th><code class="ps">-eq -ne -gt -ge -lt -le</code></th><td>vergleichen (Gross/Klein egal)</td><td><code class="ps">Status -eq 'Running'</code></td></tr>
+          <tr><th><code class="ps">-like -match</code></th><td>Muster mit <code>*</code> und <code>?</code>; Suchmuster</td><td><code class="ps">Name -like 'app-*'</code></td></tr>
+          <tr><th><code class="ps">-ceq -clike</code></th><td>vergleichen mit Gross/Klein</td><td><code class="ps">'Lea' -ceq 'lea'</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li>Die <b>Pipeline</b> reicht Objekte <b>einzeln</b> weiter. <code class="ps">Sort-Object</code> und <code class="ps">Measure-Object</code> warten, bis alle da sind.</li>
+      <li><b>Filtern</b>, dann <b>sortieren</b>, dann <b>auswählen</b>: Diese Reihenfolge passt fast immer.</li>
+      <li><b>Links filtern:</b> Hat das erste Cmdlet einen Filter-Parameter, nimm ihn statt <code class="ps">Where-Object</code>.</li>
+      <li>Vergleiche beginnen mit Strich (<code class="ps">-gt</code>), <code class="ps">&gt;</code> ist eine Umleitung.</li>
+      <li>Einheiten <code class="ps">1KB</code>, <code class="ps">1MB</code>, <code class="ps">1GB</code> rechnen mit 1024 und stehen ohne Leerzeichen.</li>
+      <li><code class="ps">-ExpandProperty</code> macht aus Objekten reine Werte.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li><code class="ps">Sort-Object -Top</code>, <code class="ps">-Bottom</code> und <code class="ps">-Stable</code> gibt es nur in <span class="ps-version">7</span>. In 5.1 meldet <code class="ps">-Top</code> «kein Parameter gefunden».</li>
+        <li><code class="ps">Measure-Object</code>: <code class="ps">-StandardDeviation</code> und <code class="ps">-AllStats</code> nur in <span class="ps-version">7</span>; in 5.1 fehlt die Zeile <code>StandardDeviation</code>.</li>
+        <li><code class="ps">Group-Object</code> sortiert die Gruppen in 7 nach Namen, in 5.1 bleiben sie in der Reihenfolge des ersten Auftretens.</li>
+        <li><code class="ps">Select-Object -CaseInsensitive</code> (für <code class="ps">-Unique</code>) gibt es erst ab 7.4.</li>
+        <li>Eine Pipeline darf in <span class="ps-version">7</span> auch mit <code class="ps">|</code> am Anfang der nächsten Zeile weitergehen; in 5.1 muss <code class="ps">|</code> am Zeilenende stehen.</li>
+      </ul>
+    </div>
+    <div class="card stack">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_pipelines">about_Pipelines</a> (Objekte einzeln, «one-at-a-time processing»)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/where-object">Where-Object</a> (Skriptblock, vereinfachte Syntax, <code>-and</code> nur im Skriptblock)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/sort-object">Sort-Object</a> (<code>-Descending</code>, mehrere Eigenschaften, <code>-Stable</code>, <code>-Top</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/select-object">Select-Object</a> (<code>-First</code> stoppt die Pipeline früh, <code>-Unique</code>, <code>-ExpandProperty</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/measure-object">Measure-Object</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/group-object">Group-Object</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comparison_operators">about_Comparison_Operators</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/learn/ps101/04-pipelines">PowerShell 101: One-liners and the pipeline</a>, Abschnitt «Filter Left» (das frühere Learn-Modul «Connect commands into a pipeline» leitet heute auf diese Seite weiter)</li>
+      </ul>
+    </div>
+    <footer>Station 07 des Lernpfads PS · Weiter geht es mit «Ausgeben, formatieren, exportieren».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  // Code als gefärbter Inline-Code (ps-konsole.js färbt ihn beim Einfügen)
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+
+  // Leas Rechner, ergänzt um zwei CSV-Listen (nur in Berichte und Dokumente, Logs und Downloads bleiben gleich)
+  const H = "C:\\Users\\lea\\";
+  const UMG = {
+    dateien: [
+      { pfad: H + "Berichte\\telefonliste.csv", inhalt: "Abteilung,Intern\nInformatik,201\nFinanzen,301\nBauamt,401\nEinwohnerdienste,501", zeit: "2026-09-14T10:05:00" },
+      { pfad: H + "Dokumente\\vereine-wolkenried.csv", inhalt: "Verein,Kontakt\nTurnverein,Huber\nMusikgesellschaft,Frei\nFeuerwehrverein,Schmid", zeit: "2026-10-20T19:40:00" }
+    ]
+  };
+
+  // Hilfen für pruefe(ctx): Name bzw. Eigenschaft eines Ausgabeobjekts
+  const eig = (ctx, o, n) => (o && typeof o === "object" && typeof o.wert === "function") ? o.wert(n) : undefined;
+  const nameVon = (ctx, o) => (typeof o === "string") ? o : (eig(ctx, o, "Name") != null ? ctx.text(eig(ctx, o, "Name")) : ctx.text(o));
+  const namen = (ctx) => ctx.objekte.map((o) => nameVon(ctx, o));
+  const gleicheListe = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+  const gleicheMenge = (a, b) => a.length === b.length && a.slice().sort().join("|") === b.slice().sort().join("|");
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t07-mini", {
+    kategorien: ["Where-Object", "Sort-Object", "Select-Object"],
+    elemente: [
+      { html: "Nur Dateien, die grösser als 1 MB sind", kategorie: "Where-Object", erklaerung: "Eine Bedingung entscheidet, wer durchkommt: filtern." },
+      { html: "Die neuste Datei zuerst", kategorie: "Sort-Object", erklaerung: "Die Reihenfolge ändert sich: sortieren (absteigend nach Datum)." },
+      { html: "Nur die ersten drei", kategorie: "Select-Object", erklaerung: "Eine Anzahl abpacken: Select-Object -First 3." },
+      { html: "Nur Dienste, die laufen", kategorie: "Where-Object", erklaerung: "Bedingung «Status ist Running»: filtern." },
+      { html: "Nur die Spalten Name und Grösse", kategorie: "Select-Object", erklaerung: "Eigenschaften auswählen: Select-Object Name, Length." },
+      { html: "Alphabetisch nach Name", kategorie: "Sort-Object", erklaerung: "Ordnen von A bis Z: sortieren." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper ---------- */
+  const st = L.konsole.sitzung(UMG);
+  const sp = (link, code) => '<span data-link="' + link + '">' + C(code) + "</span>";
+  const pipe = " " + C("|") + " ";
+  const stufe = (teile, befehl) => '<div class="t07-st"><div>' + teile + "</div>" + st.html(befehl) + "</div>";
+  const b1 = "Get-ChildItem Logs", b2 = "Where-Object Length -gt 1MB", b3 = "Sort-Object Length -Descending", b4 = "Select-Object -First 5 Name, Length";
+  L.stepper("#t07-stepper", {
+    titel: "Leas Auftrag",
+    text: 'Zeige von <span data-link="a">allen Dateien im Ordner Logs</span> nur <span data-link="b">die, die grösser als 1 MB sind</span>, <span data-link="c">die grösste zuerst</span>, und davon <span data-link="d">höchstens fünf mit Name und Grösse</span>.',
+    schritte: [
+      { html: stufe(sp("a", b1), b1),
+        warum: "Zuerst die Objekte holen. Get-ChildItem legt für jede der sieben Dateien ein Kärtchen aufs Band." },
+      { html: stufe(sp("a", b1) + pipe + sp("b", b2), b1 + " | " + b2),
+        warum: "Where-Object prüft jedes Kärtchen einzeln. Die zwei kleinen Dateien unter 1 MB fallen raus, fünf kommen durch." },
+      { html: stufe(sp("a", b1) + pipe + sp("b", b2) + pipe + sp("c", b3), b1 + " | " + b2 + " | " + b3),
+        warum: "Sort-Object sammelt die fünf Kärtchen und gibt sie nach Grösse absteigend weiter. -Descending heisst «absteigend»." },
+      { html: stufe(sp("a", b1) + pipe + sp("b", b2) + pipe + sp("c", b3) + pipe + sp("d", b4), b1 + " | " + b2 + " | " + b3 + " | " + b4),
+        warum: "Select-Object nimmt höchstens fünf Objekte und behält nur Name und Length. Es entsteht eine schlanke Tabelle." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Konsole mit Aufgaben ---------- */
+  const groesste5 = ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log", "app-2026-10.log", "backup-2026-06.log"];
+  const csvNamen = ["mitarbeitende.csv", "telefonliste.csv", "vereine-wolkenried.csv"];
+  L.konsole("#t07-konsole", {
+    umgebung: UMG,
+    aufgabenTitel: "Aufgaben für Lea",
+    aufgaben: [
+      {
+        titel: "Die fünf grössten Logdateien",
+        text: "<p>Zeige die fünf grössten Dateien im Ordner <code>Logs</code>, die grösste zuerst.</p>",
+        hinweis: "<p>Sortiere nach " + C("Length") + " mit " + C("-Descending") + ", dann nimm mit " + C("Select-Object -First 5") + " die ersten fünf.</p>",
+        loesung: "Get-ChildItem Logs | Sort-Object Length -Descending | Select-Object -First 5",
+        pruefe: (ctx) => ctx.befehle.includes("Sort-Object") && !ctx.hatFehler && gleicheListe(namen(ctx), groesste5)
+      },
+      {
+        titel: "Wie gross sind alle Fotos?",
+        text: "<p>Rechne die Summe der Grössen aller <code>.jpg</code>-Dateien in Leas ganzem Benutzerordner aus (auch in Unterordnern).</p>",
+        hinweis: "<p>" + C("Get-ChildItem -Recurse -Filter *.jpg") + " findet alle Fotos. " + C("Measure-Object") + " mit " + C("-Property Length -Sum") + " zählt zusammen.</p>",
+        loesung: "Get-ChildItem -Recurse -Filter *.jpg | Measure-Object -Property Length -Sum",
+        pruefe: (ctx) => ctx.befehle.includes("Measure-Object") && /\b8126464\b/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Laufende Dienste",
+        text: "<p>Zeige nur die Dienste, deren <code>Status</code> <code>Running</code> ist.</p>",
+        hinweis: "<p>" + C("Get-Service") + " holt alle Dienste. Filtere mit " + C("Where-Object") + " nach der Eigenschaft Status und dem Operator " + C("-eq") + ".</p>",
+        loesung: "Get-Service | Where-Object Status -eq Running",
+        pruefe: (ctx) => ctx.befehle.includes("Where-Object") && ctx.objekte.length === 8 &&
+          ctx.objekte.every((o) => eig(ctx, o, "Status") != null && ctx.text(eig(ctx, o, "Status")) === "Running")
+      },
+      {
+        titel: "Downloads nach Endung",
+        text: "<p>Teile die Dateien im Ordner <code>Downloads</code> nach ihrer Endung (<code>Extension</code>) in Gruppen ein.</p>",
+        hinweis: "<p>" + C("Group-Object") + " mit dem Namen der Eigenschaft, nach der gruppiert wird.</p>",
+        loesung: "Get-ChildItem Downloads | Group-Object Extension",
+        pruefe: (ctx) => ctx.befehle.includes("Group-Object") && gleicheMenge(namen(ctx), [".exe", ".jpg", ".pdf"]) &&
+          ctx.objekte.every((o) => ({ ".exe": 2, ".jpg": 1, ".pdf": 3 })[nameVon(ctx, o)] === Number(ctx.text(eig(ctx, o, "Count"))))
+      },
+      {
+        titel: "Alle CSV-Dateien als Liste",
+        text: "<p>Gib die <b>Namen</b> aller <code>.csv</code>-Dateien in Leas Benutzerordner als reine Liste aus, ohne Spaltenkopf.</p>",
+        hinweis: "<p>Suche mit " + C("-Recurse -Filter *.csv") + ". " + C("Select-Object -ExpandProperty Name") + " gibt nur die Namen als Text aus.</p>",
+        loesung: "Get-ChildItem -Recurse -Filter *.csv | Select-Object -ExpandProperty Name",
+        pruefe: (ctx) => ctx.objekte.length === 3 && ctx.objekte.every((o) => typeof o === "string") && gleicheMenge(ctx.objekte.slice(), csvNamen)
+      },
+      {
+        titel: "Links filtern",
+        text: "<p>Zeige alle PDF-Dateien im Ordner <code>Downloads</code>, diesmal <b>ohne</b> " + C("Where-Object") + ": Lass " + C("Get-ChildItem") + " selbst filtern.</p>",
+        hinweis: "<p>" + C("Get-ChildItem") + " hat den Parameter " + C("-Filter") + ". Er nimmt ein Muster wie " + C("*.pdf") + ".</p>",
+        loesung: "Get-ChildItem Downloads -Filter *.pdf",
+        pruefe: (ctx) => !ctx.befehle.includes("Where-Object") && ctx.befehle.includes("Get-ChildItem") &&
+          gleicheListe(namen(ctx), ["handbuch-drucker.pdf", "rechnung-2026-09.pdf", "rechnung-2026-10.pdf"])
+      }
+    ]
+  });
+
+  /* ---------- Schritt 6: Fliessband ---------- */
+  (function fliessband() {
+    const sitz = L.konsole.sitzung(UMG);
+    const reduziert = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const wo = document.getElementById("t07-wo");
+    const sort = document.getElementById("t07-sort");
+    const anz = document.getElementById("t07-anz");
+    const band = document.getElementById("t07-band");
+    const befehlBox = document.getElementById("t07-befehl");
+    const ausgabeBox = document.getElementById("t07-ausgabe");
+    const liste = document.getElementById("t07-stationen");
+    const meldung = document.getElementById("t07-meldung");
+    const bPlay = document.getElementById("t07-play");
+    const bSchritt = document.getElementById("t07-schritt");
+    const bEnde = document.getElementById("t07-ende");
+
+    // Kärtchen-Daten direkt aus dem Simulator (gleiche Daten wie in der Konsole)
+    const roh = sitz.ausfuehren("Get-ChildItem Logs | ForEach-Object { $_.Name + '|' + $_.Length + '|' + $_.LastWriteTime.ToString('dd.MM.yyyy') }");
+    const karten = {};
+    const reihenfolge = [];
+    roh.split("\n").filter(Boolean).forEach((z) => {
+      const t = z.split("|");
+      karten[t[0]] = { name: t[0], groesse: Number(t[1]), datum: t[2] };
+      reihenfolge.push(t[0]);
+    });
+    const groesseText = (b) => b >= 1048576 ? L.zahlText(b / 1048576, 2) + " MB" : b >= 1024 ? L.zahlText(b / 1024, 1) + " KB" : b + " Bytes";
+    const nameListe = (code) => sitz.ausfuehren(code + " | Select-Object -ExpandProperty Name").split("\n").filter(Boolean);
+
+    let plan = null;      // berechneter Ablauf
+    let bilder = [];      // Einzelbilder der Animation
+    let pos = 0;          // aktuelles Bild
+    let timer = null;
+
+    function befehlBauen() {
+      const teile = ["Get-ChildItem Logs"];
+      if (wo.value) teile.push("Where-Object " + wo.value);
+      if (sort.value) teile.push("Sort-Object " + sort.value);
+      if (anz.value) teile.push("Select-Object -First " + anz.value);
+      return teile;
+    }
+
+    function planen() {
+      const teile = befehlBauen();
+      const basis = "Get-ChildItem Logs";
+      const nachWo = wo.value ? basis + " | Where-Object " + wo.value : basis;
+      const nachSort = sort.value ? nachWo + " | Sort-Object " + sort.value : nachWo;
+      const durch = new Set(nameListe(nachWo));
+      const sortiert = nameListe(nachSort);
+      const ende = nameListe(teile.join(" | "));
+      const n = anz.value ? Number(anz.value) : Infinity;
+      return { teile: teile, durch: durch, sortiert: sortiert, ende: ende, n: n };
+    }
+
+    // Zustand: was jede Station bisher weitergegeben hat
+    function leererZustand() { return { s: [[], [], [], []], aktiv: -1, text: "", stopp: false }; }
+    function kopie(z) { return { s: z.s.map((a) => a.map((k) => Object.assign({}, k))), aktiv: z.aktiv, text: z.text, stopp: z.stopp }; }
+
+    function bilderBerechnen() {
+      const p = plan;
+      const b = [];
+      let z = leererZustand();
+      z.text = "Bereit. Get-ChildItem hat " + reihenfolge.length + " Dateien im Ordner Logs gefunden.";
+      b.push(kopie(z));
+      let gezaehlt = 0;
+      let gestoppt = false;
+      const neu = (st, k) => { z.s.forEach((a) => a.forEach((x) => { x.neu = false; })); z.s[st].push(Object.assign({ name: k, neu: true }, k.zustand || {})); };
+      for (let i = 0; i < reihenfolge.length; i++) {
+        const k = reihenfolge[i];
+        if (gestoppt) {
+          z.s[0].push({ name: k, spaet: true });
+          continue;
+        }
+        neu(0, k); z.aktiv = 0;
+        z.text = "Get-ChildItem legt " + k + " aufs Band.";
+        b.push(kopie(z));
+        if (wo.value) {
+          const ok = p.durch.has(k);
+          neu(1, k);
+          if (!ok) z.s[1][z.s[1].length - 1].raus = true;
+          z.aktiv = 1;
+          z.text = ok ? "Where-Object: " + k + " erfüllt «" + wo.value + "» und darf weiter." : "Where-Object: " + k + " erfüllt «" + wo.value + "» nicht und fällt raus.";
+          b.push(kopie(z));
+          if (!ok) continue;
+        }
+        if (sort.value) {
+          neu(2, k); z.s[2][z.s[2].length - 1].wartet = true; z.aktiv = 2;
+          z.text = "Sort-Object nimmt " + k + " und wartet, bis alle Kärtchen da sind.";
+          b.push(kopie(z));
+          continue;
+        }
+        // ohne Sortierung direkt weiter zu Select-Object
+        neu(3, k); z.aktiv = 3; gezaehlt++;
+        z.text = (anz.value ? "Select-Object übernimmt " + k + " (" + gezaehlt + " von " + anz.value + ")." : k + " erscheint in der Ausgabe.");
+        if (gezaehlt >= p.n) {
+          gestoppt = true;
+          z.text += " Genug! Select-Object stoppt die Pipeline: Get-ChildItem holt keine weiteren Dateien.";
+          z.stopp = true;
+        }
+        b.push(kopie(z));
+      }
+      if (sort.value) {
+        z.s.forEach((a) => a.forEach((x) => { x.neu = false; }));
+        z.s[2] = p.sortiert.map((k) => ({ name: k, neu: true }));
+        z.aktiv = 2;
+        z.text = "Alle Kärtchen sind da. Sort-Object sortiert nach «" + sort.value + "» und gibt sie der Reihe nach weiter.";
+        b.push(kopie(z));
+        for (let j = 0; j < p.sortiert.length; j++) {
+          const k = p.sortiert[j];
+          if (gezaehlt >= p.n) {
+            z.text = "Select-Object hat " + anz.value + " Kärtchen. Die übrigen sortierten Kärtchen verwirft es.";
+            b.push(kopie(z));
+            break;
+          }
+          neu(3, k); z.aktiv = 3; gezaehlt++;
+          z.text = (anz.value ? "Select-Object übernimmt " + k + " (" + gezaehlt + " von " + anz.value + ")." : k + " erscheint in der Ausgabe.");
+          b.push(kopie(z));
+        }
+      }
+      z.s.forEach((a) => a.forEach((x) => { x.neu = false; }));
+      z.aktiv = -1;
+      const ergebnis = z.s[3].map((x) => x.name);
+      z.text = "Fertig. Ausgabe: " + (ergebnis.length ? ergebnis.join(", ") : "nichts") + ".";
+      if (!gleicheListe(ergebnis, p.ende)) console.error("[t07] Fliessband und Simulator weichen ab:", ergebnis, p.ende);
+      b.push(kopie(z));
+      return b;
+    }
+
+    const stationen = [
+      { titel: () => "Get-ChildItem Logs", was: "holt die Dateien", an: () => true },
+      { titel: () => "Where-Object " + (wo.value || "…"), was: "lässt nur Passendes durch", an: () => !!wo.value },
+      { titel: () => "Sort-Object " + (sort.value || "…"), was: "sammelt alles, dann sortiert", an: () => !!sort.value },
+      { titel: () => anz.value ? "Select-Object -First " + anz.value : "Ausgabe", was: anz.value ? "nimmt nur die ersten" : "alles erscheint auf dem Bildschirm", an: () => true }
+    ];
+
+    function zeichnen(z) {
+      liste.innerHTML = "";
+      stationen.forEach((sta, i) => {
+        if (i > 0) {
+          const pf = document.createElement("li");
+          pf.className = "t07-pfeil"; pf.setAttribute("aria-hidden", "true"); pf.textContent = "↓ |";
+          liste.appendChild(pf);
+        }
+        const li = document.createElement("li");
+        li.className = "t07-station" + (sta.an() ? "" : " aus") + (z.aktiv === i ? " aktiv" : "");
+        const kopf = document.createElement("div");
+        kopf.className = "t07-kopf";
+        const nr = document.createElement("span"); nr.className = "t07-nr"; nr.textContent = String(i + 1);
+        const code = document.createElement("code"); code.className = "ps"; code.textContent = sta.titel();
+        const was = document.createElement("span"); was.className = "t07-was";
+        was.textContent = sta.an() ? sta.was : "nicht in der Pipeline: die Kärtchen laufen durch";
+        kopf.append(nr, code, was);
+        const ul = document.createElement("ul");
+        ul.className = "t07-ablage";
+        ul.setAttribute("aria-label", "Station " + (i + 1) + ": " + sta.titel());
+        const eintraege = sta.an() ? z.s[i] : [];
+        if (!eintraege.length) {
+          const leer = document.createElement("li"); leer.className = "t07-leer";
+          leer.textContent = sta.an() ? "noch nichts" : "–";
+          ul.appendChild(leer);
+        }
+        eintraege.forEach((e) => {
+          const k = karten[e.name];
+          const c = document.createElement("li");
+          c.className = "t07-karte" + (e.neu ? " neu" : "") + (e.raus ? " raus" : "") + (e.wartet ? " wartet" : "") + (e.spaet ? " spaet" : "");
+          const b = document.createElement("b"); b.textContent = k.name;
+          const s = document.createElement("span"); s.textContent = groesseText(k.groesse) + " · " + k.datum;
+          c.append(b, s);
+          if (e.raus || e.wartet || e.spaet) {
+            const sr = document.createElement("span"); sr.className = "sr-only";
+            sr.textContent = e.raus ? " (fällt raus)" : e.wartet ? " (wartet)" : " (nie geholt)";
+            c.appendChild(sr);
+          }
+          ul.appendChild(c);
+        });
+        li.append(kopf, ul);
+        if (sta.an() && i > 0) {
+          const ok = eintraege.filter((e) => !e.raus && !e.spaet).length;
+          const stand = document.createElement("p"); stand.className = "t07-stand";
+          stand.textContent = i === 1 ? ok + " durch, " + (eintraege.length - ok) + " raus" : ok + " weitergegeben";
+          li.appendChild(stand);
+        }
+        liste.appendChild(li);
+      });
+      meldung.textContent = z.text;
+    }
+
+    function befehlZeigen() {
+      const pre = document.createElement("pre");
+      pre.className = "ps-code";
+      const code = document.createElement("code");
+      code.textContent = plan.teile.join(" |\n  ");
+      pre.appendChild(code);
+      befehlBox.innerHTML = "";
+      befehlBox.appendChild(pre);
+      ausgabeBox.innerHTML = sitz.html(plan.teile.join(" | "));
+      const a = ausgabeBox.querySelector("pre");
+      if (a) { a.setAttribute("tabindex", "0"); a.setAttribute("aria-label", "Ausgabe des Befehls im Simulator"); }
+      L.psFaerben(befehlBox);
+    }
+
+    function stoppen() {
+      if (timer) { clearInterval(timer); timer = null; }
+      band.classList.remove("laeuft");
+      bPlay.textContent = "▶ Einzeln durchschicken";
+      bPlay.setAttribute("aria-pressed", "false");
+    }
+
+    function neuBerechnen() {
+      stoppen();
+      plan = planen();
+      bilder = bilderBerechnen();
+      pos = bilder.length - 1;
+      befehlZeigen();
+      zeichnen(bilder[pos]);
+      meldung.textContent = "Endstand: " + bilder[pos].text.replace(/^Fertig\. /, "") + " Mit «Einzeln durchschicken» siehst du den Weg jedes Kärtchens.";
+    }
+
+    function schritt() {
+      if (pos >= bilder.length - 1) pos = -1;
+      pos++;
+      zeichnen(bilder[pos]);
+      if (pos >= bilder.length - 1) stoppen();
+    }
+
+    bPlay.addEventListener("click", () => {
+      if (timer) { stoppen(); return; }
+      if (pos >= bilder.length - 1) { pos = 0; zeichnen(bilder[0]); }
+      band.classList.add("laeuft");
+      bPlay.textContent = "⏸ Anhalten";
+      bPlay.setAttribute("aria-pressed", "true");
+      timer = setInterval(schritt, reduziert ? 2200 : 1400);
+    });
+    bSchritt.addEventListener("click", () => { if (timer) stoppen(); schritt(); });
+    bEnde.addEventListener("click", () => { stoppen(); pos = bilder.length - 1; zeichnen(bilder[pos]); });
+    [wo, sort, anz].forEach((s) => s.addEventListener("change", neuBerechnen));
+    neuBerechnen();
+  })();
+
+  /* ---------- Pipeline-Puzzle ---------- */
+  L.sortierer("#t07-puzzle", {
+    kategorien: ["1.", "2.", "3.", "4."],
+    elemente: [
+      { html: C("Sort-Object Count -Descending"), kategorie: "3.", erklaerung: "Die Fächer nach ihrer Anzahl ordnen, das grösste zuerst. Count gibt es erst nach Group-Object." },
+      { html: C("Get-ChildItem Downloads"), kategorie: "1.", erklaerung: "Ganz links: die Dateien holen." },
+      { html: C("Select-Object -First 1"), kategorie: "4.", erklaerung: "Zum Schluss nur das oberste Fach nehmen. Ergebnis: 3 .pdf." },
+      { html: C("Group-Object Extension"), kategorie: "2.", erklaerung: "Dateien nach Endung in Fächer einteilen. Jedes Fach hat Count und Name." }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t07-u1", {
+    kategorien: ["1.", "2.", "3.", "4."],
+    elemente: [
+      { html: C("Measure-Object -Property Length -Sum"), kategorie: "3.", erklaerung: "Zählt die durchgelassenen Dateien und summiert ihre Grösse." },
+      { html: C("Select-Object -ExpandProperty Sum"), kategorie: "4.", erklaerung: "Holt aus dem Messergebnis nur die Zahl: 24'484'250 Bytes (alles ausser den zwei kleinen Dateien)." },
+      { html: C("Get-ChildItem Logs"), kategorie: "1.", erklaerung: "Zuerst die Dateien holen." },
+      { html: C("Where-Object Length -gt 1MB"), kategorie: "2.", erklaerung: "Nur Dateien über 1 MB dürfen weiter. Filtern vor dem Messen." }
+    ]
+  });
+  L.auswahl("#t07-u2", {
+    frage: "Was gibt " + C("Get-ChildItem Logs | Where-Object Length -gt 4MB | Measure-Object | Select-Object -ExpandProperty Count") + " aus?",
+    optionen: ["5", "3", "4", "7"],
+    richtig: 1,
+    erklaerung: "Über 4 MB sind nur app-2026-07.log (8.5 MB), app-2026-08.log (6 MB) und app-2026-09.log (4.5 MB). app-2026-10.log hat 3.25 MB."
+  });
+  L.auswahl("#t07-u3", {
+    frage: "Was gibt " + C("Get-ChildItem Downloads | Sort-Object Length | Select-Object -Last 1 -ExpandProperty Name") + " aus?",
+    optionen: [C("foto-apero.jpg"), C("setup-alt.exe"), C("rechnung-2026-09.pdf"), "eine Tabelle mit allen Downloads"],
+    richtig: 1,
+    erklaerung: "Aufsteigend sortiert steht die grösste Datei am Ende. -Last 1 nimmt sie: setup-alt.exe mit 50 MB. -ExpandProperty Name gibt nur den Namen aus."
+  });
+  L.auswahl("#t07-u4", {
+    frage: "Lea tippt " + C("Get-ChildItem Logs | Where-Object Length > 1MB") + ". Auf dem Bildschirm erscheint nichts. Was ist passiert?",
+    optionen: [
+      "Keine Datei ist grösser als 1 MB.",
+      C(">") + " ist eine Umleitung: Die Ausgabe landet in einer neuen Datei namens " + C("1048576") + ".",
+      "Where-Object braucht immer geschweifte Klammern.",
+      "1MB muss in Anführungszeichen stehen."
+    ],
+    richtig: 1,
+    erklaerung: "Where-Object Length allein lässt jede Datei durch, deren Length nicht 0 ist. > leitet diese Ausgabe in die Datei 1048576 um (1MB als Zahl). Richtig ist -gt."
+  });
+  L.auswahl("#t07-u5", {
+    frage: "Lea will die zwei grössten Downloads und schreibt " + C("Get-ChildItem Downloads | Select-Object -First 2 | Sort-Object Length -Descending") + ". Was stimmt?",
+    optionen: [
+      "Der Befehl ist richtig.",
+      "Sort-Object muss vor Select-Object stehen. So nimmt sie die ersten zwei Dateien des Ordners (foto-apero.jpg und handbuch-drucker.pdf) und sortiert nur diese.",
+      "Select-Object -First geht nur nach Where-Object.",
+      "-Descending gehört zu Select-Object."
+    ],
+    richtig: 1,
+    erklaerung: "Erst sortieren, dann auswählen: Get-ChildItem Downloads | Sort-Object Length -Descending | Select-Object -First 2 ergibt setup-alt.exe und WolkenriedSync-setup.exe."
+  });
+  L.wahrFalsch("#t07-u6", {
+    titel: "Vergleiche und Einheiten",
+    aussagen: [
+      { html: C("'app.log' -like '*.LOG'") + " ergibt True.", wahr: true, erklaerung: "-like ignoriert Gross und Klein. Erst -clike würde False liefern." },
+      { html: C("1MB") + " ist dasselbe wie 1'000'000.", wahr: false, erklaerung: "PowerShell rechnet mit 1024: 1MB = 1024 × 1024 = 1'048'576." },
+      { html: C("'Logs' -like 'log'") + " ergibt True.", wahr: false, erklaerung: "Ohne Platzhalter muss der ganze Text passen. 'log*' wäre True." },
+      { html: C("Where-Object { $_.Length -gt 1MB -and $_.Name -like 'app*' }") + " kannst du gleichwertig in der vereinfachten Syntax schreiben.", wahr: false, erklaerung: "-and und -or gehen nur im Skriptblock. Die vereinfachte Syntax kennt genau einen Vergleich." },
+      { html: C("'app-2026-07.log' -match '07'") + " ergibt True.", wahr: true, erklaerung: "-match sucht das Muster irgendwo im Text. 07 kommt vor." },
+      { html: C("Sort-Object Extension, Length -Descending") + " sortiert beide Eigenschaften absteigend.", wahr: true, erklaerung: "-Descending gilt für alle angegebenen Eigenschaften." }
+    ]
+  });
+  const aelteste3 = ["backup-2026-06.log", "app-2026-07.log", "app-2026-08.log"];
+  L.konsole("#t07-u7", {
+    umgebung: UMG,
+    begruessung: false,
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Die drei ältesten Logdateien",
+        text: "<p>Zeige die drei ältesten Dateien im Ordner <code>Logs</code>, die älteste zuerst, und nur die Eigenschaften <code>Name</code> und <code>LastWriteTime</code>.</p>",
+        hinweis: "<p>Alt vor neu heisst aufsteigend nach " + C("LastWriteTime") + ". Danach " + C("Select-Object") + " mit " + C("-First") + " und zwei Eigenschaften.</p>",
+        loesung: "Get-ChildItem Logs | Sort-Object LastWriteTime | Select-Object -First 3 Name, LastWriteTime",
+        pruefe: (ctx) => gleicheListe(namen(ctx), aelteste3) && ctx.objekte.every((o) => typeof o === "object" && o && typeof o.namen === "function" &&
+          gleicheMenge(o.namen().map((n) => n.toLowerCase()), ["name", "lastwritetime"]))
+      },
+      {
+        titel: "Durchschnittsgrösse der Bilder",
+        text: "<p>Wie gross ist eine Datei im Ordner <code>Bilder</code> im Durchschnitt (in Bytes)?</p>",
+        hinweis: "<p>" + C("Measure-Object") + " mit " + C("-Property Length") + " und dem Schalter für den Durchschnitt.</p>",
+        loesung: "Get-ChildItem Bilder | Measure-Object -Property Length -Average",
+        pruefe: (ctx) => ctx.befehle.includes("Measure-Object") && /1730709[.,]25/.test(ctx.ausgabe)
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const film = L.konsole.sitzung(UMG);
+  const f = (code) => film.html(code);
+  const gross = "Get-ChildItem Logs | Where-Object Length -gt 1MB | Sort-Object Length -Descending";
+  L.film("#t07-film", {
+    phasen: ["a · Zählen und messen", "b · Die grössten", "c · Dateitypen"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Lea hat drei Fragen zu beantworten. Für jede baut sie eine Pipeline, Befehl für Befehl. Sie startet in ihrem Benutzerordner." },
+      { ph: 0, f: f("Get-ChildItem Logs"), say: "Zuerst schaut sie, was im Ordner Logs liegt. Sieben Dateien, jede mit Datum und Grösse in Bytes." },
+      { ph: 0, f: f("Get-ChildItem Logs | Measure-Object"), say: "Measure-Object ohne Parameter zählt nur. Count ist 7: Das ist die erste halbe Antwort." },
+      { ph: 0, f: f("Get-ChildItem Logs | Measure-Object -Property Length -Sum"), say: "Mit -Property Length und -Sum rechnet Measure-Object die Grössen zusammen: 24'484'671 Bytes." },
+      { ph: 0, say: "Bytes sind schwer zu lesen. Lea teilt die Summe durch 1MB und rundet auf zwei Stellen." },
+      { ph: 0, f: f("[math]::Round((Get-ChildItem Logs | Measure-Object -Property Length -Sum).Sum / 1MB, 2)"), say: "Die Klammern holen zuerst das Messergebnis, .Sum nimmt die Zahl daraus. Ergebnis: 23.35 MB." },
+      { ph: 0, say: "Antwort a: 7 Logdateien mit zusammen 23.35 MB." },
+      { ph: 1, f: f("Get-ChildItem Logs | Where-Object Length -gt 1MB"), say: "Für Frage b filtert sie zuerst. Where-Object lässt nur die fünf Dateien über 1 MB durch." },
+      { ph: 1, f: f(gross), say: "Jetzt sortiert sie absteigend nach Length. Die grösste Datei steht oben." },
+      { ph: 1, f: f(gross + " | Select-Object -First 3"), say: "Select-Object -First 3 nimmt die obersten drei." },
+      { ph: 1, f: f(gross + " | Select-Object -First 3 -ExpandProperty Name"), say: "Der Chef will nur die Namen. -ExpandProperty Name macht daraus eine reine Liste." },
+      { ph: 1, say: "Antwort b: app-2026-07.log, app-2026-08.log und app-2026-09.log. Die Reihenfolge war wichtig: erst filtern, dann sortieren, dann auswählen." },
+      { ph: 2, f: f("Get-ChildItem -Recurse -File | Measure-Object"), say: "Für Frage c braucht sie alle Dateien im ganzen Benutzerordner. -Recurse geht in alle Unterordner, -File lässt Ordner weg. Es sind 27 Dateien." },
+      { ph: 2, f: f("Get-ChildItem -Recurse -File | Group-Object Extension -NoElement"), say: "Group-Object teilt sie nach Endung in Fächer ein. -NoElement lässt die lange Liste der Dateien weg." },
+      { ph: 2, say: "Die Liste ist nach Endung sortiert, nicht nach Anzahl. Lea will die häufigsten oben." },
+      { ph: 2, f: f("Get-ChildItem -Recurse -File | Group-Object Extension -NoElement | Sort-Object Count -Descending | Select-Object -First 2"), say: "Sie sortiert die Fächer nach Count absteigend und nimmt die ersten zwei." },
+      { ph: 2, say: "Antwort c: .log mit 7 Dateien und .pdf mit 4 Dateien." },
+      { ph: -1, say: "Fertig: (a) 7 Logdateien, 23.35 MB, (b) app-2026-07.log, app-2026-08.log, app-2026-09.log, (c) .log und .pdf. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "Was gibt " + C("Get-ChildItem Logs | Where-Object Length -lt 1KB | Measure-Object | Select-Object -ExpandProperty Count") + " aus?", o: ["0", "2", "5", "7"], a: 1,
+        e: "Kleiner als 1 KB sind app.log (270 Bytes) und sync-fehler.log (151 Bytes)." },
+      { q: "Was ergibt " + C("'Logs' -like 'log*'") + "?", o: ["True", "False", "eine Fehlermeldung"], a: 0,
+        e: "log* passt auf alles, was mit log beginnt. Gross und klein spielen bei -like keine Rolle." },
+      { q: "Was gibt " + C("Get-ChildItem Logs | Sort-Object LastWriteTime -Descending | Select-Object -First 1 -ExpandProperty Name") + " aus?", o: [C("app-2026-07.log"), C("backup-2026-06.log"), C("app.log"), C("sync-fehler.log")], a: 2,
+        e: "Absteigend nach Datum steht die neuste Datei oben: app.log vom 2.11.2026, 08:59." },
+      { q: "Was ergibt " + C("'Lea' -ceq 'lea'") + "?", o: ["True", "False"], a: 1,
+        e: "Das c steht für case-sensitive: Jetzt zählt die Gross- und Kleinschreibung, L ist nicht l." },
+      { q: "Was gibt " + C("Get-ChildItem Logs | Where-Object Name -eq 'app*'") + " aus?", o: ["die vier Dateien app-2026-…", "alle fünf Dateien, die mit app beginnen", "nichts", "eine Fehlermeldung"], a: 2,
+        e: "-eq vergleicht wörtlich. Eine Datei namens app* gibt es nicht. Für Muster brauchst du -like." },
+      { q: "Was gibt " + C("Get-ChildItem Logs | Select-Object Name | Sort-Object Length -Descending") + " aus?", o: ["die Namen, grösste Datei zuerst", "die Namen, aber nicht nach Grösse sortiert, ohne Fehlermeldung", "eine Fehlermeldung «Length not found»"], a: 1,
+        e: "Nach Select-Object Name gibt es kein Length mehr. Für Sort-Object ist der Wert bei allen Objekten leer, also gibt es nichts zu sortieren und keinen Fehler. In pwsh 7 bleiben die sieben Namen hier in der ursprünglichen Reihenfolge, in 5.1 geraten sie durcheinander." },
+      { q: "In welcher Zeile beginnt die Ausgabe von " + C("Get-ChildItem Downloads | Group-Object Extension -NoElement") + " in PowerShell 7?", o: [C("3 .pdf"), C("2 .exe"), C("1 .jpg")], a: 1,
+        e: "PowerShell 7 sortiert die Gruppen nach Name: .exe, .jpg, .pdf. Windows PowerShell 5.1 würde mit .jpg beginnen." },
+      { q: "Was liefert " + C("Select-Object -ExpandProperty Name") + "?", o: ["Objekte mit einer Eigenschaft Name (Tabelle mit Kopf)", "nur die Namen als Texte", "alle Eigenschaften ausser Name"], a: 1,
+        e: "-ExpandProperty packt den Wert aus. Es bleibt eine reine Liste von Texten." },
+      { q: "Lea will alle .log-Dateien im Ordner Logs. Was ist «links gefiltert»?", o: [C("Get-ChildItem Logs | Where-Object Extension -eq '.log'"), C("Get-ChildItem Logs -Filter *.log"), C("Get-ChildItem Logs | Select-Object -Unique")], a: 1,
+        e: "Get-ChildItem filtert selbst beim Holen. Where-Object filtert erst, nachdem alles geholt wurde." },
+      { q: "Welche Bedingung geht <b>nur</b> im Skriptblock " + C("{ }") + "?", o: [C("Length -gt 1MB"), C("Name -like 'app*'"), C("$_.Length -gt 1MB -and $_.Name -like 'app*'"), C("Status -eq 'Running'")], a: 2,
+        e: "Zwei Bedingungen mit -and verbinden kann nur der Skriptblock. Die anderen gehen auch in der vereinfachten Syntax." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

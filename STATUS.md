@@ -72,6 +72,7 @@
 
 ### 2026-10-31
 
+- **feat: PS-Erweiterung 1.0.0 für den Lernpfad PS** (Branch `feat/lernpfad-powershell`) — eigene Dateien `public/lernpfad/ps-konsole.css` (Akzent PowerShell-Blau, Syntaxfärbung, `.ps-ausgabe`, `.ps-version`) und `public/lernpfad/ps-konsole.js` (PowerShell-Simulator mit Spiel-Rechner «Lea», 68 Befehle, Aufgaben-API, Skript-Modus, `Lernpfad.konsole.ausfuehren`), Vorlage `content/lernseiten/ps/_vorlage.html`, Prüfregel für `ps-konsole.js` nach `lernpfad.js`, Tests `tests/ps-konsole.test.ts` (356 Vergleiche mit echtem pwsh 7.6). Baukasten 1.1.0 unverändert. Doku: `docs/lernpfad-powershell.md`
 - **feat: Baukasten 1.1.0 für den Lernpfad PMGT** (Branch `feat/lernpfad-pmgt`, live am 01.11.2026) — neue Bausteine `Lernpfad.reflexion` (offene Frage mit Musterlösung und Selbstbewertung nach Raster), `Lernpfad.matrix` (2×2 bis 5×5, Karten per Tipp und Tastatur ablegen, Prüfen), Hilfsfunktion `Lernpfad.netzplanKnoten`; CSS für ICB-Kennzeichen (`.icb`), Netzplan-Knoten (`.np-knoten`), Gantt-Balken (`.gantt`) und Akzentfarbe pro Fach (`body[data-fach="pmgt"]`, Orange, Kontrast ≥ 4.5:1 hell und dunkel). Vorlage `content/lernseiten/pmgt/_vorlage.html`. Bestehende Bausteine und MSTW-Seiten unverändert (im Browser geprüft). Doku: `docs/lernpfad-baukasten.md` (Abschnitte 7, 8.11–8.13, 9.12–9.14, Prüfliste)
 
 ### 2026-10-29
