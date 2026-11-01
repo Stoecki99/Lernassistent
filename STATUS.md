@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad AVSW Verteilte Softwarearchitekturen mit Baustein «modellieren»; Lernpfad PMGT Welle 1, Leitstand und Lernpfad PS live)
+**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad Spieltheorie mit Spiel-Erweiterung, 11 Stationen; Lernpfad AVSW Verteilte Softwarearchitekturen mit Baustein «modellieren»; Lernpfad PMGT Welle 1, Leitstand und Lernpfad PS live)
 
 ---
 
@@ -25,6 +25,7 @@
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
 | 16. Lernpfad PS | Live seit 01.11.2026 | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
 | 17. Lernpfad AVSW | Fertig, wartet auf Deploy | Verteilte Softwarearchitekturen, 6 Stationen mit 35 Modellierungsübungen, Kurzlink `/avsw`, Baukasten 1.2.0 (`modellieren`, `piktogramm`, `pre.code`) |
+| 18. Lernpfad Spieltheorie | Fertig, wartet auf Deploy | 11 Stationen (Spielbrett bis Krisenstab und Abschluss), Spiel-Erweiterung `public/lernpfad/st-spiel.*` (Figuren, Szenen, Spielbrett, Turnier, Spielbaum, Szenario, Lagetisch, Mischer), Kurzlink `/spieltheorie`; Konzept `docs/lernpfad-spieltheorie.md` (Vorlage für Vault «02 Projekte/Lernpfad Spieltheorie») |
 
 ## Security-Fixes (alle angewendet)
 
@@ -57,6 +58,10 @@
 
 ## Offene Punkte (Stand 2026-11-01)
 
+- **Lernpfad Spieltheorie, Vault:** Konzept liegt in `docs/lernpfad-spieltheorie.md`; Jan überträgt es in den Vault («02 Projekte/Lernpfad Spieltheorie»), Zugriff auf den Vault besteht aus der Cloud-Session nicht.
+- **Lernpfad Spieltheorie, Station 10:** Akteursanalysen zu Russland–Ukraine, Taiwanstrasse und Rotes Meer/Hormus mit Stand Oktober 2026. Inhalte veralten: bei grösseren Lageänderungen nachführen (Hinweis «Modell, keine Prognose» steht auf der Seite).
+- **Spiel-Erweiterung, Wünsche:** Modus «streichen» (iterierte Elimination) im Spielbrett, Zufallsziele im Szenario als eigenes Feld, Selbsttest mischt Antworten nicht (richtige Antworten von Hand verteilen), breite Spielbäume (6+ Blätter) scrollen bei 360 px in sich.
+
 - **AVSW-Inhalte nicht mit Folien abgeglichen:** Die Folien lagen beim Erstellen nicht vor. Alle Stationen tragen den Hinweis «Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt». Begriffe, Notation (C4/UML), Themenreihenfolge, Feld `vorlesung` (vorläufig «Thema 1–5») und Prüfungsrahmen mit den Modulunterlagen abgleichen.
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
 - **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
@@ -72,6 +77,10 @@
 ## Changelog
 
 ### 2026-11-01
+
+- **feat: Lernpfad Spieltheorie** — `content/lernseiten/spieltheorie/` mit 11 Stationen in 5 Sektionen: Spielbrett, Gefangenendilemma, Nash-Gleichgewicht, Nullsumme und Bluff, Drohungen und Selbstbindung, Tit-for-Tat, Signale und Täuschung, 36 Strategeme und Sun Tzu, Verhandeln (Simulation «Die Piratenallianz»), Krisenstab Geopolitik, Abschluss mit Kampagne und Prüfung. Keine Formeln, Archipel-Aurelia-Geschichten, historische Fallstudien, Alltagschecklisten.
+- **feat: Spiel-Erweiterung 1.0.0** — `public/lernpfad/st-spiel.css` und `st-spiel.js` (`Lernpfad.spiel`): Pergament-Grundton und Akzent Ziegelbraun (Kontrast hell und dunkel geprüft), 10 eigene SVG-Figuren, 7 Szenen, Bausteine `spielbrett`, `turnier` (Duell, Turnier, Evolution), `baum`, `szenario`, `akteure`, `mischer`. Vorlage `content/lernseiten/spieltheorie/_vorlage.html`, Doku `docs/lernpfad-spieltheorie.md`. Inhaltsprüfung erzwingt die Reihenfolge der Erweiterungsdateien (mit Tests), Test für `fach.json`.
+- **test:** Alle Stationen bei 360 px hell und dunkel im Browser durchgeklickt (keine Konsolenfehler, kein seitlicher Scroll), Spielbretter und Spielbäume gegen die Engine nachgerechnet, alle Szenario-Enden erreicht.
 
 - **feat: Lernpfad AVSW (Verteilte Softwarearchitekturen, FS26)** — `content/lernseiten/avsw/` mit sechs Stationen: Architekturstile, Kommunikation (REST, gRPC, Messaging), Container und Kubernetes, Resilienz und Konsistenz, Architektur modellieren, Prüfungstraining mit Prüfungsmodus. Navigation automatisch über den Fachordner (Kachel unter `/lernseiten`, Kurzlink `/avsw`). Test für `fach.json`. (Eine erste Fassung mit falschem Fach «Verlässliche IT-Infrastruktur» wurde ersetzt.)
 - **feat: Baukasten 1.2.0** — Baustein `Lernpfad.modellieren` (Architektur aus Anforderungstext modellieren: Bausteine legen, Verbindungen mit Art ziehen, prüfen mit Rückmeldung, Musterlösung mit Begründungen, ohne Ziehen per Maus bedienbar), `Lernpfad.piktogramm` (22 eigene SVG-Symbole statt Markenlogos), Codeblöcke `pre.code`. Doku in `docs/lernpfad-baukasten.md` (8.14, 9.15, 9.16), Muster in `content/lernseiten/avsw/_vorlage.html`
