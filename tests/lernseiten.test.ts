@@ -585,7 +585,7 @@ describe("MSTW fach.json im Repo", () => {
 })
 
 describe("AVSW fach.json im Repo", () => {
-  test("6 Stationen in Reihenfolge, Prüfungstraining am Schluss", () => {
+  test("7 Stationen in Reihenfolge, Prüfungstraining am Schluss", () => {
     const ergebnis = ladeFach("avsw")
     assert.ok(ergebnis)
     assert.equal(ergebnis.fach.kuerzel, "AVSW")
@@ -601,10 +601,11 @@ describe("AVSW fach.json im Repo", () => {
         "03-container-kubernetes",
         "04-resilienz-konsistenz",
         "05-architektur-modellieren",
-        "06-pruefungstraining",
+        "06-architektur-leitstand",
+        "07-pruefungstraining",
       ],
     )
-    assert.equal(ergebnis.pfad[5].sektion, "abschluss")
+    assert.equal(ergebnis.pfad[6].sektion, "abschluss")
   })
 
   test("Fachordner kollidiert nicht mit App-Seiten, public/ oder _next", () => {
