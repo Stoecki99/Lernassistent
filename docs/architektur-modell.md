@@ -209,3 +209,101 @@ Arbeitet auf demselben Modell (4). Pro Typ Standardwerte (überschreibbar je Ele
 | `puffer` | nur Messaging: Nachrichten, die gepuffert werden |
 
 Ein Tick = 1 simulierte Minute. Last fliesst entlang der Verbindungen eines Ablaufs (`sync` addiert Latenz und gibt Fehler weiter, `async` entkoppelt über Puffer, `daten` belastet die Datenhaltung, Cache senkt Last mit Trefferquote). Überlast → Warteschlange → Latenz steigt (Warteschlangenmodell, z. B. M/M/c-Näherung) → Timeouts → Fehler. Kennzahlen je Tick: Verfügbarkeit, p95-Latenz, Fehlerquote, Durchsatz, Kosten, Rückstau. Ereignisse (Lastspitze, Ausfall, langsame Abhängigkeit, fehlerhaftes Deployment) und Massnahmen (skalieren, Cache, Queue, Circuit Breaker, Timeout/Retry, Read-Replica, Autoscaling, CDN, Rate Limiting) verändern Parameter. Seed-basiert deterministisch: gleicher Seed + gleiche Aktionen = gleiches Ergebnis (Server rechnet zur Bewertung nach).
+
+### 9.1 Umsetzung und Schnittstelle (Ergänzung 01.11.2026)
+
+Code in `lib/archsim/`, nur über `lib/archsim/index.ts` importieren (reines TypeScript, keine Node-Importe, läuft im Browser und auf dem Server). Typen in `types.ts`, Zod-Schemas in `schema.ts`.
+
+| Funktion | Zweck |
+|----------|-------|
+| `listeMissionen()`, `ladeMission(id)`, `MISSION_IDS` | Missionsübersicht; geprüfte Mission (Zod) oder `null` |
+| `starte(mission, seed, modell?)` | neuer `Zustand` (Phase `bereit`, Minute 0). `modell` nur bei `art: "modellieren"` (Pflicht, muss `validiere(...).gueltig` sein, sonst `ArchSimFehler` `MODELL` mit `details`) |
+| `wendeAn(mission, zustand, aktion)` | eine Aktion (inkl. `{ typ: "weiter", minuten }`) → neuer Zustand; Eingabe bleibt unverändert |
+| `schritt(mission, zustand, aktionen?)` | Aktionen anwenden, dann genau eine Minute simulieren (Takt der Oberfläche) |
+| `beende(mission, zustand)`, `auswerten(mission, zustand)` | bis zum Ende laufen lassen; `Ergebnis` = `{ zustand, kennzahlen, score, nachbesprechung, validierung }` |
+| `spieleNach(mission, seed, aktionen, modell?)` | Server: nachrechnen, läuft nach der letzten Aktion bis zum Ende; Fehler tragen `aktionIndex` |
+| `validiere(mission, modell)` | Struktur, Palette, Lauffähigkeit, Anforderungen (9.8) |
+| `pruefeAktion(mission, zustand, aktion)` | nur prüfen (z. B. Knöpfe sperren) |
+| `protokollSchema`, `aktionSchema`, `modellSchema`, `missionSchema` | Zod für API-Eingaben (`{ missionId, seed, aktionen, modell? }`) |
+
+Aktionen (`Aktion`, Feld `typ`): `weiter {minuten}`, `skalieren {element, instanzen}`, `autoscaling {element, an, min?, max?}`, `cache {element}` (Datenhaltung), `cdn {element}` (Client), `queue {verbindung}`, `circuitBreaker {verbindung, an}`, `timeout {verbindung, ms}`, `retry {verbindung, versuche}`, `readReplica {element, anzahl}`, `rateLimit {element, proSekunde}` (0 = aus), `bulkhead {verbindung, an}`, `rollback {element}`. Die Mission legt `erlaubteAktionen` und optional `aktionsZiele` fest. `cache`, `cdn` und `queue` ändern das Modell im Zustand (`zustand.modell`, neue Elemente mit `zustand: "neu"` und freier Rasterzelle); die Oberfläche zeichnet immer `zustand.modell`.
+
+Ergänzte Felder im Modell (alle optional): Element-`sim` zusätzlich `parallel` (gleichzeitige Anfragen je Instanz), `trefferquote` (Cache), `maxInstanzen`; Verbindungs-`sim` mit `timeoutMs`, `retries`, `circuitBreaker`, `bulkhead`, `fallback`.
+
+Standardwerte (`params.ts`, `TYP_WERTE`; Auszug): `dienst` 120 Anfr./s, 25 ms, 100 parallel, 10 CHF/h · `monolith` 50/s, 60 ms, 16 CHF/h · `gateway` 1500/s, 3 ms, 1000 parallel · `datenbank` 400/s, 6 ms, 25 CHF/h, nicht horizontal skalierbar (Read-Replica) · `nosql` 1500/s · `cache` 8000/s, 1 ms, Trefferquote 0.85 · `queue`/`topic`/`broker` 3000/s, Puffer 200 000 · `extern` 200/s, 250 ms, nicht skalierbar · `cdn` 50 000/s, 15 ms · Clients unbegrenzt, 30 ms Internet. Gruppen, Artefakte, Container, Schnittstellen, Monitoring tragen keine Last. Grundfehlerquote 0.02 %, extern 0.1 %. Einmalkosten der Massnahmen (`MASSNAHMEN_KOSTEN`): Cache 40, CDN 30, Queue 60, Circuit Breaker 20, Bulkhead 20, Autoscaling 15, Rate Limit 10, Read-Replica 10 (plus laufend wie eine Instanz), Timeout/Retry/Rollback je 5 CHF.
+
+### 9.2 Rechnung einer Minute
+
+Ein Tick ist eine Minute im eingeschwungenen Zustand. Reihenfolge: Instanzen starten → Ereignisse → Last λ = Lastkurve(t) × Π Lastspitzen × (1 + Rauschen·(2u − 1)), u aus mulberry32 (`lib/simulation/rng.ts`, Zustand `rng`) → Last von oben nach unten → Antwortzeiten und Erfolg von unten nach oben → Puffer → Kennzahlen → Circuit Breaker → Autoscaling → Hinweise.
+
+- **Auslastung:** ρ = λ_angenommen ÷ (Instanzen × Kapazität). Datenbank mit R Read-Replicas: λ_eff = λ_schreibend + λ_lesend ÷ (1 + R).
+- **Antwortzeit je Element:** R = S × f(ρ, c) mit S = Bedienzeit (× Faktor bei «langsam»), c = Instanzen und Sakasegawa-Näherung für M/M/c: f = 1 + ρ^(√(2(c+1)) − 1) ÷ (c(1 − ρ)); für c = 1 genau 1 ÷ (1 − ρ). Ab ρ = 0.97 linear bis zur Kappung 40 × S.
+- **Überlast:** Anteil, der Platz findet, a_CPU = 1/ρ × (1 − 0.3 × min(1, ρ − 1)) für ρ > 1 (Goodput sinkt, weil Arbeit an schon aufgegebene Anfragen verloren geht).
+- **Threads:** Bedarf = Σ λ × Haltezeit (eigene Antwortzeit + Wartezeit auf alle synchronen Aufrufe aus der Vorminute, ohne abgeschottete Verbindungen); a_Thread = min(1, Instanzen × parallel ÷ Bedarf). Wer nicht angenommen wird, scheitert «langsam» (Wartezeit 5 s bzw. bis zum Timeout des Aufrufers), Ausfall, Rate Limit, Bulkhead und offener Circuit Breaker scheitern «schnell» (1 ms).
+- **Latenzverteilung:** je Aufrufbaum verschobene Exponentialverteilung X = a + Exp(m) mit a = 0.8 × Grundlatenz B (ohne Warteschlangen) und m = mittlere Latenz L − a. p50/p95 der Minute = Quantil der Mischung aller Anfrageklassen (gewichtet mit erfolgreichen Anfragen), per Bisektion.
+
+### 9.3 Last entlang der Abläufe (Aufrufbäume)
+
+Jede Mission definiert Anfrageklassen `{ id, name, anteil, einstieg, ziele[], schreibend?, kritisch?, statischAnteil? }`. Der Weg wird aus dem Modell abgeleitet (`routing.ts`): vom Einstieg aus jedes Ziel per Breitensuche über Lastverbindungen (`sync`, `async`, `daten`, `abhaengigkeit`, `stream`), zuerst ab dem vorigen Ziel (dort ist die Anfrage gerade), erst wenn das nicht geht ab einem beliebigen schon besuchten Element; durch Clients, Datenhaltung und externe Systeme führt kein Weg hindurch. Danach hängt jeder Dienst (Kategorie `dienst`, `sicherheit`) automatisch seine Datenhaltungen an. Rolle je Kante:
+
+| Rolle | Erkennung | Wirkung |
+|-------|-----------|---------|
+| `sync` | sonst | Aufrufer wartet: Latenz und Fehler addieren sich, Timeout/Retry/Circuit Breaker/Bulkhead wirken |
+| `daten` | Ziel ist Datenhaltung | wie `sync`; mit Cache als Geschwister (Cache-Aside) oder davor (Read-Through) bekommt die Datenbank bei lesenden Klassen nur (1 − h) der Zugriffe; h = Trefferquote, nach dem Einfügen in 3 Minuten linear aufgewärmt |
+| `publish` | Ziel ist Messaging | Aufrufer wartet nur auf die Bestätigung des Brokers |
+| `konsum` | Quelle ist Messaging | entkoppelt: Konsument zieht aus dem Puffer bis 80 % seiner CPU-Kapazität (Prefetch, ohne Rücksicht auf Threads). Hängt er an einer langsamen Abhängigkeit, belegen seine Worker die Threads des Dienstes und blockieren auch dessen synchrone Anfragen (Lehre «Konsument blockiert»). Fehlgeschlagene Nachrichten bleiben im Puffer (erneute Zustellung); Puffer über `puffer × Instanzen` läuft über (verloren) |
+| `asyncDirekt` | `async`/`stream` ohne Messaging-Element | «fire and forget»: niemand wartet, scheitert der Empfänger, ist die Nachricht verloren |
+
+CDN: Hinter einem CDN-Knoten geht nur (1 − `statischAnteil`) der Klasse weiter.
+
+### 9.4 Resilienz-Formeln je Aufruf
+
+Kind liefert Erfolg s, Latenz (a, m) und mittlere Fehlerzeit F. Mit Timeout T (Standard 30 000 ms, Kundinnen brechen nach 10 000 ms ab):
+
+- Timeout-Wahrscheinlichkeit p_T = exp(−(T − a) ÷ m) (1, wenn T ≤ a); Fehlversuch q = 1 − s × (1 − p_T).
+- Retries r: Lastfaktor auf das Kind 1 + q + … + q^r (mit q **der Vorminute**, geglättet 50 %: daraus entsteht der Retry-Sturm), Erfolg 1 − q^(r+1), Zeit je Aufruf = E[min(X, T)] × Versuche.
+- Circuit Breaker: öffnet, wenn q ≥ 50 % (lastgewichtet über die Minute); offen 2 Minuten (Aufrufe scheitern sofort oder liefern mit `fallback` eine degradierte, aber erfolgreiche Antwort), dann halboffen (10 % Probe-Aufrufe), danach zu oder wieder offen.
+- Bulkhead: die Verbindung bekommt 25 % der Threads des Aufrufers; Bedarf darüber wird sofort abgewiesen, die übrigen Anfragen des Aufrufers warten nicht mehr auf diese Abhängigkeit.
+- Rate Limit am Zugang: Anteil über der Höchstrate wird sofort abgewiesen (zählt als Fehler, `summen.abgewiesen`).
+
+### 9.5 Ereignisse, Skalierung, Kosten
+
+Ereignisse `{ id, tick, dauer, titel, text, wirkung }` mit `wirkung.art` `lastspitze {faktor}`, `ausfall {element}` (Kapazität 0, Aufrufe scheitern schnell), `langsam {element, faktor}` (Bedienzeit × Faktor), `deployment {element, fehlerquote}` (bis `rollback`). Skalieren vor dem Start wirkt sofort, sonst nach 2 Minuten Startzeit; Abbau sofort. Autoscaling misst die CPU-Auslastung (wie ein Horizontal Pod Autoscaler, Thread-Erschöpfung zählt nicht): über 75 % → Ziel ⌈Instanzen × ρ ÷ 0.6⌉ (bis max), aktiv nach 1 + 2 Minuten; 3 Minuten unter 30 % → eine Instanz weniger (bis min). Kosten je Minute = Σ (aktive + startende Instanzen + Replicas) × CHF/h ÷ 60, dazu Einmalkosten der Massnahmen.
+
+### 9.6 Kennzahlen (`KennzahlPunkt` je Minute, `Gesamtkennzahlen`)
+
+Je Minute: `last`, `durchsatz` (erfolgreich/s inkl. degradiert), `fehlerquote`, `verfuegbarkeit`, `p50`, `p95` (null ohne Erfolg), `kostenRate` (CHF/h), `kosten` (kumuliert), `rueckstau` (gepufferte Nachrichten), `verloren` (kritische Vorgänge kumuliert), `degradiert`, `sloOk` (p95 ≤ SLO und Verfügbarkeit ≥ SLO), `engpass` (höchste CPU-Auslastung ≥ 0.85, sonst höchste Thread-Auslastung), `ueberlastet` (CPU > 1), `threadsErschoepft`, `auslastungMax`, `retrySturm` (Verbindung mit Lastfaktor ≥ 1.5), `cbOffen`, `ereignisse`. Je Element in `zustand.elemente[id].messung`: `last`, `auslastung`, `latenzMs`, `fehlerquote`, `zustand` (`ok`, `ausgelastet` ≥ 0.85, `ueberlast`, `langsam`, `ausfall`, `fehlerhaft`, `leer`) für die Einfärbung (Engine: `setzeZustand`). Gesamt: Verfügbarkeit = Σ erfolgreich ÷ Σ angefragt, Median und Maximum der p95, SLO-Quote, Kosten, Rückstau am Ende und maximal, verlorene kritische Vorgänge und Quote.
+
+### 9.7 Determinismus
+
+Zufall nur für das Lastrauschen, ein Zug je Minute in fester Reihenfolge; keine `Math.random`, kein `Date`. Zustand nur JSON-Werte (kein `undefined`, `NaN`, `Map`). `ARCHSIM_VERSION` erhöhen, sobald alte Protokolle anders verlaufen würden.
+
+### 9.8 Modellprüfung (`validate.ts`)
+
+`pruefeModell`: IDs eindeutig `^[a-z0-9][a-z0-9-]{0,59}$`, bekannte Typen und Arten, Enden vorhanden, Gruppen nur mit `deploy`, `in` zeigt auf Gruppe, Tiefe ≤ 3, höchstens 60 Elemente und 150 Verbindungen. `validiere(mission, modell)` zusätzlich bei `modellieren`: nur Elemente aus Palette oder Vorgabe mit passendem Typ, Vorgabe vollständig; alle Anfrageklassen erreichen ihre Ziele (`gueltig` = startbar). Anforderungen (`mission.anforderungen`, je `{ id, text, warum, station? }`): `element`, `pfad {von, nach}`, `entkoppelt {von, nach}` (jeder Weg führt durch ein Messaging-Element; `async` ohne Broker zählt nicht), `cache {element}`, `vorgeschaltet {einstieg, bis, typ}` (kein Weg am Typ vorbei), `keineVerbindung {von, nach}`, `eigeneDaten {elemente}` (jeder Dienst hat eine Datenhaltung, die kein anderer Dienst nutzt). Nicht erfüllte Anforderungen verhindern den Lasttest nicht, kosten aber je 75 Punkte.
+
+### 9.9 Bewertung (`score.ts`)
+
+| Teil | Max | Formel |
+|------|-----|--------|
+| Verfügbarkeit | 300 | 300 × clamp((A − (Ziel − 0.1)) ÷ 0.1) |
+| Antwortzeit | 200 | Mittel je Minute: 1 bei p95 ≤ SLO, sonst clamp(1 − (p95 − SLO) ÷ (1.5 SLO)); Minute ohne Erfolg 0 |
+| SLO-Einhaltung | 150 | 150 × clamp((Quote − 0.5) ÷ 0.45) |
+| Kosten | 200 | ≤ 75 % Budget 200, bis Budget linear auf 140, darüber 140 × clamp(1 − (K − B) ÷ 0.4B) |
+| Datensicherheit | 150 | 120 × clamp(1 − Verlustquote ÷ 0.02) + 30, wenn der Rückstau am Ende ≤ 5 Minuten Nachrichten ist (sonst linear weniger) |
+| Anforderungen | 0 | −75 je nicht erfüllte Anforderung (nur `modellieren`) |
+
+Ganze Punkte je Teil, Summe 0–1000. Sterne: ★ ab 400, ★★ ab 650, ★★★ ab 820. Abstimmung (`tests/archsim-balance.test.ts`, Seeds 1–20): Musterstrategie immer ★★★, ohne Massnahmen höchstens ★.
+
+### 9.10 Nachbesprechung (`debrief.ts`)
+
+`zeitachse`: Ereignisse und eigene Aktionen mit Vorher/Nachher (Verfügbarkeit, p95), Störungsphasen (≥ 2 Minuten ausserhalb SLO) mit Ursache (Engpass, Ereignis, Retry-Sturm, Thread-Erschöpfung, Auslastung) und Erholung, erster Retry-Sturm, Öffnen jedes Circuit Breakers, Beginn grösserer Verluste. `lehren` (höchstens 6, zuerst die gewichtigsten): Daten-Engpass ohne Cache/Replica, nie skalierter Engpass, Retry-Sturm, Fehlerkaskade bei langsamer/ausgefallener Abhängigkeit (mit Timeout-Hinweis), zu spät zurückgerolltes Deployment, ungebremste Lastspitze, Verlust kritischer Vorgänge (Queue/Outbox bzw. Kapazität), Pufferüberlauf, Rückstau am Ende, Budget überschritten; positiv: SLO gehalten, Queue hat abgefedert, Circuit Breaker hat gewirkt. Jede Lehre mit `haetteGeholfen` und `link` auf `/lernseiten/avsw/<slug>#<abschnitt>`.
+
+### 9.11 Missionen
+
+| ID | Titel | Art | Kern |
+|----|-------|-----|------|
+| `m1-velokurier` | Velokurier über Mittag | vorgegeben, geführt | Monolith + DB, Last ×4,5, Regen ×1.4; skalieren und Cache |
+| `m2-black-friday` | Black Friday im Webshop | vorgegeben | Gateway, Katalog, Bestellung, Lager, Zahlung, Broker → Versand; Spitze ×8, fehlerhaftes Deployment; SLO p95 < 400 ms, ≥ 99.5 %, 750 CHF |
+| `m3-zahlungsanbieter` | Der Zahlungsanbieter stottert | vorgegeben | PayAlpin hängt (×50, 20 Minuten), dann 10 Minuten Ausfall; 10 s Timeout und 3 Retries als Startkonfiguration; Kaufstatus-Abfrage (15 %) läuft auf denselben Threads wie der Queue-Konsument. Abstimmung: nur Queue ≤ ★★, Resilienz ohne Queue ≤ ★ (Käufe verloren), Queue + zwei von Timeout/Retry-Begrenzung/Circuit Breaker/Bulkhead ★★★ |
+| `m4-ticketplattform` | Modelliere die Ticketplattform | modellieren | Auftrag mit Bausteinen (`data-baustein`), Palette mit Ablenkern, 6 Anforderungen, Musterlösung; Vorverkauf ×10, langsamer Zahlungsanbieter |
