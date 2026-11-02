@@ -1,0 +1,1853 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Architektur-Leitstand · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/architektur.css">
+  <link rel="next" href="/lernseiten/avsw/12-pruefungstraining" title="Prüfungstraining">
+  <style>
+    /* Station 11: nur Klassen mit Präfix t11-, nur Farben aus Tokens */
+    .t11-leitstand{display:grid; grid-template-columns:minmax(0,1fr); gap:10px}
+    .t11-ablauf-ls{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin:0; padding:0; list-style:none; counter-reset:t11z}
+    .t11-ablauf-ls li{counter-increment:t11z; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:.92rem}
+    .t11-ablauf-ls li::before{content:counter(t11z); display:inline-grid; place-items:center; width:1.6em; height:1.6em; border-radius:50%; background:var(--accent); color:var(--surface); font-weight:700; margin-right:6px; font-size:.85rem}
+    .t11-kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px}
+    .t11-kpi{border:1px solid var(--line); border-left:6px solid var(--line); border-radius:12px; padding:8px 12px; background:var(--surface); display:flex; flex-direction:column; gap:2px; min-width:0}
+    .t11-kpi-name{font-size:.8rem; color:var(--muted); font-weight:600}
+    .t11-kpi b{font-family:var(--f-display); font-size:1.3rem; font-variant-numeric:tabular-nums; line-height:1.2}
+    .t11-kpi-ampel{font-size:.8rem; font-weight:700}
+    .t11-gut{border-left-color:var(--ok)} .t11-gut .t11-kpi-ampel{color:var(--ok)}
+    .t11-warn{border-left-color:var(--z-langsam)} .t11-warn .t11-kpi-ampel{color:var(--z-langsam)}
+    .t11-schlecht{border-left-color:var(--bad)} .t11-schlecht .t11-kpi-ampel{color:var(--bad)}
+    .t11-info{border-left-color:var(--accent)} .t11-info .t11-kpi-ampel{color:var(--muted); font-weight:600}
+    .t11-meldung{font-size:.9rem; background:var(--board); border-radius:10px; padding:8px 12px}
+    .t11-kurve .t11-ref{stroke-dasharray:6 5; stroke-width:2}
+    .t11-kurve .t11-zone{fill:var(--bad); fill-opacity:.08}
+    .t11-kurve .t11-knick{stroke:var(--z-langsam); stroke-width:1.5; stroke-dasharray:3 4; fill:none}
+    .t11-kurve .t11-wert{font-weight:700; fill:var(--ink)}
+    .t11-presets{display:flex; flex-wrap:wrap; gap:8px}
+    .t11-zustand{font-family:var(--f-body); font-size:1rem; line-height:1.45}
+    .t11-zustand b{font-family:var(--f-display)}
+    .t11-tabs{display:flex; flex-wrap:wrap; gap:6px}
+    .t11-tabs .btn{font-size:.92rem; padding:6px 10px}
+    .t11-tabs .btn[aria-selected="true"]{background:var(--accent); color:var(--surface); border-color:var(--accent)}
+    .t11-sym{display:inline-block; min-width:1.2em; text-align:center; font-weight:700}
+    .t11-panel{display:flex; flex-direction:column; gap:12px; border-top:3px solid var(--accent); padding-top:12px}
+    .t11-panel[hidden]{display:none}
+    .t11-fakten{display:grid; grid-template-columns:minmax(0,9.5em) minmax(0,1fr); gap:6px 14px; margin:0}
+    .t11-fakten dt{font-weight:700; color:var(--accent)}
+    .t11-fakten dd{margin:0}
+    @media (max-width:560px){ .t11-fakten{grid-template-columns:minmax(0,1fr)} .t11-fakten dd{margin-bottom:6px} }
+    .t11-chips{display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0; list-style:none}
+    .t11-chips li{background:var(--board); border:1px solid var(--line); border-radius:999px; padding:3px 10px; font-size:.85rem}
+    .t11-sterne{color:var(--z-langsam); letter-spacing:2px}
+    .t11-vergleich{width:100%}
+    .t11-fk-tafel{display:grid; grid-template-columns:repeat(auto-fit,minmax(118px,1fr)); gap:8px; font-family:var(--f-body); text-align:left; width:100%}
+    .t11-fk{border:1px solid var(--line); border-left:5px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--surface); display:flex; flex-direction:column; min-width:0}
+    .t11-fk .t11-fk-name{font-size:.74rem; color:var(--muted); font-weight:600}
+    .t11-fk b{font-size:1.08rem; font-variant-numeric:tabular-nums}
+    .t11-fk .t11-kpi-ampel{font-size:.74rem}
+    .t11-fk-kopf{grid-column:1 / -1; font-weight:700; font-size:.95rem; display:flex; flex-wrap:wrap; gap:4px 12px; align-items:baseline}
+    .t11-fk-kopf span{font-weight:400; color:var(--muted); font-size:.85rem}
+    .t11-fk-liste{grid-column:1 / -1; margin:0; padding-left:1.2em; font-size:.92rem}
+    .t11-loesung-ls{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+  </style>
+</head>
+<body data-fach="avsw" data-thema="11-architektur-leitstand">
+<main class="wrap">
+  <header class="stack">
+    <span class="eyebrow">AVSW · Simulation · Architektur-Leitstand</span>
+    <h1>Architekturen unter Last verstehen</h1>
+    <p class="lead">Eine Architektur sieht auf dem Papier immer gut aus. Ob sie hält, zeigt sich erst, wenn tausend Leute gleichzeitig klicken oder ein Partner hängt. Hier lernst du, Kennzahlen wie p95, Verfügbarkeit und Rückstau zu lesen, Engpässe zu finden und die passende Massnahme zu wählen: skalieren, Cache, Queue, Circuit Breaker und mehr. Danach kennst du die vier Missionen des Architektur-Leitstands und weisst, warum ein Message Broker in der Prüfung Punkte bringt.</p>
+    <p class="note">Eigene Erklärungen und Beispiele auf Basis der Modulunterlagen, nicht vom Dozenten bestätigt. Alle Firmen sind erfunden. Die Zahlen stammen aus dem Simulator des Leitstands (vereinfachtes Modell, Startwert 7).</p>
+    <div class="card stack" data-kategorie="infrastruktur">
+      <h2 class="sr-only">Der Architektur-Leitstand</h2>
+      <p class="prose"><b>Der Architektur-Leitstand</b> ist ein Simulator in dieser App. Du übernimmst in einer Mission eine Architektur, die Zeit läuft (eine Minute pro Sekunde), Ereignisse treten ein, und du greifst mit Massnahmen ein. Am Ende bekommst du Punkte, Sterne und eine Nachbesprechung. Der Leitstand ist für Pro- und Admin-Konten freigeschaltet. <b>Diese Station funktioniert ohne Zugang:</b> Alles, was du für die Missionen und die Prüfung brauchst, steht hier.</p>
+      <ol class="t11-ablauf-ls" aria-label="So läuft eine Mission">
+        <li><b>Briefing:</b> Firma, Auftrag, SLO, Budget, Werkzeuge.</li>
+        <li><b>Leitstand:</b> Kennzahlen, Live-Diagramm, Ereignisse, Massnahmen.</li>
+        <li><b>Nachbesprechung:</b> Punkte, Zeitachse Ursache → Wirkung, Lehren.</li>
+      </ol>
+      <p class="row"><a class="btn primary" href="/architektur-leitstand">Zum Architektur-Leitstand</a> <span class="hint">Tasten im Leitstand: Leertaste Start/Pause, 1/2/4 Tempo, N eine Minute weiter.</span></p>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#bausteine"><b>1</b>Bausteine</a>
+    <a href="#woerterbuch"><b>2</b>Wörterbuch</a>
+    <a href="#kennzahlen"><b>3</b>Kennzahlen</a>
+    <a href="#warteschlange"><b>4</b>Warteschlange</a>
+    <a href="#diagnose"><b>5</b>Diagnose</a>
+    <a href="#massnahmen"><b>6</b>Massnahmen</a>
+    <a href="#modul"><b>7</b>Bezug Modul</a>
+    <a href="#raetsel"><b>8</b>Was passiert, wenn</a>
+    <a href="#missionen"><b>9</b>Missionen</a>
+    <a href="#spiel"><b>10</b>Spiel</a>
+    <a href="#film"><b>▶</b>Film</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>★</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- 0 · Bausteine -->
+  <section id="bausteine" data-kategorie="client">
+    <span class="eyebrow">Ohne Vorwissen</span>
+    <h2>Sechs Bausteine, die du aus dem Alltag kennst</h2>
+    <p class="prose">Ein Server ist wie eine Kasse im Supermarkt. Kundinnen kommen an, werden bedient und gehen. Alles in dieser Station folgt aus diesem Bild.</p>
+    <div class="grid4">
+      <div class="concept" data-kategorie="client"><span class="tag">Last</span><p>Wie viele Kundinnen pro Minute an die Kassen kommen. In der IT: <b>Anfragen pro Sekunde</b> (Anfr./s).</p></div>
+      <div class="concept" data-kategorie="dienst"><span class="tag">Kapazität und Instanz</span><p>Eine Kasse schafft 50 Kundinnen pro Minute. Eine <b>Instanz</b> ist eine weitere Kasse mit gleichem Personal: doppelt so viele Kassen, doppelte Kapazität.</p></div>
+      <div class="concept" data-kategorie="zugang"><span class="tag">Auslastung</span><p>Anteil der Zeit, in der die Kassen arbeiten. 90 % heisst: Fast immer steht jemand an. Das Zeichen dafür ist <b>ρ</b> (rho).</p></div>
+      <div class="concept" data-kategorie="messaging"><span class="tag">Warteschlange</span><p>Kommen Kundinnen zufällig, bildet sich eine Schlange, lange bevor die Kasse voll ausgelastet ist. Ab etwa 80 % wird sie schnell lang.</p></div>
+      <div class="concept" data-kategorie="daten"><span class="tag">Engpass</span><p>Die langsamste Station bestimmt das Tempo. Zehn Kassen nützen nichts, wenn alle auf <b>eine</b> Preisabfrage im Büro warten.</p></div>
+      <div class="concept" data-kategorie="sicherheit"><span class="tag">Massnahme</span><p>Was du am System änderst: mehr Kassen (skalieren), Selbstbedienung für Häufiges (Cache), Abholfach statt Warten (Queue), Kasse schliessen, wenn das Kartenterminal spinnt (Circuit Breaker).</p></div>
+    </div>
+    <p class="ar-callout" data-kategorie="dienst"><b>Merke:</b> Kennzahlen <b>messen</b>, Ereignisse <b>passieren</b>, Massnahmen <b>ändern</b>. Im Leitstand liest du zuerst die Kennzahlen, erkennst das Ereignis und wählst dann die Massnahme.</p>
+    <div class="card stack">
+      <h3>Kurz üben: messen, passieren oder ändern?</h3>
+      <div id="t11-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- 1 · Wörterbuch -->
+  <section id="woerterbuch" data-kategorie="infrastruktur">
+    <span class="eyebrow">Wörterbuch</span>
+    <h2>Die Begriffe des Leitstands</h2>
+    <p class="prose">Diese Wörter tauchen in jeder Kachel, jedem Hinweis und jeder Nachbesprechung auf. Die Werte in Klammern gelten im Simulator.</p>
+    <div class="card tablebox">
+      <table class="symtab">
+        <thead><tr><th scope="col">Zeichen</th><th scope="col">Art</th><th scope="col">Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>λ</td><td><span class="kind kind-v">Messgrösse</span></td><td><b>Last:</b> ankommende Anfragen pro Sekunde.</td></tr>
+          <tr><td>μ</td><td><span class="kind kind-c">Einstellung</span></td><td><b>Kapazität je Instanz:</b> so viele Anfragen pro Sekunde schafft eine Instanz (Dienst 120, Monolith 50, Datenbank 400).</td></tr>
+          <tr><td>c</td><td><span class="kind kind-c">Einstellung</span></td><td><b>Instanzen:</b> Anzahl gleicher Kopien hinter einem Lastverteiler.</td></tr>
+          <tr><td>ρ</td><td><span class="kind kind-v">Messgrösse</span></td><td><b>Auslastung</b> = λ ÷ (c · μ). Ab 0.85 gilt ein Element als Engpass, über 1 ist es überlastet.</td></tr>
+          <tr><td>S, R</td><td><span class="kind kind-v">Messgrösse</span></td><td><b>Bedienzeit</b> S (reine Arbeit, z. B. 25 ms) und <b>Antwortzeit</b> R (Arbeit plus Warten in der Schlange).</td></tr>
+          <tr><td>p95</td><td><span class="kind kind-fn">Kennzahl</span></td><td><b>95. Perzentil der Antwortzeit:</b> 95 % der Anfragen waren schneller. Zeigt, was die langsamen Nutzerinnen erleben.</td></tr>
+          <tr><td>SLO</td><td><span class="kind kind-p">Begriff</span></td><td><b>Service Level Objective:</b> messbares Ziel, z. B. «p95 unter 400 ms und 99.5 % Verfügbarkeit». Vertraglich mit Strafe heisst es SLA (Service Level Agreement), wie im SOA-Dreieck.</td></tr>
+          <tr><td>Verf.</td><td><span class="kind kind-fn">Kennzahl</span></td><td><b>Verfügbarkeit:</b> Anteil erfolgreich beantworteter Anfragen.</td></tr>
+          <tr><td>Rückstau</td><td><span class="kind kind-fn">Kennzahl</span></td><td>Nachrichten, die in Queues auf Verarbeitung warten (Puffer je Queue 200 000).</td></tr>
+          <tr><td>Timeout</td><td><span class="kind kind-c">Einstellung</span></td><td>So lange wartet ein Aufrufer höchstens (Standard 30 s, Kundinnen geben nach 10 s auf).</td></tr>
+          <tr><td>Retry</td><td><span class="kind kind-c">Einstellung</span></td><td>Wiederholung eines fehlgeschlagenen Aufrufs. Viele Retries auf einen kranken Partner erzeugen einen <b>Retry-Sturm</b>.</td></tr>
+          <tr><td>Threads</td><td><span class="kind kind-p">Begriff</span></td><td>Arbeiter eines Dienstes, die gleichzeitig Anfragen bearbeiten (Dienst 100 je Instanz). Warten alle auf einen langsamen Partner, sind die <b>Threads erschöpft</b>, und auch einfache Anfragen bleiben liegen.</td></tr>
+          <tr><td>Goodput</td><td><span class="kind kind-p">Begriff</span></td><td>Der Teil der Arbeit, der zu erfolgreichen Antworten führt. Bei Überlast sinkt er, weil Arbeit an Anfragen verloren geht, deren Aufrufer schon aufgegeben hat.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><b>Engpass im Leitstand:</b> Das Element mit der höchsten Auslastung ab 85 % CPU. Gibt es keines, das Element mit den am stärksten belegten Threads. Im Live-Diagramm steht es orange (ausgelastet) oder rot (überlastet), mit einer Plakette «Instanzen · Auslastung».</p>
+  </section>
+
+  <!-- 2 · Kennzahlen -->
+  <section id="kennzahlen" data-kategorie="zugang">
+    <span class="eyebrow">Kennzahlen lesen</span>
+    <h2>Sechs Kacheln, sechs Fragen</h2>
+    <p class="prose">Der Leitstand zeigt sechs Kennzahl-Kacheln mit einer Ampel: Farbe, Form und Wort. Jede beantwortet eine einfache Frage. Lies sie immer zusammen: Erst das Muster aus mehreren Kacheln verrät die Ursache.</p>
+    <div class="grid2">
+      <div class="concept" data-kategorie="dienst"><span class="tag">Verfügbarkeit · «Klappt es?»</span>
+        <p>Anteil der Anfragen, die eine Antwort bekommen. <b>Alltag:</b> Wie oft spuckt der Billettautomat ein Billett aus? 99.5 % heisst: Höchstens jede 200. Anfrage darf scheitern. Im Leitstand gilt sie über die ganze Mission, also zählt jede rote Minute bis zum Schluss mit.</p></div>
+      <div class="concept" data-kategorie="zugang"><span class="tag">Antwortzeit p95 · «Wie schnell für fast alle?»</span>
+        <p>95 % der erfolgreichen Anfragen der letzten Minute waren schneller. <b>Alltag:</b> Nicht die Durchschnittswartezeit an der Kasse zählt, sondern wie lange die Leute ganz hinten warten. Der Durchschnitt versteckt Ausreisser, p95 zeigt sie.</p></div>
+      <div class="concept" data-kategorie="sicherheit"><span class="tag">Fehlerquote · «Was scheitert gerade?»</span>
+        <p>Anteil gescheiterter Anfragen in der <b>letzten Minute</b>: Timeout, Überlast, Ausfall, Rate Limit. <b>Alltag:</b> Wie viele drehen an der vollen Kasse jetzt gerade um? Reagiert sofort, die Verfügbarkeit nur langsam.</p></div>
+      <div class="concept" data-kategorie="client"><span class="tag">Durchsatz · «Wie viel kommt durch?»</span>
+        <p>Erfolgreich beantwortete Anfragen pro Sekunde. <b>Alltag:</b> Leute pro Minute durchs Drehkreuz. Liegt der Durchsatz unter der Last, gehen Anfragen verloren.</p></div>
+      <div class="concept" data-kategorie="messaging"><span class="tag">Rückstau · «Was wartet noch?»</span>
+        <p>Nachrichten, die in Queues auf Verarbeitung warten. <b>Alltag:</b> Pakete im Abholfach. Ein Puffer fängt Spitzen ab. Wächst er dauernd, fehlt Kapazität beim Konsumenten. Kein Fehler, aber eine Verspätung.</p></div>
+      <div class="concept" data-kategorie="daten"><span class="tag">Kosten · «Was kostet es?»</span>
+        <p>Instanzen × CHF pro Stunde, dazu Einmalkosten der Massnahmen. <b>Alltag:</b> der Taxameter. Mehr Instanzen lösen fast alles, aber nicht im Budget.</p></div>
+    </div>
+
+    <div class="card stack">
+      <h3>Momentaufnahme: Pistenpass, Minute 15</h3>
+      <p class="prose">So sah der Leitstand der Mission «Der Zahlungsanbieter stottert» aus, wenn niemand eingreift. Lies die Kacheln und die Meldungen, dann beantworte die Frage.</p>
+      <div class="t11-kpis" id="t11-moment" role="group" aria-label="Kennzahlen Pistenpass Minute 15"></div>
+      <p class="t11-meldung"><b>Meldungen:</b> Threads erschöpft bei «API-Gateway» und «Kaufservice» · Retry-Sturm auf «Zahlungsservice → PayAlpin» · Ereignis seit Minute 12: «PayAlpin hängt».</p>
+      <div id="t11-moment-frage"></div>
+    </div>
+
+    <h3>p95 selbst bestimmen</h3>
+    <p class="prose">Perzentile rechnest du so: Werte sortieren, dann den Wert auf Rang ⌈0.95 · n⌉ nehmen (Methode «nächster Rang»). Bei 20 Werten ist das der 19. Wert.</p>
+    <div id="t11-p95"></div>
+
+    <h3>Vom NFA zur Kennzahl</h3>
+    <p class="prose">Im Modul legt der Architekt nichtfunktionale Anforderungen (NFA) fest, gegliedert nach ISO 25010, und dokumentiert sie in arc42 Kapitel 10 als Qualitätsszenarien. Im Leitstand werden genau diese Szenarien gemessen.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Qualitätsmerkmal (ISO 25010)</th><th scope="col">Kennzahl im Leitstand</th><th scope="col">Qualitätsszenario (Beispiel)</th></tr></thead>
+        <tbody>
+          <tr><td>Leistungseffizienz: Zeitverhalten</td><td>p95</td><td>Bei normaler Last antworten 95 % der Katalogaufrufe in unter 400 ms.</td></tr>
+          <tr><td>Leistungseffizienz: Kapazität</td><td>Durchsatz, Auslastung ρ</td><td>Bei achtfacher Last (Black Friday) sinkt der Durchsatz nicht unter die Last.</td></tr>
+          <tr><td>Zuverlässigkeit: Verfügbarkeit</td><td>Verfügbarkeit</td><td>Mindestens 99.5 % der Anfragen über die ganze Nacht sind erfolgreich.</td></tr>
+          <tr><td>Zuverlässigkeit: Fehlertoleranz</td><td>Fehlerquote, verlorene Vorgänge</td><td>Hängt der Zahlungsanbieter 20 Minuten, geht kein Kauf verloren.</td></tr>
+          <tr><td>Zuverlässigkeit: Wiederherstellbarkeit</td><td>Rückstau, Zeit bis grün</td><td>Nach einem Ausfall ist der Rückstau innert 15 Minuten abgebaut.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="ar-callout" data-kategorie="zugang"><b>Prüfungsbezug:</b> Ein gutes Qualitätsszenario nennt Auslöser, Umgebung und eine <b>messbare</b> Antwort. «Das System ist schnell» ist keins, «95 % unter 400 ms bei 1000 Anfr./s» schon. Solche Szenarien prüft man im ATAM gegen die Architektur.</p>
+  </section>
+
+  <!-- 3 · Warteschlange -->
+  <section id="warteschlange" data-kategorie="messaging">
+    <span class="eyebrow">Warteschlangen-Intuition</span>
+    <h2>Warum es ab 80 % plötzlich eng wird</h2>
+    <p class="prose">Anfragen kommen nicht im Takt, sondern zufällig. Mal kommen drei auf einmal, mal eine Weile keine. Was in der Pause nicht gearbeitet wird, ist verloren. Darum wartet man schon bei 70 % Auslastung ab und zu, und je näher ρ an 1 kommt, desto länger. Für eine Instanz gilt die einfache Formel:</p>
+    <div class="board">
+      $$\rho = \frac{\lambda}{c \cdot \mu} \qquad R = S \cdot \frac{1}{1-\rho} \quad (c = 1)$$
+      $$R \approx S \cdot \left(1 + \frac{\rho^{\sqrt{2(c+1)}-1}}{c\,(1-\rho)}\right) \quad (c \text{ Instanzen, Näherung nach Sakasegawa})$$
+    </div>
+    <p class="prose">Bei ρ = 0.5 dauert eine Antwort doppelt so lang wie die reine Arbeit, bei 0.8 fünfmal, bei 0.9 zehnmal. Bei ρ = 1 wäre die Schlange unendlich lang. Der Simulator kappt darum: Ab ρ = 0.97 wächst die Antwortzeit linear bis höchstens 40 × S. Darüber nehmen die Instanzen nicht mehr alles an, Anfragen scheitern.</p>
+    <div class="card rechner" id="t11-rechner">
+      <h3>Ausprobieren: Kurier-App unter Last</h3>
+      <p class="hint">Eine Instanz der Kurier-App schafft μ = 50 Anfragen pro Sekunde, die reine Arbeit dauert S = 60 ms (Werte des Monolithen im Simulator).</p>
+      <div class="regler">
+        <label for="t11-rho">Auslastung ρ</label>
+        <input type="range" id="t11-rho" min="0" max="1.4" step="0.01" value="0.6">
+        <output for="t11-rho" id="t11-rho-wert">0.60</output>
+      </div>
+      <div class="regler">
+        <label for="t11-c">Instanzen c</label>
+        <input type="range" id="t11-c" min="1" max="8" step="1" value="2">
+        <output for="t11-c" id="t11-c-wert">2</output>
+      </div>
+      <label class="row" for="t11-fest"><input type="checkbox" id="t11-fest" checked> Last festhalten, wenn ich die Instanzen ändere (skalieren)</label>
+      <div class="t11-presets" role="group" aria-label="Momente aus der Mission Velokurier">
+        <button type="button" class="btn" data-t11-preset="0.24,2">Morgen (Minute 0)</button>
+        <button type="button" class="btn" data-t11-preset="0.92,2">Mittag (Minute 35)</button>
+        <button type="button" class="btn" data-t11-preset="1.39,2">Platzregen (Minute 40)</button>
+        <button type="button" class="btn" data-t11-preset="0.46,6">Platzregen mit 6 Instanzen</button>
+      </div>
+      <figure class="diagramm t11-kurve">
+        <svg id="t11-kurve" viewBox="0 0 340 236" role="img" aria-labelledby="t11-kurve-titel"><title id="t11-kurve-titel">Antwortzeit in Abhängigkeit der Auslastung</title></svg>
+        <figcaption>Durchgezogen: Antwortzeit R für die gewählten Instanzen. Gestrichelt: zum Vergleich eine Instanz. Rote Fläche: Überlast (ρ &gt; 1). Waagrechte Linie: Kappung bei 40 × S = 2400 ms.</figcaption>
+      </figure>
+      <div class="rechner-ergebnis t11-zustand" id="t11-ergebnis" aria-live="polite"></div>
+    </div>
+    <p class="ar-callout" data-kategorie="messaging"><b>Zwei Lehren aus der Kurve:</b> 1) Plane mit Reserve. Ziel ist eine Auslastung um 60 %, nicht 95 %. Autoscaling im Leitstand peilt genau 60 % an. 2) Viele Instanzen gemeinsam vertragen höhere Auslastung als eine allein (Bündelungseffekt): Bei ρ = 0.9 wartet man mit 8 Instanzen kaum, mit einer zehnmal so lang wie die Arbeit.</p>
+  </section>
+
+  <!-- 4 · Diagnose -->
+  <section id="diagnose" data-kategorie="daten">
+    <span class="eyebrow">Schritt für Schritt</span>
+    <h2>Vom Symptom zur Massnahme</h2>
+    <p class="prose">Gehe bei jeder roten Kachel gleich vor: Erst das Symptom benennen, dann den Engpass suchen, dann die Ursache bestimmen. Erst danach wählst du die Massnahme, und zuletzt prüfst du ihre Nebenwirkung.</p>
+    <div class="card stack">
+      <h3>Diagnose-Baum</h3>
+      <ul class="baum">
+        <li><span class="baum-knoten">Was ist rot?</span>
+          <ul>
+            <li><span class="baum-knoten">p95 hoch, kaum Fehler</span>
+              <ul>
+                <li><span class="baum-knoten">Dienst über 85 % CPU <span class="baum-ende">skalieren, Autoscaling</span></span></li>
+                <li><span class="baum-knoten">Datenbank über 85 % <span class="baum-ende">Cache (lesend), Read-Replica</span></span></li>
+              </ul>
+            </li>
+            <li><span class="baum-knoten">p95 Sekunden, Fehler, Threads erschöpft</span>
+              <ul>
+                <li><span class="baum-knoten">langsame Abhängigkeit <span class="baum-ende">Timeout kürzen, Retries begrenzen, Circuit Breaker, Bulkhead, Queue</span></span></li>
+              </ul>
+            </li>
+            <li><span class="baum-knoten">Fehler springen, Auslastung normal</span>
+              <ul>
+                <li><span class="baum-knoten">fehlerhaftes Deployment oder Ausfall <span class="baum-ende">Rollback, Circuit Breaker mit Fallback</span></span></li>
+              </ul>
+            </li>
+            <li><span class="baum-knoten">Rückstau wächst dauernd</span>
+              <ul>
+                <li><span class="baum-knoten">Konsument zu langsam <span class="baum-ende">Konsumenten skalieren</span></span></li>
+              </ul>
+            </li>
+            <li><span class="baum-knoten">Last weit über Plan</span>
+              <ul>
+                <li><span class="baum-knoten">planbar <span class="baum-ende">vorheizen, CDN, Cache</span></span></li>
+                <li><span class="baum-knoten">Missbrauch, Bots <span class="baum-ende">Rate Limiting</span></span></li>
+              </ul>
+            </li>
+            <li><span class="baum-knoten">Kosten über Budget <span class="baum-ende">abbauen, Autoscaling mit Obergrenze</span></span></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div id="t11-diagnose"></div>
+    <div class="note falle"><b>Falle 1: Skalieren verschiebt den Engpass.</b> Mehr Instanzen eines Dienstes schicken auch mehr Abfragen an die Datenbank. Die Datenbank lässt sich im Leitstand nicht einfach vervielfachen. Im Velokurier liefert «nur skalieren» darum 602 Punkte und einen Stern, Cache plus Autoscaling 952 Punkte und drei Sterne.</div>
+    <div class="note falle"><b>Falle 2: Mehr Wiederholungen machen es schlimmer.</b> Hängt ein Partner, schickt jeder Retry eine weitere Anfrage an ihn und hält einen Thread länger fest. Bei 10 s Timeout und 3 Retries wartet ein Kauf bis zu 40 s. Die Last auf den kranken Partner vervielfacht sich: Retry-Sturm.</div>
+    <div class="note falle"><b>Falle 3: Durchschnitt statt p95.</b> 19 schnelle Antworten und eine mit 2.4 Sekunden ergeben einen harmlosen Durchschnitt. Die Kundin mit 2.4 Sekunden ist trotzdem weg. Schau auf p95.</div>
+    <div class="note falle"><b>Falle 4: Autoscaling ist kein Plan.</b> Es misst erst, entscheidet dann und startet Instanzen, die 2 Minuten brauchen: rund 3 Minuten Verzug. Für eine angekündigte Spitze heizt du vorher vor.</div>
+  </section>
+
+  <!-- 5 · Massnahmen -->
+  <section id="massnahmen" data-kategorie="dienst">
+    <span class="eyebrow">Massnahmen-Katalog</span>
+    <h2>Zehn Werkzeuge mit Wirkung, Preis und Nebenwirkung</h2>
+    <p class="prose">Wähle eine Massnahme. Jede hat ein kleines Diagramm mit Abläufen (Normalfall und Störfall), die Zahlen aus dem Simulator, die Nebenwirkung und den Bezug zum Modul. Tippe im Diagramm auf ein Element für den Steckbrief. Im Ausfall-Modus siehst du, wen ein Ausfall mitreisst.</p>
+    <div class="t11-tabs" role="tablist" aria-label="Massnahmen" id="t11-mn-tabs">
+      <button type="button" class="btn" role="tab" id="t11-t-skalieren" aria-controls="t11-p-skalieren" data-t11="skalieren"><span class="t11-sym" aria-hidden="true">⧉</span> Skalieren</button>
+      <button type="button" class="btn" role="tab" id="t11-t-autoscaling" aria-controls="t11-p-autoscaling" data-t11="autoscaling"><span class="t11-sym" aria-hidden="true">⇅</span> Autoscaling</button>
+      <button type="button" class="btn" role="tab" id="t11-t-cache" aria-controls="t11-p-cache" data-t11="cache"><span class="t11-sym" aria-hidden="true">◈</span> Cache</button>
+      <button type="button" class="btn" role="tab" id="t11-t-cdn" aria-controls="t11-p-cdn" data-t11="cdn"><span class="t11-sym" aria-hidden="true">◎</span> CDN</button>
+      <button type="button" class="btn" role="tab" id="t11-t-queue" aria-controls="t11-p-queue" data-t11="queue"><span class="t11-sym" aria-hidden="true">▤</span> Queue / Broker</button>
+      <button type="button" class="btn" role="tab" id="t11-t-timeout" aria-controls="t11-p-timeout" data-t11="timeout"><span class="t11-sym" aria-hidden="true">↻</span> Timeout und Retry</button>
+      <button type="button" class="btn" role="tab" id="t11-t-cb" aria-controls="t11-p-cb" data-t11="cb"><span class="t11-sym" aria-hidden="true">⊘</span> Circuit Breaker</button>
+      <button type="button" class="btn" role="tab" id="t11-t-bulkhead" aria-controls="t11-p-bulkhead" data-t11="bulkhead"><span class="t11-sym" aria-hidden="true">▥</span> Bulkhead</button>
+      <button type="button" class="btn" role="tab" id="t11-t-replica" aria-controls="t11-p-replica" data-t11="replica"><span class="t11-sym" aria-hidden="true">⧈</span> Read-Replica</button>
+      <button type="button" class="btn" role="tab" id="t11-t-rate" aria-controls="t11-p-rate" data-t11="rate"><span class="t11-sym" aria-hidden="true">≤</span> Rate Limiting</button>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-skalieren" aria-labelledby="t11-t-skalieren" tabindex="0" hidden>
+      <h3>Skalieren (horizontal)</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>einen Dienst, dessen CPU über 85 % liegt.</dd>
+        <dt>Wirkung</dt><dd>Mehr gleiche Instanzen hinter einem Lastverteiler teilen sich die Last: Doppelte Instanzen halbieren ρ. Voraussetzung: Der Dienst ist zustandslos (Sitzungen nicht im Speicher der Instanz).</dd>
+        <dt>Kosten</dt><dd>Laufend je Instanz (Dienst 10 CHF/h, Monolith 16 CHF/h). Neue Instanzen sind nach 2 Minuten bereit, abbauen geht sofort.</dd>
+        <dt>Nebenwirkung</dt><dd>Der Engpass wandert weiter nach hinten, meist zur Datenbank. Datenbanken skalieren nicht einfach horizontal.</dd>
+        <dt>Bezug zum Modul</dt><dd>Mehrschichtenarchitektur: Web Tier, Business Tier und Data Tier laufen getrennt, weil der Business Tier über die <b>Business Facade</b> als Web Service (REST oder gRPC) erreichbar ist. So skalierst du jeden Tier für sich. Microservices skalieren sogar je Service unabhängig.</dd>
+      </dl>
+      <div id="t11-d-skalieren"></div>
+      <pre class="code" data-sprache="Kubernetes · Deployment der Kurier-App mit 3 Instanzen"><code><span class="k">apiVersion</span>: apps/v1
+<span class="k">kind</span>: Deployment
+<span class="k">metadata</span>:
+  <span class="k">name</span>: kurier-app
+<span class="k">spec</span>:
+  <mark><span class="k">replicas</span>: <span class="n">3</span></mark>                 <span class="c"># drei gleiche Instanzen</span>
+  <span class="k">selector</span>:
+    <span class="k">matchLabels</span>: { <span class="k">app</span>: kurier-app }
+  <span class="k">template</span>:
+    <span class="k">metadata</span>:
+      <span class="k">labels</span>: { <span class="k">app</span>: kurier-app }
+    <span class="k">spec</span>:
+      <span class="k">containers</span>:
+        - <span class="k">name</span>: kurier-app
+          <span class="k">image</span>: registry.example.ch/kurier-app:2.3.1
+          <span class="k">ports</span>: [{ <span class="k">containerPort</span>: <span class="n">8080</span> }]
+<span class="c"># Ein Service vom Typ ClusterIP verteilt die Anfragen auf alle drei (Lastverteiler im Diagramm).</span></code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-autoscaling" aria-labelledby="t11-t-autoscaling" tabindex="0" hidden>
+      <h3>Autoscaling</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>schwankende Last, die du nicht genau vorhersagen kannst.</dd>
+        <dt>Wirkung</dt><dd>Ein Regler misst die CPU-Auslastung. Über 75 % setzt er das Ziel auf ⌈Instanzen × ρ ÷ 0.6⌉ (bis zur Obergrenze). Drei Minuten unter 30 %: eine Instanz weniger (bis zur Untergrenze).</dd>
+        <dt>Kosten</dt><dd>15 CHF einmalig, dazu laufend die Instanzen, die er startet.</dd>
+        <dt>Nebenwirkung</dt><dd>Rund 3 Minuten Verzug (1 Minute messen, 2 Minuten Startzeit). Erschöpfte Threads sieht er nicht, weil er nur die CPU misst. Ohne Obergrenze kann die Rechnung explodieren.</dd>
+        <dt>Bezug zum Modul</dt><dd>Container-Orchestrierung (Kubernetes, OpenShift): Load Balancing, Skalierung und Selbstheilung sind ihre Kernfunktionen. In der Makroarchitektur erwähnst du sie im Paket «Server – Docker Host» bzw. «Kubernetes-Cluster». Den Autoscaler selbst zeichnest du dort nicht als Komponente.</dd>
+      </dl>
+      <div id="t11-d-autoscaling"></div>
+      <pre class="code" data-sprache="Kubernetes · HorizontalPodAutoscaler für den Bestellservice"><code><span class="k">apiVersion</span>: autoscaling/v2
+<span class="k">kind</span>: HorizontalPodAutoscaler
+<span class="k">metadata</span>:
+  <span class="k">name</span>: bestellservice
+<span class="k">spec</span>:
+  <span class="k">scaleTargetRef</span>: { <span class="k">apiVersion</span>: apps/v1, <span class="k">kind</span>: Deployment, <span class="k">name</span>: bestellservice }
+  <mark><span class="k">minReplicas</span>: <span class="n">2</span>
+  <span class="k">maxReplicas</span>: <span class="n">10</span></mark>             <span class="c"># Obergrenze schützt das Budget</span>
+  <span class="k">metrics</span>:
+    - <span class="k">type</span>: Resource
+      <span class="k">resource</span>:
+        <span class="k">name</span>: cpu
+        <span class="k">target</span>: { <span class="k">type</span>: Utilization, <span class="k">averageUtilization</span>: <span class="n">60</span> }   <span class="c"># Ziel 60 %</span></code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-cache" aria-labelledby="t11-t-cache" tabindex="0" hidden>
+      <h3>Cache (Cache-Aside)</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>eine Datenbank, die von vielen <b>lesenden</b> Zugriffen auf dieselben Daten überlastet ist.</dd>
+        <dt>Wirkung</dt><dd>Der Dienst fragt zuerst den Cache (1 ms). Nur bei einem Fehltreffer liest er aus der Datenbank und legt das Ergebnis in den Cache. Im Leitstand: Trefferquote 85 %, nach 3 Minuten warm. Die Datenbank bekommt nur noch 15 % der Lesezugriffe.</dd>
+        <dt>Kosten</dt><dd>40 CHF einmalig, dazu laufend 8 CHF/h.</dd>
+        <dt>Nebenwirkung</dt><dd>Schreiben entlastet er nicht. Daten im Cache können veraltet sein (TTL, Invalidierung). Ein kalter Cache nach einem Neustart hilft erst nach dem Aufwärmen.</dd>
+        <dt>Bezug zum Modul</dt><dd>Serverseitig gehört ein Cache wie Redis zum Data Tier und wird über den Data Access Layer angesprochen. Clientseitig cacht der Service Worker einer PWA. CQRS treibt die Idee weiter: ein eigenes, schnell lesbares Lesemodell.</dd>
+      </dl>
+      <div id="t11-d-cache"></div>
+      <pre class="code" data-sprache="TypeScript · Cache-Aside im Katalogservice (Redis)"><code><span class="k">async function</span> produktLesen(id: <span class="k">string</span>): <span class="k">Promise</span>&lt;Produkt&gt; {
+  <span class="k">const</span> schluessel = <span class="s">"produkt:"</span> + id;
+  <mark><span class="k">const</span> treffer = <span class="k">await</span> redis.get(schluessel);</mark>        <span class="c">// 1) zuerst den Cache fragen</span>
+  <span class="k">if</span> (treffer) <span class="k">return</span> JSON.parse(treffer);
+  <span class="k">const</span> produkt = <span class="k">await</span> db.query(<span class="s">"SELECT * FROM produkt WHERE id = $1"</span>, [id]);  <span class="c">// 2) Fehltreffer: DB</span>
+  <span class="k">await</span> redis.set(schluessel, JSON.stringify(produkt), { EX: <span class="n">600</span> });   <span class="c">// 3) 10 Minuten merken</span>
+  <span class="k">return</span> produkt;
+}</code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-cdn" aria-labelledby="t11-t-cdn" tabindex="0" hidden>
+      <h3>CDN (Content Delivery Network)</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>viele Abrufe von Bildern, Skripten und statischen Seiten.</dd>
+        <dt>Wirkung</dt><dd>Server am Rand des Netzes, nah bei den Nutzenden, liefern Kopien aus (15 ms). Nur der dynamische Rest erreicht Gateway und Dienste. Im Black Friday ist das die Hälfte des Stöberns.</dd>
+        <dt>Kosten</dt><dd>30 CHF einmalig, laufend 8 CHF/h.</dd>
+        <dt>Nebenwirkung</dt><dd>Hilft nur bei statischen Inhalten. Nach einer Änderung müssen alte Kopien ablaufen oder gelöscht werden (Cache-Control, Versionsnummer im Dateinamen).</dd>
+        <dt>Bezug zum Modul</dt><dd>In der skriptbasierten Referenzarchitektur liefern die HTML5 Components ihre Dateien über «static HTTP» aus. Genau dieser statische Teil einer SPA oder PWA (App-Shell, Bilder, Skripte) kommt aus dem CDN.</dd>
+      </dl>
+      <div id="t11-d-cdn"></div>
+      <pre class="code" data-sprache="HTTP · Antwort für ein Bild, das ein CDN ein Jahr lang behalten darf"><code>HTTP/1.1 <span class="n">200</span> OK
+Content-Type: image/webp
+<mark>Cache-Control: public, max-age=31536000, immutable</mark>
+ETag: <span class="s">"zelt-alpin-v7"</span>
+<span class="c"># Dateiname mit Version (zelt-alpin.v7.webp): neue Version = neue Adresse, kein Löschen nötig</span></code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-queue" aria-labelledby="t11-t-queue" tabindex="0" hidden>
+      <h3>Queue / Message Broker</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>kritische Vorgänge, die bei einem langsamen oder ausgefallenen Empfänger verloren gehen, und gegen Lastspitzen beim Empfänger.</dd>
+        <dt>Wirkung</dt><dd>Der Sender wartet nur auf die Bestätigung des Brokers (wenige ms). Der Empfänger holt Nachrichten im eigenen Tempo ab, bis 80 % seiner Kapazität. Fällt er aus, bleiben die Nachrichten liegen und werden später zugestellt.</dd>
+        <dt>Kosten</dt><dd>60 CHF einmalig, laufend 12 CHF/h.</dd>
+        <dt>Nebenwirkung</dt><dd>Keine sofortige Antwort: Die Kundin sieht «angenommen», nicht «bezahlt». Rückstau heisst Verspätung. Über dem Puffer (200 000 Nachrichten je Instanz) gehen Nachrichten verloren. Der Konsument braucht selbst Timeout und Circuit Breaker, sonst blockieren hängende Worker den ganzen Dienst.</dd>
+        <dt>Bezug zum Modul</dt><dd>Message-oriented Middleware (MOM) und EDA. In der <b>Makroarchitektur</b> ist der Message Broker die einzige Middleware, die du einzeichnest, und er bringt viele Punkte (siehe Abschnitt «Bezug Modul»). In der Mehrschichtenarchitektur sprechen Receiver und Sender Adapter im Async Communication Layer mit ihm, z. B. per AMQP.</dd>
+      </dl>
+      <div id="t11-d-queue"></div>
+      <pre class="code" data-sprache="Java · Sender Adapter im Bestellservice (Spring AMQP, RabbitMQ)"><code><span class="k">@Component</span>
+<span class="k">public class</span> BestellungSender {
+  <span class="k">private final</span> RabbitTemplate rabbit;
+  <span class="k">public</span> BestellungSender(RabbitTemplate rabbit) { <span class="k">this</span>.rabbit = rabbit; }
+
+  <span class="k">public void</span> aufgegeben(Bestellung b) {
+    <mark>rabbit.convertAndSend(<span class="s">"bestellungen"</span>, <span class="s">"bestellung.aufgegeben"</span>, b.alsEreignis());</mark>
+    <span class="c">// kehrt zurück, sobald der Broker bestätigt; der Versand holt ab, wenn er Zeit hat</span>
+  }
+}</code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-timeout" aria-labelledby="t11-t-timeout" tabindex="0" hidden>
+      <h3>Timeout und Retry</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>Timeout: hängende Partner, die Threads festhalten. Retry: kurze Aussetzer (ein verlorenes Paket, ein Neustart).</dd>
+        <dt>Wirkung</dt><dd>Ein kurzer Timeout gibt den Thread schnell frei. Eine Wiederholung holt einen kurzen Aussetzer nach. Gute Werte: Timeout knapp über dem normalen p95 des Partners, höchstens 1 bis 2 Retries mit Pause.</dd>
+        <dt>Kosten</dt><dd>je 5 CHF einmalig.</dd>
+        <dt>Nebenwirkung</dt><dd>Zu kurz: unnötige Fehler. Zu viele Retries: Retry-Sturm, die Last auf den kranken Partner steigt um den Faktor 1 + q + q² + …, bei 3 Retries und fast nur Fehlern auf das Vierfache. Retry nur bei idempotenten Aufrufen oder mit Idempotenz-Schlüssel.</dd>
+        <dt>Bezug zum Modul</dt><dd>Service Access Layer: Je Service Provider gibt es einen eigenen Driven (sync) Adapter. Dort gehören Timeout und Retry hin, damit die Fachlogik frei davon bleibt. In der Makroarchitektur übernehmen das die «Driven Adapter Services».</dd>
+      </dl>
+      <div id="t11-d-timeout"></div>
+      <pre class="code" data-sprache="YAML · application.yml des Zahlungsadapters (Resilience4j)"><code><span class="k">resilience4j</span>:
+  <span class="k">timelimiter</span>:
+    <span class="k">instances</span>:
+      <span class="k">payalpin</span>:
+        <mark><span class="k">timeout-duration</span>: 1500ms</mark>      <span class="c"># statt 10 s: Threads schnell wieder frei</span>
+  <span class="k">retry</span>:
+    <span class="k">instances</span>:
+      <span class="k">payalpin</span>:
+        <mark><span class="k">max-attempts</span>: <span class="n">2</span></mark>               <span class="c"># 1 Versuch + 1 Wiederholung, nicht 4</span>
+        <span class="k">wait-duration</span>: 200ms
+        <span class="k">enable-exponential-backoff</span>: <span class="k">true</span></code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-cb" aria-labelledby="t11-t-cb" tabindex="0" hidden>
+      <h3>Circuit Breaker</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>eine Abhängigkeit, die minutenlang gestört ist, und die Fehlerkaskade durch die ganze Aufrufkette.</dd>
+        <dt>Wirkung</dt><dd>Wie eine Sicherung: Ab 50 % Fehlern öffnet er. Offen scheitern Aufrufe sofort (1 ms) oder bekommen eine Ersatzantwort (Fallback), Threads bleiben frei. Nach 2 Minuten halboffen: 10 % Probeaufrufe. Klappen sie, schliesst er.</dd>
+        <dt>Kosten</dt><dd>20 CHF einmalig.</dd>
+        <dt>Nebenwirkung</dt><dd>Offen scheitern auch Aufrufe, die vielleicht geklappt hätten. Ohne Timeout öffnet er nie, weil ein hängender Aufruf kein Fehler ist, solange niemand abbricht. Ohne Queue gehen die abgewiesenen Käufe verloren.</dd>
+        <dt>Bezug zum Modul</dt><dd>SOA: Consumer und Provider bilden eine kaskadierende Kette. Fällt hinten ein Provider aus, reisst er alle Consumer davor mit. Der Circuit Breaker im Adapter unterbricht diese Kette. Das SLA des Providers sagt dir, welchen Timeout du ansetzen kannst.</dd>
+      </dl>
+      <div id="t11-d-cb"></div>
+      <pre class="code" data-sprache="Java · Zahlungsadapter mit Circuit Breaker und Fallback (Resilience4j)"><code><span class="k">@Component</span>
+<span class="k">public class</span> PayAlpinAdapter {
+  <mark><span class="k">@CircuitBreaker</span>(name = <span class="s">"payalpin"</span>, fallbackMethod = <span class="s">"vormerken"</span>)</mark>
+  <span class="k">@Retry</span>(name = <span class="s">"payalpin"</span>)
+  <span class="k">public</span> Zahlungsstatus belasten(Zahlungsauftrag auftrag) {
+    <span class="k">return</span> client.belasten(auftrag);   <span class="c">// HTTPS mit Timeout 1500 ms</span>
+  }
+  <span class="c">// offen oder Fehler: sofort eine Ersatzantwort, der Auftrag bleibt in der Queue</span>
+  <span class="k">private</span> Zahlungsstatus vormerken(Zahlungsauftrag auftrag, Throwable grund) {
+    <span class="k">return</span> Zahlungsstatus.VORGEMERKT;
+  }
+}</code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-bulkhead" aria-labelledby="t11-t-bulkhead" tabindex="0" hidden>
+      <h3>Bulkhead (Schott)</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>eine hängende Abhängigkeit, die alle Threads eines Dienstes belegt, sodass auch ganz andere Anfragen liegen bleiben.</dd>
+        <dt>Wirkung</dt><dd>Wie die wasserdichten Abteilungen eines Schiffs: Die Verbindung bekommt nur 25 % der Threads. Was darüber hinausgeht, wird sofort abgewiesen. Die übrigen 75 % bleiben für alle anderen Anfragen frei.</dd>
+        <dt>Kosten</dt><dd>20 CHF einmalig.</dd>
+        <dt>Nebenwirkung</dt><dd>Bei Normalbetrieb begrenzt er die Parallelität zur Abhängigkeit. Zu klein bemessen, weist er auch gesunde Aufrufe ab.</dd>
+        <dt>Bezug zum Modul</dt><dd>Microservices sind ein Bulkhead im Grossen: Jeder Service hat eigene Ressourcen und eigene Persistenz («Domain Services with own Persistence»). Ein Fehler bleibt im Service, statt den ganzen Monolithen mitzunehmen.</dd>
+      </dl>
+      <div id="t11-d-bulkhead"></div>
+      <pre class="code" data-sprache="YAML · Bulkhead im Zahlungsservice (Resilience4j)"><code><span class="k">resilience4j</span>:
+  <span class="k">bulkhead</span>:
+    <span class="k">instances</span>:
+      <span class="k">payalpin</span>:
+        <mark><span class="k">max-concurrent-calls</span>: <span class="n">50</span></mark>     <span class="c"># 25 % von 200 Threads</span>
+        <span class="k">max-wait-duration</span>: 0ms        <span class="c"># voll? sofort ablehnen statt warten</span></code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-replica" aria-labelledby="t11-t-replica" tabindex="0" hidden>
+      <h3>Read-Replica</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>eine Datenbank mit viel Lese- und wenig Schreiblast, z. B. durch Auswertungen.</dd>
+        <dt>Wirkung</dt><dd>Eine Lesekopie bekommt alle Änderungen per Replikation. Lesende Zugriffe verteilen sich: Mit R Replicas trägt die Datenbank nur noch λ<sub>schreibend</sub> + λ<sub>lesend</sub> ÷ (1 + R).</dd>
+        <dt>Kosten</dt><dd>10 CHF einmalig, dazu laufend wie eine Datenbank-Instanz (25 CHF/h).</dd>
+        <dt>Nebenwirkung</dt><dd>Replikationsverzug: Wer gerade geschrieben hat, sieht die Änderung auf der Kopie vielleicht noch nicht (eventual consistency). Schreiben entlastet sie nicht.</dd>
+        <dt>Bezug zum Modul</dt><dd>Data Tier und CQRS: Schreib- und Lesemodell getrennt. Auswertungen gehören ohnehin nicht auf die operative Datenbank; im grossen Massstab übernimmt das ein Data Warehouse (Datenintegration, LB 3).</dd>
+      </dl>
+      <div id="t11-d-replica"></div>
+      <pre class="code" data-sprache="TypeScript · zwei Verbindungen im Reporting- und Bestelldienst (node-postgres)"><code><span class="k">const</span> schreiben = <span class="k">new</span> Pool({ host: <span class="s">"bestell-db-primaer"</span> });
+<mark><span class="k">const</span> lesen = <span class="k">new</span> Pool({ host: <span class="s">"bestell-db-replica"</span> });</mark>
+
+<span class="k">await</span> schreiben.query(<span class="s">"INSERT INTO bestellung (id, total) VALUES ($1, $2)"</span>, [id, total]);
+<span class="k">const</span> umsatz = <span class="k">await</span> lesen.query(<span class="s">"SELECT sum(total) FROM bestellung WHERE tag = $1"</span>, [heute]);</code></pre>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-rate" aria-labelledby="t11-t-rate" tabindex="0" hidden>
+      <h3>Rate Limiting</h3>
+      <dl class="t11-fakten">
+        <dt>Hilft gegen</dt><dd>Last, die weit über Plan liegt: Bots, ein Partner mit Endlosschleife, ein Angriff.</dd>
+        <dt>Wirkung</dt><dd>Am Eingang (API-Gateway) wird alles über einer Höchstrate sofort abgewiesen, mit <code>429 Too Many Requests</code>. Die Dienste dahinter bleiben gesund und bedienen den Rest.</dd>
+        <dt>Kosten</dt><dd>10 CHF einmalig.</dd>
+        <dt>Nebenwirkung</dt><dd>Abgewiesene Anfragen zählen als Fehler und senken die Verfügbarkeit. Ein Limit pro Partner ist fair, ein globales Limit trifft auch die eigenen Kundinnen. Notbremse, kein Ersatz für Kapazität.</dd>
+        <dt>Bezug zum Modul</dt><dd>Das API-Gateway steht vor allen in Echtzeit <b>angebotenen</b> APIs (Integrationsarchitektur). Es prüft Berechtigungen, verteilt Last und überwacht die Zugriffe. In der Makroarchitektur und der Mehrschichtenarchitektur zeichnest du es nicht ein.</dd>
+      </dl>
+      <div id="t11-d-rate"></div>
+      <pre class="code" data-sprache="YAML · Kong (deklarativ): 50 Anfragen pro Sekunde je Partner"><code><span class="k">services</span>:
+  - <span class="k">name</span>: verfuegbarkeit
+    <span class="k">url</span>: http://verfuegbarkeit:8080
+    <span class="k">routes</span>: [{ <span class="k">name</span>: zimmer, <span class="k">paths</span>: [<span class="s">"/zimmer"</span>] }]
+    <span class="k">plugins</span>:
+      - <span class="k">name</span>: rate-limiting
+        <span class="k">config</span>:
+          <mark><span class="k">second</span>: <span class="n">50</span></mark>
+          <span class="k">limit_by</span>: consumer      <span class="c"># je Partner, nicht global</span>
+      - <span class="k">name</span>: openid-connect   <span class="c"># Token beim Identity Provider prüfen</span></code></pre>
+    </div>
+
+    <h3>Alle Massnahmen auf einen Blick</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Massnahme</th><th scope="col">wirkt auf</th><th scope="col">hilft gegen</th><th scope="col" class="zahl">einmalig</th><th scope="col">wichtigste Nebenwirkung</th></tr></thead>
+        <tbody>
+          <tr><td>Skalieren</td><td>Element</td><td>CPU-Engpass</td><td class="zahl">0 CHF</td><td>laufende Kosten, Engpass wandert</td></tr>
+          <tr><td>Autoscaling</td><td>Element</td><td>schwankende Last</td><td class="zahl">15 CHF</td><td>3 Minuten Verzug</td></tr>
+          <tr><td>Cache</td><td>Datenhaltung</td><td>Leselast auf DB</td><td class="zahl">40 CHF</td><td>hilft nicht beim Schreiben</td></tr>
+          <tr><td>CDN</td><td>Client</td><td>statische Inhalte</td><td class="zahl">30 CHF</td><td>nur Statisches</td></tr>
+          <tr><td>Queue</td><td>Verbindung</td><td>Verlust, Spitzen beim Empfänger</td><td class="zahl">60 CHF</td><td>keine sofortige Antwort, Rückstau</td></tr>
+          <tr><td>Timeout</td><td>Verbindung</td><td>hängende Partner</td><td class="zahl">5 CHF</td><td>zu kurz = unnötige Fehler</td></tr>
+          <tr><td>Retry</td><td>Verbindung</td><td>kurze Aussetzer</td><td class="zahl">5 CHF</td><td>Retry-Sturm</td></tr>
+          <tr><td>Circuit Breaker</td><td>Verbindung</td><td>Fehlerkaskade</td><td class="zahl">20 CHF</td><td>weist auch Gesundes ab</td></tr>
+          <tr><td>Bulkhead</td><td>Verbindung</td><td>Thread-Erschöpfung</td><td class="zahl">20 CHF</td><td>begrenzt Parallelität</td></tr>
+          <tr><td>Read-Replica</td><td>Datenbank</td><td>Leselast</td><td class="zahl">10 CHF</td><td>Verzug, laufende Kosten</td></tr>
+          <tr><td>Rate Limiting</td><td>Zugang</td><td>Last über Plan</td><td class="zahl">10 CHF</td><td>Abweisungen zählen als Fehler</td></tr>
+          <tr><td>Rollback</td><td>Element</td><td>fehlerhaftes Deployment</td><td class="zahl">5 CHF</td><td>neue Funktionen sind wieder weg</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6 · Bezug zum Modul -->
+  <section id="modul" data-kategorie="messaging">
+    <span class="eyebrow">Bezug zum Modul und zur Prüfung</span>
+    <h2>Warum der Message Broker in der Makroarchitektur Punkte bringt</h2>
+    <p class="prose">Studentische Checklisten zur Makroarchitektur sagen: «Message Broker einzeichnen, gibt viele Punkte» (in einem Cheatsheet steht «10 Punkte»). Der Grund ist das, was du in dieser Station siehst: Der Broker ist der sichtbare Beweis für lose Kopplung. Ohne ihn hängen die Microservices synchron aneinander, und ein langsamer Service reisst die anderen mit. Mit ihm puffern Queues Lastspitzen und Ausfälle, und kein Auftrag geht verloren.</p>
+    <p class="prose">Das Diagramm zeigt die Referenz «Makroarchitektur Variante 2» in Modulnotation (eigene Darstellung). Spiel den Ablauf «Domain Service fällt aus» ab: Die Nachrichten bleiben im Docker Host MQ liegen, die Clients merken nur eine Verzögerung. Schalte dann den Ausfall-Modus ein und tippe auf «Docker Host MQ»: Jetzt ist fast alles beeinträchtigt. Der Broker entkoppelt die Services, wird dafür aber selbst zum zentralen Baustein. Darum betreibt man ihn hochverfügbar, z. B. als Cluster mit drei Knoten.</p>
+    <div id="t11-var2"></div>
+    <h3>Massnahmen im UML-Komponentendiagramm</h3>
+    <p class="prose">Der Leitstand zeigt Laufzeit-Komponenten in Kategoriefarben, etwa wie ein C4-Containerdiagramm. In der Prüfung zeichnest du dagegen UML-Komponentendiagramme nach den Referenzarchitekturen. So findest du die Massnahmen dort wieder:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Massnahme</th><th scope="col">Ort in der Referenzarchitektur</th><th scope="col">Satz für deine Beschreibung</th></tr></thead>
+        <tbody>
+          <tr><td>Message Broker, Queue</td><td>Makro: Paket «MOM» bzw. «Docker Host MQ» (Variante 2). Mehrschicht: Async Communication Layer mit Receiver und Sender Adapter, Broker rechts im Paket «MOM».</td><td>«Der Broker entkoppelt die Services zeitlich. Fällt ein Empfänger aus, bleiben die Nachrichten in der Queue und werden nach dem Neustart verarbeitet. Lastspitzen werden gepuffert.»</td></tr>
+          <tr><td>Skalieren</td><td>Mehrschicht: Presentation Tier, Web API und Business Tier getrennt; Business Facade mit REST- oder gRPC-Schnittstelle.</td><td>«Die Facade bietet den Business Tier als Web Service an. So laufen Web Tier und Business Tier auf eigenen Servern und skalieren unabhängig.»</td></tr>
+          <tr><td>Autoscaling</td><td>Paket «Server – Docker Host» oder «Kubernetes-Cluster» (nur im Paketnamen).</td><td>«Der Orchestrator startet bei hoher Last weitere Container eines Microservice und verteilt die Last.»</td></tr>
+          <tr><td>Timeout, Retry, Circuit Breaker</td><td>Mehrschicht: je Provider ein Adapter im Service Access Layer. Makro: «Driven Adapter Services».</td><td>«Der Adapter kapselt den Aufruf des Providers samt Timeout und Circuit Breaker und schützt die Fachlogik vor einem langsamen Provider.»</td></tr>
+          <tr><td>Bulkhead</td><td>Makro: «Domain Services with own Persistence», je Bounded Context ein Service.</td><td>«Jeder Microservice hat eigene Ressourcen und eine eigene Datenbank. Ein Fehler bleibt im Service.»</td></tr>
+          <tr><td>Cache, Read-Replica</td><td>Data Tier, angesprochen über den Data Access Layer; CQRS mit eigenem Lesemodell.</td><td>«Lesezugriffe gehen an ein separates Lesemodell, damit die Schreib-Datenbank entlastet ist.»</td></tr>
+          <tr><td>CDN</td><td>Client Tier: SPA oder PWA, statische HTML5 Components über «static HTTP».</td><td>«Die statischen Dateien der SPA werden über ein CDN nahe bei den Nutzenden ausgeliefert.»</td></tr>
+          <tr><td>Rate Limiting</td><td>Integrationsarchitektur: API-Gateway vor den in Echtzeit angebotenen APIs.</td><td>«Das API-Gateway ist der einzige Eingang für externe Consumer, prüft Tokens und begrenzt die Anfragen je Partner.»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle:</b> In der Makroarchitektur zeichnest du weder API-Gateway noch Integration Middleware ein, nur den Broker. Infrastruktur wie Web-Server, Lastverteiler oder Autoscaler ist keine Komponente; du erwähnst sie höchstens im Paketnamen. Wer im Leitstand gelernt hat, dass ein Lastverteiler wichtig ist, darf ihn in der Prüfung trotzdem nicht als Komponente zeichnen.</div>
+    <div id="t11-modul-frage"></div>
+  </section>
+
+  <!-- 7 · Rätsel -->
+  <section id="raetsel" data-kategorie="sicherheit">
+    <span class="eyebrow">Was passiert, wenn …?</span>
+    <h2>Vorhersagen, dann auflösen</h2>
+    <p class="prose">Überlege bei jedem Rätsel zuerst selbst, was im Leitstand passiert. Die Auflösung nennt die Zahlen aus dem Simulator.</p>
+    <div class="stack" id="t11-raetsel"></div>
+    <div class="card stack">
+      <h3>Stimmt das?</h3>
+      <div id="t11-wf"></div>
+    </div>
+  </section>
+
+  <!-- 8 · Missionen -->
+  <section id="missionen" data-kategorie="daten">
+    <span class="eyebrow">Die vier Missionen</span>
+    <h2>Vorschau: Briefing, Architektur, Abläufe</h2>
+    <p class="prose">Jede Mission hat eine eigene Architektur und ein eigenes Problem. Die Diagramme sind dieselben wie im Leitstand. Spiel die Abläufe ab: Normalbetrieb, Lastspitze und Störung. Die Musterstrategie liegt hinter einem Aufklapper, falls du die Mission zuerst selbst spielen willst. Mission n+1 wird im Leitstand frei, sobald du in Mission n einen Stern hast.</p>
+    <div class="t11-tabs" role="tablist" aria-label="Missionen" id="t11-mi-tabs">
+      <button type="button" class="btn" role="tab" id="t11-t-m1" aria-controls="t11-p-m1" data-t11="m1">1 · Velokurier</button>
+      <button type="button" class="btn" role="tab" id="t11-t-m2" aria-controls="t11-p-m2" data-t11="m2">2 · Black Friday</button>
+      <button type="button" class="btn" role="tab" id="t11-t-m3" aria-controls="t11-p-m3" data-t11="m3">3 · Zahlungsanbieter</button>
+      <button type="button" class="btn" role="tab" id="t11-t-m4" aria-controls="t11-p-m4" data-t11="m4">4 · Ticketplattform</button>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-m1" aria-labelledby="t11-t-m1" tabindex="0" hidden>
+      <h3>Mission 1: Velokurier über Mittag</h3>
+      <ul class="t11-chips" aria-label="Eckdaten">
+        <li>Schwierigkeit <span class="t11-sterne" aria-hidden="true">★☆☆</span><span class="sr-only">1 von 3</span></li>
+        <li>geführt, Architektur vorgegeben</li><li>80 Minuten</li><li>SLO p95 &lt; 300 ms, ≥ 99 %</li><li>Budget 220 CHF</li><li>Werkzeuge: skalieren, Autoscaling, Cache, Read-Replica</li>
+      </ul>
+      <p class="prose"><b>Briefing:</b> Ein Velokurier in einer Schweizer Stadt (fiktiv). Kundinnen erfassen Aufträge in der Web-App und verfolgen den Kurier live. Alles läuft in einem Monolithen mit zwei Instanzen hinter einem Lastverteiler, die Daten liegen in einer PostgreSQL-Datenbank. Über Mittag vervierfacht sich die Last, um Minute 38 kommt ein Platzregen dazu (+40 % für 12 Minuten). 70 % der Anfragen lesen nur (Lieferung verfolgen).</p>
+      <div id="t11-d-m1"></div>
+      <p class="prose"><b>Ohne Massnahmen:</b> Ab Minute 35 ist die Kurier-App über 90 % ausgelastet, beim Platzregen bei 139 %. p95 steigt bis 7.2 Sekunden, 13 % der Aufträge gehen verloren. Ergebnis: 342 Punkte, kein Stern.</p>
+      <details class="sol"><summary>Musterstrategie aufdecken</summary>
+        <div class="stack"><p>Vor dem Start einen Cache vor die Auftrags-DB, die Kurier-App mit Autoscaling von 2 bis 8 Instanzen. Ergebnis: 952 Punkte, drei Sterne, 99.95 % Verfügbarkeit, 178 von 220 CHF. Nur skalieren reicht nicht: Dann wird die Datenbank beim Platzregen zum Engpass (Auslastung 122 %), 602 Punkte, ein Stern.</p></div>
+      </details>
+      <p class="t11-loesung-ls"><a class="btn primary" href="/architektur-leitstand">Im Leitstand spielen</a> <span class="hint">nur Pro und Admin</span></p>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-m2" aria-labelledby="t11-t-m2" tabindex="0" hidden>
+      <h3>Mission 2: Black Friday im Webshop</h3>
+      <ul class="t11-chips" aria-label="Eckdaten">
+        <li>Schwierigkeit <span class="t11-sterne" aria-hidden="true">★★☆</span><span class="sr-only">2 von 3</span></li>
+        <li>Architektur vorgegeben</li><li>90 Minuten</li><li>SLO p95 &lt; 400 ms, ≥ 99.5 %</li><li>Budget 750 CHF</li><li>Werkzeuge: skalieren, Autoscaling, Cache, CDN, Read-Replica, Rate Limiting, Rollback, Timeout, Retry, Circuit Breaker</li>
+      </ul>
+      <p class="prose"><b>Briefing:</b> Ein Outdoor-Webshop (fiktiv) mit Microservices hinter einem API-Gateway: Katalog, Bestellung, Lager und Zahlung, dazu ein Broker, über den der Versand Aufträge bekommt. Ab Minute 30 kommt 25 Minuten lang achtmal so viel Last. Drei Viertel stöbern, ein Viertel bestellt. In Minute 62 rollt das Lager-Team eine fehlerhafte Version aus.</p>
+      <div id="t11-d-m2"></div>
+      <p class="prose"><b>Ohne Massnahmen:</b> Der Katalog müsste 303 % leisten, die Verfügbarkeit fällt auf rund 35 % pro Minute, p95 auf über 2 Sekunden, das Gateway verliert seine Threads. Der Versand-Rückstau steigt auf 121 000 Nachrichten. Ergebnis: 374 Punkte, kein Stern. Den Ablauf Minute für Minute zeigt der <a href="#film">Film</a>.</p>
+      <details class="sol"><summary>Musterstrategie aufdecken</summary>
+        <div class="stack"><p>Vor dem Start CDN hinter das Shop-Frontend und Cache vor die Katalog-DB, Autoscaling für alle Fachdienste (2 bis 10). Bei Minute 25 vorheizen (Katalog, Bestellung, am besten auch Lager und Zahlung auf 6). Beim fehlerhaften Deployment sofort zurückrollen. Ergebnis: 953 Punkte, drei Sterne, 99.8 % Verfügbarkeit, 542 von 750 CHF.</p></div>
+      </details>
+      <p class="t11-loesung-ls"><a class="btn primary" href="/architektur-leitstand">Im Leitstand spielen</a> <span class="hint">nur Pro und Admin</span></p>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-m3" aria-labelledby="t11-t-m3" tabindex="0" hidden>
+      <h3>Mission 3: Der Zahlungsanbieter stottert</h3>
+      <ul class="t11-chips" aria-label="Eckdaten">
+        <li>Schwierigkeit <span class="t11-sterne" aria-hidden="true">★★★</span><span class="sr-only">3 von 3</span></li>
+        <li>Architektur vorgegeben</li><li>70 Minuten</li><li>SLO p95 &lt; 500 ms, ≥ 99 %</li><li>Budget 330 CHF</li><li>Werkzeuge: skalieren, Autoscaling, Timeout, Retry, Circuit Breaker, Bulkhead, Queue</li>
+      </ul>
+      <p class="prose"><b>Briefing:</b> Ein Verkäufer von Skitageskarten (fiktiv). Bezahlt wird über den externen Anbieter PayAlpin, eingestellt mit 10 Sekunden Timeout und 3 Wiederholungen. Das Gateway hat 200 Threads. Der Zahlungsservice beantwortet auch die Kaufstatus-Abfragen der App, auf denselben Threads. Ab Minute 12 hängt PayAlpin 20 Minuten (Antworten fünfzigmal langsamer), ab Minute 40 fällt er 10 Minuten ganz aus. Ziel: kein Kauf geht verloren, Angebot und Kaufstatus bleiben schnell.</p>
+      <div id="t11-d-m3"></div>
+      <p class="prose"><b>Ohne Massnahmen:</b> Retry-Sturm auf PayAlpin, Threads im Gateway und im Kaufservice erschöpft. Die Verfügbarkeit fällt pro Minute auf 14 bis 17 %, p95 auf 11.7 Sekunden, auch das Angebot ist kaum erreichbar. Fast die Hälfte der Käufe geht verloren. Ergebnis: 370 Punkte, kein Stern.</p>
+      <details class="sol"><summary>Musterstrategie aufdecken</summary>
+        <div class="stack"><p>Eine Queue zwischen Kauf- und Zahlungsservice: Käufe werden bestätigt, die Zahlung läuft im Hintergrund. Allein reicht sie nicht (775 Punkte, zwei Sterne): Die Worker des Zahlungsservice hängen am Anbieter und blockieren die Kaufstatus-Abfragen. Darum zusätzlich mindestens zwei von Timeout 1500 ms, höchstens 1 Retry, Circuit Breaker und Bulkhead auf «Zahlungsservice → PayAlpin». Resilienz ohne Queue: 430 Punkte, ein Stern, weil abgewiesene Käufe verloren gehen. Alles zusammen: 965 Punkte, drei Sterne, p95 nie über 335 ms.</p></div>
+      </details>
+      <p class="t11-loesung-ls"><a class="btn primary" href="/architektur-leitstand">Im Leitstand spielen</a> <span class="hint">nur Pro und Admin</span></p>
+    </div>
+
+    <div class="t11-panel" role="tabpanel" id="t11-p-m4" aria-labelledby="t11-t-m4" tabindex="0" hidden>
+      <h3>Mission 4: Modelliere die Ticketplattform</h3>
+      <ul class="t11-chips" aria-label="Eckdaten">
+        <li>Schwierigkeit <span class="t11-sterne" aria-hidden="true">★★★</span><span class="sr-only">3 von 3</span></li>
+        <li>selbst modellieren</li><li>70 Minuten</li><li>SLO p95 &lt; 400 ms, ≥ 99.5 %</li><li>Budget 450 CHF</li><li>6 Anforderungen, je −75 Punkte, wenn verletzt</li>
+      </ul>
+      <p class="prose"><b>Briefing:</b> Eine Ticketplattform für ein Openair (fiktiv) ist letztes Jahr beim Vorverkauf zusammengebrochen. Du entwirfst die Architektur aus einem Auftrag selbst: Bausteine aus einer Palette setzen (mit Ablenkern wie ESB, Alles-in-einem-Server, Lastverteiler) und verbinden. Danach Lasttest mit Vorverkaufsstart (×10) und langsamem Zahlungsanbieter.</p>
+      <div class="card tablebox">
+        <table class="tabelle">
+          <thead><tr><th scope="col">Anforderung</th><th scope="col">Was der Prüfer im Modell sucht</th></tr></thead>
+          <tbody>
+            <tr><td>Alle Aufrufe der App über ein API-Gateway</td><td>kein Weg von der App zum Ticketservice am Gateway vorbei</td></tr>
+            <tr><td>Statisches aus einem CDN vor dem Gateway</td><td>App → CDN → Gateway</td></tr>
+            <tr><td>Verfügbarkeit über einen Cache lesen</td><td>Ticketservice mit Cache</td></tr>
+            <tr><td>Zahlungen gehen nicht verloren</td><td>jeder Weg Ticketservice → Zahlungsservice führt durch eine Queue</td></tr>
+            <tr><td>Bestätigung nach der Zahlung</td><td>Weg Zahlungsservice → E-Mail-Dienst</td></tr>
+            <tr><td>Jeder Dienst besitzt seine Daten</td><td>Ticket-DB und Zahlungs-DB, keine gemeinsame</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="prose">Vorgegeben sind Fan, App, Zahlungsanbieter und E-Mail-Dienst. Versuch das Modell zuerst selbst im Kopf oder auf Papier, dann deck die Musterlösung auf.</p>
+      <div class="row"><button type="button" class="btn primary" id="t11-m4-zeigen" aria-expanded="false" aria-controls="t11-m4-loesung">Musterlösung als Diagramm aufdecken</button></div>
+      <div id="t11-m4-loesung" class="stack" hidden>
+        <div id="t11-d-m4"></div>
+        <p class="prose"><b>Im Lasttest ohne Eingriff:</b> Das Modell erfüllt alle Anforderungen, aber beim Vorverkauf ist der Ticketservice zu 379 % ausgelastet, die Verfügbarkeit fällt auf rund 52 %: 506 Punkte, ein Stern. Ein gutes Modell allein reicht nicht.</p>
+        <details class="sol"><summary>Musterstrategie im Lasttest aufdecken</summary>
+          <div class="stack"><p>Autoscaling für Ticketservice (2 bis 12) und Zahlungsservice (1 bis 6), Circuit Breaker auf «Zahlungsservice → Zahlungsanbieter», bei Minute 17 den Ticketservice auf 8 Instanzen vorheizen. Ergebnis: 985 Punkte, drei Sterne, 210 von 450 CHF.</p></div>
+        </details>
+      </div>
+      <p class="t11-loesung-ls"><a class="btn primary" href="/architektur-leitstand">Im Leitstand spielen</a> <span class="hint">nur Pro und Admin</span></p>
+    </div>
+  </section>
+
+  <!-- 9 · Spiel -->
+  <section id="spiel" data-kategorie="dienst">
+    <span class="eyebrow">Modellierspiel</span>
+    <h2>Baue die richtige Massnahme ein</h2>
+    <p class="prose">In jedem Level steht eine Architektur mit einem Problem. Die grauen Teile sind vorgegeben. Lies den Auftrag, lege die Massnahme aus der Palette auf ein freies Feld und verbinde sie mit der richtigen Art. Nicht jeder Baustein in der Palette gehört dazu.</p>
+    <p class="hint">Bedienung: Baustein antippen, dann ein freies Feld wählen. Element wählen, «Verbinden» (oder Taste V), Ziel wählen, im Menü die Art festlegen. Tastatur: Enter, Pfeiltasten, Enter.</p>
+    <div id="t11-spiel"></div>
+  </section>
+
+  <!-- Film -->
+  <section id="film" data-kategorie="zugang">
+    <span class="eyebrow">▶ Lösungsfilm</span>
+    <h2>Black Friday Minute für Minute</h2>
+    <p class="prose">Die Mission «Black Friday im Webshop» zweimal: zuerst ohne Massnahmen, dann mit Plan. Alle Zahlen kommen aus dem Simulator (Startwert 7). Die Kacheln zeigen die Werte der jeweiligen Minute.</p>
+    <div id="t11-film"></div>
+  </section>
+
+  <!-- Selbsttest -->
+  <section id="test" data-kategorie="sicherheit">
+    <span class="eyebrow">✓ Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Neun Fragen, je eine Antwort ist richtig. Achtung, ein paar Stolperfallen sind dabei.</p>
+    <div id="t11-selbsttest"></div>
+  </section>
+
+  <section id="blick" data-kategorie="infrastruktur">
+    <span class="eyebrow">★ Merksätze</span>
+    <h2>Auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Auslastung ρ = Last ÷ (Instanzen × Kapazität). Ab etwa 80 % wächst die Antwortzeit steil, bei 1 ist Schluss. Plane mit rund 60 %.</li>
+      <li>Lies Kennzahlen als Muster: p95 hoch ohne Fehler = Engpass; Sekunden und erschöpfte Threads = langsame Abhängigkeit; Fehler ohne Last = Deployment oder Ausfall; Rückstau wächst = Konsument zu langsam.</li>
+      <li>Jede Massnahme hat einen Preis und eine Nebenwirkung: Skalieren verschiebt den Engpass, Cache hilft nur beim Lesen, Retries erzeugen Stürme, Autoscaling kommt 3 Minuten zu spät.</li>
+      <li>Resilienz ist ein Team: Queue gegen Verlust, Timeout und Circuit Breaker gegen hängende Partner, Bulkhead gegen erschöpfte Threads.</li>
+      <li>Im UML-Komponentendiagramm des Moduls zeigt der Message Broker die Entkopplung; Timeout und Circuit Breaker wohnen im Adapter, Skalierung im Docker-Host- bzw. Kubernetes-Paket. Infrastruktur ist keine Komponente.</li>
+      <li>Probier die vier Missionen im Architektur-Leitstand aus (Pro und Admin). Übe zusätzlich mit der Fallstudie Timesoft aus Moodle.</li>
+    </ul>
+  </section>
+  <footer>AVSW · Station 11 · Architektur-Leitstand · eigene Beispiele, Zahlen aus dem Simulator der App.</footer>
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/architektur.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const A = window.Architektur;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const zahl = (x, n) => L.zahlText(x, n === undefined ? 0 : n);
+
+  /* ---------- 0 · Sortierer ---------- */
+  L.sortierer("#t11-sortierer", {
+    kategorien: ["Kennzahl (misst)", "Ereignis (passiert)", "Massnahme (ändert)"],
+    elemente: [
+      { html: "p95 steigt auf 2.3 Sekunden", kategorie: 0, erklaerung: "p95 ist eine Messung: So lange warten die langsamsten 5 %." },
+      { html: "Black Friday: achtmal so viel Last", kategorie: 1, erklaerung: "Eine Lastspitze passiert. Du kannst dich vorbereiten, aber nicht verhindern, dass sie kommt." },
+      { html: "Cache vor die Katalog-DB setzen", kategorie: 2, erklaerung: "Du änderst die Architektur: Lesezugriffe treffen nun den Cache." },
+      { html: "Rückstau von 9470 Nachrichten", kategorie: 0, erklaerung: "Der Rückstau misst, was in Queues wartet." },
+      { html: "Der Zahlungsanbieter hängt", kategorie: 1, erklaerung: "Eine langsame Abhängigkeit ist ein Ereignis von aussen." },
+      { html: "Circuit Breaker auf «Zahlungsservice → PayAlpin»", kategorie: 2, erklaerung: "Eine Einstellung an einer Verbindung: Sie unterbricht Aufrufe bei vielen Fehlern." },
+      { html: "Version 4.2 des Lagerservice wird ausgerollt", kategorie: 1, erklaerung: "Ein Deployment passiert. Ist es fehlerhaft, antwortest du mit einem Rollback." },
+      { html: "Auslastung der Datenbank 122 %", kategorie: 0, erklaerung: "Auslastung ist eine Messgrösse. Über 100 % heisst Überlast." },
+      { html: "Rollback auf Version 4.1", kategorie: 2, erklaerung: "Du änderst den Zustand: zurück zur letzten guten Version." }
+    ]
+  });
+
+  /* ---------- 2 · Kennzahlen: Momentaufnahme ---------- */
+  const SYM = { gut: "✓ im Ziel", warn: "! knapp", schlecht: "✗ verletzt", info: "Info" };
+  function kachel(name, wert, stufe, unter) {
+    return '<div class="t11-kpi t11-' + stufe + '"><span class="t11-kpi-name">' + name + "</span><b>" + wert + '</b><span class="t11-kpi-ampel">' + SYM[stufe] + (unter ? " · " + unter : "") + "</span></div>";
+  }
+  $("#t11-moment").innerHTML =
+    kachel("Verfügbarkeit (Minute)", "17.1 %", "schlecht", "Ziel ≥ 99 %") +
+    kachel("Antwortzeit p95", "11.7 s", "schlecht", "Ziel &lt; 500 ms") +
+    kachel("Fehlerquote", "82.9 %", "schlecht") +
+    kachel("Durchsatz", "35 / s", "schlecht", "Last 203 / s") +
+    kachel("Rückstau", "0", "info", "keine Queue") +
+    kachel("Kosten", "141 CHF/h", "gut", "im Budget");
+  L.auswahl("#t11-moment-frage", {
+    frage: "Was ist hier die Ursache, und was hilft?",
+    optionen: [
+      "Lastspitze: Die Dienste sind überlastet. Alle Dienste hochskalieren.",
+      "Langsame Abhängigkeit: PayAlpin hält mit 10 s Timeout und 3 Retries alle Threads fest. Timeout kürzen, Retries begrenzen, Circuit Breaker, Bulkhead und eine Queue für die Käufe.",
+      "Datenbank-Engpass: Ein Cache vor die Ticket-DB setzen."
+    ],
+    richtig: 1,
+    erklaerung: "Die Last ist mit 203 Anfr./s normal, Kosten unverändert. Die Meldungen nennen Thread-Erschöpfung und Retry-Sturm, seit PayAlpin hängt. Skalieren hilft kaum: Neue Instanzen warten genauso auf PayAlpin und schicken noch mehr Wiederholungen hin."
+  });
+  L.zahlAufgabe("#t11-p95", {
+    titel: "20 Antwortzeiten der Katalogseite",
+    frage: "Gemessen in Millisekunden: 80, 95, 110, 85, 90, 100, 120, 105, 88, 92, 98, 115, 102, 97, 1800, 99, 93, 87, 108, 2400. Wie gross ist p95 (nächster Rang)?",
+    antwort: 1800, einheit: "ms", anzeige: "1800 ms",
+    hinweise: ["Sortiere die 20 Werte aufsteigend.", "Rang = ⌈0.95 · 20⌉ = 19. Nimm den 19. Wert der sortierten Liste."],
+    loesungsweg: [
+      "Sortiert: 80, 85, 87, 88, 90, 92, 93, 95, 97, 98, 99, 100, 102, 105, 108, 110, 115, 120, <b>1800</b>, 2400.",
+      "Rang 19 → p95 = 1800 ms.",
+      "Zum Vergleich: Durchschnitt = 5964 ÷ 20 ≈ 298 ms, Median = 98.5 ms. Der Durchschnitt läge unter einem SLO von 300 ms, p95 zeigt das Problem."
+    ]
+  });
+
+  /* ---------- 3 · Warteschlangen-Rechner ---------- */
+  const S = 60, MU = 50, KAPPUNG = 40, GRENZE = 0.97;
+  function faktor(rho, c) {
+    if (!(rho > 0)) return 1;
+    const r = Math.min(rho, GRENZE);
+    let f = 1 + Math.pow(r, Math.sqrt(2 * (c + 1)) - 1) / (c * (1 - r));
+    if (rho > GRENZE) f += (KAPPUNG - f) * Math.min(1, (rho - GRENZE) / 0.25);
+    return Math.min(f, KAPPUNG);
+  }
+  const reglerRho = $("#t11-rho"), reglerC = $("#t11-c"), fest = $("#t11-fest");
+  const svg = $("#t11-kurve"), ergebnis = $("#t11-ergebnis");
+  const X0 = 46, X1 = 330, Y0 = 196, Y1 = 14, XMAX = 1.4, YMAX = KAPPUNG * S;
+  const px = (rho) => X0 + (rho / XMAX) * (X1 - X0);
+  const py = (ms) => Y0 - (Math.min(ms, YMAX) / YMAX) * (Y0 - Y1);
+  const NS = "http://www.w3.org/2000/svg";
+  function svgEl(tag, attr, text) {
+    const e = document.createElementNS(NS, tag);
+    Object.keys(attr).forEach((k) => e.setAttribute(k, attr[k]));
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function pfad(c) {
+    let d = "";
+    for (let i = 0; i <= 280; i++) {
+      const rho = (i / 280) * XMAX;
+      d += (i ? "L" : "M") + px(rho).toFixed(1) + " " + py(S * faktor(rho, c)).toFixed(1);
+    }
+    return d;
+  }
+  function kurveZeichnen(rho, c) {
+    $$("g, path, line, rect, circle, text", svg).forEach((n) => { if (n.parentNode === svg) n.remove(); });
+    const g = svgEl("g", {});
+    g.appendChild(svgEl("rect", { class: "t11-zone", x: px(1), y: Y1, width: X1 - px(1), height: Y0 - Y1 }));
+    [600, 1200, 1800, 2400].forEach((ms) => {
+      g.appendChild(svgEl("line", { class: "gitter", x1: X0, x2: X1, y1: py(ms), y2: py(ms) }));
+      g.appendChild(svgEl("text", { x: X0 - 6, y: py(ms) + 4, "text-anchor": "end" }, String(ms)));
+    });
+    [0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4].forEach((r) => {
+      g.appendChild(svgEl("text", { x: px(r), y: Y0 + 16, "text-anchor": "middle" }, r.toFixed(1)));
+    });
+    g.appendChild(svgEl("line", { class: "achse", x1: X0, x2: X1, y1: Y0, y2: Y0 }));
+    g.appendChild(svgEl("line", { class: "achse", x1: X0, x2: X0, y1: Y0, y2: Y1 }));
+    g.appendChild(svgEl("line", { class: "t11-knick", x1: px(0.85), x2: px(0.85), y1: Y0, y2: Y1 }));
+    g.appendChild(svgEl("text", { x: px(0.85) - 4, y: Y1 + 34, "text-anchor": "end" }, "Engpass 85 %"));
+    g.appendChild(svgEl("line", { class: "markierung", x1: X0, x2: X1, y1: py(YMAX), y2: py(YMAX) }));
+    g.appendChild(svgEl("text", { x: X0 + 6, y: py(YMAX) + 14 }, "Kappung 40 × S"));
+    g.appendChild(svgEl("text", { x: px(1.2), y: Y0 - 8, "text-anchor": "middle" }, "Überlast"));
+    g.appendChild(svgEl("text", { x: (X0 + X1) / 2, y: Y0 + 32, "text-anchor": "middle" }, "Auslastung ρ"));
+    g.appendChild(svgEl("text", { x: 12, y: (Y0 + Y1) / 2, "text-anchor": "middle", transform: "rotate(-90 12 " + (Y0 + Y1) / 2 + ")" }, "Antwortzeit R in ms"));
+    if (c > 1) g.appendChild(svgEl("path", { class: "kurve s2 t11-ref", d: pfad(1) }));
+    g.appendChild(svgEl("path", { class: "kurve s1", d: pfad(c) }));
+    const R = S * faktor(rho, c);
+    g.appendChild(svgEl("circle", { class: "punkt an", cx: px(Math.min(rho, XMAX)), cy: py(R), r: 6 }));
+    const lx = Math.min(px(rho) + 8, X1 - 70);
+    g.appendChild(svgEl("text", { class: "t11-wert", x: lx, y: Math.max(py(R) - 10, Y1 + 12) }, Math.round(R) + " ms"));
+    svg.appendChild(g);
+  }
+  function rechnen() {
+    const rho = Number(reglerRho.value), c = Number(reglerC.value);
+    $("#t11-rho-wert").textContent = rho.toFixed(2);
+    $("#t11-c-wert").textContent = String(c);
+    const f = faktor(rho, c), R = S * f, lambda = rho * c * MU;
+    const angenommen = rho > 1 ? (1 / rho) * (1 - 0.3 * Math.min(1, rho - 1)) : 1;
+    const wartende = lambda * angenommen * Math.max(0, R - S) / 1000;
+    let zustand;
+    if (rho < 0.7) zustand = "<b>Ruhig.</b> Kaum Wartezeit.";
+    else if (rho < 0.85) zustand = "<b>Wird eng.</b> Die Schlange wächst spürbar, Autoscaling würde jetzt starten (ab 75 %).";
+    else if (rho <= GRENZE) zustand = "<b>Engpass</b> (ab 85 %). Jede kleine Spitze verlängert die Schlange stark.";
+    else if (rho <= 1) zustand = "<b>Kappung:</b> Die Formel gilt nicht mehr. Der Simulator lässt die Antwortzeit linear bis 40 × S steigen.";
+    else {
+      zustand = "<b>Überlast.</b> Mehr Last als Kapazität: Nur " + zahl(angenommen * 100) + " % der Anfragen finden Platz, der Rest scheitert nach Wartezeit. Zusätzlich geht Arbeit an Anfragen verloren, deren Aufrufer schon aufgegeben hat.";
+    }
+    ergebnis.innerHTML = "Last λ = " + rho.toFixed(2) + " × " + c + " × 50 = <b>" + zahl(lambda) + " Anfr./s</b> · Antwortzeit R ≈ " + zahl(f, 1) + " × 60 ms = <b>" + zahl(R) + " ms</b> · im Mittel warten ≈ " + zahl(wartende, 1) + " Anfragen<br>" + zustand;
+    kurveZeichnen(rho, c);
+  }
+  let cAlt = Number(reglerC.value);
+  reglerRho.addEventListener("input", rechnen);
+  reglerC.addEventListener("input", () => {
+    const c = Number(reglerC.value);
+    if (fest.checked && c !== cAlt) reglerRho.value = String(Math.min(1.4, Math.round((Number(reglerRho.value) * cAlt / c) * 100) / 100));
+    cAlt = c;
+    rechnen();
+  });
+  $$("[data-t11-preset]").forEach((b) => b.addEventListener("click", () => {
+    const t = b.getAttribute("data-t11-preset").split(",");
+    reglerC.value = t[1]; cAlt = Number(t[1]); reglerRho.value = t[0];
+    rechnen();
+  }));
+  rechnen();
+
+  /* ---------- 4 · Diagnose Schritt für Schritt ---------- */
+  L.schrittAufgabe("#t11-diagnose", {
+    titel: "Velokurier, Minute 40: Was tust du?",
+    aufgabe: "<p>Platzregen. Die Kacheln: Verfügbarkeit dieser Minute 62 %, p95 7.2 s (SLO 300 ms). Kurier-App: 2 Instanzen, Auslastung 139 %. Auftrags-DB: 46 %. Keine Meldung zu Threads, kein Rückstau. Geh die fünf Schritte durch, bevor du aufdeckst.</p>",
+    schritte: [
+      { html: "<b>1 · Symptom:</b> p95 und Verfügbarkeit rot, beides zugleich.", warum: "Beide Kacheln verletzen das SLO. Das ist mehr als eine kleine Verzögerung." },
+      { html: "<b>2 · Engpass:</b> Kurier-App mit ρ = 1.39 (über 100 %).", warum: "Das Element mit der höchsten CPU-Auslastung über 85 % ist der Engpass. Die DB ist mit 46 % entspannt." },
+      { html: "<b>3 · Ursache:</b> Lastspitze (Platzregen, +40 %) auf einen CPU-Engpass.", warum: "Last steigt, keine Threads erschöpft, kein Fehler einer Abhängigkeit: also Kapazität zu klein." },
+      { html: "<b>4 · Massnahme:</b> skalieren. Ziel ⌈2 × 1.39 ÷ 0.6⌉ = 5 Instanzen, bereit in 2 Minuten.", warum: "So rechnet auch das Autoscaling: Zielauslastung 60 %. Die Instanzen kosten je 16 CHF pro Stunde." },
+      { html: "<b>5 · Nebenwirkung:</b> 5 Instanzen schicken mehr Abfragen an die DB. Mit Cache davor bleibt sie entspannt.", warum: "Ohne Cache steigt die DB im Simulator auf 122 % und wird zum neuen Engpass. Mit Cache und Autoscaling: 952 Punkte, drei Sterne." }
+    ]
+  });
+
+  /* ---------- 5 · Massnahmen-Diagramme ---------- */
+  const I = (was, kann, wofuer, technologie, warum) => ({ was: was, kann: kann, wofuer: wofuer, technologie: technologie, warum: warum });
+  const MASSNAHMEN = {
+    skalieren: {
+      titel: "Skalieren: drei Instanzen hinter einem Lastverteiler", richtung: "rechts",
+      elemente: [
+        { id: "app", typ: "web", name: "Kurier-App (Browser)", technologie: "React", info: I("Die Web-App der Kundinnen.", "Fragt alle paar Sekunden die Position des Kuriers ab.", "Aufträge erfassen, Lieferung verfolgen.", "React", "Kennt nur eine Adresse: die des Lastverteilers.") },
+        { id: "lb", typ: "lastverteiler", name: "Lastverteiler", technologie: "HAProxy", info: I("Verteilt Anfragen auf alle gesunden Instanzen.", "Round Robin, Health Checks, nimmt kranke Instanzen aus dem Spiel.", "Damit eine zweite und dritte Instanz überhaupt Last bekommen.", "HAProxy oder ein Kubernetes-Service", "Ohne Lastverteiler bringt eine weitere Instanz nichts.") },
+        { id: "i1", typ: "monolith", name: "Kurier-App · Instanz 1", technologie: "Spring Boot", info: I("Erste Kopie des Monolithen.", "50 Anfragen pro Sekunde.", "Auftragserfassung, Tourenplanung, Tracking.", "Java 21, Spring Boot", "Zustandslos: Jede Instanz kann jede Anfrage bedienen.") },
+        { id: "i2", typ: "monolith", name: "Kurier-App · Instanz 2", technologie: "Spring Boot", info: I("Zweite, gleiche Kopie.", "50 Anfragen pro Sekunde.", "Teilt sich die Last mit den anderen.", "Spring Boot", "Gleiches Image, gleiche Konfiguration.") },
+        { id: "i3", typ: "monolith", name: "Kurier-App · Instanz 3", technologie: "Spring Boot", zustand: "neu", info: I("Neu gestartete Instanz.", "Ab 2 Minuten nach dem Start bereit.", "Halbiert … nein: drittelt die Last je Instanz.", "Spring Boot", "Skalieren heisst: mehr gleiche Kopien, nicht grössere Maschinen.") },
+        { id: "db", typ: "datenbank", name: "Auftrags-DB", technologie: "PostgreSQL", info: I("Eine gemeinsame Datenbank.", "Rund 120 Abfragen pro Sekunde, nicht horizontal skalierbar.", "Alle Aufträge und Positionen.", "PostgreSQL", "Hier landet der Engpass, wenn du nur die App skalierst.") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "app", nach: "lb", art: "sync", label: "HTTPS" },
+        { id: "v2", von: "lb", nach: "i1", art: "sync", label: "HTTP" },
+        { id: "v3", von: "lb", nach: "i2", art: "sync", label: "HTTP" },
+        { id: "v4", von: "lb", nach: "i3", art: "sync", label: "HTTP" },
+        { id: "v5", von: "i1", nach: "db", art: "daten", label: "SQL" },
+        { id: "v6", von: "i2", nach: "db", art: "daten", label: "SQL" },
+        { id: "v7", von: "i3", nach: "db", art: "daten", label: "SQL" }
+      ],
+      ablaeufe: [
+        { id: "verteilen", name: "Normal: Last verteilen", schritte: [
+          { von: "app", nach: "lb", text: "Anfrage 1 kommt beim Lastverteiler an.", phase: "Verteilen" },
+          { von: "lb", nach: "i1", text: "Er schickt sie an Instanz 1 …" },
+          { von: "lb", nach: "i2", text: "… die nächste an Instanz 2 …" },
+          { von: "lb", nach: "i3", text: "… und die dritte an Instanz 3. Jede trägt ein Drittel: ρ sinkt von 1.39 auf 0.93 … und mit 5 Instanzen auf rund 0.56." },
+          { von: "i1", nach: "db", text: "Alle drei lesen aus derselben Datenbank.", phase: "Daten" },
+          { von: "i2", nach: "db", text: "Die Datenbank bekommt jetzt dreimal so viele Abfragen pro Sekunde wie mit einer Instanz.", parallel: true }
+        ] },
+        { id: "absturz", name: "Störung: eine Instanz stürzt ab", schritte: [
+          { bei: "i2", text: "Instanz 2 stürzt ab.", fehler: true, phase: "Ausfall" },
+          { von: "app", nach: "lb", text: "Die Kundin merkt nichts: Der Lastverteiler hat es am Health Check bemerkt." },
+          { von: "lb", nach: "i1", text: "Er schickt nur noch an Instanz 1 …", phase: "Umleiten" },
+          { von: "lb", nach: "i3", text: "… und Instanz 3. Die beiden tragen jetzt die halbe statt einer Drittel Last.", parallel: true }
+        ] },
+        { id: "engpass", name: "Lastspitze: der Engpass wandert", schritte: [
+          { von: "i1", nach: "db", text: "Platzregen: Alle Instanzen lesen gleichzeitig.", phase: "Spitze" },
+          { von: "i2", nach: "db", text: "…", parallel: true },
+          { von: "i3", nach: "db", text: "…", parallel: true },
+          { bei: "db", text: "Die Datenbank ist über 100 % ausgelastet. Neuer Engpass: Hier hilft ein Cache, nicht noch mehr Instanzen.", fehler: true }
+        ] }
+      ]
+    },
+    autoscaling: {
+      titel: "Autoscaling im Kubernetes-Cluster", richtung: "rechts",
+      elemente: [
+        { id: "web", typ: "web", name: "Shop-Frontend", technologie: "React", info: I("Die Kundinnen im Browser.", "", "", "React", "") },
+        { id: "k8s", typ: "cluster", name: "Kubernetes-Cluster" },
+        { id: "ing", typ: "ingress", name: "Ingress", technologie: "NGINX Ingress", in: "k8s", info: I("Eingang in den Cluster.", "Leitet Anfragen an alle bereiten Pods eines Dienstes.", "Ein Eingang für alle Dienste im Cluster.", "NGINX Ingress Controller", "Neue Pods bekommen automatisch Anfragen, sobald sie bereit sind.") },
+        { id: "p1", typ: "dienst", name: "Bestellservice · Pod 1", technologie: "Spring Boot", in: "k8s", info: I("Erster Pod des Bestellservice.", "120 Anfragen pro Sekunde.", "", "Spring Boot im Container", "") },
+        { id: "p2", typ: "dienst", name: "Bestellservice · Pod 2", technologie: "Spring Boot", in: "k8s", info: I("Zweiter Pod (Untergrenze 2).", "", "", "Spring Boot im Container", "") },
+        { id: "p3", typ: "dienst", name: "Bestellservice · Pod 3", technologie: "Spring Boot", in: "k8s", zustand: "neu", info: I("Vom Autoscaler gestarteter Pod.", "Nach rund 2 Minuten Startzeit bereit.", "Fängt die zusätzliche Last ab.", "Spring Boot im Container", "Wird bei Flaute wieder abgebaut, damit die Kosten sinken.") },
+        { id: "hpa", typ: "monitor", name: "Autoscaler (HPA)", technologie: "HorizontalPodAutoscaler", in: "k8s", info: I("Der Regler des Clusters.", "Misst jede Minute die CPU-Auslastung und setzt die Zahl der Pods.", "Damit die Kapazität der Last folgt, ohne dass jemand eingreift.", "Kubernetes HorizontalPodAutoscaler", "Zielauslastung 60 %: genug Reserve für die nächste Spitze.") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "web", nach: "ing", art: "sync", label: "HTTPS" },
+        { id: "v2", von: "ing", nach: "p1", art: "sync", label: "HTTP" },
+        { id: "v3", von: "ing", nach: "p2", art: "sync", label: "HTTP" },
+        { id: "v4", von: "ing", nach: "p3", art: "sync", label: "HTTP" },
+        { id: "v5", von: "hpa", nach: "p1", art: "abhaengigkeit", label: "misst CPU" },
+        { id: "v6", von: "hpa", nach: "p3", art: "abhaengigkeit", label: "startet" }
+      ],
+      ablaeufe: [
+        { id: "hoch", name: "Lastspitze: Autoscaler fährt hoch", schritte: [
+          { von: "web", nach: "ing", text: "Die Last steigt. Pod 1 und 2 sind zu 85 % ausgelastet.", phase: "Messen" },
+          { von: "ing", nach: "p1", text: "Beide arbeiten am Anschlag …" },
+          { von: "ing", nach: "p2", text: "…", parallel: true },
+          { von: "hpa", nach: "p1", text: "Minute 1: Der Autoscaler misst 85 %, mehr als 75 %. Ziel: ⌈2 × 0.85 ÷ 0.6⌉ = 3 Pods.", phase: "Entscheiden" },
+          { von: "hpa", nach: "p3", text: "Er startet Pod 3. Der braucht 2 Minuten, bis er bereit ist.", phase: "Starten" },
+          { von: "ing", nach: "p3", text: "Minute 3: Pod 3 bekommt Anfragen. Die Auslastung sinkt auf rund 57 %." }
+        ] },
+        { id: "runter", name: "Flaute: Autoscaler baut ab", schritte: [
+          { von: "hpa", nach: "p3", text: "Drei Minuten in Folge unter 30 %: Der Autoscaler entfernt einen Pod.", phase: "Abbauen" },
+          { bei: "p3", text: "Pod 3 wird beendet. Abbauen geht sofort, die Kosten sinken." },
+          { von: "ing", nach: "p1", text: "Pod 1 und 2 übernehmen wieder alles. Unter 2 Pods geht er nie (Untergrenze)." }
+        ] }
+      ]
+    },
+    cache: {
+      titel: "Cache-Aside vor der Katalog-DB", richtung: "rechts",
+      elemente: [
+        { id: "web", typ: "web", name: "Shop-Frontend", technologie: "React", info: I("Die Kundin stöbert im Katalog.", "", "", "React", "") },
+        { id: "kat", typ: "dienst", name: "Katalogservice", technologie: "Node.js", info: I("Liefert Produkte, Preise und Bestand.", "Fragt zuerst den Cache, bei Fehltreffer die Datenbank.", "Stöbern: drei Viertel aller Anfragen.", "Node.js", "Der Dienst entscheidet, was in den Cache kommt (Cache-Aside).") },
+        { id: "cache", typ: "cache", name: "Produkt-Cache", technologie: "Redis", zustand: "neu", info: I("Schneller Zwischenspeicher im Arbeitsspeicher.", "Rund 8000 Zugriffe pro Sekunde, 1 ms.", "Häufig gelesene Produkte.", "Redis", "Im Leitstand treffen 85 % der Lesezugriffe; die DB sieht nur noch 15 %.") },
+        { id: "db", typ: "datenbank", name: "Katalog-DB", technologie: "PostgreSQL", info: I("Die Quelle der Wahrheit für Produktdaten.", "Rund 400 Abfragen pro Sekunde.", "Alle Produkte und Preise.", "PostgreSQL", "Bleibt die Wahrheit: Der Cache hält nur Kopien.") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "web", nach: "kat", art: "sync", label: "REST" },
+        { id: "v2", von: "kat", nach: "cache", art: "daten", label: "GET/SET" },
+        { id: "v3", von: "kat", nach: "db", art: "daten", label: "SQL" }
+      ],
+      ablaeufe: [
+        { id: "treffer", name: "Normal: Treffer (85 %)", schritte: [
+          { von: "web", nach: "kat", text: "Die Kundin öffnet das Zelt «Alpin 2».", phase: "Anfrage" },
+          { von: "kat", nach: "cache", text: "Ist «produkt:4711» im Cache? Ja: Antwort nach 1 ms.", phase: "Cache" },
+          { von: "kat", nach: "web", text: "Die Datenbank wurde gar nicht gefragt.", phase: "Antwort" }
+        ] },
+        { id: "fehltreffer", name: "Fehltreffer (15 %)", schritte: [
+          { von: "web", nach: "kat", text: "Ein selten angesehenes Produkt.", phase: "Anfrage" },
+          { von: "kat", nach: "cache", text: "Nicht im Cache.", phase: "Cache" },
+          { von: "kat", nach: "db", text: "Lesen aus der Datenbank.", phase: "Datenbank" },
+          { von: "kat", nach: "cache", text: "Ergebnis 10 Minuten im Cache ablegen (TTL)." },
+          { von: "kat", nach: "web", text: "Antwort. Die nächste Kundin bekommt einen Treffer.", phase: "Antwort" }
+        ] },
+        { id: "kalt", name: "Lastspitze mit kaltem Cache", schritte: [
+          { bei: "cache", text: "Der Cache wurde eben erst eingesetzt und ist leer: Jede Anfrage ist ein Fehltreffer.", phase: "Kalt" },
+          { von: "kat", nach: "db", text: "Alles geht an die Datenbank, bis der Cache warm ist (im Leitstand 3 Minuten).", fehler: true },
+          { von: "kat", nach: "cache", text: "Mit jeder Antwort füllt sich der Cache. Darum: vor der Spitze einsetzen.", phase: "Warm" }
+        ] }
+      ]
+    },
+    cdn: {
+      titel: "CDN vor dem API-Gateway", richtung: "rechts",
+      elemente: [
+        { id: "web", typ: "web", name: "Shop-Frontend", technologie: "React SPA", info: I("Single-Page-App im Browser.", "Lädt Bilder, Skripte und Daten.", "", "React", "") },
+        { id: "cdn", typ: "cdn", name: "CDN", technologie: "Cloudflare", zustand: "neu", info: I("Netz von Servern nah bei den Nutzenden.", "Liefert Kopien statischer Dateien in 15 ms, 50 000 Anfragen pro Sekunde.", "Bilder, Skripte, Stylesheets, App-Shell.", "Cloudflare, CloudFront, Akamai", "Was das CDN beantwortet, erreicht deine Dienste nie.") },
+        { id: "bilder", typ: "speicher", name: "Bilder-Speicher", technologie: "Objektspeicher (S3)", info: I("Ablage der Originalbilder.", "Liefert jedes Bild beim ersten Abruf an das CDN.", "Produktbilder.", "S3-kompatibler Speicher", "Billig und robust; das CDN schützt ihn vor der Masse.") },
+        { id: "gw", typ: "gateway", name: "API-Gateway", technologie: "Kong", info: I("Eingang für alle dynamischen Aufrufe.", "", "", "Kong", "") },
+        { id: "kat", typ: "dienst", name: "Katalogservice", technologie: "Node.js", info: I("Produkte und Preise.", "", "", "Node.js", "") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "web", nach: "cdn", art: "sync", label: "HTTPS" },
+        { id: "v2", von: "cdn", nach: "bilder", art: "sync", label: "Origin" },
+        { id: "v3", von: "cdn", nach: "gw", art: "sync", label: "HTTPS" },
+        { id: "v4", von: "gw", nach: "kat", art: "sync", label: "REST" }
+      ],
+      ablaeufe: [
+        { id: "bild", name: "Normal: Bild aus dem CDN", schritte: [
+          { von: "web", nach: "cdn", text: "Der Browser will «zelt-alpin.v7.webp».", phase: "Anfrage" },
+          { von: "cdn", nach: "web", text: "Der CDN-Server in Zürich hat eine Kopie: Antwort in 15 ms. Gateway und Dienste merken nichts.", phase: "Antwort" }
+        ] },
+        { id: "erst", name: "Erster Abruf eines Bildes", schritte: [
+          { von: "web", nach: "cdn", text: "Ein neues Bild, noch nie abgerufen.", phase: "Anfrage" },
+          { von: "cdn", nach: "bilder", text: "Das CDN holt das Original beim Bilder-Speicher …", phase: "Origin" },
+          { von: "cdn", nach: "web", text: "… behält eine Kopie (Cache-Control: max-age) und liefert aus.", phase: "Antwort" }
+        ] },
+        { id: "dynamisch", name: "Lastspitze: nur Dynamisches geht durch", schritte: [
+          { von: "web", nach: "cdn", text: "Black Friday: Tausende stöbern. Die Hälfte der Anfragen sind Bilder und Skripte.", phase: "Spitze" },
+          { von: "cdn", nach: "gw", text: "Nur Preise und Bestand gehen ans Gateway weiter …" },
+          { von: "gw", nach: "kat", text: "… der Katalogservice sieht nur noch die halbe Last." }
+        ] }
+      ]
+    },
+    queue: {
+      titel: "Queue zwischen Bestellung und Versand", richtung: "rechts",
+      elemente: [
+        { id: "web", typ: "web", name: "Shop-Frontend", technologie: "React", info: I("Die Kundin bestellt.", "", "", "React", "") },
+        { id: "best", typ: "dienst", name: "Bestellservice", technologie: "Spring Boot", info: I("Nimmt Bestellungen an.", "Speichert die Bestellung und veröffentlicht das Ereignis «BestellungAufgegeben».", "Kern des Shops.", "Spring Boot mit Spring AMQP", "Wartet nur auf die Bestätigung des Brokers, nicht auf den Versand.") },
+        { id: "q", typ: "queue", name: "Bestellungen", technologie: "RabbitMQ", zustand: "neu", info: I("Queue im Message Broker.", "Puffert Nachrichten (im Leitstand 200 000 je Instanz) und stellt sie zu, sobald der Empfänger bereit ist.", "Entkoppelt Bestellung und Versand.", "RabbitMQ über AMQP", "Fällt der Versand aus, gehen keine Bestellungen verloren.") },
+        { id: "versand", typ: "dienst", name: "Versandservice", technologie: "Python", info: I("Erstellt Lieferscheine und Etiketten.", "Holt Nachrichten bis 80 % seiner Kapazität ab.", "Versand vorbereiten.", "Python mit pika", "Kann langsamer sein als die Bestellung: Der Rückstau gleicht aus.") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "web", nach: "best", art: "sync", label: "REST" },
+        { id: "v2", von: "best", nach: "q", art: "async", label: "BestellungAufgegeben" },
+        { id: "v3", von: "q", nach: "versand", art: "async", label: "BestellungAufgegeben" }
+      ],
+      ablaeufe: [
+        { id: "normal", name: "Normal: Bestellen und abholen", schritte: [
+          { von: "web", nach: "best", text: "Die Kundin bestellt.", phase: "Bestellen" },
+          { von: "best", nach: "q", text: "Der Bestellservice legt «BestellungAufgegeben» in die Queue. Der Broker bestätigt in wenigen ms." },
+          { von: "best", nach: "web", text: "«Danke für die Bestellung». Die Kundin wartet nicht auf den Versand." },
+          { von: "q", nach: "versand", text: "Der Versand holt die Nachricht ab und erstellt den Lieferschein.", phase: "Abholen" }
+        ] },
+        { id: "spitze", name: "Lastspitze: Puffer füllt sich", schritte: [
+          { von: "best", nach: "q", text: "Black Friday: Achtmal so viele Bestellungen.", phase: "Spitze" },
+          { bei: "q", text: "Der Versand schafft nicht alle. Der Rückstau wächst, im Simulator um bis zu 4700 Nachrichten pro Minute." },
+          { von: "q", nach: "versand", text: "Der Versand arbeitet im eigenen Tempo weiter. Kein Fehler, nur Verspätung.", phase: "Abbauen" },
+          { bei: "q", text: "Nach der Spitze sinkt der Rückstau wieder. Abhilfe bei dauerndem Wachstum: Versand skalieren." }
+        ] },
+        { id: "ausfall", name: "Störung: Versand fällt aus", schritte: [
+          { bei: "versand", text: "Der Versandservice stürzt ab.", fehler: true, phase: "Ausfall" },
+          { von: "web", nach: "best", text: "Bestellungen laufen trotzdem weiter …" },
+          { von: "best", nach: "q", text: "… und landen in der Queue." },
+          { bei: "q", text: "Die Nachrichten bleiben liegen. Synchron gekoppelt wäre jetzt jede Bestellung gescheitert." },
+          { von: "q", nach: "versand", text: "Nach dem Neustart holt der Versand alles nach. Nichts geht verloren.", phase: "Erholung" }
+        ] }
+      ]
+    },
+    timeout: {
+      titel: "Timeout und Retry am Aufruf des Zahlungsanbieters", richtung: "rechts",
+      elemente: [
+        { id: "kauf", typ: "dienst", name: "Kaufservice", technologie: "Spring Boot", info: I("Legt Tickets an.", "Ruft den Zahlungsservice synchron auf.", "", "Spring Boot", "") },
+        { id: "zahlung", typ: "dienst", name: "Zahlungsservice", technologie: "Spring Boot", info: I("Spricht mit PayAlpin.", "200 Threads je Instanz.", "Zahlungen auslösen.", "Spring Boot mit Resilience4j", "Hier, im Adapter zum Provider, gehören Timeout und Retry hin.") },
+        { id: "psp", typ: "extern", name: "PayAlpin", technologie: "Zahlungsanbieter (extern)", info: I("Externer Zahlungsanbieter.", "Normal 200 ms, höchstens 300 gleichzeitige Anfragen.", "Karten und TWINT.", "REST über HTTPS", "Ein fremdes System: Du kannst es nicht skalieren, nur dich schützen.") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "kauf", nach: "zahlung", art: "sync", label: "REST" },
+        { id: "v2", von: "zahlung", nach: "psp", art: "sync", label: "HTTPS · 1.5 s · 1 Retry" }
+      ],
+      ablaeufe: [
+        { id: "kurz", name: "Kurzer Aussetzer: Retry hilft", schritte: [
+          { von: "kauf", nach: "zahlung", text: "Ein Kauf will bezahlt werden.", phase: "Versuch 1" },
+          { von: "zahlung", nach: "psp", text: "Erster Versuch: Die Verbindung bricht ab.", fehler: true },
+          { von: "zahlung", nach: "psp", text: "200 ms Pause, zweiter Versuch: klappt.", phase: "Versuch 2" },
+          { von: "zahlung", nach: "kauf", text: "Bezahlt. Ein Retry hat einen kurzen Aussetzer verdeckt." }
+        ] },
+        { id: "haengt", name: "Störung: Anbieter hängt, Timeout begrenzt", schritte: [
+          { von: "zahlung", nach: "psp", text: "Aufruf an PayAlpin.", phase: "Warten" },
+          { bei: "psp", text: "PayAlpin antwortet nicht.", fehler: true },
+          { bei: "zahlung", text: "Nach 1.5 s bricht der Timeout ab. Der Thread ist wieder frei." },
+          { von: "zahlung", nach: "kauf", text: "Schnelle Fehlermeldung statt 40 Sekunden Warten. Der Kauf kann später nochmals versucht werden.", phase: "Antwort" }
+        ] },
+        { id: "sturm", name: "Lastspitze: Retry-Sturm (10 s, 3 Retries)", schritte: [
+          { von: "kauf", nach: "zahlung", text: "Startkonfiguration der Mission 3: 10 s Timeout, 3 Retries.", phase: "Sturm" },
+          { von: "zahlung", nach: "psp", text: "Versuch 1 hängt 10 s …", fehler: true },
+          { von: "zahlung", nach: "psp", text: "… Versuch 2, 3, 4 ebenso. Ein Kauf hält bis 40 s einen Thread fest.", fehler: true },
+          { bei: "psp", text: "PayAlpin bekommt viermal so viele Anfragen wie Käufe: Er erholt sich noch langsamer.", fehler: true },
+          { bei: "kauf", text: "Die Threads im Kaufservice und im Gateway sind erschöpft. Auch das Angebot wird langsam: Fehlerkaskade.", fehler: true }
+        ] }
+      ]
+    },
+    cb: {
+      titel: "Circuit Breaker vor dem Zahlungsanbieter", richtung: "rechts",
+      elemente: [
+        { id: "kauf", typ: "dienst", name: "Kaufservice", technologie: "Spring Boot", info: I("Legt Tickets an.", "", "", "Spring Boot", "") },
+        { id: "zahlung", typ: "dienst", name: "Zahlungsservice", technologie: "Spring Boot", info: I("Spricht mit PayAlpin.", "Liefert bei offenem Breaker die Ersatzantwort «vorgemerkt».", "", "Spring Boot", "") },
+        { id: "cb", typ: "mesh", name: "Circuit Breaker", stereotyp: "circuit breaker", technologie: "Resilience4j oder Envoy", zustand: "neu", info: I("Die Sicherung im Aufrufweg.", "Zählt Fehler; ab 50 % öffnet er, nach 2 Minuten lässt er 10 % Probeaufrufe durch.", "Schützt Aufrufer vor einem kranken Provider.", "Resilience4j (Bibliothek) oder ein Sidecar-Proxy im Service Mesh (Envoy)", "Offen scheitern Aufrufe in 1 ms statt nach Sekunden: Threads bleiben frei.") },
+        { id: "psp", typ: "extern", name: "PayAlpin", technologie: "Zahlungsanbieter (extern)", info: I("Externer Zahlungsanbieter.", "", "", "REST über HTTPS", "") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "kauf", nach: "zahlung", art: "sync", label: "REST" },
+        { id: "v2", von: "zahlung", nach: "cb", art: "sync", label: "Aufruf" },
+        { id: "v3", von: "cb", nach: "psp", art: "sync", label: "HTTPS" }
+      ],
+      ablaeufe: [
+        { id: "zu", name: "Normal: geschlossen", schritte: [
+          { von: "kauf", nach: "zahlung", text: "Kauf.", phase: "Zu" },
+          { von: "zahlung", nach: "cb", text: "Der Breaker ist geschlossen und zählt nur mit." },
+          { von: "cb", nach: "psp", text: "Aufruf geht durch, Antwort in 200 ms." }
+        ] },
+        { id: "offen", name: "Störung: Breaker öffnet", schritte: [
+          { von: "cb", nach: "psp", text: "PayAlpin fällt aus. Aufrufe scheitern.", fehler: true, phase: "Zählen" },
+          { bei: "cb", text: "Mehr als 50 % Fehler in dieser Minute: Der Breaker öffnet.", fehler: true },
+          { von: "zahlung", nach: "cb", text: "Neue Aufrufe scheitern sofort, in 1 ms …", phase: "Offen" },
+          { von: "zahlung", nach: "kauf", text: "… mit Ersatzantwort «Zahlung vorgemerkt». Keine hängenden Threads, keine Kaskade." }
+        ] },
+        { id: "halb", name: "Erholung: halboffen", schritte: [
+          { bei: "cb", text: "Nach 2 Minuten: halboffen.", phase: "Halboffen" },
+          { von: "cb", nach: "psp", text: "10 % der Aufrufe gehen als Probe durch." },
+          { bei: "cb", text: "Klappen sie, schliesst der Breaker. Scheitern sie, öffnet er wieder für 2 Minuten.", phase: "Zu" }
+        ] }
+      ]
+    },
+    bulkhead: {
+      titel: "Bulkhead: getrennte Thread-Pools im Zahlungsservice", richtung: "rechts",
+      elemente: [
+        { id: "app", typ: "mobile", name: "Pistenpass-App", technologie: "Flutter", info: I("Fragt nach dem Kauf den Kaufstatus ab.", "", "", "Flutter", "") },
+        { id: "gw", typ: "gateway", name: "API-Gateway", technologie: "Spring Cloud Gateway", info: I("Eingang für die App.", "", "", "Spring Cloud Gateway", "") },
+        { id: "q", typ: "queue", name: "Zahlungsaufträge", technologie: "RabbitMQ", info: I("Käufe warten hier auf die Zahlung.", "", "", "RabbitMQ", "") },
+        { id: "zs", typ: "grenze", name: "Zahlungsservice (200 Threads)" },
+        { id: "pool-psp", typ: "dienst", name: "Pool PayAlpin (50 Threads)", stereotyp: "thread pool", in: "zs", zustand: "neu", info: I("Abgeschotteter Thread-Pool für Aufrufe an PayAlpin.", "Höchstens 25 % der Threads; mehr wird sofort abgewiesen.", "Hintergrundarbeit: Zahlungsaufträge abarbeiten.", "Resilience4j Bulkhead", "Hängt PayAlpin, sind nur diese 50 Threads blockiert.") },
+        { id: "pool-status", typ: "dienst", name: "Pool Kaufstatus (150 Threads)", stereotyp: "thread pool", in: "zs", info: I("Die übrigen Threads.", "Beantworten Kaufstatus-Abfragen.", "Die App will wissen, ob die Zahlung durch ist.", "Spring Boot", "Bleiben frei, auch wenn PayAlpin hängt.") },
+        { id: "psp", typ: "extern", name: "PayAlpin", technologie: "Zahlungsanbieter (extern)", info: I("Externer Zahlungsanbieter.", "", "", "", "") },
+        { id: "zdb", typ: "nosql", name: "Zahlungs-DB", technologie: "MongoDB", info: I("Status jeder Zahlung.", "", "", "MongoDB", "") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "app", nach: "gw", art: "sync", label: "HTTPS" },
+        { id: "v2", von: "gw", nach: "pool-status", art: "sync", label: "GET /status" },
+        { id: "v3", von: "pool-status", nach: "zdb", art: "daten", label: "find" },
+        { id: "v4", von: "q", nach: "pool-psp", art: "async", label: "Auftrag" },
+        { id: "v5", von: "pool-psp", nach: "psp", art: "sync", label: "HTTPS" }
+      ],
+      ablaeufe: [
+        { id: "normal", name: "Normal: zwei getrennte Wege", schritte: [
+          { von: "q", nach: "pool-psp", text: "Der Pool PayAlpin holt Zahlungsaufträge ab …", phase: "Normal" },
+          { von: "pool-psp", nach: "psp", text: "… und lässt sie belasten." },
+          { von: "app", nach: "gw", text: "Gleichzeitig fragt die App den Kaufstatus ab …", parallel: true },
+          { von: "gw", nach: "pool-status", text: "… beantwortet vom anderen Pool." },
+          { von: "pool-status", nach: "zdb", text: "Status lesen." }
+        ] },
+        { id: "haengt", name: "Störung: PayAlpin hängt", schritte: [
+          { von: "pool-psp", nach: "psp", text: "PayAlpin hängt.", fehler: true, phase: "Störung" },
+          { bei: "pool-psp", text: "Alle 50 Threads dieses Pools warten. Weitere Aufträge werden abgewiesen und bleiben in der Queue.", fehler: true },
+          { von: "app", nach: "gw", text: "Die App fragt den Kaufstatus ab.", phase: "Abgeschottet" },
+          { von: "gw", nach: "pool-status", text: "Die 150 anderen Threads sind frei: Antwort wie immer. Ohne Bulkhead wären alle 200 blockiert." }
+        ] }
+      ]
+    },
+    replica: {
+      titel: "Read-Replica für Auswertungen", richtung: "rechts",
+      elemente: [
+        { id: "best", typ: "dienst", name: "Bestellservice", technologie: "Spring Boot", info: I("Schreibt Bestellungen.", "", "", "Spring Boot", "") },
+        { id: "rep", typ: "dienst", name: "Reporting-Dienst", technologie: "Python", info: I("Rechnet Umsätze für das Management.", "Liest grosse Datenmengen.", "Dashboards, Auswertungen.", "Python mit pandas", "Liest nur noch von der Replica und stört die Bestellungen nicht mehr.") },
+        { id: "prim", typ: "datenbank", name: "Bestell-DB (Primär)", technologie: "PostgreSQL", info: I("Die Primär-Datenbank.", "Nimmt alle Schreibzugriffe an und streamt Änderungen an die Replica.", "", "PostgreSQL", "Nur hier wird geschrieben: eine Wahrheit.") },
+        { id: "repl", typ: "datenbank", name: "Read-Replica", technologie: "PostgreSQL (Streaming Replication)", zustand: "neu", info: I("Lesekopie der Primär-DB.", "Beantwortet nur lesende Abfragen.", "Entlastet die Primär-DB.", "PostgreSQL Streaming Replication", "Liegt ein paar Millisekunden bis Sekunden zurück (eventual consistency).") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "best", nach: "prim", art: "daten", label: "INSERT" },
+        { id: "v2", von: "prim", nach: "repl", art: "stream", label: "Replikation" },
+        { id: "v3", von: "rep", nach: "repl", art: "daten", label: "SELECT" }
+      ],
+      ablaeufe: [
+        { id: "normal", name: "Normal: schreiben, replizieren, lesen", schritte: [
+          { von: "best", nach: "prim", text: "Eine Bestellung wird gespeichert.", phase: "Schreiben" },
+          { von: "prim", nach: "repl", text: "Die Änderung fliesst als Datenstrom zur Replica.", phase: "Replizieren" },
+          { von: "rep", nach: "repl", text: "Das Reporting liest Millionen Zeilen, aber nur auf der Kopie.", phase: "Lesen" }
+        ] },
+        { id: "verzug", name: "Lastspitze: Replikationsverzug", schritte: [
+          { von: "best", nach: "prim", text: "Viele Bestellungen auf einmal.", phase: "Spitze" },
+          { bei: "repl", text: "Die Replica hinkt 2 Sekunden hinterher. Eine Auswertung zeigt die letzten Bestellungen noch nicht." },
+          { von: "prim", nach: "repl", text: "Der Rückstand wird aufgeholt. Für Auswertungen ist das egal, für «meine Bestellungen» nicht: Die lesen weiter von der Primär-DB." }
+        ] }
+      ]
+    },
+    rate: {
+      titel: "Rate Limiting am API-Gateway", richtung: "rechts",
+      elemente: [
+        { id: "partner", typ: "extern", name: "Vergleichsportal", technologie: "Partner (extern)", info: I("Ein Partner, der freie Zimmer abfragt.", "Schickt manchmal Tausende Anfragen pro Sekunde.", "", "", "Ein fremdes System: Du kannst es nicht steuern, nur begrenzen.") },
+        { id: "app", typ: "mobile", name: "Hotel-App", technologie: "Kotlin", info: I("Die eigene App der Gäste.", "", "", "Kotlin", "") },
+        { id: "gw", typ: "gateway", name: "API-Gateway", technologie: "Kong", zustand: "neu", info: I("Einziger Eingang für alle Aufrufe von aussen.", "Prüft Tokens, begrenzt Anfragen je Partner (Rate Limiting), leitet weiter.", "Schützt die Dienste vor Überlast und Missbrauch.", "Kong mit Plugin rate-limiting", "Ein Limit je Partner ist fair: Die eigene App leidet nicht unter dem Portal.") },
+        { id: "svc", typ: "dienst", name: "Verfügbarkeitsservice", technologie: "Go", info: I("Beantwortet, welche Zimmer frei sind.", "", "", "Go", "") },
+        { id: "db", typ: "datenbank", name: "Zimmer-DB", technologie: "PostgreSQL", info: I("Zimmer und Belegungen.", "", "", "PostgreSQL", "") }
+      ],
+      verbindungen: [
+        { id: "v1", von: "partner", nach: "gw", art: "sync", label: "REST" },
+        { id: "v2", von: "app", nach: "gw", art: "sync", label: "REST" },
+        { id: "v3", von: "gw", nach: "svc", art: "sync", label: "REST" },
+        { id: "v4", von: "svc", nach: "db", art: "daten", label: "SQL" }
+      ],
+      ablaeufe: [
+        { id: "normal", name: "Normal: innerhalb des Limits", schritte: [
+          { von: "partner", nach: "gw", text: "Das Portal fragt 30-mal pro Sekunde: erlaubt.", phase: "Normal" },
+          { von: "gw", nach: "svc", text: "Das Gateway leitet weiter." },
+          { von: "svc", nach: "db", text: "Belegung lesen." }
+        ] },
+        { id: "zuviel", name: "Lastspitze: Partner über dem Limit", schritte: [
+          { von: "partner", nach: "gw", text: "Ein Fehler im Portal: 2000 Anfragen pro Sekunde.", phase: "Spitze" },
+          { bei: "gw", text: "Ab der 51. Anfrage in dieser Sekunde: sofort 429 Too Many Requests, Retry-After: 1.", fehler: true },
+          { von: "gw", nach: "partner", text: "Das Portal bekommt die Abweisung …" },
+          { von: "app", nach: "gw", text: "… die eigene Hotel-App kommt weiter durch,", phase: "Geschützt" },
+          { von: "gw", nach: "svc", text: "und der Verfügbarkeitsservice bleibt gesund." }
+        ] }
+      ]
+    }
+  };
+  /* Kleiner Fehler im Steckbrief vermeiden: Text der neuen Instanz bereinigen */
+  MASSNAHMEN.skalieren.elemente[4].info.wofuer = "Mit drei statt zwei Instanzen trägt jede nur noch ein Drittel der Last.";
+
+  function reiter(listeSel, beimZeigen) {
+    const liste = $(listeSel);
+    const tabs = $$('[role="tab"]', liste);
+    function zeige(tab, fokus) {
+      tabs.forEach((t) => {
+        const an = t === tab;
+        t.setAttribute("aria-selected", String(an));
+        t.tabIndex = an ? 0 : -1;
+        document.getElementById(t.getAttribute("aria-controls")).hidden = !an;
+      });
+      if (fokus) tab.focus();
+      beimZeigen(tab.getAttribute("data-t11"));
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => zeige(t, false));
+      t.addEventListener("keydown", (ev) => {
+        let j = null;
+        if (ev.key === "ArrowRight" || ev.key === "ArrowDown") j = (i + 1) % tabs.length;
+        else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp") j = (i - 1 + tabs.length) % tabs.length;
+        else if (ev.key === "Home") j = 0;
+        else if (ev.key === "End") j = tabs.length - 1;
+        if (j !== null) { ev.preventDefault(); zeige(tabs[j], true); }
+      });
+    });
+    zeige(tabs[0], false);
+  }
+  const mnGezeichnet = {};
+  reiter("#t11-mn-tabs", (id) => {
+    if (mnGezeichnet[id]) return;
+    mnGezeichnet[id] = A.diagramm("#t11-d-" + id, MASSNAHMEN[id], { legende: false });
+  });
+
+  /* ---------- 6 · Bezug zum Modul: Makroarchitektur Variante 2 ---------- */
+  const VAR2 = {
+    titel: "Makroarchitektur mit Microservices · Variante 2 (async coupled Microservices)", notation: "uml-komponenten", ansicht: "komponenten", richtung: "rechts",
+    pakete: [
+      {"id":"m2-makro","name":"Reference Macro-Architecture – async coupled Microservices","spalte":0,"zeile":0,"breite":2,"hoehe":4,"info":{"was":"Das Paket für dein eigenes System.","wofuer":"Grenzt dein System von der Umgebung ab.","warum":"Zeigt, welche Microservices du selbst baust und betreibst."}},
+      {"id":"m2-client","name":"Client Tier","in":"m2-makro","spalte":0,"zeile":0,"breite":1,"hoehe":1,"info":{"was":"Alle Clients: Web App im Browser und installierbare Apps.","wofuer":"Zeigt die Oberflächen der Benutzer.","warum":"In Variante 2 sprechen die Clients nur mit dem Web-App- und dem Web-API-Microservice, nie direkt mit Domain Services."}},
+      {"id":"m2-server","name":"Server – Docker Host","in":"m2-makro","spalte":0,"zeile":1,"breite":1,"hoehe":3,"info":{"was":"Die Container-Laufzeitumgebung mit allen Microservices und dem internen Message Broker.","wofuer":"Erwähnt die notwendige Middleware zur Containerisierung.","technologie":"Docker, Kubernetes, OpenShift","warum":"Container machen jeden Service einzeln deploybar und skalierbar. Der interne Broker läuft ebenfalls als Container."}},
+      {"id":"m2-consumer","name":"Service Consumer","spalte":2,"zeile":0,"breite":1,"hoehe":1,"info":{"was":"Umgebung: fremde Apps, die deine Application API nutzen.","wofuer":"Nur Kontext.","warum":"Zeigt, dass das Web API auch Service Provider für Dritte ist."}},
+      {"id":"m2-mom","name":"MOM","spalte":2,"zeile":1,"breite":1,"hoehe":1,"info":{"was":"Externe Message-oriented Middleware.","wofuer":"Für Nachrichten mit Umsystemen.","technologie":"RabbitMQ, Kafka","warum":"Trennt interne Kopplung (Docker Host MQ) von der Anbindung an Umsysteme."}},
+      {"id":"m2-async-sys","name":"async connected Systems","spalte":2,"zeile":2,"breite":1,"hoehe":1,"info":{"was":"Umgebung: nachrichtenorientierte Systeme.","wofuer":"Nur Kontext.","warum":"Zeigt, wer am externen Broker hängt."}},
+      {"id":"m2-provider","name":"Service Provider","spalte":2,"zeile":3,"breite":1,"hoehe":1,"info":{"was":"Umgebung: synchron aufgerufene Dienste.","wofuer":"Nur Kontext.","warum":"Ziel der Driven Adapter Services."}}
+    ],
+    elemente: [
+      {"id":"m2-webapp","typ":"web","rolle":"client","name":"Web App in Browser","in":"m2-client","technologie":"HTML5, SPA-Frameworks wie React oder Angular","info":{"was":"Die Oberfläche im Browser.","kann":"Holt HTML beim Web-App-Microservice und Daten per AJAX beim Web API.","wofuer":"Für Benutzer ohne Installation, auf beliebigem Betriebssystem.","warum":"Die Web App bleibt schlank und kennt nur zwei Ansprechpartner. Die Domain Services dahinter darf das Team frei umbauen.","technologie":"HTML5, SPA-Frameworks wie React oder Angular"}},
+      {"id":"m2-installable","typ":"mobile","rolle":"client","name":"Installable Apps","in":"m2-client","technologie":"Native (Swift, Kotlin), Cross-Platform (.NET MAUI, Flutter), Hybrid (Ionic)","info":{"was":"Apps, die auf dem Gerät installiert sind, z. B. Mobile App oder Desktop App.","kann":"Nutzen Gerätefunktionen (Kamera, GPS, Offline-Speicher) und sprechen mit der Application API.","wofuer":"Wenn Benutzer offline arbeiten, Gerätefunktionen brauchen oder höchste Usability wollen.","warum":"Installierbare Apps rufen dieselbe Application API wie die Web App auf. So gibt es nur einen Zugang zur Fachlogik.","technologie":"Native (Swift, Kotlin), Cross-Platform (.NET MAUI, Flutter), Hybrid (Ionic)"}},
+      {"id":"m2-web","typ":"dienst","rolle":"client","name":"Web App","stereotyp":"Microservice","in":"m2-server","technologie":"z. B. ASP.NET Core MVC, Spring MVC mit Thymeleaf, Express mit Templates","schnittstellen":[{"id":"http","name":"HTTP"}],"info":{"was":"Ein Microservice, der die Web-Oberfläche erzeugt und ausliefert.","kann":"Liefert HTML über HTTP, nimmt Formulareingaben entgegen und gibt Aufträge über den internen Broker weiter.","wofuer":"Für die Browser-Oberfläche der Applikation.","warum":"Variante «eigene UI»: Die Oberfläche ist ein eigener Service und nicht auf die Domain Services verteilt. So bleibt sie einheitlich.","technologie":"z. B. ASP.NET Core MVC, Spring MVC mit Thymeleaf, Express mit Templates"}},
+      {"id":"m2-webapi","typ":"dienst","rolle":"webapi","name":"Web API / Web Services","stereotyp":"Microservice","in":"m2-server","technologie":"z. B. REST mit OpenAPI, GraphQL, OData, SOAP","schnittstellen":[{"id":"app-api","name":"Application API"}],"info":{"was":"Ein Microservice, der alle APIs nach aussen anbietet: für die eigenen Apps und für fremde Consumer.","kann":"Nimmt synchrone Aufrufe an (Application API) und übersetzt sie in Nachrichten an die Domain Services.","wofuer":"Für AJAX-Aufrufe der Web App, für installierbare Apps und für Service Consumer.","warum":"Ein zentraler API-Service entkoppelt die Clients von der internen Struktur. Hier legst du fest, welche Schnittstellen (z. B. GraphQL, OData) dein System anbietet.","technologie":"z. B. REST mit OpenAPI, GraphQL, OData, SOAP"}},
+      {"id":"m2-hostmq","typ":"broker","rolle":"infra","name":"Docker Host MQ","in":"m2-server","technologie":"z. B. NATS, KubeMQ, RabbitMQ als Container","schnittstellen":[{"id":"mq","name":"MQ-Prot."}],"info":{"was":"Ein Message Broker, der selbst als Container im Docker Host läuft und alle Microservices intern verbindet.","kann":"Stellt Queues und Topics bereit und vermittelt Aufträge und Ereignisse zwischen den Services.","wofuer":"Für die interne, asynchrone Kopplung aller Microservices.","warum":"Variante 2 setzt konsequent auf asynchrone Kommunikation: Fällt ein Domain Service aus, bleiben die Nachrichten im Broker liegen und gehen nicht verloren.","technologie":"z. B. NATS, KubeMQ, RabbitMQ als Container"}},
+      {"id":"m2-domain","typ":"dienst","rolle":"business","name":"Domain Services with own Persistence","stereotyp":"Microservice","in":"m2-server","technologie":"je Team frei, jeder mit eigener Datenbank","info":{"was":"Die fachlichen Microservices, je einer pro Bounded Context, jeder mit eigener Datenbank.","kann":"Empfangen Aufträge über den internen Broker, führen die Fachlogik aus und melden Ereignisse zurück.","wofuer":"Für die eigentliche Geschäftslogik.","warum":"Ohne eigene UI und ohne synchrone API sind die Domain Services maximal entkoppelt. Eigene Persistenz verhindert die Kopplung über eine gemeinsame Datenbank.","technologie":"je Team frei, jeder mit eigener Datenbank"}},
+      {"id":"m2-shared","typ":"dienst","rolle":"shared","name":"Shared Services","stereotyp":"Microservice","in":"m2-server","technologie":"z. B. Benachrichtigung, Dokumente, Protokollierung","info":{"was":"Microservices mit Querschnittsfunktionen.","kann":"Nehmen Aufträge über den internen Broker an, z. B. «sende Benachrichtigung».","wofuer":"Damit Domain Services gemeinsame technische Funktionen nicht selbst bauen.","warum":"Wiederverwendung an einer Stelle, ohne die Domain Services direkt aneinander zu binden.","technologie":"z. B. Benachrichtigung, Dokumente, Protokollierung"}},
+      {"id":"m2-adapter","typ":"dienst","rolle":"sync","name":"Driven Adapter Services","stereotyp":"Microservice","in":"m2-server","technologie":"z. B. Spring Boot mit HTTP-Clients und AMQP-Client","info":{"was":"Ein Microservice, der alle Umsysteme anbindet: synchron die Service Provider, asynchron den externen Broker.","kann":"Übersetzt interne Nachrichten in Aufrufe fremder APIs und in Nachrichten für Umsysteme.","wofuer":"Für jede Verbindung nach aussen, z. B. Zahlung, Buchhaltung, Partner.","warum":"Nur dieser Service kennt fremde Protokolle. Die Domain Services bleiben frei davon und unabhängig von Änderungen bei den Providern.","technologie":"z. B. Spring Boot mit HTTP-Clients und AMQP-Client"}},
+      {"id":"m2-consumer-apps","typ":"extern","rolle":"webapi","name":"Intranet/Extranet Consumer Apps","in":"m2-consumer","info":{"was":"Fremde Applikationen im Intranet oder Extranet, die Funktionen deiner Microservices über eine API nutzen.","kann":"Rufen die angebotenen Schnittstellen synchron auf, meist per REST, SOAP, OData oder GraphQL.","wofuer":"Zeigt im Katalog, woher Aufrufe von aussen kommen. In deiner Prüfungslösung zur Makroarchitektur zeichnest du solche Umsysteme nicht.","technologie":"z. B. Partner-Portale, Apps von Kundinnen, Reporting-Tools","warum":"Damit du siehst, dass dein System nicht nur eigene Clients bedient, sondern auch als Service Provider in einer SOA auftritt."}},
+      {"id":"m2-broker","typ":"broker","rolle":"async","name":"Message Broker (Queues, Topics)","in":"m2-mom","schnittstellen":[{"id":"async","name":"async Prot."}],"info":{"was":"Message-oriented Middleware: Ein Message Broker nimmt Nachrichten an, speichert sie in Queues oder Topics und stellt sie den Empfängern zu.","kann":"Entkoppelt Sender und Empfänger zeitlich: Der Sender wartet nicht, der Empfänger holt ab, sobald er bereit ist. Puffert Lastspitzen und stellt bei Ausfall erneut zu.","wofuer":"Für asynchrone Kommunikation zwischen deinen Microservices und mit nachrichtenorientiert verbundenen Systemen.","technologie":"RabbitMQ (AMQP), Apache Kafka, Azure Service Bus, ActiveMQ Artemis (JMS)","warum":"Der Broker ist die einzige Middleware, die du in der Makroarchitektur einzeichnest. Er bringt in der Prüfung typischerweise viele Punkte, weil er die lose Kopplung sichtbar macht."}},
+      {"id":"m2-async-systems","typ":"extern","rolle":"async","name":"Intranet/Extranet Systems","in":"m2-async-sys","info":{"was":"Applikationen im Intranet oder Extranet, die nur über Nachrichten mit deinem System verbunden sind.","kann":"Senden Ereignisse oder Aufträge an den Broker und empfangen Nachrichten aus Queues oder Topics.","wofuer":"Zeigt im Katalog, dass hinter dem Broker weitere Systeme hängen, z. B. eine Lohnbuchhaltung, die einmal pro Woche Daten bekommt.","technologie":"z. B. ERP-Module, IoT-Plattformen, Partner mit AMQP- oder Kafka-Anbindung","warum":"Asynchron verbundene Systeme müssen nicht gleichzeitig online sein wie dein System. Das erhöht die Verfügbarkeit."}},
+      {"id":"m2-sp","typ":"extern","rolle":"sync","name":"Intranet/Extranet Services","in":"m2-provider","schnittstellen":[{"id":"api-sp","name":"API SP"}],"info":{"was":"Externe oder interne Dienste, die dein System synchron aufruft (du bist Service Consumer).","kann":"Bieten eine API an, z. B. Zahlung belasten, Adresse prüfen, Benutzer authentisieren.","wofuer":"Zeigt im Katalog, wohin die Driven Adapter Services ihre Aufrufe schicken.","technologie":"z. B. Payment Service Provider, Identity Provider, Geo-Dienste, Buchhaltung mit REST- oder gRPC-API","warum":"Jeder fremde Dienst wird über einen Adapter angebunden. So bleibt die Fachlogik frei von fremden Protokollen und Datenformaten."}}
+    ],
+    verbindungen: [
+      {"id":"m2-v1","von":"m2-webapp","nach":"m2-web#http","art":"assoziation","protokoll":"HTTP","info":"Der Browser holt die Seiten beim Web-App-Microservice."},
+      {"id":"m2-v2","von":"m2-webapp","nach":"m2-webapi#app-api","art":"assoziation","label":"AJAX-Calls","info":"Die Seite lädt Daten per AJAX über die Application API."},
+      {"id":"m2-v3","von":"m2-installable","nach":"m2-webapi#app-api","art":"assoziation","label":"sync","info":"Installierbare Apps nutzen dieselbe Application API."},
+      {"id":"m2-v4","von":"m2-consumer-apps","nach":"m2-webapi#app-api","art":"assoziation","label":"sync","info":"Fremde Consumer-Apps rufen die angebotene API auf."},
+      {"id":"m2-v5","von":"m2-web","nach":"m2-hostmq#mq","art":"assoziation","label":"MQ-Prot.","info":"Die Web App gibt Aufträge als Nachricht weiter."},
+      {"id":"m2-v6","von":"m2-webapi","nach":"m2-hostmq#mq","art":"assoziation","label":"MQ-Prot.","info":"Das Web API übersetzt Aufrufe in Nachrichten an die Domain Services."},
+      {"id":"m2-v7","von":"m2-domain","nach":"m2-hostmq#mq","art":"assoziation","label":"MQ-Prot.","info":"Domain Services empfangen Aufträge und senden Ereignisse."},
+      {"id":"m2-v8","von":"m2-shared","nach":"m2-hostmq#mq","art":"assoziation","label":"MQ-Prot.","info":"Shared Services sind ebenfalls nur über den Broker erreichbar."},
+      {"id":"m2-v9","von":"m2-adapter","nach":"m2-hostmq#mq","art":"assoziation","label":"MQ-Prot.","info":"Der Adapter-Service empfängt Aufträge für Umsysteme."},
+      {"id":"m2-v10","von":"m2-adapter","nach":"m2-broker#async","art":"assoziation","label":"async","info":"Nachrichten an Umsysteme gehen über den externen Broker."},
+      {"id":"m2-v11","von":"m2-adapter","nach":"m2-sp#api-sp","art":"assoziation","label":"sync","info":"Synchrone Aufrufe an Service Provider."},
+      {"id":"m2-v12","von":"m2-async-systems","nach":"m2-broker#async","art":"assoziation","label":"async","info":"Umsysteme hängen am externen Broker."},
+      {"id":"m2-d1","von":"m2-client","nach":"m2-server","art":"abhaengigkeit","label":"use","info":"Die Clients nutzen die Microservices."},
+      {"id":"m2-d2","von":"m2-async-sys","nach":"m2-mom","art":"abhaengigkeit","label":"use","info":"Async verbundene Systeme nutzen den Broker."}
+    ],
+    notizen: [
+      {"id":"m2-n1","text":"Docker Host MQ: interner Broker als Container. Die Domain Services kennen einander nicht, sie kennen nur Nachrichten.","an":"m2-hostmq"},
+      {"id":"m2-n2","text":"Nur die Driven Adapter Services sprechen mit Umsystemen.","an":"m2-adapter"}
+    ],
+    einschraenkungen: [
+
+    ],
+    ablaeufe: [
+      {"id":"m2-a1","name":"Auftrag aus der Web App","schritte":[{"von":"m2-webapp","nach":"m2-webapi","art":"sync","text":"Die Benutzerin klickt «Bestellen». Die Seite schickt den Auftrag per AJAX an die Application API.","phase":"Anfrage"},{"von":"m2-webapi","nach":"m2-hostmq","art":"async","text":"Das Web API legt einen Auftrag (Command) in die Queue und bestätigt dem Browser sofort «angenommen»."},{"von":"m2-hostmq","nach":"m2-domain","art":"async","text":"Der zuständige Domain Service holt den Auftrag ab und speichert ihn in seiner eigenen Datenbank.","phase":"Verarbeitung"},{"von":"m2-domain","nach":"m2-hostmq","art":"async","text":"Er meldet das Ereignis «Bestellung erfasst». Wer sich dafür interessiert, abonniert es."},{"von":"m2-hostmq","nach":"m2-shared","art":"async","text":"Der Shared Service für Benachrichtigungen reagiert und verschickt eine Bestätigung.","parallel":true}]},
+      {"id":"m2-a2","name":"Umsystem über den Adapter anbinden","schritte":[{"von":"m2-domain","nach":"m2-hostmq","art":"async","text":"Ein Domain Service braucht eine Zahlung und sendet den Auftrag «Zahlung belasten»."},{"von":"m2-hostmq","nach":"m2-adapter","art":"async","text":"Der Adapter-Service empfängt den Auftrag."},{"von":"m2-adapter","nach":"m2-sp","art":"sync","text":"Er ruft die API des Payment-Providers synchron auf.","phase":"Provider"},{"von":"m2-adapter","nach":"m2-broker","art":"async","text":"Zusätzlich meldet er die Buchung über den externen Broker an ein nachrichtenorientiertes Umsystem."},{"von":"m2-broker","nach":"m2-async-systems","art":"async","text":"Das Umsystem, z. B. die Buchhaltung, holt die Nachricht ab, wenn es bereit ist."}]},
+      {"id":"m2-a3","name":"Domain Service fällt aus","schritte":[{"von":"m2-webapi","nach":"m2-hostmq","art":"async","text":"Das Web API nimmt weiter Aufträge an und legt sie in die Queue."},{"bei":"m2-domain","text":"Der Domain Service ist gerade nicht erreichbar (z. B. beim Neustart des Containers).","fehler":true},{"bei":"m2-hostmq","text":"Die Nachrichten bleiben im Broker liegen. Die Benutzer merken nur, dass die Bestätigung etwas später kommt."},{"von":"m2-hostmq","nach":"m2-domain","art":"async","text":"Nach dem Neustart holt der Service alle wartenden Aufträge ab. Nichts geht verloren: Das ist der Vorteil der asynchronen Kopplung.","phase":"Erholung"}]}
+    ]
+  };
+  A.diagramm("#t11-var2", VAR2, { titel: "Referenz Makroarchitektur Variante 2 (async coupled Microservices), eigene Darstellung" });
+  L.auswahl("#t11-modul-frage", {
+    frage: "Du beschreibst in der Prüfung den Message Broker deiner Makroarchitektur. Welcher Satz bringt am meisten?",
+    optionen: [
+      "«Der Broker ist ein RabbitMQ-Server.»",
+      "«Der Broker entkoppelt die Microservices zeitlich: Der Sender wartet nicht, Nachrichten bleiben bei einem Ausfall in der Queue und werden nach dem Neustart verarbeitet. Er wird über AMQP angebunden.»",
+      "«Der Broker ersetzt das API-Gateway, deshalb zeichne ich kein Gateway.»"
+    ],
+    richtig: 1,
+    erklaerung: "Eine gute Beschreibung sagt, was die Komponente tut, wofür, und warum sie hier passt, mit dem Protokoll. Ein Produktname allein ist keine Begründung. Das Gateway fehlt in der Makroarchitektur aus einem anderen Grund: Es wird dort nach Referenz nicht modelliert."
+  });
+
+  /* ---------- 7 · Rätsel ---------- */
+  const RAETSEL = [
+    { frage: "<b>Velokurier:</b> Was passiert, wenn du die Kurier-App mit Autoscaling bis 8 Instanzen betreibst, aber keinen Cache setzt?",
+      optionen: ["Alles gut: genug Kapazität für den Platzregen.", "Der Engpass wandert zur Auftrags-DB: Sie läuft beim Platzregen über, Aufträge scheitern.", "Die App wird langsamer, weil der Lastverteiler mehr Instanzen verwalten muss."], richtig: 1,
+      erklaerung: "Im Simulator steigt die Auftrags-DB bei Minute 45 auf 122 % Auslastung. Ergebnis: 602 Punkte, ein Stern, 5.9 % der Aufträge verloren. Mit Cache: 952 Punkte." },
+    { frage: "<b>Black Friday:</b> Was passiert, wenn der Versandservice (asynchron über den Broker angebunden) mit der achtfachen Last nicht mitkommt?",
+      optionen: ["Bestellungen scheitern mit Fehler 503.", "Der Rückstau im Broker wächst; Bestellungen laufen weiter, Lieferscheine kommen später.", "Der Broker verwirft die Nachrichten sofort."], richtig: 1,
+      erklaerung: "Ohne Massnahmen steigt der Rückstau bis auf 121 000 Nachrichten und ist erst 30 Minuten nach der Spitze abgebaut. Verloren gingen sie nicht (Puffer 200 000). Ein synchroner Aufruf hätte dagegen die Bestellung scheitern lassen." },
+    { frage: "<b>Zahlungsanbieter:</b> Was passiert, wenn PayAlpin hängt und der Aufruf mit 10 s Timeout und 3 Retries eingestellt ist?",
+      optionen: ["Die Retries holen die Zahlungen nach, die Kundinnen merken wenig.", "Jeder Kauf hält bis 40 s einen Thread; Gateway und Kaufservice laufen voll, auch das Angebot wird langsam.", "Nur die Käufe sind betroffen, Angebot und Status bleiben schnell."], richtig: 1,
+      erklaerung: "Im Simulator fällt die Verfügbarkeit pro Minute auf 14 bis 17 %, p95 auf 11.7 s, und ein Retry-Sturm dauert 31 Minuten. Das ist die Fehlerkaskade einer synchronen Kette." },
+    { frage: "<b>Black Friday:</b> Was passiert, wenn du einen Cache vor die Bestell-DB setzt, um die Bestellungen zu beschleunigen?",
+      optionen: ["Die Bestell-DB wird deutlich entlastet.", "Fast nichts: Bestellen schreibt. Ein Cache fängt nur lesende Zugriffe ab.", "Bestellungen gehen verloren, weil sie nur im Cache landen."], richtig: 1,
+      erklaerung: "Cache-Aside entlastet nur Lesezugriffe. Bestellen ist eine schreibende Anfrageklasse. Darum gehört der Cache vor die Katalog-DB, wo drei Viertel der Last lesen." },
+    { frage: "Was passiert in der Minute, in der ein Circuit Breaker öffnet?",
+      optionen: ["Er wartet länger auf die Antwort, damit mehr Aufrufe gelingen.", "Neue Aufrufe scheitern sofort (1 ms) oder bekommen eine Ersatzantwort; die Threads werden frei. Nach 2 Minuten kommen Probeaufrufe.", "Er startet automatisch den Zahlungsanbieter neu."], richtig: 1,
+      erklaerung: "Der Breaker schützt den Aufrufer, nicht den Partner. Er macht aus langsamen Fehlern schnelle. Den Kauf rettet erst eine Queue, die den Auftrag aufbewahrt." },
+    { frage: "<b>Black Friday:</b> Was passiert, wenn du Autoscaling für Lager und Zahlung einschaltest, sie aber vor Minute 30 nicht vorheizt?",
+      optionen: ["Nichts Schlimmes: Autoscaling reagiert sofort.", "Rund 3 Minuten Überlast: Lager und Zahlung bei 101 %, p95 um 1.9 s, bis die neuen Instanzen bereit sind.", "Autoscaling startet gar nicht, weil die Last zu schnell steigt."], richtig: 1,
+      erklaerung: "1 Minute messen plus 2 Minuten Startzeit. Im Simulator ist ab Minute 33 wieder alles grün. Vorgeheizt bleibt p95 durchgehend bei rund 350 ms." },
+    { frage: "Was passiert, wenn du am Black Friday ein Rate Limit von 300 Anfragen pro Sekunde am Gateway setzt?",
+      optionen: ["Die Dienste bleiben gesund, aber rund 70 % der Anfragen werden abgewiesen. Die Verfügbarkeit bricht trotzdem ein.", "Alle Kundinnen kommen durch, nur langsamer.", "Das Gateway skaliert automatisch auf 300 Anfragen pro Sekunde."], richtig: 0,
+      erklaerung: "Bei rund 1000 Anfr./s weist das Gateway alles über 300 ab. Abgewiesene Anfragen zählen als Fehler. Rate Limiting ist eine Notbremse gegen Missbrauch, keine Kapazitätsplanung." }
+  ];
+  const raetselBox = $("#t11-raetsel");
+  RAETSEL.forEach((r, i) => {
+    const d = document.createElement("div");
+    d.className = "card";
+    d.id = "t11-r" + (i + 1);
+    raetselBox.appendChild(d);
+    L.auswahl(d, r);
+  });
+  L.wahrFalsch("#t11-wf", {
+    titel: "Sechs Aussagen zu Massnahmen",
+    aussagen: [
+      { html: "Verdoppelst du die Instanzen bei gleicher Last, halbiert sich die Auslastung ρ.", wahr: true, erklaerung: "ρ = λ ÷ (c · μ). Doppeltes c, halbes ρ." },
+      { html: "Bei ρ = 0.5 dauert eine Antwort (eine Instanz) doppelt so lang wie die reine Arbeit.", wahr: true, erklaerung: "R = S ÷ (1 − 0.5) = 2 · S." },
+      { html: "Mehr Wiederholungen machen einen hängenden Anbieter schneller wieder gesund.", wahr: false, erklaerung: "Jeder Retry ist eine zusätzliche Anfrage an den kranken Anbieter: Retry-Sturm." },
+      { html: "Mit einer Queue wartet der Aufrufer nur noch auf die Bestätigung des Brokers.", wahr: true, erklaerung: "Darum sinkt seine Antwortzeit, und ein langsamer Empfänger bremst ihn nicht." },
+      { html: "Die Datenbank lässt sich im Leitstand wie ein Dienst beliebig horizontal skalieren.", wahr: false, erklaerung: "Datenbanken haben im Simulator höchstens eine Instanz. Lesen entlastest du mit Cache oder Read-Replica." },
+      { html: "Autoscaling startet neue Instanzen, sobald die Last steigt, ohne Verzögerung.", wahr: false, erklaerung: "Erst ab 75 % CPU, und neue Instanzen brauchen 2 Minuten. Rund 3 Minuten Verzug." }
+    ]
+  });
+
+  /* ---------- 8 · Missionen ---------- */
+  const MISSIONEN = {
+    m1: {
+      titel: "Velokurier: Monolith mit Datenbank", ansicht: "komponenten", richtung: "rechts",
+      elemente: [
+        { id: "kundin", typ: "akteur", name: "Kundin", x: 0, y: 1, info: { was: "Gibt Aufträge auf und verfolgt Lieferungen." } },
+        { id: "app", typ: "web", name: "Velokurier-App", technologie: "React", x: 1, y: 1, info: I("Web-App im Browser.", "Aufträge erfassen, Position des Kuriers alle paar Sekunden abfragen.", "Kundinnen der Stadt.", "React", "Läuft im Browser jedes Geräts, keine Installation.") },
+        { id: "lb", typ: "lastverteiler", name: "Lastverteiler", technologie: "HAProxy", x: 2, y: 1, info: I("Verteilt Anfragen auf alle Instanzen des Monolithen.", "5000 Anfragen pro Sekunde, Health Checks.", "Voraussetzung fürs Skalieren.", "HAProxy", "Ohne Lastverteiler bringt eine zweite Instanz nichts.") },
+        { id: "mono", typ: "monolith", name: "Kurier-App", technologie: "Spring Boot", x: 3, y: 1, info: I("Monolith mit Auftragserfassung, Tourenplanung und Tracking.", "Je Instanz 50 Anfragen pro Sekunde, 60 ms Bedienzeit. Start: 2 Instanzen.", "Die ganze Fachlogik.", "Java 21, Spring Boot", "Zustandslos und darum horizontal skalierbar.") },
+        { id: "db", typ: "datenbank", name: "Auftrags-DB", technologie: "PostgreSQL", x: 4, y: 1, info: I("Relationale Datenbank mit allen Aufträgen und Positionen.", "Rund 120 Abfragen pro Sekunde, skaliert nicht horizontal.", "Aufträge, Positionen.", "PostgreSQL", "Wird zum Engpass, sobald die App genug Instanzen hat.") }
+      ],
+      verbindungen: [
+        { id: "kundin-app", von: "kundin", nach: "app", art: "abhaengigkeit", label: "nutzt" },
+        { id: "app-lb", von: "app", nach: "lb", art: "sync", label: "HTTPS" },
+        { id: "lb-mono", von: "lb", nach: "mono", art: "sync", label: "HTTP" },
+        { id: "mono-db", von: "mono", nach: "db", art: "daten", label: "SQL" }
+      ],
+      ablaeufe: [
+        { id: "verfolgen", name: "Normal: Lieferung verfolgen", schritte: [
+          { von: "app", nach: "lb", text: "Die App fragt die Position des Kuriers ab (70 % aller Anfragen).", phase: "Anfrage" },
+          { von: "lb", nach: "mono", text: "Der Lastverteiler wählt eine der zwei Instanzen." },
+          { von: "mono", nach: "db", text: "Der Monolith liest Auftrag und Position.", phase: "Daten" },
+          { von: "mono", nach: "app", text: "Antwort. Am Morgen ist die App zu 24 % ausgelastet: p95 rund 160 ms.", phase: "Antwort" }
+        ] },
+        { id: "regen", name: "Lastspitze: Platzregen", schritte: [
+          { von: "app", nach: "lb", text: "Minute 38: Platzregen, 40 % mehr Last. Alle wollen wissen, wo ihr Paket ist.", phase: "Spitze" },
+          { von: "lb", nach: "mono", text: "Die zwei Instanzen müssten 139 % leisten." },
+          { bei: "mono", text: "Überlast: Die Schlange wächst, p95 steigt auf über 7 Sekunden, Aufträge scheitern.", fehler: true },
+          { bei: "mono", text: "Abhilfe: skalieren bzw. Autoscaling. Ziel rund 5 Instanzen.", phase: "Massnahme" },
+          { von: "mono", nach: "db", text: "Danach geht mehr Last an die Datenbank …" },
+          { bei: "db", text: "… die ohne Cache auf 122 % steigt. Darum: Cache vor die Auftrags-DB.", fehler: true }
+        ] },
+        { id: "dbausfall", name: "Störung: Datenbank fällt aus", schritte: [
+          { von: "app", nach: "lb", text: "Eine Kundin erfasst einen Auftrag.", phase: "Anfrage" },
+          { von: "lb", nach: "mono", text: "Weiter an die Kurier-App." },
+          { von: "mono", nach: "db", text: "Speichern …", fehler: true },
+          { bei: "db", text: "Die Datenbank antwortet nicht. Ein Monolith mit einer einzigen Datenbank hat hier keinen Plan B.", fehler: true },
+          { von: "mono", nach: "app", text: "Fehler 503. Mehr Instanzen helfen nicht: Alle hängen an derselben Datenbank.", phase: "Antwort" }
+        ] }
+      ]
+    },
+    m2: {
+      titel: "Gipfelstürmer-Shop: Microservices mit Broker", ansicht: "komponenten", richtung: "rechts",
+      elemente: [
+        { id: "kundin", typ: "akteur", name: "Kundin", x: 0, y: 2 },
+        { id: "shop", typ: "web", name: "Shop-Frontend", technologie: "React", x: 1, y: 2, info: I("Single-Page-App im Browser.", "Stöbern und bestellen.", "", "React", "Statische Teile (Bilder, Skripte) eignen sich für ein CDN.") },
+        { id: "gw", typ: "gateway", name: "API-Gateway", technologie: "Kong", x: 2, y: 2, info: I("Einziger Eingang für alle API-Aufrufe.", "Routing, Authentisierung, Rate Limiting. 2 Instanzen, je 1000 Threads.", "", "Kong", "Wartet synchron auf die Dienste: Ist einer überlastet, belegt er Gateway-Threads.") },
+        { id: "katalog", typ: "dienst", name: "Katalogservice", technologie: "Node.js", x: 3, y: 0, info: I("Produkte, Preise, Bilder.", "Nur lesend, zustandslos. 2 Instanzen.", "Drei Viertel der Last (Stöbern).", "Node.js", "Erster Engpass am Black Friday.") },
+        { id: "katalog-db", typ: "datenbank", name: "Katalog-DB", technologie: "PostgreSQL", x: 4, y: 0, info: I("Produktdaten.", "Rund 400 Abfragen pro Sekunde.", "", "PostgreSQL", "Kandidat für einen Cache: fast nur Lesezugriffe.") },
+        { id: "best", typ: "dienst", name: "Bestellservice", technologie: "Spring Boot", x: 3, y: 2, info: I("Nimmt Bestellungen an und koordiniert Lager, Zahlung und Versand.", "2 Instanzen.", "", "Spring Boot", "") },
+        { id: "best-db", typ: "datenbank", name: "Bestell-DB", technologie: "PostgreSQL", x: 3, y: 3 },
+        { id: "lager", typ: "dienst", name: "Lagerservice", technologie: "Go", x: 4, y: 1, info: I("Reserviert Ware im Lager.", "2 Instanzen.", "", "Go", "In Minute 62 kommt eine fehlerhafte Version: Rollback.") },
+        { id: "lager-db", typ: "datenbank", name: "Lager-DB", technologie: "PostgreSQL", x: 5, y: 1 },
+        { id: "zahlung", typ: "dienst", name: "Zahlungsservice", technologie: "Spring Boot", x: 4, y: 2, info: I("Wickelt Zahlungen über den Zahlungsanbieter ab.", "2 Instanzen.", "", "Spring Boot", "") },
+        { id: "psp", typ: "extern", name: "Zahlungsanbieter", technologie: "PayHelvetia", x: 5, y: 2, info: I("Externer Zahlungsdienst (Karte, TWINT).", "In dieser Mission robust: 5000 Anfragen pro Sekunde, 120 ms.", "", "", "") },
+        { id: "broker", typ: "broker", name: "Message Broker", technologie: "RabbitMQ", x: 4, y: 3, info: I("Leitet Bestell-Ereignisse an den Versand weiter.", "Puffert bis 200 000 Nachrichten.", "Entkoppelt den Versand.", "RabbitMQ", "Am Black Friday staut sich hier der Rückstau, statt dass Bestellungen scheitern.") },
+        { id: "versand", typ: "dienst", name: "Versandservice", technologie: "Python", x: 5, y: 3, info: I("Erstellt Lieferscheine und Paketetiketten.", "1 Instanz.", "", "Python", "") }
+      ],
+      verbindungen: [
+        { id: "kundin-shop", von: "kundin", nach: "shop", art: "abhaengigkeit", label: "nutzt" },
+        { id: "shop-gw", von: "shop", nach: "gw", art: "sync", label: "HTTPS" },
+        { id: "gw-katalog", von: "gw", nach: "katalog", art: "sync", label: "REST" },
+        { id: "gw-best", von: "gw", nach: "best", art: "sync", label: "REST" },
+        { id: "katalog-db-zugriff", von: "katalog", nach: "katalog-db", art: "daten", label: "SQL" },
+        { id: "best-db-zugriff", von: "best", nach: "best-db", art: "daten", label: "SQL" },
+        { id: "best-lager", von: "best", nach: "lager", art: "sync", label: "REST" },
+        { id: "lager-db-zugriff", von: "lager", nach: "lager-db", art: "daten", label: "SQL" },
+        { id: "best-zahlung", von: "best", nach: "zahlung", art: "sync", label: "REST" },
+        { id: "zahlung-psp", von: "zahlung", nach: "psp", art: "sync", label: "HTTPS" },
+        { id: "best-broker", von: "best", nach: "broker", art: "async", label: "BestellungAufgegeben" },
+        { id: "broker-versand", von: "broker", nach: "versand", art: "async", label: "BestellungAufgegeben" }
+      ],
+      ablaeufe: [
+        { id: "bestellen", name: "Normal: Bestellung aufgeben", schritte: [
+          { von: "shop", nach: "gw", text: "Die Kundin schickt die Bestellung.", phase: "Anfrage" },
+          { von: "gw", nach: "best", text: "Das Gateway leitet an den Bestellservice weiter." },
+          { von: "best", nach: "lager", text: "Ware reservieren.", phase: "Verarbeitung" },
+          { von: "best", nach: "zahlung", text: "Zahlung auslösen." },
+          { von: "zahlung", nach: "psp", text: "Der Zahlungsanbieter belastet die Karte." },
+          { von: "best", nach: "broker", text: "Ereignis «BestellungAufgegeben» veröffentlichen.", phase: "Benachrichtigung" },
+          { von: "broker", nach: "versand", text: "Der Versand erstellt den Lieferschein, sobald er dazukommt." }
+        ] },
+        { id: "spitze", name: "Lastspitze: Black Friday ×8", schritte: [
+          { von: "shop", nach: "gw", text: "Minute 30: 970 statt 115 Anfragen pro Sekunde.", phase: "Spitze" },
+          { von: "gw", nach: "katalog", text: "Drei Viertel wollen stöbern …" },
+          { bei: "katalog", text: "Der Katalog müsste 303 % leisten: Überlast.", fehler: true },
+          { bei: "gw", text: "Das Gateway wartet auf den Katalog, seine Threads gehen aus. Auch Bestellungen kommen kaum noch durch.", fehler: true },
+          { von: "best", nach: "broker", text: "Was durchkommt, landet im Broker …", phase: "Rückstau" },
+          { bei: "broker", text: "… und der Rückstau des Versands wächst um tausende Nachrichten pro Minute. Abhilfe: CDN, Cache, vorheizen, Autoscaling." }
+        ] },
+        { id: "deployment", name: "Störung: fehlerhaftes Deployment", schritte: [
+          { von: "gw", nach: "best", text: "Minute 62: Eine Bestellung kommt rein.", phase: "Deployment" },
+          { von: "best", nach: "lager", text: "Lagerservice 4.2 …", fehler: true },
+          { bei: "lager", text: "… scheitert bei jeder fünften Reservierung mit Fehler 500. Auslastung normal, nur die Fehlerquote springt.", fehler: true },
+          { bei: "lager", text: "Abhilfe: Rollback auf 4.1. Skalieren nützt nichts.", phase: "Rollback" }
+        ] }
+      ]
+    },
+    m3: {
+      titel: "Pistenpass: Kauf mit externem Zahlungsanbieter", ansicht: "komponenten", richtung: "rechts",
+      elemente: [
+        { id: "gast", typ: "akteur", name: "Wintersportlerin", x: 0, y: 1 },
+        { id: "app", typ: "mobile", name: "Pistenpass-App", technologie: "Flutter", x: 1, y: 1, info: I("Mobile App.", "Angebot ansehen, kaufen, Kaufstatus abfragen.", "", "Flutter", "") },
+        { id: "gw", typ: "gateway", name: "API-Gateway", technologie: "Spring Cloud Gateway", x: 2, y: 1, info: I("Eingang für alle Aufrufe der App.", "200 Worker-Threads; jeder wartet, bis der Dienst dahinter antwortet.", "", "Spring Cloud Gateway", "Hier zeigt sich die Fehlerkaskade zuerst.") },
+        { id: "angebot", typ: "dienst", name: "Angebotsservice", technologie: "Node.js", x: 3, y: 0, info: I("Bergbahnen, Preise, Schneebericht.", "3 Instanzen.", "55 % der Anfragen.", "Node.js", "Hat mit PayAlpin nichts zu tun und wird trotzdem langsam, wenn das Gateway voll ist.") },
+        { id: "angebot-db", typ: "nosql", name: "Angebots-DB", technologie: "MongoDB", x: 4, y: 0 },
+        { id: "kauf", typ: "dienst", name: "Kaufservice", technologie: "Spring Boot", x: 3, y: 1, info: I("Legt Tickets an und löst die Zahlung aus.", "2 Instanzen.", "30 % der Anfragen, kritisch.", "Spring Boot", "Ruft den Zahlungsservice synchron auf: Kandidat für eine Queue.") },
+        { id: "kauf-db", typ: "datenbank", name: "Ticket-DB", technologie: "PostgreSQL", x: 3, y: 2 },
+        { id: "zahlung", typ: "dienst", name: "Zahlungsservice", technologie: "Spring Boot", x: 4, y: 1, info: I("Spricht mit PayAlpin und beantwortet Kaufstatus-Abfragen.", "200 Threads je Instanz, gemeinsam für Abfragen und Hintergrundarbeit.", "", "Spring Boot", "Gemeinsame Threads: Ohne Bulkhead blockiert ein hängender Anbieter auch die Status-Abfragen.") },
+        { id: "zahlung-db", typ: "nosql", name: "Zahlungs-DB", technologie: "MongoDB", x: 5, y: 0 },
+        { id: "psp", typ: "extern", name: "PayAlpin", technologie: "Zahlungsanbieter (extern)", x: 5, y: 1, info: I("Externer Zahlungsanbieter.", "Vertraglich 400 Zahlungen pro Sekunde, höchstens 300 gleichzeitig offene Anfragen.", "", "", "Startkonfiguration: 10 s Timeout, 3 Retries.") }
+      ],
+      verbindungen: [
+        { id: "gast-app", von: "gast", nach: "app", art: "abhaengigkeit", label: "nutzt" },
+        { id: "app-gw", von: "app", nach: "gw", art: "sync", label: "HTTPS" },
+        { id: "gw-angebot", von: "gw", nach: "angebot", art: "sync", label: "REST" },
+        { id: "gw-kauf", von: "gw", nach: "kauf", art: "sync", label: "REST" },
+        { id: "angebot-db-zugriff", von: "angebot", nach: "angebot-db", art: "daten", label: "find" },
+        { id: "kauf-db-zugriff", von: "kauf", nach: "kauf-db", art: "daten", label: "SQL" },
+        { id: "kauf-zahlung", von: "kauf", nach: "zahlung", art: "sync", label: "REST" },
+        { id: "gw-zahlung", von: "gw", nach: "zahlung", art: "sync", label: "GET /status" },
+        { id: "zahlung-db-zugriff", von: "zahlung", nach: "zahlung-db", art: "daten", label: "find" },
+        { id: "zahlung-psp", von: "zahlung", nach: "psp", art: "sync", label: "HTTPS · 10 s · 3 Retries" }
+      ],
+      ablaeufe: [
+        { id: "kaufen", name: "Normal: Tageskarte kaufen", schritte: [
+          { von: "app", nach: "gw", text: "Die App schickt den Kauf.", phase: "Kauf" },
+          { von: "gw", nach: "kauf", text: "Das Gateway wartet auf den Kaufservice." },
+          { von: "kauf", nach: "kauf-db", text: "Ticket anlegen." },
+          { von: "kauf", nach: "zahlung", text: "Der Kaufservice wartet auf die Zahlung." },
+          { von: "zahlung", nach: "psp", text: "PayAlpin belastet in 200 ms.", phase: "Zahlung" },
+          { von: "app", nach: "gw", text: "Danach fragt die App den Kaufstatus ab …", phase: "Status" },
+          { von: "gw", nach: "zahlung", text: "… direkt beim Zahlungsservice." }
+        ] },
+        { id: "haengt", name: "Lastspitze trifft hängenden Anbieter", schritte: [
+          { bei: "psp", text: "Minute 12: PayAlpin hängt, Antworten dauern rund 10 Sekunden.", fehler: true, phase: "Hänger" },
+          { von: "zahlung", nach: "psp", text: "Timeout 10 s, dann Retry, Retry, Retry …", fehler: true },
+          { bei: "zahlung", text: "Alle 200 Threads warten auf PayAlpin. Status-Abfragen bleiben liegen.", fehler: true },
+          { bei: "kauf", text: "Der Kaufservice wartet auf den Zahlungsservice: Threads erschöpft.", fehler: true },
+          { bei: "gw", text: "Das Gateway wartet auf den Kaufservice: Threads erschöpft. Jetzt ist auch das Angebot langsam.", fehler: true, phase: "Kaskade" },
+          { von: "gw", nach: "angebot", text: "Ein Aufruf, der nichts mit Zahlungen zu tun hat, findet keinen freien Gateway-Thread mehr." }
+        ] },
+        { id: "ausfall", name: "Störung: Ausfall, mit Queue und Breaker", schritte: [
+          { bei: "psp", text: "Minute 40: PayAlpin fällt 10 Minuten aus.", fehler: true, phase: "Ausfall" },
+          { von: "kauf", nach: "zahlung", text: "Mit Queue: Der Kauf wird bestätigt, der Zahlungsauftrag wartet im Puffer.", phase: "Mit Massnahmen" },
+          { von: "zahlung", nach: "psp", text: "Der Circuit Breaker ist offen: kein Warten, keine hängenden Threads." },
+          { von: "app", nach: "gw", text: "Status-Abfragen laufen dank Bulkhead auf eigenen Threads weiter." },
+          { von: "gw", nach: "zahlung", text: "Antwort «Zahlung ausstehend»." },
+          { von: "zahlung", nach: "psp", text: "Nach dem Ausfall arbeitet der Zahlungsservice den Rückstau ab. Kein Kauf ist verloren.", phase: "Erholung" }
+        ] }
+      ]
+    },
+    m4: {
+      titel: "Ticketplattform: Musterlösung", ansicht: "komponenten", richtung: "rechts",
+      elemente: [
+        { id: "fan", typ: "akteur", name: "Fan", x: 0, y: 1 },
+        { id: "fan-app", typ: "web", name: "Ticket-App", technologie: "Vue", x: 1, y: 1, info: I("Web-App für Suche und Kauf.", "", "", "Vue", "Vorgegeben.") },
+        { id: "cdn", typ: "cdn", name: "CDN", technologie: "Cloudflare", x: 2, y: 1, info: I("Liefert Bilder, Saalpläne und Bandinfos aus.", "", "", "Cloudflare", "Anforderung: Statisches aus einem CDN vor dem Gateway.") },
+        { id: "gw", typ: "gateway", name: "API-Gateway", technologie: "Kong", x: 3, y: 1, info: I("Einziger Eingang.", "Authentisierung, Rate Limiting, Routing.", "", "Kong", "Anforderung: Alle Aufrufe der App über ein Gateway.") },
+        { id: "ticket", typ: "dienst", name: "Ticketservice", technologie: "Spring Boot", x: 4, y: 1, info: I("Zeigt Konzerte und freie Plätze, nimmt Käufe an.", "", "85 % Lesen, 15 % Kaufen.", "Spring Boot", "Beim Vorverkauf der Engpass: Autoscaling und vorheizen.") },
+        { id: "cache", typ: "cache", name: "Verfügbarkeits-Cache", technologie: "Redis", x: 4, y: 0, info: I("Freie Plätze im Arbeitsspeicher.", "", "", "Redis", "Anforderung: Verfügbarkeit über einen Cache lesen.") },
+        { id: "ticket-db", typ: "datenbank", name: "Ticket-DB", technologie: "PostgreSQL", x: 5, y: 0, info: I("Daten des Ticketservice.", "", "", "PostgreSQL", "Database per Service.") },
+        { id: "queue", typ: "queue", name: "Zahlungs-Queue", technologie: "RabbitMQ", x: 4, y: 2, info: I("Puffert Zahlungsaufträge.", "", "", "RabbitMQ", "Anforderung: Zahlungen gehen nicht verloren.") },
+        { id: "zahlung", typ: "dienst", name: "Zahlungsservice", technologie: "Spring Boot", x: 5, y: 2, info: I("Spricht mit dem Zahlungsanbieter.", "", "", "Spring Boot", "Holt Aufträge im eigenen Tempo aus der Queue.") },
+        { id: "zahlung-db", typ: "datenbank", name: "Zahlungs-DB", technologie: "PostgreSQL", x: 5, y: 3, info: I("Daten des Zahlungsservice.", "", "", "PostgreSQL", "Database per Service.") },
+        { id: "psp", typ: "extern", name: "Zahlungsanbieter", technologie: "PayHelvetia", x: 6, y: 2, info: I("Externer Zahlungsdienst.", "", "", "", "Vorgegeben. Wird ab Minute 45 langsam.") },
+        { id: "mailer", typ: "extern", name: "E-Mail-Dienst", technologie: "Mailversand (extern)", x: 6, y: 3, info: I("Verschickt Bestätigungen mit dem Ticket.", "", "", "", "Vorgegeben.") }
+      ],
+      verbindungen: [
+        { id: "fan-nutzt-app", von: "fan", nach: "fan-app", art: "abhaengigkeit", label: "nutzt" },
+        { id: "app-cdn", von: "fan-app", nach: "cdn", art: "sync", label: "HTTPS" },
+        { id: "cdn-gw", von: "cdn", nach: "gw", art: "sync", label: "HTTPS" },
+        { id: "gw-ticket", von: "gw", nach: "ticket", art: "sync", label: "REST" },
+        { id: "ticket-cache", von: "ticket", nach: "cache", art: "daten", label: "get/set" },
+        { id: "ticket-db-zugriff", von: "ticket", nach: "ticket-db", art: "daten", label: "SQL" },
+        { id: "ticket-queue", von: "ticket", nach: "queue", art: "async", label: "ZahlungAngefordert" },
+        { id: "queue-zahlung", von: "queue", nach: "zahlung", art: "async", label: "ZahlungAngefordert" },
+        { id: "zahlung-db-zugriff", von: "zahlung", nach: "zahlung-db", art: "daten", label: "SQL" },
+        { id: "zahlung-psp", von: "zahlung", nach: "psp", art: "sync", label: "HTTPS · 2 s · 1 Retry" },
+        { id: "zahlung-mailer", von: "zahlung", nach: "mailer", art: "async", label: "Bestätigung" }
+      ],
+      ablaeufe: [
+        { id: "kaufen", name: "Normal: Ticket kaufen", schritte: [
+          { von: "fan-app", nach: "cdn", text: "Saalplan und Bandfotos kommen aus dem CDN.", phase: "Ansehen" },
+          { von: "cdn", nach: "gw", text: "Die Abfrage freier Plätze geht ans Gateway …" },
+          { von: "gw", nach: "ticket", text: "… und an den Ticketservice." },
+          { von: "ticket", nach: "cache", text: "Freie Plätze aus dem Cache." },
+          { von: "ticket", nach: "ticket-db", text: "Kauf: Platz in der Ticket-DB reservieren.", phase: "Kaufen" },
+          { von: "ticket", nach: "queue", text: "Zahlungsauftrag in die Queue. Der Fan sieht «Kauf angenommen»." },
+          { von: "queue", nach: "zahlung", text: "Der Zahlungsservice holt den Auftrag ab.", phase: "Zahlen" },
+          { von: "zahlung", nach: "psp", text: "Zahlung belasten (Timeout 2 s, 1 Retry)." },
+          { von: "zahlung", nach: "mailer", text: "Bestätigung mit Ticket per E-Mail." }
+        ] },
+        { id: "vorverkauf", name: "Lastspitze: Vorverkaufsstart ×10", schritte: [
+          { von: "fan-app", nach: "cdn", text: "Minute 20: Zehnmal so viele Fans. Die Hälfte der Abrufe beantwortet das CDN.", phase: "Spitze" },
+          { von: "gw", nach: "ticket", text: "Der Rest trifft den Ticketservice …" },
+          { bei: "ticket", text: "… der ohne Vorbereitung 379 % leisten müsste. Abhilfe: Autoscaling 2 bis 12 und bei Minute 17 auf 8 vorheizen.", fehler: true },
+          { von: "ticket", nach: "cache", text: "Der Cache hält die Ticket-DB entlastet." }
+        ] },
+        { id: "langsam", name: "Störung: Zahlungsanbieter langsam", schritte: [
+          { bei: "psp", text: "Minute 45: Zahlungen dauern rund 3 Sekunden.", fehler: true, phase: "Störung" },
+          { von: "ticket", nach: "queue", text: "Käufe werden weiter angenommen und gepuffert." },
+          { bei: "queue", text: "Der Rückstau wächst, aber nichts geht verloren." },
+          { von: "zahlung", nach: "psp", text: "Ein Circuit Breaker schützt die Worker vor dem Hängen.", phase: "Schutz" },
+          { von: "queue", nach: "zahlung", text: "Danach baut der Zahlungsservice den Rückstau ab.", phase: "Erholung" }
+        ] }
+      ]
+    }
+  };
+  const miGezeichnet = {};
+  reiter("#t11-mi-tabs", (id) => {
+    if (id === "m4" || miGezeichnet[id]) return;
+    miGezeichnet[id] = A.diagramm("#t11-d-" + id, MISSIONEN[id], {});
+  });
+  const m4Knopf = $("#t11-m4-zeigen");
+  m4Knopf.addEventListener("click", () => {
+    const box = $("#t11-m4-loesung");
+    const offen = box.hidden;
+    box.hidden = !offen;
+    m4Knopf.setAttribute("aria-expanded", String(offen));
+    m4Knopf.textContent = offen ? "Musterlösung verbergen" : "Musterlösung als Diagramm aufdecken";
+    if (offen && !miGezeichnet.m4) miGezeichnet.m4 = A.diagramm("#t11-d-m4", MISSIONEN.m4, {});
+  });
+
+  /* ---------- 9 · Spiel ---------- */
+  A.spiel("#t11-spiel", {
+    spielId: "avsw-11-massnahmen",
+    fach: "avsw",
+    titel: "Baue die richtige Massnahme ein",
+    levels: [
+      { id: "cache", titel: "Der Katalog liest sich krank", schwierigkeit: 1, zielzeit: 120, raster: { spalten: 4, zeilen: 2 },
+        auftrag: '<p>Der <span data-baustein="kat">Katalogservice</span> liest jede Produktseite aus der <span data-baustein="db">Katalog-DB</span>. Neun von zehn Zugriffen lesen dieselben 500 Produkte, die Datenbank ist zu 95 % ausgelastet. Baue einen <span data-baustein="cache">Cache</span> ein: Der Katalogservice liest zuerst aus dem Cache und nur bei einem Fehltreffer aus der Datenbank (Cache-Aside). Das <span data-baustein="web">Shop-Frontend</span> bleibt, wie es ist.</p>',
+        vorgegeben: {
+          elemente: [
+            { id: "web", typ: "web", name: "Shop-Frontend", x: 0, y: 0 },
+            { id: "kat", typ: "dienst", name: "Katalogservice", x: 1, y: 0 },
+            { id: "db", typ: "datenbank", name: "Katalog-DB", x: 3, y: 0 }
+          ],
+          verbindungen: [
+            { id: "g1", von: "web", nach: "kat", art: "sync" },
+            { id: "g2", von: "kat", nach: "db", art: "daten" }
+          ]
+        },
+        palette: [
+          { id: "cache", typ: "cache", name: "Produkt-Cache" },
+          { id: "q", typ: "queue", name: "Queue", ablenker: true },
+          { id: "lb", typ: "lastverteiler", name: "Lastverteiler", ablenker: true }
+        ],
+        loesung: { elemente: ["web", "kat", "db", "cache"], verbindungen: [
+          { von: "web", nach: "kat", art: "sync", warum: "Vorgegeben: Das Frontend ruft den Katalog synchron auf." },
+          { von: "kat", nach: "db", art: "daten", warum: "Vorgegeben: Bei einem Fehltreffer liest der Katalog aus der DB." },
+          { von: "kat", nach: "cache", art: "daten", warum: "Cache-Aside: Der Katalogservice liest selbst aus dem Cache, das ist ein Datenzugriff." }
+        ] },
+        erklaerung: "<b>Merke:</b> Ein Cache senkt die Leselast der Datenbank um die Trefferquote (im Leitstand 85 %). Queue und Lastverteiler lösen kein Leseproblem." },
+      { id: "lastverteiler", titel: "Die zweite Instanz bleibt arbeitslos", schwierigkeit: 1, zielzeit: 150, raster: { spalten: 4, zeilen: 3 },
+        auftrag: '<p>Über Mittag ist die <span data-baustein="k1">Kurier-App</span> zu 139 % ausgelastet. Das Team hat eine <span data-baustein="k2">zweite Instanz</span> gestartet, aber die <span data-baustein="app">Web-App</span> kennt nur eine Adresse. Setz einen <span data-baustein="lb">Lastverteiler</span> dazwischen: Die Web-App ruft ihn synchron auf, und er leitet jede Anfrage synchron an eine der beiden Instanzen weiter. Die <span data-baustein="db">Auftrags-DB</span> bleibt, wie sie ist.</p>',
+        vorgegeben: {
+          elemente: [
+            { id: "app", typ: "web", name: "Web-App", x: 0, y: 1 },
+            { id: "k1", typ: "monolith", name: "Kurier-App 1", x: 2, y: 0 },
+            { id: "k2", typ: "monolith", name: "Kurier-App 2", x: 2, y: 2 },
+            { id: "db", typ: "datenbank", name: "Auftrags-DB", x: 3, y: 1 }
+          ],
+          verbindungen: [
+            { id: "g1", von: "k1", nach: "db", art: "daten" },
+            { id: "g2", von: "k2", nach: "db", art: "daten" }
+          ]
+        },
+        palette: [
+          { id: "lb", typ: "lastverteiler", name: "Lastverteiler" },
+          { id: "cache", typ: "cache", name: "Cache", ablenker: true },
+          { id: "q", typ: "queue", name: "Queue", ablenker: true }
+        ],
+        loesung: { elemente: ["app", "k1", "k2", "db", "lb"], verbindungen: [
+          { von: "k1", nach: "db", art: "daten", warum: "Vorgegeben." },
+          { von: "k2", nach: "db", art: "daten", warum: "Vorgegeben." },
+          { von: "app", nach: "lb", art: "sync", warum: "Die Web-App kennt nur noch den Lastverteiler." },
+          { von: "lb", nach: "k1", art: "sync", warum: "Er leitet Anfragen an Instanz 1 …" },
+          { von: "lb", nach: "k2", art: "sync", warum: "… und an Instanz 2. Erst so halbiert sich die Auslastung." }
+        ] },
+        erklaerung: "<b>Merke:</b> Horizontal skalieren braucht immer einen Lastverteiler. In Kubernetes übernimmt das ein Service, in der Prüfung ist er Infrastruktur und keine Komponente." },
+      { id: "cdn", titel: "Bilder fluten das Gateway", schwierigkeit: 2, zielzeit: 200, raster: { spalten: 4, zeilen: 3 },
+        auftrag: '<p>Die Hälfte aller Anfragen des <span data-baustein="web">Shop-Frontends</span> sind Bilder und Skripte. Ein <span data-baustein="cdn">CDN</span> soll vor dem <span data-baustein="gw">API-Gateway</span> liegen: Das Frontend ruft nur noch das CDN synchron auf. Das CDN leitet dynamische Anfragen synchron ans Gateway weiter und holt ein Bild beim ersten Abruf synchron aus dem <span data-baustein="bilder">Bilder-Speicher</span>. Der <span data-baustein="kat">Katalogservice</span> bleibt hinter dem Gateway.</p>',
+        vorgegeben: {
+          elemente: [
+            { id: "web", typ: "web", name: "Shop-Frontend", x: 0, y: 1 },
+            { id: "gw", typ: "gateway", name: "API-Gateway", x: 2, y: 1 },
+            { id: "kat", typ: "dienst", name: "Katalogservice", x: 3, y: 1 }
+          ],
+          verbindungen: [{ id: "g1", von: "gw", nach: "kat", art: "sync" }]
+        },
+        palette: [
+          { id: "cdn", typ: "cdn", name: "CDN" },
+          { id: "bilder", typ: "speicher", name: "Bilder-Speicher" },
+          { id: "cache", typ: "cache", name: "Redis-Cache", ablenker: true },
+          { id: "lb", typ: "lastverteiler", name: "Lastverteiler", ablenker: true }
+        ],
+        loesung: { elemente: ["web", "gw", "kat", "cdn", "bilder"], verbindungen: [
+          { von: "gw", nach: "kat", art: "sync", warum: "Vorgegeben." },
+          { von: "web", nach: "cdn", art: "sync", warum: "Das Frontend spricht nur noch mit dem CDN." },
+          { von: "cdn", nach: "gw", art: "sync", warum: "Dynamisches geht synchron weiter ans Gateway." },
+          { von: "cdn", nach: "bilder", art: "sync", warum: "Beim ersten Abruf holt das CDN das Original (Origin)." }
+        ] },
+        erklaerung: "<b>Merke:</b> Das CDN steht ganz vorne, vor dem Gateway. Was es beantwortet, erreicht Gateway und Dienste nie. Ein Redis-Cache sitzt dagegen hinter einem Dienst, bei den Daten." },
+      { id: "queue", titel: "Der Versand bremst die Bestellung", schwierigkeit: 2, zielzeit: 200, raster: { spalten: 4, zeilen: 3 },
+        auftrag: '<p>Heute ruft der <span data-baustein="best">Bestellservice</span> den <span data-baustein="versand">Versandservice</span> synchron auf. Am Black Friday ist der Versand zu langsam, und Bestellungen scheitern. Entkopple die beiden: Der Bestellservice veröffentlicht das Ereignis «BestellungAufgegeben» asynchron in eine <span data-baustein="q">Queue</span>, und der Versandservice holt es dort asynchron ab, wenn er Zeit hat. <span data-baustein="gw">Gateway</span> und <span data-baustein="bdb">Bestell-DB</span> bleiben.</p>',
+        vorgegeben: {
+          elemente: [
+            { id: "gw", typ: "gateway", name: "API-Gateway", x: 0, y: 1 },
+            { id: "best", typ: "dienst", name: "Bestellservice", x: 1, y: 1 },
+            { id: "bdb", typ: "datenbank", name: "Bestell-DB", x: 1, y: 2 },
+            { id: "versand", typ: "dienst", name: "Versandservice", x: 3, y: 1 }
+          ],
+          verbindungen: [
+            { id: "g1", von: "gw", nach: "best", art: "sync" },
+            { id: "g2", von: "best", nach: "bdb", art: "daten" }
+          ]
+        },
+        palette: [
+          { id: "q", typ: "queue", name: "Bestellungen" },
+          { id: "bus", typ: "bus", name: "Enterprise Service Bus", ablenker: true },
+          { id: "cache", typ: "cache", name: "Cache", ablenker: true }
+        ],
+        loesung: { elemente: ["gw", "best", "bdb", "versand", "q"], verbindungen: [
+          { von: "gw", nach: "best", art: "sync", warum: "Vorgegeben." },
+          { von: "best", nach: "bdb", art: "daten", warum: "Vorgegeben." },
+          { von: "best", nach: "q", art: "async", warum: "«veröffentlicht asynchron»: Der Bestellservice wartet nur auf die Bestätigung des Brokers." },
+          { von: "q", nach: "versand", art: "async", warum: "«holt ab»: Der Versand arbeitet im eigenen Tempo, der Rückstau puffert." }
+        ] },
+        erklaerung: "<b>Merke:</b> Eine Queue verwandelt einen Fehler in eine Verspätung. Ein ESB ist Integration Middleware für synchrone Verbindungen zwischen Applikationen, kein Puffer zwischen zwei Microservices." },
+      { id: "replica", titel: "Auswertungen legen den Shop lahm", schwierigkeit: 2, zielzeit: 200, raster: { spalten: 4, zeilen: 3 },
+        auftrag: '<p>Der <span data-baustein="rep">Reporting-Dienst</span> rechnet jede Viertelstunde Umsätze aus und liest dabei Millionen Zeilen aus der <span data-baustein="prim">Bestell-DB</span>. Dann werden Bestellungen langsam. Richte eine <span data-baustein="repl">Read-Replica</span> ein: Die Bestell-DB schickt ihre Änderungen laufend als Datenstrom an die Replica, und der Reporting-Dienst liest nur noch dort (Datenzugriff). Der <span data-baustein="best">Bestellservice</span> schreibt weiter in die Bestell-DB.</p>',
+        vorgegeben: {
+          elemente: [
+            { id: "best", typ: "dienst", name: "Bestellservice", x: 0, y: 0 },
+            { id: "rep", typ: "dienst", name: "Reporting-Dienst", x: 0, y: 2 },
+            { id: "prim", typ: "datenbank", name: "Bestell-DB", x: 2, y: 0 }
+          ],
+          verbindungen: [{ id: "g1", von: "best", nach: "prim", art: "daten" }]
+        },
+        palette: [
+          { id: "repl", typ: "datenbank", name: "Read-Replica" },
+          { id: "cache", typ: "cache", name: "Cache", ablenker: true },
+          { id: "q", typ: "queue", name: "Queue", ablenker: true }
+        ],
+        arten: ["sync", "async", "daten", "stream"],
+        loesung: { elemente: ["best", "rep", "prim", "repl"], verbindungen: [
+          { von: "best", nach: "prim", art: "daten", warum: "Vorgegeben: Schreiben bleibt bei der Primär-DB." },
+          { von: "prim", nach: "repl", art: "stream", warum: "Replikation ist ein laufender Datenstrom von der Primär-DB zur Kopie." },
+          { von: "rep", nach: "repl", art: "daten", warum: "Das Reporting liest nur noch auf der Replica." }
+        ] },
+        erklaerung: "<b>Merke:</b> Eine Read-Replica entlastet lesende Zugriffe, nie schreibende. Die Kopie liegt leicht zurück: gut für Auswertungen, schlecht für «meine eben aufgegebene Bestellung»." },
+      { id: "gateway", titel: "Ein Partner überrennt das Hotel", schwierigkeit: 3, zielzeit: 300, raster: { spalten: 4, zeilen: 3 },
+        auftrag: '<p>Ein <span data-baustein="partner">Vergleichsportal</span> fragt die freien Zimmer so oft ab, dass der <span data-baustein="svc">Verfügbarkeitsservice</span> für die eigene <span data-baustein="app">Hotel-App</span> zu langsam wird. Ab jetzt laufen alle Aufrufe von aussen synchron über ein <span data-baustein="gw">API-Gateway</span>. Es lässt jedes Token synchron beim <span data-baustein="idp">Identity Provider</span> prüfen, begrenzt jeden Partner auf 50 Anfragen pro Sekunde (Rate Limiting) und leitet erlaubte Aufrufe synchron an den Verfügbarkeitsservice weiter. Die <span data-baustein="db">Zimmer-DB</span> bleibt.</p>',
+        vorgegeben: {
+          elemente: [
+            { id: "partner", typ: "extern", name: "Vergleichsportal", x: 0, y: 0 },
+            { id: "app", typ: "mobile", name: "Hotel-App", x: 0, y: 2 },
+            { id: "svc", typ: "dienst", name: "Verfügbarkeitsservice", x: 2, y: 1 },
+            { id: "db", typ: "datenbank", name: "Zimmer-DB", x: 3, y: 1 }
+          ],
+          verbindungen: [{ id: "g1", von: "svc", nach: "db", art: "daten" }]
+        },
+        palette: [
+          { id: "gw", typ: "gateway", name: "API-Gateway" },
+          { id: "idp", typ: "auth", name: "Identity Provider" },
+          { id: "cdn", typ: "cdn", name: "CDN", ablenker: true },
+          { id: "lb", typ: "lastverteiler", name: "Lastverteiler", ablenker: true },
+          { id: "bus", typ: "bus", name: "Enterprise Service Bus", ablenker: true }
+        ],
+        loesung: { elemente: ["partner", "app", "svc", "db", "gw", "idp"], verbindungen: [
+          { von: "svc", nach: "db", art: "daten", warum: "Vorgegeben." },
+          { von: "partner", nach: "gw", art: "sync", warum: "Alle Aufrufe von aussen laufen über das Gateway, auch die des Partners." },
+          { von: "app", nach: "gw", art: "sync", warum: "Auch die eigene App geht über das Gateway." },
+          { von: "gw", nach: "idp", art: "sync", warum: "Token prüfen, bevor etwas weitergeht." },
+          { von: "gw", nach: "svc", art: "sync", warum: "Erlaubte Aufrufe gehen synchron weiter. Das Rate Limit ist eine Einstellung im Gateway, kein eigenes Element." }
+        ] },
+        erklaerung: "<b>Merke:</b> Rate Limiting wohnt im API-Gateway. Das Gateway gehört vor die in Echtzeit angebotenen APIs (Integrationsarchitektur). Ein CDN hilft bei Dynamischem nicht, ein ESB ist kein Eingang für Partner-APIs." },
+      { id: "zahlung", titel: "Rette die Skitageskarten", schwierigkeit: 3, zielzeit: 300, raster: { spalten: 4, zeilen: 2 },
+        auftrag: '<p>Der Zahlungsanbieter <span data-baustein="psp">PayAlpin</span> hängt immer wieder. Heute ruft der <span data-baustein="kauf">Kaufservice</span> den <span data-baustein="zahlung">Zahlungsservice</span> synchron auf, und Käufe gehen verloren. Baue zwei Schutzmassnahmen ein: Der Kaufservice legt Zahlungsaufträge asynchron in eine <span data-baustein="q">Queue</span>, aus der der Zahlungsservice sie asynchron abholt. Und der Zahlungsservice ruft PayAlpin nur noch synchron über einen <span data-baustein="sc">Sidecar-Proxy</span> auf, der Timeout und Circuit Breaker umsetzt; der Proxy ruft PayAlpin synchron auf. <span data-baustein="app">App</span> und <span data-baustein="gw">Gateway</span> bleiben.</p>',
+        vorgegeben: {
+          elemente: [
+            { id: "app", typ: "mobile", name: "Pistenpass-App", x: 0, y: 0 },
+            { id: "gw", typ: "gateway", name: "API-Gateway", x: 1, y: 0 },
+            { id: "kauf", typ: "dienst", name: "Kaufservice", x: 2, y: 0 },
+            { id: "psp", typ: "extern", name: "PayAlpin", x: 1, y: 1 },
+            { id: "zahlung", typ: "dienst", name: "Zahlungsservice", x: 3, y: 1 }
+          ],
+          verbindungen: [
+            { id: "g1", von: "app", nach: "gw", art: "sync" },
+            { id: "g2", von: "gw", nach: "kauf", art: "sync" }
+          ]
+        },
+        palette: [
+          { id: "q", typ: "queue", name: "Zahlungsaufträge" },
+          { id: "sc", typ: "mesh", name: "Sidecar-Proxy (Circuit Breaker)" },
+          { id: "cache", typ: "cache", name: "Cache", ablenker: true },
+          { id: "lb", typ: "lastverteiler", name: "Lastverteiler", ablenker: true }
+        ],
+        loesung: { elemente: ["app", "gw", "kauf", "psp", "zahlung", "q", "sc"], verbindungen: [
+          { von: "app", nach: "gw", art: "sync", warum: "Vorgegeben." },
+          { von: "gw", nach: "kauf", art: "sync", warum: "Vorgegeben." },
+          { von: "kauf", nach: "q", art: "async", warum: "Der Kauf wird bestätigt, der Zahlungsauftrag wartet im Puffer statt verloren zu gehen." },
+          { von: "q", nach: "zahlung", art: "async", warum: "Der Zahlungsservice holt Aufträge ab, sobald er kann." },
+          { von: "zahlung", nach: "sc", art: "sync", warum: "Der Aufruf geht über den Sidecar …" },
+          { von: "sc", nach: "psp", art: "sync", warum: "… der mit Timeout und Circuit Breaker verhindert, dass hängende Worker den ganzen Dienst blockieren." }
+        ] },
+        erklaerung: "<b>Merke:</b> Queue und Schutz des Konsumenten gehören zusammen. Nur Queue: Die Worker hängen am Anbieter (Mission 3: 775 Punkte). Nur Resilienz: Abgewiesene Käufe gehen verloren (430 Punkte). Beides: 965 Punkte." }
+    ]
+  });
+
+  /* ---------- Film: Black Friday Minute für Minute ---------- */
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  function stufeVerf(v) { return v >= 99.5 ? "gut" : v >= 99 ? "warn" : "schlecht"; }
+  function stufeP95(p) { return p <= 400 ? "gut" : p <= 600 ? "warn" : "schlecht"; }
+  function stufeRho(r) { return r < 70 ? "gut" : r < 85 ? "warn" : "schlecht"; }
+  function fk(name, wert, stufe, neu) {
+    return '<div class="t11-fk t11-' + stufe + (neu ? " nw" : "") + '"><span class="t11-fk-name">' + name + "</span><b>" + wert + '</b><span class="t11-kpi-ampel">' + SYM[stufe] + "</span></div>";
+  }
+  function tafel(d) {
+    const neu = d.neu || [];
+    let h = '<div class="t11-fk-tafel" role="group" aria-label="Kennzahlen Minute ' + d.min + '">';
+    h += '<div class="t11-fk-kopf">Minute ' + d.min + " <span>" + d.lauf + "</span></div>";
+    h += fk("Last", zahl(d.last) + " / s", "info", neu.indexOf("last") >= 0);
+    h += fk("Verfügbarkeit", L.zahlText(d.verf, 2) + " %", stufeVerf(d.verf), neu.indexOf("verf") >= 0);
+    h += fk("p95", d.p95 >= 1000 ? L.zahlText(d.p95 / 1000, 1) + " s" : zahl(d.p95) + " ms", stufeP95(d.p95), neu.indexOf("p95") >= 0);
+    h += fk("Höchste Auslastung", d.eng + " " + zahl(d.rho) + " %", stufeRho(d.rho), neu.indexOf("rho") >= 0);
+    h += fk("Rückstau", zahl(d.rs), "info", neu.indexOf("rs") >= 0);
+    h += fk("Kosten", zahl(d.chf) + " CHF/h", "info", neu.indexOf("chf") >= 0);
+    if (d.liste) h += '<ul class="t11-fk-liste">' + d.liste.map((x) => "<li>" + x + "</li>").join("") + "</ul>";
+    return h + "</div>";
+  }
+  const OHNE = "ohne Massnahmen", MIT = "mit Plan";
+  const vergleich = '<div class="tablebox t11-vergleich"><table class="tabelle"><thead><tr><th scope="col">Nacht</th><th scope="col" class="zahl">Punkte</th><th scope="col">Sterne</th><th scope="col" class="zahl">Verfügbarkeit</th><th scope="col" class="zahl">Kosten</th></tr></thead><tbody>' +
+    '<tr><td>ohne Massnahmen</td><td class="zahl">374</td><td><span aria-hidden="true">☆☆☆</span><span class="sr-only">0 Sterne</span></td><td class="zahl">48.7 %</td><td class="zahl">284 CHF</td></tr>' +
+    '<tr class="an"><td>mit Plan</td><td class="zahl">' + NW("953") + '</td><td><span aria-hidden="true">★★★</span><span class="sr-only">3 Sterne</span></td><td class="zahl">99.8 %</td><td class="zahl">542 CHF</td></tr></tbody></table></div>';
+  L.film("#t11-film", {
+    phasen: ["Lage", "Ohne Massnahmen", "Vorbereitung", "Spitze", "Deployment", "Bilanz"],
+    texte: [
+      'Ein Outdoor-Webshop. Ab Minute 30 kommt <span data-ph="spitze">25 Minuten lang achtmal so viel Last</span>.',
+      'Ziel: <span data-ph="slo">p95 unter 400 ms</span> und <span data-ph="verf">mindestens 99.5 % Verfügbarkeit</span>, <span data-ph="budget">Budget 750 CHF</span>.',
+      '<span data-ph="stoebern">Drei Viertel stöbern nur</span>, <span data-ph="bestellen">ein Viertel bestellt</span>.',
+      'Heute Nacht kommt auch noch eine <span data-ph="deploy">neue Version des Lagerservice</span>.'
+    ],
+    woerterbuch: ["ρ · Auslastung", "p95 · Antwortzeit", "SLO · Ziel", "Rückstau", "CDN", "Cache", "Autoscaling", "Vorheizen", "Rollback"],
+    beschriftung: { texte: "Das Briefing", text: "Satz", woerterbuch: "Wörterbuch", formel: "Leitstand", ende: "Weiter zum Selbsttest" },
+    szenen: [
+      { sent: "all", say: "Muster: Lastspitze abfangen. Du liest die Lage, fängst Lesezugriffe früh ab, legst Reserve an und rollst Fehler sofort zurück. Wir spielen die Nacht zweimal: ohne und mit Plan. Alle Zahlen kommen aus dem Simulator." },
+      { ph: 0, hl: ["spitze"], dict: 1, dh: [0], f: tafel({ min: 0, lauf: OHNE, last: 86, verf: 99.92, p95: 287, eng: "Katalog", rho: 27, rs: 0, chf: 189 }), say: "Minute 0. 86 Anfragen pro Sekunde, p95 bei 287 ms. Am stärksten ausgelastet ist der Katalogservice, mit 27 Prozent. Alles grün." },
+      { ph: 0, hl: ["slo", "verf", "budget"], dict: 3, dh: [1, 2], say: "Das SLO gilt für die ganze Nacht: p95 unter 400 ms und 99.5 Prozent Verfügbarkeit. Höchstens jede 200. Anfrage darf scheitern." },
+      { ph: 0, hl: ["stoebern", "bestellen"], say: "Drei Viertel stöbern: Das trifft Katalog und Katalog-DB. Ein Viertel bestellt: Bestellung, Lager, Zahlung, Broker und Versand. Wer viel liest, ist ein Kandidat für CDN und Cache." },
+      { ph: 1, hl: ["spitze"], f: tafel({ min: 30, lauf: OHNE, last: 970, verf: 41.91, p95: 4092, eng: "Katalog", rho: 303, rs: 8591, chf: 189, neu: ["last", "verf", "p95", "rho"] }), say: "Ohne Massnahmen, Minute 30: Die Last springt auf 970 pro Sekunde. Der Katalogservice müsste 303 Prozent leisten. Mehr als die Hälfte der Anfragen dieser Minute scheitert, p95 liegt bei 4.1 Sekunden." },
+      { ph: 1, f: tafel({ min: 32, lauf: OHNE, last: 987, verf: 35.75, p95: 2291, eng: "Gateway", rho: 133, rs: 18148, chf: 189, neu: ["rho"], liste: ["Threads erschöpft: API-Gateway"] }), say: "Minute 32: Jetzt gehen dem API-Gateway die Threads aus. Es wartet auf den überlasteten Katalog und nimmt auch Bestellungen kaum noch an. So breitet sich ein Engpass aus." },
+      { ph: 1, dict: 4, dh: [3], f: tafel({ min: 40, lauf: OHNE, last: 983, verf: 34.79, p95: 2323, eng: "Katalog", rho: 218, rs: 55905, chf: 189, neu: ["rs"] }), say: "Der Versand hängt asynchron am Broker. Er scheitert nicht, aber sein Rückstau wächst um rund 4700 Nachrichten pro Minute. Kein Fehler, aber die Lieferscheine kommen immer später." },
+      { ph: 1, f: tafel({ min: 55, lauf: OHNE, last: 126, verf: 99.92, p95: 290, eng: "Versand", rho: 80, rs: 117600, chf: 189, neu: ["last", "verf", "p95"] }), say: "Minute 55: Die Spitze ist vorbei. Katalog und Gateway erholen sich sofort. Der Rückstau nicht: Der Versand braucht noch 30 Minuten für die 121 000 Nachrichten." },
+      { ph: 1, hl: ["deploy"], f: tafel({ min: 62, lauf: OHNE, last: 128, verf: 94.93, p95: 280, eng: "Versand", rho: 80, rs: 90795, chf: 189, neu: ["verf"], liste: ["Ereignis: Lagerservice 4.2 ausgerollt"] }), say: "Minute 62: Version 4.2 des Lagerservice. Jede fünfte Reservierung scheitert. Weil ein Viertel bestellt, scheitern 5 Prozent aller Anfragen, bis zum Schluss. Niemand rollt zurück." },
+      { ph: 1, f: '<div class="t11-fk-tafel"><div class="t11-fk-kopf">Ergebnis <span>' + OHNE + "</span></div>" + fk("Punkte", "374 / 1000", "schlecht") + fk("Verfügbarkeit", "48.7 %", "schlecht") + fk("Bestellungen verloren", "24 %", "schlecht") + "</div>", say: "Bilanz ohne Massnahmen: 374 von 1000 Punkten, kein Stern. Verfügbarkeit über die Nacht 48.7 Prozent, ein Viertel der Bestellungen ging verloren. Jetzt die zweite Nacht, mit Plan." },
+      { ph: 2, dict: 6, dh: [4, 5], f: '<div class="t11-fk-tafel"><div class="t11-fk-kopf">Minute 0 <span>vor dem Start</span></div><ul class="t11-fk-liste"><li>' + NW("CDN hinter das Shop-Frontend") + " · 30 CHF</li><li>" + NW("Cache vor die Katalog-DB") + " · 40 CHF</li></ul></div>", say: "Vor dem Start: Ein CDN liefert Bilder und Skripte aus, die Hälfte des Stöberns erreicht den Shop gar nicht mehr. Ein Cache vor der Katalog-DB fängt 85 Prozent der Lesezugriffe ab." },
+      { ph: 2, f: tafel({ min: 10, lauf: MIT, last: 98, verf: 99.94, p95: 306, eng: "Katalog", rho: 15, rs: 0, chf: 215, neu: ["rho"], liste: ["Katalog-DB: 1 % statt 18 %"] }), say: "Die Wirkung zeigt sich schon in der ruhigen Phase: Der Katalog ist nur noch zu 15 Prozent ausgelastet statt zu 31, die Katalog-DB ist fast leer." },
+      { ph: 2, dict: 7, dh: [6], say: "Dazu Autoscaling für Katalog, Bestellung, Lager, Zahlung und Versand, je 2 bis 10 Instanzen, je 15 CHF. Es startet ab 75 Prozent Auslastung neue Instanzen mit Ziel 60 Prozent. Aber messen, entscheiden und starten dauert rund 3 Minuten." },
+      { ph: 2, dict: 8, dh: [7], f: tafel({ min: 26, lauf: MIT, last: 118, verf: 99.94, p95: 307, eng: "Katalog", rho: 18, rs: 0, chf: 295, neu: ["chf"], liste: ["Katalog und Bestellservice auf 6 Instanzen vorgeheizt"] }), say: "Minute 25: Die Spitze ist angekündigt. Darum heizt du vor: Katalog und Bestellservice auf 6 Instanzen. Das kostet laufend mehr, 295 statt 215 CHF pro Stunde, dafür steht die Reserve bereit." },
+      { ph: 3, hl: ["spitze"], f: tafel({ min: 30, lauf: MIT, last: 970, verf: 99.29, p95: 1902, eng: "Lager", rho: 101, rs: 3025, chf: 275, neu: ["last", "p95", "rho"], liste: ["Katalog 61 %, Bestellung 40 %", "Lager und Zahlung 101 %"] }), say: "Minute 30: Katalog und Bestellung halten. Aber Lager und Zahlung hast du nicht vorgeheizt: 101 Prozent Auslastung, p95 1.9 Sekunden. Das Autoscaling hat es gemerkt und startet Instanzen." },
+      { ph: 3, f: tafel({ min: 32, lauf: MIT, last: 987, verf: 98.19, p95: 1994, eng: "Lager", rho: 103, rs: 9470, chf: 325, neu: ["verf"] }), say: "Minute 32: Die neuen Instanzen starten noch. Die Verfügbarkeit dieser Minute fällt kurz auf 98.2 Prozent." },
+      { ph: 3, f: tafel({ min: 33, lauf: MIT, last: 1018, verf: 99.94, p95: 359, eng: "Bestellung", rho: 70, rs: 7450, chf: 325, neu: ["verf", "p95"], liste: ["Lager und Zahlung je 4 Instanzen, 53 %"] }), say: "Minute 33: Lager und Zahlung laufen mit je 4 Instanzen bei 53 Prozent. p95 359 ms, alles wieder grün. Drei Minuten rot: genau die Reaktionszeit des Autoscalings." },
+      { ph: 3, f: tafel({ min: 36, lauf: MIT, last: 1012, verf: 99.94, p95: 358, eng: "Katalog", rho: 63, rs: 4, chf: 345, neu: ["rs"], liste: ["Versand 5 Instanzen"] }), say: "Der Versand-Rückstau stieg nur auf 9470 Nachrichten und ist ab Minute 36 abgebaut. Das Autoscaling hat auch den Versand auf 5 Instanzen gebracht." },
+      { ph: 3, dh: [7], say: "Lehre: Hättest du bei Minute 25 auch Lager und Zahlung vorgeheizt, wäre p95 durchgehend bei rund 350 ms geblieben. Planbare Spitzen heizt du vor, Autoscaling ist das Sicherheitsnetz." },
+      { ph: 3, f: tafel({ min: 60, lauf: MIT, last: 132, verf: 99.94, p95: 304, eng: "Katalog", rho: 10, rs: 0, chf: 295, neu: ["chf"], liste: ["Autoscaling baut ab: Katalog 3, Lager 2 Instanzen"] }), say: "Nach der Spitze baut das Autoscaling ab: drei Minuten unter 30 Prozent, dann eine Instanz weniger. Die Kosten pro Stunde sinken Schritt für Schritt." },
+      { ph: 4, hl: ["deploy"], f: tafel({ min: 62, lauf: MIT, last: 128, verf: 94.94, p95: 297, eng: "Katalog", rho: 13, rs: 0, chf: 245, neu: ["verf"], liste: ["Fehlerquote 5.1 %", "Ereignis: Lagerservice 4.2 ausgerollt"] }), say: "Minute 62: Version 4.2 des Lagerservice. Die Fehlerquote springt auf 5.1 Prozent. Am Kennzahlbild erkennst du die Ursache: Fehler steigen, Auslastung und p95 nicht. Das ist kein Lastproblem." },
+      { ph: 4, dict: 9, dh: [8], f: tafel({ min: 63, lauf: MIT, last: 130, verf: 99.94, p95: 307, eng: "Lager", rho: 14, rs: 0, chf: 245, neu: ["verf"], liste: ["Rollback auf 4.1 · 5 CHF"] }), say: "Rollback auf die letzte gute Version, 5 CHF. Ab Minute 63 liegt die Verfügbarkeit wieder bei 99.94 Prozent. Skalieren hätte hier nichts genützt." },
+      { ph: 5, f: vergleich, say: "Bilanz mit Plan: 953 Punkte, drei Sterne, Verfügbarkeit 99.8 Prozent. Teurer als ohne Massnahmen, 542 statt 284 CHF, aber gut im Budget von 750 CHF." },
+      { ph: 5, dh: [4, 5, 6, 7, 8], say: "Das Muster für jede Lastspitze: Lese-Last früh abfangen, planbare Spitzen vorheizen, Autoscaling als Netz, Fehler am Kennzahlbild erkennen und zurückrollen. Prüf dich jetzt im Selbsttest.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t11-selbsttest", {
+    fragen: [
+      { q: "Ein Dienst hat 2 Instanzen mit je 50 Anfragen pro Sekunde Kapazität. Es kommen 90 Anfragen pro Sekunde. Wie gross ist ρ?",
+        o: ["0.45", "0.9", "1.8"], a: 1, e: "ρ = 90 ÷ (2 × 50) = 0.9. Das ist über 85 %: ein Engpass." },
+      { q: "Warum steigt die Antwortzeit ab etwa 80 % Auslastung so steil?",
+        o: ["Weil der Server ab 80 % langsamer rechnet.", "Weil Anfragen zufällig kommen: Verpasste Pausen holt niemand nach, die Schlange wächst mit 1 ÷ (1 − ρ).", "Weil das Autoscaling ab 80 % Instanzen abschaltet."], a: 1, e: "Die Bedienzeit bleibt gleich, das Warten wächst. Bei 0.8 dauert eine Antwort mit einer Instanz fünfmal so lang wie die Arbeit, bei 0.9 zehnmal." },
+      { q: "<b>Stolperfalle:</b> Was sagt «p95 = 400 ms»?",
+        o: ["Die durchschnittliche Antwortzeit ist 400 ms.", "95 % der Anfragen waren schneller als 400 ms.", "Das System war zu 95 % verfügbar."], a: 1, e: "p95 ist ein Perzentil der Antwortzeit. Der Durchschnitt kann viel tiefer liegen, weil er Ausreisser versteckt. Mit der Verfügbarkeit hat p95 nichts zu tun." },
+      { q: "Kacheln: p95 11.7 s, Verfügbarkeit 15 %, Last normal, Meldung «Retry-Sturm auf Zahlungsservice → PayAlpin», Threads im Gateway erschöpft. Was hilft am meisten?",
+        o: ["Alle Dienste auf die doppelte Zahl Instanzen skalieren.", "Timeout zu PayAlpin kürzen, Retries begrenzen, Circuit Breaker und Bulkhead, Käufe über eine Queue entkoppeln.", "Einen Cache vor die Ticket-DB setzen."], a: 1, e: "Die Ursache ist eine langsame Abhängigkeit, keine Kapazitätsfrage. Mehr Instanzen warten genauso und schicken noch mehr Retries." },
+      { q: "Was bewirkt eine Queue zwischen Kauf- und Zahlungsservice, wenn der Zahlungsanbieter ausfällt?",
+        o: ["Die Käufe werden bestätigt und als Aufträge gepuffert; nach dem Ausfall werden sie abgearbeitet.", "Die Zahlungen laufen schneller, weil die Queue den Anbieter ersetzt.", "Nichts: Der Kauf scheitert trotzdem sofort."], a: 0, e: "Die Queue verwandelt einen Fehler in eine Verspätung. Rückstau statt Verlust." },
+      { q: "<b>Stolperfalle:</b> Die Bestell-DB ist bei einer Bestellwelle (fast nur Schreiben) überlastet. Was hilft hier NICHT?",
+        o: ["Ein Cache vor der Bestell-DB.", "Bestellungen über eine Queue puffern.", "Die Last mit Rate Limiting begrenzen."], a: 0, e: "Ein Cache fängt nur Lesezugriffe ab. Gegen Schreiblast hilft Puffern oder Begrenzen; dauerhaft eine stärkere Datenbank oder eine Aufteilung der Daten." },
+      { q: "Warum bringt der Message Broker in der Makroarchitektur viele Punkte?",
+        o: ["Weil er zeigt, dass die Microservices lose gekoppelt sind: Er entkoppelt sie zeitlich und puffert Ausfälle und Lastspitzen. Er ist die einzige Middleware, die du dort einzeichnest.", "Weil das API-Gateway in der Makroarchitektur Pflicht ist und der Broker dazu gehört.", "Weil der Broker die Datenbanken der Microservices ersetzt."], a: 0, e: "Gateway und Integration Middleware zeichnest du in der Makroarchitektur nicht ein. Jeder Service behält seine eigene Persistenz." },
+      { q: "Wann bekommt eine vom Autoscaling gestartete Instanz im Leitstand frühestens Anfragen?",
+        o: ["Sofort, wenn die Last steigt.", "Rund 3 Minuten nach Beginn der Überlast: 1 Minute messen, 2 Minuten Startzeit.", "Erst nach 10 Minuten."], a: 1, e: "Darum heizt du planbare Spitzen vor (Black Friday bei Minute 25)." },
+      { q: "Was unterscheidet Bulkhead und Circuit Breaker?",
+        o: ["Nichts, beides sind Namen für Timeouts.", "Der Bulkhead begrenzt, wie viele Threads eine Abhängigkeit belegen darf; der Circuit Breaker unterbricht Aufrufe an eine Abhängigkeit mit vielen Fehlern.", "Der Bulkhead startet neue Instanzen, der Circuit Breaker baut sie ab."], a: 1, e: "Der Bulkhead schützt die anderen Anfragen desselben Dienstes, der Circuit Breaker macht aus langsamen Fehlern schnelle. Zusammen mit einem Timeout sind sie am stärksten." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
