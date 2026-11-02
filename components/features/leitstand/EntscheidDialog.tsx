@@ -10,10 +10,12 @@
 import { useEffect, useRef, useState } from "react"
 import { formatTick, type InboxItem } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
-import { useLeitstand } from "./context"
+import { roleOf, useLeitstand } from "./context"
 import Dialog from "./Dialog"
 import Rueckmeldung from "./Rueckmeldung"
-import { CHANNEL_ICON, CHANNEL_TEXT } from "./format"
+import { CHANNEL_SYMBOL, CHANNEL_TEXT } from "./format"
+import Avatar from "./Avatar"
+import Icon from "./Icon"
 import { optionNumber, shuffledOptions } from "./logic"
 
 /** Text des Ereignisses (mit Variante, falls bei der Zustellung gewählt). */
@@ -85,10 +87,18 @@ export default function EntscheidDialog({
   // neues Ereignis ohne Frist → Dialog bleibt offen (die Zeit steht, bis entschieden ist)
   const escapeAction = option || !isOpen || item.status === "aufgeschoben" ? onClose : canDefer ? defer : undefined
 
+  const senderRole = roleOf(scenario, def.sender.name)
   const kicker = (
-    <>
-      <span aria-hidden="true">{CHANNEL_ICON[def.channel]}</span> {CHANNEL_TEXT[def.channel]} · {def.sender.name} · {formatTick(item.arrivedTick)}
-    </>
+    <span className={styles.absender}>
+      <Avatar name={def.sender.name} role={senderRole} size={56} />
+      <span className={styles.absenderText}>
+        <strong>{def.sender.name}</strong>
+        {senderRole && <span>{senderRole}</span>}
+        <span className={styles.absenderKanal}>
+          <Icon name={CHANNEL_SYMBOL[def.channel]} size={14} /> {CHANNEL_TEXT[def.channel]} · {formatTick(item.arrivedTick)}
+        </span>
+      </span>
+    </span>
   )
 
   return (

@@ -10,6 +10,7 @@ import { formatTick, formatTickShort } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import type { SyncStatus } from "./useRunSync"
+import Icon from "./Icon"
 
 export type Speed = 0 | 1 | 2 | 4
 
@@ -135,7 +136,7 @@ export default function KopfLeiste({
         aria-keyshortcuts={shortcuts ? "P" : undefined}
         aria-label={`Posteingang: ${open} offen${fresh > 0 ? `, ${fresh} neu` : ""}`}
       >
-        <span aria-hidden="true">✉</span>
+        <Icon name="posteingang" size={18} />
         <span aria-hidden="true">{open}</span>
       </button>
 

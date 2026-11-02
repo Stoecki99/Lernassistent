@@ -5,10 +5,12 @@
 
 // components/features/leitstand/PlanPruefung.tsx
 // Plan-Prüfung vor dem Start (3.2) und Knopf «Planung abschliessen» (Aktion startPeriod).
+// Die ersten drei Befunde sind sichtbar, die übrigen aufklappbar (weniger Text auf einen Blick).
 
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
-import { planCheck } from "./logic"
+import { planCheck, type PlanFinding } from "./logic"
+import Icon from "./Icon"
 
 export default function PlanPruefung() {
   const { state, scenario, run, setView, readOnly } = useLeitstand()
@@ -32,7 +34,7 @@ export default function PlanPruefung() {
           onClick={() => run({ type: "startPeriod" })}
           aria-describedby="plan-pruefung-stand"
         >
-          Planung abschliessen ▶
+          Planung abschliessen <Icon name="pfeilRechts" size={16} />
         </button>
       </div>
       <p id="plan-pruefung-stand" className="hint">
@@ -42,21 +44,31 @@ export default function PlanPruefung() {
             ? `${warnings.length} Hinweise. Du kannst trotzdem starten.`
             : "Der Plan sieht gut aus."}
       </p>
-      {findings.length > 0 && (
-        <ul className={styles.befundListe}>
-          {findings.slice(0, 12).map((f, i) => (
-            <li key={i} className={f.kind === "fehlt" ? styles.befundFehlt : styles.befundWarn}>
-              <span aria-hidden="true">{f.kind === "fehlt" ? "■" : "▲"}</span>
-              <span className="sr-only">{f.kind === "fehlt" ? "Fehlt:" : "Hinweis:"}</span>
-              <span>{f.text}</span>
-              <button type="button" className={`btn ${styles.klein}`} onClick={() => setView(f.view)}>
-                {f.view === "team" ? "Team" : f.view === "risiken" ? "Risiken" : "Vorgänge"}
-              </button>
-            </li>
-          ))}
-          {findings.length > 12 && <li className="hint">… und {findings.length - 12} weitere.</li>}
-        </ul>
+      {findings.length > 0 && <BefundListe items={findings.slice(0, 3)} onOpen={setView} />}
+      {findings.length > 3 && (
+        <details className={styles.weitere}>
+          <summary>Weitere {findings.length - 3} Hinweise anzeigen</summary>
+          <BefundListe items={findings.slice(3)} onOpen={setView} />
+        </details>
       )}
     </div>
+  )
+}
+
+function BefundListe({ items, onOpen }: { items: PlanFinding[]; onOpen: (view: PlanFinding["view"]) => void }) {
+  return (
+    <ul className={styles.befundListe}>
+      {items.map((f, i) => (
+        <li key={i} className={f.kind === "fehlt" ? styles.befundFehlt : styles.befundWarn}>
+          <span aria-hidden="true">{f.kind === "fehlt" ? "■" : "▲"}</span>
+          <span className="sr-only">{f.kind === "fehlt" ? "Fehlt:" : "Hinweis:"}</span>
+          <span>{f.text}</span>
+          <button type="button" className={`btn ${styles.klein}`} onClick={() => onOpen(f.view)}>
+            <Icon name={f.view === "team" ? "team" : f.view === "risiken" ? "risiko" : "vorgaenge"} size={14} />{" "}
+            {f.view === "team" ? "Team" : f.view === "risiken" ? "Risiken" : "Vorgänge"}
+          </button>
+        </li>
+      ))}
+    </ul>
   )
 }

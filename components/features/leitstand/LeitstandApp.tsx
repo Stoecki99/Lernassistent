@@ -47,6 +47,7 @@ import Risikoregister from "./Risikoregister"
 import BudgetAnsicht from "./BudgetAnsicht"
 import Statusbericht, { GemeinderatAntwort } from "./Statusbericht"
 import Nachbesprechung from "./Nachbesprechung"
+import Icon, { type IconName } from "./Icon"
 
 type Load =
   | { kind: "laden" }
@@ -178,19 +179,19 @@ function initialView(state: SimState, actionCount: number): ViewKey {
   return "uebersicht"
 }
 
-const VIEWS: Array<[ViewKey, string]> = [
-  ["auftrag", "Auftrag"],
-  ["uebersicht", "Übersicht"],
-  ["vorgaenge", "Vorgänge"],
-  ["team", "Team"],
-  ["plan", "Plan"],
-  ["auslastung", "Auslastung"],
-  ["kalender", "Kalender"],
-  ["posteingang", "Posteingang"],
-  ["risiken", "Risiken"],
-  ["budget", "Budget"],
-  ["bericht", "Bericht"],
-  ["nachbesprechung", "Nachbesprechung"],
+const VIEWS: Array<[ViewKey, string, IconName]> = [
+  ["auftrag", "Auftrag", "auftrag"],
+  ["uebersicht", "Übersicht", "uebersicht"],
+  ["vorgaenge", "Vorgänge", "vorgaenge"],
+  ["team", "Team", "team"],
+  ["plan", "Plan", "plan"],
+  ["auslastung", "Auslastung", "auslastung"],
+  ["kalender", "Kalender", "kalender"],
+  ["posteingang", "Posteingang", "posteingang"],
+  ["risiken", "Risiken", "risiko"],
+  ["budget", "Budget", "budget"],
+  ["bericht", "Bericht", "bericht"],
+  ["nachbesprechung", "Nachbesprechung", "nachbesprechung"],
 ]
 
 const itemKey = (i: { eventId: string; arrivedTick: number }) => `${i.eventId}@${i.arrivedTick}`
@@ -585,9 +586,10 @@ function Spiel({
           <p className={`note ${styles.lage}`}>Dieser Lauf ist {detail.status} und lässt sich nur ansehen.</p>
         )}
 
-        <Lage hasNew={Boolean(firstNew)} onOpenNew={() => firstNew && setDialog({ eventId: firstNew.eventId, arrivedTick: firstNew.arrivedTick })} />
-
-        <Kennzahlen />
+        {/* Auf der Übersicht übernimmt «Was jetzt zu tun ist» die Lage */}
+        {view !== "uebersicht" && (
+          <Lage hasNew={Boolean(firstNew)} onOpenNew={() => firstNew && setDialog({ eventId: firstNew.eventId, arrivedTick: firstNew.arrivedTick })} />
+        )}
 
         <Hinweis
           hint={activeHint ?? null}
@@ -598,18 +600,18 @@ function Spiel({
             setDismissed(next)
             writeList(dismissKey, next)
           }}
-            onAllOff={() => {
-              setHintsOff(true)
-              try {
-                window.localStorage.setItem(HINTS_OFF_KEY, "1")
-              } catch {
-                // ohne Speicher gilt die Wahl bis zum Neuladen
-              }
-            }}
-          />
+          onAllOff={() => {
+            setHintsOff(true)
+            try {
+              window.localStorage.setItem(HINTS_OFF_KEY, "1")
+            } catch {
+              // ohne Speicher gilt die Wahl bis zum Neuladen
+            }
+          }}
+        />
 
         <nav ref={navRef} className={styles.ansichten} aria-label="Ansichten">
-          {VIEWS.filter(([key]) => key !== "nachbesprechung" || state.phase === "abgeschlossen").map(([key, label]) => (
+          {VIEWS.filter(([key]) => key !== "nachbesprechung" || state.phase === "abgeschlossen").map(([key, label, icon]) => (
             <button
               key={key}
               type="button"
@@ -617,11 +619,15 @@ function Spiel({
               aria-current={view === key ? "page" : undefined}
               onClick={() => setView(key)}
             >
+              <Icon name={icon} size={17} />
               {label}
               {key === "posteingang" && openCount > 0 ? <b className={styles.chipZahl}> {openCount}</b> : null}
             </button>
           ))}
         </nav>
+
+        {/* Volle Kacheln auf der Übersicht, sonst eine schmale Leiste */}
+        {view !== "uebersicht" && view !== "nachbesprechung" && <Kennzahlen kompakt />}
 
         <div className={styles.inhalt} aria-label={VIEWS.find(([k]) => k === view)?.[1]} role="region">
           {view === "auftrag" && <Auftrag />}

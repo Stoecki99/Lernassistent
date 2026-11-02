@@ -16,6 +16,9 @@ import { AbgleichTabelle } from "./Statusbericht"
 import KurvenDiagramm from "./charts/KurvenDiagramm"
 import { evCurves } from "./BudgetAnsicht"
 import type { FinishResponse } from "./api"
+import Avatar from "./Avatar"
+import Icon, { type IconName } from "./Icon"
+import { MotivationBalken } from "./Team"
 
 const PARTS: Array<{ key: "termin" | "kosten" | "qualitaet" | "stakeholder" | "team" | "fuehrung"; label: string; max: number; text: string }> = [
   { key: "termin", label: "Termin", max: 250, text: "" }, // Text hängt vom Terminziel ab, siehe terminText
@@ -31,15 +34,15 @@ function terminText(targetDay: number, intro: boolean): string {
   return `Ende bis Tag ${intro ? targetDay - 0.5 : targetDay - 2} volle Punkte, danach Abzug je Tag.`
 }
 
-const KIND_ICON: Record<string, string> = {
-  ereignis: "✉",
-  entscheid: "✔",
-  standard: "⌛",
-  risiko: "⚠",
-  meilenstein: "◆",
-  bericht: "📝",
-  gemeinderat: "🏛",
-  vorgang: "▣",
+const KIND_ICON: Record<string, IconName> = {
+  ereignis: "mail",
+  entscheid: "fertig",
+  standard: "uhr",
+  risiko: "risiko",
+  meilenstein: "meilenstein",
+  bericht: "bericht",
+  gemeinderat: "stakeholder",
+  vorgang: "vorgaenge",
 }
 
 function useCountUp(target: number): number {
@@ -161,13 +164,15 @@ export default function Nachbesprechung({
         )}
       </div>
 
+      <TeamAmEnde />
+
       <div className="card stack">
         <h3>Zeitstrahl: Wendepunkte</h3>
         <ol className={styles.zeitstrahl}>
           {d.turningPoints.map((t, i) => (
             <li key={i} className={styles.zeitpunkt}>
-              <span className={styles.zeitIcon} aria-hidden="true">
-                {KIND_ICON[t.kind] ?? "•"}
+              <span className={styles.zeitIcon}>
+                <Icon name={KIND_ICON[t.kind] ?? "phase"} size={16} />
               </span>
               <span className={styles.zeitTag}>{formatTick(t.tick)}</span>
               <span>{t.text}</span>
@@ -270,5 +275,32 @@ export default function Nachbesprechung({
         </div>
       </div>
     </div>
+  )
+}
+
+/** Team-Übersicht am Ende: Bild, Rolle, Motivation (Balken mit Zahl) und geleistete Projektstunden. */
+function TeamAmEnde() {
+  const { scenario, state } = useLeitstand()
+  const people = scenario.people.filter((p) => state.people[p.id]?.available || Object.values(state.tasks).some((t) => (t.hoursByPerson[p.id] ?? 0) > 0))
+  const hoursOf = (pid: string) => Object.values(state.tasks).reduce((sum, t) => sum + (t.hoursByPerson[pid] ?? 0), 0)
+  return (
+    <section className="card stack" aria-labelledby="team-ende">
+      <h3 id="team-ende" className={styles.titelMitSymbol}>
+        <Icon name="team" size={18} /> Dein Team am Ende
+      </h3>
+      <ul className={styles.teamEnde}>
+        {people.map((p) => (
+          <li key={p.id}>
+            <Avatar name={p.name} role={p.role} size={52} accessory={false} />
+            <span className={styles.teamEndeText}>
+              <strong>{p.name}</strong>
+              <span className="hint">{p.role}</span>
+              <MotivationBalken value={state.people[p.id].motivation} klein />
+              <span className={styles.kleinZahl}>{Math.round(hoursOf(p.id))} h im Projekt</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

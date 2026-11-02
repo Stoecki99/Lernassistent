@@ -9,6 +9,8 @@
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import { ORIGIN_TEXT, chf, parseBrief } from "./format"
+import Avatar from "./Avatar"
+import Icon from "./Icon"
 
 export default function Auftrag() {
   const { scenario, kpis, setView, state } = useLeitstand()
@@ -45,7 +47,9 @@ export default function Auftrag() {
       </div>
       <div className="stack">
         <div className="card stack">
-          <h3>Rahmen</h3>
+          <h3 className={styles.titelMitSymbol}>
+            <Icon name="auftrag" size={18} /> Rahmen
+          </h3>
           <dl className={styles.zahlenListe}>
             <dt>Plankosten (BAC)</dt>
             <dd>{chf(kpis.bac)}</dd>
@@ -62,21 +66,35 @@ export default function Auftrag() {
           </dl>
         </div>
         <div className="card stack">
-          <h3>Team</h3>
-          <ul className={styles.liste}>
+          <h3 className={styles.titelMitSymbol}>
+            <Icon name="team" size={18} /> Team
+          </h3>
+          <ul className={styles.personenListe}>
             {team.map((p) => (
               <li key={p.id}>
-                <strong>{p.name}</strong> · {p.role} · {ORIGIN_TEXT[p.origin]} · {Math.round(p.pensum * 100)} %
+                <Avatar name={p.name} role={p.role} size={44} accessory={false} />
+                <span>
+                  <strong>{p.name}</strong>
+                  <span className="hint">
+                    {p.role} · {ORIGIN_TEXT[p.origin]} · {Math.round(p.pensum * 100)} %
+                  </span>
+                </span>
               </li>
             ))}
           </ul>
         </div>
         <div className="card stack">
-          <h3>Stakeholder</h3>
-          <ul className={styles.liste}>
+          <h3 className={styles.titelMitSymbol}>
+            <Icon name="stakeholder" size={18} /> Stakeholder
+          </h3>
+          <ul className={styles.personenListe}>
             {scenario.stakeholders.map((s) => (
               <li key={s.id}>
-                <strong>{s.name}</strong> · {s.role}
+                <Avatar name={s.name} role={s.role.split(". ")[0]} size={44} accessory={false} />
+                <span>
+                  <strong>{s.name}</strong>
+                  <span className="hint">{s.role}</span>
+                </span>
               </li>
             ))}
           </ul>

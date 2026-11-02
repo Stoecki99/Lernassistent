@@ -13,6 +13,8 @@ import styles from "@/app/(leitstand)/leitstand.module.css"
 import { personName, useLeitstand } from "./context"
 import { chf } from "./format"
 import { KIND_TEXT } from "./Uebersicht"
+import Avatar from "./Avatar"
+import Icon from "./Icon"
 
 const COUNTED = new Set(["gespraech", "mittagessen", "teamabend", "zusatzbericht"])
 
@@ -28,14 +30,16 @@ export default function Kalender() {
   const canAct = !readOnly && (state.phase === "planung" || state.phase === "lauf")
   const entries = [...state.calendar].sort((a, b) => b.tick - a.tick)
   const absences = scenario.people.flatMap((p) =>
-    (state.people[p.id]?.absences ?? []).map((a) => ({ person: p.name, ...a }))
+    (state.people[p.id]?.absences ?? []).map((a) => ({ person: p.name, role: p.role, ...a }))
   )
 
   return (
     <div className={styles.ansicht}>
       <div className={styles.raster2}>
         <div className="card stack">
-          <h3>Termin anlegen</h3>
+          <h3 className={styles.titelMitSymbol}>
+            <Icon name="kalender" size={18} /> Termin anlegen
+          </h3>
           <p className={usedToday >= max ? styles.warnText : "hint"}>
             Heute {usedToday} von {max} Terminen belegt.
           </p>
@@ -76,13 +80,14 @@ export default function Kalender() {
             </div>
             <div className={styles.checkRaster}>
               {team.map((p) => (
-                <label key={p.id} className="row">
+                <label key={p.id} className={styles.gastWahl}>
                   <input
                     type="checkbox"
                     checked={guests.includes(p.id)}
                     onChange={(e) => setGuests((g) => (e.target.checked ? [...g, p.id] : g.filter((x) => x !== p.id)))}
-                  />{" "}
-                  {p.name}
+                  />
+                  <Avatar name={p.name} size={32} decorative />
+                  <span>{p.name}</span>
                 </label>
               ))}
             </div>
@@ -108,10 +113,13 @@ export default function Kalender() {
           {absences.length === 0 ? (
             <p className="hint">Keine bekannt.</p>
           ) : (
-            <ul className={styles.liste}>
+            <ul className={styles.terminListe}>
               {absences.map((a, i) => (
                 <li key={i}>
-                  {a.person}: Tag {dayOf(a.fromTick) + 1} bis {dayOf(Math.max(a.fromTick, a.toTick - 1)) + 1} · {a.reason}
+                  <Avatar name={a.person} role={a.role} size={36} />
+                  <span>
+                    <strong>{a.person}</strong>: Tag {dayOf(a.fromTick) + 1} bis {dayOf(Math.max(a.fromTick, a.toTick - 1)) + 1} · {a.reason}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -123,12 +131,23 @@ export default function Kalender() {
         {entries.length === 0 ? (
           <p className="hint">Noch keine Termine.</p>
         ) : (
-          <ul className={styles.liste}>
+          <ul className={styles.terminListe}>
             {entries.map((c) => (
               <li key={c.id}>
+                <span className={styles.avatarStapel}>
+                  {c.personIds.length === 0 ? (
+                    <span className={styles.terminSymbol}>
+                      <Icon name="kalender" size={16} />
+                    </span>
+                  ) : (
+                    c.personIds.slice(0, 4).map((p) => <Avatar key={p} name={personName(scenario, p)} size={32} decorative />)
+                  )}
+                </span>
+                <span>
                 <strong>{KIND_TEXT[c.kind]}</strong>
                 {c.personIds.length > 0 ? ` mit ${c.personIds.map((p) => personName(scenario, p)).join(", ")}` : ""}
                 {c.hours ? ` · ${c.hours} h` : ""} <span className="hint">· {formatTick(c.tick)}</span>
+                </span>
               </li>
             ))}
           </ul>
