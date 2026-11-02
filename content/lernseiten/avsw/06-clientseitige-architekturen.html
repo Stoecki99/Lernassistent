@@ -1,0 +1,1887 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clientseitige Architekturen · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/architektur.css">
+  <link rel="next" href="/lernseiten/avsw/07-serverseitige-architekturen" title="Serverseitige Architekturen">
+  <style>
+    .t06-ziele{margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px}
+    .t06-badge{display:inline-block; padding:1px 8px; border-radius:999px; font-size:.78rem; font-weight:600; color:var(--ink); background:var(--ar-bg); border:1px solid var(--ar-c); white-space:nowrap}
+    .t06-wb td:first-child{font-weight:600}
+    .t06-karten{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px}
+    .t06-karte{border:1px solid var(--line); border-top:4px solid var(--ar-c); border-radius:12px; padding:12px 14px; background:var(--surface); display:flex; flex-direction:column; gap:6px}
+    .t06-karte h4{margin:0; font-size:1rem}
+    .t06-karte p, .t06-karte ul{margin:0; font-size:.92rem}
+    .t06-karte ul{padding-left:1.1rem}
+    .t06-karte .t06-klein{font-size:.82rem; color:var(--muted)}
+
+    /* OS-Zuordnung */
+    .t06-os th, .t06-os td{text-align:center}
+    .t06-os th[scope="row"]{text-align:left}
+    .t06-os-knopf{min-width:4.6rem; padding:6px 8px; border-radius:8px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink); font:inherit; cursor:pointer}
+    .t06-os-knopf[aria-pressed="true"]{border-color:var(--r-client); background:var(--r-client-bg); font-weight:600}
+    .t06-os-knopf.t06-ok{outline:2px solid var(--ok); outline-offset:1px}
+    .t06-os-knopf.t06-falsch{outline:2px solid var(--bad); outline-offset:1px}
+
+    /* Regler Thin bis Fat Client */
+    .t06-regler-kopf{display:flex; justify-content:space-between; gap:8px; font-size:.85rem; color:var(--muted); font-weight:600}
+    .t06-regler input[type=range]{width:100%; accent-color:var(--accent)}
+    .t06-stufe{font-size:1.05rem; font-weight:700; margin:0}
+    .t06-split{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .t06-seite{border:2px solid var(--line); border-radius:12px; padding:10px; background:var(--surface); display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t06-seite h4{margin:0 0 2px; font-size:.95rem; display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px}
+    .t06-schicht{border-radius:8px; padding:6px 8px; font-size:.84rem; line-height:1.25; hyphens:auto; -webkit-hyphens:auto; overflow-wrap:break-word; border:1.5px solid var(--ar-c); background:var(--ar-bg); color:var(--ink); transition:opacity .3s, background-color .3s}
+    .t06-schicht.t06-geteilt{border-style:dashed}
+    .t06-schicht.t06-leer{opacity:.28; background:transparent; border-style:dotted; color:var(--muted)}
+    .t06-merkmale{display:grid; grid-template-columns:minmax(7.5rem, 13rem) minmax(0,1fr) 2.2rem; gap:6px 10px; font-size:.88rem; align-items:center}
+    @media (max-width:560px){ .t06-merkmale{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 2.2rem} .t06-split{gap:6px} .t06-seite{padding:8px 6px} }
+    .t06-balken{height:10px; border-radius:6px; background:var(--board); border:1px solid var(--line); overflow:hidden}
+    .t06-balken i{display:block; height:100%; background:var(--accent); width:calc(var(--w) * 20%); transition:width .3s}
+
+    /* Bildschirmdesign */
+    .t06-buehne{border:1px solid var(--line); border-radius:12px; background:var(--board); padding:10px; overflow:hidden}
+    .t06-rahmen{position:relative; overflow:hidden; margin:0 auto}
+    .t06-geraet{position:absolute; left:0; top:0; transform-origin:top left; border:6px solid var(--ink); border-radius:14px; background:var(--surface); overflow:hidden; height:412px; box-sizing:border-box}
+    .t06-geraet-innen{height:100%; overflow-x:auto; overflow-y:hidden}
+    .t06-mock{font-size:16px; color:var(--ink); padding:12px; box-sizing:border-box; transform-origin:top left; font-family:var(--f-body)}
+    .t06-mock-kopf{display:flex; align-items:center; gap:12px; padding:8px 12px; background:var(--r-client-bg); border-radius:8px; font-weight:700}
+    .t06-mock-nav{display:flex; gap:14px; margin-left:auto; font-weight:400}
+    .t06-mock-held{margin:12px 0; padding:20px; border-radius:8px; background:var(--r-business-bg); font-size:22px; font-weight:700}
+    .t06-mock-karten{display:grid; gap:10px}
+    .t06-mock-karte{border:1px solid var(--line); border-radius:8px; padding:10px; min-height:72px; background:var(--surface)}
+    .t06-mock-m{font-size:15px}
+
+    /* Offline / Online / Sync */
+    .t06-netz-apps{display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px}
+    .t06-app{border:2px solid var(--line); border-radius:12px; padding:10px 12px; background:var(--surface); display:flex; flex-direction:column; gap:4px}
+    .t06-app h4{margin:0; font-size:.98rem}
+    .t06-app .t06-zust{font-weight:600}
+    .t06-app.t06-gut{border-color:var(--ok)}
+    .t06-app.t06-schlecht{border-color:var(--bad)}
+    .t06-app.t06-warten{border-color:var(--r-sync)}
+    .t06-netz-status{font-weight:700}
+
+    /* Plattform-Stapel */
+    .t06-stapel{display:flex; flex-direction:column; gap:6px; align-items:stretch}
+    .t06-lage{border-radius:10px; padding:8px 10px; border:1.5px solid var(--ar-c); background:var(--ar-bg); color:var(--ink); font-size:.9rem; text-align:center}
+    .t06-lage-reihe{display:flex; gap:6px; flex-wrap:wrap}
+    .t06-lage-reihe .t06-lage{flex:1 1 7rem}
+    .t06-pfeil{text-align:center; color:var(--muted); font-size:.85rem; line-height:1}
+    .t06-pk{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:560px){ .t06-pk{grid-template-columns:1fr} }
+    .t06-pk ul{margin:0; padding-left:1.1rem; font-size:.9rem}
+
+    /* Entscheidungs-Werkzeug */
+    .t06-anf{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:8px 14px; border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0; background:var(--board)}
+    .t06-anf label{display:flex; gap:8px; align-items:flex-start; font-size:.93rem; cursor:pointer}
+    .t06-anf input{margin-top:4px}
+    .t06-rang{display:flex; flex-direction:column; gap:6px}
+    .t06-rang-zeile{display:grid; grid-template-columns:minmax(8rem, 15rem) minmax(0,1fr) 2.6rem; gap:8px; align-items:center; font-size:.9rem}
+    .t06-rang-zeile.t06-top{font-weight:700}
+    .t06-rang-balken{height:12px; border-radius:6px; background:var(--board); border:1px solid var(--line); overflow:hidden}
+    .t06-rang-balken i{display:block; height:100%; width:var(--w); background:var(--r-client); transition:width .3s}
+    .t06-rang-zeile.t06-top .t06-rang-balken i{background:var(--accent)}
+    .t06-empf{border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:10px; padding:10px 14px}
+    .t06-empf ul{margin:4px 0 0; padding-left:1.1rem}
+    .t06-plus{color:var(--ok); font-weight:700}
+    .t06-minus{color:var(--bad); font-weight:700}
+
+    /* Client-Apps-Tabelle */
+    .t06-cat{min-width:680px}
+    .t06-cat select{width:100%; max-width:15rem; font:inherit; font-size:.88rem}
+    .t06-cat td:first-child{width:30%}
+    @media (max-width:720px){
+      .t06-cat{min-width:0}
+      .t06-cat thead{display:none}
+      .t06-cat tr, .t06-cat td{display:block; width:auto}
+      .t06-cat td:first-child{width:auto}
+      .t06-cat tr{border-bottom:2px solid var(--line); padding:6px 0}
+      .t06-cat td[data-label]::before{content:attr(data-label); display:block; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:4px}
+      .t06-cat select{max-width:100%}
+    }
+    .t06-cat td:nth-child(2) select{min-width:11rem}
+    .t06-cat td:nth-child(4) select{min-width:10.5rem}
+    #t06-breite-wert{font-family:var(--f-body)}
+    .t06-cat fieldset{border:0; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+    .t06-cat fieldset label{display:flex; gap:6px; align-items:flex-start; font-size:.86rem; cursor:pointer}
+    .t06-cat fieldset input{margin-top:3px}
+    .t06-cat td{vertical-align:top}
+    .t06-cat td.t06-ok{box-shadow:inset 3px 0 0 var(--ok)}
+    .t06-cat td.t06-falsch{box-shadow:inset 3px 0 0 var(--bad)}
+    .t06-cat .t06-marke{display:block; font-size:.82rem; margin-top:4px}
+    .t06-cat .t06-uc{font-size:.9rem}
+    .t06-cat .t06-uc b{display:block}
+
+    /* Film: Mini-Tabellen und Mini-Client-Tier */
+    .t06-ff{font-family:var(--f-body); font-size:.95rem; line-height:1.4; white-space:normal; display:block; min-width:0}
+    .t06-ft{border-collapse:collapse; font-size:.84rem; width:100%}
+    .t06-ft th, .t06-ft td{border:1px solid var(--line); padding:4px 6px; text-align:left; vertical-align:top}
+    .t06-ft th{background:var(--board)}
+    .t06-fp{border:1.5px solid var(--r-paket); background:var(--r-paket-bg); border-radius:6px; padding:16px 8px 8px; position:relative; margin-top:12px}
+    .t06-fp > .t06-fp-name{position:absolute; top:-11px; left:8px; background:var(--r-reiter); border:1.5px solid var(--r-paket); border-radius:5px 5px 0 0; padding:0 8px; font-size:.78rem; font-weight:700}
+    .t06-fp-reihe{display:flex; flex-wrap:wrap; gap:8px}
+    .t06-fp-reihe > .t06-fp{flex:1 1 9rem}
+    .t06-fk{border:1.5px solid var(--ar-c); background:var(--ar-bg); border-radius:5px; padding:4px 7px; font-size:.8rem; color:var(--ink)}
+    .t06-fk small{display:block; color:var(--muted); font-size:.72rem}
+    .t06-fl{font-size:.8rem; margin:2px 0; padding-left:1rem}
+  </style>
+</head>
+<body data-fach="avsw" data-thema="06-clientseitige-architekturen">
+<main class="wrap">
+  <header class="stack">
+    <span class="eyebrow">AVSW · LB 2 · SW 7 · Clientseitige Architekturen</span>
+    <h1>Clientseitige Architekturen</h1>
+    <p class="lead">Alles, was der Mensch sieht und anfasst, läuft auf einem Client: im Browser, als App auf dem Handy, als Desktop-Programm oder sogar in Excel. Hier lernst du, welche Client-Typen es gibt, was jeweils auf dem Gerät und was auf dem Server läuft, und wie du in der Prüfung den Client Tier einer Architektur richtig ergänzt: welche App, welche Technologie, welche Schnittstelle, und warum.</p>
+    <p class="note"><b>Hinweis:</b> Eigene Erklärungen und Beispiele auf Basis der Modulunterlagen, nicht vom Dozenten bestätigt. Alle Firmen und Fälle sind erfunden.</p>
+    <div class="card stack">
+      <h3>Das kannst du nach dieser Station</h3>
+      <ul class="t06-ziele prose">
+        <li>Mobile und stationäre Client Devices (inkl. Wearables, IoT-Device, VDI) mit ihren Eigenschaften erklären.</li>
+        <li>Die gängigen Client-Betriebssysteme nennen und den Device-Typen zuordnen.</li>
+        <li>Die wichtigsten Client-App-Technologien erklären: Bildschirmdesign, LBS, AR, Offline/Online/Sync, MVC, MVVM, AJAX.</li>
+        <li>Web-App-Technologien (klassisch, SPA, PWA, Razor, Blazor, JSF) in ihrer Architektur darlegen.</li>
+        <li>Single-Platform-, Cross-/Multiplatform- und Hybrid-Apps nach Entwicklung und Frameworks unterscheiden.</li>
+        <li>Die Makroarchitektur einer Applikation um Client und Presentation Tier ergänzen, mit den richtigen Schnittstellen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#start"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#devices"><b>2</b>Devices und OS</a>
+    <a href="#aufteilung"><b>3</b>Client oder Server?</a>
+    <a href="#technik"><b>4</b>App-Technologien</a>
+    <a href="#muster"><b>5</b>MVC, MVVM, AJAX</a>
+    <a href="#webapps"><b>6</b>Web Apps</a>
+    <a href="#installierbar"><b>7</b>Installierbare Apps</a>
+    <a href="#verfahren"><b>8</b>Vorgehen</a>
+    <a href="#entscheiden"><b>9</b>Client-Typ wählen</a>
+    <a href="#makro"><b>10</b>Makroarchitektur</a>
+    <a href="#spiel"><b>11</b>Spiel</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- 0 · Bausteine -->
+  <section id="start" data-kategorie="client">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Sechs Bausteine mit Alltagsbildern</h2>
+    <p class="prose">Ein verteiltes System hat immer zwei Seiten: den Client, mit dem ein Mensch arbeitet, und den Server, der Daten und Fachlogik hält. Spannend ist, wie viel Arbeit auf welcher Seite passiert. Stell dir ein Restaurant vor.</p>
+    <div class="grid4">
+      <div class="concept" data-kategorie="client"><span class="tag">Client = Gast</span><p>Der Gast bestellt und isst. Er kocht nicht selbst. Der Client zeigt an, nimmt Eingaben an und schickt Anfragen an den Server.</p></div>
+      <div class="concept" data-kategorie="dienst"><span class="tag">Server = Küche</span><p>Die Küche hat die Vorräte (Daten) und die Rezepte (Fachlogik). Sie beantwortet Bestellungen vieler Gäste gleichzeitig.</p></div>
+      <div class="concept" data-kategorie="zugang"><span class="tag">Thin oder Rich Client</span><p>Fertiger Teller (thin): Die Küche macht alles. Fondue am Tisch (rich): Ein Teil der Arbeit passiert beim Gast.</p></div>
+      <div class="concept" data-kategorie="infrastruktur"><span class="tag">Browser = Theaterbühne</span><p>Die Bühne spielt jedes Stück, egal wer es geschrieben hat. Der Browser führt jede Web App aus, auf jedem Gerät und Betriebssystem.</p></div>
+      <div class="concept" data-kategorie="daten"><span class="tag">Installierbare App = eigenes Werkzeug</span><p>Ein Werkzeug, das genau zu deinem Gerät passt. Du musst es zuerst holen (App Store, Installer), dafür kann es alles, was das Gerät kann.</p></div>
+      <div class="concept" data-kategorie="messaging"><span class="tag">Schnittstelle = Durchreiche</span><p>Gast und Küche reden über ein vereinbartes Fenster. In der Architektur heisst es HTTP, REST, GraphQL oder OData.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Läuft im Browser oder wird installiert?</h3>
+      <p class="hint">Achte darauf, wo das Programm ausgeführt wird, nicht darauf, wie es aussieht.</p>
+      <div id="t06-sort-start"></div>
+    </div>
+  </section>
+
+  <!-- 1 · Wörterbuch -->
+  <section id="woerterbuch" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 1 · Begriffe festlegen</span>
+    <h2>Wörterbuch der Client-Seite</h2>
+    <p class="prose">Diese Begriffe brauchst du für die ganze Station. Die Farbe zeigt die Rolle wie im Referenzkatalog: Apricot für Clients und Präsentation, Grün für Web API, Grau für Daten, Lavendel für Infrastruktur.</p>
+    <div class="card tablebox">
+      <table class="tabelle t06-wb">
+        <caption>Begriffe, Art und Bedeutung</caption>
+        <thead><tr><th scope="col">Begriff</th><th scope="col">Art</th><th scope="col">Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>HCI</td><td><span class="t06-badge ar-r-client">Grundlage</span></td><td>Human Computer Interaction: wie Mensch und Computer zusammenarbeiten (Eingabe, Ausgabe, Bedienbarkeit).</td></tr>
+          <tr><td>Client Device</td><td><span class="t06-badge ar-r-client">Gerät</span></td><td>Gerät beim Menschen: mobil (Smartphone, Tablet, Notebook), stationär (Desktop, Workstation), Wearable, IoT-Device.</td></tr>
+          <tr><td>VDI</td><td><span class="t06-badge ar-r-infra">Infrastruktur</span></td><td>Virtual Desktop Infrastructure: Der Desktop läuft als virtuelle Maschine im Rechenzentrum, das Gerät zeigt nur das Bild (View Client).</td></tr>
+          <tr><td>Thin / Rich Client</td><td><span class="t06-badge ar-r-client">Aufteilung</span></td><td>Thin: Der Client zeigt fast nur an. Rich (Fat): Der Client hat UI, Logik und oft lokale Daten.</td></tr>
+          <tr><td>Responsive Design</td><td><span class="t06-badge ar-r-client">Technik</span></td><td>Die Oberfläche passt Grösse und Anordnung dynamisch an die Bildschirmbreite an.</td></tr>
+          <tr><td>LBS</td><td><span class="t06-badge ar-r-client">Technik</span></td><td>Location Based Service: Dienst, der mindestens einen Standort ermittelt (Gerät oder Ziel).</td></tr>
+          <tr><td>AR</td><td><span class="t06-badge ar-r-client">Technik</span></td><td>Augmented Reality: Kamerabild der echten Umgebung, in das virtuelle Objekte eingeblendet werden.</td></tr>
+          <tr><td>Offline- / Always-Online- / Sync-App</td><td><span class="t06-badge ar-r-daten">Datenzugang</span></td><td>Braucht keine Serverdaten / braucht immer aktuelle Serverdaten / arbeitet lokal und gleicht später mit dem Server ab.</td></tr>
+          <tr><td>MVC</td><td><span class="t06-badge ar-r-business">Muster</span></td><td>Model–View–Controller: Controller nimmt Eingaben an, Model hält Daten und Regeln, View zeigt an.</td></tr>
+          <tr><td>MVVM</td><td><span class="t06-badge ar-r-business">Muster</span></td><td>Model–View–ViewModel: Die View ist per Data Binding an das ViewModel gebunden und aktualisiert sich selbst.</td></tr>
+          <tr><td>AJAX</td><td><span class="t06-badge ar-r-webapi">Kommunikation</span></td><td>Asynchronous JavaScript and XML: Skript im Browser holt Daten im Hintergrund (heute meist JSON) und ändert nur einen Teil der Seite.</td></tr>
+          <tr><td>Web App</td><td><span class="t06-badge ar-r-client">Client-Typ</span></td><td>Läuft im Browser (HTML, CSS, JavaScript, WebAssembly). Serverseitig gerendert (ASP.NET, JSF, PHP) oder clientseitig (SPA, PWA).</td></tr>
+          <tr><td>SPA</td><td><span class="t06-badge ar-r-client">Client-Typ</span></td><td>Single Page Application: lädt einmal, danach nur noch Daten per AJAX. Navigation ohne Neuladen.</td></tr>
+          <tr><td>PWA</td><td><span class="t06-badge ar-r-client">Client-Typ</span></td><td>Progressive Web App: SPA mit Manifest (Icon, Start), Service Worker (Proxy) und Cache. Installierbar, offlinefähig, Push.</td></tr>
+          <tr><td>Service Worker</td><td><span class="t06-badge ar-r-client">Technik</span></td><td>Skript, das der Browser für die PWA registriert. Es fängt jeden Request ab und antwortet aus dem Netz oder aus dem Cache.</td></tr>
+          <tr><td>WebAssembly (Wasm)</td><td><span class="t06-badge ar-r-infra">Laufzeit</span></td><td>Binärformat, das Browser fast so schnell wie nativen Code ausführen. Basis von Blazor WebAssembly.</td></tr>
+          <tr><td>Razor / Blazor / JSF</td><td><span class="t06-badge ar-r-client">Framework</span></td><td>Razor: HTML mit C# (ASP.NET). Blazor: Razor-Komponenten im Browser (Server oder Wasm). JSF: Java Server Faces in Jakarta EE.</td></tr>
+          <tr><td>Native App</td><td><span class="t06-badge ar-r-client">Client-Typ</span></td><td>Single Platform: für genau ein Betriebssystem gebaut (Swift für iOS, Kotlin für Android).</td></tr>
+          <tr><td>Cross- / Multiplatform App</td><td><span class="t06-badge ar-r-client">Client-Typ</span></td><td>Eine Codebasis, läuft auf mehreren Betriebssystemen (Java mit JVM, .NET mit CLR, .NET MAUI).</td></tr>
+          <tr><td>Hybrid App</td><td><span class="t06-badge ar-r-client">Client-Typ</span></td><td>Nativer App-Rahmen mit Inhalt aus HTML5, CSS3 und JavaScript; Gerätefunktionen über Plugins (Cordova, Ionic).</td></tr>
+          <tr><td>Static HTTP</td><td><span class="t06-badge ar-r-webapi">Schnittstelle</span></td><td>Schnittstelle, über die ein Server unveränderte Dateien (HTML, JS, CSS, Bilder) ausliefert, z. B. für SPA und PWA.</td></tr>
+          <tr><td>OData</td><td><span class="t06-badge ar-r-webapi">Schnittstelle</span></td><td>Offenes Datenprotokoll auf REST-Basis mit Abfragen (filtern, sortieren). Excel und Power BI können es direkt lesen.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2 · Devices und OS -->
+  <section id="devices" data-kategorie="client">
+    <span class="eyebrow">Schritt 2 · Devices und Betriebssysteme</span>
+    <h2>HCI, Client Devices und Client-OS</h2>
+    <p class="prose">HCI fragt: Wie arbeitet ein Mensch mit dem Computer? Eingabe über Tastatur, Maus, Touch, Stimme oder Gesten, Ausgabe über Bildschirm, Ton und Vibration. Das Gerät bestimmt, welche Eingabe und Ausgabe möglich ist, und damit auch, welche Client-App sinnvoll ist.</p>
+    <div class="t06-karten">
+      <div class="t06-karte ar-r-client"><h4>Mobile Devices</h4><p>Smartphone, Tablet, Notebook.</p><ul><li>Touch, Kamera, GPS, Sensoren</li><li>Akku, wechselndes Netz, Funklöcher</li><li>kleiner Bildschirm, kurze Sitzungen</li></ul></div>
+      <div class="t06-karte ar-r-business"><h4>Stationäre Devices</h4><p>Desktop-PC, Workstation.</p><ul><li>grosse Bildschirme, Maus und Tastatur</li><li>stabiles Netz, viel Rechenleistung</li><li>lange Arbeitssitzungen, voller Funktionsumfang</li></ul></div>
+      <div class="t06-karte ar-r-async"><h4>Wearables</h4><p>Smartwatch, Fitnessband, Datenbrille.</p><ul><li>sammeln Daten über Sensoren</li><li>tauschen Daten aus (oft über das Handy)</li><li>informieren über Display, Ton oder Haptik</li></ul><p class="t06-klein">Achtung: Energie, Tragekomfort und Reichweite sind knapp. Beispiel: Eine Smartwatch zeigt Pflegenden den nächsten Patientenruf und vibriert.</p></div>
+      <div class="t06-karte ar-r-sync"><h4>IoT-Device</h4><p>Ein «smartes Ding»: Embedded System mit Chip, Sensoren und Aktoren im physischen Kontext, verbunden mit einer IoT-Plattform.</p><p class="t06-klein">Beispiele: Velo-Schloss, das per App öffnet; Briefkasten, der «Post da» meldet; Produktionsmaschine, die ihren Zustand sendet.</p></div>
+      <div class="t06-karte ar-r-infra"><h4>VDI</h4><p>Der ganze Desktop läuft als virtuelle Maschine im Rechenzentrum. Auf dem Gerät läuft nur ein View Client, der das Bild zeigt und Eingaben zurückschickt.</p><p class="t06-klein">Gut für zentrale Verwaltung und Sicherheit, aber ohne Netz geht nichts.</p></div>
+    </div>
+    <div class="stack">
+      <h3>VDI als Diagramm: Wo läuft der Desktop?</h3>
+      <p class="hint">Spiel den Ablauf ab und schalte den Ausfall-Modus ein: Fällt der Connection Broker aus, kann sich niemand neu anmelden.</p>
+      <div id="t06-vdi"></div>
+    </div>
+    <div class="card stack">
+      <h3>Client-OS den Devices zuordnen</h3>
+      <p class="prose">Fünf Betriebssystem-Familien dominieren: Windows 11 (Microsoft; Windows Mobile ist eingestellt), macOS und iOS/iPadOS (Apple), Linux (Ubuntu, Debian …) und Android (Google, Open Source). Tippe an, auf welchen Geräten das OS typischerweise läuft, dann «Prüfen».</p>
+      <div class="tablebox"><table class="tabelle t06-os" id="t06-os"><caption>Typische Zuordnung Client-OS zu Device</caption><thead><tr><th scope="col">Betriebssystem</th><th scope="col">Smartphone</th><th scope="col">Tablet</th><th scope="col">Desktop / Notebook</th></tr></thead><tbody></tbody></table></div>
+      <div class="row"><button type="button" class="btn primary" id="t06-os-pruefen">Prüfen</button><button type="button" class="btn" id="t06-os-reset">Zurücksetzen</button></div>
+      <div class="rueckmeldung leer" id="t06-os-fb" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- 3 · Aufteilung -->
+  <section id="aufteilung" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 3 · Varianten der Aufteilung</span>
+    <h2>Was läuft auf dem Client, was auf dem Server?</h2>
+    <p class="prose">Jede Applikation hat dieselben Schichten: Darstellung, Aufbau der Oberfläche, Präsentationslogik, Anwendungslogik und Datenhaltung. Der Client-Typ entscheidet, wie viele dieser Schichten beim Gerät liegen. Schieb den Regler vom Thin Client zum Rich Client und beobachte, was wandert.</p>
+    <div class="card stack t06-regler">
+      <div class="t06-regler-kopf"><span>Thin Client</span><span>Rich / Fat Client</span></div>
+      <label for="t06-regler" class="sr-only">Client-Typ von Thin bis Fat Client</label>
+      <input type="range" id="t06-regler" min="0" max="4" step="1" value="1">
+      <p class="t06-stufe" id="t06-stufe" aria-live="polite"></p>
+      <p class="hint" id="t06-stufe-bsp"></p>
+      <div class="t06-split">
+        <div class="t06-seite"><h4>Client <span class="t06-badge ar-r-client">Gerät</span></h4><div id="t06-seite-c" class="stack" style="gap:6px"></div></div>
+        <div class="t06-seite"><h4>Server <span class="t06-badge ar-r-business">Rechenzentrum</span></h4><div id="t06-seite-s" class="stack" style="gap:6px"></div></div>
+      </div>
+      <p class="hint">Gestrichelt = auf beiden Seiten (geteilt), gepunktet = liegt auf der anderen Seite.</p>
+      <div class="t06-merkmale" id="t06-merkmale"></div>
+    </div>
+    <p class="ar-callout" data-kategorie="client"><b>Merke:</b> Je mehr auf dem Client läuft, desto besser Offline-Fähigkeit, Gerätezugriff und Reaktionszeit. Der Preis: Installation, Verteilung von Updates und Logik, die du auf mehreren Plattformen pflegen musst.</p>
+  </section>
+
+  <!-- 4 · Client-App-Technologien -->
+  <section id="technik" data-kategorie="infrastruktur">
+    <span class="eyebrow">Schritt 4 · Client-App-Technologien</span>
+    <h2>Bildschirmdesign, Standort, AR und Serverzugang</h2>
+    <h3>Bildschirmdesign: vier Strategien</h3>
+    <p class="prose">Die gleiche Oberfläche muss auf 360 px und auf 1280 px funktionieren. Es gibt vier Strategien: eine fixe Grösse, mehrere fixe Grössen je Kontext (z. B. eine eigene Mobile-Seite), alles skalieren oder Responsive Design. Wähle eine Strategie und verändere die Gerätebreite.</p>
+    <div class="card stack" id="t06-screen">
+      <div class="modes" role="group" aria-label="Strategie wählen">
+        <button type="button" class="btn" data-strat="fix">Fixe Grösse</button>
+        <button type="button" class="btn" data-strat="mehrere">Mehrere fixe Grössen</button>
+        <button type="button" class="btn" data-strat="skal">Skalierbar</button>
+        <button type="button" class="btn on" aria-pressed="true" data-strat="resp">Responsive</button>
+      </div>
+      <div class="regler"><label for="t06-breite">Gerätebreite</label><input type="range" id="t06-breite" min="320" max="1280" step="10" value="390"><output for="t06-breite" id="t06-breite-wert">390 px</output></div>
+      <div class="t06-buehne" id="t06-buehne"><div class="t06-rahmen" id="t06-rahmen"><div class="t06-geraet" id="t06-geraet" aria-hidden="true"><div class="t06-geraet-innen"><div class="t06-mock" id="t06-mock"></div></div></div></div></div>
+      <p class="info" id="t06-screen-info" aria-live="polite"></p>
+    </div>
+    <p class="ar-callout" data-kategorie="client"><b>Merke:</b> Responsive Design ist heute Standard. Skalieren klappt für Bilder und Zeichnungen, bei Schrift nur bedingt: Sie wird unlesbar klein.</p>
+
+    <h3>Location Based Services (LBS)</h3>
+    <p class="prose">Ein LBS nutzt Standorte. Zwei Positionen spielen mit: die des mobilen Geräts und die des Ziels. Jede kann ermittelt, vorgegeben oder egal sein. Regel: Mindestens ein Standort wird ermittelt, sonst ist es kein LBS.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Fünf Arten von LBS</caption>
+        <thead><tr><th scope="col">LBS</th><th scope="col">Position des Geräts</th><th scope="col">Position des Ziels</th><th scope="col">Eigenes Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Produkttracking</th><td>nicht relevant</td><td><b>ermittelt</b></td><td>Wo ist mein Paket gerade?</td></tr>
+          <tr><th scope="row">Service Finder</th><td><b>ermittelt</b></td><td>vorgegeben</td><td>Nächste E-Ladestation finden</td></tr>
+          <tr><th scope="row">Peer Finder</th><td><b>ermittelt</b></td><td><b>ermittelt</b></td><td>Freunde am Openair finden</td></tr>
+          <tr><th scope="row">Push-Meldung</th><td><b>ermittelt</b></td><td>vorgegeben (Zone)</td><td>Gutschein beim Betreten des Bahnhofs</td></tr>
+          <tr><th scope="row">Notrufortung</th><td><b>ermittelt</b></td><td>nicht relevant</td><td>Smartwatch meldet Sturz mit Standort</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card stack"><h3>Kurz üben: Welcher LBS ist das?</h3><div id="t06-sort-lbs"></div></div>
+
+    <h3>Augmented Reality (AR)</h3>
+    <p class="prose">Die Kamera nimmt die echte Umgebung auf, die App blendet virtuelle Objekte passend ein. Das braucht Kamera, Bewegungssensoren und viel Rechenleistung, darum laufen AR-Apps fast immer als installierte Apps. Einsatz: Sofa probeweise ins Wohnzimmer stellen, Servicetechnikerin sieht die Schraube markiert, Lagerist sieht das richtige Regalfach hervorgehoben.</p>
+
+    <h3>Kommunikation: Offline, Always Online oder Sync</h3>
+    <p class="prose">Nach dem Serverzugang gibt es drei Arten von Apps. Schalte das Netz aus und mach Eingaben: Wer arbeitet weiter, wer steht, wer holt nach?</p>
+    <div class="card stack" id="t06-netz">
+      <div class="row"><button type="button" class="btn primary" id="t06-netz-knopf" aria-pressed="true">Netz ausschalten</button><button type="button" class="btn" id="t06-netz-eingabe">Eingabe machen (z. B. Mail schreiben)</button><span class="t06-netz-status" id="t06-netz-status">Netz: an</span></div>
+      <div class="t06-netz-apps">
+        <div class="t06-app" id="t06-app-off"><h4>Offline-App</h4><p class="hint">z. B. Spiel, heruntergeladene Karte</p><p class="t06-zust"></p></div>
+        <div class="t06-app" id="t06-app-on"><h4>Always-Online-App</h4><p class="hint">z. B. Wetter, Telefonbuch-Suche</p><p class="t06-zust"></p></div>
+        <div class="t06-app" id="t06-app-sync"><h4>Sync-App</h4><p class="hint">z. B. E-Mail, Adressbuch</p><p class="t06-zust"></p></div>
+      </div>
+      <p class="sr-only" id="t06-netz-live" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- 5 · Muster -->
+  <section id="muster" data-kategorie="dienst">
+    <span class="eyebrow">Schritt 5 · Architektur- und Entwurfsmuster</span>
+    <h2>MVC, MVVM und AJAX</h2>
+    <p class="prose">Muster trennen Darstellung, Steuerung und Daten. Das macht Oberflächen testbar und austauschbar. Zwei Muster brauchst du: <b>MVC</b> (typisch serverseitig, z. B. ASP.NET MVC) und <b>MVVM</b> (typisch in installierten Apps mit Data Binding, z. B. .NET MAUI mit XAML).</p>
+    <div class="stack">
+      <h3>MVC in ASP.NET: Formular absenden</h3>
+      <p class="hint">Tippe Controller, View und Model an. Spiel den Ablauf ab: Der Browser bekommt am Schluss fertiges HTML.</p>
+      <div id="t06-mvc"></div>
+      <pre class="code" data-sprache="C# · Controller (Komponente «Controller»)"><code><span class="k">public class</span> KistenController : Controller
+{
+    <span class="k">private readonly</span> IKistenService _service;          <span class="c">// Model-Seite: Fachlogik und Daten</span>
+    <span class="k">public</span> KistenController(IKistenService service) =&gt; _service = service;
+
+    <span class="k">public async</span> Task&lt;IActionResult&gt; Index()
+    {
+        <span class="k">var</span> kisten = <span class="k">await</span> _service.AlleAsync();      <span class="c">// 1. Model fragen</span>
+        <span class="k">return</span> View(kisten);                          <span class="c">// 2. View wählen, Daten übergeben</span>
+    }
+}</code></pre>
+      <pre class="code" data-sprache="Razor · View (Komponente «View», Index.cshtml)"><code><span class="c">@* Views/Kisten/Index.cshtml: HTML mit C# gemischt, auf dem Server gerendert *@</span>
+<span class="k">@model</span> IEnumerable&lt;Kiste&gt;
+
+&lt;h1&gt;Unsere Kisten&lt;/h1&gt;
+&lt;table&gt;
+  <span class="k">@foreach</span> (<span class="k">var</span> kiste <span class="k">in</span> Model)
+  {
+    &lt;tr&gt;
+      &lt;td&gt;<mark>@kiste.Name</mark>&lt;/td&gt;
+      &lt;td&gt;CHF @kiste.Preis.ToString(<span class="s">"0.00"</span>)&lt;/td&gt;
+      &lt;td&gt;&lt;a asp-action=<span class="s">"Details"</span> asp-route-id=<span class="s">"@kiste.Id"</span>&gt;Details&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  }
+&lt;/table&gt;</code></pre>
+    </div>
+    <div class="stack">
+      <h3>MVVM in einer MAUI-App: Data Binding</h3>
+      <p class="hint">Die View (XAML) kennt nur Eigenschaften des ViewModels. Ändert sich ein Wert im ViewModel, zeichnet sich die View selbst neu. Das ViewModel kennt die View nicht.</p>
+      <div id="t06-mvvm"></div>
+    </div>
+    <div class="stack">
+      <h3>AJAX: Daten nachladen, ohne die Seite neu zu laden</h3>
+      <p class="prose">Klassisch schickt der Browser bei jedem Klick eine Anfrage und bekommt eine ganze neue Seite. Mit AJAX ruft ein Skript im Hintergrund das Web API auf, bekommt nur Daten (heute meist JSON statt XML) und ändert einen Teil der Seite. Die Seite bleibt bedienbar, während die Antwort unterwegs ist.</p>
+      <div id="t06-ajax"></div>
+      <pre class="code" data-sprache="JavaScript · fetch (Verbindung «Skript → Web API», REST · JSON)"><code><span class="c">// abo.js: AJAX-Aufruf an das Web API, Antwort ist JSON, kein HTML</span>
+<span class="k">async function</span> aboPausieren(aboId, bis) {
+  <span class="k">const</span> antwort = <span class="k">await</span> <mark>fetch</mark>(<span class="s">"/api/abos/"</span> + aboId + <span class="s">"/pause"</span>, {
+    method: <span class="s">"POST"</span>,
+    headers: { <span class="s">"Content-Type"</span>: <span class="s">"application/json"</span> },
+    body: JSON.stringify({ bis: bis })
+  });
+  <span class="k">if</span> (!antwort.ok) <span class="k">throw new</span> Error(<span class="s">"Nicht gespeichert (Status "</span> + antwort.status + <span class="s">")"</span>);
+  <span class="k">return</span> antwort.json();
+}
+
+<span class="c">// Nur der Statusbereich ändert sich, die Seite bleibt stehen.</span>
+aboPausieren(<span class="n">42</span>, <span class="s">"2026-12-20"</span>)
+  .then((abo) =&gt; { document.querySelector(<span class="s">"#status"</span>).textContent = <span class="s">"Pausiert bis "</span> + abo.bis; })
+  .catch((e) =&gt; { document.querySelector(<span class="s">"#status"</span>).textContent = e.message; });</code></pre>
+      <div id="t06-ajax-frage"></div>
+    </div>
+  </section>
+
+  <!-- 6 · Web Apps -->
+  <section id="webapps" data-kategorie="client">
+    <span class="eyebrow">Schritt 6 · Web Apps</span>
+    <h2>Der Browser als Ausführungscontainer: klassisch, SPA, PWA</h2>
+    <p class="prose">Eine Web App läuft im Browser. Der Browser ist dabei viel mehr als ein Anzeigeprogramm: Er ist ein Ausführungscontainer, der die App vom Gerät und vom Betriebssystem abschirmt. Darum laufen Web Apps auf jedem Gerät mit aktuellem Browser.</p>
+    <div class="t06-karten">
+      <div class="t06-karte ar-r-client"><h4>Ausführen</h4><ul><li>HTML und CSS rendern</li><li>JavaScript interpretieren</li><li>WebAssembly ausführen</li></ul></div>
+      <div class="t06-karte ar-r-daten"><h4>Speichern</h4><ul><li>Cookies, IndexedDB, Cache</li><li>Lesezeichen und Verlauf</li></ul></div>
+      <div class="t06-karte ar-r-infra"><h4>Verwalten und schützen</h4><ul><li>Tabs und Fenster</li><li>Sicherheitsfunktionen (Sandbox, Zertifikate)</li><li>Add-ons, Entwicklerwerkzeuge (F12)</li></ul></div>
+      <div class="t06-karte ar-r-webapi"><h4>Bietet dir</h4><p>Geräte- und Plattformunabhängigkeit: eine Codebasis, Zugriff über eine URL, keine Installation, Updates sofort für alle.</p></div>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Serverseitig oder clientseitig gerendert?</caption>
+        <thead><tr><th scope="col"></th><th scope="col">Klassische Web App (serverseitig gerendert)</th><th scope="col">SPA / PWA (clientseitig gerendert)</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Wer baut das HTML?</th><td>der Server, bei jedem Klick eine neue Seite</td><td>JavaScript im Browser, aus Daten (JSON)</td></tr>
+          <tr><th scope="row">Was geht übers Netz?</th><td>ganze HTML-Seiten</td><td>einmal die App-Dateien (Static HTTP), dann nur Daten (AJAX)</td></tr>
+          <tr><th scope="row">Browser-Anforderungen</th><td>gering, wenig JavaScript</td><td>hoch, aktueller Browser nötig</td></tr>
+          <tr><th scope="row">Usability</th><td>Neuladen bei jedem Schritt</td><td>flüssig, wie eine App</td></tr>
+          <tr><th scope="row">Schnittstelle zum Server</th><td>HTTP an Presentation Components</td><td>Static HTTP an HTML5 Resources und REST/GraphQL/OData am Web API</td></tr>
+          <tr><th scope="row">Technologien</th><td>ASP.NET MVC (Razor), Blazor Server, JSF, PHP</td><td>React, Angular, Vue, Blazor WebAssembly</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>HTML5 Web App und SPA</h3>
+    <p class="prose">Eine HTML5 Web App besteht aus HTML5 (Struktur), CSS (Aussehen) und JavaScript (Logik), oft mit Hilfen wie Web Components oder Bootstrap. Die <b>SPA</b> geht weiter: Der Browser lädt einmal eine Seite mit allen Skripten (Initial Load). Danach ersetzt das Skript Inhalte selbst und holt nur noch Daten per AJAX. Darum hat die SPA in der Architektur zwei Verbindungen: eine zu den statischen Ressourcen und eine zum Web API.</p>
+    <div id="t06-spa"></div>
+    <pre class="code" data-sprache="React · Komponente der SPA (lädt per AJAX über das Web API)"><code><span class="c">// KistenListe.jsx: läuft im Browser, gehört zur Komponente «SPA»</span>
+<span class="k">import</span> { useEffect, useState } <span class="k">from</span> <span class="s">"react"</span>;
+
+<span class="k">export function</span> KistenListe({ plz }) {
+  <span class="k">const</span> [kisten, setKisten] = useState([]);
+  <span class="k">const</span> [fehler, setFehler] = useState(<span class="k">null</span>);
+
+  useEffect(() =&gt; {
+    <mark>fetch(<span class="s">"/api/kisten?plz="</span> + plz)</mark>              <span class="c">// AJAX an das Web API (REST · JSON)</span>
+      .then((r) =&gt; { <span class="k">if</span> (!r.ok) <span class="k">throw new</span> Error(r.status); <span class="k">return</span> r.json(); })
+      .then(setKisten)
+      .catch(() =&gt; setFehler(<span class="s">"Gerade keine Verbindung."</span>));
+  }, [plz]);                                     <span class="c">// neu laden, wenn die PLZ wechselt</span>
+
+  <span class="k">if</span> (fehler) <span class="k">return</span> &lt;p role=<span class="s">"alert"</span>&gt;{fehler}&lt;/p&gt;;
+  <span class="k">return</span> (
+    &lt;ul&gt;
+      {kisten.map((k) =&gt; &lt;li key={k.id}&gt;{k.name}: CHF {k.preis}&lt;/li&gt;)}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+
+    <h3>PWA: Service Worker als Proxy, Manifest und Cache</h3>
+    <p class="prose">Eine PWA ist eine SPA mit drei Zusätzen. Das <b>Manifest</b> beschreibt Name, Icon, Start-URL und Darstellung; damit lässt sich die App auf dem Startbildschirm ablegen und startet mit Splash-Screen im Vollbild. Der <b>Service Worker</b> ist ein Skript, das der Browser für die PWA registriert. Er sitzt als Proxy zwischen App und Netz. Der <b>Cache</b> hält App-Shell und letzte Daten. Der Browser bleibt dabei als unsichtbarer Container im Hintergrund.</p>
+    <div class="stack">
+      <div class="row"><button type="button" class="btn" id="t06-pwa-weg" aria-pressed="false">Server weg</button><span class="hint" id="t06-pwa-weg-text">Schaltet HTML5 Resources und Web API aus und spielt den Ablauf «Server weg» ab.</span></div>
+      <div id="t06-pwa"></div>
+      <p class="hint">Im Ausfall-Modus färbt die Engine PWA und Service Worker orange: Sie hängen am Server und bekommen keine frischen Daten. Der Ablauf zeigt, warum die App trotzdem läuft: Der Service Worker antwortet aus dem Cache.</p>
+    </div>
+    <div class="t06-karten">
+      <div class="t06-karte ar-r-client"><h4>Vorteile der PWA</h4><ul><li>installierbar mit Icon («App-Gefühl»)</li><li>offlinefähig dank Service Worker und Cache</li><li>Push-Benachrichtigungen</li><li>schneller durch Hintergrund-Synchronisation</li><li>alle Vorteile einer Web App (eine Codebasis, kein Store)</li></ul></div>
+      <div class="t06-karte ar-r-sync"><h4>Grenzen</h4><ul><li>braucht einen aktuellen Browser</li><li>Gerätefunktionen nur so weit, wie der Browser sie freigibt</li><li>Funktionen je Plattform unterschiedlich (iOS ist zurückhaltender)</li></ul></div>
+    </div>
+    <pre class="code" data-sprache="JSON · manifest.webmanifest (Komponente «Manifest»)"><code>{
+  <span class="s">"name"</span>: <span class="s">"Frischkiste"</span>,
+  <span class="s">"short_name"</span>: <span class="s">"Frischkiste"</span>,
+  <span class="s">"start_url"</span>: <span class="s">"/"</span>,
+  <mark><span class="s">"display"</span>: <span class="s">"standalone"</span></mark>,              <span class="c">// ohne Browser-Leiste, wie eine App</span>
+  <span class="s">"background_color"</span>: <span class="s">"#ffffff"</span>,
+  <span class="s">"theme_color"</span>: <span class="s">"#2e7d32"</span>,
+  <span class="s">"icons"</span>: [
+    { <span class="s">"src"</span>: <span class="s">"/icons/kiste-192.png"</span>, <span class="s">"sizes"</span>: <span class="s">"192x192"</span>, <span class="s">"type"</span>: <span class="s">"image/png"</span> },
+    { <span class="s">"src"</span>: <span class="s">"/icons/kiste-512.png"</span>, <span class="s">"sizes"</span>: <span class="s">"512x512"</span>, <span class="s">"type"</span>: <span class="s">"image/png"</span> }
+  ]
+}</code></pre>
+    <pre class="code" data-sprache="JavaScript · sw.js (Komponente «Service Worker»)"><code><span class="c">// In der App: navigator.serviceWorker.register("/sw.js");</span>
+<span class="k">const</span> SHELL = <span class="s">"frischkiste-shell-v3"</span>;
+<span class="k">const</span> DATEIEN = [<span class="s">"/"</span>, <span class="s">"/index.html"</span>, <span class="s">"/app.js"</span>, <span class="s">"/app.css"</span>, <span class="s">"/icons/kiste-192.png"</span>];
+
+self.addEventListener(<span class="s">"install"</span>, (e) =&gt; {            <span class="c">// 1. App-Shell in den Cache legen</span>
+  e.waitUntil(caches.open(SHELL).then((c) =&gt; c.addAll(DATEIEN)));
+});
+
+self.addEventListener(<span class="s">"fetch"</span>, (e) =&gt; {              <span class="c">// 2. Jeder Request läuft hier durch (Proxy)</span>
+  <span class="k">if</span> (e.request.method !== <span class="s">"GET"</span>) <span class="k">return</span>;
+  <span class="k">const</span> url = <span class="k">new</span> URL(e.request.url);
+  <span class="k">if</span> (url.pathname.startsWith(<span class="s">"/api/"</span>)) {
+    <span class="c">// Daten: zuerst das Netz; ist der Server weg, die letzte Antwort aus dem Cache</span>
+    e.respondWith(
+      fetch(e.request)
+        .then((r) =&gt; { <span class="k">const</span> kopie = r.clone(); caches.open(<span class="s">"daten"</span>).then((c) =&gt; c.put(e.request, kopie)); <span class="k">return</span> r; })
+        .catch(() =&gt; <mark>caches.match(e.request)</mark>)
+    );
+  } <span class="k">else</span> {
+    <span class="c">// App-Shell: zuerst der Cache, darum startet die PWA schnell und auch offline</span>
+    e.respondWith(caches.match(e.request).then((r) =&gt; r || fetch(e.request)));
+  }
+});</code></pre>
+
+    <h3>Frameworks für SPA und PWA</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Skriptbasierte Frameworks im Vergleich</caption>
+        <thead><tr><th scope="col">Framework</th><th scope="col">Herkunft</th><th scope="col">Charakter</th><th scope="col">Passt, wenn …</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">React</th><td>Meta, Open Source</td><td>Bibliothek für Komponenten (JSX), Rest frei wählbar</td><td>du maximale Freiheit und das grösste Ökosystem willst; auch React Native für Apps</td></tr>
+          <tr><th scope="row">Angular</th><td>Google, Open Source</td><td>komplettes Framework mit TypeScript, Routing, Formularen</td><td>grosse Teams einheitliche Strukturen brauchen (Unternehmensanwendungen)</td></tr>
+          <tr><th scope="row">Vue.js</th><td>Community, Open Source</td><td>schlank, schrittweise einführbar</td><td>du schnell starten oder eine bestehende Seite nach und nach erweitern willst</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Serverseitig gerendert: ASP.NET MVC, Blazor, JSF</h3>
+    <p class="prose"><b>ASP.NET MVC</b> (Active Server Pages) rendert mit Razor (HTML und C# gemischt) nach dem MVC-Muster; das Model hat die Verbindung zur nächsten Schicht oder zur Datenbank. <b>Blazor</b> (Browser + Razor) baut Oberflächen aus Razor-Komponenten in zwei Varianten: <b>Blazor Server</b> führt den C#-Code auf dem Server aus und schickt UI-Änderungen über eine SignalR-Verbindung; <b>Blazor WebAssembly</b> lädt die .NET-Laufzeit als Wasm in den Browser und läuft dort, auch als PWA. Komponentenbibliotheken wie MudBlazor setzen darauf auf. <b>JSF</b> (Jakarta Server Faces) ist das Gegenstück in Jakarta EE: Facelets-Seiten mit Backing Beans im Web Container, die Fachlogik und die DB-Verbindung liegen in EJBs; dazu kommen oft Frameworks wie Spring.</p>
+    <div class="stack">
+      <h3>Blazor Server oder Blazor WebAssembly?</h3>
+      <p class="hint">Spiel beide Abläufe ab. Schalte dann im Ausfall-Modus die «Blazor Server Components» aus: Nur die Server-Variante steht still.</p>
+      <div id="t06-blazor"></div>
+      <pre class="code" data-sprache="Blazor · Termine.razor (läuft als Blazor Server oder Blazor WebAssembly)"><code><span class="k">@page</span> <span class="s">"/termine"</span>
+<span class="k">@inject</span> TerminClient Termine
+
+&lt;h1&gt;Freie Termine&lt;/h1&gt;
+<span class="k">@if</span> (liste <span class="k">is null</span>) { &lt;p&gt;Lade …&lt;/p&gt; }
+<span class="k">else</span>
+{
+    <span class="k">@foreach</span> (<span class="k">var</span> t <span class="k">in</span> liste)
+    {
+        &lt;button <mark>@onclick</mark>=<span class="s">"() =&gt; Buchen(t)"</span>&gt;@t.Start.ToString(<span class="s">"dd.MM. HH:mm"</span>)&lt;/button&gt;
+    }
+}
+
+<span class="k">@code</span> {
+    <span class="k">private</span> List&lt;Termin&gt;? liste;
+    <span class="k">protected override async</span> Task OnInitializedAsync() =&gt; liste = <span class="k">await</span> Termine.FreieAsync();
+    <span class="k">private async</span> Task Buchen(Termin t) { <span class="k">await</span> Termine.BuchenAsync(t.Id); liste!.Remove(t); }
+}
+<span class="c">// Blazor Server: der Klick reist über SignalR zum Server, C# läuft dort.
+// Blazor WebAssembly: C# läuft im Browser, TerminClient ruft das Web API per REST auf.</span></code></pre>
+    </div>
+  </section>
+
+  <!-- 7 · Installierbare Apps -->
+  <section id="installierbar" data-kategorie="daten">
+    <span class="eyebrow">Schritt 7 · Installierbare Apps</span>
+    <h2>Single Platform, Cross-/Multiplatform und Hybrid</h2>
+    <p class="prose">Installierbare Apps für Mobile oder Desktop gibt es in drei Bauarten. Sie unterscheiden sich darin, wie viele Codebasen du brauchst und wie nah die App am Betriebssystem ist. Wähle eine Bauart und sieh dir den Stapel an: oben dein Code, unten das Gerät.</p>
+    <div class="card stack" id="t06-stapel-karte">
+      <div class="modes" role="group" aria-label="Bauart wählen" id="t06-stapel-wahl"></div>
+      <div class="grid2">
+        <div class="t06-stapel" id="t06-stapel" aria-live="polite"></div>
+        <div class="stack" id="t06-stapel-text"></div>
+      </div>
+    </div>
+    <p class="ar-callout" data-kategorie="daten"><b>Begriffe:</b> In der Praxis werden «Cross-Platform» und «Multiplatform» oft gleich verwendet. Faustregel für diese Station: <b>Cross-Platform</b> heisst, eine Laufzeit (JVM, CLR) führt denselben Zwischencode auf jedem OS aus. <b>Multiplatform</b> heisst, ein Framework wie .NET MAUI baut aus einer Codebasis echte Apps für Android, iOS, macOS und Windows. Beide haben eine Codebasis, das ist der Unterschied zur nativen App.</p>
+    <div class="card stack"><h3>Kurz üben: Welche Bauart?</h3><div id="t06-sort-bauart"></div></div>
+  </section>
+
+  <!-- 8 · Vorgehen -->
+  <section id="verfahren" data-kategorie="sicherheit">
+    <span class="eyebrow">Schritt 8 · Schritt für Schritt und Regeln</span>
+    <h2>Vom Anwendungsfall zur Client-App</h2>
+    <p class="prose">In der Prüfung liest du Anwendungsfälle und musst daraus Client-Apps ableiten. Die Signalwörter stehen im Text. Klick dich durch ein Beispiel: Jeder Satzteil führt zu einem Teil des Entscheids.</p>
+    <div id="t06-stepper"></div>
+    <div class="card stack">
+      <h3>So ergänzt du den Client Tier (Regeln)</h3>
+      <ol class="prose">
+        <li><b>User und Anwendungsfall</b> klären: Wer arbeitet womit, wo, wie oft?</li>
+        <li><b>Signale suchen:</b> unbekanntes OS, keine Installation, Offline, Kamera/GPS, Push, alte Browser, bekannte Plattform, voller Funktionsumfang, Auswertung in Excel.</li>
+        <li><b>Client-Typ wählen</b> und in der Tabelle mit Technologie, Begründung und User festhalten. Mehrere User-Gruppen heisst oft mehrere Client-Apps.</li>
+        <li><b>Pakete</b> im Client Tier: «Web Apps» (Browser) und «Installierbare Apps».</li>
+        <li><b>Schnittstelle</b> je App: klassische Web App → HTTP der Presentation Components bzw. des Web-App-Microservice; SPA/PWA → Static HTTP der HTML5 Resources <i>und</i> REST/GraphQL des Web API; installierbare Apps → REST/GraphQL des Web API; Excel → OData; Blazor Server → HTTP mit SignalR.</li>
+        <li><b>Beschriften und begründen:</b> jede Verbindung mit Protokoll, jede App mit zwei bis drei Sätzen.</li>
+      </ol>
+    </div>
+    <div class="note falle"><b>Falle 1: Native App bei unbekanntem OS.</b> Steht im Text «eigene Geräte» oder «Betriebssystem unbekannt», scheidet eine native iOS- oder Android-App aus. Nimm eine Web App (SPA/PWA) oder eine plattformübergreifende App.</div>
+    <div class="note falle"><b>Falle 2: Teile als eigene Komponenten.</b> Browser, Service Worker, Cache und Web-Server zeichnest du nicht als eigene Komponenten in den Client Tier. Der Service Worker ist Teil der PWA, der Web-Server ist Infrastruktur (im Paketnamen erwähnen).</div>
+    <div class="note falle"><b>Falle 3: Excel direkt an die Datenbank.</b> Excel ist eine Client-App und nutzt die OData-Schnittstelle des Web API. Ein direkter Datenbankzugriff umgeht Fachlogik und Berechtigungen.</div>
+    <div class="note falle"><b>Falle 4: API-Gateway in der Makroarchitektur.</b> Die Client-Apps verbindest du direkt mit Web App, HTML Resource und Web API. Ein API-Gateway gehört nicht in die Makroarchitektur.</div>
+    <div class="card stack"><div id="t06-wf"></div></div>
+  </section>
+
+  <!-- 9 · Client-Typ wählen -->
+  <section id="entscheiden" data-kategorie="client">
+    <span class="eyebrow">Schritt 9 · Entscheiden und begründen</span>
+    <h2>Welcher Client-Typ passt?</h2>
+    <p class="prose">Kreuze an, was eine User-Gruppe braucht. Das Werkzeug gewichtet jede Anforderung und zeigt dir eine Empfehlung mit Begründung. Probier die Beispiele aus und dann eigene Kombinationen.</p>
+    <div class="card stack" id="t06-ent">
+      <div class="row" role="group" aria-label="Beispiele laden">
+        <button type="button" class="btn" data-preset="extern">Beispiel: externe Kundschaft</button>
+        <button type="button" class="btn" data-preset="aussendienst">Beispiel: Aussendienst</button>
+        <button type="button" class="btn" data-preset="buero">Beispiel: Büro Win + Mac</button>
+        <button type="button" class="btn" data-preset="partner">Beispiel: Partner mit alten PCs</button>
+        <button type="button" class="btn" data-preset="leer">Alles leeren</button>
+      </div>
+      <fieldset class="t06-anf" id="t06-anf"><legend class="sr-only">Anforderungen</legend></fieldset>
+      <div id="t06-ent-erg" aria-live="polite"></div>
+    </div>
+
+    <h3>Übung: Client-Apps-Tabelle wie in der Prüfung</h3>
+    <p class="prose">Die Genossenschaft <b>Frischkiste</b> (fiktiv) liefert Gemüsekisten im Abo. Sie lässt eine neue Applikation bauen. Lies die fünf Anwendungsfälle und fülle für jeden die Tabelle aus: Technologie (Art der Client-App), Begründung und User. Übe danach zusätzlich mit der Fallstudie Timesoft aus Moodle.</p>
+    <div class="card stack">
+      <div class="tablebox"><table class="tabelle t06-cat" id="t06-cat"><caption>Client-Apps der Frischkiste</caption><thead><tr><th scope="col">Anwendungsfall</th><th scope="col">Technologie</th><th scope="col">Begründung</th><th scope="col">User</th></tr></thead><tbody></tbody></table></div>
+      <div class="row"><button type="button" class="btn primary" id="t06-cat-pruefen">Prüfen</button><button type="button" class="btn" id="t06-cat-loesung">Musterlösung zeigen</button><button type="button" class="btn" id="t06-cat-reset">Zurücksetzen</button></div>
+      <div class="rueckmeldung leer" id="t06-cat-fb" aria-live="polite"></div>
+      <div id="t06-cat-muster" hidden></div>
+    </div>
+  </section>
+
+  <!-- 10 · Makroarchitektur -->
+  <section id="makro" data-kategorie="dienst">
+    <span class="eyebrow">Schritt 10 · Clients in der Makroarchitektur</span>
+    <h2>Client Tier ergänzen: welche App an welche Schnittstelle</h2>
+    <p class="prose">Jetzt kommen die Client-Apps ins UML-Komponentendiagramm. In der Microservices-Makroarchitektur (Variante 2) sprechen die Apps nur mit drei Microservices: dem <b>Web-App-Microservice</b> (HTTP, serverseitig gerendert), der <b>HTML Resource</b> (Static HTTP für SPA und PWA) und dem <b>Web API</b> (REST, GraphQL, OData). Unten das fertig modellierte Beispiel der Frischkiste. Tippe Pakete, Apps und Linien an: Jeder Steckbrief ist eine prüfungstaugliche Beschreibung.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Welche Client-App nutzt welche Schnittstelle?</caption>
+        <thead><tr><th scope="col">Client-App</th><th scope="col">Schnittstelle (Ball)</th><th scope="col">Komponente auf dem Server</th><th scope="col">Warum</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">klassische Web App</th><td>HTTP</td><td>«Microservice» Web App bzw. Presentation Components</td><td>Der Server liefert fertiges HTML.</td></tr>
+          <tr><th scope="row">SPA / PWA</th><td>Static HTTP <i>und</i> REST/GraphQL</td><td>HTML Resource und Web API</td><td>einmal Dateien laden, dann Daten per AJAX</td></tr>
+          <tr><th scope="row">Mobile / Desktop App</th><td>REST oder GraphQL</td><td>Web API</td><td>Die App bringt die Oberfläche selbst mit und braucht nur Daten.</td></tr>
+          <tr><th scope="row">Excel, Power BI</th><td>OData</td><td>Web API</td><td>Offene Datenschnittstelle mit Abfragen, direkt in Excel lesbar.</td></tr>
+          <tr><th scope="row">Blazor Server (.NET)</th><td>HTTP mit SignalR</td><td>«ASP.NET» Blazor Server Components</td><td>UI-Ereignisse und Updates laufen über eine dauerhafte Verbindung.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="stack">
+      <h3>Bereits modelliert: Frischkiste, Makroarchitektur mit Client Tier</h3>
+      <p class="hint">Vier Abläufe: SPA starten, Lieferung im Funkloch, Excel aktualisieren, Web API fällt aus. Probier im Ausfall-Modus das Web API und den Web-App-Microservice aus.</p>
+      <div id="t06-makro"></div>
+    </div>
+    <div class="stack">
+      <h3>Referenz: Client und Presentation Tier in .NET (Mehrschicht)</h3>
+      <p class="prose">In der monolithischen Mehrschichtenarchitektur liegen die serverseitigen Gegenstücke der Clients im Web Tier: der Presentation Tier (Blazor Server Components über HTTP mit SignalR, Blazor-Ressourcen über Static HTTP) und der Service Tier mit dem Web API. Beide greifen nur über die Business Facade auf die Fachlogik zu.</p>
+      <div id="t06-dotnet"></div>
+    </div>
+    <p class="ar-callout" data-kategorie="dienst"><b>Merke:</b> Die Client-Apps aus der Tabelle erscheinen vollständig im Diagramm, jede mit der richtigen Assoziation. Das Web API zeigt jede angebotene Schnittstelle als eigenen Ball, z. B. REST, GraphQL und OData.</p>
+  </section>
+
+  <!-- 11 · Spiel -->
+  <section id="spiel" data-kategorie="sicherheit">
+    <span class="eyebrow">Schritt 11 · Prüfungsnah modellieren</span>
+    <h2>Spiel: Client Tier vervollständigen</h2>
+    <p class="prose">Vier Levels mit steigender Schwierigkeit: Leg die Client-Apps in die Pakete «Web Apps» oder «Installierbare Apps», setz die Server-Komponenten mit Stereotyp, ergänze die Bälle, verbinde und beschrifte. Achtung: In der Palette liegen Fallen. Ein Tipp blendet die Referenz ein (kostet XP).</p>
+    <div id="t06-spiel"></div>
+  </section>
+
+  <!-- Film -->
+  <section id="film" data-kategorie="messaging">
+    <span class="eyebrow">▶ Lösungsfilm</span>
+    <h2>Frischkiste: von den Anwendungsfällen zum Client Tier</h2>
+    <p class="prose">Der Film löst die Übung aus Schritt 9 am Stück und zeichnet danach den Client Tier.</p>
+    <div id="t06-film"></div>
+  </section>
+
+  <!-- Selbsttest -->
+  <section id="test" data-kategorie="zugang">
+    <span class="eyebrow">✓ Selbsttest</span>
+    <h2>Prüf dich selbst</h2>
+    <div id="t06-test"></div>
+  </section>
+
+  <section id="blick" data-kategorie="client">
+    <span class="eyebrow">Σ Merksätze</span>
+    <h2>Auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Der Client-Typ legt fest, was auf dem Gerät läuft: von View Client (VDI) und klassischer Web App (thin) bis zur installierbaren App mit lokalen Daten (rich).</li>
+      <li>Web Apps laufen im Browser als Ausführungscontainer: klassisch serverseitig gerendert (HTTP), SPA und PWA clientseitig (Static HTTP plus AJAX an das Web API).</li>
+      <li>PWA = SPA + Manifest + Service Worker als Proxy + Cache: installierbar, offlinefähig, Push. Der Service Worker ist keine eigene Komponente im Diagramm.</li>
+      <li>Installierbar: native (eine Plattform, beste Performance, teuer), Cross-/Multiplatform (eine Codebasis, JVM/CLR/MAUI), Hybrid (nativer Rahmen mit HTML5-Inhalt).</li>
+      <li>Signale lesen: unbekanntes OS und keine Installation → Web App; offline, Kamera, Push → installierbar oder PWA; alte Browser → klassische Web App; Excel → OData.</li>
+      <li>Im Client Tier: Pakete «Web Apps» und «Installierbare Apps», jede App mit beschrifteter Assoziation zur richtigen Schnittstelle, kein API-Gateway, keine Infrastruktur als Komponente.</li>
+    </ul>
+  </section>
+  <footer>AVSW · Station 6 · eigene Beispiele und fiktive Fälle, keine Folieninhalte.</footer>
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/architektur.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const A = window.Architektur;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const I = (was, kann, wofuer, technologie, warum) => {
+    const i = {};
+    if (was) i.was = was;
+    if (kann) i.kann = kann;
+    if (wofuer) i.wofuer = wofuer;
+    if (technologie) i.technologie = technologie;
+    if (warum) i.warum = warum;
+    return i;
+  };
+
+  /* ---------- 0 · Sortierer ---------- */
+  L.sortierer("#t06-sort-start", {
+    kategorien: ["Web App (Browser)", "Installierbare App"],
+    elemente: [
+      { html: "E-Banking, das du über eine URL im Browser öffnest", kategorie: 0, erklaerung: "Läuft im Browser, nichts wird installiert." },
+      { html: "Ein Spiel aus dem App Store", kategorie: 1, erklaerung: "Wird auf dem Gerät installiert und läuft direkt auf dem Betriebssystem." },
+      { html: "Eine PWA, deren Icon du auf den Startbildschirm gelegt hast", kategorie: 0, erklaerung: "Stolperfalle: Die PWA wirkt installiert, läuft aber im Browser als unsichtbarer Container. Sie bleibt eine Web App." },
+      { html: "Excel auf dem Notebook", kategorie: 1, erklaerung: "Ein installiertes Desktop-Programm. Es kann trotzdem Client einer Architektur sein (z. B. über OData)." },
+      { html: "Ein Kundenportal, das HTML bei jedem Klick neu vom Server holt", kategorie: 0, erklaerung: "Klassische, serverseitig gerenderte Web App." },
+      { html: "Eine Banking-App aus dem Play Store", kategorie: 1, erklaerung: "Installierbare Mobile App, z. B. nativ in Kotlin." }
+    ]
+  });
+
+  /* ---------- 2 · VDI ---------- */
+  A.diagramm("#t06-vdi", {
+    titel: "VDI: Der Desktop läuft im Rechenzentrum",
+    richtung: "rechts",
+    elemente: [
+      { id: "ma", typ: "akteur", name: "Mitarbeiterin" },
+      { id: "view", typ: "web", name: "View Client", stereotyp: "thin client", technologie: "Citrix Workspace App, VMware Horizon Client",
+        info: I("Kleines Programm (oder Browser) auf Notebook, Thin-Client-Gerät oder Tablet.", "Zeigt das Bild des entfernten Desktops und schickt Tastatur, Maus und Touch zurück.", "Für Arbeitsplätze, die zentral verwaltet werden sollen, z. B. Spital, Bank, Callcenter.", "Citrix Workspace App, VMware Horizon Client, Remote-Desktop-Client", "Auf dem Gerät liegen keine Daten. Geht es verloren, ist nichts verloren.") },
+      { id: "broker", typ: "gateway", name: "Connection Broker", technologie: "Citrix Delivery Controller, Horizon Connection Server",
+        info: I("Vermittler zwischen View Client und virtuellen Desktops.", "Meldet an, prüft Berechtigungen und teilt einen freien Desktop zu.", "Damit Hunderte Benutzer automatisch den richtigen Desktop bekommen.", "Citrix Delivery Controller, VMware Horizon Connection Server", "Zentrale Steuerung: Neue Desktops, Updates und Zugriffsrechte an einem Ort.") },
+      { id: "rz", typ: "knoten", name: "Rechenzentrum (Hypervisor)" },
+      { id: "vd", typ: "dienst", name: "Virtueller Desktop", in: "rz", technologie: "Windows 11 als VM",
+        info: I("Ein ganzer Windows-Desktop als virtuelle Maschine.", "Führt alle Programme aus, rechnet, druckt, speichert.", "Ersetzt den lokalen PC.", "Windows 11 Enterprise auf VMware vSphere, Citrix Hypervisor oder Azure Virtual Desktop", "Updates und Sicherheit nur an einer Stelle; Rechenleistung skaliert im Rechenzentrum.") },
+      { id: "app", typ: "monolith", name: "Fachapplikation", in: "rz", info: I("Die eigentliche Business-Applikation.", "Läuft im virtuellen Desktop nahe bei den Daten.", "", "", "Kurze Wege zur Datenbank, weil alles im Rechenzentrum liegt.") },
+      { id: "db", typ: "datenbank", name: "Profile und Daten", in: "rz", info: I("Benutzerprofile, Dateien und Fachdaten.", "", "", "", "Bleiben im Rechenzentrum, verlassen es nie als Datei.") }
+    ],
+    verbindungen: [
+      { id: "v1", von: "ma", nach: "view", art: "abhaengigkeit", label: "«use»" },
+      { id: "v2", von: "view", nach: "broker", art: "sync", label: "HTTPS" },
+      { id: "v3", von: "view", nach: "vd", art: "stream", label: "Bild und Eingaben (HDX, PCoIP)" },
+      { id: "v4", von: "broker", nach: "vd", art: "sync", label: "zuteilen" },
+      { id: "v5", von: "vd", nach: "app", art: "sync" },
+      { id: "v6", von: "app", nach: "db", art: "daten", label: "SQL" }
+    ],
+    ablaeufe: [
+      { id: "arbeiten", name: "Anmelden und arbeiten", schritte: [
+        { von: "ma", nach: "view", text: "Die Mitarbeiterin startet den View Client.", phase: "Anmelden" },
+        { von: "view", nach: "broker", text: "Der View Client meldet sie beim Connection Broker an.", phase: "Anmelden" },
+        { von: "broker", nach: "vd", text: "Der Broker teilt ihr einen virtuellen Desktop zu und startet ihn bei Bedarf.", phase: "Anmelden" },
+        { von: "view", nach: "vd", text: "Ab jetzt fliesst nur noch ein Bildstrom zum Gerät, Eingaben gehen zurück.", phase: "Arbeiten" },
+        { von: "vd", nach: "app", text: "Die Fachapplikation läuft im Rechenzentrum …", phase: "Arbeiten" },
+        { von: "app", nach: "db", text: "… direkt neben der Datenbank. Auf dem Gerät liegt nichts.", phase: "Arbeiten" }
+      ] },
+      { id: "netz", name: "Netz bricht ab", schritte: [
+        { von: "view", nach: "vd", text: "Die Mitarbeiterin arbeitet im Zug, der Bildstrom läuft." },
+        { bei: "view", text: "Tunnel: Das Netz bricht ab. Der Bildschirm friert ein, Eingaben gehen nirgends hin.", fehler: true },
+        { bei: "vd", text: "Der virtuelle Desktop läuft weiter. Nach dem Tunnel verbindet sich der Client neu und alles ist noch da." }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  /* ---------- 2 · OS-Zuordnung ---------- */
+  (function () {
+    const os = [
+      { name: "Windows 11", soll: [0, 1, 1], erkl: "Windows läuft auf Desktops, Notebooks und 2-in-1-Tablets (z. B. Surface). Windows Mobile für Smartphones ist eingestellt." },
+      { name: "macOS", soll: [0, 0, 1], erkl: "macOS läuft nur auf Apple-Desktops und -Notebooks (iMac, MacBook)." },
+      { name: "Linux (Ubuntu, Debian …)", soll: [0, 0, 1], erkl: "Als Client-OS vor allem auf Desktops und Notebooks. Android nutzt zwar den Linux-Kern, zählt aber als eigenes OS." },
+      { name: "iOS / iPadOS", soll: [1, 1, 0], erkl: "Apple-Smartphones (iOS) und -Tablets (iPadOS)." },
+      { name: "Android", soll: [1, 1, 0], erkl: "Smartphones und Tablets vieler Hersteller; Open Source, von Google geprägt." }
+    ];
+    const geraete = ["Smartphone", "Tablet", "Desktop / Notebook"];
+    const tbody = $("#t06-os tbody");
+    const knoepfe = [];
+    os.forEach((o, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<th scope="row">' + o.name + "</th>";
+      geraete.forEach((g, j) => {
+        const td = document.createElement("td");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "t06-os-knopf";
+        b.setAttribute("aria-pressed", "false");
+        b.setAttribute("aria-label", o.name + " auf " + g);
+        b.textContent = "–";
+        b.addEventListener("click", () => {
+          const an = b.getAttribute("aria-pressed") !== "true";
+          b.setAttribute("aria-pressed", String(an));
+          b.textContent = an ? "✓ läuft" : "–";
+          b.classList.remove("t06-ok", "t06-falsch");
+        });
+        knoepfe.push({ b: b, i: i, j: j });
+        td.appendChild(b);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    const fb = $("#t06-os-fb");
+    $("#t06-os-pruefen").addEventListener("click", () => {
+      let ok = 0;
+      const falscheZeilen = new Set();
+      knoepfe.forEach((k) => {
+        const an = k.b.getAttribute("aria-pressed") === "true";
+        const r = an === !!os[k.i].soll[k.j];
+        k.b.classList.toggle("t06-ok", r);
+        k.b.classList.toggle("t06-falsch", !r);
+        k.b.setAttribute("aria-label", os[k.i].name + " auf " + geraete[k.j] + (r ? ", richtig" : ", falsch"));
+        if (r) ok++; else falscheZeilen.add(k.i);
+      });
+      const n = knoepfe.length;
+      fb.className = "rueckmeldung " + (ok === n ? "ok" : "bad");
+      fb.innerHTML = '<span class="marke">' + (ok === n ? "✓" : "✗") + "</span> " + ok + " von " + n + " Feldern richtig." +
+        (falscheZeilen.size ? "<ul>" + Array.from(falscheZeilen).map((i) => "<li><b>" + os[i].name + ":</b> " + os[i].erkl + "</li>").join("") + "</ul>" : " Alle Zuordnungen stimmen.");
+    });
+    $("#t06-os-reset").addEventListener("click", () => {
+      knoepfe.forEach((k) => { k.b.setAttribute("aria-pressed", "false"); k.b.textContent = "–"; k.b.classList.remove("t06-ok", "t06-falsch"); k.b.setAttribute("aria-label", os[k.i].name + " auf " + geraete[k.j]); });
+      fb.className = "rueckmeldung leer"; fb.innerHTML = "";
+    });
+  })();
+
+  /* ---------- 3 · Regler Thin bis Fat ---------- */
+  (function () {
+    const schichten = [
+      { name: "Darstellung (Bildschirm, Eingabe)", rolle: "client" },
+      { name: "Oberfläche aufbauen (HTML, Views)", rolle: "client" },
+      { name: "Präsentationslogik (Validierung, Navigation)", rolle: "webapi" },
+      { name: "Anwendungslogik (Fachregeln)", rolle: "business" },
+      { name: "Datenhaltung", rolle: "daten" }
+    ];
+    const stufen = [
+      { name: "View Client (VDI, Terminal)", wo: "csss" + "s", bsp: "Der Desktop läuft im Rechenzentrum. Das Gerät zeigt nur Pixel und schickt Eingaben zurück, z. B. Citrix Workspace App.", m: [1, 0, 0, 5, 5, 5] },
+      { name: "Klassische Web App (serverseitig gerendert)", wo: "cssss", bsp: "Der Server erzeugt fertiges HTML (ASP.NET MVC, JSF, PHP). Der Browser zeigt es an und schickt Formulare zurück.", m: [0, 0, 1, 4, 5, 5] },
+      { name: "SPA (HTML/JS Web App)", wo: "ccbss", bsp: "Der Browser baut die Oberfläche selbst (React, Angular, Vue) und holt Daten per AJAX. Prüfen von Eingaben passiert auf beiden Seiten.", m: [0, 1, 2, 3, 4, 4] },
+      { name: "PWA (SPA mit Service Worker und Cache)", wo: "cccsb", bsp: "Wie die SPA, dazu App-Shell und letzte Daten im Cache. Installierbar mit Icon, läuft auch im Funkloch weiter.", m: [1, 3, 3, 2, 2, 4] },
+      { name: "Installierbare App (Rich / Fat Client)", wo: "cccbb", bsp: "Native, Cross-Platform oder Hybrid App mit UI, Teilen der Fachlogik und lokaler Datenbank, die mit dem Server synchronisiert.", m: [5, 5, 5, 2, 1, 1] }
+    ];
+    const merkmale = ["Installation nötig", "Offline-fähig", "Zugriff auf Gerätefunktionen", "Last auf dem Server", "Abhängig vom Netz", "Zentrale Wartung (Updates)"];
+    const regler = $("#t06-regler"), c = $("#t06-seite-c"), s = $("#t06-seite-s"), mk = $("#t06-merkmale");
+    const stufeT = $("#t06-stufe"), bsp = $("#t06-stufe-bsp");
+    function zeichnen() {
+      const st = stufen[Number(regler.value)];
+      stufeT.textContent = "Stufe " + (Number(regler.value) + 1) + " von 5: " + st.name;
+      bsp.textContent = st.bsp;
+      regler.setAttribute("aria-valuetext", st.name);
+      const zelle = (sch, seite, code) => {
+        const da = code === seite || code === "b";
+        const cls = "t06-schicht ar-r-" + sch.rolle + (code === "b" ? " t06-geteilt" : "") + (da ? "" : " t06-leer");
+        return '<div class="' + cls + '">' + (da ? "" : '<span class="sr-only">nicht hier: </span>') + sch.name + (code === "b" ? " (geteilt)" : "") + "</div>";
+      };
+      c.innerHTML = schichten.map((sch, i) => zelle(sch, "c", st.wo[i])).join("");
+      s.innerHTML = schichten.map((sch, i) => zelle(sch, "s", st.wo[i])).join("");
+      mk.innerHTML = merkmale.map((t, i) => '<span>' + t + '</span><span class="t06-balken" role="img" aria-label="' + t + ": " + st.m[i] + ' von 5"><i style="--w:' + st.m[i] + '"></i></span><span>' + st.m[i] + "/5</span>").join("");
+    }
+    regler.addEventListener("input", zeichnen);
+    zeichnen();
+  })();
+
+  /* ---------- 4 · Bildschirmdesign ---------- */
+  (function () {
+    let strat = "resp";
+    const breite = $("#t06-breite"), wert = $("#t06-breite-wert"), buehne = $("#t06-buehne"), rahmen = $("#t06-rahmen"), geraet = $("#t06-geraet"), mock = $("#t06-mock"), info = $("#t06-screen-info");
+    const knoepfe = Array.from(document.querySelectorAll("#t06-screen [data-strat]"));
+    function seite(spalten, burger, mobil) {
+      const karten = mobil ? 2 : 3;
+      let h = '<div class="t06-mock-kopf"><span>Frischkiste</span>' + (burger || mobil ? '<span class="t06-mock-nav">☰ Menü</span>' : '<span class="t06-mock-nav"><span>Kisten</span><span>Abo</span><span>Höfe</span><span>Login</span></span>') + "</div>";
+      h += '<div class="t06-mock-held">' + (mobil ? "Kiste bestellen" : "Frisches Gemüse, jede Woche vor deiner Tür") + "</div>";
+      h += '<div class="t06-mock-karten" style="grid-template-columns:repeat(' + spalten + ', minmax(0,1fr))">';
+      for (let i = 0; i < karten; i++) h += '<div class="t06-mock-karte' + (mobil ? " t06-mock-m" : "") + '"><b>' + ["Kleine Kiste", "Familienkiste", "Hofkiste"][i] + "</b><br>ab CHF " + [24, 39, 49][i] + "</div>";
+      return h + "</div>";
+    }
+    function zeichnen() {
+      const w = Number(breite.value);
+      wert.textContent = w + " px";
+      const vorhanden = Math.max(200, buehne.clientWidth - 22);
+      const aussen = w + 12;
+      const s = Math.min(1, vorhanden / aussen);
+      geraet.style.width = aussen + "px";
+      geraet.style.transform = "scale(" + s + ")";
+      rahmen.style.width = Math.floor(aussen * s) + "px";
+      rahmen.style.height = Math.ceil(412 * s) + "px";
+      let text = "";
+      mock.style.transform = "";
+      if (strat === "fix") {
+        mock.style.width = "1024px";
+        mock.innerHTML = seite(3, false, false);
+        text = w < 1024 ? "Fixe Grösse: Die Seite ist für 1024 px gebaut. Auf " + w + " px ragt sie hinaus, du musst seitlich scrollen." : "Fixe Grösse: Passt ab 1024 px. Auf breiteren Bildschirmen bleibt rechts leerer Rand.";
+      } else if (strat === "mehrere") {
+        if (w < 700) { mock.style.width = "360px"; mock.innerHTML = seite(1, true, true); text = "Mehrere fixe Grössen: Unter 700 px leitet die Seite auf eine eigene Mobile-Version um (z. B. m.frischkiste.ch), gebaut für 360 px. Du pflegst zwei Seiten."; }
+        else { mock.style.width = "1024px"; mock.innerHTML = seite(3, false, false); text = "Mehrere fixe Grössen: Ab 700 px kommt die Desktop-Version für 1024 px." + (w < 1024 ? " Dazwischen ragt sie noch hinaus." : ""); }
+      } else if (strat === "skal") {
+        mock.style.width = "1024px";
+        mock.innerHTML = seite(3, false, false);
+        const f = w / 1024;
+        mock.style.transform = "scale(" + f + ")";
+        text = "Skalierbar: Alles wird im gleichen Verhältnis verkleinert. Die Schrift ist nur noch " + Math.round(16 * f) + " px gross" + (f < 0.6 ? ", also kaum lesbar." : ".") + " Für Bilder gut, für Text nur bedingt.";
+      } else {
+        mock.style.width = w + "px";
+        const sp = w < 600 ? 1 : w < 900 ? 2 : 3;
+        mock.innerHTML = seite(sp, w < 600, false);
+        text = "Responsive: Die Seite ordnet sich neu an: " + sp + (sp === 1 ? " Spalte" : " Spalten") + (w < 600 ? ", Menü als ☰" : "") + ". Eine Codebasis für alle Breiten, kein seitliches Scrollen.";
+      }
+      info.textContent = text;
+    }
+    knoepfe.forEach((b) => b.addEventListener("click", () => {
+      strat = b.getAttribute("data-strat");
+      knoepfe.forEach((k) => { k.classList.toggle("on", k === b); k.setAttribute("aria-pressed", String(k === b)); });
+      zeichnen();
+    }));
+    breite.addEventListener("input", zeichnen);
+    window.addEventListener("resize", zeichnen);
+    zeichnen();
+  })();
+
+  /* ---------- 4 · LBS-Sortierer ---------- */
+  L.sortierer("#t06-sort-lbs", {
+    kategorien: ["Produkttracking", "Service Finder", "Peer Finder", "Push-Meldung", "Notrufortung"],
+    elemente: [
+      { html: "Die App zeigt, wo der bestellte Kühlschrank gerade unterwegs ist.", kategorie: 0, erklaerung: "Nur die Position des Ziels (Lieferwagen) wird ermittelt; wo du stehst, ist egal." },
+      { html: "Die App zeigt die drei nächsten Apotheken mit Notfalldienst.", kategorie: 1, erklaerung: "Dein Standort wird ermittelt, die Apotheken haben feste (vorgegebene) Adressen." },
+      { html: "Die Wander-App zeigt, wo deine Gruppe gerade ist.", kategorie: 2, erklaerung: "Beide Positionen werden laufend ermittelt: deine und die der anderen." },
+      { html: "Beim Betreten des Stadions erscheint die Sitzplatz-Info.", kategorie: 3, erklaerung: "Deine Position wird ermittelt, die Zone (Stadion) ist vorgegeben." },
+      { html: "Die Velo-App meldet nach einem Sturz automatisch deinen Standort an die Rettung.", kategorie: 4, erklaerung: "Nur deine Position zählt, ein Ziel gibt es nicht." }
+    ]
+  });
+
+  /* ---------- 4 · Offline / Online / Sync ---------- */
+  (function () {
+    let online = true, offen = 0, gesendet = 0;
+    const knopf = $("#t06-netz-knopf"), status = $("#t06-netz-status"), live = $("#t06-netz-live");
+    const kOff = $("#t06-app-off"), kOn = $("#t06-app-on"), kSync = $("#t06-app-sync");
+    function setze(k, klasse, text) {
+      k.classList.remove("t06-gut", "t06-schlecht", "t06-warten");
+      k.classList.add(klasse);
+      $(".t06-zust", k).textContent = text;
+    }
+    function zeichnen(meldung) {
+      status.textContent = "Netz: " + (online ? "an" : "aus");
+      knopf.textContent = online ? "Netz ausschalten" : "Netz einschalten";
+      knopf.setAttribute("aria-pressed", String(online));
+      setze(kOff, "t06-gut", "✓ läuft normal. Sie braucht keine Serverdaten.");
+      setze(kOn, online ? "t06-gut" : "t06-schlecht", online ? "✓ zeigt aktuelle Daten vom Server." : "✗ Keine Verbindung: Sie kann nichts anzeigen.");
+      if (online) setze(kSync, "t06-gut", "✓ synchron" + (gesendet ? ": " + gesendet + " Änderung" + (gesendet > 1 ? "en" : "") + " an den Server übertragen." : "."));
+      else setze(kSync, offen ? "t06-warten" : "t06-gut", offen ? "⏳ arbeitet lokal weiter. " + offen + " Änderung" + (offen > 1 ? "en warten" : " wartet") + " auf die Synchronisation." : "✓ arbeitet lokal mit den letzten Daten weiter.");
+      if (meldung) live.textContent = meldung;
+    }
+    knopf.addEventListener("click", () => {
+      online = !online;
+      if (online && offen) { gesendet = offen; offen = 0; zeichnen("Netz an. Die Sync-App gleicht " + gesendet + " Änderungen mit dem Server ab."); return; }
+      gesendet = 0;
+      zeichnen(online ? "Netz an." : "Netz aus. Die Always-Online-App steht, die anderen laufen weiter.");
+    });
+    $("#t06-netz-eingabe").addEventListener("click", () => {
+      if (online) { gesendet = 1; zeichnen("Eingabe sofort an den Server gesendet."); }
+      else { offen++; gesendet = 0; zeichnen("Eingabe lokal gespeichert. Offen: " + offen + "."); }
+    });
+    zeichnen();
+  })();
+
+  /* ---------- 5 · MVC ---------- */
+  A.diagramm("#t06-mvc", {
+    titel: "MVC in ASP.NET (serverseitig gerendert)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "m-client", name: "Client Tier", spalte: 0, zeile: 0, info: I("Alles, was beim Menschen läuft: hier nur der Browser.", "", "Zeigt, dass der Client bei MVC in ASP.NET dünn ist.", "", "Der Browser bekommt fertiges HTML und braucht kaum JavaScript.") },
+      { id: "m-server", name: "Web Tier (ASP.NET MVC auf IIS)", spalte: 0, zeile: 1, info: I("Der Server-Teil, der Seiten erzeugt.", "", "Enthält Controller, Views und Model.", "ASP.NET Core MVC auf IIS oder Kestrel", "Der Web-Server (IIS) ist Infrastruktur und steht darum nur im Paketnamen.") },
+      { id: "m-data", name: "Data Tier", spalte: 0, zeile: 2 }
+    ],
+    elemente: [
+      { id: "browser", typ: "web", name: "Web App (Browser)", in: "m-client", info: I("Browser, der die Seiten anzeigt.", "Formulare absenden, Links folgen, HTML anzeigen.", "Für alle Benutzer mit beliebigem Browser.", "jeder aktuelle oder ältere Browser", "Geringe Anforderungen an den Browser: Alles Schwere passiert auf dem Server.") },
+      { id: "ctrl", typ: "dienst", rolle: "client", name: "Controller", stereotyp: "ASP.NET", in: "m-server", spalte: 0, zeile: 0, schnittstellen: [{ id: "http", name: "HTTP" }],
+        info: I("Nimmt jede HTTP-Anfrage an (Route, z. B. /kisten).", "Liest Eingaben, ruft das Model auf, wählt die passende View.", "Steuert den Ablauf einer Seite.", "C#-Klasse, die von Controller erbt", "Trennt Steuerung von Darstellung: Die View muss nicht wissen, woher die Daten kommen.") },
+      { id: "view", typ: "dienst", rolle: "client", name: "View", stereotyp: "Razor", in: "m-server", spalte: 0, zeile: 1,
+        info: I("Vorlage aus HTML und C# (.cshtml).", "Erzeugt aus den Daten des Models fertiges HTML.", "Für die Darstellung jeder Seite.", "Razor-Syntax (@model, @foreach)", "Designer und Entwickler können an der Darstellung arbeiten, ohne die Logik anzufassen.") },
+      { id: "model", typ: "dienst", rolle: "business", name: "Model", stereotyp: "C#", in: "m-server", spalte: 1, zeile: 1,
+        info: I("Daten und Regeln der Anwendung.", "Hält die Fachobjekte, prüft Regeln, verbindet zur nächsten Schicht bzw. zur Datenbank.", "Für alles Fachliche.", "C#-Klassen, Entity Framework", "Das Model lässt sich ohne Oberfläche testen.") },
+      { id: "db", typ: "datenbank", name: "DB in SQL Server", in: "m-data" }
+    ],
+    verbindungen: [
+      { id: "c1", von: "browser", nach: "ctrl#http", protokoll: "HTTP", format: "HTML" },
+      { id: "c2", von: "ctrl", nach: "model" },
+      { id: "c3", von: "ctrl", nach: "view" },
+      { id: "c4", von: "view", nach: "model", label: "liest" },
+      { id: "c5", von: "model", nach: "db", label: "ADO.NET" }
+    ],
+    ablaeufe: [{ id: "formular", name: "Formular absenden", schritte: [
+      { von: "browser", nach: "ctrl", text: "Die Kundin klickt «Kiste bestellen». Der Browser schickt das Formular per HTTP POST an den Controller.", phase: "Anfrage" },
+      { von: "ctrl", nach: "model", text: "Der Controller übergibt die Eingaben dem Model. Das Model prüft die Regeln (z. B. Liefertag gültig).", phase: "Verarbeiten" },
+      { von: "model", nach: "db", text: "Das Model speichert die Bestellung in der Datenbank.", phase: "Verarbeiten" },
+      { von: "ctrl", nach: "view", text: "Der Controller wählt die View «Bestätigung» und gibt ihr das Model mit.", phase: "Darstellen" },
+      { von: "view", nach: "model", text: "Die View liest die Daten aus dem Model und erzeugt HTML.", phase: "Darstellen" },
+      { von: "ctrl", nach: "browser", text: "Der Browser bekommt eine komplett neue HTML-Seite. Das ist der klassische, serverseitig gerenderte Weg.", phase: "Antwort" }
+    ] }]
+  }, { ablauf: true, ausfall: false, legende: true, steckbrief: true });
+
+  /* ---------- 5 · MVVM ---------- */
+  A.diagramm("#t06-mvvm", {
+    titel: "MVVM in einer .NET-MAUI-App",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "v-app", name: "Installierbare App (MAUI, Tablet)", spalte: 0, zeile: 0, info: I("Die App auf dem Gerät.", "", "Enthält View, ViewModel und Model.", ".NET MAUI", "Präsentation (XAML) und Präsentationslogik (C#) sind getrennt.") },
+      { id: "v-server", name: "Server", spalte: 0, zeile: 1 }
+    ],
+    elemente: [
+      { id: "vview", typ: "dienst", rolle: "client", name: "View", stereotyp: "XAML", in: "v-app",
+        info: I("Die Präsentation: Seiten und Steuerelemente in XAML.", "Zeigt Werte an und gibt Eingaben weiter, ohne eigene Logik.", "Für Aussehen und Layout.", "XAML", "Weil die View nur bindet, kann man das Aussehen ändern, ohne Logik anzufassen.") },
+      { id: "vm", typ: "dienst", rolle: "business", name: "ViewModel", stereotyp: "C#", in: "v-app",
+        info: I("Die Präsentationslogik in C#.", "Hält den Zustand der Seite als Eigenschaften und bietet Befehle (Commands) an. Meldet Änderungen (PropertyChanged).", "Für alles, was die Oberfläche tun soll.", "C#, CommunityToolkit.Mvvm", "Das ViewModel kennt die View nicht. Darum lässt es sich ohne Oberfläche testen.") },
+      { id: "vmodel", typ: "dienst", rolle: "business", name: "Model", stereotyp: "C#", in: "v-app",
+        info: I("Fachobjekte und Zugriff auf Daten.", "Lädt und speichert, z. B. über einen GraphQL-Client.", "Für Business-Logik und Datenzugriff.", "C#", "Trennt Fachliches von der Oberfläche.") },
+      { id: "gql", typ: "dienst", rolle: "webapi", name: "GraphQL Web Service", stereotyp: "C#", in: "v-server", schnittstellen: [{ id: "gql", name: "GraphQL" }],
+        info: I("Web Service, der die Daten persistiert.", "Beantwortet Abfragen und Änderungen über GraphQL.", "Für alle installierten Apps.", "ASP.NET Core mit Hot Chocolate", "Die App holt genau die Felder, die sie braucht.") }
+    ],
+    verbindungen: [
+      { id: "b1", von: "vview", nach: "vm", label: "Data Binding" },
+      { id: "b2", von: "vm", nach: "vmodel" },
+      { id: "b3", von: "vmodel", nach: "gql#gql", protokoll: "GraphQL", format: "JSON" }
+    ],
+    ablaeufe: [{ id: "binding", name: "Tippen und automatisch aktualisieren", schritte: [
+      { von: "vview", nach: "vm", text: "Die Therapeutin tippt «Termine laden». Der Knopf ist an einen Command im ViewModel gebunden.", phase: "Eingabe" },
+      { von: "vm", nach: "vmodel", text: "Das ViewModel bittet das Model um die Termine.", phase: "Laden" },
+      { von: "vmodel", nach: "gql", text: "Das Model fragt den GraphQL-Service ab.", phase: "Laden" },
+      { von: "gql", nach: "vmodel", text: "Die Daten kommen als JSON zurück.", phase: "Laden" },
+      { von: "vmodel", nach: "vm", text: "Das ViewModel setzt seine Eigenschaft «Termine» und meldet die Änderung.", phase: "Anzeigen" },
+      { von: "vm", nach: "vview", text: "Data Binding: Die Liste in der View aktualisiert sich von selbst. Niemand musste die View direkt ansprechen.", phase: "Anzeigen" }
+    ] }]
+  }, { ablauf: true, ausfall: false, legende: false, steckbrief: true });
+
+  /* ---------- 5 · AJAX ---------- */
+  A.diagramm("#t06-ajax", {
+    titel: "AJAX: Browser und Web API tauschen JSON",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "a-client", name: "Client Tier (Browser)", spalte: 0, zeile: 0 },
+      { id: "a-server", name: "Server", spalte: 0, zeile: 1 }
+    ],
+    elemente: [
+      { id: "dom", typ: "web", name: "Seite (DOM)", stereotyp: "HTML", in: "a-client",
+        info: I("Die geladene Seite im Browser.", "Zeigt Inhalte an und meldet Ereignisse (Klick, Eingabe).", "Für alles Sichtbare.", "HTML5, CSS", "Bleibt bei AJAX stehen; nur Teile werden ersetzt.") },
+      { id: "js", typ: "dienst", rolle: "client", name: "JavaScript-Logik", stereotyp: "JS", in: "a-client",
+        info: I("Das Skript der Web App.", "Reagiert auf Ereignisse, ruft das Web API asynchron auf (fetch), baut Teile der Seite neu.", "Für die Präsentationslogik im Browser.", "JavaScript, fetch API", "Asynchron heisst: Die Seite friert nicht ein, während die Antwort unterwegs ist.") },
+      { id: "api", typ: "dienst", rolle: "webapi", name: "Web API", stereotyp: "C#", in: "a-server", schnittstellen: [{ id: "rest", name: "REST" }],
+        info: I("Web Service mit Daten-Endpunkten.", "Liefert und speichert Daten als JSON.", "Für AJAX-Aufrufe aller Web Apps.", "ASP.NET Core Web API", "Liefert nur Daten, kein HTML: Dieselbe API passt für Browser und Apps.") },
+      { id: "adb", typ: "datenbank", name: "Datenbank", in: "a-server" }
+    ],
+    verbindungen: [
+      { id: "j1", von: "dom", nach: "js", label: "Ereignis" },
+      { id: "j2", von: "js", nach: "api#rest", protokoll: "REST", format: "JSON" },
+      { id: "j3", von: "api", nach: "adb", label: "SQL" }
+    ],
+    ablaeufe: [
+      { id: "suche", name: "Kisten für eine PLZ laden", schritte: [
+        { von: "dom", nach: "js", text: "Die Kundin tippt ihre PLZ ein. Das Eingabefeld meldet das Ereignis an das Skript.", phase: "Ereignis" },
+        { von: "js", nach: "api", text: "Das Skript ruft im Hintergrund GET /api/kisten?plz=9000 auf. Die Seite bleibt bedienbar.", phase: "Anfrage" },
+        { von: "api", nach: "adb", text: "Das Web API liest die passenden Kisten.", phase: "Anfrage" },
+        { von: "api", nach: "js", text: "Die Antwort kommt als JSON: nur Daten, kein HTML.", phase: "Antwort" },
+        { von: "js", nach: "dom", text: "Das Skript ersetzt nur die Liste. Kein Neuladen, kein Flackern.", phase: "Antwort" }
+      ] },
+      { id: "fehler", name: "Web API antwortet nicht", schritte: [
+        { von: "dom", nach: "js", text: "Die Kundin klickt «Abo pausieren»." },
+        { von: "js", nach: "api", text: "Das Skript schickt POST /api/abos/42/pause.", fehler: true },
+        { bei: "api", text: "Das Web API ist überlastet und antwortet mit 503.", fehler: true },
+        { von: "js", nach: "dom", text: "Das Skript zeigt «Nicht gespeichert, bitte nochmals». Der Rest der Seite bleibt, Eingaben gehen nicht verloren." }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: false, steckbrief: true });
+
+  L.auswahl("#t06-ajax-frage", {
+    frage: "Was ist der Kern von AJAX?",
+    optionen: [
+      "Der Server schickt bei jedem Klick eine neue, komplette HTML-Seite.",
+      "Ein Skript im Browser holt im Hintergrund Daten und ändert nur einen Teil der Seite.",
+      "Die App wird aus dem Store installiert und spricht direkt mit der Datenbank.",
+      "Der Browser speichert alle Daten in XML-Dateien auf dem Gerät."
+    ],
+    richtig: 1,
+    erklaerung: "Asynchron: Die Seite bleibt bedienbar, während die Antwort unterwegs ist. Das X steht für XML, heute ist JSON üblich."
+  });
+
+  /* ---------- 6 · SPA ---------- */
+  A.diagramm("#t06-spa", {
+    titel: "SPA: einmal laden, dann Daten nachladen",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "s-client", name: "Client Tier", spalte: 0, zeile: 0, info: I("Hier läuft die SPA im Kontext des Browsers.", "", "", "", "Die Oberfläche entsteht im Browser, gesteuert durch JavaScript-Ereignisse.") },
+      { id: "s-server", name: "Server Tier (im Kontext des Web-Servers)", spalte: 0, zeile: 1, info: I("Liefert die App-Dateien und die Daten.", "", "", "z. B. Nginx für statische Dateien, ASP.NET Core oder Node.js für das Web API", "Zwei Aufgaben, zwei Komponenten: Dateien ausliefern und Daten anbieten.") },
+      { id: "s-biz", name: "Business, Service oder Data Tier", spalte: 0, zeile: 2 }
+    ],
+    elemente: [
+      { id: "spa", typ: "web", name: "Single Page App (SPA)", in: "s-client", technologie: "React, Angular, Vue",
+        info: I("Web App, die aus einer einzigen geladenen Seite besteht.", "Baut die Oberfläche im Browser, navigiert ohne Neuladen, holt Daten per AJAX.", "Für optimale Usability ohne Installation, auf jedem Gerät mit aktuellem Browser.", "React, Angular, Vue.js, Blazor WebAssembly", "Nach dem ersten Laden gehen nur noch kleine JSON-Antworten übers Netz. Das wirkt so flüssig wie eine App.") },
+      { id: "res", typ: "dienst", rolle: "client", name: "HTML5 Resources", stereotyp: "Static", in: "s-server", schnittstellen: [{ id: "static", name: "Static HTTP" }],
+        info: I("Die statischen Dateien der SPA: index.html, JavaScript-Bundles, CSS, Bilder.", "Liefert sie unverändert aus, gut cachebar.", "Für den Initial Load der SPA.", "Nginx, CDN, Azure Static Web Apps", "Statische Dateien brauchen keine Fachlogik; ein eigener, einfacher Dienst skaliert billig.") },
+      { id: "sapi", typ: "dienst", rolle: "webapi", name: "Web API", stereotyp: "C#", in: "s-server", schnittstellen: [{ id: "rest", name: "REST, OData …" }],
+        info: I("Web Service für die Daten der SPA.", "Beantwortet AJAX-Aufrufe mit JSON (REST, GraphQL oder OData).", "Für alle Datenzugriffe der SPA.", "ASP.NET Core, Express, Spring Boot", "Dieselbe API können später auch Mobile Apps nutzen.") },
+      { id: "logik", typ: "dienst", rolle: "business", name: "Fachlogik und Daten", in: "s-biz" }
+    ],
+    verbindungen: [
+      { id: "s1", von: "spa", nach: "res#static", label: "Initial Load · Static HTTP" },
+      { id: "s2", von: "spa", nach: "sapi#rest", label: "AJAX · REST/JSON" },
+      { id: "s3", von: "sapi", nach: "logik" },
+      { id: "sd", von: "s-client", nach: "s-server", art: "abhaengigkeit" }
+    ],
+    ablaeufe: [
+      { id: "laden", name: "Einmal laden, dann Daten nachladen", schritte: [
+        { von: "spa", nach: "res", text: "Initial Load: Der Browser holt index.html, JavaScript und CSS über Static HTTP.", phase: "Initial Load" },
+        { von: "res", nach: "spa", text: "Die Dateien sind da. Ab jetzt baut JavaScript die Oberfläche selbst.", phase: "Initial Load" },
+        { von: "spa", nach: "sapi", text: "Die SPA holt per AJAX die Liste der Kisten (GET /api/kisten).", phase: "Daten" },
+        { von: "sapi", nach: "logik", text: "Das Web API fragt die Fachlogik.", phase: "Daten" },
+        { von: "sapi", nach: "spa", text: "JSON kommt zurück, die SPA zeigt die Liste an.", phase: "Daten" },
+        { von: "spa", nach: "sapi", text: "Klick auf «Details»: Die SPA wechselt die Ansicht im Browser und holt nur die Details nach. Die HTML5 Resources braucht sie nicht mehr.", phase: "Navigieren" }
+      ] },
+      { id: "apiweg", name: "Web API fällt aus", schritte: [
+        { von: "spa", nach: "sapi", text: "Die SPA will Daten speichern." },
+        { bei: "sapi", text: "Das Web API ist nicht erreichbar.", fehler: true },
+        { bei: "spa", text: "Die SPA bleibt geladen und bedienbar, zeigt aber «Keine Verbindung». Neue Daten gibt es erst, wenn das Web API zurück ist." }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  /* ---------- 6 · PWA ---------- */
+  const pwa = A.diagramm("#t06-pwa", {
+    titel: "PWA: Service Worker als Proxy",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "p-geraet", name: "Gerät: Browser als unsichtbarer Container", spalte: 0, zeile: 0, info: I("Alles, was auf dem Smartphone oder PC läuft.", "", "", "Chrome, Edge, Safari, Firefox", "Der Browser ist da, aber man sieht ihn nicht: Die PWA startet im eigenen Fenster wie eine App.") },
+      { id: "p-server", name: "Server", spalte: 0, zeile: 1 }
+    ],
+    elemente: [
+      { id: "papp", typ: "web", name: "PWA (HTML5 SPA)", in: "p-geraet", spalte: 0, zeile: 0,
+        info: I("Die App selbst: eine SPA mit App-Gefühl.", "Startet über ein Icon, läuft im Vollbild, sendet Requests über den Service Worker.", "Für Benutzer mit unbekanntem Gerät, die trotzdem Offline-Fähigkeit und Push wollen.", "React, Angular, Vue oder Blazor WebAssembly als PWA", "Eine Codebasis für alle Geräte, ohne App Store, aber mit vielen Vorteilen einer installierten App.") },
+      { id: "man", typ: "artefakt", rolle: "infra", name: "Manifest", stereotyp: "JSON", in: "p-geraet", spalte: 1, zeile: 0,
+        info: I("Kleine JSON-Datei mit Name, Icon, Start-URL und Darstellung.", "Ermöglicht die Installation auf dem Startbildschirm, Splash-Screen und Vollbild.", "Für das App-Gefühl.", "manifest.webmanifest", "Ohne Manifest bietet der Browser keine Installation an.") },
+      { id: "sw", typ: "dienst", rolle: "client", name: "Service Worker", stereotyp: "JS", in: "p-geraet", spalte: 0, zeile: 1,
+        info: I("Skript, das der Browser für die PWA registriert und im Hintergrund laufen lässt.", "Fängt jeden Request ab (Proxy), antwortet aus Netz oder Cache, synchronisiert im Hintergrund, empfängt Push.", "Für Offline-Fähigkeit und Geschwindigkeit.", "JavaScript (sw.js), Workbox", "Er entscheidet pro Request: Netz oder Cache. In einem Architekturdiagramm der Prüfung ist er Teil der PWA und keine eigene Komponente.") },
+      { id: "cache", typ: "cache", name: "Cache Storage", in: "p-geraet", spalte: 1, zeile: 1,
+        info: I("Speicher des Browsers für Antworten.", "Hält die App-Shell und die letzten Daten.", "Für den schnellen Start und den Offline-Betrieb.", "Cache API, IndexedDB", "Was im Cache liegt, ist auch ohne Server sofort da.") },
+      { id: "pres", typ: "dienst", rolle: "client", name: "HTML5 Resources", stereotyp: "Microservice", in: "p-server", schnittstellen: [{ id: "static", name: "Static HTTP" }],
+        info: I("Liefert die Dateien der PWA aus.", "HTML, JavaScript, CSS, Icons, Manifest und sw.js.", "Für die Installation und Updates der PWA.", "Nginx-Container", "Statische Dateien, einfach zu skalieren.") },
+      { id: "papi", typ: "dienst", rolle: "webapi", name: "Web API", stereotyp: "Microservice", in: "p-server", schnittstellen: [{ id: "rest", name: "REST" }],
+        info: I("Web Service für die Daten.", "Liefert und speichert Daten als JSON.", "Für alle Datenzugriffe der PWA.", "ASP.NET Core, Node.js", "Dieselbe API wie für die anderen Clients.") }
+    ],
+    verbindungen: [
+      { id: "w1", von: "papp", nach: "man", label: "beim Start lesen" },
+      { id: "w2", von: "papp", nach: "sw", label: "Request" },
+      { id: "w3", von: "sw", nach: "cache", label: "lesen/schreiben" },
+      { id: "w4", von: "sw", nach: "pres#static", protokoll: "Static HTTP" },
+      { id: "w5", von: "sw", nach: "papi#rest", protokoll: "REST", format: "JSON" }
+    ],
+    ablaeufe: [
+      { id: "erst", name: "Erster Besuch und Installation", schritte: [
+        { von: "papp", nach: "sw", text: "Beim ersten Besuch registriert die Seite den Service Worker.", phase: "Installieren" },
+        { von: "sw", nach: "pres", text: "Der Service Worker lädt die App-Shell (HTML, JS, CSS, Icons) …", phase: "Installieren" },
+        { von: "sw", nach: "cache", text: "… und legt sie in den Cache.", phase: "Installieren" },
+        { von: "papp", nach: "man", text: "Der Browser liest das Manifest und bietet «Zum Startbildschirm hinzufügen» an.", phase: "Installieren" }
+      ] },
+      { id: "online", name: "Start online", schritte: [
+        { von: "papp", nach: "man", text: "Start über das Icon: Splash-Screen, dann Vollbild ohne Browser-Leiste.", phase: "App-Start" },
+        { von: "papp", nach: "sw", text: "Die App will die Kisten anzeigen und stellt einen Request.", phase: "Request" },
+        { von: "sw", nach: "cache", text: "Die App-Shell kommt sofort aus dem Cache: schneller Start.", phase: "Request" },
+        { von: "sw", nach: "papi", text: "Für die Daten fragt der Service Worker zuerst das Netz (network first).", phase: "Request" },
+        { von: "papi", nach: "sw", text: "Frische Daten kommen als JSON zurück.", phase: "Reply" },
+        { von: "sw", nach: "cache", text: "Er legt eine Kopie in den Cache, für später.", phase: "Reply" },
+        { von: "sw", nach: "papp", text: "Die App zeigt die aktuellen Daten.", phase: "Reply" }
+      ] },
+      { id: "weg", name: "Server weg (offline)", schritte: [
+        { von: "papp", nach: "sw", text: "Funkloch oder Server-Ausfall. Die App stellt einen Request wie immer.", phase: "Request" },
+        { von: "sw", nach: "papi", text: "Der Service Worker versucht das Netz …", fehler: true, phase: "Request" },
+        { bei: "papi", text: "… der Server ist nicht erreichbar.", fehler: true },
+        { von: "sw", nach: "cache", text: "Er nimmt die letzte Antwort aus dem Cache.", phase: "Fallback" },
+        { von: "sw", nach: "papp", text: "Die App läuft weiter und zeigt den letzten Stand, mit dem Hinweis «offline».", phase: "Fallback" },
+        { bei: "sw", text: "Eine neue Bestellung merkt sich der Service Worker und sendet sie per Hintergrund-Synchronisation, sobald der Server wieder da ist.", phase: "Später" }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+  (function () {
+    const b = $("#t06-pwa-weg"), t = $("#t06-pwa-weg-text");
+    let weg = false;
+    b.addEventListener("click", () => {
+      if (!pwa) return;
+      weg = !weg;
+      pwa.setzeZustand("pres", weg ? "ausfall" : "ok");
+      pwa.setzeZustand("papi", weg ? "ausfall" : "ok");
+      b.setAttribute("aria-pressed", String(weg));
+      b.textContent = weg ? "Server wieder da" : "Server weg";
+      t.textContent = weg ? "HTML5 Resources und Web API sind ausgefallen. Der Ablauf «Server weg» läuft." : "Server läuft wieder. Spiel «Start online» ab.";
+      if (weg) pwa.ablaufStarten("weg");
+    });
+  })();
+
+  /* ---------- 6 · Blazor ---------- */
+  A.diagramm("#t06-blazor", {
+    titel: "Blazor Server und Blazor WebAssembly",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "bz-client", name: "Client (Browser)", spalte: 0, zeile: 0 },
+      { id: "bz-server", name: "Web Tier (.NET-Server)", spalte: 0, zeile: 1 }
+    ],
+    elemente: [
+      { id: "bzs", typ: "web", name: "Browser mit Blazor Server", in: "bz-client",
+        info: I("Browser mit einer dünnen JavaScript-Schicht (blazor.server.js).", "Zeigt die Oberfläche, schickt Klicks über SignalR, setzt kleine DOM-Änderungen um.", "Für Intranet-Apps mit stabiler Verbindung.", "Blazor Server", "Sehr kleiner Download, Code bleibt auf dem Server. Aber ohne Verbindung steht die App.") },
+      { id: "bzw", typ: "web", name: "Browser mit Blazor WebAssembly", in: "bz-client",
+        info: I("Browser, in dem die .NET-Laufzeit als WebAssembly läuft.", "Führt C# im Browser aus, holt Daten per REST, kann als PWA offline laufen.", "Für öffentliche Apps, PWA, Offline.", "Blazor WebAssembly", "Entlastet den Server und läuft weiter, auch wenn er kurz weg ist. Dafür grösserer erster Download.") },
+      { id: "bsc", typ: "dienst", rolle: "client", name: "Blazor Server Components", stereotyp: "ASP.NET", in: "bz-server", schnittstellen: [{ id: "http", name: "HTTP" }],
+        info: I("Razor-Komponenten, die auf dem Server laufen.", "Halten den Zustand jeder Sitzung, berechnen UI-Änderungen, rufen die Fachlogik auf.", "Für die Präsentation von Blazor Server.", "ASP.NET Core Blazor Server, SignalR", "Ein Technologie-Stack (C#) von der Oberfläche bis zur Datenbank.") },
+      { id: "bres", typ: "dienst", rolle: "client", name: "Blazor Ressourcen", stereotyp: "ASP.NET", in: "bz-server", schnittstellen: [{ id: "static", name: "Static HTTP" }],
+        info: I("Die statischen Dateien der WebAssembly-App: .wasm, DLLs, index.html.", "Liefert sie einmal aus, danach aus dem Browser-Cache.", "Für Blazor WebAssembly und Blazor PWA.", "ASP.NET Core Static Files", "Statische Dateien, gut cachebar.") },
+      { id: "bapi", typ: "dienst", rolle: "webapi", name: "Web API", stereotyp: "C#", in: "bz-server", schnittstellen: [{ id: "rest", name: "REST" }],
+        info: I("Daten-Schnittstelle für die WebAssembly-App.", "Liefert JSON.", "Für AJAX-Aufrufe der Blazor-WASM-App.", "ASP.NET Core Web API", "Auch andere Clients können sie nutzen.") }
+    ],
+    verbindungen: [
+      { id: "z1", von: "bzs", nach: "bsc#http", label: "SignalR (WebSocket)" },
+      { id: "z2", von: "bzw", nach: "bres#static", protokoll: "Static HTTP" },
+      { id: "z3", von: "bzw", nach: "bapi#rest", protokoll: "REST", format: "JSON" }
+    ],
+    ablaeufe: [
+      { id: "server", name: "Klick in Blazor Server", schritte: [
+        { von: "bzs", nach: "bsc", text: "Klick auf «Buchen»: Das Ereignis reist über die SignalR-Verbindung zum Server.", phase: "Klick" },
+        { bei: "bsc", text: "Der C#-Code der Komponente läuft auf dem Server und berechnet, was sich an der Oberfläche ändert.", phase: "Rechnen" },
+        { von: "bsc", nach: "bzs", text: "Nur die Differenz geht zurück; der Browser setzt sie um.", phase: "Update" }
+      ] },
+      { id: "wasm", name: "Klick in Blazor WebAssembly", schritte: [
+        { von: "bzw", nach: "bres", text: "Einmalig: Der Browser lädt .NET-Laufzeit und App als WebAssembly.", phase: "Laden" },
+        { bei: "bzw", text: "Klick auf «Buchen»: Der C#-Code läuft direkt im Browser.", phase: "Klick" },
+        { von: "bzw", nach: "bapi", text: "Nur für die Daten ruft die App das Web API per REST auf.", phase: "Daten" },
+        { von: "bapi", nach: "bzw", text: "JSON zurück, die App aktualisiert sich im Browser.", phase: "Daten" }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: false, steckbrief: true });
+
+  /* ---------- 7 · Plattform-Stapel ---------- */
+  (function () {
+    const bauarten = [
+      { id: "native", name: "Native (Single Platform)",
+        lagen: [[["Swift + SwiftUI", "client"], ["Kotlin + Jetpack Compose", "client"]], "Xcode baut / Android Studio baut", [["iOS SDK", "business"], ["Android SDK", "business"]], [["iPhone, iPad", "daten"], ["Android-Geräte", "daten"]]],
+        text: "<p><b>Zwei Apps, zwei Codebasen.</b> Für Apple entwickelst du in Xcode mit Swift und SwiftUI (Objective-C wird nicht mehr aktiv weiterentwickelt) und verteilst über den App Store. Für Android in Android Studio mit Kotlin oder Java, UI nach Material Design, Verteilung über Google Play.</p>",
+        pro: ["nutzt das Gerät voll aus", "beste Performance", "UI voll plattformkonform"], contra: ["aufwändig und teuer", "je Plattform ein eigenes Team"] },
+      { id: "java", name: "Cross-Platform: Java (JVM)",
+        lagen: [[["Java-Quellcode (.java)", "client"]], "Java-Compiler (JDK)", [["Bytecode (.class, .jar)", "webapi"]], "läuft auf", [["JRE mit JVM und JIT", "business"]], [["Windows", "daten"], ["macOS", "daten"], ["Linux", "daten"]]],
+        text: "<p><b>Einmal übersetzen, überall ausführen.</b> Der Compiler erzeugt Bytecode. Die Java Virtual Machine des jeweiligen Betriebssystems übersetzt ihn zur Laufzeit (Just-in-Time) in Maschinencode. Typisch für Desktop-Apps im Unternehmen.</p>",
+        pro: ["eine Codebasis", "läuft überall, wo eine JVM ist", "grosses Ökosystem"], contra: ["Laufzeit muss vorhanden sein", "UI wirkt oft nicht ganz plattformtypisch"] },
+      { id: "dotnet", name: "Cross-Platform: .NET (CLR)",
+        lagen: [[["C#, VB oder F#", "client"]], "C#-Compiler (Visual Studio)", [["Common Intermediate Language (CIL)", "webapi"]], "läuft auf", [["Common Language Runtime mit JIT", "business"]], [["Windows", "daten"], ["macOS", "daten"], ["Linux", "daten"]]],
+        text: "<p><b>Gleiches Prinzip wie Java.</b> Der Compiler erzeugt Zwischencode (CIL), die Common Language Runtime führt ihn auf Windows, macOS oder Linux aus. Mehrere Sprachen teilen dieselbe Laufzeit.</p>",
+        pro: ["eine Codebasis, mehrere Sprachen", "gleicher Stack wie der .NET-Server", "Visual Studio als starke IDE"], contra: ["Laufzeit nötig", "UI-Frameworks je Plattform unterschiedlich ausgereift"] },
+      { id: "maui", name: "Multiplatform: .NET MAUI",
+        lagen: [[["Eine Codebasis: C# + XAML (MVVM)", "client"]], "baut für", [[".NET MAUI", "business"]], [["Android", "daten"], ["iOS", "daten"], ["macOS", "daten"], ["Windows", "daten"]]],
+        text: "<p><b>Ein Projekt, vier Zielplattformen.</b> .NET Multi-platform App UI erzeugt aus einer Codebasis echte Apps mit nativen Steuerelementen für Android, iOS, macOS und Windows. Ideal, wenn der Server ohnehin .NET ist.</p>",
+        pro: ["eine Codebasis für Mobile und Desktop", "schneller Time-to-Market", "Kostenersparnis"], contra: ["nicht jede Plattform-Spezialität verfügbar", "Abhängigkeit vom Framework"] },
+      { id: "hybrid", name: "Hybrid App",
+        lagen: [[["Inhalt: HTML5 + CSS3 + JavaScript", "client"]], "läuft in", [["WebView im nativen App-Rahmen", "infra"]], "Plugins", [["Mobile APIs: Kamera, GPS, Kontakte", "sync"]], [["Android-App", "daten"], ["iOS-App", "daten"]]],
+        text: "<p><b>Webinhalt in einer echten App.</b> Ein Entwicklungsframework wie Apache Cordova oder Ionic (heute oft mit Capacitor) verpackt HTML5-Inhalt in einen nativen Rahmen. Plugins öffnen die Gerätefunktionen. Die Daten kommen über Web APIs (REST) vom Server. Für Desktop gibt es dasselbe Prinzip mit Electron.</p>",
+        pro: ["eine Codebasis mit Web-Know-how", "Verteilung über die App Stores", "Gerätefunktionen über Plugins"], contra: ["Performance unter nativ", "UI nicht ganz plattformkonform", "Plugin-Abhängigkeiten"] }
+    ];
+    const wahl = $("#t06-stapel-wahl"), stapel = $("#t06-stapel"), text = $("#t06-stapel-text");
+    const knoepfe = bauarten.map((b, i) => {
+      const k = document.createElement("button");
+      k.type = "button";
+      k.className = "btn" + (i === 0 ? " on" : "");
+      k.setAttribute("aria-pressed", String(i === 0));
+      k.textContent = b.name;
+      k.addEventListener("click", () => zeige(i));
+      wahl.appendChild(k);
+      return k;
+    });
+    function zeige(i) {
+      const b = bauarten[i];
+      knoepfe.forEach((k, j) => { k.classList.toggle("on", i === j); k.setAttribute("aria-pressed", String(i === j)); });
+      stapel.innerHTML = '<p class="sr-only">Stapel ' + b.name + " von oben nach unten:</p>" + b.lagen.map((l) => {
+        if (typeof l === "string") return '<div class="t06-pfeil" aria-hidden="true">↓ ' + l + "</div>";
+        return '<div class="t06-lage-reihe">' + l.map(([t, r]) => '<div class="t06-lage ar-r-' + r + '">' + t + "</div>").join("") + "</div>";
+      }).join("");
+      text.innerHTML = b.text + '<div class="t06-pk"><div><b class="t06-plus">Vorteile</b><ul>' + b.pro.map((x) => "<li>" + x + "</li>").join("") + '</ul></div><div><b class="t06-minus">Nachteile</b><ul>' + b.contra.map((x) => "<li>" + x + "</li>").join("") + "</ul></div></div>";
+    }
+    zeige(0);
+  })();
+
+  L.sortierer("#t06-sort-bauart", {
+    kategorien: ["Native", "Cross-/Multiplatform", "Hybrid"],
+    elemente: [
+      { html: "Eine Fitness-App nur für die Apple Watch, in Swift geschrieben", kategorie: 0, erklaerung: "Eine Plattform, eigener Code in Swift: native." },
+      { html: "Eine Desktop-App in C# mit .NET MAUI für Windows und macOS", kategorie: 1, erklaerung: "Eine Codebasis, Framework baut für mehrere Plattformen." },
+      { html: "Eine Ionic-App mit Angular, verpackt mit Capacitor für iOS und Android", kategorie: 2, erklaerung: "HTML5-Inhalt im nativen Rahmen: hybrid." },
+      { html: "Ein Java-Programm, das als .jar auf Windows und Linux läuft", kategorie: 1, erklaerung: "Bytecode auf der JVM: Cross-Platform." },
+      { html: "Ein Electron-Programm aus HTML, CSS und JavaScript für den Desktop", kategorie: 2, erklaerung: "Webinhalt in einem nativen Desktop-Rahmen: das Hybrid-Prinzip für Desktop." },
+      { html: "Eine Android-App in Kotlin mit Jetpack Compose", kategorie: 0, erklaerung: "Eine Plattform, Plattformsprache: native." }
+    ]
+  });
+
+  /* ---------- 8 · Stepper ---------- */
+  const chip = (t, r) => '<span class="t06-badge ar-r-' + r + '">' + t + "</span>";
+  L.stepper("#t06-stepper", {
+    titel: "Hochwerk Lifte (fiktiv): Wartung im Liftschacht",
+    text: 'Die <span data-link="t06-u">Servicetechniker</span> <span data-link="t06-f">fotografieren defekte Teile</span> und <span data-link="t06-o">arbeiten oft im Liftschacht ohne Netz</span>. Die Firma gibt allen <span data-link="t06-p">ein iPhone</span> ab. Die App soll <span data-link="t06-g">möglichst schnell und plattformkonform</span> laufen.',
+    schritte: [
+      { html: '<span data-link="t06-u">' + chip("User: Servicetechniker (intern)", "client") + "</span>", warum: "Zuerst klären, wer die App nutzt. Interne User mit Firmengeräten erlauben mehr Freiheit bei der Technologie." },
+      { html: '<span data-link="t06-u">' + chip("Servicetechniker", "client") + '</span> <span data-link="t06-f">' + chip("Kamera → Gerätezugriff", "sync") + "</span>", warum: "Fotos verlangen vollen Zugriff auf die Kamera. Das spricht für eine installierbare App." },
+      { html: '<span data-link="t06-f">' + chip("Kamera", "sync") + '</span> <span data-link="t06-o">' + chip("kein Netz → Sync-App", "daten") + "</span>", warum: "Ohne Netz muss die App lokal speichern und später mit dem Server synchronisieren: eine Sync-App." },
+      { html: '<span data-link="t06-o">' + chip("Sync-App", "daten") + '</span> <span data-link="t06-p">' + chip("nur iOS → Plattform bekannt", "business") + "</span>", warum: "Das OS ist bekannt. Eine Single-Platform-App ist erlaubt; die Falle «unbekanntes OS» greift hier nicht." },
+      { html: '<span data-link="t06-g">' + chip("Native iOS-App (Swift, SwiftUI), offline mit Sync", "client") + "</span>", warum: "Beste Performance und plattformkonformes UI sind genau die Stärken der nativen App. Der Nachteil (zwei Teams) fällt weg, weil nur iOS nötig ist." },
+      { html: chip("Paket «Installierbare Apps»", "infra") + " → " + chip("REST an das Web API", "webapi"), warum: "Im Diagramm liegt die App im Paket «Installierbare Apps» und synchronisiert über REST mit dem Web API." }
+    ]
+  });
+
+  L.wahrFalsch("#t06-wf", {
+    titel: "Regeln prüfen",
+    aussagen: [
+      { html: "Eine SPA braucht im Diagramm eine Verbindung zu den HTML5 Resources und eine zum Web API.", wahr: true, erklaerung: "Initial Load über Static HTTP, danach Daten per AJAX an das Web API." },
+      { html: "Der Service Worker einer PWA wird als eigene Komponente in den Client Tier gezeichnet.", wahr: false, erklaerung: "Er ist Teil der PWA. Im Diagramm der Prüfung zeichnest du nur die PWA." },
+      { html: "Bei «Betriebssystem der Benutzer unbekannt» ist eine native Android-App eine gute Wahl.", wahr: false, erklaerung: "Native Apps laufen nur auf einer Plattform. Hier passt eine Web App (SPA/PWA)." },
+      { html: "Excel wird über OData an das Web API angebunden.", wahr: true, erklaerung: "OData ist eine offene Datenschnittstelle, die Excel direkt lesen kann." },
+      { html: "Eine klassische Web App stellt geringe Anforderungen an den Browser.", wahr: true, erklaerung: "Der Server liefert fertiges HTML; der Browser braucht kaum JavaScript." },
+      { html: "In der Makroarchitektur verbindest du die Client-Apps über ein API-Gateway mit dem Web API.", wahr: false, erklaerung: "Ein API-Gateway gehört nicht in die Makroarchitektur. Die Apps verbinden sich direkt mit dem Web API." }
+    ]
+  });
+
+  /* ---------- 9 · Entscheidungs-Werkzeug ---------- */
+  (function () {
+    const typen = [
+      { id: "web", name: "Klassische Web App (serverseitig gerendert)", tech: "ASP.NET MVC/Razor, Blazor Server, JSF, PHP", schnitt: "HTTP an Presentation Components bzw. Web-App-Microservice" },
+      { id: "spa", name: "SPA (Web App im Browser)", tech: "React, Angular, Vue, Blazor WebAssembly", schnitt: "Static HTTP an HTML5 Resources und REST/GraphQL an das Web API" },
+      { id: "pwa", name: "PWA (Progressive Web App)", tech: "SPA-Framework mit Service Worker und Manifest, Blazor PWA", schnitt: "Static HTTP an HTML5 Resources und REST/GraphQL an das Web API" },
+      { id: "hybrid", name: "Hybrid App", tech: "Ionic, Cordova/Capacitor, Electron (Desktop)", schnitt: "REST/GraphQL an das Web API" },
+      { id: "multi", name: "Cross-/Multiplatform App", tech: ".NET MAUI, Java, Flutter", schnitt: "REST/GraphQL an das Web API" },
+      { id: "native", name: "Native App (Single Platform)", tech: "Swift/SwiftUI (iOS), Kotlin (Android)", schnitt: "REST/GraphQL an das Web API" },
+      { id: "excel", name: "Excel mit OData-Anbindung", tech: "Excel, Power BI", schnitt: "OData an das Web API" }
+    ];
+    // Gewichte je Anforderung: [web, spa, pwa, hybrid, multi, native, excel]
+    const anf = [
+      { id: "os", text: "Betriebssystem der User unbekannt (eigene Geräte)", g: [3, 3, 3, -1, -1, -3, -3], erkl: "Web Apps laufen auf jedem Gerät mit Browser; native Apps nur auf einer Plattform." },
+      { id: "inst", text: "Keine Installation erwünscht", g: [3, 3, 2, -3, -3, -3, -2], erkl: "Web Apps öffnest du über eine URL. Die PWA kann installiert werden, muss aber nicht." },
+      { id: "ux", text: "Optimale Usability, flüssige Bedienung", g: [-1, 3, 3, 1, 2, 3, -2], erkl: "SPA, PWA und native Apps laden nicht bei jedem Klick neu." },
+      { id: "offline", text: "Offline arbeiten (Funkloch, unterwegs)", g: [-3, -2, 2, 3, 3, 3, -3], erkl: "Offline braucht lokale Daten: installierbare Apps oder eine PWA mit Cache." },
+      { id: "geraet", text: "Kamera, GPS oder Sensoren intensiv nutzen", g: [-2, -1, 0, 2, 2, 3, -3], erkl: "Vollen Gerätezugriff haben native Apps, gut auch Hybrid und Multiplatform (Plugins)." },
+      { id: "push", text: "Push-Benachrichtigungen", g: [-2, -1, 2, 2, 2, 3, -3], erkl: "Push geht in installierten Apps und in PWAs (Service Worker)." },
+      { id: "alt", text: "Geringe Anforderungen an den Browser (alte, gesperrte PCs)", g: [4, -2, -3, 0, 0, 0, 0], erkl: "Serverseitig gerendertes HTML braucht kaum JavaScript. SPA und PWA brauchen aktuelle Browser." },
+      { id: "desk", text: "Voller Funktionsumfang auf Windows und macOS", g: [0, 1, 1, 1, 4, -3, -2], erkl: "Eine installierbare Multiplatform-App (z. B. MAUI) oder hybrid mit Electron deckt beide Desktop-Systeme ab." },
+      { id: "eins", text: "Nur eine Plattform, beste Performance, plattformkonformes UI", g: [-2, -1, -1, -1, 1, 5, -3], erkl: "Genau die Stärken der nativen App; ihr Nachteil (je Plattform ein Team) fällt weg." },
+      { id: "budget", text: "Kleines Budget: eine Codebasis für iOS und Android", g: [1, 1, 2, 3, 3, -4, -3], erkl: "Hybrid, Multiplatform und PWA teilen eine Codebasis; nativ heisst zweimal bauen." },
+      { id: "excel", text: "Ad-hoc-Auswertungen in einer Tabellenkalkulation", g: [0, 0, 0, 0, 0, 0, 6], erkl: "Excel ist selbst die Client-App; es braucht eine offene Datenschnittstelle (OData)." }
+    ];
+    const presets = { extern: ["os", "inst", "ux"], aussendienst: ["offline", "geraet", "budget"], buero: ["desk", "ux"], partner: ["alt", "inst"], leer: [] };
+    const fs = $("#t06-anf"), erg = $("#t06-ent-erg");
+    anf.forEach((a) => {
+      const l = document.createElement("label");
+      l.innerHTML = '<input type="checkbox" value="' + a.id + '"><span>' + a.text + "</span>";
+      fs.appendChild(l);
+    });
+    const boxen = Array.from(fs.querySelectorAll("input"));
+    function rechnen() {
+      const gew = boxen.filter((b) => b.checked).map((b) => anf.find((a) => a.id === b.value));
+      if (!gew.length) { erg.innerHTML = '<p class="hint">Kreuze mindestens eine Anforderung an oder lade ein Beispiel.</p>'; return; }
+      const punkte = typen.map((t, i) => ({ t: t, i: i, p: gew.reduce((s, a) => s + a.g[i], 0) }));
+      const sortiert = punkte.slice().sort((a, b) => b.p - a.p || a.i - b.i);
+      const max = Math.max(1, ...punkte.map((x) => Math.abs(x.p)));
+      const top = sortiert[0];
+      let h = '<div class="t06-empf"><p><b>Empfehlung: ' + top.t.name + "</b><br>Technologie z. B.: " + top.t.tech + "<br>Schnittstelle im Diagramm: " + top.t.schnitt + "</p><p><b>Begründung</b></p><ul>" +
+        gew.map((a) => { const g = a.g[top.i]; return "<li>" + (g > 0 ? '<span class="t06-plus">+ </span>' : g < 0 ? '<span class="t06-minus">− </span>' : "<span>○ </span>") + "<b>" + a.text + ":</b> " + a.erkl + "</li>"; }).join("") + "</ul>";
+      const gleich = sortiert[1] && sortiert[1].p === top.p;
+      if (gleich) h += "<p>Gleichauf: <b>" + sortiert[1].t.name + "</b>. Entscheide mit weiteren Signalen aus dem Text (z. B. Offline oder Gerätefunktionen).</p>";
+      const ids = gew.map((a) => a.id);
+      if (ids.includes("excel") && ids.length > 1) h += "<p><b>Hinweis:</b> Excel ist meist eine zusätzliche Client-App für eine eigene User-Gruppe, nicht die einzige.</p>";
+      if (ids.includes("alt") && (ids.includes("offline") || ids.includes("ux"))) h += "<p><b>Hinweis:</b> Alte Browser und flüssige oder Offline-Bedienung widersprechen sich in einer App. In der Prüfung führst du dann zwei Client-Apps für zwei User-Gruppen auf.</p>";
+      if (top.p <= 0) h += "<p><b>Hinweis:</b> Keine Variante passt gut. Prüf, ob du zwei User-Gruppen vermischt hast.</p>";
+      h += "</div>";
+      h += '<div class="t06-rang" role="list" aria-label="Rangliste aller Client-Typen">' + sortiert.map((x, k) => '<div class="t06-rang-zeile' + (k === 0 ? " t06-top" : "") + '" role="listitem"><span>' + x.t.name + '</span><span class="t06-rang-balken" aria-hidden="true"><i style="--w:' + Math.round(Math.max(0, x.p) / max * 100) + '%"></i></span><span>' + x.p + "</span></div>").join("") + "</div>";
+      erg.innerHTML = h;
+    }
+    boxen.forEach((b) => b.addEventListener("change", rechnen));
+    document.querySelectorAll("#t06-ent [data-preset]").forEach((k) => k.addEventListener("click", () => {
+      const p = presets[k.getAttribute("data-preset")];
+      boxen.forEach((b) => (b.checked = p.includes(b.value)));
+      rechnen();
+    }));
+    rechnen();
+  })();
+
+  /* ---------- 9 · Client-Apps-Tabelle (Frischkiste) ---------- */
+  (function () {
+    const techn = ["– wählen –", "SPA (Web App im Browser)", "PWA (Progressive Web App)", "Klassische Web App (serverseitig gerendert)", "Mobile App iOS + Android (hybrid oder cross-platform), offline mit Sync", "Native iOS-App (Swift)", "Desktop-App Windows + macOS (multiplatform)", "Excel mit OData-Anbindung"];
+    const user = ["– wählen –", "Kundinnen und Kunden (extern)", "Partnerhöfe (extern)", "Fahrerinnen und Fahrer (intern)", "Disposition (intern)", "Geschäftsleitung (intern)"];
+    const zeilen = [
+      { uc: "uc1 Abo verwalten", text: "Kundinnen und Kunden bestellen, pausieren und ändern ihre Kiste. Sie nutzen ihre eigenen Geräte (Betriebssystem unbekannt) und wollen nichts installieren. Die Bedienung soll so flüssig wie möglich sein.",
+        t: [1, 2], u: 1, b: ["Läuft im Browser auf jedem Gerät ohne Installation; lädt einmal und holt dann nur Daten per AJAX, darum optimale Usability.", "Gerätefunktionen wie Kamera und GPS werden voll genutzt, darum muss die App aus dem Store kommen.", "Der Server erzeugt jede Seite neu, damit auch sehr alte Browser funktionieren."], br: 0,
+        erkl: "Unbekanntes OS + keine Installation → Web App. Flüssige Bedienung → SPA. Eine PWA ist ebenfalls richtig (installierbar, muss aber nicht)." },
+      { uc: "uc2 Ernte melden", text: "Die Partnerhöfe melden jeden Morgen ihre Erntemengen. Viele arbeiten mit älteren PCs und alten Browsern.",
+        t: [3], u: 2, b: ["Offline-Speicherung und Push sind nötig, darum eine PWA.", "Geringe Anforderungen an den Browser: Der Server liefert fertiges HTML, der Browser braucht kaum JavaScript.", "Eine Desktop-App ist auf alten PCs am schnellsten."], br: 1,
+        erkl: "«Alte Browser» ist das Signal für die klassische, serverseitig gerenderte Web App." },
+      { uc: "uc3 Lieferung bestätigen", text: "Die Fahrerinnen und Fahrer bestätigen jede Lieferung mit einem Foto vor der Haustür. Auf den Touren gibt es oft kein Netz. Die Firma stellt Android-Handys und iPhones.",
+        t: [4], u: 3, b: ["Die App läuft nur online, damit die Daten immer aktuell sind.", "Ein Foto ist im Browser nicht möglich, darum eine native App nur für iOS.", "Kamera und Offline-Arbeit verlangen eine installierte Sync-App; eine Codebasis für iOS und Android spart Kosten."], br: 2,
+        erkl: "Foto + kein Netz → installierbare Sync-App. Zwei Plattformen → hybrid oder cross-platform, nicht nativ nur für iOS (Falle)." },
+      { uc: "uc4 Touren planen", text: "Die Disposition plant die Touren auf grossen Bildschirmen mit vollem Funktionsumfang. Im Büro stehen Windows-PCs und Macs.",
+        t: [6], u: 4, b: ["Voller Funktionsumfang und optimale Usability auf bekannten Geräten; eine Codebasis für Windows und macOS.", "Keine Installation, weil die Geräte unbekannt sind.", "Excel reicht für die Tourenplanung."], br: 0,
+        erkl: "Bekannte Desktop-Plattformen + voller Funktionsumfang → installierbare Multiplatform-App (z. B. .NET MAUI oder Electron)." },
+      { uc: "uc5 Umsatz auswerten", text: "Die Geschäftsleitung wertet die Umsätze ad hoc in Excel aus, immer mit aktuellen Daten.",
+        t: [7], u: 5, b: ["Excel greift direkt per ODBC auf die Datenbank zu.", "Excel liest die Daten über die offene OData-Schnittstelle des Web API; Filter und Sortierung laufen über OData-Abfragen.", "Die Daten werden einmal pro Monat als CSV per E-Mail verschickt."], br: 1,
+        erkl: "Excel ist auch eine Client-App. Sie bekommt die Daten über OData, nie direkt aus der Datenbank (Falle)." }
+    ];
+    const tbody = $("#t06-cat tbody"), fb = $("#t06-cat-fb"), muster = $("#t06-cat-muster");
+    const sel = (opts, id, label) => '<label class="sr-only" for="' + id + '">' + label + '</label><select class="btn" id="' + id + '">' + opts.map((o, i) => '<option value="' + i + '">' + esc(o) + "</option>").join("") + "</select>";
+    zeilen.forEach((z, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = '<td class="t06-uc"><b>' + z.uc + "</b>" + z.text + "</td>" +
+        '<td data-label="Technologie">' + sel(techn, "t06-cat-t" + i, "Technologie für " + z.uc) + '<span class="t06-marke"></span></td>' +
+        '<td data-label="Begründung"><fieldset><legend class="sr-only">Begründung für ' + z.uc + "</legend>" + z.b.map((t, k) => '<label><input type="radio" name="t06-cat-b' + i + '" value="' + k + '"><span>' + t + "</span></label>").join("") + '</fieldset><span class="t06-marke"></span></td>' +
+        '<td data-label="User">' + sel(user, "t06-cat-u" + i, "User für " + z.uc) + '<span class="t06-marke"></span></td>';
+      tbody.appendChild(tr);
+    });
+    function markiere(td, ok, text) {
+      td.classList.toggle("t06-ok", ok);
+      td.classList.toggle("t06-falsch", !ok);
+      $(".t06-marke", td).textContent = (ok ? "✓ " : "✗ ") + text;
+    }
+    $("#t06-cat-pruefen").addEventListener("click", () => {
+      let ok = 0, n = 0;
+      const hinweise = [];
+      zeilen.forEach((z, i) => {
+        const tds = tbody.rows[i].cells;
+        const bw = tbody.querySelector('input[name="t06-cat-b' + i + '"]:checked');
+        const t = Number($("#t06-cat-t" + i).value), b = bw ? Number(bw.value) : -1, u = Number($("#t06-cat-u" + i).value);
+        const okT = z.t.includes(t), okB = b === z.br, okU = u === z.u;
+        markiere(tds[1], okT, okT ? "richtig" : "passt nicht");
+        markiere(tds[2], okB, okB ? "richtig" : "passt nicht");
+        markiere(tds[3], okU, okU ? "richtig" : "passt nicht");
+        n += 3; ok += okT + okB + okU;
+        if (!okT || !okB) hinweise.push("<li><b>" + z.uc + ":</b> " + z.erkl + "</li>");
+      });
+      fb.className = "rueckmeldung " + (ok === n ? "ok" : "bad");
+      fb.innerHTML = '<span class="marke">' + (ok === n ? "✓" : "✗") + "</span> " + ok + " von " + n + " Feldern richtig." + (hinweise.length ? "<ul>" + hinweise.join("") + "</ul>" : " Die Tabelle ist prüfungsreif.");
+    });
+    $("#t06-cat-loesung").addEventListener("click", () => {
+      muster.hidden = false;
+      muster.innerHTML = '<div class="tablebox"><table class="tabelle"><caption>Musterlösung Client-Apps Frischkiste</caption><thead><tr><th scope="col">Technologie</th><th scope="col">Begründung</th><th scope="col">User</th></tr></thead><tbody>' +
+        zeilen.map((z) => "<tr><td>" + z.t.map((x) => techn[x]).join(" oder ") + "</td><td>" + z.b[z.br] + " (" + z.uc + ")</td><td>" + user[z.u] + "</td></tr>").join("") +
+        '</tbody></table></div><p class="hint">Partner-Systeme, die nur Daten austauschen (z. B. eine Buchhaltung), sind keine Client-Apps. Sie gehören in die Schnittstellentabelle.</p>';
+    });
+    $("#t06-cat-reset").addEventListener("click", () => {
+      tbody.querySelectorAll("select").forEach((s) => (s.value = "0"));
+      tbody.querySelectorAll("input[type=radio]").forEach((r) => (r.checked = false));
+      tbody.querySelectorAll("td").forEach((td) => td.classList.remove("t06-ok", "t06-falsch"));
+      tbody.querySelectorAll(".t06-marke").forEach((m) => (m.textContent = ""));
+      fb.className = "rueckmeldung leer"; fb.innerHTML = "";
+      muster.hidden = true; muster.innerHTML = "";
+    });
+  })();
+
+  /* ---------- 10 · Makroarchitektur Frischkiste ---------- */
+  A.diagramm("#t06-makro", {
+    titel: "Frischkiste (fiktiv) · Makroarchitektur Variante 2 mit Client Tier",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "fk", name: "Frischkiste (fiktiv)", spalte: 0, zeile: 0, info: I("Das eigene System: Clients und Microservices.", "", "Systemgrenze der Makroarchitektur.", "", "Umsysteme liegen ausserhalb und werden in der Makroarchitektur nicht modelliert.") },
+      { id: "fk-client", name: "Client Tier", in: "fk", info: I("Alle Client-Apps aus der Client-Apps-Tabelle.", "", "Zeigt, welche App welche Schnittstelle des Servers nutzt.", "", "Die Makroarchitektur übernimmt die Client-Apps vollständig, gegliedert nach Ausführungsort.") },
+      { id: "fk-web", name: "Web Apps", in: "fk-client", spalte: 0, zeile: 0, info: I("Apps, die im Browser laufen.", "", "SPA für die Kundschaft, klassische Web App für die Partnerhöfe.", "", "Beide ohne Installation; sie unterscheiden sich in den Anforderungen an den Browser.") },
+      { id: "fk-inst", name: "Installierbare Apps", in: "fk-client", spalte: 1, zeile: 0, info: I("Apps, die auf dem Gerät installiert sind.", "", "Mobile App, Desktop-App und Excel.", "", "Installiert wegen Gerätefunktionen, Offline-Arbeit oder vollem Funktionsumfang.") },
+      { id: "fk-srv", name: "Server – Kubernetes Cluster", in: "fk", info: I("Container-Plattform, auf der alle Microservices laufen.", "", "Erwähnt die Middleware zur Containerisierung im richtigen Kontext.", "Kubernetes, z. B. als Managed Service", "Jeder Microservice läuft als eigener Container und skaliert für sich.") }
+    ],
+    elemente: [
+      { id: "fk-spa", typ: "web", name: "SPA Kundschaft (Browser)", in: "fk-web", spalte: 0, zeile: 0, technologie: "React",
+        info: I("Single Page App für das Abo-Management (uc1).", "Lädt einmal ihre Dateien und holt danach Daten per GraphQL.", "Für Kundinnen und Kunden auf beliebigen Geräten.", "React mit Apollo Client", "Unbekanntes OS und keine Installation verlangen eine Web App; die SPA bietet die beste Usability.") },
+      { id: "fk-klass", typ: "web", name: "Web App Partnerhöfe (Browser)", in: "fk-web", spalte: 0, zeile: 1,
+        info: I("Klassische, serverseitig gerenderte Web App (uc2).", "Zeigt Formulare für die Erntemeldung; jede Seite kommt fertig vom Server.", "Für Partnerhöfe mit alten PCs und Browsern.", "HTML aus dem Web-App-Microservice", "Geringe Anforderungen an den Browser.") },
+      { id: "fk-mob", typ: "mobile", name: "Mobile App Fahrer (iOS, Android)", in: "fk-inst", spalte: 0, zeile: 0, technologie: "Ionic oder .NET MAUI",
+        info: I("Installierbare Sync-App für die Lieferbestätigung (uc3).", "Nimmt Fotos auf, speichert offline, synchronisiert per REST.", "Für Fahrerinnen und Fahrer im Funkloch.", "Ionic/Capacitor (hybrid) oder .NET MAUI", "Kamera und Offline-Arbeit verlangen eine installierte App; eine Codebasis für zwei Plattformen.") },
+      { id: "fk-desk", typ: "mobile", name: "Desktop App Disposition (Windows, macOS)", in: "fk-inst", spalte: 1, zeile: 0, technologie: ".NET MAUI",
+        info: I("Installierbare Desktop-App für die Tourenplanung (uc4).", "Voller Funktionsumfang mit Karte und Drag-and-drop, Daten per REST.", "Für die Disposition im Büro.", ".NET MAUI oder Electron", "Bekannte Plattformen Windows und macOS, eine Codebasis.") },
+      { id: "fk-xl", typ: "mobile", rolle: "client", name: "Excel Geschäftsleitung", in: "fk-inst", spalte: 1, zeile: 1,
+        info: I("Excel als Client-App für Ad-hoc-Auswertungen (uc5).", "Liest Umsätze über den OData-Feed des Web API.", "Für die Geschäftsleitung.", "Microsoft Excel (Power Query)", "OData ist offen und liefert immer aktuelle Daten, ohne Zugriff auf die Datenbank.") },
+      { id: "fk-webms", typ: "dienst", rolle: "client", name: "Web App", stereotyp: "Microservice", in: "fk-srv", spalte: 0, zeile: 0, schnittstellen: [{ id: "http", name: "HTTP" }],
+        info: I("Microservice, der die Oberfläche der klassischen Web App serverseitig erzeugt.", "Liefert HTML über HTTP, nimmt Formulare an und gibt Aufträge über den Cluster-MQ weiter.", "Für die Partnerhöfe.", "ASP.NET Core MVC oder Express mit Templates", "Eigene UI als eigener Service: Die Domain Services bleiben frei von Oberfläche.") },
+      { id: "fk-html", typ: "dienst", rolle: "client", name: "HTML Resource", stereotyp: "Microservice", in: "fk-srv", spalte: 1, zeile: 0, schnittstellen: [{ id: "static", name: "Static HTTP" }],
+        info: I("Container, der die statischen Dateien der SPA ausliefert.", "Liefert index.html, JavaScript und CSS über Static HTTP.", "Für den Initial Load der SPA.", "Nginx-Container", "Statische Dateien brauchen keine Fachlogik; ein eigener Container skaliert billig und lässt sich gut cachen.") },
+      { id: "fk-api", typ: "dienst", rolle: "webapi", name: "Web API", stereotyp: "Microservice", in: "fk-srv", spalte: 2, zeile: 0, schnittstellen: [{ id: "gql", name: "GraphQL" }, { id: "rest", name: "REST" }, { id: "odata", name: "OData" }],
+        info: I("Microservice mit allen Daten-Schnittstellen.", "GraphQL für die SPA, REST für Mobile und Desktop, OData für Excel; übersetzt Aufrufe in Nachrichten an die Domain Services.", "Für alle Clients, die Daten statt HTML brauchen.", "ASP.NET Core mit Hot Chocolate (GraphQL) und OData", "Ein Zugang für alle Daten-Clients; die Domain Services dahinter bleiben austauschbar.") },
+      { id: "fk-mq", typ: "broker", rolle: "infra", name: "Cluster MQ", in: "fk-srv", spalte: 1, zeile: 1, schnittstellen: [{ id: "amqp", name: "AMQP" }],
+        info: I("Message Broker als Container im Cluster.", "Vermittelt Aufträge und Ereignisse zwischen den Microservices.", "Für die asynchrone Kopplung (Variante 2).", "RabbitMQ", "Fällt ein Domain Service kurz aus, bleiben Aufträge im Broker liegen.") },
+      { id: "fk-dom", typ: "dienst", rolle: "business", name: "Domain Services (Abo, Ernte, Touren)", stereotyp: "Microservice", in: "fk-srv", spalte: 2, zeile: 1,
+        info: I("Die fachlichen Microservices, je einer pro Bounded Context, mit eigener Datenbank.", "Führen die Fachlogik aus.", "Für Abo, Ernte und Touren.", "je Team frei", "Hier vereinfacht als eine Komponente; in der Prüfung zeichnest du jeden Domain Service einzeln.") }
+    ],
+    verbindungen: [
+      { id: "f1", von: "fk-spa", nach: "fk-html#static", protokoll: "Static HTTP", info: "Initial Load: Die SPA holt ihre Dateien." },
+      { id: "f2", von: "fk-spa", nach: "fk-api#gql", protokoll: "GraphQL", format: "JSON", info: "AJAX: Die SPA fragt genau die Daten ab, die sie braucht." },
+      { id: "f3", von: "fk-klass", nach: "fk-webms#http", protokoll: "HTTP", format: "HTML", info: "Der Browser holt fertige Seiten." },
+      { id: "f4", von: "fk-mob", nach: "fk-api#rest", protokoll: "REST", format: "JSON", info: "Synchronisation der Lieferungen und Fotos." },
+      { id: "f5", von: "fk-desk", nach: "fk-api#rest", protokoll: "REST", format: "JSON", info: "Touren laden und speichern." },
+      { id: "f6", von: "fk-xl", nach: "fk-api#odata", protokoll: "OData", info: "Excel liest Umsätze über den OData-Feed." },
+      { id: "f7", von: "fk-webms", nach: "fk-mq#amqp", protokoll: "AMQP" },
+      { id: "f8", von: "fk-api", nach: "fk-mq#amqp", protokoll: "AMQP" },
+      { id: "f9", von: "fk-dom", nach: "fk-mq#amqp", protokoll: "AMQP" },
+      { id: "fd", von: "fk-client", nach: "fk-srv", art: "abhaengigkeit", info: "Die Clients nutzen die Microservices." }
+    ],
+    ablaeufe: [
+      { id: "spa", name: "SPA starten und Abo pausieren", schritte: [
+        { von: "fk-spa", nach: "fk-html", text: "Initial Load: Der Browser holt die SPA-Dateien über Static HTTP von der HTML Resource.", phase: "Laden" },
+        { von: "fk-spa", nach: "fk-api", text: "Die SPA fragt per GraphQL das Abo der Kundin ab.", phase: "Daten" },
+        { von: "fk-api", nach: "fk-mq", text: "Das Web API legt den Auftrag «Abo pausieren» in den Cluster-MQ.", phase: "Auftrag" },
+        { von: "fk-mq", nach: "fk-dom", text: "Der Domain Service Abo holt den Auftrag ab und speichert.", phase: "Auftrag" },
+        { von: "fk-api", nach: "fk-spa", text: "Die SPA zeigt «Pausiert», ohne die Seite neu zu laden.", phase: "Antwort" }
+      ] },
+      { id: "funkloch", name: "Lieferung im Funkloch", schritte: [
+        { bei: "fk-mob", text: "Kein Netz: Die Fahrerin fotografiert die Kiste, die App speichert Foto und Bestätigung lokal.", phase: "Offline" },
+        { bei: "fk-mob", text: "Drei weitere Lieferungen ohne Netz, alles bleibt auf dem Gerät.", phase: "Offline" },
+        { von: "fk-mob", nach: "fk-api", text: "Wieder Netz: Die App synchronisiert alle Bestätigungen per REST.", phase: "Sync" },
+        { von: "fk-api", nach: "fk-mq", text: "Das Web API meldet jede Lieferung als Nachricht.", phase: "Sync" },
+        { von: "fk-mq", nach: "fk-dom", text: "Der Domain Service Touren verbucht die Lieferungen.", phase: "Sync" }
+      ] },
+      { id: "excel", name: "Excel aktualisieren", schritte: [
+        { von: "fk-xl", nach: "fk-api", text: "Die Geschäftsleitung klickt «Aktualisieren». Excel ruft den OData-Feed mit Filter auf (z. B. Umsätze im November).", phase: "Abfrage" },
+        { von: "fk-api", nach: "fk-mq", text: "Das Web API fragt die Umsätze beim Domain Service an.", phase: "Abfrage" },
+        { von: "fk-mq", nach: "fk-dom", text: "Der Domain Service liefert die Daten aus seiner Datenbank.", phase: "Abfrage" },
+        { von: "fk-api", nach: "fk-xl", text: "Excel bekommt die Tabelle und rechnet die Auswertung selbst.", phase: "Antwort" }
+      ] },
+      { id: "apiweg", name: "Web API fällt aus", schritte: [
+        { bei: "fk-api", text: "Das Web API stürzt ab.", fehler: true },
+        { von: "fk-spa", nach: "fk-api", text: "Die SPA bleibt geladen, kann aber keine Daten holen. Sie zeigt «Keine Verbindung».", fehler: true },
+        { bei: "fk-mob", text: "Die Mobile App arbeitet offline weiter und synchronisiert später. Das ist der Vorteil der Sync-App." },
+        { von: "fk-klass", nach: "fk-webms", text: "Die klassische Web App läuft weiter: Sie hängt am Web-App-Microservice, nicht am Web API." }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  /* ---------- 10 · Referenz .NET Client und Presentation Tier ---------- */
+  const refDotnet = {
+    titel: "Referenz: Client und Presentation Tier in .NET",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "nd-cf", name: "Client/Frontend", spalte: 0, zeile: 0, info: I("Alle Clients der .NET-Applikation.", "", "Gegliedert in Browserkontext und installierbare Apps.", "", "Zeigt, welche App welche Schnittstelle im Web Tier nutzt.") },
+      { id: "nd-bk", name: "Web Apps (Browserkontext)", in: "nd-cf", spalte: 0, zeile: 0 },
+      { id: "nd-ia", name: "Installierbare Apps", in: "nd-cf", spalte: 1, zeile: 0 },
+      { id: "nd-mt", name: "Middle Tier (.NET-Server)", spalte: 0, zeile: 1 },
+      { id: "nd-wt", name: "Web Tier (IIS)", in: "nd-mt", info: I("Teil des Servers, der Anfragen von aussen annimmt.", "", "", "IIS, Kestrel, Nginx als Reverse Proxy", "Der Web-Server ist Infrastruktur und steht nur im Paketnamen.") },
+      { id: "nd-pt", name: "Presentation Tier", in: "nd-wt", spalte: 0, zeile: 0 },
+      { id: "nd-st", name: "Service Tier (Web API)", in: "nd-wt", spalte: 1, zeile: 0 },
+      { id: "nd-bt", name: "Business Tier", in: "nd-mt" }
+    ],
+    elemente: [
+      { id: "nd-intra", typ: "web", name: "Intranet Web App", in: "nd-bk", info: I("Web App im Browser für interne User.", "Bedient die Blazor-Server-Oberfläche.", "Für Mitarbeitende im Firmennetz.", "Blazor Server", "Stabile Verbindung im Intranet; Code bleibt auf dem Server.") },
+      { id: "nd-pwa", typ: "web", name: "Blazor PWA", in: "nd-bk", info: I("Blazor WebAssembly als PWA.", "Läuft im Browser, offlinefähig, holt Daten per REST.", "Für externe User auf beliebigen Geräten.", "Blazor WebAssembly mit Service Worker", "C# auch im Browser, eine Sprache im ganzen Stack.") },
+      { id: "nd-maui", typ: "mobile", name: "MAUI App", in: "nd-ia", info: I("Multiplatform-App aus einer C#-Codebasis.", "Nutzt Gerätefunktionen, holt Daten per REST.", "Für Mobile und Desktop.", ".NET MAUI", "Gleicher Stack wie der Server.") },
+      { id: "nd-xl", typ: "mobile", rolle: "client", name: "Excel", in: "nd-ia", info: I("Tabellenkalkulation als Client.", "Liest Daten über OData.", "Für Ad-hoc-Auswertungen.", "Excel, Power BI", "Offene Datenschnittstelle statt Datenbankzugriff.") },
+      { id: "nd-bsc", typ: "dienst", rolle: "client", name: "Blazor Server Components", stereotyp: "ASP.NET", in: "nd-pt", schnittstellen: [{ id: "http", name: "HTTP" }], info: I("Serverseitige Razor-Komponenten.", "Rendern die Oberfläche, Ereignisse über SignalR.", "Für die Intranet Web App.", "ASP.NET Core Blazor Server", "Präsentation im .NET-Stack.") },
+      { id: "nd-res", typ: "dienst", rolle: "client", name: "Blazor Ressourcen", stereotyp: "ASP.NET", in: "nd-pt", schnittstellen: [{ id: "static", name: "Static HTTP" }], info: I("Statische Dateien der Blazor PWA.", "Liefert .wasm, DLLs, Manifest, Service Worker.", "Für die Blazor PWA.", "ASP.NET Core Static Files", "Einmal laden, danach aus dem Cache.") },
+      { id: "nd-ws", typ: "dienst", rolle: "webapi", name: "RESTful Web Service", stereotyp: "C#", in: "nd-st", schnittstellen: [{ id: "rest", name: "REST" }], info: I("Daten-Schnittstelle für PWA und MAUI App.", "REST mit JSON.", "", "ASP.NET Core Web API", "Leichtgewichtig, für alle Daten-Clients.") },
+      { id: "nd-od", typ: "dienst", rolle: "webapi", name: "OData Web Service", stereotyp: "C#", in: "nd-st", schnittstellen: [{ id: "odata", name: "OData" }], info: I("Offene Datenschnittstelle.", "Abfragen mit Filter, Sortierung, Auswahl.", "Für Excel und Power BI.", "ASP.NET Core OData", "Excel kann OData direkt lesen.") },
+      { id: "nd-fac", typ: "dienst", rolle: "business", name: "Business Facade", stereotyp: "C#", in: "nd-bt", schnittstellen: [{ id: "rest", name: "REST" }], info: I("Einziger Zugang zum Business Tier.", "Bietet die Fachfunktionen als Web Service an.", "Für Presentation Tier und Service Tier.", "ASP.NET Core (REST oder gRPC)", "Web Tier und Business Tier lassen sich getrennt betreiben und skalieren.") }
+    ],
+    verbindungen: [
+      { id: "n1", von: "nd-intra", nach: "nd-bsc#http", label: "SignalR" },
+      { id: "n2", von: "nd-pwa", nach: "nd-res#static", protokoll: "Static HTTP" },
+      { id: "n3", von: "nd-pwa", nach: "nd-ws#rest", protokoll: "REST", format: "JSON" },
+      { id: "n4", von: "nd-maui", nach: "nd-ws#rest", protokoll: "REST", format: "JSON" },
+      { id: "n5", von: "nd-xl", nach: "nd-od#odata", protokoll: "OData" },
+      { id: "n6", von: "nd-bsc", nach: "nd-fac#rest", protokoll: "REST" },
+      { id: "n7", von: "nd-ws", nach: "nd-fac#rest", protokoll: "REST" },
+      { id: "n8", von: "nd-od", nach: "nd-fac#rest", protokoll: "REST" },
+      { id: "nd-d1", von: "nd-cf", nach: "nd-wt", art: "abhaengigkeit" }
+    ],
+    ablaeufe: [
+      { id: "blazor", name: "Intranet: Klick in Blazor Server", schritte: [
+        { von: "nd-intra", nach: "nd-bsc", text: "Der Klick reist über SignalR zur Blazor Server Component.", phase: "Präsentation" },
+        { von: "nd-bsc", nach: "nd-fac", text: "Die Komponente ruft die Business Facade per REST auf.", phase: "Fachlogik" },
+        { von: "nd-bsc", nach: "nd-intra", text: "Das UI-Update geht über SignalR zurück.", phase: "Präsentation" }
+      ] },
+      { id: "pwa", name: "Blazor PWA lädt Daten", schritte: [
+        { von: "nd-pwa", nach: "nd-res", text: "Einmalig: Die PWA lädt ihre Dateien über Static HTTP.", phase: "Laden" },
+        { von: "nd-pwa", nach: "nd-ws", text: "Daten kommen per REST vom Web Service.", phase: "Daten" },
+        { von: "nd-ws", nach: "nd-fac", text: "Der Web Service greift nur über die Facade auf die Fachlogik zu.", phase: "Daten" }
+      ] },
+      { id: "excel", name: "Excel liest über OData", schritte: [
+        { von: "nd-xl", nach: "nd-od", text: "Excel ruft den OData-Feed auf.", phase: "Abfrage" },
+        { von: "nd-od", nach: "nd-fac", text: "Der OData-Service holt die Daten über die Facade.", phase: "Abfrage" }
+      ] }
+    ]
+  };
+  A.diagramm("#t06-dotnet", refDotnet, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  /* ---------- 11 · Spiel ---------- */
+  A.referenzen["avsw06-dotnet-clients"] = { titel: refDotnet.titel, notation: "uml-komponenten", pakete: refDotnet.pakete, elemente: refDotnet.elemente, verbindungen: refDotnet.verbindungen };
+  A.referenzen["avsw06-makro-clients"] = {
+    titel: "Referenz: Client Tier in der Makroarchitektur (Variante 2, vereinfacht)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "rm-c", name: "Client Tier", spalte: 0, zeile: 0 },
+      { id: "rm-w", name: "Web Apps", in: "rm-c", spalte: 0, zeile: 0 },
+      { id: "rm-i", name: "Installierbare Apps", in: "rm-c", spalte: 1, zeile: 0 },
+      { id: "rm-s", name: "Server – Docker Host / Kubernetes", spalte: 0, zeile: 1 }
+    ],
+    elemente: [
+      { id: "rm-klass", typ: "web", name: "klassische Web App", in: "rm-w" },
+      { id: "rm-spa", typ: "web", name: "SPA / PWA", in: "rm-w" },
+      { id: "rm-app", typ: "mobile", name: "Mobile / Desktop App", in: "rm-i" },
+      { id: "rm-xl", typ: "mobile", rolle: "client", name: "Excel", in: "rm-i" },
+      { id: "rm-webms", typ: "dienst", rolle: "client", name: "Web App", stereotyp: "Microservice", in: "rm-s", schnittstellen: [{ id: "http", name: "HTTP" }] },
+      { id: "rm-html", typ: "dienst", rolle: "client", name: "HTML Resource", stereotyp: "Microservice", in: "rm-s", schnittstellen: [{ id: "static", name: "Static HTTP" }] },
+      { id: "rm-api", typ: "dienst", rolle: "webapi", name: "Web API", stereotyp: "Microservice", in: "rm-s", schnittstellen: [{ id: "rest", name: "REST/GraphQL" }, { id: "odata", name: "OData" }] }
+    ],
+    verbindungen: [
+      { von: "rm-klass", nach: "rm-webms#http", protokoll: "HTTP" },
+      { von: "rm-spa", nach: "rm-html#static", protokoll: "Static HTTP" },
+      { von: "rm-spa", nach: "rm-api#rest", protokoll: "REST" },
+      { von: "rm-app", nach: "rm-api#rest", protokoll: "REST" },
+      { von: "rm-xl", nach: "rm-api#odata", protokoll: "OData" },
+      { von: "rm-c", nach: "rm-s", art: "abhaengigkeit" }
+    ]
+  };
+
+  const PROT = ["HTTP", "Static HTTP", "REST", "GraphQL", "OData", "SOAP", "SignalR", "AMQP", "gRPC"];
+  const MS = ["Microservice", "C#", "JS", "EJB"];
+  A.spiel("#t06-spiel", {
+    spielId: "avsw-06-clients",
+    fach: "avsw",
+    titel: "Client Tier vervollständigen",
+    levels: [
+      {
+        id: "bibliothek", modus: "uml", titel: "Bibliothek: SPA anbinden", schwierigkeit: 1, zielzeit: 240, referenz: "avsw06-makro-clients",
+        auftrag: '<p>Die Stadtbibliothek Seefeld (fiktiv) bietet ihren Katalog als <span data-baustein="spa">Single Page App</span> an. Die Leserinnen nutzen beliebige Geräte und wollen nichts installieren. Beim ersten Aufruf lädt die SPA ihre HTML-, CSS- und JavaScript-Dateien per Static HTTP von den <span data-baustein="html">HTML5 Resources</span>. Danach holt sie Buchdaten per AJAX über REST vom <span data-baustein="api">Web API</span>. Beide Server-Komponenten laufen als «Microservice» im Paket «Server – Docker Host». Setz die Bälle an die Server-Komponenten und beschrifte die Verbindungen.</p>',
+        pakete: [
+          { id: "b-app", name: "Stadtbibliothek Seefeld (fiktiv)", spalte: 0, zeile: 0 },
+          { id: "b-client", name: "Client Tier", in: "b-app" },
+          { id: "b-web", name: "Web Apps", in: "b-client" },
+          { id: "b-server", name: "Server – Docker Host", in: "b-app" }
+        ],
+        palette: [
+          { id: "spa", typ: "web", rolle: "client", name: "SPA Katalog", info: "Single Page App im Browser" },
+          { id: "html", typ: "dienst", rolle: "client", name: "HTML5 Resources", stereotypen: MS, schnittstellen: [{ id: "static", name: "Static HTTP" }] },
+          { id: "api", typ: "dienst", rolle: "webapi", name: "Web API", stereotypen: MS, schnittstellen: [{ id: "rest", name: "REST" }] },
+          { id: "ios", typ: "mobile", rolle: "client", name: "Native iOS-App Katalog", falle: "Die Leserinnen nutzen beliebige Geräte und wollen nichts installieren. Eine native iOS-App erreicht nur Apple-Geräte und muss installiert werden." },
+          { id: "gw", typ: "gateway", rolle: "webapi", name: "API Gateway", falle: "In der Makroarchitektur zeichnest du kein API-Gateway. Die SPA verbindet sich direkt mit dem Web API." }
+        ],
+        protokolle: PROT,
+        loesung: {
+          elemente: [{ id: "spa", paket: "b-web" }, { id: "html", paket: "b-server", stereotyp: "Microservice" }, { id: "api", paket: "b-server", stereotyp: "Microservice" }],
+          verbindungen: [
+            { von: "spa", nach: "html#static", protokoll: "Static HTTP", warum: "Initial Load: Die SPA holt einmal ihre Dateien von den HTML5 Resources." },
+            { von: "spa", nach: "api#rest", protokoll: "REST", warum: "Danach holt sie nur noch Daten per AJAX über REST." }
+          ],
+          beschreibungen: [{ id: "spa", richtig: 1, optionen: [
+            "Die SPA wird auf jedem Gerät aus dem App Store installiert und nutzt die nativen Bibliotheken von iOS.",
+            "Die SPA läuft im Browser auf jedem Gerät, ohne Installation. Sie lädt ihre Dateien einmal und holt danach nur noch Daten per AJAX, darum wirkt die Bedienung flüssig.",
+            "Die SPA erzeugt ihr HTML auf dem Server und lädt bei jedem Klick die ganze Seite neu, damit auch alte Browser mitkommen."
+          ] }]
+        },
+        erklaerung: "<b>Merke:</b> Eine SPA hat immer zwei Verbindungen: Static HTTP für den Initial Load und eine Daten-Schnittstelle (REST, GraphQL) für AJAX."
+      },
+      {
+        id: "fitness", modus: "uml", titel: "Fitnesscenter: drei Clients", schwierigkeit: 2, zielzeit: 420, referenz: "avsw06-makro-clients",
+        auftrag: '<p>Das Fitnesscenter Kraftwerk (fiktiv) ergänzt seine Makroarchitektur um den Client Tier.</p><ul><li>Die Mitglieder nutzen ihre eigenen Handys. Sie wollen den Trainingsplan auch im Keller-Studio ohne Netz sehen und eine Push-Meldung, wenn im Kurs ein Platz frei wird: eine <span data-baustein="pwa">PWA Mitglieder</span>. Sie lädt ihre Dateien per Static HTTP von der <span data-baustein="html">HTML Resource</span> und ihre Daten per REST vom <span data-baustein="api">Web API</span>.</li><li>Am Empfang stehen alte PCs mit einfachem Browser: eine <span data-baustein="klass">klassische Web App Empfang</span>. Ihr HTML liefert der <span data-baustein="webms">Web App</span>-Microservice über HTTP.</li><li>Die Buchhaltung arbeitet mit vollem Funktionsumfang auf Windows und macOS: eine <span data-baustein="desk">Desktop-App Buchhaltung</span> aus einer Codebasis, die per REST das Web API nutzt.</li></ul><p>Alle Server-Komponenten sind «Microservice». Zeichne zum Schluss die Abhängigkeit vom Paket «Client Tier» zum Paket «Server – Docker Host».</p>',
+        pakete: [
+          { id: "f-app", name: "Fitnesscenter Kraftwerk (fiktiv)", spalte: 0, zeile: 0 },
+          { id: "f-client", name: "Client Tier", in: "f-app" },
+          { id: "f-web", name: "Web Apps", in: "f-client", spalte: 0, zeile: 0 },
+          { id: "f-inst", name: "Installierbare Apps", in: "f-client", spalte: 1, zeile: 0 },
+          { id: "f-server", name: "Server – Docker Host", in: "f-app" }
+        ],
+        palette: [
+          { id: "pwa", typ: "web", rolle: "client", name: "PWA Mitglieder" },
+          { id: "klass", typ: "web", rolle: "client", name: "klassische Web App Empfang" },
+          { id: "desk", typ: "mobile", rolle: "client", name: "Desktop-App Buchhaltung" },
+          { id: "webms", typ: "dienst", rolle: "client", name: "Web App", stereotypen: MS, schnittstellen: [{ id: "http", name: "HTTP" }] },
+          { id: "html", typ: "dienst", rolle: "client", name: "HTML Resource", stereotypen: MS, schnittstellen: [{ id: "static", name: "Static HTTP" }] },
+          { id: "api", typ: "dienst", rolle: "webapi", name: "Web API", stereotypen: MS, schnittstellen: [{ id: "rest", name: "REST" }] },
+          { id: "sw", typ: "dienst", rolle: "client", name: "Service Worker", falle: "Der Service Worker ist Teil der PWA und läuft in ihrem Browserkontext. Er ist keine eigene Komponente im Client Tier." },
+          { id: "mac", typ: "mobile", rolle: "client", name: "Native macOS-App (Swift)", falle: "Die Buchhaltung arbeitet auf Windows und macOS. Eine native macOS-App deckt Windows nicht ab; gefragt ist eine Codebasis für beide." }
+        ],
+        protokolle: PROT,
+        loesung: {
+          elemente: [
+            { id: "pwa", paket: "f-web" }, { id: "klass", paket: "f-web" }, { id: "desk", paket: "f-inst" },
+            { id: "webms", paket: "f-server", stereotyp: "Microservice" }, { id: "html", paket: "f-server", stereotyp: "Microservice" }, { id: "api", paket: "f-server", stereotyp: "Microservice" }
+          ],
+          verbindungen: [
+            { von: "pwa", nach: "html#static", protokoll: "Static HTTP", warum: "Die PWA lädt App-Shell, Manifest und Service Worker von der HTML Resource." },
+            { von: "pwa", nach: "api#rest", protokoll: "REST", warum: "Trainingsplan und Kursplätze holt die PWA per REST; der Service Worker cacht sie für den Keller." },
+            { von: "klass", nach: "webms#http", protokoll: "HTTP", warum: "Der Web-App-Microservice liefert fertiges HTML; das genügt den alten PCs." },
+            { von: "desk", nach: "api#rest", protokoll: "REST", warum: "Die installierte App bringt ihre Oberfläche mit und braucht nur Daten." },
+            { von: "f-client", nach: "f-server", art: "abhaengigkeit", warum: "Die Clients nutzen die Microservices: Abhängigkeit vom Client Tier zum Server." }
+          ],
+          beschreibungen: [{ id: "klass", richtig: 0, optionen: [
+            "Die klassische Web App bekommt fertiges HTML vom Web-App-Microservice. Der Browser muss kaum JavaScript ausführen, darum genügen die alten PCs am Empfang.",
+            "Die klassische Web App speichert alle Mitgliederdaten im Browser-Cache, damit sie offline läuft.",
+            "Die klassische Web App wird über den Service Worker installiert und spricht OData mit dem Web API."
+          ] }]
+        },
+        erklaerung: "<b>Merke:</b> Alte Browser → klassische Web App über HTTP. Offline und Push auf unbekannten Geräten → PWA. Windows und macOS mit einer Codebasis → Multiplatform-Desktop-App."
+      },
+      {
+        id: "physio", modus: "uml", titel: "Physio-Praxis in .NET: Presentation Tier", schwierigkeit: 3, zielzeit: 600, referenz: "avsw06-dotnet-clients",
+        auftrag: '<p>Die Physio-Praxis Linth (fiktiv) baut ihre Applikation als <b>.NET-Mehrschichtenarchitektur</b>. Ergänze Client und Presentation Tier.</p><ul><li>Der Empfang arbeitet im Intranet mit der <span data-baustein="intra">Empfang Web App</span>. Sie nutzt <span data-baustein="bsc">Blazor Server Components</span> «ASP.NET» über deren HTTP-Schnittstelle; die Verbindung läuft über SignalR.</li><li>Patientinnen buchen Termine in der <span data-baustein="bpwa">Blazor PWA Patientinnen</span> (WebAssembly). Sie lädt ihre Dateien per Static HTTP aus den <span data-baustein="bres">Blazor Ressourcen</span> «ASP.NET» und ihre Daten per REST vom <span data-baustein="ws">Web API</span> «C#».</li><li>Die Therapeutinnen dokumentieren auf Tablets in der <span data-baustein="maui">MAUI App Therapie</span> (REST an das Web API).</li><li>Die Praxisleitung wertet in <span data-baustein="xl">Excel</span> über die OData-Schnittstelle des Web API aus.</li></ul><p>Präsentation und Web API greifen nur über die <span data-baustein="fac">Business Facade</span> «C#» (REST) auf den Business Tier zu.</p>',
+        pakete: [
+          { id: "p-cf", name: "Client/Frontend", spalte: 0, zeile: 0 },
+          { id: "p-web", name: "Web Apps (Browser)", in: "p-cf", spalte: 0, zeile: 0 },
+          { id: "p-inst", name: "Installierbare Apps", in: "p-cf", spalte: 1, zeile: 0 },
+          { id: "p-mt", name: "Middle Tier (.NET-Server)", spalte: 0, zeile: 1 },
+          { id: "p-wt", name: "Web Tier (IIS)", in: "p-mt" },
+          { id: "p-pt", name: "Presentation Tier", in: "p-wt", spalte: 0, zeile: 0 },
+          { id: "p-st", name: "Service Tier (Web API)", in: "p-wt", spalte: 1, zeile: 0 },
+          { id: "p-bt", name: "Business Tier", in: "p-mt" }
+        ],
+        palette: [
+          { id: "intra", typ: "web", rolle: "client", name: "Empfang Web App" },
+          { id: "bpwa", typ: "web", rolle: "client", name: "Blazor PWA Patientinnen" },
+          { id: "maui", typ: "mobile", rolle: "client", name: "MAUI App Therapie" },
+          { id: "xl", typ: "mobile", rolle: "client", name: "Excel Praxisleitung" },
+          { id: "bsc", typ: "dienst", rolle: "client", name: "Blazor Server Components", stereotypen: ["ASP.NET", "C#", "JS", "EJB"], schnittstellen: [{ id: "http", name: "HTTP" }] },
+          { id: "bres", typ: "dienst", rolle: "client", name: "Blazor Ressourcen", stereotypen: ["ASP.NET", "C#", "JS", "EJB"], schnittstellen: [{ id: "static", name: "Static HTTP" }] },
+          { id: "ws", typ: "dienst", rolle: "webapi", name: "Web API", stereotypen: ["C#", "ASP.NET", "JS", "EJB"], schnittstellen: [{ id: "rest", name: "REST" }, { id: "odata", name: "OData" }] },
+          { id: "fac", typ: "dienst", rolle: "business", name: "Business Facade", stereotypen: ["C#", "ASP.NET", "EJB"], schnittstellen: [{ id: "rest", name: "REST" }] },
+          { id: "iis", typ: "dienst", rolle: "infra", name: "IIS Web Server", falle: "Ein Web-Server ist Infrastruktur, keine Komponente. Er steht im Paketnamen «Web Tier (IIS)»." },
+          { id: "jsf", typ: "dienst", rolle: "client", name: "JSF Components", falle: "JSF gehört zu Jakarta EE. In .NET besteht der Presentation Tier aus ASP.NET-Komponenten (Razor, Blazor)." }
+        ],
+        protokolle: PROT,
+        loesung: {
+          elemente: [
+            { id: "intra", paket: "p-web" }, { id: "bpwa", paket: "p-web" }, { id: "maui", paket: "p-inst" }, { id: "xl", paket: "p-inst" },
+            { id: "bsc", paket: "p-pt", stereotyp: "ASP.NET" }, { id: "bres", paket: "p-pt", stereotyp: "ASP.NET" },
+            { id: "ws", paket: "p-st", stereotyp: "C#" }, { id: "fac", paket: "p-bt", stereotyp: "C#" }
+          ],
+          verbindungen: [
+            { von: "intra", nach: "bsc#http", protokoll: "SignalR", protokollAlternativen: ["HTTP"], warum: "Blazor Server: Klicks und UI-Updates laufen über eine SignalR-Verbindung zur HTTP-Schnittstelle." },
+            { von: "bpwa", nach: "bres#static", protokoll: "Static HTTP", warum: "Die WebAssembly-App lädt ihre Dateien einmal als statische Ressourcen." },
+            { von: "bpwa", nach: "ws#rest", protokoll: "REST", warum: "Danach holt die PWA nur noch Daten per REST." },
+            { von: "maui", nach: "ws#rest", protokoll: "REST", warum: "Die installierte App nutzt dieselbe REST-Schnittstelle." },
+            { von: "xl", nach: "ws#odata", protokoll: "OData", warum: "Excel liest über die offene OData-Schnittstelle, nie direkt aus der Datenbank." },
+            { von: "bsc", nach: "fac#rest", protokoll: "REST", warum: "Die Präsentation greift nur über die Facade auf den Business Tier zu." },
+            { von: "ws", nach: "fac#rest", protokoll: "REST", warum: "Auch das Web API nutzt nur die Facade." }
+          ],
+          beschreibungen: [
+            { id: "bsc", richtig: 2, optionen: [
+              "Die Blazor Server Components laufen im Browser als WebAssembly und brauchen nach dem Laden keinen Server mehr.",
+              "Die Blazor Server Components sind ein JSF-Framework und laufen im EJB Container.",
+              "Die Blazor Server Components führen den C#-Code auf dem Server aus. Der Browser zeigt nur die Oberfläche; jeder Klick geht über eine SignalR-Verbindung zum Server und kommt als kleines UI-Update zurück."
+            ] },
+            { id: "ws", richtig: 0, optionen: [
+              "Das Web API bietet REST für die PWA und die MAUI App und OData für Excel an. Es greift wie die Präsentation nur über die Business Facade auf die Fachlogik zu.",
+              "Das Web API liefert die statischen Blazor-Dateien aus und ersetzt damit die Ressourcen-Komponente.",
+              "Das Web API greift direkt auf die Datenbank zu, damit Excel schneller ist."
+            ] }
+          ]
+        },
+        erklaerung: "<b>Merke:</b> In .NET: Blazor Server über HTTP mit SignalR, Blazor PWA über Static HTTP plus REST, installierbare Apps über REST, Excel über OData. Alles im Web Tier greift über die Business Facade zu."
+      },
+      {
+        id: "tierpark", modus: "uml", titel: "Tierpark: kompletter Client Tier", schwierigkeit: 3, zielzeit: 720, referenz: "avsw06-makro-clients",
+        auftrag: '<p>Der Tierpark Rheinau (fiktiv) hat eine Makroarchitektur mit Microservices (Variante 2). Ergänze den Client Tier: Leg jede Client-App in «Web Apps» oder «Installierbare Apps» und verbinde sie mit der richtigen Schnittstelle.</p><ul><li>Besucherinnen kaufen Tickets auf ihren eigenen Geräten. Das Ticket muss auch ohne Netz im Park vorzeigbar sein, bei Fütterungen kommt eine Push-Meldung: <span data-baustein="pwa">PWA Besucher</span>. Sie lädt ihre Dateien per Static HTTP von der <span data-baustein="html">HTML Resource</span> und ihre Daten per REST vom <span data-baustein="api">Web API</span>.</li><li>Die Tierpflegerinnen erfassen Beobachtungen mit Fotos direkt im Gehege, oft ohne Netz. Der Tierpark stellt ausschliesslich Android-Tablets: <span data-baustein="tab">Tablet-App Pflege (Kotlin)</span>, sie synchronisiert per REST.</li><li>Die Kasse arbeitet auf Windows-PCs mit vollem Funktionsumfang: <span data-baustein="kasse">Desktop-App Kasse (Windows)</span>, ebenfalls per REST.</li><li>Partner-Reisebüros buchen Gruppen mit einfachen Browsern: <span data-baustein="klass">klassische Web App Reisebüros</span>. Ihr HTML liefert der <span data-baustein="webms">Web App</span>-Microservice über HTTP.</li><li>Die Finanzabteilung wertet Besucherzahlen in <span data-baustein="xl">Excel</span> über OData aus.</li></ul><p>Alle Server-Komponenten sind «Microservice» im Paket «Server – Docker Host». Das Web API bietet REST und OData an. Zeichne die Abhängigkeit vom Client Tier zum Server.</p>',
+        pakete: [
+          { id: "t-app", name: "Tierpark Rheinau (fiktiv)", spalte: 0, zeile: 0 },
+          { id: "t-client", name: "Client Tier", in: "t-app" },
+          { id: "t-web", name: "Web Apps", in: "t-client", spalte: 0, zeile: 0 },
+          { id: "t-inst", name: "Installierbare Apps", in: "t-client", spalte: 1, zeile: 0 },
+          { id: "t-server", name: "Server – Docker Host", in: "t-app" }
+        ],
+        palette: [
+          { id: "pwa", typ: "web", rolle: "client", name: "PWA Besucher" },
+          { id: "klass", typ: "web", rolle: "client", name: "klassische Web App Reisebüros" },
+          { id: "tab", typ: "mobile", rolle: "client", name: "Tablet-App Pflege (Kotlin)" },
+          { id: "kasse", typ: "mobile", rolle: "client", name: "Desktop-App Kasse (Windows)" },
+          { id: "xl", typ: "mobile", rolle: "client", name: "Excel Finanzen" },
+          { id: "webms", typ: "dienst", rolle: "client", name: "Web App", stereotypen: MS, schnittstellen: [{ id: "http", name: "HTTP" }] },
+          { id: "html", typ: "dienst", rolle: "client", name: "HTML Resource", stereotypen: MS, schnittstellen: [{ id: "static", name: "Static HTTP" }] },
+          { id: "api", typ: "dienst", rolle: "webapi", name: "Web API", stereotypen: MS, schnittstellen: [{ id: "rest", name: "REST" }, { id: "odata", name: "OData" }] },
+          { id: "ios", typ: "mobile", rolle: "client", name: "Native iOS-App Besucher (Swift)", falle: "Die Besucherinnen nutzen ihre eigenen Geräte, das Betriebssystem ist unbekannt. Eine native iOS-App schliesst alle Android-Geräte aus." },
+          { id: "gw", typ: "gateway", rolle: "webapi", name: "API Gateway", falle: "Ein API-Gateway gehört nicht in die Makroarchitektur. Die Apps verbinden sich direkt mit dem Web API." },
+          { id: "sw", typ: "dienst", rolle: "client", name: "Service Worker", falle: "Der Service Worker gehört zur PWA. Er wird nicht als eigene Komponente gezeichnet." }
+        ],
+        protokolle: PROT,
+        loesung: {
+          elemente: [
+            { id: "pwa", paket: "t-web" }, { id: "klass", paket: "t-web" },
+            { id: "tab", paket: "t-inst" }, { id: "kasse", paket: "t-inst" }, { id: "xl", paket: "t-inst" },
+            { id: "webms", paket: "t-server", stereotyp: "Microservice" }, { id: "html", paket: "t-server", stereotyp: "Microservice" }, { id: "api", paket: "t-server", stereotyp: "Microservice" }
+          ],
+          verbindungen: [
+            { von: "pwa", nach: "html#static", protokoll: "Static HTTP", warum: "Die PWA lädt App-Shell, Manifest und Service Worker als statische Dateien." },
+            { von: "pwa", nach: "api#rest", protokoll: "REST", warum: "Tickets und Fütterungszeiten holt sie per REST und cacht sie für den Park." },
+            { von: "tab", nach: "api#rest", protokoll: "REST", warum: "Die Sync-App gleicht Beobachtungen und Fotos per REST ab, sobald Netz da ist." },
+            { von: "kasse", nach: "api#rest", protokoll: "REST", warum: "Die Desktop-App braucht nur Daten; die Oberfläche bringt sie selbst mit." },
+            { von: "klass", nach: "webms#http", protokoll: "HTTP", warum: "Einfache Browser bekommen fertiges HTML vom Web-App-Microservice." },
+            { von: "xl", nach: "api#odata", protokoll: "OData", warum: "Excel liest über die offene OData-Schnittstelle." },
+            { von: "t-client", nach: "t-server", art: "abhaengigkeit", warum: "Die Clients nutzen die Microservices im Docker Host." }
+          ],
+          beschreibungen: [
+            { id: "pwa", richtig: 1, optionen: [
+              "Die PWA ist eine native Android-App, die über den Play Store verteilt wird.",
+              "Die PWA läuft im Browser als unsichtbarer Container. Ihr Service Worker hält App-Shell und Ticket im Cache, darum ist das Ticket auch ohne Netz vorzeigbar; Push-Meldungen und das Icon auf dem Startbildschirm geben App-Gefühl.",
+              "Die PWA holt jede Seite fertig gerendert vom Web-App-Microservice und funktioniert darum nur online."
+            ] },
+            { id: "api", richtig: 2, optionen: [
+              "Das Web API ist ein API-Gateway, das Anfragen nur weiterleitet.",
+              "Das Web API speichert die Tickets in Excel.",
+              "Das Web API ist der «Microservice», der alle Daten-Schnittstellen anbietet: REST für PWA, Tablet-App und Kasse, OData für die Excel-Auswertungen. So gibt es einen einzigen, kontrollierten Zugang zur Fachlogik."
+            ] }
+          ]
+        },
+        erklaerung: "<b>Merke:</b> Bekannte Plattform (nur Android) erlaubt eine native App; unbekannte Geräte nicht. Jede App aus der Client-Apps-Tabelle erscheint im Client Tier mit beschrifteter Assoziation zur richtigen Schnittstelle."
+      }
+    ]
+  });
+
+  /* ---------- Film ---------- */
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const fk = (t, r, klein) => '<div class="t06-fk ar-r-' + r + '">' + t + (klein ? "<small>" + klein + "</small>" : "") + "</div>";
+  const entscheide = [
+    ["uc1", "SPA (Web App im Browser)"],
+    ["uc2", "Klassische Web App"],
+    ["uc3", "Mobile App iOS + Android, offline mit Sync"],
+    ["uc4", "Desktop-App Windows + macOS"],
+    ["uc5", "Excel mit OData"]
+  ];
+  const liste = (n, neu) => '<div class="t06-ff"><table class="t06-ft"><thead><tr><th>Fall</th><th>Client-Typ</th></tr></thead><tbody>' + entscheide.slice(0, n).map((e, i) => { const z = "<tr><td>" + e[0] + "</td><td>" + e[1] + "</td></tr>"; return i === neu ? z.replace("<td>" + e[1], "<td>" + NW(e[1])) : z; }).join("") + "</tbody></table></div>";
+  const tabZeilen = [
+    ["SPA (Web App)", "eigene Geräte, OS unbekannt, keine Installation; optimale Usability durch AJAX", "Kundschaft (extern)"],
+    ["Klassische Web App", "alte Browser: geringe Anforderungen, HTML vom Server", "Partnerhöfe (extern)"],
+    ["Mobile App iOS + Android, offline/Sync", "Foto (Kamera), oft kein Netz; eine Codebasis für zwei Plattformen", "Fahrerinnen (intern)"],
+    ["Desktop-App Windows + macOS", "voller Funktionsumfang, Plattformen bekannt", "Disposition (intern)"],
+    ["Excel mit OData", "Ad-hoc-Auswertung, offene Datenschnittstelle", "Geschäftsleitung"]
+  ];
+  const tab = (n) => '<div class="t06-ff"><table class="t06-ft"><thead><tr><th>Technologie</th><th>Begründung</th><th>User</th></tr></thead><tbody>' + tabZeilen.slice(0, n).map((z) => "<tr><td>" + z[0] + "</td><td>" + z[1] + "</td><td>" + z[2] + "</td></tr>").join("") + "</tbody></table></div>";
+  const schnitte = [
+    "SPA → HTML Resource: <b>Static HTTP</b> (Initial Load)",
+    "SPA → Web API: <b>GraphQL</b> per AJAX",
+    "Klassische Web App → Web App-Microservice: <b>HTTP</b>",
+    "Mobile App und Desktop-App → Web API: <b>REST</b>",
+    "Excel → Web API: <b>OData</b>"
+  ];
+  const sl = (n) => '<div class="t06-ff">' + schnitte.slice(0, n).map((s, i) => '<p class="t06-fl">' + (i === n - 1 ? NW(s) : s) + "</p>").join("") + "</div>";
+  function tier(stufe) {
+    const apps = stufe >= 2;
+    const web = apps ? fk("SPA Kundschaft", "client") + fk("Web App Partnerhöfe", "client") : "";
+    const inst = apps ? fk("Mobile App Fahrer", "client") + fk("Desktop App Disposition", "client") + fk("Excel Geschäftsleitung", "client") : "";
+    let h = '<div class="t06-fp"><span class="t06-fp-name">Client Tier</span><div class="t06-fp-reihe"><div class="t06-fp"><span class="t06-fp-name">Web Apps</span><div class="t06-fp-reihe">' + web + '</div></div><div class="t06-fp"><span class="t06-fp-name">Installierbare Apps</span><div class="t06-fp-reihe">' + inst + "</div></div></div></div>";
+    if (stufe >= 3) h += '<div class="t06-fp"><span class="t06-fp-name">Server – Kubernetes Cluster</span><div class="t06-fp-reihe">' + fk("«Microservice» Web App", "client", "○ HTTP") + fk("«Microservice» HTML Resource", "client", "○ Static HTTP") + fk("«Microservice» Web API", "webapi", "○ GraphQL ○ REST ○ OData") + "</div></div>";
+    if (stufe >= 4) h += '<div class="t06-fl">' + schnitte.join("<br>") + "<br>Client Tier - - -&gt; Server (Abhängigkeit)</div>";
+    return '<div class="t06-ff">' + h + "</div>";
+  }
+  L.film("#t06-film", {
+    phasen: ["1 · Lesen", "2 · Client-Typ", "3 · Tabelle", "4 · Schnittstelle", "5 · Client Tier"],
+    texte: [
+      'uc1: Kundinnen und Kunden verwalten ihr Abo <span data-ph="os">auf ihren eigenen Geräten</span>, <span data-ph="inst">ohne etwas zu installieren</span>, und wollen <span data-ph="ux">eine flüssige Bedienung</span>.',
+      'uc2: Die Partnerhöfe melden ihre Ernte <span data-ph="alt">mit älteren PCs und alten Browsern</span>.',
+      'uc3: Die Fahrerinnen bestätigen Lieferungen <span data-ph="foto">mit einem Foto</span>, <span data-ph="netz">oft ohne Netz</span>, auf <span data-ph="zwei">Firmen-Handys mit iOS und Android</span>.',
+      'uc4: Die Disposition plant Touren <span data-ph="voll">mit vollem Funktionsumfang</span> auf <span data-ph="winmac">Windows-PCs und Macs</span>.',
+      'uc5: Die Geschäftsleitung wertet Umsätze <span data-ph="excel">ad hoc in Excel</span> aus.'
+    ],
+    woerterbuch: ["SPA", "klassische Web App", "Mobile App (Sync)", "Desktop-App (multiplatform)", "Excel + OData", "Static HTTP", "AJAX: GraphQL / REST", "Client Tier"],
+    beschriftung: { texte: "Anwendungsfälle", text: "Fall", formel: "Lösung" },
+    szenen: [
+      { say: "Muster: Client-Apps festlegen und den Client Tier ergänzen. Du gehst in fünf Schritten vor: Anforderungen lesen, Client-Typ wählen, Tabelle schreiben, Schnittstelle bestimmen, Client Tier zeichnen." },
+      { ph: 0, sent: 0, hl: ["os", "inst", "ux"], say: "uc1: Eigene Geräte heisst, das Betriebssystem ist unbekannt. Keine Installation schliesst installierbare Apps aus. Flüssige Bedienung ist ein Signal für eine SPA." },
+      { sent: 1, hl: ["alt"], say: "uc2: Alte Browser vertragen wenig JavaScript. Das spricht gegen SPA und PWA." },
+      { sent: 2, hl: ["foto", "netz"], say: "uc3: Foto und Funkloch verlangen Gerätezugriff und lokale Daten: eine installierbare Sync-App." },
+      { sent: 2, hl: ["zwei"], say: "Zwei Plattformen: Mit hybrid oder cross-platform baust du eine Codebasis statt zweimal nativ." },
+      { sent: 3, hl: ["voll", "winmac"], say: "uc4: Voller Funktionsumfang auf zwei bekannten Desktop-Systemen: eine installierbare Multiplatform-App." },
+      { sent: 4, hl: ["excel"], say: "uc5: Excel ist auch eine Client-App. Sie braucht eine offene Datenschnittstelle." },
+      { ph: 1, sent: "all", dict: 1, dh: [0], f: liste(1, 0), say: "Entscheid uc1: SPA im Browser. Sie lädt einmal und holt dann nur noch Daten. Beste Usability ohne Installation." },
+      { dict: 2, dh: [1], f: liste(2, 1), say: "uc2: klassische Web App. Der Server erzeugt fertiges HTML, der Browser muss nur anzeigen." },
+      { dict: 3, dh: [2], f: liste(3, 2), say: "uc3: Mobile App für iOS und Android, offline mit Synchronisation, z. B. mit Ionic oder .NET MAUI." },
+      { dict: 4, dh: [3], f: liste(4, 3), say: "uc4: Desktop-App für Windows und macOS aus einer Codebasis, z. B. mit .NET MAUI oder Electron." },
+      { dict: 5, dh: [4], f: liste(5, 4), say: "uc5: Excel mit OData-Feed. Kein direkter Zugriff auf die Datenbank." },
+      { ph: 2, sent: null, f: NW(tab(1)), say: "Jetzt die Tabelle wie in der Prüfung: Technologie, Begründung, User. Die Begründung nennt die Signale aus dem Text." },
+      { f: tab(3), say: "Klassische Web App für die Partnerhöfe, Sync-App für die Fahrerinnen. Jede Zeile hat ihre eigene User-Gruppe." },
+      { f: tab(5), say: "Fünf Zeilen, fünf Client-Apps. Partner-Systeme, die nur Daten austauschen, sind keine Client-Apps. Sie gehören in die Schnittstellentabelle." },
+      { ph: 3, dict: 7, dh: [5, 6], f: sl(2), say: "Die SPA braucht zwei Verbindungen: Static HTTP für den Initial Load und GraphQL für die Daten per AJAX." },
+      { f: sl(3), say: "Die klassische Web App holt fertiges HTML vom Web-App-Microservice über HTTP." },
+      { f: sl(4), say: "Installierbare Apps bringen ihre Oberfläche mit. Sie brauchen nur Daten vom Web API, hier über REST." },
+      { f: sl(5), say: "Excel nutzt die OData-Schnittstelle. Das Web API bietet also drei Bälle an: GraphQL, REST und OData." },
+      { ph: 4, dict: 8, dh: [7], f: tier(1), say: "Im Client Tier legst du zwei Pakete an: Web Apps und Installierbare Apps." },
+      { f: tier(2), say: "Die zwei Web Apps kommen in den Browser-Teil, Mobile App, Desktop-App und Excel zu den installierbaren Apps." },
+      { f: tier(3), say: "Auf dem Server stehen die drei Gegenstücke als «Microservice»: Web App, HTML Resource und Web API mit seinen Bällen." },
+      { f: tier(4), say: "Jede Linie trägt ihr Protokoll. Die Abhängigkeit vom Client Tier zum Server zeigt, wer wen nutzt." },
+      { say: "Kein API-Gateway, kein Service Worker als eigene Komponente, keine native iOS-App für zwei Plattformen. Jetzt prüf dich im Selbsttest.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t06-test", {
+    fragen: [
+      { q: "Externe User arbeiten mit unbekannten Geräten, wollen nichts installieren und erwarten optimale Usability. Welche Client-App passt?",
+        o: ["Native iOS-App in Swift", "SPA im Browser", "Desktop-App mit .NET MAUI", "View Client einer VDI"], a: 1,
+        e: "Unbekanntes OS und keine Installation → Web App; optimale Usability → SPA (eine PWA wäre ebenfalls möglich)." },
+      { q: "Welche Aufgabe hat der Service Worker in einer PWA?",
+        o: ["Er rendert die HTML-Seiten auf dem Server.", "Er sitzt als Proxy zwischen App und Netz und kann Requests aus dem Cache beantworten.", "Er ersetzt das Web API.", "Er installiert die App aus dem App Store."], a: 1,
+        e: "Der Service Worker fängt jeden Request ab und entscheidet: Netz oder Cache. Darum läuft die PWA auch offline." },
+      { q: "Wie bindest du eine Excel-Auswertung in der Architektur an? (Achtung, Stolperfalle)",
+        o: ["Direkt per ODBC an die Datenbank, das ist am schnellsten.", "Über ein API-Gateway an die Domain Services.", "Über die OData-Schnittstelle des Web API.", "Gar nicht, Excel ist keine Client-App."], a: 2,
+        e: "Excel ist eine Client-App und liest über OData. Der Direktzugriff auf die Datenbank umgeht Fachlogik und Berechtigungen." },
+      { q: "Was zeichnet AJAX aus?",
+        o: ["Jeder Klick lädt eine komplette neue Seite.", "Ein Skript holt Daten asynchron (meist JSON) und ändert nur einen Teil der Seite.", "Die Daten werden nur als XML-Datei heruntergeladen.", "Der Browser wird durch eine installierte App ersetzt."], a: 1,
+        e: "Asynchronous JavaScript and XML: Die Seite bleibt bedienbar, nur der betroffene Teil wird neu aufgebaut." },
+      { q: "Wie ist eine Hybrid App aufgebaut?",
+        o: ["Zwei native Apps mit getrennten Teams", "Nativer App-Rahmen mit Inhalt aus HTML5, CSS3 und JavaScript; Gerätefunktionen über Plugins", "Ein Desktop, der im Rechenzentrum läuft", "Java-Bytecode, der auf der JVM läuft"], a: 1,
+        e: "Frameworks wie Cordova oder Ionic verpacken Webinhalt in einen nativen Rahmen und öffnen Mobile APIs über Plugins." },
+      { q: "Was unterscheidet Blazor Server von Blazor WebAssembly?",
+        o: ["Bei Blazor Server läuft C# auf dem Server, UI-Updates kommen über SignalR; bei WebAssembly läuft C# im Browser.", "Blazor Server läuft nur auf Android, WebAssembly nur auf iOS.", "Blazor WebAssembly braucht Java im Browser.", "Es gibt keinen Unterschied, nur den Namen."], a: 0,
+        e: "Blazor Server: dünner Browser, alles auf dem Server, ohne Verbindung steht die App. WebAssembly: .NET-Laufzeit im Browser, auch als PWA offline." },
+      { q: "In der Makroarchitektur: Mit welchen Komponenten verbindest du eine SPA?",
+        o: ["Nur mit dem Message Broker", "Mit der HTML Resource (Static HTTP) und dem Web API (REST/GraphQL)", "Mit dem API-Gateway und dem Service Worker", "Direkt mit jedem Domain Service"], a: 1,
+        e: "Initial Load über Static HTTP, Daten per AJAX über das Web API. Kein API-Gateway in der Makroarchitektur." },
+      { q: "Eine E-Mail-App arbeitet im Flugzeug weiter und versendet die Mails nach der Landung. Welche Art von App ist das?",
+        o: ["Offline-App", "Always-Online-App", "Sync-App", "View Client"], a: 2,
+        e: "Sie arbeitet lokal und synchronisiert später mit dem Server." },
+      { q: "Was gilt im Muster MVVM?",
+        o: ["Das ViewModel steuert die View direkt über ihre Steuerelemente.", "Die View ist per Data Binding an das ViewModel gebunden; das ViewModel kennt die View nicht.", "Model und View sind dasselbe Objekt.", "MVVM gibt es nur auf dem Server."], a: 1,
+        e: "Data Binding macht das ViewModel ohne Oberfläche testbar. Typisch in XAML-Apps wie .NET MAUI." },
+      { q: "Ein Service meldet nach einem Sturz den Standort an die Rettung. Welche LBS-Art ist das?",
+        o: ["Produkttracking: Ziel ermittelt", "Peer Finder: beide ermittelt", "Notrufortung: Gerät ermittelt, Ziel nicht relevant", "Service Finder: Ziel vorgegeben"], a: 2,
+        e: "Nur die Position des Geräts wird ermittelt; ein Ziel gibt es nicht." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
