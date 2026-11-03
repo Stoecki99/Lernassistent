@@ -184,9 +184,9 @@
     <p class="prose">Weil Klauseln <b>Mengen</b> sind, zählt jedes Literal nur einmal, und die Reihenfolge spielt keine Rolle. Darum können verschiedene Formeln dieselbe Klauselmenge haben. Alle drei Formeln unten ergeben <span class="t03-m">{{R, ¬T}, {S}}</span>:</p>
     <div class="board">
       <div class="t03-tafel">
-        <div><i>F</i>₁ = <span class="t03-m">(R ∨ ¬T) ∧ (S ∨ S)</span></div>
-        <div><i>F</i>₂ = <span class="t03-m">(¬T ∨ R) ∧ S</span></div>
-        <div><i>F</i>₃ = <span class="t03-m">S ∧ (R ∨ ¬T ∨ R)</span></div>
+        <div><i>F</i>₁ = <span class="t03-m">(R ∨ ¬T ∨ ¬T) ∧ S</span></div>
+        <div><i>F</i>₂ = <span class="t03-m">S ∧ (¬T ∨ R) ∧ (R ∨ ¬T)</span></div>
+        <div><i>F</i>₃ = <span class="t03-m">(S ∨ S) ∧ (¬T ∨ R)</span></div>
       </div>
     </div>
     <div class="note tipp"><b>Tipp:</b> Ein einzelnes Literal in der KNF ist eine Klammer mit nur einem Eintrag. Aus <span class="t03-m">¬B</span> wird die Einerklausel <span class="t03-m">{¬B}</span>. Einerklauseln sind beim Resolvieren Gold wert, weil sie andere Klauseln kürzer machen.</div>
@@ -309,7 +309,7 @@
       </table>
     </div>
     <div class="note falle"><b>Falle:</b> Wer das Ziel selbst statt seiner Negation dazunimmt (<span class="t03-m">{C}</span> statt <span class="t03-m">{¬C}</span>), beweist nichts. Und: «oder» im Ziel wird nach dem Negieren zu «und», also zu <b>mehreren</b> Einerklauseln.</div>
-    <p class="prose">Ein klassisches Logikrätsel über Sokrates, Aristoteles und Platon setzt alles zusammen: Text in Atome übersetzen, Ziel negieren, Klauseln bilden, resolvieren.</p>
+    <p class="prose">Ein Alltagsrätsel über Mias Arbeitsweg setzt alles zusammen: Text in Atome übersetzen, Ziel negieren, Klauseln bilden, resolvieren.</p>
     <div id="t03-stepper-235"></div>
     <div class="card stack">
       <h3>Den Resolutionsbaum zeichnen</h3>
@@ -462,8 +462,8 @@
   /* ---------- Statische Bäume ---------- */
   const BAEUME = {
     def: ["{A,C}", "{A,¬B}", "{B,C}"],
-    b234: ["∅", ["{B}", ["{B,C}", "{A,B,C}", "{¬A,B,C}"], "{B,¬C}"], "{¬B}"],
-    b235: ["∅", ["{¬S}", "{¬P,¬S}", "{P}"], "{S}"],
+    b234: ["∅", ["{C}", ["{¬B,C}", "{A,¬B,C}", "{¬A,C}"], "{B,C}"], "{¬C}"],
+    b235: ["∅", ["{B}", ["{R}", "{V,R}", "{¬V}"], "{¬R,B}"], "{¬B}"],
     u6: ["∅", ["{D}", ["{A}", ["{A,B}", "{B,C}", "{¬C,A}"], "{A,¬B}"], "{D,¬A}"], "{¬D}"],
     u7: ["∅", ["{I}", ["{W}", ["{N}", "{¬U,N}", "{U,N}"], "{¬N,W}"], "{¬W,I}"], "{¬I}"],
     film: ["∅", ["{C}", ["{C,D}", ["{B,C,D}", "{A,B,D}", "{¬A,C}"], "{¬B,C}"], "{¬D,C}"], "{¬C}"]
@@ -523,9 +523,9 @@
   /* ---------- 4 · Stepper Erfüllbarkeitstest ---------- */
   const NW = function (s) { return '<span class="nw">' + s + "</span>"; };
   const z234 = [
-    '<div><span data-link="s1">' + T`\(\KK(F) = \Res^0\)` + " = { " + M("{A, B, C}, {¬A, B, C}, {¬B}, {B, ¬C}") + " }</span></div>",
-    '<div><span data-link="s2">' + T`\(\Res^1 = \Res^0 \cup\)` + " { " + M("{B, C}, {A, C}, {A, B}, {¬A, C}, {¬A, B}, {¬C}") + " }</span></div>",
-    '<div><span data-link="s2">' + T`\(\Res^2 = \Res^1 \cup\)` + " { " + M("{C}, {A}, {¬A}, {B}") + " }</span></div>",
+    '<div><span data-link="s1">' + T`\(\KK(F) = \Res^0\)` + " = { " + M("{A, ¬B, C}, {¬A, C}, {B, C}, {¬C}") + " }</span></div>",
+    '<div><span data-link="s2">' + T`\(\Res^1 = \Res^0 \cup\)` + " { " + M("{¬B, C}, {A, C}, {A, ¬B}, {¬A}, {B}") + " }</span></div>",
+    '<div><span data-link="s2">' + T`\(\Res^2 = \Res^1 \cup\)` + " { " + M("{C}, {¬B}, {A}") + " }</span></div>",
     '<div><span data-link="s2">' + T`\(\Res^3 = \Res^2 \cup \{\emptyset\}\)` + "</span></div>",
     '<div><span data-link="s3">' + T`\(\emptyset \in \Res^3\)` + " ⇒ «<i>F</i> ist unerfüllbar»</span></div>"
   ];
@@ -537,47 +537,49 @@
   }
   L.stepper("#t03-stepper-234", {
     titel: "Beispiel · Erfüllbarkeitstest",
-    text: 'Prüfe <span data-link="s1"><i>F</i> = ' + M("(A ∨ B ∨ C) ∧ (¬A ∨ B ∨ C) ∧ ¬B ∧ (B ∨ ¬C)") + '</span> auf Erfüllbarkeit. Vorgehen nach dem Erfüllbarkeitstest: <span data-link="s1">1) Klauselmenge bilden</span>, <span data-link="s2">2) Runden berechnen</span>, <span data-link="s3">3) Ergebnis ausgeben</span>.',
+    text: 'Prüfe <span data-link="s1"><i>F</i> = ' + M("(A ∨ ¬B ∨ C) ∧ (¬A ∨ C) ∧ (B ∨ C) ∧ ¬C") + '</span> auf Erfüllbarkeit. Vorgehen nach dem Erfüllbarkeitstest: <span data-link="s1">1) Klauselmenge bilden</span>, <span data-link="s2">2) Runden berechnen</span>, <span data-link="s3">3) Ergebnis ausgeben</span>.',
     schritte: [
-      { html: tafel234(1), warum: "Schritt 1: Jede Oder-Klammer wird eine Klausel. ¬B steht allein, daraus wird die Einerklausel {¬B}. Diese Menge ist zugleich Res<sup>0</sup>, die Runde 0." },
-      { html: tafel234(2), warum: "Runde 1: Jedes Paar mit genau einem Gegensatz liefert eine Resolvente. Zum Beispiel ergeben {A, B, C} und {¬A, B, C} über A die Klausel {B, C}. Sechs neue Klauseln, aber kein ∅. Also weiter." },
-      { html: tafel234(3), warum: "Runde 2: Jetzt spielen auch die neuen Klauseln mit. Zum Beispiel ergeben {B, C} und {¬C} über C die Klausel {B}. Wieder Neues, aber noch kein ∅." },
-      { html: tafel234(4), warum: "Runde 3: {B} aus Runde 2 trifft auf {¬B} aus der Klauselmenge. Nach dem Streichen bleibt ∅. Andere neue Klauseln bringt diese Runde nicht mehr." },
+      { html: tafel234(1), warum: "Schritt 1: Jede Oder-Klammer wird eine Klausel. ¬C steht allein, daraus wird die Einerklausel {¬C}. Diese Menge ist zugleich Res<sup>0</sup>, die Runde 0." },
+      { html: tafel234(2), warum: "Runde 1: Jedes Paar mit genau einem Gegensatz liefert eine Resolvente. Zum Beispiel ergeben {A, ¬B, C} und {¬A, C} über A die Klausel {¬B, C}. Fünf neue Klauseln, aber kein ∅. Also weiter." },
+      { html: tafel234(3), warum: "Runde 2: Jetzt spielen auch die neuen Klauseln mit. Zum Beispiel ergeben {¬B, C} und {B} über B die Klausel {C}. Drei neue Klauseln, aber noch kein ∅." },
+      { html: tafel234(4), warum: "Runde 3: {C} aus Runde 2 trifft auf {¬C} aus der Klauselmenge. Nach dem Streichen bleibt ∅. Andere neue Klauseln bringt diese Runde nicht mehr." },
       { html: tafel234(5), warum: "Schritt 3: ∅ ist aufgetaucht. Nach dem Resolutionssatz ist F unerfüllbar." },
-      { html: tafel234(5, true), warum: "Für den Beweis reichen drei der vielen neuen Klauseln. Der Baum zeigt nur diesen Weg: {B, C}, dann {B}, dann ∅. So einen Baum verlangt die Prüfung." }
+      { html: tafel234(5, true), warum: "Für den Beweis reichen drei der vielen neuen Klauseln. Der Baum zeigt nur diesen Weg: {¬B, C}, dann {C}, dann ∅. So einen Baum verlangt die Prüfung." }
     ]
   });
 
-  /* ---------- 5 · Stepper Sokrates ---------- */
+  /* ---------- 5 · Stepper Arbeitsweg ---------- */
   const z235 = [
-    '<div><span data-link="s">' + M("S") + '</span> = «Sokrates war ein grosser Philosoph», <span data-link="a">' + M("A") + '</span> = «Aristoteles schätzt Platon richtig ein», <span data-link="p">' + M("P") + "</span> = «Platon schätzt Sokrates richtig ein»</div>",
-    '<div><i>F</i> = ' + M("(P ⇔ ¬S) ∧ (S ⇒ A) ∧ (A ⇒ P)") + ', <span data-link="ann">Annahme ' + M("P") + "</span></div>",
-    '<div><span data-link="ziel">Ziel ' + M("¬S") + "</span>, negiert: " + M("¬¬S ≡ S") + "</div>",
-    "<div><i>F′</i> = <i>F</i> ∧ " + M("P ∧ S") + " soll unerfüllbar sein</div>",
-    "<div><i>F′</i> ≡ " + M("(P ∨ S) ∧ (¬P ∨ ¬S) ∧ (¬S ∨ A) ∧ (¬A ∨ P) ∧ P ∧ S") + "</div>",
-    "<div>" + T`\(\KK(F')\)` + " = { " + M("{P, S}, {¬P, ¬S}, {¬S, A}, {¬A, P}, {P}, {S}") + " }</div>",
-    "<div>" + M("{¬P, ¬S}") + " und " + M("{P}") + " über " + M("P") + " ergeben " + M("{¬S}") + "</div>",
-    "<div>" + M("{¬S}") + " und " + M("{S}") + " über " + M("S") + " ergeben ∅</div>"
+    '<div><span data-link="v">' + M("V") + '</span> = «Mia fährt mit dem Velo», <span data-link="r">' + M("R") + '</span> = «Es regnet», <span data-link="b">' + M("B") + "</span> = «Mia nimmt den Bus»</div>",
+    '<div><i>F</i> = ' + M("(V ⇔ ¬R) ∧ (R ⇒ B) ∧ (B ⇒ ¬V)") + ', <span data-link="ann">Annahme ' + M("¬V") + "</span></div>",
+    '<div><span data-link="ziel">Ziel ' + M("B") + "</span>, negiert: " + M("¬B") + "</div>",
+    "<div><i>F′</i> = <i>F</i> ∧ " + M("¬V ∧ ¬B") + " soll unerfüllbar sein</div>",
+    "<div><i>F′</i> ≡ " + M("(V ∨ R) ∧ (¬V ∨ ¬R) ∧ (¬R ∨ B) ∧ (¬B ∨ ¬V) ∧ ¬V ∧ ¬B") + "</div>",
+    "<div>" + T`\(\KK(F')\)` + " = { " + M("{V, R}, {¬V, ¬R}, {¬R, B}, {¬B, ¬V}, {¬V}, {¬B}") + " }</div>",
+    "<div>" + M("{V, R}") + " und " + M("{¬V}") + " über " + M("V") + " ergeben " + M("{R}") + "</div>",
+    "<div>" + M("{R}") + " und " + M("{¬R, B}") + " über " + M("R") + " ergeben " + M("{B}") + "</div>",
+    "<div>" + M("{B}") + " und " + M("{¬B}") + " über " + M("B") + " ergeben ∅</div>"
   ];
   function tafel235(n, ende) {
     let h = '<div class="t03-tafel">';
     for (let i = 0; i < n; i++) h += i === n - 1 && !ende ? NW(z235[i]) : z235[i];
-    if (ende) h += NW(baumHtml(BAEUME.b235, true) + '<div><b>Fazit:</b> <i>F′</i> ist unerfüllbar, also folgt <span data-link="ziel">' + M("¬S") + "</span> aus <i>F</i> und " + M("P") + ".</div>");
+    if (ende) h += NW(baumHtml(BAEUME.b235, true) + '<div><b>Fazit:</b> <i>F′</i> ist unerfüllbar, also folgt <span data-link="ziel">' + M("B") + "</span> aus <i>F</i> und " + M("¬V") + ".</div>");
     return h + "</div>";
   }
   L.stepper("#t03-stepper-235", {
-    titel: "Beispiel · Philosophisches",
-    text: 'Gegeben sind drei Aussagen über <span data-link="s">Sokrates</span>, <span data-link="a">Aristoteles</span> und <span data-link="p">Platon</span>: Platon schätzt Sokrates genau dann richtig ein, wenn Sokrates kein grosser Philosoph war. War Sokrates ein grosser Philosoph, schätzt Aristoteles Platon richtig ein. Aristoteles schätzt Platon nur dann richtig ein, wenn Platon Sokrates richtig einschätzt. Zusätzlich gilt: <span data-link="ann">Platons Einschätzung des Sokrates stimmt</span>. Folgt daraus, dass <span data-link="ziel">Sokrates kein grosser Philosoph war</span>?',
+    titel: "Beispiel · Mias Arbeitsweg",
+    text: 'Für Mias Weg zur Arbeit gelten drei Regeln: <span data-link="v">Mia fährt</span> genau dann <span data-link="v">mit dem Velo</span>, wenn es <span data-link="r">nicht regnet</span>. <span data-link="r">Regnet es</span>, <span data-link="b">nimmt sie den Bus</span>. <span data-link="b">Mia nimmt den Bus</span> nur dann, wenn sie nicht mit dem Velo fährt. Zusätzlich weisst du: <span data-link="ann">Heute fährt Mia nicht mit dem Velo</span>. Folgt daraus, dass <span data-link="ziel">Mia heute den Bus nimmt</span>?',
     schritte: [
-      { html: tafel235(1), warum: "Zuerst die Atome festlegen, wie in Station 01. Fahr über die Namen im Text: Das passende Atom leuchtet auf." },
-      { html: tafel235(2), warum: "Die drei Sätze als Formel F: «genau dann, wenn» wird ⇔, «wenn …, dann» wird ⇒, «nur dann, wenn» zeigt auf die Bedingung. Dazu kommt die Annahme P." },
-      { html: tafel235(3), warum: "Beweis durch Widerspruch: Du nimmst das Gegenteil des Ziels an. Die doppelte Verneinung fällt weg, übrig bleibt S." },
-      { html: tafel235(4), warum: "Folgt ¬S aus F und P, dann ist F ∧ P ∧ S unerfüllbar. Genau das prüfst du jetzt." },
-      { html: tafel235(5), warum: "KNF bilden: P ⇔ ¬S wird zu (P ∨ S) ∧ (¬P ∨ ¬S). Die Pfeile S ⇒ A und A ⇒ P werden zu ¬S ∨ A und ¬A ∨ P." },
-      { html: tafel235(6), warum: "Sechs Oder-Klammern, sechs Klauseln. Die letzte, {S}, ist das negierte Ziel." },
-      { html: tafel235(7), warum: "Die Annahme {P} trifft auf {¬P, ¬S}. Genau ein Paar, P und ¬P. Übrig bleibt {¬S}." },
-      { html: tafel235(8), warum: "{¬S} und das negierte Ziel {S} widersprechen sich. Nach dem Streichen bleibt ∅." },
-      { html: tafel235(8, true), warum: "Der Baum zeigt die zwei Schritte. Mit dem Erfüllbarkeitstest Runde für Runde taucht ∅ in Res² auf. Ergebnis: Stimmt Platons Einschätzung, dann war Sokrates kein grosser Philosoph." }
+      { html: tafel235(1), warum: "Zuerst die Atome festlegen, wie in Station 01. Fahr über die markierten Stellen im Text: Das passende Atom leuchtet auf." },
+      { html: tafel235(2), warum: "Die drei Regeln als Formel F: «genau dann, wenn» wird ⇔, «wenn …, dann» wird ⇒, «nur dann, wenn» zeigt auf die Bedingung: B ⇒ ¬V. Dazu kommt die Annahme ¬V." },
+      { html: tafel235(3), warum: "Beweis durch Widerspruch: Du nimmst das Gegenteil des Ziels an. Aus dem Ziel B wird ¬B." },
+      { html: tafel235(4), warum: "Folgt B aus F und ¬V, dann ist F ∧ ¬V ∧ ¬B unerfüllbar. Genau das prüfst du jetzt." },
+      { html: tafel235(5), warum: "KNF bilden: V ⇔ ¬R wird zu (V ∨ R) ∧ (¬V ∨ ¬R). Die Pfeile R ⇒ B und B ⇒ ¬V werden zu ¬R ∨ B und ¬B ∨ ¬V." },
+      { html: tafel235(6), warum: "Sechs Oder-Klammern, sechs Klauseln. Die letzte, {¬B}, ist das negierte Ziel." },
+      { html: tafel235(7), warum: "Die Annahme {¬V} trifft auf {V, R}. Genau ein Paar, V und ¬V. Übrig bleibt {R}: Es regnet heute." },
+      { html: tafel235(8), warum: "{R} und {¬R, B} haben genau ein Paar, R und ¬R. Übrig bleibt {B}." },
+      { html: tafel235(9), warum: "{B} und das negierte Ziel {¬B} widersprechen sich. Nach dem Streichen bleibt ∅." },
+      { html: tafel235(9, true), warum: "Der Baum zeigt die drei Schritte. Die Klausel {¬B, ¬V} brauchst du gar nicht. Mit dem Erfüllbarkeitstest Runde für Runde taucht ∅ in Res² auf. Ergebnis: Fährt Mia nicht mit dem Velo, nimmt sie den Bus." }
     ]
   });
 
@@ -585,10 +587,10 @@
   const AUFGABEN = [
     { id: "warm", titel: "Aufwärmen", klauseln: ["A, B", "¬A, B", "¬B"],
       text: "Drei Klauseln, zwei Schritte bis ∅. Tipp zuerst die beiden Klauseln mit A und ¬A an." },
-    { id: "b234", titel: "Beispiel aus Schritt 4", klauseln: ["A, B, C", "¬A, B, C", "¬B", "B, ¬C"],
+    { id: "b234", titel: "Beispiel aus Schritt 4", klauseln: ["A, ¬B, C", "¬A, C", "B, C", "¬C"],
       text: "Die Klauselmenge aus dem Erfüllbarkeitstest in Schritt 4. Der Test braucht drei Runden. Mit gezielten Paaren schaffst du es in drei Schritten." },
-    { id: "philo", titel: "Sokrates (Schritt 5)", klauseln: ["P, S", "¬P, ¬S", "¬S, A", "¬A, P", "P", "S"],
-      text: "Die Klauselmenge aus Schritt 5 (S: Sokrates grosser Philosoph, A: Aristoteles hat recht, P: Platon hat recht). Die letzte Klausel {S} ist das negierte Ziel." },
+    { id: "velo", titel: "Arbeitsweg (Schritt 5)", klauseln: ["V, R", "¬V, ¬R", "¬R, B", "¬B, ¬V", "¬V", "¬B"],
+      text: "Die Klauselmenge aus Schritt 5 (V: Mia fährt Velo, R: Es regnet, B: Mia nimmt den Bus). Die Annahme {¬V} ist (5), das negierte Ziel {¬B} ist (6). Es gibt mehr als einen Weg zu ∅." },
     { id: "zug", titel: "Wetter und Zug", klauseln: ["¬R, Z", "¬Z, T", "R, K", "¬K, Z", "¬T"],
       text: "R: Es regnet, K: Es ist kalt, Z: Ich nehme den Zug, T: Ich löse ein Ticket. Regeln: Bei Regen nehme ich den Zug {¬R, Z}, im Zug brauche ich ein Ticket {¬Z, T}, es regnet oder es ist kalt {R, K}, bei Kälte nehme ich den Zug {¬K, Z}. Ziel: Ich löse ein Ticket. Das negierte Ziel {¬T} steht als (5) schon drin. Kürzester Weg: vier Schritte." },
     { id: "kette", titel: "Lange Kette", klauseln: ["P, Q, R", "¬P, S", "¬Q, S", "¬R, T", "¬T, S", "¬S, U", "¬U"],
