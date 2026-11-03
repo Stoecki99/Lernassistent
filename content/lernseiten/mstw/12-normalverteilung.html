@@ -11,7 +11,6 @@
     /* Seiteneigene Stile der Station 12: nur Klassen mit Präfix t12-, nur Farben aus :root */
     .t12-ziele{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
     .t12-ziele li::marker{color:var(--accent)}
-    .t12-quelle{font-size:.85rem; color:var(--muted)}
     /* Zeilen in Stepper, Schritt-Aufgaben und Film */
     .t12-fz{white-space:normal}
     @media (max-width:520px){ .formula .t12-fz, .fstage .t12-fz{font-size:.88em} }
@@ -31,7 +30,10 @@
     .t12-labor .modes .btn{font-size:.9rem; padding:6px 11px}
     .t12-bild{position:relative}
     #t12-svg{touch-action:pan-y; -webkit-user-select:none; user-select:none; cursor:ew-resize}
-    .t12-griff{fill:var(--accent); stroke:var(--surface); stroke-width:2}
+    .t12-griff{fill:var(--bad); stroke:var(--surface); stroke-width:2}
+    /* Ausschnitt der Tabelle F(z) */
+    .t12-ftab td, .t12-ftab th{padding:4px 7px; font-size:.88rem}
+    .t12-ftab td.t12-treffer{outline:2px solid var(--accent); outline-offset:-2px; background:var(--accent-soft); font-weight:600}
     .t12-ergebnis{background:var(--board); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:6px; min-width:0}
     .t12-haupt{font-family:var(--f-math); font-size:clamp(1.08rem, 4.2vw, 1.35rem); line-height:1.5; font-variant-numeric:tabular-nums}
     .t12-haupt b{color:var(--accent)}
@@ -42,12 +44,12 @@
     .t12-ti-box{font-family:ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:.9rem; background:var(--board); border-radius:8px; padding:2px 6px; white-space:nowrap}
   </style>
 </head>
-<body data-fach="mstw" data-thema="12-normalverteilung">
+<body data-fach="mstw" data-thema="12-normalverteilung" data-farbig data-sektion="wahrscheinlichkeit">
 <main class="wrap">
 
   <!-- ===== Kopf ===== -->
   <header class="stack">
-    <span class="eyebrow">MSTW · S2-V7 · Normalverteilung</span>
+    <span class="eyebrow">MSTW · Wahrscheinlichkeit · Normalverteilung</span>
     <h1>Normalverteilung</h1>
     <p class="lead">Füllmengen, Lieferzeiten und Renditen werden gemessen, nicht gezählt. Ihr wichtigstes Modell ist die Normalverteilung, die Gauss’sche Glockenkurve. Hier lernst du, Wahrscheinlichkeiten als Flächen zu lesen, zu einer Wahrscheinlichkeit die passende Grenze zu finden und einen unbekannten Mittelwert oder eine unbekannte Standardabweichung über den z-Wert zu bestimmen. Am Schluss löst du eine Prüfungsaufgabe zu Rendite und Value-at-Risk.</p>
     <div class="card stack">
@@ -61,8 +63,7 @@
         <li>einen gesuchten Mittelwert oder eine gesuchte Standardabweichung über \(z\) finden.</li>
       </ul>
     </div>
-    <div class="note"><b>Prüfungsbezug:</b> Aufgabe 6a der exemplarischen Modulschlussprüfung fragt genau diese drei Dinge: eine Wahrscheinlichkeit, einen Value-at-Risk und eine höchstens zulässige Standardabweichung. In der Musterlösung gibt es Teilpunkte für das hingeschriebene Modell \(N(\mu;\ \sigma)\), den Rechenweg und das Ergebnis. Der Teil 6b (eine Verteilung durch eine einfachere annähern: dort die hypergeometrische durch die Binomialverteilung, allenfalls weiter durch die Normalverteilung) folgt in der nächsten Station.</div>
-    <p class="t12-quelle">Grundlage: Skript Wahrscheinlichkeitstheorie (WT) Kap. 4.3, 6.1–6.5 und 8.2, Folien Wahrscheinlichkeitstheorie «Normalverteilung» bis «Standardnormalverteilung», Lernblock S2-LB3 (Lösungen 6.101–6.103, Test LB2+3), exemplarische Modulschlussprüfung Aufgabe 6.</p>
+    <div class="note"><b>Prüfungsbezug:</b> In der Modulschlussprüfung fragt eine typische Aufgabe genau diese drei Dinge: eine Wahrscheinlichkeit, einen Value-at-Risk und eine höchstens zulässige Standardabweichung. Teilpunkte gibt es für das hingeschriebene Modell \(N(\mu;\ \sigma)\), den Rechenweg und das Ergebnis. Oft folgt ein zweiter Teil, in dem du eine Verteilung durch eine einfachere annäherst. Das ist Thema der nächsten Station.</div>
   </header>
 
   <!-- ===== Navigation ===== -->
@@ -86,16 +87,20 @@
     <h2>Fünf Begriffe, ohne die nichts geht</h2>
     <p class="prose">Bisher hast du Zufallsvariablen gezählt: Anzahl Tore, Anzahl defekte Teile. Jetzt wird gemessen: Gewicht, Zeit, Rendite. Zwischen zwei Messwerten liegen unendlich viele weitere. Das ändert, wie man Wahrscheinlichkeiten rechnet.</p>
     <div class="grid4">
-      <div class="concept"><span class="tag">Stetige Zufallsvariable = gemessen</span><span class="ex">\(X\) = Füllmenge in g</span><p>Ein Zählwerk springt von 1 auf 2, ein Messband läuft durch. Eine stetige Zufallsvariable kann jeden Wert in einem Intervall annehmen (Skript WT Def. 4.18). Folge: Ein einzelner exakter Wert hat die Wahrscheinlichkeit 0, also \(P(X = 500) = 0\).</p></div>
-      <div class="concept"><span class="tag">Dichte f(x) = wie dicht die Werte liegen</span><span class="ex">\(f(x) \ge 0\), Fläche total 1</span><p>Stell dir einen Haufen aus genau 1 kg Sand vor. Wo er hoch ist, liegt viel Sand. Die Höhe allein ist noch keine Wahrscheinlichkeit, erst die Sandmenge zwischen zwei Pfählen (Def. 4.20). Darum darf \(f(x)\) sogar grösser als 1 sein.</p></div>
-      <div class="concept"><span class="tag">Wahrscheinlichkeit = Fläche</span><span class="ex">\(P(a \le X \le b)\) = Fläche von \(a\) bis \(b\)</span><p>Wie beim Histogramm aus der Beschreibenden Statistik: Dort waren relative Häufigkeiten die Flächen der Balken. Hier ist es die Fläche unter der Dichte (Bem. 4.27, Satz 4.22).</p></div>
-      <div class="concept"><span class="tag">Verteilungsfunktion = Fläche links</span><span class="ex">\(F(495) = P(X \le 495)\)</span><p>\(F(x)\) beantwortet «Wie viel liegt höchstens bei \(x\)?». Beispiel: \(F(495) \approx 0.12\) heisst, rund 12 % der Packungen wiegen höchstens 495 g (Def. 4.23).</p></div>
+      <div class="concept"><span class="tag">Stetige Zufallsvariable = gemessen</span><span class="ex">\(X\) = Füllmenge in g</span><p>Ein Zählwerk springt von 1 auf 2, ein Messband läuft durch. Eine stetige Zufallsvariable kann jeden Wert in einem Intervall annehmen. Folge: Ein einzelner exakter Wert hat die Wahrscheinlichkeit 0, also \(P(X = 500) = 0\).</p></div>
+      <div class="concept"><span class="tag">Dichte f(x) = wie dicht die Werte liegen</span><span class="ex">\(f(x) \ge 0\), Fläche total 1</span><p>Stell dir einen Haufen aus genau 1 kg Sand vor. Wo er hoch ist, liegt viel Sand. Die Höhe allein ist noch keine Wahrscheinlichkeit, erst die Sandmenge zwischen zwei Pfählen. Darum darf \(f(x)\) sogar grösser als 1 sein.</p></div>
+      <div class="concept"><span class="tag">Wahrscheinlichkeit = Fläche</span><span class="ex">\(P(a \le X \le b)\) = Fläche von \(a\) bis \(b\)</span><p>Wie beim Histogramm aus der Beschreibenden Statistik: Dort waren relative Häufigkeiten die Flächen der Balken. Hier ist es die Fläche unter der Dichte.</p></div>
+      <div class="concept"><span class="tag">Verteilungsfunktion = Fläche links</span><span class="ex">\(F(495) = P(X \le 495)\)</span><p>\(F(x)\) beantwortet «Wie viel liegt höchstens bei \(x\)?». Beispiel: \(F(495) \approx 0.12\) heisst, rund 12 % der Packungen wiegen höchstens 495 g.</p></div>
       <div class="concept"><span class="tag">Quantil = Grenze zu einer Fläche</span><span class="ex">3 % → 490.7 g</span><p>Die Umkehrfrage. Nicht «Wie viel liegt links von 495 g?», sondern «Wo liegt die Grenze, links von der genau 3 % liegen?». Wie bei der Körpergrösse: «90 % sind kleiner als 187 cm». Bei Renditen heisst die Grenze, unter der nur 5 % liegen, <b>5%-Value-at-Risk</b>: So tief oder tiefer fällt die Rendite nur in 5 % der Jahre.</p></div>
     </div>
     <div class="card stack">
       <h3>Kurz üben: Fläche oder Grenze gesucht?</h3>
       <p class="hint">Diese Unterscheidung entscheidet später, welchen Taschenrechnerbefehl du brauchst. Frag dich: Ist eine Wahrscheinlichkeit gesucht oder ein Messwert?</p>
       <div id="t12-sortierer"></div>
+    </div>
+    <div class="dran">
+      <div id="t12-dran-0a"></div>
+      <div id="t12-dran-0b"></div>
     </div>
   </section>
 
@@ -115,20 +120,24 @@
           <tr><td><span class="op">∼</span> N(<span class="c">μ</span>; <span class="c">σ</span>)</td><td><span class="kind kind-op">Schreibweise</span></td><td>«ist normalverteilt mit Mittelwert μ und Standardabweichung σ», z.&nbsp;B. <span class="v">X</span> ∼ N(502; 6)</td></tr>
           <tr><td><span class="fn">f</span>(<span class="c">x</span>)</td><td><span class="kind kind-fn">Funktion</span></td><td>Dichtefunktion: Höhe der Glocke an der Stelle x</td></tr>
           <tr><td><span class="fn">F</span>(<span class="c">x</span>)</td><td><span class="kind kind-fn">Funktion</span></td><td>Verteilungsfunktion: Fläche links von x, also P(X ≤ x)</td></tr>
-          <tr><td><span class="v">Z</span>, <span class="c">z</span></td><td><span class="kind kind-v">Zufallsvariable</span></td><td>Z ∼ N(0; 1) heisst standardnormalverteilt; der Standardwert z sagt, wie viele σ ein Wert von μ entfernt ist</td></tr>
+          <tr><td><span class="v">Z</span>, <span class="c">z</span></td><td><span class="kind kind-v">Zufallsvariable</span> <span class="kind kind-c">feste Zahl</span></td><td>Z ∼ N(0; 1) heisst standardnormalverteilt; der Standardwert z sagt, wie viele σ ein Wert von μ entfernt ist</td></tr>
           <tr><td><span class="fn">normCdf</span>(u, o, μ, σ)</td><td><span class="kind kind-fn">TI-Nspire</span></td><td>Fläche zwischen unterer Grenze u und oberer Grenze o; menu 5-5-2 «Normal Cdf»</td></tr>
           <tr><td><span class="fn">invNorm</span>(w, μ, σ)</td><td><span class="kind kind-fn">TI-Nspire</span></td><td>Grenze x, links von der die Fläche w liegt; menu 5-5-3 «Inverse Normal»</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="note"><b>Merke:</b> In \(N(502;\ 6)\) ist die zweite Zahl die <b>Standardabweichung</b> σ, nicht die Varianz σ². So schreiben es Skript, Folien und Taschenrechner. Manche Bücher schreiben \(N(\mu, \sigma^2)\); dort stünde für dieselbe Verteilung \(N(502, 36)\). Prüf bei fremden Aufgaben immer, welche Schreibweise gilt.</div>
+    <div class="note"><b>Merke:</b> In \(N(502;\ 6)\) ist die zweite Zahl die <b>Standardabweichung</b> σ, nicht die Varianz σ². So schreibt man es im Modul und auf dem Taschenrechner. Manche Bücher schreiben \(N(\mu, \sigma^2)\); dort stünde für dieselbe Verteilung \(N(502, 36)\). Prüf bei fremden Aufgaben immer, welche Schreibweise gilt.</div>
+    <div class="dran">
+      <div id="t12-dran-1a"></div>
+      <div id="t12-dran-1b"></div>
+    </div>
   </section>
 
   <!-- ===== 2 · Glockenkurve ===== -->
   <section id="glocke">
-    <span class="eyebrow">Schritt 2 · Skript WT Kap. 6.2 und 6.3</span>
+    <span class="eyebrow">Schritt 2 · Die Glockenkurve</span>
     <h2>Die Glockenkurve und ihre zwei Parameter</h2>
-    <p class="prose">Nach Def. 6.1 heisst eine stetige Zufallsvariable mit Werten in ganz \(\R\) normalverteilt mit den Parametern \(\mu\) und \(\sigma > 0\), wenn ihre Dichte diese Form hat. Fahre über die unterstrichenen Erklärungen: Der passende Teil der Formel leuchtet auf.</p>
+    <p class="prose">Eine stetige Zufallsvariable mit Werten in ganz \(\R\) heisst normalverteilt mit den Parametern \(\mu\) und \(\sigma > 0\), wenn ihre Dichte diese Form hat. Fahre über die unterstrichenen Erklärungen: Der passende Teil der Formel leuchtet auf.</p>
     <div class="stack" data-link-bereich>
       <div class="board">
         $$\htmlClass{fn}{f}(x) = \htmlData{link=t12-vor}{\frac{1}{\htmlClass{c}{\sigma}\sqrt{2\pi}}} \cdot \htmlData{link=t12-exp}{e^{-\frac{1}{2}\left(\htmlData{link=t12-abst}{\frac{x-\htmlClass{c}{\mu}}{\htmlClass{c}{\sigma}}}\right)^{2}}}$$
@@ -141,7 +150,7 @@
     </div>
     <div class="note tipp"><b>Tipp:</b> Diese Formel musst du nie von Hand integrieren. Die Flächen rechnet der Taschenrechner. Wichtig ist, was \(\mu\) und \(\sigma\) mit der Kurve machen: \(\mu\) verschiebt die Glocke nach links oder rechts, \(\sigma\) macht sie breiter und flacher oder schmaler und höher. Probier es im <a href="#labor">Labor</a> aus.</div>
 
-    <h3>Satz 6.2 in eigenen Worten</h3>
+    <h3>Sechs Eigenschaften der Glocke</h3>
     <ol class="prose t12-ziele">
       <li>Dichte und Verteilungsfunktion sind stetig, die Dichte ist symmetrisch um \(\mu\).</li>
       <li>Der Erwartungswert ist \(\mu\), die Standardabweichung ist \(\sigma\).</li>
@@ -152,7 +161,7 @@
     </ol>
     <div class="card tablebox">
       <table class="tabelle">
-        <caption>σ-Regeln: Fläche zwischen μ − kσ und μ + kσ (Skript WT Satz 6.2, Nr. 5, und Tabelle direkt danach)</caption>
+        <caption>σ-Regeln: Fläche zwischen μ − kσ und μ + kσ</caption>
         <thead><tr><th>Intervall</th><th class="zahl">Fläche</th><th>Merkhilfe</th></tr></thead>
         <tbody>
           <tr><td>\(\mu \pm 1\sigma\)</td><td class="zahl">0.6827</td><td>gut zwei Drittel</td></tr>
@@ -164,33 +173,57 @@
         </tbody>
       </table>
     </div>
-    <p class="hint">Die Folie «Normalverteilung (2)» rundet die ersten drei Werte auf 0.683, 0.955 und 0.997. Im Volksmund heisst das die 68-95-99.7-Regel. Die hervorgehobenen Zeilen brauchst du in der Schliessenden Statistik wieder.</p>
+    <p class="hint">Oft rundet man die ersten drei Werte auf 0.683, 0.955 und 0.997. Im Volksmund heisst das die 68-95-99.7-Regel. Die hervorgehobenen Zeilen brauchst du in der Schliessenden Statistik wieder.</p>
 
-    <h3>Warum gerade diese Kurve? Satz 6.3</h3>
+    <h3>Warum gerade diese Kurve?</h3>
     <p class="prose">Der Zentrale Grenzwertsatz sagt sinngemäss: Addierst du viele unabhängige Zufallsgrössen, von denen keine dominiert, ist die Summe näherungsweise normalverteilt, egal wie die einzelnen Grössen verteilt sind. Die Füllmenge einer Packung hängt von vielen kleinen Einflüssen ab (Körnung, Reste im Stutzen, Temperatur). Darum passt die Glocke dort oft gut.</p>
-    <div class="note falle"><b>Falle bei Renditen (Bem. 6.9):</b> Echte Aktienrenditen sind nicht ganz normalverteilt. Sehr grosse Gewinne und Verluste kommen häufiger vor, als die Glocke vorhersagt («dicke Ränder»). Wer trotzdem mit der Normalverteilung rechnet, unterschätzt das Risiko, besonders beim Value-at-Risk. In der Prüfung rechnest du trotzdem mit der Normalverteilung, wenn die Aufgabe «näherungsweise normalverteilt» sagt.</div>
-    <details class="sol"><summary>Summe zweier normalverteilter Grössen (Satz 6.2, Nr. 6)</summary>
+    <div class="note falle"><b>Falle bei Renditen:</b> Echte Aktienrenditen sind nicht ganz normalverteilt. Sehr grosse Gewinne und Verluste kommen häufiger vor, als die Glocke vorhersagt («dicke Ränder»). Wer trotzdem mit der Normalverteilung rechnet, unterschätzt das Risiko, besonders beim Value-at-Risk. In der Prüfung rechnest du trotzdem mit der Normalverteilung, wenn die Aufgabe «näherungsweise normalverteilt» sagt.</div>
+    <details class="sol"><summary>Summe zweier normalverteilter Grössen</summary>
       <div class="stack">
         <p>Sind \(X_1 \sim N(\mu_1;\ \sigma_1)\) und \(X_2 \sim N(\mu_2;\ \sigma_2)\) unabhängig, dann ist \(X_1 + X_2\) normalverteilt. Die Mittelwerte addieren sich, und die <b>Varianzen</b> addieren sich:</p>
         <div class="board">$$X_1 + X_2 \sim N\!\left(\mu_1 + \mu_2;\ \sqrt{\sigma_1^2 + \sigma_2^2}\right)$$</div>
         <p>Weil die Schreibweise \(N(\mu;\ \sigma)\) die Standardabweichung erwartet, ziehst du am Schluss die Wurzel. Beispiel: Müesli \(N(502;\ 6)\) plus Verpackung \(N(18;\ 2)\) ergibt \(N(520;\ \sqrt{36 + 4}) = N(520;\ 6.32)\), nicht \(N(520;\ 8)\).</p>
       </div>
     </details>
+    <div class="dran">
+      <div id="t12-dran-2a"></div>
+      <div id="t12-dran-2b"></div>
+    </div>
   </section>
 
   <!-- ===== 3 · Standardisieren ===== -->
   <section id="standardisieren">
-    <span class="eyebrow">Schritt 3 · Skript WT Kap. 6.4</span>
+    <span class="eyebrow">Schritt 3 · Standardisieren</span>
     <h2>Standardisieren: alles auf eine Glocke</h2>
-    <p class="prose">Alle Normalverteilungen sind dieselbe Glocke, nur verschoben und gestreckt. Die eine Glocke mit \(\mu = 0\) und \(\sigma = 1\) heisst <b>Standardnormalverteilung</b>, kurz \(Z \sim N(0;\ 1)\) (Def. 6.6). Nach Satz 6.7 machst du aus jedem \(X \sim N(\mu;\ \sigma)\) ein standardnormalverteiltes \(Z\):</p>
+    <p class="prose">Alle Normalverteilungen sind dieselbe Glocke, nur verschoben und gestreckt. Die eine Glocke mit \(\mu = 0\) und \(\sigma = 1\) heisst <b>Standardnormalverteilung</b>, kurz \(Z \sim N(0;\ 1)\). Mit dieser Formel machst du aus jedem \(X \sim N(\mu;\ \sigma)\) ein standardnormalverteiltes \(Z\):</p>
     <div class="board">
       $$\htmlClass{v}{Z} = \frac{\htmlClass{v}{X} - \htmlClass{c}{\mu}}{\htmlClass{c}{\sigma}}$$
       $$\text{umgekehrt: } x = \htmlClass{c}{\mu} + z \cdot \htmlClass{c}{\sigma}$$
     </div>
     <p class="prose">Der <b>Standardwert</b> \(z\) beantwortet: Wie viele Standardabweichungen liegt ein Wert über (\(z > 0\)) oder unter (\(z < 0\)) dem Mittelwert? Das ist wie beim Vergleich zweier Prüfungen mit verschiedenen Skalen: Eine 82 ist nur dann stark, wenn sie weit über dem Durchschnitt liegt, gemessen an der üblichen Streuung.</p>
     <div id="t12-stepper-z"></div>
-    <div class="note"><b>Wozu braucht man z heute noch?</b> Früher las man Flächen aus Tabellen der Standardnormalverteilung ab: \(P(a \le X \le b) = F(z_2) - F(z_1)\). Heute rechnet der TI direkt mit \(\mu\) und \(\sigma\). Aber sobald \(\mu\) oder \(\sigma\) <b>gesucht</b> ist, helfen die Rechnerbefehle allein nicht mehr. Dann führt der Weg über \(z\) (Skript S. 84). Wie das geht, zeigt <a href="#rueckwaerts">Schritt 5</a>.</div>
-    <div class="note falle"><b>Druckfehler im Skript (Kap. 8.2):</b> Dort steht, für die Standardnormalverteilung gebe man «µ = 1 und σ = 0» ein. Richtig ist <b>μ = 0 und σ = 1</b>. Das Beispiel direkt daneben rechnet auch so: \(F(-0.8) = \operatorname{normCdf}(-\infty,\ -0.8,\ 0,\ 1) = 0.2119\).</div>
+    <div class="note"><b>Wozu braucht man z heute noch?</b> Früher las man Flächen aus Tabellen der Standardnormalverteilung ab: \(P(a \le X \le b) = F(z_2) - F(z_1)\). Heute rechnet der TI direkt mit \(\mu\) und \(\sigma\). Aber sobald \(\mu\) oder \(\sigma\) <b>gesucht</b> ist, helfen die Rechnerbefehle allein nicht mehr. Dann führt der Weg über \(z\). Wie das geht, zeigt <a href="#rueckwaerts">Schritt 5</a>.</div>
+    <div class="note falle"><b>Falle beim Eintippen:</b> Die Standardnormalverteilung hat <b>μ = 0 und σ = 1</b>, nicht umgekehrt. Mit σ = 0 gäbe es gar keine Glocke. Beispiel: \(F(-0.5) = \operatorname{normCdf}(-\infty,\ -0.5,\ 0,\ 1) \approx 0.3085\).</div>
+
+    <h3>Die Tabelle F(z) lesen</h3>
+    <p class="prose">Ohne Rechner liest du \(F(z) = P(Z \le z)\) in einer Tabelle ab. Die Zeile gibt \(z\) auf eine Nachkommastelle, die Spalte die zweite Nachkommastelle. Für \(z = 1.28\) gehst du in die Zeile 1.2 und die Spalte .08: \(F(1.28) = 0.8997\). Die Tabelle enthält nur positive \(z\). Für negative nutzt du die Symmetrie: \(F(-z) = 1 - F(z)\).</p>
+    <div class="card tablebox">
+      <table class="tabelle t12-ftab">
+        <caption>Ausschnitt der Tabelle F(z) der Standardnormalverteilung (vier Zeilen, Treffer der Aufgaben unten umrandet)</caption>
+        <thead><tr><th scope="col">z</th><th class="zahl" scope="col">.00</th><th class="zahl" scope="col">.01</th><th class="zahl" scope="col">.02</th><th class="zahl" scope="col">.03</th><th class="zahl" scope="col">.04</th><th class="zahl" scope="col">.05</th><th class="zahl" scope="col">.06</th><th class="zahl" scope="col">.07</th><th class="zahl" scope="col">.08</th><th class="zahl" scope="col">.09</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">0.7</th><td class="zahl">0.7580</td><td class="zahl">0.7611</td><td class="zahl">0.7642</td><td class="zahl">0.7673</td><td class="zahl">0.7704</td><td class="zahl t12-treffer">0.7734</td><td class="zahl">0.7764</td><td class="zahl">0.7794</td><td class="zahl">0.7823</td><td class="zahl">0.7852</td></tr>
+          <tr><th scope="row">1.2</th><td class="zahl">0.8849</td><td class="zahl">0.8869</td><td class="zahl">0.8888</td><td class="zahl">0.8907</td><td class="zahl">0.8925</td><td class="zahl">0.8944</td><td class="zahl">0.8962</td><td class="zahl">0.8980</td><td class="zahl t12-treffer">0.8997</td><td class="zahl">0.9015</td></tr>
+          <tr><th scope="row">1.9</th><td class="zahl">0.9713</td><td class="zahl">0.9719</td><td class="zahl">0.9726</td><td class="zahl">0.9732</td><td class="zahl">0.9738</td><td class="zahl">0.9744</td><td class="zahl t12-treffer">0.9750</td><td class="zahl">0.9756</td><td class="zahl">0.9761</td><td class="zahl">0.9767</td></tr>
+          <tr><th scope="row">2.3</th><td class="zahl">0.9893</td><td class="zahl">0.9896</td><td class="zahl">0.9898</td><td class="zahl t12-treffer">0.9901</td><td class="zahl">0.9904</td><td class="zahl">0.9906</td><td class="zahl">0.9909</td><td class="zahl">0.9911</td><td class="zahl">0.9913</td><td class="zahl">0.9916</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Schreibweise: Im Modul heisst die Verteilungsfunktion von \(Z\) einfach \(F(z)\). Viele Bücher und Tabellen schreiben dafür \(\Phi(z)\). Gemeint ist dasselbe.</p>
+    <div class="dran">
+      <div id="t12-dran-3a"></div>
+      <div id="t12-dran-3b"></div>
+    </div>
   </section>
 
   <!-- ===== 4 · Flächen ===== -->
@@ -200,9 +233,13 @@
     <p class="prose">Jede Wahrscheinlichkeitsfrage zur Normalverteilung ist eine von drei Flächen. Übersetze zuerst die Worte in ein Zeichen (≤ oder ≥), mach eine kleine Skizze, dann tippst du in den Rechner.</p>
     <div class="grid4" id="t12-karten"></div>
     <div class="note"><b>Auf dem TI-Nspire:</b> menu 5-5-2 «Normal Cdf» mit unterer Grenze, oberer Grenze, μ und σ, kurz <span class="t12-ti-box">normCdf(u, o, μ, σ)</span>. Für eine offene Seite nimmst du \(-\infty\) oder \(\infty\) (oder eine riesige Zahl wie −1E99 und 1E99, das Ergebnis ist dasselbe).</div>
-    <div class="note tipp"><b>≤ oder &lt;? Egal.</b> Bei einer stetigen Zufallsvariable ist \(P(X = x) = 0\). Darum gilt \(P(X &lt; 495) = P(X \le 495)\). Das Skript sagt es so: Auch für \(P(X &lt; 0)\) bleibt 0 die obere Grenze (Kap. 8.2).</div>
-    <div class="note falle"><b>Falle «gezählte Grössen»:</b> Werden ganze Zahlen wie belegte Hotelzimmer mit der Normalverteilung angenähert, braucht es eine Stetigkeitskorrektur von ±0.5 (Lernblock-Lösung zu Aufgabe 6.103). Das ist Thema der nächsten Station. Bei echten Messgrössen wie Gramm oder Prozent gibt es keine Korrektur.</div>
+    <div class="note tipp"><b>≤ oder &lt;? Egal.</b> Bei einer stetigen Zufallsvariable ist \(P(X = x) = 0\). Darum gilt \(P(X &lt; 495) = P(X \le 495)\). Auch für \(P(X &lt; 0)\) gibst du einfach 0 als obere Grenze ein.</div>
+    <div class="note falle"><b>Falle «gezählte Grössen»:</b> Werden ganze Zahlen wie verkaufte Konzerttickets mit der Normalverteilung angenähert, braucht es eine Stetigkeitskorrektur von ±0.5. Das ist Thema der nächsten Station. Bei echten Messgrössen wie Gramm oder Prozent gibt es keine Korrektur.</div>
     <div id="t12-stepper-flaeche"></div>
+    <div class="dran">
+      <div id="t12-dran-4a"></div>
+      <div id="t12-dran-4b"></div>
+    </div>
   </section>
 
   <!-- ===== 5 · Rückwärts ===== -->
@@ -211,7 +248,7 @@
     <h2>Rückwärts: Grenze, Mittelwert oder Streuung gesucht</h2>
     <p class="prose">Jetzt ist die Fläche gegeben und etwas anderes gesucht. Es gibt zwei Fälle.</p>
     <h3>Fall A: Die Grenze ist gesucht (Quantil)</h3>
-    <p class="prose">Dafür hat der TI-Nspire <span class="t12-ti-box">invNorm(w, μ, σ)</span> (menu 5-5-3 «Inverse Normal»). Die wichtigste Regel aus Skript Kap. 8.2 und der Lernblock-Lösung: <b>w ist immer die Fläche links</b> der gesuchten Grenze, also von \(-\infty\) bis \(x_0\). Übersetze die Aufgabe deshalb zuerst in eine Fläche links.</p>
+    <p class="prose">Dafür hat der TI-Nspire <span class="t12-ti-box">invNorm(w, μ, σ)</span> (menu 5-5-3 «Inverse Normal»). Die wichtigste Regel: <b>w ist immer die Fläche links</b> der gesuchten Grenze, also von \(-\infty\) bis \(x_0\). Übersetze die Aufgabe deshalb zuerst in eine Fläche links.</p>
     <div class="card tablebox">
       <table class="tabelle">
         <caption>Von der Formulierung zur Eingabe in invNorm</caption>
@@ -227,16 +264,22 @@
       </table>
     </div>
     <div id="t12-stepper-quantil"></div>
+    <div class="dran">
+      <div id="t12-dran-5a"></div>
+      <div id="t12-dran-5b"></div>
+    </div>
 
     <h3>Fall B: μ oder σ ist gesucht</h3>
-    <p class="prose">normCdf und invNorm brauchen \(\mu\) und \(\sigma\) als Eingabe. Fehlt eine davon, rechnest du über die Standardnormalverteilung. Dort sind \(\mu = 0\) und \(\sigma = 1\) immer bekannt (Skript S. 84; Musterbeispiel laut Lernblock: Aufgabe 6.98c). Das Rezept hat drei Schritte:</p>
+    <p class="prose">normCdf und invNorm brauchen \(\mu\) und \(\sigma\) als Eingabe. Fehlt eine davon, rechnest du über die Standardnormalverteilung. Dort sind \(\mu = 0\) und \(\sigma = 1\) immer bekannt. Das Rezept hat drei Schritte:</p>
     <ol class="prose t12-ziele">
       <li><b>Skizze</b> und Fläche links der bekannten Grenze \(x\) bestimmen.</li>
       <li><b>z-Wert</b> zur selben Fläche: \(z = \operatorname{invNorm}(\text{Fläche links},\ 0,\ 1)\).</li>
       <li><b>Umrechnungsformel</b> \(z = \frac{x-\mu}{\sigma}\) nach der Unbekannten auflösen.</li>
     </ol>
     <div id="t12-stepper-sigma"></div>
-    <p class="hint">Im Skript stehen bei Beispiel 6.8 nur die Aufgabe und der Lösungsweg in Worten (über \(z_1\) und \(z_2\)); Skizzen und Rechnung sind Lücken zum Ausfüllen in der Vorlesung. Die Zahlen oben sind eine eigene Lösung auf diesem Weg, mit der Probe bestätigt, aber nicht vom Dozenten bestätigt.</p>
+    <div class="dran">
+      <div id="t12-dran-5c"></div>
+    </div>
   </section>
 
   <!-- ===== 6 · Labor ===== -->
@@ -343,12 +386,12 @@
       <div class="stack"><p>Die Glocke wird verschoben (μ wandert auf 0) und gestaucht oder gestreckt (σ wird 1). Die Grenzen werden zu z-Werten, z.&nbsp;B. 498 → \(z = (498-502)/6 = -0.6667\). Die <b>Fläche bleibt genau gleich</b>. Darum durfte man früher mit einer einzigen Tabelle für \(Z\) alle Normalverteilungen rechnen.</p></div>
     </details>
     <details class="sol"><summary>3 · Drück «μ ± 1σ» bei der Müesli-Packung und dann bei der Fondsrendite. Vergleiche.</summary>
-      <div class="stack"><p>Beide Male 0.6827. Das ist Satz 6.2, Nr. 5: Die Fläche in \(\mu \pm k\sigma\) hängt nur von \(k\) ab, nicht von \(\mu\) und \(\sigma\). Mit «μ ± 1.96σ» bekommst du 0.95.</p></div>
+      <div class="stack"><p>Beide Male 0.6827. Das ist die σ-Regel: Die Fläche in \(\mu \pm k\sigma\) hängt nur von \(k\) ab, nicht von \(\mu\) und \(\sigma\). Mit «μ ± 1.96σ» bekommst du 0.95.</p></div>
     </details>
     <details class="sol"><summary>4 · Fondsrendite, «Wahrscheinlichkeit → Grenze», Fläche links, p = 0.05. Welche Rendite erscheint?</summary>
       <div class="stack"><p>\(x_0 \approx -9.53\) %. Das ist der 5%-Value-at-Risk aus dem Lösungsfilm. Wechsle danach auf «Grenzen → Wahrscheinlichkeit», Fläche rechts, a = 2, und schieb σ nach unten: Zwischen σ = 4.3 und σ = 4.2 steigt \(P(X \ge 2)\) über 0.80. Genau das rechnet Teil (iii) des Films aus (σ ≤ 4.28 %).</p></div>
     </details>
-    <details class="sol"><summary>5 · Nach Übung 8: Kontrolliere deinen Value-at-Risk. Fondsrendite, tippe μ = 7.5 und σ = 16 ein, «Wahrscheinlichkeit → Grenze», Fläche links, p = 1 %.</summary>
+    <details class="sol"><summary>5 · Nach der Übung «Value-at-Risk»: Kontrolliere deinen Value-at-Risk. Fondsrendite, tippe μ = 7.5 und σ = 16 ein, «Wahrscheinlichkeit → Grenze», Fläche links, p = 1 %.</summary>
       <div class="stack"><p>Das Labor zeigt \(x_0 \approx -29.72\) % und dieselbe Eingabe wie auf dem Rechner: invNorm(0.01, 7.5, 16). Schalte auf «z-Werte»: Zur Fläche 0.01 gehört \(z \approx -2.3263\), und \(7.5 + (-2.3263) \cdot 16 \approx -29.72\).</p></div>
     </details>
   </section>
@@ -357,24 +400,29 @@
   <section id="uebungen">
     <span class="eyebrow">Schritt 7 · Selbst rechnen</span>
     <h2>Übungen</h2>
-    <p class="prose">Nimm deinen TI-Nspire dazu. Rechne zuerst selbst, dann vergleiche. Die Übungen 8 und 9 sind im Stil von Aufgabe 6a der exemplarischen Modulschlussprüfung.</p>
-    <p class="hint">Alle Übungen sind eigene Aufgaben mit eigenen Zahlen im Stil der Unterlagen. Die Lösungen sind selbst gerechnet und mit Python nachgeprüft, aber nicht vom Dozenten bestätigt.</p>
+    <p class="prose">Nimm deinen TI-Nspire dazu. Die Stufe im Kopf zeigt die Schwierigkeit: <span class="stufe stufe-1">Aufwärmen</span>, <span class="stufe stufe-2">Prüfungsniveau</span>, <span class="stufe stufe-3">Knacknuss</span>. Die Aufgaben auf Prüfungsniveau fragen dasselbe wie die Modulschlussprüfung: Wahrscheinlichkeit, Value-at-Risk, gesuchtes μ oder σ.</p>
+    <p class="hint">Eigene Aufgaben mit eigenen Zahlen. Die Lösungen sind selbst gerechnet und mit Python nachgeprüft (eigene Lösung, nicht vom Dozenten bestätigt).</p>
+    <h3>Aufwärmen</h3>
     <div id="t12-u1"></div>
     <div id="t12-u2"></div>
     <div id="t12-u3"></div>
     <div id="t12-u4"></div>
     <div id="t12-u5"></div>
     <div id="t12-u6"></div>
+    <h3>Prüfungsniveau</h3>
     <div id="t12-u7"></div>
     <div id="t12-u8"></div>
     <div id="t12-u9"></div>
+    <h3>Knacknuss</h3>
+    <div id="t12-u10"></div>
+    <div id="t12-u11"></div>
   </section>
 
   <!-- ===== Lösungsfilm ===== -->
   <section id="film">
     <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
     <h2>Rendite und Value-at-Risk am Stück gelöst</h2>
-    <p class="prose">Eine Aufgabe im Stil von Aufgabe 6a der exemplarischen Modulschlussprüfung, mit eigenen Zahlen. Drück auf «Abspielen». Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist selbst gerechnet (nicht vom Dozenten bestätigt) und folgt dem Weg der Musterlösung.</p>
+    <p class="prose">Eine Prüfungsaufgabe mit eigenen Zahlen, in drei Teilen. Drück auf «Abspielen». Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist selbst gerechnet (eigene Lösung, nicht vom Dozenten bestätigt).</p>
     <div id="t12-film"></div>
   </section>
 
@@ -382,7 +430,7 @@
   <section id="test">
     <span class="eyebrow">Selbsttest</span>
     <h2>Sitzt es?</h2>
-    <p class="prose">Zehn Fragen, je eine richtige Antwort. Vier davon sind typische Stolperfallen.</p>
+    <p class="prose">Zehn Fragen, je eine richtige Antwort. Drei davon sind typische Stolperfallen.</p>
     <div id="t12-selbsttest"></div>
   </section>
 
@@ -403,7 +451,7 @@
       $$P(a \le X \le b) = F(b) - F(a)$$
       $$P(X \ge a) = 1 - F(a)$$
     </div>
-    <footer>Quellen: Skript Wahrscheinlichkeitstheorie (WT) Def. 4.18–4.23, Kap. 6.1–6.5 (Def. 6.1, Satz 6.2, Satz 6.3, Def. 6.6, Satz 6.7, Bsp. 6.8, Bem. 6.9, Aufgaben 6.96–6.104), Kap. 8.2; Folien Wahrscheinlichkeitstheorie «Normalverteilung» (1)–(3) und «Standardnormalverteilung»; Lernblock S2-LB3 (Lösungen 6.101–6.103, Test LB2+3 Aufgabe 3); exemplarische Modulschlussprüfung Aufgabe 6. Alle Beispiele mit eigenen Zahlen und in eigenen Worten. Die Lösungen der eigenen Beispiele, Übungen und des Lösungsfilms sind selbst gerechnet und mit Python nachgeprüft, aber nicht vom Dozenten bestätigt.</footer>
+    <footer>Quellen: Skript Wahrscheinlichkeitstheorie, Folien Wahrscheinlichkeitstheorie, Lernblock «Normalverteilung und Approximation» (Lösungen und Test), exemplarische Modulschlussprüfung MSTW. Alle Aufgaben und Texte eigene Formulierungen; Lösungen selbst gerechnet und mit Python nachgeprüft, nicht vom Dozenten bestätigt.</footer>
   </section>
 
 </main>
@@ -540,11 +588,11 @@
   ];
   const stapel = (zeilen, n) => zeilen.slice(0, n).join("") + NW(zeilen[n]);
   L.stepper("#t12-stepper-z", {
-    titel: "Beispiel: Punkte standardisieren (im Stil von Aufgabe 6.99/6.100)",
+    titel: "Beispiel: Punkte standardisieren",
     text: 'Im MSTW-Vortest erreichen alle im <span data-link="t12a-mu">Mittel 64 Punkte</span>, bei einer <span data-link="t12a-sig">Standardabweichung von 12 Punkten</span>. Lea hat <span data-link="t12a-x">82 Punkte</span>. Wie viele Standardabweichungen liegt sie über dem Mittel? Und welche Punktzahl gehört zum <span data-link="t12a-zr">Standardwert −0.75</span>?',
     schritte: [
       { html: NW(zA[0]), warum: "Zuerst das Modell: Der Mittelwert wird zu μ, die Standardabweichung zu σ." },
-      { html: stapel(zA, 1), warum: "Die Umrechnungsformel aus Satz 6.7. Im Zähler steht der Abstand zum Mittelwert, der Nenner misst diesen Abstand in Standardabweichungen." },
+      { html: stapel(zA, 1), warum: "Die Umrechnungsformel. Im Zähler steht der Abstand zum Mittelwert, der Nenner misst diesen Abstand in Standardabweichungen." },
       { html: stapel(zA, 2), warum: "Leas Punktzahl ist das x. Einsetzen." },
       { html: stapel(zA, 3), warum: "Lea liegt 1.5 Standardabweichungen über dem Mittel. Ein positives z heisst: über μ." },
       { html: stapel(zA, 4), warum: "Für den Rückweg löst du die Formel nach x auf: beide Seiten mal σ, dann μ addieren." },
@@ -575,7 +623,7 @@
     Z(T`$\text{Kontrolle: } \fP(-0.6667 \le \vZ \le 1.3333) = 0.9088 - 0.2525 = 0.6563$`)
   ];
   L.stepper("#t12-stepper-flaeche", {
-    titel: "Beispiel: Müeslipackungen (im Stil von Aufgabe 6.96)",
+    titel: "Beispiel: Müeslipackungen",
     text: 'Eine Anlage füllt Müeslipackungen. Die Füllmenge ist normalverteilt mit <span data-link="t12b-mu">Mittelwert 502 g</span> und <span data-link="t12b-sig">Standardabweichung 6 g</span>. Wie gross ist die Wahrscheinlichkeit, dass eine Packung <span data-link="t12b-a">(a) höchstens 495 g</span>, <span data-link="t12b-b">(b) mindestens 500 g</span>, <span data-link="t12b-c">(c) zwischen 498 g und 510 g</span> wiegt?',
     schritte: [
       { html: NW(zB[0]), warum: "Modell hinschreiben. In der Prüfung gibt das bereits einen Teilpunkt." },
@@ -607,31 +655,31 @@
       { html: stapel(zC, 2), warum: "90 % in der Mitte heisst 10 % aussen. Wegen der Symmetrie je 5 % links und rechts. invNorm braucht für jede Grenze die Fläche links von ihr." },
       { html: stapel(zC, 3), warum: "Untere Grenze: Links von x₁ liegen 0.05." },
       { html: stapel(zC, 4), warum: "Obere Grenze: Links von x₂ liegen 0.05 + 0.90 = 0.95. Hier nicht 0.90 eingeben, das ist ein typischer Fehler." },
-      { html: stapel(zC, 5), warum: "Probe mit Satz 6.2: In μ ± 1.645σ liegen 90 %. 502 − 9.87 = 492.13 und 502 + 9.87 = 511.87." }
+      { html: stapel(zC, 5), warum: "Probe mit der σ-Regel: In μ ± 1.645σ liegen 90 %. 502 − 9.87 = 492.13 und 502 + 9.87 = 511.87." }
     ]
   });
 
-  /* ---------- 5 · Stepper: Beispiel 6.8, σ gesucht ---------- */
+  /* ---------- 5 · Stepper: σ gesucht (Brühtemperatur) ---------- */
   const zD = [
-    Z(T`$\htmlData{link=t12d-sym}{\cmu = \dfrac{-3 + 11}{2} = 4}$`),
-    Z(T`$\htmlData{link=t12d-p}{\fP(-3 \le \vX \le 11) = 0.8} \Rightarrow \fP(\vX \le 11) = 0.9$`) +
-      skizze({ titel: "80 Prozent in der Mitte zwischen −3 und 11, je 10 Prozent aussen", flaechen: [{ von: -1.2816, bis: 1.2816 }, { von: -Infinity, bis: -1.2816, reihe: "s2" }, { von: 1.2816, bis: Infinity, reihe: "s2" }],
-        grenzen: [{ z: -1.2816, text: "−3" }, { z: 1.2816, text: "11" }], texte: [{ z: 0, text: "0.8", y: 52 }, { z: -2.4, text: "0.1", y: 52 }, { z: 2.4, text: "0.1", y: 52 }], mitte: "μ = 4" }),
-    Z(T`$z_2 = \invNorm(0.9,\ 0,\ 1) \approx 1.2816$`),
-    Z(T`$\dfrac{11 - 4}{\htmlData{link=t12d-sig}{\csig}} = 1.2816$`),
-    Z(T`$\htmlData{link=t12d-sig}{\csig} = \dfrac{7}{1.2816} \approx 5.462$`),
-    Z(T`$\text{Probe: } \normCdf(-3,\ 11,\ 4,\ 5.462) \approx 0.8$`)
+    Z(T`$\htmlData{link=t12d-sym}{\cmu = \dfrac{88 + 96}{2} = 92}$`),
+    Z(T`$\htmlData{link=t12d-p}{\fP(88 \le \vX \le 96) = 0.90} \Rightarrow \fP(\vX \le 96) = 0.95$`) +
+      skizze({ titel: "90 Prozent in der Mitte zwischen 88 und 96 Grad, je 5 Prozent aussen", flaechen: [{ von: -1.6449, bis: 1.6449 }, { von: -Infinity, bis: -1.6449, reihe: "s2" }, { von: 1.6449, bis: Infinity, reihe: "s2" }],
+        grenzen: [{ z: -1.6449, text: "88" }, { z: 1.6449, text: "96" }], texte: [{ z: 0, text: "0.90", y: 52 }, { z: -2.5, text: "0.05", y: 52 }, { z: 2.5, text: "0.05", y: 52 }], mitte: "μ = 92" }),
+    Z(T`$z_2 = \invNorm(0.95,\ 0,\ 1) \approx 1.6449$`),
+    Z(T`$\dfrac{96 - 92}{\htmlData{link=t12d-sig}{\csig}} = 1.6449$`),
+    Z(T`$\htmlData{link=t12d-sig}{\csig} = \dfrac{4}{1.6449} \approx 2.432\ ^\circ\text{C}$`),
+    Z(T`$\text{Probe: } \normCdf(88,\ 96,\ 92,\ 2.432) \approx 0.90$`)
   ];
   L.stepper("#t12-stepper-sigma", {
-    titel: "Beispiel 6.8 (Skript WT): σ gesucht",
-    text: 'Für eine normalverteilte Zufallsvariable X ist <span data-link="t12d-sig">σ</span> so zu bestimmen, dass <span data-link="t12d-p">P(−3 ≤ X ≤ 11) = 0.8</span> gilt. Dabei ist <span data-link="t12d-sym">das Intervall [−3; 11] symmetrisch um μ</span>.',
+    titel: "Beispiel: σ gesucht bei der Kaffeemaschine",
+    text: 'Die Brühtemperatur X einer Kaffeemaschine ist normalverteilt. Wie gross ist die <span data-link="t12d-sig">Standardabweichung σ</span>, wenn <span data-link="t12d-p">90 % der Tassen zwischen 88 °C und 96 °C</span> gebrüht werden und <span data-link="t12d-sym">dieses Intervall symmetrisch um μ liegt</span>?',
     schritte: [
       { html: NW(zD[0]), warum: "Symmetrisch um μ heisst: μ liegt genau in der Mitte des Intervalls." },
-      { html: stapel(zD, 1), warum: "Skizze: 0.8 in der Mitte, also 0.2 aussen, je 0.1 links und rechts. Links von 11 liegen 0.1 + 0.8 = 0.9." },
-      { html: stapel(zD, 2), warum: "Ohne σ kannst du für X nichts eintippen. Bei Z sind μ = 0 und σ = 1 bekannt. Zur gleichen Fläche 0.9 gehört z₂ ≈ 1.2816." },
-      { html: stapel(zD, 3), warum: "Gleiche Fläche heisst: z₂ und x₂ = 11 entsprechen sich. In z = (x − μ)/σ einsetzen. Einzige Unbekannte ist σ." },
-      { html: stapel(zD, 4), warum: "Mit σ multiplizieren und durch 1.2816 teilen." },
-      { html: stapel(zD, 5), warum: "Probe mit dem Rechner: Die Fläche zwischen −3 und 11 ist mit σ = 5.462 tatsächlich 0.8." }
+      { html: stapel(zD, 1), warum: "Skizze: 0.90 in der Mitte, also 0.10 aussen, je 0.05 links und rechts. Links von 96 liegen 0.05 + 0.90 = 0.95." },
+      { html: stapel(zD, 2), warum: "Ohne σ kannst du für X nichts eintippen. Bei Z sind μ = 0 und σ = 1 bekannt. Zur gleichen Fläche 0.95 gehört z₂ ≈ 1.6449." },
+      { html: stapel(zD, 3), warum: "Gleiche Fläche heisst: z₂ und x₂ = 96 entsprechen sich. In z = (x − μ)/σ einsetzen. Einzige Unbekannte ist σ." },
+      { html: stapel(zD, 4), warum: "Mit σ multiplizieren und durch 1.6449 teilen." },
+      { html: stapel(zD, 5), warum: "Probe mit dem Rechner: Die Fläche zwischen 88 und 96 ist mit σ = 2.432 tatsächlich 0.90." }
     ]
   });
 
@@ -994,12 +1042,164 @@
 
   presetLaden("muesli");
 
+  /* ---------- «Du bist dran»: kurze Eingaben nach jedem Erklärblock ---------- */
+  // 0 · Bausteine
+  L.zahlAufgabe("#t12-dran-0a", {
+    titel: "Ein einzelner Wert",
+    stufe: 1,
+    frage: "<p>Die Reichweite X eines E-Trottinetts (in km) ist eine stetige Zufallsvariable. Wie gross ist die Wahrscheinlichkeit, dass ein Akku exakt 25 km weit reicht, ohne den kleinsten Millimeter Abweichung?</p>",
+    antwort: 0, toleranz: 0.00001, anzeige: "P(X = 25) = 0",
+    hinweise: ["Ein einzelner Punkt hat unter der Dichte keine Breite.", "Fläche = Breite mal Höhe. Breite 0 heisst Fläche 0."],
+    loesungsweg: [T`Bei einer stetigen Zufallsvariable ist jede Wahrscheinlichkeit eine Fläche. Ein einzelner Wert hat keine Fläche: $P(X = 25) = 0$.`]
+  });
+  L.zahlAufgabe("#t12-dran-0b", {
+    titel: "Von der Fläche links zur Fläche rechts",
+    stufe: 1,
+    frage: T`<p>Für dieselbe Reichweite gilt $F(25) = 0.31$. Wie gross ist $P(X > 25)$?</p>`,
+    antwort: 0.69, toleranz: 0.0005, anzeige: "0.69",
+    hinweise: [T`$F(25)$ ist die Fläche links von 25.`, "Die ganze Fläche unter der Dichte ist 1."],
+    loesungsweg: [T`$P(X > 25) = 1 - P(X \le 25) = 1 - F(25) = 1 - 0.31 = 0.69$`, "Rund 69 % der Akkus reichen weiter als 25 km."]
+  });
+
+  // 1 · Wörterbuch
+  L.zahlAufgabe("#t12-dran-1a", {
+    titel: "Standardabweichung oder Varianz?",
+    stufe: 1,
+    frage: T`<p>Die Körpergrösse von Rekruten ist $X \sim N(178;\ 7)$ in cm. Wie gross ist die <b>Varianz</b> von $X$ in cm²?</p>`,
+    antwort: 49, anzeige: "σ² = 49",
+    hinweise: [T`In $N(\mu;\ \sigma)$ steht an zweiter Stelle die Standardabweichung.`, "Die Varianz ist das Quadrat der Standardabweichung."],
+    loesungsweg: [T`$\sigma = 7$, also $\sigma^2 = 7^2 = 49$.`, T`In der Schreibweise mit der Varianz hiesse dieselbe Verteilung $N(178, 49)$.`]
+  });
+  L.kurzAntwort("#t12-dran-1b", {
+    titel: "Modell hinschreiben",
+    stufe: 1,
+    typ: "text",
+    frage: "<p>Ein Bäcker backt Brote mit einem mittleren Gewicht von 480 g und einer Standardabweichung von 9 g. Schreib das Modell in der Form N(μ; σ) auf, zum Beispiel N(100; 5).</p>",
+    antwort: ["N(480;9)", "N(480,9)", "X~N(480;9)", "X~N(480,9)", "X∼N(480;9)", "X∼N(480,9)", "N(480; 9 g)"],
+    format: "Schreib N(μ; σ) mit Zahlen, Strichpunkt oder Komma als Trenner.",
+    hinweise: ["Zuerst der Mittelwert, dann die Standardabweichung.", "Nicht die Varianz 81 eintragen."],
+    loesungsweg: [T`$X \sim N(480;\ 9)$: Mittelwert 480 g, Standardabweichung 9 g.`]
+  });
+
+  // 2 · Glockenkurve
+  L.zahlAufgabe("#t12-dran-2a", {
+    titel: "σ-Regel anwenden",
+    stufe: 1,
+    frage: T`<p>Ein Automat füllt Kaffeebecher mit $X \sim N(250;\ 4)$ ml. Welcher Anteil der Becher enthält zwischen 242 ml und 258 ml? Auf vier Stellen, ohne Rechner.</p>`,
+    antwort: 0.9545, toleranz: 0.001, anzeige: "≈ 0.9545",
+    hinweise: ["Wie viele σ liegen 242 und 258 von μ = 250 entfernt?", T`$8 = 2 \cdot 4$. Schau in die Tabelle der σ-Regeln.`],
+    loesungsweg: [T`$242 = 250 - 2 \cdot 4$ und $258 = 250 + 2 \cdot 4$, also das Intervall $\mu \pm 2\sigma$.`, T`σ-Regel: $P(\mu - 2\sigma \le X \le \mu + 2\sigma) \approx 0.9545$`]
+  });
+  L.zahlAufgabe("#t12-dran-2b", {
+    titel: "Zwei Grössen addieren",
+    stufe: 2,
+    frage: T`<p>Dein Arbeitsweg besteht aus Busfahrt $X_1 \sim N(30;\ 3)$ und Fussweg $X_2 \sim N(20;\ 4)$ in Minuten, beide unabhängig. Wie gross ist die Standardabweichung der Gesamtzeit?</p>`,
+    antwort: 5, toleranz: 0.005, einheit: "min", anzeige: "σ = 5 min",
+    hinweise: ["Nicht die Standardabweichungen addieren, sondern die Varianzen.", T`$\sigma^2 = 3^2 + 4^2$`],
+    loesungsweg: [T`$\sigma^2 = 3^2 + 4^2 = 9 + 16 = 25$`, T`$\sigma = \sqrt{25} = 5$, also $X_1 + X_2 \sim N(50;\ 5)$, nicht $N(50;\ 7)$.`]
+  });
+
+  // 3 · Standardisieren: Tabelle F(z) und Rechenweg
+  L.tabellenAufgabe("#t12-dran-3a", {
+    titel: "Tabelle F(z) ablesen",
+    stufe: 1,
+    frage: T`<p>Lies $F(z)$ im Tabellenausschnitt oben ab und ergänze die beiden anderen Spalten. Vier Nachkommastellen.</p>`,
+    kopf: ["$z$", "$F(z)$", T`$P(Z > z)$`, T`$P(-z \le Z \le z)$`],
+    zeilenKopf: true,
+    zeilen: [
+      ["0.75", { antwort: 0.7734, toleranz: 0.0006 }, { antwort: 0.2266, toleranz: 0.0006 }, { antwort: 0.5468, toleranz: 0.0006 }],
+      ["1.28", { antwort: 0.8997, toleranz: 0.0006 }, { antwort: 0.1003, toleranz: 0.0006 }, { antwort: 0.7994, toleranz: 0.0006 }],
+      ["1.96", { antwort: 0.9750, toleranz: 0.0006 }, { antwort: 0.0250, toleranz: 0.0006 }, { antwort: 0.9500, toleranz: 0.0006 }],
+      ["2.33", { antwort: 0.9901, toleranz: 0.0006 }, { antwort: 0.0099, toleranz: 0.0006 }, { antwort: 0.9802, toleranz: 0.0006 }]
+    ],
+    hinweise: ["Zeile = z auf eine Stelle, Spalte = zweite Nachkommastelle. 0.75 steht in Zeile 0.7, Spalte .05.", T`Rechts: $P(Z > z) = 1 - F(z)$.`, T`Symmetrisch um 0: $P(-z \le Z \le z) = F(z) - F(-z) = 2F(z) - 1$.`],
+    loesungsweg: [
+      T`$z = 0.75$: $F = 0.7734$, rechts $1 - 0.7734 = 0.2266$, Mitte $2 \cdot 0.7734 - 1 = 0.5468$`,
+      T`$z = 1.28$: $F = 0.8997$, rechts $0.1003$, Mitte $0.7994$`,
+      T`$z = 1.96$: $F = 0.9750$, rechts $0.0250$, Mitte $0.9500$ (die 95-%-Grenze)`,
+      T`$z = 2.33$: $F = 0.9901$, rechts $0.0099$, Mitte $0.9802$`
+    ]
+  });
+  L.lueckenRechnung("#t12-dran-3b", {
+    titel: "Standardisieren in drei Schritten",
+    stufe: 2,
+    aufgabe: T`<p>Dein Arbeitsweg mit dem Velo dauert $X \sim N(27;\ 4)$ Minuten. Mit welcher Wahrscheinlichkeit brauchst du <b>länger als 30 Minuten</b>? Rechne über $z$ und lies $F(z)$ in der Tabelle oben ab.</p>`,
+    schritte: [
+      { label: T`Standardwert $z = \frac{30 - 27}{4}$`, antwort: 0.75, toleranz: 0.005, anzeige: "0.75",
+        hinweis: T`$z = \frac{x - \mu}{\sigma}$`, erklaerung: T`$z = \frac{3}{4} = 0.75$: 30 Minuten liegen 0.75 Standardabweichungen über dem Mittel.` },
+      { label: T`$F(z) = P(Z \le z)$`, antwort: 0.7734, toleranz: 0.0006, anzeige: "0.7734",
+        hinweis: "Zeile 0.7, Spalte .05 in der Tabelle oben.", erklaerung: T`$F(0.75) = 0.7734$`,
+        folgefehler: (v) => Phi(v[0]) },
+      { label: T`$P(X > 30)$`, antwort: 0.2266, toleranz: 0.0006, anzeige: "0.2266",
+        hinweis: "«Länger als» ist die Fläche rechts.", erklaerung: T`$P(X > 30) = 1 - 0.7734 = 0.2266$. An gut jedem fünften Tag brauchst du länger als 30 Minuten.`,
+        folgefehler: (v) => 1 - v[1] }
+    ]
+  });
+
+  // 4 · Flächen
+  L.zahlAufgabe("#t12-dran-4a", {
+    titel: "Intervall: zwischen zwei Grenzen",
+    stufe: 1,
+    frage: T`<p>Die Ladezeit einer App ist $X \sim N(12.4;\ 1.8)$ Sekunden. Wie gross ist die Wahrscheinlichkeit, dass sie zwischen 10 s und 15 s liegt? Auf vier Stellen.</p>`,
+    antwort: 0.8345, toleranz: 0.0005, anzeige: "≈ 0.8345",
+    hinweise: ["«Zwischen» heisst: beide Grenzen in normCdf.", "normCdf(10, 15, 12.4, 1.8)"],
+    loesungsweg: [T`$P(10 \le X \le 15) = \normCdf(10,\ 15,\ 12.4,\ 1.8) \approx 0.8345$`, T`Kontrolle über $Z$: $z_1 \approx -1.3333$, $z_2 \approx 1.4444$, $F(z_2) - F(z_1) \approx 0.9257 - 0.0912 = 0.8345$`]
+  });
+  L.zahlAufgabe("#t12-dran-4b", {
+    titel: "Fläche rechts: «mindestens»",
+    stufe: 1,
+    frage: "<p>Gleiche App. Mit welcher Wahrscheinlichkeit dauert das Laden mindestens 14 s? Auf vier Stellen.</p>",
+    antwort: 0.1870, toleranz: 0.0005, anzeige: "≈ 0.1870",
+    hinweise: ["«Mindestens» heisst ≥, also die Fläche rechts.", "Untere Grenze 14, obere Grenze ∞."],
+    loesungsweg: [T`$P(X \ge 14) = \normCdf(14,\ \infty,\ 12.4,\ 1.8) \approx 0.1870$`, T`Gleich gut: $1 - \normCdf(-\infty,\ 14,\ 12.4,\ 1.8) = 1 - 0.8130$`]
+  });
+
+  // 5 · Rückwärts
+  L.tabellenAufgabe("#t12-dran-5a", {
+    titel: "Formulierung → Fläche links",
+    stufe: 1,
+    frage: "<p>Bevor du invNorm eintippst, brauchst du die Fläche links der gesuchten Grenze. Trag sie als Dezimalzahl ein.</p>",
+    kopf: ["Formulierung", "Fläche links"],
+    zeilenKopf: true,
+    zeilen: [
+      ["«Wird von 80 % überschritten»", { antwort: 0.2, toleranz: 0.0005 }],
+      ["«Höchstens 15 % liegen darüber»", { antwort: 0.85, toleranz: 0.0005 }],
+      ["«Die schwächsten 25 % liegen darunter»", { antwort: 0.25, toleranz: 0.0005 }],
+      ["«Wird mit 99 % nicht unterschritten»", { antwort: 0.01, toleranz: 0.0005 }]
+    ],
+    hinweise: ["Mach eine Skizze: Wo liegt die gegebene Fläche, links oder rechts der Grenze?", "Liegt die gegebene Fläche rechts, ist die Fläche links 1 minus diese Fläche."],
+    loesungsweg: [
+      "80 % rechts → 1 − 0.80 = 0.20 links",
+      "15 % rechts → 0.85 links",
+      "25 % links → 0.25",
+      "99 % rechts (nicht unterschritten) → 0.01 links"
+    ]
+  });
+  L.zahlAufgabe("#t12-dran-5b", {
+    titel: "Quantil rückwärts",
+    stufe: 2,
+    frage: T`<p>Der Kopfumfang von Erwachsenen ist $X \sim N(57;\ 2.1)$ cm. Ein Velohelm soll für 85 % der Köpfe gross genug sein. Welchen Kopfumfang muss er mindestens fassen? In cm auf zwei Stellen.</p>`,
+    antwort: 59.18, toleranz: 0.01, einheit: "cm", anzeige: "x₀ ≈ 59.18 cm",
+    hinweise: ["Gesucht ist eine Grenze, also invNorm.", "85 % der Köpfe sollen höchstens so gross sein: Fläche links 0.85."],
+    loesungsweg: [T`$P(X \le x_0) = 0.85$`, T`$x_0 = \invNorm(0.85,\ 57,\ 2.1) \approx 59.18$ cm`, T`Kontrolle: $57 + 1.0364 \cdot 2.1 \approx 59.18$`]
+  });
+  L.zahlAufgabe("#t12-dran-5c", {
+    titel: "σ über z finden",
+    stufe: 2,
+    frage: T`<p>Die Wartezeit an einer Hotline ist normalverteilt mit $\mu = 4$ Minuten. 80 % der Anrufenden warten höchstens 5.5 Minuten. Wie gross ist $\sigma$? Auf drei Stellen.</p>`,
+    antwort: 1.782, toleranz: 0.002, einheit: "min", anzeige: "σ ≈ 1.782 min",
+    hinweise: ["σ ist gesucht: Der Weg führt über die Standardnormalverteilung.", T`$z = \invNorm(0.80,\ 0,\ 1)$`, T`Dann $z = \frac{5.5 - 4}{\sigma}$ nach $\sigma$ auflösen.`],
+    loesungsweg: [T`$P(X \le 5.5) = 0.80$`, T`$z = \invNorm(0.80,\ 0,\ 1) \approx 0.8416$`, T`$0.8416 = \dfrac{5.5 - 4}{\sigma} \;\Rightarrow\; \sigma = \dfrac{1.5}{0.8416} \approx 1.782$ min`, T`Probe: $\normCdf(-\infty,\ 5.5,\ 4,\ 1.782) \approx 0.80$`]
+  });
+
   /* ---------- 7 · Übungen ---------- */
+  // Aufwärmen
   L.zahlAufgabe("#t12-u1", {
     titel: "Übung 1 · Standardwert berechnen",
+    stufe: 1,
     frage: "<p>Die Lieferzeit eines Pizzakuriers ist normalverteilt mit μ = 32 Minuten und σ = 5 Minuten. Eine Pizza kommt nach 24 Minuten an. Welcher Standardwert z gehört dazu? Auf zwei Stellen.</p>",
     antwort: -1.6, toleranz: 0.005, anzeige: "z = −1.6",
-    hinweise: [T`Formel aus Satz 6.7: $z = \frac{x - \mu}{\sigma}$.`, "Die Pizza ist schneller als im Mittel. Das Vorzeichen muss negativ sein."],
+    hinweise: [T`Umrechnungsformel: $z = \frac{x - \mu}{\sigma}$.`, "Die Pizza ist schneller als im Mittel. Das Vorzeichen muss negativ sein."],
     loesungsweg: [
       T`$X \sim N(32;\ 5)$, $x = 24$`,
       T`$z = \dfrac{24 - 32}{5} = \dfrac{-8}{5} = -1.6$`,
@@ -1008,7 +1208,17 @@
   });
 
   L.zahlAufgabe("#t12-u2", {
-    titel: "Übung 2 · Fläche zwischen zwei Grenzen",
+    titel: "Übung 2 · Vom Standardwert zurück",
+    stufe: 1,
+    frage: T`<p>Die Wartezeit am Skilift ist $X \sim N(6.5;\ 1.4)$ Minuten. Welche Wartezeit gehört zum Standardwert $z = 1.5$? In Minuten auf eine Stelle.</p>`,
+    antwort: 8.6, toleranz: 0.005, einheit: "min", anzeige: "x = 8.6 min",
+    hinweise: [T`Rückweg: $x = \mu + z \cdot \sigma$.`],
+    loesungsweg: [T`$x = 6.5 + 1.5 \cdot 1.4 = 6.5 + 2.1 = 8.6$ Minuten`, "Positives z: über dem Mittel, hier 1.5 Standardabweichungen."]
+  });
+
+  L.zahlAufgabe("#t12-u3", {
+    titel: "Übung 3 · Fläche zwischen zwei Grenzen",
+    stufe: 1,
     frage: "<p>Die Akku-Laufzeit eines Notebook-Modells ist normalverteilt mit μ = 18.5 h und σ = 2.2 h. Wie gross ist die Wahrscheinlichkeit, dass ein Akku zwischen 16 h und 20 h durchhält? Auf vier Stellen.</p>",
     antwort: 0.6244, toleranz: 0.0005, anzeige: "≈ 0.6244",
     hinweise: ["«Zwischen» heisst: beide Grenzen in normCdf eintragen.", "TI: menu 5-5-2, untere Grenze 16, obere Grenze 20, μ = 18.5, σ = 2.2."],
@@ -1019,8 +1229,65 @@
     ]
   });
 
-  L.zahlAufgabe("#t12-u3", {
-    titel: "Übung 3 · Zwei Lösungen (im Stil von Aufgabe 6.102)",
+  L.wahrFalsch("#t12-u4", {
+    titel: "Übung 4 · Eigenschaften der Glockenkurve",
+    aussagen: [
+      { html: T`Die Dichte $f(x)$ hat ihr Maximum bei $x = \mu$.`, wahr: true, erklaerung: "Der höchste Punkt der Glocke liegt beim Mittelwert." },
+      { html: T`Die Wendepunkte der Dichte liegen bei $\mu \pm 2\sigma$.`, wahr: false, erklaerung: T`Sie liegen bei $\mu - \sigma$ und $\mu + \sigma$.` },
+      { html: T`$f(\mu)$ ist die Wahrscheinlichkeit, genau den Wert $\mu$ zu messen.`, wahr: false, erklaerung: T`$f(\mu)$ ist nur eine Höhe. Bei einer stetigen Zufallsvariable ist $P(X = \mu) = 0$.` },
+      { html: T`Weil $f(x)$ eine Dichte ist, gilt immer $f(x) \le 1$.`, wahr: false, erklaerung: T`Nur die Gesamtfläche muss 1 sein, nicht die Höhe. Eine sehr schmale Glocke ist hoch: Bei $\sigma = 0.2$ ist $f(\mu) = \frac{1}{0.2\sqrt{2\pi}} \approx 1.99$.` },
+      { html: T`Bei jeder Normalverteilung liegen rund 95 % der Fläche in $\mu \pm 1.96\sigma$.`, wahr: true, erklaerung: "Die σ-Regeln gelten für jede Normalverteilung, egal welche μ und σ." },
+      { html: T`Für eine normalverteilte Zufallsvariable gilt $P(X \ge 7) = 1 - P(X \le 7)$.`, wahr: true, erklaerung: T`Gegenwahrscheinlichkeit. Weil $P(X = 7) = 0$, spielt es keine Rolle, ob die 7 dazugehört.` },
+      { html: '<span class="t12-ti-box">invNorm(0.9, μ, σ)</span> liefert die Grenze, rechts von der 90 % der Fläche liegen.', wahr: false, erklaerung: "invNorm arbeitet immer mit der Fläche links. Links dieser Grenze liegen 90 %, rechts nur 10 %." }
+    ]
+  });
+
+  L.auswahl("#t12-u5", {
+    frage: "<b>Übung 5 · Befehl wählen.</b> Füllmenge X ∼ N(502; 6). Welches Gewicht wird von 90 % der Packungen mindestens erreicht?",
+    optionen: ['<span class="t12-ti-box">normCdf(−∞, 0.9, 502, 6)</span>', '<span class="t12-ti-box">invNorm(0.9, 502, 6)</span>', '<span class="t12-ti-box">invNorm(0.1, 502, 6)</span>', '<span class="t12-ti-box">normCdf(0.1, ∞, 502, 6)</span>'],
+    richtig: 2,
+    erklaerung: T`Gesucht ist eine Grenze, also invNorm. «Von 90 % mindestens erreicht» heisst: Darunter liegen nur 10 %. Fläche links 0.1, also $\invNorm(0.1,\ 502,\ 6) \approx 494.31$ g. normCdf wäre falsch, weil es eine Fläche liefert und keine Grenze.`
+  });
+
+  L.auswahl("#t12-u6", {
+    frage: "<b>Übung 6 · Symmetrisches Intervall.</b> Du suchst zwei Grenzen symmetrisch um μ, zwischen denen 95 % der Werte liegen. Welche Flächen gibst du invNorm?",
+    optionen: ["0.95 für beide Grenzen", "0.05 und 0.95", "0.025 und 0.975", "0.475 und 0.525"],
+    richtig: 2,
+    erklaerung: "Aussen bleiben 5 %, je 2.5 % links und rechts. Links der unteren Grenze liegen 0.025, links der oberen 0.025 + 0.95 = 0.975. Das ergibt μ ± 1.96σ."
+  });
+
+  // Prüfungsniveau
+  L.zahlAufgabe("#t12-u7", {
+    titel: "Übung 7 · Value-at-Risk einer Aktie",
+    stufe: 2,
+    frage: "<p>Die jährliche Rendite der Aktie «Seewerk AG» ist näherungsweise normalverteilt mit Mittelwert 7.5 % und Standardabweichung 16 %. Berechne den 1%-Value-at-Risk, also die Rendite, die mit 99 % Wahrscheinlichkeit nicht unterschritten wird. In Prozent auf zwei Stellen.</p>",
+    antwort: -29.72, toleranz: 0.015, einheit: "%", anzeige: "x₀ ≈ −29.72 %",
+    hinweise: ["Gesucht ist eine Grenze, also invNorm.", "«Mit 99 % nicht unterschritten» heisst: Links der Grenze liegt 1 %."],
+    loesungsweg: [
+      T`$X$ = Jahresrendite in %, $X \sim N(7.5;\ 16)$`,
+      T`$P(X \ge x_0) = 0.99 \iff P(X \le x_0) = 0.01$`,
+      T`$x_0 = \invNorm(0.01,\ 7.5,\ 16)$ $\approx -29.72\ \%$`,
+      T`Kontrolle: $7.5 - 2.3263 \cdot 16 \approx -29.72$. In einem von hundert Jahren verliert die Aktie mehr als 29.72 %.`
+    ]
+  });
+
+  L.zahlAufgabe("#t12-u8", {
+    titel: "Übung 8 · Mittelwert einstellen",
+    stufe: 2,
+    frage: "<p>Eine Anlage füllt Kaffeebohnen ab, Nennfüllmenge 500 g. Die Füllmenge ist normalverteilt mit σ = 4 g. Auf welchen Mittelwert μ musst du die Anlage einstellen, damit nur 2 % der Packungen weniger als 500 g enthalten? Auf zwei Stellen.</p>",
+    antwort: 508.21, toleranz: 0.015, einheit: "g", anzeige: "μ ≈ 508.21 g",
+    hinweise: ["μ ist gesucht. Also führt der Weg über die Standardnormalverteilung.", "Links von 500 g sollen 2 % liegen: z = invNorm(0.02, 0, 1).", T`Dann $z = \frac{500 - \mu}{4}$ nach $\mu$ auflösen.`],
+    loesungsweg: [
+      T`$X \sim N(\mu;\ 4)$, Bedingung $P(X \le 500) = 0.02$`,
+      T`$z = \invNorm(0.02,\ 0,\ 1) \approx -2.0537$`,
+      T`$-2.0537 = \dfrac{500 - \mu}{4} \;\Rightarrow\; \mu = 500 + 2.0537 \cdot 4 \approx 508.21\ \text{g}$`,
+      T`Probe: <span class="t12-ti-box">normCdf(−∞, 500, 508.21, 4)</span> $\approx 0.02$. Die Anlage füllt im Mittel gut 8 g mehr ein als angeschrieben.`
+    ]
+  });
+
+  L.zahlAufgabe("#t12-u9", {
+    titel: "Übung 9 · Zwei Lösungen",
+    stufe: 2,
     frage: "<p>Unter der Standardnormalverteilung ist die Fläche zwischen 0 und z genau 0.35 gross. Welcher Wert z passt? Es gibt zwei Lösungen. Gib eine davon auf vier Stellen ein, die andere findest du im Lösungsweg.</p>",
     antwort: [1.0364, -1.0364], toleranz: 0.0005, anzeige: "z₁ ≈ 1.0364 oder z₂ ≈ −1.0364",
     hinweise: ["Mach eine Skizze. Die Fläche kann rechts von 0 liegen (von 0 bis z) oder links von 0 (von z bis 0).", "invNorm braucht die Fläche links von z. Links von 0 liegt schon 0.5."],
@@ -1030,74 +1297,50 @@
         grenzen: [{ z: -1.0364, text: "z₂" }, { z: 1.0364, text: "z₁" }], texte: [{ z: 0.5, text: "0.35", y: 52 }, { z: -0.5, text: "0.35", y: 52 }], mitte: "0" }),
       T`Fall 1, $z$ rechts von 0: Fläche links von $z$ ist $0.5 + 0.35 = 0.85$, also $z_1 = \invNorm(0.85,\ 0,\ 1) \approx 1.0364$`,
       T`Fall 2, $z$ links von 0: Fläche links von $z$ ist $0.5 - 0.35 = 0.15$, also $z_2 = \invNorm(0.15,\ 0,\ 1) \approx -1.0364$`,
-      "Wegen der Symmetrie gilt z₂ = −z₁. Die Lernblock-Lösung zu Aufgabe 6.102 hält fest: Es gibt jeweils zwei Lösungen. Mit einer Skizze übersiehst du die zweite nicht."
+      "Wegen der Symmetrie gilt z₂ = −z₁. Bei Flächen «zwischen 0 und z» gibt es immer zwei Lösungen. Mit einer Skizze übersiehst du die zweite nicht."
     ]
   });
 
-  L.wahrFalsch("#t12-u4", {
-    titel: "Übung 4 · Eigenschaften der Glockenkurve",
-    aussagen: [
-      { html: T`Die Dichte $f(x)$ hat ihr Maximum bei $x = \mu$.`, wahr: true, erklaerung: "Satz 6.2, Nr. 3: Der höchste Punkt liegt beim Mittelwert." },
-      { html: T`Die Wendepunkte der Dichte liegen bei $\mu \pm 2\sigma$.`, wahr: false, erklaerung: T`Satz 6.2, Nr. 4: Sie liegen bei $\mu - \sigma$ und $\mu + \sigma$.` },
-      { html: T`$f(\mu)$ ist die Wahrscheinlichkeit, genau den Wert $\mu$ zu messen.`, wahr: false, erklaerung: T`$f(\mu)$ ist nur eine Höhe. Bei einer stetigen Zufallsvariable ist $P(X = \mu) = 0$.` },
-      { html: T`Weil $f(x)$ eine Dichte ist, gilt immer $f(x) \le 1$.`, wahr: false, erklaerung: T`Nur die Gesamtfläche muss 1 sein, nicht die Höhe. Eine sehr schmale Glocke ist hoch: Bei $\sigma = 0.2$ ist $f(\mu) = \frac{1}{0.2\sqrt{2\pi}} \approx 1.99$. Die Folie «Stetige Verteilung» sagt es ausdrücklich: Werte über 1 sind möglich.` },
-      { html: T`Bei jeder Normalverteilung liegen rund 95 % der Fläche in $\mu \pm 1.96\sigma$.`, wahr: true, erklaerung: "Die σ-Regeln gelten für jede Normalverteilung, egal welche μ und σ." },
-      { html: T`Für eine normalverteilte Zufallsvariable gilt $P(X \ge 7) = 1 - P(X \le 7)$.`, wahr: true, erklaerung: T`Gegenwahrscheinlichkeit. Weil $P(X = 7) = 0$, spielt es keine Rolle, ob die 7 dazugehört.` },
-      { html: '<span class="t12-ti-box">invNorm(0.9, μ, σ)</span> liefert die Grenze, rechts von der 90 % der Fläche liegen.', wahr: false, erklaerung: "invNorm arbeitet immer mit der Fläche links. Links dieser Grenze liegen 90 %, rechts nur 10 %." }
-    ]
-  });
-
-  L.auswahl("#t12-u5", {
-    frage: "<b>Übung 5 · Befehl wählen.</b> Füllmenge X ∼ N(502; 6). Welches Gewicht wird von 90 % der Packungen mindestens erreicht?",
-    optionen: ['<span class="t12-ti-box">normCdf(−∞, 0.9, 502, 6)</span>', '<span class="t12-ti-box">invNorm(0.9, 502, 6)</span>', '<span class="t12-ti-box">invNorm(0.1, 502, 6)</span>', '<span class="t12-ti-box">normCdf(0.1, ∞, 502, 6)</span>'],
-    richtig: 2,
-    erklaerung: T`Gesucht ist eine Grenze, also invNorm. «Von 90 % mindestens erreicht» heisst: Darunter liegen nur 10 %. Fläche links 0.1, also $\invNorm(0.1,\ 502,\ 6) \approx 494.31$ g. normCdf wäre falsch, weil es eine Fläche liefert und keine Grenze.`
-  });
-
-  L.auswahl("#t12-u6", {
-    frage: "<b>Übung 6 · Symmetrisches Intervall.</b> Du suchst zwei Grenzen symmetrisch um μ, zwischen denen 95 % der Werte liegen. Welche Flächen gibst du invNorm?",
-    optionen: ["0.95 für beide Grenzen", "0.05 und 0.95", "0.025 und 0.975", "0.475 und 0.525"],
-    richtig: 2,
-    erklaerung: "Aussen bleiben 5 %, je 2.5 % links und rechts. Links der unteren Grenze liegen 0.025, links der oberen 0.025 + 0.95 = 0.975. Das ergibt μ ± 1.96σ."
-  });
-
-  L.zahlAufgabe("#t12-u7", {
-    titel: "Übung 7 · Mittelwert einstellen",
-    frage: "<p>Eine Anlage füllt Kaffeebohnen ab, Nennfüllmenge 500 g. Die Füllmenge ist normalverteilt mit σ = 4 g. Auf welchen Mittelwert μ musst du die Anlage einstellen, damit nur 2 % der Packungen weniger als 500 g enthalten? Auf zwei Stellen.</p>",
-    antwort: 508.21, toleranz: 0.015, einheit: "g", anzeige: "μ ≈ 508.21 g",
-    hinweise: ["μ ist gesucht. Also führt der Weg über die Standardnormalverteilung.", "Links von 500 g sollen 2 % liegen: z = invNorm(0.02, 0, 1).", T`Dann $z = \frac{500 - \mu}{4}$ nach $\mu$ auflösen.`],
-    loesungsweg: [
-      T`$X \sim N(\mu;\ 4)$, Bedingung $P(X \le 500) = 0.02$`,
-      T`$z = \invNorm(0.02,\ 0,\ 1) \approx -2.0537$`,
-      T`$-2.0537 = \dfrac{500 - \mu}{4} \;\Rightarrow\; \mu = 500 + 2.0537 \cdot 4 \approx 508.21\ \text{g}$`,
-      T`Probe: <span class="t12-ti-box">normCdf(−∞, 500, 508.21, 4)</span> $\approx 0.02$. Die Anlage füllt im Mittel gut 8 g mehr ein als angeschrieben.`
-    ]
-  });
-
-  L.zahlAufgabe("#t12-u8", {
-    titel: "Übung 8 · Value-at-Risk (im Stil von Aufgabe 6a der Modulschlussprüfung)",
-    frage: "<p>Die jährliche Rendite der Aktie «Seewerk AG» ist näherungsweise normalverteilt mit Mittelwert 7.5 % und Standardabweichung 16 %. Berechne den 1%-Value-at-Risk, also die Rendite, die mit 99 % Wahrscheinlichkeit nicht unterschritten wird. In Prozent auf zwei Stellen.</p>",
-    antwort: -29.72, toleranz: 0.015, einheit: "%", anzeige: "x₀ ≈ −29.72 %",
-    hinweise: ["Gesucht ist eine Grenze, also invNorm.", "«Mit 99 % nicht unterschritten» heisst: Links der Grenze liegt 1 %."],
-    loesungsweg: [
-      T`$X$ = Jahresrendite in %, $X \sim N(7.5;\ 16)$`,
-      T`$P(X \ge x_0) = 0.99 \iff P(X \le x_0) = 0.01$`,
-      T`$x_0 = \invNorm(0.01,\ 7.5,\ 16)$ $\approx -29.72\ \%$`,
-      T`Kontrolle: $7.5 - 2.3263 \cdot 16 \approx -29.72$. In einem von hundert Jahren verliert die Aktie mehr als 29.72 %.`
-    ]
-  });
-
-  L.schrittAufgabe("#t12-u9", {
-    titel: "Übung 9 · Höchstens zulässige Standardabweichung (im Stil von Aufgabe 6a der Modulschlussprüfung)",
-    aufgabe: "<p>Ein Obligationenfonds hat eine näherungsweise normalverteilte Jahresrendite mit Mittelwert 3.1 %. Wie gross darf die Standardabweichung höchstens sein, damit der Fonds mit mindestens 90 % Wahrscheinlichkeit keinen Verlust macht, also mindestens 0 % Rendite erzielt?</p>",
+  // Knacknuss
+  L.lueckenRechnung("#t12-u10", {
+    titel: "Übung 10 · Höchstens zulässige Standardabweichung",
+    stufe: 3,
+    aufgabe: "<p>Ein Obligationenfonds hat eine näherungsweise normalverteilte Jahresrendite mit Mittelwert 3.1 %. Wie gross darf die Standardabweichung höchstens sein, damit der Fonds mit mindestens 90 % Wahrscheinlichkeit keinen Verlust macht, also mindestens 0 % Rendite erzielt?</p>" +
+      skizze({ titel: "Rechts von 0 liegen 90 Prozent, links 10 Prozent", flaechen: [{ von: -1.2816, bis: Infinity }, { von: -Infinity, bis: -1.2816, reihe: "s2" }], grenzen: [{ z: -1.2816, text: "0" }], texte: [{ z: 0.4, text: "0.90", y: 52 }, { z: -2.3, text: "0.10", y: 52 }], mitte: "μ = 3.1" }),
     schritte: [
-      { html: T`$X \sim N(3.1;\ \sigma)$, Bedingung $P(X \ge 0) \ge 0.90$`, warum: "Modell mit unbekanntem σ hinschreiben. «Kein Verlust» heisst Rendite mindestens 0." },
-      { html: T`Grenzfall: $P(X \ge 0) = 0.90 \iff P(X \le 0) = 0.10$` + skizze({ titel: "Rechts von 0 liegen 90 Prozent, links 10 Prozent", flaechen: [{ von: -1.2816, bis: Infinity }, { von: -Infinity, bis: -1.2816, reihe: "s2" }], grenzen: [{ z: -1.2816, text: "0" }], texte: [{ z: 0.4, text: "0.90", y: 52 }, { z: -2.3, text: "0.10", y: 52 }], mitte: "μ = 3.1" }),
-        warum: "Skizze: Die 0 liegt links von μ. Links davon dürfen höchstens 10 % liegen." },
-      { html: T`$z = \invNorm(0.10,\ 0,\ 1) \approx -1.2816$`, warum: "σ ist unbekannt, also über die Standardnormalverteilung. Zur Fläche links 0.10 gehört z ≈ −1.2816." },
-      { html: T`$-1.2816 = \dfrac{0 - 3.1}{\sigma}$`, warum: "Umrechnungsformel mit der Grenze x = 0." },
-      { html: T`$\sigma = \dfrac{-3.1}{-1.2816} \approx 2.419\ \%$`, warum: "Nach σ auflösen." },
-      { html: T`$\sigma \le 2.42\ \%$, Probe: $\normCdf(0,\ \infty,\ 3.1,\ 2.419) \approx 0.90$`, warum: "Kleineres σ heisst schmalere Glocke, also noch weniger Fläche links von 0. Darum ist 2.42 % die Obergrenze." }
+      { label: T`Grenzfall: Fläche links von 0, also $P(X \le 0)$`, antwort: 0.1, toleranz: 0.0005, anzeige: "0.10",
+        hinweis: "Rechts von 0 sollen 90 % liegen. Was bleibt links?",
+        erklaerung: T`$X \sim N(3.1;\ \sigma)$. Grenzfall $P(X \ge 0) = 0.90 \iff P(X \le 0) = 0.10$.` },
+      { label: T`$z = \invNorm(\text{Fläche links},\ 0,\ 1)$`, antwort: -1.2816, toleranz: 0.002, anzeige: "−1.2816",
+        hinweis: "σ ist unbekannt, also über die Standardnormalverteilung. Die 0 liegt links von μ: z ist negativ.",
+        erklaerung: T`$z = \invNorm(0.10,\ 0,\ 1) \approx -1.2816$`,
+        folgefehler: (v) => invPhi(v[0]) },
+      { label: T`Höchstens zulässiges $\sigma$ in %, auf zwei Stellen`, antwort: 2.42, toleranz: 0.006, einheit: "%", anzeige: "2.42",
+        hinweis: T`In $z = \frac{x - \mu}{\sigma}$ einsetzen: $z = \frac{0 - 3.1}{\sigma}$.`,
+        erklaerung: T`$\sigma = \dfrac{-3.1}{-1.2816} \approx 2.419$. Ein kleineres σ macht die Glocke schmaler, dann liegt noch weniger Fläche links von 0. Also gilt $\sigma \le 2.42\ \%$. Probe: $\normCdf(0,\ \infty,\ 3.1,\ 2.419) \approx 0.90$.`,
+        folgefehler: (v) => -3.1 / v[1] }
+    ]
+  });
+
+  L.lueckenRechnung("#t12-u11", {
+    titel: "Übung 11 · μ und σ beide gesucht",
+    stufe: 3,
+    aufgabe: "<p>Das Gewicht der Pakete eines Onlineshops ist normalverteilt. 10 % der Pakete wiegen weniger als 4.2 kg, 5 % wiegen mehr als 6.1 kg. Bestimme μ und σ.</p>",
+    schritte: [
+      { label: T`$z_1$ zur Grenze 4.2 kg`, antwort: -1.2816, toleranz: 0.002, anzeige: "−1.2816",
+        hinweis: "Links von 4.2 kg liegen 10 %.",
+        erklaerung: T`$z_1 = \invNorm(0.10,\ 0,\ 1) \approx -1.2816$` },
+      { label: T`$z_2$ zur Grenze 6.1 kg`, antwort: 1.6449, toleranz: 0.002, anzeige: "1.6449",
+        hinweis: "Rechts von 6.1 kg liegen 5 %. Wie gross ist die Fläche links?",
+        erklaerung: T`Fläche links $0.95$, also $z_2 = \invNorm(0.95,\ 0,\ 1) \approx 1.6449$` },
+      { label: T`$\sigma$ in kg, auf vier Stellen`, antwort: 0.6493, toleranz: 0.001, einheit: "kg", anzeige: "0.6493",
+        hinweis: T`Zwei Gleichungen: $4.2 = \mu + z_1 \sigma$ und $6.1 = \mu + z_2 \sigma$. Zieh die erste von der zweiten ab.`,
+        erklaerung: T`$6.1 - 4.2 = (z_2 - z_1)\,\sigma \;\Rightarrow\; \sigma = \dfrac{1.9}{1.6449 + 1.2816} = \dfrac{1.9}{2.9265} \approx 0.6493$ kg`,
+        folgefehler: (v) => 1.9 / (v[1] - v[0]) },
+      { label: T`$\mu$ in kg, auf drei Stellen`, antwort: 5.032, toleranz: 0.002, einheit: "kg", anzeige: "5.032",
+        hinweis: T`Setz $\sigma$ in $4.2 = \mu + z_1 \sigma$ ein.`,
+        erklaerung: T`$\mu = 4.2 - z_1 \sigma = 4.2 + 1.2816 \cdot 0.6493 \approx 5.032$ kg. Probe: $\normCdf(-\infty,\ 4.2,\ 5.032,\ 0.6493) \approx 0.10$ und $\normCdf(6.1,\ \infty,\ 5.032,\ 0.6493) \approx 0.05$.`,
+        folgefehler: (v) => 4.2 - v[0] * v[2] }
     ]
   });
 
@@ -1181,7 +1424,7 @@
       { ph: 2, hl: ["ii"], dh: [4], f: MOD + ERG_I + teil(II, 4),
         say: "Ergebnis: x₀ ≈ −9.53 %. In 5 % der Jahre verliert der Fonds mehr als 9.53 %. Das ist der 5%-Value-at-Risk." },
       { ph: 2, hl: ["ii"], f: MOD + ERG_I + teil(II, 5),
-        say: "Kontrolle mit Satz 6.2: Links von μ − 1.645σ liegen 5 %. 5.6 − 1.645 · 9.2 ergibt ebenfalls rund −9.53." },
+        say: "Kontrolle mit der σ-Regel: Links von μ − 1.645σ liegen 5 %. 5.6 − 1.645 · 9.2 ergibt ebenfalls rund −9.53." },
       { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 0),
         say: "Teil (iii): Jetzt ist σ unbekannt. normCdf und invNorm brauchen aber σ als Eingabe. Direkt mit dem Rechner geht es also nicht." },
       { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 1),
@@ -1189,7 +1432,7 @@
       { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 2),
         say: "Wieder zuerst die Fläche links der bekannten Grenze bestimmen: P(X ≤ 2) = 0.20." },
       { ph: 3, hl: ["iii"], dict: 6, dh: [5], f: ERG_I + ERG_II + teil(III, 3),
-        say: "Trick aus Skript Kap. 6.4: Wechsel zur Standardnormalverteilung. Dort sind μ = 0 und σ = 1 bekannt. invNorm(0.20, 0, 1) ergibt z ≈ −0.8416." },
+        say: "Trick: Wechsel zur Standardnormalverteilung. Dort sind μ = 0 und σ = 1 bekannt. invNorm(0.20, 0, 1) ergibt z ≈ −0.8416." },
       { ph: 3, hl: ["iii"], dh: [5], f: ERG_I + ERG_II + teil(III, 4),
         say: "Gleiche Fläche, also gehört z = −0.8416 zur Grenze x = 2. Einsetzen in z = (x − μ)/σ. Einzige Unbekannte ist σ." },
       { ph: 3, hl: ["iii"], f: ERG_I + ERG_II + teil(III, 5),
@@ -1208,7 +1451,7 @@
     fragen: [
       { q: T`Was bedeutet die 6 in $X \sim N(502;\ 6)$?`,
         o: [T`die Varianz $\sigma^2$`, T`die Standardabweichung $\sigma$`, T`den Mittelwert $\mu$`, "die Anzahl Messungen"], a: 1,
-        e: T`Stolperfalle: Skript, Folien und TI schreiben $N(\mu;\ \sigma)$ mit der Standardabweichung. Manche Bücher schreiben $N(\mu, \sigma^2)$; dann stünde dort 36.` },
+        e: T`Stolperfalle: Im Modul und auf dem TI schreibt man $N(\mu;\ \sigma)$ mit der Standardabweichung. Manche Bücher schreiben $N(\mu, \sigma^2)$; dann stünde dort 36.` },
       { q: T`$X$ ist normalverteilt. Wie gross ist $P(X = 500)$?`,
         o: ["genau 0", T`$f(500)$`, "etwa 0.5", T`hängt von $\sigma$ ab`], a: 0,
         e: T`Stolperfalle: Ein einzelner Wert hat keine Fläche. $f(500)$ ist eine Höhe, keine Wahrscheinlichkeit.` },
@@ -1226,14 +1469,14 @@
         e: "Stolperfalle: invNorm will die Fläche links der Grenze. «Mit 95 % nicht unterschritten» heisst: Links liegen 5 %." },
       { q: T`Wie viel Prozent der Werte liegen ungefähr im Bereich $\mu \pm 2\sigma$?`,
         o: ["68 %", "90 %", "95 %", "99.7 %"], a: 2,
-        e: T`Satz 6.2: 0.9545. Genau 95 % liegen in $\mu \pm 1.96\sigma$.` },
+        e: T`σ-Regel: 0.9545. Genau 95 % liegen in $\mu \pm 1.96\sigma$.` },
       { q: T`$\mu$ ist bekannt, $\sigma$ ist gesucht. Wie gehst du vor?`,
         o: [T`normCdf mit $\sigma = 1$ eingeben`, T`$z = \invNorm(w,\ 0,\ 1)$ bestimmen ($w$ = Fläche links), dann $z = \frac{x-\mu}{\sigma}$ nach $\sigma$ auflösen`, T`$\invNorm(p,\ \mu,\ 0)$ verwenden`, "Das geht nur mit einer Tabelle"], a: 1,
-        e: "Die Rechnerbefehle brauchen σ. Über die Standardnormalverteilung mit μ = 0 und σ = 1 bekommst du z, dann löst du die Umrechnungsformel auf (Skript S. 84, Bsp. 6.8)." },
-      { q: "Das Skript nennt in Kap. 8.2 für die Standardnormalverteilung die Eingabe «µ = 1 und σ = 0». Was gibst du auf dem TI ein?",
-        o: ["μ = 1, σ = 0", "μ = 0, σ = 1", "μ = 1, σ = 1", "μ = 0, σ = 0"], a: 1,
-        e: "Stolperfalle: Das ist ein Druckfehler. Das Beispiel daneben rechnet normCdf(−∞, −0.8, 0, 1) = 0.2119, also mit μ = 0 und σ = 1. Mit σ = 0 gäbe es gar keine Glocke." },
-      { q: "Warum warnt das Skript (Bem. 6.9) vor der Normalverteilung bei Aktienrenditen?",
+        e: "Die Rechnerbefehle brauchen σ. Über die Standardnormalverteilung mit μ = 0 und σ = 1 bekommst du z, dann löst du die Umrechnungsformel auf." },
+      { q: "Du liest in der Tabelle F(1.28) = 0.8997 ab. Wie gross ist F(−1.28)?",
+        o: ["0.8997", "0.1003", "−0.8997", "0.7994"], a: 1,
+        e: "Die Glocke ist symmetrisch um 0. Links von −1.28 liegt gleich viel wie rechts von 1.28: F(−1.28) = 1 − 0.8997 = 0.1003. Eine Wahrscheinlichkeit ist nie negativ, und 0.7994 ist die Fläche zwischen −1.28 und 1.28." },
+      { q: "Warum ist die Normalverteilung bei Aktienrenditen mit Vorsicht zu geniessen?",
         o: ["Renditen sind immer positiv", "Extreme Renditen kommen in Wirklichkeit häufiger vor; der Value-at-Risk unterschätzt dann das Risiko", "Renditen sind diskret", "Die Normalverteilung hat keinen Mittelwert"], a: 1,
         e: "Echte Renditen haben dicke Ränder. Grosse Verluste sind häufiger, als die Glocke sagt. Darum ist ein mit der Normalverteilung berechneter Value-at-Risk eher zu optimistisch." }
     ]

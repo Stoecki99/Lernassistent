@@ -17,7 +17,7 @@
     .t03-algo{margin:0; padding-left:1.4em; display:flex; flex-direction:column; gap:6px}
     .t03-algo li::marker{color:var(--accent); font-weight:700}
 
-    /* Resolutionsbaum: Elternklauseln oben, Resolvente darunter (wie Def. 2.26b) */
+    /* Resolutionsbaum: Elternklauseln oben, Resolvente darunter */
     .t03-baumbox{overflow-x:auto; max-width:100%; background:var(--board); border-radius:12px; padding:12px 8px}
     .t03-baumbox.t03-flach{background:transparent; padding:4px 0}
     .t03-baumbox > .t03-b{width:max-content; margin:0 auto}
@@ -28,7 +28,9 @@
     .t03-b-l::after{transform:rotate(-38deg)}
     .t03-b-r::after{transform:rotate(38deg)}
     .t03-bk{font-family:var(--f-math); font-size:1rem; line-height:1.3; white-space:nowrap; padding:2px 7px; border:1px solid var(--line); border-radius:7px; background:var(--accent-soft); color:var(--ink)}
-    .t03-bk-start{background:var(--surface)}
+    /* gegebene Klauseln orange getönt (feste Klauseln), Resolventen im Sektionsakzent */
+    .t03-bk-start{background:var(--s2-soft); border-color:var(--s2)}
+    .t03-baumbox .t03-bk:not(.t03-bk-start):not(.t03-bk-leer){border-color:var(--accent)}
     .t03-bk-leer{background:var(--ok-bg); border-color:var(--ok); color:var(--ok); font-weight:700; padding-inline:12px}
     .t03-legende{display:flex; flex-wrap:wrap; gap:6px 14px; font-size:.85rem; color:var(--muted)}
     .t03-legende .t03-bk{font-size:.85rem}
@@ -47,7 +49,8 @@
     .t03-kl{display:inline-flex; flex-wrap:wrap; align-items:baseline; gap:2px 6px; text-align:left; border:1px solid var(--line); background:var(--surface); color:var(--ink);
       border-radius:10px; padding:6px 10px; min-height:44px; max-width:100%; font:inherit; cursor:pointer}
     .t03-kl:hover{border-color:var(--accent)}
-    .t03-kl.t03-abgeleitet{background:var(--accent-soft)}
+    .t03-kl:not(.t03-abgeleitet):not(.t03-leer){border-left:4px solid var(--s2)}
+    .t03-kl.t03-abgeleitet{background:var(--accent-soft); border-left:4px solid var(--accent)}
     .t03-kl.t03-leer{background:var(--ok-bg); border-color:var(--ok)}
     .t03-kl.t03-zuletzt{border-color:var(--accent); border-style:dashed}
     .t03-kl[aria-pressed="true"]{background:var(--lit); border-color:var(--accent); box-shadow:0 0 0 2px var(--accent)}
@@ -74,26 +77,31 @@
     .t03-durch{text-decoration:line-through; text-decoration-color:var(--bad); text-decoration-thickness:2px}
 
     @media (prefers-reduced-motion: reduce){ .t03-kl.t03-tipp{animation:none} }
+
+    /* Lückenbeweis: Resolutionsbeweis Schritt für Schritt eintippen */
+    .t03-lb .t03-lb-ende{display:flex; flex-direction:column; gap:8px}
+    .t03-lb .t03-lb-ende[hidden]{display:none}
+    .t03-lb .lr-label .t03-m{font-size:1em}
   </style>
 </head>
-<body data-fach="mstw" data-thema="03-resolution">
+<body data-fach="mstw" data-thema="03-resolution" data-farbig data-sektion="logik">
 <main class="wrap">
 
   <!-- ===== Kopf ===== -->
   <header class="stack">
-    <span class="eyebrow">MSTW · S1-V3 · Resolutionskalkül</span>
+    <span class="eyebrow">MSTW · Logik · Resolutionskalkül</span>
     <h1>Klauseln und Resolutionskalkül</h1>
-    <p class="lead">Mit der Resolution beweist du, dass eine Formel unerfüllbar ist, oder dass eine Aussage aus anderen folgt. Du schreibst die Formel als Klauselmenge, streichst Schritt für Schritt Gegensätze heraus und suchst die leere Klausel ∅. Danach löst du Aufgabe 2a der Modulschlussprüfung in wenigen Zeilen. Unterstrichene Stellen kannst du antippen oder mit der Maus berühren.</p>
+    <p class="lead">Mit der Resolution beweist du, dass eine Formel unerfüllbar ist, oder dass eine Aussage aus anderen folgt. Du schreibst die Formel als Klauselmenge, streichst Schritt für Schritt Gegensätze heraus und suchst die leere Klausel ∅. Danach löst du die typische Resolutionsaufgabe der Modulschlussprüfung in wenigen Zeilen. Unterstrichene Stellen kannst du antippen oder mit der Maus berühren.</p>
     <div class="card stack">
       <p><b>Das kannst du nach dieser Station:</b></p>
       <ul class="t03-ziele">
         <li>aus einer Formel in KNF die Klauselmenge bilden,</li>
         <li>zwei Klauseln korrekt resolvieren und unzulässige Paare erkennen,</li>
-        <li>eine Formel mit dem Algorithmus aus Korollar 2.33 auf Erfüllbarkeit prüfen,</li>
+        <li>eine Formel mit dem Erfüllbarkeitstest Runde für Runde prüfen,</li>
         <li>eine Folgerung beweisen: negiertes Ziel dazunehmen, ∅ herleiten,</li>
         <li>einen Resolutionsbaum zeichnen, wie ihn die Prüfung verlangt.</li>
       </ul>
-      <p class="hint">Vorwissen: Wahrheitswerte und KNF aus den Stationen <a href="/lernseiten/mstw/01-aussagenlogik-grundlagen">01</a> und <a href="/lernseiten/mstw/02-aequivalenzen-normalformen">02</a>. Den Taschenrechner brauchst du hier nicht.</p>
+      <p class="hint">Vorwissen: Wahrheitswerte und KNF aus den Stationen <a href="/lernseiten/mstw/01-aussagenlogik-grundlagen">01</a> und <a href="/lernseiten/mstw/02-aequivalenzen-normalformen">02</a>. Den Taschenrechner brauchst du hier nicht. Nach jedem Abschnitt tippst du selbst Klauseln, Mengen und Formeln ein. Alle Eingabe-Aufgaben und Übungen sind eigene Aufgaben: eigene Lösungen, mit einem Programm nachgeprüft, nicht vom Dozenten bestätigt.</p>
     </div>
   </header>
 
@@ -128,13 +136,16 @@
       <p class="hint">Zähl die Mengenklammern. Keine Klammer: Literal. Eine Klammer um Literale: Klausel. Klammern um Klauseln: Klauselmenge. Sonderfall: ∅ ist die leere Klausel.</p>
       <div id="t03-sortierer"></div>
     </div>
+    <div class="dran">
+      <div id="t03-d1"></div>
+    </div>
   </section>
 
   <!-- ===== 1 · Wörterbuch ===== -->
   <section id="woerterbuch">
     <span class="eyebrow">Schritt 1 · Symbole festlegen</span>
     <h2>Das Wörterbuch der Resolution</h2>
-    <p class="prose">Diese Zeichen kommen in den Folien und in der Prüfung vor. Die Farbe zeigt die Art: Aussagen violett, feste Klauseln orange, Platzhalter blau, Funktionen grün.</p>
+    <p class="prose">Diese Zeichen brauchst du in den Aufgaben und in der Prüfung. Die Farbe zeigt die Art: Aussagen violett, feste Klauseln orange, Platzhalter blau, Funktionen grün.</p>
     <div class="card tablebox">
       <table class="symtab">
         <thead><tr><th>Symbol</th><th>Art</th><th>Bedeutung</th></tr></thead>
@@ -143,23 +154,26 @@
           <tr><td>¬, ∨, ∧</td><td><span class="kind kind-op">Junktor</span></td><td>nicht, oder, und</td></tr>
           <tr><td><span class="v">L</span></td><td><span class="kind kind-v">Platzhalter</span></td><td>irgendein Literal; ist <span class="v">L</span> = <span class="t03-m">¬A</span>, dann ist ¬<span class="v">L</span> = <span class="t03-m">A</span></td></tr>
           <tr><td><span class="c">K</span>₁, <span class="c">K</span>₂</td><td><span class="kind kind-c">Klausel</span></td><td>zwei feste Klauseln, zum Beispiel <span class="t03-m">{A, ¬B}</span></td></tr>
-          <tr><td>\(\KK(F)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>die Klauselmenge der Formel <i>F</i> (Def. 2.24)</td></tr>
-          <tr><td>\(\Res^n(\KK)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>alle Klauseln nach <i>n</i> Runden Resolution (Def. 2.30)</td></tr>
+          <tr><td>\(\KK(F)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>die Klauselmenge der Formel <i>F</i></td></tr>
+          <tr><td>\(\Res^n(\KK)\)</td><td><span class="kind kind-fn">Funktion</span></td><td>alle Klauseln nach <i>n</i> Runden Resolution</td></tr>
           <tr><td><span class="c">∅</span></td><td><span class="kind kind-c">Klausel</span></td><td>leere Klausel, immer falsch; in vielen Büchern □</td></tr>
           <tr><td>∈, ∖, ∪</td><td><span class="kind kind-op">Mengenzeichen</span></td><td>«ist Element von», «ohne», «vereinigt mit»</td></tr>
         </tbody>
       </table>
     </div>
     <div class="note"><b>Merke:</b> Innerhalb einer Klausel bedeutet das Komma «oder». Zwischen den Klauseln einer Klauselmenge bedeutet das Komma «und». <span class="t03-m">{{A, B}, {¬C}}</span> heisst also <span class="t03-m">(A ∨ B) ∧ ¬C</span>.</div>
+    <div class="dran">
+      <div id="t03-d2"></div>
+    </div>
   </section>
 
   <!-- ===== 2 · Klauselmenge ===== -->
   <section id="klauselmenge">
-    <span class="eyebrow">Schritt 2 · Def. 2.24 und Bem. 2.25</span>
+    <span class="eyebrow">Schritt 2 · Klauselmenge bilden</span>
     <h2>Von der KNF zur Klauselmenge</h2>
     <p class="prose">Die Resolution braucht eine Formel in <b>KNF</b> (konjunktive Normalform): innen Klammern mit «oder», aussen alles mit «und» verbunden. Wie du eine Formel in KNF bringst, steht in Station 02. Jetzt kommt der nächste Schritt.</p>
     <div class="stack" data-link-bereich>
-      <p class="prose sentence">Aus jeder Oder-Klammer der KNF wird eine Klausel: die Menge ihrer Literale. Alle Klauseln zusammen bilden die Klauselmenge \(\KK(F)\) (Def. 2.24). Hier: <span data-link="k1">die erste Klammer</span>, <span data-link="k2">die zweite Klammer</span> und <span data-link="k3">das einzelne <i>C</i></span>.</p>
+      <p class="prose sentence">Aus jeder Oder-Klammer der KNF wird eine Klausel: die Menge ihrer Literale. Alle Klauseln zusammen bilden die Klauselmenge \(\KK(F)\). Hier: <span data-link="k1">die erste Klammer</span>, <span data-link="k2">die zweite Klammer</span> und <span data-link="k3">das einzelne <i>C</i></span>.</p>
       <div class="board">
         <div class="t03-tafel">
           <div><i>F</i> = <span class="t03-m" data-link="k1">(A ∨ ¬B)</span> ∧ <span class="t03-m" data-link="k2">(¬A ∨ C ∨ ¬B)</span> ∧ <span class="t03-m" data-link="k3">C</span></div>
@@ -167,25 +181,29 @@
         </div>
       </div>
     </div>
-    <p class="prose">Weil Klauseln <b>Mengen</b> sind, zählt jedes Literal nur einmal, und die Reihenfolge spielt keine Rolle. Darum können verschiedene Formeln dieselbe Klauselmenge haben (Bem. 2.25). Alle drei Formeln unten ergeben <span class="t03-m">{{A}, {B, ¬C}}</span>:</p>
+    <p class="prose">Weil Klauseln <b>Mengen</b> sind, zählt jedes Literal nur einmal, und die Reihenfolge spielt keine Rolle. Darum können verschiedene Formeln dieselbe Klauselmenge haben. Alle drei Formeln unten ergeben <span class="t03-m">{{R, ¬T}, {S}}</span>:</p>
     <div class="board">
       <div class="t03-tafel">
-        <div><i>F</i>₁ = <span class="t03-m">(A ∨ A) ∧ (B ∨ ¬C)</span></div>
-        <div><i>F</i>₂ = <span class="t03-m">A ∧ (¬C ∨ B)</span></div>
-        <div><i>F</i>₃ = <span class="t03-m">A ∧ (B ∨ ¬C ∨ B)</span></div>
+        <div><i>F</i>₁ = <span class="t03-m">(R ∨ ¬T) ∧ (S ∨ S)</span></div>
+        <div><i>F</i>₂ = <span class="t03-m">(¬T ∨ R) ∧ S</span></div>
+        <div><i>F</i>₃ = <span class="t03-m">S ∧ (R ∨ ¬T ∨ R)</span></div>
       </div>
     </div>
     <div class="note tipp"><b>Tipp:</b> Ein einzelnes Literal in der KNF ist eine Klammer mit nur einem Eintrag. Aus <span class="t03-m">¬B</span> wird die Einerklausel <span class="t03-m">{¬B}</span>. Einerklauseln sind beim Resolvieren Gold wert, weil sie andere Klauseln kürzer machen.</div>
-    <div class="note falle"><b>Falle:</b> Enthält eine Klammer ein Literal und sein Gegenteil, etwa <span class="t03-m">A ∨ ¬A ∨ B</span>, ist sie eine Tautologie und immer wahr. Diese Klausel darfst du weglassen (Bem. 2.29). Sie hilft beim Beweis nie.</div>
+    <div class="note falle"><b>Falle:</b> Enthält eine Klammer ein Literal und sein Gegenteil, etwa <span class="t03-m">A ∨ ¬A ∨ B</span>, ist sie eine Tautologie und immer wahr. Diese Klausel darfst du weglassen. Sie hilft beim Beweis nie.</div>
+    <div class="dran">
+      <div id="t03-d3"></div>
+      <div id="t03-d4"></div>
+    </div>
   </section>
 
   <!-- ===== 3 · Resolvente ===== -->
   <section id="resolvente">
-    <span class="eyebrow">Schritt 3 · Def. 2.26, Satz 2.28, Bem. 2.29</span>
+    <span class="eyebrow">Schritt 3 · Resolvente bilden</span>
     <h2>Die Resolutionsregel: einen Gegensatz streichen</h2>
     <p class="prose">Nimm zwei Klauseln. Steht in der einen ein Literal und in der anderen sein Gegenteil, dann streichst du dieses Paar und wirfst den Rest zusammen. Das Ergebnis heisst <b>Resolvente</b>.</p>
     <div class="stack" data-link-bereich>
-      <p class="prose sentence">Such <span data-link="r1">ein Literal <i>L</i> in <i>K</i>₁</span>, <span data-link="r2">dessen Gegenteil ¬<i>L</i> in <i>K</i>₂ steht</span>. <span data-link="r3">Streich <i>L</i> aus <i>K</i>₁</span> und <span data-link="r4">¬<i>L</i> aus <i>K</i>₂</span>, dann <span data-link="r5">vereinige die Reste</span>. Das ergibt die Resolvente <i>K</i>₃ (Def. 2.26a).</p>
+      <p class="prose sentence">Such <span data-link="r1">ein Literal <i>L</i> in <i>K</i>₁</span>, <span data-link="r2">dessen Gegenteil ¬<i>L</i> in <i>K</i>₂ steht</span>. <span data-link="r3">Streich <i>L</i> aus <i>K</i>₁</span> und <span data-link="r4">¬<i>L</i> aus <i>K</i>₂</span>, dann <span data-link="r5">vereinige die Reste</span>. Das ergibt die Resolvente <i>K</i>₃.</p>
       <div class="board t03-klein">
         $$\htmlData{link=r1}{\htmlClass{v}{L} \in \htmlClass{c}{K_1}} \quad\text{und}\quad \htmlData{link=r2}{\neg\htmlClass{v}{L} \in \htmlClass{c}{K_2}}$$
         $$\begin{aligned}\htmlClass{c}{K_3} &= \htmlData{link=r3}{(\htmlClass{c}{K_1} \setminus \{\htmlClass{v}{L}\})} \\ &\phantom{=}\ \htmlData{link=r5}{\cup}\ \htmlData{link=r4}{(\htmlClass{c}{K_2} \setminus \{\neg\htmlClass{v}{L}\})}\end{aligned}$$
@@ -196,67 +214,74 @@
         <h3>Beispiel</h3>
         <p><span class="c">K</span>₁ = <span class="t03-m">{A, ¬B}</span>, <span class="c">K</span>₂ = <span class="t03-m">{B, C}</span>. Das Paar ist <span class="t03-m">¬B</span> / <span class="t03-m">B</span>.</p>
         <p>Rest von <span class="c">K</span>₁: <span class="t03-m">{A}</span>. Rest von <span class="c">K</span>₂: <span class="t03-m">{C}</span>. Resolvente: <span class="t03-m">{A, C}</span>.</p>
-        <p class="hint">Grafisch schreibst du die beiden Elternklauseln oben hin und die Resolvente darunter (Def. 2.26b):</p>
+        <p class="hint">Grafisch schreibst du die beiden Elternklauseln oben hin und die Resolvente darunter:</p>
         <div data-t03-baum="def"></div>
       </div>
       <div class="card stack">
         <h3>Warum darf man das?</h3>
         <p>Ist <span class="t03-m">B</span> wahr, dann muss in <span class="t03-m">{A, ¬B}</span> das <span class="t03-m">A</span> stimmen. Ist <span class="t03-m">B</span> falsch, dann muss in <span class="t03-m">{B, C}</span> das <span class="t03-m">C</span> stimmen. Ein Drittes gibt es nicht. Also stimmt <span class="t03-m">A</span> oder <span class="t03-m">C</span>, genau das sagt <span class="t03-m">{A, C}</span>.</p>
-        <p>Darum darfst du jede Resolvente zur Klauselmenge dazunehmen, ohne dass sich die Formel ändert (Satz 2.28, Resolutionslemma).</p>
+        <p>Darum darfst du jede Resolvente zur Klauselmenge dazunehmen, ohne dass sich die Formel ändert. Diese Regel heisst <b>Resolutionslemma</b>.</p>
       </div>
     </div>
-    <div class="note"><b>Die leere Klausel:</b> Aus <span class="t03-m">{A}</span> und <span class="t03-m">{¬A}</span> wird nach dem Streichen <span class="c">∅</span> (Def. 2.26c). Steht ∅ in einer Klauselmenge, ist sie unerfüllbar: Eine immer falsche Bedingung lässt sich mit nichts erfüllen.</div>
-    <div class="note falle"><b>Falle (Bem. 2.29):</b> Pro Schritt streichst du <b>genau ein</b> Paar. Die Klauseln <span class="t03-m">{A, B, ¬C}</span> und <span class="t03-m">{A, ¬B, C}</span> (Beispiel 2.27) haben zwei Paare. Über <span class="t03-m">B</span> entsteht <span class="t03-m">{A, C, ¬C}</span>, über <span class="t03-m">C</span> entsteht <span class="t03-m">{A, B, ¬B}</span>. Beide sind Tautologien und damit nutzlos. Beide Paare auf einmal streichen ergäbe <span class="t03-m t03-durch">{A}</span>, und das ist falsch.</div>
-    <details class="sol"><summary>Warum ist «zwei Paare auf einmal» falsch? (Lösung 2.12)</summary>
+    <div class="note"><b>Die leere Klausel:</b> Aus <span class="t03-m">{A}</span> und <span class="t03-m">{¬A}</span> wird nach dem Streichen <span class="c">∅</span>. Steht ∅ in einer Klauselmenge, ist sie unerfüllbar: Eine immer falsche Bedingung lässt sich mit nichts erfüllen.</div>
+    <div class="note falle"><b>Falle:</b> Pro Schritt streichst du <b>genau ein</b> Paar. Die Klauseln <span class="t03-m">{¬P, Q, R}</span> und <span class="t03-m">{P, ¬Q, R}</span> haben zwei Paare. Über <span class="t03-m">P</span> entsteht <span class="t03-m">{Q, ¬Q, R}</span>, über <span class="t03-m">Q</span> entsteht <span class="t03-m">{¬P, P, R}</span>. Beide sind Tautologien und damit nutzlos. Beide Paare auf einmal streichen ergäbe <span class="t03-m t03-durch">{R}</span>, und das ist falsch.</div>
+    <details class="sol"><summary>Warum ist «zwei Paare auf einmal» falsch?</summary>
       <div class="stack">
-        <p>Setz <span class="t03-m">A</span> = 0, <span class="t03-m">B</span> = 1, <span class="t03-m">C</span> = 1. Dann ist <span class="t03-m">{A, B, ¬C}</span> wahr (wegen <span class="t03-m">B</span>) und <span class="t03-m">{A, ¬B, C}</span> wahr (wegen <span class="t03-m">C</span>). Aber <span class="t03-m">{A}</span> ist falsch.</p>
-        <p>Die «Resolvente» <span class="t03-m">{A}</span> folgt also nicht aus den beiden Klauseln. Nimmst du sie trotzdem dazu, veränderst du die Formel. Im Spielfeld unten kannst du ausprobieren, wie solche Paare abgelehnt werden.</p>
+        <p>Setz <span class="t03-m">P</span> = 1, <span class="t03-m">Q</span> = 1, <span class="t03-m">R</span> = 0. Dann ist <span class="t03-m">{¬P, Q, R}</span> wahr (wegen <span class="t03-m">Q</span>) und <span class="t03-m">{P, ¬Q, R}</span> wahr (wegen <span class="t03-m">P</span>). Aber <span class="t03-m">{R}</span> ist falsch.</p>
+        <p>Die «Resolvente» <span class="t03-m">{R}</span> folgt also nicht aus den beiden Klauseln. Nimmst du sie trotzdem dazu, veränderst du die Formel. Im Spielfeld unten kannst du ausprobieren, wie solche Paare abgelehnt werden.</p>
       </div>
     </details>
     <div id="t03-frage-resolvente"></div>
+    <div class="dran">
+      <div id="t03-d5"></div>
+      <div id="t03-d6"></div>
+    </div>
   </section>
 
   <!-- ===== 4 · Verfahren ===== -->
   <section id="verfahren">
-    <span class="eyebrow">Schritt 4 · Def. 2.30, Satz 2.31, Korollar 2.33</span>
+    <span class="eyebrow">Schritt 4 · Erfüllbarkeitstest</span>
     <h2>Der Algorithmus: Runde für Runde bis ∅</h2>
-    <p class="prose">Eine einzelne Resolvente reicht selten. Darum bildest du in Runden («Stufen») alle möglichen Resolventen und schaust, ob irgendwann ∅ auftaucht (Def. 2.30):</p>
+    <p class="prose">Eine einzelne Resolvente reicht selten. Darum bildest du in Runden («Stufen») alle möglichen Resolventen und schaust, ob irgendwann ∅ auftaucht:</p>
     <div class="board t03-klein">
       $$\begin{aligned}\Res^0(\KK) &= \KK \\ \Res^1(\KK) &= \KK \cup \{\,R \mid R \text{ Resolvente} \\ &\qquad\qquad \text{zweier Klauseln in } \KK\,\} \\ \Res^n(\KK) &= \Res\big(\Res^{n-1}(\KK)\big) \quad (n \ge 2) \\ \Res^\infty(\KK) &= \textstyle\bigcup_{n \ge 0} \Res^n(\KK)\end{aligned}$$
     </div>
     <p class="prose">In Worten: Res¹ ist die Klauselmenge plus alle Resolventen aus je zwei ihrer Klauseln. Res² macht dasselbe noch einmal mit Res¹, jetzt dürfen auch die neuen Klauseln mitspielen (Res ohne Hochzahl heisst «eine Runde Res¹ anwenden»). Res<sup>∞</sup> sammelt alles, was je entsteht.</p>
-    <div class="note"><b>Resolutionssatz (Satz 2.31):</b> Eine Formel <i>F</i> ist genau dann unerfüllbar, wenn \(\emptyset \in \Res^\infty(\KK(F))\). Findest du ∅, ist <i>F</i> sicher unerfüllbar. Ist <i>F</i> unerfüllbar, taucht ∅ sicher irgendwann auf. Weil es mit endlich vielen Atomen nur endlich viele Klauseln gibt, endet das Verfahren immer. Die Vorlesung nennt das Kalkül darum <b>korrekt</b> (es entscheidet Erfüllbarkeit und Unerfüllbarkeit richtig) und <b>vollständig</b> (es kommt bei jeder Formel nach endlich vielen Schritten zu einer Entscheidung).</div>
+    <div class="note"><b>Resolutionssatz:</b> Eine Formel <i>F</i> ist genau dann unerfüllbar, wenn \(\emptyset \in \Res^\infty(\KK(F))\). Findest du ∅, ist <i>F</i> sicher unerfüllbar. Ist <i>F</i> unerfüllbar, taucht ∅ sicher irgendwann auf. Weil es mit endlich vielen Atomen nur endlich viele Klauseln gibt, endet das Verfahren immer. Im Modul heisst das Kalkül darum <b>korrekt</b> (es entscheidet Erfüllbarkeit und Unerfüllbarkeit richtig) und <b>vollständig</b> (es kommt bei jeder Formel nach endlich vielen Schritten zu einer Entscheidung).</div>
     <details class="sol"><summary>Vorsicht: «vollständig» heisst in anderen Logikbüchern etwas anderes</summary>
       <div class="stack">
-        <p>Die Vorlesung (Folie S1-V3 von Dr. Koch und Kreuzer/Kühling, Kap. 2.B) nennt ein Kalkül <b>korrekt</b>, wenn es Erfüllbarkeit und Unerfüllbarkeit richtig entscheidet, und <b>vollständig</b>, wenn es bei jeder Formel nach endlich vielen Schritten zu einer Entscheidung kommt.</p>
+        <p>Im Modul heisst ein Kalkül <b>korrekt</b>, wenn es Erfüllbarkeit und Unerfüllbarkeit richtig entscheidet, und <b>vollständig</b>, wenn es bei jeder Formel nach endlich vielen Schritten zu einer Entscheidung kommt.</p>
         <p>In vielen anderen Logikbüchern heisst «vollständig» etwas anderes: Jede unerfüllbare Formel lässt sich widerlegen, ∅ taucht also sicher auf. Das Abbrechen nach endlich vielen Schritten heisst dort «terminiert».</p>
-        <p>Für die Resolution in der Aussagenlogik stimmt beides: Sie ist korrekt, findet ∅ bei jeder unerfüllbaren Formel und endet immer. In der Prüfung verwendest du die Fassung der Vorlesung.</p>
+        <p>Für die Resolution in der Aussagenlogik stimmt beides: Sie ist korrekt, findet ∅ bei jeder unerfüllbaren Formel und endet immer. In der Prüfung verwendest du die Fassung des Moduls.</p>
       </div>
     </details>
     <div class="card stack">
-      <h3>Erfüllbarkeitstest (Korollar 2.33)</h3>
+      <h3>Erfüllbarkeitstest</h3>
       <p class="hint">Gegeben ist eine Formel <i>F</i> in KNF.</p>
       <ol class="t03-algo">
         <li>Bilde die Klauselmenge \(\KK(F)\).</li>
         <li>Berechne für <i>n</i> = 1, 2, 3, … die Menge \(\Res^n(\KK(F))\), bis ∅ darin vorkommt oder bis keine neue Klausel mehr dazukommt (\(\Res^n = \Res^{n-1}\)).</li>
         <li>Im ersten Fall gibst du «<i>F</i> ist unerfüllbar» aus, im zweiten «<i>F</i> ist erfüllbar».</li>
       </ol>
-      <p class="hint">Die Buch-Lösungen im Lernblock S1-LB1 nennen denselben Algorithmus «Korollar 2.34», im Buch-Beispiel 2.35 steht «Bemerkung 2.32». Die Folien von S1-V3 zählen ihn als Korollar 2.33. Gemeint ist immer dasselbe Verfahren, nur die Nummern weichen zwischen den Unterlagen ab.</p>
     </div>
     <div id="t03-stepper-234"></div>
-    <div class="note falle"><b>Falle:</b> «Erfüllbar» darfst du erst ausgeben, wenn eine ganze Runde nichts Neues bringt. Dass du ∅ nicht sofort findest, beweist gar nichts. Beispiel 2.34 braucht drei Runden.</div>
+    <div class="note falle"><b>Falle:</b> «Erfüllbar» darfst du erst ausgeben, wenn eine ganze Runde nichts Neues bringt. Dass du ∅ nicht sofort findest, beweist gar nichts. Das Beispiel oben braucht drei Runden.</div>
     <div class="note tipp"><b>Tipp für die Prüfung:</b> Für «unerfüllbar» musst du nicht jede Runde vollständig ausschreiben. Ein gezielter Weg zu ∅ genügt, gezeichnet als Resolutionsbaum. Die vollständigen Runden brauchst du nur, wenn du zeigen willst, dass etwas <b>erfüllbar</b> ist.</div>
+    <div class="dran">
+      <div id="t03-d7"></div>
+      <div id="t03-d8"></div>
+    </div>
   </section>
 
   <!-- ===== 5 · Folgerung ===== -->
   <section id="folgerung">
-    <span class="eyebrow">Schritt 5 · Bem. 2.23, Beispiele 2.21 und 2.35</span>
+    <span class="eyebrow">Schritt 5 · Folgerung und Tautologie</span>
     <h2>Folgerung beweisen: Gegenteil annehmen, Widerspruch finden</h2>
     <p class="prose">Die Resolution zeigt nur eines: Unerfüllbarkeit. Trotzdem beweist du damit auch Folgerungen und Tautologien. Der Trick ist ein Beweis durch Widerspruch, wie bei einer Kommissarin: Sie nimmt an, der Verdächtige war <i>nicht</i> am Tatort, und findet einen Widerspruch zu den Fakten. Also war er dort.</p>
     <div class="board">
       <div class="t03-tafel">
-        <div><i>G</i> folgt aus <i>F</i>₁, …, <i>F<sub>k</sub></i> &nbsp;⇔&nbsp; <i>F</i>₁ ∧ … ∧ <i>F<sub>k</sub></i> ∧ ¬<i>G</i> ist unerfüllbar <span class="t03-leise">(Bem. 2.23b)</span></div>
-        <div><i>F</i> ist eine Tautologie &nbsp;⇔&nbsp; ¬<i>F</i> ist unerfüllbar <span class="t03-leise">(Bem. 2.23a)</span></div>
+        <div><i>G</i> folgt aus <i>F</i>₁, …, <i>F<sub>k</sub></i> &nbsp;⇔&nbsp; <i>F</i>₁ ∧ … ∧ <i>F<sub>k</sub></i> ∧ ¬<i>G</i> ist unerfüllbar <span class="t03-leise">(Folgerung)</span></div>
+        <div><i>F</i> ist eine Tautologie &nbsp;⇔&nbsp; ¬<i>F</i> ist unerfüllbar <span class="t03-leise">(Tautologie)</span></div>
       </div>
     </div>
     <div class="card stack">
@@ -279,18 +304,22 @@
           <tr><td><span class="t03-m">A ∨ B</span></td><td><span class="t03-m">¬A ∧ ¬B</span></td><td><span class="t03-m">{¬A}</span> und <span class="t03-m">{¬B}</span></td></tr>
           <tr><td><span class="t03-m">A ∧ B</span></td><td><span class="t03-m">¬A ∨ ¬B</span></td><td><span class="t03-m">{¬A, ¬B}</span></td></tr>
           <tr><td><span class="t03-m">A ⇒ B</span></td><td><span class="t03-m">A ∧ ¬B</span></td><td><span class="t03-m">{A}</span> und <span class="t03-m">{¬B}</span></td></tr>
-          <tr><td><span class="t03-m">¬B ⇒ (M ∧ ¬A)</span><br><span class="hint">Aufgabe 2.8</span></td><td><span class="t03-m">¬B ∧ (¬M ∨ A)</span></td><td><span class="t03-m">{¬B}</span> und <span class="t03-m">{¬M, A}</span></td></tr>
+          <tr><td><span class="t03-m">¬R ⇒ (S ∧ ¬T)</span></td><td><span class="t03-m">¬R ∧ (¬S ∨ T)</span></td><td><span class="t03-m">{¬R}</span> und <span class="t03-m">{¬S, T}</span></td></tr>
         </tbody>
       </table>
     </div>
     <div class="note falle"><b>Falle:</b> Wer das Ziel selbst statt seiner Negation dazunimmt (<span class="t03-m">{C}</span> statt <span class="t03-m">{¬C}</span>), beweist nichts. Und: «oder» im Ziel wird nach dem Negieren zu «und», also zu <b>mehreren</b> Einerklauseln.</div>
-    <p class="prose">Das folgende Beispiel aus den Folien setzt alles zusammen. Die drei Sätze über Sokrates, Aristoteles und Platon stammen aus Beispiel 2.7.</p>
+    <p class="prose">Ein klassisches Logikrätsel über Sokrates, Aristoteles und Platon setzt alles zusammen: Text in Atome übersetzen, Ziel negieren, Klauseln bilden, resolvieren.</p>
     <div id="t03-stepper-235"></div>
     <div class="card stack">
       <h3>Den Resolutionsbaum zeichnen</h3>
       <p class="prose">Der Baum zeigt nur den Weg zu ∅: oben die verwendeten Klauseln, darunter jeweils die Resolvente, ganz unten ∅. Brauchst du eine Klausel zweimal, zeichnest du sie zweimal hin. Streng genommen ist die Herleitung ein Graph; gezeichnet wird sie als Baum.</p>
-      <p class="prose"><b>Prüfungsbezug:</b> Aufgabe 2a der exemplarischen Modulschlussprüfung fragt genau so: Impliziert eine Klauselmenge stets ein bestimmtes Literal? Erstelle den Resolutionsbaum. Das Lösungsblatt verteilt die Punkte auf drei Teile: Klauselmenge mit negiertem Ziel (3), Resolutionsbaum (2), Fazit (1). Das Aufgabenblatt selbst nennt für 2a 5 Punkte, ohne Aufteilung.</p>
-      <div class="note"><b>Hinweis zur Schreibweise:</b> Im Lösungsblatt heisst die erweiterte Menge wieder <i>K</i>. Sauberer ist ein eigener Name wie \(\KK' = \KK \cup \{\{\neg C\}\}\). So sieht man sofort, was gegeben war und was du dazugenommen hast. Beides gibt die Punkte.</div>
+      <p class="prose"><b>Prüfungsbezug:</b> Die Modulschlussprüfung fragt typischerweise genau so: Impliziert eine Klauselmenge stets ein bestimmtes Literal? Erstelle den Resolutionsbaum. Punkte gibt es für drei Teile: die erweiterte Klauselmenge mit negiertem Ziel (rund die Hälfte), den Resolutionsbaum und ein Fazit als ganzen Satz.</p>
+      <div class="note"><b>Hinweis zur Schreibweise:</b> In Musterlösungen des Moduls heisst die erweiterte Menge oft wieder <i>K</i>. Sauberer ist ein eigener Name wie \(\KK' = \KK \cup \{\{\neg C\}\}\). So sieht man sofort, was gegeben war und was du dazugenommen hast. Beides gibt die Punkte.</div>
+    </div>
+    <div class="dran">
+      <div id="t03-d9"></div>
+      <div id="t03-d10"></div>
     </div>
   </section>
 
@@ -326,7 +355,7 @@
   <section id="uebungen">
     <span class="eyebrow">Schritt 7 · Selbst lösen</span>
     <h2>Übungen</h2>
-    <p class="prose">Acht Aufgaben, von der einzelnen Resolvente bis zur ganzen Prüfungsaufgabe. Löse jede zuerst auf Papier. Aufgaben 6 bis 8 sind eigene Aufgaben im Prüfungsstil: eigene Lösung, nicht vom Dozenten bestätigt (jeder Schritt mit einem Programm nachgeprüft).</p>
+    <p class="prose">Sieben Eingabe-Aufgaben, von der Klauselmenge bis zum ganzen Resolutionsbeweis. Die Punkte zeigen die Stufe: <span class="stufe stufe-1">Aufwärmen</span>, <span class="stufe stufe-2">Prüfungsniveau</span>, <span class="stufe stufe-3">Knacknuss</span>. Rechne zuerst auf Papier, dann tipp ein. Alles sind eigene Aufgaben: eigene Lösung, nicht vom Dozenten bestätigt (jeder Schritt mit einem Programm nachgeprüft).</p>
     <div id="t03-u1"></div>
     <div id="t03-u2"></div>
     <div id="t03-u3"></div>
@@ -334,14 +363,16 @@
     <div id="t03-u5"></div>
     <div id="t03-u6"></div>
     <div id="t03-u7"></div>
+    <h3>Zum Abschluss: kurz ankreuzen</h3>
     <div id="t03-u8"></div>
+    <div id="t03-u9"></div>
   </section>
 
   <!-- ===== Lösungsfilm ===== -->
   <section id="film">
     <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
     <h2>Eine Prüfungsaufgabe am Stück gelöst</h2>
-    <p class="prose">Eine Aufgabe im Stil von Aufgabe 2a der exemplarischen Modulschlussprüfung, mit eigener Klauselmenge (eigene Lösung, nicht vom Dozenten bestätigt). Drück auf «Abspielen». Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <p class="prose">Eine Aufgabe im Stil der Modulschlussprüfung, mit eigener Klauselmenge (eigene Lösung, nicht vom Dozenten bestätigt). Drück auf «Abspielen». Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
     <div id="t03-film"></div>
   </section>
 
@@ -358,8 +389,8 @@
     <h2>Das Wichtigste auf einen Blick</h2>
     <ul class="summary prose">
       <li><b>Klausel</b> = Menge von Literalen, gelesen mit «oder». <b>Klauselmenge</b> = Menge von Klauseln, gelesen mit «und». Jede Oder-Klammer der KNF wird eine Klausel.</li>
-      <li><b>Resolvente:</b> genau <b>ein</b> Paar <i>L</i> / ¬<i>L</i> streichen, Reste vereinigen. Zwei Paare auf einmal sind verboten (Bem. 2.29).</li>
-      <li><b>∅ gefunden</b> heisst unerfüllbar. «Erfüllbar» erst, wenn eine ganze Runde nichts Neues bringt (Korollar 2.33).</li>
+      <li><b>Resolvente:</b> genau <b>ein</b> Paar <i>L</i> / ¬<i>L</i> streichen, Reste vereinigen. Zwei Paare auf einmal sind verboten.</li>
+      <li><b>∅ gefunden</b> heisst unerfüllbar. «Erfüllbar» erst, wenn eine ganze Runde nichts Neues bringt (Erfüllbarkeitstest).</li>
       <li><b>Folgerung:</b> Ziel negieren, als Klausel(n) dazunehmen, ∅ herleiten. Dann folgt das Ziel. <b>Tautologie:</b> ¬<i>F</i> auf Unerfüllbarkeit prüfen.</li>
       <li><b>Prüfung:</b> erweiterte Klauselmenge mit negiertem Ziel, Resolutionsbaum bis ∅, Fazit als ganzer Satz.</li>
     </ul>
@@ -368,7 +399,7 @@
       $$F \text{ unerfüllbar} \iff \emptyset \in \Res^\infty(\KK(F))$$
       $$G \text{ folgt aus } F \iff F \wedge \neg G \text{ unerfüllbar}$$
     </div>
-    <footer>Quellen: Vorlesung S1-V3 (Folien Dr. Stefan Ott und Dr. Ueli Koch), Kreuzer/Kühling «Logik für Informatiker», Kap. 2.B, S. 31–36 (Def. 2.24 bis Korollar 2.33, Beispiele 2.27, 2.34, 2.35), Buchaufgaben 2.8 bis 2.12 mit Lösungen (Lernblock S1-LB1), Übungsset S1 (Aufgabe 1, hier mit Resolution gelöst), exemplarische Modulschlussprüfung mit Lösungen, Aufgabe 2a. Definitionen in eigenen Worten. Eigene Aufgaben und der Lösungsfilm: eigene Lösungen, maschinell nachgeprüft, nicht vom Dozenten bestätigt.</footer>
+    <footer>Quellen: Vorlesungsfolien «Klauseln und Klauselmengen, Resolutionskalkül» (MSTW), Kreuzer/Kühling «Logik für Informatiker», Lernblock Aussagenlogik mit Lösungen, Exemplarische Modulschlussprüfung mit Lösungen. Alle Aufgaben und Texte eigene Formulierungen; eigene Lösungen, maschinell nachgeprüft, nicht vom Dozenten bestätigt.</footer>
   </section>
 
 </main>
@@ -489,13 +520,13 @@
     erklaerung: "Das Paar ist " + M("¬A") + " / " + M("A") + ". Streich es und vereinige die Reste: " + M("{B} ∪ {C, ¬D} = {B, C, ¬D}") + ". Die Länge der Klauseln spielt keine Rolle."
   });
 
-  /* ---------- 4 · Stepper Beispiel 2.34 ---------- */
+  /* ---------- 4 · Stepper Erfüllbarkeitstest ---------- */
   const NW = function (s) { return '<span class="nw">' + s + "</span>"; };
   const z234 = [
     '<div><span data-link="s1">' + T`\(\KK(F) = \Res^0\)` + " = { " + M("{A, B, C}, {¬A, B, C}, {¬B}, {B, ¬C}") + " }</span></div>",
     '<div><span data-link="s2">' + T`\(\Res^1 = \Res^0 \cup\)` + " { " + M("{B, C}, {A, C}, {A, B}, {¬A, C}, {¬A, B}, {¬C}") + " }</span></div>",
     '<div><span data-link="s2">' + T`\(\Res^2 = \Res^1 \cup\)` + " { " + M("{C}, {A}, {¬A}, {B}") + " }</span></div>",
-    '<div><span data-link="s2">' + T`\(\Res^3 = \Res^2 \cup \{\emptyset, \dots\}\)` + "</span></div>",
+    '<div><span data-link="s2">' + T`\(\Res^3 = \Res^2 \cup \{\emptyset\}\)` + "</span></div>",
     '<div><span data-link="s3">' + T`\(\emptyset \in \Res^3\)` + " ⇒ «<i>F</i> ist unerfüllbar»</span></div>"
   ];
   function tafel234(n, mitBaum) {
@@ -505,19 +536,19 @@
     return h + "</div>";
   }
   L.stepper("#t03-stepper-234", {
-    titel: "Beispiel 2.34 · Erfüllbarkeitstest",
-    text: 'Prüfe <span data-link="s1"><i>F</i> = ' + M("(A ∨ B ∨ C) ∧ (¬A ∨ B ∨ C) ∧ ¬B ∧ (B ∨ ¬C)") + '</span> auf Erfüllbarkeit. Vorgehen nach Korollar 2.33: <span data-link="s1">1) Klauselmenge bilden</span>, <span data-link="s2">2) Runden berechnen</span>, <span data-link="s3">3) Ergebnis ausgeben</span>.',
+    titel: "Beispiel · Erfüllbarkeitstest",
+    text: 'Prüfe <span data-link="s1"><i>F</i> = ' + M("(A ∨ B ∨ C) ∧ (¬A ∨ B ∨ C) ∧ ¬B ∧ (B ∨ ¬C)") + '</span> auf Erfüllbarkeit. Vorgehen nach dem Erfüllbarkeitstest: <span data-link="s1">1) Klauselmenge bilden</span>, <span data-link="s2">2) Runden berechnen</span>, <span data-link="s3">3) Ergebnis ausgeben</span>.',
     schritte: [
       { html: tafel234(1), warum: "Schritt 1: Jede Oder-Klammer wird eine Klausel. ¬B steht allein, daraus wird die Einerklausel {¬B}. Diese Menge ist zugleich Res<sup>0</sup>, die Runde 0." },
       { html: tafel234(2), warum: "Runde 1: Jedes Paar mit genau einem Gegensatz liefert eine Resolvente. Zum Beispiel ergeben {A, B, C} und {¬A, B, C} über A die Klausel {B, C}. Sechs neue Klauseln, aber kein ∅. Also weiter." },
       { html: tafel234(3), warum: "Runde 2: Jetzt spielen auch die neuen Klauseln mit. Zum Beispiel ergeben {B, C} und {¬C} über C die Klausel {B}. Wieder Neues, aber noch kein ∅." },
-      { html: tafel234(4), warum: "Runde 3: {B} aus Runde 2 trifft auf {¬B} aus der Klauselmenge. Nach dem Streichen bleibt ∅. Die übrigen Resolventen dieser Runde brauchst du nicht mehr." },
-      { html: tafel234(5), warum: "Schritt 3: ∅ ist aufgetaucht. Nach dem Resolutionssatz 2.31 ist F unerfüllbar." },
+      { html: tafel234(4), warum: "Runde 3: {B} aus Runde 2 trifft auf {¬B} aus der Klauselmenge. Nach dem Streichen bleibt ∅. Andere neue Klauseln bringt diese Runde nicht mehr." },
+      { html: tafel234(5), warum: "Schritt 3: ∅ ist aufgetaucht. Nach dem Resolutionssatz ist F unerfüllbar." },
       { html: tafel234(5, true), warum: "Für den Beweis reichen drei der vielen neuen Klauseln. Der Baum zeigt nur diesen Weg: {B, C}, dann {B}, dann ∅. So einen Baum verlangt die Prüfung." }
     ]
   });
 
-  /* ---------- 5 · Stepper Beispiele 2.21 und 2.35 ---------- */
+  /* ---------- 5 · Stepper Sokrates ---------- */
   const z235 = [
     '<div><span data-link="s">' + M("S") + '</span> = «Sokrates war ein grosser Philosoph», <span data-link="a">' + M("A") + '</span> = «Aristoteles schätzt Platon richtig ein», <span data-link="p">' + M("P") + "</span> = «Platon schätzt Sokrates richtig ein»</div>",
     '<div><i>F</i> = ' + M("(P ⇔ ¬S) ∧ (S ⇒ A) ∧ (A ⇒ P)") + ', <span data-link="ann">Annahme ' + M("P") + "</span></div>",
@@ -535,18 +566,18 @@
     return h + "</div>";
   }
   L.stepper("#t03-stepper-235", {
-    titel: "Beispiele 2.21 und 2.35 · Philosophisches",
-    text: 'Gegeben sind drei Aussagen über <span data-link="s">Sokrates</span>, <span data-link="a">Aristoteles</span> und <span data-link="p">Platon</span> (Beispiel 2.7). Zusätzlich gilt: <span data-link="ann">Platons Einschätzung des Sokrates stimmt</span>. Folgt daraus, dass <span data-link="ziel">Sokrates kein grosser Philosoph war</span>?',
+    titel: "Beispiel · Philosophisches",
+    text: 'Gegeben sind drei Aussagen über <span data-link="s">Sokrates</span>, <span data-link="a">Aristoteles</span> und <span data-link="p">Platon</span>: Platon schätzt Sokrates genau dann richtig ein, wenn Sokrates kein grosser Philosoph war. War Sokrates ein grosser Philosoph, schätzt Aristoteles Platon richtig ein. Aristoteles schätzt Platon nur dann richtig ein, wenn Platon Sokrates richtig einschätzt. Zusätzlich gilt: <span data-link="ann">Platons Einschätzung des Sokrates stimmt</span>. Folgt daraus, dass <span data-link="ziel">Sokrates kein grosser Philosoph war</span>?',
     schritte: [
       { html: tafel235(1), warum: "Zuerst die Atome festlegen, wie in Station 01. Fahr über die Namen im Text: Das passende Atom leuchtet auf." },
-      { html: tafel235(2), warum: "Die drei Sätze aus Beispiel 2.7 als Formel F, dazu die Annahme P aus Beispiel 2.21." },
+      { html: tafel235(2), warum: "Die drei Sätze als Formel F: «genau dann, wenn» wird ⇔, «wenn …, dann» wird ⇒, «nur dann, wenn» zeigt auf die Bedingung. Dazu kommt die Annahme P." },
       { html: tafel235(3), warum: "Beweis durch Widerspruch: Du nimmst das Gegenteil des Ziels an. Die doppelte Verneinung fällt weg, übrig bleibt S." },
-      { html: tafel235(4), warum: "Folgt ¬S aus F und P, dann ist F ∧ P ∧ S unerfüllbar (Bem. 2.23b). Genau das prüfst du jetzt." },
+      { html: tafel235(4), warum: "Folgt ¬S aus F und P, dann ist F ∧ P ∧ S unerfüllbar. Genau das prüfst du jetzt." },
       { html: tafel235(5), warum: "KNF bilden: P ⇔ ¬S wird zu (P ∨ S) ∧ (¬P ∨ ¬S). Die Pfeile S ⇒ A und A ⇒ P werden zu ¬S ∨ A und ¬A ∨ P." },
       { html: tafel235(6), warum: "Sechs Oder-Klammern, sechs Klauseln. Die letzte, {S}, ist das negierte Ziel." },
       { html: tafel235(7), warum: "Die Annahme {P} trifft auf {¬P, ¬S}. Genau ein Paar, P und ¬P. Übrig bleibt {¬S}." },
       { html: tafel235(8), warum: "{¬S} und das negierte Ziel {S} widersprechen sich. Nach dem Streichen bleibt ∅." },
-      { html: tafel235(8, true), warum: "Derselbe Baum steht in den Folien (Beispiel 2.35). Mit den Runden aus Korollar 2.33 taucht ∅ in Res² auf. Ergebnis: Stimmt Platons Einschätzung, dann war Sokrates kein grosser Philosoph." }
+      { html: tafel235(8, true), warum: "Der Baum zeigt die zwei Schritte. Mit dem Erfüllbarkeitstest Runde für Runde taucht ∅ in Res² auf. Ergebnis: Stimmt Platons Einschätzung, dann war Sokrates kein grosser Philosoph." }
     ]
   });
 
@@ -554,16 +585,16 @@
   const AUFGABEN = [
     { id: "warm", titel: "Aufwärmen", klauseln: ["A, B", "¬A, B", "¬B"],
       text: "Drei Klauseln, zwei Schritte bis ∅. Tipp zuerst die beiden Klauseln mit A und ¬A an." },
-    { id: "b234", titel: "Beispiel 2.34", klauseln: ["A, B, C", "¬A, B, C", "¬B", "B, ¬C"],
-      text: "Die Klauselmenge aus Beispiel 2.34. Das Buch braucht drei Runden. Mit gezielten Paaren schaffst du es in drei Schritten." },
-    { id: "philo", titel: "Philosophisches (2.35)", klauseln: ["P, S", "¬P, ¬S", "¬S, A", "¬A, P", "P", "S"],
-      text: "Klauselmenge aus Beispiel 2.35 (S: Sokrates grosser Philosoph, A: Aristoteles hat recht, P: Platon hat recht). Die letzte Klausel {S} ist das negierte Ziel." },
-    { id: "aquavit", titel: "Reiseproviant (Übungsset S1)", klauseln: ["¬A, B", "¬B, ¬C", "A, B, ¬C", "C"],
-      text: "Aufgabe 1 des Übungssets S1, hier mit Resolution statt Wahrheitstafel. A: Aquavit kommt mit, B: Bier, C: Cognac. Regeln: Aquavit nur mit Bier {¬A, B}, Bier und Cognac nie zusammen {¬B, ¬C}, Cognac nie allein {A, B, ¬C}. Ziel: kein Cognac. Das negierte Ziel {C} steht als (4) schon drin. Kürzester Weg: drei Schritte." },
-    { id: "familie", titel: "Familieneinkäufe (2.8)", klauseln: ["B, ¬A, ¬M, ¬W", "W", "A, M", "¬A, ¬U", "M, U", "¬B", "A, ¬M"],
-      text: "Aufgabe 2.8: W Waschmaschine, A Auto, M Moped, U Urlaub, B Bonus. Die Annahme {¬B} und das negierte Ziel {A, ¬M} sind schon drin. Der Baum in Lösung 2.8 braucht sieben Schritte, es geht auch in sechs. Der Tipp-Knopf hilft." },
-    { id: "erfuellbar", titel: "Erfüllbar? (2.9c)", klauseln: ["A, B, C", "A, B, ¬C", "¬A, ¬B, D", "¬D"],
-      text: "Klauselmenge aus Lösung 2.9c. Versuch, ∅ herzuleiten, und achte darauf, welche Paare abgelehnt werden. Lass danach die Runden berechnen." }
+    { id: "b234", titel: "Beispiel aus Schritt 4", klauseln: ["A, B, C", "¬A, B, C", "¬B", "B, ¬C"],
+      text: "Die Klauselmenge aus dem Erfüllbarkeitstest in Schritt 4. Der Test braucht drei Runden. Mit gezielten Paaren schaffst du es in drei Schritten." },
+    { id: "philo", titel: "Sokrates (Schritt 5)", klauseln: ["P, S", "¬P, ¬S", "¬S, A", "¬A, P", "P", "S"],
+      text: "Die Klauselmenge aus Schritt 5 (S: Sokrates grosser Philosoph, A: Aristoteles hat recht, P: Platon hat recht). Die letzte Klausel {S} ist das negierte Ziel." },
+    { id: "zug", titel: "Wetter und Zug", klauseln: ["¬R, Z", "¬Z, T", "R, K", "¬K, Z", "¬T"],
+      text: "R: Es regnet, K: Es ist kalt, Z: Ich nehme den Zug, T: Ich löse ein Ticket. Regeln: Bei Regen nehme ich den Zug {¬R, Z}, im Zug brauche ich ein Ticket {¬Z, T}, es regnet oder es ist kalt {R, K}, bei Kälte nehme ich den Zug {¬K, Z}. Ziel: Ich löse ein Ticket. Das negierte Ziel {¬T} steht als (5) schon drin. Kürzester Weg: vier Schritte." },
+    { id: "kette", titel: "Lange Kette", klauseln: ["P, Q, R", "¬P, S", "¬Q, S", "¬R, T", "¬T, S", "¬S, U", "¬U"],
+      text: "Sieben Klauseln, sechs Schritte bis ∅. Arbeite die lange Klausel (1) Literal für Literal ab, bis nur noch {S} übrig ist. Der Tipp-Knopf hilft." },
+    { id: "erfuellbar", titel: "Erfüllbar?", klauseln: ["A, B", "¬A, C", "¬B, ¬C", "¬A, ¬B"],
+      text: "Versuch, ∅ herzuleiten, und achte darauf, welche Paare abgelehnt werden. Lass danach die Runden berechnen." }
   ];
 
   const negL = function (l) { return l.charAt(0) === NEG ? l.slice(1) : NEG + l; };
@@ -724,7 +755,7 @@
         .concat(B.lits.filter(function (x) { return p.indexOf(negL(x)) < 0; })))
         .filter(function (x, i, arr) { return arr.indexOf(x) === i; });
       const namen = p.map(function (l) { return M(atomVon(l)) + "/" + M(NEG + atomVon(l)); }).join(" und ");
-      melden("✗ " + kopf + "Hier gibt es " + p.length + " Paare (" + namen + "). Du darfst pro Schritt nur ein Paar streichen (Bem. 2.29). " +
+      melden("✗ " + kopf + "Hier gibt es " + p.length + " Paare (" + namen + "). Du darfst pro Schritt nur ein Paar streichen. " +
         "Streichst du nur eines, bleibt das andere stehen: Die Resolvente enthält ein Literal und sein Gegenteil, ist also eine Tautologie und nutzlos. " +
         "Beide auf einmal zu streichen ergäbe " + '<span class="t03-durch">' + M(klText(falsch)) + "</span>. Das ist verboten, weil es nicht aus den Klauseln folgt.", "bad");
       return;
@@ -734,7 +765,7 @@
     const key = schluessel(r);
     const da = klauseln.find(function (k) { return k.key === key; });
     if (istTautologie(r)) {
-      melden("Die Resolvente " + M(klText(r)) + " ist eine Tautologie. Sie ist immer wahr und hilft nicht weiter (Bem. 2.29).", "bad");
+      melden("Die Resolvente " + M(klText(r)) + " ist eine Tautologie. Sie ist immer wahr und hilft nicht weiter.", "bad");
       return;
     }
     if (da) {
@@ -747,7 +778,7 @@
     markieren([A.nr, B.nr]);
     if (!r.length) {
       fertig = true;
-      melden("✓ Über " + M(atomVon(l)) + ": " + rechnung(A, B, l) + " = ∅. <b>Leere Klausel gefunden!</b> Die Klauselmenge ist unerfüllbar (Resolutionssatz 2.31). Unten steht der fertige Resolutionsbaum.", "ok");
+      melden("✓ Über " + M(atomVon(l)) + ": " + rechnung(A, B, l) + " = ∅. <b>Leere Klausel gefunden!</b> Die Klauselmenge ist unerfüllbar (Resolutionssatz). Unten steht der fertige Resolutionsbaum.", "ok");
     } else {
       melden("✓ Über " + M(atomVon(l)) + ": " + rechnung(A, B, l) + " = " + M(klText(r)) + ". Neue Klausel (" + neu.nr + ").", "ok");
     }
@@ -755,7 +786,7 @@
     baumZeigen();
   }
 
-  // Alle Runden Res¹, Res², … ab einer Klauselliste; Tautologien werden weggelassen (Bem. 2.29)
+  // Alle Runden Res¹, Res², … ab einer Klauselliste; Tautologien werden weggelassen
   function runden(start, grenze) {
     const bekannt = new Map();
     start.forEach(function (k) { bekannt.set(k.key, { lits: k.lits, eltern: null }); });
@@ -803,7 +834,7 @@
   bStufen.addEventListener("click", function () {
     const start = klauseln.filter(function (k) { return !k.eltern; });
     const erg = runden(start, 10);
-    let h = "<b>Korollar 2.33 für die Ausgangsmenge (" + start.length + " Klauseln):</b><ul>";
+    let h = "<b>Erfüllbarkeitstest für die Ausgangsmenge (" + start.length + " Klauseln):</b><ul>";
     erg.stufen.forEach(function (neu, i) {
       const n = i + 1;
       const hatLeer = neu.some(function (r) { return !r.length; });
@@ -826,7 +857,7 @@
       h += "<p>Keine neue Klausel und kein ∅: Die Klauselmenge ist <b>erfüllbar</b> (Fall 2)." +
         (b ? " Probe: " + b + " macht alle Klauseln wahr." : "") + "</p>";
     }
-    h += '<p class="hint">Resolventen, die Tautologien sind, sind weggelassen (Bem. 2.29).</p>';
+    h += '<p class="hint">Resolventen, die Tautologien sind, sind weggelassen.</p>';
     elStufen.innerHTML = h;
     L.formeln(elStufen);
   });
@@ -882,138 +913,404 @@
   });
   aufgabeLaden(AUFGABEN[0]);
 
-  /* ---------- 7 · Übungen ---------- */
-  L.auswahl("#t03-u1", {
-    frage: "Übung 1 · Welche Resolvente bilden " + M("{A, ¬B, C}") + " und " + M("{B, D}") + "?",
-    optionen: [M("{A, ¬B, B, C, D}"), M("{A, C}"), M("{A, C, D}"), "Keine, die Klauseln passen nicht zusammen"],
-    richtig: 2,
-    erklaerung: "Das Paar ist " + M("¬B") + " / " + M("B") + ". Streich ¬B links und B rechts, dann vereinige die Reste: " + M("{A, C} ∪ {D} = {A, C, D}") + "."
+  /* ---------- Lückenbeweis (themeneigen): Resolutionsbeweis Schritt für Schritt eintippen ---------- */
+  // Prüft Klauseln und Klauselmengen mit der Mengenlogik des Baukastens (Reihenfolge, Doppelte, ¬ als ! oder ~ egal).
+  const A = L.auswertung;
+  let lbZaehler = 0;
+  const STUFEN = { 1: "Aufwärmen", 2: "Prüfungsniveau", 3: "Knacknuss" };
+  const LB_SYMBOLE = ["¬", "{", "}", ",", "∅"];
+
+  function klauselLesen(text) {
+    let t = String(text || "").trim();
+    // Eine einzelne Klausel ohne Mengenklammern trotzdem annehmen: «A, ¬B» wie «{A, ¬B}»
+    if (t && t.charAt(0) !== "{" && t !== "∅" && t !== "□") t = "{" + t + "}";
+    return A.mengeLesen(t);
+  }
+
+  function lueckenBeweis(sel, cfg) {
+    const el = document.querySelector(sel);
+    if (!el || !A) return;
+    const id = "t03-lb" + (++lbZaehler);
+    const soll = cfg.schritte.map(function (s) { return s.antwort.map(function (a) { return klauselLesen(a); }); });
+
+    function bauen() {
+      el.className = "card stack uebung eingabe t03-lb";
+      el.innerHTML =
+        '<div class="uebung-kopf"><span class="uebung-marken"><span class="eyebrow">Übung · Resolutionsbeweis</span>' +
+        '<span class="stufe stufe-' + cfg.stufe + '">' + STUFEN[cfg.stufe] + "</span></span><h3>" + cfg.titel + "</h3></div>" +
+        '<div class="za-frage">' + cfg.aufgabe + "</div>" +
+        '<p class="hint">Tipp jede Klausel in Mengenklammern ein, zum Beispiel {A, ¬B}. Die leere Klausel ist ∅ (auch {} oder □). ¬ geht auch als ! oder ~. Der nächste Schritt öffnet sich, sobald der vorherige stimmt oder aufgedeckt ist.</p>' +
+        '<ol class="lr-schritte"></ol>' +
+        '<div class="t03-lb-ende" hidden></div>' +
+        '<p class="score lr-fazit" tabindex="-1" hidden></p>' +
+        '<div class="stepbar"><button type="button" class="btn t03-lb-reset">Zurücksetzen</button><span class="stepcount"></span></div>';
+      const ol = el.querySelector(".lr-schritte");
+      const ende = el.querySelector(".t03-lb-ende");
+      const fazit = el.querySelector(".lr-fazit");
+      const zahl = el.querySelector(".stepcount");
+      const zustand = cfg.schritte.map(function () { return "offen"; });
+      let sichtbar = 1;
+
+      function zaehlen() { zahl.textContent = "Schritt " + Math.min(sichtbar, cfg.schritte.length) + " von " + cfg.schritte.length; }
+      function melden(t, art, text) { t.rm.className = "rueckmeldung " + art; t.rm.textContent = text; }
+
+      const teile = cfg.schritte.map(function (s, k) {
+        const fid = id + "-" + k;
+        const li = document.createElement("li");
+        li.className = "lr-schritt";
+        li.hidden = k > 0;
+        li.innerHTML =
+          '<label class="lr-label" for="' + fid + '">' + s.label + "</label>" +
+          '<form class="fa-zeile" novalidate><input id="' + fid + '" class="kurz-feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="' + fid + '-fb">' +
+          '<button type="submit" class="btn primary">Prüfen</button></form>' +
+          '<div class="symbolleiste" role="toolbar" aria-label="Symbole einfügen" aria-controls="' + fid + '"></div>' +
+          '<div class="row lr-knoepfe"><button type="button" class="btn t03-lb-tipp">Tipp</button><button type="button" class="btn t03-lb-auf">Aufdecken</button></div>' +
+          '<p class="rueckmeldung" id="' + fid + '-fb" aria-live="polite"></p>' +
+          '<div class="note tipp lr-tipp" hidden></div>' +
+          '<div class="explain lr-erkl" hidden></div>';
+        ol.appendChild(li);
+        const t = {
+          li: li, form: li.querySelector("form"), feld: li.querySelector("input"), pruefen: li.querySelector('button[type="submit"]'),
+          knoepfe: li.querySelector(".lr-knoepfe"), rm: li.querySelector(".rueckmeldung"), tipp: li.querySelector(".lr-tipp"),
+          erkl: li.querySelector(".lr-erkl"), leiste: li.querySelector(".symbolleiste")
+        };
+        // Symbolleiste: ein Tabstopp, Pfeiltasten wechseln
+        const syms = LB_SYMBOLE.map(function (z, j) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "sym";
+          b.textContent = z;
+          b.tabIndex = j === 0 ? 0 : -1;
+          b.setAttribute("aria-label", z + " einfügen");
+          b.addEventListener("mousedown", function (e) { e.preventDefault(); });
+          b.addEventListener("click", function () {
+            const a = typeof t.feld.selectionStart === "number" ? t.feld.selectionStart : t.feld.value.length;
+            const e2 = typeof t.feld.selectionEnd === "number" ? t.feld.selectionEnd : a;
+            t.feld.focus();
+            t.feld.setRangeText(z, a, e2, "end");
+          });
+          b.addEventListener("keydown", function (e) {
+            let ziel = -1;
+            if (e.key === "ArrowRight") ziel = (j + 1) % LB_SYMBOLE.length;
+            else if (e.key === "ArrowLeft") ziel = (j - 1 + LB_SYMBOLE.length) % LB_SYMBOLE.length;
+            if (ziel < 0) return;
+            e.preventDefault();
+            syms.forEach(function (x, i) { x.tabIndex = i === ziel ? 0 : -1; });
+            syms[ziel].focus();
+          });
+          t.leiste.appendChild(b);
+          return b;
+        });
+        t.knoepfe.querySelector(".t03-lb-tipp").addEventListener("click", function () {
+          t.tipp.innerHTML = "<b>Tipp:</b> " + s.hinweis;
+          t.tipp.hidden = false;
+          L.formeln(t.tipp);
+        });
+        t.knoepfe.querySelector(".t03-lb-auf").addEventListener("click", function () {
+          t.feld.value = s.anzeige;
+          t.feld.removeAttribute("aria-invalid");
+          melden(t, "leer", "Aufgedeckt: " + s.anzeige);
+          abschliessen(k, "aufgedeckt", true);
+        });
+        t.form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (zustand[k] !== "offen") return;
+          if (!t.feld.value.trim()) { t.feld.setAttribute("aria-invalid", "true"); melden(t, "leer", "Gib zuerst eine Klausel ein."); return; }
+          const ist = klauselLesen(t.feld.value);
+          if (!ist.ok) { t.feld.setAttribute("aria-invalid", "true"); melden(t, "leer", ist.fehler); return; }
+          if (soll[k].some(function (x) { return x.wert === ist.wert; })) {
+            t.feld.removeAttribute("aria-invalid");
+            t.feld.classList.add("richtig");
+            melden(t, "ok", "✓ Richtig.");
+            abschliessen(k, "richtig", false);
+            return;
+          }
+          t.feld.setAttribute("aria-invalid", "true");
+          // Wie viele Elemente fehlen oder sind zu viel?
+          const s0 = soll[k][0];
+          let zusatz = "";
+          if (s0.kinder && ist.kinder) {
+            const fehlen = s0.kinder.filter(function (x) { return ist.kinder.indexOf(x) < 0; }).length;
+            const zuViel = ist.kinder.filter(function (x) { return s0.kinder.indexOf(x) < 0; }).length;
+            const d = [];
+            if (fehlen) d.push(fehlen === 1 ? "Ein Element fehlt" : fehlen + " Elemente fehlen");
+            if (zuViel) d.push(zuViel === 1 ? "eines ist zu viel" : zuViel + " sind zu viel");
+            if (d.length) zusatz = " " + d.join(", ") + ".";
+          }
+          melden(t, "bad", "✗ Das stimmt noch nicht." + zusatz + " Nimm den Tipp oder deck den Schritt auf.");
+        });
+        t.feld.addEventListener("input", function () { t.feld.removeAttribute("aria-invalid"); t.feld.classList.remove("richtig"); });
+        return t;
+      });
+
+      // Schritt k abschliessen, nächsten öffnen; der Fokus wandert mit (auch nach «Aufdecken»)
+      function abschliessen(k, neu, vomKnopf) {
+        const t = teile[k];
+        const hatteFokus = vomKnopf || t.li.contains(document.activeElement);
+        zustand[k] = neu;
+        t.li.classList.add(neu === "richtig" ? "lr-richtig" : "lr-aufgedeckt");
+        t.feld.readOnly = true;
+        t.pruefen.disabled = true;
+        t.knoepfe.hidden = true;
+        t.leiste.hidden = true;
+        if (cfg.schritte[k].erklaerung) {
+          t.erkl.innerHTML = cfg.schritte[k].erklaerung;
+          t.erkl.hidden = false;
+          L.formeln(t.erkl);
+        }
+        if (k + 1 < cfg.schritte.length) {
+          sichtbar = Math.max(sichtbar, k + 2);
+          teile[k + 1].li.hidden = false;
+          L.formeln(teile[k + 1].li);
+          if (hatteFokus) teile[k + 1].feld.focus();
+        } else {
+          const richtig = zustand.filter(function (x) { return x === "richtig"; }).length;
+          const auf = zustand.filter(function (x) { return x === "aufgedeckt"; }).length;
+          ende.innerHTML = (cfg.baum ? baumHtml(cfg.baum, true) : "") + (cfg.fazit || "");
+          ende.hidden = false;
+          L.formeln(ende);
+          fazit.textContent = "Fertig: " + richtig + " von " + cfg.schritte.length + " selbst richtig" + (auf ? ", " + auf + " aufgedeckt" : "") + ".";
+          fazit.hidden = false;
+          if (hatteFokus) fazit.focus();
+        }
+        zaehlen();
+      }
+
+      el.querySelector(".t03-lb-reset").addEventListener("click", function () {
+        bauen();
+        el.querySelector(".kurz-feld").focus();
+      });
+      zaehlen();
+      L.formeln(el);
+    }
+    bauen();
+  }
+
+  /* ---------- «Du bist dran»: kurze Eingaben nach jedem Erklärblock ---------- */
+  // 0 · Bausteine
+  L.kurzAntwort("#t03-d1", {
+    titel: "Oder-Liste als Klausel", stufe: 1, typ: "menge",
+    frage: "<p>Für den Weg zur FH gilt: «Ich nehme den Bus oder das Velo, oder es regnet nicht.» Mit " + M("B") + " = Bus, " + M("V") + " = Velo und " + M("R") + " = «Es regnet» heisst das " + M("B ∨ V ∨ ¬R") + ". Schreib diese Oder-Liste als Klausel.</p>",
+    antwort: "{B, V, ¬R}",
+    hinweise: ["Eine Klausel ist eine Menge: geschweifte Klammern, Literale durch Komma getrennt.", "Das «nicht» bleibt am Atom: ¬R. Tippen kannst du es auch als !R."],
+    loesungsweg: ["Jedes Literal der Oder-Liste wird ein Element der Menge: " + M("B") + ", " + M("V") + " und " + M("¬R") + ".", "Klausel: " + M("{B, V, ¬R}")]
   });
 
-  L.zahlAufgabe("#t03-u2", {
-    titel: "Übung 2 · Klauseln zählen",
+  // 1 · Wörterbuch
+  L.formelAufgabe("#t03-d2", {
+    titel: "Klauselmenge zurück in eine Formel", stufe: 1, form: "knf",
+    frage: "<p>Lies die Klauselmenge " + M("{{R, ¬S}, {T}}") + " als Formel und tipp sie ein. Innen steht «oder», zwischen den Klauseln «und».</p>",
+    loesung: "(R | !S) & T",
+    hinweise: ["Komma innerhalb einer Klausel = ∨, Komma zwischen den Klauseln = ∧.", "Die Einerklausel " + M("{T}") + " ist einfach " + M("T") + "."],
+    loesungsweg: [M("{R, ¬S}") + " wird " + M("R ∨ ¬S") + ", " + M("{T}") + " wird " + M("T") + ".", "Zusammen: " + M("(R ∨ ¬S) ∧ T")]
+  });
+
+  // 2 · Klauselmenge
+  L.kurzAntwort("#t03-d3", {
+    titel: "KNF → Klauselmenge", stufe: 1, typ: "menge",
+    frage: "<p>Bilde die Klauselmenge von <i>F</i> = " + M("(K ∨ ¬M) ∧ (¬M ∨ K ∨ K) ∧ (¬K ∨ L) ∧ ¬L") + ". Schreib sie als Menge von Klauseln, zum Beispiel " + M("{{A, B}, {¬C}}") + ".</p>",
+    antwort: "{{K, ¬M}, {¬K, L}, {¬L}}",
+    hinweise: ["Jede Oder-Klammer wird eine Klausel. Das einzelne ¬L wird " + M("{¬L}") + ".", M("(¬M ∨ K ∨ K)") + " ergibt als Menge " + M("{K, ¬M}") + ". Gibt es diese Klausel schon?"],
+    loesungsweg: [M("(K ∨ ¬M)") + " → " + M("{K, ¬M}"), M("(¬M ∨ K ∨ K)") + " → " + M("{K, ¬M}") + ": dieselbe Menge, sie zählt nur einmal.", M("(¬K ∨ L)") + " → " + M("{¬K, L}") + ", " + M("¬L") + " → " + M("{¬L}"), T`$\KK(F)$` + " = { " + M("{K, ¬M}, {¬K, L}, {¬L}") + " }"]
+  });
+
+  L.zahlAufgabe("#t03-d4", {
+    titel: "Klauseln zählen", stufe: 1,
     frage: "Wie viele Klauseln hat die Klauselmenge von <i>F</i> = " + M("(A ∨ B ∨ A) ∧ (¬C ∨ B) ∧ (B ∨ ¬C) ∧ A") + "?",
-    antwort: 3,
-    anzeige: "3",
+    antwort: 3, anzeige: "3",
     hinweise: [
       "Jede Oder-Klammer wird eine Menge. In einer Menge zählt jedes Element nur einmal.",
       "Vergleiche " + M("(¬C ∨ B)") + " und " + M("(B ∨ ¬C)") + ". Ist die Reihenfolge wichtig?"
     ],
     loesungsweg: [
       M("(A ∨ B ∨ A)") + " wird " + M("{A, B}") + ": A steht nur einmal in der Menge.",
-      M("(¬C ∨ B)") + " und " + M("(B ∨ ¬C)") + " ergeben beide " + M("{B, ¬C}") + ". Diese Klausel zählt nur einmal (Bem. 2.25).",
+      M("(¬C ∨ B)") + " und " + M("(B ∨ ¬C)") + " ergeben beide " + M("{B, ¬C}") + ". Diese Klausel zählt nur einmal.",
       M("A") + " wird die Einerklausel " + M("{A}") + ".",
       T`$\KK(F)$` + " = { " + M("{A, B}, {B, ¬C}, {A}") + " }: <b>3 Klauseln</b>."
     ]
   });
 
-  L.zahlAufgabe("#t03-u3", {
-    titel: "Übung 3 · Resolvente bilden",
-    frage: "Bilde die Resolvente von " + M("{A, ¬B, C, D}") + " und " + M("{B, C, ¬E}") + ". Wie viele Literale hat sie?",
-    antwort: 4,
-    anzeige: "4",
-    hinweise: [
-      "Such das Paar: Welches Atom steht in der einen Klausel ohne, in der anderen mit ¬?",
-      "Ein Literal, das in beiden Resten vorkommt, zählt in der Vereinigung nur einmal."
-    ],
+  // 3 · Resolvente
+  L.kurzAntwort("#t03-d5", {
+    titel: "Resolvente bilden", stufe: 1, typ: "menge",
+    frage: "<p>Bilde die Resolvente von " + M("{¬R, S, T}") + " und " + M("{R, ¬U, S}") + ".</p>",
+    antwort: "{S, T, ¬U}",
+    hinweise: ["Such das Paar: " + M("¬R") + " steht in der ersten, " + M("R") + " in der zweiten Klausel.", M("S") + " steht in beiden Resten. In der Menge zählt es nur einmal."],
+    loesungsweg: ["Paar " + M("¬R") + " / " + M("R") + ", genau eines. Also erlaubt.", M("{S, T} ∪ {¬U, S} = {S, T, ¬U}")]
+  });
+
+  L.zahlAufgabe("#t03-d6", {
+    titel: "Paare zählen", stufe: 2,
+    frage: "Wie viele Paare <i>L</i> / ¬<i>L</i> haben " + M("{A, ¬B, C}") + " und " + M("{¬A, B, D}") + "? Überleg danach: Darfst du die beiden resolvieren?",
+    antwort: 2, anzeige: "2",
+    hinweise: ["Geh Atom für Atom durch: A, B, C, D. Steht es in der einen Klausel ohne und in der anderen mit ¬?"],
     loesungsweg: [
-      "Paar: " + M("¬B") + " in der ersten, " + M("B") + " in der zweiten Klausel. Genau ein Paar, also erlaubt.",
-      M("{A, C, D} ∪ {C, ¬E} = {A, C, D, ¬E}"),
-      M("C") + " steht in beiden Resten, zählt in der Menge aber nur einmal: <b>4 Literale</b>."
+      M("A") + " / " + M("¬A") + " und " + M("¬B") + " / " + M("B") + ": <b>2 Paare</b>. " + M("C") + " und " + M("D") + " stehen nur auf einer Seite.",
+      "Über A entsteht " + M("{¬B, B, C, D}") + ", über B entsteht " + M("{A, ¬A, C, D}") + ". Beide sind Tautologien und helfen nicht.",
+      "Beide Paare auf einmal zu streichen und " + M("{C, D}") + " zu bilden, ist verboten."
     ]
   });
 
-  L.wahrFalsch("#t03-u4", {
-    titel: "Übung 4 · Aussagen zur Resolution",
-    aussagen: [
-      { html: "Eine Klauselmenge, die ∅ enthält, ist unerfüllbar.", wahr: true,
-        erklaerung: "∅ ist eine Oder-Liste ohne Eintrag und damit immer falsch. Eine Und-Verknüpfung mit etwas immer Falschem ist nie wahr (Def. 2.26c)." },
-      { html: "Taucht ∅ in Res¹ nicht auf, ist die Formel erfüllbar.", wahr: false,
-        erklaerung: "Erst wenn eine Runde gar nichts Neues bringt, ist die Formel erfüllbar. Beispiel 2.34 findet ∅ erst in Res³." },
-      { html: "Um zu zeigen, dass <i>G</i> aus <i>F</i> folgt, prüfst du <i>F</i> ∧ ¬<i>G</i> auf Unerfüllbarkeit.", wahr: true,
-        erklaerung: "Das ist Bem. 2.23b: G folgt genau dann aus F, wenn F ∧ ¬G unerfüllbar ist." },
-      { html: "Eine Resolvente hat immer weniger Literale als jede ihrer Elternklauseln.", wahr: false,
-        erklaerung: M("{A, B}") + " und " + M("{¬A, C, D}") + " ergeben " + M("{B, C, D}") + ": mehr Literale als die erste Elternklausel." },
-      { html: "Aus " + M("{A, B}") + " und " + M("{¬A, ¬B}") + " darfst du ∅ bilden.", wahr: false,
-        erklaerung: "Zwei Paare auf einmal streichen ist verboten (Bem. 2.29). Jede erlaubte Resolvente, etwa " + M("{B, ¬B}") + ", ist eine Tautologie. Die beiden Klauseln sind zusammen erfüllbar, zum Beispiel mit A = 1, B = 0." },
-      { html: "Jede Resolvente zweier Klauseln aus " + T`$\KK(F)$` + " darfst du dazunehmen, ohne dass sich die Formel ändert.", wahr: true,
-        erklaerung: "Das sagt das Resolutionslemma (Satz 2.28): F ist äquivalent zu jeder Formel mit der erweiterten Klauselmenge." }
-    ]
+  // 4 · Verfahren
+  const KEIN = { antwort: ["-", "–", "—", "keine", "kein", "nichts"], typ: "text", anzeige: "–" };
+  L.tabellenAufgabe("#t03-d7", {
+    titel: "Runde 1 von Hand", stufe: 2,
+    frage: "<p>Gegeben ist " + T`$\KK$` + " mit (1) " + M("{A, B}") + ", (2) " + M("{¬A, C}") + ", (3) " + M("{¬B}") + ", (4) " + M("{¬C}") + ". Bilde für jedes Paar die Resolvente und schreib sie in Mengenklammern, etwa in der Form {X, ¬Y}. Hat ein Paar keinen Gegensatz, tipp «–» oder «keine».</p>",
+    kopf: ["Paar", "Resolvente"], zeilenKopf: true,
+    zeilen: [
+      ["(1) und (2)", { antwort: ["{B,C}", "{C,B}"], typ: "text", anzeige: "{B, C}" }],
+      ["(1) und (3)", { antwort: ["{A}"], typ: "text", anzeige: "{A}" }],
+      ["(1) und (4)", KEIN],
+      ["(2) und (3)", KEIN],
+      ["(2) und (4)", { antwort: ["{¬A}", "{!A}", "{~A}"], typ: "text", anzeige: "{¬A}" }],
+      ["(3) und (4)", KEIN]
+    ],
+    hinweise: ["Ein Paar braucht ein Atom, das in der einen Klausel ohne und in der anderen mit ¬ steht.", "(3) und (4) haben verschiedene Atome: B und C. Da gibt es nichts zu streichen."],
+    loesungsweg: ["(1)+(2) über A: " + M("{B, C}") + ". (1)+(3) über B: " + M("{A}") + ". (2)+(4) über C: " + M("{¬A}") + ".", "Die übrigen drei Paare haben keinen Gegensatz.", T`$\Res^1 = \KK \cup$` + " { " + M("{B, C}, {A}, {¬A}") + " }"]
   });
 
-  L.auswahl("#t03-u5", {
-    frage: "Übung 5 · Du willst zeigen, dass " + M("A ∨ B") + " aus einer Klauselmenge folgt. Was nimmst du dazu?",
-    optionen: [M("{¬A, ¬B}"), M("{¬A}") + " und " + M("{¬B}"), M("{A, B}")],
-    richtig: 1,
-    erklaerung: "Die Negation ist " + M("¬(A ∨ B) ≡ ¬A ∧ ¬B") + " (De Morgan). Ein «und» trennt Klauseln, also zwei Einerklauseln. " + M("{¬A, ¬B}") + " wäre " + M("¬A ∨ ¬B") + ", die Negation von " + M("A ∧ B") + "."
+  L.zahlAufgabe("#t03-d8", {
+    titel: "Wann kommt ∅?", stufe: 2,
+    frage: "Gleiche Klauselmenge wie oben. In welcher Runde <i>n</i> taucht ∅ zum ersten Mal in " + T`$\Res^n(\KK)$` + " auf?",
+    antwort: 2, anzeige: "2",
+    hinweise: ["Schau dir die neuen Klauseln aus Runde 1 an. Gibt es darunter zwei, die sich genau widersprechen?"],
+    loesungsweg: [T`$\Res^1$` + " enthält " + M("{A}") + " und " + M("{¬A}") + ", aber noch kein ∅.", "In Runde 2 ergeben " + M("{A}") + " und " + M("{¬A}") + " die leere Klausel: " + T`$\emptyset \in \Res^2$` + ". Die Klauselmenge ist unerfüllbar."]
   });
 
-  L.schrittAufgabe("#t03-u6", {
-    titel: "Übung 6 · Prüfungsstil: Impliziert die Klauselmenge stets D?",
-    aufgabe: "<p>Im Stil von Aufgabe 2a der exemplarischen Modulschlussprüfung: Überprüfe mit der Resolutionsmethode, ob die Klauselmenge " +
-      T`$\KK$` + " = { " + M("{A, ¬B}, {B, C}, {¬C, A}, {D, ¬A}") + " } stets " + M("D") + " impliziert. Erstelle dazu den Resolutionsbaum.</p>" +
-      '<p class="hint">Eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt.</p>',
+  // 5 · Folgerung
+  L.formelAufgabe("#t03-d9", {
+    titel: "Ziel negieren", stufe: 2, form: "knf",
+    frage: "<p>Du willst zeigen, dass " + M("S → (T ∨ U)") + " aus einer Klauselmenge folgt. Negiere das Ziel und tipp ¬<i>G</i> in KNF ein.</p>",
+    loesung: "!(S -> (T | U))",
+    hinweise: ["Erst den Pfeil auflösen: " + M("S → (T ∨ U) ≡ ¬S ∨ T ∨ U") + ".", "Dann De Morgan: Aus «oder» wird «und», und jedes Literal kippt."],
+    loesungsweg: [M("¬(¬S ∨ T ∨ U) ≡ S ∧ ¬T ∧ ¬U"), "Als Klauseln nimmst du drei Einerklauseln dazu: " + M("{S}") + ", " + M("{¬T}") + ", " + M("{¬U}") + "."]
+  });
+
+  L.kurzAntwort("#t03-d10", {
+    titel: "Negiertes Ziel als Klauseln", stufe: 2, typ: "menge",
+    frage: "<p>Das Ziel lautet <i>G</i> = " + M("¬R ∨ (S ∧ T)") + ". Welche Klauseln nimmst du für ¬<i>G</i> dazu? Schreib sie als Menge von Klauseln.</p>",
+    antwort: "{{R}, {¬S, ¬T}}",
+    hinweise: [M("¬(X ∨ Y) ≡ ¬X ∧ ¬Y") + ": Das äussere «oder» wird zu «und», also zu mehreren Klauseln.", M("¬(S ∧ T) ≡ ¬S ∨ ¬T") + ": ein «oder», also eine einzige Klausel."],
+    loesungsweg: [M("¬G ≡ ¬¬R ∧ ¬(S ∧ T) ≡ R ∧ (¬S ∨ ¬T)"), "Klauseln: " + M("{R}") + " und " + M("{¬S, ¬T}")]
+  });
+
+  /* ---------- 7 · Übungen ---------- */
+  L.kurzAntwort("#t03-u1", {
+    titel: "Übung 1 · Im Café", stufe: 1, typ: "menge",
+    frage: "<p>Im Café gilt: Wer Kuchen bestellt, nimmt Kaffee oder Tee. Die Regel steht zweimal auf der Karte. Heute gibt es keinen Tee, und du bestellst Kuchen. Mit " + M("K") + " = Kuchen, " + M("C") + " = Kaffee, " + M("T") + " = Tee wird das zu</p><p><i>F</i> = " + M("(¬K ∨ C ∨ T) ∧ (T ∨ ¬K ∨ C) ∧ ¬T ∧ K") + ".</p><p>Bilde die Klauselmenge.</p>",
+    antwort: "{{¬K, C, T}, {¬T}, {K}}",
+    hinweise: ["Vergleiche die ersten beiden Klammern als Mengen.", "Einzelne Literale werden Einerklauseln."],
+    loesungsweg: ["Die ersten beiden Klammern sind dieselbe Menge " + M("{¬K, C, T}") + ": sie zählt nur einmal.", T`$\KK(F)$` + " = { " + M("{¬K, C, T}, {¬T}, {K}") + " }", "Nebenbei: Resolvierst du weiter, entsteht " + M("{C}") + ". Du trinkst also Kaffee."]
+  });
+
+  L.kurzAntwort("#t03-u2", {
+    titel: "Übung 2 · Resolvente mit Überlappung", stufe: 1, typ: "menge",
+    frage: "<p>Bilde die Resolvente von " + M("{A, ¬B, C, D}") + " und " + M("{B, C, ¬E}") + ".</p>",
+    antwort: "{A, C, D, ¬E}",
+    hinweise: ["Such das Paar: Welches Atom steht in der einen Klausel ohne, in der anderen mit ¬?", "Ein Literal, das in beiden Resten vorkommt, zählt in der Vereinigung nur einmal."],
+    loesungsweg: ["Paar: " + M("¬B") + " in der ersten, " + M("B") + " in der zweiten Klausel. Genau ein Paar, also erlaubt.", M("{A, C, D} ∪ {C, ¬E} = {A, C, D, ¬E}"), M("C") + " steht in beiden Resten, zählt in der Menge aber nur einmal: 4 Literale."]
+  });
+
+  L.formelAufgabe("#t03-u3", {
+    titel: "Übung 3 · Regel als Klausel", stufe: 2, form: "knf",
+    frage: "<p>Die Regel lautet: «Wenn es regnet und ich keinen Schirm dabeihabe, werde ich nass.» Mit " + M("R") + " = Regen, " + M("S") + " = Schirm dabei, " + M("N") + " = nass ist das " + M("(R ∧ ¬S) → N") + ". Tipp die Regel als eine einzige Oder-Klammer ein (KNF mit einer Klausel).</p>",
+    loesung: "(R & !S) -> N",
+    hinweise: ["Pfeil auflösen: " + M("X → Y ≡ ¬X ∨ Y") + ".", "Dann De Morgan auf " + M("¬(R ∧ ¬S)") + "."],
+    loesungsweg: [M("(R ∧ ¬S) → N ≡ ¬(R ∧ ¬S) ∨ N"), M("≡ ¬R ∨ S ∨ N"), "Als Klausel: " + M("{¬R, S, N}") + ". Jede Wenn-dann-Regel mit «und» vorne wird so zu einer einzigen Klausel."]
+  });
+
+  L.formelAufgabe("#t03-u4", {
+    titel: "Übung 4 · Tautologie vorbereiten", stufe: 2, form: "knf",
+    frage: "<p>Du willst mit Resolution zeigen, dass <i>F</i> = " + M("((A → B) ∧ A) → B") + " eine Tautologie ist. Dafür prüfst du ¬<i>F</i> auf Unerfüllbarkeit. Tipp ¬<i>F</i> in KNF ein.</p>",
+    loesung: "!(((A -> B) & A) -> B)",
+    hinweise: [M("¬(X → Y) ≡ X ∧ ¬Y") + ": Die Negation eines Pfeils ist «Vorderteil und nicht Hinterteil».", M("A → B") + " noch in " + M("¬A ∨ B") + " umschreiben."],
+    loesungsweg: [M("¬F ≡ ((A → B) ∧ A) ∧ ¬B"), M("≡ (¬A ∨ B) ∧ A ∧ ¬B"), "Klauseln " + M("{¬A, B}") + ", " + M("{A}") + ", " + M("{¬B}") + ": Über A entsteht " + M("{B}") + ", mit " + M("{¬B}") + " dann ∅. Also ist <i>F</i> eine Tautologie."]
+  });
+
+  lueckenBeweis("#t03-u5", {
+    titel: "Übung 5 · Impliziert die Klauselmenge stets D?", stufe: 2,
+    aufgabe: "<p>Überprüfe mit der Resolutionsmethode, ob die Klauselmenge " + T`$\KK$` + " = { " + M("{A, ¬B}, {B, C}, {¬C, A}, {D, ¬A}") + " } stets " + M("D") + " impliziert. Nummeriere die Klauseln (1) bis (4).</p>",
     schritte: [
-      { html: '<div class="t03-tafel"><div>' + T`$\KK' = \KK \cup \{\{\neg D\}\}$` + " = { " + M("{A, ¬B}, {B, C}, {¬C, A}, {D, ¬A}, {¬D}") + " }</div><div class=\"t03-leise\">Nummern (1) bis (5) in dieser Reihenfolge</div></div>",
-        warum: "Beweis durch Widerspruch: Ziel D negieren und als Klausel {¬D} dazunehmen. Folgt D, ist 𝒦′ unerfüllbar. Dieser Teil bringt in der Prüfung die meisten Punkte." },
-      { html: '<div class="t03-tafel"><div>(2) ' + M("{B, C}") + " und (3) " + M("{¬C, A}") + " über " + M("C") + ": (6) " + M("{A, B}") + "</div></div>",
-        warum: "Genau ein Paar, C und ¬C. Die Reste {B} und {A} ergeben zusammen {A, B}." },
-      { html: '<div class="t03-tafel"><div>(6) ' + M("{A, B}") + " und (1) " + M("{A, ¬B}") + " über " + M("B") + ": (7) " + M("{A}") + "</div></div>",
-        warum: "Paar B und ¬B. Beide Reste sind {A}. In einer Menge steht A nur einmal: {A}." },
-      { html: '<div class="t03-tafel"><div>(7) ' + M("{A}") + " und (4) " + M("{D, ¬A}") + " über " + M("A") + ": (8) " + M("{D}") + "</div></div>",
-        warum: "Paar A und ¬A. Übrig bleibt {D}." },
-      { html: '<div class="t03-tafel"><div>(8) ' + M("{D}") + " und (5) " + M("{¬D}") + " über " + M("D") + ": (9) ∅</div></div>",
-        warum: "Jetzt widerspricht {D} dem negierten Ziel {¬D}. Es bleibt die leere Klausel." },
-      { html: baumHtml(BAEUME.u6, true) + "<p><b>Fazit:</b> 𝒦′ ist unerfüllbar. Also impliziert 𝒦 stets D.</p>",
-        warum: "Der Baum zeigt die vier Schritte als Treppe bis ∅. Das Fazit als ganzer Satz gibt einen eigenen Punkt." }
-    ]
+      { label: "Welche Klausel (5) nimmst du für das negierte Ziel dazu?", antwort: ["{¬D}"], anzeige: "{¬D}",
+        hinweis: "Beweis durch Widerspruch: Nimm das Gegenteil von D an.",
+        erklaerung: T`$\KK' = \KK \cup \{\{\neg D\}\}$` + ". Folgt D, ist 𝒦′ unerfüllbar. Dieser Teil bringt in der Prüfung die meisten Punkte." },
+      { label: "(2) " + M("{B, C}") + " und (3) " + M("{¬C, A}") + " über " + M("C") + " ergeben (6):", antwort: ["{A, B}"], anzeige: "{A, B}",
+        hinweis: "Streich C und ¬C, vereinige die Reste {B} und {A}.", erklaerung: "Genau ein Paar, C und ¬C." },
+      { label: "(6) und (1) " + M("{A, ¬B}") + " über " + M("B") + " ergeben (7):", antwort: ["{A}"], anzeige: "{A}",
+        hinweis: "Beide Reste sind {A}. Wie oft steht A in einer Menge?", erklaerung: "Paar B und ¬B. In einer Menge steht A nur einmal." },
+      { label: "(7) und (4) " + M("{D, ¬A}") + " über " + M("A") + " ergeben (8):", antwort: ["{D}"], anzeige: "{D}",
+        hinweis: "Streich A und ¬A.", erklaerung: "Übrig bleibt die Einerklausel {D}." },
+      { label: "(8) und (5) über " + M("D") + " ergeben (9):", antwort: ["∅"], anzeige: "∅",
+        hinweis: "{D} und {¬D} widersprechen sich. Was bleibt nach dem Streichen übrig?", erklaerung: "Die leere Klausel. 𝒦′ ist unerfüllbar." }
+    ],
+    baum: BAEUME.u6,
+    fazit: "<p><b>Fazit:</b> 𝒦′ ist unerfüllbar. Also impliziert 𝒦 stets " + M("D") + ".</p>"
   });
 
-  L.schrittAufgabe("#t03-u7", {
-    titel: "Übung 7 · Prüfungsstil: Vom Text zum Resolutionsbeweis",
+  lueckenBeweis("#t03-u6", {
+    titel: "Übung 6 · Vom Text zum Resolutionsbeweis", stufe: 3,
     aufgabe: "<p>Ein IT-Team plant die Wartung eines Webshops. Es gilt:</p>" +
       '<ol class="t03-algo"><li>Wird ein Update eingespielt, ist ein Neustart nötig.</li>' +
       "<li>Ein Neustart findet nur dann statt, wenn ein Wartungsfenster angekündigt ist.</li>" +
       "<li>Ist ein Wartungsfenster angekündigt, wird die Kundschaft informiert.</li>" +
       "<li>Es wird ein Update eingespielt oder ein Neustart gemacht (oder beides).</li></ol>" +
-      "<p>Zeige mit der Resolutionsmethode, dass die Kundschaft informiert wird.</p>" +
-      '<p class="hint">Eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt.</p>',
+      "<p>Zeige mit der Resolutionsmethode, dass die Kundschaft informiert wird. Atome: " + M("U") + " = Update, " + M("N") + " = Neustart, " + M("W") + " = Wartungsfenster angekündigt, " + M("I") + " = Kundschaft informiert.</p>",
     schritte: [
-      { html: '<div class="t03-tafel"><div>' + M("U") + " = Update, " + M("N") + " = Neustart, " + M("W") + " = Wartungsfenster angekündigt, " + M("I") + " = Kundschaft informiert</div></div>",
-        warum: "Zuerst die Atome festlegen. Jede Teilaussage bekommt einen Buchstaben." },
-      { html: '<div class="t03-tafel"><div>' + M("U ⇒ N, N ⇒ W, W ⇒ I, U ∨ N") + "; Ziel " + M("I") + "</div></div>",
-        warum: "«A nur dann, wenn B» heisst A ⇒ B: Ohne Wartungsfenster kein Neustart. Die Bedingung steht hinter «nur dann, wenn»." },
-      { html: '<div class="t03-tafel"><div>' + M("(¬U ∨ N) ∧ (¬N ∨ W) ∧ (¬W ∨ I) ∧ (U ∨ N) ∧ ¬I") + "</div></div>",
-        warum: "Jeden Pfeil mit X ⇒ Y ≡ ¬X ∨ Y auflösen und das negierte Ziel ¬I anhängen." },
-      { html: '<div class="t03-tafel"><div>' + T`$\KK'$` + " = { " + M("{¬U, N}, {¬N, W}, {¬W, I}, {U, N}, {¬I}") + " }</div></div>",
-        warum: "Fünf Oder-Klammern, fünf Klauseln, nummeriert (1) bis (5)." },
-      { html: '<div class="t03-tafel"><div>(1) ' + M("{¬U, N}") + " und (4) " + M("{U, N}") + " über " + M("U") + ": " + M("{N}") + "</div><div>" +
-          M("{N}") + " und (2) " + M("{¬N, W}") + " über " + M("N") + ": " + M("{W}") + "</div><div>" +
-          M("{W}") + " und (3) " + M("{¬W, I}") + " über " + M("W") + ": " + M("{I}") + "</div><div>" +
-          M("{I}") + " und (5) " + M("{¬I}") + " über " + M("I") + ": ∅</div></div>",
-        warum: "Der erste Schritt ist eine Fallunterscheidung: Update oder nicht, in beiden Fällen gibt es einen Neustart. Danach läuft eine Kette bis zum Widerspruch mit {¬I}." },
-      { html: baumHtml(BAEUME.u7, true) + "<p><b>Fazit:</b> 𝒦′ ist unerfüllbar. Also folgt " + M("I") + ": Die Kundschaft wird informiert.</p>",
-        warum: "Resolutionsbaum und Fazit. Das Fazit beantwortet die Frage im Text, nicht nur in Symbolen." }
+      { label: "Tipp die ganze Klauselmenge 𝒦′ ein: die vier Regeln in dieser Reihenfolge und das negierte Ziel.", antwort: ["{{¬U, N}, {¬N, W}, {¬W, I}, {U, N}, {¬I}}"], anzeige: "{{¬U, N}, {¬N, W}, {¬W, I}, {U, N}, {¬I}}",
+        hinweis: "«A nur dann, wenn B» heisst A → B. Jeder Pfeil X → Y wird die Klausel {¬X, Y}. Das Ziel I negiert ergibt {¬I}.",
+        erklaerung: "Nummeriere in dieser Reihenfolge: (1) " + M("{¬U, N}") + ", (2) " + M("{¬N, W}") + ", (3) " + M("{¬W, I}") + ", (4) " + M("{U, N}") + ", (5) " + M("{¬I}") + "." },
+      { label: "(1) und (4) über " + M("U") + " ergeben (6):", antwort: ["{N}"], anzeige: "{N}",
+        hinweis: "Beide Reste sind {N}.", erklaerung: "Eine Fallunterscheidung: Mit oder ohne Update gibt es einen Neustart." },
+      { label: "(6) und (2) über " + M("N") + " ergeben (7):", antwort: ["{W}"], anzeige: "{W}",
+        hinweis: "Streich N und ¬N.", erklaerung: "Der Neustart verlangt ein Wartungsfenster." },
+      { label: "(7) und (3) über " + M("W") + " ergeben (8):", antwort: ["{I}"], anzeige: "{I}",
+        hinweis: "Streich W und ¬W.", erklaerung: "Das Wartungsfenster zieht die Information nach sich." },
+      { label: "(8) und (5) über " + M("I") + " ergeben (9):", antwort: ["∅"], anzeige: "∅",
+        hinweis: "{I} gegen das negierte Ziel {¬I}.", erklaerung: "Widerspruch: die leere Klausel." }
+    ],
+    baum: BAEUME.u7,
+    fazit: "<p><b>Fazit:</b> 𝒦′ ist unerfüllbar. Also folgt " + M("I") + ": Die Kundschaft wird informiert. Das Fazit beantwortet die Frage im Text, nicht nur in Symbolen.</p>"
+  });
+
+  L.lueckenRechnung("#t03-u7", {
+    titel: "Übung 7 · Erfüllbar oder unerfüllbar?", stufe: 3,
+    aufgabe: "<p>Prüfe mit dem Erfüllbarkeitstest, ob " + T`$\KK$` + " = { " + M("{A, ¬B}, {B, C}, {¬A, ¬C}") + " } erfüllbar ist. Resolventen, die Tautologien sind, lässt du weg.</p>",
+    schritte: [
+      { label: "Wie viele neue Klauseln bringt Runde 1?", antwort: 3,
+        hinweis: "Prüfe alle drei Paare (1)+(2), (2)+(3), (1)+(3). Jedes hat genau einen Gegensatz.",
+        erklaerung: "(1)+(2) über B: " + M("{A, C}") + "; (2)+(3) über C: " + M("{¬A, B}") + "; (1)+(3) über A: " + M("{¬B, ¬C}") + ". Kein ∅, also weiter." },
+      { label: "Wie viele neue Klauseln bringt Runde 2?", antwort: 0,
+        hinweis: "Vorsicht bei " + M("{A, C}") + " und " + M("{¬A, ¬C}") + ": zwei Paare.",
+        erklaerung: "Jede Resolvente ist schon da oder eine Tautologie, etwa " + M("{A, C}") + " und " + M("{¬A, B}") + " ergeben " + M("{B, C}") + ". " + T`$\Res^2 = \Res^1$` + " und ∅ fehlt: 𝒦 ist <b>erfüllbar</b>. Wer bei " + M("{A, C}") + " und " + M("{¬A, ¬C}") + " beide Paare streicht, «findet» ein falsches ∅." },
+      { label: "Probe: Wie viele der 8 Belegungen von A, B, C machen alle drei Klauseln wahr?", antwort: 2,
+        hinweis: "Fang mit A = 1 an: Dann muss C = 0 sein, und B? Danach A = 0.",
+        erklaerung: M("A") + " = 1, " + M("B") + " = 1, " + M("C") + " = 0 und " + M("A") + " = 0, " + M("B") + " = 0, " + M("C") + " = 1. Es gibt Modelle, also stimmt «erfüllbar»." }
     ]
   });
 
-  L.schrittAufgabe("#t03-u8", {
-    titel: "Übung 8 · Erfüllbar oder unerfüllbar?",
-    aufgabe: "<p>Prüfe mit dem Algorithmus aus Korollar 2.33, ob die Klauselmenge " + T`$\KK$` + " = { " + M("{A, ¬B}, {B, C}, {¬A, ¬C}") + " } erfüllbar ist.</p>" +
-      '<p class="hint">Eigene Aufgabe, eigene Lösung, nicht vom Dozenten bestätigt.</p>',
-    schritte: [
-      { html: '<div class="t03-tafel"><div>' + T`$\Res^0 = \KK$` + ", Klauseln (1) " + M("{A, ¬B}") + ", (2) " + M("{B, C}") + ", (3) " + M("{¬A, ¬C}") + "</div></div>",
-        warum: "Die Klauselmenge ist schon gegeben. Sie ist Runde 0." },
-      { html: '<div class="t03-tafel"><div>(1)+(2) über ' + M("B") + ": " + M("{A, C}") + "; (2)+(3) über " + M("C") + ": " + M("{¬A, B}") + "; (1)+(3) über " + M("A") + ": " + M("{¬B, ¬C}") + "</div><div>" +
-          T`$\Res^1 = \Res^0 \cup$` + " { " + M("{A, C}, {¬A, B}, {¬B, ¬C}") + " }</div></div>",
-        warum: "Jedes der drei Paare hat genau einen Gegensatz. Drei neue Klauseln, kein ∅. Also weiter." },
-      { html: '<div class="t03-tafel"><div>' + M("{A, C}") + " + " + M("{¬A, ¬C}") + ": zwei Paare, Tautologie, weglassen</div><div>" +
-          M("{A, C}") + " + " + M("{¬A, B}") + " über " + M("A") + ": " + M("{B, C}") + ", schon da</div><div>" +
-          M("{¬A, B}") + " + " + M("{¬B, ¬C}") + " über " + M("B") + ": " + M("{¬A, ¬C}") + ", schon da</div><div class=\"t03-leise\">Alle übrigen Paare: kein Gegensatz, zwei Paare oder schon vorhanden.</div></div>",
-        warum: "Runde 2 bringt nichts Neues. Achtung Falle: Wer bei {A, C} und {¬A, ¬C} beide Paare auf einmal streicht, «findet» ein falsches ∅." },
-      { html: '<div class="t03-tafel"><div>' + T`$\Res^2 = \Res^1$` + ", ∅ kommt nicht vor ⇒ «" + T`$\KK$` + " ist erfüllbar»</div><div>Probe: " + M("A") + " = 1, " + M("B") + " = 1, " + M("C") + " = 0 macht alle drei Klauseln wahr.</div></div>",
-        warum: "Korollar 2.33, Fall 2: Die Runden werden stationär, das heisst, sie ändern sich nicht mehr. Die Probe mit einer Belegung bestätigt das Ergebnis." }
+  L.wahrFalsch("#t03-u8", {
+    titel: "Aussagen zur Resolution",
+    aussagen: [
+      { html: "Eine Klauselmenge, die ∅ enthält, ist unerfüllbar.", wahr: true,
+        erklaerung: "∅ ist eine Oder-Liste ohne Eintrag und damit immer falsch. Eine Und-Verknüpfung mit etwas immer Falschem ist nie wahr." },
+      { html: "Taucht ∅ in Res¹ nicht auf, ist die Formel erfüllbar.", wahr: false,
+        erklaerung: "Erst wenn eine Runde gar nichts Neues bringt, ist die Formel erfüllbar. Das Beispiel in Schritt 4 findet ∅ erst in Res³." },
+      { html: "Um zu zeigen, dass <i>G</i> aus <i>F</i> folgt, prüfst du <i>F</i> ∧ ¬<i>G</i> auf Unerfüllbarkeit.", wahr: true,
+        erklaerung: "Das ist der Folgerungstest: G folgt genau dann aus F, wenn F ∧ ¬G unerfüllbar ist." },
+      { html: "Eine Resolvente hat immer weniger Literale als jede ihrer Elternklauseln.", wahr: false,
+        erklaerung: M("{A, B}") + " und " + M("{¬A, C, D}") + " ergeben " + M("{B, C, D}") + ": mehr Literale als die erste Elternklausel." },
+      { html: "Aus " + M("{A, B}") + " und " + M("{¬A, ¬B}") + " darfst du ∅ bilden.", wahr: false,
+        erklaerung: "Zwei Paare auf einmal streichen ist verboten. Jede erlaubte Resolvente, etwa " + M("{B, ¬B}") + ", ist eine Tautologie. Die beiden Klauseln sind zusammen erfüllbar, zum Beispiel mit A = 1, B = 0." },
+      { html: "Jede Resolvente zweier Klauseln aus " + T`$\KK(F)$` + " darfst du dazunehmen, ohne dass sich die Formel ändert.", wahr: true,
+        erklaerung: "Das sagt das Resolutionslemma: F ist äquivalent zu jeder Formel mit der erweiterten Klauselmenge." }
     ]
+  });
+
+  L.auswahl("#t03-u9", {
+    frage: "Du willst zeigen, dass " + M("A ∨ B") + " aus einer Klauselmenge folgt. Was nimmst du dazu?",
+    optionen: [M("{¬A, ¬B}"), M("{¬A}") + " und " + M("{¬B}"), M("{A, B}")],
+    richtig: 1,
+    erklaerung: "Die Negation ist " + M("¬(A ∨ B) ≡ ¬A ∧ ¬B") + " (De Morgan). Ein «und» trennt Klauseln, also zwei Einerklauseln. " + M("{¬A, ¬B}") + " wäre " + M("¬A ∨ ¬B") + ", die Negation von " + M("A ∧ B") + "."
   });
 
   /* ---------- Lösungsfilm ---------- */
@@ -1080,7 +1377,7 @@
       { ph: 1, hl: ["impl"], dict: 2, dh: [1], f: blatt(5, {}, 4),
         say: "Das Ziel ist C, seine Negation ist ¬C. Daraus wird die Einerklausel {¬C}. Sie bekommt die Nummer 5." },
       { ph: 1, dict: 3, dh: [2], f: blatt(5, {}, -1, NW('<div class="t03-herk">' + T`\(\KK'\)` + " = " + T`\(\KK \cup \{\{\neg C\}\}\)` + "</div>")),
-        say: "Die erweiterte Menge nennst du " + T`\(\KK'\)` + ". Ist sie unerfüllbar, folgt C. Schon diese Zeile bringt im Lösungsblatt der Prüfung 3 der 6 Punkte." },
+        say: "Die erweiterte Menge nennst du " + T`\(\KK'\)` + ". Ist sie unerfüllbar, folgt C. In der Prüfung gibt es schon für diese Zeile rund die Hälfte der Punkte." },
       { ph: 2, dict: 4, dh: [3], f: blatt(5, { 1: "A" }, -1),
         say: "Jetzt suchst du Paare. Ein guter Start ist die längste Klausel (1). Nur sie enthält A, B und D ohne Verneinung. Ohne sie gibt es hier keinen Widerspruch, also streichst du ihre Literale eins nach dem anderen weg." },
       { ph: 2, dh: [3], f: blatt(5, { 1: "A", 2: "¬A" }, -1),
@@ -1129,7 +1426,7 @@
         e: "Das Paar ist ¬A / A. Streichen und vereinigen: " + M("{B} ∪ {C} = {B, C}") + "." },
       { q: "Stolperfalle: Was darfst du aus " + M("{A, ¬B}") + " und " + M("{¬A, B}") + " bilden?",
         o: ["∅, weil sich beide Paare aufheben", M("{B, ¬B}") + " oder " + M("{A, ¬A}") + ", beides Tautologien, also nutzlos", "Gar nichts, weil die Klauseln gleich lang sind"], a: 1,
-        e: "Pro Schritt nur ein Paar (Bem. 2.29). Jede erlaubte Resolvente ist eine Tautologie. ∅ wäre falsch: Mit A = 1 und B = 1 sind beide Klauseln wahr." },
+        e: "Pro Schritt nur ein Paar. Jede erlaubte Resolvente ist eine Tautologie. ∅ wäre falsch: Mit A = 1 und B = 1 sind beide Klauseln wahr." },
       { q: "Eine Klauselmenge enthält ∅. Was folgt daraus?",
         o: ["Sie ist unerfüllbar", "Sie ist eine Tautologie", "Nichts, ∅ darf man einfach streichen"], a: 0,
         e: "∅ ist immer falsch. Eine Und-Liste mit einer immer falschen Bedingung ist unerfüllbar." },
@@ -1142,15 +1439,15 @@
       { q: "Stolperfalle: Nach Res¹ ist ∅ noch nicht aufgetaucht, aber es sind neue Klauseln entstanden. Was gilt?",
         o: ["Weiterrechnen: Res² bilden", "Die Formel ist erfüllbar", "Die Formel ist eine Tautologie"], a: 0,
         e: "Solange Neues entsteht, ist nichts entschieden. Erst ∅ oder eine Runde ohne neue Klausel beendet den Algorithmus." },
-      { q: "Wann gibst du nach Korollar 2.33 «F ist erfüllbar» aus?",
+      { q: "Wann gibst du beim Erfüllbarkeitstest «F ist erfüllbar» aus?",
         o: ["Wenn ∅ in Res¹ fehlt", "Wenn du nach fünf Versuchen kein ∅ findest", "Wenn eine Runde keine neue Klausel mehr bringt, also " + T`$\Res^n = \Res^{n-1}$`], a: 2,
         e: "Die Runden sind stationär und ∅ ist nicht dabei. Dann bleibt ∅ für immer weg, also ist F erfüllbar." },
       { q: "Wie prüfst du mit Resolution, ob <i>F</i> eine Tautologie ist?",
         o: ["<i>F</i> in KNF bringen und ∅ herleiten", "<i>F</i> in DNF bringen und ∅ herleiten", "¬<i>F</i> in KNF bringen und ∅ herleiten"], a: 2,
-        e: "F ist genau dann eine Tautologie, wenn ¬F unerfüllbar ist (Bem. 2.23a)." },
+        e: "F ist genau dann eine Tautologie, wenn ¬F unerfüllbar ist." },
       { q: "Warum darfst du eine Resolvente zur Klauselmenge dazunehmen?",
         o: ["Sie folgt aus ihren Elternklauseln, die Formel bleibt äquivalent (Resolutionslemma)", "Resolventen sind immer kürzer", "Man darf jede beliebige Klausel dazunehmen"], a: 0,
-        e: "Satz 2.28: Mit der Resolvente ist die Formel äquivalent zur alten. Darum ändert das Dazunehmen nichts an der Erfüllbarkeit." }
+        e: "Resolutionslemma: Mit der Resolvente ist die Formel äquivalent zur alten. Darum ändert das Dazunehmen nichts an der Erfüllbarkeit." }
     ]
   });
 })();
