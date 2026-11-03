@@ -239,3 +239,17 @@ describe("Leitner und Beherrschung", () => {
     assert.equal(masteryLevel(1, 2), "untrained")
   })
 })
+
+describe("Selbstbewertung: Abgleich mit dem Server", () => {
+  test("selfScoresKey hängt am Inhalt, nicht an Array-Referenzen", async () => {
+    const { selfScoresKey } = await import("@/components/features/ipma/format")
+    const rubric = [{ criterion: "a", points: 1 }, { criterion: "b", points: 2 }]
+    const leer = selfScoresKey({ selfScores: [], rubric })
+    // Neu geladener Versuch (neue Arrays, gleicher Inhalt): Auswahl der Karte bleibt erhalten
+    assert.equal(selfScoresKey({ selfScores: [], rubric: rubric.map((r) => ({ ...r })) }), leer)
+    // Gespeicherte Bewertung vom Server: Karte übernimmt sie
+    assert.notEqual(selfScoresKey({ selfScores: [1, 2], rubric }), leer)
+    assert.notEqual(selfScoresKey({ selfScores: [1, 1], rubric }), selfScoresKey({ selfScores: [1, 2], rubric }))
+    assert.equal(selfScoresKey({ selfScores: [], rubric: undefined }), "|")
+  })
+})

@@ -14,7 +14,7 @@ import type { SolvedItem } from "@/lib/ipma/types"
 import { useEffect, useId, useRef, useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
 import { ipmaApi, errorMessage } from "./api"
-import { QUARTERS, points } from "./format"
+import { QUARTERS, points, selfScoresKey } from "./format"
 
 const SOURCE_TEXT = { mc: "automatisch", self: "Selbstbewertung", ai: "Claude" } as const
 
@@ -43,10 +43,14 @@ export default function SelfAssessment({
   const empty = (item.text ?? "").trim() === ""
   const done = item.selfScores.length > 0
 
-  // Neue Daten vom Server (z. B. nach dem Speichern) übernehmen
-  useEffect(() => {
-    setScores((item.rubric ?? []).map((_, i) => item.selfScores[i] ?? null))
-  }, [item.selfScores, item.rubric])
+  // Neue Daten vom Server (z. B. nach dem Speichern) übernehmen, aber nur bei geändertem Inhalt: Lädt die
+  // Auswertung nach dem Speichern einer anderen Position den Versuch neu, bleibt die Auswahl hier erhalten
+  const serverKey = selfScoresKey(item)
+  const [syncedKey, setSyncedKey] = useState(serverKey)
+  if (serverKey !== syncedKey) {
+    setSyncedKey(serverKey)
+    setScores(rubric.map((_, i) => item.selfScores[i] ?? null))
+  }
 
   useEffect(() => {
     if (!focusAfterSave.current) return

@@ -105,6 +105,15 @@ export function needsSelfAssessment(item: SolvedItem): boolean {
   return item.type === "offen" && (item.text ?? "").trim() !== "" && item.selfScores.length === 0
 }
 
+/**
+ * Inhaltlicher Schlüssel der gespeicherten Selbstbewertung und des Rasters einer Position. Ändert sich nur, wenn
+ * der Server andere Werte liefert, nicht schon bei neuen Array-Referenzen (z. B. wenn nach dem Speichern einer
+ * anderen Position der ganze Versuch neu geladen wird). So bleibt eine noch nicht gespeicherte Auswahl erhalten.
+ */
+export function selfScoresKey(item: Pick<SolvedItem, "selfScores" | "rubric">): string {
+  return `${item.selfScores.join(",")}|${(item.rubric ?? []).map((r) => r.points).join(",")}`
+}
+
 /** Stationsnummer aus dem Slug («17-persoenliche-kompetenzen» → «17») */
 export function stationNumber(slug: string): string {
   const m = /^(\d+)-/.exec(slug)
