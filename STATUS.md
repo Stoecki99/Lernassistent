@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live)
+**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad Spieltheorie mit Spiel-Erweiterung, 11 Stationen; Lernpfad AVSW Verteilte Softwarearchitekturen mit Baustein «modellieren»; Lernpfad PMGT Welle 1, Leitstand und Lernpfad PS live)
 
 ---
 
@@ -23,6 +23,9 @@
 | 13. Lernpfad | Live seit 29.10.2026 | Reiter Lernseiten, Lernpfad MSTW mit 18 Stationen (fertige HTML-Seiten aus dem Baukasten `public/lernpfad/`), Fortschritt im Konto |
 | 14. Lernpfad PMGT | Welle 1 live seit 01.11.2026 | 7 von 25 Stationen (10, 11, 13, 18, 19, 22, 23), Baukasten 1.1.0; Konzept im Vault «02 Projekte/Lernpfad PMGT» |
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
+| 16. Lernpfad PS | Live seit 01.11.2026 | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
+| 17. Lernpfad AVSW | Fertig, wartet auf Deploy | Verteilte Softwarearchitekturen, 6 Stationen mit 35 Modellierungsübungen, Kurzlink `/avsw`, Baukasten 1.2.0 (`modellieren`, `piktogramm`, `pre.code`) |
+| 18. Lernpfad Spieltheorie | Fertig, wartet auf Deploy | 11 Stationen (Spielbrett bis Krisenstab und Abschluss), Spiel-Erweiterung `public/lernpfad/st-spiel.*` (Figuren, Szenen, Spielbrett, Turnier, Spielbaum, Szenario, Lagetisch, Mischer), Kurzlink `/spieltheorie`; Konzept `docs/lernpfad-spieltheorie.md` (Vorlage für Vault «02 Projekte/Lernpfad Spieltheorie») |
 
 ## Security-Fixes (alle angewendet)
 
@@ -53,8 +56,13 @@
 | Badge-Seed | Erledigt | Alle Badges geseeded |
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
 
-## Offene Punkte (Stand 2026-10-29)
+## Offene Punkte (Stand 2026-11-01)
 
+- **Lernpfad Spieltheorie, Vault:** Konzept liegt in `docs/lernpfad-spieltheorie.md`; Jan überträgt es in den Vault («02 Projekte/Lernpfad Spieltheorie»), Zugriff auf den Vault besteht aus der Cloud-Session nicht.
+- **Lernpfad Spieltheorie, Station 10:** Akteursanalysen zu Russland–Ukraine, Taiwanstrasse und Rotes Meer/Hormus mit Stand Oktober 2026. Inhalte veralten: bei grösseren Lageänderungen nachführen (Hinweis «Modell, keine Prognose» steht auf der Seite).
+- **Spiel-Erweiterung, Rest:** Spielbäume mit 6+ Blättern scrollen bei 360 px in sich (Breite passt sich jetzt der Textlänge an). Station 02 nutzt noch ihre eigene Streich-Interaktion statt des neuen Modus «streichen» (funktioniert, könnte umgestellt werden).
+
+- **AVSW-Inhalte nicht mit Folien abgeglichen:** Die Folien lagen beim Erstellen nicht vor. Alle Stationen tragen den Hinweis «Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt». Begriffe, Notation (C4/UML), Themenreihenfolge, Feld `vorlesung` (vorläufig «Thema 1–5») und Prüfungsrahmen mit den Modulunterlagen abgleichen.
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
 - **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
 - **Doppelte Statistik-Funktionen:** mehrere Themenseiten bringen eigene Fassungen von `erfc`, `invPhi`, `lnGamma`, `tCdf` u. a. mit. Kandidat für den Baukasten.
@@ -62,17 +70,38 @@
 - **Redundanter Index im Modell `Lernfortschritt`:** `@@index([userId, fach])` ist durch `@@unique([userId, fach, thema])` abgedeckt.
 - **npm audit:** offene Meldungen u. a. für `next` 14.2 und `next-auth` (Update auf neue Hauptversionen nötig), dazu weitere Pakete.
 - **Alte Migrationen auf frischer Datenbank:** `prisma migrate deploy` scheitert (`20260405_add_contact_email` sortiert vor `20260405_add_contact_messages`). Produktion nicht betroffen, lokal `prisma db push` verwenden.
+- **Lernpfad PS, Simulator:** bekannte Lücken gegenüber pwsh (z. B. `Get-History`, `Remove-Item -Recurse` ohne `-Force`, `break` in `ForEach-Object`, Comment-based Help), Liste in `docs/lernpfad-powershell.md` Abschnitt 8. Keine Aufgabe baut darauf auf.
+- **Lernpfad PS, 360 px:** Inline-Code wie `-Confirm` bricht nach dem Bindestrich um (z. B. Lernziele Station 05). Kosmetisch.
+- **`.claude/settings.local.json` ist versioniert** und enthält neu sehr breite Freigaben (`Bash(bash:*)`, `git restore:*`) sowie Pfade zur alten OneDrive-Kopie. Nicht in den Lernpfad-Commit aufnehmen; Bereinigung und `.gitignore` entscheidet Jan.
 
 ## Changelog
 
 ### 2026-11-01
 
+- **feat: Spiel-Erweiterung 1.1** — Spielbrett-Modus «streichen» (schrittweise dominierte Strategien streichen), Zufall auf Szenario-Karten (`zufall` mit Gewichten), Spielbaum-Blätter passen sich der Textlänge an, festes Ende einer Karte geht vor `pruefe`.
+- **feat: Lernpfad Spieltheorie** — `content/lernseiten/spieltheorie/` mit 11 Stationen in 5 Sektionen: Spielbrett, Gefangenendilemma, Nash-Gleichgewicht, Nullsumme und Bluff, Drohungen und Selbstbindung, Tit-for-Tat, Signale und Täuschung, 36 Strategeme und Sun Tzu, Verhandeln (Simulation «Die Piratenallianz»), Krisenstab Geopolitik, Abschluss mit Kampagne und Prüfung. Keine Formeln, Archipel-Aurelia-Geschichten, historische Fallstudien, Alltagschecklisten.
+- **feat: Spiel-Erweiterung 1.0.0** — `public/lernpfad/st-spiel.css` und `st-spiel.js` (`Lernpfad.spiel`): Pergament-Grundton und Akzent Ziegelbraun (Kontrast hell und dunkel geprüft), 10 eigene SVG-Figuren, 7 Szenen, Bausteine `spielbrett`, `turnier` (Duell, Turnier, Evolution), `baum`, `szenario`, `akteure`, `mischer`. Vorlage `content/lernseiten/spieltheorie/_vorlage.html`, Doku `docs/lernpfad-spieltheorie.md`. Inhaltsprüfung erzwingt die Reihenfolge der Erweiterungsdateien (mit Tests), Test für `fach.json`.
+- **test:** Alle Stationen bei 360 px hell und dunkel im Browser durchgeklickt (keine Konsolenfehler, kein seitlicher Scroll), Spielbretter und Spielbäume gegen die Engine nachgerechnet, alle Szenario-Enden erreicht.
+
+- **feat: Lernpfad AVSW (Verteilte Softwarearchitekturen, FS26)** — `content/lernseiten/avsw/` mit sechs Stationen: Architekturstile, Kommunikation (REST, gRPC, Messaging), Container und Kubernetes, Resilienz und Konsistenz, Architektur modellieren, Prüfungstraining mit Prüfungsmodus. Navigation automatisch über den Fachordner (Kachel unter `/lernseiten`, Kurzlink `/avsw`). Test für `fach.json`. (Eine erste Fassung mit falschem Fach «Verlässliche IT-Infrastruktur» wurde ersetzt.)
+- **feat: Baukasten 1.2.0** — Baustein `Lernpfad.modellieren` (Architektur aus Anforderungstext modellieren: Bausteine legen, Verbindungen mit Art ziehen, prüfen mit Rückmeldung, Musterlösung mit Begründungen, ohne Ziehen per Maus bedienbar), `Lernpfad.piktogramm` (22 eigene SVG-Symbole statt Markenlogos), Codeblöcke `pre.code`. Doku in `docs/lernpfad-baukasten.md` (8.14, 9.15, 9.16), Muster in `content/lernseiten/avsw/_vorlage.html`
+- **feat: Lernpfad PS · Tipp-Training** — jede der 13 Stationen hat einen neuen Abschnitt «Tipp-Training» mit 11–12 Simulator-Aufgaben in drei Stufen (Nachtippen, Abwandeln, Selber lösen mit Wiederholung früherer Stationen); je 2–3 Klick-Übungen pro Station sind Tipp-Aufgaben geworden. Prüfungen akzeptieren gleichwertige Lösungen (Aliase, Abkürzungen, andere Wege), lehnen zu breite Befehle ab; je Station unabhängig geprüft, Integrationstest löst alle 150 Aufgaben automatisch
+- **feat: Lernpfad PS live** (Commits 28cd6c5, 3478fb0, live am 01.11.2026) — 13 Stationen von «Konsole, erste Schritte» bis «Praxisprojekt und Abschluss» in `content/lernseiten/ps/`, Lernpfad `/lernseiten/ps`, Kurzlink `/PS`, Kachel im Reiter Lernseiten. Jede Station mit Konsolen-Simulator, Aufgaben, Lösungsfilm und Selbsttest; Fortschritt im Konto wie bei MSTW. Konzept: Vault `02 Projekte/Lernpfad PS.md`
+- **test: Integrationstest bestanden** — Tests, `tsc`, Lint, Inhaltsprüfung (PS 13 von 13), Produktions-Build und Docker-Build; Ende-zu-Ende mit Wegwerf-Datenbank: ohne Login 307 auf `/login`, eingeloggt alle 13 Stationen 200 mit CSP, keine Konsolenfehler, kein waagrechter Scroll bei 360 px hell und dunkel
+- **fix: Befunde aus dem Code-Review**:
+  - Simulator: Arrays aus `*` und `+` höchstens 100 000 Elemente, Strings höchstens 10 Mio. Zeichen; Vervielfachen von Arrays in einem Schritt statt quadratisch mit `concat`
+  - Konsole: Ausgabe pro Befehl auf 200 000 Zeichen und 3000 Zeilen begrenzt (Hinweis «Ausgabe gekürzt (Simulator)»), alte Ausgabe wird auch nach Zeichenzahl gekürzt
+  - Simulator: `cd\` wechselt ins Stammverzeichnis (wurde als Pfad gelesen)
+  - Inhaltsprüfung: `ps-konsole.css` vor `lernpfad.css` ist ein Fehler (mit Test)
+  - Station 01: Knöpfe der Prompt-Anatomie heissen wie ihr sichtbarer Text (WCAG 2.5.3), der Titel kommt nur im Modus «Erkunden» als Beschreibung; kein leerer Tabstopp mehr
+  - Aufgeräumt: toter Code in `ps-konsole.js`, Doku-Verweise (`docs/lernpfad-baukasten.md` Abschnitt 1, `docs/lernpfad-format.md`), bekannte Lücken des Simulators in `docs/lernpfad-powershell.md` Abschnitt 8, `.playwright-cli/` in `.gitignore`
 - **feat: Lernpfad PMGT Welle 1 und Leitstand live** — Stationen 10, 11, 13, 18, 19, 22, 23; Projektsimulator `/leitstand` mit API `/api/simulation/runs`, Migrationen `20261101090000_add_simulation_run` (inkl. 8 Abzeichen) und `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, von Prisma nicht abbildbar: bei `migrate dev` den Vorschlag zum Löschen entfernen). Integrationstest im Browser bestanden (Punkte Browser = Server, Free 403, Station 23 «erledigt»). Projekt-Agenten in `.claude/agents/` repariert (Werkzeugnamen).
 - **feat: Leitstand mit Porträts und Symbolen** (Branch `feat/lernpfad-pmgt`, 02.11.2026, noch nicht live) — gezeichnete SVG-Porträts für alle Personen, Stakeholder, Coach und Absender (`Avatar.tsx`, Zuordnung nach Name in `avatarData.ts`, Ersatz-Porträt aus Prüfsumme; Szenario-Daten und -Version unverändert); eigene Strich-Symbole `Icon.tsx` (keine Pakete) für Kennzahlen, Navigation, Kanäle, Vorgangsstatus inkl. «blockiert» (im Lauf bereit/laufend ohne Besetzung), Meilensteine; Übersicht neu: «Was jetzt zu tun ist» (max. 3 Handlungen), Kennzahlen, Team-Leiste mit Motivation und Auslastung, kritischer Pfad als Leiste; übrige Ansichten mit schmaler Kennzahl-Leiste; Team-Karten mit Porträt, Stufenbalken je Gebiet, Motivations- und Auslastungsbalken; Plan-Prüfung zeigt 3 Befunde, Rest aufklappbar. Test `tests/leitstand-avatar.test.ts`.
 - **fix: Review-Befunde Leitstand** (Branch `feat/lernpfad-pmgt`, live am 01.11.2026) — Client lädt nur `lib/simulation/core.ts`, Szenarien und Attrappe nur dynamisch; Sende-Logik `syncQueue.ts` (409 nach verlorener Antwort, 401 «Anmeldung abgelaufen», neue Versuche mit wachsendem Abstand / Retry-After, Sicherung mit Zod, Rest weiterverwenden); Fokusfalle mit inertem Hintergrund; Tastenkürzel nur im Leitstand und abschaltbar; Meldungen 10 s mit Pause; Rate-Limits auch für finish/GET/DELETE; Körpergrenze als Strom; `MAX_ACTIONS_PER_RUN` 900; Migration `20261101100000_simulation_run_aktiv_eindeutig` (Teil-Index, vor Deploy nötig); finish «Serializable» mit Wiederholung; Abzeichen per create. Neue Tests `tests/leitstand-sync.test.ts`, `tests/leitstand-server.test.ts`. Doku: `docs/leitstand-spezifikation.md` (Nachträge 4.5–4.8, 5.7, Restrisiko).
 
 ### 2026-10-31
 
+- **feat: PS-Erweiterung 1.0.0 für den Lernpfad PS** (Branch `feat/lernpfad-powershell`) — eigene Dateien `public/lernpfad/ps-konsole.css` (Akzent PowerShell-Blau, Syntaxfärbung, `.ps-ausgabe`, `.ps-version`) und `public/lernpfad/ps-konsole.js` (PowerShell-Simulator mit Spiel-Rechner «Lea», 68 Befehle, Aufgaben-API, Skript-Modus, `Lernpfad.konsole.ausfuehren`), Vorlage `content/lernseiten/ps/_vorlage.html`, Prüfregel für `ps-konsole.js` nach `lernpfad.js`, Tests `tests/ps-konsole.test.ts` (356 Vergleiche mit echtem pwsh 7.6). Baukasten 1.1.0 unverändert. Doku: `docs/lernpfad-powershell.md`
 - **feat: Baukasten 1.1.0 für den Lernpfad PMGT** (Branch `feat/lernpfad-pmgt`, live am 01.11.2026) — neue Bausteine `Lernpfad.reflexion` (offene Frage mit Musterlösung und Selbstbewertung nach Raster), `Lernpfad.matrix` (2×2 bis 5×5, Karten per Tipp und Tastatur ablegen, Prüfen), Hilfsfunktion `Lernpfad.netzplanKnoten`; CSS für ICB-Kennzeichen (`.icb`), Netzplan-Knoten (`.np-knoten`), Gantt-Balken (`.gantt`) und Akzentfarbe pro Fach (`body[data-fach="pmgt"]`, Orange, Kontrast ≥ 4.5:1 hell und dunkel). Vorlage `content/lernseiten/pmgt/_vorlage.html`. Bestehende Bausteine und MSTW-Seiten unverändert (im Browser geprüft). Doku: `docs/lernpfad-baukasten.md` (Abschnitte 7, 8.11–8.13, 9.12–9.14, Prüfliste)
 
 ### 2026-10-29

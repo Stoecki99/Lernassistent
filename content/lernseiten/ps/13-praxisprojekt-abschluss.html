@@ -1,0 +1,1169 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxisprojekt und Abschlusstest · PS</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/ps-konsole.css">
+  <style>
+    .t13-ziele{margin:0; padding-left:1.3em}
+    .t13-ziele li{margin-bottom:4px}
+    .t13-st{font-family:var(--f-body); font-size:1rem; font-style:normal; white-space:normal; display:flex; flex-direction:column; gap:10px; min-width:0}
+    .t13-st pre{font-style:normal}
+    .t13-plan{margin:0; padding-left:1.4em}
+    .t13-plan li{margin-bottom:4px}
+    .t13-plan li.fertig{color:var(--muted)}
+    .t13-plan li.fertig::marker{content:"✓ "; color:var(--ok)}
+    .t13-stand{font-weight:600}
+    .t13-gruppe th{background:var(--accent-soft); color:var(--ink); text-align:left; font-family:var(--f-display)}
+    .t13-spick td code{white-space:normal}
+    .t13-spick td, .t13-spick th{vertical-align:top}
+    /* Schmale Schirme: jede Zeile als kleine Karte (Befehl, Zweck, Beispiel untereinander) */
+    @media screen and (max-width:600px) {
+      .t13-spick, .t13-spick tbody, .t13-spick tr, .t13-spick th, .t13-spick td{display:block; width:auto}
+      .t13-spick thead{display:none}
+      .t13-spick caption{display:block}
+      .t13-spick tr{padding:8px 0; border-bottom:1px solid var(--line)}
+      .t13-spick th, .t13-spick td{border:0; padding:2px 4px}
+      .t13-spick tr.t13-gruppe{padding:0; border-bottom:0}
+      .t13-spick tr.t13-gruppe th{padding:6px 8px; margin-top:6px}
+    }
+    @media print {
+      html.t13-druck body > *:not(main){display:none !important}
+      html.t13-druck main > *:not(#spickzettel){display:none !important}
+      html.t13-druck #spickzettel .t13-nicht-drucken{display:none !important}
+      html.t13-druck .tablebox{overflow:visible !important}
+      html.t13-druck .t13-spick{font-size:9pt}
+      html.t13-druck .t13-spick tr{break-inside:avoid}
+    }
+  </style>
+</head>
+<body data-fach="ps" data-thema="13-praxisprojekt-abschluss">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PS · Teil 5 · Praxis</span>
+    <h1>Praxisprojekt und Abschlusstest</h1>
+    <p class="lead">Jetzt setzt du alles zusammen. Lea soll ihren Ordner <code>Logs</code> aufräumen: alte Logdateien finden, ihre Grösse melden, eine Liste als CSV abgeben und die Dateien in ein Archiv verschieben. Du baust dafür ein echtes Skript, Schritt für Schritt, und führst es nach jedem Schritt aus. Danach prüfst du dich im Abschlusstest über den ganzen Lernpfad. Zum Schluss gibt es einen Spickzettel zum Ausdrucken.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t13-ziele">
+        <li>Du zerlegst einen Auftrag in kleine Schritte und prüfst jeden Schritt zuerst in der Konsole.</li>
+        <li>Du baust ein Skript mit <code class="ps">param()</code>, Probelauf (<code class="ps">-WhatIf</code>), CSV-Bericht und Fehlerbehandlung (<code class="ps">try</code>/<code class="ps">catch</code>).</li>
+        <li>Du schreibst einen Kommentarkopf, den <code class="ps">Get-Help</code> als Hilfe anzeigt.</li>
+        <li>Du beantwortest Fragen aus allen zwölf Stationen und weisst, wo du nachschlagen musst.</li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#schritt"><b>1</b>Vom Auftrag zum Plan</a>
+    <a href="#ausprobieren"><b>2</b>Ausprobieren</a>
+    <a href="#bauen"><b>3</b>Skript bauen</a>
+    <a href="#fertig"><b>4</b>Das fertige Skript</a>
+    <a href="#uebungen"><b>5</b>Übungen</a>
+    <a href="#tipp-training"><b>6</b>Tipp-Training</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fehler"><b>!</b>Fehler</a>
+    <a href="#test"><b>✓</b>Abschlusstest</a>
+    <a href="#spickzettel"><b>Σ</b>Spickzettel</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Vom Befehl zum Werkzeug</h2>
+    <p class="prose">Bis jetzt hast du Befehle einzeln getippt. Das ist wie Kochen ohne Rezept: Es klappt, aber nächste Woche weisst du nicht mehr genau, wie. Ein <b>Skript</b> ist das aufgeschriebene Rezept. Du schreibst die Befehle einmal sauber in eine Datei <code>.ps1</code> und lässt sie so oft laufen, wie du willst. Fünf Bausteine machen aus einem Rezept ein gutes Werkzeug:</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Skript</span><span class="ex"><code class="ps">.\aufraeumen.ps1</code></span><p>Das Rezept. Eine Textdatei mit Befehlen. Du startest sie mit <code>.\</code> davor (Station 11).</p></div>
+      <div class="concept"><span class="tag">Parameter</span><span class="ex"><code class="ps">param([int]$Tage = 30)</code></span><p>Die Drehknöpfe am Herd. Du stellst beim Start ein, was sich ändern darf, zum Beispiel die Anzahl Tage.</p></div>
+      <div class="concept"><span class="tag">Probelauf</span><span class="ex"><code class="ps">-WhatIf</code></span><p>Die Generalprobe. Der Befehl sagt nur, was er tun würde, und lässt alles, wie es ist.</p></div>
+      <div class="concept"><span class="tag">Sicherheitsnetz</span><span class="ex"><code class="ps">try { } catch { }</code></span><p>Plan B. Geht im <code>try</code>-Teil etwas schief, springt das Skript in den <code>catch</code>-Teil und meldet es freundlich.</p></div>
+      <div class="concept"><span class="tag">Kommentarkopf</span><span class="ex"><code class="ps">&lt;# .SYNOPSIS … #&gt;</code></span><p>Der Beipackzettel. Ganz oben steht, was das Skript tut und wie man es aufruft. <code class="ps">Get-Help</code> zeigt ihn an.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Baustein hilft hier?</h3>
+      <div id="t13-mini"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Stepper ===== -->
+  <section id="schritt">
+    <span class="eyebrow">Schritt 1 · Vom Auftrag zum Plan</span>
+    <h2>Den Auftrag in Teile zerlegen</h2>
+    <p class="prose">Der Leiter Informatik schreibt Lea eine Nachricht. Profis schreiben nicht sofort ein Skript. Sie zerlegen den Auftrag zuerst in kleine Teile und probieren jeden Teil in der Konsole aus. Erst wenn ein Teil funktioniert, kommt er ins Skript. Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück: Der passende Befehl leuchtet auf.</p>
+    <div id="t13-stepper"></div>
+    <div class="note"><b>Merke:</b> Ein Auftrag mit «und» besteht aus mehreren Teilen. Jeder Teil wird ein kleiner Befehl. Das Skript ist am Ende nur die Liste dieser Befehle in der richtigen Reihenfolge.</div>
+  </section>
+
+  <!-- ===== 2 · Simulator ===== -->
+  <section id="ausprobieren">
+    <span class="eyebrow">Schritt 2 · Ausprobieren</span>
+    <h2>Jeden Teil zuerst in der Konsole testen</h2>
+    <p class="prose">Bevor du das Skript schreibst, probierst du die Teile in Leas Konsole aus. Die Variable <code class="ps">$alt</code> bleibt in dieser Konsole erhalten, bis du sie zurücksetzt. So kannst du sie in den nächsten Aufgaben weiterverwenden. Mit ↑ holst du den letzten Befehl zurück.</p>
+    <div id="t13-konsole"></div>
+  </section>
+
+  <!-- ===== 3 · Geführter Skript-Bau ===== -->
+  <section id="bauen">
+    <span class="eyebrow">Schritt 3 · Das Praxisprojekt</span>
+    <h2>Leas Aufräumskript Schritt für Schritt</h2>
+    <p class="prose">Jetzt kommen die Teile in eine Datei. Der Editor unten ist die Datei <code>aufraeumen.ps1</code> in Leas Benutzerordner. «▶ Ausführen» speichert sie und startet <code class="ps">.\aufraeumen.ps1</code> mit dem, was im Feld «Parameter» steht.</p>
+    <div class="card stack">
+      <h3>So gehst du vor</h3>
+      <ol class="t13-plan" id="t13-plan">
+        <li>Lies die nächste offene Aufgabe unter dem Editor.</li>
+        <li>Ergänze das Skript um die neuen Zeilen. Tippe sie selbst, das ist die beste Übung.</li>
+        <li>Klick «▶ Ausführen» und vergleiche die Ausgabe mit der Aufgabe. Erst dann geht es weiter.</li>
+      </ol>
+      <p class="hint">«Lösung» zeigt das ganze Skript nach diesem Schritt. «Ins Skript übernehmen» ersetzt deinen Editor damit. «↺ Zurücksetzen» holt Leas Dateien zurück, dein Skript bleibt stehen.</p>
+      <p class="t13-stand" id="t13-stand" aria-live="polite"></p>
+    </div>
+    <div id="t13-bau"></div>
+    <div class="note tipp"><b>Tipp:</b> Ab Schritt 6 verschiebt das Skript wirklich. Ein zweiter Lauf findet dann nichts mehr. Willst du nochmals von vorn, klick «↺ Zurücksetzen».</div>
+  </section>
+
+  <!-- ===== 4 · Das fertige Skript ===== -->
+  <section id="fertig">
+    <span class="eyebrow">Schritt 4 · Das Ergebnis</span>
+    <h2>Das fertige Skript und seine Hilfe</h2>
+    <p class="prose">So sieht <code>aufraeumen.ps1</code> nach allen acht Schritten aus. Lies es von oben nach unten: Beipackzettel, Drehknöpfe, Sicherheitsnetz, dann die vier Arbeitsschritte.</p>
+    <pre class="ps-code" id="t13-endskript"><code></code></pre>
+    <p class="prose">Der Kommentarkopf ist nicht nur für Menschen. <code class="ps">Get-Help</code> liest ihn und zeigt ihn wie die Hilfe eines Cmdlets an. Name und Syntax erzeugt PowerShell selbst aus dem Dateinamen und aus <code class="ps">param()</code>. So sieht es in echtem pwsh 7 aus:</p>
+    <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe von Get-Help für das Skript in pwsh 7" lang="en">PS C:\Users\lea&gt; Get-Help .\aufraeumen.ps1
+
+NAME
+    C:\Users\lea\aufraeumen.ps1
+
+SYNOPSIS
+    Verschiebt alte Logdateien in einen Archivordner und schreibt einen Bericht.
+
+
+SYNTAX
+    C:\Users\lea\aufraeumen.ps1 [[-Pfad] &lt;String&gt;] [[-Tage] &lt;Int32&gt;] [&lt;CommonParameters&gt;]
+
+
+DESCRIPTION
+    Sucht im Ordner Pfad alle .log-Dateien, die älter als Tage Tage sind,
+    meldet Anzahl und Grösse, schreibt Berichte\log-archiv.csv und
+    verschiebt die Dateien in den Unterordner Archiv.
+
+
+RELATED LINKS
+
+REMARKS
+    To see the examples, type: "Get-Help C:\Users\lea\aufraeumen.ps1 -Examples"
+    For more information, type: "Get-Help C:\Users\lea\aufraeumen.ps1 -Detailed"
+    For technical information, type: "Get-Help C:\Users\lea\aufraeumen.ps1 -Full"</pre>
+    <p class="hint">Von Hand gezeigt: Der Simulator kennt die Hilfe aus Kommentarköpfen nicht. Ausgabe in pwsh 7.6.1 mit nachgebautem Ordner geprüft, der Pfad des Testordners ist durch <code>C:\Users\lea</code> ersetzt.</p>
+    <p class="prose">Die Überschriften sind englisch, der Inhalt ist deiner. <code class="ps">Get-Help .\aufraeumen.ps1 -Examples</code> zeigt das Beispiel aus <code>.EXAMPLE</code>, <code class="ps">-Full</code> zusätzlich die Beschreibungen aus <code>.PARAMETER</code>.</p>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> Speicherst du das Skript als UTF-8 <i>ohne</i> BOM (so speichern pwsh 7 und Visual Studio Code standardmässig), liest Windows PowerShell 5.1 die Umlaute falsch: Aus «älter» wird «Ã¤lter». Soll das Skript auch in 5.1 laufen, speichere es als «UTF-8 with BOM» (in VS Code unten rechts auf die Codierung klicken). <span class="ps-version">7</span> liest beides richtig.</div>
+    <div class="note"><b>Unterschied <span class="ps-version">5.1</span>:</b> In Windows PowerShell 5.1 schreibt <code class="ps">Export-Csv</code> zuerst eine Zeile wie <code>#TYPE Selected.System.IO.FileInfo</code> in die Datei. Mit <code class="ps">-NoTypeInformation</code> lässt du sie weg. In 7 ist das der Standard.</div>
+  </section>
+
+  <!-- ===== 5 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 5 · Selbst denken</span>
+    <h2>Übungen</h2>
+    <div class="card stack">
+      <h3>Übung 1 · Skript zusammenbauen</h3>
+      <p class="prose">Die Teile des fertigen Skripts sind durcheinandergeraten. Gib jedem Teil seinen Platz von oben (1.) nach unten (6.).</p>
+      <div id="t13-u1"></div>
+    </div>
+    <div class="card stack"><h3>Übung 2 · Ausgabe vorhersagen</h3><div id="t13-u2"></div></div>
+    <div class="card stack"><h3>Übung 3 · Ausgabe vorhersagen</h3><div id="t13-u3"></div></div>
+    <div class="card stack">
+      <h3>Übung 4 · Fehler finden und korrigieren</h3>
+      <p class="prose">Ein Kollege hat sein Skript so begonnen und startet es mit <code class="ps">.\test.ps1 -Tage 5</code>:</p>
+      <pre class="ps-code"><code>"Start"
+param([int]$Tage = 30)
+"Tage: $Tage"</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe in pwsh 7" lang="en">PS C:\Users\lea&gt; .\test.ps1 -Tage 5
+Start
+<span class="psk-fehler">param: C:\Users\lea\test.ps1:2
+Line |
+   2 |  param([int]$Tage = 30)
+     |  ~~~~~
+     | The term 'param' is not recognized as a name of a cmdlet, function, script file, or executable program. Check
+     | the spelling of the name, or if a path was included, verify that the path is correct and try again.</span>
+
+Tage: 30</pre>
+      <p class="hint">Von Hand gezeigt, in pwsh 7.6.1 geprüft (der Simulator meldet diesen Fall anders).</p>
+      <p class="prose">Warum ist <code class="ps">$Tage</code> am Ende 30 statt 5? Unten steht das Skript im Editor, das Feld «Parameter» enthält schon <code class="ps">-Tage 5</code>. Korrigiere das Skript und klick «▶ Ausführen». Startest du es unverändert, meldet der Simulator einen <code lang="en">ParserError</code> statt der Meldung oben. Die Ursache ist dieselbe.</p>
+      <div id="t13-u4"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 5 · Fehler finden und korrigieren</h3>
+      <p class="prose">Lea hat ein Sicherheitsnetz eingebaut und startet das Skript mit einem Ordner, den es nicht gibt:</p>
+      <pre class="ps-code"><code>try {
+  Get-ChildItem -Path Protokolle
+  "weiter"
+}
+catch {
+  "Fehler: $($_.Exception.Message)"
+}</code></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe in pwsh 7" lang="en">PS C:\Users\lea&gt; .\netz.ps1
+<span class="psk-fehler">Get-ChildItem: C:\Users\lea\netz.ps1:2
+Line |
+   2 |    Get-ChildItem -Path Protokolle
+     |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot find path 'C:\Users\lea\Protokolle' because it does not exist.</span>
+
+weiter</pre>
+      <p class="prose">Warum springt das Skript nicht in den <code class="ps">catch</code>-Teil? Korrigiere es im Editor unten und klick «▶ Ausführen».</p>
+      <div id="t13-u5"></div>
+    </div>
+    <div class="card stack">
+      <h3>Übung 6 · Zuordnen</h3>
+      <p class="prose">Welches Stichwort im Kommentarkopf passt zu welchem Inhalt?</p>
+      <div id="t13-u6"></div>
+    </div>
+    <div class="card stack"><h3>Übung 7 · Wahr oder falsch?</h3><div id="t13-u7"></div></div>
+    <div class="card stack">
+      <h3>Übung 8 · Befehl selbst schreiben</h3>
+      <p class="prose">Leas Skript ist schon gelaufen. Im Ordner <code>Berichte</code> liegt der Bericht <code>log-archiv.csv</code> mit Semikolon als Trennzeichen. Werte ihn in der Konsole aus, ohne Vorlage.</p>
+      <div id="t13-u8"></div>
+    </div>
+  </section>
+
+  <!-- ===== Tipp-Training ===== -->
+  <section id="tipp-training">
+    <span class="eyebrow">Tipp-Training · Alle Stationen</span>
+    <h2>Tipp-Training: Befehle in die Finger bekommen</h2>
+    <p class="prose">Lesen ist gut, tippen ist besser. Hier wiederholst du Befehle aus allen Stationen, und zwar mit deinen eigenen Fingern. Es geht in drei Stufen: zuerst abtippen, dann abwandeln, dann selber lösen. Jede Stufe hat ihre eigene Konsole mit einem frischen Rechner von Lea. Du brauchst weder Tab noch Pfeiltasten. Geht etwas schief, holt «↺ Zurücksetzen» Leas Dateien zurück. Gelöste Aufgaben bleiben gelöst.</p>
+
+    <h3 id="t13-stufe1">Stufe 1 · Nachtippen</h3>
+    <p class="prose">Der Befehl steht in der Aufgabe. Tippe ihn Zeichen für Zeichen ab, ohne zu kopieren, und schau dir die Ausgabe an. Gross- und Kleinschreibung und zusätzliche Leerzeichen sind egal.</p>
+    <div id="t13-tipp1"></div>
+
+    <h3 id="t13-stufe2">Stufe 2 · Abwandeln</h3>
+    <p class="prose">Jetzt siehst du einen fertigen Befehl, der etwas Ähnliches tut. Ändere ihn so, dass er die Aufgabe löst: anderer Ordner, andere Grenze, andere Eigenschaft, anderer Parameter.</p>
+    <div id="t13-tipp2"></div>
+
+    <h3 id="t13-stufe3">Stufe 3 · Selber lösen</h3>
+    <p class="prose">Ab hier gibt es keinen Befehl mehr als Vorlage, nur noch das Ziel. Jede Aufgabe verbindet Stoff aus mehreren Stationen. In Klammern steht, wo du nachlesen kannst. Erst wenn du nicht weiterkommst, hilft «Hinweis».</p>
+    <div id="t13-tipp3"></div>
+    <p class="prose">Die letzte Aufgabe schreibst du als Skript, so wie Leas Aufräumskript.</p>
+    <div id="t13-tipp4"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Gleiches Vorgehen, neuer Ordner: die Downloads</h2>
+    <p class="prose">Ein zweiter Auftrag mit demselben Vorgehen: Lea soll im Ordner <code>Downloads</code> alle Dateien finden, die älter als <b>60</b> Tage sind, ihre Gesamtgrösse in MB melden, die Liste als <code>Berichte\downloads-alt.csv</code> ablegen und die Dateien in den neuen Ordner <code>Downloads\Alt</code> verschieben. Zuerst als Probelauf.</p>
+    <p class="prose">Jede Szene zeigt einen Befehl und die Ausgabe des Simulators auf Leas Rechner.</p>
+    <div id="t13-film"></div>
+    <details class="sol">
+      <summary>Lösung zum Nachlesen</summary>
+      <div class="stack">
+        <p class="prose">Älter als 60 Tage (vor dem 3. September 2026) sind <code>handbuch-drucker.pdf</code> und <code>setup-alt.exe</code>. Zusammen 57'671'680 Bytes, das sind genau 55 MB. Der Bericht enthält die zwei Zeilen mit Name und Grösse. Nach dem Verschieben liegen beide Dateien in <code>Downloads\Alt</code>.</p>
+        <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Alle Befehle in PowerShell 7.6.1 in einem nachgebauten Ordner geprüft.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Typische Fehler</span>
+    <h2>Die häufigsten Stolpersteine im Skript</h2>
+    <div class="note falle"><b>Zielordner fehlt:</b> Gibt es <code>Logs\Archiv</code> noch nicht, versteht <code class="ps">Move-Item</code> das Ziel als neuen <i>Dateinamen</i>. Die erste Datei heisst danach <code>Archiv</code>, alle weiteren scheitern. Darum legt Leas Skript den Ordner zuerst an (<code class="ps">Test-Path</code>, dann <code class="ps">New-Item</code>). So sieht es im Simulator aus:
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Verschieben ohne Zielordner" lang="en" data-ps-sitzung="falle" data-ps-befehl="$alt = Get-ChildItem Logs -Filter *.log -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30); $alt | Move-Item -Destination Logs\Archiv"></pre>
+      <pre class="ps-ausgabe" tabindex="0" aria-label="Ausgabe: Ordner Logs danach" data-ps-sitzung="falle" data-ps-befehl="Get-ChildItem Logs"></pre>
+      Auf Deutsch: «Die Datei gibt es schon.» Aus <code>app-2026-07.log</code> ist die Datei <code>Archiv</code> geworden. Der Probelauf hätte es verraten: Bei fehlendem Ordner zeigt <code class="ps">-WhatIf</code> als Ziel nur <code>…\Logs\Archiv</code> ohne Dateinamen dahinter.</div>
+    <div class="note falle"><b><code class="ps">param()</code> nicht zuoberst:</b> Vor <code class="ps">param()</code> dürfen nur Kommentare und leere Zeilen stehen. Sonst hält PowerShell <code>param</code> für einen Befehl, und deine Parameter sind wirkungslos (Übung 4).</div>
+    <div class="note falle"><b>catch fängt nichts:</b> Viele Fehler von Cmdlets brechen nicht ab. Dann springt <code class="ps">try</code> nicht in den <code class="ps">catch</code>-Teil, die rote Meldung erscheint und das Skript läuft weiter. Mit <code class="ps">-ErrorAction Stop</code> wird der Fehler abbrechend, und <code class="ps">catch</code> greift (Übung 5).</div>
+    <div class="note falle"><b>Einfache Anführungszeichen:</b> <code class="ps">'älter als $Tage Tage'</code> gibt wörtlich <code>älter als $Tage Tage</code> aus. Nur in doppelten Anführungszeichen setzt PowerShell den Wert ein: <code class="ps">"älter als $Tage Tage"</code>.</div>
+    <div class="note falle"><b>Probelauf vergessen:</b> Ein Skript, das verschiebt oder löscht, startest du das erste Mal immer mit <code class="ps">-WhatIf</code>. <code class="ps">Remove-Item</code> kennt keinen Papierkorb. Erst wenn die «What if»-Zeilen stimmen, nimmst du <code class="ps">-WhatIf</code> weg.</div>
+    <div class="note falle"><b>Zweiter Lauf überschreibt den Bericht:</b> Ohne die Prüfung <code class="ps">if (-not $alt)</code> würde ein zweiter Lauf den Bericht mit einer leeren Datei überschreiben. Darum hört Leas Skript auf, wenn es nichts findet (<code class="ps">return</code>).</div>
+    <div class="note falle"><b>Aliase im Skript:</b> <code class="ps">ls Logs | ? LastWriteTime -lt $grenze</code> funktioniert, ist aber schwer zu lesen. Im Skript schreibst du die vollen Namen <code class="ps">Get-ChildItem</code> und <code class="ps">Where-Object</code> (Station 02).</div>
+  </section>
+
+  <!-- ===== Abschlusstest ===== -->
+  <section id="test">
+    <span class="eyebrow">Abschlusstest · Alle Stationen</span>
+    <h2>Abschlusstest über den ganzen Lernpfad</h2>
+    <p class="prose">Zwanzig Fragen aus allen Stationen, von der ersten Konsole bis zu diesem Skript. In Klammern steht die Station, in der du nachlesen kannst. Fragen zu Leas Rechner beziehen sich auf den Rechner im Simulator, vor dem Aufräumen.</p>
+    <div id="selbsttest"></div>
+  </section>
+
+  <!-- ===== Spickzettel ===== -->
+  <section id="spickzettel">
+    <span class="eyebrow">Auf einen Blick · Zum Ausdrucken</span>
+    <h2>Spickzettel PowerShell</h2>
+    <p class="prose t13-nicht-drucken">Die wichtigsten Cmdlets und Operatoren aus allen Stationen auf einer Seite. «Spickzettel drucken» druckt nur diese Tabelle (oder speichert sie als PDF).</p>
+    <div class="row t13-nicht-drucken"><button type="button" class="btn primary" id="t13-drucken">🖨 Spickzettel drucken</button></div>
+    <div class="card tablebox">
+      <table class="tabelle t13-spick">
+        <caption>Cmdlets (alle Beispiele laufen auf Leas Rechner)</caption>
+        <thead><tr><th scope="col">Befehl</th><th scope="col">Zweck</th><th scope="col">Beispiel</th></tr></thead>
+        <tbody>
+          <tr class="t13-gruppe"><th colspan="3" scope="colgroup">Hilfe finden (01–03, 06)</th></tr>
+          <tr><th><code class="ps">Get-Command</code></th><td>Befehle finden</td><td><code class="ps">Get-Command -Noun Service</code></td></tr>
+          <tr><th><code class="ps">Get-Help</code></th><td>Hilfe und Beispiele lesen</td><td><code class="ps">Get-Help Move-Item -Examples</code></td></tr>
+          <tr><th><code class="ps">Get-Member</code></th><td>Typ, Eigenschaften und Methoden eines Objekts</td><td><code class="ps">Get-Item Logs\app.log | Get-Member</code></td></tr>
+          <tr><th><code class="ps">Get-Alias</code></th><td>Alias auflösen</td><td><code class="ps">Get-Alias ls</code></td></tr>
+          <tr class="t13-gruppe"><th colspan="3" scope="colgroup">Dateisystem (04, 05)</th></tr>
+          <tr><th><code class="ps">Get-Location</code></th><td>aktuellen Ort zeigen</td><td><code class="ps">Get-Location</code></td></tr>
+          <tr><th><code class="ps">Set-Location</code></th><td>Ort wechseln</td><td><code class="ps">Set-Location Logs</code></td></tr>
+          <tr><th><code class="ps">Get-ChildItem</code></th><td>Ordnerinhalt, auch in Unterordnern</td><td><code class="ps">Get-ChildItem -Filter *.log -Recurse</code></td></tr>
+          <tr><th><code class="ps">Test-Path</code></th><td>prüfen, ob es den Pfad gibt</td><td><code class="ps">Test-Path Logs\Archiv</code></td></tr>
+          <tr><th><code class="ps">Join-Path</code></th><td>Pfad zusammensetzen</td><td><code class="ps">Join-Path Logs 'Archiv'</code></td></tr>
+          <tr><th><code class="ps">New-Item</code></th><td>Ordner oder Datei anlegen</td><td><code class="ps">New-Item -ItemType Directory -Path Logs\Archiv</code></td></tr>
+          <tr><th><code class="ps">Copy-Item</code></th><td>kopieren</td><td><code class="ps">Copy-Item Dokumente\notizen.txt Berichte</code></td></tr>
+          <tr><th><code class="ps">Move-Item</code></th><td>verschieben (hier als Probelauf)</td><td><code class="ps">Move-Item Downloads\*.pdf Dokumente -WhatIf</code></td></tr>
+          <tr><th><code class="ps">Rename-Item</code></th><td>umbenennen</td><td><code class="ps">Rename-Item Dokumente\notizen.txt notizen-alt.txt</code></td></tr>
+          <tr><th><code class="ps">Remove-Item</code></th><td>löschen, ohne Papierkorb (hier als Probelauf)</td><td><code class="ps">Remove-Item Downloads\setup-alt.exe -WhatIf</code></td></tr>
+          <tr><th><code class="ps">Get-Content</code></th><td>Inhalt lesen, hier die letzten zwei Zeilen</td><td><code class="ps">Get-Content Logs\app.log -Tail 2</code></td></tr>
+          <tr><th><code class="ps">Add-Content</code></th><td>Zeile anhängen (<code class="ps">Set-Content</code> ersetzt den Inhalt)</td><td><code class="ps">Add-Content Dokumente\notizen.txt 'Neue Zeile'</code></td></tr>
+          <tr class="t13-gruppe"><th colspan="3" scope="colgroup">Pipeline (07, 10)</th></tr>
+          <tr><th><code class="ps">Where-Object</code></th><td>filtern</td><td><code class="ps">Get-ChildItem Logs | Where-Object Length -gt 1MB</code></td></tr>
+          <tr><th><code class="ps">Sort-Object</code></th><td>sortieren</td><td><code class="ps">Get-ChildItem Logs | Sort-Object Length -Descending</code></td></tr>
+          <tr><th><code class="ps">Select-Object</code></th><td>Objekte oder Eigenschaften auswählen</td><td><code class="ps">Get-ChildItem Logs | Select-Object -First 3 Name, Length</code></td></tr>
+          <tr><th><code class="ps">Measure-Object</code></th><td>zählen, Summe, Durchschnitt</td><td><code class="ps">Get-ChildItem Logs | Measure-Object -Property Length -Sum</code></td></tr>
+          <tr><th><code class="ps">Group-Object</code></th><td>nach gleichem Wert gruppieren</td><td><code class="ps">Get-ChildItem Downloads | Group-Object Extension</code></td></tr>
+          <tr><th><code class="ps">ForEach-Object</code></th><td>etwas mit jedem Objekt tun</td><td><code class="ps">Get-ChildItem Logs | ForEach-Object { $_.Name.ToUpper() }</code></td></tr>
+          <tr class="t13-gruppe"><th colspan="3" scope="colgroup">Ausgeben und exportieren (08)</th></tr>
+          <tr><th><code class="ps">Format-Table</code></th><td>als Tabelle zeigen, immer zuletzt</td><td><code class="ps">Get-Process | Format-Table Name, Id</code></td></tr>
+          <tr><th><code class="ps">Format-List</code></th><td>alle Eigenschaften als Liste</td><td><code class="ps">Get-Item Logs\app.log | Format-List *</code></td></tr>
+          <tr><th><code class="ps">Export-Csv</code></th><td>als CSV speichern; <span class="ps-version">5.1</span> braucht <code class="ps">-NoTypeInformation</code></td><td><code class="ps">Get-Service | Export-Csv Berichte\dienste.csv -Delimiter ';'</code></td></tr>
+          <tr><th><code class="ps">Import-Csv</code></th><td>CSV lesen, alle Werte sind Text</td><td><code class="ps">Import-Csv Berichte\mitarbeitende.csv</code></td></tr>
+          <tr><th><code class="ps">ConvertTo-Json</code></th><td>in JSON umwandeln</td><td><code class="ps">@{ Name = 'Lea'; Tage = 30 } | ConvertTo-Json</code></td></tr>
+          <tr class="t13-gruppe"><th colspan="3" scope="colgroup">System (12)</th></tr>
+          <tr><th><code class="ps">Get-Process</code></th><td>laufende Programme</td><td><code class="ps">Get-Process | Sort-Object WorkingSet -Descending | Select-Object -First 3</code></td></tr>
+          <tr><th><code class="ps">Stop-Process</code></th><td>Programm beenden (hier als Probelauf)</td><td><code class="ps">Stop-Process -Name notepad -WhatIf</code></td></tr>
+          <tr><th><code class="ps">Get-Service</code></th><td>Dienste und ihr Status</td><td><code class="ps">Get-Service -Name Wolk*</code></td></tr>
+          <tr><th><code class="ps">Get-Date</code></th><td>Datum, auch rechnen</td><td><code class="ps">(Get-Date).AddDays(-30)</code></td></tr>
+          <tr><th><code class="ps">Test-Connection</code></th><td>Erreichbarkeit im Netz</td><td><code class="ps">Test-Connection server -Count 1</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle t13-spick">
+        <caption>Operatoren und Sprache</caption>
+        <thead><tr><th scope="col">Zeichen</th><th scope="col">Bedeutung</th><th scope="col">Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th><code class="ps">|</code></th><td>Pipeline: Objekte an den nächsten Befehl reichen (07)</td><td><code class="ps">Get-ChildItem Logs | Measure-Object</code></td></tr>
+          <tr><th><code class="ps">-eq -ne -gt -ge -lt -le</code></th><td>vergleichen, Gross/Klein egal (07, 09)</td><td><code class="ps">5 -gt 3</code></td></tr>
+          <tr><th><code class="ps">-like</code> <code class="ps">-match</code></th><td>Muster mit <code>*</code> und <code>?</code>; Suchmuster (07)</td><td><code class="ps">'app.log' -like '*.log'</code></td></tr>
+          <tr><th><code class="ps">-and -or -not</code></th><td>Bedingungen verknüpfen (09)</td><td><code class="ps">(5 -gt 3) -and (2 -lt 1)</code></td></tr>
+          <tr><th><code class="ps">$_</code></th><td>das aktuelle Objekt in der Pipeline (06, 07)</td><td><code class="ps">Get-ChildItem Logs | Where-Object { $_.Length -gt 1MB }</code></td></tr>
+          <tr><th><code class="ps">$name = …</code></th><td>Variable zuweisen (09)</td><td><code class="ps">$tage = 30</code></td></tr>
+          <tr><th><code class="ps">"…"</code> <code class="ps">'…'</code></th><td>doppelt: Werte einsetzen; einfach: wörtlich (09)</td><td><code class="ps">"Tage: $tage"</code></td></tr>
+          <tr><th><code class="ps">&gt;</code> <code class="ps">&gt;&gt;</code></th><td>Ausgabe in Datei umleiten, ersetzen oder anhängen (05)</td><td><code class="ps">Get-Date &gt; datum.txt</code></td></tr>
+          <tr><th><code class="ps">-WhatIf</code></th><td>Probelauf: zeigt nur, was passieren würde (05)</td><td><code class="ps">Remove-Item Downloads\*.exe -WhatIf</code></td></tr>
+          <tr><th><code class="ps">-ErrorAction Stop</code></th><td>Fehler abbrechend machen, damit <code class="ps">catch</code> greift (11)</td><td><code class="ps">Get-Item Protokolle -ErrorAction Stop</code></td></tr>
+          <tr><th><code class="ps">if</code> <code class="ps">foreach</code></th><td>Bedingung und Schleife (10)</td><td><code class="ps">foreach ($d in Get-ChildItem Logs) { if ($d.Length -gt 4MB) { $d.Name } }</code></td></tr>
+          <tr><th><code class="ps">try</code> <code class="ps">catch</code></th><td>Fehler abfangen und melden (11)</td><td><code class="ps">try { Get-Item Protokolle -ErrorAction Stop } catch { $_.Exception.Message }</code></td></tr>
+          <tr><th><code class="ps">param()</code></th><td>Parameter eines Skripts, ganz oben (11, 13)</td><td><code class="ps">param([string]$Pfad = 'Logs', [int]$Tage = 30)</code></td></tr>
+          <tr><th><code class="ps">.\skript.ps1</code></th><td>Skript im aktuellen Ordner starten (11)</td><td><code class="ps">.\aufraeumen.ps1 -Tage 60</code></td></tr>
+          <tr><th><code class="ps">#</code> <code class="ps">&lt;# … #&gt;</code></th><td>Kommentar für eine Zeile; Block über mehrere Zeilen, ganz oben mit <code>.SYNOPSIS</code> als Hilfe für <code class="ps">Get-Help</code> (11, 13)</td><td><code class="ps"># 1. Alte Logdateien finden</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul class="summary prose">
+      <li><b>Erst testen, dann schreiben:</b> Jeder Teil des Skripts läuft zuerst einzeln in der Konsole.</li>
+      <li><b>Probelauf zuerst:</b> Was verschiebt oder löscht, startet das erste Mal mit <code class="ps">-WhatIf</code>.</li>
+      <li><b><code class="ps">param()</code> ganz oben</b> macht aus festen Werten Drehknöpfe mit Standardwert.</li>
+      <li><b><code class="ps">try</code>/<code class="ps">catch</code> mit <code class="ps">-ErrorAction Stop</code></b> fängt Fehler ab und meldet sie verständlich.</li>
+      <li>Der <b>Kommentarkopf</b> <code class="ps">&lt;# .SYNOPSIS … #&gt;</code> ist der Beipackzettel, <code class="ps">Get-Help</code> zeigt ihn an.</li>
+      <li>Im Skript stehen <b>volle Namen</b> statt Aliase.</li>
+    </ul>
+    <div class="card stack t13-nicht-drucken">
+      <h3>Unterschiede zu Windows PowerShell <span class="ps-version">5.1</span></h3>
+      <ul class="prose">
+        <li><code class="ps">Export-Csv</code> schreibt in 5.1 eine Zeile <code>#TYPE …</code>, ausser du gibst <code class="ps">-NoTypeInformation</code> an. In <span class="ps-version">7</span> fehlt sie.</li>
+        <li>Skripte als UTF-8 ohne BOM liest 5.1 als ANSI; Umlaute werden falsch. Für 5.1 als «UTF-8 with BOM» speichern.</li>
+        <li><code class="ps">Out-File</code> und <code class="ps">&gt;</code> schreiben in 5.1 UTF-16, in 7 UTF-8 ohne BOM (Station 05).</li>
+        <li>Operatoren wie <code class="ps">&amp;&amp;</code>, <code class="ps">||</code>, <code class="ps">??</code> und <code class="ps">? :</code> gibt es nur in <span class="ps-version">7</span>.</li>
+      </ul>
+    </div>
+    <div class="card stack t13-nicht-drucken">
+      <h3>Quellen (Microsoft Learn, in eigenen Worten)</h3>
+      <ul class="prose">
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_comment_based_help">about_Comment_Based_Help</a> (Kommentarkopf am Anfang des Skripts, nur Kommentare und leere Zeilen davor, Stichwörter wie <code>.SYNOPSIS</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_scripts">about_Scripts</a> (Skripte schreiben, starten, Parameter)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_try_catch_finally">about_Try_Catch_Finally</a> (abbrechende Fehler abfangen)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_commonparameters">about_CommonParameters</a> (<code>-WhatIf</code>, <code>-ErrorAction</code>)</li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.management/move-item">Move-Item</a> und <a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/export-csv">Export-Csv</a></li>
+        <li><a href="https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_character_encoding">about_Character_Encoding</a> (UTF-8 mit und ohne BOM in 5.1 und 7)</li>
+        <li><a href="https://learn.microsoft.com/powershell/scripting/overview">PowerShell-Dokumentation: Übersicht</a></li>
+        <li>Alle bisherigen Stationen des Lernpfads PS (01–12)</li>
+      </ul>
+    </div>
+    <footer>Station 13, die letzte Station des Lernpfads PS. Gratuliere: Du hast den ganzen Weg von der ersten Eingabe bis zum eigenen Skript geschafft.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/ps-konsole.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const C = (t) => '<code class="ps">' + esc(t) + "</code>";
+  const P = (t) => '<pre class="ps-code"><code>' + esc(t) + "</code></pre>";
+  const R = String.raw;
+
+  // Hilfen für pruefe(ctx)
+  const eig = (o, n) => (o && typeof o === "object" && typeof o.wert === "function") ? o.wert(n) : undefined;
+  const nameVon = (ctx, o) => (typeof o === "string") ? o : (eig(o, "Name") != null ? ctx.text(eig(o, "Name")) : ctx.text(o));
+  const namen = (ctx) => ctx.objekte.map((o) => nameVon(ctx, o));
+  const gleicheMenge = (a, b) => a.length === b.length && a.slice().sort().join("|") === b.slice().sort().join("|");
+  const anzahl = (text, re) => (String(text).match(re) || []).length;
+  const WHATIF = /What if: Performing the operation "Move File"/g;
+  const ALT30 = ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log", "backup-2026-06.log"];
+
+  /* ---------- Schritt 0: Mini-Übung ---------- */
+  L.sortierer("#t13-mini", {
+    kategorien: ["Parameter", "Probelauf", "Sicherheitsnetz", "Kommentarkopf"],
+    elemente: [
+      { html: "Nächsten Monat will Lea Dateien suchen, die älter als 60 statt 30 Tage sind, ohne das Skript zu ändern.", kategorie: "Parameter", erklaerung: "Ein Parameter mit Standardwert: .\\aufraeumen.ps1 -Tage 60." },
+      { html: "Lea will sehen, welche Dateien verschoben würden, bevor wirklich etwas passiert.", kategorie: "Probelauf", erklaerung: "-WhatIf zeigt nur, was passieren würde." },
+      { html: "Gibt es den Ordner nicht, soll eine verständliche Meldung erscheinen statt roter Fehlertext.", kategorie: "Sicherheitsnetz", erklaerung: "try/catch fängt den Fehler und gibt eine eigene Meldung aus." },
+      { html: "Ein Kollege soll in einem Jahr noch wissen, wofür das Skript da ist.", kategorie: "Kommentarkopf", erklaerung: "Der Kommentarkopf mit .SYNOPSIS und .EXAMPLE erklärt das Skript, Get-Help zeigt ihn an." },
+      { html: "Das Skript soll auch einen anderen Ordner als Logs aufräumen können.", kategorie: "Parameter", erklaerung: "Ein zweiter Parameter für den Pfad: -Pfad Protokolle." },
+      { html: "Bevor Lea alte Setup-Dateien löscht, prüft sie die Liste.", kategorie: "Probelauf", erklaerung: "Remove-Item … -WhatIf: Es wird nichts gelöscht." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper ---------- */
+  const st = L.konsole.sitzung();
+  const sp = (link, code) => '<span data-link="' + link + '">' + C(code) + "</span>";
+  const stufe = (teile, befehle) => '<div class="t13-st"><div>' + teile + "</div>" + befehle.map((b) => st.html(b)).join("") + "</div>";
+  const a1 = "$grenze = (Get-Date).AddDays(-30)";
+  const a2 = "$alt = Get-ChildItem -Path Logs -Filter *.log -File | Where-Object LastWriteTime -lt $grenze";
+  const a3 = "($alt | Measure-Object -Property Length -Sum).Sum";
+  const a4 = "$alt | Select-Object Name, Length | Export-Csv -Path Berichte\\alt.csv -Delimiter ';'";
+  L.stepper("#t13-stepper", {
+    titel: "Nachricht an Lea",
+    text: 'Bitte <span data-link="b">such im Ordner Logs alle Logdateien</span>, <span data-link="a">die älter als 30 Tage sind</span>, <span data-link="c">sag mir, wie viel Platz sie belegen</span>, <span data-link="d">schick mir eine Liste</span> und <span data-link="e">verschieb sie in ein Archiv</span>.',
+    schritte: [
+      { html: stufe(sp("a", a1), [a1, "$grenze"]),
+        warum: "Zuerst das Grenzdatum: heute minus 30 Tage. Get-Date liefert ein Datum, .AddDays(-30) rechnet zurück. Auf Leas Rechner ist das der 3. Oktober 2026." },
+      { html: stufe(sp("b", a2), [a2, "$alt.Name"]),
+        warum: "Dann die Dateien: alle .log-Dateien im Ordner Logs, deren LastWriteTime vor dem Grenzdatum liegt. Das Ergebnis merkst du dir in einer Variable. Vier Dateien sind alt." },
+      { html: stufe(sp("c", a3), [a3]),
+        warum: "Measure-Object zählt die Grösse zusammen. Die Klammern holen das Messergebnis, .Sum nimmt nur die Zahl: 21'076'378 Bytes." },
+      { html: stufe(sp("d", a4), [a4, "Get-Content Berichte\\alt.csv"]),
+        warum: "Export-Csv schreibt die Liste in eine Datei, die der Chef in Excel öffnen kann. Das Semikolon passt zu Excel mit Schweizer Einstellungen." },
+      { html: stufe(sp("e", "$alt | Move-Item -Destination Logs\\Archiv -WhatIf"), ["New-Item -ItemType Directory -Path Logs\\Archiv", "$alt | Move-Item -Destination Logs\\Archiv -WhatIf"]),
+        warum: "Zum Schluss verschieben. Erst den Archivordner anlegen, dann mit -WhatIf prüfen, was passieren würde. Noch ist nichts verschoben." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Konsole mit Aufgaben ---------- */
+  L.konsole("#t13-konsole", {
+    aufgabenTitel: "Teile testen",
+    aufgaben: [
+      {
+        titel: "Das Grenzdatum",
+        text: "<p>Zeige das Datum von heute vor 30 Tagen an.</p>",
+        hinweis: "<p>" + C("Get-Date") + " in Klammern liefert ein Datum. Die Methode " + C(".AddDays()") + " rechnet mit einer negativen Zahl zurück.</p>",
+        loesung: "(Get-Date).AddDays(-30)",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Date") && /AddDays/i.test(ctx.eingabe) && /3\. Oktober 2026/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Alte Logdateien in $alt merken",
+        text: "<p>Speichere alle Dateien im Ordner <code>Logs</code>, die älter als 30 Tage sind, in der Variable " + C("$alt") + ". Gib danach mit " + C("$alt.Count") + " ihre Anzahl aus. Du darfst beides mit " + C(";") + " in eine Zeile schreiben.</p>",
+        hinweis: "<p>" + C("$alt = Get-ChildItem Logs | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30)") + ", danach " + C("$alt.Count") + ".</p>",
+        loesung: "$alt = Get-ChildItem Logs -File | Where-Object LastWriteTime -lt (Get-Date).AddDays(-30); $alt.Count",
+        pruefe: (ctx) => {
+          // Inhalt von $alt prüfen (nicht die Eingabe), damit auch Zuweisung und Count in zwei Zeilen gelten
+          const v = ctx.variable("alt");
+          const nm = (o) => { const n = eig(o, "Name"); return n != null ? ctx.text(n) : (o && o.Name != null ? String(o.Name) : ""); };
+          return Array.isArray(v) && gleicheMenge(v.map(nm), ALT30) && /\$alt\.Count/i.test(ctx.eingabe) && ctx.ausgabe.trim() === "4";
+        }
+      },
+      {
+        titel: "Wie viele MB?",
+        text: "<p>Rechne aus, wie viele MB die Dateien in " + C("$alt") + " zusammen belegen, auf zwei Stellen gerundet.</p>",
+        hinweis: "<p>" + C("($alt | Measure-Object -Property Length -Sum).Sum") + " ist die Summe in Bytes. Teile sie durch " + C("1MB") + " und runde mit " + C("[math]::Round(…, 2)") + ".</p>",
+        loesung: "[math]::Round(($alt | Measure-Object -Property Length -Sum).Sum / 1MB, 2)",
+        pruefe: (ctx) => ctx.befehle.includes("Measure-Object") && ctx.ausgabe.trim() === "20.1"
+      },
+      {
+        titel: "Den Archivordner anlegen",
+        text: "<p>Lege im Ordner <code>Logs</code> den Unterordner <code>Archiv</code> an. Achtung: ein <b>Ordner</b>, keine Datei.</p>",
+        hinweis: "<p>" + C("New-Item") + " mit " + C("-ItemType Directory") + ". Ohne diesen Parameter entsteht eine leere Datei.</p>",
+        loesung: "New-Item -ItemType Directory -Path Logs\\Archiv",
+        pruefe: (ctx) => { const d = ctx.datei("Logs\\Archiv"); return ctx.befehle.includes("New-Item") && !!d && d.ordner; }
+      },
+      {
+        titel: "Probelauf",
+        text: "<p>Zeige mit einem Probelauf, wie die Dateien in " + C("$alt") + " nach <code>Logs\\Archiv</code> verschoben würden. Es darf nichts verschoben werden.</p>",
+        hinweis: "<p>" + C("$alt") + " in die Pipeline, dann " + C("Move-Item -Destination Logs\\Archiv") + " mit dem Schalter für den Probelauf.</p>",
+        loesung: "$alt | Move-Item -Destination Logs\\Archiv -WhatIf",
+        pruefe: (ctx) => ctx.befehle.includes("Move-Item") && anzahl(ctx.ausgabe, WHATIF) === 4 &&
+          /\\Logs\\Archiv\\app-2026-07\.log/.test(ctx.ausgabe) && ctx.existiert("Logs\\app-2026-07.log")
+      },
+      {
+        titel: "Kurzbericht als CSV",
+        text: "<p>Exportiere von den Dateien in " + C("$alt") + " nur <code>Name</code> und <code>Length</code> in die Datei <code>Berichte\\alt.csv</code>, mit Semikolon als Trennzeichen. Schau sie danach mit " + C("Get-Content") + " an.</p>",
+        hinweis: "<p>" + C("Select-Object Name, Length") + " vor " + C("Export-Csv") + ". Das Trennzeichen setzt " + C("-Delimiter ';'") + ".</p>",
+        loesung: "$alt | Select-Object Name, Length | Export-Csv -Path Berichte\\alt.csv -Delimiter ';'",
+        pruefe: (ctx) => {
+          const t = ctx.inhalt("Berichte\\alt.csv");
+          return !!t && t.split("\n")[0] === '"Name";"Length"' && t.split("\n").length === 5;
+        }
+      }
+    ]
+  });
+
+  /* ---------- Schritt 3: geführter Skript-Bau ---------- */
+  /* SKRIPTE-START */
+  const KOPF = R`<#
+.SYNOPSIS
+  Verschiebt alte Logdateien in einen Archivordner und schreibt einen Bericht.
+.DESCRIPTION
+  Sucht im Ordner Pfad alle .log-Dateien, die älter als Tage Tage sind,
+  meldet Anzahl und Grösse, schreibt Berichte\log-archiv.csv und
+  verschiebt die Dateien in den Unterordner Archiv.
+.PARAMETER Pfad
+  Ordner mit den Logdateien. Standard: Logs
+.PARAMETER Tage
+  Mindestalter in Tagen. Standard: 30
+.EXAMPLE
+  .\aufraeumen.ps1 -Tage 60
+#>
+`;
+  const PARAM = R`param(
+  [string]$Pfad = 'Logs',
+  [int]$Tage = 30
+)
+`;
+  const SKRIPTE = [
+    // 1 · Finden
+    R`# 1. Alte Logdateien finden
+$grenze = (Get-Date).AddDays(-30)
+$alt = Get-ChildItem -Path Logs -Filter *.log -File |
+  Where-Object LastWriteTime -lt $grenze
+$alt | Select-Object Name, LastWriteTime`,
+    // 2 · Messen
+    R`# 1. Alte Logdateien finden
+$grenze = (Get-Date).AddDays(-30)
+$alt = Get-ChildItem -Path Logs -Filter *.log -File |
+  Where-Object LastWriteTime -lt $grenze
+
+# 2. Anzahl und Gesamtgrösse ausgeben
+$summe = ($alt | Measure-Object -Property Length -Sum).Sum
+"$($alt.Count) Dateien älter als 30 Tage, zusammen $([math]::Round($summe / 1MB, 2)) MB"`,
+    // 3 · Probelauf
+    R`# 1. Alte Logdateien finden
+$grenze = (Get-Date).AddDays(-30)
+$alt = Get-ChildItem -Path Logs -Filter *.log -File |
+  Where-Object LastWriteTime -lt $grenze
+
+# 2. Anzahl und Gesamtgrösse ausgeben
+$summe = ($alt | Measure-Object -Property Length -Sum).Sum
+"$($alt.Count) Dateien älter als 30 Tage, zusammen $([math]::Round($summe / 1MB, 2)) MB"
+
+# 3. In den Archivordner verschieben (zuerst nur Probelauf)
+$archiv = Join-Path Logs 'Archiv'
+if (-not (Test-Path $archiv)) {
+  New-Item -ItemType Directory -Path $archiv | Out-Null
+}
+$alt | Move-Item -Destination $archiv -WhatIf`,
+    // 4 · Parameter
+    PARAM + R`
+# 1. Alte Logdateien finden
+$grenze = (Get-Date).AddDays(-$Tage)
+$alt = Get-ChildItem -Path $Pfad -Filter *.log -File |
+  Where-Object LastWriteTime -lt $grenze
+
+# 2. Anzahl und Gesamtgrösse ausgeben
+$summe = ($alt | Measure-Object -Property Length -Sum).Sum
+"$($alt.Count) Dateien älter als $Tage Tage, zusammen $([math]::Round($summe / 1MB, 2)) MB"
+
+# 3. In den Archivordner verschieben (zuerst nur Probelauf)
+$archiv = Join-Path $Pfad 'Archiv'
+if (-not (Test-Path $archiv)) {
+  New-Item -ItemType Directory -Path $archiv | Out-Null
+}
+$alt | Move-Item -Destination $archiv -WhatIf`,
+    // 5 · Bericht
+    PARAM + R`
+# 1. Alte Logdateien finden
+$grenze = (Get-Date).AddDays(-$Tage)
+$alt = Get-ChildItem -Path $Pfad -Filter *.log -File |
+  Where-Object LastWriteTime -lt $grenze
+
+# 2. Anzahl und Gesamtgrösse ausgeben
+$summe = ($alt | Measure-Object -Property Length -Sum).Sum
+"$($alt.Count) Dateien älter als $Tage Tage, zusammen $([math]::Round($summe / 1MB, 2)) MB"
+
+# 3. Bericht als CSV
+$alt | Select-Object Name,
+    @{ Name = 'KB'; Expression = { [math]::Round($_.Length / 1KB) } },
+    @{ Name = 'Datum'; Expression = { $_.LastWriteTime.ToString('yyyy-MM-dd') } } |
+  Export-Csv -Path 'Berichte\log-archiv.csv' -Delimiter ';'
+
+# 4. In den Archivordner verschieben (zuerst nur Probelauf)
+$archiv = Join-Path $Pfad 'Archiv'
+if (-not (Test-Path $archiv)) {
+  New-Item -ItemType Directory -Path $archiv | Out-Null
+}
+$alt | Move-Item -Destination $archiv -WhatIf`,
+    // 6 · Ernstfall
+    PARAM + R`
+# 1. Alte Logdateien finden
+$grenze = (Get-Date).AddDays(-$Tage)
+$alt = Get-ChildItem -Path $Pfad -Filter *.log -File |
+  Where-Object LastWriteTime -lt $grenze
+
+# 2. Anzahl und Gesamtgrösse ausgeben
+$summe = ($alt | Measure-Object -Property Length -Sum).Sum
+"$($alt.Count) Dateien älter als $Tage Tage, zusammen $([math]::Round($summe / 1MB, 2)) MB"
+
+# 3. Bericht als CSV
+$alt | Select-Object Name,
+    @{ Name = 'KB'; Expression = { [math]::Round($_.Length / 1KB) } },
+    @{ Name = 'Datum'; Expression = { $_.LastWriteTime.ToString('yyyy-MM-dd') } } |
+  Export-Csv -Path 'Berichte\log-archiv.csv' -Delimiter ';'
+
+# 4. In den Archivordner verschieben
+$archiv = Join-Path $Pfad 'Archiv'
+if (-not (Test-Path $archiv)) {
+  New-Item -ItemType Directory -Path $archiv | Out-Null
+}
+$alt | Move-Item -Destination $archiv
+"Verschoben nach $archiv"`
+  ];
+  const ROBUST = PARAM + R`
+try {
+  # 1. Alte Logdateien finden
+  $grenze = (Get-Date).AddDays(-$Tage)
+  $alt = Get-ChildItem -Path $Pfad -Filter *.log -File -ErrorAction Stop |
+    Where-Object LastWriteTime -lt $grenze
+  if (-not $alt) {
+    'Keine alten Logdateien gefunden.'
+    return
+  }
+
+  # 2. Anzahl und Gesamtgrösse ausgeben
+  $summe = ($alt | Measure-Object -Property Length -Sum).Sum
+  "$($alt.Count) Dateien älter als $Tage Tage, zusammen $([math]::Round($summe / 1MB, 2)) MB"
+
+  # 3. Bericht als CSV
+  $alt | Select-Object Name,
+      @{ Name = 'KB'; Expression = { [math]::Round($_.Length / 1KB) } },
+      @{ Name = 'Datum'; Expression = { $_.LastWriteTime.ToString('yyyy-MM-dd') } } |
+    Export-Csv -Path 'Berichte\log-archiv.csv' -Delimiter ';'
+
+  # 4. In den Archivordner verschieben
+  $archiv = Join-Path $Pfad 'Archiv'
+  if (-not (Test-Path $archiv)) {
+    New-Item -ItemType Directory -Path $archiv | Out-Null
+  }
+  $alt | Move-Item -Destination $archiv
+  "Verschoben nach $archiv"
+}
+catch {
+  "Fehler: $($_.Exception.Message)"
+}`;
+  SKRIPTE.push(ROBUST, KOPF + "\n" + ROBUST);
+  /* SKRIPTE-ENDE */
+
+  const START = "# aufraeumen.ps1 · Leas Aufräum- und Berichtsskript\n# Ergänze das Skript Schritt für Schritt und klicke nach jedem Schritt auf «▶ Ausführen».\n";
+  const neu = (zeilen) => "<p>Neu dazu:</p>" + P(zeilen);
+  const bau = L.konsole("#t13-bau", {
+    modus: "skript",
+    titel: "PowerShell 7 · aufraeumen.ps1",
+    skriptName: "aufraeumen.ps1",
+    argumenteBeispiel: "z. B. -Tage 60",
+    aufgabenTitel: "Bauplan: acht Schritte",
+    aufgaben: [
+      {
+        titel: "1 · Alte Logdateien finden",
+        text: "<p>Schreib unter die Kommentare die Suche aus der Konsole. Die letzte Zeile zeigt zur Kontrolle Name und Datum. Führe das Skript aus: Es müssen genau vier Dateien erscheinen.</p>" +
+          neu("# 1. Alte Logdateien finden\n$grenze = (Get-Date).AddDays(-30)\n$alt = Get-ChildItem -Path Logs -Filter *.log -File |\n  Where-Object LastWriteTime -lt $grenze\n$alt | Select-Object Name, LastWriteTime") +
+          "<p>Endet eine Zeile mit " + C("|") + ", geht die Pipeline auf der nächsten Zeile weiter.</p>",
+        hinweis: "<p>" + C("-File") + " lässt Ordner weg, " + C("-Filter *.log") + " nur Logdateien. " + C("-lt") + " heisst «kleiner als», bei Daten also «früher als».</p>",
+        loesung: SKRIPTE[0],
+        pruefe: (ctx) => /Get-ChildItem/i.test(ctx.skript || "") && /Where-Object/i.test(ctx.skript || "") && !ctx.hatFehler && gleicheMenge(namen(ctx), ALT30)
+      },
+      {
+        titel: "2 · Anzahl und Gesamtgrösse ausgeben",
+        text: "<p>Ersetze die Kontrollzeile " + C("$alt | Select-Object Name, LastWriteTime") + " durch eine Zusammenfassung in einem Satz. Erwartet: <code>4 Dateien älter als 30 Tage, zusammen 20.1 MB</code>.</p>" +
+          neu("# 2. Anzahl und Gesamtgrösse ausgeben\n$summe = ($alt | Measure-Object -Property Length -Sum).Sum\n\"$($alt.Count) Dateien älter als 30 Tage, zusammen $([math]::Round($summe / 1MB, 2)) MB\""),
+        hinweis: "<p>In doppelten Anführungszeichen setzt " + C("$( … )") + " das Ergebnis eines Ausdrucks ein. Ein Text allein auf einer Zeile wird ausgegeben.</p>",
+        loesung: SKRIPTE[1],
+        pruefe: (ctx) => /Measure-Object/i.test(ctx.skript || "") && /\b4\b/.test(ctx.ausgabe) && /\b20\.1\b/.test(ctx.ausgabe) && !ctx.hatFehler
+      },
+      {
+        titel: "3 · Verschieben, zuerst als Probelauf",
+        text: "<p>Hänge den Archiv-Teil an. Er legt den Ordner <code>Logs\\Archiv</code> an, falls es ihn noch nicht gibt, und zeigt mit " + C("-WhatIf") + ", was verschoben würde. Erwartet: vier Zeilen <code>What if: …</code>, die Dateien bleiben in <code>Logs</code>.</p>" +
+          neu("# 3. In den Archivordner verschieben (zuerst nur Probelauf)\n$archiv = Join-Path Logs 'Archiv'\nif (-not (Test-Path $archiv)) {\n  New-Item -ItemType Directory -Path $archiv | Out-Null\n}\n$alt | Move-Item -Destination $archiv -WhatIf") +
+          "<p>" + C("| Out-Null") + " schluckt die Ausgabe von " + C("New-Item") + ", damit sie den Bericht nicht stört.</p>",
+        hinweis: "<p>" + C("Test-Path") + " liefert True oder False. " + C("-not") + " dreht das um: «wenn es den Ordner nicht gibt».</p>",
+        loesung: SKRIPTE[2],
+        pruefe: (ctx) => /-WhatIf/i.test(ctx.skript || "") && /Move-Item/i.test(ctx.skript || "") && anzahl(ctx.ausgabe, WHATIF) === 4 &&
+          ctx.existiert("Logs\\app-2026-07.log") && !!ctx.datei("Logs\\Archiv") && ctx.datei("Logs\\Archiv").ordner
+      },
+      {
+        titel: "4 · Parameter für Pfad und Tage",
+        text: "<p>Mach aus den festen Werten Drehknöpfe. Setz " + C("param()") + " ganz an den Anfang (nur Kommentare dürfen davor stehen). Ersetze danach im Skript " + C("Logs") + " durch " + C("$Pfad") + " (zweimal) und " + C("30") + " durch " + C("$Tage") + " (zweimal).</p>" +
+          neu("param(\n  [string]$Pfad = 'Logs',\n  [int]$Tage = 30\n)") +
+          "<p>Starte das Skript dann mit <b>-Tage 60</b> im Feld «Parameter». Erwartet: 3 Dateien, zusammen 15.6 MB, drei Zeilen <code>What if</code>.</p>",
+        hinweis: "<p>Im Text heisst es nun " + C("\"… älter als $Tage Tage …\"") + ", beim Datum " + C("(Get-Date).AddDays(-$Tage)") + ". Das Minus steht vor der Variable. Das Feld «Parameter» füllst du selbst: " + C("-Tage 60") + ".</p>",
+        loesung: SKRIPTE[3],
+        pruefe: (ctx) => /^\s*(#[^\n]*\n|\s*\n)*\s*param\s*\(/i.test(ctx.skript || "") && /\$Pfad/.test(ctx.skript || "") && /AddDays\(\s*-\s*\$Tage\s*\)/i.test(ctx.skript || "") &&
+          /-Tage\s+60\b/i.test(ctx.argumente || "") && anzahl(ctx.ausgabe, WHATIF) === 3 && /\b15\.6\b/.test(ctx.ausgabe) && !ctx.hatFehler
+      },
+      {
+        titel: "5 · Bericht als CSV",
+        text: "<p>Füge vor dem Archiv-Teil den Bericht ein. Er enthält Name, Grösse in KB und Datum. Nummeriere die Kommentare neu (3. Bericht, 4. Verschieben). Starte ohne Parameter und schau den Bericht danach in der Datei <code>Berichte\\log-archiv.csv</code> an (Übung 8 zeigt, wie man ihn auswertet).</p>" +
+          neu("# 3. Bericht als CSV\n$alt | Select-Object Name,\n    @{ Name = 'KB'; Expression = { [math]::Round($_.Length / 1KB) } },\n    @{ Name = 'Datum'; Expression = { $_.LastWriteTime.ToString('yyyy-MM-dd') } } |\n  Export-Csv -Path 'Berichte\\log-archiv.csv' -Delimiter ';'"),
+        hinweis: "<p>Die zwei " + C("@{ Name = …; Expression = { … } }") + " sind berechnete Eigenschaften (Station 08). " + C("ToString('yyyy-MM-dd')") + " schreibt das Datum unabhängig von der Spracheinstellung. Nach einem Komma darf die Zeile umbrechen.</p>",
+        loesung: SKRIPTE[4],
+        pruefe: (ctx) => {
+          const t = ctx.inhalt("Berichte\\log-archiv.csv");
+          return /Export-Csv/i.test(ctx.skript || "") && !!t && t.split("\n")[0] === '"Name";"KB";"Datum"' && t.split("\n").length >= 2 && !ctx.hatFehler;
+        }
+      },
+      {
+        titel: "6 · Ernstfall: wirklich verschieben",
+        text: "<p>Der Probelauf stimmt. Nimm " + C("-WhatIf") + " weg, lösch « (zuerst nur Probelauf)» im Kommentar und melde am Schluss, wohin verschoben wurde. Starte ohne Parameter. Die Dateien liegen danach in <code>Logs\\Archiv</code>.</p>" +
+          neu("$alt | Move-Item -Destination $archiv\n\"Verschoben nach $archiv\""),
+        hinweis: "<p>Führst du das Skript ein zweites Mal aus, findet es nichts mehr: Die Dateien sind ja weg. Das löst Schritt 7.</p>",
+        loesung: SKRIPTE[5],
+        pruefe: (ctx) => !/-WhatIf/i.test(ctx.skript || "") && /Move-Item/i.test(ctx.skript || "") && !ctx.hatFehler &&
+          ctx.existiert("Logs\\Archiv\\app-2026-07.log") && ctx.existiert("Logs\\Archiv\\backup-2026-06.log") && !ctx.existiert("Logs\\app-2026-07.log")
+      },
+      {
+        titel: "7 · Sicherheitsnetz: try/catch",
+        text: "<p>Pack alles nach " + C("param()") + " in " + C("try { … }") + " und häng einen " + C("catch") + "-Teil an. Gib " + C("Get-ChildItem") + " den Parameter " + C("-ErrorAction Stop") + ". Ergänze direkt nach der Suche: Findet das Skript nichts, sagt es das und hört auf.</p>" +
+          neu("try {\n  … (dein bisheriges Skript, eingerückt)\n}\ncatch {\n  \"Fehler: $($_.Exception.Message)\"\n}") + P("  if (-not $alt) {\n    'Keine alten Logdateien gefunden.'\n    return\n  }") +
+          "<p>Teste mit <b>-Pfad Protokolle</b> (den Ordner gibt es nicht). Erwartet: eine Zeile <code>Fehler: Cannot find path …</code> und kein roter Text.</p>",
+        hinweis: "<p>Ohne " + C("-ErrorAction Stop") + " bricht der Fehler nicht ab, " + C("catch") + " greift nicht und die Meldung erscheint rot. " + C("return") + " beendet das Skript an dieser Stelle.</p>",
+        loesung: SKRIPTE[6],
+        pruefe: (ctx) => /\btry\s*\{/i.test(ctx.skript || "") && /\bcatch\b/i.test(ctx.skript || "") && /-Pfad\s+['"]?Protokolle\b/i.test(ctx.argumente || "") &&
+          /^Fehler: .*Protokolle/m.test(ctx.ausgabe) && !ctx.hatFehler
+      },
+      {
+        titel: "8 · Kommentarkopf",
+        text: "<p>Ersetze die zwei Kommentarzeilen ganz oben durch einen Kommentarkopf. Er steht <b>vor</b> " + C("param()") + ". Führe das Skript danach nochmals aus, ohne Parameter: Es muss weiterlaufen wie vorher. Hat Schritt 6 schon verschoben, meldet es «Keine alten Logdateien gefunden.», nach «↺ Zurücksetzen» wieder die vier Dateien.</p>" +
+          neu(KOPF.trim()),
+        hinweis: "<p>Jedes Stichwort beginnt mit einem Punkt. Der Inhalt steht auf den Zeilen darunter. Zwischen " + C("#>") + " und " + C("param(") + " darf eine leere Zeile stehen.</p>",
+        loesung: SKRIPTE[7],
+        pruefe: (ctx) => /^\s*(#[^\n]*\n|\s*\n)*\s*<#[\s\S]*?\.SYNOPSIS[\s\S]*?#>\s*param\s*\(/i.test(ctx.skript || "") && !ctx.hatFehler && ctx.ausgabe.trim().length > 0
+      }
+    ]
+  });
+  if (bau) {
+    bau.eingabe.value = START;
+    bau.eingabe.rows = 16;
+  }
+  const standBox = document.getElementById("t13-stand");
+  standBox.textContent = "Bauplan: 0 von 8 Schritten erledigt.";
+  document.getElementById("t13-bau").addEventListener("lernpfad:aufgabe", (e) => {
+    const d = e.detail;
+    standBox.textContent = d.alleGeloest
+      ? "✓ Alle 8 Schritte erledigt. Leas Skript ist fertig."
+      : "Bauplan: " + d.anzahlGeloest + " von " + d.gesamt + " Schritten erledigt.";
+  });
+
+  // Fertiges Skript im Abschnitt 4 (gleicher Text wie die Lösung von Schritt 8)
+  document.querySelector("#t13-endskript code").textContent = SKRIPTE[7];
+  L.psFaerben(document.getElementById("t13-endskript"));
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t13-u1", {
+    kategorien: ["1.", "2.", "3.", "4.", "5.", "6."],
+    elemente: [
+      { html: C("Export-Csv -Path 'Berichte\\log-archiv.csv' -Delimiter ';'"), kategorie: "5.", erklaerung: "Der Bericht kommt vor dem Verschieben, solange die Liste noch stimmt." },
+      { html: C("param([string]$Pfad = 'Logs', [int]$Tage = 30)"), kategorie: "2.", erklaerung: "param() steht direkt nach dem Kommentarkopf, vor jedem Befehl." },
+      { html: C("<# .SYNOPSIS … #>"), kategorie: "1.", erklaerung: "Der Kommentarkopf steht ganz oben, nur Kommentare und leere Zeilen davor." },
+      { html: C("$alt | Move-Item -Destination $archiv"), kategorie: "6.", erklaerung: "Verschieben ist der letzte Arbeitsschritt." },
+      { html: C("$alt = Get-ChildItem -Path $Pfad -Filter *.log -File"), kategorie: "3.", erklaerung: "Zuerst die Dateien holen, alles andere baut darauf auf." },
+      { html: C("$summe = ($alt | Measure-Object -Property Length -Sum).Sum"), kategorie: "4.", erklaerung: "Messen braucht die gefundenen Dateien aus Schritt 3." }
+    ]
+  });
+  L.auswahl("#t13-u2", {
+    frage: "Leas fertiges Skript läuft zum ersten Mal mit " + C(".\\aufraeumen.ps1 -Tage 60") + ". Was steht in der ersten Zeile der Ausgabe?",
+    optionen: [
+      C("4 Dateien älter als 60 Tage, zusammen 20.1 MB"),
+      C("3 Dateien älter als 60 Tage, zusammen 15.6 MB"),
+      C("2 Dateien älter als 60 Tage, zusammen 9.6 MB"),
+      C("Keine alten Logdateien gefunden.")
+    ],
+    richtig: 1,
+    erklaerung: "Die Grenze ist der 3. September 2026. Davor liegen app-2026-07.log, app-2026-08.log und backup-2026-06.log. app-2026-09.log vom 30. September ist jünger. Zusammen 16'357'786 Bytes, das sind 15.6 MB."
+  });
+  L.auswahl("#t13-u3", {
+    frage: "Gleich danach startet Lea " + C(".\\aufraeumen.ps1") + " ohne Parameter. Was gibt das Skript aus?",
+    optionen: [
+      C("1 Dateien älter als 30 Tage, zusammen 4.5 MB") + " und " + C("Verschoben nach Logs\\Archiv"),
+      C("4 Dateien älter als 30 Tage, zusammen 20.1 MB") + " und " + C("Verschoben nach Logs\\Archiv"),
+      C("Keine alten Logdateien gefunden."),
+      C("Fehler: Cannot find path …")
+    ],
+    richtig: 0,
+    erklaerung: "Nach dem ersten Lauf liegen drei Dateien im Archiv. Im Ordner Logs ist nur noch app-2026-09.log älter als 30 Tage (4'718'592 Bytes = 4.5 MB). Get-ChildItem ohne -Recurse schaut nicht in Logs\\Archiv. Erst ein dritter Lauf meldet «Keine alten Logdateien gefunden.»"
+  });
+  // Übung 4 und 5: Fehler im Skript-Editor selbst korrigieren
+  // Skript beginnt mit param( (davor nur Kommentare, <# … #>-Blöcke, leere Zeilen und ggf. [CmdletBinding()])
+  const PARAM_OBEN = { test: (s) => /^\s*(\[CmdletBinding\([^)]*\)\]\s*)?param\s*\(/i.test(String(s).replace(/<#[\s\S]*?#>/g, "").replace(/#[^\n]*/g, "")) };
+  L.konsole("#t13-u4", {
+    modus: "skript",
+    begruessung: false,
+    titel: "PowerShell 7 · test.ps1",
+    skriptName: "test.ps1",
+    skript: "\"Start\"\nparam([int]$Tage = 30)\n\"Tage: $Tage\"",
+    argumente: "-Tage 5",
+    argumenteBeispiel: "z. B. -Tage 5",
+    aufgabenTitel: "Korrigieren",
+    aufgaben: [
+      {
+        titel: "Tage: 5",
+        text: "<p>Korrigiere " + C("test.ps1") + " so, dass es mit " + C("-Tage 5") + " die Zeile <code>Tage: 5</code> ausgibt, ohne roten Fehler. <code>Start</code> darf weiterhin erscheinen.</p>",
+        hinweis: "<p>Was darf in einem Skript vor " + C("param()") + " stehen? Nur Kommentare und leere Zeilen. Wohin gehört also die Zeile " + C("\"Start\"") + "?</p>",
+        loesung: "# param() muss zuoberst stehen, erst danach kommen Befehle wie \"Start\"\nparam([int]$Tage = 30)\n\"Start\"\n\"Tage: $Tage\"",
+        // param() zuoberst, $Tage auch nach param() benutzt (nicht fest «5» geschrieben), Aufruf mit 5 (-Tage 5, -T 5, -Tage:5 oder nach Position)
+        pruefe: (ctx) => PARAM_OBEN.test(ctx.skript || "") && anzahl(ctx.skript || "", /\$Tage\b/gi) >= 2 &&
+          /^\s*(-T\w*(:\s*|\s+))?5\s*$/i.test(ctx.argumente || "") && /^Tage: 5$/m.test(ctx.ausgabe) && !ctx.hatFehler
+      }
+    ]
+  });
+  L.konsole("#t13-u5", {
+    modus: "skript",
+    begruessung: false,
+    titel: "PowerShell 7 · netz.ps1",
+    skriptName: "netz.ps1",
+    skript: "try {\n  Get-ChildItem -Path Protokolle\n  \"weiter\"\n}\ncatch {\n  \"Fehler: $($_.Exception.Message)\"\n}",
+    aufgabenTitel: "Korrigieren",
+    aufgaben: [
+      {
+        titel: "catch soll greifen",
+        text: "<p>Ändere " + C("netz.ps1") + " so, dass der fehlende Ordner im " + C("catch") + "-Teil landet. Erwartet: nur eine Zeile <code>Fehler: Cannot find path …</code>, kein roter Text und kein <code>weiter</code>. Der Ordner bleibt <code>Protokolle</code>.</p>",
+        hinweis: "<p>" + C("try") + " fängt nur Fehler, die abbrechen. Der Fehler von " + C("Get-ChildItem") + " bricht nicht ab. Welcher gemeinsame Parameter ändert das (Station 11)?</p>",
+        loesung: "try {\n  Get-ChildItem -Path Protokolle -ErrorAction Stop   # macht den Fehler abbrechend, erst dann greift catch\n  \"weiter\"\n}\ncatch {\n  \"Fehler: $($_.Exception.Message)\"\n}",
+        // Ergebnis prüfen: Meldung aus catch, kein «weiter», kein roter Fehler; try/catch und der Ordner bleiben
+        pruefe: (ctx) => /\btry\s*\{/i.test(ctx.skript || "") && /\bcatch\b/i.test(ctx.skript || "") && /Protokolle/i.test(ctx.skript || "") && /\$(_|PSItem)\b/i.test(ctx.skript || "") &&
+          /^Fehler: .*Protokolle/m.test(ctx.ausgabe) && !/^weiter$/m.test(ctx.ausgabe) && !ctx.hatFehler
+      }
+    ]
+  });
+  L.sortierer("#t13-u6", {
+    kategorien: [".SYNOPSIS", ".DESCRIPTION", ".PARAMETER", ".EXAMPLE"],
+    elemente: [
+      { html: "Ein Satz, was das Skript tut", kategorie: ".SYNOPSIS", erklaerung: "Die Kurzbeschreibung. Get-Help zeigt sie direkt unter dem Namen." },
+      { html: C(".\\aufraeumen.ps1 -Tage 60"), kategorie: ".EXAMPLE", erklaerung: "Ein Beispielaufruf. Get-Help … -Examples zeigt ihn." },
+      { html: "Erklärung zu " + C("-Tage") + ": Mindestalter in Tagen", kategorie: ".PARAMETER", erklaerung: "Hinter .PARAMETER steht der Name des Parameters, darunter die Erklärung." },
+      { html: "Mehrere Sätze: was gesucht, gemeldet, geschrieben und verschoben wird", kategorie: ".DESCRIPTION", erklaerung: "Die ausführliche Beschreibung." },
+      { html: "Erklärung zu " + C("-Pfad") + ": Ordner mit den Logdateien", kategorie: ".PARAMETER", erklaerung: "Für jeden Parameter ein eigenes .PARAMETER." }
+    ]
+  });
+  L.wahrFalsch("#t13-u7", {
+    titel: "Skripte, Probelauf und Fehler",
+    aussagen: [
+      { html: "Hat jeder Parameter in " + C("param()") + " einen Standardwert, kannst du das Skript auch ohne Parameter starten.", wahr: true, erklaerung: "Dann gilt der Standardwert, bei Lea Logs und 30." },
+      { html: C("-WhatIf") + " verschiebt die Dateien, fragt aber vorher nach.", wahr: false, erklaerung: "-WhatIf verschiebt gar nichts, es zeigt nur «What if: …». Nachfragen macht -Confirm." },
+      { html: "In Windows PowerShell 5.1 schreibt " + C("Export-Csv") + " ohne " + C("-NoTypeInformation") + " eine Zeile " + C("#TYPE …") + " an den Anfang.", wahr: true, erklaerung: "In 5.1 geprüft: #TYPE Selected.System.IO.FileInfo. In PowerShell 7 fehlt die Zeile." },
+      { html: "Der Kommentarkopf " + C("<# … #>") + " ändert, was das Skript tut.", wahr: false, erklaerung: "PowerShell führt Kommentare nicht aus. Der Kopf dient Menschen und Get-Help." },
+      { html: C("[int]$Tage = 30") + " heisst: Tage muss eine ganze Zahl sein, Standard ist 30. " + C("-Tage abc") + " ergibt einen Fehler.", wahr: true, erklaerung: "«Cannot convert value \"abc\" to type \"System.Int32\"»: abc lässt sich nicht in eine Zahl umwandeln." },
+      { html: "Im Skript solltest du Aliase wie " + C("ls") + " und " + C("?") + " verwenden, damit es kürzer wird.", wahr: false, erklaerung: "Aliase sind für die Konsole. Im Skript schreibst du volle Namen, damit andere es lesen können." }
+    ]
+  });
+  const BERICHT = '"Name";"KB";"Datum"\n"app-2026-07.log";"8704";"2026-07-31"\n"app-2026-08.log";"6144";"2026-08-31"\n"app-2026-09.log";"4608";"2026-09-30"\n"backup-2026-06.log";"1126";"2026-06-30"';
+  L.konsole("#t13-u8", {
+    begruessung: false,
+    umgebung: { dateien: [{ pfad: "C:\\Users\\lea\\Berichte\\log-archiv.csv", inhalt: BERICHT, zeit: "2026-11-02T09:00:00" }] },
+    aufgabenTitel: "Selbst schreiben",
+    aufgaben: [
+      {
+        titel: "Summe der Spalte KB",
+        text: "<p>Lies den Bericht mit " + C("Import-Csv") + " ein und rechne die Summe der Spalte <code>KB</code> aus.</p>",
+        hinweis: "<p>Ohne " + C("-Delimiter ';'") + " erkennt Import-Csv die Spalten nicht. Danach " + C("Measure-Object -Property KB -Sum") + ".</p>",
+        loesung: "Import-Csv Berichte\\log-archiv.csv -Delimiter ';' | Measure-Object -Property KB -Sum",
+        pruefe: (ctx) => ctx.befehle.includes("Import-Csv") && ctx.befehle.includes("Measure-Object") && /\b20582\b/.test(ctx.ausgabe)
+      },
+      {
+        titel: "Nur die grossen Dateien",
+        text: "<p>Gib aus dem Bericht nur die <b>Namen</b> der Dateien aus, die grösser als 5000 KB sind, als reine Liste.</p>",
+        hinweis: "<p>Filtere mit " + C("Where-Object { [int]$_.KB -gt 5000 }") + " (Import-Csv liefert Text, " + C("[int]") + " macht eine Zahl daraus). Dann " + C("Select-Object -ExpandProperty Name") + ".</p>",
+        loesung: "Import-Csv Berichte\\log-archiv.csv -Delimiter ';' | Where-Object { [int]$_.KB -gt 5000 } | Select-Object -ExpandProperty Name",
+        pruefe: (ctx) => ctx.befehle.includes("Import-Csv") && ctx.objekte.length === 2 && ctx.objekte.every((o) => typeof o === "string") &&
+          gleicheMenge(ctx.objekte.slice(), ["app-2026-07.log", "app-2026-08.log"])
+      }
+    ]
+  });
+
+  /* ---------- Tipp-Training ---------- */
+  // Hilfen: Eigenschaft als Text, Liste in fester Reihenfolge vergleichen
+  const eigText = (ctx, o, n) => { const v = eig(o, n); return v == null ? null : ctx.text(v); };
+  const gleicheListe = (a, b) => a.length === b.length && a.every((x, k) => x === b[k]);
+  const nurText = (ctx) => ctx.objekte.every((o) => typeof o === "string");
+  const filtert = (ctx) => ctx.befehle.includes("Where-Object") || /\.Where\s*\(/i.test(ctx.eingabe);
+
+  // Stufe 1 · Nachtippen
+  L.konsole("#t13-tipp1", {
+    begruessung: false,
+    titel: "PowerShell 7 · Stufe 1",
+    aufgabenTitel: "Stufe 1 · Nachtippen",
+    aufgaben: [
+      {
+        titel: "Die drei grössten Logdateien (07)",
+        text: "<p>Tippe ab:</p>" + P("Get-ChildItem Logs | Sort-Object Length -Descending | Select-Object -First 3 Name, Length") +
+          "<p>Es erscheinen drei Zeilen mit Name und Grösse, die grösste zuoberst.</p>",
+        hinweis: "<p>Achte auf die zwei senkrechten Striche " + C("|") + " und auf das Komma zwischen <code>Name</code> und <code>Length</code>.</p>",
+        loesung: "Get-ChildItem Logs | Sort-Object Length -Descending | Select-Object -First 3 Name, Length   # sortieren, die ersten drei nehmen, nur zwei Spalten zeigen",
+        // Ergebnis: genau diese drei Dateien in dieser Reihenfolge, nur mit Name und Length
+        pruefe: (ctx) => ctx.befehle.includes("Sort-Object") && ctx.befehle.includes("Select-Object") && !ctx.hatFehler &&
+          gleicheListe(namen(ctx), ["app-2026-07.log", "app-2026-08.log", "app-2026-09.log"]) &&
+          ctx.objekte.every((o) => o && typeof o.namen === "function" && gleicheListe(o.namen().map((n) => n.toLowerCase()), ["name", "length"]))
+      },
+      {
+        titel: "Gestoppte Dienste (07, 12)",
+        text: "<p>Tippe ab:</p>" + P("Get-Service | Where-Object Status -eq 'Stopped'") +
+          "<p>Es erscheinen nur die Dienste, die gerade nicht laufen.</p>",
+        hinweis: "<p>" + C("-eq") + " schreibst du mit Bindestrich und ohne Leerzeichen dazwischen. Der Wert " + C("'Stopped'") + " steht in einfachen Anführungszeichen.</p>",
+        loesung: "Get-Service | Where-Object Status -eq 'Stopped'   # vereinfachte Where-Schreibweise: Eigenschaft, Operator, Wert",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Service") && !ctx.hatFehler &&
+          gleicheMenge(namen(ctx), ["BITS", "Fax", "W32Time", "WolkenriedSync"]) && ctx.objekte.every((o) => eigText(ctx, o, "Status") === "Stopped")
+      },
+      {
+        titel: "Das Ende einer Logdatei (05)",
+        text: "<p>Tippe ab:</p>" + P("Get-Content Logs\\app.log -Tail 2") +
+          "<p>Es erscheinen die letzten zwei Zeilen der Datei.</p>",
+        hinweis: "<p>Zwischen " + C("Logs") + " und " + C("app.log") + " steht ein umgekehrter Schrägstrich " + C("\\") + ".</p>",
+        loesung: "Get-Content Logs\\app.log -Tail 2   # -Tail liest nur die letzten Zeilen",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Content") && nurText(ctx) && gleicheListe(ctx.objekte.slice(), [
+          "2026-11-02 08:44:19 ERROR Verbindung zu sync.wolkenried.ch fehlgeschlagen",
+          "2026-11-02 08:59:13 INFO  Sicherung abgeschlossen"])
+      }
+    ]
+  });
+
+  // Stufe 2 · Abwandeln
+  const ALS = (befehl, auftrag) => "<p>Vorlage:</p>" + P(befehl) + "<p>" + auftrag + "</p>";
+  L.konsole("#t13-tipp2", {
+    begruessung: false,
+    titel: "PowerShell 7 · Stufe 2",
+    aufgabenTitel: "Stufe 2 · Abwandeln",
+    aufgaben: [
+      {
+        titel: "Anderer Ordner, andere Grenze (07)",
+        text: ALS("Get-ChildItem Logs | Where-Object Length -gt 4MB", "Wie die Vorlage, aber im Ordner <code>Downloads</code> und nur Dateien, die grösser als <b>10 MB</b> sind."),
+        hinweis: "<p>Zwei Stellen ändern sich: der Ordner nach " + C("Get-ChildItem") + " und die Zahl hinter " + C("-gt") + ". Die Einheit " + C("MB") + " hängst du direkt an die Zahl.</p>",
+        loesung: "Get-ChildItem Downloads | Where-Object Length -gt 10MB   # Ordner und Grenze ausgetauscht, MB hängt direkt an der Zahl",
+        pruefe: (ctx) => filtert(ctx) && !ctx.hatFehler && gleicheMenge(namen(ctx), ["setup-alt.exe", "WolkenriedSync-setup.exe"]) &&
+          ctx.objekte.every((o) => eig(o, "Length") != null)
+      },
+      {
+        titel: "Andere Eigenschaft (07, 12)",
+        text: ALS("Get-Process | Sort-Object CPU -Descending | Select-Object -First 3", "Die Vorlage zeigt die drei Prozesse mit der meisten Rechenzeit. Zeige stattdessen die drei Prozesse, die am meisten <b>Arbeitsspeicher</b> belegen (Eigenschaft <code>WS</code>)."),
+        hinweis: "<p>Nur die Eigenschaft hinter " + C("Sort-Object") + " ändert sich. In der Standardansicht von " + C("Get-Process") + " heisst die Spalte " + C("WS(M)") + ", die Eigenschaft selbst " + C("WS") + ".</p>",
+        loesung: "Get-Process | Sort-Object WS -Descending | Select-Object -First 3   # WS ist der belegte Arbeitsspeicher in Bytes",
+        // Reihenfolge nach Arbeitsspeicher (absteigend oder mit -Last 3 aufsteigend); nach CPU wäre sie anders
+        pruefe: (ctx) => {
+          const ids = ctx.objekte.map((o) => Number(eigText(ctx, o, "Id")));
+          return ctx.befehle.includes("Sort-Object") && !ctx.hatFehler &&
+            (gleicheListe(ids, [6612, 7720, 4120]) || gleicheListe(ids, [4120, 7720, 6612]));
+        }
+      },
+      {
+        titel: "Anderer Parameter (12)",
+        text: ALS("Stop-Process -Name notepad -WhatIf", "Mach einen Probelauf für den Speicherfresser <code>berichtgenerator</code>. Diesmal sprichst du ihn nicht über den Namen an, sondern über seine <b>Id 6612</b>. Es darf nichts beendet werden."),
+        hinweis: "<p>Statt " + C("-Name") + " gibt es einen Parameter für die Prozessnummer. " + C("-WhatIf") + " bleibt stehen. Hast du den Prozess aus Versehen beendet, klick «↺ Zurücksetzen».</p>",
+        loesung: "Stop-Process -Id 6612 -WhatIf   # -Id statt -Name, -WhatIf zeigt nur, was passieren würde",
+        pruefe: (ctx) => ctx.befehle.includes("Stop-Process") && /\b6612\b/.test(ctx.eingabe) &&
+          /What if: Performing the operation "Stop-Process" on target "berichtgenerator \(6612\)"/.test(ctx.ausgabe) && !!ctx.prozess(6612)
+      },
+      {
+        titel: "Anderer Ordner, andere Spalten (08)",
+        text: ALS("Get-ChildItem Bilder | Select-Object Name, Length | Export-Csv -Path Berichte\\bilder.csv -Delimiter ';'",
+          "Wie die Vorlage, aber für den Ordner <code>Downloads</code>, mit den Spalten <code>Name</code> und <code>LastWriteTime</code>, gespeichert als <code>Berichte\\downloads.csv</code>. Schau die Datei danach mit " + C("Get-Content") + " an."),
+        hinweis: "<p>Drei Stellen ändern sich: der Ordner, die zweite Eigenschaft hinter " + C("Select-Object") + " und der Dateiname hinter " + C("-Path") + ". Das Semikolon bleibt.</p>",
+        loesung: "Get-ChildItem Downloads | Select-Object Name, LastWriteTime | Export-Csv -Path Berichte\\downloads.csv -Delimiter ';'   # Ordner, zweite Spalte und Dateiname ausgetauscht",
+        // Inhalt der Datei prüfen: Kopf mit genau diesen zwei Spalten (Reihenfolge egal), sechs Dateien
+        pruefe: (ctx) => {
+          const t = ctx.inhalt("Berichte\\downloads.csv");
+          if (!t) return false;
+          const z = t.split("\n");
+          return gleicheMenge(z[0].split(";"), ['"Name"', '"LastWriteTime"']) && z.length === 7 && /"setup-alt\.exe"/.test(t);
+        }
+      }
+    ]
+  });
+
+  // Stufe 3 · Selber lösen (Wiederholung über alle Stationen)
+  L.konsole("#t13-tipp3", {
+    begruessung: false,
+    titel: "PowerShell 7 · Stufe 3",
+    aufgabenTitel: "Stufe 3 · Selber lösen",
+    aufgaben: [
+      {
+        titel: "Sicherheitskopie (04, 05)",
+        text: "<p>Lea will eine Kopie ihrer Notizen. Lege im Ordner <code>Dokumente</code> den neuen Unterordner <code>Kopien</code> an und kopiere <code>notizen.txt</code> hinein. Das Original bleibt in <code>Dokumente</code>. Du darfst zwei Befehle nacheinander tippen.</p>",
+        hinweis: "<p>Zuerst der Ordner (" + C("New-Item") + " mit dem richtigen " + C("-ItemType") + "), dann " + C("Copy-Item") + " mit Quelle und Ziel. Fehlt der Ordner beim Kopieren, entsteht eine Datei namens Kopien. Dann hilft «↺ Zurücksetzen».</p>",
+        loesung: "New-Item -ItemType Directory -Path Dokumente\\Kopien; Copy-Item Dokumente\\notizen.txt Dokumente\\Kopien   # erst den Ordner anlegen, dann hineinkopieren",
+        // Absolute Pfade: gilt auch, wenn man vorher mit cd nach Dokumente gewechselt hat
+        pruefe: (ctx) => {
+          const DOK = "C:\\Users\\lea\\Dokumente";
+          const d = ctx.datei(DOK + "\\Kopien");
+          return !!d && d.ordner && ctx.existiert(DOK + "\\notizen.txt") &&
+            ctx.inhalt(DOK + "\\Kopien\\notizen.txt") !== null && ctx.inhalt(DOK + "\\Kopien\\notizen.txt") === ctx.inhalt(DOK + "\\notizen.txt");
+        }
+      },
+      {
+        titel: "Der vergessene Dienst (07, 12)",
+        text: "<p>Ein Dienst sollte beim Start von Windows automatisch laufen, ist aber gestoppt. Finde ihn mit einem Filter und gib nur seinen <b>Namen</b> aus, als reinen Text.</p>",
+        hinweis: "<p>Zwei Bedingungen: " + C("Status") + " und " + C("StartType") + ". Verknüpfe sie mit " + C("-and") + " in einem Skriptblock oder filtere zweimal. Den reinen Namen liefert " + C("Select-Object -ExpandProperty") + ".</p>",
+        loesung: "Get-Service | Where-Object { $_.Status -eq 'Stopped' -and $_.StartType -eq 'Automatic' } | Select-Object -ExpandProperty Name   # zwei Bedingungen mit -and, -ExpandProperty liefert reinen Text",
+        pruefe: (ctx) => ctx.befehle.includes("Get-Service") && filtert(ctx) && nurText(ctx) && gleicheListe(ctx.objekte.slice(), ["WolkenriedSync"])
+      },
+      {
+        titel: "Wer arbeitet wo? (07, 08)",
+        text: "<p>Wie viele Personen arbeiten in jeder Abteilung? Die Liste steht in <code>Berichte\\mitarbeitende.csv</code> (mit Komma getrennt). Gib pro Abteilung eine Zeile mit der Anzahl aus.</p>",
+        hinweis: "<p>Erst einlesen (Station 08), dann nach der Spalte " + C("Abteilung") + " in Gruppen einteilen (Station 07). Die Gruppen zeigen die Anzahl selbst.</p>",
+        loesung: "Import-Csv Berichte\\mitarbeitende.csv | Group-Object Abteilung   # Count zeigt, wie viele Zeilen in jeder Gruppe stecken",
+        pruefe: (ctx) => {
+          if (!(ctx.befehle.includes("Import-Csv") || ctx.befehle.includes("ConvertFrom-Csv")) || ctx.objekte.length !== 4) return false;
+          const soll = { Bauamt: "2", Einwohnerdienste: "1", Finanzen: "2", Informatik: "3" };
+          return ctx.objekte.every((o) => soll[eigText(ctx, o, "Name")] === eigText(ctx, o, "Count"));
+        }
+      },
+      {
+        titel: "Das grösste Bild laut (06, 07)",
+        text: "<p>Gib den Namen der grössten Datei im Ordner <code>Bilder</code> in <b>Grossbuchstaben</b> aus, nur den Namen als Text.</p>",
+        hinweis: "<p>Sortieren und die erste (oder letzte) Datei nehmen. Den Namen holst du mit der Punktnotation, Grossbuchstaben macht eine String-Methode (Station 06).</p>",
+        loesung: "(Get-ChildItem Bilder | Sort-Object Length -Descending | Select-Object -First 1).Name.ToUpper()   # die Klammer liefert die Datei, .Name den Text, ToUpper() die Grossbuchstaben",
+        // Grösse muss eine Rolle spielen: ferien-01.jpg steht auch nach Namen zuoberst, (gci Bilder)[0] zählt darum nicht
+        pruefe: (ctx) => ctx.befehle.includes("Get-ChildItem") && /Length/i.test(ctx.eingabe) &&
+          (ctx.befehle.includes("Sort-Object") || ctx.befehle.includes("Measure-Object") || filtert(ctx)) &&
+          nurText(ctx) && gleicheListe(ctx.objekte.slice(), ["FERIEN-01.JPG"])
+      }
+    ]
+  });
+
+  // Stufe 3 · Skript (09, 10, 11)
+  const GROESSE = { "foto-apero.jpg": "klein", "handbuch-drucker.pdf": "gross", "rechnung-2026-09.pdf": "klein",
+    "rechnung-2026-10.pdf": "klein", "setup-alt.exe": "gross", "WolkenriedSync-setup.exe": "gross" };
+  L.konsole("#t13-tipp4", {
+    modus: "skript",
+    begruessung: false,
+    titel: "PowerShell 7 · groesse.ps1",
+    skriptName: "groesse.ps1",
+    skript: "# groesse.ps1 · gross oder klein?\n",
+    argumenteBeispiel: "z. B. -Ordner Downloads",
+    aufgabenTitel: "Stufe 3 · Skript",
+    aufgaben: [
+      {
+        titel: "Gross oder klein? (09, 10, 11)",
+        text: "<p>Schreib ein Skript mit dem Parameter <code>Ordner</code> (Standard <code>Logs</code>). Es gibt für jede Datei im Ordner eine Zeile aus: den Namen und dahinter <code>gross</code>, wenn sie grösser als 4 MB ist, sonst <code>klein</code>. Zum Beispiel <code>setup-alt.exe gross</code>.</p>" +
+          "<p>Starte es mit <b>-Ordner Downloads</b> im Feld «Parameter». Den Ordnernamen schreibst du nicht ins Skript.</p>",
+        hinweis: "<p>Oben " + C("param([string]$Ordner = 'Logs')") + ", dann " + C("foreach ($d in Get-ChildItem $Ordner) { … }") + ". Darin ein " + C("if") + " mit " + C("-gt 4MB") + " und zwei Texte in doppelten Anführungszeichen, z. B. " + C("\"$($d.Name) gross\"") + ".</p>",
+        loesung: "# param() zuoberst: der Ordner kommt als Parameter herein, Logs ist nur der Standard\nparam([string]$Ordner = 'Logs')\nforeach ($d in Get-ChildItem -Path $Ordner -File) {\n  if ($d.Length -gt 4MB) { \"$($d.Name) gross\" }\n  else { \"$($d.Name) klein\" }\n}",
+        // Jede Datei aus Downloads steht mit dem richtigen Wort in einer Zeile; Ordner kommt über den Parameter
+        pruefe: (ctx) => {
+          const s = ctx.skript || "";
+          if (!PARAM_OBEN.test(s) || anzahl(s, /\$Ordner\b/gi) < 2 || /Downloads/i.test(s)) return false;
+          // -Ordner Downloads, abgekürzt (-O, -Ord), mit Doppelpunkt oder nach Position
+          if (!/^\s*(-O\w*(:\s*|\s+))?(['"]?)Downloads\3\s*$/i.test(ctx.argumente || "") || ctx.hatFehler) return false;
+          const zeilen = ctx.ausgabe.split("\n");
+          return Object.keys(GROESSE).every((n) => zeilen.some((z) => z.includes(n) &&
+            new RegExp("\\b" + GROESSE[n] + "\\b", "i").test(z.replace(n, "")) &&
+            !new RegExp("\\b" + (GROESSE[n] === "gross" ? "klein" : "gross") + "\\b", "i").test(z.replace(n, ""))));
+        }
+      }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const film = L.konsole.sitzung();
+  const f = (code) => film.html(code);
+  const such = "Get-ChildItem Downloads -File | Where-Object LastWriteTime -lt $grenze";
+  const summe = "($alt | Measure-Object -Property Length -Sum).Sum";
+  L.film("#t13-film", {
+    phasen: ["1 · Finden", "2 · Messen", "3 · Probelauf", "4 · Bericht", "5 · Verschieben"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Konsole" },
+    szenen: [
+      { say: "Lea geht vor wie beim Skript: finden, messen, Probelauf, Bericht, verschieben. Jeden Teil prüft sie in der Konsole." },
+      { ph: 0, f: f("Get-ChildItem Downloads"), say: "Zuerst ein Blick in den Ordner Downloads. Sechs Dateien, die älteste ist von 2025." },
+      { ph: 0, f: f("(Get-Date).AddDays(-60)"), say: "Das Grenzdatum: heute minus 60 Tage. Das ist der 3. September 2026." },
+      { ph: 0, f: f("$grenze = (Get-Date).AddDays(-60)"), say: "Sie merkt sich das Datum in der Variable grenze. Eine Zuweisung gibt nichts aus." },
+      { ph: 0, f: f(such), say: "Where-Object lässt nur Dateien durch, die vor dem Grenzdatum zuletzt geändert wurden. Es sind zwei." },
+      { ph: 0, f: f("$alt = " + such), say: "Dieselbe Suche, diesmal in der Variable alt gespeichert. Mit ihr arbeitet Lea weiter." },
+      { ph: 1, f: f("$alt.Count"), say: "Count zählt die Objekte in der Variable: 2." },
+      { ph: 1, f: f(summe), say: "Measure-Object summiert die Grössen: 57'671'680 Bytes." },
+      { ph: 1, f: f("[math]::Round(" + summe + " / 1MB, 2)"), say: "Geteilt durch 1MB und gerundet: genau 55 MB." },
+      { ph: 1, f: f("\"$($alt.Count) Dateien, zusammen $([math]::Round(" + summe + " / 1MB, 2)) MB\""), say: "In doppelten Anführungszeichen baut sie daraus einen Satz für den Chef." },
+      { ph: 2, f: f("Test-Path Downloads\\Alt"), say: "Gibt es den Zielordner schon? False: nein. Ohne Ordner würde Move-Item die erste Datei in «Alt» umbenennen." },
+      { ph: 2, f: f("New-Item -ItemType Directory -Path Downloads\\Alt"), say: "Also legt sie den Ordner Alt an. Das d in der Spalte Mode heisst Ordner (directory)." },
+      { ph: 2, f: f("$alt | Move-Item -Destination Downloads\\Alt -WhatIf"), say: "Jetzt der Probelauf mit -WhatIf. Jede Zeile zeigt eine Datei mit altem und neuem Ort. Verschoben ist noch nichts." },
+      { ph: 2, say: "Die Liste stimmt: genau die zwei alten Dateien, Ziel ist der Ordner Alt. Lea kann weitermachen." },
+      { ph: 3, f: f("$alt | Select-Object Name, Length | Export-Csv -Path Berichte\\downloads-alt.csv -Delimiter ';'"), say: "Für den Bericht wählt sie Name und Length und schreibt sie mit Semikolon als CSV. Export-Csv gibt nichts aus." },
+      { ph: 3, f: f("Get-Content Berichte\\downloads-alt.csv"), say: "Get-Content zeigt die Datei: eine Kopfzeile und zwei Zeilen, jeder Wert in Anführungszeichen." },
+      { ph: 4, f: f("$alt | Move-Item -Destination Downloads\\Alt"), say: "Jetzt der Ernstfall, diesmal ohne -WhatIf. Move-Item meldet nichts, wenn alles gut geht." },
+      { ph: 4, f: f("Get-ChildItem Downloads\\Alt"), say: "Die Kontrolle: Beide Dateien liegen im Ordner Alt." },
+      { ph: 4, f: f("Get-ChildItem Downloads"), say: "Im Ordner Downloads bleiben vier Dateien und der neue Ordner Alt." },
+      { ph: -1, say: "Fertig: 2 Dateien, 55 MB, Bericht in Berichte\\downloads-alt.csv, Dateien in Downloads\\Alt. Jetzt kannst du dich im Abschlusstest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Abschlusstest (Selbsttest) ---------- */
+  L.selbsttest("#selbsttest", {
+    fragen: [
+      { q: "(01) Mit welchem Befehl startest du PowerShell 7 aus einer anderen Konsole?", o: [C("powershell.exe"), C("pwsh"), C("cmd")], a: 1,
+        e: "pwsh ist PowerShell 7. powershell.exe ist das ältere Windows PowerShell 5.1." },
+      { q: "(02) Wofür steht der Alias " + C("ls") + " in PowerShell 7 unter Windows?", o: [C("Get-Location"), C("Get-ChildItem"), C("Get-Item"), C("Select-Object")], a: 1,
+        e: "ls, dir und gci sind Aliase für Get-ChildItem." },
+      { q: "(02) Was ist " + C("-Recurse") + " in " + C("Get-ChildItem -Recurse") + "?", o: ["ein Wert", "ein Schalter-Parameter ohne Wert", "ein Alias", "ein Cmdlet"], a: 1,
+        e: "Ein Schalter (Switch) wirkt schon dadurch, dass er dasteht. Er braucht keinen Wert." },
+      { q: "(03) In der Syntax " + C("Get-ChildItem [[-Path] <string[]>]") + ": Was bedeuten die eckigen Klammern um " + C("-Path") + "?", o: ["Der Parameter ist Pflicht.", "Den Namen -Path darfst du weglassen, der Wert genügt (Positionsparameter).", "Der Wert muss in Klammern stehen."], a: 1,
+        e: "Die inneren Klammern um den Namen heissen: Der Name ist optional. Die äusseren: Der ganze Parameter ist optional." },
+      { q: "(03) Wie zeigst du nur die Beispiele zu " + C("Copy-Item") + "?", o: [C("Get-Help Copy-Item -Examples"), C("Get-Command Copy-Item -Examples"), C("Copy-Item -Help")], a: 0,
+        e: "Get-Help mit -Examples zeigt die Beispiele." },
+      { q: "(04) Du bist in " + C("C:\\Users\\lea\\Dokumente") + ". Wohin führt " + C("Set-Location ..\\Logs") + "?", o: [C("C:\\Users\\lea\\Dokumente\\Logs"), C("C:\\Users\\lea\\Logs"), C("C:\\Logs")], a: 1,
+        e: ".. ist der übergeordnete Ordner, also C:\\Users\\lea. Darin liegt Logs." },
+      { q: "(04) Welcher Parameter von " + C("Get-ChildItem") + " zeigt auch versteckte Dateien?", o: [C("-Recurse"), C("-Force"), C("-File"), C("-All")], a: 1,
+        e: "-Force zeigt versteckte Elemente wie den Ordner AppData." },
+      { q: "(05) Welcher Befehl hängt eine Zeile an " + C("notizen.txt") + " an, ohne den Inhalt zu ersetzen?", o: [C("Set-Content"), C("Add-Content"), C("Out-File"), C("New-Item")], a: 1,
+        e: "Add-Content hängt an. Set-Content und Out-File ohne -Append ersetzen den Inhalt." },
+      { q: "(05) Was passiert bei " + C("Remove-Item Downloads\\setup-alt.exe -WhatIf") + "?", o: ["Die Datei kommt in den Papierkorb.", "Die Datei wird gelöscht.", "PowerShell zeigt nur an, was es löschen würde."], a: 2,
+        e: "-WhatIf ist der Probelauf. Ohne -WhatIf wäre die Datei endgültig weg, denn Remove-Item kennt keinen Papierkorb." },
+      { q: "(06) Was gibt " + C("(Get-Item Logs\\app.log).Length") + " auf Leas Rechner aus?", o: ["270", "5", "app.log", "eine Tabelle mit der Datei"], a: 0,
+        e: "Die Punktnotation holt eine Eigenschaft. Length ist die Grösse in Bytes: 270." },
+      { q: "(06) Welcher Befehl zeigt Typ, Eigenschaften und Methoden eines Objekts?", o: [C("Get-Help"), C("Get-Member"), C("Get-Command"), C("Format-Table")], a: 1,
+        e: "Get-Member zeigt, was in einem Objekt steckt." },
+      { q: "(07) Welcher Operator prüft ein Muster mit dem Platzhalter " + C("*") + "?", o: [C("-eq"), C("-like"), C("-gt"), C("-contains")], a: 1,
+        e: "-like kennt * und ?. -eq vergleicht wörtlich." },
+      { q: "(08) Warum gehört " + C("Format-Table") + " ans Ende einer Pipeline?", o: ["Weil es sonst zu langsam ist.", "Weil danach nur noch Formatierungsobjekte kommen, mit denen z. B. Export-Csv nichts Sinnvolles anfängt.", "Weil Format-Table nur eine Eigenschaft kennt."], a: 1,
+        e: "Format-Cmdlets wandeln die Objekte in Anweisungen für die Anzeige um. Danach sind die ursprünglichen Daten weg." },
+      { q: "(08) Was liefert " + C("Import-Csv") + " für die Werte einer Spalte?", o: ["Zahlen, wo es passt", "immer Text", "Datumswerte"], a: 1,
+        e: "Import-Csv liefert alle Werte als Text. Zum Rechnen wandelst du sie um, z. B. mit [int]." },
+      { q: "(09) Was gibt " + C("$Tage = 30; 'Tage: $Tage'") + " aus?", o: [C("Tage: 30"), C("Tage: $Tage"), "eine Fehlermeldung"], a: 1,
+        e: "In einfachen Anführungszeichen setzt PowerShell nichts ein. Nur doppelte Anführungszeichen ergäben Tage: 30." },
+      { q: "(10) Was gibt " + C("foreach ($n in 1..3) { if ($n -eq 2) { continue }; $n }") + " aus?", o: ["1, 2, 3", "1 und 3", "nur 1", "nur 2"], a: 1,
+        e: "continue überspringt den Rest des Durchgangs, wenn n gleich 2 ist. Die Schleife läuft danach mit 3 weiter." },
+      { q: "(11) Warum startest du ein Skript im aktuellen Ordner mit " + C(".\\aufraeumen.ps1") + " statt mit " + C("aufraeumen.ps1") + "?", o: ["Weil PowerShell Befehle nicht automatisch im aktuellen Ordner sucht.", "Weil .\\ das Skript als Administrator startet.", "Weil .\\ die Ausführungsrichtlinie ausschaltet."], a: 0,
+        e: "Der Schutz verhindert, dass eine Datei im Ordner unbemerkt einen echten Befehl ersetzt. .\\ heisst ausdrücklich «hier»." },
+      { q: "(11) Was braucht " + C("Get-ChildItem -Path Protokolle") + ", damit " + C("catch") + " den Fehler «Pfad nicht gefunden» abfängt?", o: [C("-WhatIf"), C("-ErrorAction Stop"), C("-Force"), "nichts, catch fängt alle Fehler"], a: 1,
+        e: "Der Fehler ist nicht abbrechend. -ErrorAction Stop macht ihn abbrechend, dann greift catch." },
+      { q: "(12) Lea ist keine Administratorin. Was passiert bei " + C("Start-Service WolkenriedSync") + "?", o: ["Der Dienst startet.", "Eine Fehlermeldung: Der Dienst kann nicht gestartet werden.", "PowerShell fragt nach einem Passwort."], a: 1,
+        e: "Dienste starten und stoppen braucht Adminrechte. Ohne sie meldet Start-Service einen Fehler." },
+      { q: "(13) Wo muss " + C("param()") + " in einem Skript stehen?", o: ["ganz am Ende", "am Anfang, davor nur Kommentare und leere Zeilen", "irgendwo, Hauptsache vor dem ersten Gebrauch", "im catch-Teil"], a: 1,
+        e: "Steht davor ein Befehl, hält PowerShell param für einen unbekannten Befehl (Übung 4). Der Kommentarkopf darf davor stehen." }
+    ]
+  });
+
+  /* ---------- Spickzettel drucken ---------- */
+  const html = document.documentElement;
+  document.getElementById("t13-drucken").addEventListener("click", () => {
+    html.classList.add("t13-druck");
+    window.print();
+  });
+  window.addEventListener("afterprint", () => html.classList.remove("t13-druck"));
+})();
+</script>
+</body>
+</html>

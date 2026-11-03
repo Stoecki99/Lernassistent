@@ -16,7 +16,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 6. [Farbcode der Symbole](#6-farbcode-der-symbole)
 7. [Design-Tokens](#7-design-tokens)
 8. [CSS-Klassen](#8-css-klassen)
-9. [JavaScript: window.Lernpfad](#9-javascript-windowlernpfad)
+9. [JavaScript: window.Lernpfad](#9-javascript-windowlernpfad) (inkl. `modellieren`, `piktogramm`)
 10. [Fortschritt und Abschluss-Box](#10-fortschritt-und-abschluss-box)
 11. [Themeneigene Interaktionen](#11-themeneigene-interaktionen)
 12. [Barrierefreiheit](#12-barrierefreiheit)
@@ -33,6 +33,10 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 | `content/lernseiten/mstw/_vorlage.html` | Muster-Themenseite MSTW mit allen Bausteinen (keine Station) |
 | `content/lernseiten/pmgt/_vorlage.html` | Muster-Themenseite PMGT: alle Bausteine plus ICB-Kennzeichen, Matrix, Reflexion, Netzplan und Gantt (keine Station) |
 | `scripts/lernpfad-vorschau.mjs` | Lokaler Vorschau-Server ohne App und Login |
+| `public/lernpfad/ps-konsole.css`, `ps-konsole.js` | Erweiterung Lernpfad PS: Konsolen-Simulator, Syntaxfärbung, Ausgabeblöcke. Nur für PS-Seiten, Doku in `docs/lernpfad-powershell.md` |
+| `content/lernseiten/ps/_vorlage.html` | Muster-Themenseite PS mit Simulator, Code- und Ausgabeblöcken (keine Station) |
+| `public/lernpfad/st-spiel.css`, `st-spiel.js` | Spiel-Erweiterung Lernpfad Spieltheorie: Pergament-Grundton, Figuren, Szenen, Spielbrett, Turnier, Spielbaum, Szenario, Lagetisch, Mischer. Nur für Spieltheorie-Seiten, Doku in `docs/lernpfad-spieltheorie.md` |
+| `content/lernseiten/spieltheorie/_vorlage.html` | Muster-Themenseite Spieltheorie mit allen Spielbausteinen (keine Station) |
 
 Ändere diese Dateien nicht für eine einzelne Themenseite. Was nur deine Seite braucht, gehört in die Seite (siehe [Abschnitt 11](#11-themeneigene-interaktionen)).
 
@@ -419,6 +423,10 @@ Schreibweise wie im Konzept: «ICB» plus Bereich und zweistellige Nummer (`ICB 
 
 Erzeugt von `reflexion` und `matrix`, nicht von Hand schreiben: `.rf-frage`, `.rf-eingabe`, `.rf-feld`, `.rf-rueckfrage`, `.rf-loesung`, `.rf-muster`, `.rf-raster`, `.rf-kriterien`, `.rf-punkte`, `.rf-summe`, `.rf-ohne`; `.mx-rahmen`, `.mx-achse-x`, `.mx-achse-y`, `.mx-raster`, `.mx-kopf`, `.mx-feld` (`.mx-tief`, `.mx-mittel`, `.mx-hoch`, `.belegt`), `.mx-name`, `.mx-marke` (`.right`, `.wrong`), `.mx-karten`, `.mx-karte`, `.mx-nr`, `.mx-ort`, `.mx-erkl`, `.mx-waehlt`.
 
+### 8.14 Code-Beispiele
+
+`<pre class="code" data-sprache="Dockerfile"><code>…</code></pre>`: Codeblock mit Überschrift aus `data-sprache`, scrollt seitlich in sich. Hervorhebung von Hand, nur mit diesen Klassen: `.k` Schlüsselwort, `.s` Zeichenkette, `.n` Zahl, `.c` Kommentar, `<mark>` für die Stelle, um die es gerade geht. Achtung: Innerhalb von `pre.code` sind `.k`, `.s`, `.n`, `.c` Code-Farben (`.c` hier nicht «Konstante»). `<` und `&` im Code als `&lt;` und `&amp;` schreiben. Inline-Code mit `<code>` (gestaltet nur in AVSW-Seiten, `body[data-fach="avsw"]`, damit bestehende Fächer unverändert bleiben). Formeln werden in `pre` und `code` nicht gesetzt (`$` in Shell-Code ist sicher).
+
 ## 9. JavaScript: window.Lernpfad
 
 Alle Bausteine nehmen als erstes Argument ein Element oder einen CSS-Selektor (`"#id"`), leeren es und füllen es neu. Sie funktionieren mehrfach pro Seite. Texte in Konfigurationen sind HTML und dürfen Formeln enthalten. Fehlerhafte Konfiguration meldet `[Lernpfad] …` in der Konsole und gibt `null` zurück, die Seite läuft weiter.
@@ -727,7 +735,35 @@ k.style.gridColumn = "3";
 document.getElementById("t10-netzplan").appendChild(k);
 ```
 
-### 9.15 Hilfsfunktionen
+### 9.15 `Lernpfad.modellieren(el, cfg)`
+
+Modellierungsübung: Anforderungstext lesen, passende Bausteine auf die Fläche legen, Verbindungen mit Art ziehen, prüfen. Ohne Ziehen mit der Maus: alles per Antippen und Tastatur (Palette-Knopf legt hin oder entfernt, Startbaustein antippen, Zielbaustein antippen). Eine Verbindungsliste unter der Fläche zeigt dasselbe als Text (Screenreader, sich kreuzende Linien) und hat je einen Knopf «Entfernen». Muster: `content/lernseiten/avsw/_vorlage.html`.
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel` | HTML | nein | Titel |
+| `aufgabe` | HTML | nein | Anforderungstext. `<span data-baustein="id">` markiert die Textstelle zu einem Baustein: Sie wird unterstrichen, sobald der Baustein liegt, und leuchtet mit ihm zusammen auf. |
+| `schichten` | Objekt[] | nein | `{ id, name }`: Bänder auf der Fläche (z. B. Client, Zugang, Dienste, Daten). Ohne: ein Band. |
+| `bausteine` | Objekt[] | ja | `{ id, name, art, schicht, info }`. `art` = Piktogramm (siehe 9.16), `schicht` = `id` aus `schichten`. Ablenker (nicht in der Lösung) sind erwünscht. |
+| `verbindungsarten` | Objekt[] | nein | `{ id, name }`, höchstens vier. Standard: `sync` «synchron (Request/Response)», `async` «asynchron (Nachricht/Event)», `daten` «liest/schreibt Daten». Linienstil je Position: voll, gestrichelt, gepunktet, Strich-Punkt. |
+| `loesung` | Objekt | ja | `{ bausteine: [id], verbindungen: [{ von, nach, art, warum, gerichtet }] }`. `warum` erscheint nach dem Lösen. `gerichtet: false` akzeptiert beide Richtungen. |
+| `richtungEgal` | Bool | nein | `true`: Richtung zählt nirgends, Linien ohne Pfeil (z. B. Deployment-Sicht «läuft auf»). |
+| `vorgegeben` | Bool | nein | `true`: Lösungs-Bausteine liegen schon, Palette ausgeblendet. Nur verbinden («die nötigen Teile miteinander verbinden»). |
+| `erklaerung` | HTML | nein | Merksatz nach dem Lösen (z. B. «Verben verraten die Verbindungsart»). |
+
+Bewertung: je ein Punkt pro richtig gelegtem Lösungs-Baustein und pro Lösungs-Verbindung mit richtiger Richtung und Art. Die Rückmeldung nennt überflüssige Bausteine beim Namen, zählt fehlende Bausteine und Verbindungen, falsche Richtungen und falsche Arten, und gibt einen Tipp («Schau dir «Bestellservice» nochmals an»), ohne die Lösung zu verraten. «Lösung zeigen» zeichnet die Musterlösung mit allen `warum` ein.
+
+Ereignis `lernpfad:modell` (bubbelt) nach jedem Prüfen: `detail: { richtig, gesamt, vollstaendig, loesungGezeigt }`. Rückgabe: `{ zuruecksetzen(), loesungZeigen(), pruefen() }`.
+
+Regeln für gute Aufgaben: Jede Verbindung der Lösung muss aus dem Text folgen (Signalwörter wie «fragt synchron», «veröffentlicht», «abonniert», «speichert»). Mindestens ein Ablenker in der Palette. Schichten so wählen, dass die Fläche bei 320 px lesbar bleibt (höchstens etwa vier Bausteine pro Schicht).
+
+### 9.16 `Lernpfad.piktogramm(art, titel)`
+
+Gibt ein eigenes Inline-SVG (24 × 24, `currentColor`, Klasse `.pikto`) als HTML-Text zurück, für Konzeptkarten, Tabellen, Bilder von Architekturen und den Baustein `modellieren`. Mit `titel` bekommt es `role="img"` und `<title>`, sonst `aria-hidden`. **Keine Markenlogos** (Kubernetes, Docker, Kafka …): Werkzeuge werden mit diesen Piktogrammen und echten Code-Beispielen gezeigt.
+
+Arten: `client`, `mobile`, `user`, `gateway`, `lb`, `service`, `function`, `db`, `cache`, `queue`, `topic`, `storage`, `extern`, `container`, `pod`, `node`, `cluster`, `auth`, `cdn`, `monitor`, `config`, `code`. Galerie in `content/lernseiten/avsw/_vorlage.html`.
+
+### 9.17 Hilfsfunktionen
 
 | Funktion | Zweck |
 |----------|-------|

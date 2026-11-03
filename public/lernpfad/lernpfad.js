@@ -1201,6 +1201,456 @@
     return { zuruecksetzen: aufbauen };
   }
 
+  /* ---------- Piktogramme (eigene Inline-SVG, keine Markenlogos) ---------- */
+
+  // 24×24, nur currentColor: passt sich hell/dunkel und der Umgebung an.
+  const PIKTO = {
+    client: '<rect x="2.5" y="4" width="19" height="15" rx="2"/><path d="M2.5 8h19"/><circle cx="5.5" cy="6" r=".6" class="pk-f"/><circle cx="7.8" cy="6" r=".6" class="pk-f"/>',
+    mobile: '<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10.5 18.5h3"/>',
+    user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20.5c.8-4 3.6-6 7-6s6.2 2 7 6"/>',
+    gateway: '<path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z"/><path d="M8.5 12h7M13 9.5l2.5 2.5-2.5 2.5"/>',
+    lb: '<circle cx="5" cy="12" r="2.2"/><circle cx="19" cy="5" r="2.2"/><circle cx="19" cy="12" r="2.2"/><circle cx="19" cy="19" r="2.2"/><path d="M7.2 12h9.6M7 11l10-5M7 13l10 5"/>',
+    service: '<path d="M12 2.8l8 4.6v9.2l-8 4.6-8-4.6V7.4z"/><path d="M9 12h6M12 9v6"/>',
+    function: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8.5 7.5c2 0 2.5 1 3 3l2 6.5M12.6 12.4L9 17"/>',
+    db: '<ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/>',
+    cache: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M13 7.5l-4 5h4l-2 4.5"/>',
+    queue: '<rect x="2.5" y="7" width="19" height="10" rx="2"/><path d="M7 7v10M11.5 7v10M16 7v10"/><path d="M19 4.5h2.5M2.5 19.5H5" />',
+    topic: '<circle cx="5" cy="12" r="2.3"/><path d="M7.3 12H11M11 12l3-6h4.5M11 12h7.5M11 12l3 6h4.5"/><circle cx="20" cy="6" r="1.3"/><circle cx="20" cy="12" r="1.3"/><circle cx="20" cy="18" r="1.3"/>',
+    storage: '<path d="M4 7l8-4 8 4-8 4z"/><path d="M4 12l8 4 8-4M4 17l8 4 8-4"/>',
+    extern: '<path d="M7 18.5h10.5a4 4 0 0 0 .5-8 6 6 0 0 0-11.4-1.6A4.8 4.8 0 0 0 7 18.5z"/>',
+    container: '<path d="M3 8l9-4.5L21 8v8l-9 4.5L3 16z"/><path d="M3 8l9 4.5L21 8M12 12.5v8"/>',
+    pod: '<path d="M12 2.5l8.5 5v9l-8.5 5-8.5-5v-9z"/><rect x="8" y="8" width="3.4" height="3.4" rx=".5"/><rect x="12.6" y="8" width="3.4" height="3.4" rx=".5"/><rect x="8" y="12.6" width="3.4" height="3.4" rx=".5"/>',
+    node: '<rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><circle cx="7" cy="7.5" r=".8" class="pk-f"/><circle cx="7" cy="16.5" r=".8" class="pk-f"/><path d="M11 7.5h6M11 16.5h6"/>',
+    cluster: '<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2.5v7M12 14.5v7M2.5 12h7M14.5 12h7M5.3 5.3l5 5M13.7 13.7l5 5M18.7 5.3l-5 5M10.3 13.7l-5 5"/>',
+    auth: '<circle cx="8" cy="12" r="4"/><path d="M12 12h9M17.5 12v3.5M20.5 12v2.5"/>',
+    cdn: '<circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.7 2.6 4 5.8 4 9.5s-1.3 6.9-4 9.5c-2.7-2.6-4-5.8-4-9.5s1.3-6.9 4-9.5z"/>',
+    monitor: '<rect x="2.5" y="4" width="19" height="14" rx="2"/><path d="M5.5 14l3.5-4 3 2.5 4.5-5.5 2 2"/><path d="M9 21h6"/>',
+    config: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/>',
+    code: '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 4.5l-3 15"/>',
+  };
+  function piktogramm(art, titel) {
+    const inhalt = PIKTO[art];
+    if (!inhalt) {
+      console.error("[Lernpfad] piktogramm: Art «" + art + "» unbekannt. Bekannt: " + Object.keys(PIKTO).join(", "));
+      return "";
+    }
+    const t = titel ? "<title>" + String(titel).replace(/[<&"]/g, "") + "</title>" : "";
+    return '<svg class="pikto" viewBox="0 0 24 24" ' + (t ? 'role="img"' : 'aria-hidden="true"') + ' focusable="false">' + t + inhalt + "</svg>";
+  }
+
+  /* ---------- Baustein: Architektur modellieren ---------- */
+
+  const MOD_ARTEN = [
+    { id: "sync", name: "synchron (Request/Response)", stil: "voll" },
+    { id: "async", name: "asynchron (Nachricht/Event)", stil: "gestrichelt" },
+    { id: "daten", name: "liest/schreibt Daten", stil: "gepunktet" },
+  ];
+
+  function modellieren(el, cfg) {
+    el = elementHolen(el, "modellieren");
+    if (!el) return null;
+    cfg = cfg || {};
+    const bausteine = cfg.bausteine || [];
+    const loesung = cfg.loesung || {};
+    const arten = cfg.verbindungsarten && cfg.verbindungsarten.length ? cfg.verbindungsarten : MOD_ARTEN;
+    const schichten = cfg.schichten && cfg.schichten.length ? cfg.schichten : [{ id: "_", name: "" }];
+    const richtungEgal = cfg.richtungEgal === true;
+    const fehler = (t) => { console.error("[Lernpfad] modellieren: " + t); return null; };
+
+    if (!bausteine.length || !Array.isArray(loesung.bausteine) || !Array.isArray(loesung.verbindungen)) {
+      return fehler("«bausteine» und «loesung» ({ bausteine, verbindungen }) sind Pflicht.");
+    }
+    const nachId = {};
+    for (const b of bausteine) {
+      if (!b || !b.id || !b.name) return fehler("jeder Baustein braucht «id» und «name».");
+      if (nachId[b.id]) return fehler("Baustein-ID «" + b.id + "» doppelt.");
+      if (b.art && !PIKTO[b.art]) return fehler("Art «" + b.art + "» bei «" + b.id + "» unbekannt.");
+      if (b.schicht !== undefined && !schichten.some((s) => s.id === b.schicht)) return fehler("Schicht «" + b.schicht + "» bei «" + b.id + "» unbekannt.");
+      nachId[b.id] = b;
+    }
+    const artIndex = (id) => arten.findIndex((a) => a.id === id);
+    for (const id of loesung.bausteine) if (!nachId[id]) return fehler("Lösung nennt unbekannten Baustein «" + id + "».");
+    for (const v of loesung.verbindungen) {
+      if (!nachId[v.von] || !nachId[v.nach]) return fehler("Lösungs-Verbindung " + v.von + " → " + v.nach + " nennt unbekannten Baustein.");
+      if (loesung.bausteine.indexOf(v.von) < 0 || loesung.bausteine.indexOf(v.nach) < 0) return fehler("Lösungs-Verbindung " + v.von + " → " + v.nach + ": beide Bausteine müssen in loesung.bausteine stehen.");
+      if (artIndex(v.art) < 0) return fehler("Verbindungsart «" + v.art + "» unbekannt.");
+    }
+    const vorgegeben = cfg.vorgegeben === true;
+    const uid = neueId("mod");
+    const schichtVon = (b) => (b.schicht !== undefined ? b.schicht : schichten[0].id);
+    const name = (id) => nachId[id].name;
+    const artName = (id) => { const a = arten[artIndex(id)]; return a ? a.name : id; };
+
+    // Zustand
+    let platziert = [];
+    let verb = [];
+    let auswahl = null;
+    let aktArt = arten[0].id;
+    let geprueft = null; // Ergebnis der letzten Prüfung (für Markierungen)
+
+    el.innerHTML = "";
+    el.classList.add("card", "stack", "mod");
+    el.setAttribute("data-link-bereich", "");
+    if (cfg.titel) el.appendChild(erzeugen("h3", null, cfg.titel));
+    if (cfg.aufgabe) {
+      const a = erzeugen("div", "mod-aufgabe prose", cfg.aufgabe);
+      $$("[data-baustein]", a).forEach((s) => {
+        const id = s.getAttribute("data-baustein");
+        if (!nachId[id]) console.error("[Lernpfad] modellieren: Text verweist auf unbekannten Baustein «" + id + "».");
+        s.classList.add("mod-text");
+        s.setAttribute("data-link", uid + "-" + id);
+      });
+      el.appendChild(a);
+    }
+
+    // Palette
+    const palette = erzeugen("div", "mod-palette");
+    const palTitel = erzeugen("p", "mod-label", "1 · Bausteine auf die Fläche legen <span class=\"hint\">(nochmals tippen entfernt)</span>");
+    const palListe = erzeugen("div", "mod-pal");
+    palListe.setAttribute("role", "group");
+    palListe.setAttribute("aria-label", "Bausteine");
+    const palKnoepfe = {};
+    bausteine.forEach((b) => {
+      const k = knopf(piktogramm(b.art || "service") + "<span>" + b.name + "</span>", "mod-palk", { "aria-pressed": "false" });
+      if (b.info) k.title = ohneTags(b.info);
+      k.addEventListener("click", () => {
+        if (platziert.indexOf(b.id) >= 0) entfernen(b.id);
+        else platzieren(b.id);
+      });
+      palKnoepfe[b.id] = k;
+      palListe.appendChild(k);
+    });
+    palette.append(palTitel, palListe);
+    if (vorgegeben) palette.hidden = true;
+
+    // Werkzeug: Verbindungsart
+    const werkzeug = erzeugen("div", "mod-werkzeug");
+    werkzeug.appendChild(erzeugen("p", "mod-label", (vorgegeben ? "1" : "2") + " · " + (arten.length > 1 ? "Verbindungsart wählen, dann " : "") + "Start- und Zielbaustein antippen"));
+    const artReihe = erzeugen("div", "row");
+    artReihe.setAttribute("role", "group");
+    artReihe.setAttribute("aria-label", "Verbindungsart");
+    const artKnoepfe = arten.map((a, i) => {
+      const k = knopf('<svg class="mod-muster" viewBox="0 0 34 10" aria-hidden="true"><line x1="2" y1="5" x2="32" y2="5" class="mod-l mod-l' + i + '"/></svg>' + a.name, "", { "aria-pressed": String(i === 0) });
+      k.addEventListener("click", () => {
+        aktArt = a.id;
+        artKnoepfe.forEach((x, j) => { x.classList.toggle("on", j === i); x.setAttribute("aria-pressed", String(j === i)); });
+      });
+      if (i === 0) k.classList.add("on");
+      artReihe.appendChild(k);
+      return k;
+    });
+    werkzeug.appendChild(artReihe);
+    if (arten.length < 2) werkzeug.querySelector(".row").hidden = true;
+
+    // Fläche mit Schichten und Linien
+    const flaeche = erzeugen("div", "mod-flaeche");
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "mod-linien");
+    svg.setAttribute("aria-hidden", "true");
+    const defs = document.createElementNS(NS, "defs");
+    arten.forEach((a, i) => {
+      const m = document.createElementNS(NS, "marker");
+      m.setAttribute("id", uid + "-pf" + i);
+      m.setAttribute("viewBox", "0 0 10 10");
+      m.setAttribute("refX", "9");
+      m.setAttribute("refY", "5");
+      m.setAttribute("markerWidth", "7");
+      m.setAttribute("markerHeight", "7");
+      m.setAttribute("orient", "auto-start-reverse");
+      const p = document.createElementNS(NS, "path");
+      p.setAttribute("d", "M0 0L10 5L0 10z");
+      p.setAttribute("class", "mod-pf" + i);
+      m.appendChild(p);
+      defs.appendChild(m);
+    });
+    svg.appendChild(defs);
+    const linienG = document.createElementNS(NS, "g");
+    svg.appendChild(linienG);
+    flaeche.appendChild(svg);
+    const schichtBoxen = {};
+    schichten.forEach((s) => {
+      const z = erzeugen("div", "mod-schicht");
+      if (s.name) z.appendChild(erzeugen("span", "mod-sname", s.name));
+      const boxen = erzeugen("div", "mod-boxen");
+      z.appendChild(boxen);
+      schichtBoxen[s.id] = boxen;
+      flaeche.appendChild(z);
+    });
+    const leer = erzeugen("p", "mod-leer hint", vorgegeben ? "" : "Noch leer. Lies den Text und lege die Bausteine aus der Liste oben auf die Fläche.");
+
+    const hilfe = erzeugen("p", "mod-hilfe");
+    hilfe.setAttribute("aria-live", "polite");
+    const listeTitel = erzeugen("p", "mod-label", "Verbindungen");
+    const liste = erzeugen("ul", "mod-liste");
+    const bPruefen = knopf("Prüfen", "primary");
+    const bLoesung = knopf("Lösung zeigen");
+    const bReset = knopf("Zurücksetzen");
+    const reihe = erzeugen("div", "row");
+    reihe.append(bPruefen, bLoesung, bReset);
+    const fb = erzeugen("div", "mod-fb");
+    fb.setAttribute("aria-live", "polite");
+    el.append(palette, werkzeug, flaeche, leer, hilfe, listeTitel, liste, reihe, fb);
+
+    const boxKnoepfe = {};
+
+    function aenderung() {
+      geprueft = null;
+      fb.innerHTML = "";
+      fb.className = "mod-fb";
+      zeichnen();
+    }
+    function platzieren(id) {
+      if (platziert.indexOf(id) < 0) platziert.push(id);
+      hilfe.textContent = "«" + ohneTags(name(id)) + "» liegt auf der Fläche.";
+      aenderung();
+    }
+    function entfernen(id) {
+      platziert = platziert.filter((x) => x !== id);
+      verb = verb.filter((v) => v.von !== id && v.nach !== id);
+      if (auswahl === id) auswahl = null;
+      hilfe.textContent = "«" + ohneTags(name(id)) + "» und seine Verbindungen sind entfernt.";
+      aenderung();
+      const k = palKnoepfe[id];
+      if (k) k.focus();
+    }
+    const gleichesPaar = (v, von, nach) =>
+      (v.von === von && v.nach === nach) || (richtungEgal && v.von === nach && v.nach === von);
+
+    function boxGeklickt(id) {
+      if (auswahl === null) {
+        auswahl = id;
+        hilfe.textContent = "Start: «" + ohneTags(name(id)) + "». Tippe jetzt das Ziel an (oder nochmals den Start zum Abbrechen).";
+        zeichnen();
+        return;
+      }
+      if (auswahl === id) {
+        auswahl = null;
+        hilfe.textContent = "Auswahl aufgehoben.";
+        zeichnen();
+        return;
+      }
+      const von = auswahl;
+      auswahl = null;
+      const da = verb.find((v) => gleichesPaar(v, von, id));
+      if (da) da.art = aktArt;
+      else verb.push({ von: von, nach: id, art: aktArt });
+      hilfe.textContent = "Verbindung «" + ohneTags(name(von)) + " → " + ohneTags(name(id)) + "» (" + artName(aktArt) + ")" + (da ? " geändert." : " gezogen.");
+      aenderung();
+      const k = boxKnoepfe[id];
+      if (k) k.focus();
+    }
+
+    // Soll-Abgleich
+    function pruefen() {
+      const soll = loesung.verbindungen;
+      const sollB = loesung.bausteine;
+      const bOk = platziert.filter((id) => sollB.indexOf(id) >= 0);
+      const bExtra = platziert.filter((id) => sollB.indexOf(id) < 0);
+      const bFehlt = sollB.filter((id) => platziert.indexOf(id) < 0);
+      const gefunden = new Array(soll.length).fill(false);
+      const vStatus = verb.map((v) => {
+        const j = soll.findIndex((s, k) => !gefunden[k] && ((s.von === v.von && s.nach === v.nach) || ((richtungEgal || s.gerichtet === false) && s.von === v.nach && s.nach === v.von)));
+        if (j < 0) {
+          const umgekehrt = soll.some((s) => s.von === v.nach && s.nach === v.von);
+          return { status: umgekehrt ? "richtung" : "falsch" };
+        }
+        gefunden[j] = true;
+        return { status: soll[j].art === v.art ? "ok" : "art", soll: soll[j] };
+      });
+      const vOk = vStatus.filter((s) => s.status === "ok").length;
+      const vFehlt = soll.filter((_, k) => !gefunden[k]);
+      return {
+        bOk: bOk, bExtra: bExtra, bFehlt: bFehlt, vStatus: vStatus, vFehlt: vFehlt,
+        richtig: bOk.length + vOk,
+        gesamt: sollB.length + soll.length,
+        fehlerzahl: bExtra.length + vStatus.filter((s) => s.status !== "ok").length,
+      };
+    }
+
+    function begruendungen() {
+      const mit = loesung.verbindungen.filter((v) => v.warum);
+      if (!mit.length && !cfg.erklaerung) return "";
+      let h = "";
+      if (mit.length) {
+        h += '<ul class="mod-warum">' + mit.map((v) =>
+          "<li><b>" + name(v.von) + " → " + name(v.nach) + "</b> <span class=\"hint\">(" + artName(v.art) + ")</span>: " + v.warum + "</li>").join("") + "</ul>";
+      }
+      if (cfg.erklaerung) h += '<div class="note tipp">' + cfg.erklaerung + "</div>";
+      return h;
+    }
+
+    function rueckmeldung(e, loesungGezeigt) {
+      geprueft = e;
+      const vollstaendig = e.richtig === e.gesamt && e.fehlerzahl === 0;
+      let h;
+      if (vollstaendig) {
+        h = "<p><b>" + (loesungGezeigt ? "Musterlösung." : "✓ Alles richtig modelliert.") + "</b> " + e.richtig + " von " + e.gesamt + " Punkten.</p>" + begruendungen();
+      } else {
+        const teile = [];
+        if (e.bFehlt.length) teile.push((e.bFehlt.length > 1 ? "Es fehlen " + e.bFehlt.length + " Bausteine" : "Es fehlt 1 Baustein") + ". Lies den Text nochmals: Welche Teile werden genannt, liegen aber nicht auf der Fläche?");
+        if (e.bExtra.length) teile.push("Überflüssig: " + e.bExtra.map((id) => "«" + name(id) + "»").join(", ") + (e.bExtra.length > 1 ? " kommen" : " kommt") + " im Text nicht vor oder wird nicht gebraucht.");
+        const nFalsch = e.vStatus.filter((s) => s.status === "falsch").length;
+        const nArt = e.vStatus.filter((s) => s.status === "art").length;
+        const nRicht = e.vStatus.filter((s) => s.status === "richtung").length;
+        if (nFalsch) teile.push(nFalsch + " Verbindung" + (nFalsch > 1 ? "en gibt" : " gibt") + " es so nicht (mit ✗ markiert).");
+        if (nRicht) teile.push(nRicht + " Verbindung" + (nRicht > 1 ? "en zeigen" : " zeigt") + " in die falsche Richtung. Wer ruft wen auf, wer sendet an wen?");
+        if (nArt) teile.push(nArt + " Verbindung" + (nArt > 1 ? "en haben" : " hat") + " die falsche Art (" + arten.map((a) => a.name).join(", ") + "?).");
+        if (e.vFehlt.length) {
+          const tipp = e.vFehlt[0];
+          teile.push((e.vFehlt.length > 1 ? "Es fehlen " + e.vFehlt.length + " Verbindungen" : "Es fehlt 1 Verbindung") + ". Tipp: Schau dir «" + name(tipp.von) + "» nochmals an.");
+        }
+        h = "<p><b>" + e.richtig + " von " + e.gesamt + " Punkten.</b></p><ul>" + teile.map((t) => "<li>" + t + "</li>").join("") + "</ul>";
+      }
+      fb.className = "mod-fb " + (vollstaendig ? "ok" : "bad");
+      fb.innerHTML = h;
+      formeln(fb);
+      zeichnen();
+      el.dispatchEvent(new CustomEvent("lernpfad:modell", { bubbles: true, detail: { richtig: e.richtig, gesamt: e.gesamt, vollstaendig: vollstaendig, loesungGezeigt: !!loesungGezeigt } }));
+    }
+
+    function zeichnen() {
+      // Palette
+      bausteine.forEach((b) => {
+        const an = platziert.indexOf(b.id) >= 0;
+        palKnoepfe[b.id].setAttribute("aria-pressed", String(an));
+        palKnoepfe[b.id].classList.toggle("on", an);
+      });
+      // Text
+      $$(".mod-text", el).forEach((s) => s.classList.toggle("mod-text-an", platziert.indexOf(s.getAttribute("data-baustein")) >= 0));
+      // Boxen
+      const fokusId = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.modId : null;
+      Object.keys(schichtBoxen).forEach((k) => (schichtBoxen[k].innerHTML = ""));
+      Object.keys(boxKnoepfe).forEach((k) => delete boxKnoepfe[k]);
+      platziert.forEach((id) => {
+        const b = nachId[id];
+        const k = knopf(piktogramm(b.art || "service") + '<span class="mod-bname">' + b.name + "</span>" + '<span class="marke" aria-hidden="true"></span>', "mod-box", { "aria-pressed": String(auswahl === id) });
+        k.dataset.modId = id;
+        k.setAttribute("data-link", uid + "-" + id);
+        if (auswahl === id) k.classList.add("mod-sel");
+        if (geprueft) {
+          const ok = geprueft.bOk.indexOf(id) >= 0;
+          k.classList.add(ok ? "mod-ok" : "mod-falsch");
+          $(".marke", k).textContent = ok ? "✓" : "✗";
+          k.setAttribute("aria-label", ohneTags(b.name) + (ok ? ", richtig" : ", überflüssig"));
+        }
+        k.addEventListener("click", () => boxGeklickt(id));
+        schichtBoxen[schichtVon(b)].appendChild(k);
+        boxKnoepfe[id] = k;
+      });
+      leer.hidden = platziert.length > 0 || vorgegeben;
+      if (fokusId && boxKnoepfe[fokusId]) boxKnoepfe[fokusId].focus();
+      // Liste
+      liste.innerHTML = "";
+      if (!verb.length) liste.appendChild(erzeugen("li", "hint", "Noch keine Verbindung."));
+      verb.forEach((v, i) => {
+        const li = erzeugen("li", "mod-v");
+        let marke = "";
+        let zusatz = "";
+        if (geprueft) {
+          const s = geprueft.vStatus[i].status;
+          marke = s === "ok" ? "✓ " : "✗ ";
+          li.classList.add(s === "ok" ? "mod-ok" : "mod-falsch");
+          zusatz = s === "art" ? " · falsche Art" : s === "richtung" ? " · falsche Richtung" : s === "falsch" ? " · gibt es so nicht" : "";
+        }
+        const text = erzeugen("span", null,
+          marke + name(v.von) + (richtungEgal ? " — " : " → ") + name(v.nach) + ' <span class="hint">· ' + artName(v.art) + zusatz + "</span>");
+        const weg = knopf("Entfernen", "mod-weg", { "aria-label": "Verbindung " + ohneTags(name(v.von)) + " nach " + ohneTags(name(v.nach)) + " entfernen" });
+        weg.addEventListener("click", () => {
+          verb.splice(i, 1);
+          hilfe.textContent = "Verbindung entfernt.";
+          aenderung();
+          const naechster = $(".mod-weg", liste) || bPruefen;
+          naechster.focus();
+        });
+        li.append(text, weg);
+        liste.appendChild(li);
+      });
+      verknuepfen(el);
+      linienZeichnen();
+    }
+
+    function rand(r, zx, zy) {
+      // Schnittpunkt der Strecke Mitte→Ziel mit dem Rechteckrand (plus 3 px Abstand)
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      const dx = zx - cx, dy = zy - cy;
+      if (!dx && !dy) return [cx, cy];
+      const sx = dx ? (r.w / 2 + 3) / Math.abs(dx) : Infinity;
+      const sy = dy ? (r.h / 2 + 3) / Math.abs(dy) : Infinity;
+      const s = Math.min(sx, sy);
+      return [cx + dx * s, cy + dy * s];
+    }
+    function linienZeichnen() {
+      const fr = flaeche.getBoundingClientRect();
+      svg.setAttribute("width", String(flaeche.clientWidth));
+      svg.setAttribute("height", String(flaeche.clientHeight));
+      linienG.innerHTML = "";
+      const rect = {};
+      Object.keys(boxKnoepfe).forEach((id) => {
+        const r = boxKnoepfe[id].getBoundingClientRect();
+        rect[id] = { x: r.left - fr.left, y: r.top - fr.top, w: r.width, h: r.height };
+      });
+      verb.forEach((v, i) => {
+        const a = rect[v.von], b = rect[v.nach];
+        if (!a || !b) return;
+        const ai = artIndex(v.art);
+        let [x1, y1] = rand(a, b.x + b.w / 2, b.y + b.h / 2);
+        let [x2, y2] = rand(b, a.x + a.w / 2, a.y + a.h / 2);
+        // Gegenläufige Verbindung zwischen denselben Bausteinen leicht versetzen
+        if (verb.some((w) => w !== v && w.von === v.nach && w.nach === v.von)) {
+          const l = Math.hypot(x2 - x1, y2 - y1) || 1;
+          const ox = (-(y2 - y1) / l) * 4, oy = ((x2 - x1) / l) * 4;
+          x1 += ox; y1 += oy; x2 += ox; y2 += oy;
+        }
+        const l = document.createElementNS(NS, "line");
+        l.setAttribute("x1", x1.toFixed(1));
+        l.setAttribute("y1", y1.toFixed(1));
+        l.setAttribute("x2", x2.toFixed(1));
+        l.setAttribute("y2", y2.toFixed(1));
+        let k = "mod-l mod-l" + ai;
+        if (geprueft) k += geprueft.vStatus[i].status === "ok" ? " mod-l-ok" : " mod-l-falsch";
+        l.setAttribute("class", k);
+        if (!richtungEgal) l.setAttribute("marker-end", "url(#" + uid + "-pf" + ai + ")");
+        linienG.appendChild(l);
+      });
+    }
+
+    function zuruecksetzen() {
+      platziert = vorgegeben ? loesung.bausteine.slice() : [];
+      verb = [];
+      auswahl = null;
+      hilfe.textContent = "";
+      aenderung();
+    }
+
+    bPruefen.addEventListener("click", () => {
+      auswahl = null;
+      rueckmeldung(pruefen(), false);
+    });
+    bLoesung.addEventListener("click", () => {
+      platziert = loesung.bausteine.slice();
+      verb = loesung.verbindungen.map((v) => ({ von: v.von, nach: v.nach, art: v.art }));
+      auswahl = null;
+      hilfe.textContent = "Die Musterlösung ist eingezeichnet.";
+      rueckmeldung(pruefen(), true);
+    });
+    bReset.addEventListener("click", () => {
+      zuruecksetzen();
+      bReset.focus();
+    });
+
+    if (window.ResizeObserver) new ResizeObserver(linienZeichnen).observe(flaeche);
+    else window.addEventListener("resize", linienZeichnen);
+
+    zuruecksetzen();
+    formeln(el);
+    return {
+      zuruecksetzen: zuruecksetzen,
+      loesungZeigen: () => bLoesung.click(),
+      pruefen: () => { const e = pruefen(); rueckmeldung(e, false); return { richtig: e.richtig, gesamt: e.gesamt }; },
+    };
+  }
+
   /* ---------- ICB-Kennzeichen (für Kopf von Bausteinen) ---------- */
 
   // «icb» darf Text oder Text-Liste sein: "ICB 4.5.4" oder ["ICB 3.04", "ICB 4.5.11"]
@@ -1885,7 +2335,7 @@
   }
 
   window.Lernpfad = {
-    version: "1.1.0",
+    version: "1.2.0",
     formeln: formeln,
     verknuepfen: verknuepfen,
     sortierer: sortierer,
@@ -1896,6 +2346,8 @@
     wahrFalsch: wahrFalsch,
     schrittAufgabe: schrittAufgabe,
     auswahl: auswahl,
+    modellieren: modellieren,
+    piktogramm: piktogramm,
     reflexion: reflexion,
     matrix: matrix,
     netzplanKnoten: netzplanKnoten,
