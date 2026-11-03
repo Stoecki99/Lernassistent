@@ -25,7 +25,7 @@ import {
 } from "@/lib/ipma/grader"
 import { handleAssess, handleCheckItem, handleCreateAttempt, handleSaveItem, handleSelfAssess, type ParamsInput } from "@/lib/ipma/handlers"
 import { buildPool, type Pool } from "@/lib/ipma/pool"
-import { ASSESS_DAILY_LIMIT, type AssessQuota, type IpmaDeps, type IpmaUser } from "@/lib/ipma/server"
+import { ASSESS_DAILY_LIMIT, defaultAiDeps, type AssessQuota, type IpmaDeps, type IpmaUser } from "@/lib/ipma/server"
 import type { SolvedItem } from "@/lib/ipma/types"
 import type { OpenQuestion } from "@/lib/validations/ipma-pool"
 import { createFakeDb, type FakeDb } from "./helpers/ipma-fake-db"
@@ -281,6 +281,17 @@ describe("gradeOpenAnswer mit Attrappe", () => {
     const down = await gradeOpenAnswer(mockClient([{ error: new Anthropic.APIConnectionTimeoutError() }]).client, SAMPLE)
     assert.deepEqual([down.ok, !down.ok && down.reason], [false, "unavailable"])
     await assert.rejects(gradeOpenAnswer(mockClient([{ error: new TypeError("Programmfehler") }]).client, SAMPLE), TypeError)
+  })
+  test("SDK-Fehler vor der Anfrage (fehlende Authentifizierung) → unavailable statt 500", async () => {
+    const auth = new Anthropic.AnthropicError("Could not resolve authentication method.")
+    const res = await gradeOpenAnswer(mockClient([{ error: auth }]).client, SAMPLE)
+    assert.deepEqual([res.ok, !res.ok && res.reason], [false, "unavailable"])
+  })
+  test("ohne API-Schlüssel keine Claude-Bewertung in den Standard-Abhängigkeiten", () => {
+    assert.equal(defaultAiDeps(undefined), undefined)
+    assert.equal(defaultAiDeps(""), undefined)
+    assert.equal(defaultAiDeps("   "), undefined)
+    assert.ok(defaultAiDeps("sk-test-attrappe"))
   })
 })
 

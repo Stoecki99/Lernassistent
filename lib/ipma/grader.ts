@@ -158,6 +158,11 @@ export async function gradeOpenAnswer(client: GraderClient, input: GradeInput): 
       console.error("[ipma/grader] API-Fehler", error.status ?? "ohne Status", error.name)
       return { ok: false, reason: "unavailable", usage: NO_USAGE }
     }
+    // Übrige SDK-Fehler vor der Anfrage, z. B. fehlende Authentifizierung
+    if (error instanceof Anthropic.AnthropicError) {
+      console.error("[ipma/grader] SDK-Fehler", error.name)
+      return { ok: false, reason: "unavailable", usage: NO_USAGE }
+    }
     throw error
   }
 

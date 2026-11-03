@@ -154,12 +154,21 @@ export function defaultDeps(): IpmaDeps {
     rateLimit: checkRateLimit,
     awardBadges: checkAndAwardBadges,
     config: EXAM_CONFIG,
-    ai: {
-      client: anthropic,
-      checkBudget: checkApiCostLimit,
-      recordUsage: incrementApiUsage,
-      quota: dailyAssessQuota,
-    },
+    ai: defaultAiDeps(process.env.ANTHROPIC_API_KEY),
+  }
+}
+
+/**
+ * Claude-Bewertung nur mit gesetztem API-Schlüssel. Ohne Schlüssel fehlt sie: «assess» antwortet dann nach den
+ * Vorbedingungen 502 AI_UNAVAILABLE (freundliche Meldung, Selbstbewertung gilt), ohne den Tageszähler zu belasten.
+ */
+export function defaultAiDeps(apiKey: string | undefined): IpmaAiDeps | undefined {
+  if (!apiKey?.trim()) return undefined
+  return {
+    client: anthropic,
+    checkBudget: checkApiCostLimit,
+    recordUsage: incrementApiUsage,
+    quota: dailyAssessQuota,
   }
 }
 
