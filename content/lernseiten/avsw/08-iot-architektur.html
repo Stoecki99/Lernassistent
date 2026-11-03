@@ -1,0 +1,1886 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IoT-Referenzarchitektur · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/architektur.css">
+  <link rel="next" href="/lernseiten/avsw/09-integrationsarchitektur" title="Integrationsarchitektur">
+  <style>
+    .t08-ziele{margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px}
+    .t08-badge{display:inline-block; padding:1px 8px; border-radius:999px; font-size:.78rem; font-weight:600; color:var(--ink); background:var(--ar-bg); border:1px solid var(--ar-c); white-space:nowrap}
+    .t08-wb td:first-child{font-weight:600}
+    .t08-karten{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:12px}
+    .t08-karte{border:1px solid var(--line); border-top:4px solid var(--ar-c, var(--accent)); border-radius:12px; padding:12px 14px; background:var(--surface); display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t08-karte h4{margin:0; font-size:1rem}
+    .t08-karte p, .t08-karte ul, .t08-karte dl{margin:0; font-size:.92rem}
+    .t08-karte ul{padding-left:1.1rem}
+    .t08-karte .t08-klein{font-size:.82rem; color:var(--muted)}
+    .t08-karte dt{font-weight:700; font-size:.8rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; margin-top:4px}
+    .t08-karte dd{margin:0}
+    .t08-wahl{display:flex; flex-wrap:wrap; gap:6px}
+    .t08-wahl .btn[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); font-weight:700}
+    .t08-info{min-height:3.2em; border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:10px; padding:10px 14px; font-size:.95rem}
+    .t08-info p{margin:0}
+    .t08-info p + p{margin-top:6px}
+
+    /* Ding-Explorer: Anatomie eines cyberphysischen Dings */
+    .t08-ding{display:grid; grid-template-columns:1fr 1.2fr 1fr; grid-template-areas:"pf pf pf" "se mp ak" "we we we"; gap:8px; align-items:stretch}
+    .t08-d{border:2px solid var(--ar-c); background:var(--ar-bg); color:var(--ink); border-radius:10px; padding:8px 10px; font-size:.88rem; min-width:0}
+    .t08-d b{display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; color:var(--ink)}
+    .t08-d ul{margin:2px 0 0; padding-left:1rem}
+    .t08-d-pf{grid-area:pf; text-align:center}
+    .t08-d-se{grid-area:se}
+    .t08-d-mp{grid-area:mp; border-style:double; border-width:4px}
+    .t08-d-ak{grid-area:ak}
+    .t08-d-we{grid-area:we; text-align:center; border-style:dashed}
+    .t08-d-fluss{display:flex; justify-content:space-between; gap:6px; font-size:.78rem; color:var(--muted); font-weight:600; margin-top:4px}
+    @media (max-width:560px){ .t08-ding{grid-template-columns:1fr; grid-template-areas:"pf" "mp" "se" "ak" "we"} }
+
+    /* Landkarte über der Referenz */
+    .t08-lk{display:flex; flex-wrap:wrap; gap:6px}
+    .t08-lk .btn{border-left:5px solid var(--ar-c, var(--line))}
+
+    /* Reise eines Messwerts */
+    .t08-leiste{display:flex; flex-wrap:wrap; gap:4px; list-style:none; margin:0; padding:0}
+    .t08-leiste button{font:inherit; font-size:.78rem; border:1.5px solid var(--ar-c); background:var(--surface); color:var(--ink); border-radius:999px; padding:2px 9px; cursor:pointer}
+    .t08-leiste button[aria-current="step"]{background:var(--ar-bg); font-weight:700; box-shadow:0 0 0 2px var(--ar-c)}
+    .t08-leiste button.t08-war{background:var(--ar-bg)}
+    .t08-reise{border:2px solid var(--ar-c); border-radius:14px; padding:12px 14px; background:var(--surface); display:flex; flex-direction:column; gap:8px}
+    .t08-reise h4{margin:0; font-size:1.05rem; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+    .t08-reise p{margin:0}
+    .t08-reise pre.code{margin:0}
+    .t08-reise-steuer{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+
+    /* MQTT: Topic-Filter */
+    .t08-tp-form{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end}
+    .t08-tp-form label{display:flex; flex-direction:column; gap:4px; font-size:.88rem; font-weight:600; flex:1 1 16rem}
+    .t08-tp-form input{font:inherit; font-family:var(--f-mono, monospace); padding:6px 8px; border:1.5px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); min-width:0}
+    .t08-tp-liste{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px}
+    .t08-tp-liste li{display:grid; grid-template-columns:2rem minmax(0,1fr); gap:6px; align-items:start; padding:4px 8px; border-radius:8px; border:1px solid var(--line); font-size:.86rem; background:var(--surface)}
+    .t08-tp-liste li code{overflow-wrap:anywhere}
+    .t08-tp-liste li.t08-ja{border-color:var(--ok); background:var(--ok-bg)}
+    .t08-tp-liste li.t08-nein{opacity:.72}
+    .t08-tp-marke{font-weight:700; text-align:center}
+    .t08-tp-liste li small{display:block; color:var(--muted)}
+
+    /* QoS-Labor: Sequenz */
+    .t08-qos-steuer{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px}
+    .t08-qos-steuer fieldset{border:1px solid var(--line); border-radius:10px; padding:8px 10px; margin:0; display:flex; flex-direction:column; gap:4px}
+    .t08-qos-steuer legend{font-weight:700; font-size:.88rem; padding:0 4px}
+    .t08-qos-steuer label{display:flex; gap:6px; align-items:flex-start; font-size:.9rem; cursor:pointer}
+    .t08-qos-steuer input{margin-top:4px}
+    .t08-seq{display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.8fr) minmax(0, 1fr); gap:4px 8px; align-items:center; font-size:.86rem}
+    .t08-seq-kopf{font-weight:700; text-align:center; border:2px solid var(--ar-c); background:var(--ar-bg); border-radius:8px; padding:4px; color:var(--ink)}
+    .t08-seq-zeile{display:contents}
+    .t08-seq-mitte{position:relative; text-align:center; padding:2px 0 8px; border-bottom:2px solid var(--muted)}
+    .t08-seq-mitte.t08-rueck{border-bottom-style:dashed}
+    .t08-seq-mitte::after{content:""; position:absolute; bottom:-6px; width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent}
+    .t08-seq-mitte.t08-hin::after{right:-2px; border-left:9px solid var(--muted)}
+    .t08-seq-mitte.t08-rueck::after{left:-2px; border-right:9px solid var(--muted)}
+    .t08-seq-mitte.t08-weg{color:var(--bad); border-bottom-color:var(--bad)}
+    .t08-seq-mitte.t08-weg::after{border-left-color:var(--bad); border-right-color:var(--bad)}
+    .t08-seq-notiz{font-size:.8rem; color:var(--muted)}
+    .t08-seq-notiz.t08-nl{grid-column:1 / 3; text-align:left}
+    .t08-seq-notiz.t08-nr{grid-column:2 / 4; text-align:right}
+    .t08-seq-mitte{overflow-wrap:anywhere; grid-column:2}
+    .t08-seq-kopf{font-size:.84rem; hyphens:auto}
+    .t08-seq-zeile.t08-neu > *{animation:t08-ein .35s ease-out both}
+    @keyframes t08-ein{from{opacity:0; transform:translateY(-4px)}to{opacity:1; transform:none}}
+    .t08-ergebnis{font-weight:700}
+    .t08-ergebnis.t08-gut{color:var(--ok)}
+    .t08-ergebnis.t08-schlecht{color:var(--bad)}
+
+    /* Plattformen */
+    .t08-abd th, .t08-abd td{text-align:center}
+    .t08-abd th[scope="row"]{text-align:left}
+    .t08-sym{display:inline-block; width:14px; height:14px; border-radius:50%; border:2px solid var(--ink); vertical-align:-2px; box-sizing:border-box}
+    .t08-sym.t08-voll{background:var(--ink)}
+    .t08-sym.t08-halb{background:linear-gradient(90deg, var(--ink) 50%, transparent 50%)}
+    #t08-plattf{grid-template-columns:repeat(auto-fit, minmax(min(100%, 300px), 1fr))}
+
+    /* RAMI 4.0 */
+    .t08-rami{display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); gap:14px; align-items:start}
+    @media (max-width:720px){ .t08-rami{grid-template-columns:1fr} }
+    .t08-rami svg{width:100%; height:auto; display:block}
+    .t08-rz{fill:var(--surface); stroke:var(--line); stroke-width:1}
+    .t08-rz.t08-an-l{fill:var(--r-business-bg)}
+    .t08-rz.t08-an-c{fill:var(--r-client-bg)}
+    .t08-rz.t08-an-h{fill:var(--r-infra-bg)}
+    .t08-rz.t08-an-l.t08-an-c, .t08-rz.t08-an-l.t08-an-h, .t08-rz.t08-an-c.t08-an-h{fill:var(--lit); stroke:var(--ink); stroke-width:1.6}
+    .t08-rami-achse{font-size:11px; fill:var(--muted); font-weight:700}
+    .t08-rami-pfeil{stroke:var(--muted); stroke-width:1.4; fill:none}
+    .t08-rami-wahl{display:flex; flex-direction:column; gap:8px}
+    .t08-rami-wahl fieldset{border:1px solid var(--line); border-left:5px solid var(--ar-c); border-radius:10px; padding:6px 10px 8px; margin:0}
+    .t08-rami-wahl legend{font-weight:700; font-size:.88rem; padding:0 4px}
+    .t08-rami-wahl .t08-wahl .btn{font-size:.8rem; padding:4px 8px}
+
+    /* Code: Bezug zur Komponente */
+    .t08-ort{display:inline-flex; align-items:center; gap:6px; font-size:.82rem; font-weight:700; padding:2px 10px; border-radius:999px; border:1.5px solid var(--ar-c); background:var(--ar-bg); color:var(--ink); align-self:flex-start}
+
+    /* Film: Mini-Diagramm */
+    .t08-fs, .t08-fbox, .t08-fflow{white-space:normal; font-family:var(--f-body)}
+    .t08-fs{display:grid; grid-template-columns:minmax(0,1.2fr) 2.4rem minmax(0,1.6fr) 2.4rem minmax(0,1fr); gap:6px; align-items:stretch; text-align:left}
+    .t08-fp{border:1.5px solid var(--r-paket); background:var(--r-paket-bg); border-radius:6px; padding:16px 6px 6px; position:relative; margin-top:12px; display:flex; flex-direction:column; gap:5px; min-width:0}
+    .t08-fp > .t08-fp-name{position:absolute; top:-11px; left:6px; background:var(--r-reiter); border:1.5px solid var(--r-paket); border-radius:5px 5px 0 0; padding:0 6px; font-size:.72rem; font-weight:700; white-space:nowrap}
+    .t08-fk{border:1.5px solid var(--ar-c); background:var(--ar-bg); border-radius:5px; padding:3px 6px; font-size:.76rem; color:var(--ink); line-height:1.2; overflow-wrap:anywhere}
+    .t08-fk small{display:block; color:var(--muted); font-size:.68rem}
+    .t08-fk.t08-leer{visibility:hidden}
+    .t08-fn{border:1.5px dashed var(--r-infra); background:var(--r-infra-bg); border-radius:999px; writing-mode:vertical-rl; transform:rotate(180deg); display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; color:var(--ink); margin-top:12px; padding:6px 0}
+    .t08-fn.t08-leer{visibility:hidden}
+    .t08-fflow{display:flex; justify-content:space-between; gap:8px; font-size:.78rem; font-weight:700; margin-top:6px; flex-wrap:wrap}
+    .t08-fflow span{padding:1px 8px; border-radius:999px; border:1px solid var(--line)}
+    .t08-fflow .t08-an{border-color:var(--accent); background:var(--accent-soft)}
+    .t08-fbox{margin-top:8px; border-left:4px solid var(--accent); background:var(--accent-soft); border-radius:8px; padding:6px 10px; font-size:.84rem; text-align:left}
+    @media (max-width:560px){
+      .t08-fs{grid-template-columns:1fr}
+      .t08-fn{writing-mode:horizontal-tb; transform:none; margin-top:0; padding:3px 8px}
+    }
+    @media (prefers-reduced-motion: reduce){ .t08-seq-zeile.t08-neu > *{animation:none} }
+  </style>
+</head>
+<body data-fach="avsw" data-thema="08-iot-architektur">
+<main class="wrap">
+  <header class="stack">
+    <span class="eyebrow">AVSW · LB 2 · SW 10 · IoT-Referenzarchitektur</span>
+    <h1>IoT-Referenzarchitektur: vom Sensor zur Entscheidung</h1>
+    <p class="lead">Ein Kühlschrank meldet seine Temperatur, eine Maschine sagt ihren Ausfall voraus, eine Strassenlampe dimmt sich selbst. Dahinter steckt immer dieselbe Architektur: Geräte am Rand, eine Plattform in der Mitte, Fachanwendungen am Ende, dazwischen drei Netze. Hier lernst du diese Referenzarchitektur kennen, spielst Data Flow und Control Flow durch, siehst MQTT von innen und modellierst IoT-Lösungen als UML-Komponentendiagramm wie in der Prüfung.</p>
+    <p class="note"><b>Hinweis:</b> Eigene Erklärungen und Beispiele auf Basis der Modulunterlagen, nicht vom Dozenten bestätigt. Alle Firmen und Fälle sind erfunden.</p>
+    <div class="card stack">
+      <h3>Das kannst du nach dieser Station</h3>
+      <ul class="t08-ziele prose">
+        <li>Ein IoT-Device als cyberphysisches Ding mit Sensoren, Aktoren und Embedded System erklären, auch Wearables und Datenbrillen.</li>
+        <li>Die IoT-Referenzarchitektur mit Edge, Platform und Enterprise Tier, Data Provider und den drei Netzen beschreiben, jede Komponente mit Aufgabe und Begründung.</li>
+        <li>Data Flow und Control Flow durch alle Tiers verfolgen und erklären, was beim Ausfall des Access Network passiert.</li>
+        <li>MQTT (Publish/Subscribe, Topics, QoS, Retained Messages) erklären und begründen, wann CoAP, AMQP oder OPC UA besser passen.</li>
+        <li>Plattformen wie Azure IoT Hub, AWS IoT Core, ThingsBoard und Eclipse Ditto einordnen und Edge Computing von Cloud Computing abgrenzen.</li>
+        <li>RAMI 4.0 mit seinen drei Dimensionen erklären und eine IoT-Lösung als UML-Komponentendiagramm nach der Referenz modellieren.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#start"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#dinge"><b>2</b>Smarte Dinge</a>
+    <a href="#referenz"><b>3</b>Referenz</a>
+    <a href="#reise"><b>4</b>Schritt für Schritt</a>
+    <a href="#protokolle"><b>5</b>Protokolle</a>
+    <a href="#code"><b>6</b>Code</a>
+    <a href="#plattformen"><b>7</b>Plattformen</a>
+    <a href="#edge"><b>8</b>Edge vs. Cloud</a>
+    <a href="#rami"><b>9</b>RAMI 4.0</a>
+    <a href="#verfahren"><b>10</b>Modellieren</a>
+    <a href="#spiel"><b>11</b>Spiel</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- 0 · Bausteine -->
+  <section id="start" data-kategorie="infrastruktur">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Sechs Bausteine mit Alltagsbildern</h2>
+    <p class="prose">Stell dir ein grosses Spital vor. Überall gibt es Menschen, die etwas wahrnehmen, andere, die handeln, und eine Zentrale, die alles zusammenführt. Genau so ist eine IoT-Lösung gebaut.</p>
+    <div class="grid4">
+      <div class="concept" data-kategorie="client"><span class="tag">Sensor = Fieberthermometer</span><p>Misst etwas in der echten Welt (Temperatur, Feuchte, Position) und macht daraus eine Zahl. Er handelt nicht selbst.</p></div>
+      <div class="concept" data-kategorie="daten"><span class="tag">Aktor = Pflegerin, die das Fenster öffnet</span><p>Setzt einen Befehl in eine Wirkung um: Ventil auf, Motor an, Schloss zu, Licht dimmen.</p></div>
+      <div class="concept" data-kategorie="zugang"><span class="tag">Edge Gateway = Stationszimmer</span><p>Sammelt die Meldungen der ganzen Abteilung, fasst sie zusammen und reagiert sofort, wenn es eilt, auch wenn die Zentrale nicht erreichbar ist.</p></div>
+      <div class="concept" data-kategorie="dienst"><span class="tag">Plattform = Leitstelle</span><p>Nimmt alle Meldungen an, prüft sie, legt sie ab, wertet sie aus, zeigt sie auf grossen Bildschirmen und schickt Anweisungen zurück.</p></div>
+      <div class="concept" data-kategorie="messaging"><span class="tag">Netze = Rohrpost, Telefon, Kurier</span><p>Im Haus die Rohrpost (Field Network), zur Leitstelle das Telefon (Access Network), zur Verwaltung der Kurier (Service Network).</p></div>
+      <div class="concept" data-kategorie="sicherheit"><span class="tag">Fachanwendung = Verwaltung</span><p>Die Verwaltung (ERP, CRM) braucht nicht jeden Fieberwert, sondern Ergebnisse: «Gerät 7 muss gewartet werden.»</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Sensor oder Aktor?</h3>
+      <p class="hint">Frag dich: Misst das Teil etwas, oder verändert es etwas in der Welt?</p>
+      <div id="t08-sort-start"></div>
+    </div>
+  </section>
+
+  <!-- 1 · Wörterbuch -->
+  <section id="woerterbuch" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 1 · Begriffe festlegen</span>
+    <h2>Wörterbuch der IoT-Architektur</h2>
+    <p class="prose">Die Begriffe der Referenzarchitektur sind englisch. Behalte sie so, denn genau so stehen sie im Prüfungsdiagramm. Die farbige Marke zeigt die Rolle, mit der die Komponente in den Diagrammen dieser Station gezeichnet wird.</p>
+    <div class="card tablebox">
+      <table class="tabelle t08-wb">
+        <thead><tr><th scope="col">Begriff</th><th scope="col">Rolle</th><th scope="col">Bedeutung in eigenen Worten</th></tr></thead>
+        <tbody>
+          <tr><td>IoT (Internet of Things)</td><td><span class="t08-badge ar-r-infra">Idee</span></td><td>Physische Dinge mit Sensoren, Aktoren und Netzanschluss liefern Daten und lassen sich aus der Ferne steuern.</td></tr>
+          <tr><td>Cyberphysisches (smartes) Ding</td><td><span class="t08-badge ar-r-infra">Device</span></td><td>Ein Gegenstand mit zwei Seiten: der physischen (Lampe, Velo, Maschine) und der digitalen (Chip, Software, Netz).</td></tr>
+          <tr><td>Embedded System, MPU</td><td><span class="t08-badge ar-r-infra">Device</span></td><td>Ein im Gerät eingebauter Kleinrechner mit Chip (MPU, Micro Processing Unit). Er liest die Sensoren, steuert die Aktoren und spricht mit dem Netz.</td></tr>
+          <tr><td>Ambient Intelligence</td><td><span class="t08-badge ar-r-infra">Idee</span></td><td>Eine Umgebung, die Menschen erkennt und sie unauffällig unterstützt: Das Licht geht an, die Heizung passt sich an.</td></tr>
+          <tr><td>Edge Tier</td><td><span class="t08-badge ar-r-infra">Tier</span></td><td>Alles nahe am physischen Geschehen: stationäre und mobile IoT Devices, das Field Network und das Edge Gateway.</td></tr>
+          <tr><td>Field Network</td><td><span class="t08-badge ar-r-infra">Netz</span></td><td>Lokales Netz zwischen Geräten und Edge Gateway, sparsam und mit kleinen Paketen (z. B. Bluetooth LE, Zigbee, LoRaWAN, Modbus).</td></tr>
+          <tr><td>Edge Gateway</td><td><span class="t08-badge ar-r-webapi">Gateway</span></td><td>Rechner vor Ort: übersetzt Feldprotokolle in Internet-Protokolle, filtert, verdichtet, puffert und reagiert lokal.</td></tr>
+          <tr><td>Data Provider</td><td><span class="t08-badge ar-r-extern">extern</span></td><td>Fremde Datenquelle, z. B. eine Wetter-API, die zusätzliche Daten in die Plattform liefert.</td></tr>
+          <tr><td>Access Network</td><td><span class="t08-badge ar-r-infra">Netz</span></td><td>Weitverkehrsnetz vom Standort zur Plattform (Mobilfunk, Glasfaser, Internet).</td></tr>
+          <tr><td>Platform Tier</td><td><span class="t08-badge ar-r-infra">Tier</span></td><td>Die IoT-Plattform, meist in der Cloud: Platform Gateway, Data Transform, DBMS, Analytics, Dashboard, Operations.</td></tr>
+          <tr><td>Platform Gateway</td><td><span class="t08-badge ar-r-webapi">Gateway</span></td><td>Eingang der Plattform für alle Geräte: authentisiert, nimmt Nachrichten an (meist MQTT), verwaltet Gerätezustände, schickt Befehle zurück.</td></tr>
+          <tr><td>Data Transform</td><td><span class="t08-badge ar-r-business">Verarbeitung</span></td><td>Prüft, bereinigt, rechnet um und reichert Rohdaten an, bevor sie gespeichert werden.</td></tr>
+          <tr><td>DBMS</td><td><span class="t08-badge ar-r-daten">Daten</span></td><td>Datenhaltung der Plattform, oft eine Zeitreihen-Datenbank für Messwerte über die Zeit.</td></tr>
+          <tr><td>Analytics, Machine Learning, AI</td><td><span class="t08-badge ar-r-business">Verarbeitung</span></td><td>Auswertungen und lernende Modelle: Trends, Abweichungen, Prognosen (Predictive Maintenance).</td></tr>
+          <tr><td>Dashboard</td><td><span class="t08-badge ar-r-client">Anzeige</span></td><td>Zeigt Zustände, Kennzahlen und Alarme für Menschen.</td></tr>
+          <tr><td>Operations Algorithms &amp; UI</td><td><span class="t08-badge ar-r-client">Steuerung</span></td><td>Steuerlogik und Bedienoberfläche: Befehle, Konfiguration, Firmware-Updates. Startpunkt des Control Flow in der Plattform.</td></tr>
+          <tr><td>Service Network</td><td><span class="t08-badge ar-r-infra">Netz</span></td><td>Netz zwischen Plattform und Fachanwendungen (APIs über Internet oder VPN).</td></tr>
+          <tr><td>Enterprise Tier, Domain Applications</td><td><span class="t08-badge ar-r-shared">Fachanwendung</span></td><td>Die Fachanwendungen des Unternehmens wie CRM, PLM, ERP, die IoT-Ergebnisse in Geschäftsprozessen nutzen.</td></tr>
+          <tr><td>Data Flow, Control Flow</td><td><span class="t08-badge ar-r-infra">Richtung</span></td><td>Data Flow: Messwerte von den Geräten nach rechts bis zur Fachanwendung. Control Flow: Befehle von rechts zurück bis zum Aktor.</td></tr>
+          <tr><td>Telemetrie</td><td><span class="t08-badge ar-r-async">Nachricht</span></td><td>Laufend gesendete Messdaten eines Geräts, meist kleine JSON- oder Binärnachrichten.</td></tr>
+          <tr><td>MQTT, Broker, Topic</td><td><span class="t08-badge ar-r-async">Protokoll</span></td><td>Leichtgewichtiges Publish/Subscribe-Protokoll. Geräte senden an einen Broker unter einem Topic (Adresse wie <code>werk/halle-1/temperatur</code>), Abonnenten erhalten passende Nachrichten.</td></tr>
+          <tr><td>QoS, Retained Message</td><td><span class="t08-badge ar-r-async">Protokoll</span></td><td>QoS legt die Zustellgarantie fest (0, 1, 2). Eine Retained Message hält der Broker als letzten bekannten Wert eines Topics bereit.</td></tr>
+          <tr><td>Digital Twin</td><td><span class="t08-badge ar-r-business">Modell</span></td><td>Digitales Abbild eines Geräts mit Ist-Zustand (gemeldet) und Soll-Zustand (gewünscht).</td></tr>
+          <tr><td>RAMI 4.0</td><td><span class="t08-badge ar-r-infra">Modell</span></td><td>Referenzarchitekturmodell Industrie 4.0 mit drei Dimensionen: Layers, Life Cycle &amp; Value Stream, Hierarchy Levels.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2 · Smarte Dinge -->
+  <section id="dinge" data-kategorie="client">
+    <span class="eyebrow">Schritt 2 · IoT-Device, Wearables</span>
+    <h2>Was ein Ding «smart» macht</h2>
+    <p class="prose">Ein IoT-Device ist ein <b>cyberphysisches Ding</b>: Es lebt in einem physischen Kontext (Wohnung, Strasse, Werkhalle) und hat eine digitale Seite. Sensoren nehmen die Umgebung wahr, Aktoren verändern sie. Dazwischen sitzt ein <b>Embedded System</b> mit einem Chip (MPU), das die Werte verarbeitet und mit der <b>IoT-Plattform</b> spricht. Viele solche Dinge zusammen ergeben <b>Ambient Intelligence</b>: eine Umgebung, die mitdenkt, ohne dass du sie bedienen musst.</p>
+    <div class="card stack">
+      <h3>Vier smarte Dinge auseinandergenommen</h3>
+      <p class="hint">Wähle ein Ding. Das Bild zeigt, was es misst, was es bewirkt, was der Chip tut und was zur Plattform fliesst.</p>
+      <div class="t08-wahl" id="t08-ding-wahl" role="group" aria-label="Ding wählen"></div>
+      <div class="t08-ding" id="t08-ding" aria-live="polite"></div>
+      <div class="t08-info" id="t08-ding-nutzen" aria-live="polite"></div>
+    </div>
+    <h3>Wearables und Datenbrillen</h3>
+    <p class="prose">Ein <b>Wearable</b> trägst du am Körper: Smartwatch, Fitnessband, Datenbrille, Sensor im Arbeitshandschuh. Es ist ein mobiles IoT-Device mit Display, Lautsprecher oder Vibration. Jedes Wearable erfüllt drei Aufgaben, und jede hat ihre Grenze:</p>
+    <div class="t08-karten">
+      <div class="t08-karte ar-r-client"><h4>1 · Wahrnehmen</h4><p>Sensoren sammeln Daten: Puls, Bewegung, Position, Kamerabild, Sprache.</p><p class="t08-klein">Grenze: Jeder Sensor kostet Strom. Der Akku ist klein.</p></div>
+      <div class="t08-karte ar-r-async"><h4>2 · Austauschen</h4><p>Das Gerät tauscht Daten aus, oft über das Handy (Bluetooth) oder das WLAN des Betriebs.</p><p class="t08-klein">Grenze: Die Reichweite ist kurz, das Netz nicht überall stabil.</p></div>
+      <div class="t08-karte ar-r-webapi"><h4>3 · Informieren</h4><p>Es informiert die Trägerin über Display, Ton oder Vibration, ohne dass sie die Hände braucht.</p><p class="t08-klein">Grenze: Es muss leicht und bequem sein, sonst trägt es niemand.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Beispiel: Datenbrille im Lager von «Gipfelsport Versand» (fiktiv)</h3>
+      <p class="prose">Rina rüstet Bestellungen. Ihre Datenbrille blendet den nächsten Lagerplatz ins Sichtfeld ein und zeigt den Weg dorthin. Am Regal <b>erfasst</b> die Kamera der Brille den Strichcode des Artikels, sie muss nichts in die Hand nehmen. Die Brille <b>ermittelt die Menge</b>: Rina sagt «drei», ein Bilderkennungsmodell zählt zur Kontrolle mit. Dann <b>zeigt</b> die Brille die nächste <b>Anweisung</b>: «Fach B-14, zwei Stück». Die Rüstaufträge kommen aus dem ERP (Control Flow), die Bestätigungen gehen zurück (Data Flow).</p>
+      <div id="t08-brille-frage"></div>
+    </div>
+  </section>
+
+  <!-- 3 · Referenz -->
+  <section id="referenz" data-kategorie="dienst">
+    <span class="eyebrow">Schritt 3 · Die Referenzarchitektur</span>
+    <h2>IoT-Referenzarchitektur als interaktive Landkarte</h2>
+    <p class="prose">Die Referenzarchitektur hat <b>drei Tiers</b> von links nach rechts: <b>Edge Tier</b> (Geräte und Edge Gateway), <b>Platform Tier</b> (die IoT-Plattform) und <b>Enterprise Tier</b> (Fachanwendungen). Unter dem Edge Tier liegt der <b>Data Provider</b> für fremde Daten. Zwischen den Tiers liegen <b>drei Netze</b>: Field Network im Edge Tier, Access Network zwischen Edge und Plattform, Service Network zwischen Plattform und Fachanwendungen. Daten fliessen nach rechts (<b>Data Flow</b>), Befehle zurück nach links (<b>Control Flow</b>).</p>
+    <div class="card stack">
+      <h3>Landkarte: Was willst du sehen?</h3>
+      <div class="t08-lk" id="t08-lk" role="group" aria-label="Teile der Referenz hervorheben"></div>
+      <div class="t08-info" id="t08-lk-info" aria-live="polite"><p>Wähle einen Teil. Er wird im Diagramm hervorgehoben, der Rest tritt zurück.</p></div>
+    </div>
+    <p class="hint">Tippe jede Komponente und jedes Paket an: Der Steckbrief ist eine prüfungstaugliche Beschreibung (was, kann, wofür, Technologie, warum). Spiel die drei Abläufe ab und schalte den Ausfall-Modus ein, z. B. für das Access Network oder das DBMS. Das Diagramm ist breit: Ziehen verschiebt, ⛶ passt die ganze Referenz ein.</p>
+    <div id="t08-ref"></div>
+    <div class="t08-karten">
+      <div class="t08-karte ar-r-infra"><h4>Edge Tier</h4><p>Nahe an der physischen Welt. Viele Geräte (Multiplizität <code>*</code>) hängen über ein sparsames Feldnetz an einem Edge Gateway.</p><p class="t08-klein">Warum ein Gateway? Ein Sensor mit Knopfbatterie kann kein TLS über Mobilfunk sprechen. Das Gateway kann.</p></div>
+      <div class="t08-karte ar-r-business"><h4>Platform Tier</h4><p>Eingang, Aufbereitung, Speicherung, Auswertung, Anzeige und Steuerung an einer Stelle, für tausende Geräte gleich.</p><p class="t08-klein">Warum zentral? Geräteverwaltung, Sicherheit und Datenmodell sind sonst je Projekt neu zu bauen.</p></div>
+      <div class="t08-karte ar-r-shared"><h4>Enterprise Tier</h4><p>CRM, PLM, ERP nutzen Ergebnisse, keine Rohdaten: Serviceauftrag, Abrechnung nach Verbrauch, Produktverbesserung.</p><p class="t08-klein">Warum getrennt? Fachanwendungen sollen nicht wissen müssen, welches Funkprotokoll ein Sensor spricht.</p></div>
+      <div class="t08-karte ar-r-extern"><h4>Data Provider</h4><p>Liefert fremde Daten (Wetter, Strompreise, Verkehr) über das Access Network in die Plattform, wie ein Gerät.</p><p class="t08-klein">Warum? Viele Auswertungen werden erst mit Kontext aussagekräftig.</p></div>
+    </div>
+    <h3>Data Flow, Control Flow und Ausfall</h3>
+    <div class="t08-karten">
+      <div class="t08-karte ar-r-webapi"><h4>Data Flow (nach rechts)</h4><p>Sensor → Field Network → Edge Gateway → Access Network → Platform Gateway → Data Transform → DBMS → Analytics → Dashboard und über das Service Network → Domain Application.</p></div>
+      <div class="t08-karte ar-r-client"><h4>Control Flow (nach links)</h4><p>Domain Application oder Mensch am UI → Operations Algorithms &amp; UI → Access Network → Edge Gateway → Field Network → Aktor im Gerät. Operations liest dazu Zustände aus dem DBMS.</p></div>
+      <div class="t08-karte ar-r-async"><h4>Ausfall des Access Network</h4><p>Die Geräte messen weiter. Das Edge Gateway puffert die Werte und reagiert lokal auf Grenzwerte. Nach der Störung sendet es nach, die Plattform füllt die Lücke.</p></div>
+    </div>
+    <p class="ar-callout" data-kategorie="dienst"><b>Merke:</b> Die Fachanwendung schaltet nie direkt einen Aktor. Jeder Befehl läuft über Operations in der Plattform. Nur dort kennt man Gerätezustand, Berechtigung und Protokoll.</p>
+    <div class="card stack">
+      <h3>Bereits modelliert: Velo-Flotte «Alpenrad» (fiktiv)</h3>
+      <p class="prose">So sieht die Referenz für einen konkreten Fall aus: E-Bikes und Ladestationen in einer Stadt, Plattform bei AWS, Abo-Verwaltung im CRM und Wartung im ERP. Jede Komponente trägt die konkrete Technologie, jede Verbindung ist beschriftet. Drei Abläufe: Velo entsperren (Control Flow), Akku-Prognose (Data Flow), Funkloch an der Station.</p>
+      <div id="t08-velo"></div>
+    </div>
+  </section>
+
+  <!-- 4 · Schritt für Schritt -->
+  <section id="reise" data-kategorie="messaging">
+    <span class="eyebrow">Schritt 4 · Schritt für Schritt</span>
+    <h2>Ein Messwert auf Reisen</h2>
+    <p class="prose">Folge einem einzigen Wert durch alle Komponenten. Die Käserei Bergblick (fiktiv) reift Käse in Kellern. Der Fühler 07 misst im Keller 2 die Luftfeuchte. Achte darauf, wie sich die <b>Form der Daten</b> auf dem Weg verändert: von zwei Bytes im Sensor bis zur Qualitätsmeldung im ERP.</p>
+    <ol class="t08-leiste" id="t08-reise-leiste" aria-label="Stationen der Reise"></ol>
+    <div class="t08-reise" id="t08-reise" aria-live="polite"></div>
+    <div class="t08-reise-steuer">
+      <button type="button" class="btn" id="t08-reise-zurueck">◀ Zurück</button>
+      <button type="button" class="btn primary" id="t08-reise-weiter">Weiter ▶</button>
+      <span class="hint" id="t08-reise-stand"></span>
+    </div>
+    <div class="note tipp"><b>Tipp für die Prüfung:</b> Genau diese Aufgaben gehören in die Beschreibung der Komponenten. «Edge Gateway: übersetzt LoRaWAN in MQTT, verdichtet und puffert bei Netzausfall» bringt mehr Punkte als «Gateway am Standort».</div>
+  </section>
+
+  <!-- 5 · Protokolle -->
+  <section id="protokolle" data-kategorie="messaging">
+    <span class="eyebrow">Schritt 5 · MQTT, CoAP, AMQP, OPC UA</span>
+    <h2>Protokolle zwischen Gerät und Plattform</h2>
+    <p class="prose">IoT-Geräte haben wenig Strom, wenig Speicher und oft ein wackliges Netz. HTTP mit grossen Kopfzeilen und ständigem Nachfragen («gibt es Neues?») passt schlecht. Darum gibt es Protokolle, die genau dafür gebaut sind. Der Klassiker ist <b>MQTT</b>.</p>
+    <h3>MQTT: Publish/Subscribe über einen Broker</h3>
+    <div class="t08-karten">
+      <div class="t08-karte ar-r-async"><h4>Broker und Topics</h4><p>Geräte <b>publizieren</b> Nachrichten unter einem <b>Topic</b> (z. B. <code>bergblick/keller-2/klima/fuehler-07</code>) an den <b>Broker</b>. Wer ein Topic <b>abonniert</b>, bekommt die Nachrichten. Sender und Empfänger kennen sich nicht.</p></div>
+      <div class="t08-karte ar-r-async"><h4>Wildcards</h4><p><code>+</code> ersetzt genau eine Ebene, <code>#</code> alle restlichen Ebenen (nur am Ende). <code>bergblick/+/klima/+</code> liefert alle Klimafühler aller Keller.</p></div>
+      <div class="t08-karte ar-r-async"><h4>QoS 0, 1, 2</h4><p><b>0</b> höchstens einmal (kann verloren gehen), <b>1</b> mindestens einmal (Duplikate möglich), <b>2</b> genau einmal (vierfacher Handschlag, langsamer).</p></div>
+      <div class="t08-karte ar-r-async"><h4>Retained und Last Will</h4><p><b>Retained:</b> Der Broker merkt sich die letzte Nachricht eines Topics und gibt sie neuen Abonnenten sofort. <b>Last Will:</b> Bricht ein Gerät unerwartet ab, publiziert der Broker die vorher hinterlegte Nachricht «offline».</p></div>
+    </div>
+    <p class="prose"><b>Warum MQTT?</b> Der feste Kopf ist nur 2 Byte gross, die Verbindung bleibt offen (der Broker kann Befehle sofort zum Gerät schieben), und der Broker entkoppelt Tausende Geräte von den Auswertungen. MQTT läuft über TCP, gesichert mit TLS (Port 8883). In der Referenz steckt der Broker im <b>Platform Gateway</b>, oft auch ein kleiner im <b>Edge Gateway</b>.</p>
+
+    <div class="card stack">
+      <h3>Ausprobieren: Welche Nachrichten bekommt ein Abonnent?</h3>
+      <p class="hint">Wähle einen Topic-Filter oder tippe einen eigenen. Die Liste zeigt, welche Topics der Käserei passen und warum.</p>
+      <div class="t08-wahl" id="t08-tp-vorlagen" role="group" aria-label="Vorlagen für Topic-Filter"></div>
+      <div class="t08-tp-form">
+        <label for="t08-tp-eingabe">Topic-Filter <input id="t08-tp-eingabe" type="text" autocomplete="off" spellcheck="false" value="bergblick/+/klima/+"></label>
+      </div>
+      <p class="t08-info" id="t08-tp-status" aria-live="polite"></p>
+      <ul class="t08-tp-liste" id="t08-tp-liste"></ul>
+    </div>
+
+    <div class="card stack">
+      <h3>QoS-Labor: Was passiert, wenn ein Paket verloren geht?</h3>
+      <p class="hint">Wähle die QoS-Stufe und eine Störung. Die Sequenz zeigt die Pakete zwischen Edge Gateway (Publisher) und Broker im Platform Gateway.</p>
+      <div class="t08-qos-steuer">
+        <fieldset><legend>QoS-Stufe</legend>
+          <label><input type="radio" name="t08-qos" value="0"> QoS 0 · höchstens einmal</label>
+          <label><input type="radio" name="t08-qos" value="1" checked> QoS 1 · mindestens einmal</label>
+          <label><input type="radio" name="t08-qos" value="2"> QoS 2 · genau einmal</label>
+        </fieldset>
+        <fieldset><legend>Störung im Access Network</legend>
+          <label><input type="radio" name="t08-stoer" value="keine" checked> keine</label>
+          <label><input type="radio" name="t08-stoer" value="publish"> PUBLISH geht verloren</label>
+          <label><input type="radio" name="t08-stoer" value="ack"> Bestätigung des Brokers geht verloren</label>
+        </fieldset>
+      </div>
+      <div class="row"><button type="button" class="btn primary" id="t08-qos-start">Nachricht senden</button></div>
+      <div class="t08-seq" id="t08-qos-seq" aria-label="Paketfolge"></div>
+      <p class="t08-info" id="t08-qos-ergebnis" aria-live="polite"><span>Wähle QoS und Störung, dann «Nachricht senden».</span></p>
+    </div>
+
+    <h3>Weitere Protokolle und warum</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Vier Protokolle im Vergleich</caption>
+        <thead><tr><th scope="col">Protokoll</th><th scope="col">Muster und Transport</th><th scope="col">Typischer Ort in der Referenz</th><th scope="col">Warum</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">MQTT</th><td>Publish/Subscribe über Broker, TCP (TLS)</td><td>Edge Gateway ↔ Platform Gateway über das Access Network, auch Geräte mit Mobilfunk direkt</td><td>Leicht, wenig Bandbreite, offene Verbindung für Befehle, entkoppelt viele Geräte.</td></tr>
+          <tr><th scope="row">CoAP</th><td>Request/Response wie REST (GET, PUT, POST, DELETE), UDP, mit «Observe» für Änderungen</td><td>Sehr kleine, batteriebetriebene Geräte im Field Network (z. B. mit 6LoWPAN, Thread)</td><td>Für Geräte, die für TCP zu klein sind. Das REST-Modell ist vertraut und lässt sich auf HTTP umsetzen.</td></tr>
+          <tr><th scope="row">AMQP</th><td>Nachrichten mit Queues und Routing, Bestätigungen und Transaktionen, TCP</td><td>Zwischen Plattform und Unternehmens-Broker, auch leistungsstarke Gateways zur Cloud</td><td>Zuverlässige Zustellung und Routing, passt zu Enterprise-Brokern wie RabbitMQ oder Azure Service Bus.</td></tr>
+          <tr><th scope="row">OPC UA</th><td>Client/Server und Pub/Sub mit Informationsmodell, eingebaute Sicherheit</td><td>Maschinen und Steuerungen in der Fabrik ↔ Edge Gateway</td><td>Beschreibt Maschinendaten mit Bedeutung (Typ, Einheit, Struktur) herstellerneutral. Standard für Industrie 4.0.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="t08-karten">
+      <div class="t08-karte ar-r-async"><h4>Mosquitto</h4><dl><dt>Was</dt><dd>Schlanker Open-Source-MQTT-Broker der Eclipse Foundation.</dd><dt>Warum</dt><dd>Läuft auf einem Raspberry Pi wie auf einem Server. Ideal im Edge Gateway oder für kleine und mittlere Plattformen.</dd><dt>Passt nicht, wenn</dt><dd>Millionen Verbindungen über einen Cluster verteilt werden müssen.</dd></dl></div>
+      <div class="t08-karte ar-r-async"><h4>HiveMQ</h4><dl><dt>Was</dt><dd>MQTT-Broker für grosse Installationen, als Community-Edition und kommerziell.</dd><dt>Warum</dt><dd>Clustering für viele Verbindungen, Hochverfügbarkeit, Erweiterungen z. B. zur Weitergabe an Kafka.</dd><dt>Passt nicht, wenn</dt><dd>ein kleines Projekt ohne Betriebsteam startet.</dd></dl></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz prüfen</h3>
+      <div id="t08-prot-frage"></div>
+    </div>
+  </section>
+
+  <!-- 6 · Code -->
+  <section id="code" data-kategorie="dienst">
+    <span class="eyebrow">Schritt 6 · MQTT im Code</span>
+    <h2>Topic-Struktur, JSON-Telemetrie, Publish und Subscribe</h2>
+    <p class="prose">Drei Programme der Käserei Bergblick zeigen, wo im Diagramm welcher Code läuft. Das Edge Gateway publiziert, Data Transform abonniert, Operations schickt einen Befehl zurück.</p>
+    <h3>Topic-Struktur festlegen</h3>
+    <p class="prose">Ein Topic ist eine Adresse von grob nach fein. Lege die Ebenen einmal fest, dann funktionieren Wildcards. Regeln: Kleinbuchstaben, kein Schrägstrich am Anfang, keine Leerzeichen, Befehle und Status auf eigenen Topics.</p>
+    <pre class="code" data-sprache="Topic-Schema"><code><span class="c"># firma / standort-oder-fahrzeug / bereich / gerät [/ art]</span>
+bergblick/keller-2/klima/fuehler-07              <span class="c"># Telemetrie (Data Flow)</span>
+bergblick/keller-2/klappe/klappe-1/befehl        <span class="c"># Befehl (Control Flow)</span>
+bergblick/keller-2/klappe/klappe-1/status        <span class="c"># Bestätigung des Aktors</span>
+bergblick/edge-1/status                          <span class="c"># Last Will: "offline", retained</span></code></pre>
+    <h3>JSON-Telemetrie</h3>
+    <pre class="code" data-sprache="JSON"><code>{
+  <span class="s">"geraet"</span>: <span class="s">"fuehler-07"</span>,
+  <span class="s">"zeit"</span>: <span class="s">"2026-11-02T06:41:00Z"</span>,
+  <span class="s">"temperatur_c"</span>: <span class="n">13.2</span>,
+  <span class="s">"feuchte_pct"</span>: <span class="n">82</span>,
+  <span class="s">"anzahl_werte"</span>: <span class="n">6</span>,
+  <span class="s">"batterie_pct"</span>: <span class="n">71</span>
+}</code></pre>
+    <p class="hint">Eine Nachricht je Gerät und Minute: <code>anzahl_werte</code> zeigt, dass das Edge Gateway 6 Messungen gemittelt hat. Die Zeit steht in UTC, damit Geräte in allen Zeitzonen vergleichbar sind.</p>
+    <div class="card stack">
+      <span class="t08-ort ar-r-webapi">läuft in: Edge Gateway (Edge Tier)</span>
+      <h3>Publish mit Python und paho-mqtt</h3>
+      <p class="prose">Das Gateway sendet jede Minute den Mittelwert mit QoS 1, hinterlegt einen Last Will und hört auf Befehle für die Lüftungsklappe.</p>
+      <pre class="code" data-sprache="Python (paho-mqtt 2)"><code><span class="k">import</span> json, time
+<span class="k">import</span> paho.mqtt.client <span class="k">as</span> mqtt
+
+BROKER = <span class="s">"iot.bergblick.example"</span>          <span class="c"># Platform Gateway</span>
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=<span class="s">"edge-1"</span>)
+client.tls_set(ca_certs=<span class="s">"ca.pem"</span>, certfile=<span class="s">"edge-1.crt"</span>, keyfile=<span class="s">"edge-1.key"</span>)
+<mark>client.will_set(<span class="s">"bergblick/edge-1/status"</span>, <span class="s">"offline"</span>, qos=<span class="n">1</span>, retain=<span class="k">True</span>)</mark>
+
+<span class="k">def</span> bei_befehl(client, userdata, msg):              <span class="c"># Control Flow kommt an</span>
+    befehl = json.loads(msg.payload)
+    klappe_stellen(befehl[<span class="s">"oeffnung_pct"</span>])           <span class="c"># Aktor über Field Network</span>
+
+client.on_message = bei_befehl
+client.connect(BROKER, <span class="n">8883</span>)
+client.subscribe(<span class="s">"bergblick/keller-2/klappe/+/befehl"</span>, qos=<span class="n">1</span>)
+client.publish(<span class="s">"bergblick/edge-1/status"</span>, <span class="s">"online"</span>, qos=<span class="n">1</span>, retain=<span class="k">True</span>)
+client.loop_start()
+
+<span class="k">while</span> <span class="k">True</span>:
+    werte = feldnetz_lesen(<span class="s">"fuehler-07"</span>, sekunden=<span class="n">60</span>)  <span class="c"># 6 Werte aus LoRaWAN</span>
+    nachricht = {<span class="s">"geraet"</span>: <span class="s">"fuehler-07"</span>, <span class="s">"zeit"</span>: jetzt_utc(), <span class="s">"feuchte_pct"</span>: mittel(werte), <span class="s">"anzahl_werte"</span>: len(werte)}
+    <mark>client.publish(<span class="s">"bergblick/keller-2/klima/fuehler-07"</span>, json.dumps(nachricht), qos=<span class="n">1</span>)</mark>
+    time.sleep(<span class="n">60</span>)</code></pre>
+      <p class="hint">Bricht das Access Network ab, hält paho die QoS-1-Nachrichten im Speicher und sendet sie nach dem Wiederverbinden. Für längere Ausfälle schreibt ein echtes Gateway zusätzlich in eine lokale Datei oder Datenbank.</p>
+    </div>
+    <div class="card stack">
+      <span class="t08-ort ar-r-business">läuft in: Data Transform (Platform Tier)</span>
+      <h3>Subscribe mit JavaScript und mqtt.js</h3>
+      <p class="prose">Data Transform abonniert alle Klimafühler, prüft die Werte, ergänzt Keller und Charge und schreibt in die Zeitreihen-Datenbank.</p>
+      <pre class="code" data-sprache="JavaScript (Node.js, mqtt.js)"><code><span class="k">import</span> mqtt <span class="k">from</span> <span class="s">"mqtt"</span>;
+
+<span class="k">const</span> client = mqtt.connect(<span class="s">"mqtts://iot.bergblick.example:8883"</span>, {
+  clientId: <span class="s">"data-transform-1"</span>, clean: <span class="k">false</span>,   <span class="c">// Sitzung behalten: nichts verpassen</span>
+});
+
+client.on(<span class="s">"connect"</span>, () =&gt; {
+  <mark>client.subscribe(<span class="s">"bergblick/+/klima/+"</span>, { qos: <span class="n">1</span> });</mark>
+});
+
+client.on(<span class="s">"message"</span>, <span class="k">async</span> (topic, payload) =&gt; {
+  <span class="k">const</span> [, keller, , fuehler] = topic.split(<span class="s">"/"</span>);
+  <span class="k">const</span> wert = JSON.parse(payload.toString());
+  <span class="k">if</span> (wert.feuchte_pct &lt; <span class="n">0</span> || wert.feuchte_pct &gt; <span class="n">100</span>) <span class="k">return</span>;   <span class="c">// unplausibel: verwerfen</span>
+  <span class="k">await</span> zeitreihe.schreiben({                                 <span class="c">// DBMS</span>
+    zeit: wert.zeit, keller, fuehler,
+    feuchte: wert.feuchte_pct, charge: <span class="k">await</span> chargeIm(keller),
+  });
+});</code></pre>
+      <p class="hint">Weil QoS 1 Duplikate erlaubt, schreibt Data Transform idempotent: Ein Wert mit gleichem Gerät und gleicher Zeit überschreibt sich selbst statt doppelt zu zählen.</p>
+    </div>
+    <div class="card stack">
+      <span class="t08-ort ar-r-client">läuft in: Operations Algorithms &amp; UI (Platform Tier)</span>
+      <h3>Befehl zurück an den Aktor (Control Flow)</h3>
+      <pre class="code" data-sprache="JavaScript (Node.js, mqtt.js)"><code><span class="k">function</span> klappeStellen(keller, klappe, oeffnungPct) {
+  <span class="k">const</span> befehl = { oeffnung_pct: oeffnungPct, grund: <span class="s">"Feuchte unter Sollwert"</span> };
+  <mark>client.publish(<span class="s">`bergblick/</span>${keller}<span class="s">/klappe/</span>${klappe}<span class="s">/befehl`</span>, JSON.stringify(befehl), { qos: <span class="n">1</span> });</mark>
+}</code></pre>
+      <p class="hint">Befehle bekommen kein «retained». Sonst würde ein Gerät nach jedem Neustart einen alten Befehl nochmals ausführen.</p>
+    </div>
+  </section>
+
+  <!-- 7 · Plattformen -->
+  <section id="plattformen" data-kategorie="infrastruktur">
+    <span class="eyebrow">Schritt 7 · Technologie-Steckbriefe</span>
+    <h2>IoT-Plattformen: was sie abdecken und warum</h2>
+    <p class="prose">Niemand baut den Platform Tier von null. Plattformen liefern das Platform Gateway mit Geräteverwaltung und je nach Produkt mehr: Regeln für Data Transform, Speicher, Dashboards, Befehle. Die Tabelle zeigt, welche Komponenten der Referenz sie selbst abdecken.</p>
+    <div class="card tablebox">
+      <table class="tabelle t08-abd">
+        <caption>Abdeckung der Referenzkomponenten: <span class="t08-sym t08-voll" aria-hidden="true"></span> selbst, <span class="t08-sym t08-halb" aria-hidden="true"></span> teilweise oder mit Zusatzdienst, <span class="t08-sym" aria-hidden="true"></span> nicht (anderes Produkt nötig)</caption>
+        <thead><tr><th scope="col">Komponente</th><th scope="col">Azure IoT Hub</th><th scope="col">AWS IoT Core</th><th scope="col">ThingsBoard</th><th scope="col">Eclipse Ditto</th></tr></thead>
+        <tbody id="t08-abd"></tbody>
+      </table>
+    </div>
+    <div class="t08-karten" id="t08-plattf"></div>
+    <div class="card stack">
+      <h3>Kurz prüfen</h3>
+      <div id="t08-plattf-frage"></div>
+    </div>
+  </section>
+
+  <!-- 8 · Edge vs. Cloud -->
+  <section id="edge" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 8 · Wo wird gerechnet?</span>
+    <h2>Edge Computing oder Cloud Computing</h2>
+    <p class="prose"><b>Edge Computing</b> rechnet nahe beim Gerät, im Edge Gateway oder sogar im Gerät. <b>Cloud Computing</b> rechnet zentral im Platform Tier. Beides gehört zusammen: Am Rand wird schnell und lokal reagiert, in der Cloud wird über alle Standorte gelernt und gesteuert.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Kriterium</th><th scope="col">Edge (Edge Gateway, Gerät)</th><th scope="col">Cloud (Platform Tier)</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Reaktionszeit</th><td>Millisekunden, ohne Weg durchs Internet</td><td>Zehntel bis ganze Sekunden, abhängig vom Netz</td></tr>
+          <tr><th scope="row">Bandbreite</th><td>Verdichtet vor Ort, sendet nur Mittelwerte oder Ereignisse</td><td>Braucht alle Daten, die ausgewertet werden sollen</td></tr>
+          <tr><th scope="row">Netzausfall</th><td>Arbeitet weiter, puffert</td><td>Sieht nichts, bis die Verbindung zurück ist</td></tr>
+          <tr><th scope="row">Rechenleistung</th><td>Begrenzt durch die Hardware vor Ort</td><td>Praktisch beliebig skalierbar, auch für ML-Training</td></tr>
+          <tr><th scope="row">Datenschutz</th><td>Rohdaten (z. B. Kamerabilder) bleiben vor Ort</td><td>Daten verlassen den Standort</td></tr>
+          <tr><th scope="row">Betrieb</th><td>Viele verteilte Geräte zu warten und zu aktualisieren</td><td>Zentral, ein Ort für Updates</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card stack">
+      <h3>Einordnen: Edge oder Cloud?</h3>
+      <div id="t08-sort-edge"></div>
+    </div>
+    <div class="card stack">
+      <h3>Rechnen: Was spart die Verdichtung am Rand?</h3>
+      <div id="t08-zahl-edge"></div>
+    </div>
+  </section>
+
+  <!-- 9 · RAMI 4.0 -->
+  <section id="rami" data-kategorie="sicherheit">
+    <span class="eyebrow">Schritt 9 · Industrie 4.0</span>
+    <h2>RAMI 4.0: drei Dimensionen als Würfel</h2>
+    <p class="prose">Das <b>Referenzarchitekturmodell Industrie 4.0</b> (RAMI 4.0) ordnet jedes Thema einer vernetzten Fabrik in einen Würfel mit drei Achsen ein. So reden Maschinenbauer, Software-Firmen und Betreiber über dasselbe Kästchen. Senkrecht stehen die <b>Layers</b> (vom physischen Ding bis zum Geschäftsprozess), waagrecht der <b>Life Cycle &amp; Value Stream</b> (vom Typ in der Entwicklung bis zum einzelnen Exemplar im Betrieb), in die Tiefe die <b>Hierarchy Levels</b> (vom Produkt bis zur vernetzten Welt).</p>
+    <div class="card stack">
+      <h3>Würfel erkunden: Spritzgiessmaschine im Kunststoffwerk Thur (fiktiv)</h3>
+      <div class="t08-rami">
+        <div id="t08-rami-bild"></div>
+        <div class="t08-rami-wahl" id="t08-rami-wahl"></div>
+      </div>
+      <div class="t08-info" id="t08-rami-text" aria-live="polite"></div>
+    </div>
+    <div class="note"><b>Brücke zur IoT-Referenz:</b> Die Layers passen gut auf die Tiers. Asset und Integration entsprechen den Geräten mit Sensoren und Aktoren im Edge Tier, Communication den Netzen und Protokollen (OPC UA, MQTT), Information dem Data Transform und dem DBMS, Functional der Analytics und Operations, Business den Domain Applications im Enterprise Tier.</div>
+    <div class="note"><b>Verwaltungsschale:</b> In Industrie 4.0 bekommt jedes Asset eine digitale «Verwaltungsschale» (Asset Administration Shell). Asset plus Verwaltungsschale ergeben eine Industrie-4.0-Komponente. Das ist der Gedanke des Digital Twin in genormter Form.</div>
+  </section>
+
+  <!-- 10 · Modellieren -->
+  <section id="verfahren" data-kategorie="sicherheit">
+    <span class="eyebrow">Schritt 10 · Vorgehen und Fallen</span>
+    <h2>Eine IoT-Lösung als UML-Komponentendiagramm modellieren</h2>
+    <div class="card stack">
+      <h3>So gehst du vor</h3>
+      <ol class="prose">
+        <li><b>Geräte sammeln:</b> Welche Dinge messen (Sensoren), welche wirken (Aktoren)? Teile sie in stationäre und mobile IoT Devices. Die Multiplizität <code>*</code> zeigt: viele.</li>
+        <li><b>Edge Tier bauen:</b> Field Network mit der Technologie im Namen (z. B. «Field Network (LoRaWAN)»), dahinter das Edge Gateway mit seinen Aufgaben.</li>
+        <li><b>Data Provider prüfen:</b> Nennt der Auftrag fremde Daten (Wetter, Preise)? Dann Paket «Data Provider» mit dem externen Dienst.</li>
+        <li><b>Access Network:</b> zwischen Edge und Plattform, Verbindung mit Protokoll beschriften (meist MQTT).</li>
+        <li><b>Platform Tier:</b> Platform Gateway → Data Transform → DBMS → Analytics → Dashboard, dazu Operations Algorithms &amp; UI. Nur, was der Auftrag braucht.</li>
+        <li><b>Service Network und Enterprise Tier:</b> konkrete Domain Applications (ERP, CRM, PLM) mit ihrem Zweck.</li>
+        <li><b>Flüsse und Beschreibungen:</b> Data Flow und Control Flow erkennbar beschriften, je Komponente 2–3 Sätze: was, wofür, warum.</li>
+      </ol>
+    </div>
+    <div class="note falle"><b>Falle 1 · Zwei Gateways verwechseln:</b> Das <b>Edge Gateway</b> steht vor Ort und spricht das Feldnetz. Das <b>Platform Gateway</b> ist der Eingang der Plattform in der Cloud. Wer nur ein «Gateway» zeichnet, verliert den Ort, an dem bei Netzausfall gepuffert wird.</div>
+    <div class="note falle"><b>Falle 2 · Control Flow vergessen oder abkürzen:</b> Ohne Rückweg kann die Lösung nur zuschauen. Und: Das ERP schaltet nicht direkt den Aktor. Der Befehl läuft über Operations Algorithms &amp; UI, das Access Network und das Edge Gateway.</div>
+    <div class="note falle"><b>Falle 3 · Infrastruktur als Komponente:</b> Web-Server, ein zusätzlicher Unternehmens-Broker oder eine Integration Middleware gehören nicht in die IoT-Referenz. Der MQTT-Broker steckt im Platform Gateway.</div>
+    <div class="note falle"><b>Falle 4 · Dashboard am Gerät:</b> Das Dashboard holt seine Daten aus der Plattform (Analytics, DBMS), nie direkt vom Sensor. Rohdaten gehen zuerst durch Data Transform.</div>
+    <div class="card stack">
+      <h3>Wahr oder falsch?</h3>
+      <div id="t08-wf"></div>
+    </div>
+    <div class="card stack">
+      <h3>Schritt-Aufgabe: Smarte Parkplätze</h3>
+      <div id="t08-sa"></div>
+    </div>
+  </section>
+
+  <!-- 11 · Spiel -->
+  <section id="spiel" data-kategorie="daten">
+    <span class="eyebrow">Schritt 11 · Prüfungsnah modellieren</span>
+    <h2>Spiel: IoT-Architekturen nach der Referenz</h2>
+    <p class="prose">Drei Levels mit steigender Schwierigkeit: Leg die Komponenten in die Tier-Pakete, verbinde sie, beschrifte mit dem Protokoll und wähle die passende Beschreibung. Achtung: In der Palette liegen Fallen. Ein Tipp blendet die IoT-Referenz ein (kostet XP). Übe danach zusätzlich mit der Fallstudie Timesoft in Moodle.</p>
+    <div id="t08-spiel"></div>
+  </section>
+
+  <!-- Film -->
+  <section id="film" data-kategorie="messaging">
+    <span class="eyebrow">▶ Lösungsfilm</span>
+    <h2>Vom Sensor zur Entscheidung</h2>
+    <p class="prose">Der Film modelliert die Käserei Bergblick am Stück: zuerst der Data Flow durch alle Tiers, dann der Control Flow zurück, zum Schluss Ausfall und Beschreibungen.</p>
+    <div id="t08-film"></div>
+  </section>
+
+  <!-- Selbsttest -->
+  <section id="test" data-kategorie="zugang">
+    <span class="eyebrow">✓ Selbsttest</span>
+    <h2>Prüf dich selbst</h2>
+    <div id="t08-test"></div>
+  </section>
+
+  <section id="blick" data-kategorie="infrastruktur">
+    <span class="eyebrow">Σ Merksätze</span>
+    <h2>Auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Ein IoT-Device ist ein cyberphysisches Ding: Sensoren messen, Aktoren wirken, ein Embedded System mit MPU verbindet beides mit der IoT-Plattform.</li>
+      <li>Drei Tiers: Edge (Geräte, Field Network, Edge Gateway), Platform (Platform Gateway, Data Transform, DBMS, Analytics, Dashboard, Operations), Enterprise (Domain Applications). Dazu der Data Provider.</li>
+      <li>Drei Netze: Field Network im Edge Tier, Access Network zur Plattform, Service Network zu den Fachanwendungen.</li>
+      <li>Data Flow läuft vom Sensor bis zum ERP, Control Flow über Operations zurück zum Aktor. Fällt das Access Network aus, puffert das Edge Gateway und reagiert lokal.</li>
+      <li>MQTT: Publish/Subscribe über einen Broker, Topics mit <code>+</code> und <code>#</code>, QoS 0/1/2, Retained und Last Will. CoAP für winzige Geräte, AMQP zum Unternehmens-Broker, OPC UA für Maschinen.</li>
+      <li>Im Diagramm: Tiers als Pakete, Netze als Komponenten zwischen den Tiers, konkrete Technologie im Namen, jede Verbindung beschriftet, keine Web-Server und kein Zusatz-Broker. RAMI 4.0 ordnet Industrie-Themen nach Layers, Life Cycle und Hierarchy Levels.</li>
+    </ul>
+  </section>
+  <footer>AVSW · Station 8 · eigene Beispiele und fiktive Fälle, keine Folieninhalte.</footer>
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/architektur.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const A = window.Architektur;
+  const $ = (s, r) => (r || document).querySelector(s);
+  const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const ruhig = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Datenmodelle (aus den geprüften AVSW-Modellen übernommen) ---------- */
+  const IOT_REFERENZ = {
+    id: "iot",
+    titel: "IoT-Referenzarchitektur (Edge, Platform, Enterprise Tier)",
+    kurz: "Geräte im Feld liefern Daten über Netze an eine Plattform, die sie aufbereitet, speichert, auswertet und an Fachanwendungen weitergibt. Steuerbefehle fliessen zurück.",
+    notation: "uml-komponenten",
+    ansicht: "komponenten",
+    richtung: "rechts",
+    pakete: [
+      {
+        id: "i-edge",
+        name: "Edge Tier",
+        spalte: 0,
+        zeile: 0,
+        breite: 1,
+        hoehe: 1,
+        info: {
+          was: "Der Tier nahe an der physischen Welt: Geräte mit Sensoren und Aktoren und das Edge Gateway.",
+          wofuer: "Erfasst Messwerte und führt Steuerbefehle aus.",
+          technologie: "Sensoren, Aktoren, Mikrocontroller, Industrie-PCs",
+          warum: "Geräte sind oft klein, batteriebetrieben und nur zeitweise verbunden. Darum sammelt ein Gateway ihre Daten, bevor sie ins Internet gehen."
+        }
+      },
+      {
+        id: "i-dataprov",
+        name: "Data Provider",
+        spalte: 0,
+        zeile: 1,
+        breite: 1,
+        hoehe: 1,
+        info: {
+          was: "Externe Datenquellen, die nicht von eigenen Geräten stammen.",
+          wofuer: "Ergänzt die Messdaten.",
+          technologie: "Wetterdienste, Verkehrsdaten, Marktpreise",
+          warum: "Viele Auswertungen werden erst mit fremden Daten aussagekräftig, z. B. Verbrauch im Verhältnis zur Aussentemperatur."
+        }
+      },
+      {
+        id: "i-platform",
+        name: "Platform Tier",
+        spalte: 2,
+        zeile: 0,
+        breite: 1,
+        hoehe: 2,
+        info: {
+          was: "Die IoT-Plattform: nimmt Daten an, bereitet sie auf, speichert, analysiert und steuert.",
+          wofuer: "Kern der IoT-Lösung, meist in der Cloud.",
+          technologie: "Azure IoT Hub, AWS IoT Core, ThingsBoard, Eclipse Ditto",
+          warum: "Eine zentrale Plattform verwaltet tausende Geräte einheitlich und trennt Gerätetechnik von den Fachanwendungen."
+        }
+      },
+      {
+        id: "i-enterprise",
+        name: "Enterprise Tier",
+        spalte: 4,
+        zeile: 0,
+        breite: 1,
+        hoehe: 2,
+        info: {
+          was: "Die Fachanwendungen des Unternehmens.",
+          wofuer: "Nutzen die aufbereiteten IoT-Daten.",
+          technologie: "CRM, PLM, ERP, Wartungsplanung",
+          warum: "Erst wenn IoT-Daten in Geschäftsprozessen ankommen (z. B. automatischer Serviceauftrag), entsteht der Nutzen."
+        }
+      }
+    ],
+    elemente: [
+      {
+        id: "i-stat",
+        typ: "extern",
+        rolle: "infra",
+        name: "stationäre IoT Devices",
+        stereotyp: "device",
+        in: "i-edge",
+        technologie: "Temperaturfühler, Zähler, Maschinensteuerungen",
+        info: {
+          was: "Fest installierte Geräte mit Sensoren und Aktoren.",
+          kann: "Messen laufend Werte (Temperatur, Druck, Verbrauch) und führen Befehle aus (Ventil öffnen).",
+          wofuer: "Für Gebäude, Maschinen, Anlagen.",
+          warum: "Die Multiplizität * zeigt: Es sind viele Geräte. Darum verbindet sie ein Feldnetz mit dem Gateway statt jedes einzeln mit dem Internet.",
+          technologie: "Temperaturfühler, Zähler, Maschinensteuerungen"
+        }
+      },
+      {
+        id: "i-mobil",
+        typ: "extern",
+        rolle: "infra",
+        name: "mobile IoT Devices",
+        stereotyp: "device",
+        in: "i-edge",
+        technologie: "GPS-Tracker, Fahrzeugsteuergeräte, Wearables",
+        info: {
+          was: "Bewegliche Geräte, z. B. in Fahrzeugen oder an Personen.",
+          kann: "Liefern Position und Zustand, auch bei wechselnder Verbindung.",
+          wofuer: "Für Flotten, Logistik, Gesundheit.",
+          warum: "Mobile Geräte verlieren zeitweise das Netz. Sie und das Gateway müssen Daten zwischenspeichern können.",
+          technologie: "GPS-Tracker, Fahrzeugsteuergeräte, Wearables"
+        }
+      },
+      {
+        id: "i-field",
+        typ: "bus",
+        rolle: "infra",
+        name: "Field Network",
+        stereotyp: "network",
+        in: "i-edge",
+        technologie: "Bluetooth LE, Zigbee, LoRaWAN, Modbus, CAN",
+        info: {
+          was: "Das lokale Netz zwischen Geräten und Edge Gateway.",
+          kann: "Überträgt kleine Datenmengen mit wenig Energie über kurze oder mittlere Distanz.",
+          wofuer: "Für die Anbindung vieler einfacher Geräte.",
+          warum: "Feldnetze sind auf Energie und Reichweite optimiert, nicht auf Internet-Protokolle. Das Gateway übersetzt.",
+          technologie: "Bluetooth LE, Zigbee, LoRaWAN, Modbus, CAN"
+        }
+      },
+      {
+        id: "i-edgegw",
+        typ: "gateway",
+        rolle: "webapi",
+        name: "Edge Gateway",
+        in: "i-edge",
+        technologie: "Industrie-PC, Raspberry Pi, Azure IoT Edge",
+        info: {
+          was: "Ein Rechner vor Ort, der die Geräte bündelt und mit der Plattform verbindet.",
+          kann: "Übersetzt Feldprotokolle in MQTT oder AMQP, filtert und verdichtet Daten, puffert bei Netzausfall und führt Steuerbefehle weiter.",
+          wofuer: "Wenn viele Geräte an einem Ort sind oder Daten vor Ort vorverarbeitet werden sollen (Edge Computing).",
+          warum: "Vorverarbeitung vor Ort spart Bandbreite und erlaubt schnelle lokale Reaktionen, auch ohne Verbindung zur Plattform.",
+          technologie: "Industrie-PC, Raspberry Pi, Azure IoT Edge"
+        }
+      },
+      {
+        id: "i-extdp",
+        typ: "extern",
+        rolle: "extern",
+        name: "external Data Provider",
+        in: "i-dataprov",
+        technologie: "z. B. Wetter-API, Verkehrsdaten-API",
+        info: {
+          was: "Ein fremder Dienst, der Daten über eine API liefert.",
+          kann: "Stellt Daten bereit, die die eigenen Geräte nicht messen.",
+          wofuer: "Für Prognosen und Zusammenhänge, z. B. Wetter für die Heizungssteuerung.",
+          warum: "Er speist seine Daten wie ein Gerät über das Access Network in die Plattform ein.",
+          technologie: "z. B. Wetter-API, Verkehrsdaten-API"
+        }
+      },
+      {
+        id: "i-access",
+        typ: "bus",
+        rolle: "infra",
+        name: "Access Network",
+        stereotyp: "network",
+        technologie: "Mobilfunk (LTE-M, NB-IoT, 5G), Glasfaser, Internet",
+        info: {
+          was: "Das Weitverkehrsnetz zwischen Edge und Plattform.",
+          kann: "Transportiert Daten zur Plattform (Data Flow) und Befehle zurück (Control Flow).",
+          wofuer: "Für die Verbindung vom Standort in die Cloud.",
+          warum: "Hier verlassen die Daten den Standort. Darum braucht es Verschlüsselung und gegenseitige Authentisierung der Geräte.",
+          technologie: "Mobilfunk (LTE-M, NB-IoT, 5G), Glasfaser, Internet"
+        }
+      },
+      {
+        id: "i-platgw",
+        typ: "gateway",
+        rolle: "webapi",
+        name: "Platform Gateway",
+        in: "i-platform",
+        technologie: "MQTT-Broker, Azure IoT Hub, AWS IoT Core",
+        info: {
+          was: "Der Eingang der Plattform für alle Geräte und Gateways.",
+          kann: "Nimmt Nachrichten an (meist MQTT), authentisiert Geräte, verwaltet Gerätezustände und schickt Befehle zurück.",
+          wofuer: "Für die sichere und skalierbare Anbindung tausender Geräte.",
+          warum: "Ein zentraler Eingang mit Geräteverwaltung hält die Plattform beherrschbar.",
+          technologie: "MQTT-Broker, Azure IoT Hub, AWS IoT Core"
+        }
+      },
+      {
+        id: "i-transform",
+        typ: "dienst",
+        rolle: "business",
+        name: "Data Transform",
+        in: "i-platform",
+        technologie: "Stream Processing, z. B. Azure Stream Analytics, Apache Flink, Node-RED",
+        info: {
+          was: "Die Aufbereitung der Rohdaten.",
+          kann: "Prüft, bereinigt, rechnet um, reichert an (z. B. mit Wetterdaten) und normalisiert Formate.",
+          wofuer: "Bevor Daten gespeichert oder ausgewertet werden.",
+          warum: "Geräte liefern unterschiedliche Formate und Fehler. Erst einheitliche, geprüfte Daten sind auswertbar.",
+          technologie: "Stream Processing, z. B. Azure Stream Analytics, Apache Flink, Node-RED"
+        }
+      },
+      {
+        id: "i-dbms",
+        typ: "datenbank",
+        rolle: "daten",
+        name: "DBMS",
+        in: "i-platform",
+        technologie: "Zeitreihen-DB (TimescaleDB, InfluxDB), Data Lake",
+        info: {
+          was: "Die Datenhaltung der Plattform.",
+          kann: "Speichert Zeitreihen und Gerätedaten und ermöglicht schnelle Abfragen über Zeiträume.",
+          wofuer: "Für Verlauf, Auswertung und Training von Modellen.",
+          warum: "In der IoT-Referenz erscheint das DBMS als eigener Baustein, weil die Wahl der Datenhaltung (Zeitreihen) hier zentral ist.",
+          technologie: "Zeitreihen-DB (TimescaleDB, InfluxDB), Data Lake"
+        }
+      },
+      {
+        id: "i-analytics",
+        typ: "dienst",
+        rolle: "business",
+        name: "Analytics, Machine Learning, AI",
+        in: "i-platform",
+        technologie: "Azure Machine Learning, Spark, Python mit scikit-learn",
+        info: {
+          was: "Auswertungen und lernende Modelle auf den gespeicherten Daten.",
+          kann: "Erkennt Muster und Abweichungen, sagt Ausfälle voraus (Predictive Maintenance).",
+          wofuer: "Für Entscheidungen, die über einzelne Messwerte hinausgehen.",
+          warum: "Der Mehrwert von IoT entsteht oft erst hier, wenn aus Daten Wissen wird.",
+          technologie: "Azure Machine Learning, Spark, Python mit scikit-learn"
+        }
+      },
+      {
+        id: "i-dashboard",
+        typ: "dienst",
+        rolle: "client",
+        name: "Dashboard",
+        in: "i-platform",
+        technologie: "Grafana, Power BI, ThingsBoard-Dashboards",
+        info: {
+          was: "Die Visualisierung von Zuständen und Kennzahlen.",
+          kann: "Zeigt Messwerte, Trends und Alarme in Echtzeit.",
+          wofuer: "Für Betreiber und Management.",
+          warum: "Menschen brauchen eine Übersicht, um Ausreisser schnell zu sehen.",
+          technologie: "Grafana, Power BI, ThingsBoard-Dashboards"
+        }
+      },
+      {
+        id: "i-ops",
+        typ: "dienst",
+        rolle: "client",
+        name: "Operations Algorithms & UI",
+        in: "i-platform",
+        technologie: "Regel-Engines, Geräteverwaltung, Steuer-UI",
+        info: {
+          was: "Steuerlogik und Bedienoberfläche für den Betrieb der Geräte.",
+          kann: "Löst Steuerbefehle aus (Control Flow), verteilt Firmware, konfiguriert Geräte.",
+          wofuer: "Für den aktiven Eingriff ins Feld.",
+          warum: "Daten fliessen nach rechts, Steuerung fliesst zurück nach links. Diese Komponente ist der Startpunkt des Control Flow.",
+          technologie: "Regel-Engines, Geräteverwaltung, Steuer-UI"
+        }
+      },
+      {
+        id: "i-servnet",
+        typ: "bus",
+        rolle: "infra",
+        name: "Service Network",
+        stereotyp: "network",
+        technologie: "Internet, VPN, Firmennetz, APIs",
+        info: {
+          was: "Das Netz zwischen Plattform und Fachanwendungen.",
+          kann: "Transportiert aufbereitete Daten und fachliche Aufträge.",
+          wofuer: "Für die Integration in die Unternehmens-IT.",
+          warum: "Plattform und Fachanwendungen laufen oft bei verschiedenen Anbietern; das Service Network verbindet sie über APIs.",
+          technologie: "Internet, VPN, Firmennetz, APIs"
+        }
+      },
+      {
+        id: "i-domain",
+        typ: "extern",
+        rolle: "shared",
+        name: "Domain Applications (z. B. CRM, PLM, ERP)",
+        in: "i-enterprise",
+        technologie: "SAP, Salesforce, Abacus, Wartungssoftware",
+        info: {
+          was: "Die Fachanwendungen, die IoT-Daten in Geschäftsprozessen nutzen.",
+          kann: "Erzeugen Serviceaufträge, Rechnungen nach Verbrauch oder Produktverbesserungen.",
+          wofuer: "Für den geschäftlichen Nutzen der Daten.",
+          warum: "Sie können auch Steuerbefehle auslösen (Control Flow), z. B. eine Anlage nach Vertragsende sperren.",
+          technologie: "SAP, Salesforce, Abacus, Wartungssoftware"
+        }
+      }
+    ],
+    verbindungen: [
+      { id: "i-v1", von: "i-stat", nach: "i-field", art: "assoziation", label: "*", info: "Viele stationäre Geräte hängen am Feldnetz." },
+      { id: "i-v2", von: "i-mobil", nach: "i-field", art: "assoziation", label: "*", info: "Viele mobile Geräte hängen am Feldnetz." },
+      { id: "i-v3", von: "i-field", nach: "i-edgegw", art: "assoziation", info: "Das Feldnetz endet am Edge Gateway." },
+      {
+        id: "i-v4",
+        von: "i-edgegw",
+        nach: "i-access",
+        art: "assoziation",
+        label: "Data Flow",
+        protokoll: "MQTT",
+        info: "Das Gateway sendet die Daten über das Access Network."
+      },
+      { id: "i-v5", von: "i-access", nach: "i-platgw", art: "assoziation", label: "Data Flow", info: "Die Daten erreichen das Platform Gateway." },
+      { id: "i-v6", von: "i-extdp", nach: "i-access", art: "assoziation", label: "Data Flow", info: "Externe Daten fliessen ebenfalls in die Plattform." },
+      { id: "i-v7", von: "i-platgw", nach: "i-transform", art: "assoziation", info: "Rohdaten gehen in die Aufbereitung." },
+      { id: "i-v8", von: "i-transform", nach: "i-dbms", art: "assoziation", info: "Aufbereitete Daten werden gespeichert." },
+      { id: "i-v9", von: "i-dbms", nach: "i-analytics", art: "assoziation", info: "Analytics liest die gespeicherten Daten." },
+      { id: "i-v10", von: "i-analytics", nach: "i-dashboard", art: "assoziation", info: "Ergebnisse erscheinen im Dashboard." },
+      {
+        id: "i-v11",
+        von: "i-analytics",
+        nach: "i-servnet",
+        art: "assoziation",
+        label: "Data Flow",
+        info: "Ergebnisse gehen über das Service Network weiter."
+      },
+      { id: "i-v12", von: "i-servnet", nach: "i-domain", art: "assoziation", label: "Data Flow", info: "Die Fachanwendung erhält die Daten." },
+      { id: "i-v13", von: "i-domain", nach: "i-ops", art: "assoziation", label: "Control Flow", info: "Eine Fachanwendung löst einen Steuerbefehl aus." },
+      { id: "i-v14", von: "i-ops", nach: "i-dbms", art: "assoziation", info: "Operations nutzt Zustände aus der Datenbank." },
+      { id: "i-v15", von: "i-ops", nach: "i-access", art: "assoziation", label: "Control Flow", info: "Steuerbefehle gehen zurück ins Feld." }
+    ],
+    notizen: [
+      { id: "i-n1", text: "Data Flow von links nach rechts, Control Flow von rechts nach links.", an: "i-access" }
+    ],
+    einschraenkungen: [],
+    ablaeufe: [
+      {
+        id: "i-a1",
+        name: "Messwert vom Sensor bis ins ERP (Data Flow)",
+        schritte: [
+          { von: "i-stat", nach: "i-field", art: "async", text: "Ein Kühlfühler misst 9 °C und funkt den Wert stromsparend ins Feldnetz.", phase: "Edge" },
+          {
+            von: "i-field",
+            nach: "i-edgegw",
+            art: "async",
+            text: "Das Edge Gateway sammelt die Werte vieler Fühler und verdichtet sie zu einem Mittelwert pro Minute."
+          },
+          { von: "i-edgegw", nach: "i-access", art: "async", text: "Es sendet per MQTT über das Mobilfunknetz. Bei Netzausfall puffert es lokal." },
+          {
+            von: "i-access",
+            nach: "i-platgw",
+            art: "async",
+            text: "Das Platform Gateway prüft das Gerätezertifikat und nimmt die Nachricht an.",
+            phase: "Platform"
+          },
+          { von: "i-platgw", nach: "i-transform", art: "async", text: "Data Transform rechnet um und ergänzt Standort und Gerätetyp." },
+          { von: "i-transform", nach: "i-dbms", art: "sync", text: "Der Wert landet in der Zeitreihen-Datenbank." },
+          {
+            von: "i-dbms",
+            nach: "i-analytics",
+            art: "sync",
+            text: "Das Modell erkennt: Die Temperatur steigt seit einer Stunde, der Kompressor fällt bald aus."
+          },
+          { von: "i-analytics", nach: "i-servnet", art: "async", text: "Der Befund geht über das Service Network weiter.", phase: "Enterprise" },
+          { von: "i-servnet", nach: "i-domain", art: "async", text: "Das ERP legt automatisch einen Serviceauftrag für die Technikerin an." }
+        ]
+      },
+      {
+        id: "i-a2",
+        name: "Steuerbefehl zurück ans Gerät (Control Flow)",
+        schritte: [
+          { von: "i-domain", nach: "i-ops", art: "sync", text: "Das ERP meldet: Vertrag beendet, Anlage abschalten.", phase: "Enterprise" },
+          { von: "i-ops", nach: "i-access", art: "async", text: "Operations erzeugt den Befehl und schickt ihn über das Access Network.", phase: "Platform" },
+          { von: "i-access", nach: "i-edgegw", art: "async", text: "Das Edge Gateway erhält den Befehl.", phase: "Edge" },
+          { von: "i-edgegw", nach: "i-field", art: "async", text: "Es übersetzt ihn ins Protokoll des Feldnetzes." },
+          { von: "i-field", nach: "i-stat", art: "async", text: "Der Aktor im Gerät schaltet ab und bestätigt." }
+        ]
+      },
+      {
+        id: "i-a3",
+        name: "Access Network fällt aus",
+        schritte: [
+          { von: "i-field", nach: "i-edgegw", art: "async", text: "Die Geräte liefern weiter Messwerte." },
+          { bei: "i-access", text: "Das Mobilfunknetz ist für 20 Minuten gestört.", fehler: true },
+          { bei: "i-edgegw", text: "Das Edge Gateway speichert die Werte zwischen und reagiert lokal auf Grenzwerte. Darum lohnt sich Rechenleistung am Rand." },
+          { von: "i-edgegw", nach: "i-access", art: "async", text: "Nach der Störung sendet es die gepufferten Werte nach.", phase: "Erholung" },
+          { von: "i-access", nach: "i-platgw", art: "async", text: "Die Plattform ergänzt die Lücke in der Zeitreihe." }
+        ]
+      }
+    ],
+    regeln: ["Drei Tiers: Edge (Geräte, Gateway), Platform (Gateway, Transform, DBMS, Analytics, Dashboard, Operations), Enterprise (Fachanwendungen).", "Drei Netze: Field Network, Access Network, Service Network.", "Data Flow läuft von den Geräten zur Fachanwendung, Control Flow zurück zu den Geräten.", "Externe Data Provider speisen Daten wie Geräte in die Plattform ein.", "Typisches Protokoll zwischen Edge und Plattform ist MQTT (leichtgewichtig, wenig Bandbreite)."]
+  };
+  const IOT_LEVELS = [
+    {
+      id: "l1",
+      titel: "Smart Farming: vom Sensor zur Plattform",
+      schwierigkeit: 2,
+      modus: "uml",
+      referenz: "iot",
+      auftrag: "<p>Der Gemüsebetrieb Grünau (fiktiv) überwacht seine Felder. <span data-baustein=\"sensor\">Bodenfeuchte-Sensoren</span> stecken fest im Boden, <span data-baustein=\"traktor\">Steuergeräte an Traktoren</span> fahren übers Feld. Beide funken über das <span data-baustein=\"field\">Field Network (LoRaWAN)</span> an ein <span data-baustein=\"edgegw\">Edge Gateway</span> am Hof. Das Gateway sendet die Daten per MQTT über das Mobilfunknetz (<span data-baustein=\"access\">Access Network</span>) an das <span data-baustein=\"platgw\">Platform Gateway</span> in der Cloud. Dort bereitet <span data-baustein=\"transform\">Data Transform</span> die Werte auf und speichert sie im <span data-baustein=\"dbms\">DBMS</span> (Zeitreihen-Datenbank); ein <span data-baustein=\"dashboard\">Dashboard</span> zeigt die Feuchte je Feld.</p>",
+      ansicht: "komponenten",
+      pakete: [
+        { id: "p-edge", name: "Edge Tier", spalte: 0, zeile: 0 },
+        { id: "p-platform", name: "Platform Tier", spalte: 2, zeile: 0 }
+      ],
+      palette: [
+        { id: "sensor", typ: "extern", rolle: "infra", name: "Bodenfeuchte-Sensoren (stationär)" },
+        { id: "field", typ: "bus", rolle: "infra", name: "Field Network (LoRaWAN)" },
+        { id: "dashboard", typ: "dienst", rolle: "client", name: "Dashboard" },
+        { id: "dbms", typ: "datenbank", rolle: "daten", name: "DBMS (Zeitreihen-DB)" },
+        { id: "access", typ: "bus", rolle: "infra", name: "Access Network (LTE-M)" },
+        { id: "transform", typ: "dienst", rolle: "business", name: "Data Transform" },
+        { id: "traktor", typ: "extern", rolle: "infra", name: "Traktor-Steuergeräte (mobil)" },
+        {
+          id: "erp",
+          typ: "extern",
+          rolle: "shared",
+          name: "ERP",
+          ablenker: true,
+          falle: "Der Auftrag nennt keine Fachanwendung; ein Enterprise Tier ist hier nicht verlangt."
+        },
+        {
+          id: "rabbit",
+          typ: "broker",
+          rolle: "async",
+          name: "Unternehmens-Broker RabbitMQ",
+          ablenker: true,
+          falle: "Das Platform Gateway nimmt die Gerätedaten selbst per MQTT an; ein zusätzlicher Broker ist nicht verlangt."
+        },
+        { id: "platgw", typ: "gateway", rolle: "webapi", name: "Platform Gateway" },
+        { id: "edgegw", typ: "gateway", rolle: "webapi", name: "Edge Gateway" }
+      ],
+      protokolle: ["REST", "AMQP", "SOAP", "MQTT"],
+      loesung: {
+        elemente: [
+          { id: "sensor", paket: "p-edge" },
+          { id: "traktor", paket: "p-edge" },
+          { id: "field", paket: "p-edge" },
+          { id: "edgegw", paket: "p-edge" },
+          { id: "access", paket: null },
+          { id: "platgw", paket: "p-platform" },
+          { id: "transform", paket: "p-platform" },
+          { id: "dbms", paket: "p-platform" },
+          { id: "dashboard", paket: "p-platform" }
+        ],
+        verbindungen: [
+          { von: "sensor", nach: "field", art: "assoziation", warum: "Die Sensoren funken ins Feldnetz." },
+          { von: "traktor", nach: "field", art: "assoziation", warum: "Die Traktor-Geräte funken ins Feldnetz." },
+          { von: "field", nach: "edgegw", art: "assoziation", warum: "Das Feldnetz endet am Edge Gateway." },
+          { von: "edgegw", nach: "access", art: "assoziation", protokoll: "MQTT", warum: "Das Gateway sendet per MQTT über das Mobilfunknetz." },
+          { von: "access", nach: "platgw", art: "assoziation", protokoll: "MQTT", warum: "Die Daten erreichen das Platform Gateway." },
+          { von: "platgw", nach: "transform", art: "assoziation", warum: "Rohdaten gehen in die Aufbereitung." },
+          { von: "transform", nach: "dbms", art: "assoziation", warum: "Aufbereitete Werte werden gespeichert." },
+          { von: "dbms", nach: "dashboard", art: "assoziation", warum: "Das Dashboard liest die Zeitreihen." }
+        ],
+        beschreibungen: [
+          {
+            id: "edgegw",
+            optionen: ["Eingang der Cloud-Plattform mit Geräteverwaltung.", "Rechner am Hof, der die Geräte bündelt, LoRaWAN in MQTT übersetzt, Daten verdichtet und bei Netzausfall puffert.", "Fachanwendung, die Aufträge für den Hof erstellt."],
+            richtig: 1
+          }
+        ]
+      },
+      gewichte: { komponenten: 2, pakete: 1, stereotypen: 1, verbindungen: 2, beschriftungen: 1, beschreibungen: 1 },
+      zielzeit: 480,
+      erklaerung: "Data Flow von links nach rechts: Geräte, Field Network, Edge Gateway, Access Network, Platform Gateway, Aufbereitung, Speicherung, Anzeige."
+    },
+    {
+      id: "l2",
+      titel: "Kühlhäuser: Data Flow und Control Flow bis ins ERP",
+      schwierigkeit: 3,
+      modus: "uml",
+      referenz: "iot",
+      auftrag: "<p>Die Frostwerk AG (fiktiv) betreibt Kühlhäuser und Kühl-LKW. <span data-baustein=\"kuehl\">Kühlzellen-Fühler</span> in den Hallen und Geräte in den <span data-baustein=\"lkw\">Kühl-LKW</span> melden Temperaturen über das <span data-baustein=\"field\">Field Network</span> an ein <span data-baustein=\"edgegw\">Edge Gateway</span>. Dieses sendet per MQTT über das <span data-baustein=\"access\">Access Network</span> an das <span data-baustein=\"platgw\">Platform Gateway</span>. Die <span data-baustein=\"wetter\">Wetterdaten-API</span> eines externen Anbieters liefert über das Access Network Aussentemperaturen (REST).</p><p><span data-baustein=\"transform\">Data Transform</span> bereitet auf und speichert ins <span data-baustein=\"dbms\">DBMS</span>. <span data-baustein=\"analytics\">Analytics</span> berechnet Ausfallprognosen, zeigt sie im <span data-baustein=\"dashboard\">Dashboard</span> und meldet sie über das <span data-baustein=\"servnet\">Service Network</span> an das <span data-baustein=\"erp\">ERP</span>, das Serviceaufträge erzeugt. Umgekehrt löst das ERP bei Vertragsende über <span data-baustein=\"ops\">Operations Algorithms & UI</span> einen Abschaltbefehl aus, der über das Access Network zurück ins Feld geht. Operations liest dazu Gerätezustände aus dem DBMS.</p>",
+      ansicht: "komponenten",
+      pakete: [
+        { id: "p-edge", name: "Edge Tier", spalte: 0, zeile: 0 },
+        { id: "p-dataprov", name: "Data Provider", spalte: 0, zeile: 1 },
+        { id: "p-platform", name: "Platform Tier", spalte: 2, zeile: 0, breite: 1, hoehe: 2 },
+        { id: "p-enterprise", name: "Enterprise Tier", spalte: 4, zeile: 0, breite: 1, hoehe: 2 }
+      ],
+      palette: [
+        { id: "wetter", typ: "extern", rolle: "extern", name: "Wetterdaten-API" },
+        { id: "erp", typ: "extern", rolle: "shared", name: "ERP (Serviceaufträge)" },
+        { id: "platgw", typ: "gateway", rolle: "webapi", name: "Platform Gateway" },
+        { id: "lkw", typ: "extern", rolle: "infra", name: "Kühl-LKW-Geräte (mobil)" },
+        { id: "field", typ: "bus", rolle: "infra", name: "Field Network" },
+        { id: "dashboard", typ: "dienst", rolle: "client", name: "Dashboard" },
+        {
+          id: "websrv",
+          typ: "dienst",
+          rolle: "extern",
+          name: "Web-Server der Plattform",
+          ablenker: true,
+          falle: "Ein Web-Server ist Infrastruktur, keine Komponente. Du nennst ihn höchstens im Paketnamen."
+        },
+        { id: "access", typ: "bus", rolle: "infra", name: "Access Network" },
+        {
+          id: "im",
+          typ: "bus",
+          rolle: "sync",
+          name: "Integration Middleware",
+          ablenker: true,
+          falle: "Die IoT-Referenz verbindet Plattform und Fachanwendung über das Service Network; eine Integration Middleware ist nicht verlangt."
+        },
+        { id: "edgegw", typ: "gateway", rolle: "webapi", name: "Edge Gateway" },
+        { id: "analytics", typ: "dienst", rolle: "business", name: "Analytics (Ausfallprognose)" },
+        { id: "servnet", typ: "bus", rolle: "infra", name: "Service Network" },
+        { id: "dbms", typ: "datenbank", rolle: "daten", name: "DBMS" },
+        { id: "kuehl", typ: "extern", rolle: "infra", name: "Kühlzellen-Fühler (stationär)" },
+        { id: "ops", typ: "dienst", rolle: "client", name: "Operations Algorithms & UI" },
+        { id: "transform", typ: "dienst", rolle: "business", name: "Data Transform" }
+      ],
+      protokolle: ["AMQP", "SOAP", "MQTT", "HTTP", "REST"],
+      loesung: {
+        elemente: [
+          { id: "kuehl", paket: "p-edge" },
+          { id: "lkw", paket: "p-edge" },
+          { id: "field", paket: "p-edge" },
+          { id: "edgegw", paket: "p-edge" },
+          { id: "wetter", paket: "p-dataprov" },
+          { id: "access", paket: null },
+          { id: "platgw", paket: "p-platform" },
+          { id: "transform", paket: "p-platform" },
+          { id: "dbms", paket: "p-platform" },
+          { id: "analytics", paket: "p-platform" },
+          { id: "dashboard", paket: "p-platform" },
+          { id: "ops", paket: "p-platform" },
+          { id: "servnet", paket: null },
+          { id: "erp", paket: "p-enterprise" }
+        ],
+        verbindungen: [
+          { von: "kuehl", nach: "field", art: "assoziation", warum: "Fühler im Feldnetz." },
+          { von: "lkw", nach: "field", art: "assoziation", warum: "LKW-Geräte im Feldnetz." },
+          { von: "field", nach: "edgegw", art: "assoziation", warum: "Das Feldnetz endet am Gateway." },
+          { von: "edgegw", nach: "access", art: "assoziation", protokoll: "MQTT", warum: "Data Flow über das Access Network." },
+          { von: "access", nach: "platgw", art: "assoziation", protokoll: "MQTT", warum: "Data Flow zur Plattform." },
+          { von: "wetter", nach: "access", art: "assoziation", protokoll: "REST", warum: "Externe Daten fliessen ebenfalls über das Access Network." },
+          { von: "platgw", nach: "transform", art: "assoziation", warum: "Aufbereitung." },
+          { von: "transform", nach: "dbms", art: "assoziation", warum: "Speicherung." },
+          { von: "dbms", nach: "analytics", art: "assoziation", warum: "Analytics liest die Daten." },
+          { von: "analytics", nach: "dashboard", art: "assoziation", warum: "Prognosen im Dashboard." },
+          { von: "analytics", nach: "servnet", art: "assoziation", warum: "Data Flow zur Fachanwendung." },
+          { von: "servnet", nach: "erp", art: "assoziation", warum: "Das ERP erhält die Prognosen." },
+          { von: "erp", nach: "ops", art: "assoziation", warum: "Control Flow: Das ERP löst einen Befehl aus." },
+          { von: "ops", nach: "dbms", art: "assoziation", warum: "Operations liest Gerätezustände." },
+          { von: "ops", nach: "access", art: "assoziation", warum: "Control Flow zurück ins Feld." }
+        ],
+        beschreibungen: [
+          {
+            id: "ops",
+            optionen: ["Steuerlogik und Bedien-UI der Plattform: Startpunkt des Control Flow, schickt Befehle über das Access Network zurück an die Geräte.", "Auswertung, die Ausfälle vorhersagt.", "Externe Datenquelle für Aussentemperaturen."],
+            richtig: 0
+          },
+          {
+            id: "analytics",
+            optionen: ["Auswertung auf den gespeicherten Zeitreihen: erkennt Muster und sagt Ausfälle der Kühlaggregate voraus.", "Aufbereitung der Rohdaten direkt nach dem Platform Gateway.", "Netz zwischen Plattform und ERP."],
+            richtig: 0
+          }
+        ]
+      },
+      gewichte: { komponenten: 2, pakete: 1, stereotypen: 1, verbindungen: 2, beschriftungen: 1, beschreibungen: 1 },
+      zielzeit: 720,
+      erklaerung: "Vollständige IoT-Referenz: drei Tiers, drei Netze, externer Data Provider, Data Flow nach rechts und Control Flow zurück."
+    }
+  ];
+
+  // Lage im Paket wie im Referenzkatalog (Geräte links, Gateway rechts; Plattform in zwei Spalten)
+  const LAGE = {
+    "i-stat": [0, 0], "i-mobil": [0, 1], "i-field": [1, 0, 2], "i-edgegw": [2, 0, 2],
+    "i-dashboard": [1, 0], "i-platgw": [0, 1], "i-analytics": [1, 1], "i-transform": [0, 2], "i-dbms": [1, 2], "i-ops": [0, 3]
+  };
+  IOT_REFERENZ.elemente.forEach((e) => { const l = LAGE[e.id]; if (l) { e.spalte = l[0]; e.zeile = l[1]; if (l[2]) e.hoehe = l[2]; } });
+  A.referenzen.iot = IOT_REFERENZ;
+
+  /* ---------- 0 · Sensor oder Aktor ---------- */
+  L.sortierer("#t08-sort-start", {
+    kategorien: ["Sensor (misst)", "Aktor (wirkt)"],
+    elemente: [
+      { html: "Temperaturfühler im Kühlschrank", kategorie: 0, erklaerung: "Er misst die Temperatur und meldet einen Wert." },
+      { html: "Relais, das den Kompressor einschaltet", kategorie: 1, erklaerung: "Es schaltet etwas in der Welt ein: Aktor." },
+      { html: "GPS-Empfänger im Velo", kategorie: 0, erklaerung: "Er bestimmt die Position, verändert aber nichts." },
+      { html: "Elektrisches Velo-Schloss", kategorie: 1, erklaerung: "Es öffnet oder schliesst auf Befehl: Aktor." },
+      { html: "Bewegungsmelder an der Strassenlampe", kategorie: 0, erklaerung: "Er erkennt Bewegung und meldet sie." },
+      { html: "Dimmbarer LED-Treiber", kategorie: 1, erklaerung: "Er stellt die Helligkeit ein: eine Wirkung." },
+      { html: "Vibrationsmotor der Smartwatch", kategorie: 1, erklaerung: "Er informiert die Trägerin durch Vibration: Aktor." },
+      { html: "Kamera der Datenbrille", kategorie: 0, erklaerung: "Sie erfasst Bilder, z. B. einen Strichcode." },
+      { html: "Ventil der Heizung", kategorie: 1, erklaerung: "Es regelt den Durchfluss: Aktor." },
+      { html: "Beschleunigungssensor in der Fräsmaschine", kategorie: 0, erklaerung: "Er misst Vibrationen, die auf Verschleiss hindeuten." }
+    ]
+  });
+
+  /* ---------- 2 · Ding-Explorer ---------- */
+  const DINGE = [
+    { id: "lampe", name: "Intelligente Lampe", kontext: "Wohnzimmer und Strasse",
+      sens: ["Bewegungsmelder", "Helligkeitssensor"], akt: ["LED-Treiber (dimmen, Farbe)"],
+      mpu: "Schaltet bei Bewegung und Dunkelheit ein, dimmt nach Zeitplan, meldet Zustand und Stromverbrauch.",
+      daten: "Brenndauer, Verbrauch, Defekt", befehle: "Szene «Kino», Zeitplan, Firmware",
+      nutzen: "Ambient Intelligence: Das Licht folgt dir durch den Raum. Die Gemeinde sieht defekte Strassenlampen, bevor jemand anruft." },
+    { id: "kuehl", name: "«Smarter» Kühlschrank", kontext: "Küche",
+      sens: ["Temperaturfühler", "Türkontakt", "Kamera im Innenraum"], akt: ["Kompressor-Relais", "Warnton"],
+      mpu: "Regelt die Temperatur, erkennt eine offene Tür, erkennt Lebensmittel auf dem Kamerabild.",
+      daten: "Temperaturverlauf, Türöffnungen, Inhalt", befehle: "Ferienmodus, neue Solltemperatur",
+      nutzen: "Du siehst im Laden auf dem Handy, ob noch Milch da ist. Der Hersteller erkennt ein schwaches Kühlaggregat, bevor es ausfällt." },
+    { id: "velo", name: "«Smartes» Velo", kontext: "unterwegs in der Stadt",
+      sens: ["GPS", "Akkustand", "Beschleunigung (Sturz)"], akt: ["Elektroschloss", "Motorunterstützung"],
+      mpu: "Bestimmt Position und Akkustand, erkennt einen Sturz, öffnet das Schloss auf Befehl.",
+      daten: "Position, Akku, Kilometer, Sturzalarm", befehle: "Entsperren, Motor drosseln, Diebstahlmodus",
+      nutzen: "Verleih ohne Schalter: App buchen, Schloss öffnet. Ein gestohlenes Velo meldet seinen Standort." },
+    { id: "maschine", name: "Produktionsmaschine", kontext: "Werkhalle",
+      sens: ["Vibration", "Temperatur der Spindel", "Stromaufnahme", "Stückzähler"], akt: ["Not-Aus", "Drehzahl", "Kühlmittelventil"],
+      mpu: "Die Steuerung überwacht Grenzwerte, stoppt bei Gefahr sofort und fasst Messwerte zusammen.",
+      daten: "Zustand, Stückzahl, Vibrationsspektrum", befehle: "Neues Programm, Drehzahl, Wartungsmodus",
+      nutzen: "Predictive Maintenance: Die Plattform erkennt Verschleiss am Lager und plant die Wartung, bevor die Maschine stillsteht." }
+  ];
+  const dingWahl = $("#t08-ding-wahl"), dingBild = $("#t08-ding"), dingNutzen = $("#t08-ding-nutzen");
+  function dingZeigen(id) {
+    const d = DINGE.find((x) => x.id === id);
+    dingWahl.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
+    const li = (a) => "<ul>" + a.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+    dingBild.innerHTML =
+      '<div class="t08-d t08-d-pf ar-r-business"><b>IoT-Plattform</b>' +
+        '<div class="t08-d-fluss"><span>↑ Data Flow: ' + esc(d.daten) + '</span><span>↓ Control Flow: ' + esc(d.befehle) + "</span></div></div>" +
+      '<div class="t08-d t08-d-se ar-r-client"><b>Sensoren (messen) →</b>' + li(d.sens) + "</div>" +
+      '<div class="t08-d t08-d-mp ar-r-infra"><b>Embedded System mit Chip (MPU)</b><p>' + esc(d.mpu) + "</p></div>" +
+      '<div class="t08-d t08-d-ak ar-r-sync"><b>→ Aktoren (wirken)</b>' + li(d.akt) + "</div>" +
+      '<div class="t08-d t08-d-we ar-r-extern"><b>Physischer Kontext</b>' + esc(d.kontext) + " · " + esc(d.name) + "</div>";
+    dingNutzen.innerHTML = "<p><b>Nutzen:</b> " + esc(d.nutzen) + "</p>";
+  }
+  DINGE.forEach((d) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.dataset.id = d.id; b.textContent = d.name;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => dingZeigen(d.id));
+    dingWahl.appendChild(b);
+  });
+  dingZeigen("lampe");
+
+  L.auswahl("#t08-brille-frage", {
+    frage: "Wo liegt die Datenbrille in der IoT-Referenzarchitektur?",
+    optionen: ["Im Enterprise Tier, weil sie Rüstaufträge aus dem ERP zeigt.", "Im Edge Tier als mobiles IoT Device: Sie erfasst Daten mit Sensoren und informiert die Trägerin.", "Im Platform Tier als Dashboard."],
+    richtig: 1,
+    erklaerung: "Die Brille ist ein Gerät am Körper, also ein mobiles IoT Device im Edge Tier. Die Aufträge kommen über den Control Flow aus dem ERP, die Anzeige darauf ist kein Dashboard der Plattform."
+  });
+
+  /* ---------- 3 · Referenz mit Landkarte ---------- */
+  const ref = A.diagramm("#t08-ref", IOT_REFERENZ, { titel: "IoT-Referenzarchitektur (Edge, Platform, Enterprise Tier)" });
+  const DF = ["i-v1", "i-v2", "i-v3", "i-v4", "i-v5", "i-v6", "i-v7", "i-v8", "i-v9", "i-v10", "i-v11", "i-v12"];
+  const LANDKARTE = [
+    { id: "edge", name: "Edge Tier", rolle: "infra", ids: ["i-edge", "i-stat", "i-mobil", "i-field", "i-edgegw", "i-v1", "i-v2", "i-v3"],
+      text: "<p><b>Edge Tier:</b> Viele stationäre und mobile Geräte funken über das Field Network an das Edge Gateway. Das Gateway übersetzt, verdichtet, puffert und reagiert lokal.</p><p>Typische Technologie: Sensoren und Aktoren, Bluetooth LE, Zigbee, LoRaWAN, Modbus; Gateway auf Industrie-PC oder Raspberry Pi.</p>" },
+    { id: "plat", name: "Platform Tier", rolle: "business", ids: ["i-platform", "i-platgw", "i-transform", "i-dbms", "i-analytics", "i-dashboard", "i-ops", "i-v7", "i-v8", "i-v9", "i-v10", "i-v14"],
+      text: "<p><b>Platform Tier:</b> Platform Gateway (Eingang, Geräte-Identität), Data Transform (aufbereiten), DBMS (speichern), Analytics (auswerten), Dashboard (anzeigen), Operations (steuern).</p><p>Typische Technologie: Azure IoT Hub, AWS IoT Core, ThingsBoard; Zeitreihen-DB; Grafana.</p>" },
+    { id: "ent", name: "Enterprise Tier", rolle: "shared", ids: ["i-enterprise", "i-domain"],
+      text: "<p><b>Enterprise Tier:</b> Domain Applications wie CRM, PLM und ERP nutzen Ergebnisse der Plattform und lösen selbst Befehle aus.</p>" },
+    { id: "dp", name: "Data Provider", rolle: "extern", ids: ["i-dataprov", "i-extdp", "i-v6"],
+      text: "<p><b>Data Provider:</b> Ein externer Dienst (z. B. Wetter-API) liefert über das Access Network Daten in die Plattform, genau wie ein Gerät.</p>" },
+    { id: "netze", name: "Drei Netze", rolle: "infra", ids: ["i-field", "i-access", "i-servnet"],
+      text: "<p><b>Netze:</b> Field Network (lokal, sparsam, im Edge Tier), Access Network (Weitverkehr zur Plattform, z. B. LTE-M oder Glasfaser), Service Network (APIs zu den Fachanwendungen). Im Diagramm sind sie eigene Komponenten.</p>" },
+    { id: "df", name: "Data Flow →", rolle: "webapi", ids: ["i-stat", "i-mobil", "i-field", "i-edgegw", "i-access", "i-platgw", "i-transform", "i-dbms", "i-analytics", "i-dashboard", "i-servnet", "i-domain", "i-extdp"].concat(DF), fluss: DF,
+      text: "<p><b>Data Flow:</b> vom Gerät über Field Network, Edge Gateway, Access Network ins Platform Gateway, durch Transform, DBMS und Analytics ins Dashboard und über das Service Network zur Domain Application.</p>" },
+    { id: "cf", name: "← Control Flow", rolle: "client", ids: ["i-domain", "i-ops", "i-dbms", "i-access", "i-edgegw", "i-field", "i-stat", "i-mobil", "i-v13", "i-v14", "i-v15", "i-v4", "i-v3", "i-v1", "i-v2"], fluss: ["i-v13", "i-v15"],
+      text: "<p><b>Control Flow:</b> Die Domain Application (oder ein Mensch am UI) löst über Operations Algorithms &amp; UI einen Befehl aus. Er geht über das Access Network, das Edge Gateway und das Field Network zum Aktor. Operations liest dazu Zustände aus dem DBMS.</p>" },
+    { id: "alle", name: "Alles zeigen", rolle: "", ids: [], text: "<p>Ganze Referenz. Tippe eine Komponente an, um ihren Steckbrief zu lesen.</p>" }
+  ];
+  const lk = $("#t08-lk"), lkInfo = $("#t08-lk-info");
+  let lkFluss = [];
+  LANDKARTE.forEach((g) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn" + (g.rolle ? " ar-r-" + g.rolle : ""); b.textContent = g.name;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => {
+      lk.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b && g.id !== "alle")));
+      if (!ref) return;
+      lkFluss.forEach((k) => ref.fluss(k, { an: false }));
+      lkFluss = g.fluss || [];
+      ref.markiere(g.ids);
+      lkFluss.forEach((k) => ref.fluss(k, { an: true }));
+      lkInfo.innerHTML = g.text;
+    });
+    lk.appendChild(b);
+  });
+
+  /* ---------- 3b · Bereits modelliert: Velo-Flotte Alpenrad ---------- */
+  A.diagramm("#t08-velo", {
+    titel: "Velo-Flotte «Alpenrad» (fiktiv) · IoT-Architektur",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "v-edge", name: "Edge Tier (Stationen in der Stadt)", spalte: 0, zeile: 0,
+        info: { was: "Ladestationen mit Schlössern und die E-Bikes, verbunden über LoRaWAN mit einem Gateway je Station.", warum: "Die Velos haben kleine Akkus und sind viel unterwegs; das Gateway in der Station hat Strom und Netz." } },
+      { id: "v-dp", name: "Data Provider", spalte: 0, zeile: 1,
+        info: { was: "Externe Wetterprognose.", warum: "Die Nachfrage nach Velos hängt stark vom Wetter ab." } },
+      { id: "v-plat", name: "Platform Tier (AWS)", spalte: 2, zeile: 0, hoehe: 2,
+        info: { was: "Die IoT-Plattform bei AWS: Geräteanbindung, Regeln, Speicher, Prognosen, Dashboard und Flottensteuerung.", warum: "Alpenrad betreibt keine eigenen Server. Verwaltete Dienste skalieren mit der Flotte." } },
+      { id: "v-ent", name: "Enterprise Tier", spalte: 4, zeile: 0, hoehe: 2,
+        info: { was: "Die Fachanwendungen von Alpenrad.", warum: "Abos und Abrechnung (CRM) sowie Wartung (ERP) nutzen die IoT-Ergebnisse." } }
+    ],
+    elemente: [
+      { id: "v-station", spalte: 0, zeile: 0, typ: "extern", rolle: "infra", name: "Ladestationen mit Schlössern", stereotyp: "device", in: "v-edge", technologie: "stationär, *",
+        info: { was: "Stationäre IoT Devices: je Station 10 bis 20 Ladeplätze mit Elektroschloss.", kann: "Melden belegt/frei und Ladezustand (Sensoren), öffnen und schliessen Schlösser (Aktoren).", wofuer: "Ausleihe und Rückgabe ohne Personal.", technologie: "Mikrocontroller mit LoRaWAN-Modul, NFC-Leser für Abo-Karten.", warum: "Die Multiplizität * zeigt: viele Stationen. Darum spricht jede nur das Feldnetz statt eigenes Mobilfunk." } },
+      { id: "v-bike", spalte: 0, zeile: 1, typ: "extern", rolle: "infra", name: "E-Bike-Bordcomputer", stereotyp: "device", in: "v-edge", technologie: "mobil, *",
+        info: { was: "Mobile IoT Devices in jedem E-Bike.", kann: "Melden Position, Akkustand und Kilometer, erkennen einen Sturz.", wofuer: "Flottenübersicht, Diebstahlschutz, Wartung nach Nutzung.", technologie: "GPS, Akku-Management, LoRaWAN.", warum: "Unterwegs gibt es keine feste Verbindung; LoRaWAN reicht weit und braucht wenig Strom." } },
+      { id: "v-field", spalte: 1, zeile: 1, typ: "bus", rolle: "infra", name: "Field Network (LoRaWAN)", stereotyp: "network", in: "v-edge",
+        info: { was: "Funknetz zwischen Velos, Stationen und den Gateways.", kann: "Kleine Nachrichten über einige Kilometer mit wenig Energie übertragen, auch zurück zum Gerät (Downlink).", wofuer: "Anbindung aller Geräte in der Stadt.", technologie: "LoRaWAN", warum: "Reichweite und Akkulaufzeit sind wichtiger als Bandbreite: Ein Akkustand braucht nur wenige Bytes." } },
+      { id: "v-edgegw", spalte: 2, zeile: 1, typ: "gateway", rolle: "webapi", name: "Stations-Gateway", in: "v-edge", technologie: "Industrie-PC mit AWS IoT Greengrass",
+        info: { was: "Edge Gateway in jeder Station.", kann: "Übersetzt LoRaWAN in MQTT, puffert bei Netzausfall, prüft Abo-Karten lokal gegen eine zwischengespeicherte Liste.", wofuer: "Damit Ausleihen auch im Funkloch funktionieren.", technologie: "Industrie-PC mit AWS IoT Greengrass (Edge-Laufzeit für Container-Module).", warum: "Lokale Entscheidungen brauchen keine Cloud. Greengrass passt zur AWS-Plattform und wird zentral aktualisiert." } },
+      { id: "v-wetter", typ: "extern", rolle: "extern", name: "Wetter-API (MeteoPunkt, fiktiv)", in: "v-dp",
+        info: { was: "Externer Data Provider.", kann: "Liefert stündlich Prognosen für Temperatur und Regen.", wofuer: "Nachfrageprognose der Analytics.", technologie: "REST-API mit JSON.", warum: "Bei 28 °C und Sonne werden doppelt so viele Velos ausgeliehen wie bei Regen." } },
+      { id: "v-access", typ: "bus", rolle: "infra", name: "Access Network (LTE-M, Glasfaser)", stereotyp: "network",
+        info: { was: "Weitverkehrsnetz von den Stationen zu AWS.", kann: "Trägt Data Flow und Control Flow, verschlüsselt mit TLS.", wofuer: "Verbindung jeder Station mit der Plattform.", technologie: "LTE-M an Aussenstationen, Glasfaser am Bahnhof.", warum: "Hier verlassen die Daten die Stadt. Jedes Gateway hat ein eigenes Zertifikat." } },
+      { id: "v-platgw", spalte: 0, zeile: 1, typ: "gateway", rolle: "webapi", name: "Platform Gateway (AWS IoT Core)", in: "v-plat",
+        info: { was: "Eingang der Plattform.", kann: "MQTT-Broker, Geräte-Zertifikate, Device Shadow mit Soll- und Ist-Zustand.", wofuer: "Sichere Anbindung aller Gateways.", technologie: "AWS IoT Core", warum: "Verwalteter Broker ohne eigenen Betrieb, skaliert mit der Flotte." } },
+      { id: "v-transform", spalte: 0, zeile: 2, typ: "dienst", rolle: "business", name: "Data Transform (IoT Rules, Lambda)", in: "v-plat",
+        info: { was: "Aufbereitung der Meldungen.", kann: "Prüft Werte, ergänzt Velo- und Stationsdaten, verwirft Unplausibles.", wofuer: "Einheitliche Daten für Speicher und Prognose.", technologie: "AWS IoT Rules Engine mit Lambda-Funktionen.", warum: "Regeln greifen direkt auf die MQTT-Topics zu, ohne eigenen Server." } },
+      { id: "v-dbms", spalte: 1, zeile: 2, typ: "datenbank", rolle: "daten", name: "DBMS (Zeitreihen-DB InfluxDB)", in: "v-plat",
+        info: { was: "Datenhaltung für Zeitreihen.", kann: "Speichert Akkustand, Position und Belegung über die Zeit.", wofuer: "Verlauf, Prognose und Zustände für Operations.", technologie: "InfluxDB als verwalteter Dienst", warum: "Zeitreihen-DBs speichern und verdichten Messreihen effizient." } },
+      { id: "v-analytics", spalte: 1, zeile: 1, typ: "dienst", rolle: "business", name: "Analytics (Akku- und Nachfrageprognose)", in: "v-plat",
+        info: { was: "Lernende Modelle auf den Zeitreihen.", kann: "Sagt leere Stationen und schwache Akkus voraus.", wofuer: "Velos rechtzeitig umverteilen und warten.", technologie: "Amazon SageMaker, Python", warum: "Erst die Prognose macht aus Messwerten Entscheidungen." } },
+      { id: "v-dash", spalte: 1, zeile: 0, typ: "dienst", rolle: "client", name: "Flotten-Dashboard (Grafana)", in: "v-plat",
+        info: { was: "Anzeige für die Disposition.", kann: "Karte mit Stationen, Akkus, Prognosen und Alarmen.", wofuer: "Umverteilung planen.", technologie: "Grafana", warum: "Fertige Diagramme und Karten für Zeitreihen, schnell eingerichtet." } },
+      { id: "v-ops", spalte: 0, zeile: 3, typ: "dienst", rolle: "client", name: "Operations (Device Shadow, Jobs)", in: "v-plat",
+        info: { was: "Flottensteuerung.", kann: "Setzt Soll-Zustände (Schloss offen), verteilt Firmware an alle Stationen, sperrt gestohlene Velos.", wofuer: "Start des Control Flow.", technologie: "AWS IoT Device Shadow und Jobs, eigene Flotten-UI", warum: "Befehle laufen über den Shadow: Auch ein kurz offline gewesenes Gerät holt sich danach den Soll-Zustand." } },
+      { id: "v-service", typ: "bus", rolle: "infra", name: "Service Network (REST über VPN)", stereotyp: "network",
+        info: { was: "Netz zwischen Plattform und Fachanwendungen.", kann: "Transportiert Ergebnisse und Aufträge über REST-APIs.", wofuer: "CRM und ERP anbinden.", technologie: "Site-to-Site-VPN, REST mit JSON", warum: "Die Fachanwendungen laufen im eigenen Rechenzentrum, die Plattform bei AWS." } },
+      { id: "v-crm", typ: "extern", rolle: "shared", name: "CRM (Abos, Ausleihen)", in: "v-ent",
+        info: { was: "Domain Application für Kundinnen und Abos.", kann: "Prüft Abos, gibt Ausleihen frei, rechnet Fahrten ab.", wofuer: "Kundenprozess von der Buchung bis zur Rechnung.", warum: "Löst den Control Flow «entsperren» aus und bekommt die Fahrtdaten über den Data Flow." } },
+      { id: "v-erp", typ: "extern", rolle: "shared", name: "ERP (Wartung, Ersatzteile)", in: "v-ent",
+        info: { was: "Domain Application für Wartung und Material.", kann: "Legt Wartungsaufträge an und bestellt Akkus.", wofuer: "Velos fahrbereit halten.", warum: "Bekommt Prognosen statt Rohdaten: «Velo 77 Akku tauschen»." } }
+    ],
+    verbindungen: [
+      { id: "w1", von: "v-station", nach: "v-field", label: "*" },
+      { id: "w2", von: "v-bike", nach: "v-field", label: "*" },
+      { id: "w3", von: "v-field", nach: "v-edgegw", protokoll: "LoRaWAN" },
+      { id: "w4", von: "v-edgegw", nach: "v-access", protokoll: "MQTT", format: "JSON" },
+      { id: "w5", von: "v-access", nach: "v-platgw", protokoll: "MQTT", format: "JSON" },
+      { id: "w6", von: "v-wetter", nach: "v-access", protokoll: "REST", format: "JSON" },
+      { id: "w7", von: "v-platgw", nach: "v-transform" },
+      { id: "w8", von: "v-transform", nach: "v-dbms" },
+      { id: "w9", von: "v-dbms", nach: "v-analytics" },
+      { id: "w10", von: "v-analytics", nach: "v-dash" },
+      { id: "w11", von: "v-analytics", nach: "v-service", protokoll: "REST", format: "JSON" },
+      { id: "w12", von: "v-service", nach: "v-erp", protokoll: "REST" },
+      { id: "w16", von: "v-service", nach: "v-crm", protokoll: "REST" },
+      { id: "w13", von: "v-crm", nach: "v-ops", label: "Control Flow · REST" },
+      { id: "w14", von: "v-ops", nach: "v-dbms" },
+      { id: "w15", von: "v-ops", nach: "v-access", label: "Control Flow · MQTT" }
+    ],
+    ablaeufe: [
+      { id: "entsperren", name: "Velo entsperren (Control Flow)", schritte: [
+        { von: "v-crm", nach: "v-ops", text: "Lea bucht in der App. Das CRM prüft ihr Abo und gibt die Ausleihe frei.", phase: "Enterprise" },
+        { von: "v-ops", nach: "v-dbms", text: "Operations liest den Zustand: Station 12, Platz 3, Velo geladen.", phase: "Platform" },
+        { von: "v-ops", nach: "v-access", text: "Operations setzt im Device Shadow den Soll-Zustand «offen». AWS IoT Core publiziert den Befehl per MQTT." },
+        { von: "v-access", nach: "v-edgegw", text: "Das Stations-Gateway empfängt den Befehl über LTE-M.", phase: "Edge" },
+        { von: "v-edgegw", nach: "v-field", text: "Es übersetzt ihn in eine LoRaWAN-Nachricht zum Schloss (Downlink)." },
+        { von: "v-field", nach: "v-station", text: "Das Schloss (Aktor) öffnet. Lea nimmt das Velo." },
+        { von: "v-station", nach: "v-field", text: "Die Station meldet «offen» zurück, jetzt wieder als Data Flow.", phase: "Bestätigung" },
+        { von: "v-edgegw", nach: "v-access", text: "Das Gateway publiziert die Bestätigung." },
+        { von: "v-access", nach: "v-platgw", text: "Im Device Shadow stimmen Soll- und Ist-Zustand jetzt überein." }
+      ] },
+      { id: "prognose", name: "Akku-Prognose (Data Flow)", schritte: [
+        { von: "v-bike", nach: "v-field", text: "Der Bordcomputer von Velo 77 meldet alle 5 Minuten Akkustand und Position.", phase: "Edge" },
+        { von: "v-field", nach: "v-edgegw", text: "Das nächste Stations-Gateway empfängt die Meldung." },
+        { von: "v-edgegw", nach: "v-access", text: "Es publiziert per MQTT mit QoS 1." },
+        { von: "v-wetter", nach: "v-access", text: "Gleichzeitig liefert die Wetter-API: morgen 28 °C und Sonne.", parallel: true },
+        { von: "v-access", nach: "v-platgw", text: "AWS IoT Core nimmt beides an.", phase: "Platform" },
+        { von: "v-platgw", nach: "v-transform", text: "Eine Regel prüft die Werte und ergänzt Velo-Typ und Akku-Alter." },
+        { von: "v-transform", nach: "v-dbms", text: "Die Werte landen in der Zeitreihen-DB." },
+        { von: "v-dbms", nach: "v-analytics", text: "Das Modell erkennt: Der Akku von Velo 77 verliert schneller als die anderen. Und Station 12 ist morgen um 8 Uhr leer." },
+        { von: "v-analytics", nach: "v-dash", text: "Das Dashboard zeigt der Disposition, wohin sie heute Abend Velos bringen soll." },
+        { von: "v-analytics", nach: "v-service", text: "Die Prognose geht über das Service Network weiter.", phase: "Enterprise" },
+        { von: "v-service", nach: "v-erp", text: "Das ERP legt den Wartungsauftrag «Akku tauschen, Velo 77» an." }
+      ] },
+      { id: "funkloch", name: "Funkloch an der Station (Ausfall)", schritte: [
+        { bei: "v-access", text: "Das LTE-M-Netz an Station 12 fällt für 30 Minuten aus.", fehler: true, phase: "Störung" },
+        { von: "v-station", nach: "v-field", text: "Ein Kunde hält seine Abo-Karte an ein Schloss." },
+        { von: "v-field", nach: "v-edgegw", text: "Das Gateway prüft die Karte gegen die zwischengespeicherte Abo-Liste und öffnet lokal." },
+        { bei: "v-edgegw", text: "Es puffert die Ausleihe und alle Messwerte." },
+        { von: "v-edgegw", nach: "v-access", text: "Nach der Störung sendet es alles nach.", phase: "Erholung" },
+        { von: "v-access", nach: "v-platgw", text: "Die Plattform verbucht die Ausleihe nachträglich." },
+        { von: "v-service", nach: "v-crm", text: "Das CRM rechnet die Fahrt korrekt ab. Kein Kunde hat etwas vom Ausfall gemerkt." }
+      ] }
+    ]
+  });
+
+  /* ---------- 4 · Ein Messwert auf Reisen ---------- */
+  const REISE = [
+    { ort: "Sensor im Fühler 07", rolle: "infra", tier: "Edge Tier",
+      text: "Der Feuchtesensor misst im Keller 2 die Luft. Er liefert keine Zahl in Prozent, sondern einen Rohwert des Analog-Digital-Wandlers.",
+      sprache: "Rohwert (2 Bytes)", daten: '<span class="n">0x0C 0xCD</span>   <span class="c">// 3277 von 4095 Schritten</span>',
+      warum: "Sensoren sind einfach und billig. Die Umrechnung macht der Chip daneben." },
+    { ort: "Embedded System (MPU) im Fühler", rolle: "infra", tier: "Edge Tier",
+      text: "Der Chip rechnet den Rohwert in 80 % um, legt Temperatur und Batteriestand dazu und packt alles in 5 Bytes. Alle 10 Sekunden wacht er kurz auf, sendet und schläft wieder.",
+      sprache: "Funk-Payload (5 Bytes)", daten: '01 <mark>50</mark> 00 84 47   <span class="c">// Typ 1, Feuchte 80 %, Temp 13.2 °C, Batterie 71 %</span>',
+      warum: "Jedes Byte Funk kostet Strom. Mit 5 Bytes hält die Batterie Jahre." },
+    { ort: "Field Network (LoRaWAN)", rolle: "infra", tier: "Edge Tier",
+      text: "Das Paket reist per Funk durch die Kellerwände zum Gateway. Es ist verschlüsselt, aber noch kein Internet-Paket.",
+      sprache: "LoRaWAN-Uplink", daten: 'DevAddr 26 0B 1F 07 · FPort 1 · Payload 01 50 00 84 47',
+      warum: "LoRaWAN reicht weit und braucht wenig Energie. Dafür sind nur kleine Pakete erlaubt." },
+    { ort: "Edge Gateway", rolle: "webapi", tier: "Edge Tier",
+      text: "Das Gateway entschlüsselt, decodiert und mittelt sechs Werte zu einem Minutenwert. Es prüft den Grenzwert lokal und publiziert per MQTT mit QoS 1.",
+      sprache: "MQTT-Publish (JSON)", daten: 'Topic: bergblick/keller-2/klima/fuehler-07\n{ <span class="s">"feuchte_pct"</span>: <span class="n">80</span>, <span class="s">"temperatur_c"</span>: <span class="n">13.2</span>, <span class="s">"anzahl_werte"</span>: <span class="n">6</span> }',
+      warum: "Verdichten spart Bandbreite (sechsmal weniger Nachrichten). Lokal prüfen erlaubt sofortiges Handeln, auch ohne Netz." },
+    { ort: "Access Network (LTE-M)", rolle: "infra", tier: "zwischen Edge und Platform",
+      text: "Die MQTT-Nachricht verlässt den Betrieb über Mobilfunk, verschlüsselt mit TLS. Fällt das Netz aus, hält das Gateway die Nachrichten zurück und sendet sie später.",
+      sprache: "TLS-Verbindung", daten: 'mqtts://iot.bergblick.example:8883  <span class="c">// Client-Zertifikat edge-1</span>',
+      warum: "Hier wird es öffentlich. Darum gegenseitige Authentisierung mit Zertifikaten." },
+    { ort: "Platform Gateway", rolle: "webapi", tier: "Platform Tier",
+      text: "Der Broker der Plattform prüft das Zertifikat von edge-1, bestätigt mit PUBACK und gibt die Nachricht an alle Abonnenten des Topics weiter.",
+      sprache: "Broker-Log", daten: 'PUBLISH von edge-1 · QoS 1 · id 4711 → PUBACK\nweitergeleitet an: data-transform-1',
+      warum: "Ein zentraler Eingang verwaltet tausende Geräte gleich und trennt sie von den Auswertungen." },
+    { ort: "Data Transform", rolle: "business", tier: "Platform Tier",
+      text: "Der Wert ist plausibel (0 bis 100 %). Data Transform ergänzt Keller, Käsesorte und Charge und bringt alles in das einheitliche Format der Plattform.",
+      sprache: "aufbereiteter Datensatz", daten: '{ <span class="s">"zeit"</span>: <span class="s">"06:41"</span>, <span class="s">"keller"</span>: <span class="s">"keller-2"</span>, <span class="s">"charge"</span>: <span class="s">"BG-2611-04"</span>,\n  <span class="s">"sorte"</span>: <span class="s">"Bergkäse"</span>, <span class="s">"feuchte"</span>: <span class="n">80</span> }',
+      warum: "Geräte liefern verschiedene Formate und Fehler. Auswertbar sind nur geprüfte, einheitliche Daten." },
+    { ort: "DBMS (Zeitreihen-DB)", rolle: "daten", tier: "Platform Tier",
+      text: "Der Datensatz wird eine Zeile in der Zeitreihen-Datenbank. Sie kann schnell fragen: «Wie lief die Feuchte in Keller 2 in den letzten 24 Stunden?»",
+      sprache: "SQL (TimescaleDB)", daten: '<span class="k">INSERT INTO</span> klima (zeit, keller, charge, feuchte)\n<span class="k">VALUES</span> (<span class="s">\'2026-11-02 06:41\'</span>, <span class="s">\'keller-2\'</span>, <span class="s">\'BG-2611-04\'</span>, <span class="n">80</span>);',
+      warum: "Zeitreihen-DBs sind für viele Messwerte über die Zeit gebaut und verdichten alte Daten automatisch." },
+    { ort: "Analytics", rolle: "business", tier: "Platform Tier",
+      text: "Das Modell sieht: Die Feuchte sinkt seit drei Stunden um 1 % pro Stunde. Bei unter 78 % reisst die Käserinde. Prognose: in zwei Stunden kritisch.",
+      sprache: "Befund", daten: '{ <span class="s">"befund"</span>: <span class="s">"Feuchte sinkt"</span>, <span class="s">"risiko"</span>: <span class="s">"Rindenrisse"</span>,\n  <span class="s">"kritisch_in_min"</span>: <span class="n">120</span>, <span class="s">"charge"</span>: <span class="s">"BG-2611-04"</span> }',
+      warum: "Ein einzelner Wert von 80 % ist harmlos. Erst der Trend macht ihn zur Warnung." },
+    { ort: "Dashboard", rolle: "client", tier: "Platform Tier",
+      text: "Im Dashboard der Käserin wird Keller 2 gelb. Sie sieht Verlauf, Prognose und die betroffene Charge.",
+      sprache: "Anzeige", daten: 'Keller 2 · Feuchte 80 % ↓ · <mark>Achtung: kritisch in 2 h</mark>',
+      warum: "Menschen brauchen eine Übersicht, die Ausreisser sofort zeigt." },
+    { ort: "Service Network → ERP", rolle: "shared", tier: "Enterprise Tier",
+      text: "Der Befund geht über das Service Network an das ERP. Dort entsteht eine Qualitätsmeldung zur Charge. Gleichzeitig startet der Control Flow: Operations schliesst die Lüftungsklappe um 20 %.",
+      sprache: "REST-Aufruf", daten: '<span class="k">POST</span> /qualitaet/meldungen\n{ <span class="s">"charge"</span>: <span class="s">"BG-2611-04"</span>, <span class="s">"massnahme"</span>: <span class="s">"Feuchte erhöhen"</span> }',
+      warum: "Das ERP braucht keinen Messwert, sondern einen Geschäftsvorfall. So entsteht aus dem Sensorwert eine Entscheidung." }
+  ];
+  const reiseLeiste = $("#t08-reise-leiste"), reiseKarte = $("#t08-reise"), reiseStand = $("#t08-reise-stand");
+  const reiseZ = $("#t08-reise-zurueck"), reiseW = $("#t08-reise-weiter");
+  let reiseI = 0;
+  REISE.forEach((r, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "ar-r-" + r.rolle; b.textContent = (i + 1) + " " + r.ort.replace(/ \(.*\)$/, "");
+    b.addEventListener("click", () => reiseZeigen(i));
+    li.appendChild(b); reiseLeiste.appendChild(li);
+  });
+  function reiseZeigen(i) {
+    reiseI = Math.max(0, Math.min(REISE.length - 1, i));
+    const r = REISE[reiseI];
+    reiseLeiste.querySelectorAll("button").forEach((b, k) => {
+      if (k === reiseI) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+      b.classList.toggle("t08-war", k < reiseI);
+    });
+    reiseKarte.className = "t08-reise ar-r-" + r.rolle;
+    reiseKarte.innerHTML = '<h4><span class="t08-badge ar-r-' + r.rolle + '">' + esc(r.tier) + "</span> " + (reiseI + 1) + " · " + esc(r.ort) + "</h4>" +
+      "<p>" + r.text + "</p>" +
+      '<pre class="code" data-sprache="' + esc(r.sprache) + '"><code>' + r.daten + "</code></pre>" +
+      '<p class="hint"><b>Warum:</b> ' + r.warum + "</p>";
+    reiseStand.textContent = "Station " + (reiseI + 1) + " von " + REISE.length;
+    reiseZ.disabled = reiseI === 0;
+    reiseW.disabled = reiseI === REISE.length - 1;
+    if (reiseZ.disabled && document.activeElement === reiseZ) reiseW.focus();
+    if (reiseW.disabled && document.activeElement === reiseW) reiseZ.focus();
+  }
+  reiseZ.addEventListener("click", () => reiseZeigen(reiseI - 1));
+  reiseW.addEventListener("click", () => reiseZeigen(reiseI + 1));
+  reiseZeigen(0);
+
+  /* ---------- 5 · MQTT Topic-Filter ---------- */
+  const TOPICS = [
+    { t: "bergblick/keller-1/klima/fuehler-01", w: "Klimawert Keller 1" },
+    { t: "bergblick/keller-1/klima/fuehler-02", w: "Klimawert Keller 1" },
+    { t: "bergblick/keller-2/klima/fuehler-07", w: "Klimawert Keller 2" },
+    { t: "bergblick/keller-1/klima/fuehler-01/batterie", w: "Batteriestand eines Fühlers" },
+    { t: "bergblick/keller-2/klappe/klappe-1/befehl", w: "Befehl an die Lüftungsklappe (Control Flow)" },
+    { t: "bergblick/keller-2/klappe/klappe-1/status", w: "Bestätigung der Klappe" },
+    { t: "bergblick/lkw-3/tank/temperatur", w: "Tanktemperatur im Sammel-LKW" },
+    { t: "bergblick/edge-1/status", w: "Last Will des Edge Gateways" }
+  ];
+  const VORLAGEN = ["bergblick/+/klima/+", "bergblick/keller-2/#", "bergblick/+/klima/#", "+/+/tank/+", "bergblick/#", "bergblick/+/+/+/befehl", "bergblick/keller/#"];
+  const tpEin = $("#t08-tp-eingabe"), tpListe = $("#t08-tp-liste"), tpStatus = $("#t08-tp-status"), tpVorl = $("#t08-tp-vorlagen");
+  function filterPruefen(f) {
+    if (!f) return "Der Filter ist leer.";
+    const e = f.split("/");
+    for (let i = 0; i < e.length; i++) {
+      if (e[i].includes("#") && (e[i] !== "#" || i !== e.length - 1)) return "«#» muss allein auf der letzten Ebene stehen.";
+      if (e[i].includes("+") && e[i] !== "+") return "«+» muss eine ganze Ebene ersetzen, z. B. «a/+/c».";
+    }
+    return "";
+  }
+  function vergleich(f, t) {
+    const fe = f.split("/"), te = t.split("/");
+    for (let i = 0; i < fe.length; i++) {
+      if (fe[i] === "#") return { ok: true, grund: "«#» ab Ebene " + (i + 1) + " passt auf alles Restliche." };
+      if (i >= te.length) return { ok: false, grund: "Das Topic hat nur " + te.length + " Ebenen, der Filter verlangt mehr." };
+      if (fe[i] === "+") continue;
+      if (fe[i] !== te[i]) return { ok: false, grund: "Ebene " + (i + 1) + ": «" + te[i] + "» ist nicht «" + fe[i] + "»." };
+    }
+    if (te.length > fe.length) return { ok: false, grund: "Das Topic hat " + te.length + " Ebenen, der Filter nur " + fe.length + " (ohne «#» am Ende)." };
+    return { ok: true, grund: fe.includes("+") ? "Alle festen Ebenen stimmen, «+» deckt je eine Ebene." : "Genau gleiches Topic." };
+  }
+  function tpZeigen() {
+    const f = tpEin.value.trim();
+    tpVorl.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.textContent === f)));
+    const fehler = filterPruefen(f);
+    tpListe.innerHTML = "";
+    if (fehler) { tpStatus.innerHTML = "<b>Ungültiger Filter:</b> " + esc(fehler); return; }
+    let n = 0;
+    TOPICS.forEach((x) => {
+      const v = vergleich(f, x.t);
+      if (v.ok) n++;
+      const li = document.createElement("li");
+      li.className = v.ok ? "t08-ja" : "t08-nein";
+      li.innerHTML = '<span class="t08-tp-marke" aria-hidden="true">' + (v.ok ? "✓" : "✗") + '</span><span><span class="sr-only">' + (v.ok ? "passt: " : "passt nicht: ") + "</span><code>" + esc(x.t) + "</code><small>" + esc(x.w) + " · " + esc(v.grund) + "</small></span>";
+      tpListe.appendChild(li);
+    });
+    tpStatus.innerHTML = "<b>" + n + " von " + TOPICS.length + "</b> Topics passen zu <code>" + esc(f) + "</code>.";
+  }
+  VORLAGEN.forEach((v) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.textContent = v; b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => { tpEin.value = v; tpZeigen(); });
+    tpVorl.appendChild(b);
+  });
+  tpEin.addEventListener("input", tpZeigen);
+  tpZeigen();
+
+  /* ---------- 5b · QoS-Labor ---------- */
+  const H = (p, weg, notiz) => ({ d: "hin", p: p, weg: !!weg, n: notiz || "" });
+  const R = (p, weg, notiz) => ({ d: "rueck", p: p, weg: !!weg, n: notiz || "" });
+  const NL = (t) => ({ d: "nl", n: t });   // Notiz beim Gateway
+  const NR = (t) => ({ d: "nr", n: t });   // Notiz beim Broker
+  const QOS = {
+    "0": {
+      keine: { seq: [H("PUBLISH (QoS 0)"), NR("Broker leitet an die Abonnenten weiter.")], zust: 1, text: "Zugestellt mit einem einzigen Paket. Billig, aber ohne Garantie." },
+      publish: { seq: [H("PUBLISH (QoS 0)", true), NL("Das Gateway hat die Nachricht schon vergessen. Es wiederholt nichts.")], zust: 0, text: "Verloren. QoS 0 passt nur für Werte, die bald wieder kommen (z. B. jede Sekunde ein neuer Messwert)." },
+      ack: { seq: [NL("Bei QoS 0 gibt es keine Bestätigung, die verloren gehen könnte."), H("PUBLISH (QoS 0)"), NR("Broker leitet weiter.")], zust: 1, text: "Zugestellt. Ohne Bestätigung weiss das Gateway aber nie, ob es geklappt hat." }
+    },
+    "1": {
+      keine: { seq: [H("PUBLISH id 17 (QoS 1)", false), NL("Gateway behält eine Kopie, bis PUBACK kommt."), NR("Broker leitet weiter (1. Zustellung)."), R("PUBACK id 17"), NL("Gateway löscht die Kopie.")], zust: 1, text: "Zugestellt mit zwei Paketen." },
+      publish: { seq: [H("PUBLISH id 17 (QoS 1)", true), NL("Kein PUBACK. Nach dem Wiederverbinden sendet das Gateway nochmals, mit DUP-Flag."), H("PUBLISH id 17 (DUP)"), NR("Broker leitet weiter (1. Zustellung)."), R("PUBACK id 17")], zust: 1, text: "Zugestellt. Die Kopie im Gateway hat die Nachricht gerettet." },
+      ack: { seq: [H("PUBLISH id 17 (QoS 1)"), NR("Broker leitet weiter (1. Zustellung)."), R("PUBACK id 17", true), NL("Kein PUBACK. Das Gateway sendet nochmals, mit DUP-Flag."), H("PUBLISH id 17 (DUP)"), NR("Bei QoS 1 merkt sich der Broker die id nicht: 2. Zustellung!"), R("PUBACK id 17")], zust: 2, text: "Doppelt zugestellt. Darum muss der Abonnent (z. B. Data Transform) idempotent verarbeiten: gleiches Gerät und gleiche Zeit nur einmal speichern." }
+    },
+    "2": {
+      keine: { seq: [H("PUBLISH id 17 (QoS 2)"), NR("Broker merkt sich id 17 und leitet weiter (1. Zustellung)."), R("PUBREC id 17"), H("PUBREL id 17"), NR("Broker vergisst id 17."), R("PUBCOMP id 17")], zust: 1, text: "Genau einmal zugestellt, mit vier Paketen. Sicher, aber langsamer und teurer." },
+      publish: { seq: [H("PUBLISH id 17 (QoS 2)", true), NL("Kein PUBREC. Das Gateway sendet nochmals mit DUP-Flag."), H("PUBLISH id 17 (DUP)"), NR("Broker merkt sich id 17 und leitet weiter (1. Zustellung)."), R("PUBREC id 17"), H("PUBREL id 17"), R("PUBCOMP id 17")], zust: 1, text: "Genau einmal zugestellt." },
+      ack: { seq: [H("PUBLISH id 17 (QoS 2)"), NR("Broker merkt sich id 17 und leitet weiter (1. Zustellung)."), R("PUBREC id 17", true), NL("Kein PUBREC. Das Gateway sendet nochmals mit DUP-Flag."), H("PUBLISH id 17 (DUP)"), NR("Broker kennt id 17 schon: keine zweite Zustellung, nur PUBREC nochmals."), R("PUBREC id 17"), H("PUBREL id 17"), R("PUBCOMP id 17")], zust: 1, text: "Genau einmal zugestellt, obwohl eine Bestätigung verloren ging. Dafür sind es sechs Pakete." }
+    }
+  };
+  const qosSeq = $("#t08-qos-seq"), qosErg = $("#t08-qos-ergebnis"), qosStart = $("#t08-qos-start");
+  let qosTimer = null;
+  function qosZeile(s) {
+    const z = document.createElement("div");
+    z.className = "t08-seq-zeile t08-neu";
+    if (s.d === "nl" || s.d === "nr") {
+      z.innerHTML = '<span class="t08-seq-notiz t08-' + s.d + '">' + esc(s.n) + "</span>";
+    } else {
+      z.innerHTML = "<span class=\"t08-seq-mitte " + (s.d === "hin" ? "t08-hin" : "t08-rueck") + (s.weg ? " t08-weg" : "") + "\">" +
+        (s.d === "hin" ? "" : "← ") + esc(s.p) + (s.d === "hin" ? " →" : "") + (s.weg ? " ✗ verloren" : "") + "</span>";
+    }
+    return z;
+  }
+  function qosSenden() {
+    clearTimeout(qosTimer);
+    const q = (document.querySelector('input[name="t08-qos"]:checked') || {}).value || "1";
+    const st = (document.querySelector('input[name="t08-stoer"]:checked') || {}).value || "keine";
+    const fall = QOS[q][st];
+    qosSeq.innerHTML = '<span class="t08-seq-kopf ar-r-webapi">Edge Gateway</span><span class="t08-seq-notiz" style="text-align:center">Access Network</span><span class="t08-seq-kopf ar-r-async">Broker</span>';
+    qosErg.innerHTML = "<span>Pakete laufen …</span>";
+    let i = 0;
+    const pakete = fall.seq.filter((s) => s.d === "hin" || s.d === "rueck").length;
+    const fertig = () => {
+      const gut = fall.zust === 1;
+      qosErg.innerHTML = '<span class="t08-ergebnis ' + (gut ? "t08-gut" : "t08-schlecht") + '">' + (gut ? "✓ " : "✗ ") + "Beim Abonnenten angekommen: " + fall.zust + "-mal · " + pakete + " Pakete.</span> " + esc(fall.text);
+    };
+    const weiter = () => {
+      if (i >= fall.seq.length) { fertig(); return; }
+      qosSeq.appendChild(qosZeile(fall.seq[i++]));
+      qosTimer = setTimeout(weiter, ruhig ? 0 : 450);
+    };
+    if (ruhig) { fall.seq.forEach((s) => qosSeq.appendChild(qosZeile(s))); fertig(); } else weiter();
+  }
+  qosStart.addEventListener("click", qosSenden);
+
+  L.auswahl("#t08-prot-frage", {
+    frage: "Spritzgiessmaschinen von drei Herstellern sollen ihre Werte mit Bedeutung (Typ, Einheit, Sollwert) einheitlich an das Edge Gateway liefern. Welches Protokoll passt am besten?",
+    optionen: ["MQTT mit frei gewähltem JSON", "OPC UA", "CoAP", "SMTP"],
+    richtig: 1,
+    erklaerung: "OPC UA bringt ein herstellerneutrales Informationsmodell mit. MQTT transportiert gut, sagt aber nichts über die Bedeutung der Daten. Darum oft: OPC UA an der Maschine, MQTT vom Edge Gateway zur Plattform."
+  });
+
+  /* ---------- 7 · Plattformen ---------- */
+  const KOMP = ["Edge Gateway", "Platform Gateway", "Data Transform", "DBMS", "Analytics, ML", "Dashboard", "Operations"];
+  const PLATTF = [
+    { name: "Azure IoT Hub", rolle: "shared",
+      abd: [["◐", "mit Azure IoT Edge"], ["●", "Geräte-Identität, MQTT, AMQP, HTTPS"], ["◐", "Message Routing, Stream Analytics separat"], ["○", "z. B. Azure Data Explorer"], ["○", "z. B. Azure Machine Learning"], ["○", "z. B. Power BI, Grafana"], ["◐", "Device Twin, Direct Methods"]],
+      was: "Verwalteter Cloud-Dienst von Microsoft als Platform Gateway.",
+      kann: "Eigene Identität je Gerät (Zertifikat oder Schlüssel), Nachrichten in beide Richtungen, Device Twin mit Soll- und Ist-Zustand, Weiterleiten an andere Azure-Dienste. Azure IoT Edge bringt Container-Module ins Edge Gateway.",
+      warum: "Die Firma arbeitet schon mit Microsoft-Diensten und will keinen Broker selbst betreiben. Skaliert auf sehr viele Geräte.",
+      nicht: "Daten müssen im eigenen Rechenzentrum bleiben, oder es gibt kein Cloud-Budget." },
+    { name: "AWS IoT Core", rolle: "shared",
+      abd: [["◐", "mit AWS IoT Greengrass"], ["●", "Geräte-Zertifikate, MQTT, HTTPS"], ["◐", "Rules Engine mit SQL-artigen Regeln"], ["○", "z. B. DynamoDB, S3"], ["○", "z. B. SageMaker"], ["○", "z. B. Managed Grafana"], ["◐", "Device Shadow, Jobs"]],
+      was: "Verwalteter Cloud-Dienst von Amazon als Platform Gateway.",
+      kann: "MQTT-Broker mit Zertifikaten und Policies, Device Shadow, Rules Engine, die Nachrichten ohne eigenen Server an andere AWS-Dienste weiterleitet. AWS IoT Greengrass läuft im Edge Gateway.",
+      warum: "Die Firma ist auf AWS. Die Rules Engine verbindet Topics mit Speicher und Funktionen fast ohne Code.",
+      nicht: "Man will sich nicht an einen Cloud-Anbieter binden." },
+    { name: "ThingsBoard", rolle: "business",
+      abd: [["◐", "ThingsBoard Edge, IoT Gateway"], ["●", "MQTT, CoAP, HTTP, LwM2M"], ["●", "Rule Engine (Rule Chains)"], ["●", "PostgreSQL, optional Cassandra oder TimescaleDB"], ["◐", "Regeln und Kennzahlen, ML extern"], ["●", "Dashboards mit Widgets"], ["●", "RPC an Geräte, Alarme"]],
+      was: "Open-Source-IoT-Plattform (Community Edition), selbst betreibbar oder als Cloud-Angebot.",
+      kann: "Geräteverwaltung, Rule Engine, Speicherung, Dashboards, Alarme und Befehle an Geräte (RPC) in einem Produkt.",
+      warum: "Daten bleiben im eigenen Rechenzentrum, Dashboards stehen schnell, keine Bindung an einen Cloud-Anbieter.",
+      nicht: "Anspruchsvolles Machine Learning im grossen Stil: Dafür braucht es zusätzliche Analytics-Werkzeuge." },
+    { name: "Eclipse Ditto", rolle: "infra",
+      abd: [["○", ""], ["◐", "Connectivity zu MQTT, AMQP, Kafka, HTTP"], ["◐", "Payload Mapping"], ["◐", "speichert den Twin-Zustand, keine Zeitreihen"], ["○", ""], ["○", ""], ["●", "Soll-Zustand, Befehle, Policies über REST und WebSocket"]],
+      was: "Open-Source-Framework der Eclipse Foundation für Digital Twins.",
+      kann: "Verwaltet «Things» mit Zustand und feinen Zugriffsrechten. Anwendungen lesen und ändern den Twin per REST oder WebSocket, auch wenn das Gerät gerade offline ist.",
+      warum: "Fachanwendungen sollen nicht MQTT sprechen müssen. Der Twin ist eine saubere API zwischen Geräten und Anwendungen.",
+      nicht: "Man sucht eine komplette Plattform: Ditto ersetzt weder Dashboard noch Zeitreihen-DB und wird oft mit Eclipse Hono (Geräteanbindung) kombiniert." }
+  ];
+  const abd = $("#t08-abd");
+  KOMP.forEach((k, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<th scope="row">' + esc(k) + "</th>" + PLATTF.map((p) => {
+      const a = p.abd[i];
+      const wort = a[0] === "●" ? "selbst" : a[0] === "◐" ? "teilweise" : "nicht";
+      return '<td><span class="t08-sym' + (a[0] === "●" ? " t08-voll" : a[0] === "◐" ? " t08-halb" : "") + '" aria-hidden="true"></span><span class="sr-only">' + wort + "</span>" + (a[1] ? "<br><small>" + esc(a[1]) + "</small>" : "") + "</td>";
+    }).join("");
+    abd.appendChild(tr);
+  });
+  const plattf = $("#t08-plattf");
+  PLATTF.forEach((p) => {
+    const d = document.createElement("div");
+    d.className = "t08-karte ar-r-" + p.rolle;
+    d.innerHTML = "<h4>" + esc(p.name) + "</h4><dl><dt>Was</dt><dd>" + esc(p.was) + "</dd><dt>Kann</dt><dd>" + esc(p.kann) + "</dd><dt>Warum wählen</dt><dd>" + esc(p.warum) + "</dd><dt>Passt nicht, wenn</dt><dd>" + esc(p.nicht) + "</dd></dl>";
+    plattf.appendChild(d);
+  });
+  L.auswahl("#t08-plattf-frage", {
+    frage: "Die Gemeinde Seedorf (fiktiv) will Messwerte ihrer Strassenlampen im eigenen Rechenzentrum halten, schnell eigene Dashboards bauen und nicht von einem Cloud-Anbieter abhängen. Was passt am besten?",
+    optionen: ["Azure IoT Hub", "ThingsBoard, selbst betrieben", "Eclipse Ditto allein", "AWS IoT Core"],
+    richtig: 1,
+    erklaerung: "ThingsBoard läuft im eigenen Rechenzentrum und bringt Geräteanbindung, Speicher und Dashboards mit. Azure und AWS sind Cloud-Dienste. Ditto allein hat weder Dashboard noch Zeitreihen-Speicher."
+  });
+
+  /* ---------- 8 · Edge oder Cloud ---------- */
+  L.sortierer("#t08-sort-edge", {
+    kategorien: ["Edge (vor Ort)", "Cloud (Plattform)"],
+    elemente: [
+      { html: "Fräsmaschine stoppen, sobald die Vibration einen Grenzwert überschreitet", kategorie: 0, erklaerung: "Not-Aus braucht Millisekunden. Der Weg in die Cloud und zurück dauert zu lange." },
+      { html: "Ausfallprognose aus zwei Jahren Daten von 400 Maschinen", kategorie: 1, erklaerung: "Viele Daten von vielen Standorten und viel Rechenleistung: Cloud." },
+      { html: "1000 Werte pro Sekunde zu Minutenmittelwerten verdichten", kategorie: 0, erklaerung: "Verdichten vor Ort spart Bandbreite im Access Network." },
+      { html: "Lüftung im Reifekeller weiter regeln, während der Mobilfunk ausfällt", kategorie: 0, erklaerung: "Ohne Netz kann nur das Edge Gateway reagieren." },
+      { html: "Ein neues Machine-Learning-Modell trainieren", kategorie: 1, erklaerung: "Training braucht viel Rechenleistung und die Daten aller Geräte." },
+      { html: "Kamerabilder vor Ort anonymisieren, bevor sie das Werk verlassen", kategorie: 0, erklaerung: "Datenschutz: Rohbilder bleiben am Rand, nur Ergebnisse gehen weiter." },
+      { html: "Dashboard der Geschäftsleitung über alle Standorte", kategorie: 1, erklaerung: "Der Überblick über alle Standorte entsteht zentral." },
+      { html: "Neue Firmware planen und an 5000 Geräte verteilen", kategorie: 1, erklaerung: "Operations in der Plattform steuert den Rollout zentral; die Gateways führen ihn aus." }
+    ]
+  });
+  L.zahlAufgabe("#t08-zahl-edge", {
+    titel: "Datenmenge im Access Network",
+    frage: "Die Käserei hat 200 Fühler. Jeder misst einmal pro Sekunde, eine Nachricht hat 80 Byte. Das Edge Gateway verdichtet auf eine Nachricht pro Fühler und Minute. Wie viele MB (1 MB = 1 000 000 Byte) gehen danach pro Tag über das Access Network? Auf zwei Stellen.",
+    antwort: 23.04, toleranz: 0.01, einheit: "MB",
+    hinweise: ["Ein Tag hat 1440 Minuten.", "Nachrichten pro Tag = Fühler × Nachrichten je Fühler und Tag."],
+    loesungsweg: [
+      "Ohne Verdichtung: 200 × 86 400 × 80 Byte = 1 382 400 000 Byte = 1382.4 MB pro Tag.",
+      "Mit Verdichtung: 200 × 1440 × 80 Byte = 23 040 000 Byte = 23.04 MB pro Tag.",
+      "Das ist 60-mal weniger. Genau deshalb verdichtet das Edge Gateway, bevor es teuren Mobilfunk nutzt."
+    ]
+  });
+
+  /* ---------- 9 · RAMI 4.0 ---------- */
+  const LAYERS = [
+    { n: "Asset", t: "das physische Ding selbst, aber auch Pläne und Software als Werte", b: "Die Maschine mit Werkzeug und Heizzonen." },
+    { n: "Integration", t: "der Übergang von der realen in die digitale Welt: Sensoren, Aktoren, Steuerungen", b: "Temperaturfühler an den Heizzonen, Drucksensor und Ventile; die Steuerung liest sie aus." },
+    { n: "Communication", t: "einheitlicher Zugriff auf Daten über Protokolle und Formate", b: "Die Steuerung stellt ihre Werte per OPC UA bereit, das Edge Gateway leitet sie per MQTT weiter." },
+    { n: "Information", t: "Daten mit Bedeutung: Informationsmodell, Ereignisse, Vorverarbeitung", b: "Das Modell sagt: «Zone3.Temperatur» ist eine Temperatur in °C mit Sollwert 230." },
+    { n: "Functional", t: "Funktionen auf den Daten: Auswertung, Regeln, Fernwartung, Steuerlogik", b: "Eine Auswertung erkennt, dass die Zykluszeit steigt, und schlägt eine Wartung vor." },
+    { n: "Business", t: "Geschäftsprozesse, Aufträge, Verträge, Abrechnung", b: "Das ERP plant die Wartung zwischen zwei Aufträgen und bestellt das Ersatzteil." }
+  ];
+  const LEBEN = [
+    { n: "Typ · Entwicklung", t: "Der Maschinentyp wird entworfen und simuliert, noch gibt es kein Exemplar." },
+    { n: "Typ · Wartung/Nutzung", t: "Der Typ wird gepflegt: neue Firmware-Version, verbesserte Baureihe für alle Exemplare." },
+    { n: "Instanz · Produktion", t: "Ein konkretes Exemplar mit Seriennummer wird gebaut, geprüft und ausgeliefert." },
+    { n: "Instanz · Wartung/Nutzung", t: "Das Exemplar läuft im Werk, wird überwacht und gewartet. Hier entstehen die meisten IoT-Daten." }
+  ];
+  const HIER = [
+    { n: "Product", t: "das Werkstück, z. B. ein Deckel, der seine eigenen Daten mitträgt" },
+    { n: "Field Device", t: "ein einzelner Sensor oder Aktor, z. B. ein Temperaturfühler" },
+    { n: "Control Device", t: "die Steuerung der Maschine (SPS)" },
+    { n: "Station", t: "die ganze Maschine als Arbeitsstation" },
+    { n: "Work Centers", t: "die Fertigungslinie oder Halle" },
+    { n: "Enterprise", t: "das ganze Unternehmen mit seinem ERP" },
+    { n: "Connected World", t: "Lieferanten, Kunden und Dienstleister über die Firmengrenze hinaus" }
+  ];
+  const rami = { l: 2, c: 3, h: 2 };
+  const RX = 92, RY = 252, CW = 40, CH = 26, DX = 19, DY = 11;
+  const pt = (x, y, z) => (RX + x * CW + z * DX).toFixed(1) + "," + (RY - y * CH - z * DY).toFixed(1);
+  const poly = (a) => a.map((p) => pt(p[0], p[1], p[2])).join(" ");
+  function ramiZeichnen() {
+    let s = '<svg viewBox="0 0 460 296" role="img" aria-labelledby="t08-rami-titel"><title id="t08-rami-titel">RAMI-4.0-Würfel. Gewählt: Layer ' + LAYERS[rami.l].n + ", " + LEBEN[rami.c].n + ", Hierarchy Level " + HIER[rami.h].n + "</title>";
+    const kl = (l, c, h) => "t08-rz" + (l === rami.l ? " t08-an-l" : "") + (c === rami.c ? " t08-an-c" : "") + (h === rami.h ? " t08-an-h" : "");
+    for (let x = 0; x < 4; x++) for (let y = 0; y < 6; y++) s += '<polygon class="' + kl(y, x, -1) + '" points="' + poly([[x, y, 0], [x + 1, y, 0], [x + 1, y + 1, 0], [x, y + 1, 0]]) + '"/>';
+    for (let z = 0; z < 7; z++) for (let y = 0; y < 6; y++) s += '<polygon class="' + kl(y, -1, z) + '" points="' + poly([[4, y, z], [4, y, z + 1], [4, y + 1, z + 1], [4, y + 1, z]]) + '"/>';
+    for (let x = 0; x < 4; x++) for (let z = 0; z < 7; z++) s += '<polygon class="' + kl(-1, x, z) + '" points="' + poly([[x, 6, z], [x + 1, 6, z], [x + 1, 6, z + 1], [x, 6, z + 1]]) + '"/>';
+    LAYERS.forEach((L2, y) => { s += '<text class="t08-rami-achse" x="' + (RX - 6) + '" y="' + (RY - y * CH - CH / 2 + 4) + '" text-anchor="end">' + L2.n + "</text>"; });
+    s += '<text class="t08-rami-achse" x="' + (RX + CW) + '" y="' + (RY + 16) + '" text-anchor="middle">Typ</text><text class="t08-rami-achse" x="' + (RX + 3 * CW) + '" y="' + (RY + 16) + '" text-anchor="middle">Instanz</text>';
+    s += '<text class="t08-rami-achse" x="' + (RX + 2 * CW) + '" y="' + (RY + 32) + '" text-anchor="middle">Life Cycle &amp; Value Stream →</text>';
+    s += '<text class="t08-rami-achse" x="' + (RX + 4 * CW + 7 * DX + 4) + '" y="' + (RY - 7 * DY + 14) + '">Hierarchy</text><text class="t08-rami-achse" x="' + (RX + 4 * CW + 7 * DX + 4) + '" y="' + (RY - 7 * DY + 28) + '">Levels ↗</text>';
+    s += '<text class="t08-rami-achse" x="' + (RX - 6) + '" y="' + (RY - 6 * CH - 12) + '" text-anchor="end">Layers ↑</text>';
+    s += "</svg>";
+    $("#t08-rami-bild").innerHTML = s;
+    $("#t08-rami-text").innerHTML = "<p><b>Kästchen:</b> " + LAYERS[rami.l].n + " × " + LEBEN[rami.c].n + " × " + HIER[rami.h].n + "</p>" +
+      "<p><b>Layer " + LAYERS[rami.l].n + ":</b> " + LAYERS[rami.l].t + ". Beispiel: " + LAYERS[rami.l].b + "</p>" +
+      "<p><b>" + LEBEN[rami.c].n + ":</b> " + LEBEN[rami.c].t + "</p>" +
+      "<p><b>Hierarchy Level " + HIER[rami.h].n + ":</b> " + HIER[rami.h].t + ".</p>";
+    document.querySelectorAll("#t08-rami-wahl button").forEach((b) => b.setAttribute("aria-pressed", String(rami[b.dataset.achse] === Number(b.dataset.i))));
+  }
+  const ramiWahl = $("#t08-rami-wahl");
+  [["l", "Layers (senkrecht)", LAYERS, "business"], ["c", "Life Cycle & Value Stream (waagrecht)", LEBEN, "client"], ["h", "Hierarchy Levels (Tiefe)", HIER, "infra"]].forEach(([achse, titel, liste, rolle]) => {
+    const fs = document.createElement("fieldset");
+    fs.className = "ar-r-" + rolle;
+    fs.innerHTML = "<legend>" + esc(titel) + '</legend><div class="t08-wahl"></div>';
+    const w = $(".t08-wahl", fs);
+    liste.forEach((x, i) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "btn"; b.textContent = x.n; b.dataset.achse = achse; b.dataset.i = i;
+      b.addEventListener("click", () => { rami[achse] = i; ramiZeichnen(); });
+      w.appendChild(b);
+    });
+    ramiWahl.appendChild(fs);
+  });
+  ramiZeichnen();
+
+  /* ---------- 10 · Wahr/Falsch und Schritt-Aufgabe ---------- */
+  L.wahrFalsch("#t08-wf", {
+    titel: "Aussagen zur IoT-Referenz",
+    aussagen: [
+      { html: "Das Access Network verbindet den Edge Tier (und den Data Provider) mit dem Platform Tier.", wahr: true, erklaerung: "Genau: Es ist das Weitverkehrsnetz vom Standort zur Plattform." },
+      { html: "Field Network und Access Network sind zwei Namen für dasselbe Netz.", wahr: false, erklaerung: "Das Field Network ist lokal und sparsam (z. B. LoRaWAN), das Access Network das Weitverkehrsnetz (z. B. LTE-M)." },
+      { html: "Ein ERP im Enterprise Tier schaltet Aktoren direkt über das Field Network.", wahr: false, erklaerung: "Befehle laufen über Operations Algorithms & UI, das Access Network und das Edge Gateway (Control Flow)." },
+      { html: "Data Transform steht in der Referenz zwischen Platform Gateway und DBMS.", wahr: true, erklaerung: "Rohdaten werden zuerst geprüft und aufbereitet, dann gespeichert." },
+      { html: "Zwischen Platform Gateway und Data Transform modellierst du zusätzlich einen RabbitMQ-Broker.", wahr: false, erklaerung: "Das Platform Gateway enthält den MQTT-Broker bereits. Ein zusätzlicher Broker ist eine typische Falle." },
+      { html: "Bei Ausfall des Access Network puffert das Edge Gateway die Messwerte und kann lokal reagieren.", wahr: true, erklaerung: "Darum lohnt sich Rechenleistung am Rand (Edge Computing)." }
+    ]
+  });
+  L.schrittAufgabe("#t08-sa", {
+    titel: "Parkleitsystem Seeburg (fiktiv)",
+    aufgabe: "<p>Die Stadt Seeburg baut ein Parkleitsystem. Bodensensoren in jedem Parkfeld melden «belegt» oder «frei» per LoRaWAN an Gateways auf Kandelabern. Die Gateways senden per MQTT über Glasfaser an eine IoT-Plattform. Eine Verkehrsdaten-API des Kantons liefert Baustellen und Staus. Die Plattform zählt freie Plätze je Parkhaus, speichert den Verlauf, sagt die Auslastung voraus, zeigt alles der Verkehrsleitstelle und setzt die Anzeigetafeln an den Einfahrten («Parkhaus voll»). Das Gebührensystem der Stadt bekommt die Belegungszeiten. Ordne alles der Referenz zu.</p>",
+    schritte: [
+      { html: "<b>Edge Tier:</b> «Parkfeld-Sensoren» (stationär, *) und «Anzeigetafeln» (stationär, *, Aktoren), «Field Network (LoRaWAN)», «Edge Gateway (Kandelaber)».", warum: "Sensoren und Tafeln sind Dinge vor Ort. Die Tafeln sind Aktoren: Sie bekommen Befehle." },
+      { html: "<b>Data Provider:</b> «Verkehrsdaten-API (Kanton)», angeschlossen über das Access Network.", warum: "Fremde Daten, die die eigenen Geräte nicht messen." },
+      { html: "<b>Access Network:</b> «Access Network (Glasfaser)», Verbindungen mit «MQTT» beschriftet.", warum: "Weitverkehr vom Kandelaber zur Plattform; MQTT ist leicht und hält die Verbindung für Befehle offen." },
+      { html: "<b>Platform Tier:</b> Platform Gateway → Data Transform (freie Plätze zählen) → DBMS (Verlauf) → Analytics (Auslastungsprognose) → Dashboard (Verkehrsleitstelle); dazu Operations (Tafeln setzen).", warum: "Jede Aufgabe aus dem Text hat ihre Komponente: zählen, speichern, voraussagen, zeigen, steuern." },
+      { html: "<b>Service Network und Enterprise Tier:</b> «Service Network (REST)» → «Gebührensystem der Stadt» als Domain Application.", warum: "Das Gebührensystem nutzt Ergebnisse (Belegungszeiten), keine Rohdaten." },
+      { html: "<b>Control Flow:</b> Operations → Access Network → Edge Gateway → Field Network → Anzeigetafel. <b>Data Flow:</b> Sensor → … → Gebührensystem.", warum: "Die Tafel wird nicht vom Dashboard geschaltet, sondern über Operations. Das ist der Rückweg der Referenz." }
+    ]
+  });
+
+  /* ---------- 11 · Spiel ---------- */
+  const NETZ_HINWEIS = '<p class="hint">Hinweis zum Spielfeld: Netze wie das Access Network oder Service Network liegen in der Referenz zwischen den Tiers. Leg sie hier in das Paket links davon; ihre Lage wird nicht bewertet, ihre Verbindungen schon.</p>';
+  const LEVEL_LAMPEN = {
+    id: "l0", titel: "Smarte Strassenlampen: Control Flow", schwierigkeit: 1, modus: "uml", referenz: "iot",
+    auftrag: '<p>Die Gemeinde Seedorf (fiktiv) macht ihre Beleuchtung smart. Jede <span data-baustein="lampe">Strassenlampe</span> hat einen Bewegungsmelder (Sensor) und einen dimmbaren LED-Treiber (Aktor). Die Lampen funken über das <span data-baustein="field">Field Network (Zigbee)</span> an ein <span data-baustein="edgegw">Edge Gateway</span> im Verteilkasten. Das Gateway sendet die Zustände per MQTT über das <span data-baustein="access">Access Network (Glasfaser)</span> an das <span data-baustein="platgw">Platform Gateway</span>. <span data-baustein="transform">Data Transform</span> bereitet auf und speichert ins <span data-baustein="dbms">DBMS</span>. Nachts löst <span data-baustein="ops">Operations Algorithms &amp; UI</span> nach einem Dimmplan Befehle aus, die per MQTT über das Access Network zurück zu den Lampen gehen. Operations liest dazu die Zustände aus dem DBMS.</p>',
+    pakete: [{ id: "p-edge", name: "Edge Tier", spalte: 0, zeile: 0 }, { id: "p-platform", name: "Platform Tier", spalte: 2, zeile: 0 }],
+    palette: [
+      { id: "ops", typ: "dienst", rolle: "client", name: "Operations Algorithms & UI" },
+      { id: "lampe", typ: "extern", rolle: "infra", name: "Strassenlampen (stationär)" },
+      { id: "dbms", typ: "datenbank", rolle: "daten", name: "DBMS" },
+      { id: "websrv", typ: "dienst", rolle: "extern", name: "Web-Server im Verteilkasten", ablenker: true, falle: "Ein Web-Server ist Infrastruktur, keine Komponente. Die Aufgaben vor Ort übernimmt das Edge Gateway." },
+      { id: "edgegw", typ: "gateway", rolle: "webapi", name: "Edge Gateway" },
+      { id: "access", typ: "bus", rolle: "infra", name: "Access Network (Glasfaser)" },
+      { id: "dashboard", typ: "dienst", rolle: "client", name: "Dashboard", ablenker: true },
+      { id: "platgw", typ: "gateway", rolle: "webapi", name: "Platform Gateway" },
+      { id: "field", typ: "bus", rolle: "infra", name: "Field Network (Zigbee)" },
+      { id: "erp", typ: "extern", rolle: "shared", name: "ERP der Gemeinde", ablenker: true, falle: "Der Auftrag nennt keine Fachanwendung. Ohne Enterprise Tier im Auftrag kein ERP im Modell." },
+      { id: "transform", typ: "dienst", rolle: "business", name: "Data Transform" }
+    ],
+    protokolle: ["MQTT", "REST", "AMQP", "SOAP", "HTTP"],
+    loesung: {
+      elemente: [
+        { id: "lampe", paket: "p-edge" }, { id: "field", paket: "p-edge" }, { id: "edgegw", paket: "p-edge" }, { id: "access", paket: null },
+        { id: "platgw", paket: "p-platform" }, { id: "transform", paket: "p-platform" }, { id: "dbms", paket: "p-platform" }, { id: "ops", paket: "p-platform" }
+      ],
+      verbindungen: [
+        { von: "lampe", nach: "field", art: "assoziation", warum: "Die Lampen funken ins Feldnetz." },
+        { von: "field", nach: "edgegw", art: "assoziation", warum: "Das Feldnetz endet am Edge Gateway im Verteilkasten." },
+        { von: "edgegw", nach: "access", art: "assoziation", protokoll: "MQTT", warum: "Das Gateway sendet per MQTT über das Access Network." },
+        { von: "access", nach: "platgw", art: "assoziation", protokoll: "MQTT", warum: "Die Zustände erreichen das Platform Gateway." },
+        { von: "platgw", nach: "transform", art: "assoziation", warum: "Rohdaten gehen in die Aufbereitung." },
+        { von: "transform", nach: "dbms", art: "assoziation", warum: "Aufbereitete Zustände werden gespeichert." },
+        { von: "ops", nach: "dbms", art: "assoziation", warum: "Operations liest die Zustände aus dem DBMS." },
+        { von: "ops", nach: "access", art: "assoziation", protokoll: "MQTT", warum: "Control Flow: Die Dimmbefehle gehen per MQTT über das Access Network zurück." }
+      ],
+      beschreibungen: [{ id: "ops", richtig: 2, optionen: [
+        "Zeigt der Gemeinde die Zustände aller Lampen als Karte.",
+        "Rechner im Verteilkasten, der Zigbee in MQTT übersetzt.",
+        "Steuerlogik der Plattform: löst nach dem Dimmplan Befehle aus und schickt sie über das Access Network zurück an die Lampen (Control Flow)."
+      ] }]
+    },
+    gewichte: { komponenten: 2, pakete: 1, stereotypen: 1, verbindungen: 2, beschriftungen: 1, beschreibungen: 1 },
+    zielzeit: 360,
+    erklaerung: "Der Control Flow beginnt bei Operations in der Plattform und läuft über das Access Network zurück ins Feld. Das Dashboard steht nicht im Auftrag."
+  };
+  const levels = [LEVEL_LAMPEN].concat(IOT_LEVELS).map((l) => Object.assign({}, l, { auftrag: l.auftrag + NETZ_HINWEIS }));
+  A.spiel("#t08-spiel", { spielId: "avsw-08-iot", fach: "avsw", titel: "IoT-Architekturen modellieren", levels: levels });
+
+  /* ---------- Film: Vom Sensor zur Entscheidung ---------- */
+  const FK = {
+    sensor: ["Klima-Fühler (stationär) *", "infra", "edge"], lkw: ["Tank-Fühler im LKW (mobil) *", "infra", "edge"],
+    klappe: ["Lüftungsklappen (Aktoren) *", "infra", "edge"], field: ["Field Network (LoRaWAN)", "infra", "edge"], edgegw: ["Edge Gateway", "webapi", "edge"],
+    wetter: ["Wetter-API", "extern", "dp"],
+    platgw: ["Platform Gateway", "webapi", "plat"], transform: ["Data Transform", "business", "plat"], dbms: ["DBMS (Zeitreihen)", "daten", "plat"],
+    analytics: ["Analytics", "business", "plat"], dash: ["Dashboard", "client", "plat"], ops: ["Operations Algorithms & UI", "client", "plat"],
+    erp: ["ERP (Qualität, Chargen)", "shared", "ent"]
+  };
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  function buehne(sicht, neu, flow, box) {
+    const has = (id) => sicht.includes(id);
+    const k = (id) => {
+      const f = FK[id];
+      if (!has(id)) return '<div class="t08-fk t08-leer" aria-hidden="true">–</div>';
+      const inner = '<div class="t08-fk ar-r-' + f[1] + '">' + esc(f[0]) + "</div>";
+      return neu.includes(id) ? NW(inner) : inner;
+    };
+    const paket = (name, ids, sichtbar) => sichtbar ? '<div class="t08-fp"><span class="t08-fp-name">' + name + "</span>" + ids.map(k).join("") + "</div>" : '<div class="t08-fp" style="visibility:hidden"></div>';
+    const netz = (id, name) => {
+      if (!has(id)) return '<div class="t08-fn t08-leer" aria-hidden="true">.</div>';
+      const inner = '<div class="t08-fn">' + name + "</div>";
+      return neu.includes(id) ? NW(inner) : inner;
+    };
+    const edgeSicht = ["sensor", "lkw", "klappe", "field", "edgegw"].some(has);
+    let s = '<div class="t08-fs"><div>' + paket("Edge Tier", ["sensor", "lkw", "klappe", "field", "edgegw"].filter(has), edgeSicht) +
+      (has("wetter") ? paket("Data Provider", ["wetter"], true) : "") + "</div>" +
+      netz("access", "Access Network (LTE-M)") +
+      paket("Platform Tier", ["platgw", "transform", "dbms", "analytics", "dash", "ops"].filter(has), ["platgw", "transform", "dbms", "analytics", "dash", "ops"].some(has)) +
+      netz("service", "Service Network") +
+      paket("Enterprise Tier", ["erp"].filter(has), has("erp")) + "</div>";
+    if (flow) s += '<div class="t08-fflow"><span class="' + (flow === "df" || flow === "beide" ? "t08-an" : "") + '">Data Flow →</span><span class="' + (flow === "cf" || flow === "beide" ? "t08-an" : "") + '">← Control Flow</span></div>';
+    if (box) s += '<div class="t08-fbox">' + box + "</div>";
+    return s;
+  }
+  const S1 = ["sensor", "lkw"], S2 = S1.concat(["klappe"]), S3 = S2.concat(["field"]), S4 = S3.concat(["edgegw"]), S5 = S4.concat(["access"]), S6 = S5.concat(["wetter"]),
+    S7 = S6.concat(["platgw"]), S8 = S7.concat(["transform"]), S9 = S8.concat(["dbms"]), S10 = S9.concat(["analytics"]), S11 = S10.concat(["dash"]),
+    S12 = S11.concat(["service"]), S13 = S12.concat(["erp"]), S14 = S13.concat(["ops"]);
+  L.film("#t08-film", {
+    phasen: ["1 · Dinge", "2 · Edge Tier", "3 · Platform Tier", "4 · Enterprise Tier", "5 · Control Flow", "6 · Ausfall und Beschreibung"],
+    texte: [
+      'Die Käserei Bergblick (fiktiv) überwacht ihre <span data-ph="keller">Reifekeller</span> mit <span data-ph="fuehler">Klima-Fühlern</span> und die <span data-ph="lkw">Milchsammel-LKW</span> mit Tank-Fühlern. Alle funken über <span data-ph="lora">LoRaWAN</span> an ein <span data-ph="edge">Gateway im Betrieb</span>.',
+      'Eine <span data-ph="cloud">Cloud-Plattform</span> nimmt die Werte per <span data-ph="mqtt">MQTT über Mobilfunk</span> an, <span data-ph="auf">bereitet sie auf</span>, <span data-ph="speich">speichert</span> sie, erkennt <span data-ph="trend">Qualitätsrisiken</span> und zeigt sie im <span data-ph="dash">Dashboard</span>. Ein <span data-ph="wetter">Wetterdienst</span> liefert Aussenwerte.',
+      'Risiken gehen als Meldung an das <span data-ph="erp">ERP</span>. Die Käserin kann die <span data-ph="klappe">Lüftungsklappen</span> aus der Plattform verstellen. Fällt der <span data-ph="funk">Mobilfunk</span> aus, dürfen keine Werte verloren gehen.'
+    ],
+    woerterbuch: ["Sensor, Aktor", "Field Network", "Edge Gateway", "MQTT · QoS 1", "Access Network", "Data Provider", "Platform Gateway", "Data Transform", "DBMS", "Analytics", "Dashboard", "Service Network", "Domain Application", "Operations", "Control Flow"],
+    beschriftung: { texte: "Der Auftrag", text: "Absatz", formel: "UML-Komponentendiagramm (Skizze)" },
+    szenen: [
+      { ph: -1, sent: "all", say: "Muster: IoT-Referenzarchitektur. Drei Tiers (Edge, Platform, Enterprise), dazu der Data Provider, drei Netze und zwei Flussrichtungen. Wir modellieren die Käserei Bergblick Schritt für Schritt." },
+      { ph: 0, sent: 0, hl: ["keller", "fuehler", "lkw"], f: buehne(S1, S1), say: "Zuerst die Dinge. Die Klima-Fühler im Keller sind stationär, die Tank-Fühler im LKW mobil. Es sind viele, darum die Multiplizität Stern." },
+      { ph: 0, sent: 2, hl: ["klappe"], dict: 1, dh: [0], f: buehne(S2, ["klappe"]), say: "Die Lüftungsklappen sind Aktoren: Sie verändern die Welt. Auch sie sind stationäre IoT Devices im Edge Tier." },
+      { ph: 1, sent: 0, hl: ["lora"], dict: 2, dh: [1], f: buehne(S3, ["field"]), say: "Die Geräte funken über LoRaWAN. Das ist das Field Network: lokal, sparsam, kleine Pakete. Die Technologie schreibst du in den Namen." },
+      { ph: 1, sent: 0, hl: ["edge"], dict: 3, dh: [2], f: buehne(S4, ["edgegw"]), say: "Das Gateway im Betrieb ist das Edge Gateway. Es übersetzt LoRaWAN in MQTT, mittelt die Werte pro Minute und prüft Grenzwerte lokal." },
+      { ph: 1, sent: 1, hl: ["mqtt"], dict: 4, dh: [3], f: buehne(S4, [], null, "Topic <code>bergblick/keller-2/klima/fuehler-07</code>, QoS 1: mindestens einmal, Duplikate möglich."), say: "Das Gateway publiziert per MQTT mit QoS 1. So geht nichts verloren; doppelte Nachrichten muss die Plattform aushalten." },
+      { ph: 1, sent: 1, hl: ["mqtt"], dict: 5, dh: [4], f: buehne(S5, ["access"]), say: "Mobilfunk ist das Access Network zwischen Edge und Plattform. Es ist eine eigene Komponente, die Verbindung beschriftest du mit MQTT." },
+      { ph: 1, sent: 1, hl: ["wetter"], dict: 6, dh: [5], f: buehne(S6, ["wetter"]), say: "Der Wetterdienst ist ein Data Provider. Er speist seine Werte über das Access Network ein, genau wie ein Gerät." },
+      { ph: 2, sent: 1, hl: ["cloud"], dict: 7, dh: [6], f: buehne(S7, ["platgw"]), say: "In der Cloud beginnt der Platform Tier mit dem Platform Gateway: Es prüft das Zertifikat des Edge Gateways und enthält den MQTT-Broker." },
+      { ph: 2, sent: 1, hl: ["auf"], dict: 8, dh: [7], f: buehne(S8, ["transform"]), say: "«Bereitet auf» heisst Data Transform: Werte prüfen, Keller und Charge ergänzen, ins einheitliche Format bringen." },
+      { ph: 2, sent: 1, hl: ["speich"], dict: 9, dh: [8], f: buehne(S9, ["dbms"]), say: "«Speichert» heisst DBMS. Für Messwerte über die Zeit passt eine Zeitreihen-Datenbank." },
+      { ph: 2, sent: 1, hl: ["trend"], dict: 10, dh: [9], f: buehne(S10, ["analytics"]), say: "«Erkennt Qualitätsrisiken» ist Analytics. Ein Modell sieht im Verlauf, dass die Feuchte sinkt und die Rinde bald reisst." },
+      { ph: 2, sent: 1, hl: ["dash"], dict: 11, dh: [10], f: buehne(S11, ["dash"]), say: "Das Dashboard zeigt der Käserin Verlauf, Prognose und Alarm. Es holt die Daten aus der Plattform, nie direkt vom Fühler." },
+      { ph: 3, sent: 2, hl: ["erp"], dict: 12, dh: [11], f: buehne(S12, ["service"]), say: "Zum ERP geht es über das Service Network. Es verbindet die Plattform mit den Fachanwendungen, meist über REST." },
+      { ph: 3, sent: 2, hl: ["erp"], dict: 13, dh: [12], f: buehne(S13, ["erp"]), say: "Das ERP ist eine Domain Application im Enterprise Tier. Es bekommt keinen Messwert, sondern eine Qualitätsmeldung zur Charge." },
+      { ph: 3, sent: "all", f: buehne(S13, [], "df"), say: "Damit steht der Data Flow: Fühler, Field Network, Edge Gateway, Access Network, Platform Gateway, Transform, DBMS, Analytics, Service Network, ERP." },
+      { ph: 4, sent: 2, hl: ["klappe"], dict: 14, dh: [13], f: buehne(S14, ["ops"], "df"), say: "Die Käserin verstellt die Klappen «aus der Plattform». Dafür gibt es Operations Algorithms und UI. Hier beginnt der Control Flow." },
+      { ph: 4, sent: 2, hl: ["klappe"], dict: 15, dh: [14], f: buehne(S14, [], "cf", "Control Flow: Operations → Access Network → Edge Gateway → Field Network → Lüftungsklappe. Operations liest vorher den Zustand im DBMS."), say: "Der Befehl läuft zurück: über das Access Network zum Edge Gateway, ins Feldnetz und zur Klappe. Das ERP schaltet nie direkt." },
+      { ph: 4, sent: 2, f: buehne(S14, [], "beide", "Auch das ERP darf einen Befehl auslösen, aber immer über Operations: ERP → Operations → … → Aktor."), say: "Löst das ERP einen Befehl aus, etwa «Keller 2 stilllegen», geht auch er über Operations. Nur dort kennt man Gerät, Zustand und Berechtigung." },
+      { ph: 5, sent: 2, hl: ["funk"], f: buehne(S14, [], "beide", "Ausfall Access Network: Edge Gateway puffert (QoS 1, lokaler Speicher), regelt die Klappen lokal nach Grenzwert und sendet nach der Störung nach."), say: "Fällt der Mobilfunk aus, arbeitet der Rand weiter. Das Edge Gateway puffert und regelt lokal. Danach sendet es nach, die Zeitreihe bekommt keine Lücke." },
+      { ph: 5, sent: null, f: buehne(S14, [], "beide", "<b>Edge Gateway:</b> Rechner in der Käserei, der die Fühler über LoRaWAN bündelt, die Werte pro Minute verdichtet und per MQTT an die Plattform sendet. Bei Ausfall des Mobilfunks puffert es und regelt die Lüftung lokal."), say: "Jetzt die Beschreibungen. Je Komponente zwei bis drei Sätze: was sie ist, was sie tut, warum. So für das Edge Gateway." },
+      { ph: 5, sent: null, f: buehne(S14, [], "beide", "<b>Platform Gateway:</b> Eingang der Plattform in der Cloud mit MQTT-Broker. Authentisiert jedes Gateway mit Zertifikat, nimmt die Telemetrie an und leitet Befehle an die Geräte zurück."), say: "Und für das Platform Gateway. Achte auf den Unterschied: vor Ort gegen in der Cloud." },
+      { ph: 5, sent: null, f: buehne(S14, [], "beide", "Prüfliste: drei Tiers als Pakete · Data Provider · drei Netze als Komponenten · Technologie im Namen · Verbindungen beschriftet · kein Web-Server · kein Zusatz-Broker · Control Flow über Operations."), say: "Zum Schluss die Prüfliste: Pakete, Netze, Beschriftungen, keine Infrastruktur als Komponente, Control Flow über Operations." },
+      { ph: 5, sent: null, f: buehne(S14, [], "beide"), say: "Fertig: Vom Sensor zur Entscheidung in einem Diagramm. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t08-test", {
+    fragen: [
+      { q: "Welche Komponente übersetzt LoRaWAN in MQTT und puffert bei Netzausfall?", o: ["Platform Gateway", "Edge Gateway", "Data Transform", "Service Network"], a: 1, e: "Das Edge Gateway steht vor Ort, spricht das Feldnetz und puffert, wenn das Access Network ausfällt." },
+      { q: "Welcher Weg beschreibt den Control Flow der Referenz?", o: ["Sensor → Field Network → Edge Gateway → Access Network → Platform Gateway", "Domain Application → Operations Algorithms &amp; UI → Access Network → Edge Gateway → Field Network → Aktor", "Domain Application → Field Network → Aktor", "Dashboard → Sensor"], a: 1, e: "Befehle laufen über Operations in der Plattform zurück ins Feld. Die erste Option ist der Data Flow." },
+      { q: "Stolperfalle: Woher bekommt das Dashboard in der Referenz seine Daten?", o: ["Direkt vom Sensor, damit es schneller ist", "Aus der Plattform (Analytics und DBMS)", "Vom Edge Gateway über das Field Network", "Aus dem ERP"], a: 1, e: "Das Dashboard liegt im Platform Tier und zeigt aufbereitete und ausgewertete Daten. Eine direkte Verbindung zum Sensor ist eine typische Falle." },
+      { q: "Was bedeutet MQTT QoS 1?", o: ["höchstens einmal, kann verloren gehen", "mindestens einmal, Duplikate sind möglich", "genau einmal mit vier Paketen", "nur für Befehle erlaubt"], a: 1, e: "Bei QoS 1 wiederholt der Sender, bis ein PUBACK kommt. Geht das PUBACK verloren, kommt die Nachricht doppelt an." },
+      { q: "Was macht der Broker mit einer Retained Message?", o: ["Er löscht sie nach dem Zustellen sofort.", "Er speichert die letzte Nachricht des Topics und gibt sie jedem neuen Abonnenten sofort.", "Er sendet sie, wenn ein Gerät unerwartet die Verbindung verliert.", "Er stellt sie genau einmal zu."], a: 1, e: "Retained = letzter bekannter Wert. Die dritte Option beschreibt den Last Will." },
+      { q: "Welches Topic passt zum Filter <code>werk/+/temperatur</code>?", o: ["<code>werk/halle-2/temperatur</code>", "<code>werk/halle-2/ofen/temperatur</code>", "<code>werk/temperatur</code>", "<code>fabrik/halle-2/temperatur</code>"], a: 0, e: "«+» ersetzt genau eine Ebene. Für beliebig viele Ebenen bräuchte es «#» am Ende." },
+      { q: "Wann passt CoAP besser als MQTT?", o: ["Für sehr kleine, batteriebetriebene Geräte, die für TCP zu schwach sind und REST-artig abgefragt werden", "Für die Anbindung des ERP an die Plattform", "Für Maschinendaten mit herstellerneutralem Informationsmodell", "Für E-Mails an die Technikerin"], a: 0, e: "CoAP läuft über UDP und bildet GET/PUT/POST nach. Für das Informationsmodell von Maschinen passt OPC UA." },
+      { q: "Was gehört an den Rand (Edge) statt in die Cloud?", o: ["Ein ML-Modell mit Daten aller Standorte trainieren", "Eine Maschine innerhalb von Millisekunden stoppen, wenn die Vibration zu hoch ist", "Das Dashboard der Geschäftsleitung", "Die Abrechnung im ERP"], a: 1, e: "Kurze Reaktionszeit und Unabhängigkeit vom Netz sprechen für Edge Computing." },
+      { q: "Welche drei Dimensionen hat RAMI 4.0?", o: ["Edge, Platform, Enterprise", "Layers, Life Cycle &amp; Value Stream, Hierarchy Levels", "Field, Access, Service Network", "Sensor, Aktor, Chip"], a: 1, e: "Die erste Option sind die Tiers der IoT-Referenz, die dritte ihre Netze." },
+      { q: "Stolperfalle: Die Plattform läuft auf einem Web-Server, und die Firma hat schon einen RabbitMQ-Broker. Was modellierst du in der IoT-Referenz?", o: ["Beide als eigene Komponenten im Platform Tier", "Keines von beiden als Komponente; der MQTT-Broker steckt im Platform Gateway", "Nur den RabbitMQ zwischen Edge Gateway und Platform Gateway", "Nur den Web-Server, weil das Dashboard darauf läuft"], a: 1, e: "Web-Server sind Infrastruktur. Ein zusätzlicher Unternehmens-Broker ist in der IoT-Referenz nicht vorgesehen." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

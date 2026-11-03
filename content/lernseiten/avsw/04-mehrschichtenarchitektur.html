@@ -1,0 +1,2333 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mehrschichtenarchitektur · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/architektur.css">
+  <link rel="next" href="/lernseiten/avsw/05-microservices" title="Microservices und Makroarchitektur">
+  <style>
+    .t04-ziele{margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px}
+    .t04-wb td:first-child{font-weight:600; white-space:nowrap}
+    .t04-klein{font-size:.85rem; color:var(--muted)}
+    .t04-knoepfe{display:flex; flex-wrap:wrap; gap:6px}
+    .t04-knopf{padding:6px 10px; border-radius:999px; border:1.5px solid var(--ar-c, var(--line)); background:var(--surface); color:var(--ink); font:inherit; font-size:.9rem; cursor:pointer; line-height:1.25}
+    .t04-knopf:hover{background:var(--ar-bg, var(--accent-soft))}
+    .t04-knopf[aria-pressed="true"]{background:var(--ar-bg, var(--accent-soft)); font-weight:700; box-shadow:inset 0 0 0 1.5px var(--ar-c, var(--accent))}
+    .t04-panel{border:1px solid var(--line); border-left:5px solid var(--ar-c, var(--accent)); border-radius:10px; padding:12px 14px; background:var(--surface); min-height:5.5rem}
+    .t04-panel h4{margin:0 0 6px; font-size:1.02rem}
+    .t04-panel p, .t04-panel ul{margin:0 0 6px}
+    .t04-panel ul{padding-left:1.15rem}
+
+    /* Landkarte der Basisbegriffe */
+    .t04-karte{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px}
+    .t04-region{border:2px solid var(--ar-c); background:var(--ar-bg); border-radius:16px; padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px; min-width:0}
+    .t04-region h4{margin:0; font-size:1rem; display:flex; align-items:center; gap:6px}
+    .t04-region .t04-frage{margin:0; font-size:.85rem; color:var(--muted)}
+    .t04-region .t04-knopf{background:var(--surface)}
+    .t04-region .t04-knopf[aria-pressed="true"]{background:var(--surface); box-shadow:inset 0 0 0 2px var(--ar-c)}
+    @media (max-width:640px){ .t04-karte{grid-template-columns:1fr} }
+
+    /* Varianten der Verteilung */
+    .t04-vt-bild{display:grid; grid-template-columns:minmax(0,1fr) 2.2rem minmax(0,1fr); gap:6px; align-items:stretch}
+    .t04-vt-seite{border:2px solid var(--line); border-radius:12px; padding:8px; background:var(--surface); display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t04-vt-seite h4{margin:0; font-size:.92rem; text-align:center}
+    .t04-vt-block{border:1.5px solid var(--ar-c); background:var(--ar-bg); border-radius:8px; padding:6px 8px; font-size:.84rem; line-height:1.25; color:var(--ink); text-align:center; transition:opacity .25s}
+    .t04-vt-block.t04-halb{border-style:dashed}
+    .t04-vt-block.t04-weg{opacity:.22; border-style:dotted; background:transparent; color:var(--muted)}
+    @media (max-width:440px){
+      .t04-vt-bild{grid-template-columns:minmax(0,1fr) 1.3rem minmax(0,1fr); gap:4px}
+      .t04-vt-seite{padding:5px}
+      .t04-vt-block{font-size:.76rem; padding:5px 3px}
+    }
+    .t04-vt-netz{display:flex; align-items:center; justify-content:center; writing-mode:vertical-rl; font-size:.78rem; color:var(--muted); border-left:2px dashed var(--muted); border-right:2px dashed var(--muted); border-radius:4px}
+    .t04-skala{display:flex; justify-content:space-between; font-size:.8rem; color:var(--muted); font-weight:600}
+    .t04-skala-balken{height:8px; border-radius:6px; background:var(--board); border:1px solid var(--line); position:relative}
+    .t04-skala-balken i{position:absolute; top:-5px; width:16px; height:16px; border-radius:50%; background:var(--accent); border:2px solid var(--surface); transform:translateX(-50%); transition:left .3s}
+    .t04-schnitt{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px}
+    .t04-schnitt.t04-horizontal{grid-template-columns:1fr}
+    .t04-schnitt > div{border:1.5px solid var(--ar-c); background:var(--ar-bg); border-radius:8px; padding:6px 8px; font-size:.84rem; text-align:center}
+
+    /* Steckbriefe der Schichten */
+    .t04-sb-grid{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-top:6px}
+    .t04-sb-grid > div{border-radius:8px; padding:8px 10px; border:1px solid var(--line); background:var(--bg)}
+    .t04-sb-grid h5{margin:0 0 4px; font-size:.9rem}
+    .t04-sb-ja h5::before{content:"✓ "; color:var(--ok)}
+    .t04-sb-nein h5::before{content:"✗ "; color:var(--bad)}
+    @media (max-width:560px){ .t04-sb-grid{grid-template-columns:1fr} }
+
+    /* Zuordnungstabelle */
+    .t04-zt td, .t04-zt th{vertical-align:top}
+    .t04-zt select{font:inherit; font-size:.88rem; max-width:13rem; width:100%; padding:4px; border-radius:6px; border:1.5px solid var(--line); background:var(--surface); color:var(--ink)}
+    .t04-zt select.t04-ok{border-color:var(--ok); box-shadow:0 0 0 1px var(--ok)}
+    .t04-zt select.t04-falsch{border-color:var(--bad); box-shadow:0 0 0 1px var(--bad)}
+    .t04-zt .t04-marke{font-weight:700; margin-left:4px}
+    .t04-zt .t04-erkl{font-size:.82rem; color:var(--muted); margin-top:4px}
+    .t04-zt td:first-child{min-width:12rem}
+    @media (max-width:600px){
+      .t04-zt thead{display:none}
+      .t04-zt tr{display:block; border-bottom:1px solid var(--line); padding:8px 0}
+      .t04-zt td{display:block; border:0; padding:3px 0}
+      .t04-zt td:first-child{min-width:0; font-weight:600}
+      .t04-zt td:nth-child(2)::before{content:"Komponente"; display:block; font-size:.75rem; color:var(--muted)}
+      .t04-zt td:nth-child(3)::before{content:"Stereotyp"; display:block; font-size:.75rem; color:var(--muted)}
+      .t04-zt select{max-width:calc(100% - 1.6rem)}
+    }
+
+    /* Zwiebel / Clean Architecture */
+    .t04-onion svg{width:100%; max-width:440px; height:auto; display:block; margin:0 auto}
+    .t04-ring{cursor:pointer}
+    .t04-ring circle{stroke:var(--ar-c); stroke-width:2; fill:var(--ar-bg); transition:stroke-width .2s}
+    .t04-ring.t04-an circle{stroke-width:5}
+    .t04-ring:focus{outline:none}
+    .t04-ring:focus-visible circle{stroke-width:5; stroke-dasharray:6 3}
+    .t04-ring text{fill:var(--ink); font-size:14px; font-weight:700; pointer-events:none}
+    .t04-ring text.t04-sub{font-weight:400; font-size:11.5px; fill:var(--muted)}
+    .t04-pfeil{stroke:var(--ok); stroke-width:3; fill:none}
+    .t04-pfeil-kopf{fill:var(--ok)}
+    .t04-pfeil.t04-falsch{stroke:var(--bad); stroke-dasharray:7 4}
+    .t04-pfeil-kopf.t04-falsch{fill:var(--bad)}
+    .t04-svg-text{fill:var(--ink); font-size:12px}
+
+    /* Programmiersprachtypen */
+    .t04-lanes{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px}
+    .t04-lane{border:2px solid var(--ar-c); background:var(--ar-bg); border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t04-lane h4{margin:0; font-size:.95rem}
+    .t04-lane .t04-bsp{font-size:.8rem; color:var(--muted); margin:0}
+    .t04-stufe{border:1.5px solid var(--line); background:var(--surface); border-radius:8px; padding:6px 8px; font-size:.84rem; line-height:1.25; transition:box-shadow .2s, opacity .2s; opacity:.55}
+    .t04-stufe b{display:block; font-size:.74rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em}
+    .t04-stufe.t04-an{opacity:1; box-shadow:0 0 0 3px var(--lit)}
+    .t04-stufe.t04-vorbei{opacity:1}
+    .t04-pfeilchen{text-align:center; color:var(--muted); font-size:.85rem; line-height:1}
+    @media (max-width:700px){ .t04-lanes{grid-template-columns:1fr} }
+
+    /* Liefermodelle: Stapel */
+    .t04-modelle{display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:6px}
+    .t04-modelle .t04-knopf{border-radius:10px; text-align:center; padding:8px 4px}
+    @media (max-width:640px){ .t04-modelle{grid-template-columns:repeat(3, minmax(0,1fr))} }
+    .t04-stapel-wrap{display:grid; grid-template-columns:minmax(0, 1.1fr) minmax(0, 1fr); gap:14px; align-items:start}
+    @media (max-width:720px){ .t04-stapel-wrap{grid-template-columns:1fr} }
+    .t04-stapel{display:flex; flex-direction:column; gap:4px}
+    .t04-schicht{display:flex; align-items:center; justify-content:space-between; gap:8px; border-radius:8px; padding:6px 10px; font-size:.88rem; border:1.5px solid var(--line); transition:background-color .3s, border-color .3s}
+    .t04-schicht .t04-wer{font-size:.76rem; font-weight:700; white-space:nowrap; padding:1px 8px; border-radius:999px; border:1px solid currentColor}
+    .t04-schicht.t04-du{background:var(--r-client-bg); border-color:var(--r-client)}
+    .t04-schicht.t04-du .t04-wer{color:var(--r-client)}
+    .t04-schicht.t04-anb{background:repeating-linear-gradient(135deg, var(--r-shared-bg) 0 8px, var(--surface) 8px 12px); border-color:var(--r-shared); border-style:dashed}
+    .t04-schicht.t04-anb .t04-wer{color:var(--r-shared)}
+    .t04-schicht.t04-geteilt{background:linear-gradient(90deg, var(--r-client-bg) 50%, var(--r-shared-bg) 50%); border-color:var(--r-infra)}
+    .t04-schicht.t04-geteilt .t04-wer{color:var(--r-infra)}
+    .t04-legende{display:flex; flex-wrap:wrap; gap:10px; font-size:.82rem}
+    .t04-legende span{display:inline-flex; align-items:center; gap:5px}
+    .t04-legende i{display:inline-block; width:22px; height:14px; border-radius:4px; border:1.5px solid}
+    .t04-vergleich td, .t04-vergleich th{text-align:center; font-size:.82rem; padding:4px 5px}
+    .t04-vergleich th[scope="row"]{text-align:left}
+    .t04-vergleich .t04-v-du{background:var(--r-client-bg)}
+    .t04-vergleich .t04-v-anb{background:var(--r-shared-bg)}
+    .t04-vergleich .t04-v-geteilt{background:var(--r-infra-bg)}
+
+    /* Film-Bühne */
+    .t04-fs{display:flex; flex-direction:column; gap:3px; font-size:.82rem; text-align:left; font-family:var(--f-body)}
+    .t04-fs-reihe{display:flex; flex-wrap:wrap; gap:3px}
+    .t04-fs-reihe > div{flex:1 1 5.6rem; min-width:0; overflow-wrap:anywhere}
+    .t04-fs-s{border:1.5px solid var(--ar-c); background:var(--ar-bg); border-radius:6px; padding:3px 6px; color:var(--ink); opacity:.45; transition:opacity .2s, box-shadow .2s}
+    .t04-fs-s small{display:block; color:var(--muted); font-size:.72rem; line-height:1.2}
+    .t04-fs-s.t04-an{opacity:1; font-weight:700; box-shadow:0 0 0 3px var(--lit)}
+    .t04-fs-s.t04-fehler{opacity:1; box-shadow:0 0 0 3px var(--bad)}
+    .t04-fs-msg{margin-top:6px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:.78rem; background:var(--board); border:1px dashed var(--line); border-radius:6px; padding:4px 6px; overflow-wrap:anywhere}
+    .t04-fs-msg code{white-space:pre-wrap; overflow-wrap:anywhere; background:none; border:0; padding:0; font-size:inherit; color:inherit}
+
+    .t04-karten{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px}
+    .t04-karte2{border:1px solid var(--line); border-top:4px solid var(--ar-c); border-radius:12px; padding:10px 12px; background:var(--surface); display:flex; flex-direction:column; gap:6px}
+    .t04-karte2 h4{margin:0; font-size:1rem}
+    .t04-karte2 p, .t04-karte2 ul{margin:0; font-size:.92rem}
+    .t04-karte2 ul{padding-left:1.1rem}
+  </style>
+</head>
+<body data-fach="avsw" data-thema="04-mehrschichtenarchitektur">
+<main class="wrap">
+  <header class="stack">
+    <span class="eyebrow">AVSW · LB 2 · SW 4 · Mehrschichtenarchitektur</span>
+    <h1>Mehrschichtenarchitektur</h1>
+    <p class="lead">Fast jede Geschäftsanwendung ist in Schichten gebaut: vorne das, was Menschen sehen, in der Mitte die Geschäftsregeln, hinten die Daten. Hier lernst du das Client-Server-Grundmuster, die SOA-enabled N-Tier-Architektur Schicht für Schicht, die hexagonale (Clean, Onion) Architektur, die drei Typen von Programmiersprachen und die IT-Liefermodelle von on-premises bis SaaS. Am Schluss modellierst du Mehrschichtenarchitekturen selbst als UML-Komponentendiagramm.</p>
+    <p class="note"><b>Hinweis:</b> Eigene Erklärungen und Beispiele auf Basis der Modulunterlagen, nicht vom Dozenten bestätigt. Alle Firmen und Fälle sind erfunden.</p>
+    <div class="card stack">
+      <h3>Das kannst du nach dieser Station</h3>
+      <ul class="t04-ziele prose">
+        <li>Das Client-Server-Grundmuster darlegen und Varianten der Verteilung unterscheiden.</li>
+        <li>Eine generische SOA-enabled Mehrschichtenarchitektur aufzeichnen, ihre Schichten benennen, einordnen und ihre Funktion erläutern.</li>
+        <li>Eine hexagonale (Clean, Onion) Architektur darlegen und für einen Fall entwerfen.</li>
+        <li>Die drei Typen von Programmiersprachen darlegen und Beispiele nennen.</li>
+        <li>IT-Liefermodelle on-premises, IaaS, CaaS, PaaS, FaaS und SaaS ausführen, inklusive Sicherheitszielen und Standards in der Cloud.</li>
+        <li>Die Funktionen des Servers und die Arten von DBMS im Persistence Tier nennen (Vertiefung in Station 07).</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#start"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#landkarte"><b>2</b>Landkarte</a>
+    <a href="#clientserver"><b>3</b>Client-Server</a>
+    <a href="#ntier"><b>4</b>N-Tier</a>
+    <a href="#schichten"><b>5</b>Schichten</a>
+    <a href="#persistenz"><b>6</b>Persistenz</a>
+    <a href="#code"><b>7</b>Code</a>
+    <a href="#hexagonal"><b>8</b>Hexagonal</a>
+    <a href="#sprachen"><b>9</b>Sprachen</a>
+    <a href="#liefermodelle"><b>10</b>Liefermodelle</a>
+    <a href="#sicherheit"><b>11</b>Cloud-Sicherheit</a>
+    <a href="#verfahren"><b>12</b>Vorgehen</a>
+    <a href="#spiel"><b>13</b>Spiel</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- 0 · Bausteine -->
+  <section id="start" data-kategorie="client">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Ein Hotel in Schichten</h2>
+    <p class="prose">Stell dir ein grosses Hotel vor. Gäste reden nie direkt mit der Buchhaltung oder dem Lager. Jede Abteilung hat genau eine Aufgabe und spricht nur mit ihren Nachbarn. Genau so ist eine Mehrschichtenarchitektur gebaut.</p>
+    <div class="grid4">
+      <div class="concept" data-kategorie="client"><span class="tag">Gast = Client</span><p>Der Gast stellt Wünsche und wartet auf Antwort. Der Client (Browser, App) zeigt an, nimmt Eingaben an und schickt Anfragen.</p></div>
+      <div class="concept" data-kategorie="zugang"><span class="tag">Rezeption = Web Tier</span><p>Die Rezeption nimmt jede Anfrage entgegen: Gäste am Schalter (Presentation) und Reisebüros am Telefon (Web API).</p></div>
+      <div class="concept" data-kategorie="dienst"><span class="tag">Direktion = Business Facade</span><p>Alle Aufträge an die Abteilungen laufen über ein Sekretariat. So bleibt klar, wer was darf.</p></div>
+      <div class="concept" data-kategorie="dienst"><span class="tag">Abteilungen = Business Components</span><p>Reservation, Küche, Buchhaltung: Hier gelten die Regeln des Hauses. Das ist das Herzstück.</p></div>
+      <div class="concept" data-kategorie="daten"><span class="tag">Archivar = Data Access Layer</span><p>Nur der Archivar geht ins Archiv. Die Abteilungen fragen ihn, statt selbst in Ordnern zu wühlen.</p></div>
+      <div class="concept" data-kategorie="daten"><span class="tag">Archiv = Persistence Tier</span><p>Hier liegen alle Daten dauerhaft: die Datenbank.</p></div>
+      <div class="concept" data-kategorie="extern"><span class="tag">Einkauf = Service Access Layer</span><p>Wer mit Lieferanten telefoniert, übersetzt deren Sprache. Ein Einkäufer pro Lieferant.</p></div>
+      <div class="concept" data-kategorie="messaging"><span class="tag">Postfach = Async Adapter Layer</span><p>Briefe kommen rein und gehen raus, ohne dass jemand am Telefon wartet: asynchrone Nachrichten über einen Broker.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Wo arbeitet wer?</h3>
+      <p class="hint">Ordne jede Tätigkeit dem Tier zu, in dem sie passiert.</p>
+      <div id="t04-sort-start"></div>
+    </div>
+  </section>
+
+  <!-- 1 · Wörterbuch -->
+  <section id="woerterbuch" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 1 · Begriffe festlegen</span>
+    <h2>Wörterbuch der Mehrschichtenarchitektur</h2>
+    <p class="prose">Die Begriffe sind im Modul Englisch, weil sie so in den Referenzarchitekturen stehen. Lern sie so, wie du sie in der Prüfung schreibst.</p>
+    <div class="card tablebox">
+      <table class="tabelle t04-wb">
+        <thead><tr><th scope="col">Begriff</th><th scope="col">Bedeutung</th></tr></thead>
+        <tbody>
+          <tr><td>Tier</td><td>Grobe Stufe der Verteilung, oft auch ein eigener Rechner oder Prozess: Client Tier, Middle Tier, Persistence Tier.</td></tr>
+          <tr><td>Layer</td><td>Schicht innerhalb eines Tiers, z. B. Business Logic Layer im Business Tier. Eine Schicht nutzt nur die Schicht darunter.</td></tr>
+          <tr><td>Komponente</td><td>Austauschbarer Softwarebaustein mit Schnittstellen. In UML ein Rechteck mit Komponentensymbol und «Stereotyp».</td></tr>
+          <tr><td>Stereotyp</td><td>Text in «…» über dem Namen, z. B. «C#», «JS», «EJB». In der Prüfung zeigt er die Technologie der Komponente.</td></tr>
+          <tr><td>Paket</td><td>UML-Rahmen mit Reiter, gruppiert Komponenten. Tiers und Layers sind Pakete.</td></tr>
+          <tr><td>Client-Server</td><td>Grundmuster: Ein Client schickt einen Request über ein Zugriffsprotokoll an die API des Servers, der Server antwortet mit einem Reply.</td></tr>
+          <tr><td>SOA-enabled</td><td>Die Anwendung bietet ihre Funktionen auch als Web Services an (Service Tier) und nutzt fremde Services (Service Access Layer).</td></tr>
+          <tr><td>Business Facade</td><td>Einziger Zugang zum Business Tier. Bietet die Geschäftsfunktionen als API an, z. B. REST oder gRPC.</td></tr>
+          <tr><td>DAC</td><td>Data Access Component: liest und schreibt Daten in der Datenbank, z. B. mit Entity Framework, JPA oder einem DB-Treiber.</td></tr>
+          <tr><td>Driven Adapter</td><td>Adapter, den die Anwendung selbst anstösst: ruft einen Service Provider auf (sync) oder sendet eine Nachricht (async).</td></tr>
+          <tr><td>Receiver / Sender Adapter</td><td>Empfangen bzw. senden asynchrone Nachrichten über einen Message Broker. Je eine eigene Komponente.</td></tr>
+          <tr><td>Service Consumer / Provider</td><td>Consumer nutzt einen Service, Provider bietet ihn an. Beides sind Umsysteme (Intranet oder Extranet).</td></tr>
+          <tr><td>MOM</td><td>Message-oriented Middleware, z. B. ein Message Broker wie RabbitMQ: puffert und verteilt Nachrichten.</td></tr>
+          <tr><td>Port / Adapter</td><td>Hexagonal: Port = Schnittstelle der Anwendung, Adapter = Technik, die einen Port mit der Aussenwelt verbindet.</td></tr>
+          <tr><td>Deployable</td><td>Auslieferungseinheit (Artefakt), die für sich installiert wird, z. B. eine Web App oder ein Web API.</td></tr>
+          <tr><td>on-premises / IaaS … SaaS</td><td>IT-Liefermodelle: Wer betreibt welche Schicht vom Rechenzentrum bis zur Anwendung, du oder ein Cloud-Anbieter?</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 2 · Landkarte -->
+  <section id="landkarte" data-kategorie="dienst">
+    <span class="eyebrow">Basisbegriffe · Landkarte</span>
+    <h2>Vier Regionen, die man gern verwechselt</h2>
+    <p class="prose">Wenn du über Architektur redest, meinst du eine von vier Ebenen: einen <b>Architekturstil</b> (wie ist die ganze Anwendung geschnitten?), einen <b>Kommunikations- oder Integrationsstil</b> (wie reden Teile miteinander?), ein <b>Architekturmuster</b> (wie löse ich ein wiederkehrendes Teilproblem?) oder einen <b>Technologie-Stack</b> (womit entwickle und betreibe ich?). Tippe einen Ort an.</p>
+    <div class="t04-karte" id="t04-karte"></div>
+    <div class="t04-panel" id="t04-karte-info" aria-live="polite"><p class="t04-klein">Wähle einen Ort auf der Karte.</p></div>
+    <div class="card stack">
+      <h3>Kurz üben: In welche Region gehört der Begriff?</h3>
+      <div id="t04-sort-karte"></div>
+    </div>
+  </section>
+
+  <!-- 3 · Client-Server -->
+  <section id="clientserver" data-kategorie="client">
+    <span class="eyebrow">Lernziel 1 · Grundmuster</span>
+    <h2>Das Client-Server-Grundmuster</h2>
+    <p class="prose">Jede Mehrschichtenarchitektur beginnt mit zwei Rollen. Der <b>Client</b> stellt eine Anfrage (Request) über ein vereinbartes <b>Zugriffsprotokoll</b> an die <b>API</b> des Servers. Der <b>Server</b> verarbeitet die Anfrage und schickt eine Antwort (Reply). Der Server ergreift nie selbst die Initiative: Er wartet auf Anfragen und bedient viele Clients gleichzeitig.</p>
+    <div id="t04-cs"></div>
+    <div class="t04-karten">
+      <div class="t04-karte2 ar-r-client"><h4>Was der Client tut</h4><ul><li>Anzeigen und Eingaben annehmen</li><li>Anfrage stellen und auf die Antwort warten</li><li>evtl. eigene Logik oder lokale Daten (Fat Client)</li></ul></div>
+      <div class="t04-karte2 ar-r-business"><h4>Funktionen des Servers</h4><ul><li>Anfragen vieler Clients annehmen und beantworten</li><li>Geschäftsregeln zentral durchsetzen</li><li>Daten zentral, konsistent und gesichert halten</li><li>Zugriffe prüfen (Authentifizierung, Berechtigung)</li><li>Umsysteme anbinden, skalieren, verfügbar bleiben</li></ul></div>
+      <div class="t04-karte2 ar-r-webapi"><h4>Zugriffsprotokoll und API</h4><p>Die API ist der Vertrag des Servers. Das Protokoll ist die Sprache dafür: HTTP für Seiten, REST, SOAP, GraphQL, OData oder gRPC für Web Services, ein DB-Protokoll für Datenbanken.</p></div>
+    </div>
+
+    <h3>Varianten der Verteilung: Wie viel macht der Client?</h3>
+    <p class="prose">Eine Anwendung hat drei Aufgabenblöcke: Präsentation, Anwendungslogik, Datenhaltung. Wo du den Schnitt zwischen Client und Server setzt, bestimmt, ob der Client «dünn» (thin) oder «dick» (fat, rich) ist. Wähle eine Variante.</p>
+    <div class="card stack">
+      <div class="t04-knoepfe" id="t04-vt-knoepfe" role="group" aria-label="Variante der Verteilung"></div>
+      <div class="t04-skala"><span>Thin Client</span><span>Fat Client</span></div>
+      <div class="t04-skala-balken" aria-hidden="true"><i id="t04-vt-punkt"></i></div>
+      <div class="t04-vt-bild" id="t04-vt-bild" aria-hidden="true"></div>
+      <div class="t04-panel" id="t04-vt-info" aria-live="polite"></div>
+    </div>
+
+    <h3>Horizontal oder vertikal schneiden</h3>
+    <p class="prose">Eine Softwareapplikation lässt sich auf zwei Arten zerlegen. Die <b>monolithische Mehrschichtenarchitektur</b> schneidet horizontal nach technischen Schichten: ein Deployable mit Client, Web Tier, Business Tier und Persistence Tier. <b>Self-contained Systems</b> und Microservices schneiden vertikal nach Fachlichkeit: Jeder Fachservice hat seine eigenen Schichten (Station 05).</p>
+    <div class="card stack">
+      <div class="t04-knoepfe" role="group" aria-label="Schnitt wählen">
+        <button type="button" class="t04-knopf" data-t04-schnitt="h" aria-pressed="true">Horizontal: Mehrschicht</button>
+        <button type="button" class="t04-knopf" data-t04-schnitt="v" aria-pressed="false">Vertikal: Self-contained Systems</button>
+      </div>
+      <div id="t04-schnitt" aria-live="polite"></div>
+    </div>
+
+    <h3>Das 3-Schichten-Muster als Paketdiagramm</h3>
+    <p class="prose">Grob hat jede Mehrschichtenarchitektur drei Tiers: <b>Client/Front-End Tier</b>, <b>Middle/Business Tier</b> (mit Web Tier und Business Tier) und <b>Data/Persistence Tier</b>. Die gestrichelten Pfeile sind UML-Abhängigkeiten: Jede Schicht nutzt nur die darunter, nie umgekehrt.</p>
+    <div id="t04-drei"></div>
+  </section>
+
+  <!-- 4 · SOA-enabled N-Tier -->
+  <section id="ntier" data-kategorie="zugang">
+    <span class="eyebrow">Lernziel 2 · Generische Referenz</span>
+    <h2>SOA-enabled N-Tier-Architektur zum Durchklicken</h2>
+    <p class="prose">Das ist die generische Referenz, auf der .NET, Jakarta EE und die skriptbasierte Variante (Station 07) aufbauen. Beispiel ist das Kletterzentrum Griffig (fiktiv): Mitglieder buchen Kurse im Browser oder in der App, ein Tourismusbüro bucht über eine Partner-API, bezahlt wird beim Zahlungsdienst PayAlpin (fiktiv), Neuigkeiten kommen über einen Message Broker.</p>
+    <ul class="prose">
+      <li><b>Tippe</b> ein Paket oder eine Komponente an: Der Steckbrief sagt, was hineingehört und warum.</li>
+      <li><b>Spiel die Abläufe</b> ab: Seitenaufruf im Browser, Buchung in der App, Partner über API-Gateway, Nachricht vom Broker, Zahlung beim Service Provider, Datenbankzugriff und der Fehlerfall.</li>
+      <li><b>Schalte den Ausfall-Modus</b> ein und lass die Datenbank, den Zahlungsdienst oder den Receiver Adapter ausfallen. Vergleiche: Synchrone Aufrufe reissen die ganze Kette bis zum Client mit. Fällt der Receiver aus, läuft alles andere weiter; die Nachrichten warten im Broker. Fällt der Broker selbst aus, kann der Sender nicht mehr senden.</li>
+    </ul>
+    <div id="t04-ntier"></div>
+    <p class="ar-callout" data-kategorie="zugang"><b>Lesehilfe:</b> «Sprache» im Stereotyp ist ein Platzhalter. In deiner konkreten Architektur steht dort die Technologie: «JS» oder «PHP» (skriptbasiert), «C#» und «ASP.NET» (.NET), «EJB» und «EJB MDB» (Jakarta EE).</p>
+    <div class="note falle"><b>Falle {xor}:</b> Die Präsentation darf den Business Tier entweder direkt über die Facade erreichen oder über den eigenen Service Tier, aber nicht beides gemischt. Im Diagramm steht deshalb {xor} zwischen den zwei Linien.</div>
+  </section>
+
+  <!-- 5 · Schichten-Steckbriefe -->
+  <section id="schichten" data-kategorie="dienst">
+    <span class="eyebrow">Jede Schicht ein Steckbrief</span>
+    <h2>Was gehört hinein, was nicht?</h2>
+    <p class="prose">In der Prüfung verlierst du Punkte, wenn eine Komponente im falschen Paket steht oder wenn Infrastruktur als Komponente auftaucht. Wähle eine Schicht. «Im Diagramm zeigen» markiert sie oben in der Referenz.</p>
+    <div class="t04-knoepfe" id="t04-sb-knoepfe" role="group" aria-label="Schicht wählen"></div>
+    <div class="t04-panel" id="t04-sb-panel" aria-live="polite"></div>
+    <div class="note falle"><b>Falle Infrastruktur:</b> Web-Server (IIS, Apache, Nginx), DBMS-Server und Security-Server (z. B. ein LDAP- oder Login-Server) sind keine Komponenten deiner Anwendung. Du erwähnst sie höchstens im Paketnamen, z. B. «Web Tier (Nginx)» oder «Persistence Tier (PostgreSQL)».</div>
+    <div class="note falle"><b>Falle API-Gateway:</b> Ein vorgelagertes API-Gateway ist Middleware vor dem Service Tier. In der Mehrschichtenarchitektur der Prüfung zeichnest du es nicht als eigene Komponente; das Web API ist der Zugang.</div>
+
+    <h3>Zuordnungsübung: Technologie im Auftrag → Komponente → Stereotyp</h3>
+    <p class="prose">So liest du einen Prüfungsauftrag: Jede genannte Technologie verrät eine Komponente und ihren Stereotyp. Wähle beides und prüfe.</p>
+    <div class="card stack">
+      <div class="tablebox">
+        <table class="tabelle t04-zt" id="t04-zt">
+          <thead><tr><th scope="col">Im Auftrag steht …</th><th scope="col">Komponente</th><th scope="col">Stereotyp</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t04-zt-pruefen">Prüfen</button>
+        <button type="button" class="btn" id="t04-zt-loesung">Lösung zeigen</button>
+        <button type="button" class="btn" id="t04-zt-reset">Zurücksetzen</button>
+      </div>
+      <p class="rueckmeldung leer" id="t04-zt-fb" aria-live="polite"></p>
+    </div>
+
+    <div class="card stack">
+      <h3>Kurz üben: In welches Tier gehört es?</h3>
+      <div id="t04-sort-tier"></div>
+    </div>
+  </section>
+
+  <!-- 6 · Persistenz -->
+  <section id="persistenz" data-kategorie="daten">
+    <span class="eyebrow">Persistence Tier · Ausblick auf Station 07</span>
+    <h2>Arten von DBMS, CRUD, CQRS und Event Sourcing</h2>
+    <p class="prose">Der Persistence Tier hält die Datenobjekte dauerhaft. Welches DBMS du wählst, hängt von der Struktur der Daten und vom Zugriff ab. Das Fachwissen aus Datenbanksystemen brauchst du hier wieder.</p>
+    <div class="t04-karten">
+      <div class="t04-karte2 ar-r-daten"><h4>SQL (relational)</h4><p>Tabellen mit Schema, Transaktionen (ACID), Joins. Beispiele: PostgreSQL, SQL Server, MySQL, Oracle. Standard für Geschäftsdaten.</p></div>
+      <div class="t04-karte2 ar-r-daten"><h4>NewSQL</h4><p>SQL und Transaktionen wie relational, aber über viele Knoten verteilt und horizontal skalierbar. Beispiele: CockroachDB, Google Spanner.</p></div>
+      <div class="t04-karte2 ar-r-daten"><h4>NoSQL: Dokument</h4><p>Ganze Objekte als JSON-Dokument, flexibles Schema. Beispiel: MongoDB. Passt zu verschachtelten Daten mit wechselnder Struktur.</p></div>
+      <div class="t04-karte2 ar-r-daten"><h4>NoSQL: Key-Value und Cache</h4><p>Schlüssel → Wert, extrem schnell, oft im Arbeitsspeicher. Beispiel: Redis. Für Sitzungen, Zähler, Zwischenspeicher.</p></div>
+      <div class="t04-karte2 ar-r-daten"><h4>Objektorientiert</h4><p>Speichert Objekte direkt, ohne Abbildung auf Tabellen. Beispiel: ObjectDB. Selten im Geschäftsalltag.</p></div>
+    </div>
+    <p class="prose"><b>CRUD</b> (Create, Read, Update, Delete) nutzt ein Modell für Lesen und Schreiben. <b>CQRS</b> (Command Query Responsibility Segregation) trennt die Seite, die ändert (Commands), von der Seite, die liest (Queries). Beide Seiten können eigene Modelle und Datenbanken haben und unabhängig skalieren: Meist wird viel öfter gelesen als geschrieben. <b>Event Sourcing</b> speichert nicht den aktuellen Zustand, sondern jede Änderung als Event in einer Reihe; der Zustand entsteht durch Abspielen. Zusammen mit CQRS füttern diese Events die Lese-Datenbank.</p>
+    <div id="t04-cqrs"></div>
+  </section>
+
+  <!-- 7 · Code -->
+  <section id="code" data-kategorie="infrastruktur">
+    <span class="eyebrow">So sieht es im Code aus</span>
+    <h2>Eine Buchung, Schicht für Schicht im Code</h2>
+    <p class="prose">Die Beispiele zeigen das Kletterzentrum in Node.js mit TypeScript (Stereotyp «JS») und PostgreSQL. Jede Datei gehört zu genau einer Komponente der Referenz oben. Achte darauf, wer wen aufruft: immer nur nach unten.</p>
+    <pre class="code" data-sprache="TypeScript · Web Tier → Service Tier: «JS» Web Service (Express)"><code><span class="c">// Nimmt HTTP-Anfragen der App an, prüft das Format, ruft die Facade</span>
+<span class="k">import</span> { Router } <span class="k">from</span> <span class="s">"express"</span>;
+<span class="k">import</span> { buchungsFacade } <span class="k">from</span> <span class="s">"../business/facade"</span>;
+
+<span class="k">export const</span> buchungRouter = Router();
+
+buchungRouter.post(<span class="s">"/api/buchungen"</span>, <span class="k">async</span> (req, res) =&gt; {
+  <span class="k">const</span> { kursId, mitgliedId } = req.body;            <span class="c">// JSON aus der App</span>
+  <span class="k">if</span> (!Number.isInteger(kursId)) {
+    <span class="k">return</span> res.status(<span class="n">400</span>).json({ fehler: <span class="s">"kursId fehlt"</span> });
+  }
+  <span class="k">try</span> {
+    <mark><span class="k">const</span> buchung = <span class="k">await</span> buchungsFacade.kursBuchen(mitgliedId, kursId);</mark>
+    res.status(<span class="n">201</span>).json(buchung);                     <span class="c">// Reply an die App</span>
+  } <span class="k">catch</span> {
+    res.status(<span class="n">409</span>).json({ fehler: <span class="s">"Buchung nicht möglich"</span> });
+  }
+});</code></pre>
+    <pre class="code" data-sprache="TypeScript · Business Facade und Business Component «JS»"><code><span class="c">// Business Facade: einziger Zugang zum Business Tier</span>
+<span class="k">export const</span> buchungsFacade = {
+  kursBuchen: (mitgliedId: <span class="k">number</span>, kursId: <span class="k">number</span>) =&gt; kursbuchung.buchen(mitgliedId, kursId),
+};
+
+<span class="c">// Business Logic Layer: hier stehen die Regeln des Kletterzentrums</span>
+<span class="k">export class</span> Kursbuchung {
+  <span class="k">constructor</span>(
+    <span class="k">private</span> kurse: KursDac,             <span class="c">// Data Access Layer</span>
+    <span class="k">private</span> zahlung: PayAlpinAdapter,   <span class="c">// Service Access Layer</span>
+    <span class="k">private</span> sender: BuchungSender,      <span class="c">// Async Adapter Layer</span>
+  ) {}
+
+  <span class="k">async</span> buchen(mitgliedId: <span class="k">number</span>, kursId: <span class="k">number</span>) {
+    <span class="k">const</span> kurs = <span class="k">await this</span>.kurse.finde(kursId);
+    <mark><span class="k">if</span> (kurs.freiePlaetze &lt;= <span class="n">0</span>) <span class="k">throw new</span> Error(<span class="s">"Kurs ist voll"</span>);</mark>   <span class="c">// Geschäftsregel</span>
+    <span class="k">await this</span>.zahlung.autorisieren(mitgliedId, kurs.preisRappen);
+    <span class="k">const</span> buchung = <span class="k">await this</span>.kurse.buchungSpeichern(mitgliedId, kursId);
+    <span class="k">await this</span>.sender.kursGebucht(buchung);   <span class="c">// asynchron: wartet nicht auf Empfänger</span>
+    <span class="k">return</span> buchung;
+  }
+}</code></pre>
+    <pre class="code" data-sprache="TypeScript · Data Access Layer: «JS» DAC (Repository mit Treiber pg)"><code><span class="k">import</span> { Pool } <span class="k">from</span> <span class="s">"pg"</span>;
+<span class="k">const</span> pool = <span class="k">new</span> Pool();   <span class="c">// Verbindungsdaten aus Umgebungsvariablen</span>
+
+<span class="k">export class</span> KursDac {
+  <span class="k">async</span> finde(kursId: <span class="k">number</span>): Promise&lt;Kurs&gt; {
+    <mark><span class="k">const</span> r = <span class="k">await</span> pool.query(
+      <span class="s">"SELECT id, titel, preis_rappen, plaetze - gebucht AS frei FROM kurs WHERE id = $1"</span>,
+      [kursId]);</mark>                             <span class="c">// Parameter statt zusammengeklebter Zeichenketten</span>
+    <span class="k">const</span> z = r.rows[<span class="n">0</span>];
+    <span class="k">return</span> { id: z.id, titel: z.titel, preisRappen: z.preis_rappen, freiePlaetze: z.frei };
+  }
+
+  <span class="k">async</span> buchungSpeichern(mitgliedId: <span class="k">number</span>, kursId: <span class="k">number</span>) {
+    <span class="k">const</span> c = <span class="k">await</span> pool.connect();
+    <span class="k">try</span> {
+      <span class="k">await</span> c.query(<span class="s">"BEGIN"</span>);
+      <span class="k">await</span> c.query(<span class="s">"UPDATE kurs SET gebucht = gebucht + 1 WHERE id = $1 AND gebucht &lt; plaetze"</span>, [kursId]);
+      <span class="k">const</span> r = <span class="k">await</span> c.query(
+        <span class="s">"INSERT INTO buchung (kurs_id, mitglied_id) VALUES ($1, $2) RETURNING id"</span>, [kursId, mitgliedId]);
+      <span class="k">await</span> c.query(<span class="s">"COMMIT"</span>);
+      <span class="k">return</span> { id: r.rows[<span class="n">0</span>].id, kursId, mitgliedId };
+    } <span class="k">catch</span> (e) { <span class="k">await</span> c.query(<span class="s">"ROLLBACK"</span>); <span class="k">throw</span> e; } <span class="k">finally</span> { c.release(); }
+  }
+}</code></pre>
+    <pre class="code" data-sprache="SQL · Persistence Tier: DB in PostgreSQL"><code><span class="c">-- Tabellen der Kursbuchung</span>
+<span class="k">CREATE TABLE</span> kurs (
+  id           <span class="k">SERIAL PRIMARY KEY</span>,
+  titel        <span class="k">TEXT    NOT NULL</span>,
+  preis_rappen <span class="k">INTEGER NOT NULL</span>,
+  plaetze      <span class="k">INTEGER NOT NULL</span>,
+  gebucht      <span class="k">INTEGER NOT NULL DEFAULT</span> <span class="n">0</span> <span class="k">CHECK</span> (gebucht &lt;= plaetze)
+);
+<span class="k">CREATE TABLE</span> buchung (
+  id          <span class="k">SERIAL PRIMARY KEY</span>,
+  kurs_id     <span class="k">INTEGER NOT NULL REFERENCES</span> kurs(id),
+  mitglied_id <span class="k">INTEGER NOT NULL</span>,
+  status      <span class="k">TEXT NOT NULL DEFAULT</span> <span class="s">'bezahlt'</span>,
+  erstellt    <span class="k">TIMESTAMPTZ NOT NULL DEFAULT</span> now()
+);
+<span class="c">-- Was der DAC zum Lesen schickt</span>
+<mark><span class="k">SELECT</span> id, titel, preis_rappen, plaetze - gebucht <span class="k">AS</span> frei <span class="k">FROM</span> kurs <span class="k">WHERE</span> id = <span class="n">42</span>;</mark></code></pre>
+    <pre class="code" data-sprache="TypeScript · Service Access Layer: «JS» Driven sync Adapter für PayAlpin (fiktiv)"><code><span class="c">// Kapselt die API eines Service Providers. Ändert PayAlpin seine API, ändert nur diese Datei.</span>
+<span class="k">export class</span> PayAlpinAdapter {
+  <span class="k">async</span> autorisieren(mitgliedId: <span class="k">number</span>, betragRappen: <span class="k">number</span>) {
+    <span class="k">const</span> antwort = <span class="k">await</span> fetch(process.env.PAYALPIN_URL + <span class="s">"/v1/autorisierungen"</span>, {
+      method: <span class="s">"POST"</span>,
+      headers: { <span class="s">"Content-Type"</span>: <span class="s">"application/json"</span>, Authorization: <span class="s">"Bearer "</span> + process.env.PAYALPIN_TOKEN },
+      body: JSON.stringify({ kunde: mitgliedId, betrag: betragRappen, waehrung: <span class="s">"CHF"</span> }),
+      <mark>signal: AbortSignal.timeout(<span class="n">3000</span>),</mark>      <span class="c">// synchron, aber nie ewig warten</span>
+    });
+    <span class="k">if</span> (!antwort.ok) <span class="k">throw new</span> Error(<span class="s">"Zahlung nicht autorisiert"</span>);
+  }
+}</code></pre>
+    <pre class="code" data-sprache="TypeScript · Async Adapter Layer: «JS» Sender und Receiver Adapter (amqplib, RabbitMQ)"><code><span class="c">// Sender Adapter: veröffentlicht ein Event, die Business Component wartet nicht auf Empfänger</span>
+<span class="k">export class</span> BuchungSender {
+  <span class="k">constructor</span>(<span class="k">private</span> kanal: Channel) {}
+  kursGebucht(b: Buchung) {
+    <mark><span class="k">this</span>.kanal.publish(<span class="s">"griffig.events"</span>, <span class="s">"kurs.gebucht"</span>,</mark>
+      Buffer.from(JSON.stringify({ buchungId: b.id, kursId: b.kursId })), { persistent: <span class="k">true</span> });
+  }
+}
+
+<span class="c">// Receiver Adapter: holt Nachrichten aus der Queue und gibt sie der Business Component</span>
+kanal.consume(<span class="s">"griffig.kursaenderungen"</span>, <span class="k">async</span> (msg) =&gt; {
+  <span class="k">if</span> (!msg) <span class="k">return</span>;
+  <span class="k">await</span> kursverwaltung.kursVerschoben(JSON.parse(msg.content.toString()));
+  kanal.ack(msg);                                   <span class="c">// erst nach Erfolg bestätigen</span>
+});</code></pre>
+    <div class="note"><b>Merke:</b> Der Controller kennt kein SQL, die Business Component kennt kein HTTP und keine PayAlpin-URL, der DAC kennt keine Geschäftsregeln. Genau diese Trennung macht Schichten austauschbar und testbar.</div>
+  </section>
+
+  <!-- 8 · Hexagonal -->
+  <section id="hexagonal" data-kategorie="messaging">
+    <span class="eyebrow">Lernziel 3 · Hexagonal, Clean, Onion</span>
+    <h2>Ports und Adapter: Die Domäne in der Mitte</h2>
+    <p class="prose">Die klassische Schichtung hat einen Haken: Die Geschäftslogik hängt vom Data Access Layer ab, also letztlich von der Datenbank. Die <b>hexagonale Architektur</b> (auch Ports and Adapters, fast gleichbedeutend: Onion, Clean oder Explicit Architecture) dreht das um. Die <b>Domäne</b> steht im Zentrum und kennt keine Technik. Sie bietet <b>Ports</b> an (Schnittstellen für die Nutzung) und definiert Ports, die sie braucht (z. B. «Kursablage»). <b>Adapter</b> verbinden die Ports mit der Aussenwelt: links die <b>Driving Adapters</b> (UI, Web API, Tests, Message Receiver rufen die Anwendung auf), rechts die <b>Driven Adapters</b> (Datenbank, Service Provider, Message Sender werden von der Anwendung angestossen).</p>
+    <div class="grid2">
+      <div class="card stack t04-onion">
+        <h3>Die Zwiebel: Abhängigkeiten zeigen nach innen</h3>
+        <div id="t04-onion"></div>
+        <div class="t04-knoepfe" role="group" aria-label="Abhängigkeit zeigen">
+          <button type="button" class="t04-knopf" id="t04-onion-gut" aria-pressed="true">Richtig: nach innen</button>
+          <button type="button" class="t04-knopf" id="t04-onion-falle" aria-pressed="false">Falle: Domäne kennt die DB</button>
+        </div>
+      </div>
+      <div class="t04-panel ar-r-business" id="t04-onion-info" aria-live="polite"></div>
+    </div>
+    <p class="prose">Im UML-Komponentendiagramm zeichnest du die Ports als Schnittstellen: Den Port, den der Core anbietet, als Ball am Core. Einen Port, den der Core braucht, implementiert ein Driven Adapter; der Ball sitzt am Adapter, der Core hängt mit dem Socket daran. Spiel die Abläufe ab und lass die Datenbank ausfallen.</p>
+    <div id="t04-hex"></div>
+    <div class="note falle"><b>Falle Richtung:</b> Ein Pfeil von der Domäne zur Datenbank oder zum Repository-Adapter (ohne Port dazwischen) bricht die Regel. Die Domäne kennt nur ihr eigenes Interface; welcher Adapter es erfüllt, entscheidet erst die Zusammensetzung beim Start (Dependency Injection).</div>
+    <div class="note falle"><b>Falle Facade:</b> Im hexagonalen Stil gibt es keine zusätzliche Business Facade. Die angebotenen Ports des Core sind der Zugang.</div>
+    <pre class="code" data-sprache="TypeScript · Port im Core, Adapter aussen, Zusammenstecken beim Start"><code><span class="c">// Application Core: Port, den der Core braucht (nur ein Interface, keine Technik)</span>
+<span class="k">export interface</span> Kursablage {
+  finde(kursId: <span class="k">number</span>): Promise&lt;Kurs&gt;;
+  speichere(buchung: Buchung): Promise&lt;<span class="k">void</span>&gt;;
+}
+
+<span class="c">// Use Case im Core: angebotener Port «Kurs buchen»</span>
+<span class="k">export class</span> KursBuchen {
+  <span class="k">constructor</span>(<span class="k">private</span> ablage: Kursablage) {}       <span class="c">// kennt nur den Port</span>
+  <span class="k">async</span> ausfuehren(mitgliedId: <span class="k">number</span>, kursId: <span class="k">number</span>) { <span class="c">/* Regeln wie oben */</span> }
+}
+
+<span class="c">// Driven Adapter (Infrastruktur): implementiert den Port mit PostgreSQL</span>
+<mark><span class="k">export class</span> PostgresKursablage <span class="k">implements</span> Kursablage {</mark> <span class="c">/* SQL wie im DAC */</span> }
+
+<span class="c">// Composition Root: hier wird zusammengesteckt (Dependency Injection)</span>
+<span class="k">const</span> kursBuchen = <span class="k">new</span> KursBuchen(<span class="k">new</span> PostgresKursablage(pool));
+<span class="c">// im Test: new KursBuchen(new KursablageImSpeicher()) – ganz ohne Datenbank</span></code></pre>
+
+    <h3>Sourcen-Pakete und Deployables</h3>
+    <p class="prose">Nicht verwechseln: <b>Sourcen-Pakete</b> gliedern den Quellcode (Domain, Application, Infrastructure, Web API, Web App, Mobile App). <b>Deployables</b> sind die Einheiten, die du ausrollst. Im UML-Komponentendiagramm ist eine Komponente ein konkretes Deployable, z. B. eine Web App oder ein Microservice. Das Kletterzentrum liefert drei Deployables aus, die sich die inneren Pakete teilen.</p>
+    <div id="t04-pakete"></div>
+    <div class="tablebox card">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Deployable</th><th scope="col">enthält die Sourcen-Pakete</th><th scope="col">läuft auf</th></tr></thead>
+        <tbody>
+          <tr><td>Web API</td><td>Web API, Application, Domain, Infrastructure</td><td>Server (Container)</td></tr>
+          <tr><td>Web App</td><td>Web App (ruft nur das Web API)</td><td>Browser</td></tr>
+          <tr><td>Mobile App</td><td>Mobile App (ruft nur das Web API)</td><td>Smartphone</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card stack">
+      <h3>Wahr oder falsch?</h3>
+      <div id="t04-wf-hex"></div>
+    </div>
+  </section>
+
+  <!-- 9 · Programmiersprachen -->
+  <section id="sprachen" data-kategorie="infrastruktur">
+    <span class="eyebrow">Lernziel 4 · Drei Programmiersprachtypen</span>
+    <h2>Kompiliert, Bytecode, interpretiert</h2>
+    <p class="prose">Die Wahl der Sprache bestimmt den Technologie-Stack und damit den Stereotyp in deinem Diagramm. Entscheidend ist, <b>wann</b> der Quellcode in etwas übersetzt wird, das die Maschine ausführt. Spiel die vier Stufen durch: zwei passieren in der Entwicklungsumgebung, zwei in der Ausführungsumgebung.</p>
+    <div class="card stack">
+      <div class="row">
+        <button type="button" class="btn" id="t04-spr-zurueck" aria-label="Stufe zurück">◀ Zurück</button>
+        <button type="button" class="btn primary" id="t04-spr-weiter">Nächste Stufe ▶</button>
+        <span class="t04-klein" id="t04-spr-stand" aria-live="polite"></span>
+      </div>
+      <div class="t04-lanes" id="t04-lanes"></div>
+      <div class="t04-panel" id="t04-spr-info" aria-live="polite"></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Typ?</h3>
+      <div id="t04-sort-spr"></div>
+    </div>
+  </section>
+
+  <!-- 10 · Liefermodelle -->
+  <section id="liefermodelle" data-kategorie="infrastruktur">
+    <span class="eyebrow">Lernziel 5 · IT-Liefermodelle</span>
+    <h2>Wer betreibt welche Schicht?</h2>
+    <p class="prose">Eine Anwendung braucht einen ganzen Stapel: vom Rechenzentrum mit Strom und Kühlung bis zu deinem Code und deinen Daten. Die Liefermodelle unterscheiden sich darin, ab welcher Schicht der Cloud-Anbieter übernimmt. Je mehr er übernimmt, desto weniger Aufwand hast du, desto weniger Kontrolle bleibt dir.</p>
+    <div class="card stack">
+      <div class="t04-modelle" id="t04-modelle" role="group" aria-label="Liefermodell wählen"></div>
+      <div class="t04-legende" aria-hidden="true">
+        <span><i style="background:var(--r-client-bg); border-color:var(--r-client)"></i>du verwaltest</span>
+        <span><i style="background:repeating-linear-gradient(135deg, var(--r-shared-bg) 0 5px, var(--surface) 5px 8px); border-color:var(--r-shared); border-style:dashed"></i>Anbieter verwaltet</span>
+        <span><i style="background:linear-gradient(90deg, var(--r-client-bg) 50%, var(--r-shared-bg) 50%); border-color:var(--r-infra)"></i>geteilt</span>
+      </div>
+      <div class="t04-stapel-wrap">
+        <div class="t04-stapel" id="t04-stapel" aria-live="polite"></div>
+        <div class="t04-panel" id="t04-modell-info"></div>
+      </div>
+    </div>
+    <details class="sol">
+      <summary>Alle sechs Modelle in einer Tabelle vergleichen</summary>
+      <div class="tablebox"><table class="tabelle t04-vergleich" id="t04-vergleich"></table></div>
+    </details>
+    <div class="t04-karten">
+      <div class="t04-karte2 ar-r-client"><h4>On-premises</h4><p>Eigenes Rechenzentrum oder Serverraum. Volle Kontrolle, aber auch voller Aufwand: Hardware kaufen, patchen, Notstrom, Backup.</p></div>
+      <div class="t04-karte2 ar-r-shared"><h4>Public Cloud</h4><p>Ressourcen eines grossen Anbieters, geteilt mit anderen Kunden und über das Internet erreichbar. Bezahlt wird nach Verbrauch.</p></div>
+      <div class="t04-karte2 ar-r-infra"><h4>Private und Hybrid Cloud</h4><p>Private Cloud: Cloud-Technik nur für eine Organisation (selbst oder bei einem Provider). Hybrid: Teile on-premises, Teile in der Public Cloud.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Welches Liefermodell passt?</h3>
+      <div id="t04-lm-a1"></div>
+      <div id="t04-lm-a2"></div>
+      <div id="t04-lm-a3"></div>
+    </div>
+  </section>
+
+  <!-- 11 · Sicherheit -->
+  <section id="sicherheit" data-kategorie="sicherheit">
+    <span class="eyebrow">Cloud-Sicherheit · Ziele und Standards</span>
+    <h2>Was ein Cloud-Anbieter sicherstellen muss</h2>
+    <p class="prose">Wer Daten in die Cloud gibt, gibt Verantwortung ab, aber nicht die Haftung. Darum prüfst du beim Anbieter zwei Gruppen von Sicherheitszielen und lässt dir Zertifikate nach anerkannten Standards zeigen.</p>
+    <div class="grid2">
+      <div class="t04-karte2 ar-r-sync"><h4>Verfügbarkeit</h4><ul><li>Inventar der Anlagen und genügend Redundanz</li><li>Physische Sicherheit, Notstrom</li><li>Backup und Wiederherstellung nach einer Katastrophe (Disaster Recovery)</li><li>Geschäftsfortführung planen (Continuity Management)</li></ul></div>
+      <div class="t04-karte2 ar-r-async"><h4>Vertraulichkeit, Integrität, Datenschutz</h4><ul><li>Organisation, Richtlinien und Weisungen fürs Personal</li><li>Identitäten und Berechtigungen verwalten</li><li>Verschlüsselung und Schlüsselverwaltung</li><li>Sichere Kommunikation (z. B. TLS, getrennte Netze)</li></ul></div>
+    </div>
+    <div class="tablebox card">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Standard</th><th scope="col">Was er nachweist</th></tr></thead>
+        <tbody>
+          <tr><td>ISO/IEC 27001 (mit 27002)</td><td>Der Anbieter betreibt ein funktionierendes Managementsystem für Informationssicherheit (ISMS); 27002 liefert die Massnahmen dazu.</td></tr>
+          <tr><td>ISO/IEC 27017</td><td>Zusätzliche Sicherheitsmassnahmen speziell für Cloud-Dienste, für Anbieter und Kunden.</td></tr>
+          <tr><td>ISO/IEC 27018</td><td>Schutz personenbezogener Daten in der Public Cloud (passt zu DSGVO und Schweizer DSG).</td></tr>
+          <tr><td>BSI C5</td><td>Kriterienkatalog des deutschen Bundesamts für Sicherheit in der Informationstechnik (Cloud Computing Compliance Criteria Catalogue), mit Prüfbericht eines Wirtschaftsprüfers.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welches Sicherheitsziel?</h3>
+      <div id="t04-sort-sich"></div>
+    </div>
+    <div id="t04-sich-a1"></div>
+  </section>
+
+  <!-- 12 · Vorgehen -->
+  <section id="verfahren" data-kategorie="zugang">
+    <span class="eyebrow">Schritt für Schritt · Prüfungsvorgehen</span>
+    <h2>Vom Auftrag zur Mehrschichtenarchitektur</h2>
+    <ol class="prose">
+      <li><b>Technologie festlegen</b> (skriptbasiert, .NET oder Jakarta EE) und begründen. Sie bestimmt Paketnamen und Stereotypen.</li>
+      <li><b>Pakete zeichnen:</b> Client Tier, Server mit Middle Tier (Web Tier mit Presentation und Web API, Business Tier mit Facade, Business Logic, Async, Data Access, Service Access) und Persistence Tier. Rechts die Umsysteme: Service Consumer, MOM, Service Provider.</li>
+      <li><b>Komponenten einsetzen:</b> Client-Apps aus dem Auftrag, Präsentation und Web Services, Facade, jede fachliche Komponente einzeln, Receiver und Sender getrennt, DACs, je Service Provider ein eigener Adapter, Datenbank.</li>
+      <li><b>Stereotypen setzen:</b> jede Server-Komponente mit ihrer Technologie, z. B. «C#» oder «JS».</li>
+      <li><b>Schnittstellen und Verbindungen:</b> Ball an die anbietende Komponente (HTTP, REST, AMQP, API des Providers), jede Verbindung mit Protokoll und Format beschriften.</li>
+      <li><b>Beschreiben:</b> zwei bis drei Sätze je Paket und Komponente: was sie tut, womit, und warum.</li>
+    </ol>
+    <div id="t04-sa"></div>
+  </section>
+
+  <!-- 13 · Spiel -->
+  <section id="spiel" data-kategorie="sicherheit">
+    <span class="eyebrow">Modellieren wie in der Prüfung</span>
+    <h2>Spiel: Schichten modellieren</h2>
+    <p class="prose">Drei Levels mit steigender Schwierigkeit: drei Tiers, die SOA-enabled N-Tier-Architektur und ein hexagonaler Entwurf. Leg die Komponenten in die Pakete, setz Schnittstellen, verbinde und beschrifte. In der Palette liegen Fallen. Der Tipp «Referenz» zeigt dir die passende Referenzarchitektur dieser Seite. Übe zusätzlich mit der Fallstudie Timesoft aus Moodle.</p>
+    <div id="t04-spiel"></div>
+  </section>
+
+  <!-- Film -->
+  <section id="film" data-kategorie="messaging">
+    <span class="eyebrow">▶ Lösungsfilm</span>
+    <h2>Eine Anforderung wandert durch die Schichten</h2>
+    <p class="prose">Lea bucht in der App des Kletterzentrums einen Kurs. Verfolge ihre Anfrage durch jede Schicht bis in die Datenbank, zum Zahlungsdienst, in den Broker und als Antwort zurück.</p>
+    <div id="t04-film"></div>
+  </section>
+
+  <!-- Selbsttest -->
+  <section id="test" data-kategorie="zugang">
+    <span class="eyebrow">✓ Selbsttest</span>
+    <h2>Prüf dich selbst</h2>
+    <div id="t04-test"></div>
+  </section>
+
+  <!-- Auf einen Blick -->
+  <section id="blick" data-kategorie="client">
+    <span class="eyebrow">Σ Merksätze</span>
+    <h2>Auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Client-Server: Der Client schickt einen Request über ein Zugriffsprotokoll an die API des Servers, der Server antwortet. Wo der Schnitt liegt, entscheidet über Thin oder Fat Client.</li>
+      <li>SOA-enabled N-Tier: Client Tier · Middle Tier (Web Tier mit Presentation und Service Tier/Web API; Business Tier mit Facade, Business Logic, Async Adapter, Data Access und Service Access Layer) · Persistence Tier. Rechts Service Consumer, MOM und Service Provider.</li>
+      <li>Web-Server, DBMS-Server und Security-Server sind keine Komponenten; ein API-Gateway zeichnest du in der Mehrschicht nicht. Je Service Provider ein eigener Adapter, Receiver und Sender getrennt.</li>
+      <li>Hexagonal, Clean, Onion: Domäne in der Mitte, Ports als Schnittstellen, Adapter aussen, Abhängigkeiten zeigen immer nach innen.</li>
+      <li>Programmiersprachen: kompiliert (C, C++, Swift), Bytecode/hybrid (Java, C#) mit Runtime, interpretiert (JavaScript, PHP, Python) im Ausführungscontainer.</li>
+      <li>Liefermodelle: on-premises → IaaS (ab OS du) → CaaS (ab Container du) → PaaS (nur App und Daten) → FaaS (nur Funktionen, Abrechnung pro Aufruf) → SaaS (nur Nutzung). Anbieter prüfen nach ISO 27001/27017/27018 und BSI C5.</li>
+    </ul>
+  </section>
+  <footer>AVSW · Station 4 · eigene Erklärungen und fiktive Beispiele auf Basis der Modulunterlagen.</footer>
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/architektur.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const A = window.Architektur;
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const I = (was, kann, wofuer, technologie, warum) => {
+    const o = {};
+    if (was) o.was = was;
+    if (kann) o.kann = kann;
+    if (wofuer) o.wofuer = wofuer;
+    if (technologie) o.technologie = technologie;
+    if (warum) o.warum = warum;
+    return o;
+  };
+  const OPT = { ablauf: true, ausfall: true, legende: true, steckbrief: true };
+
+  /* ---------- 0 · Bausteine: Sortierer ---------- */
+  L.sortierer("#t04-sort-start", {
+    kategorien: ["Client Tier", "Middle Tier", "Persistence Tier"],
+    elemente: [
+      { html: "Formular anzeigen und Eingaben annehmen", kategorie: "Client Tier", erklaerung: "Anzeigen und Eingaben sind Aufgabe des Clients (Browser oder App)." },
+      { html: "HTML-Seite für den Browser erzeugen", kategorie: "Middle Tier", erklaerung: "Serverseitig gerenderte Seiten entstehen im Presentation Tier, also im Web Tier des Middle Tier." },
+      { html: "Prüfen, ob der Kurs noch freie Plätze hat", kategorie: "Middle Tier", erklaerung: "Eine Geschäftsregel: Business Components im Business Tier." },
+      { html: "Kursdaten dauerhaft in Tabellen speichern", kategorie: "Persistence Tier", erklaerung: "Dauerhaft speichern ist die Aufgabe der Datenbank im Persistence Tier." },
+      { html: "Den Zahlungsdienst über dessen API aufrufen", kategorie: "Middle Tier", erklaerung: "Das macht ein Driven sync Adapter im Service Access Layer des Business Tier." },
+      { html: "Daten als JSON über REST an die App liefern", kategorie: "Middle Tier", erklaerung: "Web Services im Service Tier (Web API) des Web Tier." },
+      { html: "Eingaben offline zwischenspeichern, bis wieder Netz da ist", kategorie: "Client Tier", erklaerung: "Eine Sync-App hält lokale Daten auf dem Gerät: verteilte Datenhaltung im Client." },
+      { html: "Abfragen über einen Index schnell beantworten", kategorie: "Persistence Tier", erklaerung: "Indexe verwaltet das DBMS im Persistence Tier." }
+    ]
+  });
+
+  /* ---------- 2 · Landkarte der Basisbegriffe ---------- */
+  const REGIONEN = [
+    { id: "stile", name: "Architekturstile", rolle: "business", frage: "Wie ist die ganze Anwendung geschnitten?", orte: [
+      { n: "Monolithische Mehrschichtenarchitektur", t: "Eine Anwendung, horizontal in Tiers und Layers geschnitten und als ein Ganzes ausgeliefert. Thema dieser Station.", wo: "#ntier", won: "Zur N-Tier-Referenz" },
+      { n: "Hexagonal / Clean / Onion", t: "Schichtenorientierter Stil mit der Domäne im Zentrum: Ports als Schnittstellen, Adapter aussen, Abhängigkeiten nach innen.", wo: "#hexagonal", won: "Zu Hexagonal" },
+      { n: "Microservices (SCS)", t: "Vertikal nach Fachlichkeit geschnitten: kleine, unabhängig auslieferbare Services mit eigener Datenhaltung. Self-contained Systems bringen ihr eigenes UI mit.", wo: "/lernseiten/avsw/05-microservices", won: "Station 05" },
+      { n: "Serverless Architecture", t: "Die Anwendung besteht aus Funktionen und verwalteten Diensten. Server, Skalierung und Betrieb übernimmt der Anbieter (FaaS).", wo: "#liefermodelle", won: "Zu den Liefermodellen" }
+    ] },
+    { id: "komm", name: "Kommunikations- und Integrationsstile", rolle: "async", frage: "Wie reden die Teile miteinander?", orte: [
+      { n: "SOA", t: "Service Oriented Architecture: Provider bieten Services über eine beschriebene Schnittstelle an, Consumer rufen sie synchron auf (Request/Response). «SOA-enabled» heisst: Die Mehrschicht bietet und nutzt solche Services.", wo: "/lernseiten/avsw/02-soa-apis", won: "Station 02" },
+      { n: "EDA", t: "Event Driven Architecture: Teile tauschen asynchron Events und Nachrichten über einen Message Broker aus. In der Mehrschicht ist das der Async Adapter Layer.", wo: "/lernseiten/avsw/03-eda-message-broker", won: "Station 03" }
+    ] },
+    { id: "muster", name: "Architekturmuster", rolle: "webapi", frage: "Wie löse ich ein wiederkehrendes Teilproblem?", orte: [
+      { n: "MVC", t: "Model-View-Controller trennt in der Präsentation Daten (Model), Darstellung (View) und Steuerung (Controller).", wo: "/lernseiten/avsw/06-clientseitige-architekturen", won: "Station 06" },
+      { n: "Repository", t: "Kapselt den Datenzugriff hinter einer Schnittstelle, die sich wie eine Sammlung von Objekten anfühlt. In der Mehrschicht sind das die DACs.", wo: "#code", won: "Zum Code-Beispiel" },
+      { n: "CQRS", t: "Trennt Schreiben (Commands) und Lesen (Queries) in eigene Modelle, oft mit eigener Datenbank je Seite.", wo: "#persistenz", won: "Zum Persistence Tier" },
+      { n: "Saga", t: "Ein langer Geschäftsvorgang über mehrere Services als Folge lokaler Transaktionen; scheitert ein Schritt, gleichen Gegenbuchungen aus.", wo: "/lernseiten/avsw/05-microservices", won: "Station 05" }
+    ] },
+    { id: "stack", name: "Technologie-Stack", rolle: "infra", frage: "Womit entwickle und betreibe ich?", orte: [
+      { n: "Entwicklung: .NET", t: "Microsoft-Plattform mit C#, ASP.NET und Entity Framework. Bytecode läuft in der .NET-Runtime (CLR). Stereotypen «C#», «ASP.NET».", wo: "/lernseiten/avsw/07-serverseitige-architekturen", won: "Station 07" },
+      { n: "Entwicklung: Jakarta EE", t: "Java-Standard für Unternehmensserver mit Web Container und EJB Container, JPA und Jakarta Messaging. Bytecode in der JVM. Stereotypen «EJB», «EJB MDB».", wo: "/lernseiten/avsw/07-serverseitige-architekturen", won: "Station 07" },
+      { n: "Entwicklung: skriptbasiert", t: "PHP, Python, Ruby oder JavaScript mit Node.js, zur Laufzeit interpretiert. Stereotyp der Sprache, z. B. «JS».", wo: "#sprachen", won: "Zu den Sprachtypen" },
+      { n: "Betrieb: on-premises oder Cloud", t: "Eigener Serverraum oder ein Cloud-Liefermodell: IaaS, CaaS, PaaS, FaaS, SaaS. Dazu zählt auch DaaS (Desktop as a Service: der ganze Arbeitsplatz aus der Cloud).", wo: "#liefermodelle", won: "Zu den Liefermodellen" }
+    ] }
+  ];
+  (function karte() {
+    const box = $("#t04-karte"), info = $("#t04-karte-info");
+    const knoepfe = [];
+    REGIONEN.forEach((r) => {
+      const reg = document.createElement("div");
+      reg.className = "t04-region ar-r-" + r.rolle;
+      reg.innerHTML = "<h4>" + esc(r.name) + '</h4><p class="t04-frage">' + esc(r.frage) + '</p><div class="t04-knoepfe"></div>';
+      const kn = reg.querySelector(".t04-knoepfe");
+      r.orte.forEach((o) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "t04-knopf"; b.textContent = o.n; b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", () => {
+          knoepfe.forEach((x) => x.setAttribute("aria-pressed", "false"));
+          b.setAttribute("aria-pressed", "true");
+          info.className = "t04-panel ar-r-" + r.rolle;
+          info.innerHTML = "<h4>" + esc(o.n) + '</h4><p class="t04-klein">' + esc(r.name) + "</p><p>" + esc(o.t) + '</p><p><a href="' + o.wo + '">' + esc(o.won || "Mehr dazu") + " →</a></p>";
+        });
+        knoepfe.push(b); kn.appendChild(b);
+      });
+      box.appendChild(reg);
+    });
+  })();
+  L.sortierer("#t04-sort-karte", {
+    kategorien: ["Architekturstil", "Kommunikations-/Integrationsstil", "Architekturmuster", "Technologie-Stack"],
+    elemente: [
+      { html: "Microservices", kategorie: 0, erklaerung: "Schneidet die ganze Anwendung vertikal: ein Architekturstil." },
+      { html: "EDA", kategorie: 1, erklaerung: "Event Driven Architecture beschreibt, wie Teile kommunizieren: asynchron über Events." },
+      { html: "Saga", kategorie: 2, erklaerung: "Löst das Teilproblem «Transaktion über mehrere Services»: ein Muster." },
+      { html: "Jakarta EE", kategorie: 3, erklaerung: "Plattform für die Entwicklung: Technologie-Stack." },
+      { html: "Serverless Architecture", kategorie: 0, erklaerung: "Prägt die ganze Anwendung (Funktionen statt Server): Architekturstil." },
+      { html: "MVC", kategorie: 2, erklaerung: "Löst das Teilproblem «Präsentation sauber aufteilen»." },
+      { html: "PaaS", kategorie: 3, erklaerung: "Ein Liefermodell für den Betrieb: Technologie-Stack (Betrieb)." },
+      { html: "SOA", kategorie: 1, erklaerung: "Services über Schnittstellen anbieten und nutzen: Kommunikations- und Integrationsstil." },
+      { html: "Monolithische Mehrschichtenarchitektur", kategorie: 0, erklaerung: "Horizontal geschnittene Gesamtanwendung: Architekturstil." },
+      { html: "Repository", kategorie: 2, erklaerung: "Kapselt den Datenzugriff: ein Muster (in der Mehrschicht die DACs)." }
+    ]
+  });
+
+  /* ---------- 3 · Client-Server-Grundmuster ---------- */
+  const modellCS = {
+    titel: "Client-Server-Grundmuster",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "cs-client", name: "Client Tier", spalte: 0, zeile: 0, info: I("Alles, was beim Benutzer läuft.", "", "Zeigt, welche Client App mit dem Server spricht.", "", "Client und Server sind getrennte Rollen; oft auch getrennte Rechner.") },
+      { id: "cs-server", name: "Server Tier", spalte: 0, zeile: 1, info: I("Der Rechner oder Prozess, der Anfragen bedient.", "", "Nimmt die Requests vieler Clients an.", "", "Daten und Regeln liegen zentral an einer Stelle.") }
+    ],
+    elemente: [
+      { id: "cs-app", typ: "web", rolle: "client", name: "Client App", in: "cs-client",
+        info: I("Das Programm beim Benutzer, z. B. Browser mit Web App oder installierte App.", "Eingaben annehmen, Request schicken, Reply anzeigen.", "Die Benutzerin arbeitet nur hier.", "Browser, Mobile App, Desktop-App", "Der Client ergreift die Initiative; er wartet danach auf die Antwort.") },
+      { id: "cs-srv", typ: "dienst", rolle: "business", name: "Server-Applikation", stereotyp: "", in: "cs-server", schnittstellen: [{ id: "api", name: "API" }],
+        info: I("Das Programm auf dem Server, das Requests verarbeitet.", "Request prüfen, Logik ausführen, Daten lesen und schreiben, Reply erzeugen.", "Bedient viele Clients gleichzeitig.", "z. B. Node.js, .NET, Jakarta EE", "Die API (Ball) ist der Vertrag: Nur darüber spricht der Client mit dem Server.") }
+    ],
+    verbindungen: [
+      { id: "cs-v1", von: "cs-app", nach: "cs-srv#api", label: "Zugriffsprotokoll, z. B. HTTPS", info: "Request und Reply laufen über dieselbe Verbindung." }
+    ],
+    ablaeufe: [
+      { id: "cs-rr", name: "Request und Reply", schritte: [
+        { von: "cs-app", nach: "cs-srv", text: "Der Client schickt einen <b>Request</b> über das Zugriffsprotokoll an die API des Servers.", phase: "Request" },
+        { bei: "cs-srv", text: "Der Server verarbeitet den Request: prüfen, rechnen, Daten holen.", phase: "Verarbeitung" },
+        { von: "cs-srv", nach: "cs-app", text: "Er schickt den <b>Reply</b> zurück. Erst jetzt arbeitet der Client weiter.", phase: "Reply" }
+      ] },
+      { id: "cs-fehler", name: "Server antwortet nicht", schritte: [
+        { von: "cs-app", nach: "cs-srv", text: "Der Client schickt den Request …", phase: "Request" },
+        { bei: "cs-srv", text: "… der Server ist überlastet oder ausgefallen.", fehler: true, phase: "Fehler" },
+        { bei: "cs-app", text: "Der Client wartet bis zum Timeout und zeigt dann eine Fehlermeldung. Der Server ist ein Single Point of Failure.", fehler: true, phase: "Fehler" }
+      ] }
+    ]
+  };
+  A.diagramm("#t04-cs", modellCS, { ablauf: true, ausfall: true, legende: false, steckbrief: true, breit: false });
+
+  /* Varianten der Verteilung */
+  const VARIANTEN = [
+    { id: "vp", name: "Verteilte Präsentation", c: { p: "h" }, s: { p: "h", l: 1, d: 1 }, pos: 4,
+      text: "Selbst die Darstellung ist geteilt: Der Server bereitet die Oberfläche auf, der Client zeigt sie nur an und schickt Tastatur und Maus zurück.", bsp: "Terminal-Server, Remote Desktop, virtueller Desktop (VDI)." },
+    { id: "ep", name: "Entfernte Präsentation", c: { p: 1 }, s: { l: 1, d: 1 }, pos: 27,
+      text: "Die ganze Präsentation läuft auf dem Client, Anwendungslogik und Daten auf dem Server.", bsp: "Klassische Web App: Der Browser stellt die vom Server erzeugten Seiten dar." },
+    { id: "vl", name: "Verteilte Anwendungslogik", c: { p: 1, l: "h" }, s: { l: "h", d: 1 }, pos: 50,
+      text: "Ein Teil der Logik läuft auf dem Client, z. B. Eingaben prüfen, filtern, sortieren. Die verbindliche Logik bleibt auf dem Server.", bsp: "SPA oder Mobile App mit REST-API. Der Normalfall der SOA-enabled N-Tier-Architektur." },
+    { id: "ed", name: "Entfernte Datenhaltung", c: { p: 1, l: 1 }, s: { d: 1 }, pos: 73,
+      text: "Die ganze Anwendung läuft auf dem Client, nur die Datenbank steht auf dem Server (2-Tier, Fat Client).", bsp: "Desktop-Programm, das direkt per ODBC oder JDBC auf einen DB-Server zugreift." },
+    { id: "vd", name: "Verteilte Datenhaltung", c: { p: 1, l: 1, d: "h" }, s: { d: "h" }, pos: 96,
+      text: "Der Client hält zusätzlich eigene Daten und gleicht sie mit dem Server ab.", bsp: "Offline-fähige Sync-App mit lokaler Datenbank." }
+  ];
+  (function verteilung() {
+    const kn = $("#t04-vt-knoepfe"), bild = $("#t04-vt-bild"), info = $("#t04-vt-info"), punkt = $("#t04-vt-punkt");
+    const BL = [["p", "Präsen&shy;tation", "client"], ["l", "Anwendungs&shy;logik", "business"], ["d", "Daten&shy;haltung", "daten"]];
+    const seite = (titel, teil) => '<div class="t04-vt-seite"><h4>' + titel + "</h4>" + BL.map(([k, n, r]) => {
+      const w = teil[k];
+      return '<div class="t04-vt-block ar-r-' + r + (w === "h" ? " t04-halb" : w ? "" : " t04-weg") + '">' + n + (w === "h" ? " (Teil)" : "") + "</div>";
+    }).join("") + "</div>";
+    const zeigen = (v) => {
+      bild.innerHTML = seite("Client", v.c) + '<div class="t04-vt-netz">Netz</div>' + seite("Server", v.s);
+      punkt.style.left = v.pos + "%";
+      info.innerHTML = "<h4>" + v.name + "</h4><p>" + v.text + "</p><p><b>Beispiel:</b> " + v.bsp + "</p>";
+      kn.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v.id)));
+    };
+    VARIANTEN.forEach((v) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "t04-knopf"; b.dataset.v = v.id; b.textContent = v.name;
+      b.addEventListener("click", () => zeigen(v));
+      kn.appendChild(b);
+    });
+    zeigen(VARIANTEN[2]);
+  })();
+
+  (function schnitt() {
+    const box = $("#t04-schnitt");
+    const zeigen = (art) => {
+      document.querySelectorAll("[data-t04-schnitt]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t04Schnitt === art)));
+      if (art === "h") {
+        box.innerHTML = '<p class="t04-klein">Eine Softwareapplikation, ein Deployable, horizontal in Schichten geteilt.</p><div class="t04-schnitt t04-horizontal">' +
+          '<div class="ar-r-client">Client Tier</div><div class="ar-r-webapi">Web Tier (Präsentation, Web API)</div><div class="ar-r-business">Business Tier (Facade, Logik, Adapter, Datenzugriff)</div><div class="ar-r-daten">Persistence Tier</div></div>' +
+          "<p>Stark: einfach zu entwickeln, zu testen und zu betreiben, eine Transaktion über alles. Schwach: Jede Änderung heisst, alles neu auszuliefern; skalieren geht nur als Ganzes.</p>";
+      } else {
+        box.innerHTML = '<p class="t04-klein">Mehrere Fachservices nebeneinander, jeder mit eigenem UI, eigener Logik und eigenen Daten.</p><div class="t04-schnitt">' +
+          ["Kurse", "Mitglieder", "Hallenbelegung"].map((n) => '<div class="ar-r-sync"><b>Fachservice ' + n + "</b><br>UI · Logik · Daten</div>").join("") + "</div>" +
+          "<p>Stark: Teams liefern unabhängig aus, Teile skalieren einzeln. Schwach: verteiltes System mit Netzwerkfehlern und verteilten Daten (Station 05).</p>";
+      }
+    };
+    document.querySelectorAll("[data-t04-schnitt]").forEach((b) => b.addEventListener("click", () => zeigen(b.dataset.t04Schnitt)));
+    zeigen("h");
+  })();
+
+  /* 3-Schichten-Muster als Paketdiagramm */
+  const modellDrei = {
+    titel: "3-Schichten-Muster (monolithische Mehrschicht)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "d-sw", name: "Softwareapplikation (monolithische Mehrschicht)", spalte: 0, zeile: 0, info: I("Die ganze Anwendung als ein System.", "", "Grenzt ab, was zur Applikation gehört.", "", "Alle Schichten werden zusammen entwickelt und ausgeliefert.") },
+      { id: "d-client", name: "Client / Front-End Tier", in: "d-sw", info: I("Clients: Web Apps im Browser und installierbare Apps.", "", "Bedienung durch Menschen.", "Browser, Mobile, Desktop", "Läuft auf dem Gerät der Benutzerin.") },
+      { id: "d-server", name: "Server", in: "d-sw", info: I("Alles, was auf Servern läuft.", "", "Fasst Middle und Persistence Tier zusammen.", "", "Hier liegen Regeln und Daten zentral.") },
+      { id: "d-middle", name: "Middle / Business Tier", in: "d-server", info: I("Die Anwendung auf dem Server: Web Tier und Business Tier.", "", "Nimmt Anfragen an und führt die Geschäftslogik aus.", "Node.js, .NET, Jakarta EE", "Heisst Middle Tier, weil es zwischen Client und Daten liegt.") },
+      { id: "d-web", name: "Web Tier", in: "d-middle", info: I("Präsentation und Web API.", "", "Nimmt alle Anfragen von aussen an.", "", "Trennt das Annehmen von Anfragen von der Geschäftslogik.") },
+      { id: "d-biz", name: "Business Tier", in: "d-middle", info: I("Herzstück mit den Business Components.", "", "Geschäftsregeln, Datenzugriff, Anbindung von Umsystemen.", "", "Die Regeln stehen nur an einer Stelle.") },
+      { id: "d-pers", name: "Data / Persistence Tier", in: "d-server", info: I("Die Datenbank im DBMS.", "", "Daten dauerhaft und konsistent halten.", "PostgreSQL, SQL Server, MongoDB", "Daten überleben jeden Neustart der Anwendung.") }
+    ],
+    elemente: [
+      { id: "d-capp", typ: "web", rolle: "client", name: "Client App", in: "d-client", info: I("Web App oder installierte App.", "Anzeigen, Eingaben annehmen.") },
+      { id: "d-wc", typ: "dienst", rolle: "webapi", name: "Präsentation / Web API", stereotyp: "", in: "d-web", info: I("Komponenten, die Seiten erzeugen oder Web Services anbieten.", "Anfragen annehmen und an die Logik weitergeben.") },
+      { id: "d-bc", typ: "dienst", rolle: "business", name: "Business Components", stereotyp: "", in: "d-biz", info: I("Die fachlichen Komponenten.", "Geschäftsregeln ausführen.") },
+      { id: "d-db", typ: "datenbank", rolle: "daten", name: "DB in DBMS", in: "d-pers", info: I("Die Datenbank der Anwendung.", "Lesen, schreiben, Transaktionen.") }
+    ],
+    verbindungen: [
+      { id: "d-v1", von: "d-capp", nach: "d-wc", label: "HTTP / REST" },
+      { id: "d-v2", von: "d-wc", nach: "d-bc" },
+      { id: "d-v3", von: "d-bc", nach: "d-db", label: "SQL" },
+      { id: "d-a1", von: "d-client", nach: "d-web", art: "abhaengigkeit" },
+      { id: "d-a2", von: "d-web", nach: "d-biz", art: "abhaengigkeit" },
+      { id: "d-a3", von: "d-middle", nach: "d-pers", art: "abhaengigkeit" }
+    ],
+    ablaeufe: [
+      { id: "d-ab", name: "Anfrage von oben nach unten", schritte: [
+        { von: "d-capp", nach: "d-wc", text: "Der Client schickt die Anfrage an den Web Tier.", phase: "Client → Middle" },
+        { von: "d-wc", nach: "d-bc", text: "Der Web Tier gibt sie an die Business Components.", phase: "Middle" },
+        { von: "d-bc", nach: "d-db", text: "Die Business Components lesen und schreiben Daten.", phase: "Middle → Persistence" },
+        { von: "d-bc", nach: "d-wc", text: "Das Ergebnis geht zurück nach oben …", phase: "Antwort" },
+        { von: "d-wc", nach: "d-capp", text: "… bis zum Client. Keine Schicht überspringt die andere.", phase: "Antwort" }
+      ] }
+    ]
+  };
+  A.diagramm("#t04-drei", modellDrei, { ablauf: true, ausfall: true, legende: false, steckbrief: true, breit: false });
+
+  /* ---------- 4 · SOA-enabled N-Tier (grosses Diagramm) ---------- */
+  const SPR = "Sprache";
+  const modellNT = {
+    titel: "SOA-enabled N-Tier-Architektur · Kletterzentrum Griffig (fiktiv)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "nt-app", name: "Kletterzentrum Griffig (fiktiv) · The Whole Application", spalte: 0, zeile: 0, hoehe: 3,
+        info: I("Die ganze eigene Anwendung: Client Tier und Server.", "", "Grenzt ab, was du baust und betreibst. Rechts stehen die Umsysteme.", "", "In der Prüfung zeichnest du die unmittelbaren Umsysteme konkret benannt daneben.") },
+      { id: "nt-client", name: "Client Tier", in: "nt-app",
+        info: I("Alle Client-Apps. <b>Gehört hinein:</b> Web Apps im Browser, installierbare Apps. <b>Nicht hinein:</b> Server-Komponenten.", "", "Zeigt, welche App welche Schnittstelle des Servers nutzt.", "Browser, iOS, Android, Windows, macOS", "Getrennt nach Ausführungsort: Browser oder installiert.") },
+      { id: "nt-cweb", name: "Web Apps", in: "nt-client", spalte: 0, zeile: 0, info: I("Apps, die im Browser laufen: klassisch, SPA oder PWA.", "", "Keine Installation nötig.") },
+      { id: "nt-cinst", name: "Installierbare Apps", in: "nt-client", spalte: 1, zeile: 0, info: I("Apps, die auf dem Gerät installiert werden.", "", "Für Kamera, Offline-Arbeit oder vollen Funktionsumfang.") },
+      { id: "nt-server", name: "Server", in: "nt-app", info: I("Alle Tiers, die auf Servern laufen: Middle Tier und Persistence Tier.", "", "Trennt die Server-Seite vom Client Tier.") },
+      { id: "nt-middle", name: "Middle Tier", in: "nt-server",
+        info: I("Die eigentliche Anwendung auf dem Server mit Web Tier und Business Tier.", "", "Nimmt Anfragen an und führt die Geschäftslogik aus.", "Laufzeit: Node.js, .NET-Server oder Jakarta-EE-Server", "Die Laufzeitumgebung nennst du im Paketnamen, z. B. «Middle Tier (.NET Server)».") },
+      { id: "nt-web", name: "Web Tier (Web-Server, z. B. Nginx)", in: "nt-middle",
+        info: I("Nimmt alle Anfragen von aussen an. <b>Gehört hinein:</b> Presentation Tier und Service Tier (Web API). <b>Nicht hinein:</b> der Web-Server als Komponente, Geschäftslogik.", "", "Trennt das Annehmen von Anfragen von der Fachlogik.", "IIS, Apache, Nginx (im Paketnamen)", "Der Web-Server ist Infrastruktur und steht deshalb nur im Paketnamen.") },
+      { id: "nt-pres", name: "Presentation Tier", in: "nt-web", spalte: 0, zeile: 0,
+        info: I("Erzeugt die Oberfläche für Web Apps. <b>Gehört hinein:</b> Controller- und View-Komponenten, serverseitig gerenderte Seiten, statische HTML5-Ressourcen. <b>Nicht hinein:</b> Regeln, SQL.", "", "Für Benutzer im Browser.", "Express mit Templates, ASP.NET Razor, JSF", "Seiten entstehen nahe beim Benutzer, die Regeln bleiben im Business Tier.") },
+      { id: "nt-svc", name: "Service Tier (Web API)", in: "nt-web", spalte: 1, zeile: 0,
+        info: I("Bietet die Funktionen als Web Services an. <b>Gehört hinein:</b> REST-, SOAP-, GraphQL-, OData- oder gRPC-Services. <b>Nicht hinein:</b> API-Gateway, Integration Middleware.", "", "Für eigene Apps und für Service Consumer im Intranet oder Extranet.", "REST, SOAP, GraphQL, OData, gRPC", "Das macht die Mehrschicht «SOA-enabled»: Sie ist selbst Service Provider.") },
+      { id: "nt-biz", name: "Business Tier", in: "nt-middle",
+        info: I("Das Herzstück: Facade, Geschäftslogik und alle Adapter nach aussen. <b>Nicht hinein:</b> Präsentation, Datenbank.", "", "Hier entscheidet die Anwendung, was erlaubt ist.", "", "Ist vom Web Tier getrennt und kann auf einem eigenen Server laufen.") },
+      { id: "nt-fac", name: "Business Facade", in: "nt-biz", spalte: 0, zeile: 0, breite: 2,
+        info: I("Einziger Zugang zum Business Tier. <b>Gehört hinein:</b> eine Facade-Komponente mit Business API. <b>Nicht hinein:</b> Geschäftsregeln, Datenzugriff.", "", "Presentation und Service Tier rufen nur die Facade.", "REST oder gRPC (skriptbasiert, .NET), RMI (Jakarta EE)", "Trennt Web und Business Tier, damit sie getrennt laufen und skalieren können.") },
+      { id: "nt-bll", name: "Business Logic Layer", in: "nt-biz", spalte: 0, zeile: 1,
+        info: I("Die Business Components. In der Referenz zusammengefasst, im konkreten Fall jede fachliche Komponente einzeln (z. B. Kursbuchung, Mitglieder).", "", "Geschäftsregeln an genau einer Stelle.") },
+      { id: "nt-asy", name: "Async Adapter Layer", in: "nt-biz", spalte: 1, zeile: 1,
+        info: I("Asynchrone Anbindung an die MOM. <b>Gehört hinein:</b> Receiver Adapter und Sender Adapter, je eine eigene Komponente. <b>Nicht hinein:</b> der Message Broker selbst.", "", "Nachrichten empfangen und senden, ohne dass jemand wartet.", "AMQP, JMS, MQTT", "Entkoppelt: Fällt ein Empfänger aus, staut sich die Nachricht im Broker.") },
+      { id: "nt-dal", name: "Data Access Layer", in: "nt-biz", spalte: 0, zeile: 2,
+        info: I("Datenzugriff. <b>Gehört hinein:</b> DACs (ORM oder DB-Treiber) {xor} DACs über einen Data Service. <b>Nicht hinein:</b> DBMS, Tabellen.", "", "Die Business Components kennen kein SQL.", "Entity Framework, JPA, node-postgres", "Die Datenbank lässt sich austauschen, ohne die Regeln anzufassen.") },
+      { id: "nt-sal", name: "Service Access Layer", in: "nt-biz", spalte: 1, zeile: 2,
+        info: I("Synchroner Zugriff auf Service Provider. <b>Gehört hinein:</b> je Provider ein Driven sync Adapter. <b>Nicht hinein:</b> der Provider selbst.", "", "Entkoppelt die Business Components von fremden APIs und konvertiert Protokolle.", "REST, SOAP, gRPC", "Ändert ein Provider seine API, ändert nur sein Adapter.") },
+      { id: "nt-pers", name: "Persistence Tier (DBMS, z. B. PostgreSQL)", in: "nt-server",
+        info: I("Hält die Datenobjekte dauerhaft. <b>Gehört hinein:</b> die Datenbank, z. B. «DB in PostgreSQL», evtl. ein Data Service. <b>Nicht hinein:</b> der DBMS-Server als Komponente.", "", "Daten überleben Neustarts und sind gesichert.", "RDBMS, Dokument-DB, Key-Value-DB, Cache-DB", "Das DBMS ist Infrastruktur und steht nur im Paketnamen.") },
+      { id: "nt-cons", name: "Service Consumer (Intranet/Extranet)", spalte: 1, zeile: 0,
+        info: I("Fremde Apps, die dein Web API nutzen.", "", "Umsystem: hier das Buchungssystem eines Tourismusbüros.", "", "Konkret benennen, damit klar ist, wer die API nutzt.") },
+      { id: "nt-mom", name: "Message Oriented Middleware (MOM)", spalte: 1, zeile: 1,
+        info: I("Der Message Broker als Umsystem.", "", "Puffert und verteilt Nachrichten an andere Systeme.", "RabbitMQ, Azure Service Bus, ActiveMQ", "Die Mehrschicht ist nur über den Async Adapter Layer damit verbunden.") },
+      { id: "nt-prov", name: "Service Provider (Intranet/Extranet)", spalte: 1, zeile: 2,
+        info: I("Fremde Services, die deine Anwendung nutzt.", "", "Umsystem: hier der Zahlungsdienst.", "", "Je Provider ein eigener Adapter im Service Access Layer.") }
+    ],
+    elemente: [
+      { id: "nt-browser", typ: "web", rolle: "client", name: "Web App (Browser)", in: "nt-cweb", technologie: "HTML, CSS, JavaScript",
+        info: I("Klassische Web App für die Mitglieder.", "Kursliste anzeigen, Kurs buchen.", "Mitglieder am PC, ohne Installation.", "Browser, Seiten kommen fertig vom Server", "Geringe Anforderungen an den Browser, nichts zu installieren.") },
+      { id: "nt-mapp", typ: "mobile", rolle: "client", name: "Mobile App (iOS, Android)", in: "nt-cinst", technologie: ".NET MAUI oder Kotlin/Swift",
+        info: I("Installierbare App für die Mitglieder.", "Kurse buchen, Push-Nachrichten empfangen.", "Unterwegs in der Halle.", "z. B. .NET MAUI", "Holt Daten als JSON über REST vom Web API.") },
+      { id: "nt-pc", typ: "dienst", rolle: "client", name: "Presentation Components", stereotyp: SPR, in: "nt-pres", schnittstellen: [{ id: "http", name: "HTTP" }],
+        info: I("Controller- und View-Komponenten, die HTML erzeugen.", "Anfragen des Browsers annehmen, Facade aufrufen, Seite rendern.", "Für die Web App.", "Express mit Templates, ASP.NET Razor, JSF", "Gleiche Sprache wie der Server, Seiten entstehen serverseitig.") },
+      { id: "nt-ws", typ: "dienst", rolle: "webapi", name: "Web Services", stereotyp: SPR, in: "nt-svc", schnittstellen: [{ id: "rest", name: "REST" }],
+        info: I("Web Services des Service Tier.", "Format prüfen, JSON in Aufrufe übersetzen, Facade aufrufen, Reply bauen.", "Für die Mobile App und für Service Consumer (über das API-Gateway).", "REST mit JSON; je nach Auftrag SOAP, GraphQL, OData, gRPC", "REST ist leichtgewichtig und von jeder Plattform nutzbar.") },
+      { id: "nt-facade", typ: "dienst", rolle: "business", name: "Business Facade", stereotyp: SPR, in: "nt-fac", schnittstellen: [{ id: "api", name: "Business API" }],
+        info: I("Einziger Zugang zum Business Tier.", "Geschäftsfunktionen anbieten und an die Business Components delegieren.", "Presentation Components und Web Services rufen nur sie.", "REST oder gRPC; bei Jakarta EE RMI", "Web und Business Tier bleiben getrennt und lassen sich getrennt betreiben.") },
+      { id: "nt-bc", typ: "dienst", rolle: "business", name: "Business Components", stereotyp: SPR, in: "nt-bll",
+        info: I("Die fachlichen Komponenten, z. B. Kursbuchung und Mitglieder.", "Regeln prüfen (Kurs nicht voll, Mitglied aktiv), Abläufe steuern.", "Das Herzstück der Anwendung.", "Klassen in der gewählten Sprache", "Regeln an genau einer Stelle, unabhängig von UI und Datenbank.") },
+      { id: "nt-recv", typ: "dienst", rolle: "async", name: "Receiver Adapter", stereotyp: SPR, in: "nt-asy",
+        info: I("Empfängt Nachrichten vom Broker.", "Nachricht lesen, in einen Aufruf übersetzen, nach Erfolg bestätigen (ack).", "z. B. «Kurs verschoben» aus der Hallenplanung.", "AMQP-Client; bei Jakarta eine Message-Driven Bean «EJB MDB»", "Eigene Komponente, getrennt vom Sender.") },
+      { id: "nt-send", typ: "dienst", rolle: "async", name: "Sender Adapter", stereotyp: SPR, in: "nt-asy",
+        info: I("Sendet Nachrichten an den Broker.", "Events wie «Kurs gebucht» veröffentlichen.", "Benachrichtigt andere Systeme, ohne auf sie zu warten.", "AMQP-Client, z. B. amqplib", "Asynchron: Die Buchung ist fertig, auch wenn der Empfänger gerade nicht läuft.") },
+      { id: "nt-dacs", typ: "dienst", rolle: "daten", name: "DACs", stereotyp: SPR, in: "nt-dal",
+        info: I("Data Access Components.", "Objekte lesen und speichern, SQL mit Parametern, Transaktionen.", "Die Business Components fragen sie statt die Datenbank.", "ORM (Entity Framework, JPA) oder DB-Treiber (node-postgres)", "Kapselt die Datenbank; Repository-Muster.") },
+      { id: "nt-sync", typ: "dienst", rolle: "sync", name: "Driven sync Adapter PayAlpin", stereotyp: SPR, in: "nt-sal",
+        info: I("Adapter für genau einen Service Provider.", "Aufruf in die API des Providers übersetzen, mit Timeout warten, Fehler übersetzen.", "Zahlungen autorisieren.", "HTTP-Client mit REST/JSON", "Je Provider ein eigener Adapter: Änderungen beim Provider bleiben hier.") },
+      { id: "nt-db", typ: "datenbank", rolle: "daten", name: "DB in DBMS", in: "nt-pers",
+        info: I("Die Datenbank der Anwendung.", "Kurse, Mitglieder und Buchungen speichern, Transaktionen, Indexe.", "Alle dauerhaften Daten.", "z. B. PostgreSQL", "Relationale Daten mit Transaktionen; bewährt und frei verfügbar.") },
+      { id: "nt-capp", typ: "extern", rolle: "webapi", name: "Buchungssystem Tourismusbüro", spalte: 0, zeile: 0, in: "nt-cons",
+        info: I("Service Consumer App eines Partners im Extranet.", "Kurse für Gäste buchen.", "Verkauft Schnupperkurse an Touristen.", "REST/JSON", "Nutzt dasselbe Web API wie die eigene App.") },
+      { id: "nt-gw", typ: "gateway", rolle: "webapi", name: "API-Gateway (vorgelagert)", spalte: 0, zeile: 1, in: "nt-cons", schnittstellen: [{ id: "api", name: "Partner-API" }],
+        info: I("Middleware vor dem Service Tier.", "Partner authentisieren, Last begrenzen, Aufrufe weiterleiten.", "Schützt das Web API gegen aussen.", "z. B. Kong, Azure API Management", "Steht hier nur als Kontext. In der Mehrschicht der Prüfung zeichnest du kein API-Gateway.") },
+      { id: "nt-broker", typ: "broker", rolle: "async", name: "Message Broker", technologie: "z. B. RabbitMQ", in: "nt-mom", schnittstellen: [{ id: "amqp", name: "AMQP", seite: "links" }],
+        info: I("Message Broker mit Queues und Topics.", "Nachrichten puffern und zustellen.", "Verbindet die Anwendung mit Hallenplanung und Trainer-App.", "RabbitMQ über AMQP", "Offenes Protokoll, Bestätigungen, einfach zu betreiben.") },
+      { id: "nt-sp", typ: "extern", rolle: "sync", name: "Zahlungsdienst PayAlpin (fiktiv)", in: "nt-prov", schnittstellen: [{ id: "api", name: "REST-API" }],
+        info: I("Service Provider im Extranet.", "Kartenzahlungen und Twint autorisieren.", "Bezahlen der Kursgebühren.", "REST/JSON", "Kartendaten selbst zu verarbeiten wäre teuer und streng reguliert.") }
+    ],
+    verbindungen: [
+      { id: "nv1", von: "nt-browser", nach: "nt-pc#http", protokoll: "HTTP", format: "HTML" },
+      { id: "nv2", von: "nt-mapp", nach: "nt-ws#rest", protokoll: "REST", format: "JSON" },
+      { id: "nv3", von: "nt-capp", nach: "nt-gw#api", protokoll: "REST", format: "JSON" },
+      { id: "nv4", von: "nt-gw", nach: "nt-ws#rest", protokoll: "REST" },
+      { id: "nv5", von: "nt-pc", nach: "nt-facade#api", label: "REST/gRPC" },
+      { id: "nv6", von: "nt-pc", nach: "nt-ws#rest", protokoll: "REST" },
+      { id: "nv7", von: "nt-ws", nach: "nt-facade#api", label: "REST/gRPC" },
+      { id: "nv8", von: "nt-facade", nach: "nt-bc" },
+      { id: "nv9", von: "nt-bc", nach: "nt-send" },
+      { id: "nv10", von: "nt-recv", nach: "nt-bc" },
+      { id: "nv11", von: "nt-send", nach: "nt-broker#amqp", protokoll: "AMQP" },
+      { id: "nv12", von: "nt-recv", nach: "nt-broker#amqp", protokoll: "AMQP" },
+      { id: "nv13", von: "nt-bc", nach: "nt-dacs" },
+      { id: "nv14", von: "nt-dacs", nach: "nt-db", label: "SQL" },
+      { id: "nv15", von: "nt-bc", nach: "nt-sync" },
+      { id: "nv16", von: "nt-sync", nach: "nt-sp#api", protokoll: "REST", format: "JSON" }
+    ],
+    notizen: [
+      { id: "nt-n1", text: "Vorgelagerte Middleware: in der Mehrschicht der Prüfung nicht modelliert", an: "nt-gw" }
+    ],
+    einschraenkungen: [{ text: "{xor}", zwischen: ["nv5", "nv6"] }],
+    ablaeufe: [
+      { id: "nt-a-browser", name: "Browser ruft eine Seite auf", schritte: [
+        { von: "nt-browser", nach: "nt-pc", text: "Ein Mitglied öffnet die Kursliste. Der Browser schickt <code>GET /kurse</code> über HTTP an die Presentation Components.", phase: "Client → Web Tier" },
+        { von: "nt-pc", nach: "nt-facade", text: "Die Presentation Components holen die Daten über die Business API der Facade.", phase: "Web Tier → Business Tier" },
+        { von: "nt-facade", nach: "nt-bc", text: "Die Facade delegiert an die Business Component Kursbuchung.", phase: "Business Tier" },
+        { von: "nt-bc", nach: "nt-dacs", text: "Die Kursbuchung fragt den DAC nach allen Kursen der Woche.", phase: "Business Tier" },
+        { von: "nt-dacs", nach: "nt-db", text: "Der DAC liest per SQL aus der Datenbank.", phase: "Persistence Tier" },
+        { von: "nt-db", nach: "nt-dacs", text: "Die Datenbank liefert die Zeilen zurück; der DAC macht Objekte daraus.", phase: "Antwort" },
+        { von: "nt-facade", nach: "nt-pc", text: "Die Kurse gehen über die Facade zurück zur Präsentation.", phase: "Antwort" },
+        { von: "nt-pc", nach: "nt-browser", text: "Die Presentation Components rendern fertiges HTML. Der Browser zeigt es nur an.", phase: "Antwort" }
+      ] },
+      { id: "nt-a-app", name: "App bucht über das Web API", schritte: [
+        { von: "nt-mapp", nach: "nt-ws", text: "Die App schickt <code>POST /api/buchungen</code> mit JSON an den Web Service (REST).", phase: "Client → Web API" },
+        { von: "nt-ws", nach: "nt-facade", text: "Der Web Service prüft das Format und ruft die Facade.", phase: "Web Tier → Business Tier" },
+        { von: "nt-facade", nach: "nt-bc", text: "Die Facade gibt an die Kursbuchung weiter. Sie prüft: Ist noch ein Platz frei?", phase: "Business Tier" },
+        { von: "nt-bc", nach: "nt-dacs", text: "Die Kursbuchung lässt die Buchung über den DAC speichern …", phase: "Daten" },
+        { von: "nt-dacs", nach: "nt-db", text: "… der DAC schreibt in einer Transaktion: Platz belegen, Buchung anlegen.", phase: "Daten" },
+        { von: "nt-bc", nach: "nt-send", text: "Die Kursbuchung meldet «Kurs gebucht» an den Sender Adapter.", phase: "Benachrichtigen" },
+        { von: "nt-send", nach: "nt-broker", text: "Der Sender Adapter übergibt das Event per AMQP an den Broker und wartet nicht auf Empfänger.", phase: "Benachrichtigen" },
+        { von: "nt-ws", nach: "nt-mapp", text: "Der Web Service antwortet mit <code>201 Created</code> und der Buchung als JSON.", phase: "Antwort" }
+      ] },
+      { id: "nt-a-partner", name: "Partner bucht über das API-Gateway", schritte: [
+        { von: "nt-capp", nach: "nt-gw", text: "Das Buchungssystem des Tourismusbüros ruft die Partner-API am API-Gateway auf.", phase: "Consumer" },
+        { bei: "nt-gw", text: "Das Gateway prüft den API-Schlüssel des Partners und begrenzt die Anzahl Aufrufe.", phase: "Consumer" },
+        { von: "nt-gw", nach: "nt-ws", text: "Es leitet den Aufruf an denselben Web Service weiter, den auch die App nutzt.", phase: "Web API" },
+        { von: "nt-ws", nach: "nt-facade", text: "Ab hier läuft alles wie bei der App: Facade …", phase: "Business Tier" },
+        { von: "nt-facade", nach: "nt-bc", text: "… Business Component, Regeln, Speichern.", phase: "Business Tier" },
+        { von: "nt-gw", nach: "nt-capp", text: "Die Antwort geht über das Gateway zurück an den Partner.", phase: "Antwort" }
+      ] },
+      { id: "nt-a-broker", name: "Nachricht vom Broker kommt an", schritte: [
+        { von: "nt-broker", nach: "nt-recv", text: "Die Hallenplanung hat «Kurs verschoben» veröffentlicht. Der Broker stellt die Nachricht dem Receiver Adapter zu.", phase: "Empfangen" },
+        { von: "nt-recv", nach: "nt-bc", text: "Der Receiver Adapter liest die Nachricht und ruft die Business Component auf.", phase: "Verarbeiten" },
+        { von: "nt-bc", nach: "nt-dacs", text: "Die Business Component passt Termin und Buchungen an …", phase: "Verarbeiten" },
+        { von: "nt-dacs", nach: "nt-db", text: "… der DAC speichert die Änderungen.", phase: "Verarbeiten" },
+        { von: "nt-bc", nach: "nt-send", text: "Die Business Component lässt die betroffenen Mitglieder benachrichtigen …", phase: "Weitermelden" },
+        { von: "nt-send", nach: "nt-broker", text: "… über den Sender Adapter. Erst jetzt bestätigt der Receiver die Nachricht (ack).", phase: "Weitermelden" }
+      ] },
+      { id: "nt-a-provider", name: "Zahlung beim Service Provider", schritte: [
+        { von: "nt-mapp", nach: "nt-ws", text: "Die App bucht einen kostenpflichtigen Kurs.", phase: "Anfrage" },
+        { von: "nt-ws", nach: "nt-facade", text: "Web Service → Facade.", phase: "Anfrage" },
+        { von: "nt-facade", nach: "nt-bc", text: "Facade → Kursbuchung. Sie braucht eine Zahlungsautorisierung.", phase: "Business Tier" },
+        { von: "nt-bc", nach: "nt-sync", text: "Die Kursbuchung ruft den Driven sync Adapter für PayAlpin auf. Sie kennt die API von PayAlpin nicht.", phase: "Service Access" },
+        { von: "nt-sync", nach: "nt-sp", text: "Der Adapter übersetzt in die REST-API des Providers und wartet synchron, höchstens drei Sekunden.", phase: "Service Provider" },
+        { von: "nt-sp", nach: "nt-sync", text: "PayAlpin antwortet «autorisiert».", phase: "Service Provider" },
+        { von: "nt-bc", nach: "nt-dacs", text: "Jetzt speichert die Kursbuchung die Buchung als «bezahlt».", phase: "Daten" }
+      ] },
+      { id: "nt-a-db", name: "Datenbankzugriff im Detail", schritte: [
+        { von: "nt-bc", nach: "nt-dacs", text: "Die Business Component ruft eine Methode auf, z. B. <code>kurse.finde(42)</code>. Von SQL weiss sie nichts.", phase: "Business → DAL" },
+        { bei: "nt-dacs", text: "Der DAC baut eine parametrisierte Abfrage. Werte gehen als Parameter mit, nie als zusammengeklebter Text (Schutz vor SQL-Injection).", phase: "DAL" },
+        { von: "nt-dacs", nach: "nt-db", text: "Der DB-Treiber schickt die Abfrage an das DBMS.", phase: "DAL → Persistence" },
+        { bei: "nt-db", text: "Das DBMS nutzt den Index auf der Kurs-ID und liest eine Zeile.", phase: "Persistence" },
+        { von: "nt-db", nach: "nt-dacs", text: "Die Zeile kommt zurück. Der DAC macht daraus ein Kurs-Objekt.", phase: "Antwort" },
+        { von: "nt-dacs", nach: "nt-bc", text: "Die Business Component erhält ein Objekt, keine Tabellenzeile. Alternative: DACs über einen Data Service {xor} DB-Treiber.", phase: "Antwort" }
+      ] },
+      { id: "nt-a-fehler", name: "Fehlerfall: Zahlungsdienst antwortet nicht", schritte: [
+        { von: "nt-mapp", nach: "nt-ws", text: "Die App bucht.", phase: "Anfrage" },
+        { von: "nt-ws", nach: "nt-facade", text: "Web Service → Facade.", phase: "Anfrage" },
+        { von: "nt-facade", nach: "nt-bc", text: "Facade → Kursbuchung.", phase: "Anfrage" },
+        { von: "nt-bc", nach: "nt-sync", text: "Die Kursbuchung ruft den PayAlpin-Adapter …", phase: "Fehler" },
+        { von: "nt-sync", nach: "nt-sp", text: "… der Adapter ruft PayAlpin auf.", fehler: true, phase: "Fehler" },
+        { bei: "nt-sp", text: "PayAlpin antwortet nicht. Nach drei Sekunden bricht der Adapter ab (Timeout).", fehler: true, phase: "Fehler" },
+        { von: "nt-bc", nach: "nt-dacs", text: "Die Kursbuchung speichert die Buchung als «Zahlung offen», statt endlos zu warten.", phase: "Reaktion" },
+        { von: "nt-ws", nach: "nt-mapp", text: "Die App zeigt: «Platz reserviert, Zahlung bitte später bestätigen.» Synchrone Abhängigkeiten brauchen einen Plan B.", phase: "Reaktion" }
+      ] }
+    ]
+  };
+  const dNT = A.diagramm("#t04-ntier", modellNT, Object.assign({}, OPT, window.innerWidth >= 1000 ? { hoehe: 1560 } : {}));
+
+  /* ---------- 5 · Steckbriefe der Schichten ---------- */
+  const SCHICHTEN = [
+    { id: "client", name: "Client Tier", rolle: "client", ids: ["nt-client", "nt-browser", "nt-mapp"],
+      was: "Alle Apps, mit denen Menschen arbeiten. Gegliedert nach Ausführungsort.",
+      ja: ["Web Apps im Browser: klassisch, SPA, PWA", "installierbare Apps: Mobile, Desktop, Hybrid", "Name mit Plattform, z. B. «Web App (Browser)», «MAUI App»"],
+      nein: ["Komponenten, die auf dem Server HTML erzeugen (die gehören in den Presentation Tier)", "Service Consumer fremder Firmen (die stehen rechts als Umsystem)"],
+      tech: "Browser, iOS, Android, Windows, macOS" },
+    { id: "pres", name: "Presentation Tier", rolle: "client", ids: ["nt-pres", "nt-pc"],
+      was: "Teil des Web Tier, der die Oberfläche für Web Apps erzeugt oder ausliefert.",
+      ja: ["Controller- und View-Komponenten, Ball «HTTP»", "serverseitige Seiten: «ASP.NET» Razor, JSF-Komponenten, Express-Views", "HTML5-Ressourcen für SPA/PWA (static HTTP)"],
+      nein: ["Web-Server (IIS, Apache, Nginx)", "Geschäftsregeln und SQL"],
+      tech: "skriptbasiert «JS»/«PHP», .NET «ASP.NET», Jakarta JSF" },
+    { id: "svc", name: "Service Tier (Web API)", rolle: "webapi", ids: ["nt-svc", "nt-ws"],
+      was: "Teil des Web Tier, der die Funktionen als Web Services anbietet (SOA-enabled).",
+      ja: ["Web Services mit Ball und Protokoll: REST, SOAP, GraphQL, OData, gRPC", "interne und externe Web Services getrennt, wenn der Auftrag es verlangt"],
+      nein: ["API-Gateway (vorgelagerte Middleware)", "Integration Middleware, Geschäftslogik"],
+      tech: "Express «JS», ASP.NET Web API «C#», JAX-RS in Jakarta EE" },
+    { id: "fac", name: "Business Facade", rolle: "business", ids: ["nt-fac", "nt-facade"],
+      was: "Der einzige Zugang zum Business Tier.",
+      ja: ["eine Facade-Komponente mit Ball «Business API»", "als Web Service (REST/gRPC) bei .NET und skriptbasiert, über RMI bei Jakarta EE"],
+      nein: ["Geschäftsregeln (die stehen in den Business Components)", "direkter Datenzugriff"],
+      tech: "«C#», «JS», «EJB» (Session Bean)" },
+    { id: "bll", name: "Business Logic Layer", rolle: "business", ids: ["nt-bll", "nt-bc"],
+      was: "Das Herzstück: die fachlichen Business Components.",
+      ja: ["in der Referenz zusammengefasst als «Business Components»", "im konkreten Fall jede fachliche Komponente einzeln, z. B. «Kursbuchung», «Mitglieder»", "bei .NET evtl. zusätzlich ein Business Workflow Layer"],
+      nein: ["Protokolle wie HTTP oder AMQP", "SQL, URLs fremder APIs"],
+      tech: "«C#», «JS», «EJB»" },
+    { id: "asy", name: "Async Adapter Layer", rolle: "async", ids: ["nt-asy", "nt-recv", "nt-send"],
+      was: "Die asynchrone Anbindung an die Message Oriented Middleware.",
+      ja: ["Receiver Adapter und Sender Adapter als zwei eigene Komponenten", "Verbindung zum Broker mit asynchronem Protokoll (AMQP, JMS, MQTT)"],
+      nein: ["der Message Broker selbst (gehört ins Paket MOM)", "synchrone Aufrufe fremder APIs"],
+      tech: "«C#», «JS», «EJB MDB» (Message-Driven Bean)" },
+    { id: "dal", name: "Data Access Layer", rolle: "daten", ids: ["nt-dal", "nt-dacs"],
+      was: "Kapselt den Zugriff auf die Datenbank.",
+      ja: ["DACs mit ORM (Entity Framework, JPA) oder DB-Treiber", "Alternative: DACs über einen Data Service ({xor})"],
+      nein: ["DBMS-Server, Tabellen", "Geschäftsregeln"],
+      tech: "«C#» mit Entity Framework, «EJB» mit JPA, «JS» mit Treiber" },
+    { id: "sal", name: "Service Access Layer", rolle: "sync", ids: ["nt-sal", "nt-sync"],
+      was: "Synchroner Zugriff auf Service Provider; entkoppelt und konvertiert Protokolle.",
+      ja: ["je Service Provider ein eigener Driven sync Adapter", "Zugriff direkt oder über das API-Gateway des Providers"],
+      nein: ["der Service Provider selbst (rechts als Umsystem)", "ein einziger Adapter für alle Provider"],
+      tech: "«C#», «JS», «EJB»" },
+    { id: "pers", name: "Persistence Tier", rolle: "daten", ids: ["nt-pers", "nt-db"],
+      was: "Hält die Datenobjekte dauerhaft.",
+      ja: ["die Datenbank als Komponente, z. B. «DB in PostgreSQL»", "evtl. ein Data Service mit REST oder GraphQL"],
+      nein: ["der DBMS-Server als eigene Komponente (nur im Paketnamen)"],
+      tech: "RDBMS, NewSQL, Dokument-DB, Key-Value-DB, Cache-DB" },
+    { id: "um", name: "Umsysteme rechts", rolle: "extern", ids: ["nt-cons", "nt-mom", "nt-prov", "nt-capp", "nt-broker", "nt-sp"],
+      was: "Service Consumer, MOM und Service Provider: die unmittelbaren Nachbarn der Anwendung.",
+      ja: ["konkret benannte Consumer Apps, z. B. «Buchungssystem Tourismusbüro»", "der Message Broker mit Ball für das Protokoll", "konkret benannte Provider mit Ball «API»"],
+      nein: ["Integration Middleware", "API-Gateway als eigene Komponente der Prüfungs-Mehrschicht"],
+      tech: "je nach Partner" }
+  ];
+  (function steckbriefe() {
+    const kn = $("#t04-sb-knoepfe"), panel = $("#t04-sb-panel");
+    const zeigen = (s, b) => {
+      kn.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      panel.className = "t04-panel ar-r-" + s.rolle;
+      panel.innerHTML = "<h4>" + s.name + "</h4><p>" + s.was + '</p><div class="t04-sb-grid"><div class="t04-sb-ja"><h5>Gehört hinein</h5><ul>' +
+        s.ja.map((x) => "<li>" + x + "</li>").join("") + '</ul></div><div class="t04-sb-nein"><h5>Gehört nicht hinein</h5><ul>' +
+        s.nein.map((x) => "<li>" + x + "</li>").join("") + "</ul></div></div><p><b>Technologie und Stereotyp:</b> " + s.tech +
+        '</p><p><button type="button" class="btn" data-t04-zeige="' + s.id + '">Im Diagramm zeigen</button></p>';
+      panel.querySelector("[data-t04-zeige]").addEventListener("click", () => {
+        if (!dNT) return;
+        dNT.markiere(s.ids);
+        const ziel = document.getElementById("t04-ntier");
+        ziel.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      });
+    };
+    SCHICHTEN.forEach((s, i) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "t04-knopf ar-r-" + s.rolle; b.textContent = s.name;
+      b.addEventListener("click", () => zeigen(s, b));
+      kn.appendChild(b);
+      if (i === 0) zeigen(s, b);
+    });
+  })();
+
+  /* Zuordnungstabelle: Technologie → Komponente → Stereotyp */
+  const KOMP = ["Presentation Components", "Web Service", "Business Facade", "Business Component", "Receiver Adapter", "Sender Adapter", "DAC", "Driven sync Adapter", "DB in DBMS", "keine Komponente (Infrastruktur)"];
+  const STER = ["kein Stereotyp", "«ASP.NET»", "«C#»", "«JS»", "«PHP»", "«EJB»", "«EJB MDB»"];
+  const ZEILEN = [
+    { t: "Razor-Seiten in ASP.NET erzeugen das HTML für den Browser.", k: 0, s: 1, e: "Serverseitig gerenderte Seiten sind Presentation Components; bei .NET mit Stereotyp «ASP.NET»." },
+    { t: "Ein Express-Router in Node.js liefert JSON an die Mobile App.", k: 1, s: 3, e: "JSON für eine App über REST = Web Service im Service Tier; Node.js ist JavaScript, also «JS»." },
+    { t: "Eine Session Bean ist der einzige Zugang zum Business Tier (Jakarta EE).", k: 2, s: 5, e: "«einziger Zugang» = Business Facade; Session Beans tragen «EJB»." },
+    { t: "Eine C#-Klasse berechnet die Mitgliederbeiträge.", k: 3, s: 2, e: "Eine Geschäftsregel: Business Component im Business Logic Layer, Stereotyp «C#»." },
+    { t: "Eine Message-Driven Bean nimmt Bestellungen über JMS entgegen.", k: 4, s: 6, e: "Empfangen über einen Broker = Receiver Adapter im Async Layer; Message-Driven Bean = «EJB MDB»." },
+    { t: "Ein PHP-Skript schickt jede neue Anmeldung per AMQP an RabbitMQ.", k: 5, s: 4, e: "Senden an den Broker = Sender Adapter; die Skriptsprache ist PHP." },
+    { t: "Entity Framework liest und schreibt die Kundendaten (.NET).", k: 6, s: 2, e: "Datenzugriff mit ORM = DAC im Data Access Layer, in C# geschrieben." },
+    { t: "Ein Node.js-Modul ruft die REST-API des Versanddienstleisters auf.", k: 7, s: 3, e: "Synchroner Aufruf eines Service Providers = eigener Driven sync Adapter im Service Access Layer." },
+    { t: "Die Kursdaten liegen in PostgreSQL.", k: 8, s: 0, e: "Die Datenbank ist eine Komponente im Persistence Tier («DB in PostgreSQL»), ohne Sprach-Stereotyp." },
+    { t: "Nginx nimmt die HTTPS-Verbindungen an.", k: 9, s: 0, e: "Ein Web-Server ist Infrastruktur. Du nennst ihn im Paketnamen «Web Tier (Nginx)»." },
+    { t: "Ein LDAP-Server prüft die Anmeldung der Mitarbeitenden.", k: 9, s: 0, e: "Ein Security-Server ist Infrastruktur und keine Komponente der Mehrschichtenarchitektur." }
+  ];
+  (function zuordnung() {
+    const tbody = $("#t04-zt tbody"), fb = $("#t04-zt-fb");
+    const opt = (liste) => '<option value="">– wählen –</option>' + liste.map((x, i) => '<option value="' + i + '">' + esc(x) + "</option>").join("");
+    ZEILEN.forEach((z, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + esc(z.t) + '<div class="t04-erkl" hidden></div></td>' +
+        '<td><select aria-label="Komponente zu: ' + esc(z.t) + '" data-art="k">' + opt(KOMP) + '</select><span class="t04-marke" aria-hidden="true"></span></td>' +
+        '<td><select aria-label="Stereotyp zu: ' + esc(z.t) + '" data-art="s">' + opt(STER) + '</select><span class="t04-marke" aria-hidden="true"></span></td>';
+      tr.dataset.i = i;
+      tbody.appendChild(tr);
+    });
+    const auswerten = (zeigeLoesung) => {
+      let richtig = 0, gesamt = 0, leer = 0;
+      tbody.querySelectorAll("tr").forEach((tr) => {
+        const z = ZEILEN[Number(tr.dataset.i)];
+        tr.querySelectorAll("select").forEach((sel) => {
+          const soll = sel.dataset.art === "k" ? z.k : z.s;
+          if (zeigeLoesung) sel.value = String(soll);
+          const ok = sel.value !== "" && Number(sel.value) === soll;
+          gesamt++; if (ok) richtig++; if (sel.value === "") leer++;
+          sel.classList.toggle("t04-ok", ok); sel.classList.toggle("t04-falsch", !ok);
+          sel.nextElementSibling.textContent = ok ? "✓" : "✗";
+          sel.setAttribute("aria-invalid", String(!ok));
+        });
+        const e = tr.querySelector(".t04-erkl");
+        e.textContent = z.e; e.hidden = false;
+      });
+      if (zeigeLoesung) { fb.className = "rueckmeldung ok"; fb.textContent = "Lösung eingetragen. Lies die Begründungen unter jeder Zeile."; return; }
+      fb.className = "rueckmeldung " + (richtig === gesamt ? "ok" : "bad");
+      fb.textContent = richtig === gesamt ? "✓ Alles richtig: " + richtig + " von " + gesamt + " Feldern." :
+        "✗ " + richtig + " von " + gesamt + " Feldern richtig" + (leer ? " (" + leer + " leer)" : "") + ". Die Begründungen stehen unter jeder Zeile.";
+    };
+    $("#t04-zt-pruefen").addEventListener("click", () => auswerten(false));
+    $("#t04-zt-loesung").addEventListener("click", () => auswerten(true));
+    $("#t04-zt-reset").addEventListener("click", () => {
+      tbody.querySelectorAll("select").forEach((s) => { s.value = ""; s.classList.remove("t04-ok", "t04-falsch"); s.nextElementSibling.textContent = ""; s.removeAttribute("aria-invalid"); });
+      tbody.querySelectorAll(".t04-erkl").forEach((e) => { e.hidden = true; });
+      fb.className = "rueckmeldung leer"; fb.textContent = "";
+    });
+  })();
+
+  L.sortierer("#t04-sort-tier", {
+    kategorien: ["Web Tier", "Business Tier", "Persistence Tier", "keine Komponente"],
+    elemente: [
+      { html: "Presentation Components «ASP.NET»", kategorie: 0, erklaerung: "Erzeugen Seiten: Presentation Tier im Web Tier." },
+      { html: "Web Service mit REST «JS»", kategorie: 0, erklaerung: "Service Tier (Web API) im Web Tier." },
+      { html: "Business Facade «EJB»", kategorie: 1, erklaerung: "Einziger Zugang zum Business Tier, steht darin zuoberst." },
+      { html: "Sender Adapter «C#»", kategorie: 1, erklaerung: "Async Adapter Layer im Business Tier." },
+      { html: "DACs mit Entity Framework", kategorie: 1, erklaerung: "Data Access Layer gehört zum Business Tier; erst die Datenbank liegt im Persistence Tier." },
+      { html: "Driven sync Adapter Versanddienst", kategorie: 1, erklaerung: "Service Access Layer im Business Tier." },
+      { html: "DB in MySQL", kategorie: 2, erklaerung: "Die Datenbank ist die Komponente im Persistence Tier." },
+      { html: "Web-Server IIS", kategorie: 3, erklaerung: "Infrastruktur: höchstens im Paketnamen «Web Tier (IIS)»." },
+      { html: "DBMS-Server Oracle", kategorie: 3, erklaerung: "Infrastruktur: Die Datenbank zeichnest du, den DBMS-Server nicht." },
+      { html: "API-Gateway vor dem Web API", kategorie: 3, erklaerung: "Vorgelagerte Middleware: in der Mehrschicht der Prüfung nicht modelliert." }
+    ]
+  });
+
+  /* ---------- 6 · CQRS und Event Sourcing ---------- */
+  A.diagramm("#t04-cqrs", {
+    titel: "CQRS mit Event Sourcing (vereinfacht)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "q-c", name: "Client Tier", spalte: 0, zeile: 0, breite: 2, info: I("Die App, die ändert und liest.") },
+      { id: "q-cmd", name: "Command-Seite (schreiben)", spalte: 0, zeile: 1, info: I("Nimmt Änderungen an, prüft Regeln, hängt Events an.", "", "Wenige, aber wichtige Zugriffe.", "", "Kann für Konsistenz optimiert werden.") },
+      { id: "q-qry", name: "Query-Seite (lesen)", spalte: 1, zeile: 1, info: I("Beantwortet Abfragen aus einem vorbereiteten Lesemodell.", "", "Viele Zugriffe, oft mit eigenen Instanzen.", "", "Skaliert unabhängig von der Schreibseite.") }
+    ],
+    elemente: [
+      { id: "q-app", typ: "web", rolle: "client", name: "Client App", in: "q-c", info: I("Ändert über Commands, liest über Queries.") },
+      { id: "q-ch", typ: "dienst", rolle: "business", name: "Command Handler", stereotyp: "", in: "q-cmd", schnittstellen: [{ id: "cmd", name: "Commands" }],
+        info: I("Verarbeitet Befehle wie «Kurs buchen».", "Regeln prüfen, Event erzeugen.", "", "", "Schreibt nie direkt ins Lesemodell.") },
+      { id: "q-es", typ: "datenbank", rolle: "daten", name: "Event Store", in: "q-cmd",
+        info: I("Speichert jede Änderung als Event in einer Reihe (Event Sourcing).", "Events anhängen, nie überschreiben.", "Vollständige Geschichte, Zustand durch Abspielen.") },
+      { id: "q-proj", typ: "dienst", rolle: "async", name: "Projektion", stereotyp: "", in: "q-qry",
+        info: I("Liest neue Events und baut daraus das Lesemodell.", "Tabellen für schnelle Abfragen nachführen.", "", "", "Läuft asynchron: Das Lesemodell ist kurz verzögert (eventual consistency).") },
+      { id: "q-rdb", typ: "datenbank", rolle: "daten", name: "Lese-DB", in: "q-qry", info: I("Fertig aufbereitete Daten für Abfragen.", "Schnelle Abfragen ohne Joins.") },
+      { id: "q-qh", typ: "dienst", rolle: "webapi", name: "Query Handler", stereotyp: "", in: "q-qry", schnittstellen: [{ id: "q", name: "Queries" }],
+        info: I("Beantwortet Abfragen.", "Nur lesen, nichts ändern.", "", "", "Kann mehrfach laufen, wenn viel gelesen wird.") }
+    ],
+    verbindungen: [
+      { id: "qv1", von: "q-app", nach: "q-ch#cmd", protokoll: "REST", format: "POST" },
+      { id: "qv2", von: "q-ch", nach: "q-es", label: "Event anhängen" },
+      { id: "qv3", von: "q-proj", nach: "q-es", label: "neue Events lesen" },
+      { id: "qv4", von: "q-proj", nach: "q-rdb", label: "nachführen" },
+      { id: "qv5", von: "q-app", nach: "q-qh#q", protokoll: "REST", format: "GET" },
+      { id: "qv6", von: "q-qh", nach: "q-rdb", label: "SELECT" }
+    ],
+    ablaeufe: [
+      { id: "q-schreiben", name: "Ändern (Command)", schritte: [
+        { von: "q-app", nach: "q-ch", text: "Die App schickt den Command «Kurs 42 buchen».", phase: "Command" },
+        { von: "q-ch", nach: "q-es", text: "Der Command Handler prüft die Regeln und hängt das Event «KursGebucht» an den Event Store an.", phase: "Command" },
+        { von: "q-es", nach: "q-proj", text: "Die Projektion liest das neue Event …", phase: "Projektion" },
+        { von: "q-proj", nach: "q-rdb", text: "… und erhöht in der Lese-DB die Zahl der Buchungen von Kurs 42.", phase: "Projektion" }
+      ] },
+      { id: "q-lesen", name: "Lesen (Query)", schritte: [
+        { von: "q-app", nach: "q-qh", text: "Die App fragt: Welche Kurse haben diese Woche freie Plätze?", phase: "Query" },
+        { von: "q-qh", nach: "q-rdb", text: "Der Query Handler liest die fertige Liste, ohne Rechenarbeit.", phase: "Query" },
+        { von: "q-qh", nach: "q-app", text: "Antwort in Millisekunden. Viele Leser belasten die Schreibseite nicht.", phase: "Antwort" }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: false, steckbrief: true, breit: false });
+
+  /* ---------- 8 · Hexagonal ---------- */
+  const RINGE = [
+    { id: "fw", r: 150, rolle: "infra", name: "Frameworks und Treiber", sub: "DB, Web, UI, Broker", text: "Ganz aussen: konkrete Technik wie Datenbank, Web-Framework, Message Broker, Geräte. Sie ist austauschbar und ändert sich am häufigsten." },
+    { id: "ad", r: 114, rolle: "sync", name: "Adapter", sub: "Controller, Repositories", text: "Adapter übersetzen zwischen der Technik aussen und den Ports innen: Driving Adapters (Controller, Receiver, Tests) rufen die Anwendung auf, Driven Adapters (Repository, Zahlungs-Adapter, Sender) erfüllen Ports, die der Core braucht." },
+    { id: "ap", r: 78, rolle: "webapi", name: "Application", sub: "Use Cases, Ports", text: "Die Anwendungsschicht steuert die Use Cases (z. B. «Kurs buchen»), bietet Ports an und definiert die Ports, die sie braucht. Zusammen mit der Domäne bildet sie den Application Core." },
+    { id: "do", r: 40, rolle: "business", name: "Domäne", sub: "", text: "Im Zentrum: Entities, Regeln und Domain Services. Die Domäne kennt nichts von aussen: keine Datenbank, kein Web, keine Adapter. Sie ändert sich nur, wenn sich das Geschäft ändert." }
+  ];
+  (function onion() {
+    const box = $("#t04-onion"), info = $("#t04-onion-info");
+    const C = 160;
+    let svg = '<svg viewBox="0 0 320 330" role="img" aria-labelledby="t04-onion-t"><title id="t04-onion-t">Vier Ringe: Frameworks und Treiber aussen, dann Adapter, Application und die Domäne im Zentrum; Pfeile der Abhängigkeiten zeigen nach innen.</title>';
+    RINGE.forEach((r, i) => {
+      const naechst = RINGE[i + 1] ? RINGE[i + 1].r : 0;
+      const ty = C - (r.r + naechst) / 2 + (r.sub ? -2 : 4);
+      svg += '<g class="t04-ring ar-r-' + r.rolle + '" data-ring="' + r.id + '" tabindex="0" role="button" aria-label="' + esc(r.name) + '"><circle cx="' + C + '" cy="' + C + '" r="' + r.r + '"/>' +
+        '<text x="' + C + '" y="' + (i === 3 ? C + 4 : ty) + '" text-anchor="middle">' + esc(r.name) + "</text>" +
+        (r.sub ? '<text class="t04-sub" x="' + C + '" y="' + (ty + 13) + '" text-anchor="middle">' + esc(r.sub) + "</text>" : "") + "</g>";
+    });
+    svg += '<g id="t04-onion-gutpf"><path class="t04-pfeil" d="M8 200 L112 176"/><polygon class="t04-pfeil-kopf" points="122,174 109,170 112,181"/>' +
+      '<path class="t04-pfeil" d="M312 200 L208 176"/><polygon class="t04-pfeil-kopf" points="198,174 211,170 208,181"/>' +
+      '<text class="t04-svg-text" x="160" y="324" text-anchor="middle">Abhängigkeiten zeigen nach innen</text></g>' +
+      '<g id="t04-onion-falschpf" hidden><path class="t04-pfeil t04-falsch" d="M190 185 L300 215"/><polygon class="t04-pfeil-kopf t04-falsch" points="312,218 298,208 296,221"/>' +
+      '<text class="t04-svg-text" x="160" y="324" text-anchor="middle">✗ Domäne → Datenbank: Regel verletzt</text></g></svg>';
+    box.innerHTML = svg;
+    const waehle = (id) => {
+      const r = RINGE.find((x) => x.id === id);
+      box.querySelectorAll(".t04-ring").forEach((g) => g.classList.toggle("t04-an", g.dataset.ring === id));
+      info.className = "t04-panel ar-r-" + r.rolle;
+      info.innerHTML = "<h4>" + esc(r.name) + "</h4><p>" + esc(r.text) + "</p>";
+    };
+    box.querySelectorAll(".t04-ring").forEach((g) => {
+      g.addEventListener("click", () => waehle(g.dataset.ring));
+      g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); waehle(g.dataset.ring); } });
+    });
+    waehle("do");
+    const gut = $("#t04-onion-gut"), falle = $("#t04-onion-falle");
+    const modus = (f) => {
+      gut.setAttribute("aria-pressed", String(!f)); falle.setAttribute("aria-pressed", String(f));
+      $("#t04-onion-gutpf").toggleAttribute("hidden", f); $("#t04-onion-falschpf").toggleAttribute("hidden", !f);
+      info.className = "t04-panel ar-r-" + (f ? "async" : "business");
+      info.innerHTML = f ? "<h4>✗ Falle: Die Domäne kennt die Datenbank</h4><p>Ruft eine Domänenklasse direkt SQL oder ein Repository der Infrastruktur auf, zeigt die Abhängigkeit nach aussen. Dann kannst du die Domäne nicht ohne Datenbank testen und musst sie bei jedem Technikwechsel anfassen.</p><p><b>Lösung:</b> Die Domäne oder Application definiert einen Port (Interface), der Driven Adapter implementiert ihn.</p>"
+        : "<h4>✓ Abhängigkeiten nach innen</h4><p>Aussen darf innen kennen, innen nie aussen. Adapter kennen die Ports, die Ports gehören dem Core. Wer was implementiert, wird beim Start zusammengesteckt (Dependency Injection).</p>";
+    };
+    gut.addEventListener("click", () => modus(false));
+    falle.addEventListener("click", () => modus(true));
+  })();
+
+  const modellHex = {
+    titel: "Hexagonal (Ports and Adapters) · Kletterzentrum Griffig (fiktiv)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "hx-links", name: "Benutzer und Consumer", spalte: 0, zeile: 0, info: I("Alles, was die Anwendung von aussen aufruft.", "", "Browser, Apps, Tests.") },
+      { id: "hx-drv", name: "Driving Adapters", spalte: 1, zeile: 0, info: I("Primäre Adapter: rufen die Anwendung über ihre angebotenen Ports auf.", "", "Übersetzen HTTP, Nachrichten oder Testaufrufe in Use-Case-Aufrufe.", "Controller, Message Receiver, CLI") },
+      { id: "hx-core", name: "Application Core", spalte: 2, zeile: 0, info: I("Application Layer und Domain Layer: alles ohne Technik.", "", "Hier stehen Use Cases und Regeln.", "", "Testbar ohne Datenbank und ohne Web-Server.") },
+      { id: "hx-appl", name: "Application Layer", in: "hx-core", info: I("Use Cases, Command- und Query-Handler; bietet Ports an und definiert benötigte Ports.") },
+      { id: "hx-dom", name: "Domain Layer", in: "hx-core", info: I("Domain Model und Domain Services: die reinen Geschäftsregeln.") },
+      { id: "hx-drvn", name: "Driven Adapters", spalte: 3, zeile: 0, info: I("Sekundäre Adapter: implementieren die Ports, die der Core braucht.", "", "Datenbank, Service Provider, Message Broker anbinden.", "Repository, Zahlungs-Adapter, Message Sender", "Je Umsystem ein eigener Adapter.") },
+      { id: "hx-infra", name: "Infrastruktur und Umsysteme", spalte: 4, zeile: 0, info: I("Konkrete Technik und fremde Systeme.", "", "Austauschbar, ohne den Core zu ändern.") }
+    ],
+    elemente: [
+      { id: "hx-web", typ: "web", rolle: "client", name: "Web App (Browser)", spalte: 0, zeile: 0, in: "hx-links", info: I("Oberfläche für Mitglieder.") },
+      { id: "hx-mapp", typ: "mobile", rolle: "client", name: "Mobile App", spalte: 0, zeile: 1, in: "hx-links", info: I("App für Mitglieder.") },
+      { id: "hx-test", typ: "dienst", rolle: "extern", name: "Automatischer Test", spalte: 0, zeile: 2, stereotyp: "", in: "hx-links",
+        info: I("Ein Testtreiber, z. B. Unit-Test.", "Ruft den Use Case direkt über den Port auf.", "", "", "Zeigt den Vorteil: Der Core läuft ohne Web und Datenbank.") },
+      { id: "hx-ctrl", typ: "dienst", rolle: "webapi", name: "REST-Controller (Web API)", spalte: 0, zeile: 0, stereotyp: "JS", in: "hx-drv", schnittstellen: [{ id: "rest", name: "REST" }],
+        info: I("Driving Adapter für HTTP.", "JSON annehmen, Use Case aufrufen, Antwort bauen.", "", "Express", "Kennt den Port des Core, der Core kennt ihn nicht.") },
+      { id: "hx-recv", typ: "dienst", rolle: "async", name: "Message Receiver", spalte: 0, zeile: 1, stereotyp: "JS", in: "hx-drv",
+        info: I("Driving Adapter für Nachrichten.", "Nachricht vom Broker lesen und den Use Case aufrufen.") },
+      { id: "hx-uc", typ: "dienst", rolle: "business", name: "Use Cases", stereotyp: "JS", in: "hx-appl", schnittstellen: [{ id: "in", name: "Port Kursbuchung" }],
+        info: I("Anwendungslogik des Core.", "Ablauf eines Use Case steuern, Domäne nutzen, benötigte Ports aufrufen.", "", "TypeScript-Klassen ohne Framework", "Bietet den Port «Kursbuchung» an (Ball).") },
+      { id: "hx-dm", typ: "dienst", rolle: "business", name: "Domain Model und Services", stereotyp: "JS", in: "hx-dom",
+        info: I("Entities wie Kurs und Buchung mit ihren Regeln.", "Regeln prüfen, Zustände ändern.", "", "", "Kennt keine Ports der Infrastruktur und keine Technik.") },
+      { id: "hx-repo", typ: "dienst", rolle: "daten", name: "Repository-Adapter", spalte: 0, zeile: 0, stereotyp: "JS", in: "hx-drvn", schnittstellen: [{ id: "ablage", name: "Port Kursablage" }],
+        info: I("Driven Adapter für die Datenbank.", "Implementiert den Port «Kursablage» mit SQL.", "", "node-postgres", "Erst hier taucht PostgreSQL auf.") },
+      { id: "hx-pay", typ: "dienst", rolle: "sync", name: "Zahlungs-Adapter", spalte: 0, zeile: 1, stereotyp: "JS", in: "hx-drvn", schnittstellen: [{ id: "zahl", name: "Port Zahlung" }],
+        info: I("Driven Adapter für PayAlpin.", "Implementiert den Port «Zahlung» mit REST-Aufrufen.") },
+      { id: "hx-send", typ: "dienst", rolle: "async", name: "Message Sender", spalte: 0, zeile: 2, stereotyp: "JS", in: "hx-drvn", schnittstellen: [{ id: "info", name: "Port Benachrichtigung" }],
+        info: I("Driven Adapter für den Broker.", "Implementiert den Port «Benachrichtigung» mit AMQP.") },
+      { id: "hx-db", typ: "datenbank", rolle: "daten", name: "DB in PostgreSQL", spalte: 0, zeile: 0, in: "hx-infra", info: I("Die Datenbank.") },
+      { id: "hx-psp", typ: "extern", rolle: "sync", name: "PayAlpin (fiktiv)", spalte: 0, zeile: 1, in: "hx-infra", schnittstellen: [{ id: "api", name: "REST-API" }], info: I("Zahlungsdienst als Service Provider.") },
+      { id: "hx-broker", typ: "broker", rolle: "async", name: "Message Broker", spalte: 0, zeile: 2, in: "hx-infra", schnittstellen: [{ id: "amqp", name: "AMQP" }], info: I("RabbitMQ.") }
+    ],
+    verbindungen: [
+      { id: "hv1", von: "hx-web", nach: "hx-ctrl#rest", protokoll: "REST" },
+      { id: "hv2", von: "hx-mapp", nach: "hx-ctrl#rest", protokoll: "REST" },
+      { id: "hv3", von: "hx-ctrl", nach: "hx-uc#in" },
+      { id: "hv4", von: "hx-recv", nach: "hx-uc#in" },
+      { id: "hv5", von: "hx-test", nach: "hx-uc#in", label: "direkt" },
+      { id: "hv6", von: "hx-uc", nach: "hx-dm" },
+      { id: "hv7", von: "hx-uc", nach: "hx-repo#ablage" },
+      { id: "hv8", von: "hx-uc", nach: "hx-pay#zahl" },
+      { id: "hv9", von: "hx-uc", nach: "hx-send#info" },
+      { id: "hv10", von: "hx-repo", nach: "hx-db", label: "SQL" },
+      { id: "hv11", von: "hx-pay", nach: "hx-psp#api", protokoll: "REST" },
+      { id: "hv12", von: "hx-send", nach: "hx-broker#amqp", protokoll: "AMQP" },
+      { id: "hv13", von: "hx-recv", nach: "hx-broker#amqp", protokoll: "AMQP" }
+    ],
+    ablaeufe: [
+      { id: "hx-a1", name: "Buchung aus der App", schritte: [
+        { von: "hx-mapp", nach: "hx-ctrl", text: "Die App schickt die Buchung per REST an den Controller (Driving Adapter).", phase: "Driving" },
+        { von: "hx-ctrl", nach: "hx-uc", text: "Der Controller ruft den angebotenen Port «Kursbuchung» auf.", phase: "Core" },
+        { von: "hx-uc", nach: "hx-dm", text: "Der Use Case lässt die Domäne die Regeln prüfen: Kurs nicht voll.", phase: "Core" },
+        { von: "hx-uc", nach: "hx-pay", text: "Er ruft den Port «Zahlung». Welcher Adapter dahinter steckt, weiss er nicht.", phase: "Driven" },
+        { von: "hx-pay", nach: "hx-psp", text: "Der Zahlungs-Adapter ruft PayAlpin per REST.", phase: "Driven" },
+        { von: "hx-uc", nach: "hx-repo", text: "Er speichert über den Port «Kursablage»; der Repository-Adapter …", phase: "Driven" },
+        { von: "hx-repo", nach: "hx-db", text: "… schreibt per SQL in PostgreSQL.", phase: "Driven" },
+        { von: "hx-uc", nach: "hx-send", text: "Zum Schluss meldet er «Kurs gebucht» über den Port «Benachrichtigung».", phase: "Driven" },
+        { von: "hx-send", nach: "hx-broker", text: "Der Message Sender veröffentlicht das Event per AMQP.", phase: "Driven" }
+      ] },
+      { id: "hx-a2", name: "Test ohne Datenbank", schritte: [
+        { von: "hx-test", nach: "hx-uc", text: "Ein Unit-Test ruft den Port «Kursbuchung» direkt auf, ohne Web-Server.", phase: "Test" },
+        { von: "hx-uc", nach: "hx-dm", text: "Die Regeln laufen wie in Produktion.", phase: "Test" },
+        { bei: "hx-repo", text: "Statt des Repository-Adapters steckt im Test eine Ablage im Arbeitsspeicher am Port. Die Datenbank braucht es nicht.", phase: "Test" }
+      ] },
+      { id: "hx-a3", name: "Nachricht kommt an", schritte: [
+        { von: "hx-broker", nach: "hx-recv", text: "Der Broker liefert «Kurs verschoben».", phase: "Driving" },
+        { von: "hx-recv", nach: "hx-uc", text: "Der Message Receiver ist ebenfalls ein Driving Adapter: Er ruft den Port des Core auf.", phase: "Core" },
+        { von: "hx-uc", nach: "hx-repo", text: "Der Use Case speichert die Änderung über den Port «Kursablage».", phase: "Driven" }
+      ] }
+    ]
+  };
+  A.diagramm("#t04-hex", modellHex, OPT);
+
+  A.diagramm("#t04-pakete", {
+    titel: "Sourcen-Pakete des Kletterzentrums (Abhängigkeiten nach innen)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "sp-src", name: "Sourcen (ein Repository)", spalte: 0, zeile: 0, info: I("Der gesamte Quellcode, gegliedert in Pakete.", "", "Struktur für Entwickler, nicht für den Betrieb.") },
+      { id: "sp-webapp", name: "Web App", in: "sp-src", spalte: 0, zeile: 0, info: I("Code der Browser-Oberfläche. Wird ein eigenes Deployable.") },
+      { id: "sp-mob", name: "Mobile App", in: "sp-src", spalte: 0, zeile: 1, info: I("Code der App. Wird ein eigenes Deployable.") },
+      { id: "sp-webapi", name: "Web API", in: "sp-src", spalte: 1, zeile: 0, info: I("Controller als Driving Adapters. Wird mit Application, Domain und Infrastructure zum Deployable «Web API».") },
+      { id: "sp-appl", name: "Application", in: "sp-src", spalte: 2, zeile: 0, info: I("Use Cases und Ports.") },
+      { id: "sp-dom", name: "Domain", in: "sp-src", spalte: 2, zeile: 1, info: I("Entities und Regeln, hängt von nichts ab.") },
+      { id: "sp-infra", name: "Infrastructure", in: "sp-src", spalte: 3, zeile: 0, hoehe: 2, info: I("Driven Adapters und Data Repositories; implementiert die Ports aus Application.") },
+      { id: "sp-adap", name: "Adapters", in: "sp-infra", info: I("Zahlungs- und Message-Adapter.") },
+      { id: "sp-repos", name: "Data Repositories", in: "sp-infra", info: I("Repositories für PostgreSQL.") }
+    ],
+    elemente: [
+      { id: "sp-e1", typ: "dienst", rolle: "client", name: "Seiten, Komponenten", stereotyp: "", in: "sp-webapp" },
+      { id: "sp-e2", typ: "dienst", rolle: "client", name: "Screens, Sync", stereotyp: "", in: "sp-mob" },
+      { id: "sp-e3", typ: "dienst", rolle: "webapi", name: "Controller", stereotyp: "", in: "sp-webapi" },
+      { id: "sp-e4", typ: "dienst", rolle: "business", name: "Use Cases, Ports", stereotyp: "", in: "sp-appl" },
+      { id: "sp-e5", typ: "dienst", rolle: "business", name: "Entities, Regeln", stereotyp: "", in: "sp-dom" },
+      { id: "sp-e6", typ: "dienst", rolle: "sync", name: "PayAlpin-, Message-Adapter", stereotyp: "", in: "sp-adap" },
+      { id: "sp-e7", typ: "dienst", rolle: "daten", name: "Kurs-Repository", stereotyp: "", in: "sp-repos" }
+    ],
+    verbindungen: [
+      { id: "spd1", von: "sp-webapp", nach: "sp-webapi", art: "abhaengigkeit" },
+      { id: "spd2", von: "sp-mob", nach: "sp-webapi", art: "abhaengigkeit" },
+      { id: "spd3", von: "sp-webapi", nach: "sp-appl", art: "abhaengigkeit" },
+      { id: "spd4", von: "sp-appl", nach: "sp-dom", art: "abhaengigkeit" },
+      { id: "spd5", von: "sp-infra", nach: "sp-appl", art: "abhaengigkeit" }
+    ]
+  }, { ablauf: false, ausfall: false, legende: false, steckbrief: true });
+
+  L.wahrFalsch("#t04-wf-hex", {
+    titel: "Hexagonal, Clean, Onion",
+    aussagen: [
+      { html: "In der hexagonalen Architektur ruft die Domäne direkt die Datenbank auf.", wahr: false, erklaerung: "Die Domäne kennt keine Technik. Sie nutzt einen Port, den ein Driven Adapter implementiert." },
+      { html: "Ein REST-Controller und ein automatischer Test sind beide Driving Adapters.", wahr: true, erklaerung: "Beide rufen die Anwendung über einen angebotenen Port auf." },
+      { html: "Ein Driven Adapter implementiert einen Port, den der Core braucht.", wahr: true, erklaerung: "Z. B. implementiert der Repository-Adapter den Port «Kursablage»." },
+      { html: "Onion, Clean und Hexagonal sind grundverschiedene Stile mit anderen Regeln.", wahr: false, erklaerung: "Sie sind fast gleichbedeutend: Domäne innen, Adapter aussen, Abhängigkeiten nach innen." },
+      { html: "Eine Komponente im UML-Komponentendiagramm entspricht einem Sourcen-Paket wie «Domain».", wahr: false, erklaerung: "Eine Komponente ist ein konkretes Deployable, z. B. eine Web App oder ein Web API. Sourcen-Pakete gliedern nur den Code." },
+      { html: "Dank Ports lässt sich die Datenbank austauschen, ohne den Application Core zu ändern.", wahr: true, erklaerung: "Nur der Adapter wechselt; der Port bleibt gleich." }
+    ]
+  });
+
+  /* ---------- 9 · Programmiersprachtypen ---------- */
+  const SPRACHEN = [
+    { id: "komp", name: "Kompilierte Sprachen", rolle: "webapi", bsp: "C, C++, Swift, Go, Rust",
+      st: ["Quellcode in C++ oder Swift", "Compiler erzeugt Maschinencode (Objektcode) für ein Betriebssystem und einen Prozessor", "Ausgeliefert wird die ausführbare Datei", "Das Betriebssystem führt sie direkt aus"] },
+    { id: "byte", name: "Sprachen mit Bytecode (hybrid)", rolle: "shared", bsp: "Java, Kotlin, C#, VB.NET, F#",
+      st: ["Quellcode in Java oder C#", "Compiler erzeugt Zwischencode (Java Bytecode, .NET IL)", "Ausgeliefert wird der Bytecode, z. B. .jar oder .dll", "Eine Runtime (JVM, .NET CLR) übersetzt ihn zur Laufzeit (JIT) und führt ihn aus"] },
+    { id: "skript", name: "Skript- (Interpreter-) Sprachen", rolle: "sync", bsp: "JavaScript, PHP, Python, Ruby",
+      st: ["Quellcode in JavaScript, PHP oder Python", "Kein Übersetzungsschritt in der Entwicklung", "Ausgeliefert wird der Quellcode selbst", "Ein Ausführungscontainer (Browser, Node.js, PHP-Interpreter) liest und führt ihn zur Laufzeit aus"] }
+  ];
+  const STUFEN = [
+    { n: "Quellcode schreiben", ort: "Entwicklungsumgebung", text: "Alle drei Typen beginnen gleich: Menschen schreiben lesbaren Quellcode." },
+    { n: "Übersetzen", ort: "Entwicklungsumgebung", text: "Hier trennen sich die Wege. Kompilierte Sprachen übersetzen ganz in Maschinencode, Bytecode-Sprachen in einen Zwischencode, Skriptsprachen gar nicht." },
+    { n: "Ausliefern (Deployment)", ort: "Übergang", text: "Ausgeliefert wird je nach Typ eine ausführbare Datei, Bytecode oder der Quellcode selbst." },
+    { n: "Ausführen", ort: "Ausführungsumgebung", text: "Maschinencode läuft direkt und am schnellsten, aber nur auf der Plattform, für die er übersetzt wurde. Bytecode läuft überall, wo die Runtime installiert ist, und wird dank JIT fast so schnell. Skripte laufen in jedem passenden Ausführungscontainer und lassen sich sofort ändern, brauchen aber den Interpreter zur Laufzeit." }
+  ];
+  (function sprachen() {
+    const lanes = $("#t04-lanes"), info = $("#t04-spr-info"), stand = $("#t04-spr-stand");
+    const zur = $("#t04-spr-zurueck"), wei = $("#t04-spr-weiter");
+    lanes.innerHTML = SPRACHEN.map((s) => '<div class="t04-lane ar-r-' + s.rolle + '"><h4>' + s.name + '</h4><p class="t04-bsp">' + s.bsp + "</p>" +
+      s.st.map((x, i) => (i ? '<div class="t04-pfeilchen" aria-hidden="true">↓</div>' : "") + '<div class="t04-stufe" data-st="' + i + '"><b>' + STUFEN[i].n + "</b>" + x + "</div>").join("") + "</div>").join("");
+    let k = 0;
+    const zeigen = () => {
+      lanes.querySelectorAll(".t04-stufe").forEach((el) => {
+        const i = Number(el.dataset.st);
+        el.classList.toggle("t04-an", i === k); el.classList.toggle("t04-vorbei", i < k);
+      });
+      stand.textContent = "Stufe " + (k + 1) + " von 4: " + STUFEN[k].n + " (" + STUFEN[k].ort + ")";
+      info.innerHTML = "<h4>" + STUFEN[k].n + "</h4><p>" + STUFEN[k].text + "</p>" + (k === 3 ? "<p><b>Für die Mehrschicht:</b> .NET und Jakarta EE sind Bytecode-Plattformen, die skriptbasierte Mehrschicht läuft interpretiert (z. B. Node.js).</p>" : "");
+      zur.disabled = k === 0; wei.disabled = k === 3;
+    };
+    zur.addEventListener("click", () => { if (k > 0) { k--; zeigen(); if (zur.disabled) wei.focus(); } });
+    wei.addEventListener("click", () => { if (k < 3) { k++; zeigen(); if (wei.disabled) zur.focus(); } });
+    zeigen();
+  })();
+  L.sortierer("#t04-sort-spr", {
+    kategorien: ["kompiliert", "Bytecode (hybrid)", "interpretiert (Skript)"],
+    elemente: [
+      { html: "C++", kategorie: 0, erklaerung: "Wird vorab in Maschinencode übersetzt." },
+      { html: "Swift", kategorie: 0, erklaerung: "Kompiliert für iOS und macOS in Maschinencode." },
+      { html: "Go", kategorie: 0, erklaerung: "Erzeugt eine ausführbare Datei je Plattform." },
+      { html: "Java", kategorie: 1, erklaerung: "Bytecode, ausgeführt in der JVM." },
+      { html: "C#", kategorie: 1, erklaerung: "Zwischencode (IL), ausgeführt in der .NET-Runtime." },
+      { html: "Kotlin", kategorie: 1, erklaerung: "Kompiliert meist in Java Bytecode für die JVM." },
+      { html: "JavaScript", kategorie: 2, erklaerung: "Läuft als Quellcode im Browser oder in Node.js." },
+      { html: "PHP", kategorie: 2, erklaerung: "Der PHP-Interpreter führt den Quellcode auf dem Server aus." },
+      { html: "Python", kategorie: 2, erklaerung: "Gilt als Skriptsprache: ausgeliefert wird der Quellcode. Intern erzeugt der Interpreter zwar Bytecode, aber erst zur Laufzeit." }
+    ]
+  });
+
+  /* ---------- 10 · Liefermodelle ---------- */
+  const STAPEL = ["Daten und Zugriffsrechte", "Anwendung (dein Code)", "Laufzeit (JVM, .NET, Node.js)", "Middleware (Web-Server, DBMS)", "Container-Laufzeit und Orchestrierung", "Betriebssystem", "Virtualisierung", "Server-Hardware", "Speicher und Netzwerk", "Rechenzentrum (Strom, Kühlung, Zutritt)"];
+  const MODELLE = [
+    { id: "onprem", kurz: "On-prem", name: "On-premises", wer: "DDDDDDDDDD", rolle: "client",
+      pizza: "Zu Hause backen: Ofen, Strom, Teig und Belag sind deine Sache.",
+      abr: "Kauf und Abschreibung der Hardware, eigenes Personal.", prod: "Eigener Serverraum mit VMware vSphere oder Hyper-V, selbst installierte Datenbank.",
+      passt: "Daten dürfen das Haus nicht verlassen, volle Kontrolle nötig, gleichmässige Last." },
+    { id: "iaas", kurz: "IaaS", name: "Infrastructure as a Service", wer: "DDDDDDAAAA", rolle: "shared",
+      pizza: "Eine Küche mieten: Ofen und Strom stehen bereit, Teig und Belag bringst du mit.",
+      abr: "Pro virtueller Maschine und Stunde, Speicher pro GB.", prod: "Amazon EC2, Azure Virtual Machines, Google Compute Engine, Exoscale (Schweiz).",
+      passt: "Bestehende Software ohne Umbau in die Cloud heben (Lift and Shift), eigenes Betriebssystem nötig." },
+    { id: "caas", kurz: "CaaS", name: "Container as a Service", wer: "DDDDAAAAAA", rolle: "infra",
+      pizza: "Ein Ofen-Service: Du lieferst fertig belegte Pizzen in Normboxen, der Service backt so viele wie nötig.",
+      abr: "Pro Container-Ressource (CPU, Speicher) oder pro Cluster-Knoten.", prod: "Amazon ECS und EKS, Azure Kubernetes Service, Azure Container Apps, Google Kubernetes Engine.",
+      passt: "Microservices als Container-Images; gleiche Images lokal und in der Cloud.", notiz: "Laufzeit und Middleware stecken in deinem Container-Image." },
+    { id: "paas", kurz: "PaaS", name: "Platform as a Service", wer: "DDAAAAAAAA", rolle: "webapi",
+      pizza: "Take and Bake: Teig und Ofen kommen vom Laden, du belegst nur noch.",
+      abr: "Pro Instanz und Stunde, teils automatisch skaliert.", prod: "Azure App Service, Heroku, Google App Engine, AWS Elastic Beanstalk.",
+      passt: "Eine Web App schnell betreiben, ohne Server und Betriebssysteme zu pflegen." },
+    { id: "faas", kurz: "FaaS", name: "Function as a Service", wer: "DDAAAAAAAA", rolle: "async",
+      pizza: "Pizza am Stück: Du gibst das Rezept ab; gebacken und bezahlt wird jedes Stück, das jemand bestellt.",
+      abr: "Pro Aufruf und Rechenzeit; ohne Aufrufe fast keine Kosten.", prod: "AWS Lambda, Azure Functions, Google Cloud Run functions.",
+      passt: "Ereignisgesteuerte, seltene oder stark schwankende Aufgaben (Serverless).", notiz: "Du lieferst nur einzelne Funktionen; Starten, Skalieren und Stoppen übernimmt der Anbieter pro Aufruf." },
+    { id: "saas", kurz: "SaaS", name: "Software as a Service", wer: "GAAAAAAAAA", rolle: "sync",
+      pizza: "Im Restaurant essen: Du wählst aus der Karte.",
+      abr: "Pro Benutzer und Monat (Abo).", prod: "Microsoft 365, Salesforce, Google Workspace, Bexio.",
+      passt: "Standardaufgaben wie Mail, CRM oder Buchhaltung ohne eigene Entwicklung.", notiz: "Für deine Daten und wer darauf zugreift, bleibst du verantwortlich." }
+  ];
+  const WER = { D: ["t04-du", "du"], A: ["t04-anb", "Anbieter"], G: ["t04-geteilt", "geteilt"] };
+  (function liefermodelle() {
+    const kn = $("#t04-modelle"), stapel = $("#t04-stapel"), info = $("#t04-modell-info");
+    const zeigen = (m) => {
+      kn.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === m.id)));
+      stapel.innerHTML = '<p class="sr-only">' + esc(m.name) + ": " + STAPEL.map((s, i) => s + " " + WER[m.wer[i]][1]).join(", ") + ".</p>" +
+        STAPEL.map((s, i) => '<div class="t04-schicht ' + WER[m.wer[i]][0] + '" aria-hidden="true"><span>' + esc(s) + '</span><span class="t04-wer">' + WER[m.wer[i]][1] + "</span></div>").join("");
+      const du = m.wer.split("").filter((x) => x === "D").length;
+      info.className = "t04-panel ar-r-" + m.rolle;
+      info.innerHTML = "<h4>" + esc(m.name) + " (" + m.kurz + ")</h4><p><b>Pizza-Bild:</b> " + esc(m.pizza) + "</p>" +
+        "<p><b>Du verwaltest:</b> " + du + " von 10 Schichten." + (m.notiz ? " " + esc(m.notiz) : "") + "</p>" +
+        "<p><b>Abrechnung:</b> " + esc(m.abr) + "</p><p><b>Produkte:</b> " + esc(m.prod) + "</p><p><b>Passt, wenn:</b> " + esc(m.passt) + "</p>";
+    };
+    MODELLE.forEach((m) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "t04-knopf ar-r-" + m.rolle; b.dataset.m = m.id; b.textContent = m.kurz;
+      b.setAttribute("aria-label", m.name);
+      b.addEventListener("click", () => zeigen(m));
+      kn.appendChild(b);
+    });
+    zeigen(MODELLE[1]);
+    const tab = $("#t04-vergleich");
+    tab.innerHTML = '<caption class="t04-klein">D = du verwaltest, A = Anbieter, G = geteilt</caption><thead><tr><th scope="col">Schicht</th>' + MODELLE.map((m) => '<th scope="col">' + m.kurz + "</th>").join("") + "</tr></thead><tbody>" +
+      STAPEL.map((s, i) => '<tr><th scope="row">' + esc(s) + "</th>" + MODELLE.map((m) => {
+        const w = m.wer[i];
+        return '<td class="' + (w === "D" ? "t04-v-du" : w === "A" ? "t04-v-anb" : "t04-v-geteilt") + '">' + w + "</td>";
+      }).join("") + "</tr>").join("") +
+      '<tr><th scope="row">Abrechnung</th>' + MODELLE.map((m) => "<td>" + esc(m.abr.split(/[,;.]/)[0]) + "</td>").join("") + "</tr></tbody>";
+  })();
+  L.auswahl("#t04-lm-a1", {
+    frage: "Ein Treuhandbüro will seine bestehende Windows-Software unverändert auf gemieteten Servern betreiben und das Betriebssystem selbst konfigurieren. Welches Liefermodell?",
+    optionen: ["SaaS", "PaaS", "IaaS", "FaaS"], richtig: 2,
+    erklaerung: "Eigenes Betriebssystem und unveränderte Software: Der Anbieter liefert nur die virtuelle Maschine. Das ist IaaS (Lift and Shift)."
+  });
+  L.auswahl("#t04-lm-a2", {
+    frage: "Nach jedem Foto-Upload soll ein Bild verkleinert werden. Uploads kommen unregelmässig, nachts fast keine. Was ist am günstigsten?",
+    optionen: ["On-premises-Server, der immer läuft", "FaaS: eine Funktion pro Upload-Ereignis", "IaaS mit einer grossen VM", "SaaS"], richtig: 1,
+    erklaerung: "Ereignisgesteuert und stark schwankend: FaaS rechnet pro Aufruf ab und kostet ohne Uploads fast nichts."
+  });
+  L.auswahl("#t04-lm-a3", {
+    frage: "Ein Team hat seine Microservices als Docker-Images und will sie orchestrieren lassen, ohne Betriebssysteme zu patchen. Welches Liefermodell?",
+    optionen: ["CaaS", "SaaS", "On-premises", "IaaS"], richtig: 0,
+    erklaerung: "Container as a Service: Der Anbieter betreibt Container-Laufzeit und Orchestrierung (z. B. Kubernetes), du lieferst die Images."
+  });
+
+  /* ---------- 11 · Cloud-Sicherheit ---------- */
+  L.sortierer("#t04-sort-sich", {
+    kategorien: ["Verfügbarkeit", "Vertraulichkeit, Integrität, Datenschutz"],
+    elemente: [
+      { html: "Notstromaggregat im Rechenzentrum", kategorie: 0, erklaerung: "Physische Sicherheit und Notstrom halten den Betrieb am Laufen." },
+      { html: "Zweites Rechenzentrum mit laufender Replikation", kategorie: 0, erklaerung: "Redundanz und Disaster Recovery." },
+      { html: "Tägliches Backup mit geübter Wiederherstellung", kategorie: 0, erklaerung: "Backup dient der Verfügbarkeit der Daten." },
+      { html: "Plan, wie das Geschäft nach einem Grossausfall weiterläuft", kategorie: 0, erklaerung: "Continuity Management." },
+      { html: "Anmeldung mit zweitem Faktor", kategorie: 1, erklaerung: "Identitäts- und Berechtigungsmanagement schützt die Vertraulichkeit." },
+      { html: "Daten verschlüsselt, Schlüssel beim Kunden", kategorie: 1, erklaerung: "Kryptographie und Schlüsselmanagement." },
+      { html: "Weisung: Admins sehen Kundendaten nur mit Ticket", kategorie: 1, erklaerung: "Organisation und Anweisungen für das Personal." },
+      { html: "TLS für alle Verbindungen", kategorie: 1, erklaerung: "Kommunikationssicherheit: Niemand liest oder verändert unterwegs." }
+    ]
+  });
+  L.auswahl("#t04-sich-a1", {
+    frage: "Eine Physiotherapie-Praxis will Patientendaten in einer Public Cloud speichern. Welcher Standard belegt speziell den Schutz personenbezogener Daten beim Cloud-Anbieter?",
+    optionen: ["ISO/IEC 27017", "ISO/IEC 27018", "BSI C5", "ISO/IEC 27001 allein"], richtig: 1,
+    erklaerung: "ISO/IEC 27018 regelt den Schutz personenbezogener Daten in der Public Cloud. 27001 belegt das ISMS allgemein, 27017 Cloud-Sicherheitsmassnahmen, C5 ist der Kriterienkatalog des BSI."
+  });
+
+  /* ---------- 12 · Schritt-Aufgabe ---------- */
+  L.schrittAufgabe("#t04-sa", {
+    titel: "Übung: Fahrschule Zügig (fiktiv) als .NET-Mehrschicht",
+    aufgabe: "<p>Die Fahrschule Zügig (fiktiv) baut ihre Planung in <b>.NET</b>. Fahrschülerinnen buchen Fahrstunden in einer <b>Web App im Browser</b> (serverseitig mit ASP.NET gerendert), Fahrlehrer nutzen eine <b>MAUI App</b> über REST. Die Fachkomponenten <b>Fahrstunden</b> und <b>Fahrschüler</b> speichern mit Entity Framework in <b>SQL Server</b>. Jede neue Fahrstunde wird per AMQP an <b>Azure Service Bus</b> gemeldet, Erinnerungen gehen über die REST-API eines <b>SMS-Dienstes</b>. Skizziere die Pakete und Komponenten, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "<p>Pakete: <b>Client Tier</b> · <b>Middle Tier (.NET Server)</b> mit <b>Web Tier (IIS)</b> ⊃ Presentation Tier, Web API und <b>Business Tier</b> ⊃ Business Facade, Business Logic Layer, Async Comm. Layer, Data Access Layer, Service Access Layer · <b>Persistence Tier</b>. Rechts: <b>MOM</b> und <b>Service Provider</b>.</p>", warum: "Technologie .NET bestimmt die Paketnamen. Der Web-Server IIS steht im Paketnamen, nicht als Komponente." },
+      { html: "<p>Client Tier: «Web App (Browser)» und «MAUI App».</p><p>Web Tier: «ASP.NET» Presentation Components mit Ball HTTP, «C#» Web Service mit Ball REST.</p>", warum: "Serverseitige Seiten = Presentation Components mit «ASP.NET»; die App braucht einen Web Service." },
+      { html: "<p>Business Facade: «C#» Business API mit Ball REST. Business Logic Layer: «C#» <b>Fahrstunden</b> und «C#» <b>Fahrschüler</b> einzeln.</p>", warum: "Die Facade ist der einzige Zugang. Im konkreten Fall zeichnest du jede fachliche Komponente einzeln." },
+      { html: "<p>Async Comm. Layer: «C#» Sender Adapter → Message Broker (Azure Service Bus) mit Ball AMQP. Data Access Layer: «C#» DACs (Entity Framework) → «DB in SQL Server». Service Access Layer: «C#» Adapter SMS-Dienst → SMS-Dienst mit Ball REST-API.</p>", warum: "Nur senden ist verlangt, also nur ein Sender Adapter. Je Service Provider ein eigener Adapter." },
+      { html: "<p>Beschriftung: Browser → Presentation «HTTP · HTML», MAUI → Web Service «REST · JSON», Sender → Broker «AMQP», DACs → DB «ADO.NET / SQL», Adapter → SMS-Dienst «REST · JSON».</p>", warum: "Jede Verbindung bekommt Protokoll und, wo sinnvoll, Format." },
+      { html: "<p>Beschreibung (Beispiel Facade): «Die Business API ist der einzige Zugang zum Business Tier. Sie bietet Fahrstunden und Fahrschüler als REST-Service an, damit Web Tier und Business Tier getrennt betrieben und skaliert werden können.»</p>", warum: "Zwei bis drei Sätze: was, womit, warum. Beschreibungen bringen in der Prüfung viele Punkte." }
+    ]
+  });
+
+  /* ---------- 13 · Spiel ---------- */
+  const ref = (m, titel) => ({ titel: titel || m.titel, notation: "uml-komponenten", pakete: m.pakete, elemente: m.elemente, verbindungen: m.verbindungen, notizen: m.notizen || [], einschraenkungen: m.einschraenkungen || [] });
+  A.referenzen["avsw04-drei"] = ref(modellDrei, "Referenz: 3-Schichten-Muster");
+  A.referenzen["avsw04-ntier"] = ref(modellNT, "Referenz: SOA-enabled N-Tier (generisch)");
+  A.referenzen["avsw04-hex"] = ref(modellHex, "Referenz: Hexagonal (Ports and Adapters)");
+  const LEVELS = [
+    {
+      "id": "l1",
+      "titel": "Drei Tiers: Client, Middle, Data",
+      "schwierigkeit": 1,
+      "modus": "uml",
+      "auftrag": "<p>Die Gemeindebibliothek Seewil (fiktiv) baut einen Online-Katalog. Leserinnen suchen Medien in einer <span data-baustein=\"web\">Web App im Browser</span>. Auf dem Server erzeugen <span data-baustein=\"pres\">Presentation Components</span> die Seiten, <span data-baustein=\"bc\">Business Components</span> prüfen die Ausleihregeln (z. B. höchstens zehn Medien) und <span data-baustein=\"dacs\">Data Access Components (DACs)</span> lesen und schreiben die Daten in eine <span data-baustein=\"db\">Datenbank in PostgreSQL</span>. Ordne alles den drei Tiers zu und verbinde die Schichten von oben nach unten.</p>",
+      "ansicht": "komponenten",
+      "pakete": [
+        {
+          "id": "p-client",
+          "name": "Client Tier",
+          "spalte": 0,
+          "zeile": 0
+        },
+        {
+          "id": "p-middle",
+          "name": "Middle Tier (Server)",
+          "spalte": 0,
+          "zeile": 1
+        },
+        {
+          "id": "p-data",
+          "name": "Data Tier",
+          "spalte": 0,
+          "zeile": 2
+        }
+      ],
+      "palette": [
+        {
+          "id": "dacs",
+          "typ": "dienst",
+          "rolle": "daten",
+          "name": "DACs"
+        },
+        {
+          "id": "dbms",
+          "typ": "datenbank",
+          "rolle": "daten",
+          "name": "DBMS-Server PostgreSQL",
+          "ablenker": true,
+          "falle": "Den DBMS-Server zeichnest du nicht. Es genügt die Datenbank als Komponente, z. B. «DB in PostgreSQL»."
+        },
+        {
+          "id": "db",
+          "typ": "datenbank",
+          "rolle": "daten",
+          "name": "DB in PostgreSQL"
+        },
+        {
+          "id": "bc",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Business Components"
+        },
+        {
+          "id": "apache",
+          "typ": "dienst",
+          "rolle": "extern",
+          "name": "Web-Server Apache",
+          "ablenker": true,
+          "falle": "Ein Web-Server ist Infrastruktur, keine Komponente. Du nennst ihn höchstens im Paketnamen."
+        },
+        {
+          "id": "pres",
+          "typ": "dienst",
+          "rolle": "client",
+          "name": "Presentation Components",
+          "schnittstellen": [
+            {
+              "id": "http",
+              "name": "HTTP"
+            }
+          ]
+        },
+        {
+          "id": "web",
+          "typ": "web",
+          "rolle": "client",
+          "name": "Web App (Browser)"
+        }
+      ],
+      "protokolle": [
+        "HTTP",
+        "REST",
+        "SQL",
+        "AMQP",
+        "SOAP"
+      ],
+      "loesung": {
+        "elemente": [
+          {
+            "id": "web",
+            "paket": "p-client"
+          },
+          {
+            "id": "pres",
+            "paket": "p-middle"
+          },
+          {
+            "id": "bc",
+            "paket": "p-middle"
+          },
+          {
+            "id": "dacs",
+            "paket": "p-middle"
+          },
+          {
+            "id": "db",
+            "paket": "p-data"
+          }
+        ],
+        "verbindungen": [
+          {
+            "von": "web",
+            "nach": "pres#http",
+            "art": "assoziation",
+            "protokoll": "HTTP",
+            "warum": "Der Browser holt fertige Seiten über HTTP."
+          },
+          {
+            "von": "pres",
+            "nach": "bc",
+            "art": "assoziation",
+            "warum": "Die Präsentation ruft die Geschäftslogik auf."
+          },
+          {
+            "von": "bc",
+            "nach": "dacs",
+            "art": "assoziation",
+            "warum": "Die Geschäftslogik nutzt den Datenzugriff."
+          },
+          {
+            "von": "dacs",
+            "nach": "db",
+            "art": "assoziation",
+            "protokoll": "SQL",
+            "warum": "Die DACs lesen und schreiben per SQL."
+          }
+        ],
+        "beschreibungen": [
+          {
+            "id": "bc",
+            "optionen": [
+              "Die Geschäftslogik im Middle Tier: prüft Ausleihregeln wie die Höchstzahl der Medien und ruft für Daten die DACs auf.",
+              "Die Komponente, die HTML-Seiten für den Browser erzeugt.",
+              "Der Web-Server, der HTTP-Anfragen annimmt."
+            ],
+            "richtig": 0
+          }
+        ]
+      },
+      "gewichte": {
+        "komponenten": 2,
+        "pakete": 1,
+        "stereotypen": 1,
+        "verbindungen": 2,
+        "beschriftungen": 1,
+        "beschreibungen": 1
+      },
+      "zielzeit": 300,
+      "erklaerung": "Client-Server-Grundmuster mit drei Tiers. Infrastruktur wie Web- und DBMS-Server zeichnest du nicht als Komponente."
+    },
+    {
+      "id": "l2",
+      "titel": "SOA-enabled N-Tier: Presentation, Web API, Facade",
+      "schwierigkeit": 2,
+      "modus": "uml",
+      "auftrag": "<p>Der Turnverband Ostschweiz (fiktiv) baut eine Plattform für Mitgliederbeiträge. Vereinsverantwortliche arbeiten in einer <span data-baustein=\"web\">Web App im Browser</span>, Mitglieder bezahlen mit einer <span data-baustein=\"app\">Mobile App</span>. Im Web Tier erzeugen <span data-baustein=\"pres\">Presentation Services</span> die Seiten für die Web App, ein <span data-baustein=\"ws\">Web API</span> mit REST bedient die Mobile App. Beide erreichen den Business Tier nur über eine <span data-baustein=\"facade\">Business Facade</span>, die selbst REST anbietet, weil Web und Business Tier auf getrennten Servern laufen. Die <span data-baustein=\"bc\">Business Components</span> berechnen die Beiträge, speichern über <span data-baustein=\"dacs\">DACs</span> in einer <span data-baustein=\"db\">Datenbank in MySQL</span> und belasten Zahlungen über einen <span data-baustein=\"adapter\">Driven Adapter</span>, der die REST-API von <span data-baustein=\"pay\">Payrexx</span> aufruft.</p>",
+      "ansicht": "komponenten",
+      "pakete": [
+        {
+          "id": "p-client",
+          "name": "Client Tier",
+          "spalte": 0,
+          "zeile": 0,
+          "breite": 2
+        },
+        {
+          "id": "p-web",
+          "name": "Web Tier",
+          "spalte": 0,
+          "zeile": 1,
+          "breite": 2
+        },
+        {
+          "id": "p-business",
+          "name": "Business Tier",
+          "spalte": 0,
+          "zeile": 2,
+          "breite": 2
+        },
+        {
+          "id": "p-data",
+          "name": "Data Tier",
+          "spalte": 0,
+          "zeile": 3,
+          "breite": 2
+        },
+        {
+          "id": "p-provider",
+          "name": "Service Provider",
+          "spalte": 2,
+          "zeile": 2
+        }
+      ],
+      "palette": [
+        {
+          "id": "app",
+          "typ": "mobile",
+          "rolle": "client",
+          "name": "Mobile App"
+        },
+        {
+          "id": "facade",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Business Facade",
+          "schnittstellen": [
+            {
+              "id": "f",
+              "name": "REST"
+            }
+          ]
+        },
+        {
+          "id": "ws",
+          "typ": "dienst",
+          "rolle": "webapi",
+          "name": "Web API",
+          "schnittstellen": [
+            {
+              "id": "rest",
+              "name": "REST"
+            }
+          ]
+        },
+        {
+          "id": "bc",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Business Components"
+        },
+        {
+          "id": "dacs",
+          "typ": "dienst",
+          "rolle": "daten",
+          "name": "DACs"
+        },
+        {
+          "id": "gw",
+          "typ": "gateway",
+          "rolle": "sync",
+          "name": "API-Gateway",
+          "ablenker": true,
+          "falle": "In der Mehrschichtenarchitektur zeichnest du kein API-Gateway; das Web API ist der Zugang."
+        },
+        {
+          "id": "db",
+          "typ": "datenbank",
+          "rolle": "daten",
+          "name": "DB in MySQL"
+        },
+        {
+          "id": "pres",
+          "typ": "dienst",
+          "rolle": "client",
+          "name": "Presentation Services",
+          "schnittstellen": [
+            {
+              "id": "http",
+              "name": "HTTP"
+            }
+          ]
+        },
+        {
+          "id": "pay",
+          "typ": "extern",
+          "rolle": "sync",
+          "name": "Payrexx",
+          "schnittstellen": [
+            {
+              "id": "api",
+              "name": "REST-API"
+            }
+          ]
+        },
+        {
+          "id": "nginx",
+          "typ": "dienst",
+          "rolle": "extern",
+          "name": "Web-Server Nginx",
+          "ablenker": true,
+          "falle": "Ein Web-Server ist Infrastruktur, keine Komponente. Du nennst ihn höchstens im Paketnamen."
+        },
+        {
+          "id": "web",
+          "typ": "web",
+          "rolle": "client",
+          "name": "Web App (Browser)"
+        },
+        {
+          "id": "adapter",
+          "typ": "dienst",
+          "rolle": "sync",
+          "name": "Driven Adapter Payrexx"
+        }
+      ],
+      "protokolle": [
+        "AMQP",
+        "gRPC",
+        "SOAP",
+        "RMI",
+        "SQL",
+        "HTTP",
+        "REST"
+      ],
+      "loesung": {
+        "elemente": [
+          {
+            "id": "web",
+            "paket": "p-client"
+          },
+          {
+            "id": "app",
+            "paket": "p-client"
+          },
+          {
+            "id": "pres",
+            "paket": "p-web"
+          },
+          {
+            "id": "ws",
+            "paket": "p-web"
+          },
+          {
+            "id": "facade",
+            "paket": "p-business"
+          },
+          {
+            "id": "bc",
+            "paket": "p-business"
+          },
+          {
+            "id": "dacs",
+            "paket": "p-business"
+          },
+          {
+            "id": "adapter",
+            "paket": "p-business"
+          },
+          {
+            "id": "db",
+            "paket": "p-data"
+          },
+          {
+            "id": "pay",
+            "paket": "p-provider"
+          }
+        ],
+        "verbindungen": [
+          {
+            "von": "web",
+            "nach": "pres#http",
+            "art": "assoziation",
+            "protokoll": "HTTP",
+            "warum": "Die Web App braucht fertige Seiten."
+          },
+          {
+            "von": "app",
+            "nach": "ws#rest",
+            "art": "assoziation",
+            "protokoll": "REST",
+            "warum": "Die Mobile App braucht Daten über REST."
+          },
+          {
+            "von": "pres",
+            "nach": "facade#f",
+            "art": "assoziation",
+            "protokoll": "REST",
+            "warum": "Getrennte Tiers: Die Präsentation erreicht die Logik über den Web Service der Facade."
+          },
+          {
+            "von": "ws",
+            "nach": "facade#f",
+            "art": "assoziation",
+            "protokoll": "REST",
+            "warum": "Auch das Web API geht nur über die Facade."
+          },
+          {
+            "von": "facade",
+            "nach": "bc",
+            "art": "assoziation",
+            "warum": "Die Facade verteilt an die Geschäftslogik."
+          },
+          {
+            "von": "bc",
+            "nach": "dacs",
+            "art": "assoziation",
+            "warum": "Datenzugriff über DACs."
+          },
+          {
+            "von": "bc",
+            "nach": "adapter",
+            "art": "assoziation",
+            "warum": "Fremde Dienste über einen Driven Adapter."
+          },
+          {
+            "von": "dacs",
+            "nach": "db",
+            "art": "assoziation",
+            "protokoll": "SQL",
+            "warum": "Die DACs schreiben in MySQL."
+          },
+          {
+            "von": "adapter",
+            "nach": "pay#api",
+            "art": "assoziation",
+            "protokoll": "REST",
+            "warum": "Der Adapter ruft Payrexx synchron auf."
+          }
+        ],
+        "beschreibungen": [
+          {
+            "id": "facade",
+            "optionen": [
+              "Der einzige Zugang zum Business Tier: bietet alle Geschäftsfunktionen über REST an, weil Web und Business Tier auf getrennten Servern laufen.",
+              "Eine Komponente im Client Tier, die die Mobile App mit Daten versorgt.",
+              "Ein API-Gateway, das Aufrufe von Partnern prüft und weiterleitet."
+            ],
+            "richtig": 0
+          },
+          {
+            "id": "adapter",
+            "optionen": [
+              "Kapselt den Aufruf der Payrexx-API. Ändert Payrexx seine Schnittstelle, ist nur dieser Adapter betroffen.",
+              "Speichert Zahlungen in der Datenbank.",
+              "Empfängt Zahlungsereignisse asynchron vom Broker."
+            ],
+            "richtig": 0
+          }
+        ]
+      },
+      "gewichte": {
+        "komponenten": 2,
+        "pakete": 1,
+        "stereotypen": 1,
+        "verbindungen": 2,
+        "beschriftungen": 1,
+        "beschreibungen": 1
+      },
+      "zielzeit": 480,
+      "erklaerung": "SOA-enabled N-Tier: Präsentation und Web API im Web Tier, Facade als Zugang zum Business Tier, Driven Adapter für Provider."
+    },
+    {
+      "id": "l3",
+      "titel": "Hexagonal: Ports und Adapter",
+      "schwierigkeit": 3,
+      "modus": "uml",
+      "auftrag": "<p>Der Velokurier Blitz (fiktiv) baut seine Auftragsverwaltung nach Ports und Adapters. Im Zentrum steht die <span data-baustein=\"core\">Auftragsverwaltung</span> als Application Core. Sie bietet den Port «Aufträge» an und definiert zwei Ports, die sie braucht: «Auftragsablage» und «Routenberechnung».</p><p>Die <span data-baustein=\"app\">Kurier-App</span> spricht REST mit einem <span data-baustein=\"rest\">REST-Controller</span> (Driving Adapter), der den Port «Aufträge» aufruft. Den Port «Auftragsablage» implementiert ein <span data-baustein=\"repo\">Repository-Adapter</span>, der in eine <span data-baustein=\"db\">Datenbank in PostgreSQL</span> schreibt. Den Port «Routenberechnung» implementiert ein <span data-baustein=\"route\">Routen-Adapter</span>, der eine <span data-baustein=\"maps\">Karten-API</span> per REST aufruft. Die Domäne kennt keine Technik.</p>",
+      "ansicht": "komponenten",
+      "pakete": [
+        {
+          "id": "p-driving",
+          "name": "Driving Adapters",
+          "spalte": 0,
+          "zeile": 0
+        },
+        {
+          "id": "p-core",
+          "name": "Application Core",
+          "spalte": 1,
+          "zeile": 0
+        },
+        {
+          "id": "p-driven",
+          "name": "Driven Adapters",
+          "spalte": 2,
+          "zeile": 0
+        },
+        {
+          "id": "p-aussen",
+          "name": "Aussenwelt",
+          "spalte": 0,
+          "zeile": 1,
+          "breite": 3
+        }
+      ],
+      "palette": [
+        {
+          "id": "app",
+          "typ": "mobile",
+          "rolle": "client",
+          "name": "Kurier-App"
+        },
+        {
+          "id": "core",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Auftragsverwaltung (Domäne)",
+          "schnittstellen": [
+            {
+              "id": "in",
+              "name": "Port Aufträge"
+            }
+          ]
+        },
+        {
+          "id": "route",
+          "typ": "dienst",
+          "rolle": "sync",
+          "name": "Routen-Adapter",
+          "schnittstellen": [
+            {
+              "id": "routen",
+              "name": "Port Routenberechnung"
+            }
+          ]
+        },
+        {
+          "id": "maps",
+          "typ": "extern",
+          "rolle": "sync",
+          "name": "Karten-API",
+          "schnittstellen": [
+            {
+              "id": "api",
+              "name": "REST"
+            }
+          ]
+        },
+        {
+          "id": "rest",
+          "typ": "dienst",
+          "rolle": "webapi",
+          "name": "REST-Controller",
+          "schnittstellen": [
+            {
+              "id": "rest",
+              "name": "REST"
+            }
+          ]
+        },
+        {
+          "id": "repo",
+          "typ": "dienst",
+          "rolle": "daten",
+          "name": "Repository-Adapter",
+          "schnittstellen": [
+            {
+              "id": "ablage",
+              "name": "Port Auftragsablage"
+            }
+          ]
+        },
+        {
+          "id": "broker",
+          "typ": "broker",
+          "rolle": "async",
+          "name": "Message Broker",
+          "ablenker": true,
+          "falle": "Der Auftrag nennt keine asynchrone Verbindung."
+        },
+        {
+          "id": "facade",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Business Facade",
+          "ablenker": true,
+          "falle": "Im hexagonalen Stil bietet der Core seine Ports selbst an; eine zusätzliche Facade-Schicht gibt es nicht."
+        },
+        {
+          "id": "db",
+          "typ": "datenbank",
+          "rolle": "daten",
+          "name": "DB in PostgreSQL"
+        }
+      ],
+      "protokolle": [
+        "REST",
+        "AMQP",
+        "SQL",
+        "SOAP",
+        "gRPC"
+      ],
+      "loesung": {
+        "elemente": [
+          {
+            "id": "app",
+            "paket": "p-aussen"
+          },
+          {
+            "id": "rest",
+            "paket": "p-driving"
+          },
+          {
+            "id": "core",
+            "paket": "p-core"
+          },
+          {
+            "id": "repo",
+            "paket": "p-driven"
+          },
+          {
+            "id": "route",
+            "paket": "p-driven"
+          },
+          {
+            "id": "db",
+            "paket": "p-aussen"
+          },
+          {
+            "id": "maps",
+            "paket": "p-aussen"
+          }
+        ],
+        "verbindungen": [
+          {
+            "von": "app",
+            "nach": "rest#rest",
+            "art": "assoziation",
+            "protokoll": "REST",
+            "warum": "Die App spricht REST mit dem Driving Adapter."
+          },
+          {
+            "von": "rest",
+            "nach": "core#in",
+            "art": "assoziation",
+            "warum": "Der Driving Adapter ruft den angebotenen Port des Core auf."
+          },
+          {
+            "von": "core",
+            "nach": "repo#ablage",
+            "art": "assoziation",
+            "warum": "Der Core nutzt den Port Auftragsablage; der Repository-Adapter implementiert ihn. Die Abhängigkeit zeigt nach innen."
+          },
+          {
+            "von": "core",
+            "nach": "route#routen",
+            "art": "assoziation",
+            "warum": "Der Core nutzt den Port Routenberechnung; der Routen-Adapter implementiert ihn."
+          },
+          {
+            "von": "repo",
+            "nach": "db",
+            "art": "assoziation",
+            "protokoll": "SQL",
+            "warum": "Erst der Adapter kennt PostgreSQL."
+          },
+          {
+            "von": "route",
+            "nach": "maps#api",
+            "art": "assoziation",
+            "protokoll": "REST",
+            "warum": "Erst der Adapter kennt die Karten-API."
+          }
+        ],
+        "beschreibungen": [
+          {
+            "id": "core",
+            "optionen": [
+              "Die Domäne im Zentrum: enthält die Regeln für Aufträge, bietet den Port «Aufträge» an und definiert die Ports, die Adapter implementieren. Sie kennt weder Datenbank noch REST.",
+              "Ein Controller, der HTTP-Anfragen annimmt und JSON zurückgibt.",
+              "Die Datenbank, in der die Aufträge liegen."
+            ],
+            "richtig": 0
+          },
+          {
+            "id": "repo",
+            "optionen": [
+              "Driving Adapter, der Aufträge von der Kurier-App annimmt.",
+              "Driven Adapter: implementiert den Port «Auftragsablage» mit SQL auf PostgreSQL. Die Datenbank lässt sich austauschen, ohne den Core zu ändern.",
+              "Ein Teil der Domäne, der SQL-Abfragen enthält."
+            ],
+            "richtig": 1
+          }
+        ]
+      },
+      "gewichte": {
+        "komponenten": 2,
+        "pakete": 1,
+        "stereotypen": 1,
+        "verbindungen": 2,
+        "beschriftungen": 1,
+        "beschreibungen": 1
+      },
+      "zielzeit": 720,
+      "erklaerung": "Hexagonal (Ports and Adapters, Clean): Die Domäne steht im Zentrum, Abhängigkeiten zeigen immer nach innen. Driving Adapters rufen den Core auf, Driven Adapters implementieren die Ports, die der Core braucht."
+    }
+  ];
+  const REF_JE_LEVEL = { l1: "avsw04-drei", l2: "avsw04-ntier", l3: "avsw04-hex" };
+  LEVELS.forEach((lv) => { if (REF_JE_LEVEL[lv.id]) lv.referenz = REF_JE_LEVEL[lv.id]; });
+  A.spiel("#t04-spiel", { spielId: "avsw-04-schichten", fach: "avsw", titel: "Schichten modellieren", levels: LEVELS });
+
+  /* ---------- Film ---------- */
+  const FS = [
+    [["client", "Client Tier", "Mobile App", "client"]],
+    [["pres", "Presentation", "Seiten (HTTP)", "client"], ["ws", "Service Tier", "Web API (REST)", "webapi"]],
+    [["fac", "Business Facade", "Business API", "business"]],
+    [["bc", "Business Logic", "Kursbuchung", "business"], ["asy", "Async Adapter", "Sender, Receiver", "async"]],
+    [["dal", "Data Access", "KursDac", "daten"], ["sal", "Service Access", "PayAlpin-Adapter", "sync"]],
+    [["db", "Persistence Tier", "DB in PostgreSQL", "daten"], ["broker", "MOM", "RabbitMQ", "async"], ["psp", "Service Provider", "PayAlpin", "sync"]]
+  ];
+  const buehne = (an, msg, fehler) => {
+    an = an || []; fehler = fehler || [];
+    return '<div class="t04-fs">' + FS.map((reihe) => '<div class="t04-fs-reihe">' + reihe.map(([id, n, s, r]) =>
+      '<div class="t04-fs-s ar-r-' + r + (fehler.includes(id) ? " t04-fehler" : an.includes(id) ? " t04-an" : "") + '">' + n + "<small>" + s + (fehler.includes(id) ? " ⚡" : "") + "</small></div>").join("") + "</div>").join("") +
+      (msg ? '<div class="t04-fs-msg"><code>' + esc(msg) + "</code></div>" : "") + "</div>";
+  };
+  L.film("#t04-film", {
+    phasen: ["1 · Client", "2 · Web Tier", "3 · Business Tier", "4 · Daten", "5 · Umsysteme", "6 · Antwort"],
+    texte: [
+      'Lea <span data-ph="app">tippt in der Griffig-App auf «Buchen»</span> für den Kurs «Vorstieg Basis». Das System <span data-ph="regel">prüft, ob noch Plätze frei sind</span>, <span data-ph="zahl">lässt die Kursgebühr bei PayAlpin autorisieren</span>, <span data-ph="db">speichert die Buchung</span> und <span data-ph="event">meldet sie dem Trainerteam über den Message Broker</span>. <span data-ph="antwort">Lea sieht sofort die Bestätigung.</span>'
+    ],
+    woerterbuch: ["Client Tier", "Web Service (Service Tier)", "Business Facade", "Business Component", "DAC", "DB in DBMS", "Driven sync Adapter", "Sender Adapter", "Message Broker", "Reply"],
+    beschriftung: { texte: "Die Anforderung", text: "Anforderung", formel: "Schichten" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: buehne([]), say: "Muster: SOA-enabled N-Tier-Architektur. Wir verfolgen eine Anforderung von oben durch alle Schichten und als Antwort zurück. Jede Schicht macht genau ihren Teil." },
+      { ph: 0, hl: ["app"], dict: 1, dh: [0], f: buehne(["client"], "Tipp auf «Buchen»"), say: "Lea tippt in der installierten App auf «Buchen». Die App gehört in den Client Tier. Sie kennt keine Geschäftsregeln, sie schickt nur eine Anfrage." },
+      { f: buehne(["client"], 'POST /api/buchungen  {"kursId": 42, "mitgliedId": 7}'), say: "Die App schickt einen Request: POST an das Web API, Daten als JSON, über HTTPS. Das ist der Request aus dem Client-Server-Grundmuster." },
+      { ph: 1, dict: 2, dh: [1], f: buehne(["ws"], "Nginx → Web Service"), say: "Zuerst nimmt der Web-Server die Verbindung an. Er ist Infrastruktur, keine Komponente. Er reicht die Anfrage an den Web Service im Service Tier weiter." },
+      { f: buehne(["ws"], "kursId ist eine Zahl ✓"), say: "Der Web Service prüft nur das Format: Ist die Kurs-ID eine Zahl? Geschäftsregeln prüft er nicht." },
+      { ph: 2, dict: 3, dh: [2], f: buehne(["ws", "fac"], "buchungsFacade.kursBuchen(7, 42)"), say: "Er ruft die Business Facade. Sie ist der einzige Zugang zum Business Tier, egal ob die Anfrage aus der App, dem Browser oder von einem Partner kommt." },
+      { dict: 4, dh: [3], f: buehne(["fac", "bc"], "kursbuchung.buchen(7, 42)"), say: "Die Facade delegiert an die Business Component Kursbuchung. Hier stehen die Regeln des Kletterzentrums." },
+      { hl: ["regel"], f: buehne(["bc"], "Regel: freie Plätze > 0 ?"), say: "Die Regel lautet: Buchen geht nur, wenn der Kurs noch Plätze frei hat. Dafür braucht die Kursbuchung Daten." },
+      { ph: 3, dict: 5, dh: [4], f: buehne(["bc", "dal"], "kurse.finde(42)"), say: "Sie fragt den DAC im Data Access Layer. Sie selbst kennt keine Tabellen und kein SQL." },
+      { dict: 6, dh: [5], f: buehne(["dal", "db"], "SELECT … FROM kurs WHERE id = ?   [42]"), say: "Der DAC schickt eine parametrisierte SQL-Abfrage an die Datenbank im Persistence Tier." },
+      { f: buehne(["db", "dal", "bc"], "frei = 3"), say: "Die Datenbank antwortet: drei Plätze frei. Der DAC macht daraus ein Kurs-Objekt. Die Regel ist erfüllt." },
+      { ph: 4, hl: ["zahl"], dict: 7, dh: [6], f: buehne(["bc", "sal"], "zahlung.autorisieren(7, 4500)"), say: "Jetzt die Zahlung. Die Kursbuchung ruft den Driven sync Adapter für PayAlpin im Service Access Layer." },
+      { f: buehne(["sal", "psp"], 'POST /v1/autorisierungen  {"betrag": 4500, "waehrung": "CHF"}'), say: "Der Adapter übersetzt in die Sprache des Providers: REST mit JSON. Er wartet synchron, aber höchstens drei Sekunden." },
+      { f: buehne(["psp", "sal", "bc"], '200 OK  {"status": "autorisiert"}'), say: "PayAlpin autorisiert die 45 Franken. Für jeden weiteren Service Provider gäbe es einen eigenen Adapter." },
+      { ph: 3, hl: ["db"], dh: [4, 5], f: buehne(["bc", "dal", "db"], "BEGIN; UPDATE kurs …; INSERT INTO buchung …; COMMIT;"), say: "Die Kursbuchung lässt die Buchung über den DAC speichern. Platz belegen und Buchung anlegen passieren in einer Transaktion." },
+      { ph: 4, hl: ["event"], dict: 9, dh: [7, 8], f: buehne(["bc", "asy", "broker"], 'publish kurs.gebucht  {"buchungId": 981}'), say: "Danach übergibt sie das Event «Kurs gebucht» an den Sender Adapter. Der schickt es per AMQP an den Message Broker und wartet nicht, bis das Trainerteam es liest." },
+      { f: buehne(["broker"], "Queue trainer.benachrichtigungen: 1 Nachricht"), say: "Der Broker puffert die Nachricht. Läuft die Trainer-App gerade nicht, staut sie sich hier und geht nicht verloren." },
+      { ph: 5, hl: ["antwort"], dict: 10, dh: [9], f: buehne(["bc", "fac", "ws"], "Buchung 981"), say: "Die Antwort läuft den gleichen Weg zurück: Business Component, Facade, Web Service." },
+      { f: buehne(["ws", "client"], '201 Created  {"id": 981, "status": "bezahlt"}'), say: "Der Web Service schickt den Reply mit Status 201 an die App. Lea sieht die Bestätigung." },
+      { ph: 4, f: buehne(["sal"], "Timeout nach 3 s", ["psp"]), say: "Und wenn PayAlpin nicht antwortet? Der Adapter bricht nach drei Sekunden ab. Synchron heisst: Der Fehler kommt bei der Kursbuchung an, sie muss entscheiden." },
+      { f: buehne(["bc", "dal"], "status = 'Zahlung offen'", ["psp"]), say: "Eine gute Regel: Buchung als «Zahlung offen» speichern und Lea informieren, statt endlos zu warten. Ohne Timeout würden Threads blockieren." },
+      { ph: 5, f: buehne(["client", "ws", "fac", "bc", "dal", "db", "sal", "psp", "asy", "broker"]), say: "Zusammengefasst: Jede Schicht hatte genau eine Aufgabe. Aufgerufen wurde immer nur nach unten oder über einen Adapter nach aussen." },
+      { say: "Genau diese Pakete und Verbindungen zeichnest du in der Prüfung, mit Stereotyp und Beschriftung. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t04-test", {
+    fragen: [
+      { q: "Was gilt im Client-Server-Grundmuster?", o: ["Der Server schickt Daten, sobald sie sich ändern, ohne Anfrage.", "Der Client schickt einen Request an die API des Servers, der Server antwortet mit einem Reply.", "Client und Server sind immer dasselbe Programm."], a: 1, e: "Der Client ergreift die Initiative, der Server bedient Anfragen über seine API." },
+      { q: "Welche Komponente ist der einzige Zugang zum Business Tier?", o: ["Der Web Service im Service Tier", "Die Business Facade", "Der Data Access Layer"], a: 1, e: "Presentation und Service Tier rufen nur die Facade; sie delegiert an die Business Components." },
+      { q: "Stolperfalle: Der Auftrag sagt «Die Anwendung läuft hinter einem Nginx-Web-Server.» Wie modellierst du Nginx?", o: ["Als Komponente «Nginx» im Web Tier", "Gar nicht als Komponente; höchstens im Paketnamen «Web Tier (Nginx)»", "Als Service Provider rechts"], a: 1, e: "Web-Server, DBMS-Server und Security-Server sind Infrastruktur, keine Komponenten." },
+      { q: "In welches Paket gehört ein «EJB MDB» Receiver Adapter?", o: ["Async Adapter Layer (Async Comm. Layer)", "Service Access Layer", "MOM"], a: 0, e: "Receiver und Sender stehen als eigene Komponenten im Async Layer; im Paket MOM steht nur der Broker." },
+      { q: "Die Anwendung nutzt drei Service Provider. Wie viele Driven sync Adapter zeichnest du?", o: ["Einen für alle", "Drei, je Provider einen", "Keinen, die Business Components rufen direkt"], a: 1, e: "Je Service Provider ein eigener Adapter: Änderungen bei einem Provider bleiben in seinem Adapter." },
+      { q: "Wohin zeigen in der hexagonalen (Clean, Onion) Architektur die Abhängigkeiten?", o: ["Nach aussen zur Datenbank", "Nach innen zur Domäne", "In beide Richtungen"], a: 1, e: "Aussen kennt innen, nie umgekehrt. Ports gehören dem Core, Adapter implementieren sie." },
+      { q: "Zu welchem Typ gehört C#?", o: ["Kompiliert direkt in Maschinencode", "Bytecode (hybrid): Zwischencode, ausgeführt in der .NET-Runtime", "Interpretierte Skriptsprache"], a: 1, e: "C# wird in IL übersetzt; die CLR übersetzt zur Laufzeit (JIT). Ebenso Java mit der JVM." },
+      { q: "Bei welchem Liefermodell verwaltest du das Betriebssystem noch selbst?", o: ["IaaS", "PaaS", "SaaS"], a: 0, e: "Bei IaaS mietest du virtuelle Maschinen; ab dem Betriebssystem bist du zuständig." },
+      { q: "Was unterscheidet FaaS von PaaS am deutlichsten?", o: ["FaaS braucht keinen Code.", "Bei FaaS lieferst du nur Funktionen, bezahlst pro Aufruf und ohne Last fällt fast nichts an.", "Bei FaaS verwaltest du das Betriebssystem."], a: 1, e: "FaaS skaliert pro Aufruf (auch auf null), PaaS betreibt dauerhaft laufende Instanzen deiner App." },
+      { q: "Welcher Standard belegt den Schutz personenbezogener Daten in der Public Cloud?", o: ["ISO/IEC 27017", "ISO/IEC 27018", "BSI C5"], a: 1, e: "27018: Datenschutz in der Public Cloud. 27017: Cloud-Sicherheitsmassnahmen. C5: Kriterienkatalog des BSI." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

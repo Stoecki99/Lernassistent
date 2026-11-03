@@ -1,0 +1,2396 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOA und synchrone APIs · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/architektur.css">
+  <link rel="next" href="/lernseiten/avsw/03-eda-message-broker" title="EDA und Message Broker">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t02-», nur Farben aus Tokens -->
+  <style>
+    .t02-ziele{margin:0; padding-left:1.2rem; display:flex; flex-direction:column; gap:4px}
+    .t02-wb td:first-child{font-weight:600; white-space:nowrap}
+    .t02-badge{display:inline-block; padding:1px 8px; border-radius:999px; font-size:.78rem; font-weight:600; color:var(--ink); background:var(--ar-bg); border:1px solid var(--ar-c); white-space:nowrap}
+
+    /* Karten mit Rollenfarbe */
+    .t02-karten{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px}
+    .t02-karte{border:1px solid var(--line); border-top:4px solid var(--ar-c, var(--accent)); border-radius:12px; padding:12px 14px; background:var(--surface); display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t02-karte h4{margin:0; font-size:1rem}
+    .t02-karte p, .t02-karte ul{margin:0; font-size:.92rem}
+    .t02-karte ul{padding-left:1.1rem}
+    .t02-klein{font-size:.84rem; color:var(--muted)}
+
+    /* Drei Ebenen einer Schnittstelle */
+    .t02-ebenen{display:flex; flex-direction:column; gap:6px}
+    .t02-ebene{display:grid; grid-template-columns:minmax(6.5rem, 9rem) minmax(0, 1fr); gap:10px; align-items:center; border:1.5px solid var(--ar-c); background:var(--ar-bg); border-radius:10px; padding:8px 12px; color:var(--ink)}
+    .t02-ebene b{font-size:.95rem}
+    .t02-ebene span{font-size:.9rem}
+    .t02-arten{display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0; list-style:none}
+    .t02-arten li{border:1px solid var(--line); border-radius:999px; padding:2px 10px; font-size:.86rem; background:var(--surface)}
+    .t02-arten li b{color:var(--accent)}
+
+    /* Landkarte «Welche API wann?» */
+    .t02-lk{display:grid; grid-template-columns:minmax(0, 1fr); gap:14px}
+    .t02-krit{display:flex; flex-direction:column; gap:10px}
+    .t02-krit fieldset{border:1px solid var(--line); border-radius:12px; padding:8px 12px 10px; margin:0; background:var(--surface)}
+    .t02-krit legend{font-weight:700; font-size:.92rem; padding:0 4px}
+    .t02-chips{display:flex; flex-wrap:wrap; gap:6px}
+    .t02-chip{font:inherit; font-size:.88rem; padding:6px 12px; border-radius:999px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer; min-height:36px}
+    .t02-chip[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); font-weight:700}
+    .t02-chip[aria-pressed="true"]::before{content:"✓ "}
+    .t02-presets{display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+    .t02-karte-lk{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; padding:10px; border-radius:14px; border:1px solid var(--line); background:linear-gradient(90deg, var(--r-business-bg) 0 33.3%, var(--r-sync-bg) 33.3% 66.6%, var(--r-client-bg) 66.6% 100%)}
+    .t02-zone{font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink); text-align:center; padding:2px 0 4px}
+    .t02-ort{font:inherit; text-align:left; border:2px solid var(--ar-c); background:var(--surface); color:var(--ink); border-radius:12px; padding:8px 10px; cursor:pointer; display:flex; flex-direction:column; gap:4px; min-width:0; transition:transform .25s, box-shadow .25s}
+    .t02-ort b{font-size:1rem}
+    .t02-ort .t02-klein{line-height:1.3}
+    .t02-ort[aria-pressed="true"]{box-shadow:0 0 0 3px var(--ar-c)}
+    .t02-ort.t02-top{transform:scale(1.03); box-shadow:0 0 0 3px var(--accent), 0 6px 16px var(--line)}
+    .t02-ort.t02-top::after{content:"Empfehlung"; align-self:flex-start; font-size:.72rem; font-weight:700; color:var(--surface); background:var(--accent); border-radius:999px; padding:1px 8px}
+    .t02-ort.t02-schwach{opacity:.55}
+    .t02-balken{height:8px; border-radius:99px; background:var(--line); overflow:hidden}
+    .t02-balken > span{display:block; height:100%; width:var(--w, 0%); background:var(--ar-c); transition:width .35s}
+    .t02-pos-grpc{grid-column:1; grid-row:2}
+    .t02-pos-soap{grid-column:2; grid-row:2}
+    .t02-pos-graphql{grid-column:3; grid-row:2}
+    .t02-pos-odata{grid-column:2; grid-row:3}
+    .t02-pos-rest{grid-column:1 / span 3; grid-row:4}
+    .t02-empf{min-height:5em}
+    .t02-empf h4{margin:0 0 4px}
+    .t02-empf ul{margin:4px 0 0; padding-left:1.2rem}
+    .t02-steck{border-left:4px solid var(--ar-c); padding:8px 12px; background:var(--ar-bg); border-radius:0 10px 10px 0; color:var(--ink)}
+    .t02-steck dl{display:grid; grid-template-columns:minmax(6rem, 9rem) minmax(0, 1fr); gap:4px 10px; margin:6px 0 0; font-size:.9rem}
+    .t02-steck dt{font-weight:700}
+    .t02-steck dd{margin:0}
+    @media (max-width:640px){
+      .t02-karte-lk{grid-template-columns:minmax(0, 1fr); background:var(--board)}
+      .t02-zone{display:none}
+      .t02-pos-grpc, .t02-pos-soap, .t02-pos-graphql, .t02-pos-odata, .t02-pos-rest{grid-column:1; grid-row:auto}
+      .t02-ort.t02-top{transform:none}
+      .t02-steck dl{grid-template-columns:minmax(0, 1fr)}
+    }
+
+    /* Zuordnungs- und Tabellenübungen */
+    .t02-zu{display:flex; flex-direction:column; gap:10px}
+    .t02-zu-karte{border:1px solid var(--line); border-left:4px solid var(--ar-c, var(--accent)); border-radius:10px; padding:10px 12px; background:var(--surface); display:flex; flex-direction:column; gap:8px}
+    .t02-zu-karte p{margin:0}
+    .t02-felder{display:flex; flex-wrap:wrap; gap:8px 14px}
+    .t02-feld{display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 9.5rem}
+    .t02-feld label{font-size:.8rem; font-weight:700; color:var(--muted)}
+    .t02-feld select{width:100%; max-width:100%}
+    .t02-mark{font-weight:700; font-size:.82rem}
+    .t02-ok-z{outline:2px solid var(--ok); outline-offset:1px}
+    .t02-falsch-z{outline:2px solid var(--bad); outline-offset:1px}
+    .t02-erkl{font-size:.88rem; color:var(--muted); margin:0}
+    .t02-st{width:100%}
+    .t02-st select{width:100%; min-width:6.5rem; font-size:.88rem}
+    .t02-st td{vertical-align:top}
+    .t02-st .t02-mark{display:block; margin-top:2px}
+    @media (max-width:700px){
+      .t02-st thead{display:none}
+      .t02-st, .t02-st tbody, .t02-st tr, .t02-st td, .t02-st th{display:block; width:100%}
+      .t02-st tr{border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:10px; background:var(--surface)}
+      .t02-st td, .t02-st th{border:none; padding:3px 0}
+      .t02-st td::before{content:attr(data-label); display:block; font-size:.78rem; font-weight:700; color:var(--muted)}
+    }
+    .t02-fall{border:1px dashed var(--line); border-radius:12px; padding:10px 14px; background:var(--board)}
+    .t02-fall ol{margin:6px 0 0; padding-left:1.3rem; display:flex; flex-direction:column; gap:4px}
+
+    /* Film: Tabelle */
+    .t02-fbox{overflow-x:auto; max-width:100%}
+    .t02-ft{border-collapse:collapse; font-size:.8rem; width:100%; min-width:520px; font-family:var(--f-body); white-space:normal}
+    .t02-ft th, .t02-ft td{border:1px solid var(--line); padding:4px 6px; text-align:left; vertical-align:top}
+    .t02-ft th{background:var(--surface)}
+    .t02-ft .t02-leer{color:var(--muted)}
+    .t02-ft .t02-weg{text-decoration:line-through; color:var(--muted)}
+  </style>
+</head>
+<body data-fach="avsw" data-thema="02-soa-apis">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">AVSW · LB 1 · SW 2 · SOA und synchrone APIs</span>
+    <h1>SOA und synchrone APIs</h1>
+    <p class="lead">In einer serviceorientierten Architektur bietet ein System einen Dienst über eine Schnittstelle an, ein anderes nutzt ihn. Hier lernst du die Rollen Provider und Consumer, das SOA-Dreieck und die fünf Web-Service-Arten REST, SOAP, GraphQL, OData und gRPC kennen. Du entscheidest auf einer interaktiven Landkarte, welche API wann passt, siehst API-Gateway und OAuth 2.0 als animierte Abläufe und übst, was in der Prüfung Punkte bringt: Schnittstellen beschreiben, Schnittstellentabellen ausfüllen und Verbindungen richtig beschriften.</p>
+    <p class="note"><b>Hinweis:</b> Eigene Erklärungen und Beispiele auf Basis der Modulunterlagen, nicht vom Dozenten bestätigt. Alle Firmen und Fälle sind erfunden.</p>
+    <div class="card stack">
+      <h3>Das kannst du nach dieser Station</h3>
+      <ul class="t02-ziele prose">
+        <li>Die Grundidee und die Prinzipien von SOA erklären und Service Provider und Service Consumer unterscheiden.</li>
+        <li>Das SOA-Dreieck mit Registry und SLA beschreiben und eine kaskadierende Kette erkennen.</li>
+        <li>REST, SOAP, GraphQL, OData und gRPC erklären und für einen Fall begründet auswählen.</li>
+        <li>Funktionen und Produkte eines API-Gateways nennen und API-Security (TLS, Basic, API-Key, OAuth 2.0) einordnen.</li>
+        <li>Eine Schnittstelle nach der Vorgabe des Moduls mit Art der API, Semantik, Struktur und Codierung beschreiben.</li>
+        <li>Eine Schnittstellentabelle aus Anwendungsfällen ableiten und Services in SoaML mit Service- und Request-Ports darstellen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#start"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#soa"><b>2</b>SOA</a>
+    <a href="#dreieck"><b>3</b>SOA-Dreieck</a>
+    <a href="#kaskade"><b>4</b>Kette</a>
+    <a href="#rest"><b>5</b>REST</a>
+    <a href="#soap"><b>6</b>SOAP</a>
+    <a href="#weitere"><b>7</b>GraphQL, OData, gRPC</a>
+    <a href="#landkarte"><b>8</b>Welche API wann?</a>
+    <a href="#gateway"><b>9</b>API-Gateway</a>
+    <a href="#security"><b>10</b>API-Security</a>
+    <a href="#beschreibung"><b>11</b>Schnittstelle beschreiben</a>
+    <a href="#soaml"><b>12</b>SoaML</a>
+    <a href="#tabelle"><b>13</b>Schnittstellentabelle</a>
+    <a href="#spiel"><b>14</b>Spiel</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="start" data-kategorie="client">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Sechs Bausteine mit Alltagsbildern</h2>
+    <p class="prose">Verteilte Systeme arbeiten wie Betriebe in einer Stadt: Niemand macht alles selbst. Die Bäckerei kauft Mehl, der Laden kauft Brot, der Gast kauft im Laden. Jede Beziehung hat einen, der etwas anbietet, und einen, der es nutzt.</p>
+    <div class="grid4">
+      <div class="concept" data-kategorie="dienst"><span class="tag">Service = Dienstleistung</span><p>Eine abgeschlossene Leistung, die man bestellen kann: «Zimmer reservieren», «Bestand abfragen». Wie es innen gemacht wird, bleibt verborgen.</p></div>
+      <div class="concept" data-kategorie="daten"><span class="tag">Provider = Bäckerei</span><p>Der <b>Service Provider</b> bietet den Dienst an und hält sich an die Abmachung. Er wartet, bis jemand bestellt.</p></div>
+      <div class="concept" data-kategorie="client"><span class="tag">Consumer = Kundin</span><p>Der <b>Service Consumer</b> nutzt den Dienst. Er muss wissen, wie man bestellt, aber nicht, wie gebacken wird.</p></div>
+      <div class="concept" data-kategorie="zugang"><span class="tag">API = Bestellschalter</span><p>Die Schnittstelle legt fest, was man bestellen kann, in welcher Form und was zurückkommt. Ohne Schalter kein Geschäft.</p></div>
+      <div class="concept" data-kategorie="infrastruktur"><span class="tag">Registry = Branchenbuch</span><p>Im Verzeichnis findet die Kundin passende Anbieter. Danach geht sie direkt zur Bäckerei, nicht über das Branchenbuch.</p></div>
+      <div class="concept" data-kategorie="sicherheit"><span class="tag">SLA = Liefervertrag</span><p>Das <b>Service Level Agreement</b> regelt, wie gut der Dienst sein muss: Antwortzeit, Verfügbarkeit, Supportzeiten, Folgen bei Verletzung.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Wer ist Provider, wer Consumer?</h3>
+      <p class="hint">Achte darauf, wer anbietet und wer anfragt. Es geht immer um die genannte Verbindung.</p>
+      <div id="t02-sort-start"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 1 · Begriffe festlegen</span>
+    <h2>Wörterbuch der Services und APIs</h2>
+    <p class="prose">Diese Begriffe brauchst du auf der ganzen Seite. Die Farbe in der dritten Spalte ist die Rollenfarbe der Referenzarchitekturen.</p>
+    <div class="card tablebox">
+      <table class="tabelle t02-wb">
+        <thead><tr><th scope="col">Begriff</th><th scope="col">Bedeutung</th><th scope="col">Rolle im Diagramm</th></tr></thead>
+        <tbody>
+          <tr><td>Service</td><td>Fachlich abgeschlossene Leistung hinter einer Schnittstelle, z. B. «Bestellung anlegen».</td><td><span class="t02-badge ar-r-business">Business</span></td></tr>
+          <tr><td>SOA</td><td>Serviceorientierte Architektur: Systeme bieten einander Services über standardisierte Schnittstellen an und sind dadurch lose gekoppelt.</td><td>Kommunikationsstil</td></tr>
+          <tr><td>Service Provider</td><td>Bietet den Service an und stellt die API bereit. Im UML-Diagramm hat er den Ball (Kreis).</td><td><span class="t02-badge ar-r-sync">Service Provider</span></td></tr>
+          <tr><td>Service Consumer</td><td>Ruft die API auf. Im UML-Diagramm sitzt bei ihm der Socket (Halbkreis).</td><td><span class="t02-badge ar-r-webapi">Service Consumer</span></td></tr>
+          <tr><td>API</td><td>Application Programming Interface: Vertrag, wie man einen Service aufruft (Adresse, Operationen, Daten, Fehler).</td><td>Ball mit Namen</td></tr>
+          <tr><td>Web Service</td><td>API, die über Web-Protokolle (HTTP/HTTPS) erreichbar ist: SOAP, REST, GraphQL, OData, gRPC.</td><td>Beschriftung der Verbindung</td></tr>
+          <tr><td>synchron</td><td>Der Consumer wartet auf die Antwort (Request/Response). Thema dieser Station.</td><td>durchgezogene Linie</td></tr>
+          <tr><td>asynchron</td><td>Der Sender legt eine Nachricht beim Broker ab und arbeitet weiter. Thema der nächsten Station.</td><td><span class="t02-badge ar-r-async">Async / MOM</span></td></tr>
+          <tr><td>Service Registry</td><td>Verzeichnis, in dem Provider ihre Services veröffentlichen und Consumer sie finden.</td><td><span class="t02-badge ar-r-shared">Shared Service</span></td></tr>
+          <tr><td>SLA</td><td>Service Level Agreement: vereinbarte Qualität (Antwortzeit, Verfügbarkeit, Support, Strafen).</td><td>Notiz am Service</td></tr>
+          <tr><td>Vertrag</td><td>Maschinenlesbare Beschreibung der API: OpenAPI (REST), WSDL (SOAP), Schema (GraphQL), Metadaten (OData), <code>.proto</code> (gRPC).</td><td>–</td></tr>
+          <tr><td>Ressource</td><td>Bei REST ein Ding mit eigener Adresse, z. B. <code>/bestellungen/B-17</code>.</td><td>–</td></tr>
+          <tr><td>stateless</td><td>Zustandslos: Der Server merkt sich zwischen zwei Anfragen nichts. Jede Anfrage bringt alles mit.</td><td>–</td></tr>
+          <tr><td>Semantik</td><td>Was die Daten bedeuten: Norm (UBL, EDIFACT, IDoc, HL7) oder die Definition der Applikation (App-Def).</td><td>Beschriftung</td></tr>
+          <tr><td>Struktur / Codierung</td><td>Wie die Daten aufgebaut sind (XML, JSON, CSV, EDI) und wie die Zeichen codiert sind (UTF-8, ASCII, EBCDIC).</td><td>Beschriftung</td></tr>
+          <tr><td>API-Gateway</td><td>Vorgeschaltete Middleware für angebotene APIs: Anmeldung prüfen, weiterleiten, begrenzen, zwischenspeichern, überwachen.</td><td><span class="t02-badge ar-r-webapi">Web API</span></td></tr>
+          <tr><td>Token</td><td>Zeitlich begrenzter Ausweis (z. B. JWT), den der Consumer bei jeder Anfrage mitschickt (OAuth 2.0).</td><td>–</td></tr>
+          <tr><td>Participant (SoaML)</td><td>Teilnehmer, der Services anbietet und nutzt. Service-Port = angeboten, Request-Port = genutzt.</td><td>Komponente mit Ports</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 2 · SOA ===== -->
+  <section id="soa" data-kategorie="dienst">
+    <span class="eyebrow">Schritt 2 · Die Idee</span>
+    <h2>SOA: Systeme bieten einander Services an</h2>
+    <p class="prose">Früher hat jede Applikation alles selbst gemacht oder direkt in fremde Datenbanken geschaut. Das macht Systeme eng verflochten: Ändert eine Tabelle, brechen andere Programme. <b>SOA</b> dreht das um. Jedes System bietet seine Leistungen als Services über eine definierte Schnittstelle an. Wer etwas braucht, ruft den Service auf und kennt nur den Vertrag, nicht das Innere.</p>
+    <p class="prose">Damit gibt es in jeder Verbindung genau zwei Rollen: den <b>Service Provider</b>, der anbietet, und den <b>Service Consumer</b>, der nutzt. Diese Rollen beschriftest du in der Prüfung in Tabellen und Diagrammen.</p>
+    <div class="t02-karten">
+      <div class="t02-karte ar-r-business"><h4>Lose Kopplung</h4><p>Consumer und Provider kennen sich nur über den Vertrag. Der Provider darf sein Inneres ändern, solange der Vertrag gilt.</p></div>
+      <div class="t02-karte ar-r-webapi"><h4>Standardisierter Vertrag</h4><p>Die Schnittstelle ist beschrieben (OpenAPI, WSDL, <code>.proto</code>) und folgt Standards. So kann jedes Team und jede Firma sie nutzen.</p></div>
+      <div class="t02-karte ar-r-shared"><h4>Kapselung (Abstraktion)</h4><p>Der Service zeigt nur, was er kann, nicht wie. Datenbank, Sprache und Server bleiben verborgen.</p></div>
+      <div class="t02-karte ar-r-sync"><h4>Wiederverwendbarkeit</h4><p>Ein Service «Kunde prüfen» dient Webshop, Callcenter und Partnern. Einmal bauen, mehrfach nutzen.</p></div>
+      <div class="t02-karte ar-r-client"><h4>Auffindbarkeit</h4><p>Services sind in einem Verzeichnis (Registry) mit Vertrag und SLA beschrieben, damit Consumer sie finden.</p></div>
+      <div class="t02-karte ar-r-infra"><h4>Komponierbarkeit und Autonomie</h4><p>Aus Services lassen sich neue Abläufe zusammensetzen. Jeder Service läuft und skaliert für sich, möglichst zustandslos.</p></div>
+    </div>
+    <p class="ar-callout" data-kategorie="dienst"><b>Merke:</b> SOA ist ein <b>Kommunikations- und Integrationsstil</b>, kein Produkt. Ob die Services in einem Monolithen, in Microservices oder bei einem Partner laufen, spielt keine Rolle. Wichtig sind Rollen, Verträge und Standards.</p>
+    <div class="note falle"><b>Falle:</b> Provider und Consumer sind Rollen <b>einer Verbindung</b>, keine festen Eigenschaften eines Systems. Dasselbe System kann in einer Verbindung Provider und in der nächsten Consumer sein (Schritt 4).</div>
+  </section>
+
+  <!-- ===== 3 · SOA-Dreieck ===== -->
+  <section id="dreieck" data-kategorie="infrastruktur">
+    <span class="eyebrow">Schritt 3 · Publish, Find, Bind</span>
+    <h2>Das SOA-Dreieck mit Registry und SLA</h2>
+    <p class="prose">Das SOA-Dreieck zeigt, wie ein Consumer zu seinem Provider kommt. Drei Rollen, drei Schritte:</p>
+    <ol class="prose">
+      <li><b>Publish:</b> Der Provider veröffentlicht seinen Service in der <b>Registry</b>: Vertrag (z. B. WSDL oder OpenAPI), Adresse und die Bedingungen im <b>SLA</b>.</li>
+      <li><b>Find:</b> Der Consumer sucht in der Registry nach einem passenden Service und erhält Vertrag und Adresse.</li>
+      <li><b>Bind:</b> Der Consumer ruft den Provider <b>direkt</b> auf. Die Registry ist dabei nicht mehr im Spiel.</li>
+    </ol>
+    <p class="prose">Spiel beide Abläufe ab. Im zweiten fällt ein Hotel aus, und das Reiseportal findet über die Registry einen Ersatz. Schalte den Ausfall-Modus ein und tippe die Registry an: Laufende Aufrufe gehen weiter, nur das Finden neuer Provider klappt nicht mehr.</p>
+    <div id="t02-dreieck"></div>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Was steht in einem SLA?</h3>
+        <ul class="prose">
+          <li>Verfügbarkeit, z. B. 99.5 % pro Monat</li>
+          <li>Antwortzeit, z. B. 95 % der Aufrufe unter 800 ms</li>
+          <li>Durchsatz und Grenzen, z. B. 50 Anfragen pro Sekunde</li>
+          <li>Supportzeiten, Wartungsfenster, Meldewege</li>
+          <li>Folgen bei Verletzung (Gutschrift, Kündigungsrecht)</li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3>Registry heute</h3>
+        <p class="prose">Die klassische Registry (UDDI) hat sich im Internet kaum durchgesetzt. Die Idee lebt aber weiter: als API-Katalog im Developer-Portal eines API-Gateways, als Schnittstellen-Repository einer Integration Middleware oder als Service Registry für Microservices (Consul, Eureka, Kubernetes-DNS).</p>
+      </div>
+    </div>
+    <div id="t02-frage-dreieck"></div>
+    <div class="note falle"><b>Falle:</b> Die Registry ist kein Vermittler für die Daten. Nach dem Finden läuft der Aufruf direkt vom Consumer zum Provider. Wer im SOA-Dreieck einen Message Broker oder ein Gateway zwischen die beiden zeichnet, verwechselt Finden mit Aufrufen.</div>
+  </section>
+
+  <!-- ===== 4 · Kaskadierende Kette ===== -->
+  <section id="kaskade" data-kategorie="dienst">
+    <span class="eyebrow">Schritt 4 · Provider und Consumer zugleich</span>
+    <h2>Die kaskadierende Kette</h2>
+    <p class="prose">Ein Service braucht oft selbst andere Services, um seine Leistung zu erbringen. Der Bestellservice der (fiktiven) Alpenrad AG bietet dem Velo-Shop die Bestell-API an. Um eine Bestellung anzunehmen, fragt er den Lagerservice und den Zahlungsanbieter. Der Lagerservice wiederum bestellt Nachschub beim Lieferanten. So entsteht eine <b>Kette</b>: Jedes mittlere Glied ist <b>Provider</b> für das Glied davor und <b>Consumer</b> für das Glied dahinter.</p>
+    <div id="t02-kaskade"></div>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Was die Kette bedeutet</h3>
+        <ul class="prose">
+          <li>Jede synchrone Stufe addiert ihre Antwortzeit. Der Velo-Shop wartet auf alle.</li>
+          <li>Fällt das letzte Glied aus, steht ohne Gegenmassnahme die ganze Kette (Timeout, Fallback, Circuit Breaker).</li>
+          <li>Das SLA eines Glieds kann nie besser sein als das, was seine eigenen Provider garantieren.</li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3>Im Diagramm</h3>
+        <p class="prose">Ein Glied hat <b>Ball und Socket</b> zugleich: den Ball für die angebotene API, den Socket an der Linie zu seinem Provider. In der Schnittstellentabelle steht das Umsystem einmal als Consumer, einmal als Provider.</p>
+      </div>
+    </div>
+    <div id="t02-frage-kaskade"></div>
+  </section>
+
+  <!-- ===== 5 · REST ===== -->
+  <section id="rest" data-kategorie="client">
+    <span class="eyebrow">Schritt 5 · Web Service 1 von 5</span>
+    <h2>REST: Ressourcen, Verben, Statuscodes</h2>
+    <p class="prose"><b>REST</b> (<span lang="en">Representational State Transfer</span>) ist ein Architekturstil für Schnittstellen über HTTP. Es gibt <b>Ressourcen</b> mit eigener Adresse (URL), etwa <code>/velos/VR-204</code>. Was du damit tust, sagt das <b>HTTP-Verb</b>. Wie es ausging, sagt der <b>Statuscode</b>. Die Daten reisen meist als JSON in UTF-8. REST ist heute der häufigste Stil für Web-, Mobile- und Microservice-APIs.</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Ressourcen statt Aktionen</h3>
+        <p class="hint">Die Adresse ist ein Nomen in der Mehrzahl, die Aktion steckt im Verb.</p>
+        <ul class="prose">
+          <li>✓ <code>POST /bestellungen</code></li>
+          <li>✓ <code>GET /velos?typ=e-bike</code></li>
+          <li>✓ <code>DELETE /bestellungen/B-17</code></li>
+          <li>✗ <code>POST /erstelleBestellung</code></li>
+          <li>✗ <code>GET /loescheBestellung?id=17</code></li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3>Zustandslos (<span lang="en">stateless</span>)</h3>
+        <p class="prose">Jede Anfrage bringt alles mit, was der Server braucht, auch den Ausweis im Header <code>Authorization</code>. Der Server merkt sich zwischen zwei Anfragen nichts über den Client. Darum darf jede Anfrage auf einer anderen Instanz landen, und der Service lässt sich einfach skalieren.</p>
+      </div>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>HTTP-Verben am Beispiel der Bestell-API</caption>
+        <thead><tr><th scope="col">Verb</th><th scope="col">Zweck</th><th scope="col">idempotent</th><th scope="col">Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">GET</th><td>lesen, ändert nichts</td><td>ja</td><td><code>GET /bestellungen/B-17</code></td></tr>
+          <tr><th scope="row">POST</th><td>neu anlegen, Aktion auslösen</td><td><b>nein</b></td><td><code>POST /bestellungen</code></td></tr>
+          <tr><th scope="row">PUT</th><td>ganz ersetzen</td><td>ja</td><td><code>PUT /bestellungen/B-17/lieferadresse</code></td></tr>
+          <tr><th scope="row">PATCH</th><td>teilweise ändern</td><td>nicht garantiert</td><td><code>PATCH /bestellungen/B-17</code></td></tr>
+          <tr><th scope="row">DELETE</th><td>löschen</td><td>ja</td><td><code>DELETE /bestellungen/B-17</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Statuscodes: 2xx gut, 4xx Fehler des Consumers, 5xx Fehler des Providers</caption>
+        <thead><tr><th scope="col">Code</th><th scope="col">Bedeutung</th><th scope="col">Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">200 OK</th><td>Erfolg mit Inhalt</td><td>Velo gelesen</td></tr>
+          <tr><th scope="row">201 Created</th><td>neu angelegt, Adresse im Header <code>Location</code></td><td>Bestellung angelegt</td></tr>
+          <tr><th scope="row">204 No Content</th><td>Erfolg ohne Inhalt</td><td>Bestellung gelöscht</td></tr>
+          <tr><th scope="row">400 Bad Request</th><td>Anfrage falsch aufgebaut</td><td>Feld «anzahl» fehlt</td></tr>
+          <tr><th scope="row">401 Unauthorized</th><td>nicht angemeldet, Token fehlt oder abgelaufen</td><td>Token älter als 15 Minuten</td></tr>
+          <tr><th scope="row">403 Forbidden</th><td>angemeldet, aber nicht berechtigt</td><td>Händler will Preise ändern</td></tr>
+          <tr><th scope="row">404 Not Found</th><td>Ressource gibt es nicht</td><td>Velo VR-999</td></tr>
+          <tr><th scope="row">429 Too Many Requests</th><td>Rate Limit erreicht</td><td>mehr als 100 Anfragen pro Minute</td></tr>
+          <tr><th scope="row">500 / 503</th><td>Fehler im Provider / gerade nicht verfügbar</td><td>Programmfehler, Wartung</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>So geht ein REST-Aufruf über die Leitung</h3>
+    <p class="prose">Der Velo-Shop (Consumer in der Kette oben) legt beim Bestellservice (Provider) eine Bestellung an. Eine Leerzeile trennt Kopfzeilen und Inhalt.</p>
+    <pre class="code" data-sprache="HTTP · Anfrage des Velo-Shops"><code><span class="k">POST</span> /api/v1/bestellungen HTTP/1.1
+Host: api.alpenrad.example
+<mark>Authorization: Bearer eyJhbGciOiJSUzI1NiJ9…</mark>
+Content-Type: application/json; charset=utf-8
+
+{
+  <span class="s">"kunde"</span>: <span class="s">"K-5501"</span>,
+  <span class="s">"positionen"</span>: [ { <span class="s">"velo"</span>: <span class="s">"VR-204"</span>, <span class="s">"anzahl"</span>: <span class="n">1</span> } ],
+  <span class="s">"lieferung"</span>: <span class="s">"Filiale St. Gallen"</span>
+}</code></pre>
+    <pre class="code" data-sprache="HTTP · Antwort des Bestellservice"><code>HTTP/1.1 <mark><span class="n">201</span> Created</mark>
+Location: /api/v1/bestellungen/B-17
+Content-Type: application/json; charset=utf-8
+
+{ <span class="s">"id"</span>: <span class="s">"B-17"</span>, <span class="s">"status"</span>: <span class="s">"ANGENOMMEN"</span>, <span class="s">"total"</span>: <span class="n">2890.00</span> }</code></pre>
+    <h3>OpenAPI: der Vertrag zur REST-API</h3>
+    <p class="prose">Eine <b>OpenAPI</b>-Datei (früher Swagger) beschreibt alle Pfade, Parameter, Antworten und Datentypen in YAML oder JSON. Daraus entstehen eine klickbare Dokumentation, Client-Code und Tests. Das ist der Vertrag, den der Provider in der Registry oder im Developer-Portal veröffentlicht.</p>
+    <pre class="code" data-sprache="YAML · OpenAPI 3 (Ausschnitt Bestell-API)"><code><span class="k">openapi</span>: <span class="n">3.0.3</span>
+<span class="k">info</span>: { <span class="k">title</span>: Bestell-API Alpenrad, <span class="k">version</span>: <span class="n">1.2.0</span> }
+<span class="k">servers</span>: [ { <span class="k">url</span>: https://api.alpenrad.example/api/v1 } ]
+<span class="k">paths</span>:
+  <mark>/bestellungen/{id}</mark>:
+    <span class="k">get</span>:
+      <span class="k">summary</span>: Eine Bestellung lesen
+      <span class="k">security</span>: [ { <span class="k">oauth2</span>: [bestellungen.lesen] } ]
+      <span class="k">parameters</span>:
+        - { <span class="k">name</span>: id, <span class="k">in</span>: path, <span class="k">required</span>: <span class="n">true</span>, <span class="k">schema</span>: { <span class="k">type</span>: string } }
+      <span class="k">responses</span>:
+        <span class="s">"200"</span>:
+          <span class="k">description</span>: gefunden
+          <span class="k">content</span>:
+            <span class="k">application/json</span>:
+              <span class="k">schema</span>: { <span class="k">$ref</span>: <span class="s">"#/components/schemas/Bestellung"</span> }
+        <span class="s">"404"</span>: { <span class="k">description</span>: unbekannte Bestellung }
+<span class="k">components</span>:
+  <span class="k">schemas</span>:
+    <span class="k">Bestellung</span>:
+      <span class="k">type</span>: object
+      <span class="k">required</span>: [id, status]
+      <span class="k">properties</span>:
+        <span class="k">id</span>:     { <span class="k">type</span>: string, <span class="k">example</span>: B-17 }
+        <span class="k">status</span>: { <span class="k">type</span>: string, <span class="k">enum</span>: [ANGENOMMEN, VERSANDT, GELIEFERT] }
+        <span class="k">total</span>:  { <span class="k">type</span>: number }</code></pre>
+    <div class="note falle"><b>Falle:</b> POST ist nicht idempotent. Schickt der Velo-Shop nach einem Timeout dieselbe POST-Anfrage nochmals, entstehen zwei Bestellungen. Abhilfe: ein <code>Idempotency-Key</code> im Header, den der Provider sich merkt.</div>
+    <div class="note falle"><b>Falle:</b> 401 heisst «Wer bist du?» (nicht angemeldet). 403 heisst «Ich kenne dich, aber du darfst das nicht.»</div>
+    <div id="t02-wf-rest"></div>
+  </section>
+
+  <!-- ===== 6 · SOAP ===== -->
+  <section id="soap" data-kategorie="daten">
+    <span class="eyebrow">Schritt 6 · Web Service 2 von 5</span>
+    <h2>SOAP: formaler Vertrag mit WSDL und XML</h2>
+    <p class="prose"><b>SOAP</b> ist ein Protokoll für Web Services, bei dem jede Nachricht ein XML-Dokument mit einem <b>Envelope</b> ist: Im <b>Header</b> stehen Zusatzangaben wie Sicherheit (WS-Security), im <b>Body</b> der eigentliche Aufruf. Der Vertrag steht in einer <b>WSDL</b>-Datei (<span lang="en">Web Services Description Language</span>): Operationen, Nachrichten, XML-Schemas und Adresse. Werkzeuge erzeugen daraus Client-Code in Java, C# und vielen weiteren Sprachen.</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Wofür SOAP heute steht</h3>
+        <ul class="prose">
+          <li><b>Extranet und B2B:</b> Geschäftspartner, Behörden, Banken, EDI-Provider.</li>
+          <li>Streng typisierter Vertrag, gut für Systeme verschiedener Hersteller.</li>
+          <li>WS-Security: Signatur und Verschlüsselung einzelner Nachrichtenteile.</li>
+          <li>Viele bestehende Unternehmenssysteme (ERP, Versicherungen) bieten SOAP an.</li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3>Preis dafür</h3>
+        <ul class="prose">
+          <li>Viel XML: grössere Nachrichten, langsamer als JSON oder Protobuf.</li>
+          <li>Aufwendiger zu bauen und zu testen.</li>
+          <li>Immer POST an eine Adresse: kein HTTP-Caching wie bei REST.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="prose">Im Beispiel bestellen die Händler-ERPs der Velohändler über SOAP beim Bestellservice. Zuerst der Ausschnitt aus der WSDL, dann die Nachricht, die tatsächlich übertragen wird.</p>
+    <pre class="code" data-sprache="WSDL 1.1 · Ausschnitt HaendlerBestellung"><code>&lt;<span class="k">definitions</span> name=<span class="s">"HaendlerBestellung"</span>
+    targetNamespace=<span class="s">"urn:alpenrad:haendler:v1"</span> xmlns:tns=<span class="s">"urn:alpenrad:haendler:v1"</span> …&gt;
+  &lt;<span class="k">message</span> name=<span class="s">"BestellungAnfrage"</span>&gt;&lt;<span class="k">part</span> name=<span class="s">"bestellung"</span> element=<span class="s">"tns:Bestellung"</span>/&gt;&lt;/<span class="k">message</span>&gt;
+  &lt;<span class="k">message</span> name=<span class="s">"BestellungQuittung"</span>&gt;&lt;<span class="k">part</span> name=<span class="s">"quittung"</span> element=<span class="s">"tns:Quittung"</span>/&gt;&lt;/<span class="k">message</span>&gt;
+  &lt;<span class="k">portType</span> name=<span class="s">"HaendlerPort"</span>&gt;
+    <mark>&lt;<span class="k">operation</span> name=<span class="s">"BestellungAufgeben"</span>&gt;</mark>
+      &lt;<span class="k">input</span>  message=<span class="s">"tns:BestellungAnfrage"</span>/&gt;
+      &lt;<span class="k">output</span> message=<span class="s">"tns:BestellungQuittung"</span>/&gt;
+    &lt;/<span class="k">operation</span>&gt;
+  &lt;/<span class="k">portType</span>&gt;
+  &lt;<span class="k">service</span> name=<span class="s">"HaendlerService"</span>&gt;
+    &lt;<span class="k">port</span> name=<span class="s">"HaendlerPortSoap"</span> binding=<span class="s">"tns:HaendlerBinding"</span>&gt;
+      &lt;<span class="k">soap:address</span> location=<span class="s">"https://b2b.alpenrad.example/soap/haendler"</span>/&gt;
+    &lt;/<span class="k">port</span>&gt;
+  &lt;/<span class="k">service</span>&gt;
+&lt;/<span class="k">definitions</span>&gt;</code></pre>
+    <pre class="code" data-sprache="XML · SOAP-Envelope einer Händlerbestellung"><code>&lt;<span class="k">soap:Envelope</span> xmlns:soap=<span class="s">"http://schemas.xmlsoap.org/soap/envelope/"</span>
+               xmlns:h=<span class="s">"urn:alpenrad:haendler:v1"</span>&gt;
+  &lt;<span class="k">soap:Header</span>&gt;
+    <mark>&lt;<span class="k">wsse:Security</span>&gt; … Signatur und Zertifikat des Händlers … &lt;/<span class="k">wsse:Security</span>&gt;</mark>
+  &lt;/<span class="k">soap:Header</span>&gt;
+  &lt;<span class="k">soap:Body</span>&gt;
+    &lt;<span class="k">h:Bestellung</span>&gt;
+      &lt;<span class="k">h:Haendler</span>&gt;H-0420&lt;/<span class="k">h:Haendler</span>&gt;
+      &lt;<span class="k">h:Position</span> velo=<span class="s">"VR-204"</span> anzahl=<span class="s">"6"</span>/&gt;
+    &lt;/<span class="k">h:Bestellung</span>&gt;
+  &lt;/<span class="k">soap:Body</span>&gt;
+&lt;/<span class="k">soap:Envelope</span>&gt;</code></pre>
+    <div class="note falle"><b>Falle:</b> SOAP und REST sind keine Datenformate. SOAP ist ein Protokoll mit XML-Envelope, REST ein Stil auf HTTP. Die Semantik (z. B. UBL oder App-Def) beschreibst du in der Schnittstellenbeschreibung zusätzlich.</div>
+  </section>
+
+  <!-- ===== 7 · GraphQL, OData, gRPC ===== -->
+  <section id="weitere" data-kategorie="messaging">
+    <span class="eyebrow">Schritt 7 · Web Services 3 bis 5</span>
+    <h2>GraphQL, OData und gRPC</h2>
+    <h3>GraphQL: Der Consumer wählt die Felder</h3>
+    <p class="prose"><b>GraphQL</b> ist eine Abfragesprache für APIs. Es gibt eine einzige Adresse (meist <code>POST /graphql</code>) und ein <b>Schema</b> als Vertrag. Der Consumer schreibt hin, welche Felder er braucht, auch über mehrere Objekte hinweg. So bekommt die Velo-App nicht zu viel (<span lang="en">overfetching</span>) und muss nicht fünfmal nachfragen (<span lang="en">underfetching</span>). Das passt zu Frontends mit vielen verschiedenen Ansichten. Nachteile: HTTP-Caching ist schwieriger, und teure Abfragen müssen begrenzt werden.</p>
+    <pre class="code" data-sprache="GraphQL · Abfrage der Velo-App"><code><span class="k">query</span> VeloDetail {
+  velo(id: <span class="s">"VR-204"</span>) {
+    name
+    preis
+    <mark>verfuegbarkeit(filiale: <span class="s">"St. Gallen"</span>) { bestand naechsteLieferung }</mark>
+  }
+}</code></pre>
+    <pre class="code" data-sprache="JSON · Antwort, genau in der Form der Abfrage"><code>{ <span class="s">"data"</span>: { <span class="s">"velo"</span>: { <span class="s">"name"</span>: <span class="s">"Säntis E-Trail"</span>, <span class="s">"preis"</span>: <span class="n">2890</span>,
+  <span class="s">"verfuegbarkeit"</span>: { <span class="s">"bestand"</span>: <span class="n">3</span>, <span class="s">"naechsteLieferung"</span>: <span class="s">"2026-11-12"</span> } } } }</code></pre>
+
+    <h3>OData: Tabellen abfragen wie eine Datenbank</h3>
+    <p class="prose"><b>OData</b> (<span lang="en">Open Data Protocol</span>) ist ein OASIS-Standard auf REST-Basis. Daten erscheinen als <b>Entity Sets</b> mit Metadaten (<code>/odata/$metadata</code>). Der Consumer filtert, sortiert, wählt Spalten und zählt direkt in der URL. Excel und Power BI können OData-Feeds ohne Programmierung einlesen. Darum ist OData die typische Wahl für <b>Ad-hoc-Auswertungen</b>, etwa wenn eine Projektleitung oder ein Treuhänder Daten in Excel holt.</p>
+    <pre class="code" data-sprache="HTTP · OData-Abfrage aus Excel"><code><span class="k">GET</span> /odata/Bestellungen<mark>?$filter=Datum ge 2026-10-01 and Kanton eq 'SG'</mark>&amp;$select=Nummer,Total,Kanton&amp;$orderby=Total desc&amp;$top=<span class="n">10</span>&amp;$count=<span class="n">true</span>
+Accept: application/json</code></pre>
+    <pre class="code" data-sprache="JSON · Antwort (gekürzt)"><code>{ <span class="s">"@odata.context"</span>: <span class="s">"https://api.alpenrad.example/odata/$metadata#Bestellungen(Nummer,Total,Kanton)"</span>,
+  <span class="s">"@odata.count"</span>: <span class="n">214</span>,
+  <span class="s">"value"</span>: [ { <span class="s">"Nummer"</span>: <span class="s">"B-17"</span>, <span class="s">"Total"</span>: <span class="n">2890.0</span>, <span class="s">"Kanton"</span>: <span class="s">"SG"</span> } ] }</code></pre>
+
+    <h3>gRPC: schnelle Fernaufrufe im Intranet</h3>
+    <p class="prose"><b>gRPC</b> ist ein Framework für entfernte Prozeduraufrufe (<span lang="en">Remote Procedure Call</span>). Der Vertrag steht in einer <code>.proto</code>-Datei (Protocol Buffers). Ein Generator erzeugt daraus Client- und Server-Code. Die Nachrichten sind <b>binär</b> und klein, der Transport läuft über <b>HTTP/2</b> mit Streaming in beide Richtungen. Das macht gRPC ideal für Aufrufe <b>zwischen eigenen Services</b>, etwa vom Bestellservice zum Lagerservice. Browser und viele Partner-Werkzeuge sprechen gRPC nicht direkt.</p>
+    <pre class="code" data-sprache="Protobuf · lager.proto (Vertrag des Lagerservice)"><code><span class="k">syntax</span> = <span class="s">"proto3"</span>;
+<span class="k">package</span> alpenrad.lager.v1;
+
+<span class="k">service</span> Lager {
+  <mark><span class="k">rpc</span> ReserviereBestand (Reservation) <span class="k">returns</span> (ReservationsAntwort);</mark>
+  <span class="k">rpc</span> BeobachteBestand (VeloId) <span class="k">returns</span> (<span class="k">stream</span> Bestand);   <span class="c">// Server-Streaming</span>
+}
+<span class="k">message</span> VeloId      { <span class="k">string</span> velo = <span class="n">1</span>; }
+<span class="k">message</span> Reservation { <span class="k">string</span> velo = <span class="n">1</span>; <span class="k">int32</span> anzahl = <span class="n">2</span>; <span class="k">string</span> bestellung = <span class="n">3</span>; }
+<span class="k">message</span> ReservationsAntwort { <span class="k">bool</span> ok = <span class="n">1</span>; <span class="k">int32</span> rest = <span class="n">2</span>; }
+<span class="k">message</span> Bestand     { <span class="k">string</span> velo = <span class="n">1</span>; <span class="k">int32</span> anzahl = <span class="n">2</span>; }</code></pre>
+    <pre class="code" data-sprache="Java · Aufruf im Bestellservice (Consumer)"><code>ManagedChannel kanal = ManagedChannelBuilder.forAddress(<span class="s">"lagerservice"</span>, <span class="n">9090</span>)
+    .useTransportSecurity().build();
+LagerGrpc.LagerBlockingStub lager = LagerGrpc.newBlockingStub(kanal);
+
+ReservationsAntwort a = lager
+    <mark>.withDeadlineAfter(<span class="n">300</span>, TimeUnit.MILLISECONDS)</mark>   <span class="c">// synchron, aber nie endlos warten</span>
+    .reserviereBestand(Reservation.newBuilder()
+        .setVelo(<span class="s">"VR-204"</span>).setAnzahl(<span class="n">1</span>).setBestellung(<span class="s">"B-17"</span>).build());</code></pre>
+
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die fünf Web-Service-Arten im Vergleich</caption>
+        <thead><tr><th scope="col"></th><th scope="col">REST</th><th scope="col">SOAP</th><th scope="col">GraphQL</th><th scope="col">OData</th><th scope="col">gRPC</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Vertrag</th><td>OpenAPI</td><td>WSDL (Pflicht)</td><td>Schema (Pflicht)</td><td><code>$metadata</code></td><td><code>.proto</code> (Pflicht)</td></tr>
+          <tr><th scope="row">Format</th><td>JSON (frei)</td><td>XML</td><td>JSON</td><td>JSON oder XML</td><td>Protobuf, binär</td></tr>
+          <tr><th scope="row">Transport</th><td>HTTP</td><td>HTTP (meist)</td><td>HTTP POST</td><td>HTTP</td><td>HTTP/2</td></tr>
+          <tr><th scope="row">Stärke</th><td>einfach, verbreitet, cachebar</td><td>formal, WS-Security</td><td>Consumer wählt Felder</td><td>Filtern, Excel/BI</td><td>schnell, Streaming</td></tr>
+          <tr><th scope="row">Typischer Kontext</th><td>Intranet und Internet</td><td>Extranet, B2B</td><td>Frontends, Apps</td><td>Extranet, Auswertungen</td><td>Intranet, Service zu Service</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle:</b> gRPC kann streamen und ist trotzdem <b>synchron</b>: Beide Seiten müssen gleichzeitig laufen, nichts wird für später gepuffert. Asynchron heisst: über einen Message Broker.</div>
+  </section>
+
+  <!-- ===== 8 · Landkarte ===== -->
+  <section id="landkarte" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 8 · Interaktive Landkarte</span>
+    <h2>Welche API wann?</h2>
+    <p class="prose">Wähle die Kriterien deines Falls. Die Landkarte zeigt, wie gut jede API passt, und begründet die Empfehlung. Die Zonen der Karte sind die Heimat jeder API: links das Intranet, in der Mitte das Extranet mit Geschäftspartnern, rechts das offene Internet. Tippe eine API an, um ihren Steckbrief zu sehen.</p>
+    <p class="ar-callout" data-kategorie="zugang"><b>Regel aus der Gruppen-Anwendung 2:</b> Für Services im <b>Intranet</b> wählst du <b>REST oder gRPC</b>, im <b>Extranet</b> <b>SOAP oder OData</b>. Die Landkarte zeigt, warum diese Regel sinnvoll ist.</p>
+    <div class="card stack">
+      <div class="t02-presets"><span class="hint">Beispiel laden:</span><span id="t02-presets" class="t02-chips"></span></div>
+      <div class="t02-lk">
+        <div class="t02-krit" id="t02-krit"></div>
+        <div class="stack">
+          <div class="t02-karte-lk" id="t02-karte-lk" role="group" aria-label="Landkarte der Web-Service-Arten">
+            <div class="t02-zone" style="grid-column:1; grid-row:1">Intranet</div>
+            <div class="t02-zone" style="grid-column:2; grid-row:1">Extranet (B2B)</div>
+            <div class="t02-zone" style="grid-column:3; grid-row:1">Internet</div>
+          </div>
+          <div class="t02-empf card" id="t02-empf" aria-live="polite"></div>
+          <div id="t02-steck" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3>Üben: Welche API passt?</h3>
+      <p class="hint">Ordne jeden Fall der passenden Web-Service-Art zu. Achte auf Kontext und Consumer.</p>
+      <div id="t02-sort-api"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · API-Gateway ===== -->
+  <section id="gateway" data-kategorie="zugang">
+    <span class="eyebrow">Schritt 9 · Der Türsteher</span>
+    <h2>API-Gateway: Funktionen als Abläufe</h2>
+    <p class="prose">Ein <b>API-Gateway</b> steht zwischen den Consumern und deinen Services. Alle angebotenen APIs laufen über diese eine Tür. Das Gateway prüft, wer anfragt, leitet weiter, schützt vor Überlast, speichert Antworten zwischen und misst alles. Die Services dahinter bleiben schlank, weil sie sich um diese Querschnittsthemen nicht selbst kümmern.</p>
+    <p class="prose">Spiel die fünf Abläufe ab: Normalfall, Cache-Treffer, Rate Limit, ungültiges Token und Ausfall eines Services. Im Ausfall-Modus siehst du: Fällt das Gateway aus, sind alle angebotenen APIs weg. Darum betreibt man es immer mehrfach.</p>
+    <div id="t02-gateway"></div>
+    <div class="t02-karten">
+      <div class="t02-karte ar-r-shared"><h4>Authentifizierung und Autorisierung</h4><p>Token, API-Key oder Zertifikat prüfen, Rechte (Scopes) durchsetzen. Ohne gültigen Ausweis: 401, ohne Recht: 403.</p></div>
+      <div class="t02-karte ar-r-webapi"><h4>Routing und Load Balancing</h4><p><code>/bestellungen/**</code> geht zum Bestellservice, <code>/katalog/**</code> zum Katalogservice, verteilt auf mehrere Instanzen.</p></div>
+      <div class="t02-karte ar-r-async"><h4>Rate Limiting und Quoten</h4><p>Höchstens 100 Anfragen pro Minute und Consumer, sonst 429. Schützt vor Überlast, Missbrauch und Kostenexplosion.</p></div>
+      <div class="t02-karte ar-r-daten"><h4>Caching</h4><p>Häufige, gleiche Lesezugriffe (Katalog) kommen aus dem Cache. Das entlastet die Services und spart Zeit.</p></div>
+      <div class="t02-karte ar-r-infra"><h4>Monitoring und Abrechnung</h4><p>Zugriffe, Antwortzeiten und Fehler je API und Consumer messen. Grundlage für SLA-Nachweis und Verrechnung.</p></div>
+      <div class="t02-karte ar-r-sync"><h4>Protokollumwandlung</h4><p>Aussen REST mit JSON, innen gRPC oder SOAP. Das Gateway übersetzt, die Consumer merken nichts davon.</p></div>
+    </div>
+    <h3>Produkte und warum man sie wählt</h3>
+    <div class="t02-karten">
+      <div class="t02-karte ar-r-webapi"><h4>Kong Gateway</h4><p>Open Source auf NGINX-Basis, viele Plugins (Auth, Rate Limit, Cache), läuft on-prem, in Docker und Kubernetes.</p><p class="t02-klein">Warum: herstellerneutral und selbst betreibbar, gut für hybride Umgebungen.</p></div>
+      <div class="t02-karte ar-r-shared"><h4>Azure API Management</h4><p>Verwalteter Dienst mit Gateway, Developer-Portal und Richtlinien (Policies) in Azure.</p><p class="t02-klein">Warum: passt zu .NET- und Azure-Landschaften, Anmeldung über Entra ID, wenig Betrieb.</p></div>
+      <div class="t02-karte ar-r-sync"><h4>Amazon API Gateway</h4><p>Verwalteter Dienst in AWS, eng verbunden mit Lambda (Serverless), Cognito und CloudWatch.</p><p class="t02-klein">Warum: Abrechnung pro Aufruf, skaliert automatisch, ideal für Serverless in AWS.</p></div>
+      <div class="t02-karte ar-r-client"><h4>Apigee (Google Cloud)</h4><p>Volles API-Management mit Analytics, Monetarisierung und Developer-Portal.</p><p class="t02-klein">Warum: wenn APIs ein Produkt sind, das man an Partner verkauft und auswertet.</p></div>
+      <div class="t02-karte ar-r-business"><h4>Spring Cloud Gateway</h4><p>Gateway als Java-Bibliothek in einer Spring-Boot-Anwendung, Routen und Filter als Konfiguration.</p><p class="t02-klein">Warum: passt zu Java-/Spring-Microservices, das Team kennt die Technik schon.</p></div>
+    </div>
+    <p class="prose">So sehen Gateway-Funktionen als Konfiguration aus (Kong, deklarativ). Jede Zeile gehört zu einem Ablauf im Diagramm oben.</p>
+    <pre class="code" data-sprache="YAML · Kong deklarativ (Ausschnitt)"><code><span class="k">services</span>:
+  - <span class="k">name</span>: bestellservice
+    <span class="k">url</span>: http://bestellservice:8080          <span class="c"># Routing: Ziel hinter dem Gateway</span>
+    <span class="k">routes</span>: [ { <span class="k">paths</span>: [<span class="s">"/api/v1/bestellungen"</span>] } ]
+    <span class="k">plugins</span>:
+      - <span class="k">name</span>: jwt                              <span class="c"># Authentifizierung: Token prüfen → sonst 401</span>
+      - <span class="k">name</span>: rate-limiting
+        <mark><span class="k">config</span>: { <span class="k">minute</span>: <span class="n">100</span>, <span class="k">policy</span>: local }</mark>   <span class="c"># mehr → 429</span>
+  - <span class="k">name</span>: katalogservice
+    <span class="k">url</span>: http://katalogservice:8080
+    <span class="k">routes</span>: [ { <span class="k">paths</span>: [<span class="s">"/api/v1/katalog"</span>] } ]
+    <span class="k">plugins</span>:
+      - <span class="k">name</span>: proxy-cache                      <span class="c"># Caching: gleiche GET-Anfragen aus dem Cache</span>
+        <span class="k">config</span>: { <span class="k">cache_ttl</span>: <span class="n">300</span>, <span class="k">strategy</span>: memory }
+<span class="k">plugins</span>:
+  - <span class="k">name</span>: prometheus                         <span class="c"># Monitoring: Metriken für alle APIs</span></code></pre>
+    <p class="ar-callout" data-kategorie="zugang"><b>Modellierregel:</b> In der <b>Makroarchitektur mit Microservices</b> und in der <b>Mehrschichtenarchitektur</b> zeichnest du das API-Gateway <b>nicht</b> ein. In der <b>Integrationsarchitektur</b> gilt: In Echtzeit <b>angebotene</b> APIs laufen über das API-Gateway, in Echtzeit <b>konsumierte</b> APIs verbindest du direkt.</p>
+    <div class="note falle"><b>Falle:</b> Das Gateway schützt nur die APIs, die du <b>anbietest</b>. Ruft dein System selbst die API eines Zahlungsanbieters auf, läuft dieser Aufruf nicht über dein Gateway.</div>
+  </section>
+
+  <!-- ===== 10 · API-Security ===== -->
+  <section id="security" data-kategorie="sicherheit">
+    <span class="eyebrow">Schritt 10 · Absichern</span>
+    <h2>API-Security: TLS, Basic, API-Key, OAuth 2.0</h2>
+    <p class="prose">Eine API absichern heisst zwei Dinge: den <b>Weg</b> schützen, damit niemand mitliest, und den <b>Consumer</b> prüfen, damit nur Berechtigte zugreifen. TLS erledigt das Erste, die Verfahren Basic, API-Key und OAuth 2.0 das Zweite.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Verfahren</th><th scope="col">So funktioniert es</th><th scope="col">Stärke</th><th scope="col">Schwäche</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">TLS 1.2/1.3 (HTTPS), VPN</th><td>Verschlüsselt die Verbindung, Zertifikat beweist die Identität des Servers (bei mTLS auch des Clients).</td><td>Pflicht für jede API, Grundlage für alles andere</td><td>Prüft allein noch keine Rechte</td></tr>
+          <tr><th scope="row">Basic Auth</th><td>Benutzername und Passwort Base64-codiert im Header <code>Authorization: Basic …</code>.</td><td>sehr einfach</td><td>Passwort bei jeder Anfrage, Base64 ist keine Verschlüsselung</td></tr>
+          <tr><th scope="row">API-Key</th><td>Geheimer Schlüssel je Consumer im Header, z. B. <code>X-API-Key</code>.</td><td>einfach, Consumer unterscheidbar (Quoten, Abrechnung)</td><td>läuft nicht ab, keine Benutzerrechte, gestohlen = offen</td></tr>
+          <tr><th scope="row">OAuth 2.0</th><td>Der Consumer holt beim Authorization Server ein <b>zeitlich begrenztes Token</b> und schickt es als <code>Bearer</code> mit.</td><td>Standard im Web, Scopes, kurze Gültigkeit, kein Passwort beim Provider</td><td>mehr Teile (Authorization Server), mehr Konfiguration</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>OAuth 2.0 als Ablauf</h3>
+    <p class="prose">Drei Rollen: der <b>Client</b> (die Consumer-App), der <b>Authorization Server</b> (stellt Tokens aus, z. B. Keycloak oder Entra ID) und der <b>Resource Server</b> (die API des Providers). Spiel die drei Abläufe ab: Maschine zu Maschine (Client Credentials), mit Anmeldung einer Person (Authorization Code mit PKCE) und ein abgelaufenes Token.</p>
+    <div id="t02-oauth"></div>
+    <pre class="code" data-sprache="HTTP · Token holen (Client Credentials)"><code><span class="k">POST</span> /oauth2/token HTTP/1.1
+Host: login.alpenrad.example
+<mark>Authorization: Basic aGFlbmRsZXItYXBwOmdlaGVpbQ==</mark>          <span class="c">// client_id:client_secret</span>
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&amp;scope=bestellungen.lesen</code></pre>
+    <pre class="code" data-sprache="JSON · Antwort des Authorization Server"><code>{ <span class="s">"access_token"</span>: <span class="s">"eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJoYWVuZGxlci1hcHAi…"</span>,
+  <span class="s">"token_type"</span>: <span class="s">"Bearer"</span>, <mark><span class="s">"expires_in"</span>: <span class="n">900</span></mark>, <span class="s">"scope"</span>: <span class="s">"bestellungen.lesen"</span> }</code></pre>
+    <pre class="code" data-sprache="HTTP · API-Aufruf mit Token"><code><span class="k">GET</span> /api/v1/bestellungen/B-17 HTTP/1.1
+Host: api.alpenrad.example
+<mark>Authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJoYWVuZGxlci1hcHAi…</mark></code></pre>
+    <div class="note falle"><b>Falle:</b> Base64 ist <b>keine</b> Verschlüsselung. Basic Auth und API-Keys sind nur über TLS sicher.</div>
+    <div class="note falle"><b>Falle:</b> OAuth 2.0 regelt die <b>Berechtigung</b> (Zugriff mit Token). Wer die Person ist, liefert erst <b>OpenID Connect</b> mit dem ID-Token obendrauf.</div>
+    <div id="t02-frage-security"></div>
+  </section>
+
+  <!-- ===== 11 · Schnittstellenbeschreibung ===== -->
+  <section id="beschreibung" data-kategorie="daten">
+    <span class="eyebrow">Schritt 11 · Vorgabe des Moduls</span>
+    <h2>Eine Schnittstelle vollständig beschreiben</h2>
+    <p class="prose">In der Prüfung beschriftest du jede Verbindung zwischen zwei Applikationen. Die Vorgabe des Moduls: Die <b>Consumer App</b> ruft die <b>API der Provider App</b> auf. Am Ball steht die <b>Art der API</b>. An der Verbindung stehen die <b>Semantik</b> und, wenn sie vom Standard abweichen, <b>Struktur und Codierung</b>.</p>
+    <div class="t02-ebenen">
+      <div class="t02-ebene ar-r-business"><b>Semantik</b><span>Was bedeuten die Daten? Eine Norm wie UBL, EDIFACT, SAP IDoc, HL7, ISO 20022, ebXML, oder die eigene Definition der Applikation (App-Def).</span></div>
+      <div class="t02-ebene ar-r-sync"><b>Struktur</b><span>Wie sind die Daten aufgebaut? XML, JSON, CSV, EDI, Protobuf.</span></div>
+      <div class="t02-ebene ar-r-daten"><b>Codierung</b><span>Wie sind die Zeichen dargestellt? UTF-8, ASCII, EBCDIC (Grossrechner).</span></div>
+      <div class="t02-ebene ar-r-webapi"><b>Art der API</b><span>Wie kommen die Daten an? Der Name am Ball, z. B. SOAP, REST, AMQP, FTPS.</span></div>
+    </div>
+    <p class="ar-callout" data-kategorie="daten"><b>Standard:</b> Ohne Angabe gelten als Struktur und Codierung <b>XML in UTF-8</b>. Weicht es ab, schreibst du es hin, z. B. «CSV/EBCDIC» oder «EDI/ASCII».</p>
+    <h3>Arten von APIs, die du an den Ball schreiben kannst</h3>
+    <ul class="t02-arten">
+      <li><b>Web Services:</b> SOAP, REST, GraphQL, OData, gRPC</li>
+      <li><b>Async:</b> AMQP, MQTT, JMS</li>
+      <li><b>Datei:</b> HTTP(S), FTP(S), DFS</li>
+      <li><b>E-Mail:</b> SMTP, POP, IMAP</li>
+      <li><b>DBMS-Anbindung:</b> ADO.NET, OLE-DB, ODBC, JDBC</li>
+      <li><b>OLAP:</b> XMLA</li>
+      <li><b>Dokumente:</b> ODMA</li>
+    </ul>
+    <p class="prose">Das Referenzmodell unten zeigt die Vorgabe und zwei ausgefüllte Beispiele. Spiel die Abläufe ab und tippe Elemente und Notizen an.</p>
+    <div id="t02-schnittstelle"></div>
+    <div class="note falle"><b>Falle:</b> «REST» allein ist keine vollständige Beschreibung. Erst mit Semantik (z. B. «App-Def») und Struktur/Codierung (z. B. «JSON/UTF-8») weiss der Consumer, was er erhält.</div>
+    <div class="card stack">
+      <h3>Übung: Sechs Verbindungen beschreiben</h3>
+      <p class="hint">Lies jeden Fall und wähle Semantik, Struktur/Codierung und Art der API. Jede Angabe folgt aus dem Text.</p>
+      <div class="t02-zu" id="t02-zu"></div>
+      <div class="row"><button type="button" class="btn primary" id="t02-zu-pruefen">Prüfen</button><button type="button" class="btn" id="t02-zu-reset">Zurücksetzen</button><button type="button" class="btn" id="t02-zu-loesung">Lösung zeigen</button></div>
+      <p class="rueckmeldung leer" id="t02-zu-fb" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== 12 · SoaML ===== -->
+  <section id="soaml" data-kategorie="infrastruktur">
+    <span class="eyebrow">Schritt 12 · Services modellieren</span>
+    <h2>SoaML: Teilnehmer, Service-Ports und Request-Ports</h2>
+    <p class="prose"><b>SoaML</b> (<span lang="en">Service oriented architecture Modeling Language</span>) ist ein UML-Profil der OMG für Services. Es zeigt nicht, wie ein System innen gebaut ist, sondern <b>wer welche Services anbietet und nutzt</b>.</p>
+    <div class="t02-karten">
+      <div class="t02-karte ar-r-business"><h4>Participant</h4><p>Ein Teilnehmer: eine Applikation oder Organisationseinheit, die Services anbietet und nutzt.</p></div>
+      <div class="t02-karte ar-r-sync"><h4>Service-Port (Provider)</h4><p>Hier <b>bietet</b> der Teilnehmer einen Service an. In der Engine: der Ball mit dem Namen der API.</p></div>
+      <div class="t02-karte ar-r-webapi"><h4>Request-Port (Consumer)</h4><p>Hier <b>nutzt</b> der Teilnehmer einen fremden Service. In der Engine: der Socket an der Linie.</p></div>
+      <div class="t02-karte ar-r-async"><h4>Publisher und Subscriber</h4><p>Bei Nachrichten: Der Publisher veröffentlicht, Subscriber abonnieren, ein Broker verteilt.</p></div>
+    </div>
+    <p class="prose">Das Diagramm zeigt die Teilnehmer der Alpenrad AG in eigener, vereinfachter Darstellung. Es hält die Regel der Gruppen-Anwendung ein: Intranet mit gRPC oder REST, Extranet mit SOAP oder OData. Spiel die Abläufe ab und achte darauf, dass der Bestellservice Service-Ports und Request-Ports hat.</p>
+    <div id="t02-soaml"></div>
+    <div class="note"><b>Hinweis zur Notation:</b> In Visual Paradigm zeichnest du Ports als kleine Quadrate am Rand des Participants, mit Stereotyp «ServicePoint» oder «RequestPoint». Die Engine zeigt dasselbe mit Ball und Socket. Wichtig für die Bewertung: Rolle, Technologie und Nachricht sind für jede Verbindung erkennbar. Hier steht die Technologie am Port (Ball), die Nachricht an der Linie.</div>
+    <div class="card stack">
+      <h3>Üben: Welcher Port ist es?</h3>
+      <p class="hint">Ordne zu, aus Sicht des genannten Teilnehmers.</p>
+      <div id="t02-sort-soaml"></div>
+    </div>
+  </section>
+
+  <!-- ===== 13 · Schnittstellentabelle ===== -->
+  <section id="tabelle" data-kategorie="sicherheit">
+    <span class="eyebrow">Schritt 13 · Prüfungsaufgabe</span>
+    <h2>Schnittstellentabelle aus Anwendungsfällen</h2>
+    <p class="prose">In der Fallstudie leitest du aus der Ausgangslage eine Tabelle aller Applikationsschnittstellen ab. Die Spalten:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th scope="col">Spalte</th><th scope="col">Inhalt</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Applikation</th><td>das Umsystem, das eine Schnittstelle zu deiner Applikation hat</td></tr>
+          <tr><th scope="row">sync/async</th><td>synchron (Aufruf mit Antwort) oder asynchron (Nachricht über Broker)</td></tr>
+          <tr><th scope="row">Funktion</th><td>Rolle <b>des Umsystems</b>: bei sync Consumer oder Provider, bei async Sender oder Receiver</td></tr>
+          <tr><th scope="row">Protokoll (Semantik)</th><td>Transportprotokoll und in Klammern die semantische Norm, z. B. «SOAP (UBL)»</td></tr>
+          <tr><th scope="row">Anwendungsfall</th><td>in welchem Anwendungsfall die Schnittstelle vorkommt</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle:</b> In der Spalte «Funktion» steht die Rolle des <b>Umsystems</b>, nicht die deiner Applikation. Ruft deine Applikation die REST-API der Buchhaltung auf, ist die Buchhaltung <b>Provider</b>.</div>
+    <div class="note falle"><b>Falle:</b> Eigene Clients (Webshop, Mobile App deiner Applikation) sind keine Umsysteme. Sie gehören in den Client Tier, nicht in die Schnittstellentabelle. Excel oder Tools Dritter, die eine API von dir nutzen, sind dagegen Umsysteme.</div>
+    <div class="t02-fall">
+      <b>Mini-Fall: «BrauPlan» der Brauerei Bergquell AG (fiktiv)</b>
+      <ol class="prose">
+        <li><b>Rohstoffe bestellen:</b> BrauPlan bestellt Malz bei der Mälzerei Rheintal. Die Mälzerei bietet dafür eine SOAP-Schnittstelle an, die Bestellungen folgen der Norm UBL Order.</li>
+        <li><b>Absatz auswerten:</b> Die Verkaufsleitung wertet die Absatzzahlen ad hoc mit Excel aus. BrauPlan stellt dafür eine OData-Schnittstelle bereit (eigene Definition).</li>
+        <li><b>Sud überwachen:</b> Die Sudhaus-Steuerung schickt laufend Messwerte als Nachrichten über MQTT an den Broker, BrauPlan holt sie dort ab.</li>
+        <li><b>Lieferung avisieren:</b> BrauPlan legt Lieferavise als Nachricht beim Message Broker (AMQP) ab. Die Lagerverwaltung holt sie dort ab.</li>
+        <li><b>Bestand abfragen:</b> Der Webshop des Getränkehändlers Durstlöscher GmbH ruft in Echtzeit die REST-API von BrauPlan auf und fragt den Bestand ab.</li>
+        <li><b>Rechnung stellen:</b> BrauPlan übergibt Rechnungen dem EDI-Provider EDIhub über dessen SOAP-Schnittstelle, Semantik EDIFACT INVOIC.</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>Fülle die Schnittstellentabelle aus</h3>
+      <div class="tablebox">
+        <table class="tabelle t02-st" id="t02-st">
+          <thead><tr><th scope="col">Applikation</th><th scope="col">sync/async</th><th scope="col">Funktion</th><th scope="col">Protokoll (Semantik)</th><th scope="col">Anwendungsfall</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="row"><button type="button" class="btn primary" id="t02-st-pruefen">Prüfen</button><button type="button" class="btn" id="t02-st-reset">Zurücksetzen</button><button type="button" class="btn" id="t02-st-loesung">Lösung zeigen</button></div>
+      <p class="rueckmeldung leer" id="t02-st-fb" aria-live="polite"></p>
+    </div>
+    <p class="hint">Übe zusätzlich mit der Fallstudie Timesoft aus Moodle (Aufgabe «Applikationsschnittstellen identifizieren»).</p>
+  </section>
+
+  <!-- ===== 14 · Spiel ===== -->
+  <section id="spiel" data-kategorie="client">
+    <span class="eyebrow">Schritt 14 · Modellieren mit Sternen</span>
+    <h2>Spiel: SOA und APIs modellieren</h2>
+    <p class="prose">Vier Levels mit steigender Schwierigkeit: zuerst das SOA-Dreieck, dann Schnittstellen in der Modulnotation mit Ball, Socket und Beschriftung. Lege Komponenten in die Pakete, füge am Provider den Ball hinzu, verbinde den Consumer mit dem Ball und wähle das Protokoll. In der Palette liegen Fallen. In den Levels 2 bis 4 zeigt Tipp 1 ein Referenzmodell (kostet XP).</p>
+    <div id="t02-spiel"></div>
+  </section>
+
+  <!-- ===== Film ===== -->
+  <section id="film" data-kategorie="messaging">
+    <span class="eyebrow">▶ Lösungsfilm</span>
+    <h2>Schnittstellentabelle aus Anwendungsfällen ableiten</h2>
+    <p class="prose">Die Sprachschule Lingua Nova (fiktiv) baut die Applikation «KursPilot». Der Film füllt die Schnittstellentabelle Zeile für Zeile aus und zeigt, an welchen Wörtern du sync/async, Rolle und Protokoll erkennst.</p>
+    <div id="t02-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test" data-kategorie="zugang">
+    <span class="eyebrow">✓ Selbsttest</span>
+    <h2>Prüf dich selbst</h2>
+    <div id="t02-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick" data-kategorie="client">
+    <span class="eyebrow">Σ Merksätze</span>
+    <h2>Auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>SOA: Systeme bieten Services über standardisierte Verträge an. In jeder Verbindung gibt es einen <b>Provider</b> (Ball) und einen <b>Consumer</b> (Socket).</li>
+      <li>SOA-Dreieck: Publish in die Registry, Find durch den Consumer, Bind direkt zum Provider. Das SLA regelt die Qualität.</li>
+      <li>Kaskadierende Kette: Ein System kann Provider und Consumer zugleich sein; synchrone Glieder addieren Zeit und Ausfallrisiko.</li>
+      <li>REST für Web und Microservices, SOAP für formales B2B, GraphQL für Frontends, OData für Auswertungen, gRPC für schnelle interne Aufrufe. Regel: Intranet REST/gRPC, Extranet SOAP/OData.</li>
+      <li>API-Gateway für angebotene APIs: Auth, Routing, Rate Limit, Caching, Monitoring. Nicht in Makro- und Mehrschichtenarchitektur zeichnen.</li>
+      <li>Jede Schnittstelle: Art der API am Ball, Semantik an der Verbindung, Struktur/Codierung nur bei Abweichung von XML/UTF-8. In der Tabelle steht die Rolle des Umsystems.</li>
+    </ul>
+  </section>
+  <footer>AVSW · Station 2 · eigene Beispiele auf Basis der Modulunterlagen, keine Folieninhalte.</footer>
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/architektur.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const A = window.Architektur;
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  /* Referenzmodell «Schnittstellenbeschreibung» (aus dem Modellkatalog der AVSW-Seiten, eigene Darstellung) */
+  const REF_SCHNITTSTELLE = {
+    "id": "schnittstelle",
+    "titel": "Vorgabe Schnittstellenbeschreibung (Consumer, Provider, API)",
+    "kurz": "Jede Verbindung zwischen zwei Applikationen beschreibst du mit der Art der API, der semantischen Norm und, wenn nötig, Struktur und Codierung.",
+    "notation": "uml-komponenten",
+    "ansicht": "komponenten",
+    "richtung": "rechts",
+    "pakete": [
+      {
+        "id": "x-vorgabe",
+        "name": "Vorgabe",
+        "spalte": 0,
+        "zeile": 0,
+        "breite": 2,
+        "hoehe": 1,
+        "info": {
+          "was": "Das allgemeine Muster: Consumer App ruft die API einer Provider App.",
+          "wofuer": "Vorlage für jede Assoziation in deinen Diagrammen.",
+          "warum": "Erst mit Semantik, Struktur und Codierung ist eine Schnittstelle eindeutig beschrieben."
+        }
+      },
+      {
+        "id": "x-bsp",
+        "name": "Beispiele",
+        "spalte": 0,
+        "zeile": 1,
+        "breite": 2,
+        "hoehe": 2,
+        "info": {
+          "was": "Zwei ausgefüllte Beispiele.",
+          "wofuer": "Zeigen, wie die Beschriftung konkret aussieht.",
+          "warum": "So übst du, die Labels in der Prüfung vollständig zu setzen."
+        }
+      }
+    ],
+    "elemente": [
+      {
+        "id": "x-consumer",
+        "typ": "extern",
+        "rolle": "webapi",
+        "name": "Consumer App",
+        "in": "x-vorgabe",
+        "technologie": "beliebige Applikation",
+        "info": {
+          "was": "Die Applikation, die einen Dienst nutzt (Service Consumer).",
+          "kann": "Ruft die API auf und muss deren Semantik, Struktur und Codierung verstehen.",
+          "wofuer": "Beginn jeder Schnittstellenbeschreibung: Wer fragt an?",
+          "warum": "Die Rolle bestimmt die Richtung: Der Socket (Halbkreis) sitzt beim Consumer.",
+          "technologie": "beliebige Applikation"
+        },
+        "spalte": 0,
+        "zeile": 0
+      },
+      {
+        "id": "x-provider",
+        "typ": "extern",
+        "rolle": "sync",
+        "name": "Provider App",
+        "in": "x-vorgabe",
+        "technologie": "beliebige Applikation",
+        "schnittstellen": [
+          {
+            "id": "api",
+            "name": "API",
+            "seite": "oben"
+          }
+        ],
+        "info": {
+          "was": "Die Applikation, die den Dienst anbietet (Service Provider).",
+          "kann": "Stellt die API bereit und legt Art (z. B. SOAP, REST, AMQP) und Vertrag fest.",
+          "wofuer": "Ziel jeder Schnittstellenbeschreibung: Wer bietet an?",
+          "warum": "Der Ball (Kreis) gehört zum Provider. Am Ball notierst du die Art der API.",
+          "technologie": "beliebige Applikation"
+        },
+        "spalte": 0,
+        "zeile": 1
+      },
+      {
+        "id": "x-kasse",
+        "typ": "extern",
+        "rolle": "webapi",
+        "name": "Kassensystem der Filialen",
+        "in": "x-bsp",
+        "technologie": "Kassen-App",
+        "info": {
+          "was": "Beispiel für einen Consumer: Die Kasse fragt beim Bezahlen die Treuepunkte ab.",
+          "kann": "Ruft die REST-API synchron auf.",
+          "wofuer": "Zeigt eine Echtzeit-Abfrage mit applikationsspezifischer Semantik.",
+          "warum": "Die Semantik ist hier keine Norm, sondern die Definition des Providers (App-Def).",
+          "technologie": "Kassen-App"
+        },
+        "spalte": 0,
+        "zeile": 0
+      },
+      {
+        "id": "x-treue",
+        "typ": "extern",
+        "rolle": "sync",
+        "name": "Treueprogramm",
+        "in": "x-bsp",
+        "technologie": "Treueprogramm-Service",
+        "schnittstellen": [
+          {
+            "id": "rest",
+            "name": "REST",
+            "seite": "oben"
+          }
+        ],
+        "info": {
+          "was": "Beispiel für einen Provider mit REST-API.",
+          "kann": "Liefert Punktestand und bucht Punkte.",
+          "wofuer": "Zeigt die Default-Struktur JSON mit UTF-8.",
+          "warum": "REST mit JSON ist für Echtzeitabfragen schlank und verbreitet.",
+          "technologie": "Treueprogramm-Service"
+        },
+        "spalte": 0,
+        "zeile": 1
+      },
+      {
+        "id": "x-erp",
+        "typ": "extern",
+        "rolle": "webapi",
+        "name": "ERP Grosshandel",
+        "in": "x-bsp",
+        "technologie": "ERP-System",
+        "info": {
+          "was": "Beispiel für einen Consumer, der Rechnungen an Kunden übermittelt.",
+          "kann": "Übergibt Rechnungen an den EDI-Dienstleister.",
+          "wofuer": "Zeigt eine B2B-Verbindung mit normierter Semantik.",
+          "warum": "Hier legt eine Norm die Bedeutung fest, nicht eine der beiden Applikationen.",
+          "technologie": "ERP-System"
+        },
+        "spalte": 1,
+        "zeile": 0
+      },
+      {
+        "id": "x-edi",
+        "typ": "extern",
+        "rolle": "sync",
+        "name": "EDI Service Provider",
+        "in": "x-bsp",
+        "technologie": "EDI-Dienstleister",
+        "schnittstellen": [
+          {
+            "id": "soap",
+            "name": "SOAP",
+            "seite": "oben"
+          }
+        ],
+        "info": {
+          "was": "Beispiel für einen Provider im B2B: ein Intermediär für elektronische Geschäftsnachrichten.",
+          "kann": "Nimmt Nachrichten an, wandelt sie um und stellt sie dem Empfänger zu.",
+          "wofuer": "Zeigt Semantik EDIFACT mit Struktur EDI und Codierung ASCII.",
+          "warum": "Ein Managed Service Provider erspart dir eine eigene Verbindung zu jedem Geschäftspartner.",
+          "technologie": "EDI-Dienstleister"
+        },
+        "spalte": 1,
+        "zeile": 1
+      }
+    ],
+    "verbindungen": [
+      {
+        "id": "x-v1",
+        "von": "x-consumer",
+        "nach": "x-provider#api",
+        "art": "assoziation",
+        "label": "Semantik: ebXML, …, App-Def · Struktur/Codierung",
+        "format": "Struktur/Codierung",
+        "semantik": "ebXML, …, App-Def",
+        "info": "Die Beschriftung nennt die semantische Norm und, wenn vom Default XML/UTF-8 abweichend, Struktur und Codierung."
+      },
+      {
+        "id": "x-v2",
+        "von": "x-kasse",
+        "nach": "x-treue#rest",
+        "art": "assoziation",
+        "label": "App-Def · JSON/UTF-8",
+        "protokoll": "REST",
+        "format": "JSON/UTF-8",
+        "semantik": "App-Def",
+        "info": "Applikationsspezifische Semantik, JSON in UTF-8."
+      },
+      {
+        "id": "x-v3",
+        "von": "x-erp",
+        "nach": "x-edi#soap",
+        "art": "assoziation",
+        "label": "EDIFACT INVOIC · EDI/ASCII",
+        "protokoll": "SOAP",
+        "format": "EDI/ASCII",
+        "semantik": "EDIFACT INVOIC",
+        "info": "Normierte Semantik für Rechnungen, EDI-Struktur in ASCII."
+      }
+    ],
+    "notizen": [
+      {
+        "id": "x-n1",
+        "text": "Struktur/Codierung: Standard ist XML in UTF-8. Weitere Beispiele: CSV mit EBCDIC, EDI mit ASCII.",
+        "an": "x-consumer",
+        "spalte": 1,
+        "zeile": 0,
+        "in": "x-vorgabe"
+      },
+      {
+        "id": "x-n2",
+        "text": "Art der API am Ball: Web Services, Async, HTTP(S), FTP(S), E-Mail, DFS, DBMS-Anbindung, OLAP, ODMA",
+        "an": "x-provider",
+        "spalte": 1,
+        "zeile": 1,
+        "in": "x-vorgabe"
+      }
+    ],
+    "einschraenkungen": [],
+    "ablaeufe": [
+      {
+        "id": "x-a1",
+        "name": "Allgemeine Schnittstelle lesen",
+        "schritte": [
+          {
+            "von": "x-consumer",
+            "nach": "x-provider",
+            "art": "sync",
+            "text": "Der Consumer ruft die API auf. Am Ball steht, welche Art von API es ist (z. B. SOAP).",
+            "phase": "Aufruf"
+          },
+          {
+            "von": "x-provider",
+            "nach": "x-consumer",
+            "art": "sync",
+            "text": "Die Antwort hat dieselbe Semantik. Beide Seiten müssen sie kennen, sonst verstehen sie die Daten nicht.",
+            "phase": "Antwort"
+          }
+        ]
+      },
+      {
+        "id": "x-a2",
+        "name": "Beispiel Treuepunkte (REST, App-Def)",
+        "schritte": [
+          {
+            "von": "x-kasse",
+            "nach": "x-treue",
+            "art": "sync",
+            "text": "Die Kasse sendet GET /kunden/4711/punkte. Semantik nach der API-Definition des Treueprogramms (App-Def).",
+            "phase": "Aufruf"
+          },
+          {
+            "von": "x-treue",
+            "nach": "x-kasse",
+            "art": "sync",
+            "text": "Antwort als JSON in UTF-8: {\"punkte\": 320}.",
+            "phase": "Antwort"
+          }
+        ]
+      },
+      {
+        "id": "x-a3",
+        "name": "Beispiel Rechnung über EDI-Provider",
+        "schritte": [
+          {
+            "von": "x-erp",
+            "nach": "x-edi",
+            "art": "sync",
+            "text": "Das ERP übergibt die Rechnung per SOAP. Inhalt nach der Norm EDIFACT INVOIC, Struktur EDI, Codierung ASCII.",
+            "phase": "Übergabe"
+          },
+          {
+            "bei": "x-edi",
+            "text": "Der EDI-Provider stellt die Nachricht dem Kunden in dessen Format zu. Den Kunden selbst modellierst du nicht."
+          },
+          {
+            "von": "x-edi",
+            "nach": "x-erp",
+            "art": "sync",
+            "text": "Der Provider bestätigt die Übernahme.",
+            "phase": "Quittung"
+          }
+        ]
+      }
+    ],
+    "regeln": [
+      "Jede Assoziation trägt die semantische Norm (z. B. UBL, IDoc, EDIFACT, App-Def) und, wenn nötig, Struktur und Codierung.",
+      "Ohne Angabe gilt als Struktur und Codierung XML mit UTF-8.",
+      "Der Ball mit Namen der API gehört zum Provider, der Socket zum Consumer.",
+      "In der Schnittstellentabelle steht: sync oder async, Rolle (Consumer/Provider bzw. Sender/Receiver), Protokoll mit Semantik in Klammern, Anwendungsfall.",
+      "Die Rolle in der Tabelle ist die Rolle des Umsystems, nicht die deiner Applikation."
+    ]
+  };
+  /* Spiel-Levels dieser Station (vorbereitete Levels plus eigenes Level «api-wahl») */
+  const LEVELS = [
+    {
+      "id": "l1",
+      "titel": "SOA-Dreieck: Dienst finden und nutzen",
+      "schwierigkeit": 1,
+      "auftrag": "<p>Die Bergbahnen Alpstein (fiktiv) zeigen in ihrer <span data-baustein=\"app\">Bergbahn-App</span> das aktuelle Wetter. Der <span data-baustein=\"wetter\">Wetterdienst</span> veröffentlicht seine Schnittstelle in der <span data-baustein=\"registry\">Service Registry</span> der Region (publish). Die App sucht dort einen passenden Dienst (find) und ruft danach den Wetterdienst direkt synchron auf (bind).</p><p>Ziehe die drei Rollen des SOA-Dreiecks auf die Fläche und verbinde sie.</p>",
+      "ansicht": "komponenten",
+      "palette": [
+        {
+          "id": "broker",
+          "typ": "broker",
+          "name": "Message Broker",
+          "ablenker": true,
+          "falle": "Im SOA-Dreieck gibt es keinen Broker. Nach der Suche ruft der Consumer den Provider direkt auf."
+        },
+        {
+          "id": "registry",
+          "typ": "dienst",
+          "name": "Service Registry"
+        },
+        {
+          "id": "db",
+          "typ": "datenbank",
+          "name": "Wetter-Datenbank",
+          "ablenker": true,
+          "falle": "Die Datenbank ist das Innere des Providers und gehört nicht zum SOA-Dreieck."
+        },
+        {
+          "id": "wetter",
+          "typ": "dienst",
+          "name": "Wetterdienst"
+        },
+        {
+          "id": "app",
+          "typ": "mobile",
+          "name": "Bergbahn-App"
+        }
+      ],
+      "loesung": {
+        "elemente": [
+          "app",
+          "wetter",
+          "registry"
+        ],
+        "verbindungen": [
+          {
+            "von": "wetter",
+            "nach": "registry",
+            "art": "sync",
+            "warum": "Publish: Der Provider veröffentlicht seine Schnittstellenbeschreibung in der Registry."
+          },
+          {
+            "von": "app",
+            "nach": "registry",
+            "art": "sync",
+            "warum": "Find: Der Consumer sucht in der Registry nach einem passenden Dienst."
+          },
+          {
+            "von": "app",
+            "nach": "wetter",
+            "art": "sync",
+            "warum": "Bind: Der Consumer ruft den gefundenen Provider direkt und synchron auf."
+          }
+        ]
+      },
+      "arten": [
+        "sync",
+        "async"
+      ],
+      "zielzeit": 300,
+      "erklaerung": "Das SOA-Dreieck hat drei Rollen: Provider, Consumer und Registry. Die Registry vermittelt nur das Finden; der Aufruf läuft direkt zwischen Consumer und Provider, geregelt durch ein SLA."
+    },
+    {
+      "id": "l2",
+      "titel": "Schnittstellen beschreiben: Semantik, Struktur, Codierung",
+      "schwierigkeit": 2,
+      "modus": "uml",
+      "auftrag": "<p>Die Möbelkette Holzwerk (fiktiv) hat zwei Verbindungen. Das <span data-baustein=\"kasse\">Kassensystem</span> fragt beim Bezahlen in Echtzeit den Punktestand beim <span data-baustein=\"treue\">Treueprogramm</span> ab. Das Treueprogramm bietet dafür eine REST-API an; die Bedeutung der Daten legt es selbst fest (App-Def), übertragen wird JSON in UTF-8.</p><p>Das <span data-baustein=\"erp\">ERP</span> übergibt Rechnungen an den <span data-baustein=\"edi\">EDI Service Provider</span>, der eine SOAP-Schnittstelle anbietet. Die Rechnungen folgen der Norm EDIFACT INVOIC, Struktur EDI, Codierung ASCII.</p><p>Ordne Consumer und Provider den Paketen zu und beschrifte beide Assoziationen mit dem Protokoll.</p>",
+      "ansicht": "komponenten",
+      "pakete": [
+        {
+          "id": "p-consumer",
+          "name": "Consumer Apps",
+          "spalte": 0,
+          "zeile": 0
+        },
+        {
+          "id": "p-provider",
+          "name": "Provider Apps",
+          "spalte": 1,
+          "zeile": 0
+        }
+      ],
+      "palette": [
+        {
+          "id": "websrv",
+          "typ": "dienst",
+          "rolle": "extern",
+          "name": "Web-Server Apache",
+          "ablenker": true,
+          "falle": "Ein Web-Server ist Infrastruktur, keine Komponente. Du nennst ihn höchstens im Paketnamen."
+        },
+        {
+          "id": "kunde",
+          "typ": "extern",
+          "rolle": "extern",
+          "name": "Kunden von Holzwerk",
+          "ablenker": true,
+          "falle": "Die Kunden erreichst du über den EDI Service Provider. Du zeichnest den Provider mit seiner Schnittstelle, nicht die Geschäftspartner."
+        },
+        {
+          "id": "treue",
+          "typ": "extern",
+          "rolle": "sync",
+          "name": "Treueprogramm",
+          "schnittstellen": [
+            {
+              "id": "rest",
+              "name": "REST"
+            }
+          ]
+        },
+        {
+          "id": "edi",
+          "typ": "extern",
+          "rolle": "sync",
+          "name": "EDI Service Provider",
+          "schnittstellen": [
+            {
+              "id": "soap",
+              "name": "SOAP"
+            }
+          ]
+        },
+        {
+          "id": "erp",
+          "typ": "extern",
+          "rolle": "webapi",
+          "name": "ERP"
+        },
+        {
+          "id": "kasse",
+          "typ": "extern",
+          "rolle": "webapi",
+          "name": "Kassensystem"
+        }
+      ],
+      "protokolle": [
+        "AMQP",
+        "FTP",
+        "SOAP",
+        "OData",
+        "GraphQL",
+        "REST"
+      ],
+      "loesung": {
+        "elemente": [
+          {
+            "id": "kasse",
+            "paket": "p-consumer"
+          },
+          {
+            "id": "erp",
+            "paket": "p-consumer"
+          },
+          {
+            "id": "treue",
+            "paket": "p-provider"
+          },
+          {
+            "id": "edi",
+            "paket": "p-provider"
+          }
+        ],
+        "verbindungen": [
+          {
+            "von": "kasse",
+            "nach": "treue#rest",
+            "art": "assoziation",
+            "protokoll": "REST",
+            "warum": "Echtzeit-Abfrage des Punktestands; Semantik App-Def, Struktur JSON, Codierung UTF-8."
+          },
+          {
+            "von": "erp",
+            "nach": "edi#soap",
+            "art": "assoziation",
+            "protokoll": "SOAP",
+            "warum": "Übergabe der Rechnungen; Semantik EDIFACT INVOIC, Struktur EDI, Codierung ASCII."
+          }
+        ],
+        "beschreibungen": [
+          {
+            "id": "treue",
+            "optionen": [
+              "Service Provider mit REST-API: liefert dem Kassensystem in Echtzeit den Punktestand. Die Semantik legt das Treueprogramm selbst fest (App-Def), übertragen wird JSON in UTF-8.",
+              "Service Consumer, der beim Kassensystem Punkte abfragt. Die Daten sind nach EDIFACT normiert und in ASCII codiert.",
+              "Message Broker, der Punktestände asynchron an alle Kassen verteilt."
+            ],
+            "richtig": 0
+          },
+          {
+            "id": "edi",
+            "optionen": [
+              "Interne Datenbank des ERP, in der Rechnungen als JSON gespeichert werden.",
+              "Managed Service Provider für B2B-Nachrichten: nimmt Rechnungen per SOAP an und stellt sie den Kunden zu. Semantik EDIFACT INVOIC, Struktur EDI, Codierung ASCII.",
+              "API-Gateway, das die REST-API des Treueprogramms nach aussen anbietet."
+            ],
+            "richtig": 1
+          }
+        ]
+      },
+      "gewichte": {
+        "komponenten": 2,
+        "pakete": 1,
+        "stereotypen": 1,
+        "verbindungen": 2,
+        "beschriftungen": 1,
+        "beschreibungen": 1
+      },
+      "zielzeit": 480,
+      "erklaerung": "Zu jeder Schnittstelle gehören die Art der API (am Ball des Providers), die semantische Norm und, falls nicht XML/UTF-8, Struktur und Codierung.",
+      "referenz": "schnittstelle"
+    },
+    {
+      "id": "api-wahl",
+      "titel": "Bestellplattform: die passende API je Kontext",
+      "schwierigkeit": 2,
+      "modus": "uml",
+      "referenz": "soaml-t02",
+      "auftrag": "<p>Die Velofirma Rotsee Bikes (fiktiv) betreibt ihre eigenen Services als <b>«Microservice»</b>. Regel aus der IT-Strategie: Im Intranet sprechen Services gRPC, im Extranet SOAP oder OData.</p><p>Im Intranet reserviert der <span data-baustein=\"auftrag\">Auftragsservice</span> Material beim <span data-baustein=\"material\">Materialservice</span>, der dafür eine gRPC-Schnittstelle anbietet. Im Extranet geben die <span data-baustein=\"haendler\">Händler-ERPs</span> ihre Aufträge über eine SOAP-Schnittstelle des Auftragsservice auf. Die <span data-baustein=\"revision\">Revisionsstelle</span> wertet die Aufträge mit Excel über eine OData-Schnittstelle des Auftragsservice aus. Der Auftragsservice lässt jede Anzahlung beim <span data-baustein=\"bank\">Bankdienst</span> über dessen SOAP-Schnittstelle prüfen.</p><p>Lege die Teilnehmer in die Pakete, setze bei den eigenen Services den Stereotyp, ergänze die Bälle bei den Providern und beschrifte jede Verbindung mit dem Protokoll.</p>",
+      "ansicht": "komponenten",
+      "pakete": [
+        {
+          "id": "p-intra",
+          "name": "Rotsee Bikes – Intranet",
+          "spalte": 0,
+          "zeile": 0
+        },
+        {
+          "id": "p-extra",
+          "name": "Extranet",
+          "spalte": 1,
+          "zeile": 0
+        }
+      ],
+      "palette": [
+        {
+          "id": "auftrag",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Auftragsservice",
+          "stereotypen": [
+            "Microservice",
+            "EJB",
+            "C#"
+          ],
+          "schnittstellen": [
+            {
+              "id": "soap",
+              "name": "SOAP Aufträge"
+            },
+            {
+              "id": "odata",
+              "name": "OData Aufträge"
+            }
+          ]
+        },
+        {
+          "id": "material",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Materialservice",
+          "stereotypen": [
+            "Microservice",
+            "EJB",
+            "C#"
+          ],
+          "schnittstellen": [
+            {
+              "id": "grpc",
+              "name": "gRPC Material"
+            }
+          ]
+        },
+        {
+          "id": "db",
+          "typ": "datenbank",
+          "rolle": "daten",
+          "name": "Auftrags-DB",
+          "ablenker": true,
+          "falle": "Die Datenbank ist das Innere des Auftragsservice. In der Teilnehmersicht zeigst du nur Services und ihre Schnittstellen."
+        },
+        {
+          "id": "haendler",
+          "typ": "extern",
+          "rolle": "webapi",
+          "name": "Händler-ERPs"
+        },
+        {
+          "id": "revision",
+          "typ": "extern",
+          "rolle": "webapi",
+          "name": "Revisionsstelle"
+        },
+        {
+          "id": "bank",
+          "typ": "extern",
+          "rolle": "sync",
+          "name": "Bankdienst",
+          "schnittstellen": [
+            {
+              "id": "soap",
+              "name": "SOAP Anzahlung"
+            }
+          ]
+        },
+        {
+          "id": "broker",
+          "typ": "broker",
+          "rolle": "async",
+          "name": "Message Broker",
+          "ablenker": true,
+          "falle": "Alle Verbindungen im Auftrag sind synchrone Aufrufe. Ein Broker gehört nur zu asynchronen Nachrichten."
+        }
+      ],
+      "protokolle": [
+        "REST",
+        "SOAP",
+        "GraphQL",
+        "OData",
+        "gRPC",
+        "AMQP",
+        "FTP"
+      ],
+      "loesung": {
+        "elemente": [
+          {
+            "id": "auftrag",
+            "paket": "p-intra",
+            "stereotyp": "Microservice"
+          },
+          {
+            "id": "material",
+            "paket": "p-intra",
+            "stereotyp": "Microservice"
+          },
+          {
+            "id": "haendler",
+            "paket": "p-extra"
+          },
+          {
+            "id": "revision",
+            "paket": "p-extra"
+          },
+          {
+            "id": "bank",
+            "paket": "p-extra"
+          }
+        ],
+        "verbindungen": [
+          {
+            "von": "auftrag",
+            "nach": "material#grpc",
+            "art": "assoziation",
+            "protokoll": "gRPC",
+            "warum": "Intranet: gRPC. Der Auftragsservice ist Consumer, der Materialservice Provider mit dem Ball."
+          },
+          {
+            "von": "haendler",
+            "nach": "auftrag#soap",
+            "art": "assoziation",
+            "protokoll": "SOAP",
+            "warum": "Extranet: Die Händler-ERPs nutzen die SOAP-Schnittstelle des Auftragsservice."
+          },
+          {
+            "von": "revision",
+            "nach": "auftrag#odata",
+            "art": "assoziation",
+            "protokoll": "OData",
+            "warum": "Auswertung mit Excel im Extranet: OData."
+          },
+          {
+            "von": "auftrag",
+            "nach": "bank#soap",
+            "art": "assoziation",
+            "protokoll": "SOAP",
+            "warum": "Der Auftragsservice ist hier Consumer der SOAP-Schnittstelle des Bankdienstes."
+          }
+        ],
+        "beschreibungen": [
+          {
+            "id": "auftrag",
+            "richtig": 2,
+            "optionen": [
+              "Reiner Provider im Extranet, der nur Aufträge annimmt und selbst keine Services nutzt.",
+              "Datenbank für Aufträge, die Händler und Revision direkt per SQL abfragen.",
+              "Microservice im Intranet mit zwei Service-Ports (SOAP für Händler, OData für die Revision). Er nutzt als Consumer den Materialservice per gRPC und den Bankdienst per SOAP, ist also Provider und Consumer zugleich."
+            ]
+          }
+        ]
+      },
+      "gewichte": {
+        "komponenten": 2,
+        "pakete": 1,
+        "stereotypen": 1,
+        "verbindungen": 2,
+        "beschriftungen": 1,
+        "beschreibungen": 1
+      },
+      "zielzeit": 600,
+      "erklaerung": "Die Regel Intranet REST/gRPC, Extranet SOAP/OData legt die Art der API fest. Der Ball gehört immer zum Provider der jeweiligen Verbindung."
+    },
+    {
+      "id": "l3",
+      "titel": "Teilnehmer mit Service- und Request-Ports (SoaML-Sicht)",
+      "schwierigkeit": 3,
+      "modus": "uml",
+      "auftrag": "<p>Die Spedition Transalpin AG (fiktiv) beschreibt ihre Services als Teilnehmer mit Service-Ports (angeboten, Ball) und Request-Ports (genutzt, Socket). Regel aus der IT-Strategie: Im Intranet sprechen Services gRPC, im Extranet SOAP oder OData.</p><p>Das <span data-baustein=\"portal\">Auftragsportal</span> fordert Touren bei der <span data-baustein=\"touren\">Tourenplanung</span> an. Die Tourenplanung meldet jede grenzüberschreitende Tour beim <span data-baustein=\"zoll\">Zollsystem der Behörde</span> an, das eine SOAP-Schnittstelle anbietet. Die <span data-baustein=\"tracking\">Sendungsverfolgung</span> fragt bei der Tourenplanung die voraussichtliche Ankunft ab und bietet den <span data-baustein=\"kunden\">Kundensystemen</span> die Sendungsdaten über OData an. Portal, Tourenplanung und Sendungsverfolgung laufen im Intranet, Zollsystem und Kundensysteme im Extranet.</p>",
+      "ansicht": "komponenten",
+      "pakete": [
+        {
+          "id": "p-intranet",
+          "name": "Transalpin – Intranet",
+          "spalte": 0,
+          "zeile": 0,
+          "breite": 2
+        },
+        {
+          "id": "p-extranet",
+          "name": "Extranet",
+          "spalte": 2,
+          "zeile": 0
+        }
+      ],
+      "palette": [
+        {
+          "id": "touren",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Tourenplanung",
+          "schnittstellen": [
+            {
+              "id": "grpc",
+              "name": "gRPC Touren"
+            }
+          ]
+        },
+        {
+          "id": "broker",
+          "typ": "broker",
+          "rolle": "async",
+          "name": "Message Broker",
+          "ablenker": true,
+          "falle": "Alle Verbindungen sind synchrone Service-Aufrufe; einen Broker gäbe es nur bei Publisher und Subscriber."
+        },
+        {
+          "id": "zoll",
+          "typ": "extern",
+          "rolle": "sync",
+          "name": "Zollsystem der Behörde",
+          "schnittstellen": [
+            {
+              "id": "soap",
+              "name": "SOAP Zoll"
+            }
+          ]
+        },
+        {
+          "id": "tracking",
+          "typ": "dienst",
+          "rolle": "business",
+          "name": "Sendungsverfolgung",
+          "schnittstellen": [
+            {
+              "id": "odata",
+              "name": "OData Sendungen"
+            }
+          ]
+        },
+        {
+          "id": "portal",
+          "typ": "dienst",
+          "rolle": "webapi",
+          "name": "Auftragsportal"
+        },
+        {
+          "id": "gw",
+          "typ": "gateway",
+          "rolle": "sync",
+          "name": "API-Gateway",
+          "ablenker": true,
+          "falle": "Die Teilnehmersicht zeigt Services und ihre Ports, keine Middleware."
+        },
+        {
+          "id": "kunden",
+          "typ": "extern",
+          "rolle": "webapi",
+          "name": "Kundensysteme"
+        }
+      ],
+      "protokolle": [
+        "REST",
+        "AMQP",
+        "SOAP",
+        "GraphQL",
+        "SMTP",
+        "gRPC",
+        "OData"
+      ],
+      "loesung": {
+        "elemente": [
+          {
+            "id": "portal",
+            "paket": "p-intranet"
+          },
+          {
+            "id": "touren",
+            "paket": "p-intranet"
+          },
+          {
+            "id": "tracking",
+            "paket": "p-intranet"
+          },
+          {
+            "id": "zoll",
+            "paket": "p-extranet"
+          },
+          {
+            "id": "kunden",
+            "paket": "p-extranet"
+          }
+        ],
+        "verbindungen": [
+          {
+            "von": "portal",
+            "nach": "touren#grpc",
+            "art": "assoziation",
+            "protokoll": "gRPC",
+            "warum": "Intranet: gRPC. Das Portal nutzt den Service-Port der Tourenplanung."
+          },
+          {
+            "von": "touren",
+            "nach": "zoll#soap",
+            "art": "assoziation",
+            "protokoll": "SOAP",
+            "warum": "Extranet: SOAP. Die Tourenplanung ist hier Consumer (Request-Port)."
+          },
+          {
+            "von": "tracking",
+            "nach": "touren#grpc",
+            "art": "assoziation",
+            "protokoll": "gRPC",
+            "warum": "Intranet: gRPC. Die Sendungsverfolgung ist Consumer der Tourenplanung."
+          },
+          {
+            "von": "kunden",
+            "nach": "tracking#odata",
+            "art": "assoziation",
+            "protokoll": "OData",
+            "warum": "Extranet: OData. Die Kundensysteme lesen Sendungsdaten."
+          }
+        ],
+        "beschreibungen": [
+          {
+            "id": "touren",
+            "optionen": [
+              "Reiner Consumer, der nur Daten beim Zollsystem abholt und selbst nichts anbietet.",
+              "Teilnehmer mit Service-Port (gRPC) für Portal und Sendungsverfolgung und mit Request-Port zum Zollsystem. Er ist Provider und Consumer zugleich, ein Glied einer kaskadierenden Kette.",
+              "Externer Teilnehmer im Extranet, der seine Touren per OData veröffentlicht."
+            ],
+            "richtig": 1
+          },
+          {
+            "id": "tracking",
+            "optionen": [
+              "Teilnehmer, der den Kundensystemen Sendungsdaten per OData anbietet und dafür bei der Tourenplanung per gRPC die Ankunftszeit abfragt.",
+              "Teilnehmer, der Sendungen asynchron über einen Broker an die Kunden verteilt.",
+              "Datenbank der Tourenplanung, in der die Sendungen gespeichert sind."
+            ],
+            "richtig": 0
+          }
+        ]
+      },
+      "gewichte": {
+        "komponenten": 2,
+        "pakete": 1,
+        "stereotypen": 1,
+        "verbindungen": 2,
+        "beschriftungen": 1,
+        "beschreibungen": 1
+      },
+      "zielzeit": 720,
+      "erklaerung": "Ein Service kann zugleich Provider und Consumer sein (kaskadierende Kette). In der Teilnehmersicht (SoaML) zeigst du angebotene Ports als Ball und genutzte als Socket.",
+      "referenz": "soaml-t02"
+    }
+  ];
+
+  /* ===== 0 · Sortierer Provider/Consumer ===== */
+  L.sortierer("#t02-sort-start", {
+    kategorien: ["Provider", "Consumer"],
+    elemente: [
+      { html: "Der Wetterdienst bietet eine API mit der Prognose an. Rolle des <b>Wetterdienstes</b>?", kategorie: "Provider", erklaerung: "Er bietet den Dienst an." },
+      { html: "Die Bergbahn-App ruft die Prognose ab. Rolle der <b>App</b>?", kategorie: "Consumer", erklaerung: "Sie nutzt den Dienst des Wetterdienstes." },
+      { html: "Der Webshop lässt Zahlungen beim Zahlungsanbieter autorisieren. Rolle des <b>Zahlungsanbieters</b>?", kategorie: "Provider", erklaerung: "Er bietet die Autorisierung an, der Webshop fragt an." },
+      { html: "Excel liest Umsätze über die OData-Schnittstelle des ERP. Rolle von <b>Excel</b>?", kategorie: "Consumer", erklaerung: "Excel ruft die API des ERP auf." },
+      { html: "Der Bestellservice ruft den Lagerservice auf. Rolle des <b>Bestellservice</b> in dieser Verbindung?", kategorie: "Consumer", erklaerung: "In dieser Verbindung fragt er an. Gegenüber dem Webshop wäre er Provider." },
+      { html: "Der Zoll stellt Behörden-Formulare als SOAP-Service bereit. Rolle des <b>Zolls</b>?", kategorie: "Provider", erklaerung: "Er stellt den Service bereit." }
+    ]
+  });
+
+  /* ===== 3 · SOA-Dreieck ===== */
+  A.diagramm("#t02-dreieck", {
+    titel: "SOA-Dreieck: Reiseportal findet Hotel-Services (fiktiv)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "d-reg", name: "Service Registry", spalte: 0, zeile: 0, breite: 2,
+        info: { was: "Das Verzeichnis der Services.", wofuer: "Hier treffen sich Angebot und Nachfrage.", warum: "Consumer müssen Provider finden, ohne ihre Adressen fest einzubauen." } },
+      { id: "d-cons", name: "Service Consumer", spalte: 0, zeile: 1,
+        info: { was: "Wer einen Service nutzt.", wofuer: "Ruft nach dem Finden den Provider direkt auf.", warum: "Der Socket an der Linie zeigt die genutzte Schnittstelle." } },
+      { id: "d-prov", name: "Service Provider", spalte: 1, zeile: 1,
+        info: { was: "Wer einen Service anbietet.", wofuer: "Veröffentlicht Vertrag und SLA und beantwortet Aufrufe.", warum: "Der Ball zeigt die angebotene API." } }
+    ],
+    elemente: [
+      { id: "reg", typ: "dienst", rolle: "shared", name: "Service Registry", in: "d-reg", technologie: "API-Katalog im Developer-Portal",
+        schnittstellen: [{ id: "such", name: "Verzeichnis-API", seite: "unten" }],
+        info: { was: "Verzeichnis aller veröffentlichten Services mit Vertrag, Adresse und SLA.", kann: "Services aufnehmen (publish) und auf Anfrage passende Services liefern (find).", wofuer: "Damit Consumer Provider finden und austauschen können, ohne Adressen fest einzubauen.", technologie: "Früher UDDI; heute API-Katalog eines API-Managements, Schnittstellen-Repository einer Integration Middleware oder Consul/Eureka bei Microservices.", warum: "Ein zentrales Verzeichnis macht Services auffindbar und wiederverwendbar, ein Grundprinzip von SOA." } },
+      { id: "portal", typ: "dienst", rolle: "webapi", name: "Reiseportal", in: "d-cons", technologie: "Web-Applikation",
+        info: { was: "Ein Reiseportal, das Hotelzimmer vermittelt.", kann: "Passende Hotel-Services in der Registry suchen und dann direkt aufrufen.", wofuer: "Kundinnen sehen freie Zimmer mehrerer Hotels an einem Ort.", technologie: "Web-Applikation mit REST-Client", warum: "Als Consumer kennt es nur Vertrag und Adresse aus der Registry, nicht das Innere der Hotels." } },
+      { id: "hotel1", typ: "extern", rolle: "sync", name: "Zimmerbuchung Hotel Säntisblick", in: "d-prov", technologie: "REST-API",
+        schnittstellen: [{ id: "rest", name: "REST Zimmer", seite: "links" }],
+        info: { was: "Service Provider: Buchungsservice eines Hotels.", kann: "Freie Zimmer liefern und Reservationen annehmen.", wofuer: "Verkauft Zimmer über viele Portale, ohne für jedes etwas Eigenes zu bauen.", technologie: "REST mit JSON, Vertrag als OpenAPI", warum: "Ein veröffentlichter Standard-Vertrag erlaubt beliebig viele Consumer." } },
+      { id: "hotel2", typ: "extern", rolle: "sync", name: "Zimmerbuchung Hotel Seeblick", in: "d-prov", technologie: "REST-API",
+        schnittstellen: [{ id: "rest", name: "REST Zimmer", seite: "links" }],
+        info: { was: "Zweiter Provider mit demselben Vertrag.", kann: "Dasselbe wie Hotel Säntisblick.", wofuer: "Alternative, wenn ein Provider ausfällt oder sein SLA nicht hält.", technologie: "REST mit JSON, gleicher Vertrag", warum: "Gleicher Vertrag heisst austauschbar: lose Kopplung in Reinform." } }
+    ],
+    verbindungen: [
+      { id: "p1", von: "hotel1", nach: "reg#such", label: "publish · Vertrag + SLA", info: "Das Hotel veröffentlicht Vertrag, Adresse und SLA." },
+      { id: "p2", von: "hotel2", nach: "reg#such", label: "publish", info: "Auch das zweite Hotel ist eingetragen." },
+      { id: "f1", von: "portal", nach: "reg#such", label: "find", info: "Das Portal sucht passende Services." },
+      { id: "b1", von: "portal", nach: "hotel1#rest", label: "bind · REST · JSON", info: "Danach ruft das Portal den Provider direkt auf." }
+    ],
+    notizen: [{ id: "n-sla", text: "SLA: 99.5 % verfügbar, 95 % der Antworten unter 800 ms, Support werktags", an: "hotel1" }],
+    ablaeufe: [
+      { id: "pfb", name: "Publish, Find, Bind", schritte: [
+        { von: "hotel1", nach: "reg", text: "<b>Publish:</b> Hotel Säntisblick trägt seinen Service ein: OpenAPI-Vertrag, Adresse und SLA.", phase: "Publish" },
+        { von: "hotel2", nach: "reg", text: "Hotel Seeblick tut dasselbe mit demselben Vertrag.", parallel: true, phase: "Publish" },
+        { von: "portal", nach: "reg", text: "<b>Find:</b> Das Reiseportal sucht «Zimmer buchen in der Ostschweiz».", phase: "Find" },
+        { von: "reg", nach: "portal", text: "Die Registry liefert die passenden Services mit Adresse, Vertrag und SLA.", phase: "Find" },
+        { von: "portal", nach: "hotel1", text: "<b>Bind:</b> Das Portal ruft Hotel Säntisblick direkt auf: <code>GET /zimmer?von=2026-12-20</code>.", phase: "Bind" },
+        { von: "hotel1", nach: "portal", text: "Antwort <code>200 OK</code> mit den freien Zimmern, innerhalb des SLA.", phase: "Bind" }
+      ] },
+      { id: "ersatz", name: "Provider fällt aus: Ersatz finden", schritte: [
+        { von: "portal", nach: "hotel1", text: "Das Portal ruft Hotel Säntisblick auf …", phase: "Aufruf" },
+        { bei: "hotel1", text: "… keine Antwort nach 2 Sekunden. Das SLA ist verletzt.", fehler: true, phase: "Aufruf" },
+        { von: "portal", nach: "reg", text: "Das Portal fragt die Registry erneut nach einem Service mit gleichem Vertrag.", phase: "Neu suchen" },
+        { von: "reg", nach: "portal", text: "Die Registry nennt Hotel Seeblick.", phase: "Neu suchen" },
+        { von: "portal", nach: "hotel2", text: "Das Portal bindet sich an Hotel Seeblick. Gleicher Vertrag, also kein Umbau nötig.", phase: "Ersatz" },
+        { von: "hotel2", nach: "portal", text: "Freie Zimmer kommen zurück. Lose Kopplung zahlt sich aus.", phase: "Ersatz" }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  L.auswahl("#t02-frage-dreieck", {
+    frage: "Das Reiseportal hat Hotel Säntisblick über die Registry gefunden. Wie läuft danach der Aufruf «freie Zimmer»?",
+    optionen: ["Über die Registry, die die Anfrage weiterleitet.", "Direkt vom Reiseportal zum Hotel-Service.", "Über einen Message Broker, damit das Portal nicht warten muss."],
+    richtig: 1,
+    erklaerung: "Bind heisst: Der Consumer ruft den Provider direkt auf. Die Registry vermittelt nur das Finden."
+  });
+
+  /* ===== 4 · Kaskadierende Kette ===== */
+  A.diagramm("#t02-kaskade", {
+    titel: "Kaskadierende Kette bei der Alpenrad AG (fiktiv)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "k-cons", name: "Service Consumer", spalte: 0, zeile: 0 },
+      { id: "k-platt", name: "Alpenrad Bestellplattform", spalte: 1, zeile: 0,
+        info: { was: "Die eigenen Services der Alpenrad AG.", wofuer: "Hier liegen die Glieder, die Provider und Consumer zugleich sind.", warum: "Die Kette macht sichtbar, wovon eine Antwort abhängt." } },
+      { id: "k-prov", name: "Service Provider (extern)", spalte: 2, zeile: 0 }
+    ],
+    elemente: [
+      { id: "shop", typ: "web", rolle: "webapi", name: "Velo-Shop", in: "k-cons", technologie: "Web App",
+        info: { was: "Online-Shop der Alpenrad AG.", kann: "Bestellungen der Kundschaft an die Bestell-API übergeben.", wofuer: "Anfang der Kette: Er wartet auf die Antwort aller Glieder.", technologie: "SPA im Browser mit REST-Aufrufen", warum: "Als reiner Consumer braucht er nur den Vertrag der Bestell-API." } },
+      { id: "bestell", typ: "dienst", rolle: "business", name: "Bestellservice", in: "k-platt", technologie: "Java, Spring Boot",
+        schnittstellen: [{ id: "rest", name: "REST Bestellung", seite: "links" }],
+        info: { was: "Provider der Bestell-API und Consumer von Lager und Zahlung.", kann: "Bestellung prüfen, Bestand reservieren, Zahlung autorisieren, Bestellung speichern.", wofuer: "Mittleres Glied der Kette: ohne Lager und Zahlung keine Bestellung.", technologie: "Spring Boot mit REST-Controller und gRPC-Client", warum: "REST für den Shop, gRPC intern: jeweils die passende API für den Kontext." } },
+      { id: "lager", typ: "dienst", rolle: "business", name: "Lagerservice", in: "k-platt", technologie: "Go",
+        schnittstellen: [{ id: "grpc", name: "gRPC Bestand", seite: "oben" }],
+        info: { was: "Provider für Bestand und Reservation, Consumer des Lieferanten.", kann: "Bestand reservieren und bei Unterschreitung Nachschub bestellen.", wofuer: "Zweites mittleres Glied der Kette.", technologie: "Go mit gRPC-Server", warum: "Kurze, häufige interne Aufrufe: gRPC ist schnell und typisiert." } },
+      { id: "zahlung", typ: "extern", rolle: "sync", name: "Zahlungsanbieter", in: "k-prov", technologie: "REST-API",
+        schnittstellen: [{ id: "rest", name: "REST Zahlung", seite: "links" }],
+        info: { was: "Externer Service Provider für Kartenzahlungen.", kann: "Zahlungen autorisieren und verbuchen.", wofuer: "Ende eines Asts der Kette.", technologie: "REST mit JSON, OAuth 2.0", warum: "Kartenzahlungen selbst abzuwickeln wäre teuer und streng reguliert." } },
+      { id: "lieferant", typ: "extern", rolle: "sync", name: "Lieferant Velotech", in: "k-prov", technologie: "SOAP-Service",
+        schnittstellen: [{ id: "soap", name: "SOAP Nachschub", seite: "links" }],
+        info: { was: "Externer Lieferant mit B2B-Schnittstelle.", kann: "Nachschubbestellungen annehmen und Liefertermine bestätigen.", wofuer: "Letztes Glied der Kette.", technologie: "SOAP mit WSDL, Semantik UBL Order", warum: "Im Extranet sind formale Verträge und Normen üblich." } }
+    ],
+    verbindungen: [
+      { id: "k1", von: "shop", nach: "bestell#rest", protokoll: "REST", format: "App-Def/JSON" },
+      { id: "k2", von: "bestell", nach: "lager#grpc", protokoll: "gRPC", format: "Protobuf" },
+      { id: "k3", von: "bestell", nach: "zahlung#rest", protokoll: "REST", format: "JSON" },
+      { id: "k4", von: "lager", nach: "lieferant#soap", protokoll: "SOAP", format: "UBL Order" }
+    ],
+    ablaeufe: [
+      { id: "kette", name: "Bestellung läuft durch die Kette", schritte: [
+        { von: "shop", nach: "bestell", text: "Der Velo-Shop (Consumer) ruft <code>POST /bestellungen</code> beim Bestellservice (Provider) auf und wartet.", phase: "Anfrage" },
+        { von: "bestell", nach: "lager", text: "Jetzt ist der Bestellservice selbst <b>Consumer</b>: Er reserviert per gRPC Bestand beim Lagerservice.", phase: "Anfrage" },
+        { von: "lager", nach: "lieferant", text: "Der Bestand fällt unter die Mindestmenge. Der Lagerservice bestellt als Consumer Nachschub beim Lieferanten (SOAP).", phase: "Anfrage" },
+        { von: "lieferant", nach: "lager", text: "Der Lieferant bestätigt den Liefertermin.", phase: "Antworten" },
+        { von: "lager", nach: "bestell", text: "Der Lagerservice meldet: reserviert.", phase: "Antworten" },
+        { von: "bestell", nach: "zahlung", text: "Der Bestellservice lässt die Zahlung autorisieren (zweiter Provider).", phase: "Antworten" },
+        { von: "zahlung", nach: "bestell", text: "Zahlung autorisiert.", phase: "Antworten" },
+        { von: "bestell", nach: "shop", text: "Erst jetzt antwortet der Bestellservice <code>201 Created</code>. Die Wartezeit des Shops ist die Summe aller Glieder.", phase: "Antworten" }
+      ] },
+      { id: "timeout", name: "Letztes Glied hängt", schritte: [
+        { von: "shop", nach: "bestell", text: "Der Shop bestellt.", phase: "Anfrage" },
+        { von: "bestell", nach: "lager", text: "Der Bestellservice wartet auf den Lagerservice …", phase: "Anfrage" },
+        { von: "lager", nach: "lieferant", text: "… der Lagerservice wartet auf den Lieferanten …", phase: "Anfrage", fehler: true },
+        { bei: "lieferant", text: "Der Lieferant antwortet nicht. Ohne Timeout warten alle Glieder, Threads bleiben belegt.", fehler: true, phase: "Störung" },
+        { von: "lager", nach: "bestell", text: "Besser: Der Lagerservice bricht nach 2 s ab, reserviert trotzdem und holt die Nachschubbestellung später nach.", phase: "Gegenmassnahme" },
+        { von: "bestell", nach: "shop", text: "Die Bestellung gelingt. Lehre: Jedes Glied braucht ein Timeout und einen Plan B.", phase: "Gegenmassnahme" }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  L.auswahl("#t02-frage-kaskade", {
+    frage: "In der Kette oben: Welche Rolle hat der <b>Lagerservice</b>?",
+    optionen: ["Nur Provider, weil er eine gRPC-Schnittstelle hat.", "Nur Consumer, weil er beim Lieferanten bestellt.", "Provider für den Bestellservice und Consumer des Lieferanten."],
+    richtig: 2,
+    erklaerung: "Ein Glied in der Mitte einer kaskadierenden Kette hat beide Rollen, je nach Verbindung."
+  });
+
+  /* ===== 5 · REST Wahr/Falsch ===== */
+  L.wahrFalsch("#t02-wf-rest", {
+    titel: "REST: wahr oder falsch?",
+    aussagen: [
+      { html: "Ein REST-Server speichert zwischen zwei Anfragen den Zustand der Sitzung des Clients.", wahr: false, erklaerung: "REST ist stateless. Jede Anfrage bringt alles mit, z. B. das Token." },
+      { html: "<code>GET /bestellungen/B-17</code> darf beliebig oft wiederholt werden, ohne etwas zu ändern.", wahr: true, erklaerung: "GET liest nur und ist idempotent." },
+      { html: "<code>POST /loescheBestellung?id=17</code> ist guter REST-Stil.", wahr: false, erklaerung: "Die Aktion gehört ins Verb: <code>DELETE /bestellungen/17</code>." },
+      { html: "Ein Consumer mit abgelaufenem Token erhält 401.", wahr: true, erklaerung: "401 heisst: nicht (mehr) angemeldet." },
+      { html: "OpenAPI ist das Datenformat, in dem REST-Nachrichten übertragen werden.", wahr: false, erklaerung: "OpenAPI ist der Vertrag (Beschreibung). Übertragen wird meist JSON." }
+    ]
+  });
+
+  /* ===== 8 · Landkarte «Welche API wann?» ===== */
+  const APIS = {
+    rest: { name: "REST", rolle: "ar-r-webapi", heimat: "überall, besonders Intranet und Internet", kurz: "Ressourcen und HTTP-Verben, meist JSON.",
+      vertrag: "OpenAPI (YAML/JSON)", format: "JSON, frei wählbar", transport: "HTTP/1.1 oder HTTP/2", stark: "einfach, jede Sprache, cachebar, gut für öffentliche APIs", schwach: "kein Pflicht-Vertrag, Über- oder Unterabfrage bei vielen Ansichten", bsp: "Velo-Shop legt Bestellung an: <code>POST /bestellungen</code>" },
+    soap: { name: "SOAP", rolle: "ar-r-daten", heimat: "Extranet, B2B", kurz: "XML-Envelope mit WSDL-Vertrag.",
+      vertrag: "WSDL mit XML-Schema", format: "XML", transport: "meist HTTP POST", stark: "formaler Vertrag, WS-Security, Normen wie UBL oder EDIFACT", schwach: "schwerfällig, grosse Nachrichten, kein HTTP-Caching", bsp: "Händler-ERP sendet Bestellung, EDI-Provider nimmt Rechnungen an" },
+    graphql: { name: "GraphQL", rolle: "ar-r-client", heimat: "Internet, Frontends", kurz: "Consumer wählt die Felder selbst.",
+      vertrag: "GraphQL-Schema", format: "JSON", transport: "HTTP POST an eine Adresse", stark: "genau die Daten, die eine Ansicht braucht, ein Aufruf statt vieler", schwach: "Caching und Kostenkontrolle schwieriger", bsp: "Velo-App holt Name, Preis und Bestand einer Filiale in einem Aufruf" },
+    odata: { name: "OData", rolle: "ar-r-sync", heimat: "Extranet, Auswertungen", kurz: "Tabellen filtern und zählen in der URL.",
+      vertrag: "<code>$metadata</code> (CSDL)", format: "JSON oder XML", transport: "HTTP (REST-basiert)", stark: "Ad-hoc-Abfragen, Excel und Power BI lesen ohne Programmierung", schwach: "datenorientiert, weniger für fachliche Operationen", bsp: "Treuhänder wertet Umsätze in Excel aus" },
+    grpc: { name: "gRPC", rolle: "ar-r-business", heimat: "Intranet, Service zu Service", kurz: "Binäre Fernaufrufe über HTTP/2.",
+      vertrag: "<code>.proto</code> (Protocol Buffers)", format: "Protobuf, binär", transport: "HTTP/2, Streaming", stark: "sehr schnell, typisiert, Code-Generierung, Streaming", schwach: "nicht direkt im Browser, Partner-Werkzeuge kennen es selten", bsp: "Bestellservice reserviert Bestand beim Lagerservice" }
+  };
+  const ORDNUNG = ["grpc", "soap", "graphql", "odata", "rest"];
+  const GRUPPEN = [
+    { id: "kontext", name: "Wo läuft die Verbindung?", einzeln: true, kriterien: [
+      { id: "intranet", name: "Intranet (eigene Services)", p: { grpc: 3, rest: 2, graphql: 1, soap: 0, odata: 0 },
+        w: { grpc: "Im Intranet kontrollierst du beide Seiten: gRPC ist schnell, binär, und der <code>.proto</code>-Vertrag erzeugt Code für alle Sprachen.", rest: "REST ist auch intern einfach und überall bekannt.", soap: "Für interne Services ist SOAP meist zu schwerfällig.", odata: "OData lohnt sich vor allem, wenn Externe Daten auswerten." } },
+      { id: "extranet", name: "Extranet (Geschäftspartner)", p: { soap: 3, odata: 3, rest: 1, graphql: 0, grpc: -2 },
+        w: { soap: "Geschäftspartner erwarten einen formalen Vertrag (WSDL), Normen wie UBL und WS-Security.", odata: "Partner lesen Daten standardisiert mit Filtern, ohne dass du für jede Frage einen Endpunkt baust.", rest: "REST geht auch, aber ohne Pflicht-Vertrag musst du mehr absprechen.", grpc: "Firewalls und Werkzeuge der Partner unterstützen HTTP/2 und Protobuf selten." } },
+      { id: "internet", name: "Internet (öffentlich)", p: { rest: 3, graphql: 2, odata: 1, soap: 0, grpc: -2 },
+        w: { rest: "Öffentliche APIs: Jede Sprache und jedes Werkzeug spricht REST mit JSON, HTTP-Caching hilft bei vielen Zugriffen.", graphql: "Gut für eigene Frontends im Internet.", grpc: "Browser sprechen gRPC nicht direkt, es braucht gRPC-Web und einen Proxy.", soap: "Für unbekannte Consumer im Internet ist SOAP zu aufwendig." } }
+    ] },
+    { id: "consumer", name: "Wer ist der Consumer?", einzeln: true, kriterien: [
+      { id: "service", name: "Eigener Service", p: { grpc: 3, rest: 2, graphql: 0, soap: 0, odata: 0 },
+        w: { grpc: "Service zu Service mit vielen kurzen Aufrufen: gRPC spart Zeit und Bandbreite.", rest: "REST ist die einfache Alternative, wenn Tempo nicht entscheidend ist." } },
+      { id: "frontend", name: "SPA oder Mobile App", p: { graphql: 3, rest: 2, odata: 0, soap: -2, grpc: -2 },
+        w: { graphql: "Viele Ansichten mit unterschiedlichem Datenbedarf: Die App holt genau ihre Felder in einem Aufruf.", rest: "REST mit JSON ist für Apps einfach und gut cachebar.", soap: "XML-Envelopes sind für Browser und Apps unhandlich.", grpc: "Browser sprechen gRPC nicht direkt." } },
+      { id: "excel", name: "Excel oder BI-Tool", p: { odata: 4, rest: 0, graphql: 0, soap: -1, grpc: -2 },
+        w: { odata: "Excel und Power BI haben einen eingebauten OData-Feed-Import: Auswerten ohne Programmierung.", soap: "Excel kann SOAP nur mit Programmierung nutzen.", grpc: "BI-Werkzeuge sprechen kein gRPC." } },
+      { id: "erp", name: "ERP eines Partners", p: { soap: 3, odata: 1, rest: 1, graphql: -1, grpc: -1 },
+        w: { soap: "ERP-Systeme und EDI-Provider bieten und nutzen SOAP mit Normen wie UBL oder EDIFACT.", rest: "Neuere ERP haben auch REST-Adapter.", graphql: "ERP-Integrationen nutzen GraphQL kaum." } }
+    ] },
+    { id: "wichtig", name: "Was ist besonders wichtig?", einzeln: false, kriterien: [
+      { id: "tempo", name: "Hohe Last, Streaming", p: { grpc: 3, rest: 1, graphql: 0, soap: -1, odata: 0 },
+        w: { grpc: "Protobuf ist kompakt, HTTP/2 bündelt Aufrufe und erlaubt Streaming.", soap: "XML ist gross und langsam zu verarbeiten." } },
+      { id: "felder", name: "Consumer wählt die Felder", p: { graphql: 3, odata: 2, rest: 0, soap: 0, grpc: 0 },
+        w: { graphql: "Genau dafür gemacht: Die Abfrage bestimmt die Antwort.", odata: "Mit <code>$select</code> und <code>$expand</code> wählt auch OData Spalten und Beziehungen." } },
+      { id: "vertrag", name: "Formaler Vertrag, WS-Security", p: { soap: 3, grpc: 1, rest: 1, graphql: 0, odata: 0 },
+        w: { soap: "WSDL ist Pflicht, WS-Security signiert und verschlüsselt Nachrichtenteile.", grpc: "Auch <code>.proto</code> ist ein strenger Vertrag." } },
+      { id: "auswertung", name: "Ad-hoc filtern und zählen", p: { odata: 3, graphql: 1, rest: 0, soap: 0, grpc: 0 },
+        w: { odata: "<code>$filter</code>, <code>$orderby</code>, <code>$count</code>: Abfragen wie bei einer Datenbank, direkt in der URL." } },
+      { id: "einfach", name: "Einfach und verbreitet", p: { rest: 3, graphql: 0, odata: 0, soap: -1, grpc: -1 },
+        w: { rest: "Am weitesten verbreitet: einfach zu testen (curl, Browser), viele Bibliotheken.", soap: "SOAP braucht spezielle Werkzeuge.", grpc: "gRPC braucht Code-Generierung und HTTP/2." } }
+    ] }
+  ];
+  const BEISPIELE = [
+    { name: "Bestellservice fragt Lager", wahl: ["intranet", "service", "tempo"] },
+    { name: "Treuhänder wertet in Excel aus", wahl: ["extranet", "excel", "auswertung"] },
+    { name: "Rechnungen an Partner-ERP", wahl: ["extranet", "erp", "vertrag"] },
+    { name: "Velo-App mit vielen Ansichten", wahl: ["internet", "frontend", "felder"] },
+    { name: "Öffentliche Verfügbarkeits-API", wahl: ["internet", "frontend", "einfach"] }
+  ];
+  const kritNach = {};
+  GRUPPEN.forEach((g) => g.kriterien.forEach((k) => (kritNach[k.id] = Object.assign({ gruppe: g }, k))));
+  const wahl = new Set(["intranet", "service"]);
+  let gewaehlteApi = null;
+  const kritBox = document.getElementById("t02-krit");
+  const karteLk = document.getElementById("t02-karte-lk");
+  const empf = document.getElementById("t02-empf");
+  const steck = document.getElementById("t02-steck");
+  const chipKnoepfe = {};
+  GRUPPEN.forEach((g) => {
+    const fs = document.createElement("fieldset");
+    fs.innerHTML = "<legend>" + g.name + (g.einzeln ? "" : ' <span class="t02-klein">(mehrere möglich)</span>') + '</legend><div class="t02-chips"></div>';
+    const box = fs.querySelector(".t02-chips");
+    g.kriterien.forEach((k) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "t02-chip"; b.textContent = k.name;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => {
+        if (wahl.has(k.id)) wahl.delete(k.id);
+        else { if (g.einzeln) g.kriterien.forEach((x) => wahl.delete(x.id)); wahl.add(k.id); }
+        landkarte();
+      });
+      chipKnoepfe[k.id] = b;
+      box.appendChild(b);
+    });
+    kritBox.appendChild(fs);
+  });
+  const presetBox = document.getElementById("t02-presets");
+  BEISPIELE.forEach((bsp) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.textContent = bsp.name;
+    b.addEventListener("click", () => { wahl.clear(); bsp.wahl.forEach((x) => wahl.add(x)); landkarte(); });
+    presetBox.appendChild(b);
+  });
+  const ortKnoepfe = {};
+  ORDNUNG.forEach((id) => {
+    const a = APIS[id];
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "t02-ort t02-pos-" + id + " " + a.rolle;
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = "<b>" + a.name + '</b><span class="t02-klein">' + a.kurz + '</span><span class="t02-klein">Heimat: ' + a.heimat + '</span><span class="t02-balken" aria-hidden="true"><span></span></span><span class="sr-only t02-sr"></span>';
+    b.addEventListener("click", () => { gewaehlteApi = gewaehlteApi === id ? null : id; landkarte(); });
+    ortKnoepfe[id] = b;
+    karteLk.appendChild(b);
+  });
+  function landkarte() {
+    Object.keys(chipKnoepfe).forEach((k) => chipKnoepfe[k].setAttribute("aria-pressed", String(wahl.has(k))));
+    const punkte = {};
+    ORDNUNG.forEach((id) => (punkte[id] = 0));
+    wahl.forEach((k) => ORDNUNG.forEach((id) => (punkte[id] += kritNach[k].p[id] || 0)));
+    const max = Math.max.apply(null, ORDNUNG.map((id) => punkte[id]));
+    const best = wahl.size && max > 0 ? ORDNUNG.filter((id) => punkte[id] === max) : [];
+    ORDNUNG.forEach((id) => {
+      const b = ortKnoepfe[id];
+      const anteil = max > 0 ? Math.max(0, punkte[id]) / max : 0;
+      b.querySelector(".t02-balken > span").style.setProperty("--w", Math.round(anteil * 100) + "%");
+      b.querySelector(".t02-sr").textContent = ", Passung " + Math.round(anteil * 100) + " Prozent" + (best.indexOf(id) >= 0 ? ", Empfehlung" : "");
+      b.classList.toggle("t02-top", best.indexOf(id) >= 0);
+      b.classList.toggle("t02-schwach", wahl.size > 0 && punkte[id] <= 0);
+      b.setAttribute("aria-pressed", String(gewaehlteApi === id));
+    });
+    if (!wahl.size) {
+      empf.innerHTML = '<p class="hint">Wähle mindestens ein Kriterium oder lade ein Beispiel.</p>';
+    } else {
+      const namen = best.map((id) => APIS[id].name).join(" oder ");
+      let h = "<h4>Empfehlung: " + (namen || "keine klare Wahl") + "</h4><ul>";
+      best.forEach((id) => wahl.forEach((k) => { const t = kritNach[k].w[id]; if (t && (kritNach[k].p[id] || 0) > 0) h += "<li><b>" + APIS[id].name + ":</b> " + t + "</li>"; }));
+      const schlecht = ORDNUNG.filter((id) => best.indexOf(id) < 0).sort((a, b) => punkte[a] - punkte[b])[0];
+      const gegen = [];
+      wahl.forEach((k) => { const t = kritNach[k].w[schlecht]; if (t && (kritNach[k].p[schlecht] || 0) < 0) gegen.push(t); });
+      if (gegen.length) h += "<li><b>Eher nicht " + APIS[schlecht].name + ":</b> " + gegen[0] + "</li>";
+      h += "</ul>";
+      if (wahl.has("intranet")) h += '<p class="t02-klein">Regel der Gruppen-Anwendung: Intranet → REST oder gRPC.</p>';
+      else if (wahl.has("extranet")) h += '<p class="t02-klein">Regel der Gruppen-Anwendung: Extranet → SOAP oder OData.</p>';
+      else if (wahl.has("internet")) h += '<p class="t02-klein">Für öffentliche APIs gibt das Modul keine feste Regel; REST ist der verbreitete Standard.</p>';
+      empf.innerHTML = h;
+    }
+    if (gewaehlteApi) {
+      const a = APIS[gewaehlteApi];
+      steck.innerHTML = '<div class="t02-steck ' + a.rolle + '"><b>Steckbrief ' + a.name + "</b><dl><dt>Vertrag</dt><dd>" + a.vertrag + "</dd><dt>Format</dt><dd>" + a.format + "</dd><dt>Transport</dt><dd>" + a.transport + "</dd><dt>Stark bei</dt><dd>" + a.stark + "</dd><dt>Schwach bei</dt><dd>" + a.schwach + "</dd><dt>Beispiel</dt><dd>" + a.bsp + "</dd></dl></div>";
+    } else steck.innerHTML = "";
+  }
+  landkarte();
+
+  L.sortierer("#t02-sort-api", {
+    kategorien: ["REST", "SOAP", "GraphQL", "OData", "gRPC"],
+    elemente: [
+      { html: "Eine Velohändlerin will mit Excel monatlich ihre Bestellungen filtern und summieren.", kategorie: "OData", erklaerung: "Excel liest OData-Feeds direkt, Filtern geht in der URL." },
+      { html: "Der Bestellservice reserviert bei jedem Kauf Bestand beim internen Lagerservice, tausende Male pro Stunde.", kategorie: "gRPC", erklaerung: "Intranet, Service zu Service, hohe Last: gRPC." },
+      { html: "Eine Versicherung verlangt von Partnern einen WSDL-Vertrag und signierte Nachrichten.", kategorie: "SOAP", erklaerung: "WSDL und WS-Security sind SOAP." },
+      { html: "Die eigene Mobile App hat zwanzig Ansichten mit jeweils anderen Datenfeldern.", kategorie: "GraphQL", erklaerung: "Die App wählt pro Ansicht die Felder selbst." },
+      { html: "Eine öffentliche API soll Fahrplandaten für beliebige Entwicklerinnen liefern, einfach mit curl testbar.", kategorie: "REST", erklaerung: "Öffentlich, einfach, verbreitet, cachebar: REST." },
+      { html: "Ein EDI-Provider nimmt Rechnungen nach EDIFACT entgegen und bietet dafür eine Schnittstelle mit WSDL an.", kategorie: "SOAP", erklaerung: "B2B mit WSDL: SOAP." }
+    ]
+  });
+
+  /* ===== 9 · API-Gateway ===== */
+  A.diagramm("#t02-gateway", {
+    titel: "API-Gateway der Alpenrad AG (fiktiv)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "g-cons", name: "Service Consumer", spalte: 0, zeile: 0, hoehe: 2 },
+      { id: "g-mgmt", name: "API Management", spalte: 1, zeile: 0,
+        info: { was: "Das API-Gateway mit seinem Cache.", wofuer: "Einzige Tür für alle angebotenen APIs.", warum: "Querschnittsthemen an einer Stelle statt in jedem Service." } },
+      { id: "g-shared", name: "Shared Services", spalte: 1, zeile: 1 },
+      { id: "g-svc", name: "Services (Intranet)", spalte: 2, zeile: 0, hoehe: 2 }
+    ],
+    elemente: [
+      { id: "app", typ: "mobile", rolle: "webapi", name: "Velo-App", in: "g-cons", spalte: 0, zeile: 0, technologie: "Kotlin, Swift",
+        info: { was: "Mobile App der Kundschaft.", kann: "Katalog lesen und bestellen.", wofuer: "Consumer der angebotenen REST-API.", technologie: "Kotlin (Android), Swift (iOS)", warum: "Sie kennt nur die Adresse des Gateways, nicht die Services dahinter." } },
+      { id: "partner", typ: "extern", rolle: "webapi", name: "Händler-Portal", in: "g-cons", spalte: 0, zeile: 1, technologie: "Partner-Applikation",
+        info: { was: "Applikation eines Velohändlers.", kann: "Bestellungen für den Laden aufgeben.", wofuer: "Zweiter Consumer mit eigener Quote.", technologie: "beliebig, spricht REST mit OAuth 2.0", warum: "Das Gateway unterscheidet Consumer und setzt je eigene Limits." } },
+      { id: "gw", typ: "gateway", rolle: "webapi", name: "API-Gateway", in: "g-mgmt", spalte: 0, zeile: 0, technologie: "Kong Gateway",
+        schnittstellen: [{ id: "api", name: "REST API", seite: "links" }],
+        info: { was: "Vorgeschaltete Middleware für alle angebotenen APIs.", kann: "Authentifizieren, routen, Last verteilen, Anfragen begrenzen, Antworten cachen, Protokolle umwandeln, messen.", wofuer: "Einheitliche, geschützte Tür nach aussen.", technologie: "Kong Gateway (Alternativen: Azure API Management, Amazon API Gateway, Apigee, Spring Cloud Gateway)", warum: "Die Services bleiben schlank; Sicherheit und Limits sind an einer Stelle konfiguriert." } },
+      { id: "cache", typ: "cache", rolle: "daten", name: "Antwort-Cache", in: "g-mgmt", spalte: 0, zeile: 1, technologie: "Redis",
+        info: { was: "Zwischenspeicher für Antworten.", kann: "Gleiche GET-Antworten für eine Zeit (TTL) liefern.", wofuer: "Katalogdaten ändern selten und werden oft gelesen.", technologie: "Redis oder Speicher des Gateways", warum: "Ein Cache-Treffer braucht Millisekunden und entlastet die Services." } },
+      { id: "idp", typ: "auth", rolle: "shared", name: "Identity Provider", in: "g-shared", technologie: "Keycloak",
+        schnittstellen: [{ id: "oidc", name: "OIDC", seite: "oben" }],
+        info: { was: "Stellt Tokens aus und veröffentlicht die Prüfschlüssel.", kann: "Anmelden, Tokens nach OAuth 2.0 ausstellen, Schlüssel (JWKS) bereitstellen.", wofuer: "Das Gateway prüft Tokens damit.", technologie: "Keycloak (Alternativen: Entra ID, Auth0)", warum: "Anmeldung an einer Stelle, Standardprotokolle OAuth 2.0 und OpenID Connect." } },
+      { id: "mon", typ: "monitor", rolle: "infra", name: "Monitoring", in: "g-shared", technologie: "Prometheus, Grafana",
+        info: { was: "Sammelt Metriken und Logs.", kann: "Aufrufe, Antwortzeiten, Fehler je API und Consumer zeigen und alarmieren.", wofuer: "SLA-Nachweis, Fehlersuche, Abrechnung.", technologie: "Prometheus und Grafana", warum: "Ohne Messung kein Nachweis, dass das SLA eingehalten ist." } },
+      { id: "bestell", typ: "dienst", rolle: "business", name: "Bestellservice", in: "g-svc", spalte: 0, zeile: 0, technologie: "Spring Boot",
+        schnittstellen: [{ id: "rest", name: "REST", seite: "links" }],
+        info: { was: "Fachservice für Bestellungen.", kann: "Bestellungen anlegen und lesen.", wofuer: "Ziel der Route <code>/bestellungen</code>.", technologie: "Spring Boot", warum: "Muss sich dank Gateway nicht selbst um Rate Limits kümmern." } },
+      { id: "katalog", typ: "dienst", rolle: "business", name: "Katalogservice", in: "g-svc", spalte: 0, zeile: 1, technologie: "Go",
+        schnittstellen: [{ id: "grpc", name: "gRPC", seite: "links" }],
+        info: { was: "Fachservice für Velos und Preise.", kann: "Katalog per gRPC liefern.", wofuer: "Ziel der Route <code>/katalog</code>.", technologie: "Go mit gRPC", warum: "Intern gRPC, aussen REST: Das Gateway wandelt das Protokoll um." } }
+    ],
+    verbindungen: [
+      { id: "g1", von: "app", nach: "gw#api", protokoll: "REST", format: "JSON" },
+      { id: "g2", von: "partner", nach: "gw#api", protokoll: "REST", format: "JSON" },
+      { id: "g3", von: "gw", nach: "idp#oidc", label: "JWKS (Schlüssel)" },
+      { id: "g4", von: "gw", nach: "cache", label: "Cache" },
+      { id: "g5", von: "gw", nach: "mon", label: "Metriken" },
+      { id: "g6", von: "gw", nach: "bestell#rest", protokoll: "REST" },
+      { id: "g7", von: "gw", nach: "katalog#grpc", protokoll: "gRPC" }
+    ],
+    ablaeufe: [
+      { id: "normal", name: "Normalfall: Auth und Routing", schritte: [
+        { von: "partner", nach: "gw", text: "Das Händler-Portal sendet <code>POST /api/v1/bestellungen</code> mit Bearer-Token.", phase: "Eingang" },
+        { von: "gw", nach: "idp", text: "<b>Authentifizierung:</b> Das Gateway prüft die Signatur des Tokens mit den Schlüsseln des Identity Providers (meist zwischengespeichert).", phase: "Prüfen" },
+        { bei: "gw", text: "<b>Rate Limit:</b> 37 von 100 Anfragen in dieser Minute, weiter.", phase: "Prüfen" },
+        { von: "gw", nach: "bestell", text: "<b>Routing:</b> Pfad <code>/bestellungen</code> geht an den Bestellservice.", phase: "Weiterleiten" },
+        { von: "bestell", nach: "gw", text: "Der Bestellservice antwortet <code>201 Created</code>.", phase: "Antwort" },
+        { von: "gw", nach: "partner", text: "Das Gateway gibt die Antwort zurück …", phase: "Antwort" },
+        { von: "gw", nach: "mon", text: "… und meldet <b>Monitoring</b>-Daten: Consumer, Dauer 84 ms, Status 201.", parallel: true, phase: "Antwort" }
+      ] },
+      { id: "cache", name: "Caching und Protokollumwandlung", schritte: [
+        { von: "app", nach: "gw", text: "Die Velo-App fragt <code>GET /api/v1/katalog/e-bikes</code>.", phase: "Erster Aufruf" },
+        { von: "gw", nach: "cache", text: "Kein Treffer im Cache.", phase: "Erster Aufruf" },
+        { von: "gw", nach: "katalog", text: "<b>Protokollumwandlung:</b> Das Gateway ruft den Katalogservice per gRPC auf.", phase: "Erster Aufruf" },
+        { von: "katalog", nach: "gw", text: "Antwort in Protobuf; das Gateway macht daraus JSON.", phase: "Erster Aufruf" },
+        { von: "gw", nach: "cache", text: "Die Antwort kommt für 5 Minuten in den Cache.", phase: "Erster Aufruf" },
+        { von: "gw", nach: "app", text: "Die App erhält JSON.", phase: "Erster Aufruf" },
+        { von: "app", nach: "gw", text: "Eine zweite App fragt dasselbe.", phase: "Cache-Treffer" },
+        { von: "gw", nach: "cache", text: "<b>Treffer:</b> Die Antwort kommt aus dem Cache, der Katalogservice merkt nichts.", phase: "Cache-Treffer" },
+        { von: "gw", nach: "app", text: "Antwort in wenigen Millisekunden.", phase: "Cache-Treffer" }
+      ] },
+      { id: "limit", name: "Rate Limit überschritten", schritte: [
+        { von: "partner", nach: "gw", text: "Ein fehlerhaftes Skript beim Händler sendet 100 Anfragen in 20 Sekunden …", phase: "Last" },
+        { von: "partner", nach: "gw", text: "… und noch eine.", phase: "Last" },
+        { bei: "gw", text: "<b>Rate Limit:</b> Die 101. Anfrage in dieser Minute wird abgewiesen.", fehler: true, phase: "Abweisen" },
+        { von: "gw", nach: "partner", text: "Antwort <code>429 Too Many Requests</code> mit <code>Retry-After: 40</code>.", phase: "Abweisen" },
+        { von: "gw", nach: "mon", text: "Das Monitoring zählt die Abweisungen und alarmiert. Der Bestellservice bleibt geschützt.", phase: "Abweisen" }
+      ] },
+      { id: "token", name: "Token ungültig", schritte: [
+        { von: "app", nach: "gw", text: "Die App sendet ein Token, das vor zwei Stunden abgelaufen ist.", phase: "Eingang" },
+        { bei: "gw", text: "Ablaufzeit überschritten: Das Token ist ungültig.", fehler: true, phase: "Prüfen" },
+        { von: "gw", nach: "app", text: "Antwort <code>401 Unauthorized</code>. Die Anfrage erreicht keinen Service.", phase: "Abweisen" }
+      ] },
+      { id: "ausfall", name: "Service ausgefallen", schritte: [
+        { von: "partner", nach: "gw", text: "Das Händler-Portal bestellt.", phase: "Eingang" },
+        { von: "gw", nach: "bestell", text: "Das Gateway leitet weiter …", phase: "Weiterleiten", fehler: true },
+        { bei: "bestell", text: "Keine Instanz des Bestellservice antwortet.", fehler: true, phase: "Störung" },
+        { von: "gw", nach: "partner", text: "Nach dem Timeout antwortet das Gateway <code>503 Service Unavailable</code> statt endlos zu warten.", phase: "Störung" },
+        { von: "gw", nach: "mon", text: "Das Monitoring meldet den Ausfall, bevor viele Händler anrufen.", phase: "Störung" }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  /* ===== 10 · OAuth 2.0 ===== */
+  A.diagramm("#t02-oauth", {
+    titel: "OAuth 2.0: Token holen und mitschicken",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "o-client", name: "Consumer", spalte: 0, zeile: 0, hoehe: 2 },
+      { id: "o-as", name: "Authorization Server", spalte: 1, zeile: 0 },
+      { id: "o-rs", name: "Resource Server (Provider)", spalte: 1, zeile: 1 }
+    ],
+    elemente: [
+      { id: "person", typ: "akteur", rolle: "client", name: "Händlerin", in: "o-client",
+        info: { was: "Ressourcenbesitzerin: die Person, deren Daten gelesen werden.", kann: "Sich anmelden und dem Zugriff zustimmen.", wofuer: "Nur im Ablauf mit Anmeldung (Authorization Code) beteiligt.", technologie: "Browser", warum: "Ihr Passwort sieht nur der Authorization Server, nie die App." } },
+      { id: "client", typ: "web", rolle: "webapi", name: "Händler-App (Client)", in: "o-client", technologie: "Web App",
+        info: { was: "Der OAuth-Client, also der Service Consumer.", kann: "Tokens holen, erneuern und bei jedem Aufruf mitschicken.", wofuer: "Ruft die Bestell-API im Namen der Händlerin oder in eigenem Namen auf.", technologie: "Web App mit OAuth-Bibliothek", warum: "Mit Tokens braucht der Provider kein Passwort der App." } },
+      { id: "as", typ: "auth", rolle: "shared", name: "Authorization Server", in: "o-as", technologie: "Keycloak",
+        schnittstellen: [{ id: "login", name: "Login", seite: "links" }, { id: "token", name: "Token", seite: "unten" }],
+        info: { was: "Stellt Tokens aus.", kann: "Clients und Personen prüfen, Access Tokens (z. B. JWT, 15 Minuten) und Refresh Tokens ausstellen, Schlüssel veröffentlichen.", wofuer: "Zentrale Stelle für alle Berechtigungen.", technologie: "Keycloak, Entra ID oder Auth0", warum: "Ein Standard (OAuth 2.0) statt eigener Login-Lösung in jeder API." } },
+      { id: "api", typ: "dienst", rolle: "business", name: "Bestell-API", in: "o-rs", technologie: "Spring Boot",
+        schnittstellen: [{ id: "rest", name: "REST", seite: "links" }],
+        info: { was: "Der Resource Server: die geschützte API des Providers.", kann: "Token prüfen (Signatur, Ablauf, Scope) und dann Daten liefern.", wofuer: "Liefert Bestellungen nur gegen gültiges Token.", technologie: "Spring Boot mit Spring Security", warum: "Die Prüfung braucht nur den öffentlichen Schlüssel, keinen Aufruf pro Anfrage." } }
+    ],
+    verbindungen: [
+      { id: "o1", von: "person", nach: "client", label: "bedient" },
+      { id: "o2", von: "person", nach: "as#login", label: "Anmeldung, Zustimmung" },
+      { id: "o3", von: "client", nach: "as#token", label: "HTTPS · Token holen" },
+      { id: "o4", von: "client", nach: "api#rest", label: "REST · Bearer-Token" },
+      { id: "o5", von: "api", nach: "as#token", label: "Schlüssel (JWKS)" }
+    ],
+    ablaeufe: [
+      { id: "cc", name: "Client Credentials (Maschine zu Maschine)", schritte: [
+        { von: "client", nach: "as", text: "Die App meldet sich mit <code>client_id</code> und <code>client_secret</code> und verlangt den Scope <code>bestellungen.lesen</code>.", phase: "Token holen" },
+        { von: "as", nach: "client", text: "Der Authorization Server stellt ein Access Token aus, gültig 900 Sekunden.", phase: "Token holen" },
+        { von: "client", nach: "api", text: "Die App ruft <code>GET /bestellungen/B-17</code> mit <code>Authorization: Bearer …</code> auf.", phase: "API nutzen" },
+        { bei: "api", text: "Die API prüft Signatur, Ablaufzeit und Scope. Alles gültig.", phase: "API nutzen" },
+        { von: "api", nach: "client", text: "Antwort <code>200 OK</code> mit der Bestellung.", phase: "API nutzen" }
+      ] },
+      { id: "code", name: "Authorization Code mit PKCE (mit Anmeldung)", schritte: [
+        { von: "person", nach: "client", text: "Die Händlerin will in der App ihre Bestellungen sehen.", phase: "Anmelden" },
+        { von: "client", nach: "as", text: "Die App leitet den Browser zum Login des Authorization Server (mit <code>code_challenge</code>).", phase: "Anmelden" },
+        { von: "person", nach: "as", text: "Die Händlerin meldet sich dort an und stimmt dem Zugriff zu. Die App sieht ihr Passwort nie.", phase: "Anmelden" },
+        { von: "as", nach: "client", text: "Zurück zur App kommt nur ein kurzlebiger Code.", phase: "Token holen" },
+        { von: "client", nach: "as", text: "Die App tauscht Code und <code>code_verifier</code> gegen Access Token und Refresh Token.", phase: "Token holen" },
+        { von: "as", nach: "client", text: "Tokens ausgestellt.", phase: "Token holen" },
+        { von: "client", nach: "api", text: "Aufruf mit Bearer-Token.", phase: "API nutzen" },
+        { von: "api", nach: "client", text: "Die API liefert nur die Bestellungen dieser Händlerin.", phase: "API nutzen" }
+      ] },
+      { id: "ablauf", name: "Token abgelaufen", schritte: [
+        { von: "client", nach: "api", text: "Die App ruft die API mit einem Token von gestern auf.", phase: "Aufruf" },
+        { bei: "api", text: "Ablaufzeit überschritten.", fehler: true, phase: "Aufruf" },
+        { von: "api", nach: "client", text: "Antwort <code>401 Unauthorized</code>.", phase: "Aufruf" },
+        { von: "client", nach: "as", text: "Die App holt mit dem Refresh Token (oder den Client-Credentials) ein neues Access Token.", phase: "Erneuern" },
+        { von: "as", nach: "client", text: "Neues Token, wieder 15 Minuten gültig.", phase: "Erneuern" },
+        { von: "client", nach: "api", text: "Erneuter Aufruf mit dem neuen Token.", phase: "Erneut" },
+        { von: "api", nach: "client", text: "<code>200 OK</code>.", phase: "Erneut" }
+      ] }
+    ]
+  }, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  L.auswahl("#t02-frage-security", {
+    frage: "Ein Partner soll Bestellungen lesen dürfen. Der Zugriff soll nach kurzer Zeit ablaufen und auf «lesen» beschränkt sein. Was passt am besten?",
+    optionen: ["Basic Auth mit dem Passwort eines Mitarbeiters", "Ein API-Key ohne Ablaufdatum", "OAuth 2.0 mit kurzlebigem Token und Scope <code>bestellungen.lesen</code>", "Nur TLS"],
+    richtig: 2,
+    erklaerung: "OAuth 2.0 liefert zeitlich begrenzte Tokens mit Scopes. TLS schützt nur den Weg, ein API-Key läuft nicht ab."
+  });
+
+  /* ===== 11 · Referenzmodell Schnittstelle ===== */
+  A.referenzen["schnittstelle"] = REF_SCHNITTSTELLE;
+  A.diagramm("#t02-schnittstelle", REF_SCHNITTSTELLE, { ablauf: true, ausfall: false, legende: true, steckbrief: true });
+
+  /* Übung: sechs Verbindungen beschreiben */
+  const SEM = ["App-Def", "EDIFACT INVOIC", "ISO 20022 (pain.001)", "HL7 FHIR", "SAP IDoc", "UBL Invoice"];
+  const FMT = ["JSON/UTF-8", "XML/UTF-8", "EDI/ASCII", "CSV/EBCDIC", "Protobuf (binär)"];
+  const PROT = ["REST", "SOAP", "GraphQL", "OData", "gRPC", "AMQP", "FTPS"];
+  const ZU = [
+    { rolle: "ar-r-sync", text: "Das <b>ERP</b> des Grosshändlers übergibt Rechnungen an den <b>EDI-Provider</b>. Der Provider bietet eine Schnittstelle mit WSDL an. Inhalt nach der UN-Norm für Rechnungen, Struktur EDI mit ASCII-Zeichen.",
+      loesung: ["EDIFACT INVOIC", "EDI/ASCII", "SOAP"], erkl: "UN-Norm für Rechnungen = EDIFACT INVOIC, EDI/ASCII steht im Text, WSDL bedeutet SOAP." },
+    { rolle: "ar-r-client", text: "Die <b>Velo-App</b> holt beim Web API pro Ansicht genau die Felder, die sie braucht, in einem einzigen Aufruf. Die Bedeutung legt die Applikation selbst fest, übertragen wird JSON.",
+      loesung: ["App-Def", "JSON/UTF-8", "GraphQL"], erkl: "Felder selbst wählen = GraphQL, eigene Definition = App-Def." },
+    { rolle: "ar-r-sync", text: "Der <b>Treuhänder</b> liest mit Excel die Umsätze, filtert nach Monat und zählt die Bestellungen direkt in der Abfrage-URL. Eigene Definition des Anbieters, Antworten als JSON.",
+      loesung: ["App-Def", "JSON/UTF-8", "OData"], erkl: "Excel plus Filtern und Zählen in der URL = OData." },
+    { rolle: "ar-r-daten", text: "Die <b>Kreditorenbuchhaltung</b> lädt Zahlungsaufträge als Datei beim Bankserver hoch, verschlüsselt über einen Dateiübertragungs-Dienst. Inhalt nach dem Banken-Standard für Zahlungsaufträge (pain.001), XML in UTF-8.",
+      loesung: ["ISO 20022 (pain.001)", "XML/UTF-8", "FTPS"], erkl: "pain.001 gehört zu ISO 20022, Datei über verschlüsselten Dateitransfer = FTPS." },
+    { rolle: "ar-r-business", text: "Der <b>Bestellservice</b> reserviert im Intranet Bestand beim Lagerservice. Vertrag als <code>.proto</code>, binäre Nachrichten, eigene Definition.",
+      loesung: ["App-Def", "Protobuf (binär)", "gRPC"], erkl: "<code>.proto</code> und binär = gRPC mit Protobuf." },
+    { rolle: "ar-r-webapi", text: "Die <b>Praxissoftware</b> einer Arztpraxis schickt Laboraufträge an das Laborsystem. Inhalt nach dem Gesundheitsstandard mit Ressourcen wie <code>ServiceRequest</code>, als JSON über eine ressourcenorientierte HTTP-API.",
+      loesung: ["HL7 FHIR", "JSON/UTF-8", "REST"], erkl: "Gesundheitsstandard mit Ressourcen = HL7 FHIR, ressourcenorientierte HTTP-API = REST." }
+  ];
+  const zuBox = document.getElementById("t02-zu");
+  const zuFb = document.getElementById("t02-zu-fb");
+  const SPALTEN_ZU = [["Semantik", SEM], ["Struktur/Codierung", FMT], ["Art der API", PROT]];
+  ZU.forEach((z, i) => {
+    const k = document.createElement("div");
+    k.className = "t02-zu-karte " + z.rolle;
+    let h = "<p><b>" + (i + 1) + ".</b> " + z.text + '</p><div class="t02-felder">';
+    SPALTEN_ZU.forEach(([lab, werte], j) => {
+      const id = "t02-zu-" + i + "-" + j;
+      h += '<div class="t02-feld"><label for="' + id + '">' + lab + '</label><select class="btn" id="' + id + '"><option value="">– wählen –</option>' +
+        werte.map((w) => '<option value="' + esc(w) + '">' + esc(w) + "</option>").join("") + '</select><span class="t02-mark" aria-live="polite"></span></div>';
+    });
+    h += '</div><p class="t02-erkl" hidden></p>';
+    k.innerHTML = h;
+    zuBox.appendChild(k);
+  });
+  function zuPruefen(zeigen) {
+    let ok = 0, leer = 0;
+    ZU.forEach((z, i) => {
+      const karte = zuBox.children[i];
+      SPALTEN_ZU.forEach((_, j) => {
+        const s = document.getElementById("t02-zu-" + i + "-" + j);
+        if (zeigen) s.value = z.loesung[j];
+        const m = s.parentNode.querySelector(".t02-mark");
+        s.classList.remove("t02-ok-z", "t02-falsch-z");
+        if (!s.value) { leer++; m.textContent = ""; return; }
+        const r = s.value === z.loesung[j];
+        if (r) ok++;
+        s.classList.add(r ? "t02-ok-z" : "t02-falsch-z");
+        m.textContent = r ? "✓ richtig" : "✗ falsch";
+        m.style.color = r ? "var(--ok)" : "var(--bad)";
+      });
+      const e = karte.querySelector(".t02-erkl");
+      e.innerHTML = z.erkl; e.hidden = false;
+    });
+    const n = ZU.length * 3;
+    zuFb.className = "rueckmeldung " + (ok === n ? "ok" : "bad");
+    zuFb.innerHTML = zeigen ? "Lösung eingetragen. Lies die Begründungen unter jedem Fall." : (ok === n ? "<b>✓ Alles richtig:</b> " : "<b>" + ok + " von " + n + " richtig.</b> ") + (leer ? leer + " Angaben fehlen noch. " : "") + (ok === n ? "Jede Schnittstelle ist vollständig beschrieben." : "Prüfe die rot markierten Angaben mit den Signalwörtern im Text.");
+  }
+  document.getElementById("t02-zu-pruefen").addEventListener("click", () => zuPruefen(false));
+  document.getElementById("t02-zu-loesung").addEventListener("click", () => zuPruefen(true));
+  document.getElementById("t02-zu-reset").addEventListener("click", () => {
+    zuBox.querySelectorAll("select").forEach((s) => { s.value = ""; s.classList.remove("t02-ok-z", "t02-falsch-z"); });
+    zuBox.querySelectorAll(".t02-mark").forEach((m) => (m.textContent = ""));
+    zuBox.querySelectorAll(".t02-erkl").forEach((e) => (e.hidden = true));
+    zuFb.className = "rueckmeldung leer"; zuFb.textContent = "";
+  });
+
+  /* ===== 12 · SoaML ===== */
+  const SOAML = {
+    titel: "SoaML-Sicht der Alpenrad AG (eigene, vereinfachte Darstellung)",
+    notation: "uml-komponenten",
+    pakete: [
+      { id: "s-intra", name: "Alpenrad – Intranet (REST oder gRPC)", spalte: 0, zeile: 0,
+        info: { was: "Teilnehmer im eigenen Netz.", wofuer: "Interne Services.", warum: "Regel: Im Intranet sprechen Services REST oder gRPC." } },
+      { id: "s-extra", name: "Extranet (SOAP oder OData)", spalte: 1, zeile: 0,
+        info: { was: "Teilnehmer von Geschäftspartnern.", wofuer: "B2B-Verbindungen.", warum: "Regel: Im Extranet SOAP oder OData." } }
+    ],
+    elemente: [
+      { id: "shop", typ: "dienst", rolle: "webapi", name: "Velo-Shop-Backend", stereotyp: "Participant", in: "s-intra", spalte: 0, zeile: 0, technologie: "Node.js",
+        info: { was: "Teilnehmer mit einem Request-Port.", kann: "Bestellungen beim Bestellservice aufgeben.", wofuer: "Reiner Consumer.", technologie: "Node.js mit REST-Client", warum: "Intranet: REST." } },
+      { id: "bestell", typ: "dienst", rolle: "business", name: "Bestellservice", stereotyp: "Participant", in: "s-intra", spalte: 1, zeile: 0, technologie: "Spring Boot",
+        schnittstellen: [{ id: "rest", name: "REST Bestellung", seite: "links" }, { id: "soap", name: "SOAP Händler", seite: "rechts" }, { id: "odata", name: "OData Umsätze", seite: "unten" }],
+        info: { was: "Teilnehmer mit drei Service-Ports und zwei Request-Ports.", kann: "Bestellungen annehmen (REST intern, SOAP für Händler), Umsätze liefern (OData), Lager und Zahlung nutzen.", wofuer: "Zentrales Glied: Provider und Consumer zugleich.", technologie: "Spring Boot", warum: "Je Kontext die passende API nach der Regel Intranet/Extranet." } },
+      { id: "lager", typ: "dienst", rolle: "business", name: "Lagerservice", stereotyp: "Participant", in: "s-intra", spalte: 0, zeile: 1, technologie: "Go",
+        schnittstellen: [{ id: "grpc", name: "gRPC Bestand", seite: "oben" }],
+        info: { was: "Teilnehmer mit Service-Port gRPC und Rolle Publisher.", kann: "Bestand reservieren und Bestandsänderungen veröffentlichen.", wofuer: "Provider für den Bestellservice, Publisher für Filialen.", technologie: "Go", warum: "Intranet: gRPC für schnelle Aufrufe." } },
+      { id: "broker", typ: "broker", rolle: "async", name: "Message Broker", stereotyp: "Participant", in: "s-intra", spalte: 0, zeile: 2, technologie: "RabbitMQ",
+        schnittstellen: [{ id: "topic", name: "AMQP Topic", seite: "oben" }],
+        info: { was: "Vermittelt Nachrichten zwischen Publisher und Subscribern.", kann: "Nachrichten «BestandGeaendert» an alle Abonnenten verteilen.", wofuer: "Asynchrone Verbindungen (Thema der nächsten Station).", technologie: "RabbitMQ mit AMQP", warum: "Der Publisher muss die Subscriber nicht kennen." } },
+      { id: "kasse", typ: "dienst", rolle: "client", name: "Filialkasse", stereotyp: "Participant", in: "s-intra", spalte: 1, zeile: 2, technologie: "C#",
+        info: { was: "Teilnehmer in der Rolle Subscriber.", kann: "Bestandsänderungen empfangen und anzeigen.", wofuer: "Filialen sehen den aktuellen Bestand.", technologie: ".NET-Kassenapplikation", warum: "Abonniert, statt ständig nachzufragen." } },
+      { id: "haendler", typ: "extern", rolle: "webapi", name: "Händler-ERP", stereotyp: "Participant", in: "s-extra", spalte: 0, zeile: 0, technologie: "ERP des Händlers",
+        info: { was: "Teilnehmer im Extranet mit Request-Port.", kann: "Bestellungen per SOAP aufgeben.", wofuer: "Consumer des Service-Ports «SOAP Händler».", technologie: "beliebiges ERP", warum: "Extranet: SOAP mit WSDL-Vertrag." } },
+      { id: "treuhand", typ: "extern", rolle: "webapi", name: "Treuhänder", stereotyp: "Participant", in: "s-extra", spalte: 0, zeile: 1, technologie: "Excel",
+        info: { was: "Teilnehmer im Extranet mit Request-Port.", kann: "Umsätze per OData in Excel auswerten.", wofuer: "Consumer des Service-Ports «OData Umsätze».", technologie: "Excel, Power BI", warum: "Extranet: OData für Auswertungen." } },
+      { id: "zahlung", typ: "extern", rolle: "sync", name: "Zahlungsanbieter", stereotyp: "Participant", in: "s-extra", spalte: 0, zeile: 2, technologie: "SOAP-Service",
+        schnittstellen: [{ id: "soap", name: "SOAP Zahlung", seite: "links" }],
+        info: { was: "Externer Teilnehmer mit Service-Port.", kann: "Zahlungen autorisieren.", wofuer: "Provider für den Bestellservice.", technologie: "SOAP mit WS-Security", warum: "Extranet: SOAP." } }
+    ],
+    verbindungen: [
+      { id: "s1", von: "shop", nach: "bestell#rest", label: "Bestellung" },
+      { id: "s2", von: "bestell", nach: "lager#grpc", label: "Reservation" },
+      { id: "s3", von: "haendler", nach: "bestell#soap", label: "Händlerbestellung" },
+      { id: "s4", von: "treuhand", nach: "bestell#odata", label: "Umsätze" },
+      { id: "s5", von: "bestell", nach: "zahlung#soap", label: "Zahlung" },
+      { id: "s6", von: "lager", nach: "broker#topic", label: "publish BestandGeaendert" },
+      { id: "s7", von: "kasse", nach: "broker#topic", label: "subscribe" }
+    ],
+    ablaeufe: [
+      { id: "ports", name: "Service-Ports und Request-Ports", schritte: [
+        { von: "shop", nach: "bestell", text: "Request-Port des Shops → Service-Port «REST Bestellung»: Consumer und Provider im Intranet.", phase: "Intranet" },
+        { von: "bestell", nach: "lager", text: "Der Bestellservice nutzt über einen Request-Port den Service-Port «gRPC Bestand».", phase: "Intranet" },
+        { von: "haendler", nach: "bestell", text: "Extranet: Das Händler-ERP nutzt den Service-Port «SOAP Händler».", phase: "Extranet" },
+        { von: "treuhand", nach: "bestell", text: "Extranet: Der Treuhänder liest über «OData Umsätze».", phase: "Extranet" },
+        { von: "bestell", nach: "zahlung", text: "Extranet: Der Bestellservice ist Consumer des Zahlungsanbieters (SOAP).", phase: "Extranet" }
+      ] },
+      { id: "pubsub", name: "Publisher und Subscriber", schritte: [
+        { von: "lager", nach: "broker", text: "Der Lagerservice ist <b>Publisher</b>: Er veröffentlicht «BestandGeaendert» und arbeitet weiter.", phase: "Publish" },
+        { von: "broker", nach: "kasse", text: "Die Filialkasse ist <b>Subscriber</b>: Der Broker stellt ihr die Nachricht zu.", phase: "Subscribe" }
+      ] }
+    ]
+  };
+  A.referenzen["soaml-t02"] = SOAML;
+  A.diagramm("#t02-soaml", SOAML, { ablauf: true, ausfall: true, legende: true, steckbrief: true });
+
+  L.sortierer("#t02-sort-soaml", {
+    kategorien: ["Service-Port", "Request-Port", "Publisher", "Subscriber"],
+    elemente: [
+      { html: "Der Lagerservice bietet «gRPC Bestand» an.", kategorie: "Service-Port", erklaerung: "Angebotener Service = Service-Port (Ball)." },
+      { html: "Der Bestellservice ruft den Zahlungsanbieter auf.", kategorie: "Request-Port", erklaerung: "Genutzter Service = Request-Port (Socket)." },
+      { html: "Der Lagerservice veröffentlicht «BestandGeaendert» beim Broker.", kategorie: "Publisher", erklaerung: "Er veröffentlicht Nachrichten." },
+      { html: "Die Filialkasse erhält jede Bestandsänderung vom Broker.", kategorie: "Subscriber", erklaerung: "Sie hat das Thema abonniert." },
+      { html: "Der Treuhänder liest Umsätze per OData beim Bestellservice.", kategorie: "Request-Port", erklaerung: "Aus Sicht des Treuhänders: genutzter Service." },
+      { html: "Der Bestellservice stellt Händlern «SOAP Händler» bereit.", kategorie: "Service-Port", erklaerung: "Bereitgestellter Service = Service-Port." }
+    ]
+  });
+
+  /* ===== 13 · Schnittstellentabelle ===== */
+  const ST_SYNC = ["sync", "async"];
+  const ST_FUNK = ["Consumer", "Provider", "Sender", "Receiver"];
+  const ST_PROT = ["SOAP (UBL Order)", "SOAP (EDIFACT INVOIC)", "OData (App-Def)", "REST (App-Def)", "MQTT (App-Def)", "AMQP (App-Def)", "gRPC (App-Def)"];
+  const ST_UC = ["Rohstoffe bestellen", "Absatz auswerten", "Sud überwachen", "Lieferung avisieren", "Bestand abfragen", "Rechnung stellen"];
+  const ST = [
+    { app: "Mälzerei Rheintal", l: ["sync", "Provider", "SOAP (UBL Order)", "Rohstoffe bestellen"], erkl: "BrauPlan ruft die SOAP-Schnittstelle der Mälzerei auf: Die Mälzerei ist Provider." },
+    { app: "Excel (Verkaufsleitung)", l: ["sync", "Consumer", "OData (App-Def)", "Absatz auswerten"], erkl: "Excel nutzt die OData-Schnittstelle von BrauPlan: Consumer. Excel ist ein Umsystem, kein eigener Client." },
+    { app: "Sudhaus-Steuerung", l: ["async", "Sender", "MQTT (App-Def)", "Sud überwachen"], erkl: "Nachrichten über den Broker: async. Die Steuerung schickt, also Sender." },
+    { app: "Lagerverwaltung", l: ["async", "Receiver", "AMQP (App-Def)", "Lieferung avisieren"], erkl: "Die Lagerverwaltung holt die Nachricht beim Broker ab: Receiver." },
+    { app: "Webshop Durstlöscher GmbH", l: ["sync", "Consumer", "REST (App-Def)", "Bestand abfragen"], erkl: "Der fremde Webshop ruft die REST-API von BrauPlan auf: Consumer." },
+    { app: "EDI-Provider EDIhub", l: ["sync", "Provider", "SOAP (EDIFACT INVOIC)", "Rechnung stellen"], erkl: "BrauPlan nutzt die SOAP-Schnittstelle von EDIhub: Provider, Semantik EDIFACT INVOIC." }
+  ];
+  const ST_SP = [["sync/async", ST_SYNC], ["Funktion", ST_FUNK], ["Protokoll (Semantik)", ST_PROT], ["Anwendungsfall", ST_UC]];
+  const stBody = document.querySelector("#t02-st tbody");
+  const stFb = document.getElementById("t02-st-fb");
+  ST.forEach((z, i) => {
+    const tr = document.createElement("tr");
+    let h = '<th scope="row" data-label="Applikation">' + z.app + "</th>";
+    ST_SP.forEach(([lab, werte], j) => {
+      h += '<td data-label="' + lab + '"><select class="btn" id="t02-st-' + i + "-" + j + '" aria-label="' + esc(z.app) + ": " + lab + '"><option value="">– wählen –</option>' +
+        werte.map((w) => '<option value="' + esc(w) + '">' + esc(w) + "</option>").join("") + '</select><span class="t02-mark"></span></td>';
+    });
+    tr.innerHTML = h;
+    stBody.appendChild(tr);
+  });
+  function stPruefen(zeigen) {
+    let ok = 0, leer = 0;
+    const hinweise = [];
+    ST.forEach((z, i) => {
+      let zeileOk = true;
+      ST_SP.forEach((_, j) => {
+        const s = document.getElementById("t02-st-" + i + "-" + j);
+        if (zeigen) s.value = z.l[j];
+        const m = s.parentNode.querySelector(".t02-mark");
+        s.classList.remove("t02-ok-z", "t02-falsch-z");
+        if (!s.value) { leer++; zeileOk = false; m.textContent = ""; return; }
+        const r = s.value === z.l[j];
+        if (r) ok++; else zeileOk = false;
+        s.classList.add(r ? "t02-ok-z" : "t02-falsch-z");
+        m.textContent = r ? "✓" : "✗";
+        m.style.color = r ? "var(--ok)" : "var(--bad)";
+      });
+      if (!zeileOk) hinweise.push("<li><b>" + z.app + ":</b> " + z.erkl + "</li>");
+      const syncWahl = document.getElementById("t02-st-" + i + "-0").value, funk = document.getElementById("t02-st-" + i + "-1").value;
+      if (syncWahl === "sync" && (funk === "Sender" || funk === "Receiver")) hinweise.push("<li>Bei <b>sync</b> heisst die Funktion Consumer oder Provider, nicht " + funk + ".</li>");
+      if (syncWahl === "async" && (funk === "Consumer" || funk === "Provider")) hinweise.push("<li>Bei <b>async</b> heisst die Funktion Sender oder Receiver, nicht " + funk + ".</li>");
+    });
+    const n = ST.length * 4;
+    stFb.className = "rueckmeldung " + (ok === n ? "ok" : "bad");
+    if (zeigen) stFb.innerHTML = "Lösung eingetragen. Merke: Die Funktion ist immer die Rolle des Umsystems.<ul>" + ST.map((z) => "<li><b>" + z.app + ":</b> " + z.erkl + "</li>").join("") + "</ul>";
+    else stFb.innerHTML = (ok === n ? "<b>✓ Alles richtig.</b> Die Tabelle ist prüfungsreif." : "<b>" + ok + " von " + n + " Zellen richtig.</b>" + (leer ? " " + leer + " Zellen sind noch leer." : "")) + (hinweise.length && ok < n ? "<ul>" + hinweise.join("") + "</ul>" : "");
+  }
+  document.getElementById("t02-st-pruefen").addEventListener("click", () => stPruefen(false));
+  document.getElementById("t02-st-loesung").addEventListener("click", () => stPruefen(true));
+  document.getElementById("t02-st-reset").addEventListener("click", () => {
+    stBody.querySelectorAll("select").forEach((s) => { s.value = ""; s.classList.remove("t02-ok-z", "t02-falsch-z"); });
+    stBody.querySelectorAll(".t02-mark").forEach((m) => (m.textContent = ""));
+    stFb.className = "rueckmeldung leer"; stFb.textContent = "";
+  });
+
+  /* ===== 14 · Spiel ===== */
+  A.spiel("#t02-spiel", { spielId: "avsw-02-soa", fach: "avsw", titel: "SOA und APIs modellieren", levels: LEVELS });
+
+  /* ===== Film: Schnittstellentabelle aus Anwendungsfällen ===== */
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const F_ZEILEN = [
+    ["PayHelvetia (Zahlungsanbieter)", "sync", "Provider", "REST (App-Def)", "Kurs buchen"],
+    ["Finanzbuchhaltung", "async", "Receiver", "AMQP (App-Def)", "Buchung verbuchen"],
+    ["Excel (Schulleitung)", "sync", "Consumer", "OData (App-Def)", "Auslastung auswerten"],
+    ["Partnerschulen", "sync", "Consumer", "SOAP (EduBook)", "Partnerkurse anbieten"],
+    ["Raumplaner", "sync", "Provider", "gRPC (App-Def)", "Raum reservieren"],
+    ["EDI-Provider EDIhub", "sync", "Provider", "SOAP (UBL Invoice)", "Firmen verrechnen"]
+  ];
+  // stand[i] = Anzahl gefüllter Spalten in Zeile i (1 = nur Applikation), neu = [zeile, spalte] der neuen Zelle
+  function tabelle(stand, neu, extra) {
+    let h = '<div class="t02-fbox"><table class="t02-ft"><thead><tr><th>Applikation</th><th>sync/async</th><th>Funktion</th><th>Protokoll (Semantik)</th><th>Anwendungsfall</th></tr></thead><tbody>';
+    if (extra) h += '<tr><td class="t02-weg">Webshop (eigener Client)</td><td colspan="4" class="t02-leer">kein Umsystem, gehört nicht in die Tabelle</td></tr>';
+    F_ZEILEN.forEach((z, i) => {
+      if (!stand[i]) return;
+      h += "<tr>";
+      z.forEach((w, j) => {
+        const da = j < stand[i];
+        const istNeu = neu && neu.some((n) => n[0] === i && (n[1] === j || n[1] === -1)) && da;
+        h += "<td" + (da ? "" : ' class="t02-leer"') + ">" + (da ? (istNeu ? NW(w) : w) : "…") + "</td>";
+      });
+      h += "</tr>";
+    });
+    return h + "</tbody></table></div>";
+  }
+  const st0 = [0, 0, 0, 0, 0, 0];
+  const alleApp = [1, 1, 1, 1, 1, 1];
+  const S = (arr) => arr.slice();
+  const szenen = [];
+  szenen.push({ ph: -1, sent: "all", dict: 0, f: tabelle(st0), say: "Muster: Schnittstellentabelle aus Anwendungsfällen. Du gehst in fünf Schritten vor: Umsysteme markieren, sync oder async bestimmen, Rolle des Umsystems festlegen, Protokoll mit Semantik notieren, Anwendungsfall eintragen." });
+  szenen.push({ ph: 0, hl: ["zahl", "buch", "excel", "partner", "raum", "edi"], dict: 1, dh: [0], f: tabelle(alleApp, [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]]), say: "Zuerst markierst du jedes Umsystem, das mit KursPilot Daten austauscht. Jedes wird eine Zeile in der Spalte «Applikation»." });
+  szenen.push({ ph: 0, hl: ["shop"], dict: 2, dh: [1], f: tabelle(alleApp, null, true), say: "Achtung beim Webshop: Er ist der eigene Client von KursPilot, kein Umsystem. Er kommt nicht in die Tabelle." });
+  // Zeile für Zeile
+  const zeilenSzenen = [
+    { hl: ["zsync"], dict: 3, dh: [2], say: "Zeile 1, PayHelvetia: KursPilot «wartet auf die Antwort». Das ist synchron." },
+    { hl: ["zrest"], dict: 4, dh: [3], say: "KursPilot ruft die API von PayHelvetia auf. Also ist PayHelvetia der Provider. In die Spalte gehört die Rolle des Umsystems." },
+    { hl: ["zrest", "zahl"], dict: 4, say: "Protokoll REST, eine Norm wird nicht genannt: Semantik App-Def. Anwendungsfall «Kurs buchen»." },
+    { hl: ["bsend", "bamqp"], dict: 5, dh: [4], say: "Zeile 2, Finanzbuchhaltung: «sendet eine Nachricht» über den Message Broker. Das ist asynchron." },
+    { hl: ["buch"], dict: 5, say: "Die Buchhaltung holt die Nachricht ab, sie ist also Receiver. Bei async heisst es Sender oder Receiver, nie Consumer oder Provider." },
+    { hl: ["bamqp"], say: "Protokoll AMQP, Semantik App-Def, Anwendungsfall «Buchung verbuchen»." },
+    { hl: ["excel"], say: "Zeile 3, Excel: Die Schulleitung wertet aus, Excel wartet auf die Daten. Synchron." },
+    { hl: ["odata"], say: "Die OData-Schnittstelle gehört KursPilot. Excel nutzt sie, ist also Consumer." },
+    { hl: ["odata"], say: "Protokoll OData mit eigener Definition: OData (App-Def). Anwendungsfall «Auslastung auswerten»." },
+    { hl: ["psoap"], say: "Zeile 4, Partnerschulen: Sie «rufen die SOAP-Schnittstelle von KursPilot auf». Synchron." },
+    { hl: ["partner", "psoap"], say: "Die Partnerschulen rufen auf, also sind sie Consumer. Achte auf das Wort «von KursPilot»: Die API gehört KursPilot." },
+    { hl: ["pnorm"], dict: 6, dh: [5], say: "Hier ist eine Norm genannt: «EduBook». Sie kommt in Klammern hinter das Protokoll: SOAP (EduBook)." },
+    { hl: ["raum", "rgrpc"], say: "Zeile 5, Raumplaner: KursPilot «fragt ab», also synchron, intern per gRPC." },
+    { hl: ["raum"], say: "KursPilot fragt beim Raumplaner: Der Raumplaner ist Provider." },
+    { hl: ["rgrpc"], say: "gRPC mit eigener Definition, Anwendungsfall «Raum reservieren». Intern ist gRPC nach der Regel richtig gewählt." },
+    { hl: ["edi", "esoap"], say: "Zeile 6, EDIhub: KursPilot übergibt Rechnungen über dessen SOAP-Schnittstelle. Synchron." },
+    { hl: ["edi"], say: "Die Schnittstelle gehört EDIhub: Provider. Das ist der klassische Managed Service Provider im B2B." },
+    { hl: ["enorm"], say: "Die Norm UBL kommt in Klammern: SOAP (UBL Invoice). Anwendungsfall «Firmen verrechnen»." }
+  ];
+  const stand = S(alleApp);
+  zeilenSzenen.forEach((z, k) => {
+    const zeile = Math.floor(k / 3), teil = k % 3;
+    const neu = [];
+    if (teil === 0) { stand[zeile] = 2; neu.push([zeile, 1]); }
+    else if (teil === 1) { stand[zeile] = 3; neu.push([zeile, 2]); }
+    else { stand[zeile] = 5; neu.push([zeile, 3], [zeile, 4]); }
+    szenen.push({ ph: 1, sent: zeile <= 1 ? 0 : 1, hl: z.hl, dict: z.dict, dh: z.dh, f: tabelle(S(stand), neu), say: z.say });
+  });
+  szenen.push({ ph: 2, sent: "all", f: tabelle([5, 5, 5, 5, 5, 5]), say: "Kontrolle: Jede sync-Zeile hat Consumer oder Provider, jede async-Zeile Sender oder Receiver. Jedes Protokoll hat in Klammern seine Semantik." });
+  szenen.push({ ph: 2, say: "Und die Regel des Moduls passt: Intern gRPC, mit Partnern SOAP und OData. Diese Tabelle ist die Grundlage für die Integrationsarchitektur. Jetzt prüf dich im Selbsttest.", end: true });
+  L.film("#t02-film", {
+    phasen: ["1 · Umsysteme markieren", "2 · Zeilen ausfüllen", "3 · Kontrollieren"],
+    texte: [
+      '<b>Kurs buchen:</b> Kundinnen buchen im <span data-ph="shop">Webshop</span>. KursPilot lässt die Zahlung beim <span data-ph="zahl">Zahlungsanbieter PayHelvetia</span> über dessen <span data-ph="zrest">REST-API</span> autorisieren und <span data-ph="zsync">wartet auf die Antwort</span>. <b>Buchung verbuchen:</b> Danach <span data-ph="bsend">sendet KursPilot eine Nachricht</span> an die <span data-ph="buch">Finanzbuchhaltung</span>, die sie <span data-ph="bamqp">beim Message Broker (AMQP) abholt</span>.',
+      '<b>Auslastung auswerten:</b> Die Schulleitung wertet mit <span data-ph="excel">Excel</span> die Belegung über eine <span data-ph="odata">OData-Schnittstelle von KursPilot</span> aus. <b>Partnerkurse anbieten:</b> <span data-ph="partner">Partnerschulen</span> <span data-ph="psoap">rufen die SOAP-Schnittstelle von KursPilot auf</span>; die Nachrichten folgen dem <span data-ph="pnorm">Branchenstandard «EduBook» (fiktiv)</span>. <b>Raum reservieren:</b> KursPilot fragt beim internen <span data-ph="raum">Raumplaner</span> per <span data-ph="rgrpc">gRPC</span> freie Räume ab. <b>Firmen verrechnen:</b> KursPilot übergibt Rechnungen an den <span data-ph="edi">EDI-Provider EDIhub</span> über <span data-ph="esoap">dessen SOAP-Schnittstelle</span>, <span data-ph="enorm">Semantik UBL Invoice</span>.'
+    ],
+    woerterbuch: [
+      "<b>Umsystem</b> = fremde Applikation mit Schnittstelle",
+      "<b>Eigener Client</b> ≠ Umsystem",
+      "<b>wartet auf Antwort</b> = sync",
+      "<b>ruft API von X auf</b> → X ist Provider",
+      "<b>Nachricht über Broker</b> = async, Sender/Receiver",
+      "<b>Norm</b> in Klammern hinter das Protokoll",
+      "<b>keine Norm</b> → App-Def"
+    ],
+    beschriftung: { texte: "Anwendungsfälle", text: "Teil", formel: "Schnittstellentabelle" },
+    szenen: szenen
+  });
+
+  /* ===== Selbsttest ===== */
+  L.selbsttest("#t02-selbsttest", {
+    fragen: [
+      { q: "Welche Rolle im SOA-Dreieck vermittelt nur das <b>Finden</b> eines Services?", o: ["Message Broker", "Service Registry", "API-Gateway", "Service Consumer"], a: 1,
+        e: "Die Registry nimmt Services auf (publish) und liefert sie bei der Suche (find). Den Aufruf (bind) macht der Consumer direkt beim Provider." },
+      { q: "Der Bestellservice bietet eine REST-API an und ruft für jede Bestellung die gRPC-API des Lagerservice auf. Was ist er?", o: ["Nur Provider", "Nur Consumer", "Provider und Consumer zugleich: Glied einer kaskadierenden Kette", "Registry"], a: 2,
+        e: "Rollen gelten je Verbindung. Gegenüber dem Shop ist er Provider, gegenüber dem Lager Consumer." },
+      { q: "Was bedeutet «REST ist stateless»?", o: ["Der Server speichert keine Daten in einer Datenbank.", "Jede Anfrage bringt alles Nötige mit; der Server merkt sich zwischen Anfragen keinen Client-Zustand.", "Antworten haben keinen Statuscode.", "Der Client darf nur GET verwenden."], a: 1,
+        e: "Zustandslos betrifft die Sitzung, nicht die Daten. Darum kann jede Anfrage auf einer anderen Instanz landen." },
+      { q: "Ein Treuhänder will im Extranet mit Excel ad hoc Umsätze filtern und summieren. Welche API passt?", o: ["gRPC", "GraphQL", "OData", "SOAP"], a: 2,
+        e: "Excel liest OData-Feeds direkt, Filtern und Zählen geht in der URL. Ausserdem passt OData zur Regel Extranet: SOAP oder OData." },
+      { q: "<b>Stolperfalle:</b> Deine Applikation ruft die REST-API der Kreditorenbuchhaltung auf. Was steht in der Schnittstellentabelle bei «Funktion» für die Kreditorenbuchhaltung?", o: ["Consumer, weil deine Applikation die Daten braucht", "Provider", "Sender", "Receiver"], a: 1,
+        e: "In der Spalte steht die Rolle des Umsystems. Die Buchhaltung bietet die API an: Provider. Sender/Receiver gibt es nur bei async." },
+      { q: "An einer Assoziation steht nur «App-Def». Welche Struktur und Codierung gilt dann nach der Vorgabe des Moduls?", o: ["JSON/UTF-8", "XML/UTF-8", "CSV/ASCII", "keine, die Angabe ist ungültig"], a: 1,
+        e: "Standard ist XML in UTF-8. Nur Abweichungen (z. B. JSON, CSV/EBCDIC, EDI/ASCII) schreibst du dazu." },
+      { q: "Zeichnest du in der Makroarchitektur mit Microservices ein API-Gateway ein?", o: ["Ja, vor jeden Microservice", "Ja, aber nur im Client Tier", "Nein, API-Gateway und Integration Middleware werden dort nicht modelliert", "Nur wenn OAuth verwendet wird"], a: 2,
+        e: "Das Gateway gehört in die Integrationsarchitektur (angebotene Echtzeit-APIs), nicht in Makro- oder Mehrschichtenarchitektur." },
+      { q: "Was zeigt in SoaML ein <b>Request-Port</b>?", o: ["Einen Service, den der Teilnehmer anbietet", "Einen Service, den der Teilnehmer nutzt (Consumer-Seite)", "Eine Datenbank des Teilnehmers", "Ein Topic beim Broker"], a: 1,
+        e: "Service-Port = angeboten (Provider, Ball), Request-Port = genutzt (Consumer, Socket)." },
+      { q: "Was schickt ein OAuth-2.0-Client bei jedem API-Aufruf mit?", o: ["Benutzername und Passwort", "Ein zeitlich begrenztes Access Token im Header <code>Authorization: Bearer</code>", "Die WSDL-Datei", "Nichts, TLS reicht"], a: 1,
+        e: "Der Client holt beim Authorization Server ein kurzlebiges Token und weist sich damit aus. Passwörter sieht der Provider nie." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
