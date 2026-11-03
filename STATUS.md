@@ -76,6 +76,10 @@
 
 ## Changelog
 
+### 2026-11-03
+
+- **feat: Lernpfad PMGT Welle 2 und IPMA-Prüfungssimulator live** — Stationen 01–03, 05–09, 12, 14–17 und 24 (21 von 25); Prüfungssimulator `/ipma` für alle eingeloggten Konten (Übungsprüfung 60 MC + 30 offen, Kurzprüfung, Training, Lücken schliessen; Auswertung 60 % und 23/28 Kompetenzen), Fragenpool Teil 1 mit 175 fachgeprüften Fragen (`content/ipma/fragen/`), Bewertung offener Antworten durch Claude (`claude-opus-5-5`, strukturierte Ausgabe, nur Pro/Admin, Tages- und Monatsdeckel); Migrationen `20261102090000_ipma_modelle` (inkl. 6 Abzeichen) und `20261102100000_ipma_aktiv_eindeutig` (Teil-Index). Leitstand mit gezeichneten Porträts, Symbolen und neuer Übersicht. Review und Integrationstest im Browser bestanden. Spezifikation `docs/ipma-pruefungssimulator-spezifikation.md`.
+
 ### 2026-11-01
 
 - **feat: Spiel-Erweiterung 1.1** — Spielbrett-Modus «streichen» (schrittweise dominierte Strategien streichen), Zufall auf Szenario-Karten (`zufall` mit Gewichten), Spielbaum-Blätter passen sich der Textlänge an, festes Ende einer Karte geht vor `pruefe`.
