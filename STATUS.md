@@ -60,7 +60,7 @@
 
 - **Lernpfad Spieltheorie, Vault:** Konzept liegt in `docs/lernpfad-spieltheorie.md`; Jan überträgt es in den Vault («02 Projekte/Lernpfad Spieltheorie»), Zugriff auf den Vault besteht aus der Cloud-Session nicht.
 - **Lernpfad Spieltheorie, Station 10:** Akteursanalysen zu Russland–Ukraine, Taiwanstrasse und Rotes Meer/Hormus mit Stand Oktober 2026. Inhalte veralten: bei grösseren Lageänderungen nachführen (Hinweis «Modell, keine Prognose» steht auf der Seite).
-- **Spiel-Erweiterung, Wünsche:** Modus «streichen» (iterierte Elimination) im Spielbrett, Zufallsziele im Szenario als eigenes Feld, Selbsttest mischt Antworten nicht (richtige Antworten von Hand verteilen), breite Spielbäume (6+ Blätter) scrollen bei 360 px in sich.
+- **Spiel-Erweiterung, Rest:** Spielbäume mit 6+ Blättern scrollen bei 360 px in sich (Breite passt sich jetzt der Textlänge an). Station 02 nutzt noch ihre eigene Streich-Interaktion statt des neuen Modus «streichen» (funktioniert, könnte umgestellt werden).
 
 - **AVSW-Inhalte nicht mit Folien abgeglichen:** Die Folien lagen beim Erstellen nicht vor. Alle Stationen tragen den Hinweis «Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt». Begriffe, Notation (C4/UML), Themenreihenfolge, Feld `vorlesung` (vorläufig «Thema 1–5») und Prüfungsrahmen mit den Modulunterlagen abgleichen.
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
@@ -78,6 +78,7 @@
 
 ### 2026-11-01
 
+- **feat: Spiel-Erweiterung 1.1** — Spielbrett-Modus «streichen» (schrittweise dominierte Strategien streichen), Zufall auf Szenario-Karten (`zufall` mit Gewichten), Spielbaum-Blätter passen sich der Textlänge an, festes Ende einer Karte geht vor `pruefe`.
 - **feat: Lernpfad Spieltheorie** — `content/lernseiten/spieltheorie/` mit 11 Stationen in 5 Sektionen: Spielbrett, Gefangenendilemma, Nash-Gleichgewicht, Nullsumme und Bluff, Drohungen und Selbstbindung, Tit-for-Tat, Signale und Täuschung, 36 Strategeme und Sun Tzu, Verhandeln (Simulation «Die Piratenallianz»), Krisenstab Geopolitik, Abschluss mit Kampagne und Prüfung. Keine Formeln, Archipel-Aurelia-Geschichten, historische Fallstudien, Alltagschecklisten.
 - **feat: Spiel-Erweiterung 1.0.0** — `public/lernpfad/st-spiel.css` und `st-spiel.js` (`Lernpfad.spiel`): Pergament-Grundton und Akzent Ziegelbraun (Kontrast hell und dunkel geprüft), 10 eigene SVG-Figuren, 7 Szenen, Bausteine `spielbrett`, `turnier` (Duell, Turnier, Evolution), `baum`, `szenario`, `akteure`, `mischer`. Vorlage `content/lernseiten/spieltheorie/_vorlage.html`, Doku `docs/lernpfad-spieltheorie.md`. Inhaltsprüfung erzwingt die Reihenfolge der Erweiterungsdateien (mit Tests), Test für `fach.json`.
 - **test:** Alle Stationen bei 360 px hell und dunkel im Browser durchgeklickt (keine Konsolenfehler, kein seitlicher Scroll), Spielbretter und Spielbäume gegen die Engine nachgerechnet, alle Szenario-Enden erreicht.

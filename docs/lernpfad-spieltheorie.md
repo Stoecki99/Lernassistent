@@ -192,7 +192,7 @@ Regeln: Wie Baukasten Abschnitt 11. Seiteneigene Klassen mit Präfix `t<NN>-`. F
 | `gleichgewichte` | optional Liste `[[i, j], …]`, sonst automatisch berechnet (reine Gleichgewichte) |
 | `erklaerung` | HTML nach dem Lösen |
 
-Weitere Felder: `feldtexte` (`[[HTML]]`, Zusatztext je Feld im Modus «lesen»), `einheit_eins` (Einzahl der Einheit, z. B. «Jahr»; für «Jahre», «Punkte», «Monate», «Tage», «Schiffe», «Stimmen» automatisch). Der Modus «dominanz» prüft strikte Dominanz in einem Schritt; schrittweises Streichen (iterierte Elimination) baut eine Station seitenlokal (Muster: Station 02).
+Weitere Felder: `feldtexte` (`[[HTML]]`, Zusatztext je Feld im Modus «lesen»), `einheit_eins` (Einzahl der Einheit, z. B. «Jahr»; für «Jahre», «Punkte», «Monate», «Tage», «Schiffe», «Stimmen» automatisch). Der Modus «dominanz» prüft strikte Dominanz in einem Schritt. Der Modus «streichen» (iterierte Elimination): Knöpfe «✂ Strategie» je Spieler, gestrichen wird nur, was unter den übrigen Strategien streng dominiert ist; Protokoll der Schritte, Abschluss bei einem Feld oder mit «Nichts mehr zu streichen». Muster: `_vorlage.html` («Drei Handelsrouten»).
 
 Rückgabe `{ modus(name), zuruecksetzen() }`. Ereignis `lernpfad:spielbrett` mit `detail: { modus, richtig }`.
 
@@ -210,7 +210,7 @@ Rückgabe `{ modus(name), zuruecksetzen() }`. Ereignis `lernpfad:spielbrett` mit
 
 ### 5.5 `S.baum(el, cfg)`
 
-Spielbaum mit Rückwärtsinduktion. `knoten`: `{ id, spieler, text, aeste: [{ text, ziel }] }`, Blätter `{ id, ende: true, text, werte: [a, b] }`. `spieler`: Index in `spieler: [{ name, figur }]`. Der Baustein fragt Knoten von unten nach oben ab; `S.baum(...).loesen()` zeigt alles. Felder `titel`, `frage`, `erklaerung`.
+Spielbaum mit Rückwärtsinduktion. Blattbreite und Abstände passen sich dem längsten Blatttext an (höchstens 190 Einheiten); breite Bäume scrollen in `.tablebox`. `knoten`: `{ id, spieler, text, aeste: [{ text, ziel }] }`, Blätter `{ id, ende: true, text, werte: [a, b] }`. `spieler`: Index in `spieler: [{ name, figur }]`. Der Baustein fragt Knoten von unten nach oben ab; `S.baum(...).loesen()` zeigt alles. Felder `titel`, `frage`, `erklaerung`.
 
 ### 5.6 `S.szenario(el, cfg)`
 
@@ -222,7 +222,7 @@ Spielbaum mit Rückwärtsinduktion. `knoten`: `{ id, spieler, text, aeste: [{ te
 | `knoten` | `{ id: { szene, sprecher, figur, stimmung, text, karten: [{ titel, symbol, text, effekte: { id: Zahl }, ziel, lupe, bedingung }] } }`. `ziel` = nächster Knoten; `bedingung(stand)` optional (Funktion, Karte nur sichtbar, wenn wahr) |
 | `enden` | `{ id: { titel, siegel, text, konzepte: [Text] } }`; Knoten mit `ende: "id"` beenden das Szenario. Statt fester Enden darf ein Knoten `weiche(stand)` haben (Funktion → Knoten-Id) |
 
-Weitere Felder: `einleitung` (HTML über der Leiste), `zustand` (zusätzliche Startwerte im Stand, z. B. Merker), `pruefe(stand, verlauf)` (nach jeder Karte: Ende-Id oder `null`). Auf Karten: `ende` (Ende-Id statt `ziel`), `setze` (Objekt oder Funktion `(stand, verlauf) → Objekt`, wird in den Stand übernommen, z. B. `{ pfand: true }`), `folge`, `folgeFigur`, `folgeSprecher`, `folgeStimmung` (Antwort einer Figur nach der Wahl), `ziel` darf eine Funktion `(stand, verlauf) → Id` sein. Auf Knoten: `ort`, `figuren`, `effekte` (beim Betreten). Texte (`text`, `lupe`, Ende-`text`) dürfen Funktionen `(stand, verlauf) → HTML` sein.
+Weitere Felder: `einleitung` (HTML über der Leiste), `zustand` (zusätzliche Startwerte im Stand, z. B. Merker), `pruefe(stand, verlauf)` (nach jeder Karte: Ende-Id oder `null`). Auf Karten: `ende` (Ende-Id statt `ziel`), `setze` (Objekt oder Funktion `(stand, verlauf) → Objekt`, wird in den Stand übernommen, z. B. `{ pfand: true }`), `folge`, `folgeFigur`, `folgeSprecher`, `folgeStimmung` (Antwort einer Figur nach der Wahl), `ziel` darf eine Funktion `(stand, verlauf) → Id` sein. Auf Knoten: `ort`, `figuren`, `effekte` (beim Betreten). **Zufall** auf Karten: `zufall: [{ p, kurz, text, lupe, effekte, setze, ziel, ende }]` – eine Folge wird nach Gewicht `p` gezogen (Zahl oder Funktion `(stand, verlauf) → Zahl`, Standard 1); `text` erscheint als «🎲 Der Zufall entscheidet», `ziel`/`ende` der Folge ersetzen die der Karte. Reihenfolge nach «Weiter»: festes Ende (Folge oder Karte) vor `pruefe`, dann das Ziel. Texte (`text`, `lupe`, Ende-`text`) dürfen Funktionen `(stand, verlauf) → HTML` sein.
 
 Rückgabe `{ neuStarten() }`. Ereignis `lernpfad:szenario` mit `detail: { ende, stand }`.
 

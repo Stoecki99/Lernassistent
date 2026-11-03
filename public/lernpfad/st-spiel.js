@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Lernpfad-Baukasten · st-spiel.js (Spiel-Erweiterung 1.0.0 für den Lernpfad Spieltheorie)
+   Lernpfad-Baukasten · st-spiel.js (Spiel-Erweiterung 1.1.0 für den Lernpfad Spieltheorie)
    Einbinden NACH lernpfad.js:
      <script src="/lernpfad/lernpfad.js"></script>
      <script src="/lernpfad/st-spiel.js"></script>
@@ -463,7 +463,7 @@
     const A = analysiere(W, weniger);
     if (Array.isArray(cfg.gleichgewichte)) A.gg = cfg.gleichgewichte;
     const modi = cfg.modi || ["lesen", "antworten", "gleichgewicht", "dominanz"];
-    const MODUSNAME = { lesen: "📜 Lesen", spielen: "🎲 Spielen", antworten: "🎯 Beste Antworten", gleichgewicht: "⚖ Gleichgewicht finden", dominanz: "🗡 Dominanz" };
+    const MODUSNAME = { lesen: "📜 Lesen", spielen: "🎲 Spielen", antworten: "🎯 Beste Antworten", gleichgewicht: "⚖ Gleichgewicht finden", dominanz: "🗡 Dominanz", streichen: "✂ Streichen" };
     const zn = Z.name, sn = S.name;
     const zs = (i) => "«" + ohneTags(Z.strategien[i]) + "»", ss = (j) => "«" + ohneTags(S.strategien[j]) + "»";
     const EINZAHL = { Jahre: "Jahr", Punkte: "Punkt", Monate: "Monat", Tage: "Tag", Schiffe: "Schiff", Stimmen: "Stimme" };
@@ -573,6 +573,8 @@
         baueDominanz();
       } else if (m === "spielen") {
         baueSpiel();
+      } else if (m === "streichen") {
+        baueStreichen();
       }
       melde(root, "lernpfad:spielbrett", { modus: m, richtig: null });
     }
@@ -696,6 +698,63 @@
         melde(root, "lernpfad:spielbrett", { modus: "dominanz", richtig: okZ && okS });
       });
       box.appendChild(p);
+      steuer.appendChild(box);
+    }
+
+    // Schrittweise streichen: nur streng dominierte Strategien unter den noch übrigen
+    function baueStreichen() {
+      const restZ = new Set(Z.strategien.map((_, i) => i)), restS = new Set(S.strategien.map((_, j) => j));
+      const besser = A.besser;
+      const dominiertZ = (i) => [...restZ].find((k) => k !== i && [...restS].every((j) => besser(W[k][j][0], W[i][j][0])));
+      const dominiertS = (j) => [...restS].find((k) => k !== j && [...restZ].every((i) => besser(W[i][k][1], W[i][j][1])));
+      const schritte = [];
+      info.innerHTML = "Streiche Schritt für Schritt jede Strategie, die ein vernünftiger Spieler <b>nie</b> wählt: Es gibt eine andere, die gegen alles noch Übrige besser ist.";
+      const box = neu("div", { class: "stack" });
+      const gZ = neu("div", { class: "st-wahl", role: "group", "aria-label": "Strategien von " + ohneTags(zn) + " streichen" });
+      const gS = neu("div", { class: "st-wahl", role: "group", "aria-label": "Strategien von " + ohneTags(sn) + " streichen" });
+      const fertigB = knopf("Nichts mehr zu streichen");
+      const protokoll = neu("ol", { class: "st-verlauf" });
+      function dimmen() {
+        for (let i = 0; i < nz; i++) for (let j = 0; j < ns; j++) felder[i][j].classList.toggle("gedimmt", !restZ.has(i) || !restS.has(j));
+        zeKopf.forEach((h, i) => h.classList.toggle("gestrichen", !restZ.has(i)));
+        spKopf.forEach((h, j) => h.classList.toggle("gestrichen", !restS.has(j)));
+      }
+      function knoepfe() {
+        gZ.innerHTML = '<span class="st-z" style="align-self:center">' + zn + ":</span>";
+        gS.innerHTML = '<span class="st-s" style="align-self:center">' + sn + ":</span>";
+        restZ.forEach((i) => { const b = knopf("✂ " + ohneTags(Z.strategien[i])); b.addEventListener("click", () => versuch("z", i)); gZ.appendChild(b); });
+        restS.forEach((j) => { const b = knopf("✂ " + ohneTags(S.strategien[j])); b.addEventListener("click", () => versuch("s", j)); gS.appendChild(b); });
+      }
+      function nochWas() { return [...restZ].some((i) => dominiertZ(i) !== undefined) || [...restS].some((j) => dominiertS(j) !== undefined); }
+      function versuch(wer, x) {
+        const k = wer === "z" ? dominiertZ(x) : dominiertS(x);
+        const name = wer === "z" ? zn + " " + zs(x) : sn + " " + ss(x);
+        if (k === undefined) {
+          info.innerHTML = '<span class="marke">✗</span> ' + name + " ist (noch) nicht dominiert: Gegen mindestens eine übrige Strategie des anderen ist sie die beste oder gleich gut. Such weiter.";
+          return;
+        }
+        if (wer === "z") restZ.delete(x); else restS.delete(x);
+        const t = name + " gestrichen: " + (wer === "z" ? zs(k) : ss(k)) + " ist immer besser.";
+        schritte.push(t);
+        protokoll.insertAdjacentHTML("beforeend", "<li>" + t + "</li>");
+        dimmen(); knoepfe();
+        if (restZ.size === 1 && restS.size === 1) abschluss();
+        else { info.innerHTML = '<span class="marke">✓</span> ' + t + " Schau jetzt das kleinere Brett an: Wird dadurch etwas Neues dominiert?"; const b = gZ.querySelector("button") || gS.querySelector("button"); if (b) b.focus(); }
+      }
+      function abschluss() {
+        const i = [...restZ][0], j = [...restS][0];
+        info.innerHTML = restZ.size === 1 && restS.size === 1
+          ? '<span class="marke">✓</span> Übrig bleibt ' + zs(i) + " / " + ss(j) + " mit " + w(W[i][j][0]) + " für " + zn + " und " + w(W[i][j][1]) + " für " + sn + ". Das ist die Lösung durch Streichen." + (cfg.erklaerung ? " " + cfg.erklaerung : "")
+          : '<span class="marke">✓</span> Richtig, mehr lässt sich nicht streichen. Für den Rest brauchst du die besten Antworten (Gleichgewicht).';
+        gZ.remove(); gS.remove(); fertigB.remove();
+        melde(root, "lernpfad:spielbrett", { modus: "streichen", richtig: true });
+      }
+      fertigB.addEventListener("click", () => {
+        if (nochWas()) info.innerHTML = '<span class="marke">✗</span> Es gibt noch etwas zu streichen. Vergleiche die übrigen Strategien eines Spielers Feld für Feld.';
+        else abschluss();
+      });
+      knoepfe(); dimmen();
+      box.appendChild(gZ); box.appendChild(gS); box.appendChild(neu("div", { class: "row" })).appendChild(fertigB); box.appendChild(protokoll);
       steuer.appendChild(box);
     }
 
@@ -1029,7 +1088,11 @@
       const xs = k.aeste.map((a) => pos[a.ziel].x);
       pos[id] = { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: tiefe };
     })(wurzel, 0);
-    const DX = 118, DY = 92, PAD = 64;
+    // Blattbreite nach dem längsten Text (Kurztitel oder Werte), Abstand der Blätter danach
+    let blattText = 0;
+    for (const id in KN) if (KN[id].ende) blattText = Math.max(blattText, ohneTags(KN[id].kurz || "").length, KN[id].werte.join(" | ").length);
+    const BW = Math.max(104, Math.min(190, blattText * 7.2 + 18));
+    const DX = Math.max(118, BW + 14), DY = 92, PAD = Math.max(64, BW / 2 + 8);
     const breite = Math.max(320, (blattNr - 1) * DX + 2 * PAD);
     const hoehe = tiefeMax * DY + 80;
     const px = (id) => PAD + pos[id].x * DX + (breite - 2 * PAD - (blattNr - 1) * DX) / 2;
@@ -1054,7 +1117,7 @@
       for (const id in pos) {
         const k = KN[id];
         if (k.ende) {
-          s += '<rect class="st-blatt" x="' + (px(id) - 52) + '" y="' + (py(id) - 18) + '" width="104" height="44" rx="8"/>';
+          s += '<rect class="st-blatt" x="' + (px(id) - BW / 2) + '" y="' + (py(id) - 18) + '" width="' + BW + '" height="44" rx="8"/>';
           if (k.kurz) s += '<text class="st-blatt-t" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) - 2) + '">' + esc(k.kurz) + "</text>";
           s += '<text class="st-wert" text-anchor="middle" x="' + px(id) + '" y="' + (py(id) + (k.kurz ? 16 : 8)) + '">' + k.werte.map(mz).join(" | ") + "</text>";
         } else {
@@ -1183,10 +1246,25 @@
       });
       return d;
     }
+    function wuerfle(liste) {
+      const gew = liste.map((z) => Math.max(0, Number(typeof z.p === "function" ? z.p(stand, verlauf) : z.p === undefined ? 1 : z.p) || 0));
+      const summe = gew.reduce((a, b) => a + b, 0);
+      if (!summe) return liste[0];
+      let x = Math.random() * summe;
+      for (let i = 0; i < liste.length; i++) { x -= gew[i]; if (x < 0) return liste[i]; }
+      return liste[liste.length - 1];
+    }
     function waehle(k, ka) {
       const d = anwenden(ka.effekte || {});
       if (ka.setze) Object.assign(stand, typeof ka.setze === "function" ? ka.setze(stand, verlauf) || {} : ka.setze);
-      verlauf.push({ knoten: knotenId, karte: ohneTags(ka.titel) });
+      // Zufall: eine Folge wird nach Gewicht p gezogen (p darf eine Funktion des Stands sein)
+      const wurf = Array.isArray(ka.zufall) && ka.zufall.length ? wuerfle(ka.zufall) : null;
+      if (wurf) {
+        const d2 = anwenden(wurf.effekte || {});
+        Object.keys(d2).forEach((x) => (d[x] = (d[x] || 0) + d2[x]));
+        if (wurf.setze) Object.assign(stand, typeof wurf.setze === "function" ? wurf.setze(stand, verlauf) || {} : wurf.setze);
+      }
+      verlauf.push({ knoten: knotenId, karte: ohneTags(ka.titel) + (wurf && wurf.kurz ? " (" + ohneTags(wurf.kurz) + ")" : ""), zufall: wurf ? wurf.kurz || true : undefined });
       zeichneLeiste(d);
       const karten = buehne.querySelector(".st-karten");
       if (karten) karten.remove();
@@ -1196,19 +1274,23 @@
       if (folge) buehne.appendChild(folge);
       const lupe = neu("div", { class: "st-lupe", tabindex: "-1" });
       const dt = Object.keys(d).filter((x) => d[x]).map((x) => { const r = RES.find((q) => q.id === x); return (r.symbol || "") + " " + r.name + " " + (d[x] > 0 ? "+" : "") + d[x]; }).join(", ");
-      lupe.innerHTML = "<h4>Konzept-Lupe</h4>" + (ka.lupe ? "<p>" + text(ka.lupe) + "</p>" : "") + (dt ? '<p class="hint">Folgen: ' + dt + "</p>" : "");
+      lupe.innerHTML = (wurf && wurf.text ? '<p class="st-wurf"><span aria-hidden="true">🎲 </span><b>Der Zufall entscheidet:</b> ' + text(wurf.text) + "</p>" : "") +
+        "<h4>Konzept-Lupe</h4>" + (ka.lupe ? "<p>" + text(ka.lupe) + "</p>" : "") + (wurf && wurf.lupe ? "<p>" + text(wurf.lupe) + "</p>" : "") +
+        (dt ? '<p class="hint">Folgen: ' + dt + "</p>" : "");
       buehne.appendChild(lupe);
       const weiter = knopf("Weiter →", "primary");
       weiter.addEventListener("click", () => {
-        let zielId = ka.ziel;
+        // Reihenfolge: festes Ende der Karte (oder des Wurfs) vor pruefe, dann das Ziel
+        const festesEnde = (wurf && wurf.ende) || (!wurf || wurf.ziel === undefined ? ka.ende : null);
+        if (festesEnde) { endeZeigen(festesEnde); return; }
         if (cfg.pruefe) { const e = cfg.pruefe(stand, verlauf); if (e) { endeZeigen(e); return; } }
+        let zielId = wurf && wurf.ziel !== undefined ? wurf.ziel : ka.ziel;
         if (typeof zielId === "function") zielId = zielId(stand, verlauf);
-        if (ka.ende) { endeZeigen(ka.ende); return; }
         const r = zeige(zielId);
         if (r) r.focus();
       });
       buehne.appendChild(neu("div", { class: "row" })).appendChild(weiter);
-      live.textContent = "Gewählt: " + ohneTags(ka.titel) + (dt ? ". Folgen: " + dt : "");
+      live.textContent = "Gewählt: " + ohneTags(ka.titel) + (wurf && wurf.text ? ". Zufall: " + ohneTags(text(wurf.text)) : "") + (dt ? ". Folgen: " + dt : "");
       formeln(buehne);
       lupe.focus();
     }
@@ -1428,7 +1510,7 @@
   }
 
   L.spiel = {
-    version: "1.0.0",
+    version: "1.1.0",
     figur, szene, sprecher, spielbrett, turnier, baum, szenario, akteure, mischer,
     strategien: STRATEGIEN, partie: (a, b, n, rausch, seed, werte) => partie(a, b, n, rausch || 0, rng(seed || 1), Object.assign({ T: 5, R: 3, P: 1, S: 0 }, werte || {})),
     analysiere,
