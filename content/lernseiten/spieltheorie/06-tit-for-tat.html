@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wiederholte Spiele und Tit-for-Tat · SPIELTHEORIE</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/st-spiel.css">
+  <link rel="next" href="/lernseiten/spieltheorie/07-signale-und-taeuschung" title="Information, Signale und Täuschung">
+  <style>
+    .t06-ziele{margin:0; padding-left:1.3em}
+    .t06-ziele li{margin-bottom:4px}
+    .t06-vier{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(150px,100%), 1fr)); gap:10px}
+    .t06-vier .concept .ex{font-family:var(--f-display)}
+    .t06-balken{display:grid; gap:8px; margin:0; padding:0; list-style:none}
+    .t06-balken li{display:grid; grid-template-columns:minmax(0, 8.5rem) minmax(0,1fr) auto; gap:8px; align-items:center; font-size:.92rem}
+    .t06-balken .t06-bb{height:16px; border-radius:4px; background:var(--line); overflow:hidden}
+    .t06-balken .t06-bb i{display:block; height:100%; background:linear-gradient(90deg, var(--st-gold2), var(--st-gold)); transition:width .4s}
+    .t06-balken li.t06-rot .t06-bb i{background:linear-gradient(90deg, var(--st-rot2), var(--st-rot))}
+    .t06-balken .t06-zahl{font-variant-numeric:tabular-nums; font-weight:700}
+    .t06-urteil{border-left:4px solid var(--accent); padding:6px 10px; background:var(--accent-soft); border-radius:6px}
+    .t06-reihe{display:flex; flex-wrap:wrap; gap:4px}
+    .t06-reihe span{display:inline-grid; place-items:center; width:34px; height:40px; border-radius:6px; border:1px solid var(--line); background:var(--surface); font-size:.72rem; line-height:1.1; text-align:center}
+    .t06-reihe span b{display:block; font-size:1rem}
+    .t06-reihe span.t06-v{background:var(--bad-bg); color:var(--bad); font-weight:700}
+    .t06-wahl{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(200px,100%), 1fr)); gap:10px}
+    .t06-wahl label{display:flex; flex-direction:column; gap:4px; font-weight:600; font-size:.92rem}
+    .t06-wahl select{width:100%}
+    .t06-zeile{display:grid; grid-template-columns:minmax(0, 4.5rem) minmax(0,1fr); gap:6px; align-items:center; font-size:.85rem}
+    .t06-logbuch{margin:0; padding-left:1.3em; display:grid; gap:12px}
+    .t06-logbuch li{padding-left:2px}
+    .t06-logbuch details{margin-top:6px}
+    .t06-quelle{font-size:.82rem; color:var(--muted)}
+  </style>
+</head>
+<body data-fach="spieltheorie" data-thema="06-tit-for-tat">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">Spieltheorie · Kapitel 6 · Dynamik</span>
+    <h1>Wiederholte Spiele und Tit-for-Tat</h1>
+    <div data-st-szene="see" data-st-titel="Handelsschiffe auf hoher See: Kasimir, Kapitänin Mara und Händlerin Ilse" data-st-figuren="kapitaenin:froh,papagei,haendlerin:froh"></div>
+    <p class="lead">Im Gefangenendilemma (Kapitel 2) lohnt sich Verrat, wenn man sich nur einmal begegnet. Doch im Archipel Aurelia trifft man sich immer wieder: im selben Hafen, auf denselben Routen, beim selben Kontor. Dieses Kapitel zeigt, warum Kooperation entsteht, sobald es ein <b>Morgen</b> gibt, welche Regeln dabei am besten fahren und warum <b>Vergebung</b> klüger ist als ewiger Groll.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t06-ziele">
+        <li>Du erklärst den «Schatten der Zukunft»: Wer sich wieder begegnet, hat einen Grund, heute ehrlich zu sein.</li>
+        <li>Du erkennst das Endspiel-Problem, wenn die letzte Runde bekannt ist.</li>
+        <li>Du nennst die vier Eigenschaften von Tit-for-Tat und erklärst, warum es Turniere gewinnt, aber kein einziges Duell.</li>
+        <li>Du beschreibst, wie Missverständnisse (Rauschen) Groll und Vergeltung bestrafen und Vergebung belohnen.</li>
+        <li>Du überträgst wiederholte Spiele und Reputation auf Lieferanten, Teams, Nachbarschaft und Online-Handel.</li>
+      </ul>
+    </div>
+    <div id="t06-kasimir"></div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#spiel"><b>0</b>Spiel zuerst</a>
+    <a href="#woerter"><b>1</b>Wörterbuch</a>
+    <a href="#schritt"><b>2</b>Schatten der Zukunft</a>
+    <a href="#turnier"><b>3</b>Das Hafenturnier</a>
+    <a href="#strategem"><b>4</b>Strategem-Ecke</a>
+    <a href="#alltag"><b>5</b>Alltag und Welt</a>
+    <a href="#uebungen"><b>6</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Spiel zuerst ===== -->
+  <section id="spiel" class="stack">
+    <span class="eyebrow">Schritt 0 · Spiel zuerst</span>
+    <h2>Handelsfahrten mit einem Fremden</h2>
+    <p class="prose">Du bist Kapitänin Mara. Ein fremder Kapitän schlägt dir vor, gemeinsam Waren zwischen Goldbucht und den Gewürzinseln zu fahren. Bei jeder Fahrt entscheidet ihr beide gleichzeitig: <b>ehrlich handeln</b> (die vereinbarte Ware liefern) oder <b>betrügen</b> (Kisten mit Steinen füllen). Es ist das Gefangenendilemma aus Kapitel 2, nur diesmal nicht einmal, sondern immer wieder.</p>
+    <p class="prose">Du weisst nicht, wie der Fremde tickt. Und du weisst nicht, wann die Handelssaison zu Ende ist: Irgendwann zieht ein Sturm auf. Spiel ein paar Duelle. Achte darauf: Wie reagiert dein Gegenüber auf deinen Betrug? Wie auf deine Ehrlichkeit?</p>
+    <div id="t06-duell-offen" class="card"></div>
+    <div id="t06-erkenntnis"></div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerter" class="stack">
+    <span class="eyebrow">Schritt 1 · Wörterbuch</span>
+    <h2>Die Sprache der wiederholten Spiele</h2>
+    <p class="prose">Ein <b>wiederholtes Spiel</b> ist dasselbe Spiel, das dieselben Spieler mehrmals hintereinander spielen. Das verändert alles: Jetzt kann ich auf deinen Zug von gestern reagieren. Eine Strategie ist dann keine einzelne Entscheidung mehr, sondern eine <b>Regel</b>: «Was tue ich, nachdem du dies oder das getan hast?»</p>
+    <div class="t06-vier">
+      <div class="concept"><span class="tag">Schatten der Zukunft</span><span class="ex">«Wir sehen uns wieder»</span><p>Je wahrscheinlicher ein Wiedersehen, desto mehr kostet Betrug heute: Er vergiftet alle künftigen Fahrten.</p></div>
+      <div class="concept"><span class="tag">Endspiel</span><span class="ex">die letzte Fahrt</span><p>Ist die letzte Runde bekannt, kann dort niemand mehr strafen. Das kann die Kooperation von hinten her aufrollen.</p></div>
+      <div class="concept"><span class="tag">Rauschen</span><span class="ex">ein Missverständnis</span><p>Ein ehrlicher Zug kommt als Betrug an: ein nasser Laderaum, ein verlorener Brief. Kein Wille, trotzdem Schaden.</p></div>
+      <div class="concept"><span class="tag">Reputation</span><span class="ex">der Ruf im Hafen</span><p>Was andere über dein bisheriges Verhalten wissen. Ein Ruf wirkt auch auf Fremde, die dich noch nie getroffen haben.</p></div>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Strategien im Hafenturnier (so heissen sie in den Simulationen)</caption>
+        <thead><tr><th>Name</th><th>Regel in einem Satz</th></tr></thead>
+        <tbody>
+          <tr><td><b>Tit-for-Tat</b><br><span class="hint">«Wie du mir, so ich dir»</span></td><td>Beginnt ehrlich, macht danach immer den letzten Zug des Gegenübers nach.</td></tr>
+          <tr><td><b>Immer ehrlich</b></td><td>Handelt ehrlich, egal was passiert.</td></tr>
+          <tr><td><b>Immer Betrug</b></td><td>Betrügt in jeder Fahrt.</td></tr>
+          <tr><td><b>Groll</b><br><span class="hint">auch «Grim»</span></td><td>Ehrlich, bis du ein einziges Mal betrügst. Danach betrügt Groll für immer.</td></tr>
+          <tr><td><b>Geduldig</b><br><span class="hint">Tit-for-Two-Tats</span></td><td>Straft erst, wenn du zweimal hintereinander betrogen hast.</td></tr>
+          <tr><td><b>Nachsichtig</b></td><td>Wie Tit-for-Tat, vergibt aber etwa jeden zehnten Betrug, statt ihn zu vergelten.</td></tr>
+          <tr><td><b>Misstrauisch</b></td><td>Wie Tit-for-Tat, beginnt aber mit Betrug.</td></tr>
+          <tr><td><b>Würfel</b></td><td>Wirft jede Fahrt eine Münze: halb ehrlich, halb Betrug.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die Auszahlung je Fahrt ist immer gleich: <b>beide ehrlich je 3 Gold</b>, <b>beide betrügen je 1 Gold</b>, wer <b>allein betrügt 5 Gold</b>, wer <b>betrogen wird 0 Gold</b>. In einer einzelnen Fahrt ist Betrügen also dominant, genau wie im Kerker von Kapitel 2.</p>
+    <div class="note"><b>Merke:</b> In wiederholten Spielen vergleichst du nicht Züge, sondern <b>Regeln</b>. Die entscheidende Frage lautet nicht «Betrüge ich jetzt?», sondern «Mit welcher Regel fahre ich über die ganze Saison am besten?»</div>
+  </section>
+
+  <!-- ===== 2 · Schatten der Zukunft ===== -->
+  <section id="schritt" class="stack">
+    <span class="eyebrow">Schritt 2 · Konzept Schritt für Schritt</span>
+    <h2>Warum ein Morgen alles ändert</h2>
+    <div id="t06-ilse"></div>
+    <p class="prose">Händlerin Ilse vergisst nie. Sie spielt <b>Groll</b>: Solange du ehrlich bist, ist sie es auch. Betrügst du einmal, betrügt sie dich bei jeder weiteren Fahrt. Lohnt sich ein Betrug trotzdem? Das hängt nur an einer Zahl: Wie wahrscheinlich triffst du Ilse nach einer Fahrt <b>wieder</b>? Schieb den Regler.</p>
+    <div class="card rechner" id="t06-schatten">
+      <div class="regler">
+        <label for="t06-w">Chance auf ein Wiedersehen</label>
+        <input type="range" id="t06-w" min="0" max="95" step="5" value="50">
+        <output for="t06-w" id="t06-w-out">50 %</output>
+      </div>
+      <p id="t06-n" class="hint"></p>
+      <ul class="t06-balken" id="t06-schatten-balken"></ul>
+      <p class="t06-urteil" id="t06-schatten-urteil" aria-live="polite"></p>
+    </div>
+    <details class="sol">
+      <summary>Wie rechnet der Regler?</summary>
+      <p>Bei 50 % Wiedersehen fahrt ihr im Durchschnitt 2 Mal, bei 75 % 4 Mal, bei 90 % 10 Mal. <b>Ehrlich:</b> jede Fahrt 3 Gold. <b>Einmal betrügen:</b> in der ersten Fahrt 5 Gold, danach betrügt Ilse für immer, und du holst nur noch 1 Gold pro Fahrt. Bei 2 Fahrten ist es genau gleich (6 gegen 6). Darüber gewinnt die Ehrlichkeit, und zwar immer deutlicher.</p>
+    </details>
+    <div class="note tipp"><b>Schatten der Zukunft:</b> Betrug bringt einen schnellen Gewinn heute und kostet alle Gewinne von morgen. Je länger der Schatten der Zukunft, desto teurer wird der schnelle Gewinn. Darum sind Stammkunden ehrlicher behandelt als Durchreisende, und darum lohnt es sich, Beziehungen langfristig anzulegen.</div>
+
+    <h3>Das Endspiel-Problem: Wenn alle wissen, wann Schluss ist</h3>
+    <p class="prose">Was ist, wenn ihr genau weisst, dass es <b>10 Fahrten</b> gibt, keine mehr? Denk wie in Kapitel 5 vom Ende her. Deck Schritt für Schritt auf.</p>
+    <div id="t06-endspiel"></div>
+    <div class="note falle"><b>Falle:</b> Die Logik ist zwingend, aber nur, wenn wirklich alle das Ende kennen und alle streng so rechnen. In Experimenten kooperieren die meisten Menschen in den ersten Runden trotzdem und brechen erst kurz vor Schluss ein. Gefährlich wird es dort, wo ein Ende sichtbar ist: die letzte Woche in einer Stelle, ein Lieferant kurz vor der Pleite, ein Politiker ohne Wiederwahl.</div>
+
+    <h3>Die vier Eigenschaften von Tit-for-Tat</h3>
+    <p class="prose">Um 1980 lud der Politikwissenschaftler <b>Robert Axelrod</b> Fachleute ein, Computerprogramme für ein wiederholtes Gefangenendilemma einzusenden. Jedes Programm spielte gegen jedes. Gewonnen hat das kürzeste von allen: <b>Tit-for-Tat</b>, eingesandt vom Mathematiker Anatol Rapoport. In einer zweiten, grösseren Runde mit über 60 Programmen gewann es erneut. Axelrod fand vier Eigenschaften, die erfolgreiche Regeln gemeinsam hatten:</p>
+    <div class="t06-vier">
+      <div class="concept"><span class="tag">1 · Freundlich</span><span class="ex">nie zuerst betrügen</span><p>Tit-for-Tat beginnt ehrlich und betrügt nie als Erster. So kommt Zusammenarbeit überhaupt in Gang.</p></div>
+      <div class="concept"><span class="tag">2 · Wehrhaft</span><span class="ex">sofort antworten</span><p>Auf Betrug folgt sofort Vergeltung. Wer Tit-for-Tat ausnutzen will, zahlt schon in der nächsten Fahrt.</p></div>
+      <div class="concept"><span class="tag">3 · Nachsichtig</span><span class="ex">nicht nachtragen</span><p>Ist das Gegenüber wieder ehrlich, ist es Tit-for-Tat auch. Kein ewiger Groll, kein Rachefeldzug.</p></div>
+      <div class="concept"><span class="tag">4 · Klar</span><span class="ex">leicht zu durchschauen</span><p>Die Regel ist so einfach, dass das Gegenüber sie nach wenigen Fahrten erkennt und merkt: Mit mir lohnt sich Ehrlichkeit.</p></div>
+    </div>
+    <div class="note"><b>Erstaunlich:</b> Tit-for-Tat gewinnt <b>kein einziges Duell</b>. Es betrügt nie zuerst, also holt es gegen jedes Gegenüber höchstens gleich viel. Es gewinnt Turniere, weil es mit fast allen eine gute Zusammenarbeit aufbaut. Axelrods Rat: Sei nicht neidisch. Es zählt dein eigenes Gold, nicht der Vergleich mit dem Gegenüber.</div>
+
+    <h3>Missverständnisse: das Echo der Rache</h3>
+    <p class="prose">Auf See geht manches schief: Ein Fass läuft aus, ein Bote verwechselt die Lieferung. Dann kommt ein <b>ehrlicher Zug als Betrug an</b>. Teste, was ein einziges Missverständnis anrichtet: In Fahrt 3 kommt Maras ehrliche Lieferung bei Ilse als Betrug an. Wähle für beide eine Regel.</p>
+    <div class="card stack" id="t06-echo">
+      <div class="t06-wahl">
+        <label for="t06-echo-a">Mara spielt
+          <select id="t06-echo-a" class="btn">
+            <option value="tft" selected>Tit-for-Tat</option>
+            <option value="tf2t">Geduldig</option>
+            <option value="nachsichtig">Nachsichtig</option>
+            <option value="grim">Groll</option>
+          </select>
+        </label>
+        <label for="t06-echo-b">Ilse spielt
+          <select id="t06-echo-b" class="btn">
+            <option value="tft" selected>Tit-for-Tat</option>
+            <option value="tf2t">Geduldig</option>
+            <option value="nachsichtig">Nachsichtig</option>
+            <option value="grim">Groll</option>
+          </select>
+        </label>
+      </div>
+      <div class="row"><button type="button" class="btn primary" id="t06-echo-los">⛵ Zwölf Fahrten mit einem Missverständnis</button></div>
+      <div id="t06-echo-bild"></div>
+      <div class="info" id="t06-echo-info" aria-live="polite"></div>
+    </div>
+    <div id="t06-echo-kasimir"></div>
+  </section>
+
+  <!-- ===== 3 · Simulation: Hafenturnier ===== -->
+  <section id="turnier" class="stack">
+    <span class="eyebrow">Schritt 3 · Simulation</span>
+    <h2>Das grosse Hafenturnier</h2>
+    <p class="prose">Jetzt wird es ernst. Zuerst ein Duell mit <b>bekannter</b> Rundenzahl, dann ein Turnier wie bei Axelrod, zum Schluss die Evolution: Welche Flotten wachsen, welche gehen unter?</p>
+
+    <h3>3a · Duell mit bekanntem Ende</h3>
+    <p class="prose">Diesmal weisst du: Es gibt genau <b>10 Fahrten</b>. Probier aus, in der letzten Fahrt zu betrügen. Was riskierst du? Und was, wenn du schon in der vorletzten betrügst?</p>
+    <div id="t06-duell-bekannt" class="card"></div>
+    <div id="t06-duell-kasimir"></div>
+
+    <h3>3b · Das Turnier: jeder gegen jeden</h3>
+    <p class="prose">Wähle die Strategien, die im Hafen antreten. Jede fährt 200 Fahrten gegen jede andere und gegen eine Kopie von sich selbst. Gezählt wird das Gold pro Fahrt im Durchschnitt. Mit dem Regler «Rauschen» stellst du ein, wie oft ein Zug falsch ankommt.</p>
+    <div id="t06-turnier" class="card"></div>
+    <div class="st-pergament stack">
+      <h3>Logbuch: fünf Experimente</h3>
+      <p>Mach die Experimente der Reihe nach. Überlege vor jedem Start, wer gewinnen wird. Die Zahlen schwanken leicht, weil Würfel und Rauschen zufällig sind. Starte ruhig mehrmals.</p>
+      <ol class="t06-logbuch">
+        <li><b>Die Vorauswahl, ohne Rauschen.</b> Fünf Strategien sind gewählt. Wer gewinnt?
+          <details class="sol"><summary>Was wir beobachtet haben</summary><p><b>Groll</b> gewinnt knapp vor Tit-for-Tat (rund 2.6 gegen 2.45 Gold pro Fahrt). Grund ist der <b>Würfel</b>: Sobald er einmal betrügt, betrügt Groll für immer und holt dann im Schnitt 3 Gold pro Fahrt gegen ihn (halb 5, halb 1). Tit-for-Tat ahmt den Würfel nur nach und holt etwa 2.25. Gegen alle anderen spielen Groll und Tit-for-Tat ohne Rauschen genau gleich. Tit-for-Tat ist also <i>nicht</i> immer der Sieger.</p></details></li>
+        <li><b>Alle acht Strategien, ohne Rauschen.</b> Wähle zusätzlich Geduldig, Nachsichtig und Misstrauisch.
+          <details class="sol"><summary>Was wir beobachtet haben</summary><p>Jetzt liegen <b>Nachsichtig, Tit-for-Tat und Geduldig</b> fast gleichauf vorn (je rund 2.6). Groll fällt auf Platz 4, Immer Betrug wird Letzter. Grund: <b>Misstrauisch</b> beginnt mit Betrug. Groll verzeiht das nie, und beide stecken für den Rest der Saison im gegenseitigen Betrug fest. Geduldig dagegen übersieht den ersten Betrug, Misstrauisch zieht nach, und die beiden handeln danach ehrlich.</p></details></li>
+        <li><b>Alle acht, Rauschen 5 % und dann 10 %.</b> Jeder zwanzigste, dann jeder zehnte Zug kommt falsch an.
+          <details class="sol"><summary>Was wir beobachtet haben</summary><p>Bei 5 % gewinnt meistens <b>Geduldig</b>, und Groll rutscht weit nach hinten (meist Platz 7 von 8). Bei 10 % werden die Abstände klein (alle zwischen etwa 2.0 und 2.3), aber vorn liegen fast immer die verzeihenden Regeln: Geduldig, Nachsichtig, Tit-for-Tat, auch Misstrauisch. Groll, Immer Betrug und Immer ehrlich landen in der unteren Hälfte. Wer bei Missverständnissen sofort und für immer straft, zerstört sich die eigene Zusammenarbeit.</p></details></li>
+        <li><b>Zurück zur Vorauswahl, Rauschen 10 %.</b> Nur die fünf ursprünglichen Strategien.
+          <details class="sol"><summary>Was wir beobachtet haben</summary><p>Jetzt gewinnt meistens <b>Immer Betrug</b>, Groll dicht dahinter, Tit-for-Tat fällt zurück. In diesem kleinen Hafen gibt es zwei leichte Opfer (Immer ehrlich und Würfel), und das Rauschen zerstört die Zusammenarbeit der Freundlichen untereinander. Die Lehre: <b>Es gibt keine Strategie, die in jeder Umgebung gewinnt.</b> Wer gewinnt, hängt davon ab, wer sonst noch im Hafen liegt.</p></details></li>
+        <li><b>Alle acht, Rauschen 20 %.</b> Jeder fünfte Zug kommt falsch an.
+          <details class="sol"><summary>Was wir beobachtet haben</summary><p>Jetzt liegen meist <b>Groll und Immer Betrug</b> vorn. Wenn so viele Botschaften falsch ankommen, kann niemand mehr Ehrlichkeit von Betrug unterscheiden. Vertrauen hat keine Grundlage mehr. Darum investieren Händler, Firmen und Staaten so viel in klare Kommunikation: Sie hält das Rauschen klein.</p></details></li>
+      </ol>
+    </div>
+
+    <h3>3c · Evolution: Die naive Flotte</h3>
+    <p class="prose">Im Turnier zählt nur eine Saison. In der Evolution geht es weiter: Wer viel Gold verdient, kann im nächsten Jahr mehr Schiffe ausrüsten. Wer wenig verdient, verliert Schiffe. Am Anfang dieses Archipels sind 80 % der Schiffe gutgläubig (Immer ehrlich), 10 % Halsabschneider (Immer Betrug) und 10 % fahren Tit-for-Tat. Drück mehrmals auf «10 Generationen». Was geschieht zuerst, was danach?</p>
+    <div id="t06-evo-naiv" class="card"></div>
+    <details class="sol">
+      <summary>Was wir beobachtet haben</summary>
+      <p>Zuerst <b>explodieren die Halsabschneider</b>: Nach 10 Generationen stellen sie über 90 % der Flotte, denn die Gutgläubigen sind leichte Beute. Dann kippt es: Die Beute ist aufgefressen, die Betrüger betrügen sich nur noch gegenseitig (1 Gold pro Fahrt), während die Tit-for-Tat-Schiffe untereinander 3 Gold verdienen. Nach etwa 30 Generationen fährt die ganze Flotte Tit-for-Tat. Mit 10 % Rauschen sieht es anders aus: Dann halten sich die Betrüger viel länger und stellen nach 40 Generationen noch rund 80 % der Flotte.</p>
+      <p>Die Lehre: Naive Gutgläubigkeit füttert die Betrüger. Kooperation setzt sich durch, wenn sie <b>wehrhaft</b> ist und wenn die Verständigung funktioniert.</p>
+    </details>
+
+    <h3>3d · Evolution: dein Labor</h3>
+    <p class="prose">Jetzt stellst du die Startflotte selbst zusammen: Alle Strategien starten gleich stark. Probiere zuerst die Vorauswahl ohne Rauschen, dann mit 5 % Rauschen.</p>
+    <div id="t06-evo-labor" class="card"></div>
+    <details class="sol">
+      <summary>Was wir beobachtet haben</summary>
+      <p><b>Ohne Rauschen</b> sterben Immer Betrug und Würfel nach 10 bis 20 Generationen aus. Übrig bleiben die freundlichen Regeln, alle ehrlich miteinander: Groll ist dann mit gut einem Drittel die grösste Flotte, vor Tit-for-Tat, Geduldig und Immer ehrlich. In einer Welt ohne Missverständnisse schadet ewiger Groll nicht.</p>
+      <p><b>Mit 5 % Rauschen</b> dreht sich das Bild: Groll und Immer Betrug verschwinden fast ganz, nach 40 Generationen führen Geduldig und Tit-for-Tat. Sobald Fehler passieren, überlebt, wer verzeihen kann.</p>
+    </details>
+  </section>
+
+  <!-- ===== 4 · Strategem-Ecke ===== -->
+  <section id="strategem" class="stack">
+    <span class="eyebrow">Schritt 4 · Strategem-Ecke</span>
+    <h2>Wer fangen will, muss loslassen</h2>
+    <div class="st-strategem">
+      <span class="st-nr">Strategem 16</span><b>Wer etwas fangen will, muss es zuerst loslassen</b>
+      <p>Sinngemäss: Treib einen Gegner nicht in die Enge, sondern lass ihn ziehen, damit sein Widerstand erlahmt. Die Überlieferung erzählt vom Feldherrn <b>Zhuge Liang</b>, der im Jahr 225 im Süden Chinas gegen den Stammesführer <b>Meng Huo</b> kämpfte. Er nahm ihn siebenmal gefangen und liess ihn siebenmal frei. Nach dem siebten Mal unterwarf sich Meng Huo aus eigenem Willen und blieb danach treu. Die Geschichte ist zum Teil legendenhaft ausgeschmückt, ihr Kern ist aber lehrreich.</p>
+    </div>
+    <p class="prose">Spieltheoretisch hat Zhuge Liang das Spiel verwandelt: aus einer einmaligen Schlacht, in der Härte siegt, in ein <b>wiederholtes Spiel</b>, in dem es um die Zukunft geht. Ein Sieg mit Gewalt hätte einen Gegner hinterlassen, der beim nächsten Rückzug der Armee wieder aufsteht. Siebenmal Gnade baute dagegen einen <b>Ruf</b> auf: Wer sich mit Zhuge Liang einigt, wird anständig behandelt. Das ist Nachsicht als Strategie, nicht als Schwäche.</p>
+    <div class="st-strategem">
+      <span class="st-nr">Sun Tzu</span><b>Die Kunst des Krieges, Kapitel 2</b>
+      <p>Sinngemäss: Behandle gefangene Soldaten gut und versorge sie. So wird man durch den Sieg über den Feind selbst stärker.</p>
+    </div>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>«Leben und leben lassen» (Westfront, 1914–1916)</h3>
+        <p>Im Stellungskrieg des Ersten Weltkriegs lagen sich oft dieselben Einheiten wochenlang auf kurzer Distanz gegenüber. An manchen Frontabschnitten entstand ohne Befehl eine stille Zurückhaltung: Zu Essenszeiten wurde nicht geschossen, die Artillerie traf immer dieselben Stellen zur selben Zeit, als wollte sie sagen: «Wir könnten, wir wollen aber nicht.» Brach eine Seite die Ruhe, folgte prompt Vergeltung, danach kehrte die Ruhe zurück.</p>
+        <p>Das ist ein wiederholtes Gefangenendilemma mit Tit-for-Tat-Verhalten. Die Heeresleitungen unterbanden es, indem sie Truppen häufig austauschten und Stosstruppunternehmen befahlen. Sie zerstörten damit gezielt den <b>Schatten der Zukunft</b>. Bekannter, aber nur eine Episode, ist der Weihnachtsfrieden von 1914.</p>
+      </div>
+      <div class="card stack">
+        <h3>Die Maghribi-Händler (11. Jahrhundert)</h3>
+        <p>Jüdische Kaufleute im Mittelmeerraum, deren Briefe in der Genisa von Kairo erhalten sind, handelten von Tunesien bis Sizilien und Ägypten. Sie schickten Waren an Geschäftsfreunde in fernen Häfen, ohne Gericht, das Betrug hätte ahnden können.</p>
+        <p>Die Lösung war ein <b>Netzwerk mit Gedächtnis</b>: Wer einen Partner betrog, wurde von allen anderen Händlern des Netzwerks gemieden. Die Briefe verbreiteten den Ruf schnell. Ein Betrug kostete also nicht einen Partner, sondern alle. So wird aus vielen einzelnen Begegnungen ein einziges, grosses wiederholtes Spiel.</p>
+      </div>
+    </div>
+    <div id="t06-strategem-frage"></div>
+  </section>
+
+  <!-- ===== 5 · Alltag und Welt ===== -->
+  <section id="alltag" class="stack">
+    <span class="eyebrow">Schritt 5 · Alltag und Welt</span>
+    <h2>Wiederholte Spiele um dich herum</h2>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>🚚 Lieferanten</h3>
+        <p>Ein Stammlieferant liefert gute Qualität, weil er auf die nächsten hundert Aufträge hofft. Kündigt eine Firma an, den Lieferanten im nächsten Jahr zu wechseln, verkürzt sie den Schatten der Zukunft: Der Anreiz zur Sorgfalt sinkt. Kluge Einkäufer halten die Zukunft offen und reagieren auf eine schlechte Lieferung zuerst mit einer Rückfrage, nicht mit dem Abbruch (Rauschen!).</p>
+      </div>
+      <div class="card stack">
+        <h3>👥 Teamarbeit</h3>
+        <p>Im Team spielt ihr Woche für Woche dasselbe Spiel: Wer übernimmt die mühsame Aufgabe? Tit-for-Tat übersetzt: Biete Hilfe zuerst an (freundlich). Sprich Trittbrettfahren sofort und sachlich an (wehrhaft). Trag es nicht monatelang nach (nachsichtig). Sag offen, was du erwartest (klar).</p>
+      </div>
+      <div class="card stack">
+        <h3>🏡 Nachbarschaft</h3>
+        <p>Die laute Party, die überhängende Hecke: Nachbarn begegnen sich jahrelang. Wer nach dem ersten Ärger einen Anwalt einschaltet, spielt Groll und riskiert Jahrzehnte Kleinkrieg. Wer einmal grosszügig ist und den Ärger einmal ruhig anspricht, spielt eher Geduldig. Bei Missverständnissen gewinnt, wer nachfragt, bevor er zurückschlägt.</p>
+      </div>
+      <div class="card stack">
+        <h3>⭐ Online-Bewertungen</h3>
+        <p>Einen Verkäufer auf einer Plattform triffst du vielleicht nur einmal. Trotzdem ist er meist ehrlich. Warum? Die <b>Bewertungen</b> sind das Gedächtnis des Hafens, wie die Briefe der Maghribi-Händler. Wer betrügt, verliert nicht dich, sondern alle künftigen Kunden. Darum ist es so schädlich, wenn Bewertungen gefälscht werden: Dann wird der Ruf zum Rauschen.</p>
+      </div>
+      <div class="card stack">
+        <h3>⏳ Das Endspiel im Beruf</h3>
+        <p>Die letzte Woche vor dem Stellenwechsel, ein auslaufender Vertrag, ein Politiker in seiner letzten Amtszeit: Überall dort ist das Ende sichtbar, und der Schatten der Zukunft wird kurz. Gute Organisationen verlängern ihn künstlich: mit Arbeitszeugnissen, Referenzen, Boni, die erst später ausbezahlt werden.</p>
+      </div>
+      <div class="card stack">
+        <h3>🌍 Abrüstung und Diplomatie</h3>
+        <p>Rüstungskontrollverträge im Kalten Krieg setzten auf kleine, überprüfbare Schritte und Gegenseitigkeit: Ich baue ab, wenn du abbaust. Inspektionen sollten das Rauschen senken, damit ein Missverständnis nicht als Vertragsbruch gedeutet wird. Das ist Tit-for-Tat mit Kontrolle.</p>
+      </div>
+    </div>
+    <div class="note falle"><b>Falle:</b> Tit-for-Tat ist kein Allheilmittel. Gegen einen Partner, der dich ausnutzen will und dich ohnehin nicht wieder trifft, hilft auch die beste Regel nichts. Prüfe zuerst: Gibt es wirklich ein Morgen? Und wie gross ist das Rauschen in dieser Beziehung?</div>
+  </section>
+
+  <!-- ===== 6 · Übungen ===== -->
+  <section id="uebungen" class="stack">
+    <span class="eyebrow">Schritt 6 · Übungen</span>
+    <h2>Regeln für wiederholte Spiele</h2>
+    <div id="t06-wf"></div>
+    <div id="t06-sort"></div>
+    <div id="t06-auswahl-1"></div>
+    <div id="t06-auswahl-2"></div>
+    <div id="t06-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film" class="stack">
+    <span class="eyebrow">▶ Lösungsfilm</span>
+    <h2>Die Saison der zwei Neulinge</h2>
+    <p class="prose">Ein ganzes Beispiel am Stück: Warum gewinnt Tit-for-Tat die Saison, obwohl es kein einziges Duell gewinnt? Und was richtet ein Missverständnis an?</p>
+    <div id="t06-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test" class="stack">
+    <span class="eyebrow">✓ Selbsttest</span>
+    <h2>Selbsttest</h2>
+    <div id="t06-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick" class="stack">
+    <span class="eyebrow">Σ Auf einen Blick</span>
+    <h2>Auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Wer sich <b>wiederholt</b> begegnet, kann Betrug von heute morgen bestrafen. Dieser <b>Schatten der Zukunft</b> macht Ehrlichkeit lohnend.</li>
+      <li>Ist die <b>letzte Runde bekannt</b>, kann sich die Kooperation vom Ende her auflösen (Endspiel-Problem).</li>
+      <li><b>Tit-for-Tat</b> ist freundlich, wehrhaft, nachsichtig und klar. Es gewinnt kein Duell, aber oft das Turnier.</li>
+      <li>Kein Sieger für alle Fälle: Das Turnierergebnis hängt davon ab, <b>wer sonst noch mitspielt</b>. Ohne Fehler kann auch Groll gewinnen.</li>
+      <li>Bei <b>Missverständnissen</b> (Rauschen) verlieren Groll und strenge Vergeltung. Verzeihende Regeln wie Geduldig oder Nachsichtig fahren besser.</li>
+      <li><b>Reputation</b> (Bewertungen, Netzwerke) macht aus vielen einzelnen Begegnungen ein grosses wiederholtes Spiel.</li>
+    </ul>
+    <div class="st-pergament stack">
+      <h3>Checkliste für den Alltag</h3>
+      <ul class="st-checkliste">
+        <li>Sehen wir uns wieder? Wie lange noch? Ist ein Ende in Sicht?</li>
+        <li>Kann ich den Schatten der Zukunft verlängern (langfristiger Vertrag, Referenz, späterer Bonus)?</li>
+        <li>Fange ich freundlich an, ohne naiv zu sein?</li>
+        <li>War das wirklich Absicht oder ein Missverständnis? Erst nachfragen, dann reagieren.</li>
+        <li>Ist meine Regel für das Gegenüber klar erkennbar?</li>
+        <li>Wer erfährt von meinem Verhalten? Welchen Ruf baue ich gerade auf?</li>
+      </ul>
+    </div>
+    <footer class="hint">Lernpfad Spieltheorie · Kapitel 6 · Eigene Beispiele. Turnierergebnisse aus der Simulation dieser Seite (sie schwanken leicht). Axelrods Turniere, Strategem 16 und Sun Tzu sinngemäss wiedergegeben.</footer>
+  </section>
+
+</main>
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/st-spiel.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad, S = L.spiel;
+  const ALLE = ["tft", "immer_k", "immer_v", "grim", "tf2t", "zufall", "nachsichtig", "misstrauisch"];
+  const P = { T: 5, R: 3, P: 1, S: 0 };
+  const gold = (a, b) => (a === "K" && b === "K" ? [P.R, P.R] : a === "K" ? [P.S, P.T] : b === "K" ? [P.T, P.S] : [P.P, P.P]);
+
+  document.getElementById("t06-kasimir").innerHTML = S.sprecher("papagei", "Kasimir erklärt",
+    "<p>Im Kerker von Kapitel 2 haben beide verraten, weil sie sich nie wieder sehen würden. Aber wie oft im Leben triffst du jemanden wirklich nur ein einziges Mal? Fast nie! Und sobald es ein <b>Wiedersehen</b> gibt, wird aus dem Dilemma ein ganz anderes Spiel. Heute lernst du die erfolgreichste Regel kennen, die je in einem Turnier angetreten ist, und ihre Schwächen.</p>", { stimmung: "froh" });
+
+  // ---- 0 · Duell mit offenem Ende ----
+  S.turnier("#t06-duell-offen", {
+    modus: "duell",
+    titel: "Handelssaison mit offenem Ende",
+    frage: "<p>Dein Gegenüber spielt eine von sechs geheimen Regeln. Am Ende siehst du, welche es war, und wie viel Tit-for-Tat gegen dieselbe Regel geholt hätte.</p>",
+    strategien: ["tft", "immer_k", "immer_v", "grim", "tf2t", "zufall"],
+    gegner: "geheim",
+    rundenUnbekannt: true
+  });
+  document.getElementById("t06-erkenntnis").innerHTML = S.sprecher("papagei", "Kasimir",
+    "<p>Hast du gemerkt? Manche Gegenüber zahlen dir Betrug <b>sofort heim</b>, manche <b>nie wieder zurück</b> (sie bleiben beleidigt), manche sind gutmütig. Gegen die meisten fährst du mit Ehrlichkeit besser, weil du nicht weisst, wie lange die Saison dauert: Jeder Betrug kann dich viele künftige Fahrten kosten. Spiel ruhig mehrere Duelle, bis du ein paar Regeln erkannt hast.</p>", { klein: true });
+
+  // ---- 2 · Schatten der Zukunft ----
+  document.getElementById("t06-ilse").innerHTML = S.sprecher("haendlerin", "Händlerin Ilse",
+    "<p>Ich handle gern mit dir, Mara. Aber merk dir eins: Wer mich ein einziges Mal betrügt, bekommt von mir nie wieder ehrliche Ware.</p>", { stimmung: "neutral" });
+
+  (function schatten() {
+    const inp = document.getElementById("t06-w"), out = document.getElementById("t06-w-out");
+    const nEl = document.getElementById("t06-n"), liste = document.getElementById("t06-schatten-balken"), urteil = document.getElementById("t06-schatten-urteil");
+    function zeichne() {
+      const w = Number(inp.value) / 100;
+      const n = 1 / (1 - w);
+      const ehrlich = 3 * n, betrug = 5 + (n - 1) * 1;
+      const max = Math.max(ehrlich, betrug);
+      out.textContent = inp.value + " %";
+      nEl.textContent = "Erwartete Anzahl Fahrten mit Ilse: " + L.zahlText(n, 1) + ".";
+      liste.innerHTML =
+        '<li><span>🤝 Immer ehrlich</span><span class="t06-bb" aria-hidden="true"><i style="width:' + Math.round((ehrlich / max) * 100) + '%"></i></span><span class="t06-zahl">' + L.zahlText(ehrlich, 1) + " Gold</span></li>" +
+        '<li class="t06-rot"><span>🗡 Einmal betrügen</span><span class="t06-bb" aria-hidden="true"><i style="width:' + Math.round((betrug / max) * 100) + '%"></i></span><span class="t06-zahl">' + L.zahlText(betrug, 1) + " Gold</span></li>";
+      let t;
+      if (Math.abs(ehrlich - betrug) < 0.05) t = "⚖ Gleichstand: Bei 50 % Wiedersehen (im Schnitt 2 Fahrten) bringen Ehrlichkeit und Betrug gleich viel. Das ist die Kippstelle.";
+      else if (betrug > ehrlich) t = "🗡 Betrug lohnt sich: Ihr seht euch zu selten wieder. Der schnelle Gewinn von 5 Gold wiegt mehr als die Zukunft. So war es im Kerker von Kapitel 2.";
+      else t = "🤝 Ehrlichkeit lohnt sich: Der Schatten der Zukunft ist lang genug. Mit Ehrlichkeit holst du " + L.zahlText(ehrlich - betrug, 1) + " Gold mehr.";
+      urteil.textContent = t;
+    }
+    inp.addEventListener("input", zeichne);
+    zeichne();
+  })();
+
+  const reihe = (n) => {
+    let s = '<div class="t06-reihe" role="img" aria-label="Zehn Fahrten, davon die letzten ' + n + ' mit Betrug">';
+    for (let k = 1; k <= 10; k++) {
+      const v = k > 10 - n;
+      s += '<span class="' + (v ? "t06-v" : "") + '"><b>' + (v ? "🗡" : "?") + "</b>" + k + "</span>";
+    }
+    return s + "</div>";
+  };
+  L.stepper("#t06-endspiel", {
+    titel: "Zehn Fahrten, alle kennen das Ende",
+    text: "Mara und Ilse wissen beide: Nach Fahrt 10 trennen sich ihre Wege für immer.",
+    schritte: [
+      { html: reihe(1), warum: "<b>Fahrt 10</b> ist die letzte. Danach gibt es kein Morgen, also kann niemand Betrug noch bestrafen. Die letzte Fahrt ist ein einmaliges Gefangenendilemma: Betrügen ist für beide besser (5 statt 3, 1 statt 0)." },
+      { html: reihe(2), warum: "<b>Fahrt 9:</b> Was in Fahrt 10 passiert, steht schon fest: Beide betrügen sowieso. Ehrlichkeit in Fahrt 9 kann also keine Belohnung mehr kaufen. Damit ist auch Fahrt 9 ein einmaliges Spiel: beide betrügen." },
+      { html: reihe(3), warum: "<b>Fahrt 8:</b> Dasselbe Argument rückt eine Fahrt nach vorn. Die Zukunft ist schon «verloren», also zählt nur der Gewinn von heute." },
+      { html: reihe(10), warum: "<b>Bis Fahrt 1:</b> Wie bei Dominosteinen fällt eine Fahrt nach der anderen. Streng logisch betrügen beide von Anfang an und holen je 10 Gold statt 30. Das ist <b>Rückwärtsinduktion</b> aus Kapitel 5." },
+      { html: reihe(10) + '<p class="hint">Der Ausweg: Ist das Ende <b>offen</b> (der Sturm kann jederzeit kommen), gibt es keine bekannte letzte Fahrt, an der das Domino beginnt.</p>', warum: "Darum ist ein <b>offenes Ende</b> so wichtig für Kooperation. Und darum verhalten sich Menschen, die das Ende nahen sehen, oft anders als vorher." }
+    ]
+  });
+
+  // ---- Echo der Rache ----
+  (function echo() {
+    const selA = document.getElementById("t06-echo-a"), selB = document.getElementById("t06-echo-b");
+    const bild = document.getElementById("t06-echo-bild"), info = document.getElementById("t06-echo-info");
+    const name = { tft: "Tit-for-Tat", tf2t: "Geduldig", nachsichtig: "Nachsichtig", grim: "Groll" };
+    function lauf() {
+      const sa = selA.value, sb = selB.value, ha = [], hb = [], pa = [0], pb = [0];
+      let ga = 0, gb = 0;
+      for (let k = 0; k < 12; k++) {
+        let a = S.strategien[sa].zug(ha, hb, Math.random);
+        const b = S.strategien[sb].zug(hb, ha, Math.random);
+        if (k === 2) a = "V";
+        ha.push(a); hb.push(b);
+        const [x, y] = gold(a, b); ga += x; gb += y;
+      }
+      const zelle = (z, rausch) => '<span class="' + (z === "K" ? "k" : "v") + (rausch ? " rausch" : "") + '">' + (z === "K" ? "🤝" : "🗡") + "</span>";
+      let s = '<div class="t06-zeile"><span>Mara</span><span>' + name[sa] + '</span><span>Ilse</span><span>' + name[sb] + "</span></div>";
+      s += '<div class="st-fahrten" role="list" aria-label="Zwölf Fahrten: oben Mara, unten Ilse">';
+      for (let k = 0; k < 12; k++) {
+        s += '<span class="st-fahrt" role="listitem" aria-label="Fahrt ' + (k + 1) + ": Mara " + (ha[k] === "K" ? "ehrlich" : "Betrug") + (k === 2 ? " (Missverständnis)" : "") + ", Ilse " + (hb[k] === "K" ? "ehrlich" : "Betrug") + '">' + zelle(ha[k], k === 2) + zelle(hb[k], false) + "</span>";
+      }
+      s += "</div>";
+      bild.innerHTML = s;
+      // Auswertung
+      let frieden = -1;
+      for (let k = 3; k < 12; k++) {
+        let ok = true;
+        for (let j = k; j < 12; j++) if (ha[j] !== "K" || hb[j] !== "K") { ok = false; break; }
+        if (ok) { frieden = k; break; }
+      }
+      const dauerstreit = [8, 9, 10, 11].every((j) => ha[j] === "V" && hb[j] === "V");
+      let t;
+      if (frieden >= 0) t = "🕊 Ab Fahrt " + (frieden + 1) + " handeln wieder beide ehrlich. Das Missverständnis ist verziehen.";
+      else if (dauerstreit) t = "⚔ Dauerstreit: Seit dem Missverständnis betrügen sich beide bis zum Schluss. Niemand hat je wirklich betrügen wollen.";
+      else t = "🔁 Das Echo hallt hin und her: Einer straft, der andere straft zurück, und so weiter, bis zum Ende der Saison.";
+      t += " Gold: Mara " + ga + ", Ilse " + gb + ". Ohne Missverständnis hätten beide je 36 Gold geholt.";
+      if (sa === "nachsichtig" || sb === "nachsichtig") t += " (Nachsichtig vergibt zufällig. Drück nochmals, das Ergebnis kann sich ändern.)";
+      info.textContent = t;
+    }
+    document.getElementById("t06-echo-los").addEventListener("click", lauf);
+    lauf();
+  })();
+  document.getElementById("t06-echo-kasimir").innerHTML = S.sprecher("papagei", "Kasimir",
+    "<p>Probier diese Paare: <b>Tit-for-Tat gegen Tit-for-Tat</b> (das Echo hört nie auf), <b>Groll gegen Groll</b> (ein einziger Fehler, und die Freundschaft ist für immer tot), <b>Mara Tit-for-Tat, Ilse Geduldig</b> (Ilse schluckt den einen Betrug, alles ist wieder gut). Wer verzeihen kann, ist bei Missverständnissen klar im Vorteil.</p>", { klein: true });
+
+  // ---- 3a · Duell mit bekanntem Ende ----
+  S.turnier("#t06-duell-bekannt", {
+    modus: "duell",
+    titel: "Zehn Fahrten, kein Tag mehr",
+    strategien: ["tft", "immer_k", "immer_v", "grim", "tf2t", "zufall"],
+    gegner: "geheim",
+    runden: 10
+  });
+  document.getElementById("t06-duell-kasimir").innerHTML = S.sprecher("papagei", "Kasimir",
+    "<p>Ein Betrug in der <b>letzten</b> Fahrt bringt dir hier oft 2 Gold mehr: Das Gegenüber kann nicht mehr zurückschlagen. Die Regeln in dieser Simulation denken nicht vom Ende her, sie wissen nicht, dass Schluss ist. Ein schlauer Mensch würde es ahnen und dir zuvorkommen, und schon beginnt das Domino aus der Rückwärtsinduktion. Darum zerbrechen Partnerschaften oft genau dann, wenn ihr Ende angekündigt wird.</p>", { klein: true });
+
+  // ---- 3b · Turnier ----
+  S.turnier("#t06-turnier", {
+    modus: "turnier",
+    titel: "Das Hafenturnier von Goldbucht",
+    strategien: ALLE,
+    vorauswahl: ["tft", "immer_k", "immer_v", "grim", "zufall"],
+    rauschen: 0,
+    rauschenRegler: true
+  });
+
+  // ---- 3c · Evolution: naive Flotte ----
+  S.turnier("#t06-evo-naiv", {
+    modus: "evolution",
+    titel: "Die naive Flotte",
+    strategien: ["immer_k", "immer_v", "tft"],
+    anteile: { immer_k: 8, immer_v: 1, tft: 1 },
+    rauschen: 0
+  });
+
+  // ---- 3d · Evolution: Labor ----
+  S.turnier("#t06-evo-labor", {
+    modus: "evolution",
+    titel: "Welche Flotte wächst?",
+    strategien: ALLE,
+    vorauswahl: ["tft", "immer_k", "immer_v", "grim", "tf2t", "zufall"],
+    rauschen: 0
+  });
+
+  // ---- 4 · Strategem-Frage ----
+  L.auswahl("#t06-strategem-frage", {
+    frage: "Warum zerstörten die Heeresleitungen das «Leben und leben lassen», indem sie die Truppen häufig austauschten?",
+    optionen: ["Frische Truppen kämpfen besser", "Damit die Soldaten die Gegend kennenlernen", "Wer nur kurz an einem Ort liegt, hat keinen Schatten der Zukunft: Zurückhaltung lohnt sich für ihn nicht mehr", "Weil der Feind sonst Spione einschleust"],
+    richtig: 2,
+    erklaerung: "Zurückhaltung beruhte auf Gegenseitigkeit über viele Tage. Wer bald abgelöst wird, muss die Vergeltung von morgen nicht fürchten. Der Austausch machte aus dem wiederholten Spiel viele kurze Spiele."
+  });
+
+  // ---- 6 · Übungen ----
+  L.wahrFalsch("#t06-wf", {
+    titel: "Stimmt das?",
+    aussagen: [
+      { html: "Tit-for-Tat holt in einem einzelnen Duell nie mehr Gold als sein Gegenüber.", wahr: true, erklaerung: "Es betrügt nie zuerst und antwortet nur. Darum holt es höchstens gleich viel wie das Gegenüber. Es gewinnt Turniere über die Summe vieler guter Partnerschaften." },
+      { html: "Wenn beide genau wissen, dass es 10 Fahrten gibt, ist Kooperation in allen Fahrten streng logisch gesichert.", wahr: false, erklaerung: "Umgekehrt: Die bekannte letzte Fahrt löst die Kooperation von hinten her auf (Rückwärtsinduktion)." },
+      { html: "Ohne Rauschen kann Groll ein Turnier gewinnen.", wahr: true, erklaerung: "In der Vorauswahl dieser Seite gewinnt Groll knapp, weil er den Würfel stärker ausnutzt als Tit-for-Tat. Das Ergebnis hängt von den anderen Teilnehmern ab." },
+      { html: "Bei Missverständnissen schneiden verzeihende Regeln meist besser ab als Groll.", wahr: true, erklaerung: "Groll macht aus einem einzigen Fehler einen ewigen Streit. Geduldig und Nachsichtig finden zur Zusammenarbeit zurück." },
+      { html: "Je unwahrscheinlicher ein Wiedersehen, desto eher lohnt sich Ehrlichkeit.", wahr: false, erklaerung: "Genau umgekehrt: Ein seltenes Wiedersehen macht den Schatten der Zukunft kurz, Betrug lohnt sich dann eher." },
+      { html: "Online-Bewertungen wirken wie ein Gedächtnis, das viele einmalige Käufe zu einem wiederholten Spiel verbindet.", wahr: true, erklaerung: "Wer betrügt, verliert nicht nur diesen Kunden, sondern seinen Ruf bei allen künftigen. Wie bei den Maghribi-Händlern." },
+      { html: "In einer Flotte aus lauter Gutgläubigen setzt sich Ehrlichkeit von selbst durch.", wahr: false, erklaerung: "Gutgläubige sind leichte Beute: In der Evolution explodieren zuerst die Betrüger. Erst wehrhafte Kooperation wie Tit-for-Tat stoppt sie." }
+    ]
+  });
+
+  L.sortierer("#t06-sort", {
+    frage: "Welche Eigenschaft von Tit-for-Tat zeigt sich hier?",
+    kategorien: ["freundlich", "wehrhaft", "nachsichtig", "klar"],
+    elemente: [
+      { html: "Die neue Kollegin bietet in der ersten Woche von sich aus Hilfe an.", kategorie: "freundlich", erklaerung: "Sie macht den ersten Schritt zur Zusammenarbeit und betrügt nicht zuerst." },
+      { html: "Ein Lieferant liefert zu spät. Die Einkäuferin spricht es noch am selben Tag an.", kategorie: "wehrhaft", erklaerung: "Fehlverhalten wird sofort beantwortet, nicht geschluckt." },
+      { html: "Nach einem Streit ist der Nachbar wieder freundlich. Du grüsst wieder, ohne die Sache aufzuwärmen.", kategorie: "nachsichtig", erklaerung: "Sobald das Gegenüber zur Zusammenarbeit zurückkehrt, tust du es auch." },
+      { html: "Eine Teamleiterin sagt am ersten Tag: «Wer mir hilft, dem helfe ich. Wer Abmachungen bricht, mit dem rede ich sofort.»", kategorie: "klar", erklaerung: "Die Regel ist offen ausgesprochen und leicht zu durchschauen." },
+      { html: "Ein Staat antwortet auf eine Zollerhöhung des Nachbarn mit einer gleich grossen Zollerhöhung, nicht mehr.", kategorie: "wehrhaft", erklaerung: "Die Antwort folgt sofort und ist angemessen, nicht eskalierend." },
+      { html: "Ein Händler eröffnet mit einem fairen Angebot statt mit einem Wucherpreis.", kategorie: "freundlich", erklaerung: "Er beginnt kooperativ." },
+      { html: "Nach einer einmaligen Lieferpanne bestellst du wieder beim Stammlieferanten.", kategorie: "nachsichtig", erklaerung: "Ein Fehler ist kein Grund für ewigen Groll, besonders wenn es ein Missverständnis sein könnte." }
+    ]
+  });
+
+  L.auswahl("#t06-auswahl-1", {
+    frage: "Im Hafenturnier ohne Rauschen gewinnt in der Vorauswahl Groll vor Tit-for-Tat. Was ist die beste Erklärung?",
+    optionen: ["Groll nutzt den Würfel stärker aus; gegen alle anderen spielen beide ohne Rauschen gleich", "Groll ist grundsätzlich die beste Strategie", "Tit-for-Tat betrügt zu oft", "Das Turnier ist falsch programmiert"],
+    richtig: 0,
+    erklaerung: "Gegen den Würfel betrügt Groll nach dem ersten Betrug für immer und holt im Schnitt 3 Gold pro Fahrt, Tit-for-Tat nur etwa 2.25. Kommen andere Teilnehmer dazu (z. B. Misstrauisch) oder Rauschen, verliert Groll den Vorsprung."
+  });
+  L.auswahl("#t06-auswahl-2", {
+    frage: "Eine Firma kündigt ihrem Reinigungsunternehmen auf Ende Jahr. Was sagt die Spieltheorie über die letzten Wochen voraus?",
+    optionen: ["Die Qualität steigt, weil das Unternehmen den Auftrag zurückgewinnen will", "Nichts ändert sich", "Das Unternehmen arbeitet gratis", "Die Qualität sinkt eher, weil der Schatten der Zukunft fehlt"],
+    richtig: 3,
+    erklaerung: "Das Ende ist bekannt, künftige Aufträge fallen weg. Ohne Referenz, Bonus oder Aussicht auf neue Aufträge sinkt der Anreiz zur Sorgfalt. Ausnahme: Das Unternehmen sorgt sich um seinen Ruf bei anderen Kunden."
+  });
+
+  L.reflexion("#t06-reflexion", {
+    titel: "Deine Regel",
+    frage: "<p>Denk an eine Beziehung, in der ihr immer wieder dasselbe Spiel spielt (Mitbewohner, Team, Lieferant, Nachbarin). Welche Regel spielst du dort heute, ehrlich betrachtet: eher Tit-for-Tat, Groll, Immer ehrlich oder Geduldig? Wo gibt es Rauschen? Was würdest du ändern?</p>",
+    musterloesung: "<p><b>Beispiel WG:</b> Ich spiele ehrlich gesagt Groll: Seit mein Mitbewohner einmal seinen Putzdienst vergessen hat, mache ich auch nur noch das Nötigste, und er auch. Rauschen: Er war damals krank, das habe ich erst später erfahren. Ich würde zu Geduldig wechseln: einen Ausrutscher übersehen, beim zweiten das Gespräch suchen und klar sagen, was ich erwarte. Den Schatten der Zukunft gibt es: Wir wohnen noch mindestens ein Jahr zusammen.</p>",
+    kriterien: [
+      { text: "Wiederholte Beziehung konkret benannt", punkte: 1 },
+      { text: "Eigene Regel ehrlich einer Strategie zugeordnet", punkte: 1 },
+      { text: "Mögliches Rauschen (Missverständnis) erkannt", punkte: 1 },
+      { text: "Konkrete Änderung mit Begründung (Schatten der Zukunft, Vergebung, Klarheit)", punkte: 2 }
+    ]
+  });
+
+  // ---- Lösungsfilm ----
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const tab = (z, hl) => {
+    const zeilen = [["Ilse (Immer ehrlich)"], ["Bors (Immer Betrug)"], ["Albrecht (Groll)"], ["Nell (Misstrauisch)"], ["Summe"]];
+    let s = '<table class="tabelle"><thead><tr><th>Gegenüber</th><th>Mara<br>(Tit-for-Tat)</th><th>Fremder<br>(Immer Betrug)</th></tr></thead><tbody>';
+    zeilen.forEach((r, i) => {
+      s += "<tr><th>" + r[0] + "</th><td" + (hl === i ? ' class="lit"' : "") + ">" + (z[i] ? z[i][0] : "?") + "</td><td" + (hl === i ? ' class="lit"' : "") + ">" + (z[i] ? z[i][1] : "?") + "</td></tr>";
+    });
+    return s + "</tbody></table>";
+  };
+  const z1 = ["30 | 30", "0 | 50"], z2 = ["9 | 14", "10 | 10"], z3 = ["30 | 30", "14 | 9"], z4 = ["25 | 25", "10 | 10"], z5 = ["<b>94</b>", "<b>84</b>"];
+  L.film("#t06-film", {
+    phasen: ["1 · Aufstellung", "2 · Vier Duelle", "3 · Bilanz", "4 · Missverständnis"],
+    texte: [
+      'Zwei Neulinge kommen nach Goldbucht: <span data-ph="mara">Mara spielt Tit-for-Tat</span>, <span data-ph="fremd">ein Fremder spielt Immer Betrug</span>.',
+      'Beide fahren je <span data-ph="zehn">10 Fahrten</span> mit vier Kapitänen: <span data-ph="vier">Ilse (Immer ehrlich), Bors (Immer Betrug), Albrecht (Groll), Nell (Misstrauisch)</span>.',
+      'Pro Fahrt: <span data-ph="gold">beide ehrlich je 3, beide Betrug je 1, allein Betrug 5, betrogen 0</span>. In jeder Zelle steht: Neuling | Gegenüber.'
+    ],
+    woerterbuch: ["Tit-for-Tat: ehrlich beginnen, dann nachahmen", "Groll: nach einem Betrug nie wieder ehrlich", "Misstrauisch: beginnt mit Betrug, ahmt dann nach", "Ohne Rauschen: alle Züge kommen richtig an"],
+    beschriftung: { woerterbuch: "Regeln", formel: "Saisonbilanz" },
+    szenen: [
+      { say: "Eine ganze Handelssaison im Zeitraffer. Wir vergleichen zwei Neulinge: die freundliche Mara und einen Fremden, der immer betrügt." },
+      { ph: 0, sent: 0, hl: ["mara", "fremd"], dict: 1, say: "Mara spielt Tit-for-Tat: Sie beginnt ehrlich und macht dann den letzten Zug ihres Gegenübers nach. Der Fremde betrügt immer." },
+      { ph: 0, sent: 1, hl: ["vier"], dict: 3, f: tab([], -1), say: "Beide treffen auf dieselben vier Kapitäne, je zehn Fahrten lang. Links steht Maras Duell, rechts das des Fremden." },
+      { ph: 0, sent: 2, hl: ["gold"], dict: 4, say: "Die Auszahlungen kennst du: Ehrlichkeit auf beiden Seiten bringt je 3 Gold, gegenseitiger Betrug je 1, wer allein betrügt holt 5, wer betrogen wird 0." },
+      { ph: 1, sent: 1, hl: ["vier"], f: tab([z1].map((x) => [NW(x[0]), NW(x[1])]), 0), say: "Gegen Ilse, die immer ehrlich ist: Mara handelt zehnmal ehrlich, 30 zu 30. Der Fremde plündert Ilse aus: 50 zu 0." },
+      { ph: 1, f: tab([z1, [NW(z2[0]), NW(z2[1])]], 1), say: "Gegen Bors, der immer betrügt: Mara verliert nur die erste Fahrt, dann betrügt sie zurück: 9 zu 14. Der Fremde und Bors betrügen sich zehnmal: 10 zu 10." },
+      { ph: 1, f: tab([z1, z2, [NW(z3[0]), NW(z3[1])]], 2), say: "Gegen Albrecht, der Groll spielt: Mara ist nie unehrlich, also bleibt Albrecht ehrlich: 30 zu 30. Den Fremden bestraft Albrecht ab Fahrt 2 für immer: 14 zu 9." },
+      { ph: 1, f: tab([z1, z2, z3, [NW(z4[0]), NW(z4[1])]], 3), say: "Gegen Nell, die misstrauisch beginnt: Nell betrügt zuerst, Mara antwortet, Nell ahmt Maras frühere Ehrlichkeit nach. Ein Echo: abwechselnd 0 und 5, macht 25 zu 25. Der Fremde und Nell betrügen sich durchgehend: 10 zu 10." },
+      { ph: 2, f: tab([z1, z2, z3, z4, [NW(z5[0]), NW(z5[1])]], 4), say: "Die Bilanz: Mara holt 94 Gold, der Fremde nur 84. Tit-for-Tat gewinnt die Saison." },
+      { ph: 2, f: tab([z1, z2, z3, z4, z5], 1), say: "Aber schau die Duelle an: Mara holt nie mehr als ihr Gegenüber. Gegen Bors verliert sie sogar 9 zu 14. Der Fremde verliert dagegen kein einziges Duell." },
+      { ph: 2, say: "Das ist die Pointe: Tit-for-Tat gewinnt nicht durch Besiegen, sondern indem es möglichst viele gute Partnerschaften ermöglicht. Neid auf das Gegenüber ist ein schlechter Ratgeber." },
+      { ph: 3, f: '<table class="tabelle"><thead><tr><th>Mara gegen</th><th>ohne Fehler</th><th>Fehler in Fahrt 3</th></tr></thead><tbody><tr><th>Albrecht (Groll)</th><td>30 | 30</td><td class="lit">' + NW("17 | 17") + "</td></tr></tbody></table>", say: "Jetzt ein Missverständnis: In Fahrt 3 kommt Maras ehrliche Ware bei Albrecht als Betrug an. Albrecht spielt Groll und betrügt ab Fahrt 4 für immer. Ab Fahrt 5 betrügen beide. Statt je 30 holen beide nur noch 17." },
+      { ph: 3, f: '<table class="tabelle"><thead><tr><th>Mara gegen</th><th>ohne Fehler</th><th>Fehler in Fahrt 3</th></tr></thead><tbody><tr><th>Albrecht (Groll)</th><td>30 | 30</td><td>17 | 17</td></tr><tr><th>Albrecht (Geduldig)</th><td>30 | 30</td><td class="lit">' + NW("32 | 27") + "</td></tr></tbody></table>", say: "Spielte Albrecht Geduldig, würde er den einen Betrug übersehen. Mara bliebe ehrlich, und es ginge sofort friedlich weiter: 32 zu 27. Albrecht verliert durch das Missverständnis nur 3 Gold statt 13." },
+      { ph: 3, say: "Merke: Freundlich beginnen, sofort antworten, schnell verzeihen, klar bleiben. Und wo Missverständnisse häufig sind, lieber einmal mehr verzeihen. Jetzt prüf dich im Selbsttest.", end: true }
+    ]
+  });
+
+  // ---- Selbsttest ----
+  L.selbsttest("#t06-selbsttest", {
+    fragen: [
+      { q: "Was meint der «Schatten der Zukunft»?", o: ["Die Aussicht auf ein Wiedersehen macht Betrug heute teuer, weil er künftige Gewinne kostet", "Die Angst vor dem Unbekannten", "Dass die Zukunft immer schlechter wird", "Dass man Gewinne sofort ausgeben soll"], a: 0, e: "Je wahrscheinlicher und länger die gemeinsame Zukunft, desto mehr lohnt sich Ehrlichkeit heute." },
+      { q: "Was tut Tit-for-Tat in der allerersten Fahrt?", o: ["Es betrügt, um sicherzugehen", "Es würfelt", "Es wartet ab", "Es handelt ehrlich"], a: 3, e: "Tit-for-Tat ist freundlich: Es betrügt nie als Erster." },
+      { q: "Beide wissen, dass es genau 10 Fahrten gibt. Was folgt streng logisch aus der Rückwärtsinduktion?", o: ["Beide kooperieren immer", "Beide betrügen nur in der letzten Fahrt", "Beide betrügen schon ab der ersten Fahrt", "Es gibt keine Vorhersage"], a: 2, e: "In Fahrt 10 kann niemand mehr strafen, also betrügen beide. Damit ist Fahrt 9 ebenfalls ohne Zukunft, und so weiter bis Fahrt 1." },
+      { q: "Warum gewinnt Tit-for-Tat nie ein einzelnes Duell?", o: ["Weil es zu langsam ist", "Weil es nie zuerst betrügt und darum höchstens gleich viel holt wie das Gegenüber", "Weil es zufällig spielt", "Weil es immer verzeiht"], a: 1, e: "Tit-for-Tat antwortet nur. Es gewinnt Turniere über die Summe vieler guter Partnerschaften." },
+      { q: "Welche der vier Eigenschaften fehlt der Strategie Groll?", o: ["freundlich", "wehrhaft", "nachsichtig", "klar"], a: 2, e: "Groll beginnt ehrlich (freundlich), straft sofort (wehrhaft) und ist leicht zu verstehen (klar), verzeiht aber nie." },
+      { q: "Zwei Tit-for-Tat-Spieler, ein einziges Missverständnis. Was passiert?", o: ["Ein Echo: Abwechselnd straft einer den anderen, bis jemand verzeiht", "Nichts, sie merken es sofort", "Beide betrügen sofort für immer", "Sie hören auf zu handeln"], a: 0, e: "Jeder ahmt den letzten Zug des anderen nach, also wandert der Betrug hin und her. Verzeihende Regeln brechen das Echo." },
+      { q: "In welchem Fall gewinnt im Hafenturnier eher eine verzeihende Strategie wie Geduldig?", o: ["Wenn es keine Missverständnisse gibt", "Wenn nur zwei Strategien antreten", "Nie", "Wenn es öfter Missverständnisse (Rauschen) gibt"], a: 3, e: "Bei Rauschen werden Fehler nicht zu ewigem Streit. Groll und strenge Vergelter verlieren." },
+      { q: "Warum funktionierte das «Leben und leben lassen» an Teilen der Westfront?", o: ["Weil es offiziell befohlen war", "Weil sich dieselben Einheiten lange gegenüberlagen: ein wiederholtes Spiel mit Vergeltung bei Bruch", "Weil die Soldaten keine Munition hatten", "Weil es keine Offiziere gab"], a: 1, e: "Lange Gegenüberstellung schuf einen Schatten der Zukunft. Häufiger Truppenaustausch zerstörte ihn." },
+      { q: "Wie sicherten die Maghribi-Händler Ehrlichkeit ohne Gerichte?", o: ["Mit Geiseln", "Mit Verträgen beim Kalifen", "Ein Betrüger wurde vom ganzen Netzwerk gemieden, Briefe verbreiteten den Ruf", "Sie handelten nur mit Verwandten"], a: 2, e: "Ein Betrug kostete nicht einen Partner, sondern alle. Reputation verband viele Begegnungen zu einem wiederholten Spiel." },
+      { q: "Eine Flotte besteht zu 80 % aus Gutgläubigen (Immer ehrlich). Was passiert in der Evolution zuerst?", o: ["Die Betrüger wachsen stark, weil sie leichte Beute haben", "Die Gutgläubigen wachsen weiter", "Alle bleiben gleich", "Tit-for-Tat übernimmt sofort"], a: 0, e: "Naive Kooperation füttert Betrüger. Erst wenn die Beute fehlt, setzt sich das wehrhafte Tit-for-Tat durch." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

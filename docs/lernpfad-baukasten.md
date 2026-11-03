@@ -35,6 +35,8 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 | `scripts/lernpfad-vorschau.mjs` | Lokaler Vorschau-Server ohne App und Login |
 | `public/lernpfad/ps-konsole.css`, `ps-konsole.js` | Erweiterung Lernpfad PS: Konsolen-Simulator, Syntaxfärbung, Ausgabeblöcke. Nur für PS-Seiten, Doku in `docs/lernpfad-powershell.md` |
 | `content/lernseiten/ps/_vorlage.html` | Muster-Themenseite PS mit Simulator, Code- und Ausgabeblöcken (keine Station) |
+| `public/lernpfad/st-spiel.css`, `st-spiel.js` | Spiel-Erweiterung Lernpfad Spieltheorie: Pergament-Grundton, Figuren, Szenen, Spielbrett, Turnier, Spielbaum, Szenario, Lagetisch, Mischer. Nur für Spieltheorie-Seiten, Doku in `docs/lernpfad-spieltheorie.md` |
+| `content/lernseiten/spieltheorie/_vorlage.html` | Muster-Themenseite Spieltheorie mit allen Spielbausteinen (keine Station) |
 
 Ändere diese Dateien nicht für eine einzelne Themenseite. Was nur deine Seite braucht, gehört in die Seite (siehe [Abschnitt 11](#11-themeneigene-interaktionen)).
 

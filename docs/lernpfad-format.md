@@ -1,6 +1,6 @@
 # Lernpfad — Format und Auslieferung
 
-Ein Lernpfad führt durch ein Studienfach (bisher MSTW und AVSW), Station für Station bis zur Modulschlussprüfung. Jede Station ist **eine fertige HTML-Datei**. Die App liefert sie hinter dem Login aus und speichert den Fortschritt pro Konto.
+Ein Lernpfad führt durch ein Studienfach (bisher MSTW, PMGT, PS, AVSW und Spieltheorie), Station für Station bis zur Modulschlussprüfung. Jede Station ist **eine fertige HTML-Datei**. Die App liefert sie hinter dem Login aus und speichert den Fortschritt pro Konto.
 
 Gestaltung und Bausteine der Seiten (CSS, JavaScript, Schriften, KaTeX, Vorlage) beschreibt `docs/lernpfad-baukasten.md`. Dieses Dokument regelt Daten, Dateien, Prüfung, Auslieferung und Fortschritt.
 
@@ -138,6 +138,8 @@ Loader (`lib/lernseiten.ts`, nur serverseitig):
 Auskommentierte Teile (`<!-- … -->`) zählen bei der Prüfung nicht. Code: `lib/lernseiten-pruefung.ts`, Tests: `tests/lernseiten.test.ts`.
 
 **Zusatz Lernpfad PS:** Weitere Dateien aus `/lernpfad/` sind erlaubt (sie sind keine externen Ressourcen), z. B. `<link rel="stylesheet" href="/lernpfad/ps-konsole.css">` nach `lernpfad.css` und `<script src="/lernpfad/ps-konsole.js"></script>` nach `lernpfad.js`. `lernpfad.css` und `lernpfad.js` bleiben Pflicht. Steht `ps-konsole.js` vor `lernpfad.js` oder `ps-konsole.css` vor `lernpfad.css`, ist das ein Fehler. Details: `docs/lernpfad-powershell.md`.
+
+**Zusatz Lernpfad Spieltheorie:** Gleiches gilt für `/lernpfad/st-spiel.css` (nach `lernpfad.css`) und `/lernpfad/st-spiel.js` (nach `lernpfad.js`). Falsche Reihenfolge ist ein Fehler. Details: `docs/lernpfad-spieltheorie.md`.
 
 ## Auslieferung
 
