@@ -46,6 +46,45 @@ export const MUSTERBESETZUNG: Readonly<Record<string, readonly string[]>> = {
 /** Ramon (P13, nur über E08): gezielt auf Vorgänge mit Entwicklungs- und Datenanteil */
 const RAMON: readonly string[] = ["V06", "V07", "V08"]
 
+/**
+ * Musterbesetzung Hochmatt (Spezifikation 2.11.14, abgestimmt in K6): Zuweisungen je Person in
+ * Prioritätsreihenfolge. Kritische Vorgänge stehen vorne, Vorgänge mit Puffer dienen als Füllarbeit.
+ * Meilin (P10) bleibt auf Sprint 1, Sprint 2, Evaluation und Betrieb (kritischer Pfad), V07 übernehmen
+ * Sandro, Kevin und Florian. Mirko, Regula und Leonie tragen die fachlichen Vorgänge des kritischen Pfads.
+ */
+export const MUSTERBESETZUNG_HOCHMATT: Readonly<Record<string, readonly string[]>> = {
+  P01: ["V01", "V02", "V06", "V09", "V10", "V04", "V12", "V15", "V17", "V18"],
+  P02: ["V01", "V02", "V06", "V09", "V10", "V12", "V17", "V18"],
+  P03: ["V01", "V02", "V06", "V10", "V14", "V13", "V12", "V15", "V18"],
+  P04: ["V04", "V06", "V12", "V15"],
+  P05: ["V01", "V04", "V13", "V12", "V15", "V17", "V18"],
+  P06: ["V02", "V04", "V12"],
+  P07: ["V03", "V07", "V08", "V16"],
+  P08: ["V05", "V09", "V11", "V06", "V16", "V17"],
+  P09: ["V03", "V05", "V07", "V10", "V16", "V18"],
+  P10: ["V03", "V05", "V09", "V11", "V16"],
+  P11: ["V07", "V11", "V08", "V16"],
+  P12: ["V04", "V08", "V11", "V14"],
+  P13: ["V01", "V14", "V13", "V15"],
+}
+
+/** Dominik (P14, nur über E08 C): gezielt auf Schutzkonzept, Sicherheitstest und Betrieb (2.11.8 E08) */
+const DOMINIK: readonly string[] = ["V08", "V11", "V16"]
+
+/** Einstellungen des Roboters «gut» je Szenario (5.4) */
+interface GutConfig {
+  staffing: Readonly<Record<string, readonly string[]>>
+  /** Person, die erst über ein Ereignis dazukommt (Wolkenried E08 Ramon, Hochmatt E08 Dominik) */
+  extra: Readonly<Record<string, readonly string[]>>
+  /** Vorgänge mit 2 Reviews; alle übrigen R-Vorgänge erhalten 1 */
+  doubleReviews: readonly string[]
+}
+
+const GUT_CONFIG: Readonly<Record<string, GutConfig>> = {
+  wolkenried: { staffing: MUSTERBESETZUNG, extra: { P13: RAMON }, doubleReviews: ["V05", "V09"] },
+  hochmatt: { staffing: MUSTERBESETZUNG_HOCHMATT, extra: { P14: DOMINIK }, doubleReviews: ["V05", "V09"] },
+}
+
 const MAX_OPEN = 6
 const MAX_STEPS = 6000
 
@@ -172,18 +211,25 @@ function takeRiskMeasures(r: Runner): void {
  * und 1 auf den übrigen R-Vorgängen, Risikomassnahmen ab Wert 9, Register jeden Montag, Ereignisse mit
  * der ersten Option «gut», Gespräche bei m < 85, Überstufe 1 auf dem kritischen Pfad bei Prognose > 38
  * (höchstens 5 Tage am Stück, nicht für Personen mit tiefer Überstunden-Toleranz), ehrliche Berichte.
+ * Besetzung, Zusatzperson und Reviews je Szenario aus GUT_CONFIG (Hochmatt: Musterbesetzung 2.11.14,
+ * Dominik nach E08 C auf V08, V11, V16); `staffing` ersetzt nur die Musterbesetzung.
  */
-export function playGut(seed: number, scenario: Scenario = wolkenried(), staffing: Readonly<Record<string, readonly string[]>> = MUSTERBESETZUNG): BotRun {
+export function playGut(seed: number, scenario: Scenario = wolkenried(), staffing?: Readonly<Record<string, readonly string[]>>): BotRun {
+  const base = GUT_CONFIG[scenario.id] ?? GUT_CONFIG.wolkenried
+  return playGutWith(seed, scenario, staffing ? { ...base, staffing } : base)
+}
+
+function playGutWith(seed: number, scenario: Scenario, config: GutConfig): BotRun {
   const r = new Runner(scenario, seed)
   const critical = new Set(computeSchedule(scenario).filter((row) => row.critical).map((row) => row.taskId))
   const tolerance = Object.fromEntries(scenario.people.map((p) => [p.id, p.overtimeTolerance]))
-  const plan: Record<string, readonly string[]> = { P13: RAMON, ...staffing }
+  const plan: Record<string, readonly string[]> = { ...config.extra, ...config.staffing }
 
   r.fill(plan)
-  // Reviews: 2 auf V05, V09, 1 auf allen übrigen R-Vorgängen
+  // Reviews: 2 auf den Vorgängen aus config.doubleReviews (Wolkenried V05, V09), 1 auf allen übrigen R-Vorgängen
   for (const t of scenario.tasks) {
     if (t.phase !== "R") continue
-    r.act({ type: "setReviews", taskId: t.id, count: t.id === "V05" || t.id === "V09" ? 2 : 1 })
+    r.act({ type: "setReviews", taskId: t.id, count: config.doubleReviews.includes(t.id) ? 2 : 1 })
   }
   takeRiskMeasures(r)
   r.act({ type: "riskReview" })
@@ -333,6 +379,12 @@ export function playBot(name: BotName, seed: number, scenario: Scenario = wolken
   if (name === "gut") return playGut(seed, scenario)
   if (name === "naiv") return playNaiv(seed, scenario)
   return playSchlecht(seed, scenario)
+}
+
+export function hochmatt(): Scenario {
+  const s = loadScenario("hochmatt")
+  if (!s) throw new Error("Szenario hochmatt fehlt")
+  return s
 }
 
 // ---------- Einführungslauf «Hundeanmeldung online» (2.10, AP6) ----------

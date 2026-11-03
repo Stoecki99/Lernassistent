@@ -4,12 +4,13 @@
 // tests/simulation-balance.test.ts
 // Abstimmung mit Strategie-Robotern (Spezifikation 5.4, AP5): je Roboter 20 feste Startwerte (1–20),
 // Schwellen aus 5.4. Dazu Determinismus mit Roboter «gut» (5.3) und Laufzeit von replay (5.1).
+// Hochmatt (2.11.14, K6) mit denselben Schwellen, eigener Musterbesetzung und eigenem Determinismus-Test.
 
 import { describe, test } from "node:test"
 import assert from "node:assert/strict"
 import { performance } from "node:perf_hooks"
-import { computeKpis, replay, type RunResult } from "@/lib/simulation"
-import { einfuehrung, playBot, playIntroGut, playIntroNaiv, wolkenried, type BotName, type BotRun } from "./helpers/simulation-bots"
+import { computeKpis, replay, type RunResult, type Scenario } from "@/lib/simulation"
+import { einfuehrung, hochmatt, playBot, playIntroGut, playIntroNaiv, wolkenried, type BotName, type BotRun } from "./helpers/simulation-bots"
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => i + 1)
 const BOTS: BotName[] = ["gut", "naiv", "schlecht"]
@@ -19,38 +20,6 @@ interface Row {
   seed: number
   result: RunResult
   cpi: number
-}
-
-const scenario = wolkenried()
-const runs = new Map<string, BotRun>()
-let rows: Row[] | null = null
-
-function run(bot: BotName, seed: number): BotRun {
-  const key = `${bot}:${seed}`
-  let r = runs.get(key)
-  if (!r) {
-    r = playBot(bot, seed, scenario)
-    runs.set(key, r)
-  }
-  return r
-}
-
-function allRows(): Row[] {
-  if (rows) return rows
-  rows = []
-  for (const bot of BOTS) {
-    for (const seed of SEEDS) {
-      const { state } = run(bot, seed)
-      assert.equal(state.phase, "abgeschlossen", `${bot} ${seed}: Lauf nicht abgeschlossen`)
-      assert.ok(state.result, `${bot} ${seed}: kein Ergebnis`)
-      rows.push({ bot, seed, result: state.result, cpi: computeKpis(state, scenario).cpi })
-    }
-  }
-  return rows
-}
-
-function of(bot: BotName): Row[] {
-  return allRows().filter((r) => r.bot === bot)
 }
 
 function median(values: number[]): number {
@@ -64,36 +33,66 @@ function stdev(values: number[]): number {
   return Math.sqrt(values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length)
 }
 
-/** Tabelle Roboter × Startwert × Teilpunkte für die Ausgabe bei Fehlschlag (5.4) */
-function table(): string {
-  const head = "Roboter  Seed  Total Termin Kosten Qual. Stake. Team Führ.  Endtag  CPI    Restm."
-  const lines = allRows().map((r) => {
-    const s = r.result.score
-    return [
-      r.bot.padEnd(8),
-      String(r.seed).padStart(4),
-      String(s.total).padStart(6),
-      String(s.termin).padStart(6),
-      String(s.kosten).padStart(6),
-      String(s.qualitaet).padStart(5),
-      String(s.stakeholder).padStart(6),
-      String(s.team).padStart(4),
-      String(s.fuehrung).padStart(5),
-      String(r.result.endDay).padStart(7),
-      r.cpi.toFixed(3).padStart(6),
-      String(r.result.restmaengel).padStart(6),
-    ].join(" ")
-  })
-  return [head, ...lines].join("\n")
+/** Läufe eines Ernstfalls: je Roboter und Startwert einmal gespielt und zwischengespeichert */
+function balanceRuns(scenario: Scenario) {
+  const runs = new Map<string, BotRun>()
+  let rows: Row[] | null = null
+
+  function run(bot: BotName, seed: number): BotRun {
+    const key = `${bot}:${seed}`
+    let r = runs.get(key)
+    if (!r) {
+      r = playBot(bot, seed, scenario)
+      runs.set(key, r)
+    }
+    return r
+  }
+
+  function allRows(): Row[] {
+    if (rows) return rows
+    rows = []
+    for (const bot of BOTS) {
+      for (const seed of SEEDS) {
+        const { state } = run(bot, seed)
+        assert.equal(state.phase, "abgeschlossen", `${scenario.id} ${bot} ${seed}: Lauf nicht abgeschlossen`)
+        assert.ok(state.result, `${scenario.id} ${bot} ${seed}: kein Ergebnis`)
+        rows.push({ bot, seed, result: state.result, cpi: computeKpis(state, scenario).cpi })
+      }
+    }
+    return rows
+  }
+
+  /** Tabelle Roboter × Startwert × Teilpunkte für die Ausgabe bei Fehlschlag (5.4) */
+  function table(): string {
+    const head = "Roboter  Seed  Total Termin Kosten Qual. Stake. Team Führ.  Endtag  CPI    Restm."
+    const lines = allRows().map((r) => {
+      const s = r.result.score
+      return [
+        r.bot.padEnd(8),
+        String(r.seed).padStart(4),
+        String(s.total).padStart(6),
+        String(s.termin).padStart(6),
+        String(s.kosten).padStart(6),
+        String(s.qualitaet).padStart(5),
+        String(s.stakeholder).padStart(6),
+        String(s.team).padStart(4),
+        String(s.fuehrung).padStart(5),
+        String(r.result.endDay).padStart(7),
+        r.cpi.toFixed(3).padStart(6),
+        String(r.result.restmaengel).padStart(6),
+      ].join(" ")
+    })
+    return [`Szenario ${scenario.id}`, head, ...lines].join("\n")
+  }
+
+  return { run, allRows, table, of: (bot: BotName) => allRows().filter((r) => r.bot === bot) }
 }
 
-function check(ok: boolean, message: string): void {
-  assert.ok(ok, `${message}\n\n${table()}`)
-}
+/** Schwellen aus 5.4 (AP5); für Hochmatt (2.11.14, K6) unverändert übernommen */
+function thresholdTests(b: ReturnType<typeof balanceRuns>): void {
+  const check = (ok: boolean, message: string): void => assert.ok(ok, `${message}\n\n${b.table()}`)
+  const total = (bot: BotName) => b.of(bot).map((r) => r.result.score.total)
 
-const total = (bot: BotName) => of(bot).map((r) => r.result.score.total)
-
-describe("Abstimmung mit Strategie-Robotern (5.4)", () => {
   test("gut: Median Punkte ≥ 720", () => {
     check(median(total("gut")) >= 720, `Median gut = ${median(total("gut"))}`)
   })
@@ -102,11 +101,11 @@ describe("Abstimmung mit Strategie-Robotern (5.4)", () => {
     check(n >= 18, `nur ${n} von 20 Startwerten ≥ 650`)
   })
   test("gut: Median Endtag 36 bis 40", () => {
-    const m = median(of("gut").map((r) => r.result.endDay))
+    const m = median(b.of("gut").map((r) => r.result.endDay))
     check(m >= 36 && m <= 40, `Median Endtag gut = ${m}`)
   })
   test("gut: Median CPI am Ende 0.92 bis 1.05", () => {
-    const m = median(of("gut").map((r) => r.cpi))
+    const m = median(b.of("gut").map((r) => r.cpi))
     check(m >= 0.92 && m <= 1.05, `Median CPI gut = ${m.toFixed(3)}`)
   })
   test("gut: Streuung (Standardabweichung) ≤ 60 Punkte", () => {
@@ -118,7 +117,7 @@ describe("Abstimmung mit Strategie-Robotern (5.4)", () => {
     check(m >= 350 && m <= 600, `Median naiv = ${m}`)
   })
   test("naiv: Median Endtag 42 bis 48", () => {
-    const m = median(of("naiv").map((r) => r.result.endDay))
+    const m = median(b.of("naiv").map((r) => r.result.endDay))
     check(m >= 42 && m <= 48, `Median Endtag naiv = ${m}`)
   })
   test("schlecht: Median Punkte ≤ 300", () => {
@@ -130,8 +129,45 @@ describe("Abstimmung mit Strategie-Robotern (5.4)", () => {
     check(d >= 150, `Abstand = ${d}`)
   })
   test("kein Roboter erreicht 1000 Punkte", () => {
-    check(allRows().every((r) => r.result.score.total < 1000), "ein Lauf erreicht 1000 Punkte")
+    check(b.allRows().every((r) => r.result.score.total < 1000), "ein Lauf erreicht 1000 Punkte")
   })
+}
+
+/** Determinismus (5.3) und Laufzeit von replay (5.1) mit Roboter «gut» */
+function replayTests(scenario: Scenario, b: ReturnType<typeof balanceRuns>): void {
+  for (const seed of [1, 7, 13]) {
+    test(`Startwert ${seed}: gleicher Startwert + gleiches Protokoll = gleicher Endzustand`, () => {
+      const { state, actions } = b.run("gut", seed)
+      const again = replay(scenario, seed, actions)
+      assert.deepEqual(JSON.parse(JSON.stringify(again)), JSON.parse(JSON.stringify(state)))
+      assert.deepEqual(playBot("gut", seed, scenario).actions, actions)
+    })
+  }
+  test("replay eines vollständigen Ernstfalls mit Roboter «gut» < 200 ms", () => {
+    const { actions, state } = b.run("gut", 1)
+    assert.equal(state.phase, "abgeschlossen")
+    replay(scenario, 1, actions) // Aufwärmen (JIT, Szenario-Kontext)
+    let best = Number.POSITIVE_INFINITY
+    for (let i = 0; i < 3; i++) {
+      const t0 = performance.now()
+      replay(scenario, 1, actions)
+      best = Math.min(best, performance.now() - t0)
+    }
+    assert.ok(best < 200, `replay dauerte ${best.toFixed(1)} ms (${actions.length} Aktionen)`)
+  })
+}
+
+const scenario = wolkenried()
+const wolkenriedRuns = balanceRuns(scenario)
+const hochmattScenario = hochmatt()
+const hochmattRuns = balanceRuns(hochmattScenario)
+
+describe("Abstimmung mit Strategie-Robotern (5.4)", () => {
+  thresholdTests(wolkenriedRuns)
+})
+
+describe("Abstimmung Hochmatt mit Strategie-Robotern (2.11.14, K6)", () => {
+  thresholdTests(hochmattRuns)
 })
 
 describe("Einführungslauf «Hundeanmeldung online» (2.10, AP6)", () => {
@@ -165,28 +201,10 @@ describe("Einführungslauf «Hundeanmeldung online» (2.10, AP6)", () => {
   })
 })
 
-describe("Determinismus mit Roboter «gut» (5.3)", () => {
-  for (const seed of [1, 7, 13]) {
-    test(`Startwert ${seed}: gleicher Startwert + gleiches Protokoll = gleicher Endzustand`, () => {
-      const { state, actions } = run("gut", seed)
-      const again = replay(scenario, seed, actions)
-      assert.deepEqual(JSON.parse(JSON.stringify(again)), JSON.parse(JSON.stringify(state)))
-      assert.deepEqual(playBot("gut", seed, scenario).actions, actions)
-    })
-  }
+describe("Determinismus und Leistung mit Roboter «gut» (5.3, 5.1)", () => {
+  replayTests(scenario, wolkenriedRuns)
 })
 
-describe("Leistung (5.1)", () => {
-  test("replay eines vollständigen Ernstfalls mit Roboter «gut» < 200 ms", () => {
-    const { actions, state } = run("gut", 1)
-    assert.equal(state.phase, "abgeschlossen")
-    replay(scenario, 1, actions) // Aufwärmen (JIT, Szenario-Kontext)
-    let best = Number.POSITIVE_INFINITY
-    for (let i = 0; i < 3; i++) {
-      const t0 = performance.now()
-      replay(scenario, 1, actions)
-      best = Math.min(best, performance.now() - t0)
-    }
-    assert.ok(best < 200, `replay dauerte ${best.toFixed(1)} ms (${actions.length} Aktionen)`)
-  })
+describe("Hochmatt: Determinismus und Leistung mit Roboter «gut» (5.3, 5.1)", () => {
+  replayTests(hochmattScenario, hochmattRuns)
 })

@@ -499,7 +499,7 @@ Prüfung in `tests/simulation-balance.test.ts` (Abschnitt «Einführungslauf»):
 
 ### 2.11 Szenario 2: Agentische Fachapplikation
 
-**Stand:** Entwurf vom 02.11.2026, nicht mit dem Rechenkern abgestimmt (kein Roboterlauf). Geplante Datei `content/simulation/hochmatt.json`, `kind: "main"`, Titel **«Stipendien-Assistent Hochmatt»**. Grundlage der Best Practices (Kürzel BP01–BP24 in den Tabellen): Vault-Notiz `04 Ressourcen/KI in der Verwaltung/Agentic Workflows in der Kantonsverwaltung.md` (Checkliste). Zeitmodell, Formeln und `DEFAULT_PARAMS` wie Abschnitt 3; was der Kern zusätzlich braucht, steht in 2.11.13.
+**Stand:** Entwurf vom 02.11.2026, mit dem Rechenkern abgestimmt am 03.11.2026 (K6, Szenario-Version 1.1.0, Abschnitt 2.11.14). Geplante Datei `content/simulation/hochmatt.json`, `kind: "main"`, Titel **«Stipendien-Assistent Hochmatt»**. Grundlage der Best Practices (Kürzel BP01–BP24 in den Tabellen): Vault-Notiz `04 Ressourcen/KI in der Verwaltung/Agentic Workflows in der Kantonsverwaltung.md` (Checkliste). Zeitmodell, Formeln und `DEFAULT_PARAMS` wie Abschnitt 3; was der Kern zusätzlich braucht, steht in 2.11.13.
 
 #### 2.11.1 Ausgangslage
 
@@ -660,28 +660,28 @@ Fast kritisch mit 1 Tag Puffer: V03 (Plattform), **V06 (Testset)**, **V07 (Schni
 |---|---|---|---|---|---|---|---|---|
 | PV CHF | 19'520 | 71'280 | 100'720 | 122'080 | 141'920 | 155'120 | 171'920 | 175'760 |
 
-**Machbarkeit (ungeprüft):** Aufwand +0.7 % und BAC +8.3 % gegenüber Wolkenried, Team 9.2 statt 8.5 Stellen. Engpass ist Meilin Zürcher (P10): Sie hat die beste Passung auf V03, V05, V07, V09, V11 und V16. Wer sie überall einsetzt, überlastet sie; das ist gewollt (Lernziel Ressourcen). Vor der Freigabe braucht es eine Abstimmung mit den Strategie-Robotern wie AP5 (5.4) und eine Musterbesetzung wie 8.2.
+**Machbarkeit (abgestimmt, 2.11.14):** Aufwand +0.7 % und BAC +8.3 % gegenüber Wolkenried, Team 9.9 statt 8.5 Stellen (nach K6; vorher 9.2). Engpass ist Meilin Zürcher (P10): Sie hat die beste Passung auf V03, V05, V07, V09, V11 und V16. Wer sie überall einsetzt, überlastet sie; das ist gewollt (Lernziel Ressourcen). Musterbesetzung und Roboterläufe in 2.11.14.
 
 #### 2.11.6 Team
 
-Profil VER, ENT, KID, SID, CHG. Sätze zu Vollkosten bzw. Verrechnungssatz, wie 2.5 rund 15 % unter den Plansätzen.
+Profil VER, ENT, KID, SID, CHG. Sätze zu Vollkosten bzw. Verrechnungssatz, rund 25 % unter den Plansätzen (Abstimmung K6, 2.11.14: die Passungen liegen tiefer als in Wolkenried, der Plansatz deckt deshalb mehr bezahlte Stunden je Planstunde). Pensen von Mirko, Leonie, Sandro, Yasmin und Kevin ebenfalls aus K6.
 
 | ID | Name, Alter | Rolle | Herkunft (Vorgesetzte) | Pensum | Satz CHF | VER | ENT | KID | SID | CHG | Start-Mot. | Bedürfnisse | Eigenschaften | Überstunden |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| P01 | Regula Tschanz, 47 | Fachverantwortliche Stipendien | Kernteam | 100 % | 105 | 6 | 0 | 2 | 2 | 4 | 100 | Anerkennung, Sicherheit | – | mittel |
-| P02 | Mirko Vasić, 38 | Produktverantwortlicher (Product Owner) | Kernteam | 100 % | 110 | 4 | 2 | 4 | 2 | 3 | 95 | Autonomie, Entwicklung | schnell | hoch |
-| P03 | Leonie Hasler, 33 | Agile Coachin und Business-Analystin | Kernteam | 80 % | 100 | 3 | 1 | 3 | 2 | 4 | 105 | Zugehörigkeit, Entwicklung | verzettelt | mittel |
-| P04 | Bruno Zaugg, 59 | Sachbearbeiter Stipendien | Linie (Roland Etter) | 60 % | 85 | 5 | 0 | 1 | 1 | 2 | 85 | Klarheit, Sicherheit | gründlich | tief |
-| P05 | Priska Vonlanthen, 41 | Sachbearbeiterin Härtefälle | Linie (Roland Etter) | 50 % | 90 | 6 | 0 | 1 | 2 | 3 | 95 | Anerkennung, Zugehörigkeit | – | mittel |
-| P06 | Dr. Nora Bächtold, 44 | Juristin Rechtsdienst | Linie (Matthias Zollinger) | 40 % | 125 | 6 | 0 | 1 | 4 | 2 | 95 | Autonomie, Anerkennung | gründlich | tief |
-| P07 | Sandro Lüthi, 35 | Plattform-Ingenieur | Linie Informatikamt (Isabelle Graf) | 60 % | 115 | 0 | 5 | 3 | 4 | 1 | 100 | Autonomie, Klarheit | – | hoch |
-| P08 | Yasmin El-Amrani, 29 | Datenwissenschaftlerin | Linie Informatikamt (Isabelle Graf) | 60 % (Tag 16–18: 20 %) | 110 | 2 | 3 | 6 | 2 | 1 | 105 | Entwicklung, Anerkennung | lernt schnell | hoch |
-| P09 | Florian Wüthrich, 43 | Leitender Entwickler | Lieferant Arvenhof (Simone Kradolfer) | 100 % | 160 | 1 | 6 | 4 | 2 | 1 | 95 | Autonomie, Anerkennung | schnell | hoch |
-| P10 | Meilin Zürcher, 34 | KI-Ingenieurin (Agenten, Evaluation) | Lieferant Arvenhof (Simone Kradolfer) | 100 % | 160 | 1 | 5 | 6 | 3 | 1 | 100 | Klarheit, Autonomie | gründlich | mittel |
-| P11 | Kevin Rohner, 31 | Integrationsentwickler | Lieferant Arvenhof (Simone Kradolfer) | 80 % | 145 | 1 | 6 | 2 | 3 | 0 | 100 | Entwicklung, Zugehörigkeit | – | mittel |
-| P12 | Dr. Ursina Planta, 52 | Beraterin Informationssicherheit und Datenschutz | Beratung (eigenes Büro) | 40 % | 170 | 2 | 1 | 2 | 6 | 3 | 95 | Autonomie, Anerkennung | gründlich | tief |
-| P13 | Selina Brügger, 39 | Personalentwicklung und Change | Linie Generalsekretariat (Claudine Rüegg) | 50 % | 100 | 2 | 0 | 1 | 1 | 6 | 100 | Anerkennung, Zugehörigkeit | schnell | mittel |
-| P14 | Dominik Steffen, 27 | Testingenieur KI-Sicherheit (nur über E08) | Lieferant Arvenhof (Simone Kradolfer) | 100 % | 150 | 0 | 4 | 5 | 4 | 0 | 95 | Entwicklung | schnell | hoch |
+| P01 | Regula Tschanz, 47 | Fachverantwortliche Stipendien | Kernteam | 100 % | 95 | 6 | 0 | 2 | 2 | 4 | 100 | Anerkennung, Sicherheit | – | mittel |
+| P02 | Mirko Vasić, 38 | Produktverantwortlicher (Product Owner) | Kernteam | 90 % | 100 | 4 | 2 | 4 | 2 | 3 | 95 | Autonomie, Entwicklung | schnell | hoch |
+| P03 | Leonie Hasler, 33 | Agile Coachin und Business-Analystin | Kernteam | 100 % | 90 | 3 | 1 | 3 | 2 | 4 | 105 | Zugehörigkeit, Entwicklung | verzettelt | mittel |
+| P04 | Bruno Zaugg, 59 | Sachbearbeiter Stipendien | Linie (Roland Etter) | 60 % | 75 | 5 | 0 | 1 | 1 | 2 | 85 | Klarheit, Sicherheit | gründlich | tief |
+| P05 | Priska Vonlanthen, 41 | Sachbearbeiterin Härtefälle | Linie (Roland Etter) | 50 % | 80 | 6 | 0 | 1 | 2 | 3 | 95 | Anerkennung, Zugehörigkeit | – | mittel |
+| P06 | Dr. Nora Bächtold, 44 | Juristin Rechtsdienst | Linie (Matthias Zollinger) | 40 % | 115 | 6 | 0 | 1 | 4 | 2 | 95 | Autonomie, Anerkennung | gründlich | tief |
+| P07 | Sandro Lüthi, 35 | Plattform-Ingenieur | Linie Informatikamt (Isabelle Graf) | 80 % | 105 | 0 | 5 | 3 | 4 | 1 | 100 | Autonomie, Klarheit | – | hoch |
+| P08 | Yasmin El-Amrani, 29 | Datenwissenschaftlerin | Linie Informatikamt (Isabelle Graf) | 80 % (Tag 16–18: 20 %) | 100 | 2 | 3 | 6 | 2 | 1 | 105 | Entwicklung, Anerkennung | lernt schnell | hoch |
+| P09 | Florian Wüthrich, 43 | Leitender Entwickler | Lieferant Arvenhof (Simone Kradolfer) | 100 % | 145 | 1 | 6 | 4 | 2 | 1 | 95 | Autonomie, Anerkennung | schnell | hoch |
+| P10 | Meilin Zürcher, 34 | KI-Ingenieurin (Agenten, Evaluation) | Lieferant Arvenhof (Simone Kradolfer) | 100 % | 145 | 1 | 5 | 6 | 3 | 1 | 100 | Klarheit, Autonomie | gründlich | mittel |
+| P11 | Kevin Rohner, 31 | Integrationsentwickler | Lieferant Arvenhof (Simone Kradolfer) | 100 % | 130 | 1 | 6 | 2 | 3 | 0 | 100 | Entwicklung, Zugehörigkeit | – | mittel |
+| P12 | Dr. Ursina Planta, 52 | Beraterin Informationssicherheit und Datenschutz | Beratung (eigenes Büro) | 40 % | 155 | 2 | 1 | 2 | 6 | 3 | 95 | Autonomie, Anerkennung | gründlich | tief |
+| P13 | Selina Brügger, 39 | Personalentwicklung und Change | Linie Generalsekretariat (Claudine Rüegg) | 50 % | 90 | 2 | 0 | 1 | 1 | 6 | 100 | Anerkennung, Zugehörigkeit | schnell | mittel |
+| P14 | Dominik Steffen, 27 | Testingenieur KI-Sicherheit (nur über E08) | Lieferant Arvenhof (Simone Kradolfer) | 100 % | 135 | 0 | 4 | 5 | 4 | 0 | 95 | Entwicklung | schnell | hoch |
 
 Namen geprüft gegen die Sperrliste aus 5.6 und gegen in der Region Schwyz besonders häufige Familiennamen (keine Übereinstimmung).
 
@@ -709,7 +709,7 @@ Namen geprüft gegen die Sperrliste aus 5.6 und gegen in der Region Schwyz beson
 | ID | Kategorie | Risiko | W | A | Wert | Fenster | Sichtbar | Bei Eintritt | Massnahmen (Strategie, Kosten, Wirkung) |
 |---|---|---|---|---|---|---|---|---|---|
 | R01 | Umfang | Zusatzwünsche (Chatbot, weitere Gesuchsarten) weiten den Umfang aus | 3 | 3 | 9 | 5–35 | Start | +24 h auf den laufenden Vorgang mit dem meisten Restaufwand (× A/3) | M1 Backlog-Regel: neue Wünsche nur über Änderungsantrag (vermindern, 1 h Mirko): W −1 · M2 Änderungsbudget (akzeptieren aktiv, 0 CHF): A −1 |
-| R02 | Qualität | Evaluationsergebnis ungenügend: Übereinstimmung unter dem Abnahmekriterium | 3 | 4 | 12 | 15–20 | Start | V11 +24 h und V09 Fehlerlast +4 (× A/4), Info-Mail | M1 Fachleute bauen das Testset mit (vermindern, V06 +8 h): W −1 · M2 Abnahmekriterien vor dem Test festlegen (vermindern, 2 h Meilin): A −2 |
+| R02 | Qualität | Evaluationsergebnis ungenügend: Übereinstimmung unter dem Abnahmekriterium | 3 | 4 | 12 | 15–20 | Start | V11 +16 h (K6, vorher 24 h) und V09 Fehlerlast +4 (× A/4), Info-Mail | M1 Fachleute bauen das Testset mit (vermindern, V06 +8 h): W −1 · M2 Abnahmekriterien vor dem Test festlegen (vermindern, 2 h Meilin): A −2 |
 | R03 | Recht | Rechtsgrundlage für besondere Personendaten (Härtefälle) fehlt | 3 | 4 | 12 | 6–16 | Start | Ereignis E14 | M1 Rechtsgrundlagenanalyse vorziehen (vermindern, 4 h Nora): W −2 · M2 Härtefälle vorsorglich ausnehmen (vermeiden teilweise, V02 +4 h, S09 −2): A −2 |
 | R04 | Ressourcen | Linie zieht Sachbearbeitende in der Gesuchsspitze ab | 4 | 3 | 12 | 3–35 | Start | Ereignis E25 (E05 kommt fest, × A/3) | M1 Ressourcenvereinbarung mit Roland Etter (vermindern, 1 h je Linienperson): A −2 · M2 Stellvertretungen planen (vermindern, 0 CHF): W −1 |
 | R05 | Betrieb | KI-Plattform oder Testumgebung fällt aus | 2 | 3 | 6 | 22–38 | Start | Ereignis E36 | M1 Notbetrieb und zweite Umgebung (vermindern, CHF 1'500): A −2 · M2 Überwachung beauftragen (vermindern, CHF 300): W −1 |
@@ -738,7 +738,7 @@ Kanal, Fristen, Kurzformen und Bewertung wie 2.7. Spalte «BP» verweist auf die
 | E05 | T4 VM | 🚪 Roland Etter | Semesterbeginn: zieht Bruno und Priska 3 Tage ab | A mit dem kritischen Pfad verhandeln: Priska geht, Bruno bleibt im Prüfkatalog (V02) und hilft später einen halben Tag aus (g) · B «zugesichert, keine Freigabe» (m) · C sofort zustimmen (s) · D über die Auftraggeberin klären (m) | Wie E05 Wolkenried (2.8), Personen getauscht (Thomas → Priska, Martin → Bruno) | 1.04, 3.08 | – | 15, 11 |
 | E06 | T5 VM | ✉ Ursina | Beilagen enthalten Steuer- und Gesundheitsdaten, Schutzbedarf hoch | A DSFA vollständig, Vorabkontrolle vorbereiten (g) · B minimal (s) · C Auftraggeberin entscheiden lassen (m) · Std = B | A: V04 +12 h, R07 W −2, R06 sichtbar · B: V04 +8 h, R07 W +1, E27 sicher · C: V04 1 Tag blockiert, S01 +2; R06 und R07 sichtbar | 1.03 | BP02, BP03 | 04, 20 |
 | E07 | Teamphase → Sturm (ab T6) | 🚪 Leonie | Streit Regula gegen Florian: «Ermessen gegen Automatik» | A moderiertes Klärungsgespräch (g) · B Spielregeln im Sprint-Review (g) · C Aufgaben trennen (m) · D nicht einmischen (s) · Std = D | Wie E07 Wolkenried mit Regula und Florian | 2.07, 2.06 | BP06 | 16, 17 |
-| E08 | T7 VM | ✉ Simone Kradolfer | Bietet Dominik (Testingenieur KI-Sicherheit) für 3 Wochen an, CHF 150/h | A annehmen, Einarbeitung durch Meilin (4 h), gezielt auf V08/V11 (g) · B ab sofort (m) · C ablehnen (m) · Std = C | A: P14 ab T9, Lernkurve 0.95, R06 W −1 · B: P14 ab T8 · C: S08 −2 | 3.08, 3.09 | BP11 | 11, 21 |
+| E08 | T7 VM | ✉ Simone Kradolfer | Bietet Dominik (Testingenieur KI-Sicherheit) für 3 Wochen an, CHF 135/h (K6, vorher 150) | A annehmen, Einarbeitung durch Meilin (4 h), gezielt auf V08/V11 (g) · B ab sofort (m) · C ablehnen (m) · Std = C | A: P14 ab T9, Lernkurve 0.95, R06 W −1 · B: P14 ab T8 · C: S08 −2 | 3.08, 3.09 | BP11 | 11, 21 |
 | E09 | T8 VM (Sprint-Review 1) | ☎ Verband Studierender | Will die Briefe des Agenten verstehen und mitprüfen | A drei Gesuchstellende testen die Entwürfe in V10 (g) · B schriftliche Stellungnahme (m) · C ablehnen (s) · Std = C | A: V10 +4 h, S09 +15, R09 W −1 · B: V10 +4 h, S09 +5 · C: S09 −15, S10 −3 | 3.12, 3.02 | BP22, BP20 | 14, 05 |
 | E10 | T9 NM | ✉ Yasmin | Bittet um Kurs «Evaluation von Sprachmodellen» (CHF 1'500) | A nach der Freigabe Pilot (Tag 22–23) (g) · B jetzt (m) · C ablehnen (s) · Std = C | A: Mot +4, Kurs Tag 22–23, KID +1 ab Tag 28 · B: Abw. 2 Tage ab T11, KID +1 nach 5 Tagen, Mot +12 · C: Mot −12 | 2.05, 3.08 | BP19 | 16 |
 | E11 | T10 NM | 🚪 Helen Gasche | Wünscht zusätzlich einen Chatbot «Wo steht mein Gesuch?» | A Änderungsantrag mit Auswirkungsanalyse (g) · B sofort einbauen (s) · C ablehnen (s) · D für Ausbaustufe 2 vormerken (g) · Std = B | A: CR3 verfügbar · B: V09 +48 h (oder V17), S01 +4, R06 W +1 · C: S01 −8 · D: S01 −2 | 3.03, 3.13 | BP24 | 06, 20 |
@@ -765,13 +765,13 @@ Kanal, Fristen, Kurzformen und Bewertung wie 2.7. Spalte «BP» verweist auf die
 | E26 | Teammotivation < 80 (ab T21) | 🚪 Leonie | Das Team ist müde | wie E26 Wolkenried (Retrospektive) | wie E26 Wolkenried | 2.06 | – | 16 |
 | E27 | Eintritt R07; sicher bei E06 B oder Flag `rechtsgrundlageOffen` | ✉ Datenschutzbeauftragte | Protokolle mit Personendaten beim Modellanbieter, kein Vertrag Bearbeiten im Auftrag | A mit Ursina Vertrag und Löschregel nachliefern (g) · B Pilot mit Auflage weiter (m) · C bestreiten (s) · Std = B | A: V16 +12 h, CHF 800 · B: S12 −10, Restmängel +2 · C: V17 3 Tage blockiert, S12 −20, S10 −5 | 1.03 | BP04, BP08 | 04 |
 | E28 | T28 VM | ✉ Kanton Talwies | Nachbarkanton will den Assistenten mitbenutzen | A gemeinsame Weiterentwicklung nach Abschluss prüfen (g) · B Anforderungen sofort aufnehmen (s) · C absagen (m) · Std = B | A: S01 +5, S02 +5 · B: V17 +32 h, R01 W +1 · C: S02 −5 | 1.01, 3.11 | BP16 | 04, 13 |
-| E29 | Eintritt R10 | ✉ Talgrat Modelle AG | +60 % Preis ab nächstem Quartal, Protokolle neu in einer Region ausserhalb der Schweiz | A auf das geprüfte Ausweichmodell wechseln (g, voll wirksam nur mit R10-M1) · B über Arvenhof nachverhandeln (m) · C akzeptieren (s) · Std = C | A mit M1: V16 +8 h · A ohne M1: V16 +24 h, V17 Fehlerlast +3 · B: 2 h Simone, Kosten CHF 2'000 · C: Kosten CHF 4'000, R07 W +2, S12 −8 | 3.09, 3.11 | BP16, BP21, BP04 | 21, 13 |
+| E29 | Eintritt R10 | ✉ Talgrat Modelle AG | +60 % Preis ab nächstem Quartal, Protokolle neu in einer Region ausserhalb der Schweiz | A auf das geprüfte Ausweichmodell wechseln (g, voll wirksam nur mit R10-M1) · B über Arvenhof nachverhandeln (m) · C akzeptieren (s) · Std = C | A mit M1: V16 +8 h · A ohne M1: V16 +16 h (K6, vorher 24 h), V17 Fehlerlast +3 · B: 2 h Simone, Kosten CHF 2'000 · C: Kosten CHF 4'000, R07 W +2, S12 −8 | 3.09, 3.11 | BP16, BP21, BP04 | 21, 13 |
 | E30 | T30 VM | ✉ Roland Etter | Sachbearbeitende wollen keine Schulung, «einfach ausprobieren» | A Kurzschulung mit echten Fehlbeispielen und Automation Bias (g) · B Schulung verordnen (m) · C streichen (s) · Std = C | A: V15 +6 h (oder V16), R09 W −1 · B: Mot Bruno −5, S05 −3 · C: R09 W +2, R11 A +1 | 3.13, 2.08 | BP19 | 20 |
 | E31 | Regula > 8 Tage Überstunden oder Mot < 60 | 🚪 Regula | Ist erschöpft | wie E31 Wolkenried | wie E31 Wolkenried | 2.05, 2.01 | – | 17 |
 | E32 | T32 VM | ☎ Erwin Sigrist | Fragt, ab wann alle Gesuche über den Assistenten laufen | wie E32 Wolkenried | wie E32 Wolkenried | 2.02, 3.12 | – | 19 |
 | E33 | T29 VM, wenn V17 gestartet | ✉ Mirko | Freigabestufen lockern, weil 94 % übereinstimmen | **ausgeschrieben in 2.11.9** | | 3.06, 3.13, 3.01 | BP05, BP06, BP17 | 20, 08 |
 | E34 | T34 VM (milder Text, wenn E01 A) | 🚪 Bruno mit Vertretung Personalverband | Angst vor Stellenabbau und vor Leistungskontrolle über die Protokolle | A Vereinbarung: Zweck Entlastung, keine Auswertung je Person, Rolle als Prüfende (g) · B beruhigendes Gespräch (m) · C «Digitalisierung kommt so oder so» (s) · Std = C | A: 2 h Selina, Mot Bruno +15, S11 +10, S05 +3 · B: Mot Bruno +5, S11 +2 · C: Mot Bruno −12, S11 −15, Mot Linie −5 | 3.13, 2.04, 1.05 | BP18 | 17, 20 |
-| E35 | Start V18 und Restmängel > 12 | ✉ Roland Etter | Abnahme nur ohne Mängel | wie E35 Wolkenried | wie E35 Wolkenried | 3.06 | BP12 | 20 |
+| E35 | Start V18 und Restmängel > 12 | ✉ Roland Etter | Abnahme nur ohne Mängel | wie E35 Wolkenried, Reihenfolge im JSON: A beheben (m) · B verschieben (s) · C Mängelliste (g) | wie E35 Wolkenried, aber Beheben 0.5 h je Restmangel statt 2 h (K6) | 3.06 | BP12 | 20 |
 | E36 | Eintritt R05 | ☎ Meilin | KI-Plattform ausgefallen | A Notbetrieb aktivieren: manueller Ablauf, zweite Umgebung (g, nur mit R05-M1) · B Überstunden zum Aufholen (m) · C warten (s) | wie E36 Wolkenried (`laufendeEnt3`); zusätzlich ohne M1: S05 −4 | 3.11 | BP14 | 13 |
 | E37 | T37 VM | 🚪 Leonie | Lessons Learned und Abschluss | wie E37 Wolkenried | wie E37 Wolkenried | 3.10, 2.06 | – | 20 |
 | E38 | V18 fertig | ☎ Hochmatter Zeitung | Medienanfrage zur Einführung | A gemeinsamer Auftritt mit Regierungsrat, Zahlen aus dem Pilot, was die KI nicht tut (g) · B allein (s) · C Medienmitteilung (m) | A: S01 +5, S02 +3, S10 +5 · B: S01 −5 · C: S01 +1 | 3.12, 2.03 | BP20 | 14 |
@@ -887,9 +887,92 @@ Gegenüber Wolkenried neu: Der Engpass liegt nicht bei einer Schnittstelle allei
 | K3 | **Zweiten Ernstfall registrieren und wählbar machen.** **Umgesetzt 03.11.2026:** Verzeichnis `lib/simulation/catalog.ts` (`SCENARIO_CATALOG`: ID, Art, `?start=`-Wert, Kartentext, Sinnbild) für Server und Browser. Server (`scenarios.ts`): Einführung und Wolkenried statisch importiert, weitere Einträge (Hochmatt) aus `content/simulation/<id>.json` per Dateisystem; fehlt die Datei, ist das Szenario unbekannt (`loadScenario` → null, API 400, Startkarte «folgt»). Browser (`scenarioLoader.ts`): dynamischer Import nur für IDs aus dem Verzeichnis, je Szenario ein eigenes Teilpaket. Startseite `/leitstand`: drei Karten mit Sinnbild, Kurzbeschreibung, Kennzahlen und Bestwert; `?start=einfuehrung`, `?start=ernstfall` (Wolkenried), `?start=hochmatt`. Bestwert je Szenario (`GET /api/simulation/runs?scenarioId=`). **Station 23 «erledigt» bei jedem abgeschlossenen Ernstfall** (`kind: "main"`, `stationDoneFor`). Zugang unverändert Pro/Admin; die Empfehlung «nach Wolkenried» ist nur ein Hinweis auf der Karte, keine Sperre. | `lib/simulation/catalog.ts`, `lib/simulation/scenarios.ts`, `components/features/leitstand/scenarioLoader.ts`, `app/(leitstand)/leitstand/page.tsx`, `LeitstandStart.tsx`, `lib/leitstand.ts` | ja | erledigt |
 | K4 | **Lessons ohne feste Ereignis-IDs:** Feld `lessonTags` an Optionen (`umfangOhneAntrag`, `konfliktLinie`) statt Listen in `debrief.ts`. Nicht nötig, solange 2.11.8 die IDs gleich belegt. | `lib/simulation/debrief.ts`, `types.ts`, Schema | nein | 1–2 h |
 | K5 | **Sprints sichtbar machen:** optionales Feld `sprint` an Vorgängen, Gruppierung im Gantt. Rein darstellend. | `types.ts`, Gantt-Komponente | nein | 2 h |
-| K6 | **Tests und Abstimmung:** Netzplan-Referenzwerte (5.2) für Hochmatt, Schema (5.5), Sperrliste (5.6: Datei in `SCENARIO_FILES`), Musterbesetzung und Roboterläufe (5.4) mit Zielwerten wie Wolkenried (Roboter «gut» Median ≤ Tag 40, «naiv» deutlich schlechter). | `tests/simulation-*.test.ts` | ja | 1–1.5 Tage, davon der grösste Teil Abstimmung der Szenariowerte |
+| K6 | **Tests und Abstimmung:** Netzplan-Referenzwerte (5.2) für Hochmatt, Schema (5.5), Sperrliste (5.6: Datei in `SCENARIO_FILES`), Musterbesetzung und Roboterläufe (5.4) mit Zielwerten wie Wolkenried (Roboter «gut» Median ≤ Tag 40, «naiv» deutlich schlechter). | `tests/simulation-*.test.ts` | ja | Abstimmung, Musterbesetzung und Roboterläufe erledigt 03.11.2026 (2.11.14, Szenario-Version 1.1.0); Netzplan-Referenzwerte 5.2 offen |
 
 Dazu kommt das Schreiben von `content/simulation/hochmatt.json` (Texte aller 41 Ereignisse, Persönlichkeiten, Hinweise) mit rund 1 Tag. Total rund 3 Arbeitstage, davon etwa 1 Tag Code (K1–K3) und 2 Tage Inhalt und Abstimmung. Der Rechenkern (`ENGINE_VERSION`) ändert sich durch K1–K3 nicht.
+
+#### 2.11.14 Abstimmung mit dem Rechenkern (K6, 03.11.2026)
+
+Vorgehen wie AP5 (5.4, 8.2, 8.3): Roboter «gut», «naiv», «schlecht» mit je 20 Startwerten, Schwellen unverändert aus 5.4 (`tests/simulation-balance.test.ts`, Block «Abstimmung Hochmatt»). Rechenkern unverändert (`ENGINE_VERSION` 2): Es lag kein Fehler gegenüber der Spezifikation vor, alle Auslöser, Bedingungen und Flags wirkten wie beschrieben. Wolkenried-Ergebnisse unverändert.
+
+**Ursachen der Abbrüche (Version 1.0.0):**
+
+1. **Passung unter 1.** Die Plandauer rechnet mit Passung 1 (Aufwand ÷ (Personen × 8)). Die besten Vollzeitpersonen erreichen auf dem kritischen Pfad nur 0.81 (V09), 0.85 (V10), 0.88 (V11) und 0.90 (V17). Jede vernünftige Besetzung braucht 15–25 % mehr bezahlte Stunden als geplant; eine erste Prüfbesetzung endete schon ohne Ereignisse bei Tag 45.5.
+2. **Kleinpensen.** Der Teamgrössen-Abzug zählt Köpfe, nicht Pensen. Mit Nora, Ursina (40 %), Priska, Selina (50 %), Bruno, Sandro und Yasmin (60 %) bringt Überbesetzen wenig.
+3. **«naiv» auf V17.** Der Roboter füllt die geplante Personenzahl nach Pensum auf: Regula und Mirko ergeben zusammen 2.0 Stellen (Passung 0.82 und 0.90). V17 dauert so 11–12.5 statt 8 Tage. Ohne Reviews bringt der Test in V11 zusätzlich 50–85 h Nacharbeit (gewollt).
+4. **E35 mit gemischter Optionsreihenfolge.** In Hochmatt ist «gut» nicht immer A. Bei E35 ist A «alle Mängel beheben» (2 h je Restmangel). «naiv» wählt immer A und hat 20–30 Restmängel: 40–60 h auf V18 am Schluss, Abbruch bei Tag 50 mit 17 von 18 fertigen Vorgängen.
+5. **Kosten.** «gut» verbrauchte für Arbeit CHF 188'000 bei einem BAC von 175'760 (Wolkenried: 0.98 × BAC), CPI 0.85, Kostenpunkte 120–130.
+6. **Ungeschützte Risiken auf dem kritischen Pfad.** R02 (V11 +24 h kurz vor der Freigabe Pilot) und E29 A ohne R10-M1 (V16 +24 h) trafen ungeschützte Projekte härter als die vergleichbaren Wirkungen in Wolkenried.
+
+**Änderungen in `hochmatt.json` (Version 1.0.0 → 1.1.0):**
+
+| Was | Vorher | Nachher | Begründung |
+|---|---|---|---|
+| Pensum Mirko (P02) | 100 % | 90 % | Product Owner mit Linienanteil; «naiv» setzt so drei Personen auf V17 (Ursache 3) |
+| Pensum Leonie (P03), Kevin (P11) | 80 % | 100 % | Kapazität ohne zusätzliche Köpfe (Ursache 2) |
+| Pensum Sandro (P07), Yasmin (P08) | 60 % | 80 % | wie oben; Yasmins Konferenz Tag 16–18 (20 %) bleibt |
+| Sätze P01–P14 | 105, 110, 100, 85, 90, 125, 115, 110, 160, 160, 145, 170, 100, 150 | 95, 100, 90, 75, 80, 115, 105, 100, 145, 145, 130, 155, 90, 135 | × 0.9, auf 5 gerundet (Ursache 5); der Text von E08 nennt neu CHF 135 |
+| R02, Eintritt | V11 +24 h | V11 +16 h | Ursache 6; die Fehler in V09 (+4) bleiben |
+| E29 A ohne R10-M1 | V16 +24 h | V16 +16 h | Ursache 6; mit M1 weiterhin +8 h |
+| E35 A «alle Mängel beheben» | 2 h je Restmangel | 0.5 h je Restmangel | Ursache 4; bleibt die teure, aber gründliche Option |
+
+Unverändert: Vorgänge mit Vorgängern, Aufwänden, Personenzahlen, Mindestdauern und Profilen (kritischer Pfad 36 Tage, Terminziel 40), BAC CHF 175'760, Kredit CHF 195'000, Personenprofile, Ereignisse mit Auslösern und Zeitpunkten, Lernziele.
+
+**Musterbesetzung (Grundlage für Roboter «gut», `MUSTERBESETZUNG_HOCHMATT` in `tests/helpers/simulation-bots.ts`):** Zuweisungen in Prioritätsreihenfolge, höchstens 6 gleichzeitig wie 8.2.
+
+| Person | Prioritäten |
+|---|---|
+| P01 Regula | V01, V02, V06, V09, V10, V04, V12, V15, V17, V18 |
+| P02 Mirko | V01, V02, V06, V09, V10, V12, V17, V18 |
+| P03 Leonie | V01, V02, V06, V10, V14, V13, V12, V15, V18 |
+| P04 Bruno | V04, V06, V12, V15 |
+| P05 Priska | V01, V04, V13, V12, V15, V17, V18 |
+| P06 Nora | V02, V04, V12 |
+| P07 Sandro | V03, V07, V08, V16 |
+| P08 Yasmin | V05, V09, V11, V06, V16, V17 |
+| P09 Florian | V03, V05, V07, V10, V16, V18 |
+| P10 Meilin | V03, V05, V09, V11, V16 |
+| P11 Kevin | V07, V11, V08, V16 |
+| P12 Ursina | V04, V08, V11, V14 |
+| P13 Selina | V01, V14, V13, V15 |
+| P14 Dominik (nach E08 C) | V08, V11, V16 |
+
+Reviews: 2 auf V05 und V09, 1 auf allen übrigen R-Vorgängen; die übrige Strategie wie 5.4.
+
+Herleitung:
+
+- Der Rechenkern gibt die Kapazität einer Person dem ersten bearbeitbaren Vorgang ihrer Liste (3.2). Darum stehen kritische Vorgänge vorne, Vorgänge mit Puffer (V04, V13, V14) dahinter als Füllarbeit.
+- Das Fachtrio Regula, Mirko und Leonie (alle Vollzeit) trägt V01, V02, V06, V09, V10 und V12. Es hebt sich über die Kollegenhilfe gegenseitig in VER, KID und CHG.
+- V06 ist fast kritisch und erhält über R02-M1 und E13 A zusammen 16 h. Das Fachtrio übernimmt V06, sobald V02 fertig ist; sonst wartet V09 auf das Testset.
+- Meilin bleibt auf dem kritischen Pfad (V03, V05, V09, V11, V16), nicht auf V07. Die Schnittstellen (144 h) übernehmen Sandro, Kevin und Florian. Das ist die Antwort auf den Engpass aus 2.11.5.
+- V04 (Vorgänger von V08 → V11) übernehmen Nora, Priska, Ursina und Bruno; Regula hilft, solange V09 noch nicht bearbeitbar ist.
+- V17 mit Regula, Mirko, Priska und Yasmin: Mit vier Personen begrenzt die Mindestdauer (6 Tage), nicht die Kapazität.
+- Selina nicht auf V18 (Ferien Tag 27–31 über E21). Dominik gezielt auf Schutzkonzept, Sicherheitstest und Betrieb, wie E08 C verlangt.
+
+**Kontrollrechnung (Version 1.1.0):**
+
+- Netzplan unverändert: Ende Tag 36; BAC CHF 175'760; Reserve CHF 19'240.
+- Stellen ohne Dominik: 1 + 0.9 + 1 + 0.6 + 0.5 + 0.4 + 0.8 + 0.8 + 1 + 1 + 1 + 0.4 + 0.5 = **9.9**.
+- Musterbesetzung ohne Ereignisse und Risiken, Startwert 1, Kern mit Lernkurve, Fehlern und Motivation (anders als die Prüfrechnung in 8.2): **Ende Tag 39, AC CHF 167'728, CPI 1.05**; V12 endet an Tag 26.5, V17 an Tag 36. Roboter «naiv» unter denselben Bedingungen: Tag 44.5.
+
+**Strategie-Roboter, 20 Startwerte** (Version 1.0.0 mit derselben Musterbesetzung gerechnet; vorher gab es keine):
+
+| Roboter | Version | Median | Min | Max | Standardabw. | Median Endtag | Median CPI | Abbrüche | ≥ 650 |
+|---|---|---|---|---|---|---|---|---|---|
+| gut | 1.0.0 | 650.5 | 513 | 697 | 51.1 | 41 | 0.85 | 0 | 11 |
+| naiv | 1.0.0 | 382 | 266 | 451 | 64.7 | 50 (Abbruch) | 0.90 | 20 | 0 |
+| schlecht | 1.0.0 | 27 | 19 | 32 | 3.2 | 50 (Abbruch) | 0.35 | 20 | 0 |
+| **gut** | **1.1.0** | **765** | 688 | 781 | 25.1 | **39** | **0.95** | 0 | 20 |
+| **naiv** | **1.1.0** | **588.5** | 493 | 625 | 31.8 | **48** | 1.03 | 1 | 0 |
+| **schlecht** | **1.1.0** | **31** | 25 | 36 | 3.0 | 50 (Abbruch) | 0.40 | 20 | 0 |
+
+Teilpunkte (Median, 1.1.0): «gut» Termin 240, Kosten 199, Qualität 62, Stakeholder 92, Team 90, Führung 88 · «naiv» Termin 46, Kosten 200, Qualität 200, Stakeholder 45, Team 75, Führung 22. Alle Schwellen aus 5.4 sind erfüllt; Abstand gut − naiv 176.5 Punkte.
+
+**Offene Punkte:**
+
+- «naiv» liegt mit Median Endtag 48 und 588.5 Punkten knapp an den Schwellen (42–48, 350–600). Seine Qualitätspunkte sind voll, weil E35 A alle Mängel beheben lässt; «gut» erreicht nur rund 62 Qualitätspunkte (rund 19 Restmängel, vor allem aus V17 und V18). Das ist didaktisch vertretbar (Mängel beheben kostet Termin), Jan soll aber entscheiden.
+- E13 steht im JSON bei Takt 10 (T6 VM), E17 bei Takt 26 (T14 VM); die Tabelle 2.11.8 nennt T12 und T16. Die Zeitpunkte im JSON treffen V06 und V10 noch während der Arbeit und bleiben so; die Tabelle ist nachzuführen.
+- Aus K6 noch offen: Netzplan-Referenzwerte (5.2) für Hochmatt in `tests/simulation-scenario.test.ts`.
 
 ---
 
