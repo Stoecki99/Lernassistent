@@ -13,19 +13,30 @@ import styles from "@/app/(leitstand)/leitstand.module.css"
 import { leitstandApi, type RunListResponse } from "./api"
 import { chf } from "./format"
 import Dialog from "./Dialog"
+import Avatar from "./Avatar"
 
+/** Karte je Szenario aus dem Verzeichnis (lib/simulation/catalog.ts, K3 in 2.11.13) */
 export interface ScenarioMeta {
   id: string
-  slug: "einfuehrung" | "ernstfall"
+  /** Wert für ?start= */
+  slug: string
   label: string
   title: string
+  teaser: string
+  /** Name des Sinnbilds (avatarData.ts) */
+  emblem: string
+  recommendation: string | null
   kind: "intro" | "main"
-  days: number
-  tasks: number
-  people: number
-  events: number
-  budget: number
-  periods: string[]
+  /** false, solange die Szenario-Datei fehlt: Karte zeigt «folgt» */
+  available: boolean
+  facts: {
+    days: number
+    tasks: number
+    people: number
+    events: number
+    budget: number
+    periods: string[]
+  } | null
 }
 
 const STATUS_TEXT: Record<string, string> = {
@@ -47,7 +58,7 @@ function Sterne({ n }: { n: number }) {
   )
 }
 
-export default function LeitstandStart({ scenarios, start }: { scenarios: ScenarioMeta[]; start: "einfuehrung" | "ernstfall" | null }) {
+export default function LeitstandStart({ scenarios, start }: { scenarios: ScenarioMeta[]; start: string | null }) {
   const router = useRouter()
   const [lists, setLists] = useState<Record<string, RunListResponse | null>>({})
   const [error, setError] = useState<string | null>(null)
@@ -57,7 +68,7 @@ export default function LeitstandStart({ scenarios, start }: { scenarios: Scenar
 
   useEffect(() => {
     let cancelled = false
-    Promise.all(scenarios.map((s) => leitstandApi.listRuns(s.id).then((r) => [s.id, r] as const)))
+    Promise.all(scenarios.filter((s) => s.available).map((s) => leitstandApi.listRuns(s.id).then((r) => [s.id, r] as const)))
       .then((entries) => {
         if (!cancelled) setLists(Object.fromEntries(entries))
       })
@@ -92,10 +103,10 @@ export default function LeitstandStart({ scenarios, start }: { scenarios: Scenar
     else void create(s)
   }
 
-  // ?start=einfuehrung|ernstfall aus Station 23: ohne laufenden Lauf direkt starten, sonst zum Weiterspielen hinführen
+  // ?start=einfuehrung|ernstfall|hochmatt (Station 23, Verzeichnis): ohne laufenden Lauf direkt starten, sonst zum Weiterspielen hinführen
   useEffect(() => {
     if (!start || autoStarted) return
-    const s = scenarios.find((x) => x.slug === start)
+    const s = scenarios.find((x) => x.slug === start && x.available)
     const list = s ? lists[s.id] : undefined
     if (!s || list === undefined) return
     setAutoStarted(true)
@@ -120,39 +131,51 @@ export default function LeitstandStart({ scenarios, start }: { scenarios: Scenar
           const finished = list?.runs.filter((r) => r.status === "abgeschlossen") ?? []
           return (
             <article key={s.id} className={`card stack ${styles.szenarioKarte} ${s.kind === "main" ? styles.ernstfall : ""}`} aria-labelledby={`sz-${s.id}`}>
-              <p className="eyebrow">{s.label}</p>
-              <h2 id={`sz-${s.id}`}>{s.title}</h2>
-              <p className="hint">
-                {s.kind === "intro"
-                  ? "Kurzes Übungsprojekt mit eingeblendeten Hinweisen. Ideal, um die Bedienung zu lernen."
-                  : "Das Hauptprojekt: Realisierung und Einführung, Statusbericht an den Gemeinderat, Abschlussbericht."}
-              </p>
-              <ul className={styles.fakten}>
-                <li>
-                  <strong>{s.days}</strong> Tage Terminziel
-                </li>
-                <li>
-                  <strong>{s.tasks}</strong> Vorgänge
-                </li>
-                <li>
-                  <strong>{s.people}</strong> Personen
-                </li>
-                <li>
-                  <strong>{chf(s.budget)}</strong> Kredit
-                </li>
-              </ul>
-              <p className="hint">{s.periods.join(" · ")}</p>
+              <div className={styles.szenarioKopf}>
+                <Avatar name={s.emblem} size={56} decorative />
+                <div>
+                  <p className="eyebrow">{s.label}</p>
+                  <h2 id={`sz-${s.id}`}>{s.title}</h2>
+                </div>
+              </div>
+              <p className="hint">{s.teaser}</p>
+              {s.recommendation && s.available && <p className="hint">{s.recommendation}</p>}
+              {s.facts && (
+                <>
+                  <ul className={styles.fakten}>
+                    <li>
+                      <strong>{s.facts.days}</strong> Tage Terminziel
+                    </li>
+                    <li>
+                      <strong>{s.facts.tasks}</strong> Vorgänge
+                    </li>
+                    <li>
+                      <strong>{s.facts.people}</strong> Personen
+                    </li>
+                    <li>
+                      <strong>{chf(s.facts.budget)}</strong> Kredit
+                    </li>
+                  </ul>
+                  <p className="hint">{s.facts.periods.join(" · ")}</p>
+                </>
+              )}
 
-              {list === undefined ? (
+              {!s.available ? (
+                <p className={styles.bestwert}>
+                  <strong>folgt</strong> Dieses Szenario wird gerade fertiggestellt.
+                </p>
+              ) : list === undefined ? (
                 <p className="hint" role="status">
                   Läufe werden geladen …
                 </p>
               ) : (
                 <>
-                  {list?.best && (
+                  {list?.best ? (
                     <p className={styles.bestwert}>
                       Bestwert <strong>{list.best.score}</strong> Punkte <Sterne n={list.best.stars} />
                     </p>
+                  ) : (
+                    s.kind === "main" && <p className="hint">Noch kein Bestwert.</p>
                   )}
                   <div className="row">
                     {active && (
@@ -161,7 +184,7 @@ export default function LeitstandStart({ scenarios, start }: { scenarios: Scenar
                       </a>
                     )}
                     <button type="button" className={`btn ${active ? "" : "primary"}`} disabled={busy !== null} onClick={() => startNew(s)}>
-                      {busy === s.id ? "Wird gestartet …" : active ? "Neu beginnen" : `${s.label} starten`}
+                      {busy === s.id ? "Wird gestartet …" : active ? "Neu beginnen" : s.kind === "intro" ? "Einführungslauf starten" : "Ernstfall starten"}
                     </button>
                   </div>
                   {list && list.runs.length > 0 && (
@@ -201,7 +224,7 @@ export default function LeitstandStart({ scenarios, start }: { scenarios: Scenar
       {confirm && (
         <Dialog title="Laufenden Lauf abbrechen?" onEscape={() => setConfirm(null)}>
           <p>
-            Du hast im {confirm.label} einen laufenden Lauf. Ein neuer Start bricht ihn ab; er lässt sich danach nicht mehr fortsetzen.
+            Du hast in «{confirm.title}» einen laufenden Lauf. Ein neuer Start bricht ihn ab; er lässt sich danach nicht mehr fortsetzen.
           </p>
           <div className={styles.dialogKnoepfe}>
             <button

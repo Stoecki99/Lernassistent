@@ -37,7 +37,10 @@ export type RunStatus = (typeof RUN_STATUS)[number]
 
 /** Lernpfad-Station, die der Leitstand meldet (4.7) */
 export const LEITSTAND_STATION = { fach: "pmgt", thema: "23-leitstand" } as const
-/** Szenario, dessen Abschluss Station 23 auf «erledigt» setzt (4.7) */
+/**
+ * Standard-Ernstfall für die Laufliste ohne scenarioId (Bestwert). Station 23 «erledigt» setzt jeder
+ * abgeschlossene Ernstfall (kind «main»: Wolkenried oder Hochmatt), siehe stationDoneFor (K3, 2.11.13).
+ */
 export const ERNSTFALL_SCENARIO_ID = "wolkenried"
 
 /** Höchstwerte für den Startwert (4.6: crypto.randomInt(1, 2147483647)) */
@@ -239,6 +242,11 @@ export function computePointsAward(oldBest: number | null, newScore: number, see
   if (seedReused) return 0
   const improvement = Math.max(0, newScore - (oldBest ?? 0))
   return Math.min(MAX_POINTS_PER_RUN, Math.round(improvement / 10))
+}
+
+/** Setzt der Abschluss dieses Szenarios Station 23 auf «erledigt»? Jeder Ernstfall zählt (K3), der Einführungslauf nicht. */
+export function stationDoneFor(scenario: Pick<Scenario, "kind">): boolean {
+  return scenario.kind === "main"
 }
 
 /** Ausschnitt eines Laufs für die Abzeichen-Statistik */
@@ -627,7 +635,7 @@ export async function finishRun(userId: string, runId: string): Promise<FinishOu
     if (pointsAwarded > 0) {
       await tx.user.update({ where: { id: userId }, data: { points: { increment: pointsAwarded } } })
     }
-    if (run.scenarioId === ERNSTFALL_SCENARIO_ID) await markStation(tx, userId, "erledigt")
+    if (stationDoneFor(scenario)) await markStation(tx, userId, "erledigt")
     return { result, improvedBest, pointsAwarded, firstFinish: true }
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
   const outcome = await retryOnPrismaCodes(["P2034"], FINISH_ATTEMPTS, finishTx)

@@ -5,7 +5,7 @@
 // Anzeigehilfen des Leitstands: Zahlen (Schweizer Format), Ampeln, Bezeichnungen, Stationen.
 
 import pmgtFach from "@/content/lernseiten/pmgt/fach.json"
-import type { Ampel, AreaId, Channel, Rating, TaskStatus, TeamPhase } from "@/lib/simulation/core"
+import type { Ampel, Channel, Rating, TaskStatus, TeamPhase } from "@/lib/simulation/core"
 import type { IconName } from "./Icon"
 import type { DisplayStatus } from "./logic"
 
@@ -40,14 +40,7 @@ export function tag(value: number): string {
 export const AMPEL_FORM: Record<Ampel, string> = { gruen: "●", gelb: "▲", rot: "■" }
 export const AMPEL_TEXT: Record<Ampel, string> = { gruen: "Grün", gelb: "Gelb", rot: "Rot" }
 
-export const AREA_LABEL: Record<AreaId, string> = { bau: "BAU", ent: "ENT", dat: "DAT", ux: "UX", kom: "KOM" }
-export const AREA_NAME: Record<AreaId, string> = {
-  bau: "Fachwissen Bau und Verwaltung",
-  ent: "Entwicklung",
-  dat: "Daten und Schnittstellen",
-  ux: "Benutzerführung",
-  kom: "Kommunikation und Schulung",
-}
+// Gebietskürzel und -namen je Szenario: areaLabelsOf (lib/simulation/labels.ts, K1 in 2.11.13)
 
 export const STATUS_TEXT: Record<TaskStatus, string> = {
   offen: "offen",

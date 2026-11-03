@@ -547,7 +547,20 @@ Der Kern führt die Gebiete als feste IDs `bau, ent, dat, ux, kom` (`AREAS` in `
 | 4 | `ux` | Sicherheit und Datenschutz | SID |
 | 5 | `kom` | Change, Schulung und Benutzerführung | CHG |
 
-Ohne Kern-Erweiterung K1 (2.11.13) würde die Oberfläche die Wolkenrieder Kürzel BAU/ENT/DAT/UX/KOM zeigen; die Rechnung stimmt trotzdem.
+Ohne Kern-Erweiterung K1 (2.11.13) würde die Oberfläche die Wolkenrieder Kürzel BAU/ENT/DAT/UX/KOM zeigen; die Rechnung stimmt trotzdem. In `hochmatt.json` deshalb (K1 umgesetzt):
+
+```json
+"areas": [
+  { "id": "bau", "short": "VER", "label": "Verwaltung und Recht" },
+  { "id": "ent", "short": "ENT", "label": "Entwicklung und Integration" },
+  { "id": "dat", "short": "KID", "label": "KI und Daten" },
+  { "id": "ux",  "short": "SID", "label": "Sicherheit und Datenschutz" },
+  { "id": "kom", "short": "CHG", "label": "Change, Schulung und Benutzerführung" }
+],
+"board": { "name": "Regierungsrat" }
+```
+
+Porträts (`avatarData.ts`) gibt es für alle Namen aus 2.11.4 und 2.11.6, mit und ohne «Dr.», sowie für die Organisationen «Regierungsrat», «Hochmatter Zeitung», «Verband Studierender Hochmatt», «Personalverband Hochmatt», «Kantonale Datenschutzbeauftragte», «Staatsarchiv Hochmatt», «Kanton Talwies», «Arvenhof Software AG», «Talgrat Modelle AG», «Gesuchstellende», «Bevölkerung und Medien», «Amt für Ausbildungsbeiträge», «Kantonales Informatikamt» (Kurzformen «Staatsarchiv», «Datenschutzbeauftragte», «Personalverband», «Verband Studierender» ebenfalls). Andere Absendernamen erhalten ein Ersatz-Porträt; der Test `tests/leitstand-avatar.test.ts` verlangt aber für jeden Namen eine Zuordnung.
 
 #### 2.11.4 Organisation und Stakeholder
 
@@ -863,15 +876,15 @@ Gegenüber Wolkenried neu: Der Engpass liegt nicht bei einer Schnittstelle allei
 | Wirkungen und Bedingungen der Ereignisse | ja | alle Wirkungstypen aus 4.3 vorhanden (`restmaengelFactor`, `riskMeasure`, `decided`, `bodyVariants`, `fixAllDefects`) |
 | Stakeholder-Regeln mit festen IDs | ja | Belegung S01–S03, S09–S11 bewusst gewählt (2.11.4) |
 | Lessons mit festen Ereignis-IDs (`debrief.ts`) | ja | IDs mit gleicher Bedeutung (2.11.8) |
-| Gebietsnamen, Gremiumsname, Szenario-Auswahl | **nein** | Kern-Erweiterungen K1–K3 |
+| Gebietsnamen, Gremiumsname, Szenario-Auswahl | ja (seit 03.11.2026) | Kern-Erweiterungen K1–K3 umgesetzt |
 
 #### 2.11.13 Nötige Kern-Erweiterungen
 
 | Nr. | Erweiterung | Dateien | Pflicht | Aufwand |
 |---|---|---|---|---|
-| K1 | **Gebietsbezeichnungen je Szenario:** optionales Feld `areas: Array<{ id: AreaId; short: string; label: string }>` (Länge 5, IDs fest). Standard = Wolkenried. Die Oberfläche liest Kürzel und Namen aus dem Szenario statt aus `AREA_LABEL`. Rechnung unverändert. | `lib/simulation/types.ts`, `lib/validations/simulation.ts`, `components/features/leitstand/format.ts`, `Team.tsx`, Vorgangsansicht | ja | 3–4 h |
-| K2 | **Gremium je Szenario:** Feld `board: { name: string }` (z. B. «Regierungsrat»). Ersetzt fest geschriebenes «Gemeinderat» in Begründungstexten (`report.ts`) und in der Oberfläche (Statusbericht, Posteingang, Dialog nach dem Bericht, Startseite). | `lib/simulation/report.ts`, `components/features/leitstand/Statusbericht.tsx`, `LeitstandApp.tsx`, `LeitstandStart.tsx`, `Posteingang.tsx` | ja | 2–3 h |
-| K3 | **Zweiten Ernstfall registrieren und wählbar machen:** Eintrag in `SOURCES`, Auswahl auf der Startseite (`?start=`), Bestwert je Szenario (bisher Standard `ERNSTFALL_SCENARIO_ID`), Regel für Station 23 (zählt jeder Ernstfall oder nur Wolkenried?). | `lib/simulation/scenarios.ts`, `app/(leitstand)/leitstand/page.tsx`, `lib/leitstand.ts`, `app/api/simulation/runs/route.ts` | ja | 3–4 h |
+| K1 | **Gebietsbezeichnungen je Szenario:** optionales Feld `areas: Array<{ id: AreaId; short: string; label: string }>` (Länge 5, IDs fest). Standard = Wolkenried. Die Oberfläche liest Kürzel und Namen aus dem Szenario statt aus `AREA_LABEL`. Rechnung unverändert. **Umgesetzt 03.11.2026:** Typ `AreaLabel` (4.3), Schema prüft Länge 5, Reihenfolge `bau, ent, dat, ux, kom` und Kürzel `/^[A-ZÄÖÜ]{2,4}$/`; Anzeige über `areaLabelsOf(scenario)` (`lib/simulation/labels.ts`) in Team (Profil, Weiterbildung) und Vorgangsdetail. | `lib/simulation/types.ts`, `lib/validations/simulation.ts`, `lib/simulation/labels.ts`, `Team.tsx`, `Vorgaenge.tsx` | ja | erledigt |
+| K2 | **Gremium je Szenario:** Feld `board: { name: string }` (z. B. «Regierungsrat»). Ersetzt fest geschriebenes «Gemeinderat» in Begründungstexten (`report.ts`) und in der Oberfläche. **Umgesetzt 03.11.2026:** optional, 1–60 Zeichen, Standard «Gemeinderat» über `boardNameOf(scenario)`; Texte setzen ein maskulines Substantiv voraus («Statusbericht an den Regierungsrat», «Entscheid des Regierungsrats», «Der Regierungsrat hat entschieden»). Statusbericht, Anträge, Meldung zum Periodenende, Dialog nach dem Bericht, Begründung der Auflage. Zeitstrahl-Art `gemeinderat` bleibt als interner Schlüssel. | `lib/simulation/report.ts`, `Statusbericht.tsx`, `LeitstandApp.tsx` | ja | erledigt |
+| K3 | **Zweiten Ernstfall registrieren und wählbar machen.** **Umgesetzt 03.11.2026:** Verzeichnis `lib/simulation/catalog.ts` (`SCENARIO_CATALOG`: ID, Art, `?start=`-Wert, Kartentext, Sinnbild) für Server und Browser. Server (`scenarios.ts`): Einführung und Wolkenried statisch importiert, weitere Einträge (Hochmatt) aus `content/simulation/<id>.json` per Dateisystem; fehlt die Datei, ist das Szenario unbekannt (`loadScenario` → null, API 400, Startkarte «folgt»). Browser (`scenarioLoader.ts`): dynamischer Import nur für IDs aus dem Verzeichnis, je Szenario ein eigenes Teilpaket. Startseite `/leitstand`: drei Karten mit Sinnbild, Kurzbeschreibung, Kennzahlen und Bestwert; `?start=einfuehrung`, `?start=ernstfall` (Wolkenried), `?start=hochmatt`. Bestwert je Szenario (`GET /api/simulation/runs?scenarioId=`). **Station 23 «erledigt» bei jedem abgeschlossenen Ernstfall** (`kind: "main"`, `stationDoneFor`). Zugang unverändert Pro/Admin; die Empfehlung «nach Wolkenried» ist nur ein Hinweis auf der Karte, keine Sperre. | `lib/simulation/catalog.ts`, `lib/simulation/scenarios.ts`, `components/features/leitstand/scenarioLoader.ts`, `app/(leitstand)/leitstand/page.tsx`, `LeitstandStart.tsx`, `lib/leitstand.ts` | ja | erledigt |
 | K4 | **Lessons ohne feste Ereignis-IDs:** Feld `lessonTags` an Optionen (`umfangOhneAntrag`, `konfliktLinie`) statt Listen in `debrief.ts`. Nicht nötig, solange 2.11.8 die IDs gleich belegt. | `lib/simulation/debrief.ts`, `types.ts`, Schema | nein | 1–2 h |
 | K5 | **Sprints sichtbar machen:** optionales Feld `sprint` an Vorgängen, Gruppierung im Gantt. Rein darstellend. | `types.ts`, Gantt-Komponente | nein | 2 h |
 | K6 | **Tests und Abstimmung:** Netzplan-Referenzwerte (5.2) für Hochmatt, Schema (5.5), Sperrliste (5.6: Datei in `SCENARIO_FILES`), Musterbesetzung und Roboterläufe (5.4) mit Zielwerten wie Wolkenried (Roboter «gut» Median ≤ Tag 40, «naiv» deutlich schlechter). | `tests/simulation-*.test.ts` | ja | 1–1.5 Tage, davon der grösste Teil Abstimmung der Szenariowerte |
@@ -1356,7 +1369,7 @@ export type Channel = "mail" | "anruf" | "besuch" | "system"
 
 // ---------- Szenario ----------
 export interface Scenario {
-  id: string                       // "wolkenried" | "einfuehrung"; /^[a-z0-9-]+$/
+  id: string                       // "wolkenried" | "einfuehrung" | "hochmatt"; /^[a-z0-9-]+$/, Eintrag in catalog.ts (K3)
   version: string                  // semver, z. B. "1.0.0"
   kind: "intro" | "main"
   title: string
@@ -1381,6 +1394,15 @@ export interface Scenario {
   trainingCost: number
   hints?: HintDef[]
   params?: Partial<Params>
+  // Ergänzung K1, K2 (2.11.13), rein darstellend, ohne Einfluss auf Rechnung und ENGINE_VERSION:
+  areas?: AreaLabel[]              // genau 5, Reihenfolge wie AREAS; fehlt → Wolkenried (DEFAULT_AREA_LABELS)
+  board?: { name: string }         // Gremium, 1–60 Zeichen, maskulin («an den …», «des …s»); fehlt → «Gemeinderat»
+}
+
+export interface AreaLabel {       // Ergänzung K1
+  id: AreaId                       // muss AREAS[Position] entsprechen
+  short: string                    // 2–4 Grossbuchstaben (/^[A-ZÄÖÜ]{2,4}$/), z. B. "VER"
+  label: string                    // 1–80 Zeichen, z. B. "Verwaltung und Recht"
 }
 
 export interface TaskDef {

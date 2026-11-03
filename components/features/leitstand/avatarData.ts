@@ -4,7 +4,7 @@
 // components/features/leitstand/avatarData.ts
 // Merkmale der gezeichneten Porträts (frei erfundene Figuren, keine Fotos, keine Vorlagen realer Personen).
 // Zuordnung über den angezeigten Namen, weil Absender von Ereignissen nicht immer eine ID tragen und dieselben
-// Figuren in beiden Szenarien vorkommen. Unbekannte Namen erhalten ein festes Porträt aus einer Prüfsumme
+// Figuren in mehreren Szenarien vorkommen (Mia Baumann). Unbekannte Namen erhalten ein festes Porträt aus einer Prüfsumme
 // des Namens (deterministisch, ohne Zufall des Rechenkerns). Ohne React, damit Tests die Zuordnung prüfen können.
 
 export type HairStyle = "kurz" | "scheitel" | "lang" | "dutt" | "locken" | "glatze" | "zopf" | "bob" | "stoppel"
@@ -75,6 +75,29 @@ export const AVATARS: Record<string, AvatarSpec> = {
   "Monika Steiner": { kind: "person", skin: 0, hair: "bob", hairColor: 4, clothing: "bluse", tone: 5, bg: 2, accessory: "rechner" },
   "Daniel Frei": { kind: "person", skin: 0, hair: "scheitel", hairColor: 3, clothing: "anzug", tone: 2, bg: 3, accessory: "laptop" },
   "Mia Baumann": { kind: "person", skin: 4, hair: "locken", hairColor: 1, clothing: "bluse", tone: 3, bg: 1, accessory: "sprechblase", earrings: true },
+  // Hochmatt (2.11.6): Team
+  "Regula Tschanz": { kind: "person", skin: 0, hair: "bob", hairColor: 5, clothing: "blazer", tone: 2, bg: 4, accessory: "ordner", glasses: true, earrings: true },
+  "Mirko Vasić": { kind: "person", skin: 1, hair: "kurz", hairColor: 1, clothing: "hemd", tone: 4, bg: 2, accessory: "tablet", beard: "stoppeln" },
+  "Leonie Hasler": { kind: "person", skin: 0, hair: "zopf", hairColor: 4, clothing: "pullover", tone: 5, bg: 3, accessory: "notiz" },
+  "Bruno Zaugg": { kind: "person", skin: 1, hair: "glatze", hairColor: 6, clothing: "pullover", tone: 2, bg: 1, accessory: "rechner", glasses: true, beard: "schnauz" },
+  "Priska Vonlanthen": { kind: "person", skin: 1, hair: "locken", hairColor: 2, clothing: "bluse", tone: 1, bg: 5, accessory: "headset", earrings: true },
+  "Nora Bächtold": { kind: "person", skin: 0, hair: "dutt", hairColor: 0, clothing: "blazer", tone: 1, bg: 2, accessory: "dokument", glasses: true },
+  "Sandro Lüthi": { kind: "person", skin: 1, hair: "stoppel", hairColor: 2, clothing: "tshirt", tone: 2, bg: 4, accessory: "laptop" },
+  "Yasmin El-Amrani": { kind: "person", skin: 3, hair: "lang", hairColor: 0, clothing: "pullover", tone: 3, bg: 5, accessory: "tablet", earrings: true },
+  "Florian Wüthrich": { kind: "person", skin: 0, hair: "scheitel", hairColor: 3, clothing: "hemd", tone: 5, bg: 4, accessory: "laptop", beard: "voll" },
+  "Meilin Zürcher": { kind: "person", skin: 2, hair: "bob", hairColor: 0, clothing: "tshirt", tone: 4, bg: 1, accessory: "laptop", glasses: true },
+  "Kevin Rohner": { kind: "person", skin: 0, hair: "locken", hairColor: 1, clothing: "tshirt", tone: 1, bg: 3, accessory: "plan" },
+  "Ursina Planta": { kind: "person", skin: 0, hair: "kurz", hairColor: 5, clothing: "anzug", tone: 3, bg: 2, accessory: "schild", glasses: true, earrings: true },
+  "Selina Brügger": { kind: "person", skin: 1, hair: "lang", hairColor: 3, clothing: "bluse", tone: 5, bg: 1, accessory: "sprechblase", earrings: true },
+  "Dominik Steffen": { kind: "person", skin: 4, hair: "kurz", hairColor: 0, clothing: "pullover", tone: 4, bg: 3, accessory: "headset" },
+  // Hochmatt (2.11.4): Personen unter den Stakeholdern
+  "Helen Gasche": { kind: "person", skin: 0, hair: "bob", hairColor: 2, clothing: "blazer", tone: 3, bg: 1, accessory: "klemmbrett", earrings: true },
+  "Erwin Sigrist": { kind: "person", skin: 1, hair: "scheitel", hairColor: 5, clothing: "anzug", tone: 1, bg: 4, glasses: true },
+  "Claudine Rüegg": { kind: "person", skin: 1, hair: "dutt", hairColor: 3, clothing: "blazer", tone: 2, bg: 5, accessory: "ordner" },
+  "Roland Etter": { kind: "person", skin: 0, hair: "kurz", hairColor: 5, clothing: "hemd", tone: 4, bg: 3, accessory: "klemmbrett", beard: "voll" },
+  "Isabelle Graf": { kind: "person", skin: 2, hair: "lang", hairColor: 1, clothing: "blazer", tone: 4, bg: 2, accessory: "laptop" },
+  "Matthias Zollinger": { kind: "person", skin: 0, hair: "glatze", hairColor: 1, clothing: "anzug", tone: 5, bg: 3, accessory: "dokument", glasses: true },
+  "Simone Kradolfer": { kind: "person", skin: 1, hair: "zopf", hairColor: 2, clothing: "blazer", tone: 5, bg: 4, accessory: "tablet", earrings: true },
   // Gruppen und Organisationen
   Gemeinderat: { kind: "gruppe", emblem: "gebaeude", bg: 1 },
   "Gemeinde Seeweid": { kind: "gruppe", emblem: "gebaeude", bg: 3 },
@@ -87,6 +110,35 @@ export const AVATARS: Record<string, AvatarSpec> = {
   "Kantonale Datenschutzstelle": { kind: "gruppe", emblem: "schild", bg: 1 },
   "Wolkenrieder Bote": { kind: "gruppe", emblem: "zeitung", bg: 2 },
   "Krankmeldung aus der Linie": { kind: "gruppe", emblem: "kreuz", bg: 4 },
+  "Gemeinde Wolkenried": { kind: "gruppe", emblem: "gebaeude", bg: 2 },
+  // Hochmatt (2.11.1, 2.11.4, 2.11.8): Gremien, Organisationen, Gruppen; mehrere Schreibweisen, damit das Szenario frei wählen kann
+  "Kanton Hochmatt": { kind: "gruppe", emblem: "gebaeude", bg: 4 },
+  Regierungsrat: { kind: "gruppe", emblem: "gebaeude", bg: 5 },
+  "Regierungsrat Hochmatt": { kind: "gruppe", emblem: "gebaeude", bg: 5 },
+  "Amt für Ausbildungsbeiträge": { kind: "gruppe", emblem: "schalter", bg: 3 },
+  Gesuchstellende: { kind: "gruppe", emblem: "leute", bg: 2 },
+  "Verband Studierender Hochmatt": { kind: "gruppe", emblem: "leute", bg: 1 },
+  "Verband Studierender": { kind: "gruppe", emblem: "leute", bg: 1 },
+  "Bevölkerung und Medien": { kind: "gruppe", emblem: "zeitung", bg: 4 },
+  "Hochmatter Zeitung": { kind: "gruppe", emblem: "zeitung", bg: 3 },
+  "Personalverband Hochmatt": { kind: "gruppe", emblem: "leute", bg: 4 },
+  Personalverband: { kind: "gruppe", emblem: "leute", bg: 4 },
+  "Kantonale Datenschutzbeauftragte": { kind: "gruppe", emblem: "schild", bg: 2 },
+  Datenschutzbeauftragte: { kind: "gruppe", emblem: "schild", bg: 2 },
+  "Staatsarchiv Hochmatt": { kind: "gruppe", emblem: "stempel", bg: 1 },
+  Staatsarchiv: { kind: "gruppe", emblem: "stempel", bg: 1 },
+  "Kanton Talwies": { kind: "gruppe", emblem: "gebaeude", bg: 3 },
+  "Arvenhof Software AG": { kind: "gruppe", emblem: "zirkel", bg: 5 },
+  "Talgrat Modelle AG": { kind: "gruppe", emblem: "zirkel", bg: 1 },
+  "Kantonales Informatikamt": { kind: "gruppe", emblem: "schalter", bg: 5 },
+}
+
+/** Titel vor dem Namen («Dr. Nora Bächtold» → «Nora Bächtold»), damit beide Schreibweisen dasselbe Porträt zeigen */
+const TITLE_PREFIX = /^(?:(?:Dr|Prof)\.\s+)+/
+
+/** Zugeordnetes Porträt (auch mit Titel vor dem Namen) oder undefined */
+export function knownAvatar(name: string): AvatarSpec | undefined {
+  return AVATARS[name] ?? AVATARS[name.replace(TITLE_PREFIX, "")]
 }
 
 /** FNV-1a (32 Bit) für die Ersatz-Porträts; verbraucht keinen Zufall des Rechenkerns. */
@@ -104,7 +156,7 @@ const CLOTHES: Clothing[] = ["hemd", "pullover", "blazer", "tshirt", "bluse", "a
 
 /** Festes Porträt je Name: zuerst die Zuordnung, sonst aus der Prüfsumme des Namens abgeleitet. */
 export function avatarSpec(name: string): AvatarSpec {
-  const known = AVATARS[name]
+  const known = knownAvatar(name)
   if (known) return known
   const h = hash32(name)
   const pick = (n: number, shift: number) => (h >>> shift) % n

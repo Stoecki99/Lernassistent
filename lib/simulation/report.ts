@@ -2,11 +2,13 @@
 // Proprietary — copying, modification, or distribution prohibited without permission.
 
 // lib/simulation/report.ts
-// Statusbericht: Abgleich mit den Ist-Daten (Ehrlichkeit H) und Entscheid des Gemeinderats (Spezifikation 3.11).
+// Statusbericht: Abgleich mit den Ist-Daten (Ehrlichkeit H) und Entscheid des Gremiums (Spezifikation 3.11;
+// Name je Szenario, K2 in 2.11.13, Standard «Gemeinderat»).
 
 import { clamp, safeDiv, type Ctx } from "./context"
 import { applyEffects, evalCondition, newMemo } from "./events"
 import { ampelRank } from "./kpi"
+import { boardNameOf } from "./labels"
 import { REPORT_FORECAST_DAY_MAX, type Ampel, type BoardDecision, type KpiSnapshot, type ReportArea, type ReportRecord, type SimState, type StatusReportInput } from "./types"
 
 export const REPORT_AREAS: readonly ReportArea[] = ["termine", "kosten", "qualitaet", "team", "risiken"]
@@ -118,7 +120,7 @@ function phaseMilestoneDone(state: SimState, ctx: Ctx): boolean {
 }
 
 /**
- * Entscheid des Gemeinderats (3.11, nur Statusbericht 1, deterministisch).
+ * Entscheid des Gremiums (3.11, nur Statusbericht 1, deterministisch).
  * Phasenfreigabe, Budgetnachtrag, Änderungsanträge (2.9, zusätzlich H ≥ 70), Ehrlichkeit allgemein.
  */
 export function boardDecision(state: SimState, ctx: Ctx, input: StatusReportInput, honesty: number, embellished: boolean): BoardDecision {
@@ -136,7 +138,7 @@ export function boardDecision(state: SimState, ctx: Ctx, input: StatusReportInpu
     reasons.push("Phasenfreigabe erteilt: Meilenstein noch offen, aber ehrlicher Bericht mit Massnahmen.")
   } else {
     phaseRelease = "mitAuflage"
-    reasons.push("Phasenfreigabe mit Auflage: wöchentlicher Zusatzbericht an den Gemeinderat.")
+    reasons.push(`Phasenfreigabe mit Auflage: wöchentlicher Zusatzbericht an den ${boardNameOf(ctx.scenario)}.`)
     bump(state, SPONSOR_ID, -8)
     bump(state, BOARD_ID, -5)
     state.flags.auflage = true

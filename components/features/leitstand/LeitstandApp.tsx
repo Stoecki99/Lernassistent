@@ -13,6 +13,7 @@ import {
   ENGINE_VERSION,
   SimError,
   applyAction,
+  boardNameOf,
   computeKpis,
   evaluateCondition,
   halfOf,
@@ -45,7 +46,7 @@ import Kalender from "./Kalender"
 import Posteingang from "./Posteingang"
 import Risikoregister from "./Risikoregister"
 import BudgetAnsicht from "./BudgetAnsicht"
-import Statusbericht, { GemeinderatAntwort } from "./Statusbericht"
+import Statusbericht, { GremiumAntwort } from "./Statusbericht"
 import Nachbesprechung from "./Nachbesprechung"
 import Icon, { type IconName } from "./Icon"
 
@@ -375,7 +376,7 @@ function Spiel({
       }
       if (state.phase === "periodenende") {
         setView("bericht")
-        notify("Periodenende: Der Statusbericht an den Gemeinderat ist fällig.")
+        notify(`Periodenende: Der Statusbericht an den ${boardNameOf(scenario)} ist fällig.`)
       }
       if (state.phase === "abschlussbericht") {
         setView("bericht")
@@ -655,9 +656,9 @@ function Spiel({
         )}
 
         {gemeinderat && lastBoard?.board && (
-          <Dialog title="Der Gemeinderat hat entschieden" kicker="Sitzung nach dem Statusbericht" onEscape={() => setGemeinderat(false)}>
+          <Dialog title={`Der ${boardNameOf(scenario)} hat entschieden`} kicker="Sitzung nach dem Statusbericht" onEscape={() => setGemeinderat(false)}>
             <p>Ehrlichkeit deines Berichts: {Math.round(lastBoard.honesty)} von 100.</p>
-            <GemeinderatAntwort board={lastBoard.board} />
+            <GremiumAntwort board={lastBoard.board} boardName={boardNameOf(scenario)} />
             {lastBoard.findings.length > 0 && (
               <ul className={styles.liste}>
                 {lastBoard.findings.map((f, i) => (

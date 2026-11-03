@@ -5,7 +5,7 @@
 
 // components/features/leitstand/Posteingang.tsx
 // Posteingang (4.8): Liste nach Eingang mit Kanal-Symbol und Text, Status (neu, aufgeschoben mit Frist, entschieden);
-// darunter die Mitteilungen des Systems (Meilensteine, Risiken, Gemeinderat) aus dem Zeitstrahl.
+// darunter die Mitteilungen des Systems (Meilensteine, Risiken, Gremium) aus dem Zeitstrahl.
 
 import { formatTick } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"

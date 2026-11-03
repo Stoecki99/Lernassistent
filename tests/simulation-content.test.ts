@@ -10,7 +10,10 @@ import path from "node:path"
 import { describe, test } from "node:test"
 import assert from "node:assert/strict"
 
-const SCENARIO_FILES = ["wolkenried.json", "einfuehrung.json"]
+// hochmatt.json (2.11) wird geprüft, sobald die Datei vorliegt
+const SCENARIO_FILES = ["wolkenried.json", "einfuehrung.json", "hochmatt.json"].filter((file) =>
+  fs.existsSync(path.join(process.cwd(), "content", "simulation", file)),
+)
 
 /**
  * Sperrliste (ohne Gross-/Kleinschreibung, ganze Wörter): Figurennamen und Begriffe des Vorbilds

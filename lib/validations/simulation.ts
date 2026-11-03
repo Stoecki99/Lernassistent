@@ -7,7 +7,7 @@
 
 import { z } from "zod"
 import pmgtFach from "../../content/lernseiten/pmgt/fach.json"
-import { REPORT_FORECAST_DAY_MAX, type Action, type Condition, type Effect, type Scenario, type StatusReportInput } from "../simulation/types"
+import { AREAS, REPORT_FORECAST_DAY_MAX, type Action, type Condition, type Effect, type Scenario, type StatusReportInput } from "../simulation/types"
 
 // ---------- Grundbausteine ----------
 
@@ -344,6 +344,11 @@ function checkScenario(s: z.infer<typeof scenarioBaseSchema>): Issue[] {
   ]
   for (const [name, ids] of collections) for (const d of duplicates(ids)) add([name], `Doppelte ID ${d}.`)
 
+  // K1: Gebiete in der Reihenfolge von AREAS (die Rechnung hängt an der Position)
+  s.areas?.forEach((a, i) => {
+    if (a.id !== AREAS[i]) add(["areas", i], `Gebiet an Position ${i + 1} muss «${AREAS[i]}» sein.`)
+  })
+
   // Ereignisse und Optionen für Verweise
   const optionsByEvent = new Map(s.events.map((e) => [e.id, new Set(e.options.map((o) => o.id))]))
   const measuresByRisk = new Map(s.risks.map((r) => [r.id, new Set(r.measures.map((m) => m.id))]))
@@ -559,6 +564,20 @@ const scenarioBaseSchema = z
     trainingCost: z.number().min(0).max(1e5),
     hints: z.array(hintSchema).max(40).optional(),
     params: paramsSchema.optional(),
+    // Ergänzung K1, K2 (2.11.13): rein darstellend, Reihenfolge der Gebiete prüft checkScenario
+    areas: z
+      .array(
+        z
+          .object({
+            id: areaSchema,
+            short: z.string().regex(/^[A-ZÄÖÜ]{2,4}$/, "Kürzel: 2 bis 4 Grossbuchstaben."),
+            label: text(80),
+          })
+          .strict(),
+      )
+      .length(5, "areas braucht genau 5 Einträge.")
+      .optional(),
+    board: z.object({ name: text(60) }).strict().optional(),
   })
   .strict()
 

@@ -8,10 +8,10 @@
 // Auf schmalen Schirmen eine Karte je Vorgang. Detail mit Profil gegen Team und Besetzung.
 
 import { useState } from "react"
-import { AREAS, fitFor, forecast, type Scenario, type SimState, type TaskDef } from "@/lib/simulation/core"
+import { AREAS, areaLabelsOf, fitFor, forecast, type Scenario, type SimState, type TaskDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { firstName, personName, useLeitstand } from "./context"
-import { AREA_LABEL, AREA_NAME, DISPLAY_STATUS_ICON, DISPLAY_STATUS_TEXT, PRIORITIES, chf, stunden } from "./format"
+import { DISPLAY_STATUS_ICON, DISPLAY_STATUS_TEXT, PRIORITIES, chf, stunden } from "./format"
 import { displayStatus, fitInTeam, meanFit, teamOf, type DisplayStatus } from "./logic"
 import Avatar from "./Avatar"
 import Icon from "./Icon"
@@ -235,6 +235,7 @@ export function VorgangDetail({ def }: { def: TaskDef }) {
   const cost = Object.entries(ts.hoursByPerson).reduce((s, [pid, h]) => s + h * (scenario.people.find((p) => p.id === pid)?.rate ?? 0), 0)
   const duration = ts.startTick !== null ? ((ts.endTick ?? state.tick - 1) + 1) / 2 - ts.startTick / 2 : null
   const bestQ = AREAS.map((_, k) => team.reduce((m, pid) => Math.max(m, state.people[pid].profile[k]), 0))
+  const areaLabels = areaLabelsOf(scenario)
 
   return (
     <div className={styles.detail}>
@@ -245,7 +246,7 @@ export function VorgangDetail({ def }: { def: TaskDef }) {
           <ul className={styles.profilListe}>
             {AREAS.map((a, k) => (
               <li key={a}>
-                <abbr title={AREA_NAME[a]}>{AREA_LABEL[a]}</abbr>
+                <abbr title={areaLabels[a].label}>{areaLabels[a].short}</abbr>
                 <span className={styles.profilSpur} aria-hidden="true">
                   <span className={styles.profilSoll} style={{ width: `${(def.profile[k] / 6) * 100}%` }} />
                   <span className={styles.profilIst} style={{ width: `${(bestQ[k] / 6) * 100}%` }} />

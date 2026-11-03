@@ -23,6 +23,7 @@ export { nextRandom } from "./rng"
 export { dayOf, weekOf, weekdayOf, halfOf, tauAfter, tickOf, formatTick, formatTickShort } from "./calendar"
 export type * from "./types"
 export { AREAS, COST_CATEGORIES, HOUR_CATEGORIES } from "./types"
+export { DEFAULT_AREA_LABELS, DEFAULT_BOARD_NAME, areaLabelsOf, boardNameOf } from "./labels"
 
 /**
  * Passung einer Person auf einem Vorgang (3.4) mit dem aktuellen Profil.

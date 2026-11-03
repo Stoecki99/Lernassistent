@@ -9,10 +9,10 @@
 // Jede Karte mit gezeichnetem Porträt; Profil als Stufenbalken (0–6), Motivation und Auslastung als Balken mit Zahl.
 
 import { useState } from "react"
-import { AREAS, dayOf, fitFor, type AreaId, type PersonDef } from "@/lib/simulation/core"
+import { AREAS, areaLabelsOf, dayOf, fitFor, type AreaId, type PersonDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
-import { AREA_LABEL, AREA_NAME, ORIGIN_TEXT, PRIORITIES, SHARE_OPTIONS, chf } from "./format"
+import { ORIGIN_TEXT, PRIORITIES, SHARE_OPTIONS, chf } from "./format"
 import { absentNow, fitInTeam, personLoad, teamOf } from "./logic"
 import Verlauf from "./charts/Verlauf"
 import Avatar from "./Avatar"
@@ -240,7 +240,7 @@ function PersonKarte({ def }: { def: PersonDef }) {
               <option value="">Weiterbildung …</option>
               {AREAS.map((a) => (
                 <option key={a} value={a}>
-                  {AREA_NAME[a]}
+                  {areaLabelsOf(scenario)[a].label}
                 </option>
               ))}
             </select>
@@ -289,18 +289,20 @@ function PersonKarte({ def }: { def: PersonDef }) {
 
 /** Profil in fünf Gebieten als Stufenbalken 0–6 (Zahl daneben, Farbe nie allein). */
 export function ProfilBalken({ profile }: { profile: readonly number[] }) {
+  const { scenario } = useLeitstand()
+  const labels = areaLabelsOf(scenario)
   return (
     <ul className={styles.profilStufen} aria-label="Profil, Stufen 0 bis 6">
       {AREAS.map((a, k) => (
         <li key={a}>
-          <abbr title={AREA_NAME[a]}>{AREA_LABEL[a]}</abbr>
+          <abbr title={labels[a].label}>{labels[a].short}</abbr>
           <span className={styles.stufen} aria-hidden="true">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <span key={n} className={n <= profile[k] ? styles.stufeAn : undefined} />
             ))}
           </span>
           <span className={styles.stufenZahl}>
-            <span className="sr-only">{AREA_NAME[a]}: Stufe </span>
+            <span className="sr-only">{labels[a].label}: Stufe </span>
             {profile[k]}
           </span>
         </li>

@@ -8,7 +8,8 @@
 
 import { test, describe } from "node:test"
 import assert from "node:assert/strict"
-import { ENGINE_VERSION, replay, type Action } from "@/lib/simulation"
+import { ENGINE_VERSION, SCENARIO_IDS, loadScenario, replay, type Action } from "@/lib/simulation"
+import { CATALOG_IDS, SCENARIO_CATALOG } from "@/lib/simulation/catalog"
 import {
   LeitstandError,
   achievementStats,
@@ -16,6 +17,7 @@ import {
   computePointsAward,
   errorResponse,
   newSeed,
+  stationDoneFor,
   verifyAndAppend,
   type StoredRun,
 } from "@/lib/leitstand"
@@ -215,5 +217,38 @@ describe("Startwert", () => {
       const seed = newSeed()
       assert.ok(Number.isInteger(seed) && seed >= 1 && seed <= 2_147_483_646)
     }
+  })
+})
+
+describe("Szenario-Verzeichnis (K3, 2.11.13)", () => {
+  test("Einführung und beide Ernstfälle sind verzeichnet, Startparameter eindeutig", () => {
+    assert.deepEqual([...CATALOG_IDS].sort(), ["einfuehrung", "hochmatt", "wolkenried"])
+    const starts = SCENARIO_CATALOG.map((e) => e.start)
+    assert.equal(new Set(starts).size, starts.length)
+    // Station 23 verlinkt ?start=einfuehrung und ?start=ernstfall
+    assert.equal(SCENARIO_CATALOG.find((e) => e.start === "ernstfall")?.id, "wolkenried")
+    assert.equal(SCENARIO_CATALOG.find((e) => e.start === "einfuehrung")?.id, "einfuehrung")
+  })
+
+  test("ladbare Szenarien passen zum Verzeichnis (Art, ID)", () => {
+    assert.ok(SCENARIO_IDS.includes("einfuehrung") && SCENARIO_IDS.includes("wolkenried"))
+    for (const id of SCENARIO_IDS) {
+      const s = loadScenario(id)
+      const entry = SCENARIO_CATALOG.find((e) => e.id === id)
+      assert.ok(s && entry, id)
+      assert.equal(s.id, id)
+      assert.equal(s.kind, entry.kind, id)
+    }
+  })
+
+  test("fehlende Datei oder fremde ID ergibt null statt Absturz", () => {
+    assert.equal(loadScenario("gibt-es-nicht"), null)
+    assert.equal(loadScenario("../package"), null)
+    if (!SCENARIO_IDS.includes("hochmatt")) assert.equal(loadScenario("hochmatt"), null)
+  })
+
+  test("Station 23 «erledigt» bei jedem Ernstfall, nicht beim Einführungslauf", () => {
+    assert.equal(stationDoneFor({ kind: "main" }), true)
+    assert.equal(stationDoneFor({ kind: "intro" }), false)
   })
 })
