@@ -83,16 +83,40 @@ export function muster(m: Mission): Strategie {
     case "m4-ticketplattform":
       return {
         modell: m.musterloesung,
-        aktionen: [
-          as("ticket", 2, 12), as("zahlung", 1, 6),
-          { typ: "circuitBreaker", verbindung: "zahlung-psp", an: true },
-          { typ: "weiter", minuten: 17 },
-          { typ: "skalieren", element: "ticket", instanzen: 8 },
-        ],
+        aktionen: m4Massnahmen(m.musterloesung as ArchModell),
       }
     default:
       throw new Error(`Keine Musterstrategie für ${m.id}`)
   }
+}
+
+/** Massnahmen der Musterstrategie M4 für ein beliebiges Modell (Verbindungs-ID aus von/nach, wie sie der Editor vergibt) */
+export function m4Massnahmen(modell: ArchModell): Aktion[] {
+  const zp = modell.verbindungen.find((v) => v.von === "zahlung" && v.nach === "psp")?.id
+  if (!zp) throw new Error("Verbindung Zahlungsservice → Zahlungsanbieter fehlt")
+  return [
+    as("ticket", 2, 12), as("zahlung", 1, 6),
+    { typ: "timeout", verbindung: zp, ms: 2000 },
+    { typ: "retry", verbindung: zp, versuche: 1 },
+    { typ: "circuitBreaker", verbindung: zp, an: true },
+    { typ: "weiter", minuten: 17 },
+    { typ: "skalieren", element: "ticket", instanzen: 8 },
+  ]
+}
+
+/**
+ * Musterlösung so, wie sie aus dem Editor kommt: Verbindungs-IDs v1…vn (vorgegebene bleiben), Standard-Labels leer,
+ * keine Simulationswerte, Engine-Füllfelder ("" und null); danach Bereinigung der Oberfläche (editorModellBereinigen).
+ */
+export function editorRohModell(m: Mission, quelle: ArchModell): unknown {
+  const vorgegeben = new Set(m.modell.verbindungen.map((v) => v.id))
+  let n = 0
+  return JSON.parse(
+    JSON.stringify({
+      elemente: quelle.elemente.map(({ sim: _sim, ...e }) => ({ ...e, info: null, technologie: "", stereotyp: "" })),
+      verbindungen: quelle.verbindungen.map((v) => ({ id: vorgegeben.has(v.id) ? v.id : `v${++n}`, von: v.von, nach: v.nach, art: v.art, label: "", info: "" })),
+    }),
+  )
 }
 
 // ---------- Mini-Missionen für Plausibilitätstests ----------

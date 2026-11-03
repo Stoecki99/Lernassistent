@@ -79,22 +79,37 @@ export function pruefeModell(modell: ArchModell): string[] {
   return fehler
 }
 
-/** Elemente des Spielers mit Werten aus Palette und vorgegebenem Modell ergänzen (Technologie, Steckbrief, Simulationswerte) */
+/**
+ * Modell des Spielers für Missionen «modellieren» vereinheitlichen (Editor-Modell → Simulationsmodell):
+ * Simulationswerte kommen nie vom Spieler, sondern aus Palette bzw. vorgegebenem Modell (sonst Standardwerte des Typs);
+ * Verbindungen tragen nur bei vorgegebenen Verbindungen deren Werte, sonst Standard (Timeout, Retry usw. sind Aktionen).
+ * Technologie und Steckbrief ergänzt, wenn sie fehlen. So erreicht ein im Editor gebautes Modell dieselben Werte wie die
+ * Musterlösung, und ein von Hand geschicktes Modell kann sich keine Kapazität erschleichen.
+ */
 export function ergaenzeAusPalette(mission: Mission, modell: ArchModell): ArchModell {
   if (mission.art !== "modellieren") return modell
-  const pal = new Map<string, { sim?: ModellElement["sim"]; technologie?: string; info?: ModellElement["info"] }>()
-  for (const p of mission.palette ?? []) pal.set(p.id, p)
-  for (const e of mission.modell.elemente) pal.set(e.id, e)
+  const quelle = new Map<string, { sim?: ModellElement["sim"]; technologie?: string; info?: ModellElement["info"] }>()
+  for (const p of mission.palette ?? []) quelle.set(p.id, p)
+  for (const e of mission.modell.elemente) quelle.set(e.id, e)
+  const vorgegebeneVerbindungen = new Map(mission.modell.verbindungen.map((v) => [v.id, v]))
   return {
     ...modell,
     elemente: modell.elemente.map((e) => {
-      const p = pal.get(e.id)
-      if (!p) return e
-      const out: ModellElement = { ...e }
-      if (!out.sim && p.sim) out.sim = { ...p.sim }
+      const { sim: _sim, ...rest } = e
+      void _sim
+      const out: ModellElement = { ...rest }
+      const p = quelle.get(e.id)
+      if (!p) return out
+      if (p.sim) out.sim = { ...p.sim }
       if (!out.technologie && p.technologie) out.technologie = p.technologie
       if (!out.info && p.info) out.info = { ...p.info }
       return out
+    }),
+    verbindungen: modell.verbindungen.map((v) => {
+      const { sim: _sim, ...rest } = v
+      void _sim
+      const vorgabe = vorgegebeneVerbindungen.get(v.id)
+      return vorgabe?.sim && vorgabe.von === v.von && vorgabe.nach === v.nach ? { ...rest, sim: { ...vorgabe.sim } } : rest
     }),
   }
 }

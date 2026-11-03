@@ -21,7 +21,7 @@ const vorgegeben: ArchModell = {
   verbindungen: [{ id: "fan-nutzt-app", von: "fan", nach: "fan-app", art: "abhaengigkeit", label: "nutzt" }],
 }
 
-/** Musterlösung (für Tests und «Lösung zeigen») */
+/** Musterlösung (für Tests und «Lösung zeigen»). Nur, was der Editor kann: Elemente, Typen, Verbindungen, Arten. */
 const muster: ArchModell = {
   ...vorgegeben,
   elemente: [
@@ -45,14 +45,14 @@ const muster: ArchModell = {
     { id: "ticket-queue", von: "ticket", nach: "queue", art: "async", label: "ZahlungAngefordert" },
     { id: "queue-zahlung", von: "queue", nach: "zahlung", art: "async", label: "ZahlungAngefordert" },
     { id: "zahlung-db-zugriff", von: "zahlung", nach: "zahlung-db", art: "daten", label: "SQL" },
-    { id: "zahlung-psp", von: "zahlung", nach: "psp", art: "sync", label: "HTTPS", sim: { timeoutMs: 2000, retries: 1 } },
+    { id: "zahlung-psp", von: "zahlung", nach: "psp", art: "sync", label: "HTTPS" },
     { id: "zahlung-mailer", von: "zahlung", nach: "mailer", art: "async", label: "Bestätigung" },
   ],
 }
 
 export const m4Ticketplattform: Mission = {
   id: "m4-ticketplattform",
-  version: 1,
+  version: 2,
   titel: "Modelliere die Ticketplattform",
   untertitel: "Vom Auftrag zur Architektur, dann der Lasttest",
   schwierigkeit: 3,
@@ -61,7 +61,7 @@ export const m4Ticketplattform: Mission = {
   firma: "BühnenPass AG",
   briefing:
     "<p>Die <strong>BühnenPass AG</strong> verkauft die Tickets für das <strong>Openair Seeland</strong>. Letztes Jahr ist die alte Plattform beim Vorverkaufsstart zusammengebrochen. Du entwirfst die neue Architektur und beweist im Lasttest, dass sie hält.</p>" +
-    "<p>Lies den Auftrag, setze die Bausteine aus der Palette und verbinde sie. Nicht jeder Baustein gehört in die Lösung. Wenn das Modell lauffähig ist, startet der Lasttest; während des Tests kannst du skalieren und Resilienz-Einstellungen anpassen.</p>",
+    "<p>Lies den Auftrag, setze die Bausteine aus der Palette und verbinde sie. Nicht jeder Baustein gehört in die Lösung. Wenn das Modell lauffähig ist, startet der Lasttest. Im Modell legst du nur Bausteine und Verbindungsarten fest; Instanzen, Autoscaling, Timeouts, Wiederholungen und Circuit Breaker stellst du während des Tests als Massnahmen ein. Das beste Modell allein trägt den Vorverkauf nicht.</p>",
   auftrag:
     "<p>Fans nutzen die <span data-baustein=\"fan-app\">BühnenPass-App</span>. Alle Aufrufe der App laufen über ein <span data-baustein=\"gw\">API-Gateway</span>; Bilder, Saalpläne und Bandinfos kommen aus einem <span data-baustein=\"cdn\">CDN</span>, das vor dem Gateway liegt.</p>" +
     "<p>Der <span data-baustein=\"ticket\">Ticketservice</span> zeigt Konzerte und freie Plätze und nimmt Käufe an. Die Verfügbarkeit wird rund 50-mal häufiger gelesen als gekauft wird, darum liest der Ticketservice über einen <span data-baustein=\"cache\">Cache</span>. Seine Daten liegen in der <span data-baustein=\"ticket-db\">Ticket-DB</span>.</p>" +
@@ -155,5 +155,5 @@ export const m4Ticketplattform: Mission = {
   budget: 450,
   slo: { p95Ms: 400, verfuegbarkeit: 0.995 },
   musterstrategie:
-    "Modell wie im Auftrag (CDN → Gateway → Ticketservice mit Cache und Ticket-DB, Queue zum Zahlungsservice mit eigener DB, Zahlungsanbieter mit 2 s Timeout und 1 Wiederholung, Bestätigung asynchron an den E-Mail-Dienst). Im Lasttest Autoscaling für Ticketservice (2 bis 12) und Zahlungsservice (1 bis 6), Ticketservice bei Minute 17 auf 8 Instanzen vorheizen, Circuit Breaker auf Zahlungsservice → Zahlungsanbieter.",
+    "Modell wie im Auftrag (CDN → Gateway → Ticketservice mit Cache und Ticket-DB, Queue zum Zahlungsservice mit eigener DB, Zahlungsanbieter synchron, Bestätigung asynchron an den E-Mail-Dienst). Im Lasttest als Massnahmen: Autoscaling für Ticketservice (2 bis 12) und Zahlungsservice (1 bis 6), auf Zahlungsservice → Zahlungsanbieter Timeout 2 s, 1 Wiederholung und Circuit Breaker; Ticketservice bei Minute 17 auf 8 Instanzen vorheizen. Ohne Massnahmen trägt auch das richtige Modell den Vorverkauf nicht.",
 }

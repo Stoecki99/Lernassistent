@@ -9,8 +9,9 @@
 
 import { describe, test } from "node:test"
 import assert from "node:assert/strict"
-import { MISSIONEN, spieleNach, type Aktion, type Ergebnis, type Mission } from "@/lib/archsim"
-import { mission, muster, ohneMassnahmen, type Strategie } from "./helpers/archsim-strategien"
+import { MISSIONEN, spieleNach, validiere, type Aktion, type ArchModell, type Ergebnis, type Mission } from "@/lib/archsim"
+import { editorModellBereinigen } from "@/components/features/architektur-leitstand/logik"
+import { editorRohModell, m4Massnahmen, mission, muster, ohneMassnahmen, type Strategie } from "./helpers/archsim-strategien"
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => i + 1)
 
@@ -107,6 +108,38 @@ describe("Abstimmung der Missionen", () => {
       assert.ok(naiv.nachbesprechung.lehren.some((l) => l.id.startsWith("kaskade-")), naiv.nachbesprechung.lehren.map((l) => l.id).join(","))
       const resil = spiele(m, { aktionen: namen.map((n) => massnahmen[n]) }, 1)
       assert.ok(resil.score.total > naiv.score.total, `${resil.score.total} vs. ${naiv.score.total}`)
+    })
+  })
+
+  describe("M4: Weg durch die Oberfläche (Editor → editorModellBereinigen → starte)", () => {
+    const m = mission("m4-ticketplattform")
+    const editor = editorModellBereinigen(editorRohModell(m, m.musterloesung as ArchModell))
+
+    test("Editor-Modell ohne Simulationswerte ist gültig und erfüllt alle Anforderungen", () => {
+      assert.ok(editor.elemente.every((e) => e.sim === undefined) && editor.verbindungen.every((v) => v.sim === undefined))
+      assert.ok(editor.verbindungen.some((v) => /^v\d+$/.test(v.id)), "Editor-IDs v1…vn")
+      const v = validiere(m, editor)
+      assert.ok(v.gueltig, v.fehler.join("; "))
+      assert.ok(v.anforderungen.every((a) => a.erfuellt))
+    })
+
+    test("Editor-Modell + Massnahmen im Lauf: immer 3 Sterne", () => {
+      const rows = SEEDS.map((s) => spiele(m, { modell: editor, aktionen: m4Massnahmen(editor) }, s))
+      assert.ok(rows.every((r) => r.score.sterne === 3), tabelle(m, "Editor-Modell + Massnahmen", rows))
+    })
+
+    test("Editor-Modell ohne Massnahmen: höchstens 1 Stern", () => {
+      const rows = SEEDS.map((s) => spiele(m, { modell: editor, aktionen: [] }, s))
+      assert.ok(rows.every((r) => r.score.sterne <= 1), tabelle(m, "Editor-Modell ohne Massnahmen", rows))
+    })
+
+    test("Editor-Modell und Musterlösung rechnen identisch (gleiche Simulationswerte)", () => {
+      const a = spiele(m, { modell: editor, aktionen: m4Massnahmen(editor) }, 3)
+      const b = spiele(m, muster(m), 3)
+      // Verbindungs-IDs unterscheiden sich (v1…vn), die Zahlen nicht
+      const zahlen = (r: Ergebnis) => r.zustand.verlauf.map((p) => [p.last, p.verfuegbarkeit, p.p95, p.kosten, p.rueckstau, p.verloren, p.engpass, p.cbOffen.length])
+      assert.deepEqual(zahlen(a), zahlen(b))
+      assert.equal(a.score.total, b.score.total)
     })
   })
 

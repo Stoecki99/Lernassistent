@@ -153,6 +153,20 @@ describe("M4 «Modelliere die Ticketplattform»", () => {
     assert.throws(() => starte(m4, 1), (e: unknown) => e instanceof ArchSimFehler && e.code === "MODELL")
   })
 
+  test("Simulationswerte des Spielers zählen nicht (nur Palette, Vorgabe, Standard)", () => {
+    const geschummelt: ArchModell = {
+      ...muster,
+      elemente: muster.elemente.map((e) => (e.id === "ticket" ? { ...e, sim: { kapazitaet: 1e6, parallel: 1e6 } } : e.id === "psp" ? { ...e, sim: { kapazitaet: 1e6, latenz: 1 } } : e)),
+      verbindungen: muster.verbindungen.map((v) => (v.id === "zahlung-psp" ? { ...v, sim: { timeoutMs: 500, retries: 5 } } : v)),
+    }
+    const z = starte(m4, 1, geschummelt)
+    assert.equal(z.modell.elemente.find((e) => e.id === "ticket")?.sim, undefined)
+    assert.equal(z.modell.elemente.find((e) => e.id === "psp")?.sim?.kapazitaet, 400)
+    assert.equal(z.verbindungen["zahlung-psp"].timeoutMs, 30000)
+    assert.equal(z.verbindungen["zahlung-psp"].retries, 0)
+    assert.equal(spieleNach(m4, 1, [], geschummelt).score.total, spieleNach(m4, 1, [], muster).score.total)
+  })
+
   test("Palette und Vorgabe ergänzen Simulationswerte des Spielermodells", () => {
     const ohneSim: ArchModell = { ...muster, elemente: muster.elemente.map(({ sim: _sim, ...rest }) => rest) }
     assert.equal(ohneSim.elemente.find((e) => e.id === "psp")?.sim, undefined)
