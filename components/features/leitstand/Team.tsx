@@ -77,7 +77,7 @@ function PersonKarte({ def }: { def: PersonDef }) {
   return (
     <article className={`card ${styles.personKarte} ${!person.available ? styles.inaktiv : ""}`} aria-labelledby={`p-${def.id}`}>
       <header className={styles.personKopf}>
-        <Avatar name={def.name} role={def.role} size={72} />
+        <Avatar name={def.name} role={def.role} size={72} decorative />
         <div className={styles.personTitel}>
           <h3 id={`p-${def.id}`}>{def.name}</h3>
           <p className={styles.personRolle}>{def.role}</p>

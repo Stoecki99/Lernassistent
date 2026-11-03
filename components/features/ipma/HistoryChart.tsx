@@ -7,19 +7,29 @@
 // Verlauf der Übungsprüfungen (Spezifikation 4.4, 6.8): eigenes SVG mit Linie «Prozent» und Grenze 60 %,
 // Säulen «nachgewiesene Kompetenzen» mit Grenze 23; gleichwertige Tabelle (auch für Kurzprüfungen).
 // Farbe nie allein: Linienarten und Beschriftung unterscheiden die Reihen.
+// Schmale Bildschirme: das Diagramm behält 640 px (lesbare Schrift) und scrollt waagrecht im Container;
+// die Tabelle ist dort von Anfang an aufgeklappt.
 
 import type { AttemptSummary } from "@/lib/ipma/types"
-import { useId } from "react"
+import { useEffect, useId, useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
 import { MIN_COMPETENCES, PASS_PERCENT, TOTAL_COMPETENCES, VARIANT_LABEL, date, percent, points } from "./format"
 
 const W = 640
 const H = 220
-const PAD = { left: 40, right: 40, top: 14, bottom: 30 }
+const PAD = { left: 44, right: 40, top: 14, bottom: 30 }
+/** Unterhalb dieser Breite ist die Tabelle zu Beginn offen */
+const NARROW_QUERY = "(max-width: 40rem)"
 
 export default function HistoryChart({ exams, shorts }: { exams: AttemptSummary[]; shorts: AttemptSummary[] }) {
   const titleId = useId()
   const descId = useId()
+  const [tableOpen, setTableOpen] = useState(false)
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return
+    if (window.matchMedia(NARROW_QUERY).matches) setTableOpen(true)
+  }, [])
   // Chronologisch, nur abgeschlossene mit Ergebnis
   const done = (list: AttemptSummary[]) =>
     list.filter((a) => a.status === "finished" && a.percent !== null).sort((a, b) => a.startedAt.localeCompare(b.startedAt))
@@ -46,7 +56,7 @@ export default function HistoryChart({ exams, shorts }: { exams: AttemptSummary[
       {examList.length === 0 ? (
         <p className="hint">Noch keine abgeschlossene Übungsprüfung. Nach der ersten Prüfung erscheint hier dein Verlauf.</p>
       ) : (
-        <div className="tablebox">
+        <div className={styles.diagrammBox} role="region" aria-label="Verlaufsdiagramm, waagrecht scrollbar" tabIndex={0}>
           <svg className={styles.diagramm} viewBox={`0 0 ${W} ${H}`} role="img" aria-labelledby={`${titleId} ${descId}`}>
             <title id={titleId}>Verlauf der Übungsprüfungen</title>
             <desc id={descId}>{desc}</desc>
@@ -101,7 +111,7 @@ export default function HistoryChart({ exams, shorts }: { exams: AttemptSummary[
         </ul>
       )}
       {(examList.length > 0 || shortList.length > 0) && (
-        <details>
+        <details open={tableOpen} onToggle={(e) => setTableOpen(e.currentTarget.open)}>
           <summary>Als Tabelle zeigen</summary>
           <div className="tablebox">
             <table className={`tabelle ${styles.verlaufTabelle}`}>

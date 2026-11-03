@@ -54,7 +54,7 @@ export default function Posteingang() {
                     onClick={() => openEvent(i.eventId)}
                   >
                     <span className={styles.postBild}>
-                      <Avatar name={def.sender.name} role={roleOf(scenario, def.sender.name)} size={44} accessory={false} />
+                      <Avatar name={def.sender.name} role={roleOf(scenario, def.sender.name)} size={44} decorative accessory={false} />
                       <span className={styles.postKanal}>
                         <Icon name={CHANNEL_SYMBOL[def.channel]} size={12} />
                       </span>

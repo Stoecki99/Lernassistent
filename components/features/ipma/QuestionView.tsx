@@ -71,8 +71,10 @@ export default function QuestionView({
                   disabled={readOnly}
                   onChange={() => onChoice?.(index)}
                 />
-                <span className={styles.optionBuchstabe} aria-hidden="true">
+                {/* Buchstabe gehört zur Beschriftung, damit «richtig ist B» auch mit Screenreader nachvollziehbar ist */}
+                <span className={styles.optionBuchstabe}>
                   {LETTERS[index]}
+                  <span className="sr-only">:</span>
                 </span>
                 <span className={styles.optionText}>{option}</span>
                 {solved && (right || chosen) && (

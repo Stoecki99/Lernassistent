@@ -8,6 +8,8 @@
 // arbeitet die selbst bewerteten, noch nicht von Claude bewerteten Antworten nacheinander ab, mit Fortschritt
 // und «Anhalten». Der Vergleich Selbst/Claude erscheint je Frage in AiAssessment.
 // Stopp bei Monatsdeckel, Tageszähler oder fehlendem Pro; beim Rate-Limit (10/min) eine Pause, dann weiter.
+// Während des Durchlaufs aria-disabled (Fokus bleibt), am Ende Fokus auf die Zusammenfassung; onRunningChange
+// meldet den Durchlauf, damit die Seite «Abschliessen» so lange sperrt.
 
 import type { SolvedItem } from "@/lib/ipma/types"
 import { useEffect, useRef, useState } from "react"
@@ -35,6 +37,7 @@ export default function AiAssessAll({
   onItem,
   onDone,
   onAnnounce,
+  onRunningChange,
 }: {
   attemptId: string
   /** Beantwortete offene Fragen der Prüfung */
@@ -44,7 +47,13 @@ export default function AiAssessAll({
   /** Nach dem Durchlauf (vorläufiges Ergebnis neu laden) */
   onDone: () => void
   onAnnounce?: (text: string) => void
+  /** true beim Start, false am Ende des Durchlaufs */
+  onRunningChange?: (running: boolean) => void
 }) {
+  const summaryRef = useRef<HTMLParagraphElement>(null)
+  const focusSummary = useRef(false)
+  const runningRef = useRef(onRunningChange)
+  runningRef.current = onRunningChange
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [summary, setSummary] = useState<string | null>(null)
   const [pausing, setPausing] = useState(false)
@@ -57,6 +66,12 @@ export default function AiAssessAll({
     [],
   )
 
+  useEffect(() => {
+    if (summary === null || !focusSummary.current) return
+    focusSummary.current = false
+    summaryRef.current?.focus()
+  }, [summary])
+
   if (!canUseAi) return null
   const candidates = items.filter(isCandidate)
   const withoutSelf = items.filter((i) => i.selfScores.length === 0).length
@@ -67,6 +82,7 @@ export default function AiAssessAll({
     const queue = items.filter(isCandidate)
     if (queue.length === 0) return
     stopRef.current = false
+    runningRef.current?.(true)
     setSummary(null)
     setProgress({ done: 0, total: queue.length })
     onAnnounce?.(`Claude bewertet ${queue.length} ${queue.length === 1 ? "Antwort" : "Antworten"} nacheinander.`)
@@ -119,15 +135,25 @@ export default function AiAssessAll({
     const text = parts.join(" ")
     setProgress(null)
     setPausing(false)
+    // Die Zusammenfassung bekommt den Fokus und wird dabei vorgelesen
+    focusSummary.current = true
     setSummary(text)
-    onAnnounce?.(text)
+    runningRef.current?.(false)
     onDone()
   }
 
   return (
     <div className="stack">
       <div className="row">
-        <button type="button" className="btn" disabled={running || candidates.length === 0} onClick={() => void run()}>
+        <button
+          type="button"
+          className="btn"
+          disabled={!running && candidates.length === 0}
+          aria-disabled={running || undefined}
+          onClick={() => {
+            if (!running) void run()
+          }}
+        >
           {running ? "Claude bewertet …" : "Alle offenen Antworten bewerten"}
         </button>
         {running && (
@@ -154,7 +180,11 @@ export default function AiAssessAll({
           </span>
         </div>
       )}
-      {summary && <p className={styles.meldung}>{summary}</p>}
+      {summary && (
+        <p className={styles.meldung} ref={summaryRef} tabIndex={-1}>
+          {summary}
+        </p>
+      )}
     </div>
   )
 }

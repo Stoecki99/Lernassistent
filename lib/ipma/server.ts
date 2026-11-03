@@ -25,6 +25,7 @@ import {
 } from "@/lib/leitstand"
 import { fortschrittSchreibdaten, type LernStatus } from "@/lib/validations/lernfortschritt"
 import type { CreateAttemptInput, SaveItemInput } from "@/lib/validations/ipma"
+import type { OpenQuestion } from "@/lib/validations/ipma-pool"
 import { COMPETENCE_IDS, RASTER_TOTAL, type CompetenceId } from "./competences"
 import { CONFIG_VERSION, EXAM_CONFIG, configSnapshot, type ExamConfig } from "./config"
 import { IpmaError } from "./errors"
@@ -126,6 +127,8 @@ export interface IpmaAiDeps {
 export interface AssessQuota {
   available: (userId: string, now: Date) => boolean
   consume: (userId: string, now: Date) => void
+  /** Reservierung zurückgeben, wenn Claude nicht aufgerufen wurde */
+  release: (userId: string, now: Date) => void
 }
 
 let catalogCache: StationCatalog | null = null
@@ -383,6 +386,8 @@ export async function loadMastery(db: Db, userId: string, cfg: ExamConfig = EXAM
 /**
  * Leitner-Fächer nachführen (3.5) und die Anzahl erstmals richtiger Fragen liefern (6.10).
  * Gleiche Ergebnisse werden zu je einem updateMany zusammengefasst (höchstens 10 statt 90 Abfragen).
+ * «Erstmals richtig» zählt die Datenbank selbst (bedingtes updateMany auf correctCount 0 bzw. createMany),
+ * damit zwei gleichzeitige Abläufe denselben Punkt nicht doppelt vergeben.
  */
 async function applyLeitner(
   db: Db,
@@ -393,7 +398,7 @@ async function applyLeitner(
   if (!graded.length) return 0
   const rows = await loadStates(db, userId, graded.map((g) => g.questionId))
   const states = new Map<string, QuestionStateRow>(rows.map((r) => [r.questionId, r]))
-  const { updates, firstCorrect } = planLeitner(graded, states, now)
+  const { updates } = planLeitner(graded, states, now)
   const groups = new Map<string, { box: number; dueAt: Date; correct: boolean; ids: string[] }>()
   const missing = updates.filter((u) => !u.exists)
   for (const u of updates.filter((x) => x.exists)) {
@@ -402,31 +407,41 @@ async function applyLeitner(
     g.ids.push(u.questionId)
     groups.set(key, g)
   }
+  let firstCorrect = 0
   for (const g of groups.values()) {
+    const data = { box: g.box, dueAt: g.dueAt, lastCorrect: g.correct }
+    if (!g.correct) {
+      await db.ipmaQuestionState.updateMany({ where: { userId, questionId: { in: g.ids } }, data })
+      continue
+    }
+    // Zuerst die schon einmal richtigen, dann die erstmals richtigen (deren Anzahl ergibt die Punkte)
     await db.ipmaQuestionState.updateMany({
-      where: { userId, questionId: { in: g.ids } },
-      data: {
-        box: g.box,
-        dueAt: g.dueAt,
-        lastCorrect: g.correct,
-        ...(g.correct ? { correctCount: { increment: 1 } } : {}),
-      },
+      where: { userId, questionId: { in: g.ids }, correctCount: { gte: 1 } },
+      data: { ...data, correctCount: { increment: 1 } },
     })
+    const first = await db.ipmaQuestionState.updateMany({
+      where: { userId, questionId: { in: g.ids }, correctCount: 0 },
+      data: { ...data, correctCount: 1 },
+    })
+    firstCorrect += first.count
   }
-  if (missing.length) {
-    await db.ipmaQuestionState.createMany({
-      data: missing.map((u) => ({
+  for (const correct of [true, false]) {
+    const list = missing.filter((u) => u.correct === correct)
+    if (!list.length) continue
+    const created = await db.ipmaQuestionState.createMany({
+      data: list.map((u) => ({
         userId,
         questionId: u.questionId,
         box: u.box,
         dueAt: u.dueAt,
         seenCount: 1,
-        correctCount: u.correct ? 1 : 0,
-        lastCorrect: u.correct,
+        correctCount: correct ? 1 : 0,
+        lastCorrect: correct,
         lastSeenAt: now,
       })),
       skipDuplicates: true,
     })
+    if (correct) firstCorrect += created.count
   }
   return firstCorrect
 }
@@ -669,12 +684,13 @@ export async function checkItem(deps: IpmaDeps, userId: string, id: string, posi
     data.pointsQ = 0
   }
 
-  await db.$transaction(async (tx) => {
+  const after = await db.$transaction(async (tx) => {
     const saved = await tx.ipmaAttemptItem.updateMany({ where: { attemptId: id, position, locked: false }, data })
     if (saved.count === 0) throw new IpmaError(409, "LOCKED", "Diese Frage wurde schon geprüft.")
     if (correct !== null) await awardTrainingPoints(tx, userId, id, [{ questionId: item.questionId, correct }], now)
+    return requireItem(tx, id, position)
   })
-  return solvedOf(deps, attempt, await requireItem(db, id, position))
+  return solvedOf(deps, attempt, after)
 }
 
 /** Leitner nachführen und 1 Punkt je erstmals richtiger Frage gutschreiben (Training, Lücken; 6.10) */
@@ -738,15 +754,16 @@ export async function selfAssess(
     selfAssessedAt: now,
     ...(aiDone ? {} : { rasterPoints: total, scoreSource: "self", correct, pointsQ: cfg.weights.offen * total }),
   }
-  await db.$transaction(async (tx) => {
+  const after = await db.$transaction(async (tx) => {
     const saved = await tx.ipmaAttemptItem.updateMany({
       where: { attemptId: id, position, locked: true, ...(exam ? {} : { selfAssessedAt: null }) },
       data,
     })
     if (saved.count === 0) throw new IpmaError(409, "CONFLICT", "Die Antwort wurde inzwischen verändert.")
     if (!exam && !aiDone) await awardTrainingPoints(tx, userId, id, [{ questionId: item.questionId, correct }], now)
+    return requireItem(tx, id, position)
   })
-  return solvedOf(deps, attempt, await requireItem(db, id, position))
+  return solvedOf(deps, attempt, after)
 }
 
 // ---------- Claude-Bewertung (POST items/[position]/assess, 4.3, AP5) ----------
@@ -766,7 +783,9 @@ function zurichDay(now: Date): string {
 
 /**
  * Tageszähler im Speicher je Konto (Muster Rate-Limit; nach einem Neustart beginnt er neu, der Monatsdeckel
- * bleibt in der Datenbank). Gezählt wird jeder Aufruf von Claude, auch fehlgeschlagene.
+ * bleibt in der Datenbank). Gezählt wird jeder Aufruf von Claude, auch fehlgeschlagene. assessItem reserviert
+ * vor allen weiteren Prüfungen (gleichzeitige Anfragen überschreiten das Limit nicht) und gibt die Reservierung
+ * zurück, wenn es gar nicht zum Aufruf kommt.
  */
 export const dailyAssessQuota: AssessQuota = {
   available(userId, now) {
@@ -779,6 +798,12 @@ export const dailyAssessQuota: AssessQuota = {
     }
     const key = `${day}:${userId}`
     dailyAssessMap.set(key, (dailyAssessMap.get(key) ?? 0) + 1)
+  },
+  release(userId, now) {
+    const key = `${zurichDay(now)}:${userId}`
+    const used = dailyAssessMap.get(key) ?? 0
+    if (used <= 1) dailyAssessMap.delete(key)
+    else dailyAssessMap.set(key, used - 1)
   },
 }
 
@@ -827,9 +852,10 @@ function assessFailure(reason: GradeFailure): IpmaError {
 
 /**
  * Claude-Bewertung einer offenen Antwort (4.3 Schritte 4–14, Entscheid 9 Nr. 4). Pro-Prüfung (403) und Rate-Limit
- * macht die Route. Ablauf: Tageszähler → Monatsdeckel → Vorbedingungen → Sperre «pending» per updateMany (gegen
- * Doppelauslösung) → Claude → Tokens buchen (immer, auch bei ungültiger Ausgabe) → Punkte selbst summieren und
- * speichern (scoreSource «ai», massgebend). Fehler setzen «failed» (neuer Versuch erlaubt), nach «done» nicht mehr.
+ * macht die Route. Ablauf: Tageszähler reservieren → Monatsdeckel → Vorbedingungen → Sperre «pending» per updateMany
+ * (gegen Doppelauslösung) → Claude → Tokens buchen (immer, auch bei ungültiger Ausgabe) → Punkte selbst summieren und
+ * in einer Transaktion speichern, nur solange der Versuch nicht abgeschlossen ist (scoreSource «ai», massgebend).
+ * Fehler setzen «failed» (neuer Versuch erlaubt), nach «done» nicht mehr.
  * Das Ergebnis einer abgegebenen Prüfung rechnet GET neu (Nachtrag 8.5 Nr. 6).
  */
 export async function assessItem(deps: IpmaDeps, userId: string, id: string, position: number): Promise<SolvedItem> {
@@ -840,33 +866,24 @@ export async function assessItem(deps: IpmaDeps, userId: string, id: string, pos
     await assertAssessable(deps, userId, id, position)
     throw assessFailure("unavailable")
   }
+  // Tageszähler reservieren: Prüfen und Buchen ohne await dazwischen, damit gleichzeitige Anfragen das Limit
+  // nicht überschreiten; kommt es nicht zum Aufruf von Claude, wird die Reservierung zurückgegeben
   if (!ai.quota.available(userId, now)) {
     throw new IpmaError(429, "DAILY_LIMIT", `Heute sind keine weiteren Bewertungen durch Claude möglich (höchstens ${ASSESS_DAILY_LIMIT} am Tag). Deine Selbstbewertung gilt.`)
   }
-  if (!(await ai.checkBudget(userId))) {
-    throw new IpmaError(429, "BUDGET", "Das monatliche Kontingent für Claude ist aufgebraucht. Deine Selbstbewertung gilt.")
+  ai.quota.consume(userId, now)
+  let prepared: { attempt: StoredAttempt; item: StoredItem; question: OpenQuestion }
+  try {
+    prepared = await lockForAssessment(deps, ai, userId, id, position, now)
+  } catch (error) {
+    ai.quota.release(userId, now)
+    throw error
   }
-  const { attempt, item } = await loadAssessable(deps, userId, id, position)
-  const question = deps.pool().byId.get(item.questionId) ?? null
-  if (!question || question.typ !== "offen") throw new IpmaError(422, "NOT_OPEN", "Zu dieser Frage gibt es kein Raster mehr.")
-
-  // Optimistische Sperre (4.3 Schritt 8): nur eine Anfrage gewinnt; verwaiste Sperren werden übernommen
-  let locked = await db.ipmaAttemptItem.updateMany({
-    where: { attemptId: id, position, aiStatus: { in: ["none", "failed"] } },
-    data: { aiStatus: "pending", aiAssessedAt: now },
-  })
-  if (locked.count === 0) {
-    locked = await db.ipmaAttemptItem.updateMany({
-      where: { attemptId: id, position, aiStatus: "pending", aiAssessedAt: { lt: new Date(now.getTime() - AI_PENDING_STALE_MS) } },
-      data: { aiStatus: "pending", aiAssessedAt: now },
-    })
-  }
-  if (locked.count === 0) throw new IpmaError(409, "CONFLICT", "Diese Antwort wird gerade bewertet.")
+  const { attempt, item, question } = prepared
 
   const markFailed = () =>
     db.ipmaAttemptItem.updateMany({ where: { attemptId: id, position, aiStatus: "pending" }, data: { aiStatus: "failed" } })
 
-  ai.quota.consume(userId, now)
   let result: Awaited<ReturnType<typeof gradeOpenAnswer>>
   try {
     result = await gradeOpenAnswer(ai.client, {
@@ -901,29 +918,77 @@ export async function assessItem(deps: IpmaDeps, userId: string, id: string, pos
 
   // Punkte selbst summieren (4.3 Schritt 13), nie eine Summe von Claude übernehmen
   const cfg = readConfig(attempt.config)
-  const total = result.scores.reduce((sum, v) => sum + v, 0)
+  const scores = result.scores
+  const total = scores.reduce((sum, v) => sum + v, 0)
   const feedback: Prisma.InputJsonObject = {
     kriterien: result.feedback.kriterien.map((k) => ({ nummer: k.nummer, punkte: k.punkte, begruendung: k.begruendung })),
     gesamtkommentar: result.feedback.gesamtkommentar,
     verdacht: result.feedback.verdacht,
   }
-  const saved = await db.ipmaAttemptItem.updateMany({
-    where: { attemptId: id, position, aiStatus: "pending" },
-    data: {
-      aiStatus: "done",
-      aiScores: result.scores,
-      aiFeedback: feedback,
-      aiTokens: tokens,
-      aiAssessedAt: deps.now(),
-      scoreSource: "ai",
-      rasterPoints: total,
-      correct: total >= cfg.openCorrectRaster,
-      pointsQ: cfg.weights.offen * total,
-    },
-  })
-  if (saved.count === 0) throw new IpmaError(409, "CONFLICT", "Die Antwort wurde inzwischen verändert.")
+  // Speichern nur, solange der Versuch noch offen ist: Serializable gegen einen gleichzeitigen Abschluss
+  // (finishAttempt liest die Positionen, hier wird der Versuch gelesen und die Position geschrieben)
+  const saveTx = () => db.$transaction(async (tx) => {
+    const current = await requireOwnAttempt(tx, userId, id)
+    const status = asStatus(current.status)
+    if (status === "finished" || status === "aborted") return null
+    const saved = await tx.ipmaAttemptItem.updateMany({
+      where: { attemptId: id, position, aiStatus: "pending" },
+      data: {
+        aiStatus: "done",
+        aiScores: scores,
+        aiFeedback: feedback,
+        aiTokens: tokens,
+        aiAssessedAt: deps.now(),
+        scoreSource: "ai",
+        rasterPoints: total,
+        correct: total >= cfg.openCorrectRaster,
+        pointsQ: cfg.weights.offen * total,
+      },
+    })
+    if (saved.count === 0) throw new IpmaError(409, "CONFLICT", "Die Antwort wurde inzwischen verändert.")
+    return requireItem(tx, id, position)
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
+  const saved = await retryOnPrismaCodes(["P2034"], FINISH_ATTEMPTS, saveTx)
+  if (!saved) {
+    await markFailed()
+    throw new IpmaError(409, "NOT_ACTIVE", "Dieser Versuch wurde inzwischen abgeschlossen; die Bewertung durch Claude wird nicht mehr übernommen.")
+  }
   if (result.feedback.verdacht) console.warn("[ipma/assess] Manipulationsverdacht", { attemptId: id, position })
-  return solvedOf(deps, attempt, await requireItem(db, id, position))
+  return solvedOf(deps, attempt, saved)
+}
+
+/**
+ * Vorbereitung der Claude-Bewertung bis zur Sperre: Monatsdeckel → Vorbedingungen → Sperre «pending» per
+ * updateMany (gegen Doppelauslösung, 4.3 Schritt 8); verwaiste Sperren werden übernommen.
+ */
+async function lockForAssessment(
+  deps: IpmaDeps,
+  ai: IpmaAiDeps,
+  userId: string,
+  id: string,
+  position: number,
+  now: Date,
+): Promise<{ attempt: StoredAttempt; item: StoredItem; question: OpenQuestion }> {
+  const db = deps.db
+  if (!(await ai.checkBudget(userId))) {
+    throw new IpmaError(429, "BUDGET", "Das monatliche Kontingent für Claude ist aufgebraucht. Deine Selbstbewertung gilt.")
+  }
+  const { attempt, item } = await loadAssessable(deps, userId, id, position)
+  const question = deps.pool().byId.get(item.questionId) ?? null
+  if (!question || question.typ !== "offen") throw new IpmaError(422, "NOT_OPEN", "Zu dieser Frage gibt es kein Raster mehr.")
+
+  let locked = await db.ipmaAttemptItem.updateMany({
+    where: { attemptId: id, position, aiStatus: { in: ["none", "failed"] } },
+    data: { aiStatus: "pending", aiAssessedAt: now },
+  })
+  if (locked.count === 0) {
+    locked = await db.ipmaAttemptItem.updateMany({
+      where: { attemptId: id, position, aiStatus: "pending", aiAssessedAt: { lt: new Date(now.getTime() - AI_PENDING_STALE_MS) } },
+      data: { aiStatus: "pending", aiAssessedAt: now },
+    })
+  }
+  if (locked.count === 0) throw new IpmaError(409, "CONFLICT", "Diese Antwort wird gerade bewertet.")
+  return { attempt, item, question }
 }
 
 // ---------- Pause (POST /pause) ----------
@@ -1055,9 +1120,13 @@ export async function finishAttempt(deps: IpmaDeps, user: IpmaUser, id: string):
   const catalog = deps.catalog()
   const finishTx = () => db.$transaction(async (tx) => {
     const items = await loadItems(tx, id)
+    // Laufende Bewertung durch Claude: erst abschliessen, wenn sie fertig ist (sonst überschriebe sie das Ergebnis)
+    if (items.some((i) => i.aiStatus === "pending" && !isStalePending(i, now))) {
+      throw new IpmaError(409, "AI_PENDING", "Claude bewertet gerade noch eine Antwort. Bitte warten, bis die Bewertung fertig ist, dann abschliessen.")
+    }
     const result = resultOf(attempt, items, catalog)
 
-    let pointsAwarded = attempt.pointsAwarded
+    let pointsAwarded = 0
     if (exam) {
       const graded = items.filter((i) => i.correct !== null).map((i) => ({ questionId: i.questionId, correct: i.correct === true }))
       await applyLeitner(tx, userId, graded, now)
@@ -1083,11 +1152,15 @@ export async function finishAttempt(deps: IpmaDeps, user: IpmaUser, id: string):
         maxPointsQ: result.maxPointsQ,
         shownCount: result.shownCount,
         passed: result.passed,
-        pointsAwarded,
+        // Training/Lücken: pointsAwarded zählt «Prüfen» laufend hoch; nicht mit einem früher gelesenen Wert überschreiben
+        ...(exam ? { pointsAwarded } : {}),
       },
     })
     if (saved.count === 0) return null
-    if (!exam) await tx.ipmaAttemptItem.updateMany({ where: { attemptId: id, locked: false }, data: { locked: true } })
+    if (!exam) {
+      await tx.ipmaAttemptItem.updateMany({ where: { attemptId: id, locked: false }, data: { locked: true } })
+      pointsAwarded = (await requireOwnAttempt(tx, userId, id)).pointsAwarded
+    }
     if (exam && pointsAwarded > 0) {
       await tx.user.update({ where: { id: userId }, data: { points: { increment: pointsAwarded } } })
     }

@@ -194,7 +194,9 @@ export default function IpmaStart({ stations, start }: { stations: StationTitles
             </fieldset>
             {errorFor("exam")}
             <div className="row">
-              <button type="button" className={`btn ${active("exam") ? "" : "primary"}`} disabled={busy !== null || !overview} onClick={() => void create({ mode: "exam", variant })}>
+              <button type="button" className={`btn ${active("exam") ? "" : "primary"}`} disabled={!overview} aria-disabled={busy !== null || undefined} onClick={() => {
+                if (busy === null) void create({ mode: "exam", variant })
+              }}>
                 {busy === "exam" ? "Wird gestartet …" : active("exam") ? "Neu beginnen" : "Übungsprüfung starten"}
               </button>
             </div>
@@ -217,7 +219,9 @@ export default function IpmaStart({ stations, start }: { stations: StationTitles
             {continueRow("short", "Kurzprüfung")}
             {errorFor("short")}
             <div className="row">
-              <button type="button" className={`btn ${active("short") ? "" : "primary"}`} disabled={busy !== null || !overview} onClick={() => void create({ mode: "short" })}>
+              <button type="button" className={`btn ${active("short") ? "" : "primary"}`} disabled={!overview} aria-disabled={busy !== null || undefined} onClick={() => {
+                if (busy === null) void create({ mode: "short" })
+              }}>
                 {busy === "short" ? "Wird gestartet …" : active("short") ? "Neu beginnen" : "Kurzprüfung starten"}
               </button>
             </div>
@@ -245,7 +249,9 @@ export default function IpmaStart({ stations, start }: { stations: StationTitles
             {continueRow("gaps", "Runde")}
             {errorFor("gaps")}
             <div className="row">
-              <button type="button" className={`btn ${active("gaps") ? "" : "primary"}`} disabled={busy !== null || !overview} onClick={() => void create({ mode: "gaps" })}>
+              <button type="button" className={`btn ${active("gaps") ? "" : "primary"}`} disabled={!overview} aria-disabled={busy !== null || undefined} onClick={() => {
+                if (busy === null) void create({ mode: "gaps" })
+              }}>
                 {busy === "gaps" ? "Wird gestartet …" : active("gaps") ? "Neue Runde" : "Runde starten"}
               </button>
             </div>
@@ -312,6 +318,8 @@ export default function IpmaStart({ stations, start }: { stations: StationTitles
               type="button"
               className="btn"
               onClick={() => {
+                // Der Dialog gibt den Fokus beim Schliessen an den Startknopf zurück; dieser ist während des
+                // Starts nur aria-disabled, damit der Fokus nicht verloren geht
                 const body = confirm.body
                 setConfirm(null)
                 void create({ ...body, replaceActive: true })

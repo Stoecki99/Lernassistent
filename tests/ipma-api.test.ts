@@ -620,6 +620,36 @@ describe("Abgabe, Abschluss, Punkte, Station 24", () => {
     assert.equal(user()?.points, rows.length)
   })
 
+  test("erstmals richtig nur einmal, auch wenn der gelesene Leitner-Stand veraltet ist", async () => {
+    const ctx = context()
+    const first = await start(ctx, { mode: "training", competences: ["3.04"], type: "mc", count: 5 })
+    const rows = itemsOf(ctx, first)
+    for (const row of rows) {
+      await call(handleSaveItem(req("PUT", { choice: rightDisplay(row) }), params(first, Number(row.position)), ctx.deps))
+      await call(handleCheckItem(req("POST"), params(first, Number(row.position)), ctx.deps))
+    }
+    await call(handleFinish(req("POST"), params(first), ctx.deps))
+    const user = () => ctx.fake.tables().user.find((u) => u.id === "user-a")
+    assert.equal(user()?.points, rows.length)
+
+    // Gleichzeitiger Ablauf: findMany liefert noch correctCount 0, die Datenbank ist schon weiter
+    const states = ctx.fake.db.ipmaQuestionState as unknown as { findMany: (args: unknown) => Promise<Record<string, unknown>[]> }
+    const original = states.findMany.bind(states)
+    states.findMany = async (args) => (await original(args)).map((r) => ({ ...r, correctCount: 0 }))
+    try {
+      const again = await start(ctx, { mode: "training", competences: ["3.04"], type: "mc", count: 5 })
+      for (const row of itemsOf(ctx, again)) {
+        await call(handleSaveItem(req("PUT", { choice: rightDisplay(row) }), params(again, Number(row.position)), ctx.deps))
+        await call(handleCheckItem(req("POST"), params(again, Number(row.position)), ctx.deps))
+      }
+    } finally {
+      states.findMany = original
+    }
+    assert.equal(user()?.points, rows.length, "kein zweiter Punkt")
+    const counts = ctx.fake.tables().ipmaQuestionState.filter((r) => r.userId === "user-a").map((r) => r.correctCount)
+    assert.ok(counts.every((c) => c === 2), "correctCount weiter gezählt")
+  })
+
   test("Lücken schliessen und Übersicht", async () => {
     const ctx = context()
     const id = await start(ctx, { mode: "gaps" })

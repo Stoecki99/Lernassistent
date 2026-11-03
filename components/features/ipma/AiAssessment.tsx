@@ -9,9 +9,11 @@
 // Free-Konten: kurzer Hinweis statt Anfrage (Zugang 5), «Mehr erfahren» öffnet den Upgrade-Hinweis.
 // Fehler der Route (502 AI_UNAVAILABLE/AI_INVALID/AI_REFUSED, 429 BUDGET/DAILY_LIMIT) zeigen die Meldung des
 // Servers; nach «failed» ist ein neuer Versuch möglich. «Alle bewerten» steht in AiAssessAll.
+// Während der Anfrage aria-disabled (Fokus bleibt), danach Fokus auf den Titel des Vergleichs; onRunningChange
+// meldet die laufende Bewertung, damit die Seite «Abschliessen» so lange sperrt.
 
 import type { SolvedItem } from "@/lib/ipma/types"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
 import Dialog from "@/components/features/leitstand/Dialog"
 import UpgradePrompt from "@/components/features/UpgradePrompt"
@@ -24,6 +26,7 @@ export default function AiAssessment({
   allowed,
   onSaved,
   onAnnounce,
+  onRunningChange,
 }: {
   attemptId: string
   item: SolvedItem
@@ -32,8 +35,32 @@ export default function AiAssessment({
   allowed: boolean
   onSaved: (item: SolvedItem) => void
   onAnnounce?: (text: string) => void
+  /** true beim Start, false am Ende einer Bewertung */
+  onRunningChange?: (running: boolean) => void
 }) {
   const [busy, setBusy] = useState(false)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const focusTitle = useRef(false)
+  const runningRef = useRef(onRunningChange)
+  runningRef.current = onRunningChange
+  const done = item.aiStatus === "done"
+
+  // Nach der Bewertung ersetzt der Vergleich den Knopf: Fokus auf dessen Titel
+  useEffect(() => {
+    if (!done || !focusTitle.current) return
+    focusTitle.current = false
+    titleRef.current?.focus()
+  }, [done])
+
+  // Verlässt die Ansicht während einer Bewertung (z. B. Fragenwechsel), die Sperre trotzdem lösen
+  const busyRef = useRef(false)
+  useEffect(
+    () => () => {
+      if (busyRef.current) runningRef.current?.(false)
+    },
+    [],
+  )
+
   const [message, setMessage] = useState<string | null>(null)
   const [proHint, setProHint] = useState(false)
   const [upgrade, setUpgrade] = useState(false)
@@ -50,18 +77,22 @@ export default function AiAssessment({
       return
     }
     setBusy(true)
+    busyRef.current = true
+    runningRef.current?.(true)
     setMessage(null)
     onAnnounce?.("Claude bewertet deine Antwort …")
     try {
       const next = await ipmaApi.assess(attemptId, item.position)
+      focusTitle.current = true
       onSaved(next)
-      onAnnounce?.("Die Bewertung durch Claude ist da.")
     } catch (e) {
       const text = errorMessage(e, "Die Bewertung durch Claude ist gerade nicht möglich. Deine Selbstbewertung gilt.")
       setMessage(text)
       onAnnounce?.(text)
     } finally {
       setBusy(false)
+      busyRef.current = false
+      runningRef.current?.(false)
     }
   }
 
@@ -69,7 +100,9 @@ export default function AiAssessment({
     <div className="stack">
       {feedback ? (
         <div className="stack">
-          <h4>Vergleich: Selbst und Claude</h4>
+          <h4 ref={titleRef} tabIndex={-1}>
+            Vergleich: Selbst und Claude
+          </h4>
           <div className="tablebox">
             <table className={`tabelle ${styles.claudeTabelle}`}>
               <thead>
@@ -115,7 +148,15 @@ export default function AiAssessment({
         allowed && (
           <div className="stack">
             <div className="row">
-              <button type="button" className="btn" disabled={!selfDone || busy || item.aiStatus === "pending"} onClick={() => void assess()}>
+              <button
+                type="button"
+                className="btn"
+                disabled={!selfDone}
+                aria-disabled={busy || item.aiStatus === "pending" || undefined}
+                onClick={() => {
+                  if (!busy && item.aiStatus !== "pending") void assess()
+                }}
+              >
                 {busy || item.aiStatus === "pending" ? "Claude bewertet …" : "Von Claude bewerten lassen"}
               </button>
               {!selfDone && <span className="hint">Zuerst selbst bewerten, dann vergleichen.</span>}

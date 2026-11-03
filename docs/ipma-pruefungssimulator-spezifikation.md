@@ -67,6 +67,8 @@ Die Autoren bestätigen die Regel je Datei (Feld `herkunft: "eigen"`), die Fachp
 
 **Restrisiko (akzeptiert):** Weil das Repo öffentlich ist, sind alle richtigen Antworten auf GitHub lesbar. Der Simulator verhindert nur, dass die Lösungen **in der App** vor der Abgabe sichtbar sind (Bündel, Antworten der API, siehe 6.6). Das genügt: Es ist ein persönliches Lernwerkzeug ohne Rangliste; wer im Repo nachschaut, betrügt nur sich selbst.
 
+**Restrisiko (akzeptiert), Selbstbewertung:** Offene Fragen bewertet man selbst (4.2). Wer sich ohne Claude die vollen Rasterpunkte gibt, erreicht Höchstpunkte und damit auch die Abzeichen «Bestanden» und «Souverän» (6.10). Bewusst nicht technisch verhindert: Es ist ein persönliches Lernwerkzeug ohne Rangliste, Punkte und Abzeichen haben keinen Wert ausserhalb des eigenen Kontos, und eine Pflicht zur Claude-Bewertung schlösse Free-Konten aus (Entscheid 9 Nr. 1). Siehe Nachtrag 8.8 Nr. 10.
+
 ### 1.4 Abgrenzung
 
 | Gehört dazu (erste Fassung) | Gehört nicht dazu |
@@ -1038,7 +1040,7 @@ Alle Routen nach dem Muster des Leitstands (`app/api/simulation/runs/**`, `lib/l
 | `POST /api/ipma/attempts/[id]/items/[position]/assess` | `{}` | 4.3 | `SolvedItem` |
 | `POST /api/ipma/attempts/[id]/pause` | `{ paused: boolean }` | nur `pausable` + `active`; `pausedAt` setzen bzw. `activeSeconds += jetzt − letzter Start` | `{ activeSeconds, paused }` |
 | `POST /api/ipma/attempts/[id]/submit` | `{}` | nur `exam`/`short`, `active` → `submitted` (6.4); idempotent | `AttemptView` (mit Lösungen) |
-| `POST /api/ipma/attempts/[id]/finish` | `{}` | `submitted` (Prüfung) bzw. `active` (Training/Lücken; offene ungesperrte Positionen bleiben unbewertet) → `finished`; Ergebnis festschreiben; Leitner aller Positionen (Prüfung); Punkte, Abzeichen, Station 24 (6.10); idempotent | `{ result, newBadges, pointsAwarded }` |
+| `POST /api/ipma/attempts/[id]/finish` | `{}` | `submitted` (Prüfung) bzw. `active` (Training/Lücken; offene ungesperrte Positionen bleiben unbewertet) → `finished`; Ergebnis festschreiben; Leitner aller Positionen (Prüfung); Punkte, Abzeichen, Station 24 (6.10); idempotent; 409 `AI_PENDING`, solange eine Claude-Bewertung «pending» (nicht verwaist) ist | `{ result, newBadges, pointsAwarded }` |
 | `DELETE /api/ipma/attempts/[id]` | – | `active` → `aborted` (kein Löschen) | `{ ok: true }` |
 
 **Regeln für Lösungen (zwingend):**
@@ -1126,7 +1128,7 @@ export const attemptParamsSchema = z.object({ id: z.cuid(), position: z.coerce.n
 
 ### 6.7 Fehler
 
-`IpmaError(status, code, message, extra)` nach dem Muster `LeitstandError`. Codes: `BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, `ACTIVE_EXISTS` (409, mit `activeAttemptId`), `NOT_ACTIVE`, `LOCKED`, `TIME_UP` (422), `POOL_TOO_SMALL` (422), `NOT_SUBMITTED`, `NOT_OPEN`, `SELF_FIRST` (422: Claude erst nach Selbstbewertung), `PRO_REQUIRED` (403), `BUDGET` (429), `DAILY_LIMIT` (429), `AI_INVALID` und `AI_UNAVAILABLE` (502). Meldungen deutsch, ohne interne Details; Antworttexte werden nie protokolliert.
+`IpmaError(status, code, message, extra)` nach dem Muster `LeitstandError`. Codes: `BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, `ACTIVE_EXISTS` (409, mit `activeAttemptId`), `NOT_ACTIVE`, `LOCKED`, `TIME_UP` (422), `POOL_TOO_SMALL` (422), `NOT_SUBMITTED`, `NOT_OPEN`, `SELF_FIRST` (422: Claude erst nach Selbstbewertung), `PRO_REQUIRED` (403), `BUDGET` (429), `DAILY_LIMIT` (429), `AI_INVALID`, `AI_REFUSED` und `AI_UNAVAILABLE` (502), `AI_PENDING` (409: Abschluss während einer laufenden Claude-Bewertung). Meldungen deutsch, ohne interne Details; Antworttexte werden nie protokolliert.
 
 ### 6.8 Oberfläche
 
@@ -1198,7 +1200,7 @@ Auswertung:
 | Anforderung | Umsetzung |
 |---|---|
 | Struktur | Je Frage `<fieldset>` mit `<legend>` (Fragetext), MC als native Radios; Textfeld mit `<label>` und Zähler (`aria-describedby`) |
-| Tastatur | Alles mit Tab erreichbar; Pfeiltasten in der Radiogruppe (nativ); keine Einzeltasten-Kürzel (WCAG 2.1.4); Dialoge mit Fokusfalle, Hintergrund `inert`, `Esc` schliesst Übersicht und Rückfrage; nach Fragenwechsel Fokus auf die Überschrift der Frage |
+| Tastatur | Alles mit Tab erreichbar; Pfeiltasten in der Radiogruppe (nativ); keine Einzeltasten-Kürzel (WCAG 2.1.4); Dialoge mit Fokusfalle, Hintergrund `inert`, `Esc` schliesst Übersicht und Rückfrage; nach Fragenwechsel Fokus auf die Überschrift der Frage; nach «Prüfen»/«Lösung zeigen» auf den Titel der Rückmeldung, nach der Claude-Bewertung auf den Titel des Vergleichs, nach «Alle offenen Antworten bewerten» auf die Zusammenfassung, nach «Weiter» (Pause) auf den Pause-Knopf; Knöpfe sind während einer Anfrage `aria-disabled` statt `disabled`, damit der Fokus bleibt |
 | Uhr | `role="timer"` ohne laufende Ansage; Ansage über `aria-live="polite"` nur bei 30, 10, 5 Minuten und bei Pause/Weiter; «Zeit abgelaufen, die Prüfung wurde abgegeben» `assertive` |
 | Zustände | Markiert/beantwortet mit Zeichen und Wort, `aria-pressed` beim Markieren, `aria-current` in der Übersicht |
 | Farbe nie allein | ✓/✗ und Wort in Landkarte, Rückmeldung und Ergebnis; Diagramm mit Linienart und Beschriftung |
@@ -1457,6 +1459,21 @@ Danach geht der Simulator mit **Welle 2** am **So 29.11.** live (mit Fragenpool 
 | 11 | 4.3 Fallbacks | Kein `fallbacks: "default"` (Beta `server-side-fallback-2026-07-01`) | `@anthropic-ai/sdk` 0.82 kennt das Feld nicht (auch nicht in `beta.messages`); nachrüsten mit einem neueren SDK. |
 | 12 | 6.4 / Training | Im Training ersetzt die Claude-Bewertung Punkte und «richtig» der Position; Leitner und Trainingspunkt bleiben bei der Selbstbewertung | Leitner und Punkt zählen je Frage nur einmal (Nachtrag 8.5 Nr. 5). |
 | 13 | IpmaDeps | Neues optionales Feld `ai` (Client, Deckel, Token-Erfassung, Tageszähler); fehlt es, antwortet `assess` nach den Vorbedingungen 502 `AI_UNAVAILABLE` | Tests übergeben Attrappen (`tests/ipma-grader.test.ts`), bestehende Tests bleiben unverändert. |
+
+### 8.8 Nachtrag Review (03.11.2026): Abweichungen und Ergänzungen
+
+| Nr. | Stelle | Umsetzung | Begründung |
+|---|---|---|---|
+| 1 | 6.6 `finish`, 4.3 Schritt 14 | `finish` lehnt mit 409 `AI_PENDING` ab, solange eine Position «pending» und nicht verwaist (≤ 2 min) ist. `assess` speichert das Ergebnis in einer Serializable-Transaktion, die zuerst den Versuchsstatus liest; ist der Versuch inzwischen `finished`/`aborted`, wird nichts übernommen (Position → `failed`, 409 `NOT_ACTIVE`). Oberfläche: «Abschliessen» bleibt gesperrt, solange `AiAssessment` oder `AiAssessAll` läuft | Ein spätes Claude-Ergebnis darf ein festgeschriebenes Ergebnis nicht mehr verändern. |
+| 2 | 4.3 Schritt 4 | Tageszähler wird **vor** Monatsdeckel und Vorbedingungen reserviert (Prüfen und Buchen ohne `await` dazwischen) und zurückgegeben, wenn es nicht zum Aufruf von Claude kommt (`AssessQuota.release`). Ein Aufruf zählt weiterhin auch bei ungültiger Ausgabe | Gleichzeitige Anfragen konnten das Limit von 60 überschreiten. |
+| 3 | 6.10 Trainingspunkt | «Erstmals richtig» zählt die Datenbank: bedingtes `updateMany` auf `correctCount: 0` bzw. `createMany` neuer Zustände; die Anzahl geänderter Zeilen ergibt die Punkte | Zwei gleichzeitige Abläufe vergeben denselben Punkt nicht doppelt. |
+| 4 | 6.6 `check`, `self`, `assess` | Die zurückgegebene Position wird innerhalb der Transaktion gelesen | Antwort entspricht genau dem gespeicherten Stand. |
+| 5 | 6.6 `finish` Training/Lücken | `pointsAwarded` wird beim Abschluss nicht mehr geschrieben, sondern nach dem Abschluss gelesen (nur Prüfungen setzen den Wert) | Der früher gelesene Wert überschrieb Punkte aus gleichzeitigem «Prüfen». |
+| 6 | 6.8 Autospeichern | Abgabe und Abschluss werten `flush()` aus: nicht alles gespeichert → Abbruch mit Meldung, Sicherung bleibt. Automatische Abgabe nach Zeitablauf gibt trotzdem ab, löscht die Sicherung dann aber nicht | Keine stillen Verluste; die Zeitgrenze bleibt verbindlich. |
+| 7 | 6.8 Barrierefreiheit | Fokusführung siehe 6.8 Tastatur; Buchstaben A–D gehören zur Beschriftung der Optionen, die Rückmeldung nennt zusätzlich den Text der richtigen Option; «Tastenkürzel» und «Markieren» mit gleichbleibendem Namen und `aria-pressed`; Zeitablauf «mit Pausen» nur noch über `role="status"` angesagt; Avatare im Leitstand dekorativ, wo Name und Rolle daneben stehen | Review UX/Accessibility. |
+| 8 | 6.8 Verlauf | Diagramm mindestens 640 px breit (Schrift 13 px), auf schmalen Bildschirmen waagrecht scrollbar im Container; die Ersatztabelle ist unter 40 rem zu Beginn offen | Bei 360 px war die Achsenbeschriftung unter 6 px. |
+| 9 | 6.8 Auswertung | Werte aus dem `sessionStorage` (Abschluss, Stand vorher) werden mit Zod geprüft (`z.enum` für Kompetenz und Stufe) | Fremde oder veraltete Daten im Speicher führen nicht zu Fehlern in der Anzeige. |
+| 10 | 1.3 Restrisiken | Selbstbewertung kann Höchstpunkte und Abzeichen ermöglichen; bewusst akzeptiert (siehe 1.3) | Persönliches Lernwerkzeug ohne Rangliste. |
 
 ---
 

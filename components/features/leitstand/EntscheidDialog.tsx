@@ -90,7 +90,7 @@ export default function EntscheidDialog({
   const senderRole = roleOf(scenario, def.sender.name)
   const kicker = (
     <span className={styles.absender}>
-      <Avatar name={def.sender.name} role={senderRole} size={56} />
+      <Avatar name={def.sender.name} role={senderRole} size={56} decorative />
       <span className={styles.absenderText}>
         <strong>{def.sender.name}</strong>
         {senderRole && <span>{senderRole}</span>}

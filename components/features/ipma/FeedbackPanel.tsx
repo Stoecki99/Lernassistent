@@ -47,6 +47,7 @@ export default function FeedbackPanel({ item }: { item: SolvedItem }) {
     const right = item.correct === true
     const hint = item.choice !== null ? item.optionHints?.[item.choice] : undefined
     const rightHint = item.correctOption !== undefined && item.correctOption !== item.choice ? item.optionHints?.[item.correctOption] : undefined
+    const rightText = !right && item.correctOption !== undefined ? item.options?.[item.correctOption] : undefined
     return (
       <div className={`${styles.rueckmeldung} ${right ? styles.rueckRichtig : styles.rueckFalsch}`}>
         <p className={styles.rueckTitel}>
@@ -54,6 +55,11 @@ export default function FeedbackPanel({ item }: { item: SolvedItem }) {
           {!right && item.correctOption !== undefined ? ` · richtig ist ${LETTERS[item.correctOption]}` : ""}
           {item.pointsQ !== null ? ` · ${points(item.pointsQ)} von ${item.points} ${item.points === 1 ? "Punkt" : "Punkten"}` : ""}
         </p>
+        {rightText && (
+          <p>
+            <strong>Richtige Antwort ({LETTERS[item.correctOption ?? 0]}):</strong> {rightText}
+          </p>
+        )}
         {hint && (
           <p>
             <strong>Zu deiner Wahl ({LETTERS[item.choice ?? 0]}):</strong> {hint}

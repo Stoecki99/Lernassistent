@@ -62,8 +62,14 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
   const [actionError, setActionError] = useState<string | null>(null)
   const [timeUp, setTimeUp] = useState(false)
   const [shortcutsOff, setShortcutsOff] = useState(false)
+  // Laufende Claude-Bewertungen: solange eine läuft, bleibt «Abschliessen» gesperrt
+  const [aiRunning, setAiRunning] = useState(0)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const focusHeading = useRef(false)
+  const feedbackRef = useRef<HTMLHeadingElement>(null)
+  const focusFeedback = useRef(false)
+  const pauseRef = useRef<HTMLButtonElement>(null)
+  const focusPause = useRef(false)
   const viewRef = useRef<AttemptView | null>(null)
   viewRef.current = view
 
@@ -168,10 +174,28 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
     headingRef.current?.focus()
   }, [index])
 
+  // Nach «Prüfen»/«Lösung zeigen» verschwindet der Knopf: Fokus auf den Titel der Rückmeldung
+  useEffect(() => {
+    if (!focusFeedback.current) return
+    focusFeedback.current = false
+    feedbackRef.current?.focus()
+  }, [items])
+
+  const onAiRunning = useCallback((running: boolean) => {
+    setAiRunning((n) => Math.max(0, n + (running ? 1 : -1)))
+  }, [])
+
   const exam = view ? view.mode === "exam" || view.mode === "short" : false
   const training = !exam
   const item = items[index] as Item | undefined
   const paused = clockBase?.paused ?? false
+
+  // Nach «Weiter» verschwindet die Decke mit ihrem Knopf: Fokus zurück auf den Pause-Knopf im Kopf
+  useEffect(() => {
+    if (!focusPause.current || paused) return
+    focusPause.current = false
+    pauseRef.current?.focus()
+  }, [paused])
 
   const go = useCallback(
     (next: number) => {
@@ -207,6 +231,7 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
     try {
       if (!paused) await sync.flush()
       const res = await ipmaApi.pause(attemptId, !paused)
+      if (!res.paused) focusPause.current = true
       setClockBase((b) => (b ? { ...b, activeSeconds: res.activeSeconds, baseAtMs: Date.now(), paused: res.paused } : b))
       announce(res.paused ? "Pause. Die Fragen sind verdeckt, die Zeit steht." : "Weiter. Die Zeit läuft.")
     } catch (e) {
@@ -219,10 +244,17 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
   async function submit(auto = false) {
     setBusy(true)
     setActionError(null)
-    await sync.flush()
+    const saved = await sync.flush()
+    // Nicht gespeicherte Antworten: von Hand nicht abgeben; nach Zeitablauf trotzdem, die Sicherung bleibt
+    if (!saved && !auto) {
+      setActionError("Deine Antworten sind noch nicht alle gespeichert (sie sind in diesem Browser gesichert). Bitte kurz warten und erneut abgeben.")
+      setBusy(false)
+      setDialog(null)
+      return
+    }
     try {
       await ipmaApi.submit(attemptId)
-      clearBackup(attemptId)
+      if (saved) clearBackup(attemptId)
       goToResult(auto ? "?zeit=abgelaufen" : "")
     } catch (e) {
       if (e instanceof IpmaApiError && (e.status === 409 || e.status === 422)) {
@@ -245,10 +277,10 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
       setAssertive("Zeit abgelaufen, die Prüfung wird abgegeben.")
       void submitRef.current(true)
     } else {
+      // Ansage über role="status" der Meldung «Zeit um.»
       setTimeUp(true)
-      announce("Die 3 Stunden aktive Zeit sind um. Du kannst jetzt abgeben.")
     }
-  }, [announce])
+  }, [])
 
   async function check() {
     if (!item || busy) return
@@ -262,9 +294,9 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
     }
     try {
       const solved = await ipmaApi.check(attemptId, item.position)
+      // Der Titel der Rückmeldung bekommt den Fokus und wird dabei vorgelesen (keine zusätzliche Ansage)
+      focusFeedback.current = true
       replaceItem(solved)
-      if (solved.type === "mc") announce(solved.correct ? "Richtig." : "Falsch.")
-      else announce("Musterlösung und Raster sind eingeblendet. Bewerte dich selbst.")
     } catch (e) {
       if (e instanceof IpmaApiError && e.status === 409) await reload()
       else setActionError(errorMessage(e, "Die Antwort konnte nicht geprüft werden."))
@@ -274,9 +306,16 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
   }
 
   async function finishTraining() {
+    if (aiRunning > 0) return
     setBusy(true)
     setActionError(null)
-    await sync.flush()
+    const saved = await sync.flush()
+    if (!saved) {
+      setActionError("Deine Antworten sind noch nicht alle gespeichert (sie sind in diesem Browser gesichert). Bitte kurz warten und erneut abschliessen.")
+      setBusy(false)
+      setDialog(null)
+      return
+    }
     try {
       const res = await ipmaApi.finish(attemptId)
       storeSession(finishStorageKey(attemptId), res)
@@ -388,7 +427,8 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
             }
           }}
         >
-          Tastenkürzel {shortcutsOff ? "aus" : "an"}
+          {/* Gleichbleibender Name, Zustand über aria-pressed; «an/aus» nur für die Augen */}
+          Tastenkürzel<span aria-hidden="true"> {shortcutsOff ? "aus" : "an"}</span>
         </button>
       </div>
 
@@ -408,7 +448,15 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
           <span className={`${styles.speicher} ${syncProblem ? styles.speicherFehler : ""}`}>{SYNC_TEXT[sync.state]}</span>
           <span className="row">
             {exam && view.variant === "pausable" && (
-              <button type="button" className="btn" disabled={busy} onClick={() => void togglePause()}>
+              <button
+                type="button"
+                className="btn"
+                ref={pauseRef}
+                aria-disabled={busy || undefined}
+                onClick={() => {
+                  if (!busy) void togglePause()
+                }}
+              >
                 <span aria-hidden="true">{paused ? "▶" : "⏸"}</span> <span className={styles.symbolText}>{paused ? "Weiter" : "Pause"}</span>
               </button>
             )}
@@ -420,7 +468,7 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
                 <span aria-hidden="true">✓</span> <span className={styles.symbolText}>Abgeben</span>
               </button>
             ) : (
-              <button type="button" className="btn primary" onClick={() => setDialog("finish")} disabled={busy}>
+              <button type="button" className="btn primary" onClick={() => setDialog("finish")} disabled={busy || aiRunning > 0}>
                 <span aria-hidden="true">✓</span> <span className={styles.symbolText}>Abschliessen</span>
               </button>
             )}
@@ -454,7 +502,14 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
         <div className={styles.decke}>
           <h2>Pause</h2>
           <p>Die Fragen sind verdeckt, die Zeit steht. Deine Antworten sind gespeichert.</p>
-          <button type="button" className="btn primary" disabled={busy} onClick={() => void togglePause()}>
+          <button
+            type="button"
+            className="btn primary"
+            aria-disabled={busy || undefined}
+            onClick={() => {
+              if (!busy) void togglePause()
+            }}
+          >
             Weiter
           </button>
         </div>
@@ -479,7 +534,14 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
 
             {training && !solved && (
               <div className="row">
-                <button type="button" className="btn primary" disabled={busy} onClick={() => void check()}>
+                <button
+                  type="button"
+                  className="btn primary"
+                  aria-disabled={busy || undefined}
+                  onClick={() => {
+                    if (!busy) void check()
+                  }}
+                >
                   {busy ? "Wird geprüft …" : isAnswered(item) ? "Prüfen" : "Lösung zeigen"}
                 </button>
                 {!isAnswered(item) && <span className="hint">Ohne Antwort zählt die Frage als falsch.</span>}
@@ -487,15 +549,26 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
             )}
 
             {training && solved && (
-              <div className="stack" aria-label="Rückmeldung">
+              <section className="stack" aria-labelledby={`rueckmeldung-${solved.position}`}>
+                <h3 id={`rueckmeldung-${solved.position}`} ref={feedbackRef} tabIndex={-1} className={styles.rueckTitel}>
+                  {feedbackTitle(solved)}
+                </h3>
                 {solved.type === "offen" && (
                   <>
                     <SelfAssessment attemptId={attemptId} item={solved} editable={solved.selfScores.length === 0} onSaved={replaceItem} onAnnounce={announce} />
-                    <AiAssessment attemptId={attemptId} item={solved} canUseAi={view.canUseAi} allowed={view.status === "active"} onSaved={replaceItem} onAnnounce={announce} />
+                    <AiAssessment
+                      attemptId={attemptId}
+                      item={solved}
+                      canUseAi={view.canUseAi}
+                      allowed={view.status === "active"}
+                      onSaved={replaceItem}
+                      onAnnounce={announce}
+                      onRunningChange={onAiRunning}
+                    />
                   </>
                 )}
                 <FeedbackPanel item={solved} />
-              </div>
+              </section>
             )}
 
             <div className={styles.navigation}>
@@ -511,7 +584,8 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
                   onClick={toggleFlag}
                   aria-keyshortcuts={shortcutsOff ? undefined : "M"}
                 >
-                  ⚑ {item.flagged ? "Markiert" : "Markieren"}
+                  {/* Gleichbleibender Name, Zustand über aria-pressed und Hervorhebung */}
+                  <span aria-hidden="true">⚑</span> Markieren
                 </button>
               </div>
               <button type="button" className="btn" onClick={() => go(index + 1)} disabled={index >= total - 1} aria-keyshortcuts={shortcutsOff ? undefined : "W"}>
@@ -525,9 +599,10 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
       {training && unchecked === 0 && total > 0 && (
         <div className={`${styles.meldung} ${styles.meldungOk}`}>
           <p>Alle Fragen sind geprüft. Schliesse ab, um deine Auswertung und die empfohlenen Stationen zu sehen.</p>
-          <button type="button" className="btn primary" disabled={busy} onClick={() => void finishTraining()}>
+          <button type="button" className="btn primary" disabled={busy || aiRunning > 0} onClick={() => void finishTraining()}>
             {view.mode === "gaps" ? "Runde abschliessen" : "Training abschliessen"}
           </button>
+          {aiRunning > 0 && <p className="hint">Claude bewertet noch; danach kannst du abschliessen.</p>}
         </div>
       )}
 
@@ -567,7 +642,7 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
               : `${unchecked} ${unchecked === 1 ? "Frage ist" : "Fragen sind"} noch nicht geprüft; sie zählen nicht für Landkarte und Wiederholung.`}
           </p>
           <div className={styles.dialogKnoepfe}>
-            <button type="button" className="btn primary" disabled={busy} onClick={() => void finishTraining()}>
+            <button type="button" className="btn primary" disabled={busy || aiRunning > 0} onClick={() => void finishTraining()}>
               {busy ? "Wird abgeschlossen …" : "Abschliessen"}
             </button>
             <button type="button" className="btn" disabled={busy} onClick={() => setDialog(null)}>
@@ -578,4 +653,13 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
       )}
     </div>
   )
+}
+
+/** Titel der Rückmeldung im Training (bekommt nach «Prüfen» den Fokus) */
+function feedbackTitle(item: SolvedItem): string {
+  if (item.type === "offen") {
+    return (item.text ?? "").trim() === "" ? "Rückmeldung: keine Antwort, 0 Punkte" : "Rückmeldung: Musterlösung und Raster, bewerte dich selbst"
+  }
+  if (item.correct === true) return "Rückmeldung: richtig"
+  return item.choice === null ? "Rückmeldung: nicht beantwortet" : "Rückmeldung: falsch"
 }

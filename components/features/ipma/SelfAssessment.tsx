@@ -7,9 +7,11 @@
 // Selbstbewertung einer offenen Antwort (Spezifikation 4.2, 6.8 SelfAssessment): eigene Antwort neben der
 // Musterlösung, je Rasterkriterium Schaltflächen 0 … max (aria-pressed, keine Schieberegler), Summe.
 // Prüfung: änderbar, solange abgegeben und nicht abgeschlossen; Training: genau einmal (Nachtrag 8.5 Nr. 5).
+// Speichern-Knopf mit aria-disabled (Fokus bleibt); verschwindet er nach dem Speichern (Training), erhält der
+// Titel des Rasters den Fokus.
 
 import type { SolvedItem } from "@/lib/ipma/types"
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
 import { ipmaApi, errorMessage } from "./api"
 import { QUARTERS, points } from "./format"
@@ -36,6 +38,8 @@ export default function SelfAssessment({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const focusAfterSave = useRef(false)
   const empty = (item.text ?? "").trim() === ""
   const done = item.selfScores.length > 0
 
@@ -44,18 +48,26 @@ export default function SelfAssessment({
     setScores((item.rubric ?? []).map((_, i) => item.selfScores[i] ?? null))
   }, [item.selfScores, item.rubric])
 
+  useEffect(() => {
+    if (!focusAfterSave.current) return
+    focusAfterSave.current = false
+    if (!editable) titleRef.current?.focus()
+  }, [editable, item.selfScores])
+
   const complete = scores.every((s) => s !== null)
   const sum = scores.reduce<number>((a, s) => a + (s ?? 0), 0)
   const max = rubric.reduce((a, r) => a + r.points, 0)
   const changed = scores.some((s, i) => s !== (item.selfScores[i] ?? null))
+  const saveBlocked = !complete || busy || (done && !changed)
 
   async function save() {
-    if (!complete) return
+    if (saveBlocked) return
     setBusy(true)
     setError(null)
     try {
       const next = await ipmaApi.self(attemptId, item.position, scores.map((s) => s ?? 0))
       setSaved(true)
+      focusAfterSave.current = true
       onSaved(next)
       onAnnounce?.(`Selbstbewertung gespeichert: ${sum} von ${max} Rasterpunkten.`)
     } catch (e) {
@@ -81,7 +93,7 @@ export default function SelfAssessment({
 
       {rubric.length > 0 && (
         <div className="stack">
-          <h4 id={`${id}-raster`}>{empty ? "Bewertungsraster" : editable ? "Bewerte dich selbst nach dem Raster" : "Bewertung nach Raster"}</h4>
+          <h4 id={`${id}-raster`} ref={titleRef} tabIndex={-1}>{empty ? "Bewertungsraster" : editable ? "Bewerte dich selbst nach dem Raster" : "Bewertung nach Raster"}</h4>
           <ul className={styles.raster} aria-labelledby={`${id}-raster`}>
             {rubric.map((r, i) => (
               <li key={i} className={styles.rasterZeile}>
@@ -119,7 +131,7 @@ export default function SelfAssessment({
           )}
           {!empty && editable && (
             <div className="row">
-              <button type="button" className="btn primary" disabled={!complete || busy || (done && !changed)} onClick={() => void save()}>
+              <button type="button" className="btn primary" aria-disabled={saveBlocked || undefined} onClick={() => void save()}>
                 {busy ? "Wird gespeichert …" : done ? "Bewertung ändern" : "Bewertung speichern"}
               </button>
               {!complete && <span className="hint">Wähle für jedes Kriterium eine Punktzahl.</span>}

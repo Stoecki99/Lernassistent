@@ -23,7 +23,7 @@ import {
   type GradeInput,
   type GraderClient,
 } from "@/lib/ipma/grader"
-import { handleAssess, handleCheckItem, handleCreateAttempt, handleSaveItem, handleSelfAssess, type ParamsInput } from "@/lib/ipma/handlers"
+import { handleAssess, handleCheckItem, handleCreateAttempt, handleFinish, handleSaveItem, handleSelfAssess, type ParamsInput } from "@/lib/ipma/handlers"
 import { buildPool, type Pool } from "@/lib/ipma/pool"
 import { ASSESS_DAILY_LIMIT, defaultAiDeps, type AssessQuota, type IpmaDeps, type IpmaUser } from "@/lib/ipma/server"
 import type { SolvedItem } from "@/lib/ipma/types"
@@ -119,6 +119,9 @@ function context(opts: { pro?: boolean; client?: GraderClient } = {}): Ctx {
     available: () => quota.used < ASSESS_DAILY_LIMIT,
     consume: () => {
       quota.used += 1
+    },
+    release: () => {
+      quota.used -= 1
     },
   }
   let seed = 4000
@@ -395,6 +398,77 @@ describe("POST assess mit Attrappe und Fake-Datenbank", () => {
     assert.equal(daily.body.code, "DAILY_LIMIT")
     assert.equal(mock.calls.length, 0)
     assert.equal(itemRow(ctx, id).aiStatus, "none")
+    assert.equal(ctx.quota.used, ASSESS_DAILY_LIMIT, "Deckel: Reservierung zurückgegeben")
+  })
+
+  test("Tageszähler: Reservierung vor dem Aufruf, Rückgabe ohne Aufruf (Vorbedingung, Sperre)", async () => {
+    const ctx = context()
+    const { id, question } = await prepared(ctx)
+    ctx.budget.ok = false
+    assert.equal((await call(handleAssess(req("POST"), params(id, 1), ctx.deps))).status, 429)
+    assert.equal(ctx.quota.used, 0)
+    ctx.budget.ok = true
+    itemRow(ctx, id).aiStatus = "pending"
+    itemRow(ctx, id).aiAssessedAt = new Date(START)
+    assert.equal((await call(handleAssess(req("POST"), params(id, 1), ctx.deps))).status, 409)
+    assert.equal(ctx.quota.used, 0)
+    itemRow(ctx, id).aiStatus = "none"
+    ctx.deps.ai!.client = mockClient([{ json: goodOutput(question.bewertungsraster) }]).client
+    assert.equal((await call(handleAssess(req("POST"), params(id, 1), ctx.deps))).status, 200)
+    assert.equal(ctx.quota.used, 1)
+  })
+
+  test("gleichzeitige Anfragen am Limit: nur eine erreicht Claude", async () => {
+    const ctx = context()
+    const { id, question } = await prepared(ctx)
+    const mock = mockClient([{ json: goodOutput(question.bewertungsraster), delayMs: 20 }])
+    ctx.deps.ai!.client = mock.client
+    ctx.quota.used = ASSESS_DAILY_LIMIT - 1
+    const [a, b] = await Promise.all([
+      call(handleAssess(req("POST"), params(id, 1), ctx.deps)),
+      call(handleAssess(req("POST"), params(id, 1), ctx.deps)),
+    ])
+    assert.deepEqual([a.status, b.status].sort(), [200, 429])
+    assert.equal(mock.calls.length, 1)
+    assert.equal(ctx.quota.used, ASSESS_DAILY_LIMIT)
+  })
+
+  test("Abschluss während einer laufenden Bewertung → 409 AI_PENDING; verwaiste Sperre blockiert nicht", async () => {
+    const ctx = context()
+    const { id } = await prepared(ctx)
+    const row = itemRow(ctx, id)
+    row.aiStatus = "pending"
+    row.aiAssessedAt = new Date(START.getTime() - 30_000)
+    const blocked = await call(handleFinish(req("POST"), params(id, 1), ctx.deps))
+    assert.equal(blocked.status, 409)
+    assert.equal(blocked.body.code, "AI_PENDING")
+    const attempt = ctx.fake.tables().ipmaAttempt.find((a) => a.id === id)
+    assert.equal(attempt?.status, "active")
+    // Rollback der Fake-Datenbank ersetzt die Zeilen: neu holen
+    itemRow(ctx, id).aiAssessedAt = new Date(START.getTime() - 3 * 60_000)
+    const done = await call(handleFinish(req("POST"), params(id, 1), ctx.deps))
+    assert.equal(done.status, 200, JSON.stringify(done.body))
+  })
+
+  test("Ergebnis von Claude nach dem Abschluss: nicht gespeichert, 409 NOT_ACTIVE, Selbstbewertung bleibt", async () => {
+    const ctx = context()
+    const { id, question } = await prepared(ctx)
+    const pointsBefore = itemRow(ctx, id).pointsQ
+    const mock = mockClient([{ json: goodOutput(question.bewertungsraster), delayMs: 30 }])
+    ctx.deps.ai!.client = mock.client
+    const pending = call(handleAssess(req("POST"), params(id, 1), ctx.deps))
+    await new Promise((r) => setTimeout(r, 5))
+    // Abschluss in einem anderen Prozess, nachdem die Sperre verwaist erschien
+    const attempt = ctx.fake.tables().ipmaAttempt.find((a) => a.id === id)
+    assert.ok(attempt)
+    attempt.status = "finished"
+    const res = await pending
+    assert.equal(res.status, 409)
+    assert.equal(res.body.code, "NOT_ACTIVE")
+    assert.equal(mock.calls.length, 1)
+    assert.equal(itemRow(ctx, id).aiStatus, "failed")
+    assert.equal(itemRow(ctx, id).scoreSource, "self")
+    assert.equal(itemRow(ctx, id).pointsQ, pointsBefore)
   })
 
   test("Free-Konto: 403 PRO_REQUIRED ohne Aufruf", async () => {

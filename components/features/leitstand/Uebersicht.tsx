@@ -162,7 +162,7 @@ export default function Uebersicht() {
                     <li key={`${i.eventId}-${i.arrivedTick}`}>
                       <button type="button" className={styles.postEintrag} onClick={() => openEvent(i.eventId)}>
                         <span className={styles.postBild}>
-                          <Avatar name={def.sender.name} role={roleOf(scenario, def.sender.name)} size={40} accessory={false} />
+                          <Avatar name={def.sender.name} role={roleOf(scenario, def.sender.name)} size={40} decorative accessory={false} />
                           <span className={styles.postKanal}>
                             <Icon name={CHANNEL_SYMBOL[def.channel]} size={12} />
                           </span>
@@ -312,7 +312,7 @@ function WasJetzt() {
         icon: "uhr",
         avatar: def.sender.name,
         title: def.title,
-        text: `Aufgeschoben, Frist ${deadlineText(item.deadlineTick)}.`,
+        text: `Von ${def.sender.name}, aufgeschoben, Frist ${deadlineText(item.deadlineTick)}.`,
         label: "Entscheiden",
         onClick: () => openEvent(def.id),
       })
@@ -380,7 +380,7 @@ function WasJetzt() {
               <span className={styles.todoBild}>
                 {t.avatar ? (
                   <>
-                    <Avatar name={t.avatar} role={roleOf(scenario, t.avatar)} size={44} accessory={false} />
+                    <Avatar name={t.avatar} role={roleOf(scenario, t.avatar)} size={44} decorative accessory={false} />
                     <span className={styles.todoSymbolKlein}>
                       <Icon name={t.icon} size={13} />
                     </span>

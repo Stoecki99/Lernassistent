@@ -24,6 +24,7 @@ export type IpmaErrorCode =
   | "AI_INVALID"
   | "AI_REFUSED"
   | "AI_UNAVAILABLE"
+  | "AI_PENDING"
 
 /** Fachlicher Fehler mit HTTP-Status; die Meldung ist für die Oberfläche bestimmt (6.7). */
 export class IpmaError extends Error {

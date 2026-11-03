@@ -9,11 +9,15 @@
 //   oder «Alle offenen Antworten bewerten», AiAssessAll), danach «Abschliessen»
 //   (POST finish); das vorläufige Ergebnis rechnet der Server bei jedem Laden neu (Nachtrag 8.5 Nr. 6)
 // - Ergebnis, Kompetenz-Landkarte des Versuchs, «Lücken schliessen» mit Vorher/Nachher, Stationen, Durchsicht
-// - neue Abzeichen und Punkte aus dem Abschluss (FinishView)
+// - neue Abzeichen und Punkte aus dem Abschluss (FinishView); Werte aus dem sessionStorage mit Zod geprüft
+// «Auswertung abschliessen» bleibt gesperrt, solange eine Bewertung durch Claude läuft (der Server lehnt dann
+// ohnehin mit 409 AI_PENDING ab).
 
 import type { AttemptView, FinishView, OverviewView, SolvedItem } from "@/lib/ipma/types"
 import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { z } from "zod"
+import { COMPETENCE_IDS } from "@/lib/ipma/competences"
 import styles from "@/app/(ipma)/ipma.module.css"
 import { ipmaApi, IpmaApiError, beforeStorageKey, errorMessage, finishStorageKey, readSession } from "./api"
 import AiAssessAll from "./AiAssessAll"
@@ -25,13 +29,34 @@ import ResultSummary from "./ResultSummary"
 import SelfAssessment from "./SelfAssessment"
 import StationAdvice from "./StationAdvice"
 
-function isFinishView(value: unknown): value is FinishView {
-  return typeof value === "object" && value !== null && "result" in value && Array.isArray((value as { newBadges?: unknown }).newBadges)
-}
+/** Aus dem Abschluss angezeigt: neue Abzeichen und Punkte */
+type FinishShown = Pick<FinishView, "newBadges" | "pointsAwarded">
 
-function isMasteryList(value: unknown): value is MasteryEntry[] {
-  return Array.isArray(value) && value.every((m) => typeof m === "object" && m !== null && "competence" in m && "level" in m)
-}
+// sessionStorage ist Eingabe von aussen: nur geprüfte Werte anzeigen
+const finishSchema = z.object({
+  newBadges: z
+    .array(
+      z.object({
+        name: z.string().max(200),
+        icon: z.string().max(20),
+        description: z.string().max(500),
+        points: z.number().int().min(0),
+      }),
+    )
+    .max(50),
+  pointsAwarded: z.number().int().min(0),
+})
+
+const masterySchema = z
+  .array(
+    z.object({
+      competence: z.enum(COMPETENCE_IDS),
+      value: z.number().min(0).max(1).nullable(),
+      answers: z.number().int().min(0),
+      level: z.enum(["secure", "close", "gap", "untrained"]),
+    }),
+  )
+  .max(COMPETENCE_IDS.length)
 
 function masteryWord(m: MasteryEntry | undefined): string {
   if (!m) return "–"
@@ -43,12 +68,17 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
   const router = useRouter()
   const [view, setView] = useState<AttemptView | null>(null)
   const [overview, setOverview] = useState<OverviewView | null>(null)
-  const [finish, setFinish] = useState<FinishView | null>(null)
+  const [finish, setFinish] = useState<FinishShown | null>(null)
   const [before, setBefore] = useState<MasteryEntry[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [polite, setPolite] = useState("")
+  // Laufende Claude-Bewertungen (einzeln oder «Alle bewerten»)
+  const [aiRunning, setAiRunning] = useState(0)
+  const onAiRunning = useCallback((running: boolean) => {
+    setAiRunning((n) => Math.max(0, n + (running ? 1 : -1)))
+  }, [])
   // Auf/zu je offener Frage: bleibt nach dem Speichern offen (sonst verschwände der Claude-Knopf)
   const [expanded, setExpanded] = useState<Record<number, boolean>>({})
 
@@ -81,10 +111,10 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
 
   useEffect(() => {
     void load()
-    const stored = readSession(finishStorageKey(attemptId))
-    if (isFinishView(stored)) setFinish(stored)
-    const prior = readSession(beforeStorageKey(attemptId))
-    if (isMasteryList(prior)) setBefore(prior)
+    const stored = finishSchema.safeParse(readSession(finishStorageKey(attemptId)))
+    if (stored.success) setFinish(stored.data)
+    const prior = masterySchema.safeParse(readSession(beforeStorageKey(attemptId)))
+    if (prior.success) setBefore(prior.data)
   }, [attemptId, load])
 
   const replaceItem = useCallback((next: SolvedItem) => {
@@ -109,6 +139,7 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
   )
 
   async function doFinish() {
+    if (aiBlocked) return
     setBusy(true)
     setActionError(null)
     try {
@@ -172,6 +203,8 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
   const submitted = view.status === "submitted"
   const openItems = items.filter((i) => i.type === "offen" && (i.text ?? "").trim() !== "")
   const pendingSelf = items.filter(needsSelfAssessment).length
+  // Nur lokale Läufe sperren; eine verwaiste Sperre «pending» gibt der Server nach 2 Minuten frei
+  const aiBlocked = aiRunning > 0
   const result = view.result
 
   const competences: Record<string, AttemptCompetence> = {}
@@ -206,7 +239,15 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
               ? "Du hast keine offene Frage beantwortet; unbeantwortete zählen 0 Punkte."
               : `${openItems.length - pendingSelf} von ${openItems.length} bewertet.`}
           </p>
-          <AiAssessAll attemptId={attemptId} items={openItems} canUseAi={view.canUseAi} onItem={replaceItem} onDone={refresh} onAnnounce={announce} />
+          <AiAssessAll
+            attemptId={attemptId}
+            items={openItems}
+            canUseAi={view.canUseAi}
+            onItem={replaceItem}
+            onDone={refresh}
+            onAnnounce={announce}
+            onRunningChange={onAiRunning}
+          />
           <ul className={styles.durchsicht}>
             {openItems.map((item) => (
               <li key={item.position}>
@@ -222,7 +263,15 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
                   <div className={styles.durchsichtInhalt}>
                     <p className={styles.frageText}>{item.question}</p>
                     <SelfAssessment attemptId={attemptId} item={item} editable onSaved={onSelfSaved} onAnnounce={announce} />
-                    <AiAssessment attemptId={attemptId} item={item} canUseAi={view.canUseAi} allowed onSaved={onSelfSaved} onAnnounce={announce} />
+                    <AiAssessment
+                      attemptId={attemptId}
+                      item={item}
+                      canUseAi={view.canUseAi}
+                      allowed
+                      onSaved={onSelfSaved}
+                      onAnnounce={announce}
+                      onRunningChange={onAiRunning}
+                    />
                   </div>
                 </details>
               </li>
@@ -234,7 +283,7 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
             </p>
           )}
           <div className="row">
-            <button type="button" className="btn primary" disabled={busy || pendingSelf > 0} onClick={() => void doFinish()}>
+            <button type="button" className="btn primary" disabled={busy || pendingSelf > 0 || aiBlocked} onClick={() => void doFinish()}>
               {busy ? "Wird abgeschlossen …" : "Auswertung abschliessen"}
             </button>
             {pendingSelf > 0 && (
@@ -242,6 +291,7 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
                 Noch {pendingSelf} {pendingSelf === 1 ? "Antwort" : "Antworten"} zu bewerten.
               </span>
             )}
+            {pendingSelf === 0 && aiBlocked && <span className="hint">Claude bewertet noch; danach kannst du abschliessen.</span>}
           </div>
         </section>
       )}
