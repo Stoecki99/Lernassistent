@@ -151,7 +151,14 @@ Tokens `--r-<rolle>` (Rand) und `--r-<rolle>-bg` (Fläche) hell und dunkel; Text
 
 **Layout:** Jedes Paket ist ein Raster: Kinder (Pakete, Komponenten, Notizen) mit `spalte`, `zeile`, `breite`, `hoehe` (Zellen) liegen dort; Kinder ohne Lage füllen die nächste freie Zelle. Hat kein Kind eine Lage, fliessen Komponenten in Reihen (höchstens vier) und Pakete stehen untereinander. Pakete in derselben Reihe werden gleich hoch, alle Pakete füllen die Breite ihrer Zelle. Linien laufen rechtwinklig um Komponenten, Bälle, Ball-Beschriftungen und Paketreiter herum; Linien zu demselben Ball treffen sich am Ball (wie im Original).
 
-**Ausfall in der Modulnotation:** Assoziationen zählen als synchron, ausser das Protokoll ist asynchron (AMQP, JMS, MQTT, Kafka …) oder eine Seite ist ein Broker: dann staut sich die Nachricht im Broker.
+**Ausfall in der Modulnotation:** Assoziationen zählen als synchron, ausser das Protokoll (auch der Name der Ziel-Schnittstelle) ist asynchron (AMQP, JMS, MQTT, Kafka …) oder eine Seite ist ein Puffer (Typ `broker`, `queue`, `topic`, `bus` oder eine Komponente mit «MOM»/«Broker» im Namen oder Stereotyp). Die Richtung der Linie spielt dabei keine Rolle:
+
+- Fällt ein Empfänger hinter dem Broker aus (z. B. Receiver Adapter → Broker), stauen sich die Nachrichten im Broker; Sender laufen weiter.
+- Fällt der Broker aus, sind die Sender beeinträchtigt; Empfänger (Name mit «Receiver», «Empfänger», «Consumer» …) laufen, bekommen aber keine Nachrichten.
+
+**Netze (IoT):** Typ `netz` oder `bus` mit Stereotyp «network» erscheint in der Modulnotation als Band (kein Komponentensymbol) und zählt nicht als Broker. Fällt ein Netz aus, ist die Verbindung der Nachbarn unterbrochen; ein Gateway (Typ `gateway` oder Name mit «Gateway») puffert die Daten (Store and Forward).
+
+**Notizen** hängen an einem Element oder an einer Verbindung (`an: "<verbindungs-id>"`, gestrichelt zur Linienmitte).
 
 Eine IDs-Regel: Pakete und Komponenten teilen sich die IDs (`web` darf nicht Paket und Komponente zugleich sein).
 
@@ -161,11 +168,14 @@ Für eigene Anzeigen (z. B. Architektur-Leitstand) gibt `diagramm` zusätzlich z
 
 ```js
 const d = Architektur.diagramm("#lage", modell, { massstab: 0.8 });  // Startzoom (Massstab 1 = Weltkoordinaten in px)
+Architektur.diagramm("#gross", modell, { einpassen: true });         // Start eingepasst: ganzes Diagramm sichtbar
 d.plakette("best", "3 Instanzen", "ar-plakette-warn");  // Plakette am Element oder an einer Verbindung (Text, Klassen: ar-plakette-warn | -fehler | -ok)
 d.entfernePlakette("best");                              // ohne ID: alle
 d.fluss("v3", { an: true, tempo: 2 });                    // Linie animiert «fliessen» lassen, ohne Ablauf; { an: false } stoppt
 d.modell();                                               // sauberes Modell nach Vertrag
 ```
+
+Startzoom ohne Angabe: Das Diagramm füllt die Breite (höchstens Massstab 1.08). Ist es dafür zu breit, startet es lesbar (Massstab 0.92, unter 600 px 0.74) und verschiebt sich in sich. Ausnahme: Auf Fenstern ab 1000 px Breite wird bis zu einem Massstab von 0.7 eingepasst (Diagramme bis etwa 1700 px Breite erscheinen ganz). Mit `massstab`, `einpassen` oder `kMin` bestimmt die Seite das selbst.
 
 `modell()` von `diagramm` und `editor` liefert das Modell in Vertragsform: keine leeren Felder, kein `info: null`, kein `zustand: "ok"`, Namen unverändert, unbekannte Zusatzfelder der Eingabe (z. B. `sim`) unverändert durchgereicht. Bei «Bewegung reduzieren» bleibt die Fluss-Linie stehen (gestrichelt, ohne Bewegung).
 
@@ -254,9 +264,20 @@ Architektur.spiel("#pruefung", {
 });
 ```
 
+Weitere Level-Felder:
+
+- `vorgegeben: { elemente: [{ id, typ, rolle, name, paket, stereotyp, schnittstellen }], verbindungen: [{ von, nach, protokoll }] }`: fest platziert, nicht verschieb- oder löschbar, verbindbar. Vorgegebenes ist geschenkt (zählt weder als Punkt noch als Fehler).
+- `loesung.elemente[].paket: null`: die Komponente gehört ausserhalb der Pakete. Dann gibt es eine freie Fläche (neben den Paketen ablegen; Tastatur: Pfeiltasten bis «freie Fläche», Enter; im Panel «(freie Fläche …)»). Mit `freieFlaeche: true` gibt es sie auch ohne solche Lösung.
+- Mehrere Verbindungen zwischen demselben Paar (z. B. AMQP und JMS zum selben Broker) ordnet die Bewertung über Ziel-Schnittstelle und Protokoll zu, nicht über die Reihenfolge.
+- `loesung.verbindungen[].alternativen: [{ von, nach, art, protokoll }]`: gleichwertige Varianten (z. B. bei `{xor}`); eine davon genügt. Die Musterlösung zeigt die Hauptvariante.
+
 Bedienung: Komponente aus der Palette in ein Paket ziehen (Maus, Touch, Stift) oder antippen und dann das Paket wählen (Tastatur: Enter, Pfeiltasten wechseln das Paket, Enter legt ab, Escape bricht ab). Im Eigenschaften-Panel: Stereotyp (Auswahl aus `stereotypen`), Paket ändern, Schnittstellen (Ball) hinzufügen und benennen, Beschreibung wählen. Verbinden: Element wählen, «Verbinden» oder Taste V, Ziel wählen (Komponente, Ball oder Paket); danach im Panel Art, Ziel-Schnittstelle, Protokoll (Auswahl) und Format (frei) setzen. Rückgängig (Ctrl+Z).
 
 Bewertung je Kriterium mit Teilpunkten (Raster): Komponenten (überflüssige kosten halb), Pakete (Lage), Stereotypen, Verbindungen (Paar; Art und Ball geben Teilpunkte), Beschriftungen (Protokoll), Beschreibungen; Gewichte aus `gewichte`. Jede Falle (`falle`) zieht 8 % ab und erklärt warum. «Prüfen» zeigt das Raster, ✓/✗ an Komponenten, Paketen und Linien und konkrete Hinweise («Sender Adapter gehört in Async Comm. Layer»). Tipps: 1 = Referenzarchitektur aus `Architektur.referenzen[referenz]` einblenden, 2 = fehlende Komponente oder falsches Paket, 3 = fehlende Verbindung gestrichelt. Musterlösung als Diagramm in Modulnotation mit Ablauf und Begründungen; Prüfungsmodus und Speichern wie beim normalen Spiel.
+
+`ergebnis(levelId)`, `ergebnisse()` und das Ereignis `architektur:spiel` enthalten zusätzlich `kriterien: [{ id, name, erreicht, max, punkte, gewicht }]` und `fallen: [{ id, text }]` (beim normalen Spiel ein Kriterium «Modell»).
+
+**Prüfungsmodus und Steuerung durch die Seite:** Mit `pruefung: true` sind alle Levels offen (keine Schlösser). `einzelabgabe: false` blendet «Prüfen/Abgeben» und «Lösung zeigen» aus; die Seite gibt mit `abgeben()` ab. `pausiere()` hält die Spieluhr an, `fortsetzen()` lässt sie weiterlaufen (die pausierte Zeit zählt nicht).
 
 ## 7. Barrierefreiheit und Bedienung
 

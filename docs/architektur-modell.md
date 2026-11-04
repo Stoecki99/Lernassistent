@@ -170,10 +170,10 @@ Kopplung, Kommunikation und Einsatz werden als Filter-Chips angeboten, sobald ei
 
 | Funktion | zusätzliche Optionen | zusätzliche Rückgabe |
 |----------|----------------------|----------------------|
-| `diagramm` | `titel` (überschreibt `modell.titel`, `""` = kein Titel), `textliste` (Standard `true`), `breit` (Standard `true`: auf breiten Bildschirmen über die Lesespalte hinaus), `massstab` (Startzoom, 1 = Weltkoordinaten), `kMin` (lesbarer Mindestmassstab) | `waehle(id)`, `plakette(id, text, klasse)`, `entfernePlakette(id?)`, `fluss(verbindungId, { an, tempo })`; `modell()` liefert die Vertragsform ohne leere Felder und reicht Zusatzfelder (z. B. `sim`) durch |
+| `diagramm` | `titel` (überschreibt `modell.titel`, `""` = kein Titel), `textliste` (Standard `true`), `breit` (Standard `true`: auf breiten Bildschirmen über die Lesespalte hinaus), `massstab` (Startzoom, 1 = Weltkoordinaten), `einpassen` (Start eingepasst), `kMin` (lesbarer Mindestmassstab) | `waehle(id)`, `plakette(id, text, klasse)`, `entfernePlakette(id?)`, `fluss(verbindungId, { an, tempo })`; `modell()` liefert die Vertragsform ohne leere Felder und reicht Zusatzfelder (z. B. `sim`) durch |
 | `atlas` | drittes Argument `opt`: `{ titel, breit }` | `{ zeigeStil(id), karte(), vergleiche(a, b), entdeckt() }` |
 | `editor` | `arten` (erlaubte Verbindungsarten), `fest` (IDs, die nicht gelöscht oder verschoben werden), `labels` (Beschriftung im Art-Menü, Standard `true`), `breit` | `markiere([])` löscht; Klassen `ar-ok`/`ar-falsch` setzen zusätzlich ✓/✗; `geist({ von, nach, art })`, `palettePuls(id)`, `rueckgaengig()` |
-| `spiel` | `titel`, `breit`, `speichern`; je Level `arten`, `raster` (`{ spalten, zeilen }`), `erklaerung`; je Lösungs-Verbindung `gerichtet: false`, `label` | `{ starten(levelId), levelkarte(), abgeben(), ergebnis(levelId), ergebnisse(), bestwerte() }` |
+| `spiel` | `titel`, `breit`, `speichern`, `einzelabgabe` (`false`: Abgabe nur über `abgeben()`), mit `pruefung: true` sind alle Levels offen; je Level `arten`, `raster` (`{ spalten, zeilen }`), `erklaerung`; je Lösungs-Verbindung `gerichtet: false`, `label` | `{ starten(levelId), levelkarte(), abgeben(), ergebnis(levelId), ergebnisse(), bestwerte(), pausiere(), fortsetzen() }`; Ergebnisse und Ereignis mit `kriterien: [{ id, name, erreicht, max, punkte, gewicht }]` und `fallen` |
 
 `editor().modell()` liefert ebenfalls die saubere Vertragsform. `Architektur.referenzen` ist eine Registry für Referenzmodelle in Modulnotation (Tipp im Prüfungsspiel, Abschnitt 10.3).
 
@@ -375,6 +375,8 @@ Die Modulschlussprüfung verlangt **UML-Komponentendiagramme nach Referenzarchit
 - Pakete: Rasterlayout je Elternpaket (`spalte`, `zeile`, `breite`, `hoehe` in Zellen); Elemente fliessen im Paket in Reihen. Ohne Angaben ordnet die Engine Pakete untereinander an.
 - `art: "assoziation"` = UML-Assoziation (durchgezogene Linie ohne Pfeil), die im Modul übliche Verbindung; `abhaengigkeit` = gestrichelt mit offener Spitze. Ziel `element#schnittstelle` zeichnet Ball (Anbieter) und Socket (Nutzer).
 - `label` frei; `protokoll`, `format`, `semantik` werden als Label `Protokoll · Format` gesetzt, wenn `label` fehlt.
+- `notizen[].an` darf ein Element oder eine Verbindungs-ID sein.
+- Typ `netz` (oder `bus` mit Stereotyp «network»): Netz als Band, kein Broker; im Ausfall unterbricht es die Verbindung, ein Gateway puffert. Assoziationen zu Puffern (Broker, Queue, Topic, Bus, «MOM») oder mit asynchronem Protokoll gelten im Ausfall richtungsunabhängig als asynchron.
 
 ### 10.3 Prüfungsspiel (`Architektur.spiel` mit `modus: "uml"`)
 
@@ -395,5 +397,7 @@ Level-Erweiterungen:
   zielzeit: 600
 }
 ```
+
+Weitere Level-Felder: `vorgegeben` (fest platzierte Elemente mit `paket` und Verbindungen, geschenkt), `loesung.elemente[].paket: null` (ausserhalb der Pakete, freie Fläche), `loesung.verbindungen[].alternativen` (gleichwertige Varianten), `freieFlaeche`. Mehrere Verbindungen zwischen demselben Paar werden über Ziel-Schnittstelle und Protokoll zugeordnet.
 
 Bewertung je Kriterium mit Teilpunkten wie ein Bewertungsraster; Fallen (`falle`) geben Abzug mit Erklärung; Rückmeldung je Kriterium («Pakete 4/5: «Sender Adapter» gehört in den Async Communication Layer»). Prüfungsmodus wie Abschnitt 7.
