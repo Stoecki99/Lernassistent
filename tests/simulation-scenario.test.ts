@@ -3,7 +3,7 @@
 
 // tests/simulation-scenario.test.ts
 // Netzplan und Szenario (Spezifikation 5.2): computeSchedule ergibt die Tabelle aus 2.4,
-// BAC, Aufwand, Budget und Einführungslauf stimmen.
+// BAC, Aufwand, Budget und Einführungslauf stimmen; Hochmatt gegen die Tabelle aus 2.11.5 (K6).
 
 import { describe, test } from "node:test"
 import assert from "node:assert/strict"
@@ -78,6 +78,68 @@ describe("Netzplan Wolkenried (2.4)", () => {
     assert.equal(bac, 162_240)
     assert.equal(sc.budget.total, 180_000)
     assert.equal(sc.budget.total - bac, 17_760)
+  })
+})
+
+/** Tabelle «Netzplan und kritischer Pfad» aus 2.11.5 (Hochmatt): Dauer, FA, FE, SA, SE, GP, FP */
+const NETZPLAN_HOCHMATT: Record<string, [number, number, number, number, number, number, number]> = {
+  V01: [2, 0, 2, 0, 2, 0, 0],
+  V02: [3, 2, 5, 2, 5, 0, 0],
+  V03: [2, 2, 4, 3, 5, 1, 1],
+  V04: [3, 5, 8, 9, 12, 4, 0],
+  V05: [4, 5, 9, 5, 9, 0, 0],
+  V06: [3, 5, 8, 6, 9, 1, 1],
+  V07: [9, 5, 14, 6, 15, 1, 1],
+  V08: [3, 8, 11, 12, 15, 4, 4],
+  V09: [4, 9, 13, 9, 13, 0, 0],
+  V10: [2, 13, 15, 13, 15, 0, 0],
+  V11: [3, 15, 18, 15, 18, 0, 0],
+  V12: [2, 18, 20, 18, 20, 0, 0],
+  V13: [3, 15, 18, 18, 21, 3, 2],
+  V14: [3, 8, 11, 21, 24, 13, 13],
+  V15: [3, 20, 23, 21, 24, 1, 1],
+  V16: [4, 20, 24, 20, 24, 0, 0],
+  V17: [8, 24, 32, 24, 32, 0, 0],
+  V18: [4, 32, 36, 32, 36, 0, 0],
+}
+const KRITISCH_HOCHMATT = ["V01", "V02", "V05", "V09", "V10", "V11", "V12", "V16", "V17", "V18"]
+
+describe("Netzplan Hochmatt (2.11.5, K6)", () => {
+  const sc = scenario("hochmatt")
+  const rows = computeSchedule(sc)
+
+  test("FA, FE, SA, SE, GP, FP wie Tabelle 2.11.5", () => {
+    assert.deepEqual(rows.map((r) => r.taskId).sort(), Object.keys(NETZPLAN_HOCHMATT).sort())
+    for (const row of rows) {
+      const [d, fa, fe, sa, se, gp, fp] = NETZPLAN_HOCHMATT[row.taskId]
+      near(row.duration, d, `${row.taskId} Dauer`)
+      near(row.es, fa, `${row.taskId} FA`)
+      near(row.ef, fe, `${row.taskId} FE`)
+      near(row.ls, sa, `${row.taskId} SA`)
+      near(row.lf, se, `${row.taskId} SE`)
+      near(row.totalFloat, gp, `${row.taskId} GP`)
+      near(row.freeFloat, fp, `${row.taskId} FP`)
+    }
+  })
+
+  test("Ende 36, kritischer Pfad V01 → V02 → V05 → V09 → V10 → V11 → V12 → V16 → V17 → V18", () => {
+    near(Math.max(...rows.map((r) => r.ef)), 36, "Projektende")
+    const critical = rows.filter((r) => r.critical).map((r) => r.taskId).sort()
+    assert.deepEqual(critical, [...KRITISCH_HOCHMATT].sort())
+  })
+
+  test("calendar.planEndDay stimmt mit der Rechnung überein, Terminziel 40", () => {
+    near(sc.calendar.planEndDay, Math.max(...rows.map((r) => r.ef)), "planEndDay")
+    assert.equal(sc.calendar.targetDay, 40)
+  })
+
+  test("BAC 175'760, Σ Aufwand 1'080 h, Kredit 195'000, Reserve 19'240", () => {
+    const effort = sc.tasks.reduce((s, t) => s + t.effortHours, 0)
+    const bac = sc.tasks.reduce((s, t) => s + t.effortHours * t.plannedRate, 0)
+    assert.equal(effort, 1080)
+    assert.equal(bac, 175_760)
+    assert.equal(sc.budget.total, 195_000)
+    assert.equal(sc.budget.total - bac, 19_240)
   })
 })
 

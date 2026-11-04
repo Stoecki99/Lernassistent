@@ -499,7 +499,7 @@ Prüfung in `tests/simulation-balance.test.ts` (Abschnitt «Einführungslauf»):
 
 ### 2.11 Szenario 2: Agentische Fachapplikation
 
-**Stand:** Entwurf vom 02.11.2026, mit dem Rechenkern abgestimmt am 03.11.2026 (K6, Szenario-Version 1.1.0, Abschnitt 2.11.14). Geplante Datei `content/simulation/hochmatt.json`, `kind: "main"`, Titel **«Stipendien-Assistent Hochmatt»**. Grundlage der Best Practices (Kürzel BP01–BP24 in den Tabellen): Vault-Notiz `04 Ressourcen/KI in der Verwaltung/Agentic Workflows in der Kantonsverwaltung.md` (Checkliste). Zeitmodell, Formeln und `DEFAULT_PARAMS` wie Abschnitt 3; was der Kern zusätzlich braucht, steht in 2.11.13.
+**Stand:** Entwurf vom 02.11.2026, mit dem Rechenkern abgestimmt am 03.11.2026 (K6, Szenario-Version 1.1.0, Abschnitt 2.11.14), fachlich geprüft am 04.11.2026 (Szenario-Version 1.2.0, Abschnitt 2.11.15). Geplante Datei `content/simulation/hochmatt.json`, `kind: "main"`, Titel **«Stipendien-Assistent Hochmatt»**. Grundlage der Best Practices (Kürzel BP01–BP24 in den Tabellen): Vault-Notiz `04 Ressourcen/KI in der Verwaltung/Agentic Workflows in der Kantonsverwaltung.md` (Checkliste). Zeitmodell, Formeln und `DEFAULT_PARAMS` wie Abschnitt 3; was der Kern zusätzlich braucht, steht in 2.11.13.
 
 #### 2.11.1 Ausgangslage
 
@@ -743,11 +743,11 @@ Kanal, Fristen, Kurzformen und Bewertung wie 2.7. Spalte «BP» verweist auf die
 | E10 | T9 NM | ✉ Yasmin | Bittet um Kurs «Evaluation von Sprachmodellen» (CHF 1'500) | A nach der Freigabe Pilot (Tag 22–23) (g) · B jetzt (m) · C ablehnen (s) · Std = C | A: Mot +4, Kurs Tag 22–23, KID +1 ab Tag 28 · B: Abw. 2 Tage ab T11, KID +1 nach 5 Tagen, Mot +12 · C: Mot −12 | 2.05, 3.08 | BP19 | 16 |
 | E11 | T10 NM | 🚪 Helen Gasche | Wünscht zusätzlich einen Chatbot «Wo steht mein Gesuch?» | A Änderungsantrag mit Auswirkungsanalyse (g) · B sofort einbauen (s) · C ablehnen (s) · D für Ausbaustufe 2 vormerken (g) · Std = B | A: CR3 verfügbar · B: V09 +48 h (oder V17), S01 +4, R06 W +1 · C: S01 −8 · D: S01 −2 | 3.03, 3.13 | BP24 | 06, 20 |
 | E12 | eine Person > 5 Tage Überstunden (ab T6) | ✉ Claudine Rüegg | Hinweis auf Arbeitszeit nach Personalrecht | wie E12 Wolkenried | wie E12 Wolkenried | 1.03, 2.05 | – | 11, 17 |
-| E13 | T12 VM | ✉ Sandro | Informatikamt verlangt Sicherheitsprüfung, bevor echte Altfälle ins Testset dürfen | A Prüfung einplanen (g) · B Testset still auf 100 synthetische Fälle verkleinern (m) · C ohne Planung prüfen lassen (s) · Std = C | A: V06 +8 h, Kosten CHF 1'200 · B: V06 Rest −50 %, R02 W +1, S01 −3 (Umfang ohne Antrag) · C: V06 3 Tage blockiert | 3.09, 3.02 | BP03, BP12 | 21 |
+| E13 | T6 VM | ✉ Sandro | Informatikamt verlangt Sicherheitsprüfung, bevor echte Altfälle ins Testset dürfen | A Prüfung einplanen (g) · B Testset still auf 100 synthetische Fälle verkleinern (m) · C ohne Planung prüfen lassen (s) · Std = C | A: V06 +8 h, Kosten CHF 1'200 · B: V06 Rest −50 %, R02 W +1, S01 −3 (Umfang ohne Antrag) · C: V06 3 Tage blockiert | 3.04, 3.06 | BP03, BP12 | 10, 05 |
 | E14 | Eintritt R03 | ✉ Nora | Rechtsgrundlage für Härtefälle fehlt | **ausgeschrieben in 2.11.9** | | 1.03, 3.11 | BP01 | 04, 13 |
 | E15 | 3 Tage nach E07 D | 🚪 Claudine Rüegg | Konflikt eskaliert, Florian will das Projekt verlassen | wie E15 Wolkenried (Ersatz: P14) | wie E15 Wolkenried | 2.07 | – | 17 |
 | E16 | Eintritt R08 | ☎ Regula | Krank für 3 Tage (× A/4) | A kritischen Pfad umverteilen (g) · B Priska bei der Linie aufstocken (m) · C abwarten (s) · Std = C | wie E16 Wolkenried (Martin → Priska, S05) | 3.08, 3.04 | – | 11 |
-| E17 | T16 VM (Sprint-Review 2) | ✉ Priska | Unklar, welche Fälle der Agent gar nicht anfassen darf (Härtefälle, Rekurse, Fristerstreckungen) | A Workshop «Grenzen der Automatisierung» (g) · B Annahme dokumentieren und bestätigen lassen (m) · C Lieferant entscheiden lassen (s) · Std = C | A: je 2 h Priska, Regula, Meilin, V10 +4 h, R01 W −1, R09 sichtbar · B: S01 +1, R09 sichtbar · C: V10 Fehlerlast +4, Mot Priska −6, S12 −3 | 3.02, 3.01 | BP06, BP24 | 05, 08 |
+| E17 | T14 VM (Sprint-Review 2) | ✉ Priska | Unklar, welche Fälle der Agent gar nicht anfassen darf (Härtefälle, Rekurse, Fristerstreckungen) | A Workshop «Grenzen der Automatisierung» (g) · B Annahme dokumentieren und bestätigen lassen (m) · C Lieferant entscheiden lassen (s) · Std = C | A: je 2 h Priska, Regula, Meilin, V10 +4 h, R01 W −1, R09 sichtbar · B: S01 +1, R09 sichtbar · C: V10 Fehlerlast +4, Mot Priska −6, S12 −3 | 3.02, 3.01 | BP06, BP24 | 05, 08 |
 | E18 | Risiko-Index < 80 ab T15 | 🚪 Mia Baumann | Fragt nach dem Risikoregister | wie E18 Wolkenried | wie E18 Wolkenried | 3.11 | – | 13 |
 | E19 | Flag `lieferantMehraufwand`, sonst T18 mit 40 % | ✉ Simone Kradolfer | Rechnung CHF 6'400 für Agentenfunktionen ausserhalb des Werkvertrags | wie E19 Wolkenried | wie E19 Wolkenried | 2.09, 3.09 | BP21 | 21, 17 |
 | E20 | T19 VM, wenn wahre Gesamtampel ≠ Grün | 🚪 Helen Gasche | «Im Regierungsrat sitzen KI-Skeptiker. Melden Sie Grün.» | wie E20 Wolkenried (2.8), Text angepasst | wie E20 Wolkenried | 2.02, 3.10 | – | 19, 17 |
@@ -761,7 +761,7 @@ Kanal, Fristen, Kurzformen und Bewertung wie 2.7. Spalte «BP» verweist auf die
 | E22 | T22 NM | ✉ Hochmatter Zeitung | «Entscheidet bald ein Computer über Stipendien?» | A Faktenblatt, Hinweis in den Briefen, Eintrag im Verzeichnis (g) · B Antwort des Regierungsrats (m) · C ignorieren (s) · Std = C | A: V16 +8 h, S10 +10, S12 +3 · B: S10 +4, S02 +2 · C: S10 −8, S09 −3 | 3.12, 3.13 | BP20 | 14, 20 |
 | E23 | Eintritt R06 (Fenster 16–34) | ☎ Priska | Präparierte Beilage steuert den Agenten | **ausgeschrieben in 2.11.9** | | 3.06, 3.11 | BP11, BP07, BP14 | 20, 13 |
 | E24 | T24 VM, 40 % (sicher bei `vertrauensverlust`) | ✉ Claudine Rüegg | Budgetkürzung CHF 10'000 (Entlastungsprogramm) | wie E24 Wolkenried | wie E24 Wolkenried (Betrag 10'000) | 3.07, 1.02 | BP15 | 18, 12 |
-| E25 | Eintritt R04 (Fenster 21–35) | ☎ Isabelle Graf | Braucht Sandro 2 Tage für eine dringende Sicherheitsaktualisierung | A Zeitpunkt aushandeln: nach V16 (g) · B zustimmen (m) · C ablehnen (s) · Std = B | wie E25 Wolkenried (Jasmin → Sandro, S06) | 1.04 | BP03 | 15 |
+| E25 | Eintritt R04 (Fenster 21–35) | ☎ Isabelle Graf | Braucht Sandro 2 Tage für eine Sicherheitsaktualisierung | A Zeitpunkt aushandeln: nach V16 (g) · B zustimmen (m) · C ablehnen (s) · Std = B | wie E25 Wolkenried (Jasmin → Sandro, S06) | 1.04 | BP03 | 15 |
 | E26 | Teammotivation < 80 (ab T21) | 🚪 Leonie | Das Team ist müde | wie E26 Wolkenried (Retrospektive) | wie E26 Wolkenried | 2.06 | – | 16 |
 | E27 | Eintritt R07; sicher bei E06 B oder Flag `rechtsgrundlageOffen` | ✉ Datenschutzbeauftragte | Protokolle mit Personendaten beim Modellanbieter, kein Vertrag Bearbeiten im Auftrag | A mit Ursina Vertrag und Löschregel nachliefern (g) · B Pilot mit Auflage weiter (m) · C bestreiten (s) · Std = B | A: V16 +12 h, CHF 800 · B: S12 −10, Restmängel +2 · C: V17 3 Tage blockiert, S12 −20, S10 −5 | 1.03 | BP04, BP08 | 04 |
 | E28 | T28 VM | ✉ Kanton Talwies | Nachbarkanton will den Assistenten mitbenutzen | A gemeinsame Weiterentwicklung nach Abschluss prüfen (g) · B Anforderungen sofort aufnehmen (s) · C absagen (m) · Std = B | A: S01 +5, S02 +5 · B: V17 +32 h, R01 W +1 · C: S02 −5 | 1.01, 3.11 | BP16 | 04, 13 |
@@ -771,7 +771,7 @@ Kanal, Fristen, Kurzformen und Bewertung wie 2.7. Spalte «BP» verweist auf die
 | E32 | T32 VM | ☎ Erwin Sigrist | Fragt, ab wann alle Gesuche über den Assistenten laufen | wie E32 Wolkenried | wie E32 Wolkenried | 2.02, 3.12 | – | 19 |
 | E33 | T29 VM, wenn V17 gestartet | ✉ Mirko | Freigabestufen lockern, weil 94 % übereinstimmen | **ausgeschrieben in 2.11.9** | | 3.06, 3.13, 3.01 | BP05, BP06, BP17 | 20, 08 |
 | E34 | T34 VM (milder Text, wenn E01 A) | 🚪 Bruno mit Vertretung Personalverband | Angst vor Stellenabbau und vor Leistungskontrolle über die Protokolle | A Vereinbarung: Zweck Entlastung, keine Auswertung je Person, Rolle als Prüfende (g) · B beruhigendes Gespräch (m) · C «Digitalisierung kommt so oder so» (s) · Std = C | A: 2 h Selina, Mot Bruno +15, S11 +10, S05 +3 · B: Mot Bruno +5, S11 +2 · C: Mot Bruno −12, S11 −15, Mot Linie −5 | 3.13, 2.04, 1.05 | BP18 | 17, 20 |
-| E35 | Start V18 und Restmängel > 12 | ✉ Roland Etter | Abnahme nur ohne Mängel | wie E35 Wolkenried, Reihenfolge im JSON: A beheben (m) · B verschieben (s) · C Mängelliste (g) | wie E35 Wolkenried, aber Beheben 0.5 h je Restmangel statt 2 h (K6) | 3.06 | BP12 | 20 |
+| E35 | Start V18 und Restmängel > 12 | ✉ Roland Etter | Abnahme nur ohne Mängel | wie E35 Wolkenried, Reihenfolge im JSON: A beheben (m) · B verschieben (s) · C Mängelliste mit gestaffelter Freischaltung (g) | wie E35 Wolkenried, aber Beheben 0.5 h je Restmangel statt 2 h (K6); C behebt die Mängel ebenfalls mit 0.5 h je Restmangel vor dem Freischalten (1.2.0, 2.11.15), S05 −2 | 3.06 | BP12 | 20 |
 | E36 | Eintritt R05 | ☎ Meilin | KI-Plattform ausgefallen | A Notbetrieb aktivieren: manueller Ablauf, zweite Umgebung (g, nur mit R05-M1) · B Überstunden zum Aufholen (m) · C warten (s) | wie E36 Wolkenried (`laufendeEnt3`); zusätzlich ohne M1: S05 −4 | 3.11 | BP14 | 13 |
 | E37 | T37 VM | 🚪 Leonie | Lessons Learned und Abschluss | wie E37 Wolkenried | wie E37 Wolkenried | 3.10, 2.06 | – | 20 |
 | E38 | V18 fertig | ☎ Hochmatter Zeitung | Medienanfrage zur Einführung | A gemeinsamer Auftritt mit Regierungsrat, Zahlen aus dem Pilot, was die KI nicht tut (g) · B allein (s) · C Medienmitteilung (m) | A: S01 +5, S02 +3, S10 +5 · B: S01 −5 · C: S01 +1 | 3.12, 2.03 | BP20 | 14 |
@@ -779,6 +779,8 @@ Kanal, Fristen, Kurzformen und Bewertung wie 2.7. Spalte «BP» verweist auf die
 | E41 | T25 NM | ✉ Staatsarchiv | Agentenprotokolle und Entwürfe sind Akten: Aufbewahrung und Ablieferung? | A Aktenplan und Fristen in V16 aufnehmen (g) · B nach der Einführung (m) · C «Protokolle löschen wir nach 30 Tagen» (s) · Std = B | A: V16 +4 h, S13 +10, S12 +2 · B: S13 −5, Restmängel +1 · C: S13 −15, S12 −5, S07 −3 | 1.03, 3.06 | BP08 | 04, 20 |
 
 Systemereignisse S1–S6 wie 2.7; S2 und S3 nennen Regierungsrat bzw. Claudine Rüegg (Kern-Erweiterung K2). Total 41 Ereignisse; alle 28 ICB-Elemente kommen vor (2.08 nur in E30, 2.10 nur in E40, 1.05 nur in E34).
+
+**Stationen (1.2.0):** Die Stationen 04, 20 und 21 sind noch nicht geschrieben. Im JSON verweisen die Ereignisse deshalb auf vorhandene Stationen: Recht, Datenschutz und Beschaffung auf 07 (Rechtsgrundlagen-, Schutzbedarfs- und Beschaffungsanalyse), ISDS auf 03, Qualität und Abnahme auf 05 oder 06, Freigabestufen auf 08, Sicherheitsvorfälle auf 13, Change und Transparenz auf 14, Abschluss auf 16. Die Spalte «Station» oben zeigt den Entwurf; massgebend ist das JSON. Sind 04, 20 und 21 fertig, können die Verweise zurückgestellt werden.
 
 #### 2.11.9 Drei Ereignisse vollständig
 
@@ -887,7 +889,7 @@ Gegenüber Wolkenried neu: Der Engpass liegt nicht bei einer Schnittstelle allei
 | K3 | **Zweiten Ernstfall registrieren und wählbar machen.** **Umgesetzt 03.11.2026:** Verzeichnis `lib/simulation/catalog.ts` (`SCENARIO_CATALOG`: ID, Art, `?start=`-Wert, Kartentext, Sinnbild) für Server und Browser. Server (`scenarios.ts`): Einführung und Wolkenried statisch importiert, weitere Einträge (Hochmatt) aus `content/simulation/<id>.json` per Dateisystem; fehlt die Datei, ist das Szenario unbekannt (`loadScenario` → null, API 400, Startkarte «folgt»). Browser (`scenarioLoader.ts`): dynamischer Import nur für IDs aus dem Verzeichnis, je Szenario ein eigenes Teilpaket. Startseite `/leitstand`: drei Karten mit Sinnbild, Kurzbeschreibung, Kennzahlen und Bestwert; `?start=einfuehrung`, `?start=ernstfall` (Wolkenried), `?start=hochmatt`. Bestwert je Szenario (`GET /api/simulation/runs?scenarioId=`). **Station 23 «erledigt» bei jedem abgeschlossenen Ernstfall** (`kind: "main"`, `stationDoneFor`). Zugang unverändert Pro/Admin; die Empfehlung «nach Wolkenried» ist nur ein Hinweis auf der Karte, keine Sperre. | `lib/simulation/catalog.ts`, `lib/simulation/scenarios.ts`, `components/features/leitstand/scenarioLoader.ts`, `app/(leitstand)/leitstand/page.tsx`, `LeitstandStart.tsx`, `lib/leitstand.ts` | ja | erledigt |
 | K4 | **Lessons ohne feste Ereignis-IDs:** Feld `lessonTags` an Optionen (`umfangOhneAntrag`, `konfliktLinie`) statt Listen in `debrief.ts`. Nicht nötig, solange 2.11.8 die IDs gleich belegt. | `lib/simulation/debrief.ts`, `types.ts`, Schema | nein | 1–2 h |
 | K5 | **Sprints sichtbar machen:** optionales Feld `sprint` an Vorgängen, Gruppierung im Gantt. Rein darstellend. | `types.ts`, Gantt-Komponente | nein | 2 h |
-| K6 | **Tests und Abstimmung:** Netzplan-Referenzwerte (5.2) für Hochmatt, Schema (5.5), Sperrliste (5.6: Datei in `SCENARIO_FILES`), Musterbesetzung und Roboterläufe (5.4) mit Zielwerten wie Wolkenried (Roboter «gut» Median ≤ Tag 40, «naiv» deutlich schlechter). | `tests/simulation-*.test.ts` | ja | Abstimmung, Musterbesetzung und Roboterläufe erledigt 03.11.2026 (2.11.14, Szenario-Version 1.1.0); Netzplan-Referenzwerte 5.2 offen |
+| K6 | **Tests und Abstimmung:** Netzplan-Referenzwerte (5.2) für Hochmatt, Schema (5.5), Sperrliste (5.6: Datei in `SCENARIO_FILES`), Musterbesetzung und Roboterläufe (5.4) mit Zielwerten wie Wolkenried (Roboter «gut» Median ≤ Tag 40, «naiv» deutlich schlechter). | `tests/simulation-*.test.ts` | ja | Abstimmung, Musterbesetzung und Roboterläufe erledigt 03.11.2026 (2.11.14, Szenario-Version 1.1.0); Netzplan-Referenzwerte 5.2 erledigt 04.11.2026 (Block «Netzplan Hochmatt» in `tests/simulation-scenario.test.ts`) |
 
 Dazu kommt das Schreiben von `content/simulation/hochmatt.json` (Texte aller 41 Ereignisse, Persönlichkeiten, Hinweise) mit rund 1 Tag. Total rund 3 Arbeitstage, davon etwa 1 Tag Code (K1–K3) und 2 Tage Inhalt und Abstimmung. Der Rechenkern (`ENGINE_VERSION`) ändert sich durch K1–K3 nicht.
 
@@ -970,9 +972,44 @@ Teilpunkte (Median, 1.1.0): «gut» Termin 240, Kosten 199, Qualität 62, Stakeh
 
 **Offene Punkte:**
 
-- «naiv» liegt mit Median Endtag 48 und 588.5 Punkten knapp an den Schwellen (42–48, 350–600). Seine Qualitätspunkte sind voll, weil E35 A alle Mängel beheben lässt; «gut» erreicht nur rund 62 Qualitätspunkte (rund 19 Restmängel, vor allem aus V17 und V18). Das ist didaktisch vertretbar (Mängel beheben kostet Termin), Jan soll aber entscheiden.
-- E13 steht im JSON bei Takt 10 (T6 VM), E17 bei Takt 26 (T14 VM); die Tabelle 2.11.8 nennt T12 und T16. Die Zeitpunkte im JSON treffen V06 und V10 noch während der Arbeit und bleiben so; die Tabelle ist nachzuführen.
-- Aus K6 noch offen: Netzplan-Referenzwerte (5.2) für Hochmatt in `tests/simulation-scenario.test.ts`.
+- «naiv» liegt mit Median Endtag 48 und 588.5 Punkten knapp an den Schwellen (42–48, 350–600). Seine Qualitätspunkte sind voll, weil E35 A alle Mängel beheben lässt; «gut» erreichte nur rund 62 Qualitätspunkte (rund 19 Restmängel, vor allem aus V17 und V18). **Entschieden in 2.11.15** (E35 C behebt die Mängel vor dem Freischalten).
+- E13 steht im JSON bei Takt 10 (T6 VM), E17 bei Takt 26 (T14 VM). Die Zeitpunkte im JSON treffen V06 und V10 noch während der Arbeit und bleiben so; **Tabelle 2.11.8 nachgeführt** (04.11.2026).
+- Netzplan-Referenzwerte (5.2) für Hochmatt in `tests/simulation-scenario.test.ts`: **erledigt** (04.11.2026).
+
+#### 2.11.15 Fachprüfung (04.11.2026, Szenario-Version 1.2.0)
+
+Unabhängige Prüfung aller 41 Ereignisse und der übrigen Texte gegen 2.11, Abschnitt 3 und die Best Practices BP01–BP24 der Vault-Notiz. Bewertungen, Auslöser, Zeitpunkte und Zahlen bleiben bis auf E35 unverändert.
+
+| Ereignis | Befund | Korrektur |
+|---|---|---|
+| alle | 19 Ereignisse verwiesen auf die noch fehlenden Stationen 04, 20, 21 | auf vorhandene Stationen umgebogen (Liste bei 2.11.8), Texte und `stations` gleich |
+| E09 B | «Einfache Sprache ist Pflicht» ist als Rechtsaussage zu stark | «Verständliche Sprache gehört zum Auftrag» |
+| E12 | Überzeit «muss kompensiert werden» trifft nicht jedes kantonale Personalrecht | «angeordnet und begründet, in der Regel mit Freizeit kompensiert» |
+| E13 | Sicherheitsprüfung durch das Informatikamt ist keine Beschaffung (ICB 3.09) | ICB 3.04, 3.06; Stationen 10, 05 |
+| E14 | «ausdrückliche» Grundlage | «hinreichend bestimmte» Grundlage im formellen Gesetz (Merkblatt DSB ZH) |
+| E23 A | «wichtigstes Sicherheitsrisiko» ohne Beleg | «Platz 1 der OWASP-Liste» |
+| E25 | Eine *kritische* Firewall-Lücke eine Woche aufzuschieben, wäre als «gut» falsch (BP03) | Lücke mit Frist von zwei Wochen; Rückmeldung A: Termin in der Frist, bei ausgenutzter Lücke sofort |
+| E27 | Widerspruch zu 2.11.1 (Modell läuft im Kanton): warum liegen Protokolle beim Anbieter? | «für Support und Fehleranalyse übermittelt» |
+| E28 A | Zusammenarbeit «verringert die Abhängigkeit vom Anbieter» stimmt so nicht | «stärkt die Verhandlungsposition», Beschaffungsfrage klären |
+| E29 C | «verletzt den Vertrag mit dem Kanton» ohne Grundlage | Widerspruch zu DSFA und Datenstandort; Auslandsbekanntgabe neu prüfen |
+| E32 | Interpellation und Fragestunde vermischt | «es liegt eine Frage vor» |
+| E33 A | «keine Rechtsfolge» bei Nachforderungen mit Frist widerspricht E02 A | «wirken weniger stark und lassen sich korrigieren» |
+| E33 B | Art. 21 DSG gilt für Bundesorgane und Private, nicht direkt für den Kanton | «Art. 21 DSG des Bundes und ähnlich viele kantonale Datenschutzgesetze» |
+| E35 | siehe unten | Wirkung C, Rückmeldungen A und C |
+
+**Entscheid E35.** Die Bewertung bleibt: C «Abnahme mit Mängelliste» gut, A «alle Mängel vor der Abnahme» mittel, B «verschieben» schlecht (IPMA 3.06, BP12, BP17; gleich wie Wolkenried). Der Widerspruch lag in der Wirkung: C verspricht «betroffene Funktionen erst freischalten, wenn sie behoben sind», behob im Rechenkern aber nichts, während A seit K6 für nur 0.5 h je Mangel alles behob. Damit war die mittlere Option die beste, und «gut» endete mit rund 19 Restmängeln. Neu behebt C die Mängel während der gestaffelten Freischaltung (`fixAllDefects` V18, 0.5 h je Restmangel, wie A) und kostet S05 −2, weil Roland nicht alles vor der Unterschrift bekommt. A unterscheidet sich nur noch in der Bewertung: Die Abnahme hängt am letzten Schönheitsfehler. Der Roboter «gut» bleibt unverändert; er wählte schon fachlich richtig. Geprüft und verworfen: Reviews auch auf V15–V18 im Roboter «gut» (Restmängel nur 12–16, E35 löst weiter aus, Median Endtag 40.5 bricht die Schwelle).
+
+**Roboterläufe Version 1.2.0** (20 Startwerte, Schwellen 5.4 unverändert):
+
+| Roboter | Median | Min | Max | Standardabw. | Median Endtag | Median CPI | ≥ 650 |
+|---|---|---|---|---|---|---|---|
+| gut | 908 | 855 | 922 | 16.1 | 39.5 | 0.94 | 20 |
+| naiv | 588.5 | 493 | 625 | 31.8 | 48 | 1.03 | 0 |
+| schlecht | 31 | 25 | 36 | 3.0 | 50 (Abbruch) | 0.40 | 0 |
+
+Teilpunkte «gut» (Median): Termin 235, Kosten 195, Qualität 200, Stakeholder 98, Team 90, Führung 88. «naiv» und «schlecht» unverändert. Abstand gut − naiv 319.5 Punkte.
+
+**Offen:** «naiv» erhält über E35 A weiterhin volle Qualitätspunkte; die Qualitätswertung misst nur Restmängel am Ende, nicht, wie spät sie behoben wurden. Das betrifft den Rechenkern (3.6, 3.13) und beide Ernstfälle und bleibt für eine spätere Kernversion vorgemerkt.
 
 ---
 
