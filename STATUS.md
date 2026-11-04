@@ -76,6 +76,10 @@
 
 ## Changelog
 
+### 2026-11-04
+
+- **feat: Leitstand-Szenario 2 «Stipendien-Assistent, Kanton Hochmatt» live** — Einführung einer agentischen Fachapplikation in einer fiktiven Kantonsverwaltung (Mensch entscheidet, Rechtsgrundlage, DSFA/ISDS, geringste Rechte, Protokollierung, Prompt-Injection, Testset, Notbetrieb, Exit-Strategie, Personalvertretung). `content/simulation/hochmatt.json` (Version 1.2.0, abgestimmt: Roboter gut Median 908 Punkte, Endtag 39.5), Szenario-Auswahl auf `/leitstand`, Gebietsnamen und Gremium je Szenario (`areas`, `board`), Bestwert je Szenario, Porträts. Fachprüfung (14 Korrekturen) und Integrationstest (Punkte Browser = Server 909) bestanden. Station 23 heisst neu «Leitstand: Zwei Projekte selbst leiten». Recherche: Vault `04 Ressourcen/KI in der Verwaltung/`. Offen: Abzeichen «Onlineschalter eröffnet» gilt auch für Hochmatt.
+
 ### 2026-11-03
 
 - **test: Leitstand-Szenario Hochmatt abgestimmt (K6)** (Branch `feat/lernpfad-pmgt`, 03.11.2026, noch nicht live) — Szenario-Version 1.1.0: Pensen Mirko 90 %, Leonie und Kevin 100 %, Sandro und Yasmin 80 %; alle Sätze × 0.9; R02 und E29 A (ohne Vorsorge) +16 statt +24 h; E35 A 0.5 statt 2 h je Restmangel. Netzplan, BAC und Kredit unverändert. Musterbesetzung `MUSTERBESETZUNG_HOCHMATT` und Roboter-Einstellungen je Szenario in `tests/helpers/simulation-bots.ts`; `tests/simulation-balance.test.ts` prüft Hochmatt mit den Schwellen aus 5.4 (gut Median 765, Tag 39, CPI 0.95; naiv 588.5, Tag 48; schlecht 31), dazu Determinismus und replay < 200 ms. Rechenkern und `ENGINE_VERSION` unverändert, Wolkenried unverändert. Spezifikation 2.11.14 neu. Offen: Netzplan-Referenztest 5.2 für Hochmatt.
