@@ -162,10 +162,12 @@ export default function DatenschutzPage() {
                 6.1 Claude API (Anthropic)
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Für die Chat-Funktion und Quiz-Generierung nutze ich die
-                Claude API von Anthropic (USA). Dabei werden Deine
-                Chat-Nachrichten und ggf. Karteikarten-Inhalte an Anthropic
-                übermittelt. Es werden keine personenbezogenen Daten (Name,
+                Für die Chat-Funktion, die Quiz-Generierung und die
+                Bewertung offener Antworten im IPMA-Prüfungssimulator (nur
+                auf Deinen Wunsch, Pro-Abo) nutze ich die Claude API von
+                Anthropic (USA). Dabei werden Deine Chat-Nachrichten, ggf.
+                Karteikarten-Inhalte bzw. die Frage, die Musterlösung, das
+                Bewertungsraster und Deine Antwort an Anthropic übermittelt. Es werden keine personenbezogenen Daten (Name,
                 E-Mail) an Anthropic übermittelt — nur die Inhalte Deiner
                 Lernmaterialien und Nachrichten. Anthropic verarbeitet diese
                 Daten gemäss ihrer eigenen{" "}
@@ -311,7 +313,7 @@ export default function DatenschutzPage() {
                 anzupassen. Die aktuelle Fassung ist stets auf dieser Seite
                 abrufbar.
               </p>
-              <p className="text-gray-500 text-sm mt-4">Stand: Oktober 2026</p>
+              <p className="text-gray-500 text-sm mt-4">Stand: November 2026</p>
             </section>
           </div>
         </div>

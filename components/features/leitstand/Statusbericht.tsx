@@ -6,11 +6,11 @@
 // components/features/leitstand/Statusbericht.tsx
 // Statusbericht und Abschlussbericht (3.11): Ampeln, Fertigstellungsgrad, Prognosen, Abweichungen,
 // Massnahmen M1–M8, Budgetnachtrag und Änderungsanträge; aktuelle Zahlen daneben sichtbar.
-// Danach die Antwort des Gemeinderats (nur Statusbericht).
+// Danach die Antwort des Gremiums (nur Statusbericht; Name je Szenario, K2 in 2.11.13).
 
 import { useState } from "react"
 import { REPORT_FORECAST_DAY_MAX } from "@/lib/simulation/types"
-import { isChangeRequestAvailable, type Ampel as AmpelWert, type ReportArea, type ReportRecord, type StatusReportInput } from "@/lib/simulation/core"
+import { boardNameOf, isChangeRequestAvailable, type Ampel as AmpelWert, type ReportArea, type ReportRecord, type StatusReportInput } from "@/lib/simulation/core"
 import { statusReportInputSchema } from "@/lib/validations/simulation"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
@@ -81,7 +81,7 @@ export default function Statusbericht() {
     <div className={`${styles.ansicht} ${styles.berichtRaster}`}>
       <form className="card stack" onSubmit={submit} noValidate aria-labelledby="bericht-titel">
         <p className="eyebrow">{kind === "status" ? "Periodenende" : "Projektende"}</p>
-        <h3 id="bericht-titel">{kind === "status" ? "Statusbericht an den Gemeinderat" : "Abschlussbericht"}</h3>
+        <h3 id="bericht-titel">{kind === "status" ? `Statusbericht an den ${boardNameOf(scenario)}` : "Abschlussbericht"}</h3>
         <p className="hint">
           Melde ehrlich. Der Leitstand vergleicht deine Angaben mit den gemessenen Zahlen. Schönfärberei kostet Vertrauen und Punkte.
         </p>
@@ -140,7 +140,7 @@ export default function Statusbericht() {
 
         {kind === "status" && (
           <fieldset className={styles.feldgruppe}>
-            <legend>Anträge an den Gemeinderat</legend>
+            <legend>Anträge an den {boardNameOf(scenario)}</legend>
             <label className={styles.feld}>
               <span>Budgetnachtrag CHF</span>
               <input className={styles.eingabe} type="number" inputMode="numeric" min={0} max={100000} step={1000} value={supplement} onChange={(e) => setSupplement(e.target.value)} />
@@ -209,7 +209,7 @@ export default function Statusbericht() {
   )
 }
 
-/** Eingereichte Berichte mit Abgleich und Antwort des Gemeinderats. */
+/** Eingereichte Berichte mit Abgleich und Antwort des Gremiums. */
 export function BerichtArchiv() {
   const { state, scenario } = useLeitstand()
   if (state.reports.length === 0) {
@@ -240,7 +240,7 @@ export function BerichtArchiv() {
               ))}
             </ul>
           )}
-          {r.board && <GemeinderatAntwort board={r.board} />}
+          {r.board && <GremiumAntwort board={r.board} boardName={boardNameOf(scenario)} />}
         </div>
       ))}
     </div>
@@ -284,11 +284,12 @@ export function AbgleichTabelle({
   )
 }
 
-export function GemeinderatAntwort({ board }: { board: NonNullable<ReportRecord["board"]> }) {
+/** Entscheid des Gremiums; boardName aus boardNameOf(scenario), z. B. «Gemeinderat» oder «Regierungsrat». */
+export function GremiumAntwort({ board, boardName }: { board: NonNullable<ReportRecord["board"]>; boardName: string }) {
   return (
     <div className={`note ${styles.gemeinderat}`}>
       <p>
-        <b>Entscheid des Gemeinderats</b>
+        <b>Entscheid des {boardName}s</b>
       </p>
       <ul className={styles.liste}>
         <li>

@@ -92,6 +92,26 @@ export interface Scenario {
   trainingCost: number
   hints?: HintDef[]
   params?: ParamsOverride
+  /**
+   * Ergänzung K1 (2.11.13): Bezeichnungen der fünf Qualifikationsgebiete, genau 5 Einträge in der
+   * Reihenfolge von AREAS. Rein darstellend, die Rechnung hängt nur an der Position. Fehlt das Feld,
+   * gelten die Wolkenrieder Bezeichnungen (DEFAULT_AREA_LABELS in labels.ts).
+   */
+  areas?: AreaLabel[]
+  /**
+   * Ergänzung K2 (2.11.13): Gremium für Statusbericht, Phasenfreigabe und Anträge, z. B. «Regierungsrat».
+   * Fehlt das Feld, gilt «Gemeinderat». Maskulines Substantiv (Texte: «an den …», «des …s»).
+   */
+  board?: { name: string }
+}
+
+/** Ergänzung K1: Anzeige eines Qualifikationsgebiets (Kürzel in Profilen, Name als Erklärung) */
+export interface AreaLabel {
+  id: AreaId
+  /** Kürzel, 2–4 Grossbuchstaben, z. B. «VER» */
+  short: string
+  /** Name, z. B. «Verwaltung und Recht» */
+  label: string
 }
 
 export interface TaskDef {

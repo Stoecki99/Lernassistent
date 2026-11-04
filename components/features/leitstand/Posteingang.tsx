@@ -5,12 +5,14 @@
 
 // components/features/leitstand/Posteingang.tsx
 // Posteingang (4.8): Liste nach Eingang mit Kanal-Symbol und Text, Status (neu, aufgeschoben mit Frist, entschieden);
-// darunter die Mitteilungen des Systems (Meilensteine, Risiken, Gemeinderat) aus dem Zeitstrahl.
+// darunter die Mitteilungen des Systems (Meilensteine, Risiken, Gremium) aus dem Zeitstrahl.
 
 import { formatTick } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
-import { useLeitstand } from "./context"
-import { CHANNEL_ICON, CHANNEL_TEXT } from "./format"
+import { roleOf, useLeitstand } from "./context"
+import { CHANNEL_SYMBOL, CHANNEL_TEXT } from "./format"
+import Avatar from "./Avatar"
+import Icon from "./Icon"
 import { deadlineText } from "./EntscheidDialog"
 import { optionNumber } from "./logic"
 
@@ -33,7 +35,9 @@ export default function Posteingang() {
   return (
     <div className={styles.ansicht}>
       <div className="card stack">
-        <h3>Posteingang</h3>
+        <h3 className={styles.titelMitSymbol}>
+          <Icon name="posteingang" size={18} /> Posteingang
+        </h3>
         {items.length === 0 ? (
           <p className="hint">Noch keine Nachrichten.</p>
         ) : (
@@ -49,8 +53,11 @@ export default function Posteingang() {
                     className={`${styles.postEintrag} ${i.status === "neu" ? styles.postEintragNeu : ""}`}
                     onClick={() => openEvent(i.eventId)}
                   >
-                    <span className={styles.postIcon} aria-hidden="true">
-                      {CHANNEL_ICON[def.channel]}
+                    <span className={styles.postBild}>
+                      <Avatar name={def.sender.name} role={roleOf(scenario, def.sender.name)} size={44} decorative accessory={false} />
+                      <span className={styles.postKanal}>
+                        <Icon name={CHANNEL_SYMBOL[def.channel]} size={12} />
+                      </span>
                     </span>
                     <span className={styles.postText}>
                       <strong>{def.title}</strong>
@@ -70,7 +77,9 @@ export default function Posteingang() {
       </div>
       {notes.length > 0 && (
         <div className="card stack">
-          <h3>Mitteilungen</h3>
+          <h3 className={styles.titelMitSymbol}>
+            <Icon name="system" size={18} /> Mitteilungen
+          </h3>
           <ul className={styles.liste}>
             {notes.map((n, k) => (
               <li key={k}>

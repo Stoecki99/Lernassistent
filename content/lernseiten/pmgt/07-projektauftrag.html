@@ -1,0 +1,1153 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Initialisierung und Projektauftrag · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/08-vorgehensmodelle" title="Vorgehensmodelle: Wasserfall bis Scrum">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t07-», nur Farben aus :root -->
+  <style>
+    .t07-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t07-ziele li{margin-bottom:3px}
+    .t07-quelle{font-size:.92rem; color:var(--muted); margin:0}
+
+    /* Ablauf als nummerierte Kette */
+    .t07-fluss{margin:0; padding:0; list-style:none; counter-reset:t07f; display:flex; flex-direction:column; gap:8px}
+    .t07-fluss > li{counter-increment:t07f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t07-fluss > li::before{content:counter(t07f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t07-fluss .hint{margin:2px 0 0}
+    .t07-fluss > li.t07-entscheid{border:2px solid var(--accent); background:var(--accent-soft)}
+
+    /* Ebenen-Marke (Steuerung, Führung) */
+    .t07-ebene{display:inline-block; font-size:.78rem; font-weight:700; padding:0 7px; border-radius:999px; border:1px solid currentColor; margin-left:4px; white-space:nowrap}
+    .t07-st{color:var(--s4)}
+    .t07-fu{color:var(--s1)}
+
+    /* Drei Phasen nach Näf */
+    .t07-phasen{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(220px,100%),1fr)); gap:10px}
+    .t07-phase{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface); min-width:0}
+    .t07-phase b{display:block}
+    .t07-phase .t07-erg{display:inline-block; margin:6px 0; padding:2px 10px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-weight:700}
+    .t07-phase ul{margin:0; padding-left:1.2em; font-size:.95rem}
+
+    /* Gliederung */
+    .t07-gliederung{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(230px,100%),1fr)); gap:10px}
+    .t07-teil{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface); min-width:0}
+    .t07-teil b{display:block; margin-bottom:2px}
+    .t07-teil p{margin:0; font-size:.95rem}
+    .t07-teil .hint{margin-top:4px}
+
+    /* Baukasten */
+    .t07-tabs{display:flex; flex-wrap:wrap; gap:6px}
+    .t07-tab{min-width:2.6rem}
+    .t07-tab.t07-fertig::after{content:" ✓"}
+    .t07-dossier{margin:0; padding-left:1.2em; font-size:.95rem}
+    .t07-dossier li{margin-bottom:3px}
+    .t07-abschnitt:focus{outline-offset:4px}
+    .t07-ueberblick{display:flex; flex-direction:column; gap:8px}
+    .t07-ueberblick:empty{display:none}
+    .t07-ue-teil{border:1px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--surface)}
+    .t07-ue-teil b{display:block; color:var(--accent)}
+    .t07-ue-teil p{margin:4px 0 0; white-space:pre-wrap; overflow-wrap:anywhere}
+    .t07-leer{color:var(--muted); font-style:italic}
+
+    /* Freigabe-Check */
+    .t07-entwurf th, .t07-entwurf td{vertical-align:top; hyphens:auto; overflow-wrap:break-word}
+    .t07-entwurf th{width:30%}
+    .t07-checks{display:flex; flex-direction:column; gap:10px}
+    .t07-check{border:1px solid var(--line); border-radius:10px; padding:10px 12px 12px; margin:0; min-width:0; background:var(--surface)}
+    .t07-check legend{font-weight:700; padding:0 4px}
+    .t07-check .hint{margin:0 0 8px}
+    .t07-knoepfe{display:flex; flex-wrap:wrap; gap:8px}
+    .t07-wahl[aria-pressed="true"][data-wert="ja"]{color:var(--ok); background:var(--ok-bg); border-color:var(--ok); font-weight:700}
+    .t07-wahl[aria-pressed="true"][data-wert="nein"]{color:var(--bad); background:var(--bad-bg); border-color:var(--bad); font-weight:700}
+    .t07-rm{margin-top:8px; font-size:.95rem; line-height:1.5}
+    .t07-rm:empty{display:none}
+    .t07-rm.ok{border-left:3px solid var(--ok); padding-left:10px}
+    .t07-rm.bad{border-left:3px solid var(--bad); padding-left:10px}
+    .t07-rm .marke{font-weight:700}
+    .t07-rm.ok .marke{color:var(--ok)}
+    .t07-rm.bad .marke{color:var(--bad)}
+    .t07-stand{font-weight:600; margin:0}
+    .t07-stand:empty{display:none}
+
+    /* Reihenfolge */
+    .t07-reihe{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px}
+    .t07-reihe li{display:flex; gap:8px; align-items:flex-start; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+    .t07-reihe .t07-nr{flex:0 0 1.8rem; height:1.8rem; border-radius:50%; background:var(--board); font-weight:700; display:flex; align-items:center; justify-content:center}
+    .t07-reihe .t07-text{flex:1 1 auto; min-width:0; hyphens:auto; overflow-wrap:break-word}
+    .t07-reihe .t07-text small{display:block; color:var(--muted)}
+    .t07-reihe .t07-pfeile{display:flex; flex-direction:column; gap:4px}
+    .t07-reihe .t07-pfeile .btn{padding:2px 10px; min-height:0}
+    .t07-reihe li.t07-ok{border-color:var(--ok); box-shadow:inset 4px 0 0 var(--ok)}
+    .t07-reihe li.t07-bad{border-color:var(--bad); box-shadow:inset 4px 0 0 var(--bad)}
+    .t07-reihe .t07-marke{font-weight:700}
+    .t07-reihe li.t07-ok .t07-marke{color:var(--ok)}
+    .t07-reihe li.t07-bad .t07-marke{color:var(--bad)}
+
+    /* Kick-off-Ziele */
+    .t07-gruppen{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(200px,100%),1fr)); gap:10px}
+    .t07-gruppe{border-top:4px solid var(--s1); border-radius:10px; padding:8px 12px; background:var(--board)}
+    .t07-gruppe:nth-child(2){border-top-color:var(--s2)}
+    .t07-gruppe:nth-child(3){border-top-color:var(--s3)}
+    .t07-gruppe:nth-child(4){border-top-color:var(--s4)}
+    .t07-gruppe ul{margin:4px 0 0; padding-left:1.2em; font-size:.95rem}
+
+    /* Durchführungsauftrag im Lösungsfilm und in der Lösung */
+    .t07-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t07-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t07-fb:last-child{border-bottom:0}
+    .t07-fb b{color:var(--accent)}
+    .t07-fertig-box{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t07-fluss > li{padding-left:40px}
+      .t07-entwurf, .t07-entwurf tbody, .t07-entwurf tr, .t07-entwurf th, .t07-entwurf td{display:block; width:auto}
+      .t07-entwurf th{padding-bottom:0; border-bottom:0}
+      .t07-fz{font-size:.93rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="07-projektauftrag">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 2, LB 3, LB 5, LB 6 · Projekt aufsetzen</span>
+    <h1>Initialisierung und Projektauftrag</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.01</span><span class="icb">ICB 3.10</span>
+    </p>
+    <p class="lead">Bevor ein Projekt Geld und Leute bekommt, muss jemand verbindlich sagen: Ja, wir machen das, so, mit diesen Zielen und diesen Mitteln. Diese Station führt dich von der ersten Idee über die HERMES-Initialisierung bis zum unterschriebenen Auftrag und zum Kick-off. Roter Faden ist der Onlineschalter Wolkenried, bevor die Realisierung beginnt.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t07-ziele">
+        <li>den Weg von der Idee über den Projektantrag zum Projektauftrag und zum Projektplan beschreiben,</li>
+        <li>die Phase Initialisierung nach HERMES erklären: Studie, Rechtsgrundlagen-, Schutzbedarfs- und Beschaffungsanalyse, die drei Entscheide und die Gründe für einen Abbruch,</li>
+        <li>einen Projekt- bzw. Durchführungsauftrag gliedern und für einen eigenen Fall ausfüllen,</li>
+        <li>prüfen, ob ein Auftrag freigabereif ist, und sagen, wer was freigibt,</li>
+        <li>die Ziele eines Kick-offs nennen und einen Kick-off planen,</li>
+        <li>Durchführungsauftrag und Projektmanagementplan auseinanderhalten.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der IPMA-Prüfung kommen Fragen zu den Bestandteilen eines Projektauftrags, zum Projektstart und zum Kick-off (<span class="icb">ICB 3.01</span> Projektdesign, <span class="icb">ICB 3.10</span> Planung und Steuerung, Indikator «Projekt starten, Projektmanagement-Plan entwickeln und Zustimmung einholen»). In der Modulschlussprüfung kann verlangt sein, aus Fallangaben die Kernpunkte eines Projektauftrags zu formulieren. Genau das zeigt der Lösungsfilm.</div>
+    <p class="t07-quelle">Quellen: Skript LB 2 F.28 (Projektinitialisierung: Idee, Definition, Projektplan), F.29–32 (Problemerfassung, Situationserfassung, Ziele und Lösungsansätze), F.35–36 (Initialisierung und Vorgehen nach HERMES); LB 3 F.12–13 und F.20; LB 5 F.22 (Kick-off); LB 6 F.34 (Durchführungsauftrag); Vorlagen «HERMES Projektauftrag» (LB 3), «Durchführungsauftrag (HERMES)» (LB 6), «5.4 Projektmanagementplan» (LB 5); HERMES-Referenzhandbuch Kap. 1.4.1.1, Ergebnisse 4.4.1.x, Aufgaben 5.4.1.x und 5.4.2.7; Swiss ICB 4.5.1 und 4.5.10. Alle Texte in eigenen Worten, alle Fälle frei erfunden.</p>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#ablauf"><b>1</b>Antrag zum Auftrag</a>
+    <a href="#hermes"><b>2</b>HERMES</a>
+    <a href="#auftrag"><b>3</b>Gliederung</a>
+    <a href="#freigaben"><b>4</b>Freigaben</a>
+    <a href="#kickoff"><b>5</b>Kick-off</a>
+    <a href="#baukasten"><b>6</b>Baukasten</a>
+    <a href="#reihenfolge"><b>7</b>Reihenfolge</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir vor, du willst dein Bad renovieren. Zuerst beschreibst du dem Handwerker das Problem: Die Leitungen sind alt, die Dusche leckt. Er klärt ab, was geht und was es kostet. Dann unterschreibst du einen Vertrag mit Preis, Termin und Leistung. Erst danach rückt er an, und am ersten Tag besprecht ihr, wer wann was macht. Ein Projekt beginnt genau so.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Projektantrag = Anfrage</span><span class="ex">Problem · Zweck · erste Ideen</span><p>Eine kurze Beschreibung der Aufgabe mit Ziel, Zweck und ersten Lösungsansätzen. Wie deine Anfrage an den Handwerker: Sie bittet darum, die Idee zu prüfen.</p></div>
+      <div class="concept"><span class="tag">Initialisierung = Vorabklärung</span><span class="ex">Varianten · Recht · Schutz · Einkauf</span><p>Die erste Phase in HERMES. Wie die Besichtigung vor dem Kauf eines Occasionsautos: Varianten vergleichen, Papiere prüfen, Risiken abschätzen, bevor du Geld ausgibst.</p></div>
+      <div class="concept"><span class="tag">Projektauftrag = Vertrag</span><span class="ex">Was · Wozu · Womit · Wer · Bis wann</span><p>Die verbindliche Vereinbarung zwischen Auftraggeber und Projektleitung. In HERMES 2022 heisst er Durchführungsauftrag. Wie der Werkvertrag mit dem Handwerker.</p></div>
+      <div class="concept"><span class="tag">Freigabe = grünes Licht</span><span class="ex">Unterschrift · Ressourcen frei</span><p>Ein formeller Entscheid der Steuerung. Wie die Baubewilligung: Vorher darfst du planen, aber nicht bauen.</p></div>
+      <div class="concept"><span class="tag">Kick-off = Anpfiff</span><span class="ex">Ziele · Rollen · Regeln</span><p>Die Startveranstaltung mit dem Team. Wie die Teamsitzung vor dem Spiel: alle kennen das Ziel, ihre Position und die Spielregeln.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Projektantrag, Projektauftrag oder Projektplan?</h3>
+      <p class="hint">LB 2 F.28 teilt die Projektinitialisierung in drei Phasen: Idee mit dem Ergebnis Projektantrag, Definition mit dem Ergebnis Projektauftrag, Projektplan mit Netzplan und Gantt. Wohin gehört was?</p>
+      <div id="t07-sortierer-pap"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Vom Antrag zum Auftrag ===== -->
+  <section id="ablauf">
+    <span class="eyebrow">Schritt 1 · Ablauf nach LB 2 F.28–32</span>
+    <h2>Von der Idee zum Projektauftrag</h2>
+    <p class="prose">Im Skript gliedert Markus Näf die Projektinitialisierung in drei Phasen. Jede endet mit einem Dokument, auf das die nächste Phase aufbaut (LB 2 F.28, in eigenen Worten):</p>
+    <div class="t07-phasen">
+      <div class="t07-phase"><b>Phase 1 · Idee</b><span class="t07-erg">→ Projektantrag</span>
+        <ul><li>Problem erfassen</li><li>Situation analysieren</li><li>Ziel, Zweck und erste Lösungsansätze</li></ul></div>
+      <div class="t07-phase"><b>Phase 2 · Definition</b><span class="t07-erg">→ Projektauftrag</span>
+        <ul><li>Ziele formulieren</li><li>Vorgehen skizzieren</li><li>Wirtschaftlichkeit</li><li>Risikoanalyse</li><li>Projektorganisation</li><li>Entscheidungsprozess</li></ul></div>
+      <div class="t07-phase"><b>Phase 3 · Projektplan</b><span class="t07-erg">→ Netzplan, Gantt</span>
+        <ul><li>Führungsrhythmus</li><li>Arbeitspakete</li><li>Ressourcenplan</li></ul></div>
+    </div>
+    <p class="prose">Die Problemerfassung soll die Aufgabe klar und kurz beschreiben, Ziel und Zweck auslegen und erste Lösungsansätze im Rahmen der Auflagen nennen. Ihr Ergebnis ist der Projektantrag (LB 2 F.29). Dafür verschaffst du dir Klarheit über die Ausgangslage: Unterlagen sammeln, die Idee beschreiben, Lücken schliessen (F.30). F.31 gibt dir eine Liste von Leitfragen. Sinngemäss:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Leitfragen der Situationserfassung (LB 2 F.31, gekürzt und in eigenen Worten)</caption>
+        <thead><tr><th>Frage</th><th>Am Onlineschalter Wolkenried</th></tr></thead>
+        <tbody>
+          <tr><th>Was ist der Anlass?</th><td>Das Bauamt bearbeitet rund 260 Baugesuche pro Jahr auf Papier, mit drei Dossiers je Gesuch.</td></tr>
+          <tr><th>Welchen Nutzen bringt die Idee?</th><td>Weniger Kopieren und Versand, Bauwillige sehen den Stand selbst, Fachstellen arbeiten mit Fristen.</td></tr>
+          <tr><th>Gibt es Vorgeschichte und Unterlagen?</th><td>Ein Bericht des Bauamts zu Durchlaufzeiten, Beschwerden des Architekturforums.</td></tr>
+          <tr><th>Passt die Idee zur Strategie?</th><td>Ja, Legislaturziel «Digitale Verwaltung» des Gemeinderats (erfunden).</td></tr>
+          <tr><th>Wer ist betroffen?</th><td>Bauamt, Fachstellen, Bauwillige, Planungsbüros, Finanzen, Informatik.</td></tr>
+          <tr><th>Wie dringend ist es? Was droht ohne Projekt?</th><td>Erfahrene Sachbearbeitende gehen in den nächsten Jahren in Pension; ihr Wissen steckt im Papierablauf.</td></tr>
+          <tr><th>Welche Risiken oder Widerstände gibt es?</th><td>Skepsis im Bauamt, Datenschutz, Abhängigkeit vom Hersteller der Bauverwaltungssoftware.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Klick dich durch, wie aus einer Klage im Gemeindehaus ein Projektantrag wird. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil des Antrags leuchtet auf.</p>
+    <div id="t07-stepper-antrag"></div>
+    <div class="note"><b>Merke:</b> Der Projektantrag bittet um eine Prüfung, der Projektauftrag erteilt den Auftrag. Dazwischen liegt die Arbeit der Definition: Varianten vergleichen, Ziele messbar machen, Kosten und Nutzen schätzen, Risiken bewerten, die Organisation festlegen. Erst mit dem unterschriebenen Auftrag geht die Planung im Detail los (Phase 3).</div>
+  </section>
+
+  <!-- ===== 2 · HERMES-Initialisierung ===== -->
+  <section id="hermes">
+    <span class="eyebrow">Schritt 2 · HERMES (LB 2 F.35–36, Referenzhandbuch Kap. 1.4.1.1)</span>
+    <h2>Die Phase Initialisierung nach HERMES</h2>
+    <p class="prose">HERMES nennt dieselbe Arbeit «Phase Initialisierung». Sie findet in jedem Projekt statt, egal ob es danach klassisch oder agil weitergeht. Sie schafft eine definierte Ausgangslage und stellt sicher, dass die Projektziele zu den Zielen und Strategien der Organisation passen. Aus Sicht des Projektmanagements läuft sie immer klassisch ab, auch wenn einzelne agile Werkzeuge erlaubt sind (LB 2 F.35–36). So läuft sie ab:</p>
+    <ol class="t07-fluss">
+      <li class="t07-entscheid"><b>Entscheid Projektinitialisierungsfreigabe</b> <span class="t07-ebene t07-st">Steuerung</span><p class="hint">Grundlage ist der Projektinitialisierungsauftrag (Ausgangslage, Ziele der Initialisierung, Ressourcen, Termine, Organisation, Kommunikation, Risiken). Der Auftraggeber entscheidet allein, gibt die Ressourcen für die Initialisierung frei und beauftragt eine Projektleitung. Ab hier existiert das Projekt formell (HERMES 5.4.1.7).</p></li>
+      <li><b>Studie erarbeiten</b> <span class="t07-ebene t07-fu">Führung</span><p class="hint">Standortbestimmung, Ziele, grobe Anforderungen, Lösungsvarianten. Jede Variante so genau, dass man sie nachvollziehbar bewerten kann. Projekt- und Betriebsrisiken werden ermittelt, und für jede Variante steht fest, ob es klassisch oder agil weitergeht.</p></li>
+      <li><b>Parallel: Rechtsgrundlagenanalyse und Schutzbedarfsanalyse</b><p class="hint">Beide fliessen in den Entscheid ein. Geht es um den Kauf eines Produkts oder Systems, läuft parallel eine <b>Beschaffungsanalyse</b>.</p></li>
+      <li class="t07-entscheid"><b>Entscheid weiteres Vorgehen</b> <span class="t07-ebene t07-fu">Führung</span><p class="hint">Welche Variante, klassisch oder agil, welches Szenario? Die Projektleitung entscheidet nach Rücksprache mit dem Auftraggeber und weiteren Stakeholdern; der Entscheid steht in der Liste Projektentscheide Führung (HERMES 5.4.2.7).</p></li>
+      <li><b>Szenario wählen, Projektmanagementplan und Durchführungsauftrag erarbeiten</b> <span class="t07-ebene t07-fu">Führung</span><p class="hint">Mit den Strategien, Vorgaben und übergeordneten Zielen der Stammorganisation abgleichen. Stakeholderinteressen analysieren, Zielkonflikte bereinigen. Bei agilem Vorgehen festlegen, ob der optionale Entscheid Releasefreigabe nötig ist.</p></li>
+      <li class="t07-entscheid"><b>Entscheid Projektdurchführungsfreigabe</b> <span class="t07-ebene t07-st">Steuerung</span><p class="hint">Auftraggeber und Stammorganisation entscheiden gemeinsam und unterschreiben den Durchführungsauftrag. Danach startet die Lösungsentstehung: klassisch mit der Phase Konzept, agil mit der Phase Umsetzung (HERMES 5.4.1.9).</p></li>
+    </ol>
+
+    <h3>Studie und die drei Analysen in eigenen Worten</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Ergebnis</th><th>Was es klärt</th><th>Onlineschalter Wolkenried</th></tr></thead>
+        <tbody>
+          <tr><th>Studie (HERMES 4.4.1.53)</th><td>Ausgangslage, Standortbestimmung, Ziele, Grobanforderungen, Varianten mit Bewertung (Zielerreichung, Anforderungsabdeckung, Kosten, Nutzen, Risiken), Vorschlag zum Vorgehen mit Szenario und grober Projektgrösse. Nur so detailliert, dass der Entscheid weiteres Vorgehen möglich ist.</td><td>Drei Varianten: A Eigenentwicklung, B Standardprodukt der Lärchwerk Informatik AG mit Anbindung an die Bauverwaltungssoftware, C kantonale Plattform abwarten. Gewählt: B, klassisch.</td></tr>
+          <tr><th>Rechtsgrundlagenanalyse (4.4.1.45)</th><td>Welche Gesetze und Vorschriften gelten (Gemeinde, Kanton, Bund, international), wo sind Lücken, was muss geändert werden?</td><td>Darf ein Baugesuch elektronisch eingereicht werden, oder braucht es weiter eine Unterschrift auf Papier? Reicht das Gebührenreglement für Zahlungen online?</td></tr>
+          <tr><th>Schutzbedarfsanalyse (4.4.1.48)</th><td>Auch ISDS-Analyse genannt: Anforderungen an Informationssicherheit und Datenschutz.</td><td>Baupläne und Personendaten der Gesuchstellenden; wer darf was sehen, wie lange wird aufbewahrt?</td></tr>
+          <tr><th>Beschaffungsanalyse (4.4.1.9)</th><td>Nur bei einer Beschaffung: Bedarf, Markt, mögliche Anbieter, Verfahren nach Beschaffungsrecht, Vertragsform, grobe Kosten.</td><td>Standardprodukt mit Werkvertrag; welches Verfahren der Auftragswert verlangt, klärt die Gemeinde mit der Fachstelle Beschaffung.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Die Initialisierung prüft, ob ein Vorhaben <b>projekttauglich und projektwürdig</b> ist. Sie ist kein Vorspiel, das man überspringt, wenn es eilt. Wer die Rechtsgrundlagen erst in der Realisierung klärt, riskiert, dass das fertige System gar nicht eingesetzt werden darf.</div>
+    <p class="prose">Die ICB nennt diesen Schritt Projektdesign (<span class="icb">ICB 3.01</span>): Aus dem Kontext leitest du den passenden Projektmanagement-Ansatz ab, also etwa Eigenfertigung oder Kauf, Wasserfall oder iterativ, interne oder externe Ressourcen, und hältst ihn in einer groben Skizze fest (Swiss ICB 4.5.1.4 und 4.5.1.5). Das Design kommt vor der Detailplanung.</p>
+  </section>
+
+  <!-- ===== 3 · Gliederung ===== -->
+  <section id="auftrag">
+    <span class="eyebrow">Schritt 3 · Was steht drin? (LB 6 F.34, Vorlagen LB 3 und LB 6)</span>
+    <h2>Die Gliederung des Projekt- bzw. Durchführungsauftrags</h2>
+    <p class="prose">Der Durchführungsauftrag ist der Rahmen und die verbindliche Grundlage für die Lösungsentstehung bis zum Projektabschluss. Er erlaubt, das Projekt fortzusetzen, und ist eine Vereinbarung zwischen Auftraggeber und Projektleitung (LB 6 F.34, Vorlage). LB 6 F.34 zählt 14 Punkte auf. Was jeder Punkt enthält, in eigenen Worten:</p>
+    <div class="t07-gliederung">
+      <div class="t07-teil"><b>1 · Ausgangslage und Handlungsbedarf</b><p>Was ist heute das Problem, warum muss man handeln? Verweis auf die Studie und die gewählte Variante.</p></div>
+      <div class="t07-teil"><b>2 · Ziele</b><p>Lösungsziele mit Kategorie, Beschreibung, Messgrösse und Priorität (M = Muss, 1–3). Vorgehensziele: klassisch oder agil, Szenario, weitere Ziele.</p></div>
+      <div class="t07-teil"><b>3 · Rahmenbedingungen und Abgrenzung</b><p>Was ist vorgegeben (Plattform, Budgetdach, Termine)? Was gehört ausdrücklich nicht dazu?</p></div>
+      <div class="t07-teil"><b>4 · Zusammenfassende Lösungsbeschreibung</b><p>Die gewählte Variante in wenigen Sätzen.</p></div>
+      <div class="t07-teil"><b>5 · Strategiebezug und Umsetzung von Vorgaben</b><p>Welche Strategie stützt das Projekt? Welche Normen und Vorgaben gelten, und werden sie eingehalten?</p></div>
+      <div class="t07-teil"><b>6 · Rechtliche Grundlagen</b><p>Die Schlussfolgerung aus der Rechtsgrundlagenanalyse.</p></div>
+      <div class="t07-teil"><b>7 · Investitionsbedarf</b><p>Kosten je Phase in Franken, die Initialisierung als Ist-Wert.</p></div>
+      <div class="t07-teil"><b>8 · Ressourcen- und Hilfsmittelbedarf</b><p>Arbeitstage je Phase, Räume, Infrastruktur, Software.</p></div>
+      <div class="t07-teil"><b>9 · Kosten, Nutzen, Wirtschaftlichkeit (Vorschau)</b><p>Investition und Betrieb gegenüber dem messbaren Nutzen, dazu der nicht messbare Nutzen (Station 12).</p></div>
+      <div class="t07-teil"><b>10 · Planung und Organisation</b><p>Meilensteine mit Terminen, Rollen mit Namen.</p></div>
+      <div class="t07-teil"><b>11 · Vorgehensweise (Entwicklungsmanagement)</b><p>Welche Methoden im Detail, zum Beispiel Scrum (Station 8).</p></div>
+      <div class="t07-teil"><b>12 · Risiken</b><p>Bewertet (Eintretenswahrscheinlichkeit × Auswirkungsgrad), mit Massnahme, Verantwortlichen und Termin.</p></div>
+      <div class="t07-teil"><b>13 · Konsequenzen</b><p>Was passiert bei Freigabe, bei späterer Freigabe und bei abgelehnter Freigabe?</p></div>
+      <div class="t07-teil"><b>14 · Verbindlichkeiten</b><p>Was sich Auftraggeber und Projektleitung gegenseitig zusichern, mit Verantwortlichen.</p></div>
+    </div>
+
+    <h3>Projektauftrag oder Durchführungsauftrag?</h3>
+    <p class="prose">Im Kurs liegen zwei Vorlagen. Die ältere «HERMES Projektauftrag» (LB 3, HERMES 5) und die neuere «Durchführungsauftrag» (LB 6, HERMES 2022). Der Inhalt ist fast gleich. Die neue Fassung trennt den Mittelbedarf in Investitionen und Ressourcen und hat zwei Kapitel mehr:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Durchführungsauftrag (LB 6 F.34, 14 Punkte)</th><th>Projektauftrag (Vorlage LB 3, 10 Kapitel)</th></tr></thead>
+        <tbody>
+          <tr><td>1 Ausgangslage und Handlungsbedarf</td><td>1 Ausgangslage</td></tr>
+          <tr><td>2 Ziele (Lösungs-, Vorgehensziele)</td><td>2 Ziele (System-, Vorgehensziele)</td></tr>
+          <tr><td>3 Rahmenbedingungen und Abgrenzung</td><td>in 2 (Rahmenbedingungen, Abgrenzung)</td></tr>
+          <tr><td>4 Lösungsbeschreibung</td><td>3 Lösungsbeschreibung</td></tr>
+          <tr><td>5 Strategiebezug und Vorgaben</td><td>4 Strategiebezug und Vorgaben</td></tr>
+          <tr><td>6 Rechtliche Grundlagen</td><td>5 Rechtliche Grundlagen</td></tr>
+          <tr><td>7 Investitionsbedarf · 8 Ressourcen und Hilfsmittel</td><td>6 Mittelbedarf (Personal, Sachmittel, Kosten)</td></tr>
+          <tr><td>9 Kosten, Nutzen, Wirtschaftlichkeit</td><td>7 Wirtschaftlichkeit</td></tr>
+          <tr><td>10 Planung und Organisation</td><td>8 Planung und Organisation</td></tr>
+          <tr><td>11 Vorgehensweise</td><td>fehlt</td></tr>
+          <tr><td>12 Risiken</td><td>9 Risiken</td></tr>
+          <tr><td>13 Konsequenzen</td><td>10 Konsequenzen</td></tr>
+          <tr><td>14 Verbindlichkeiten</td><td>fehlt</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Die Word-Vorlage zum Durchführungsauftrag (LB 6) hat 13 Kapitel, weil sie Rahmenbedingungen und Abgrenzung als Unterkapitel der Ziele führt. In der Prüfung zählt der Inhalt, nicht die Nummer.</p>
+
+    <h3>Ein Lösungsziel in die Tabelle bringen</h3>
+    <p class="prose">Die Vorlage verlangt für jedes Ziel Kategorie, Beschreibung, Messgrösse und Priorität. Die Spalte «Prognose» füllst du erst später im Statusbericht aus (Station 19). Klick dich durch, wie aus einem Wunsch der Auftraggeberin ein Ziel wird:</p>
+    <div id="t07-stepper-ziel"></div>
+    <div class="note falle"><b>Falle:</b> «Der Onlineschalter soll modern und bürgerfreundlich sein» ist kein Ziel, sondern ein Wunsch. Niemand kann am Projektende sagen, ob er erfüllt ist. Ohne Messgrösse ist auch die spätere Abnahme ein Streitfall. Wie man Ziele SMART formuliert, übst du in Station 5.</div>
+  </section>
+
+  <!-- ===== 4 · Freigaben ===== -->
+  <section id="freigaben">
+    <span class="eyebrow">Schritt 4 · Wer entscheidet was? (HERMES 5.4.1.5, 5.4.1.7, 5.4.1.9, 5.4.2.7)</span>
+    <h2>Freigaben, Kompetenzen und Abbruch</h2>
+    <p class="prose">In der Initialisierung gibt es drei Entscheide. Wer welchen trifft, ist eine beliebte Prüfungsfrage:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Entscheid</th><th>Wer</th><th>Grundlage</th><th>Folge</th></tr></thead>
+        <tbody>
+          <tr><th>Projektinitialisierungsfreigabe</th><td>Auftraggeber allein (im Namen der Stammorganisation)</td><td>Projektinitialisierungsauftrag, Checkliste</td><td>Das Projekt existiert, die Ressourcen für die Initialisierung sind frei.</td></tr>
+          <tr><th>Weiteres Vorgehen</th><td>Projektleitung, nach Rücksprache mit Auftraggeber und Stakeholdern</td><td>Studie, Beschaffungsanalyse, Checkliste</td><td>Variante und Vorgehensart stehen; Grundlage für PM-Plan und Durchführungsauftrag.</td></tr>
+          <tr><th>Projektdurchführungsfreigabe</th><td>Auftraggeber und Stammorganisation gemeinsam</td><td>Durchführungsauftrag, Projektmanagementplan, Checkliste</td><td>Auftrag unterzeichnet, Projektorganisation in Kraft, Ressourcen für die Lösungsentstehung frei.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Bei der Durchführungsfreigabe gibt es nicht nur Ja oder Nein. HERMES unterscheidet: Ist die Initialisierung überhaupt fertig, oder fehlen noch Ergebnisse? Wenn sie fertig ist, wird die Durchführung <b>freigegeben</b>, <b>zurzeit nicht freigegeben</b> (später neu beantragen) oder <b>nicht freigegeben</b>, und das Vorhaben endet.</p>
+
+    <h3>Gründe für das Ende in der Initialisierung</h3>
+    <p class="prose">LB 2 F.35 nennt die möglichen Gründe, die Durchführung nicht freizugeben:</p>
+    <ul class="prose">
+      <li>fehlende Wirtschaftlichkeit,</li>
+      <li>zu hohe Risiken,</li>
+      <li>keine Realisierbarkeit,</li>
+      <li>rechtliche oder politische Bedenken,</li>
+      <li>fehlende Übereinstimmung mit Zielen, Strategien und Prioritäten der Organisation.</li>
+    </ul>
+    <div class="note"><b>Merke:</b> Ein Vorhaben, das am Ende der Initialisierung nicht freigegeben wird, ist in HERMES <b>kein Projektabbruch</b>. Ein Abbruch ist nur während der Lösungsentstehung möglich, also nach der Durchführungsfreigabe und vor der Phasenfreigabe Abschluss. Er liegt ganz in der Kompetenz des Auftraggebers und wird geordnet durchgeführt: Organisation auflösen, Dokumente übergeben, Gründe festhalten (HERMES 5.4.1.5).</div>
+
+    <h3>Abbruchkriterien vorher festlegen</h3>
+    <p class="prose">Ob ein laufendes Projekt abgebrochen wird, entscheidet der Auftraggeber. Damit das nicht aus dem Bauch heraus geschieht, gehören <b>Projektabbruchkriterien</b> in den Projektmanagementplan (HERMES 4.4.1.35). Für den Onlineschalter könnten das sein (eigene Beispiele):</p>
+    <ul class="prose">
+      <li>Die Kostenprognose liegt über 110&nbsp;% des Kredits (über CHF 198'000), und der Gemeinderat bewilligt keinen Nachtrag.</li>
+      <li>Der Hersteller der Bauverwaltungssoftware kann die Schnittstelle bis zur Phasenfreigabe Realisierung nicht zusichern.</li>
+      <li>Die kantonale Datenschutzstelle lehnt die Datenhaltung beim Lieferanten ab, und keine Alternative ist bezahlbar.</li>
+    </ul>
+
+    <h3>Kompetenzen in Wolkenried</h3>
+    <p class="prose">Der Durchführungsauftrag legt auch fest, wer später was entscheiden darf (Kompetenzordnung). Phasenfreigabe, Budgetnachtrag und die Grenze von CHF 5'000 gelten gleich wie im Leitstand (Station 23); die übrigen Einträge sind eine eigene Ergänzung:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Stufe</th><th>Person oder Gremium</th><th>Entscheidet</th></tr></thead>
+        <tbody>
+          <tr><th>Stammorganisation</th><td>Gemeinderat (Gesamtbehörde)</td><td>Durchführungsfreigabe mit der Auftraggeberin, Phasenfreigaben, Budgetnachtrag, Änderungen über CHF 5'000</td></tr>
+          <tr><th>Steuerung</th><td>Auftraggeberin Franziska Bühlmann, Vorsitz Projektausschuss</td><td>Initialisierungsfreigabe, Prioritäten, Änderungen bis CHF 5'000, Projektabbruch (nach HERMES Sache des Auftraggebers)</td></tr>
+          <tr><th>Führung</th><td>Projektleitung (du)</td><td>Weiteres Vorgehen, Massnahmen innerhalb von Plan und Reserve</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Kredit Gemeinderat CHF 180'000 für Realisierung und Einführung, davon Plankosten der Vorgänge (BAC) CHF 162'240 und Reserve CHF 17'760; Terminziel Tag 40. Gleiche Zahlen wie in Station 19 und im Leitstand.</p>
+  </section>
+
+  <!-- ===== 5 · Kick-off und PM-Plan ===== -->
+  <section id="kickoff">
+    <span class="eyebrow">Schritt 5 · Start mit dem Team (LB 5 F.22, Vorlage 5.4)</span>
+    <h2>Kick-off und Projektmanagementplan</h2>
+    <p class="prose">Ist der Auftrag freigegeben, holst du das Team zusammen. Die Startveranstaltung hat laut LB 5 F.22 dreizehn Ziele. Zu vier Gruppen geordnet, in eigenen Worten:</p>
+    <div class="t07-gruppen">
+      <div class="t07-gruppe"><b>Inhalt</b><ul><li>gemeinsames Verständnis von Problem und Aufgabe</li><li>unterschiedliche Zielvorstellungen auf eine Definition bringen</li><li>Lösungswege diskutieren und sich für einen entscheiden</li></ul></div>
+      <div class="t07-gruppe"><b>Menschen</b><ul><li>Vorkenntnisse und Fähigkeiten der Mitglieder erfragen</li><li>gegenseitige Erwartungen aussprechen</li><li>Rollen und Funktionen festlegen</li></ul></div>
+      <div class="t07-gruppe"><b>Regeln</b><ul><li>Form der Zusammenarbeit und Spielregeln klären</li><li>Verantwortung und Kompetenzen regeln</li><li>Umgang mit Meinungsverschiedenheiten</li><li>Regeln wie Pünktlichkeit, Verbindlichkeit, Zuhören</li></ul></div>
+      <div class="t07-gruppe"><b>Steuerung</b><ul><li>Aufwand und Termine absprechen</li><li>Regeln und Mittel für Information und Kommunikation</li><li>verbindliche Kontrollmechanismen vereinbaren</li></ul></div>
+    </div>
+    <p class="prose">Die ICB unterscheidet zwei Anlässe (<span class="icb">ICB 3.10</span>): einen oder mehrere <b>Start-up-Workshops</b> am Projektanfang, in denen Projektauftrag und Projektmanagementplan entstehen (Indikator 4.5.10.1), und ein <b>Kick-off-Meeting</b> beim Übergang in jede neue Phase, das das Team über Pläne, Bedarf und Ziele der Phase informiert (Indikator 4.5.10.2).</p>
+
+    <h3>Ein Ablauf für den Kick-off (Ergänzung)</h3>
+    <p class="prose">Die Folien nennen die Ziele, aber keinen Ablauf. Ein bewährter Ablauf, als Ergänzung ohne Quelle in den Unterlagen:</p>
+    <ol class="t07-fluss">
+      <li><b>Vorbereiten:</b> Auftrag ist freigegeben; Einladung mit Agenda und Auftrag eine Woche vorher; Raum, Protokoll bestimmen.</li>
+      <li><b>Eröffnung durch die Auftraggeberin:</b> Warum ist das Projekt wichtig? Das zeigt die Rückendeckung der Steuerung.</li>
+      <li><b>Ausgangslage, Ziele, Abgrenzung:</b> Die Projektleitung stellt den Auftrag vor, Fragen klären.</li>
+      <li><b>Vorgehen und Termine:</b> Phasen, Meilensteine, nächste Arbeitspakete, Aufwand je Person.</li>
+      <li><b>Organisation:</b> Rollen, Verantwortung, Kompetenzen, Stellvertretungen.</li>
+      <li><b>Team:</b> Vorstellungsrunde mit Fähigkeiten und Erwartungen, Bedenken und Risiken sammeln.</li>
+      <li><b>Spielregeln:</b> Sitzungsrhythmus, Berichtswesen, Ablage, Umgang mit Konflikten, Eskalation.</li>
+      <li><b>Abschluss:</b> Pendenzen mit Wer und Bis-wann, Protokoll an alle.</li>
+    </ol>
+    <p class="prose">Im Leitstand ist der Kick-off der Realisierung der erste Vorgang: V01 «Kick-off und Detailplanung Realisierung», 48 Stunden, 3 Personen, 2 Tage. Der Leitstand zählt ab Tag 1 = erster Tag der Realisierung; V01 hat FA 0 und FE 2, läuft also an Tag 1 und Tag 2. In V01 legt das Team auch fest, wie Änderungswünsche laufen (Massnahme gegen Risiko R01).</p>
+
+    <h3>Der Projektmanagementplan in Kürze</h3>
+    <p class="prose">Der Auftrag sagt, <b>was</b> das Projekt liefern soll und mit welchen Mitteln. Der Projektmanagementplan sagt, <b>wie</b> es geführt wird: Gesamtplanung und alle projektspezifischen Regeln zu Methoden, Rollen und Hilfsmitteln. Er entsteht in der Initialisierung, geprägt vom Varianten- und Vorgehensentscheid, und wird nach dem Prinzip der rollenden Planung in jeder Phase nachgeführt (Vorlage 5.4, HERMES 4.4.1.35). Die Vorlage 5.4 hat 19 Kapitel:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Kapitel der Vorlage 5.4 Projektmanagementplan</caption>
+        <tbody>
+          <tr><th>Projekt und Struktur</th><td>1 Projektbeschreibung · 2 Szenario mit Durchführungsstrukturplan · 3 Durchführungsorganisation · 4 Projektergebnisstruktur (Scope)</td></tr>
+          <tr><th>Qualität</th><td>5 Qualitätsziele und -vorgaben · 6 Prüfplan · 15 Qualitätssicherung</td></tr>
+          <tr><th>Planung</th><td>7 Durchführungsplanung (Termine, Releases) · 8 Kostenplan und genehmigtes Budget · 9 Ressourcenplan · 10 Beschaffungsplan</td></tr>
+          <tr><th>Information</th><td>11 Kommunikationsplan · 12 Stakeholdermanagement · 13 Reporting · 19 Dokumentmanagement</td></tr>
+          <tr><th>Regeln</th><td>14 Vorgaben, Methoden, Werkzeuge · 16 Änderungsmanagement · 17 Risikomanagement · 18 Eskalationsvorgehen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Die Kapitel 13 (Reporting) und 18 (Eskalation) brauchst du in Station 19, Kapitel 17 (Risikomanagement) in Station 13. Die Projektabbruchkriterien nennt HERMES als eigenen Inhalt des Plans; in der Vorlage 5.4 fehlt dafür ein Kapitel.</p>
+  </section>
+
+  <!-- ===== 6 · Baukasten ===== -->
+  <section id="baukasten">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>Projektauftrag-Baukasten: der Durchführungsauftrag des Onlineschalters</h2>
+    <p class="prose">Die Studie ist fertig, Variante B «Standardprodukt» ist gewählt. Jetzt schreibst du als Projektleitung den Durchführungsauftrag, über den Auftraggeberin und Gemeinderat entscheiden. Lies das Dossier, füll die acht Abschnitte nacheinander aus und vergleich jeden mit der Musterlösung. Die 14 Punkte aus Schritt 3 sind dafür zu acht Abschnitten gebündelt. Danach prüfst du im Freigabe-Check einen fremden Entwurf.</p>
+    <div class="card stack">
+      <h3>Dossier Onlineschalter Wolkenried</h3>
+      <ul class="t07-dossier">
+        <li><b>Heute:</b> rund 260 Baugesuche pro Jahr auf Papier, je drei Dossiers; das Bauamt kopiert, verschickt an Feuerpolizei, Umwelt und Energie, Tiefbau und kantonale Stellen, Stand nur am Telefon, Gebühren per Einzahlungsschein.</li>
+        <li><b>Studie:</b> Variante B gewählt: Standardplattform der Lärchwerk Informatik AG, konfiguriert und an die vorhandene Bauverwaltungssoftware angebunden; Werkvertrag. Vorgehen klassisch.</li>
+        <li><b>Funktionen:</b> Gesuch online einreichen mit Planbeilagen und Vollständigkeitsprüfung, Status verfolgen, digitale Zirkulation an die Fachstellen mit Fristen, Gebühren online oder per QR-Rechnung.</li>
+        <li><b>Gemeinderat:</b> Legislaturziel «Digitale Verwaltung». Kredit für Realisierung und Einführung CHF 180'000 (Plankosten BAC 162'240, Reserve 17'760). Initialisierung bisher CHF 12'000, Konzept geschätzt CHF 28'000 (eigene Annahmen).</li>
+        <li><b>Termine:</b> Konzept 6 Wochen; dann Realisierung 4 Wochen (Tag 1–20) mit Vorabnahme Plan Tag 20, Einführung 4 Wochen (Tag 21–40), Abnahme Plan Tag 36, Terminziel Tag 40.</li>
+        <li><b>Organisation:</b> Auftraggeberin Franziska Bühlmann (Gemeinderätin Bau und Planung), Projektausschuss mit Claudia Wyss, Beat Imhof, Silvan Schuler, beratend Daniel Frei (Lärchwerk). Anwendervertretung Seraina Caflisch. Datenschutzberatung Sabine Wäfler.</li>
+        <li><b>Hinweise:</b> Die Hundeanmeldung online soll später kommen. Die Bauverwaltungssoftware bleibt. Der Hersteller muss die Schnittstellenbeschreibung liefern. Mitarbeitende aus Bauamt, Finanzen und Informatik arbeiten neben dem Tagesgeschäft mit.</li>
+      </ul>
+    </div>
+    <div class="card stack" id="t07-baukasten">
+      <h3>Acht Abschnitte</h3>
+      <div class="t07-tabs" role="group" aria-label="Abschnitt wählen" id="t07-tabs"></div>
+      <p class="t07-stand" id="t07-bk-stand" aria-live="polite"></p>
+      <div id="t07-bk-abschnitte"></div>
+      <div class="row">
+        <button type="button" class="btn" id="t07-bk-zurueck">← Vorheriger Abschnitt</button>
+        <button type="button" class="btn primary" id="t07-bk-weiter">Nächster Abschnitt →</button>
+      </div>
+    </div>
+    <div class="card stack">
+      <h3>Dein Auftrag im Überblick</h3>
+      <p class="hint">Stellt deine Texte aus allen acht Abschnitten zusammen. Nichts wird gespeichert oder verschickt.</p>
+      <div class="row"><button type="button" class="btn" id="t07-bk-ueberblick-knopf">Überblick zusammenstellen</button></div>
+      <div class="t07-ueberblick" id="t07-bk-ueberblick" aria-live="polite"></div>
+    </div>
+
+    <h3>Freigabe-Check: Ist dieser Entwurf freigabereif?</h3>
+    <p class="prose">Bevor der Auftrag an den Gemeinderat geht, prüft die Auftraggeberin ihn mit der Checkliste Projektdurchführungsfreigabe (HERMES 5.4.1.9). Unten liegt ein Entwurf, den die Gemeindekanzlei vor deiner Zeit begonnen hat. Prüf jeden Punkt: erfüllt oder fehlt?</p>
+    <div class="card stack">
+      <h3>Entwurf Durchführungsauftrag Onlineschalter, Version 0.9</h3>
+      <div class="tablebox">
+        <table class="tabelle t07-entwurf">
+          <tbody>
+            <tr><th>Ausgangslage</th><td>260 Baugesuche pro Jahr auf Papier, je drei Dossiers, Stand nur per Telefon. Gemäss Studie wird Variante B (Standardprodukt) umgesetzt.</td></tr>
+            <tr><th>Lösungsziele</th><td>Der Onlineschalter soll modern und bürgerfreundlich sein und das Bauamt entlasten. Priorität: hoch.</td></tr>
+            <tr><th>Vorgehensziele</th><td>Klassisches Vorgehen, Szenario IT-Adaption.</td></tr>
+            <tr><th>Rahmenbedingungen</th><td>Anbindung an die bestehende Bauverwaltungssoftware. Kredit höchstens CHF 180'000 für Realisierung und Einführung.</td></tr>
+            <tr><th>Rechtliche Grundlagen</th><td>Die Rechtsgrundlagenanalyse folgt in der Phase Konzept.</td></tr>
+            <tr><th>Investitionsbedarf</th><td>Initialisierung 12'000 (Ist) · Konzept 28'000 · Realisierung 112'800 · Einführung 49'440 · Reserve 17'760 · Total CHF 220'000.</td></tr>
+            <tr><th>Ressourcen und Hilfsmittel</th><td>1'072 Planstunden für Realisierung und Einführung, Mitarbeitende aus Bauamt, Finanzen und Informatik; Testumgebung beim Lieferanten, Schulungsraum im Gemeindehaus.</td></tr>
+            <tr><th>Planung und Organisation</th><td>Meilensteine mit Plantermin: Durchführungsfreigabe (Start Konzept), Phasenfreigabe Realisierung (nach 6 Wochen Konzept), Vorabnahme Tag 20, Phasenfreigabe Einführung (Tag 20), Abnahme Tag 36. Rollen besetzt: Auftraggeberin, Projektausschuss, Projektleitung, Anwendervertretung.</td></tr>
+            <tr><th>Risiken</th><td>Schnittstelle aufwendiger als geplant (hoch). Hersteller liefert spät (hoch). Mitarbeitende werden abgezogen (hoch).</td></tr>
+            <tr><th>Konsequenzen</th><td>Bei Freigabe: Der Onlineschalter läuft ab dem nächsten Frühling.</td></tr>
+            <tr><th>Verbindlichkeiten</th><td>Beat Imhof, Silvan Schuler und Monika Steiner sichern die Pensen ihrer Mitarbeitenden für Realisierung und Einführung schriftlich zu.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">Ausschnitt: Lösungsbeschreibung, Strategiebezug, Wirtschaftlichkeit und Vorgehensweise stehen im Entwurf und sind hier weggelassen. Die Checkliste prüft nur die gezeigten Punkte.</p>
+    </div>
+    <div class="card stack">
+      <h3>Checkliste</h3>
+      <div class="t07-checks" id="t07-checks"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t07-check-pruefen">Checkliste prüfen</button>
+        <button type="button" class="btn" id="t07-check-zuruecksetzen">Zurücksetzen</button>
+      </div>
+      <p class="t07-stand" id="t07-check-stand" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Reihenfolge ===== -->
+  <section id="reihenfolge">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Die Initialisierung in die richtige Reihenfolge bringen</h2>
+    <p class="prose">So lief die Initialisierung des Onlineschalters. Die Schritte sind durcheinandergeraten. Bring sie mit den Pfeilknöpfen in die richtige Reihenfolge und prüf dann. Tipp: Jeder Entscheid braucht vorher das Dokument, auf dem er beruht.</p>
+    <div class="card stack">
+      <ol class="t07-reihe" id="t07-reihe"></ol>
+      <div class="row">
+        <button type="button" class="btn primary" id="t07-reihe-pruefen">Reihenfolge prüfen</button>
+        <button type="button" class="btn" id="t07-reihe-zuruecksetzen">Neu mischen</button>
+      </div>
+      <p class="t07-stand" id="t07-reihe-stand" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst einordnen, rechnen, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Neun Übungen in sechs Arten: zuordnen, wahr oder falsch, rechnen, Schritt für Schritt, Fallentscheid und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest.</p>
+    <div id="t07-u-dapm"></div>
+    <div id="t07-u-wer"></div>
+    <div id="t07-u-wf"></div>
+    <div id="t07-u-payback"></div>
+    <div id="t07-u-ziel"></div>
+    <div id="t07-u-fall"></div>
+    <div id="t07-u-kickoff-mc"></div>
+    <div id="t07-u-kickoff"></div>
+    <div id="t07-u-bestandteile"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein Durchführungsauftrag aus Fallangaben, am Stück</h2>
+    <p class="prose">Eine eigene Aufgabe mit eigenem Fall und eigenen Zahlen, angelehnt an die Fallarbeit im Kurs (Fallstudie MOVE, LB 2: aus einer Fallbeschreibung Problemerfassung, Organisation und Budget ableiten): Aus Fallangaben die Kernpunkte eines Durchführungsauftrags formulieren und prüfen, ob er freigabereif ist. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t07-film"></div>
+    <details class="sol"><summary>Der fertige Durchführungsauftrag als Text</summary>
+      <div class="t07-fertig-box" id="t07-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>Auftrag und Plan verwechseln.</b> Der Durchführungsauftrag ist die verbindliche Vereinbarung für die Freigabe (was, wozu, womit). Der Projektmanagementplan regelt, wie das Projekt geführt wird, und wird laufend nachgeführt.</div>
+    <div class="note falle"><b>Initialisierung bei agilen Projekten weglassen.</b> Die Phase Initialisierung findet in jedem HERMES-Projekt statt und läuft aus Sicht des Projektmanagements klassisch ab.</div>
+    <div class="note falle"><b>Falsche Entscheidungsträger.</b> Initialisierungsfreigabe: Auftraggeber allein. Weiteres Vorgehen: Projektleitung nach Rücksprache. Durchführungsfreigabe: Auftraggeber und Stammorganisation. Nie die Projektleitung allein.</div>
+    <div class="note falle"><b>Analysen vergessen.</b> Rechtsgrundlagen- und Schutzbedarfsanalyse gehören in die Initialisierung, parallel zur Studie. Die Beschaffungsanalyse nur, wenn etwas beschafft wird.</div>
+    <div class="note falle"><b>Ziele ohne Messgrösse.</b> Jedes Lösungsziel braucht Beschreibung, Messgrösse mit Termin und Priorität (M, 1, 2, 3).</div>
+    <div class="note falle"><b>Abgrenzung fehlt.</b> Was nicht dazugehört, muss ausdrücklich im Auftrag stehen. Sonst kommt es später als «war doch selbstverständlich» zurück.</div>
+    <div class="note falle"><b>Konsequenzen nur für den Ja-Fall.</b> Die Steuerung braucht die Folgen für drei Fälle: Freigabe, spätere Freigabe, keine Freigabe.</div>
+    <div class="note falle"><b>Ausbleibende Freigabe ist kein Projektabbruch.</b> In HERMES gibt es den Abbruch nur während der Lösungsentstehung. Er liegt beim Auftraggeber.</div>
+    <div class="note falle"><b>Kick-off als reine Information.</b> Der Kick-off klärt auch Rollen, Kompetenzen, Spielregeln, Erwartungen, Aufwand und Kontrollmechanismen. Ein Vortrag mit Folien reicht nicht.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t07-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Nach LB 2: <b>Idee → Projektantrag</b>, <b>Definition → Projektauftrag</b>, <b>Projektplan → Netzplan und Gantt</b>. Der Antrag bittet um Prüfung, der Auftrag erteilt den Auftrag.</li>
+      <li>Die <b>HERMES-Initialisierung</b> findet immer statt und läuft klassisch: Studie mit Varianten, parallel Rechtsgrundlagen- und Schutzbedarfsanalyse, bei Beschaffung die Beschaffungsanalyse; dann PM-Plan und Durchführungsauftrag.</li>
+      <li>Drei Entscheide: <b>Initialisierungsfreigabe</b> (Auftraggeber), <b>weiteres Vorgehen</b> (Projektleitung nach Rücksprache), <b>Durchführungsfreigabe</b> (Auftraggeber und Stammorganisation).</li>
+      <li>Der <b>Durchführungsauftrag</b> hat 14 Punkte von Ausgangslage bis Verbindlichkeiten. Prüfstein für die Freigabe: messbare Ziele, Abgrenzung, Recht geklärt, Mittel je Phase, Risiken mit Massnahmen, Konsequenzen für alle drei Fälle.</li>
+      <li>Gründe gegen die Freigabe: fehlende Wirtschaftlichkeit, zu hohe Risiken, keine Realisierbarkeit, rechtliche oder politische Bedenken, fehlende Übereinstimmung mit der Strategie. <b>Abbruchkriterien</b> stehen im PM-Plan.</li>
+      <li>Der <b>Kick-off</b> schafft gemeinsames Verständnis, klärt Ziele, Rollen, Kompetenzen, Regeln, Aufwand, Kommunikation und Kontrolle.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t07-ziele">
+        <li><span class="icb">ICB 3.01</span> Projektdesign: Swiss ICB 4.5.1 (ab S. 89), besonders 4.5.1.4 «Generellen Projektmanagement-Ansatz auswählen und anpassen» und 4.5.1.5 «Konzept für die Projektdurchführung entwerfen» (Eigenfertigung oder Kauf, Wasserfall oder iterativ).</li>
+        <li><span class="icb">ICB 3.10</span> Planung und Steuerung: Swiss ICB 4.5.10 (ab S. 123), Indikator 4.5.10.1 «Projekt starten, Projektmanagement-Plan entwickeln und Zustimmung einholen» (Start-up-Workshop) und 4.5.10.2 «Übergang in eine neue Projektphase» (Kick-off-Meeting).</li>
+        <li>Ablauf der Initialisierung mit den drei Entscheiden und wer sie trifft (Tabelle aus Schritt 4); die 14 Punkte des Durchführungsauftrags (Schritt 3); die 13 Kick-off-Ziele in vier Gruppen (Schritt 5); die fünf Gründe gegen eine Freigabe.</li>
+        <li>Fundstellen: LB 2 F.28 (Idee, Definition, Projektplan), F.29–32 (Problemerfassung, Leitfragen), F.35–36 (HERMES-Initialisierung, Abbruchgründe); LB 3 F.12–13 (Modul Projektgrundlagen, Lieferobjekte); LB 5 F.22 (Kick-off); LB 6 F.34 (Durchführungsauftrag); Vorlagen HERMES Projektauftrag (LB 3), Durchführungsauftrag (LB 6), 5.4 Projektmanagementplan (LB 5); HERMES-Referenzhandbuch Kap. 1.4.1.1 Initialisierung (S. 22), Ergebnisse 4.4.1.9 Beschaffungsanalyse (S. 49), 4.4.1.34 Projektinitialisierungsauftrag (S. 60), 4.4.1.35 Projektmanagementplan (S. 61), 4.4.1.45 Rechtsgrundlagenanalyse (S. 64), 4.4.1.48 Schutzbedarfsanalyse (S. 65), 4.4.1.53 Studie (S. 67), 4.4.1.57 Projektdurchführungsauftrag (S. 69); Aufgaben 5.4.1.5 Projektabbruch (S. 83), 5.4.1.7 Initialisierungsfreigabe (S. 85), 5.4.1.9 Durchführungsfreigabe (S. 87), 5.4.2.7 weiteres Vorgehen (S. 93).</li>
+        <li>Gubelmann/Sommer: Kapitel 8 «Projektdesign», S. 89–104 (laut LB 4). Das Kapitel zu Planung und Steuerung (ICB 3.10) nennen die bisherigen Folien nicht; im Inhaltsverzeichnis nachschlagen. Für den Kick-off nennt LB 5 Kapitel 9 «Organisation, Information und Dokumentation», S. 105–124.</li>
+      </ul>
+    </div>
+    <footer>Station 7 des Lernpfads PMGT. Gemeinde Wolkenried, «Onlineschalter Wolkenried», «Online-Reservation Mehrzweckhalle», «Archiv digital» und alle Personen und Firmen frei erfunden. Quellen: LB 2, LB 3, LB 5, LB 6, HERMES-Vorlagen, HERMES-Referenzhandbuch, Swiss ICB 4.0, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------- Schritt 0: Antrag, Auftrag oder Plan ---------- */
+  L.sortierer("#t07-sortierer-pap", {
+    kategorien: ["Projektantrag", "Projektauftrag", "Projektplan"],
+    elemente: [
+      { html: "Kurze Beschreibung von Problem, Zweck und ersten Lösungsideen", kategorie: "Projektantrag", erklaerung: "Das ist das Ergebnis der Problemerfassung in der Phase Idee (LB 2 F.29)." },
+      { html: "Messbare Ziele, Vorgehen, Wirtschaftlichkeit, Risiken und Organisation, vom Auftraggeber unterschrieben", kategorie: "Projektauftrag", erklaerung: "Das erarbeitet die Phase Definition; das Ergebnis ist der Projektauftrag (LB 2 F.28)." },
+      { html: "Netzplan und Gantt mit Arbeitspaketen und Ressourcen", kategorie: "Projektplan", erklaerung: "Die Detailplanung kommt nach dem Auftrag, in der Phase Projektplan." },
+      { html: "Führungsrhythmus: wann welche Sitzung stattfindet", kategorie: "Projektplan", erklaerung: "LB 2 F.28 ordnet den Führungsrhythmus der Phase Projektplan zu (siehe Station 16)." },
+      { html: "Das Ergebnis der Phase Idee", kategorie: "Projektantrag", erklaerung: "Phase 1 Idee endet mit dem Projektantrag." },
+      { html: "Der Entscheidungsprozess: wer was entscheidet", kategorie: "Projektauftrag", erklaerung: "LB 2 F.28 nennt den Entscheidungsprozess als Teil der Definition, also des Projektauftrags." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper Projektantrag ---------- */
+  L.stepper("#t07-stepper-antrag", {
+    titel: "Vom Ärger im Bauamt zum Projektantrag",
+    text: 'Bauverwalter Beat Imhof klagt: «Wir <span data-link="anlass">kopieren jedes Baugesuch dreimal und verschicken es per Post</span>. <span data-link="betroffen">Die Planungsbüros rufen ständig an</span>, weil sie den Stand nicht kennen. Und <span data-link="dring">in drei Jahren geht unser erfahrenster Sachbearbeiter in Pension</span>.» Gemeinderätin Franziska Bühlmann sagt: «Das passt zu unserem <span data-link="strat">Legislaturziel Digitale Verwaltung</span>.»',
+    schritte: [
+      { html: '<b>Anlass:</b> <span data-link="anlass">Papierablauf mit drei Dossiers je Gesuch, rund 260 Gesuche pro Jahr.</span>',
+        warum: "Erste Leitfrage der Situationserfassung: Was löst die Idee aus? Mit Zahl, damit es prüfbar ist." },
+      { html: '<b>Betroffene und Nutzen:</b> <span data-link="betroffen">Bauwillige und Planungsbüros wollen den Stand sehen;</span> Bauamt und Fachstellen sparen Kopier- und Telefonaufwand.',
+        warum: "Wer ist betroffen, welchen Nutzen hat die Idee? Das sind zwei Fragen aus LB 2 F.31." },
+      { html: '<b>Dringlichkeit:</b> <span data-link="dring">Wissen über den Ablauf geht mit Pensionierungen verloren.</span> Ohne Projekt bleibt der Aufwand, und die Abhängigkeit von Einzelnen wächst.',
+        warum: "LB 2 F.31 fragt auch: Was ist die Konsequenz, wenn das Projekt nicht umgesetzt wird?" },
+      { html: '<b>Strategiebezug:</b> <span data-link="strat">Passt zum Legislaturziel «Digitale Verwaltung».</span>',
+        warum: "Passt die Idee in die Strategie der Organisation? Sonst hat sie im Portfolio keine Chance (Station 4)." },
+      { html: "<b>Ziel und Lösungsansätze:</b> Baugesuch online einreichen und verfolgen. Ansätze: eigene Lösung, Standardprodukt, kantonale Plattform abwarten.",
+        warum: "Nicht mit der erstbesten Lösung zufrieden sein: Mehrere Varianten erweitern den Blick (LB 2 F.32). Bewertet werden sie erst in der Studie." },
+      { html: "<b>Projektantrag</b> an die Auftraggeberin: Bitte um Freigabe der Initialisierung mit 60 Stunden für Studie und Analysen.",
+        warum: "Ergebnis der Phase Idee ist der Projektantrag (LB 2 F.29). In HERMES entspricht dem der Projektinitialisierungsauftrag, über den die Auftraggeberin allein entscheidet." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper Lösungsziel ---------- */
+  L.stepper("#t07-stepper-ziel", {
+    titel: "Vom Wunsch zum Lösungsziel",
+    text: 'Franziska Bühlmann wünscht: «Die Bauwilligen sollen <span data-link="was">ihr Gesuch online einreichen</span> können, und zwar <span data-link="wieviel">möglichst viele</span>, <span data-link="wann">bald nach dem Start</span>. Das ist für mich <span data-link="prio">nicht verhandelbar</span>.»',
+    schritte: [
+      { html: "<b>Kategorie:</b> Dienstleistung für die Bevölkerung",
+        warum: "Die Kategorie ordnet das Ziel ein, zum Beispiel Dienstleistung, Effizienz oder Kosten." },
+      { html: '<b>Beschreibung:</b> <span data-link="was">Baugesuche werden online mit Planbeilagen eingereicht.</span>',
+        warum: "Was soll die Lösung leisten? Lösungsneutral genug, aber eindeutig." },
+      { html: '<b>Messgrösse:</b> <span data-link="wieviel">mindestens 60&nbsp;% der Baugesuche online</span>, <span data-link="wann">gemessen 12 Monate nach Betriebsaufnahme</span>',
+        warum: "«Möglichst viele» und «bald» werden zu einer Zahl und einem Zeitpunkt. Erst so lässt sich bei der Abnahme sagen: erreicht oder nicht. Die 60&nbsp;% sind eine eigene Annahme." },
+      { html: '<b>Priorität:</b> <span data-link="prio">M (Muss)</span>',
+        warum: "Die Vorlage kennt M = Muss sowie 1 = hoch, 2 = mittel, 3 = tief. «Nicht verhandelbar» heisst Muss." },
+      { html: "<b>Prognose:</b> leer, wird im Statusbericht in Prozent nachgeführt",
+        warum: "Die Vorlage zum Durchführungsauftrag sieht die Spalte für die Projektstatusberichte vor. Im Auftrag selbst bleibt sie leer." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Baukasten ---------- */
+  const ABSCHNITTE = [
+    { kurz: "Ausgangslage", titel: "Abschnitt 1 · Ausgangslage und Handlungsbedarf",
+      frage: "<p>Beschreib in drei bis vier Sätzen, was heute das Problem ist, warum die Gemeinde handeln muss und auf welche Studie und Variante sich der Auftrag stützt (Punkt 1).</p>",
+      muster: "<p>Das Bauamt Wolkenried bearbeitet rund 260 Baugesuche pro Jahr vollständig auf Papier. Jedes Gesuch wird in drei Dossiers eingereicht, kopiert und per Post an die Fachstellen verschickt; Bauwillige und Planungsbüros erfahren den Stand nur per Telefon, Gebühren laufen über Einzahlungsscheine. Das bindet Personal, verlängert die Durchlaufzeit und macht die Gemeinde vom Wissen einzelner Mitarbeitender abhängig. Die Studie hat drei Varianten bewertet; gewählt ist Variante B, das Standardprodukt der Lärchwerk Informatik AG mit Anbindung an die Bauverwaltungssoftware.</p>",
+      kriterien: [{ text: "Problem mit Zahl (260 Gesuche, drei Dossiers)", punkte: 1 }, { text: "Handlungsbedarf begründet (Aufwand, Durchlaufzeit, Abhängigkeit)", punkte: 1 }, { text: "Verweis auf Studie und gewählte Variante", punkte: 1 }] },
+    { kurz: "Ziele", titel: "Abschnitt 2 · Ziele",
+      frage: "<p>Formuliere zwei Lösungsziele mit Beschreibung, Messgrösse (mit Termin) und Priorität sowie die Vorgehensziele (klassisch oder agil, Szenario) (Punkt 2).</p>",
+      muster: "<p><b>Z1 (M):</b> Baugesuche werden online mit Planbeilagen eingereicht. Messgrösse: mindestens 60&nbsp;% der Gesuche online, 12 Monate nach Betriebsaufnahme.</p><p><b>Z2 (1 hoch):</b> Die Zirkulation an die Fachstellen läuft digital mit Fristen. Messgrösse: 100&nbsp;% der Online-Gesuche ohne Papierkopie zirkuliert, ab Betriebsaufnahme.</p><p><b>Vorgehensziele:</b> klassisches Vorgehen (Phasen Konzept, Realisierung, Einführung), Szenario IT-Adaption, weil ein Standardprodukt angepasst wird.</p><p class=\"hint\">Zahlen sind eigene Annahmen.</p>",
+      kriterien: [{ text: "Mindestens zwei Ziele mit Messgrösse und Termin", punkte: 2 }, { text: "Priorität je Ziel (M, 1, 2, 3)", punkte: 1 }, { text: "Vorgehensart und Szenario genannt", punkte: 1 }] },
+    { kurz: "Rahmen", titel: "Abschnitt 3 · Rahmenbedingungen und Abgrenzung",
+      frage: "<p>Was ist vorgegeben, und was gehört ausdrücklich nicht zum Projekt? Je mindestens zwei Punkte (Punkt 3).</p>",
+      muster: "<p><b>Rahmenbedingungen:</b> Die bestehende Bauverwaltungssoftware bleibt und wird angebunden. Kredit für Realisierung und Einführung höchstens CHF 180'000. Abnahme spätestens Tag 40 der Realisierung und Einführung. Mitarbeitende arbeiten neben dem Tagesgeschäft mit.</p><p><b>Abgrenzung:</b> Andere Online-Dienste wie die Hundeanmeldung gehören nicht dazu. Die Bauverwaltungssoftware selbst wird nicht ersetzt. Der Papierweg bleibt für Bauwillige ohne Computer bestehen.</p>",
+      kriterien: [{ text: "Mindestens zwei Rahmenbedingungen (System, Budget, Termin, Personal)", punkte: 1 }, { text: "Mindestens zwei klare Abgrenzungen (was nicht dazugehört)", punkte: 2 }] },
+    { kurz: "Lösung, Recht", titel: "Abschnitt 4 · Lösung, Strategiebezug, rechtliche Grundlagen",
+      frage: "<p>Beschreib die Lösung in zwei Sätzen, nenne den Strategiebezug und die wichtigsten Schlüsse aus Rechtsgrundlagen- und Schutzbedarfsanalyse (Punkte 4 bis 6).</p>",
+      muster: "<p><b>Lösung:</b> Eine Standardplattform der Lärchwerk Informatik AG für Einreichung, Statusabfrage, Zirkulation und Gebühren, angebunden an die Bauverwaltungssoftware.</p><p><b>Strategiebezug:</b> Legislaturziel «Digitale Verwaltung»; Vorgaben der Gemeinde zu Informatik und Beschaffung werden eingehalten.</p><p><b>Recht:</b> Die Rechtsgrundlagenanalyse zeigt: Das Gebührenreglement muss für Zahlungen online ergänzt werden (Antrag an den Gemeinderat). Ob ein Gesuch ohne Unterschrift auf Papier gültig ist, klärt die Gemeinde mit dem Kanton. Die Schutzbedarfsanalyse verlangt Berechtigungen nach Rolle, Datenhaltung in der Schweiz und eine Vorprüfung durch die kantonale Datenschutzstelle.</p><p class=\"hint\">Rechtliche Befunde frei erfunden.</p>",
+      kriterien: [{ text: "Lösung kurz und eindeutig beschrieben", punkte: 1 }, { text: "Strategiebezug genannt", punkte: 1 }, { text: "Mindestens ein rechtlicher Befund mit Folge", punkte: 1 }, { text: "Datenschutz und Informationssicherheit berücksichtigt", punkte: 1 }] },
+    { kurz: "Mittel", titel: "Abschnitt 5 · Investitions-, Ressourcen- und Hilfsmittelbedarf, Wirtschaftlichkeit",
+      frage: "<p>Stell den Investitionsbedarf je Phase mit Total zusammen, nenne den Ressourcenbedarf und schreib einen Satz zur Wirtschaftlichkeit (Punkte 7 bis 9).</p>",
+      muster: "<p><b>Investitionsbedarf:</b> Initialisierung CHF 12'000 (Ist) · Konzept CHF 28'000 · Realisierung CHF 112'800 und Einführung CHF 49'440 (Plankosten der Vorgänge, zusammen BAC CHF 162'240) · Reserve CHF 17'760 · Total CHF 220'000.</p><p><b>Ressourcen:</b> 1'072 Planstunden für Realisierung und Einführung, davon Mitarbeitende aus Bauamt, Finanzen und Informatik mit festen Pensen; Testumgebung beim Lieferanten; Schulungsraum im Gemeindehaus.</p><p><b>Wirtschaftlichkeit:</b> Nutzen vor allem durch weniger Kopier-, Versand- und Telefonaufwand und kürzere Durchlaufzeit; die Vorschau mit Betriebskosten und Payback liegt der Studie bei (Rechenweg in Station 12).</p><p class=\"hint\">Konzept und Initialisierung eigene Annahmen; Realisierung, Einführung und Reserve aus der Leitstand-Spezifikation: 112'800 + 49'440 = 162'240; 162'240 + 17'760 = 180'000; 12'000 + 28'000 + 180'000 = 220'000.</p>",
+      kriterien: [{ text: "Kosten je Phase mit Total, Initialisierung als Ist", punkte: 2 }, { text: "Reserve sichtbar ausgewiesen", punkte: 1 }, { text: "Personal und Hilfsmittel genannt", punkte: 1 }, { text: "Aussage zur Wirtschaftlichkeit", punkte: 1 }] },
+    { kurz: "Planung", titel: "Abschnitt 6 · Planung, Organisation, Vorgehensweise",
+      frage: "<p>Nenne die wichtigsten Meilensteine mit Termin und die Rollen mit Namen. Ein Satz zur Vorgehensweise (Punkte 10 und 11).</p>",
+      muster: "<p><b>Meilensteine:</b> Durchführungsfreigabe (Start Konzept) · Phasenfreigabe Realisierung nach 6 Wochen Konzept · Vorabnahme Plan Tag 20 · Phasenfreigabe Einführung durch den Gemeinderat · Abnahme Plan Tag 36, Terminziel Tag 40 (Tage im Leitstand ab Start der Realisierung gezählt).</p><p><b>Organisation:</b> Auftraggeberin Franziska Bühlmann mit Projektausschuss (Claudia Wyss, Beat Imhof, Silvan Schuler, beratend Daniel Frei); Projektleitung; Anwendervertretung Seraina Caflisch; Lieferant Lärchwerk Informatik AG; Datenschutzberatung Sabine Wäfler.</p><p><b>Vorgehensweise:</b> Konfiguration der Plattform mit einem Prototyp der Formulare, getestet mit Bauwilligen und Planungsbüros; Pilot mit drei Planungsbüros vor der Abnahme.</p>",
+      kriterien: [{ text: "Mindestens vier Meilensteine mit Termin", punkte: 2 }, { text: "Rollen der Steuerung, Führung und Ausführung mit Namen", punkte: 2 }, { text: "Vorgehensweise kurz beschrieben", punkte: 1 }] },
+    { kurz: "Risiken", titel: "Abschnitt 7 · Risiken",
+      frage: "<p>Nenne drei Risiken mit Bewertung (Eintretenswahrscheinlichkeit × Auswirkung), je mit Massnahme, Verantwortlichen und Termin (Punkt 12).</p>",
+      muster: "<p><b>R02 Aufwand der Schnittstelle unterschätzt</b> (W 3 × A 4 = 12): Zweitschätzung durch Elena vor Beginn; verantwortlich Projektleitung, vor Tag 6.</p><p><b>R03 Hersteller liefert die Schnittstellenbeschreibung zu spät</b> (3 × 4 = 12): Beschreibung jetzt über die Gemeinde anfordern; verantwortlich Luca Bernasconi, sofort.</p><p><b>R04 Linienvorgesetzte ziehen Mitarbeitende ab</b> (4 × 3 = 12): Ressourcenvereinbarung mit den Linienvorgesetzten; verantwortlich Auftraggeberin, vor der Freigabe.</p><p class=\"hint\">Skala 1–5 wie im Risikoregister des Leitstands; die Vorlage zum Auftrag nutzt eine 3er-Skala. Beides ist zulässig, wenn die Skala genannt ist.</p>",
+      kriterien: [{ text: "Drei konkrete Risiken (Ursache und Wirkung erkennbar)", punkte: 1 }, { text: "Bewertung mit genannter Skala", punkte: 1 }, { text: "Je eine Massnahme mit Verantwortlichen und Termin", punkte: 2 }] },
+    { kurz: "Konsequenzen", titel: "Abschnitt 8 · Konsequenzen und Verbindlichkeiten",
+      frage: "<p>Was folgt bei Freigabe, bei späterer Freigabe und bei abgelehnter Freigabe? Welche Verbindlichkeiten gehen Auftraggeberin und Projektleitung ein (Punkte 13 und 14)?</p>",
+      muster: "<p><b>Bei Freigabe:</b> Konzept startet sofort, Onlineschalter in Betrieb nach der Einführung, rund 14 Wochen nach Freigabe (6 Wochen Konzept, 8 Wochen Realisierung und Einführung).</p><p><b>Bei späterer Freigabe:</b> Die Plattform-Offerte läuft ab und muss neu eingeholt werden; der Papieraufwand bleibt ein weiteres Jahr; das Wissen der Pensionierten geht verloren.</p><p><b>Bei Ablehnung:</b> Papierablauf bleibt; die Gemeinde verfehlt das Legislaturziel; die bisherigen CHF 12'000 der Initialisierung sind ohne Nutzen ausgegeben, die Studie bleibt für später verwendbar.</p><p><b>Verbindlichkeiten:</b> Die Linienvorgesetzten sichern die Pensen schriftlich zu; die Auftraggeberin entscheidet Anträge innert 5 Arbeitstagen; die Projektleitung berichtet alle 4 Wochen mit Statusbericht.</p>",
+      kriterien: [{ text: "Konsequenzen für alle drei Fälle", punkte: 3 }, { text: "Mindestens zwei gegenseitige Verbindlichkeiten mit Verantwortlichen", punkte: 2 }] }
+  ];
+
+  const tabsBox = document.getElementById("t07-tabs");
+  const abschnitteBox = document.getElementById("t07-bk-abschnitte");
+  const bkStand = document.getElementById("t07-bk-stand");
+  const knopfZurueck = document.getElementById("t07-bk-zurueck");
+  const knopfWeiter = document.getElementById("t07-bk-weiter");
+  const tabs = [];
+  const boxen = [];
+  let aktiv = 0;
+
+  ABSCHNITTE.forEach(function (a, i) {
+    const t = document.createElement("button");
+    t.type = "button";
+    t.className = "btn t07-tab";
+    t.textContent = (i + 1) + " " + a.kurz;
+    t.setAttribute("aria-pressed", "false");
+    t.setAttribute("aria-label", "Abschnitt " + (i + 1) + ": " + a.kurz);
+    t.addEventListener("click", function () { zeige(i, true); });
+    tabsBox.appendChild(t);
+    tabs.push(t);
+
+    const box = document.createElement("div");
+    box.className = "t07-abschnitt";
+    box.id = "t07-bk-" + (i + 1);
+    box.tabIndex = -1;
+    box.hidden = true;
+    abschnitteBox.appendChild(box);
+    boxen.push(box);
+    L.reflexion(box, {
+      titel: a.titel,
+      icb: i === 1 || i === 5 ? ["ICB 3.01", "ICB 3.10"] : "ICB 3.10",
+      frage: a.frage,
+      musterloesung: a.muster + '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt.</p>',
+      kriterien: a.kriterien
+    });
+    box.addEventListener("input", markieren);
+  });
+
+  function textVon(i) {
+    const f = boxen[i].querySelector("textarea");
+    return f ? f.value.trim() : "";
+  }
+  function markieren() {
+    let fertig = 0;
+    tabs.forEach(function (t, i) {
+      const voll = textVon(i).length > 0;
+      t.classList.toggle("t07-fertig", voll);
+      if (voll) fertig++;
+    });
+    bkStand.textContent = "Abschnitt " + (aktiv + 1) + " von " + ABSCHNITTE.length + " · " + fertig + " ausgefüllt";
+  }
+  function zeige(i, fokus) {
+    aktiv = Math.max(0, Math.min(ABSCHNITTE.length - 1, i));
+    boxen.forEach(function (b, k) { b.hidden = k !== aktiv; });
+    tabs.forEach(function (t, k) {
+      t.setAttribute("aria-pressed", k === aktiv ? "true" : "false");
+      t.classList.toggle("on", k === aktiv);
+    });
+    knopfZurueck.disabled = aktiv === 0;
+    knopfWeiter.disabled = aktiv === ABSCHNITTE.length - 1;
+    markieren();
+    if (fokus) boxen[aktiv].focus();
+  }
+  knopfZurueck.addEventListener("click", function () { zeige(aktiv - 1, true); if (knopfZurueck.disabled) knopfWeiter.focus(); });
+  knopfWeiter.addEventListener("click", function () { zeige(aktiv + 1, true); if (knopfWeiter.disabled) knopfZurueck.focus(); });
+  zeige(0, false);
+
+  document.getElementById("t07-bk-ueberblick-knopf").addEventListener("click", function () {
+    const ziel = document.getElementById("t07-bk-ueberblick");
+    let leer = 0;
+    ziel.innerHTML = '<p class="t07-ue-teil"><b>Durchführungsauftrag Onlineschalter Wolkenried · Entwurf zur Freigabe</b>Von: Projektleitung · An: Auftraggeberin Franziska Bühlmann, Gemeinderat</p>' +
+      ABSCHNITTE.map(function (a, i) {
+        const t = textVon(i);
+        if (!t) leer++;
+        return '<div class="t07-ue-teil"><b>' + escapeHtml(a.titel) + "</b><p" + (t ? ">" + escapeHtml(t) : ' class="t07-leer">noch leer') + "</p></div>";
+      }).join("") +
+      '<p class="hint">' + (leer ? leer + " Abschnitt(e) noch leer. Ein Auftrag mit Lücken ist nicht freigabereif." : "Alle acht Abschnitte sind ausgefüllt. Jetzt der Freigabe-Check unten: Würde dein eigener Entwurf ihn bestehen?") + "</p>";
+  });
+
+  /* ---------- Schritt 6: Freigabe-Check ---------- */
+  const CHECKS = [
+    { name: "Ausgangslage mit Handlungsbedarf und Bezug zur Studie", soll: "ja",
+      erkl: "Problem mit Zahl, Verweis auf Studie und Variante B: erfüllt." },
+    { name: "Lösungsziele mit Messgrösse, Termin und Priorität", soll: "nein",
+      erkl: "«Modern und bürgerfreundlich» lässt sich nicht messen, und ein Termin fehlt. Ohne Messgrösse kann niemand die Zielerreichung prüfen. Fehlt." },
+    { name: "Vorgehensart und Szenario gewählt", soll: "ja",
+      erkl: "Klassisch, Szenario IT-Adaption: erfüllt." },
+    { name: "Rahmenbedingungen und Abgrenzung", soll: "nein",
+      erkl: "Rahmenbedingungen stehen da, aber keine Abgrenzung. Was gehört nicht dazu, etwa die Hundeanmeldung oder der Ersatz der Bauverwaltungssoftware? Fehlt." },
+    { name: "Rechtliche Grundlagen geklärt", soll: "nein",
+      erkl: "Die Rechtsgrundlagenanalyse gehört in die Initialisierung und fliesst in den Entscheid ein (LB 2 F.36). «Folgt im Konzept» heisst: Die Grundlage für den Entscheid fehlt." },
+    { name: "Investitions- und Ressourcenbedarf je Phase", soll: "ja",
+      erkl: "Kosten je Phase mit Initialisierung als Ist, Reserve und Total, dazu Planstunden und Hilfsmittel: erfüllt. 12'000 + 28'000 + 112'800 + 49'440 + 17'760 = 220'000." },
+    { name: "Meilensteine und Rollen", soll: "ja",
+      erkl: "Meilensteine mit Plantermin und besetzte Rollen: erfüllt." },
+    { name: "Risiken bewertet, mit Massnahme, Verantwortlichen und Termin", soll: "nein",
+      erkl: "Nur «hoch», keine Skala, keine Massnahmen, keine Verantwortlichen. So kann die Steuerung nicht beurteilen, ob die Risiken tragbar sind. Fehlt." },
+    { name: "Konsequenzen für Freigabe, spätere Freigabe und Ablehnung", soll: "nein",
+      erkl: "Nur der Ja-Fall ist beschrieben. Der Gemeinderat muss wissen, was ein Aufschub oder ein Nein kostet. Fehlt." },
+    { name: "Verbindlichkeiten (Zusagen der Beteiligten)", soll: "ja",
+      erkl: "Schriftliche Zusage der Pensen durch die Linienvorgesetzten: erfüllt. Das ist zugleich die Massnahme gegen Risiko R04." }
+  ];
+  const checkWahl = {};
+  const checksBox = document.getElementById("t07-checks");
+  const checkStand = document.getElementById("t07-check-stand");
+  CHECKS.forEach(function (c, i) {
+    const fs = document.createElement("fieldset");
+    fs.className = "t07-check";
+    fs.innerHTML = "<legend>" + (i + 1) + " · " + c.name + "</legend>";
+    const kn = document.createElement("div");
+    kn.className = "t07-knoepfe";
+    [["ja", "✓ erfüllt"], ["nein", "✗ fehlt"]].forEach(function (w) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn t07-wahl";
+      b.dataset.wert = w[0];
+      b.textContent = w[1];
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", c.name + ": " + w[1].slice(2));
+      b.addEventListener("click", function () {
+        checkWahl[i] = w[0];
+        kn.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        rm.className = "t07-rm";
+        rm.innerHTML = "";
+        checkStand.textContent = "";
+      });
+      kn.appendChild(b);
+    });
+    const rm = document.createElement("div");
+    rm.className = "t07-rm";
+    rm.id = "t07-check-rm-" + i;
+    rm.setAttribute("aria-live", "polite");
+    fs.append(kn, rm);
+    checksBox.appendChild(fs);
+  });
+  document.getElementById("t07-check-pruefen").addEventListener("click", function () {
+    let richtig = 0, offen = 0;
+    CHECKS.forEach(function (c, i) {
+      const rm = document.getElementById("t07-check-rm-" + i);
+      const w = checkWahl[i];
+      if (!w) { offen++; rm.className = "t07-rm bad"; rm.innerHTML = '<span class="marke">?</span> Noch nicht beurteilt.'; return; }
+      const ok = w === c.soll;
+      if (ok) richtig++;
+      rm.className = "t07-rm " + (ok ? "ok" : "bad");
+      rm.innerHTML = '<span class="marke">' + (ok ? "✓ Richtig." : "✗ Nicht ganz.") + "</span> " + c.erkl;
+    });
+    const maengel = CHECKS.filter(function (c) { return c.soll === "nein"; }).length;
+    checkStand.textContent = richtig + " von " + CHECKS.length + " richtig beurteilt" + (offen ? " · " + offen + " noch offen" : "") +
+      ". Urteil: nicht freigabereif, " + maengel + " Mängel (Ziele, Abgrenzung, Recht, Risiken, Konsequenzen). Nach HERMES ist die Initialisierung noch nicht abgeschlossen: Die fehlenden Ergebnisse werden erarbeitet, dann wird die Freigabe neu beantragt.";
+  });
+  document.getElementById("t07-check-zuruecksetzen").addEventListener("click", function () {
+    CHECKS.forEach(function (c, i) {
+      delete checkWahl[i];
+      const rm = document.getElementById("t07-check-rm-" + i);
+      rm.className = "t07-rm"; rm.innerHTML = "";
+    });
+    checksBox.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+    checkStand.textContent = "";
+    const erster = checksBox.querySelector("button");
+    if (erster) erster.focus();
+  });
+
+  /* ---------- Schritt 7: Reihenfolge ---------- */
+  const SCHRITTE = [
+    { text: "Projektantrag bzw. Projektinitialisierungsauftrag schreiben", info: "Ausgangslage, Ziele der Initialisierung, 60 Stunden für Studie und Analysen.",
+      erkl: "Ohne dieses Dokument gibt es nichts freizugeben. Es entsteht noch ausserhalb der künftigen Projektorganisation." },
+    { text: "Entscheid Projektinitialisierungsfreigabe", info: "Franziska Bühlmann unterschreibt und gibt die Ressourcen frei.",
+      erkl: "Der erste formelle Entscheid: Ab jetzt existiert das Projekt. Die Auftraggeberin entscheidet allein." },
+    { text: "Studie mit Varianten, parallel Rechtsgrundlagen-, Schutzbedarfs- und Beschaffungsanalyse", info: "Varianten A, B, C bewerten; Recht, Datenschutz und Einkauf klären.",
+      erkl: "Die Analysen laufen parallel zur Studie und fliessen in den nächsten Entscheid ein." },
+    { text: "Entscheid weiteres Vorgehen", info: "Variante B, klassisch, Szenario IT-Adaption.",
+      erkl: "Beruht auf Studie und Beschaffungsanalyse. Die Projektleitung entscheidet nach Rücksprache mit der Auftraggeberin." },
+    { text: "Projektmanagementplan und Durchführungsauftrag erarbeiten", info: "Mit Strategie und Vorgaben abgleichen, Stakeholderinteressen klären.",
+      erkl: "Der Entscheid weiteres Vorgehen ist die Grundlage für beide Dokumente." },
+    { text: "Entscheid Projektdurchführungsfreigabe", info: "Auftraggeberin und Gemeinderat unterzeichnen den Auftrag.",
+      erkl: "Auftraggeber und Stammorganisation geben gemeinsam frei. Damit endet die Initialisierung." },
+    { text: "Kick-off und Start der Phase Konzept", info: "Team zusammenholen: Ziele, Rollen, Regeln.",
+      erkl: "Erst mit freigegebenem Auftrag und freigegebenen Ressourcen startet die Lösungsentstehung mit dem Team." }
+  ];
+  const START = [4, 2, 6, 0, 5, 1, 3];
+  let reihe = START.slice();
+  const reiheBox = document.getElementById("t07-reihe");
+  const reiheStand = document.getElementById("t07-reihe-stand");
+
+  // Weiche Trennstellen für lange Wörter (schmale Bildschirme)
+  function weich(t) {
+    return t.replace(/Projektinitialisierungs/g, "Projekt&shy;initialisierungs&shy;").replace(/Projektdurchführungs/g, "Projekt&shy;durchführungs&shy;");
+  }
+  function reiheZeichnen(fokusIdx, fokusRichtung) {
+    reiheBox.innerHTML = "";
+    reihe.forEach(function (s, pos) {
+      const li = document.createElement("li");
+      li.dataset.schritt = String(s);
+      li.innerHTML = '<span class="t07-nr" aria-hidden="true">' + (pos + 1) + '</span><span class="t07-text"><span class="sr-only">Platz ' + (pos + 1) + ": </span>" +
+        weich(SCHRITTE[s].text) + "<small>" + SCHRITTE[s].info + '</small><span class="t07-erkl"></span></span>';
+      const pf = document.createElement("span");
+      pf.className = "t07-pfeile";
+      [["hoch", "↑", -1], ["runter", "↓", 1]].forEach(function (p) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn";
+        b.textContent = p[1];
+        b.dataset.richtung = p[0];
+        b.setAttribute("aria-label", SCHRITTE[s].text + (p[2] < 0 ? " nach oben" : " nach unten"));
+        b.disabled = (p[2] < 0 && pos === 0) || (p[2] > 0 && pos === reihe.length - 1);
+        b.addEventListener("click", function () { verschieben(pos, p[2]); });
+        pf.appendChild(b);
+      });
+      li.appendChild(pf);
+      reiheBox.appendChild(li);
+    });
+    if (fokusIdx != null) {
+      const li = reiheBox.children[fokusIdx];
+      let b = li.querySelector('[data-richtung="' + fokusRichtung + '"]');
+      if (b.disabled) b = li.querySelector('[data-richtung="' + (fokusRichtung === "hoch" ? "runter" : "hoch") + '"]');
+      b.focus();
+    }
+  }
+  function verschieben(pos, d) {
+    const neu = pos + d;
+    if (neu < 0 || neu >= reihe.length) return;
+    const tmp = reihe[pos]; reihe[pos] = reihe[neu]; reihe[neu] = tmp;
+    reiheStand.textContent = "";
+    reiheZeichnen(neu, d < 0 ? "hoch" : "runter");
+  }
+  document.getElementById("t07-reihe-pruefen").addEventListener("click", function () {
+    let richtig = 0;
+    Array.prototype.forEach.call(reiheBox.children, function (li, pos) {
+      const s = Number(li.dataset.schritt);
+      const ok = s === pos;
+      if (ok) richtig++;
+      li.classList.toggle("t07-ok", ok);
+      li.classList.toggle("t07-bad", !ok);
+      li.querySelector(".t07-erkl").innerHTML = '<small><span class="t07-marke">' + (ok ? "✓ richtig." : "✗ gehört auf Platz " + (s + 1) + ".") + "</span> " + SCHRITTE[s].erkl + "</small>";
+    });
+    reiheStand.textContent = richtig + " von " + SCHRITTE.length + " Schritten am richtigen Platz" +
+      (richtig === SCHRITTE.length ? ". Genau so läuft die Initialisierung nach HERMES: drei Entscheide, und jeder stützt sich auf das Dokument davor." : ". Verschieb die markierten Schritte und prüf nochmals.");
+  });
+  document.getElementById("t07-reihe-zuruecksetzen").addEventListener("click", function () {
+    reihe = START.slice();
+    reiheStand.textContent = "";
+    reiheZeichnen(null);
+    reiheBox.querySelector("button:not([disabled])").focus();
+  });
+  reiheZeichnen(null);
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t07-u-dapm", {
+    frage: "Übung 1 · Durchführungsauftrag oder Projektmanagementplan?",
+    kategorien: ["Durchführungsauftrag", "Projektmanagementplan"],
+    elemente: [
+      { html: "Konsequenzen bei abgelehnter Freigabe", kategorie: "Durchführungsauftrag", erklaerung: "Punkt 13 des Durchführungsauftrags: Die Steuerung braucht die Folgen für ihren Entscheid." },
+      { html: "Namenskonvention für Dateien", kategorie: "Projektmanagementplan", erklaerung: "Kapitel 19 Dokumentmanagement der Vorlage 5.4." },
+      { html: "Investitionsbedarf je Phase", kategorie: "Durchführungsauftrag", erklaerung: "Punkt 7: Der Auftraggeber gibt damit die Mittel frei." },
+      { html: "Prüfplan mit Prüfmethode und Prüfer", kategorie: "Projektmanagementplan", erklaerung: "Kapitel 6 Prüfplan der Vorlage 5.4." },
+      { html: "Gegenseitige Verbindlichkeiten von Auftraggeber und Projektleitung", kategorie: "Durchführungsauftrag", erklaerung: "Punkt 14: Er macht den Auftrag zur Vereinbarung." },
+      { html: "Kommunikationsplan mit Adressaten und Mitteln", kategorie: "Projektmanagementplan", erklaerung: "Kapitel 11 der Vorlage 5.4." },
+      { html: "Strategiebezug des Projekts", kategorie: "Durchführungsauftrag", erklaerung: "Punkt 5: Passt das Projekt zur Strategie der Stammorganisation?" },
+      { html: "Eskalationsvorgehen: nach 5 Tagen eine Stufe höher", kategorie: "Projektmanagementplan", erklaerung: "Kapitel 3 und 18 der Vorlage 5.4 (Station 19)." }
+    ]
+  });
+
+  L.sortierer("#t07-u-wer", {
+    frage: 'Übung 2 · Wer entscheidet? <span class="icb">ICB 3.10</span>',
+    kategorien: ["Auftraggeber allein", "Projektleitung nach Rücksprache", "Auftraggeber und Stammorganisation"],
+    elemente: [
+      { html: "Entscheid Projektinitialisierungsfreigabe", kategorie: "Auftraggeber allein", erklaerung: "HERMES 5.4.1.7: Der Entscheid erfolgt ausschliesslich durch den Auftraggeber." },
+      { html: "Entscheid weiteres Vorgehen", kategorie: "Projektleitung nach Rücksprache", erklaerung: "HERMES 5.4.2.7: Die Projektleitung entscheidet nach Konsultation von Auftraggeber und Stakeholdern; Eintrag in der Liste Projektentscheide Führung." },
+      { html: "Entscheid Projektdurchführungsfreigabe", kategorie: "Auftraggeber und Stammorganisation", erklaerung: "HERMES 5.4.1.9: gemeinsam durch Auftraggeber und Stammorganisation." },
+      { html: "Franziska Bühlmann gibt 60 Stunden für Studie und Analysen frei.", kategorie: "Auftraggeber allein", erklaerung: "Das ist die Initialisierungsfreigabe: Ressourcen für die Phase Initialisierung." },
+      { html: "Nach einem Gespräch mit Bühlmann und Seraina Caflisch wählst du Variante B und das klassische Vorgehen.", kategorie: "Projektleitung nach Rücksprache", erklaerung: "Variante und Vorgehensart: Entscheid weiteres Vorgehen." },
+      { html: "Gemeinderat und Auftraggeberin unterzeichnen den Durchführungsauftrag.", kategorie: "Auftraggeber und Stammorganisation", erklaerung: "Die Gemeinde als Stammorganisation (Gemeinderat) und die Auftraggeberin geben die Durchführung frei." }
+    ]
+  });
+
+  L.wahrFalsch("#t07-u-wf", {
+    titel: 'Übung 3 · Wahr oder falsch? <span class="icb">ICB 3.01</span> <span class="icb">ICB 3.10</span>',
+    aussagen: [
+      { html: "Die Phase Initialisierung wird in HERMES auch bei agilem Vorgehen klassisch abgewickelt.", wahr: true,
+        erklaerung: "So steht es in LB 2 F.36 und im Referenzhandbuch: aus Projektmanagementsicht klassisch, einzelne agile Werkzeuge sind erlaubt." },
+      { html: "Die Rechtsgrundlagenanalyse kann man in die Phase Realisierung schieben, wenn es eilt.", wahr: false,
+        erklaerung: "Sie wird parallel zur Studie erarbeitet und fliesst in den Entscheid über die Durchführung ein. Später ist es zu spät." },
+      { html: "Eine Beschaffungsanalyse braucht es nur, wenn ein Produkt oder System beschafft werden soll.", wahr: true,
+        erklaerung: "HERMES: «für die allfällige Beschaffung». Sie ergänzt dann die Studie." },
+      { html: "Wird die Durchführung am Ende der Initialisierung nicht freigegeben, gilt das als Projektabbruch.", wahr: false,
+        erklaerung: "Ein Abbruch ist in HERMES nur während der Lösungsentstehung möglich. Eine ausbleibende Freigabe ist etwas anderes (HERMES 5.4.1.5)." },
+      { html: "Der Projektmanagementplan wird einmal erstellt und danach nicht mehr verändert.", wahr: false,
+        erklaerung: "Er wird nach dem Prinzip der rollenden Planung laufend konkretisiert und bei jedem Phasenabschluss angepasst." },
+      { html: "Der Durchführungsauftrag ist eine verbindliche Vereinbarung zwischen Auftraggeber und Projektleitung.", wahr: true,
+        erklaerung: "So beschreiben ihn LB 6 F.34 und die Vorlage." }
+    ]
+  });
+
+  L.zahlAufgabe("#t07-u-payback", {
+    titel: "Übung 4 · Wirtschaftlichkeitsvorschau im Auftrag",
+    frage: "<p>Projekt «Archiv digital» der Gemeinde Wolkenried. Der Durchführungsauftrag nennt diesen Investitionsbedarf: Initialisierung CHF 6'000 (Ist), Konzept CHF 14'000, Realisierung CHF 52'000, Einführung CHF 12'000. Der Nutzen beträgt CHF 30'000 pro Jahr, die Betriebskosten CHF 9'000 pro Jahr. Nach wie vielen Jahren ist die Investition zurückverdient (statischer Payback)? Auf eine Stelle nach dem Punkt.</p>",
+    antwort: 4,
+    toleranz: 0.05,
+    einheit: "Jahre",
+    anzeige: "84'000 ÷ 21'000 = 4.0",
+    hinweise: ["Zähl zuerst den Investitionsbedarf aller Phasen zusammen, auch die Initialisierung.", "Nettonutzen pro Jahr = Nutzen − Betriebskosten."],
+    loesungsweg: [
+      "Investition = 6'000 + 14'000 + 52'000 + 12'000 = 84'000",
+      "Nettonutzen = 30'000 − 9'000 = 21'000 pro Jahr",
+      "Payback = 84'000 ÷ 21'000 = 4.0 Jahre",
+      "Im Auftrag gehört dazu der nicht messbare Nutzen, etwa schnellere Auskunft an die Bevölkerung. Wie man mit Abzinsung rechnet (NPV), lernst du in Station 12."
+    ]
+  });
+
+  L.schrittAufgabe("#t07-u-ziel", {
+    titel: "Übung 5 · Ein Ziel freigabereif machen",
+    aufgabe: "<p>Im Entwurf steht als Lösungsziel: «Der Onlineschalter soll das Bauamt entlasten.» Mach daraus ein Ziel für die Tabelle im Durchführungsauftrag. Überleg zuerst selbst, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "Kategorie: Effizienz der Verwaltung", warum: "Worum geht es? Um weniger Aufwand im Bauamt." },
+      { html: "Beschreibung: Online eingereichte Gesuche werden ohne Kopieren und Postversand an die Fachstellen verteilt.", warum: "«Entlasten» wird konkret: Welche Arbeit fällt weg?" },
+      { html: "Messgrösse: Aufwand für Kopieren und Versand je Gesuch von heute rund 45 auf höchstens 10 Minuten, gemessen 12 Monate nach Betriebsaufnahme", warum: "Ausgangswert, Zielwert, Zeitpunkt. Die Zahlen sind eigene Annahmen; im echten Projekt stammen sie aus der Standortbestimmung der Studie." },
+      { html: "Priorität: 1 (hoch)", warum: "Wichtig, aber nicht Muss: Der Onlineschalter wäre auch mit etwas mehr Restaufwand ein Erfolg. Das Muss-Ziel ist die Einreichung online." },
+      { html: "Kontrolle: Lässt sich das bei der Abnahme mit Ja oder Nein beantworten? Ja.", warum: "Die einfachste Probe für jedes Ziel. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.auswahl("#t07-u-fall", {
+    frage: '<p><b>Übung 6 · Fallentscheid</b> <span class="icb">ICB 3.01</span> <span class="icb">ICB 3.10</span></p><p>Gemeindepräsident Walter Inauen ruft an: «Der Lieferant steht bereit, die Offerte ist da. Lassen Sie Studie und Analysen weg und starten Sie nächste Woche mit der Realisierung. Den Auftrag können Sie nachliefern.» Was tust du?</p>',
+    optionen: [
+      "Sofort starten. Der Gemeindepräsident ist die höchste Stelle der Gemeinde.",
+      "Höflich ablehnen und auf das Handbuch verweisen: HERMES schreibt alle Ergebnisse vor.",
+      "Mit der Auftraggeberin die Initialisierung schlank, aber vollständig planen: Studie knapp halten, Rechtsgrundlagen- und Schutzbedarfsanalyse parallel, Durchführungsauftrag in zwei bis drei Wochen zur Freigabe. Dem Präsidenten Termin und Risiken eines Starts ohne Auftrag aufzeigen.",
+      "Mit der Realisierung beginnen und die Analysen nebenbei machen, damit niemand Zeit verliert."
+    ],
+    richtig: 2,
+    erklaerung: "Ohne Auftrag gibt es weder messbare Ziele noch eine Freigabe der Mittel, und offene Rechtsfragen können das fertige System blockieren. HERMES verlangt, die Studie nur so weit auszuarbeiten, wie der Entscheid es braucht; schlank ist also erlaubt. Der Weg läuft über die Auftraggeberin, nicht am Präsidenten vorbei und nicht gegen ihn. Die Folgen der anderen Optionen: Sofort starten heisst ohne Grundlage arbeiten. Stur ablehnen kostet die Unterstützung des Präsidenten. Analysen nebenbei verschieben das Risiko in die teure Realisierung (ICB 3.01 Ansatz wählen, ICB 3.10 Projekt starten und Zustimmung einholen)."
+  });
+
+  L.auswahl("#t07-u-kickoff-mc", {
+    frage: '<p><b>Übung 7</b> <span class="icb">ICB 3.10</span></p><p>Eine Woche nach dem Kick-off der Realisierung fragen Martin Zgraggen und Thomas Ellinger vom Bauamt: «Wie viele Stunden pro Woche sollen wir eigentlich für das Projekt einsetzen, und bis wann?» Welches Ziel des Kick-offs (LB 5 F.22) wurde verfehlt?</p>',
+    optionen: [
+      "Ein gemeinsames Problemverständnis finden",
+      "Aufwandvorstellungen und Termine absprechen",
+      "Regeln für den Umgang mit Meinungsverschiedenheiten festlegen",
+      "Mögliche Lösungswege diskutieren"
+    ],
+    richtig: 1,
+    erklaerung: "Wer nicht weiss, wie viel Zeit er bis wann einsetzen soll, hat keine Absprache über Aufwand und Termine. Abhilfe: Pensen in der Ressourcenvereinbarung festhalten (Verbindlichkeiten im Auftrag) und mit den beiden und Beat Imhof als Linienvorgesetztem klären."
+  });
+
+  L.reflexion("#t07-u-kickoff", {
+    titel: "Übung 8 · Offene Frage: Kick-off der Phase Konzept",
+    icb: ["ICB 3.10", "ICB 2.05"],
+    frage: "<p>Der Durchführungsauftrag des Onlineschalters ist freigegeben. Du lädst zum Kick-off der Phase Konzept ein. (a) Nenne sechs Ziele dieses Kick-offs. (b) Skizziere eine Agenda mit fünf Punkten und sag, wer welchen Punkt übernimmt.</p>",
+    musterloesung:
+      "<p><b>(a) Ziele:</b> gemeinsames Verständnis von Problem und Auftrag; die Ziele aus dem Auftrag allen gleich erklären; Rollen und Funktionen klären; Verantwortung und Kompetenzen regeln; Aufwand und Termine je Person absprechen; Spielregeln, Informations- und Kommunikationsmittel festlegen; Erwartungen und Fähigkeiten der Mitglieder erfragen; Kontrollmechanismen vereinbaren (sechs davon genügen, LB 5 F.22).</p>" +
+      "<p><b>(b) Agenda:</b> 1. Eröffnung, Bedeutung des Projekts (Auftraggeberin Franziska Bühlmann). 2. Auftrag: Ausgangslage, Ziele, Abgrenzung (Projektleitung). 3. Vorgehen in der Phase Konzept, Meilensteine, Aufwand je Person (Projektleitung mit Seraina Caflisch). 4. Rollen, Kompetenzen, Spielregeln, Berichtswesen und Eskalation (Projektleitung). 5. Erwartungen, Bedenken und Risiken der Teilnehmenden sammeln, Pendenzen mit Wer und Bis-wann (alle, Protokoll Aylin Demir).</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Die Agenda ist eine Ergänzung ohne Quelle in den Unterlagen.</p>',
+    kriterien: [
+      { text: "Mindestens sechs passende Ziele", punkte: 3 },
+      { text: "Agenda mit fünf sinnvollen Punkten in logischer Reihenfolge", punkte: 2 },
+      { text: "Rollen zugeordnet, Auftraggeberin sichtbar beteiligt", punkte: 1 },
+      { text: "Abschluss mit Pendenzen oder Protokoll", punkte: 1 }
+    ]
+  });
+
+  L.reflexion("#t07-u-bestandteile", {
+    titel: "Übung 9 · Offene Frage: Bestandteile eines Projektauftrags",
+    icb: ["ICB 3.01", "ICB 3.10"],
+    frage: "<p>Eine Kollegin im Gemeindehaus fragt: «Wozu so ein langer Projektauftrag? Eine E-Mail mit dem Budget reicht doch.» Nenne acht Bestandteile eines Projekt- bzw. Durchführungsauftrags und erkläre bei dreien, warum die Steuerung sie für die Freigabe braucht. Sechs bis acht Sätze.</p>",
+    musterloesung:
+      "<p><b>Bestandteile:</b> Ausgangslage und Handlungsbedarf; Ziele (Lösungs- und Vorgehensziele); Rahmenbedingungen und Abgrenzung; Lösungsbeschreibung; Strategiebezug und Vorgaben; rechtliche Grundlagen; Investitions- und Ressourcenbedarf; Kosten, Nutzen, Wirtschaftlichkeit; Planung und Organisation; Vorgehensweise; Risiken; Konsequenzen; Verbindlichkeiten.</p>" +
+      "<p><b>Warum:</b> Messbare <b>Ziele</b> legen fest, woran der Erfolg gemessen wird; ohne sie gibt es keine faire Abnahme. Die <b>Abgrenzung</b> verhindert, dass der Umfang unkontrolliert wächst. Die <b>Konsequenzen</b> zeigen der Steuerung, was ein Ja, ein Aufschub oder ein Nein bedeuten; erst damit kann sie abwägen. Die <b>Risiken</b> mit Massnahmen zeigen, ob das Vorhaben tragbar ist.</p>" +
+      "<p>Der Auftrag ist eine verbindliche Vereinbarung zwischen Auftraggeber und Projektleitung. Eine E-Mail mit dem Budget regelt weder Ziele noch Kompetenzen.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt.</p>',
+    kriterien: [
+      { text: "Mindestens acht richtige Bestandteile", punkte: 3 },
+      { text: "Drei Bestandteile mit stichhaltiger Begründung für die Freigabe", punkte: 3 },
+      { text: "Auftrag als verbindliche Vereinbarung zwischen Auftraggeber und Projektleitung erkannt", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Bausteine des Auftrags; jede Szene zeigt eine Auswahl, Neues leuchtet auf.
+  const B = {
+    kopf: "<b>Durchführungsauftrag</b> · Online-Reservation Mehrzweckhalle Wolkenried · Version 1.0 zur Freigabe",
+    a1: "<b>1 Ausgangslage:</b> Rund 800 Reservationen pro Jahr per Telefon und E-Mail, Excel-Liste, je rund 18 min Aufwand (rund 240 h pro Jahr), rund 12 Doppelbelegungen pro Jahr. Studie: Variante B «Standardlösung als Mietdienst» gewählt.",
+    z1: "<b>2 Lösungsziel Z1 (M):</b> Mindestens 75&nbsp;% der Reservationen online, gemessen 12 Monate nach Betriebsaufnahme.",
+    z2: "<b>Lösungsziel Z2 (1):</b> Aufwand der Kanzlei je Online-Reservation höchstens 6 min im Durchschnitt; ab Betriebsaufnahme keine Doppelbelegung mehr.",
+    v: "<b>Vorgehensziele:</b> klassisch, Szenario IT-Adaption (Standardprodukt anpassen).",
+    r: "<b>3 Rahmen:</b> Mietdienst mit Datenhaltung in der Schweiz; Investition höchstens CHF 40'000. <b>Abgrenzung:</b> Turnhallen der Schule und die elektronische Schliessanlage gehören nicht dazu.",
+    l: "<b>4–5 Lösung und Strategie:</b> Online-Kalender mit Reservation, Bestätigung und Rechnung, Export in die Finanzsoftware. Strategiebezug: Legislaturziel «Digitale Dienste rund um die Uhr».",
+    re: "<b>6 Recht:</b> Das Benützungs- und Gebührenreglement kennt nur die Rechnung nach dem Anlass. Der Gemeinderat ergänzt es für die Vorauszahlung online (Antrag in Woche 2, Entscheid bis Woche 6). Personendaten der Mietenden: Vertrag zur Auftragsbearbeitung mit dem Lieferanten.",
+    inv: "<b>7 Investitionsbedarf:</b> Initialisierung 4'000 (Ist) · Konzept 6'000 · Realisierung 20'000 · Einführung 6'000 · <b>Total CHF 36'000</b>",
+    res: "<b>8 Ressourcen:</b> Kanzlei 31 Arbeitstage (5 · 8 · 12 · 6 je Phase), Hallenwart 20&nbsp;% von Woche 5 bis 14, ein Testlaptop in der Halle.",
+    w: "<b>9 Wirtschaftlichkeit:</b> 600 Online-Reservationen × 12 min = 120 h × CHF 95 = 11'400 pro Jahr; Mietdienst 2'400 pro Jahr; Nettonutzen 9'000 pro Jahr; <b>Payback 36'000 ÷ 9'000 = 4 Jahre</b>. Nicht messbar: weniger Ärger bei Vereinen.",
+    p: "<b>10 Planung und Organisation:</b> Konzept W1–4, Realisierung W5–10, Einführung W11–14. Meilensteine: Phasenfreigabe Realisierung Ende W4 · Vorabnahme Ende W10 · Betriebsaufnahme Ende W14, vor der Vereinssaison. Auftraggeber Gemeinderat Pius Gwerder (Liegenschaften), Projektleitung Aylin Demir, Anwendervertretung Hallenwart Bruno Mettler, Lieferant Lärchwerk Informatik AG.",
+    vw: "<b>11 Vorgehensweise:</b> Konfiguration in zwei Testrunden mit Vertretungen von drei Vereinen.",
+    ri: "<b>12 Risiken (RZ = EW × AG, Skala 1–3):</b><ul><li>R1 Reglement nicht rechtzeitig ergänzt (2 × 3 = 6): Antrag in Woche 2, Projektleitung.</li><li>R2 Export in die Finanzsoftware fehlerhaft (3 × 2 = 6): Test mit 20 Rechnungen in der Vorabnahme, Lieferant.</li><li>R3 Vereine reservieren weiter per Telefon (2 × 2 = 4): Infoabend in Woche 12, Hallenwart.</li></ul>",
+    k: "<b>13 Konsequenzen:</b> Bei Freigabe: Betrieb ab Ende W14, rechtzeitig zur Saison. Bei späterer Freigabe: Saisonstart verpasst, ein weiteres Jahr mit rund 240 h Aufwand und Doppelbelegungen. Bei Ablehnung: Excel-Liste bleibt, Ziel der Legislatur verfehlt.",
+    vb: "<b>14 Verbindlichkeiten:</b> Gemeinderat entscheidet das Reglement bis W6; Leiter Liegenschaften gibt den Hallenwart zu 20&nbsp;% frei; Projektleitung berichtet alle 4 Wochen.",
+    fc: "<b>Freigabe-Check:</b> Ziele messbar ✓ · Abgrenzung ✓ · Recht geklärt ✓ · Kosten je Phase ✓ · Risiken mit Massnahme ✓ · Konsequenzen in drei Fällen ✓ → bereit für den Entscheid Projektdurchführungsfreigabe durch Auftraggeber und Gemeinderat."
+  };
+  const REIHE = ["kopf", "a1", "z1", "z2", "v", "r", "l", "re", "inv", "res", "w", "p", "vw", "ri", "k", "vb", "fc"];
+  function auftrag(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t07-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k];
+      return '<div class="t07-fb">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t07-film", {
+    phasen: ["1 · Sichten", "2 · Ziele und Rahmen", "3 · Lösung und Recht", "4 · Mittel", "5 · Plan und Risiken", "6 · Konsequenzen und Freigabe"],
+    texte: [
+      'Projekt «Online-Reservation Mehrzweckhalle Wolkenried». <span data-ph="heute">Heute reservieren Vereine, Schulen und Private per Telefon und E-Mail bei der Gemeindekanzlei: rund 800 Reservationen pro Jahr, je rund 18 Minuten Aufwand, Excel-Liste, rund 12 Doppelbelegungen pro Jahr.</span> <span data-ph="studie">Die Studie empfiehlt eine Standardlösung als Mietdienst (Variante B) der Lärchwerk Informatik AG; Mietpreis CHF 2\'400 pro Jahr.</span> <span data-ph="ziel">Der Gemeinderat will, dass mindestens drei Viertel online reservieren und die Kanzlei je Online-Reservation im Schnitt nur noch 6 Minuten braucht.</span> <span data-ph="grenze">Die Turnhallen der Schule und die Schliessanlage sind nicht Teil des Projekts.</span> <span data-ph="recht">Das Gebührenreglement kennt nur die Rechnung nach dem Anlass.</span> <span data-ph="geld">Kosten: Initialisierung CHF 4\'000 (bereits ausgegeben), Konzept 6\'000, Realisierung 20\'000, Einführung 6\'000. Interner Stundensatz CHF 95.</span> <span data-ph="zeit">Der Betrieb soll nach 14 Wochen laufen, vor der Vereinssaison: Konzept 4 Wochen, Realisierung 6, Einführung 4.</span> <span data-ph="org">Auftraggeber ist Gemeinderat Pius Gwerder (Liegenschaften), Projektleiterin Aylin Demir, Hallenwart Bruno Mettler vertritt die Anwender. Die Kanzlei rechnet mit 5, 8, 12 und 6 Arbeitstagen je Phase, der Hallenwart mit 20&nbsp;% ab Woche 5.</span> <span data-ph="risiko">Bedenken: Reglement zu spät, Export in die Finanzsoftware, Vereine bleiben beim Telefon.</span> Formuliere die Kernpunkte des Durchführungsauftrags und prüf, ob er freigabereif ist.'
+    ],
+    woerterbuch: [
+      "<b>Lösungsziel</b> = Beschreibung + Messgrösse + Priorität",
+      "<b>Abgrenzung</b> = was nicht dazugehört",
+      "<b>Investition</b> = Summe aller Phasen, Initialisierung als Ist",
+      "<b>Payback</b> = Investition ÷ Nettonutzen pro Jahr",
+      "<b>RZ</b> = EW × AG",
+      "<b>Konsequenzen:</b> Freigabe · später · Ablehnung"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Durchführungsauftrag", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So baust du einen Durchführungsauftrag aus Fallangaben: sichten, Ziele und Rahmen, Lösung und Recht, Mittel, Plan und Risiken, zum Schluss Konsequenzen und der Freigabe-Check." },
+      { ph: 0, hl: ["heute", "studie"], f: auftrag("kopf", ["kopf"]),
+        say: "Zuerst der Kopf: Projekt, Version, Zweck. Dann markierst du, was die Ausgangslage beschreibt: heutiger Ablauf mit Zahlen und die gewählte Variante." },
+      { ph: 0, hl: ["ziel", "grenze", "recht", "geld", "zeit", "org", "risiko"], f: auftrag("kopf"),
+        say: "Die übrigen Angaben ordnest du den 14 Punkten zu: Ziele, Abgrenzung, Recht, Kosten, Termine und Risiken." },
+      { ph: 0, hl: ["heute", "studie"], f: auftrag("a1", ["a1"]),
+        say: "Ausgangslage und Handlungsbedarf: 800 Reservationen mal 18 Minuten sind 240 Stunden pro Jahr, dazu 12 Doppelbelegungen. Und der Verweis auf die Studie." },
+      { ph: 1, hl: ["ziel"], dict: 1, dh: [0], f: auftrag("z1", ["z1"]),
+        say: "Erstes Lösungsziel: Drei Viertel heisst 75 Prozent online. Mit Zeitpunkt der Messung und Priorität Muss." },
+      { ph: 1, hl: ["ziel", "heute"], dh: [0], f: auftrag("z2", ["z2"]),
+        say: "Zweites Ziel: höchstens 6 Minuten je Online-Reservation und keine Doppelbelegung mehr. Priorität 1, also hoch." },
+      { ph: 1, hl: ["studie"], f: auftrag("v", ["v"]),
+        say: "Vorgehensziele: Ein Standardprodukt wird angepasst, also klassisch und Szenario IT-Adaption." },
+      { ph: 1, hl: ["grenze", "geld"], dict: 2, dh: [1], f: auftrag("r", ["r"]),
+        say: "Rahmenbedingungen und Abgrenzung. Was nicht dazugehört, schreibst du ausdrücklich hin: Turnhallen und Schliessanlage." },
+      { ph: 2, hl: ["studie"], f: auftrag("l", ["l"]),
+        say: "Die Lösung in zwei Sätzen und der Bezug zur Strategie der Gemeinde." },
+      { ph: 2, hl: ["recht"], f: auftrag("re", ["re"]),
+        say: "Rechtliche Grundlagen: Das Reglement erlaubt keine Vorauszahlung. Das wird ein Antrag an den Gemeinderat mit Frist. Dazu der Datenschutz der Mietenden." },
+      { ph: 3, hl: ["geld"], dict: 3, dh: [2], f: auftrag("inv", ["inv"]),
+        say: "Investitionsbedarf je Phase: 4'000 plus 6'000 plus 20'000 plus 6'000 gibt 36'000 Franken. Die Initialisierung steht als Ist-Wert drin." },
+      { ph: 3, hl: ["org"], f: auftrag("res", ["res"]),
+        say: "Ressourcen und Hilfsmittel: Arbeitstage der Kanzlei je Phase, das Pensum des Hallenwarts, ein Testgerät." },
+      { ph: 3, hl: ["heute", "ziel", "geld"], f: auftrag("res"),
+        say: "Jetzt der Nutzen: 75 Prozent von 800 sind 600 Online-Reservationen. Jede spart 18 minus 6, also 12 Minuten." },
+      { ph: 3, hl: ["studie", "geld"], dict: 4, dh: [3], f: auftrag("w", ["w"]),
+        say: "600 mal 12 Minuten sind 120 Stunden, mal 95 Franken gibt 11'400 pro Jahr. Minus 2'400 Miete bleiben 9'000. Payback: 36'000 durch 9'000 gleich 4 Jahre." },
+      { ph: 4, hl: ["zeit", "org"], f: auftrag("p", ["p"]),
+        say: "Planung und Organisation: Phasen in Wochen ab Woche 1, Meilensteine und die Rollen mit Namen." },
+      { ph: 4, f: auftrag("vw", ["vw"]),
+        say: "Die Vorgehensweise in einem Satz: zwei Testrunden mit Vereinen." },
+      { ph: 4, hl: ["risiko", "recht"], dict: 5, dh: [4], f: auftrag("ri", ["ri"]),
+        say: "Risiken: Aus jedem Bedenken wird ein bewertetes Risiko mit Massnahme und Verantwortlichen. Risikozahl gleich Eintretenswahrscheinlichkeit mal Auswirkungsgrad auf der 3er-Skala der Vorlage." },
+      { ph: 5, hl: ["zeit", "heute"], dict: 6, dh: [5], f: auftrag("k", ["k"]),
+        say: "Konsequenzen für alle drei Fälle: Freigabe, spätere Freigabe, Ablehnung. Hier zählt der Saisonstart." },
+      { ph: 5, hl: ["recht"], f: auftrag("vb", ["vb"]),
+        say: "Verbindlichkeiten: Wer sichert wem was bis wann zu? Gemeinderat, Linienvorgesetzter und Projektleitung." },
+      { ph: 5, dh: [0, 1, 5], f: auftrag("fc", ["fc"]),
+        say: "Der Freigabe-Check: Sind die Ziele messbar, ist die Abgrenzung da, das Recht geklärt, sind Kosten, Risiken und Konsequenzen vollständig? Ja, sechsmal." },
+      { ph: 5, f: auftrag("fc"),
+        say: "Wer entscheidet? Nicht die Projektleitung. Auftraggeber und Stammorganisation, hier der Gemeinderat, geben die Durchführung frei und unterschreiben." },
+      { ph: 5, f: auftrag("fc", ["kopf"]),
+        say: "Fertig. Der Auftrag ist vollständig und freigabereif. Danach folgt der Kick-off der Phase Konzept. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t07-film-loesung").innerHTML = auftrag("fc");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t07-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.10</span> Wer trifft in HERMES den Entscheid Projektdurchführungsfreigabe?',
+        o: ["Die Projektleitung allein", "Auftraggeber und Stammorganisation gemeinsam", "Das Projektteam am Kick-off", "Der Lieferant nach Vertragsabschluss"], a: 1,
+        e: "HERMES 5.4.1.9: gemeinsam durch Auftraggeber und Stammorganisation; der Durchführungsauftrag wird unterzeichnet. ICB 3.10, Indikator «Zustimmung einholen»." },
+      { q: '<span class="icb">ICB 3.01</span> Mit welchem Entscheid wird festgelegt, ob die Lösungsentstehung klassisch oder agil abläuft?',
+        o: ["Projektinitialisierungsfreigabe", "Weiteres Vorgehen", "Phasenfreigabe Realisierung", "Vorabnahme"], a: 1,
+        e: "Der Entscheid weiteres Vorgehen bestimmt Variante und Vorgehensart (HERMES 5.4.2.7). Den passenden Ansatz zu wählen ist Kern von ICB 3.01 Projektdesign (4.5.1.4)." },
+      { q: '<span class="icb">ICB 3.01</span> Welche Arbeit gehört <b>nicht</b> in die Phase Initialisierung?',
+        o: ["Rechtsgrundlagenanalyse", "Schutzbedarfsanalyse", "Beschaffungsanalyse", "Migrationskonzept erarbeiten"], a: 3,
+        e: "Die drei Analysen sind Ergebnisse des Moduls Projektgrundlagen in der Initialisierung. Das Migrationskonzept entsteht erst in der Lösungsentstehung. ICB 3.01 und ICB 1.03 (Compliance)." },
+      { q: '<span class="icb">ICB 3.10</span> Was ist nach LB 2 F.28 das Ergebnis der Phase Definition?',
+        o: ["Der Projektantrag", "Der Projektauftrag", "Der Netzplan", "Das Abnahmeprotokoll"], a: 1,
+        e: "Idee → Projektantrag, Definition → Projektauftrag, Projektplan → Netzplan und Gantt. ICB 3.10, Projekt starten." },
+      { q: '<span class="icb">ICB 3.10</span> Welches ist <b>kein</b> Ziel des Kick-offs nach LB 5 F.22?',
+        o: ["Ein gemeinsames Problem- und Aufgabenverständnis finden", "Spielregeln für die Zusammenarbeit festlegen", "Rollen und Funktionen definieren", "Den Durchführungsauftrag durch das Team freigeben lassen"], a: 3,
+        e: "Freigeben dürfen nur Auftraggeber und Stammorganisation. Der Kick-off setzt den freigegebenen Auftrag mit dem Team um. ICB 3.10, Indikator 4.5.10.2 (Kickoff-Meeting)." },
+      { q: '<span class="icb">ICB 3.01</span> Welcher Grund wird in LB 2 F.35 <b>nicht</b> als möglicher Grund genannt, das Projekt nach der Initialisierung zu beenden?',
+        o: ["Fehlende Wirtschaftlichkeit", "Zu hohe Risiken", "Rechtliche oder politische Bedenken", "Die Projektleitung ist neu in der Organisation"], a: 3,
+        e: "Genannt werden fehlende Wirtschaftlichkeit, zu hohe Risiken, keine Realisierbarkeit, rechtliche oder politische Bedenken und fehlende Übereinstimmung mit der Strategie. ICB 3.01 (Erfolgskriterien) und ICB 1.01 (Strategie)." },
+      { q: '<span class="icb">ICB 3.10</span> Worin unterscheiden sich Durchführungsauftrag und Projektmanagementplan?',
+        o: ["Der Auftrag ist die verbindliche Vereinbarung für die Freigabe, der Plan regelt Planung und Führung und wird laufend nachgeführt.", "Es gibt keinen Unterschied.", "Der Plan wird vom Gemeinderat unterschrieben, der Auftrag nicht.", "Der Auftrag entsteht erst nach dem Projektabschluss."], a: 0,
+        e: "Vorlage Durchführungsauftrag (LB 6) und Vorlage 5.4: Vereinbarung gegenüber Gesamtplanung mit rollender Nachführung. ICB 3.10, Indikator 4.5.10.1." },
+      { q: '<span class="icb">ICB 3.10</span> Was gehört in das Kapitel «Konsequenzen» des Durchführungsauftrags?',
+        o: ["Die Folgen bei Freigabe, bei späterer Freigabe und bei abgelehnter Freigabe", "Die Liste aller Risiken", "Vertragsstrafen für den Lieferanten", "Die Lessons Learned des Projekts"], a: 0,
+        e: "So sehen es die Vorlagen (Projektauftrag LB 3, Durchführungsauftrag LB 6) vor. Die Steuerung braucht alle drei Fälle, um abzuwägen. ICB 3.10 (Entscheidungsvorlage)." },
+      { q: '<span class="icb">ICB 3.01</span> Welches Lösungsziel ist freigabereif formuliert?',
+        o: ["«Der Onlineschalter soll modern sein.»", "«Möglichst viele Gesuche online.»", "«Mindestens 60&nbsp;% der Baugesuche online, 12 Monate nach Betriebsaufnahme; Priorität M.»", "«Das Bauamt wird entlastet.»"], a: 2,
+        e: "Nur diese Formulierung hat Messgrösse, Zeitpunkt und Priorität. ICB 3.01 (Erfolgskriterien) und ICB 3.02 (Anforderungen und Ziele, Station 5)." },
+      { q: '<span class="icb">ICB 3.10</span> Was stimmt zum Projektabbruch nach HERMES?',
+        o: ["Die Projektleitung kann jederzeit selbst abbrechen.", "Er ist nur während der Lösungsentstehung möglich und liegt in der Kompetenz des Auftraggebers.", "Er ist dasselbe wie eine ausbleibende Durchführungsfreigabe.", "Er ist nur in der Phase Initialisierung möglich."], a: 1,
+        e: "HERMES 5.4.1.5: nach der Durchführungsfreigabe und vor der Phasenfreigabe Abschluss, Entscheid des Auftraggebers, geordnet durchgeführt. Abbruchkriterien stehen im PM-Plan. ICB 3.10 (Entscheidungsbefugnis)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

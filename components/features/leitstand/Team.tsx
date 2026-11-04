@@ -6,14 +6,17 @@
 // components/features/leitstand/Team.tsx
 // Team (4.8): Karte je Person mit Rolle, Herkunft, Pensum, Motivation (Kleinkurve), Profil, Zuweisungen A–F,
 // Überstunden und Abwesenheiten; Aktionen Gespräch, Weiterbildung, Überstufe; Persönlichkeit aufklappbar.
+// Jede Karte mit gezeichnetem Porträt; Profil als Stufenbalken (0–6), Motivation und Auslastung als Balken mit Zahl.
 
 import { useState } from "react"
-import { AREAS, dayOf, fitFor, type AreaId, type PersonDef } from "@/lib/simulation/core"
+import { AREAS, areaLabelsOf, dayOf, fitFor, type AreaId, type PersonDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
-import { AREA_LABEL, AREA_NAME, ORIGIN_TEXT, PRIORITIES, SHARE_OPTIONS, chf } from "./format"
-import { absentNow, fitInTeam, teamOf } from "./logic"
+import { ORIGIN_TEXT, PRIORITIES, SHARE_OPTIONS, chf } from "./format"
+import { absentNow, fitInTeam, personLoad, teamOf } from "./logic"
 import Verlauf from "./charts/Verlauf"
+import Avatar from "./Avatar"
+import Icon from "./Icon"
 
 const NEED_TEXT: Record<string, string> = {
   anerkennung: "Anerkennung",
@@ -61,6 +64,7 @@ function PersonKarte({ def }: { def: PersonDef }) {
   const ids = person.assignments.map((a) => a.taskId)
   const canAct = !readOnly && person.available && (state.phase === "planung" || state.phase === "lauf")
   const lastTalk = person.lastTalkTick === null ? null : dayOf(state.tick) - dayOf(person.lastTalkTick)
+  const load = personLoad(state, trace, scenario, def.id)
 
   function move(i: number, d: -1 | 1) {
     const next = [...ids]
@@ -73,36 +77,38 @@ function PersonKarte({ def }: { def: PersonDef }) {
   return (
     <article className={`card ${styles.personKarte} ${!person.available ? styles.inaktiv : ""}`} aria-labelledby={`p-${def.id}`}>
       <header className={styles.personKopf}>
-        <div>
+        <Avatar name={def.name} role={def.role} size={72} decorative />
+        <div className={styles.personTitel}>
           <h3 id={`p-${def.id}`}>{def.name}</h3>
+          <p className={styles.personRolle}>{def.role}</p>
           <p className="hint">
-            {def.role} · {ORIGIN_TEXT[def.origin]}
-            {manager ? ` (${manager})` : ""}
+            {ORIGIN_TEXT[def.origin]}
+            {manager ? ` (${manager})` : ""} · {Math.round(def.pensum * 100)} % · {chf(def.rate)}/h
           </p>
         </div>
-        <div className={styles.motivation} aria-label={`Motivation ${Math.round(person.motivation)} Prozent`}>
-          <span className={styles.motivationZahl} aria-hidden="true">
-            {Math.round(person.motivation)}
-          </span>
-          <span className={styles.kleinZahl} aria-hidden="true">
-            Motivation
-          </span>
-        </div>
       </header>
-      <div className={styles.personVerlauf}>
-        <Verlauf values={trace.motivation[def.id] ?? []} label={`Motivation ${def.name}`} min={50} max={110} reference={85} />
+      {!person.available && <p className="hint">Nicht im Team.</p>}
+      {absent ? (
+        <p className={styles.warnText}>
+          <strong>▲ abwesend: {absent}</strong>
+        </p>
+      ) : null}
+      <div className={styles.personWerte}>
+        <div>
+          <span className={styles.wertLabel}>Motivation</span>
+          <MotivationBalken value={person.motivation} />
+          {(trace.motivation[def.id]?.length ?? 0) > 1 && (
+            <div className={styles.personVerlauf}>
+              <Verlauf values={trace.motivation[def.id] ?? []} label={`Motivation ${def.name}`} min={50} max={110} reference={85} />
+            </div>
+          )}
+        </div>
+        <div>
+          <span className={styles.wertLabel}>{load?.planned ? "Verplant" : "Auslastung letzter Tag"}</span>
+          {load ? <LastBalken percent={load.percent} planned={load.planned} /> : <span className="hint">–</span>}
+        </div>
       </div>
-      <p className={styles.personFakten}>
-        Pensum {Math.round(def.pensum * 100)} % · {chf(def.rate)}/h · {person.available ? "im Team" : "nicht im Team"}
-        {absent ? <strong className={styles.warnText}> · ▲ abwesend: {absent}</strong> : null}
-      </p>
-      <p className={styles.profilChips} aria-label="Profil">
-        {AREAS.map((a, k) => (
-          <span key={a} className={styles.profilChip} title={AREA_NAME[a]}>
-            {AREA_LABEL[a]} {person.profile[k]}
-          </span>
-        ))}
-      </p>
+      <ProfilBalken profile={person.profile} />
 
       <ol className={styles.zuweisungen} aria-label={`Zuweisungen ${def.name}`}>
         {person.assignments.map((a, i) => {
@@ -234,7 +240,7 @@ function PersonKarte({ def }: { def: PersonDef }) {
               <option value="">Weiterbildung …</option>
               {AREAS.map((a) => (
                 <option key={a} value={a}>
-                  {AREA_NAME[a]}
+                  {areaLabelsOf(scenario)[a].label}
                 </option>
               ))}
             </select>
@@ -278,5 +284,65 @@ function PersonKarte({ def }: { def: PersonDef }) {
         </p>
       </details>
     </article>
+  )
+}
+
+/** Profil in fünf Gebieten als Stufenbalken 0–6 (Zahl daneben, Farbe nie allein). */
+export function ProfilBalken({ profile }: { profile: readonly number[] }) {
+  const { scenario } = useLeitstand()
+  const labels = areaLabelsOf(scenario)
+  return (
+    <ul className={styles.profilStufen} aria-label="Profil, Stufen 0 bis 6">
+      {AREAS.map((a, k) => (
+        <li key={a}>
+          <abbr title={labels[a].label}>{labels[a].short}</abbr>
+          <span className={styles.stufen} aria-hidden="true">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <span key={n} className={n <= profile[k] ? styles.stufeAn : undefined} />
+            ))}
+          </span>
+          <span className={styles.stufenZahl}>
+            <span className="sr-only">{labels[a].label}: Stufe </span>
+            {profile[k]}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+/** Motivation mit Herz-Symbol, Balken (Skala bis 120) und Zahl; Schwellen wie die Ampel (95 / 85). */
+export function MotivationBalken({ value, klein = false }: { value: number; klein?: boolean }) {
+  const level = value >= 95 ? "gut" : value >= 85 ? "mittel" : "tief"
+  return (
+    <span className={`${styles.wertBalken} ${klein ? styles.wertBalkenKlein : ""} ${styles[`wert_${level}`]}`}>
+      <Icon name="motivation" size={klein ? 12 : 16} />
+      <span className={styles.wertSpur} aria-hidden="true">
+        <span style={{ width: `${Math.min(100, (value / 120) * 100)}%` }} />
+      </span>
+      <span className={styles.wertZahl}>
+        <span className="sr-only">Motivation </span>
+        {Math.round(value)}
+        {level === "tief" ? " ▲" : ""}
+      </span>
+    </span>
+  )
+}
+
+/** Auslastung (Skala bis 150 %, Linie bei 100 %); über 100 % und unter 50 % markiert. */
+export function LastBalken({ percent, planned, klein = false }: { percent: number; planned: boolean; klein?: boolean }) {
+  const level = percent > 105 ? "tief" : percent < 50 ? "mittel" : "gut"
+  return (
+    <span className={`${styles.wertBalken} ${styles.lastBalken} ${klein ? styles.wertBalkenKlein : ""} ${styles[`wert_${level}`]}`}>
+      <Icon name="auslastung" size={klein ? 12 : 16} />
+      <span className={styles.wertSpur} aria-hidden="true">
+        <span style={{ width: `${Math.min(100, (percent / 150) * 100)}%` }} />
+        <i />
+      </span>
+      <span className={styles.wertZahl}>
+        <span className="sr-only">{planned ? "verplant " : "Auslastung "}</span>
+        {Math.round(percent)} %
+      </span>
+    </span>
   )
 }

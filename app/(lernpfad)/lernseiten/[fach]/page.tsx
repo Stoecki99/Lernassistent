@@ -180,8 +180,15 @@ export default async function LernpfadPage({ params }: LernpfadPageProps) {
 
       {sektionen.map((sektion) => {
         const sektionErledigt = sektion.stationen.filter((s) => s.zustand === "erledigt").length
+        // Optionale Sektionsfarbe aus fach.json (geprueft: #RRGGBB) als CSS-Variable fuer Kopf und Stationspunkte
+        const farbe = sektion.farbe ? ({ "--sektion": sektion.farbe } as React.CSSProperties) : undefined
         return (
-          <section key={sektion.id} aria-labelledby={`sektion-${sektion.id}`}>
+          <section
+            key={sektion.id}
+            aria-labelledby={`sektion-${sektion.id}`}
+            className={farbe ? styles.sektionFarbig : undefined}
+            style={farbe}
+          >
             <span className="eyebrow">
               {anzahl(sektion.stationen.length, "Station", "Stationen")} · {sektionErledigt} erledigt
             </span>

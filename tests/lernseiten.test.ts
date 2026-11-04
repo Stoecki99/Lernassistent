@@ -152,6 +152,23 @@ describe("fach.json-Schema", () => {
   test("leerer Pfad ist ungueltig", () => {
     assert.equal(fachSchema.safeParse(fach("TEST", [])).success, false)
   })
+
+  test("Sektionsfarbe ist optional und muss #RRGGBB sein", () => {
+    const mitFarbe = (farbe: unknown) => ({
+      ...fach(),
+      sektionen: [
+        { id: "s1", titel: "Sektion 1", farbe },
+        { id: "s2", titel: "Sektion 2" },
+      ],
+    })
+    assert.equal(fachSchema.safeParse(mitFarbe("#3b37b8")).success, true)
+    assert.equal(fachSchema.safeParse(mitFarbe("#3B37B8")).success, true)
+    for (const falsch of ["3b37b8", "#3b37b", "#3b37b8ff", "blau", "rgb(1,2,3)", "", 123]) {
+      const ergebnis = fachSchema.safeParse(mitFarbe(falsch))
+      assert.equal(ergebnis.success, false, String(falsch))
+    }
+    assert.match(JSON.stringify(fachSchema.safeParse(mitFarbe("blau")).error?.issues), /Sektionsfarbe/)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -284,6 +301,36 @@ describe("Pflicht-Geruest einer Themenseite", () => {
     assert.match(fehler, /<title>/)
   })
 
+  test("Farb-Opt-in: data-farbig und bekannte data-sektion sind erlaubt, unbekannte gemeldet", () => {
+    for (const sektion of ["logik", "wahrscheinlichkeit", "statistik", "abschluss"]) {
+      const html = seite("test", "01-erstes", {
+        bodyAttribute: `data-fach="test" data-thema="01-erstes" data-farbig data-sektion="${sektion}"`,
+      })
+      assert.deepEqual(pruefeThemaHtml(html, "test", "01-erstes"), [], sektion)
+    }
+    assert.deepEqual(
+      pruefeThemaHtml(seite("test", "01-erstes", { bodyAttribute: 'data-fach="test" data-thema="01-erstes" data-farbig' }), "test", "01-erstes"),
+      [],
+    )
+    assert.match(
+      pruefe({ bodyAttribute: 'data-fach="test" data-thema="01-erstes" data-farbig data-sektion="s1"' }),
+      /data-sektion="s1"> ist unbekannt/,
+    )
+    assert.match(
+      pruefe({ bodyAttribute: 'data-fach="test" data-thema="01-erstes" data-sektion="logik"' }),
+      /wirkt nur zusammen mit data-farbig/,
+    )
+  })
+
+  test("Fach mstw: data-farbig und data-sektion sind Pflicht", () => {
+    const mstw = (attribute: string) =>
+      pruefeThemaHtml(seite("mstw", "01-erstes", { bodyAttribute: `data-fach="mstw" data-thema="01-erstes"${attribute}` }), "mstw", "01-erstes").join("\n")
+    assert.equal(mstw(" data-farbig data-sektion=\"logik\""), "")
+    assert.match(mstw(""), /im Fach mstw data-farbig und data-sektion/)
+    assert.match(mstw(" data-farbig"), /im Fach mstw data-farbig und data-sektion/)
+    assert.match(mstw(" data-sektion=\"logik\""), /im Fach mstw data-farbig und data-sektion/)
+  })
+
   test("meldet fehlendes lernpfad.css und lernpfad.js", () => {
     assert.match(pruefe({ css: "" }), /lernpfad\.css/)
     assert.match(pruefe({ css: '<link rel="stylesheet" href="/anders.css">' }), /lernpfad\.css/)
@@ -354,6 +401,21 @@ describe("Pflicht-Geruest einer Themenseite", () => {
   test("Erweiterung AVSW: architektur.js von einem fremden Server ist eine externe Ressource", () => {
     const fehler = pruefe({ js: '<script src="/lernpfad/lernpfad.js"></script>\n<script src="https://cdn.example.org/architektur.js"></script>' })
     assert.match(fehler, /externe Ressource <script src="https:\/\/cdn\.example\.org\/architektur\.js">/)
+  })
+
+  test("Erweiterung Spieltheorie: st-spiel.css und st-spiel.js nach dem Baukasten sind erlaubt", () => {
+    const html = seite("test", "01-erstes", {
+      css: '<link rel="stylesheet" href="/lernpfad/lernpfad.css">\n<link rel="stylesheet" href="/lernpfad/st-spiel.css">',
+      js: '<script src="/lernpfad/lernpfad.js"></script>\n<script src="/lernpfad/st-spiel.js"></script>',
+    })
+    assert.deepEqual(pruefeThemaHtml(html, "test", "01-erstes"), [])
+  })
+
+  test("Erweiterung Spieltheorie: falsche Reihenfolge ist ein Fehler", () => {
+    const js = pruefe({ js: '<script src="/lernpfad/st-spiel.js"></script>\n<script src="/lernpfad/lernpfad.js"></script>' })
+    assert.match(js, /st-spiel\.js"> gehört nach <script src="\/lernpfad\/lernpfad\.js">/)
+    const css = pruefe({ css: '<link rel="stylesheet" href="/lernpfad/st-spiel.css">\n<link rel="stylesheet" href="/lernpfad/lernpfad.css">' })
+    assert.match(css, /st-spiel\.css"> gehört nach <link rel="stylesheet" href="\/lernpfad\/lernpfad\.css">/)
   })
 
   test("lernpfad.js gehoert ans Ende von <body>", () => {
@@ -610,6 +672,15 @@ describe("MSTW fach.json im Repo", () => {
     assert.equal(ergebnis.pfad[17].sektion, "abschluss")
   })
 
+  test("jede Sektion hat eine Farbe (Akzent wie lernpfad.css, hell)", () => {
+    const ergebnis = ladeFach("mstw")
+    assert.ok(ergebnis)
+    assert.deepEqual(
+      ergebnis.fach.sektionen.map((s) => s.farbe),
+      ["#3b37b8", "#0b6176", "#7c2a99", "#7a1f5c"],
+    )
+  })
+
   test("Fachordner kollidiert nicht mit App-Seiten, public/ oder _next", () => {
     const reserviert = reservierteNamen()
     for (const name of ["lernpfad", "_next", "api", "lernseiten"]) {
@@ -638,5 +709,27 @@ describe("AVSW fach.json im Repo", () => {
 
   test("Fachordner kollidiert nicht mit App-Seiten, public/ oder _next", () => {
     assert.equal(reservierteNamen().includes("avsw"), false)
+  })
+})
+
+describe("Spieltheorie fach.json im Repo", () => {
+  test("11 Stationen in Reihenfolge, Feldzug am Schluss", () => {
+    const ergebnis = ladeFach("spieltheorie")
+    assert.ok(ergebnis)
+    assert.equal(ergebnis.fach.kuerzel, "SPIELTHEORIE")
+    assert.deepEqual(
+      ergebnis.fach.sektionen.map((s) => s.id),
+      ["grundlagen", "dynamik", "strategeme", "anwendung", "abschluss"],
+    )
+    assert.equal(ergebnis.pfad.length, 11)
+    ergebnis.pfad.forEach((s, i) => {
+      assert.ok(s.slug.startsWith(String(i + 1).padStart(2, "0") + "-"), s.slug)
+    })
+    assert.equal(ergebnis.pfad[10].slug, "11-feldzug-abschluss")
+    assert.equal(ergebnis.pfad[10].sektion, "abschluss")
+  })
+
+  test("Fachordner kollidiert nicht mit reservierten Namen", () => {
+    assert.equal(reservierteNamen().includes("spieltheorie"), false)
   })
 })

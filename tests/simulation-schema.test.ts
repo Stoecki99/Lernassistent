@@ -11,10 +11,12 @@ import {
   actionSchema,
   appendActionsSchema,
   createRunSchema,
+  parseScenario,
   runIdSchema,
   scenarioSchema,
   statusReportInputSchema,
 } from "@/lib/validations/simulation"
+import { DEFAULT_AREA_LABELS, areaLabelsOf, boardNameOf } from "@/lib/simulation/labels"
 import { rawFixture } from "./helpers/simulation-mini"
 
 type Json = Record<string, unknown>
@@ -74,6 +76,43 @@ describe("Szenario-Schema (4.4) an der Fixture", () => {
     )
     assert.equal(text, "")
   })
+})
+
+describe("Bezeichnungen je Szenario (K1, K2 in 2.11.13)", () => {
+  const HOCHMATT_AREAS = [
+    { id: "bau", short: "VER", label: "Verwaltung und Recht" },
+    { id: "ent", short: "ENT", label: "Entwicklung und Integration" },
+    { id: "dat", short: "KID", label: "KI und Daten" },
+    { id: "ux", short: "SID", label: "Sicherheit und Datenschutz" },
+    { id: "kom", short: "CHG", label: "Change, Schulung und Benutzerführung" },
+  ]
+
+  test("areas und board sind gültig und optional", () => {
+    assert.equal(messages(mutate((s) => { s.areas = HOCHMATT_AREAS; s.board = { name: "Regierungsrat" } })), "")
+    const parsed = parseScenario(mutate((s) => { s.areas = HOCHMATT_AREAS; s.board = { name: "Regierungsrat" } }))
+    assert.equal(areaLabelsOf(parsed).dat.short, "KID")
+    assert.equal(boardNameOf(parsed), "Regierungsrat")
+  })
+
+  test("ohne Felder gelten die Wolkenrieder Bezeichnungen", () => {
+    const parsed = parseScenario(rawFixture())
+    assert.equal(parsed.areas, undefined)
+    assert.deepEqual(Object.values(areaLabelsOf(parsed)), [...DEFAULT_AREA_LABELS])
+    assert.equal(boardNameOf(parsed), "Gemeinderat")
+  })
+
+  const invalidLabels: Array<[string, (s: Json) => void, RegExp]> = [
+    ["vier Gebiete", (s) => { s.areas = HOCHMATT_AREAS.slice(0, 4) }, /genau 5/],
+    ["falsche Reihenfolge", (s) => { s.areas = [HOCHMATT_AREAS[1], HOCHMATT_AREAS[0], ...HOCHMATT_AREAS.slice(2)] }, /Position 1 muss «bau»/],
+    ["Kürzel klein", (s) => { s.areas = [{ ...HOCHMATT_AREAS[0], short: "ver" }, ...HOCHMATT_AREAS.slice(1)] }, /Kürzel/],
+    ["Gremium leer", (s) => { s.board = { name: "" } }, /board\.name/],
+  ]
+  for (const [name, fn, pattern] of invalidLabels) {
+    test(`abgelehnt: ${name}`, () => {
+      const text = messages(mutate(fn))
+      assert.match(text, pattern, text || "(gültig)")
+    })
+  }
 })
 
 describe("Aktionen (4.3)", () => {

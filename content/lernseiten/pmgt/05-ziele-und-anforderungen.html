@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Problemerfassung, Ziele, Anforderungen · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/06-leistungsumfang-und-arbeitspakete" title="Leistungsumfang, Lieferobjekte, Arbeitspakete">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t05-», nur Farben aus :root -->
+  <style>
+    .t05-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t05-ziele li{margin-bottom:3px}
+    .t05-quelle{margin:0}
+
+    /* Ablauf als nummerierte Kette */
+    .t05-fluss{margin:0; padding:0; list-style:none; counter-reset:t05f; display:flex; flex-direction:column; gap:8px}
+    .t05-fluss > li{counter-increment:t05f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t05-fluss > li::before{content:counter(t05f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t05-fluss .hint{margin:2px 0 0}
+
+    /* Bewertung in Tabellen: immer Zeichen + Wort */
+    .t05-ja{color:var(--ok); font-weight:700; white-space:nowrap}
+    .t05-teils{color:var(--free); font-weight:700; white-space:nowrap}
+    .t05-nein{color:var(--bad); font-weight:700; white-space:nowrap}
+
+    /* Satzschablone */
+    .t05-schablone{display:flex; flex-wrap:wrap; gap:8px; align-items:stretch}
+    .t05-teil{display:flex; flex-direction:column; gap:2px; border:2px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--surface); min-width:0}
+    .t05-teil small{font-size:.75rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted)}
+    .t05-teil b{font-family:var(--f-body)}
+    .t05-teil.t05-sys{border-color:var(--s1)}
+    .t05-teil.t05-verb{border-color:var(--s2)}
+    .t05-teil.t05-fkt{border-color:var(--s3)}
+    .t05-teil.t05-obj{border-color:var(--s4)}
+
+    /* SMART-Werkstatt und Anforderungs-Prüfer */
+    .t05-liste{display:flex; flex-direction:column; gap:12px}
+    .t05-fall{border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:var(--surface); display:flex; flex-direction:column; gap:8px; min-width:0}
+    .t05-fall h3{margin:0; font-size:1.05rem}
+    .t05-fall .hint{margin:0}
+    .t05-zitat{margin:0; padding:8px 12px; border-left:3px solid var(--accent); background:var(--board); border-radius:0 8px 8px 0; font-style:italic}
+    .t05-knoepfe{display:flex; flex-wrap:wrap; gap:8px}
+    .t05-krit{min-width:3.2em; font-weight:700}
+    .t05-krit[aria-pressed="true"]{color:var(--bad); background:var(--bad-bg); border-color:var(--bad); text-decoration:line-through}
+    .t05-wahl[aria-pressed="true"]{color:var(--accent); background:var(--accent-soft); border-color:var(--accent); font-weight:700}
+    .t05-rm{font-size:.95rem; line-height:1.5}
+    .t05-rm:empty{display:none}
+    .t05-rm.ok{border-left:3px solid var(--ok); padding-left:10px}
+    .t05-rm.bad{border-left:3px solid var(--bad); padding-left:10px}
+    .t05-rm .marke{font-weight:700}
+    .t05-rm.ok > p:first-child .marke{color:var(--ok)}
+    .t05-rm.bad > p:first-child .marke{color:var(--bad)}
+    .t05-rm p{margin:0 0 4px}
+    .t05-rm ul{margin:2px 0 6px; padding-left:1.2em}
+    .t05-rm li{margin-bottom:2px}
+    .t05-gut{color:var(--ok); font-weight:700}
+    .t05-schlecht{color:var(--bad); font-weight:700}
+    .t05-besser{margin:4px 0 0; padding:8px 12px; background:var(--ok-bg); border-radius:8px}
+    .t05-stand{font-weight:600; margin:0}
+    .t05-stand:empty{display:none}
+
+    /* Dokument im Lösungsfilm und in der Lösung */
+    .t05-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px; text-align:left}
+    .t05-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t05-fb:last-child{border-bottom:0}
+    .t05-fb b{color:var(--accent)}
+    .t05-fertig{background:var(--board); border-radius:12px; padding:12px 14px}
+    .t05-fertig .t05-fz{font-size:1rem}
+
+    @media (max-width: 480px){
+      .t05-fluss > li{padding-left:40px}
+      .t05-fz{font-size:.93rem}
+      .t05-krit{min-width:2.8em}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="05-ziele-und-anforderungen">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 2 und LB 3 · Projekt aufsetzen</span>
+    <h1>Problemerfassung, Ziele, Anforderungen</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.02</span>
+    </p>
+    <p class="lead">Bevor ein Projekt plant, muss klar sein: Welches Problem löst es, woran misst man den Erfolg, und was muss das Ergebnis können? Hier lernst du, eine Ausgangslage systematisch zu erfassen, Ziele SMART zu formulieren und gute Anforderungen von schlechten zu unterscheiden. Roter Faden ist der Onlineschalter Wolkenried, ganz am Anfang: in der Initialisierung, bevor der Gemeinderat ihn beschlossen hat.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t05-ziele">
+        <li>eine Situationsanalyse mit den Leitfragen durchführen und das Problem kurz und ohne Lösung beschreiben,</li>
+        <li>eine Lage nach der Methode der Armee (FSO) beurteilen: fünf Lagefaktoren AUGEZ, Analysekette AEK, Varianten nach sechs Kriterien,</li>
+        <li>Ziele nach Art (System, Prozess, Mehrwert) und Gewichtung (Muss, Soll, Kann) ordnen und SMART formulieren,</li>
+        <li>Anforderungen nach den neun Qualitätskriterien prüfen, Fach- und Systemanforderung unterscheiden und die Satzschablone «Das System muss …» anwenden,</li>
+        <li>Erhebungsmethoden wählen und kombinieren und den Anforderungskatalog vom Pflichtenheft unterscheiden.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der IPMA-Prüfung kommen offene Fragen wie «Formuliere zwei SMARTe Ziele für …» und Multiple-Choice-Fragen zu den Qualitätskriterien von Anforderungen (<span class="icb">ICB 3.02</span>). In der Modulschlussprüfung kann eine Problemerfassung zu einem Fall verlangt sein, so wie Aufgabe A2 der Fallstudie MOVE (LB 2, Dok. 2.1). Genau das zeigt der Lösungsfilm an einem eigenen Fall.</div>
+    <p class="hint t05-quelle">Quellen: Skript LB 2 F.29–33 (Problemerfassung, Situationsfragen, Ziele und Anforderungen); LB 3 F.6–9 (Führungs- und Stabsorganisation der Armee, FSO); Referat SG «Requirements Analyse im IT-Projekt» und Referat RJ «Organisation Requirements Analyse» (LB 3, Kernaussagen); Swiss ICB 4.5.2 «Anforderungen und Ziele» (S. 94–97); Gubelmann/Sommer S. 128–138 (laut Referat RJ). Alle Texte in eigenen Worten, alle Zahlen eigene Beispiele.</p>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#situation"><b>1</b>Situation</a>
+    <a href="#lage"><b>2</b>Lage (FSO)</a>
+    <a href="#ziele"><b>3</b>Ziele</a>
+    <a href="#anforderungen"><b>4</b>Anforderungen</a>
+    <a href="#erheben"><b>5</b>Erheben</a>
+    <a href="#werkstatt"><b>6</b>SMART-Werkstatt</a>
+    <a href="#pruefer"><b>7</b>Prüfer</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir vor, du baust ein Haus. Zuerst klärst du, was dich heute stört (die Wohnung ist zu klein). Dann legst du fest, was am Ende anders sein soll (Einzug im Herbst, vier Zimmer, höchstens 900'000 Franken). Danach schreibst du dem Architekten auf, was das Haus können muss. Erst dann zeichnet er einen Plan. Ein Projekt geht genauso vor.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Problem = Diagnose</span><span class="ex">Ist ≠ Soll</span><p>Die Lücke zwischen dem heutigen und dem gewünschten Zustand. Wie beim Arzt: Erst die Diagnose, dann die Therapie. Wer gleich das Medikament verschreibt, behandelt vielleicht das Falsche.</p></div>
+      <div class="concept"><span class="tag">Ziel = Reiseziel</span><span class="ex">«in Zermatt bis 18 Uhr»</span><p>Beschreibt den Zustand nach dem Projekt, nicht den Weg dahin. «Mit dem Zug fahren» ist kein Ziel, sondern ein Mittel.</p></div>
+      <div class="concept"><span class="tag">Anforderung = Wunschliste</span><span class="ex">«rollstuhlgängig»</span><p>Eine Eigenschaft oder Fähigkeit, die das Ergebnis haben muss. Du sagst dem Architekten, was du brauchst, ohne den Plan selbst zu zeichnen.</p></div>
+      <div class="concept"><span class="tag">Lösung = Bauplan</span><span class="ex">wie · womit</span><p>Wie und womit das Ziel erreicht wird: Produkt, Technik, Ablauf. Sie kommt nach Ziel und Anforderungen, nicht davor.</p></div>
+      <div class="concept"><span class="tag">Messgrösse = Massband</span><span class="ex">900 → höchstens 450</span><p>Woran du merkst, dass ein Ziel erreicht ist. Ohne Zahl oder klares Ja-Nein-Kriterium weiss am Schluss niemand, ob das Projekt erfolgreich war.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Problem, Ziel, Anforderung oder Lösung?</h3>
+      <p class="hint">Frag dich: Beschreibt der Satz, was heute stört (Problem), was am Ende erreicht sein soll (Ziel), was das Ergebnis können muss (Anforderung) oder wie und womit es gemacht wird (Lösung)? Alle Sätze stammen aus der Initialisierung des Onlineschalters Wolkenried.</p>
+      <div id="t05-sortierer-bausteine"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Situationsanalyse ===== -->
+  <section id="situation">
+    <span class="eyebrow">Schritt 1 · Situationsanalyse (LB 2 F.29–32)</span>
+    <h2>Die Ausgangslage erfassen</h2>
+    <p class="prose">Am Anfang steht eine Idee, oft auch nur ein Ärger. Die <b>Problemerfassung</b> macht daraus eine kurze, klare Beschreibung der Aufgabe: Worum geht es, wozu dient das Vorhaben, und welche ersten Lösungsansätze sind innerhalb der Vorgaben denkbar? Ihr Ergebnis ist der <b>Projektantrag</b> (LB 2 F.29). Wie du daraus den Projektauftrag machst, lernst du in <a href="/lernseiten/pmgt/07-projektauftrag">Station 07</a>.</p>
+    <p class="prose">Der erste Teil ist die <b>Situationserfassung</b> (LB 2 F.30): Du verschaffst dir Klarheit über die Ausgangslage und die Rahmenbedingungen, beschreibst die Projektidee und schliesst Informationslücken. Dazu trägst du alle vorhandenen Unterlagen und Daten übersichtlich zusammen.</p>
+
+    <h3>Die Leitfragen der Situationsanalyse</h3>
+    <p class="prose">LB 2 F.31 gibt zwölf Leitfragen und eine Schlussfrage vor. Hier sind sie in eigenen Worten in vier Gruppen geordnet, jeweils mit der Antwort für Wolkenried im Sommer, als die Idee entstand (Zahlen frei erfunden):</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Situationsanalyse Onlineschalter Wolkenried (Initialisierung)</caption>
+        <thead><tr><th>Gruppe</th><th>Leitfrage</th><th>Antwort Wolkenried</th></tr></thead>
+        <tbody>
+          <tr><th rowspan="4">Anlass und Herkunft</th><td>Was hat die Idee ausgelöst?</td><td>Klagen des Architekturforums über lange Wartezeiten und viele Telefonanrufe im Bauamt.</td></tr>
+          <tr><td>Wie ist die Vorgeschichte?</td><td>2023 scheiterte ein PDF-Formular, weil der Ablauf dahinter auf Papier blieb.</td></tr>
+          <tr><td>Welche Unterlagen gibt es, auch von aussen?</td><td>Baureglement, Gebührentarif, alte Formulare, Merkblatt des Kantons zum elektronischen Baugesuch.</td></tr>
+          <tr><td>Gab es ähnliche Projekte, mit Erfahrungen?</td><td>Zwei Nachbargemeinden haben einen Onlineschalter; beide raten, die Fachstellen früh einzubeziehen.</td></tr>
+          <tr><th rowspan="3">Nutzen und Strategie</th><td>Welchen Nutzen bringt die Idee?</td><td>Weniger Kopieren und Versand, weniger Statusanrufe, schnellere Zirkulation.</td></tr>
+          <tr><td>Passt sie zur Strategie?</td><td>Ja: Legislaturziel des Gemeinderats «Verwaltungsleistungen bis 2028 auch online».</td></tr>
+          <tr><td>Lässt sich schon etwas zur Wirtschaftlichkeit sagen?</td><td>Grob: rund 2 Stunden weniger Aufwand pro Gesuch, bei 260 Gesuchen pro Jahr. Genauer in Station 12.</td></tr>
+          <tr><th rowspan="3">Betroffene und Zeit</th><td>Wer ist künftig betroffen?</td><td>Bauwillige, Planungsbüros, Bauamt, Fachstellen, Finanzen, Informatik, Datenschutzaufsicht.</td></tr>
+          <tr><td>Wie sieht der Zeitplan aus?</td><td>Realisierung und Einführung in 8 Wochen (40 Arbeitstage).</td></tr>
+          <tr><td>Wie dringend ist es?</td><td>Hoch: Die Zahl der Gesuche steigt, Martin Zgraggen geht in wenigen Jahren in Pension.</td></tr>
+          <tr><th rowspan="2">Risiken und Nullvariante</th><td>Gibt es Risiken oder Widerstände?</td><td>Fachstellen wollen Papier behalten, Schnittstelle zum Hersteller der Bauverwaltungssoftware, Datenschutz.</td></tr>
+          <tr><td><b>Was passiert, wenn das Projekt nicht kommt?</b></td><td>Der Aufwand wächst mit jedem Gesuch, das Wissen geht mit der Pensionierung verloren, das Architekturforum bleibt unzufrieden.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Die Schlussfrage «Was passiert, wenn wir nichts tun?» heisst auch <b>Nullvariante</b>. Sie ist der Massstab für jede Variante: Ein Projekt lohnt sich nur, wenn es besser ist als Nichtstun.</div>
+
+    <h3>Vom Ärger zur Problembeschreibung</h3>
+    <p class="prose">Das Problem ist selten das, was zuerst geklagt wird. Klick dich durch, wie aus einer Klage eine brauchbare Problembeschreibung wird. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil leuchtet auf.</p>
+    <div id="t05-stepper-problem"></div>
+
+    <h3>Ziele und Lösungsansätze</h3>
+    <p class="prose">Zum Schluss der Problemerfassung skizzierst du mögliche Ziele und Lösungsansätze (LB 2 F.32): Welchen Nutzen soll das Ergebnis haben, welche Merkmale, welche Anforderungen? Welche Wege führen dorthin, was steht im Weg, und wie verhalten sich Aufwand und Nutzen grob? Wichtig ist der Rat der Folie: Gib dich nicht mit der erstbesten Lösung zufrieden. Mehrere Varianten öffnen den Blick. Wie du Varianten beurteilst, zeigt Schritt 2.</p>
+  </section>
+
+  <!-- ===== 2 · Lage nach FSO ===== -->
+  <section id="lage">
+    <span class="eyebrow">Schritt 2 · Lagebeurteilung nach FSO (LB 3 F.6–9)</span>
+    <h2>Die Lage beurteilen wie ein Stab</h2>
+    <p class="prose">Die Schweizer Armee hat für Entscheide unter Zeitdruck ein festes Vorgehen: die <b>Führungs- und Stabsorganisation (FSO)</b>. LB 3 übernimmt daraus vier Schritte für die Problemerfassung im Projekt:</p>
+    <ol class="t05-fluss">
+      <li><b>Problemerfassung:</b> Worum geht es? Lässt sich das Problem in Teilaufgaben zerlegen, und wer übernimmt welche? Was kommt zuerst? Welche Vorgaben gelten?<p class="hint">LB 3 F.6 empfiehlt, die Aufgabe als Bild darzustellen: So erkennst du das Problem, klärst und bewertest es. LB 2 F.39 zeigt ein solches Flipchart aus der Praxis.</p></li>
+      <li><b>Beurteilung der Lage:</b> Auftrag analysieren, die fünf Lagefaktoren AUGEZ durchgehen, mit AEK zu Konsequenzen verdichten.<p class="hint">LB 3 F.7.</p></li>
+      <li><b>Grobkonzept:</b> in Varianten denken, nach Kriterien beurteilen, eine wählen und den Entschluss so formulieren, dass alle Ziel und Vorgehen verstehen.<p class="hint">LB 3 F.8.</p></li>
+      <li><b>Detailkonzept (Planentwicklung):</b> Massnahmen, Ressourcen, Chancen und Risiken, Eventualplanung.<p class="hint">LB 3 F.9. Das ist die eigentliche Projektplanung, Stationen 06 bis 13.</p></li>
+    </ol>
+
+    <h3>Auftragsanalyse: sechs Fragen</h3>
+    <p class="prose">Bevor du die Lage beurteilst, klärst du deinen Auftrag (LB 3 F.7, in eigenen Worten): Was ist mein Beitrag zum Ganzen? Welche Leistung wird erwartet? Wo bin ich frei, wo gebunden? Wer unterstützt mich? Was kann die Gegenseite tun, und was tue ich dagegen? Welche Faktoren entscheiden?</p>
+
+    <h3>Die fünf Lagefaktoren AUGEZ</h3>
+    <p class="prose">AUGEZ steht für <b>A</b>uftrag, <b>U</b>mwelt, <b>G</b>egenseite, <b>e</b>igene Mittel und <b>Z</b>eit. In jedem Faktor dürfen Geld und Recht vorkommen (LB 3 F.7). Im Projekt gibt es selten einen Gegner. Die «Gegenseite» ist alles, was gegen das Projekt arbeitet: Widerstände, Konkurrenz um Leute und Geld, Abhängigkeiten.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Lagebeurteilung Onlineschalter Wolkenried nach AUGEZ</caption>
+        <thead><tr><th>Faktor</th><th>Leitfrage</th><th>Wolkenried</th></tr></thead>
+        <tbody>
+          <tr><th>Auftrag</th><td>Was genau soll ich leisten? Wo bin ich frei, wo gebunden?</td><td>Baugesuch online: einreichen, Status, Zirkulation, Gebühren. Frei in der Wahl der Lösung, gebunden an Kredit, Baurecht und Datenschutz.</td></tr>
+          <tr><th>Umwelt</th><td>Wer und was wirkt von aussen?</td><td>Kanton (Baurecht, kantonale Fachstellen), Datenschutzaufsicht, Architekturforum, Bevölkerung, Hersteller der Bauverwaltungssoftware.</td></tr>
+          <tr><th>Gegenseite</th><td>Was arbeitet gegen das Projekt?</td><td>Fachstellen wollen Papier behalten, Martin ist skeptisch, das Tagesgeschäft im Bauamt hat Vorrang, der Hersteller lieferte bisher oft spät.</td></tr>
+          <tr><th>Eigene Mittel</th><td>Womit kann ich arbeiten?</td><td>Kredit CHF 180'000, Kernteam (Seraina, Luca, Aylin), Leute aus der Linie mit Teilpensum, Lieferant Lärchwerk Informatik AG, Datenschutzberatung.</td></tr>
+          <tr><th>Zeit</th><td>Bis wann, und was drängt?</td><td>Abnahme spätestens Tag 40 (Plan Tag 36). Tage zählen ab Tag 1 wie in Station 10 und im Leitstand. Die Auftraggeberin will das Ergebnis vor den Wahlen.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Die Analysekette AEK</h3>
+    <p class="prose">AEK heisst <b>Aussage – Erkenntnis – Konsequenz</b> (LB 3 F.7). Du sammelst Aussagen, also Fakten. Du verdichtest sie zu Erkenntnissen, meist Risiken oder Chancen. Daraus leitest du Konsequenzen ab: Was folgt daraus für das Projekt? Eine Aussage ohne Konsequenz ist nur ein Fakt; erst die Konsequenz macht sie für die Planung brauchbar.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>AEK für den Onlineschalter (Konsequenzen finden sich im Risikoregister, Station 13)</caption>
+        <thead><tr><th>Aussage (Fakt)</th><th>Erkenntnis</th><th>Konsequenz</th></tr></thead>
+        <tbody>
+          <tr><td>Die Fachstellen kennen nur Papierdossiers.</td><td>Die digitale Zirkulation wird vielleicht nicht genutzt.</td><td>Fachstellen in die Konfiguration der Zirkulation einbeziehen, Kurzvideo erstellen.</td></tr>
+          <tr><td>Martin arbeitet 60 %, Thomas 40 %, beide aus der Linie des Bauamts.</td><td>Das Tagesgeschäft konkurriert mit dem Projekt.</td><td>Ressourcenvereinbarung mit Bauverwalter Beat Imhof abschliessen.</td></tr>
+          <tr><td>Gesuche enthalten Personendaten und Pläne von Wohnhäusern.</td><td>Datenschutzauflagen können spät kommen.</td><td>Vorprüfung durch die Datenschutzstelle früh einplanen.</td></tr>
+          <tr><td>Der Hersteller der Bauverwaltungssoftware lieferte bisher oft zu spät.</td><td>Die Schnittstelle, das teuerste Arbeitspaket, hat ein Terminrisiko.</td><td>Schnittstellenbeschreibung sofort über die Gemeinde anfordern.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Aussage, Erkenntnis oder Konsequenz?</h3>
+      <p class="hint">Aussage = ein Fakt, den man nachprüfen kann. Erkenntnis = was der Fakt für das Projekt bedeutet (meist ein Risiko). Konsequenz = was du deshalb tust.</p>
+      <div id="t05-sortierer-aek"></div>
+    </div>
+
+    <h3>Varianten beurteilen: sechs Kriterien</h3>
+    <p class="prose">Im Grobkonzept denkst du in Varianten. LB 3 F.8 nennt sechs Kriterien, mit denen du prüfst, ob eine Variante realisierbar ist. Die Folie nennt nur die Begriffe; die Erklärungen sind eigene Worte (Ergänzung):</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Drei Varianten für Wolkenried (eigene Beurteilung, nicht vom Dozenten bestätigt)</caption>
+        <thead><tr><th>Kriterium</th><th>Prüffrage</th><th>A · Standardprodukt konfigurieren</th><th>B · Eigenentwicklung</th><th>C · PDF-Formular per E-Mail</th></tr></thead>
+        <tbody>
+          <tr><th>Angemessenheit</th><td>Passt die Variante zum Auftrag und zur Grösse des Problems?</td><td><span class="t05-ja">✓ ja</span></td><td><span class="t05-teils">~ teils</span>, zu gross für 260 Gesuche</td><td><span class="t05-nein">✗ nein</span>, Ablauf bleibt Papier</td></tr>
+          <tr><th>Machbarkeit</th><td>Reichen Wissen, Leute und Zeit?</td><td><span class="t05-ja">✓ ja</span></td><td><span class="t05-nein">✗ nein</span>, kein Entwicklerteam</td><td><span class="t05-ja">✓ ja</span></td></tr>
+          <tr><th>Tragbarkeit</th><td>Sind Kosten, Risiken und Folgen tragbar, auch rechtlich und politisch?</td><td><span class="t05-ja">✓ ja</span>, Festpreis im Kredit</td><td><span class="t05-nein">✗ nein</span>, Wartung hängt an einer Person</td><td><span class="t05-teils">~ teils</span>, Personendaten per E-Mail heikel</td></tr>
+          <tr><th>Exklusivität</th><td>Ist sie eine echte, klar unterscheidbare Alternative?</td><td><span class="t05-ja">✓ ja</span></td><td><span class="t05-ja">✓ ja</span></td><td><span class="t05-ja">✓ ja</span></td></tr>
+          <tr><th>Vollständigkeit</th><td>Deckt sie den ganzen Auftrag ab (einreichen, Status, Zirkulation, Gebühren)?</td><td><span class="t05-ja">✓ ja</span></td><td><span class="t05-ja">✓ ja</span></td><td><span class="t05-nein">✗ nein</span>, nur einreichen</td></tr>
+          <tr><th>Einfachheit</th><td>Ist sie einfach zu verstehen, umzusetzen und zu betreiben?</td><td><span class="t05-ja">✓ ja</span></td><td><span class="t05-nein">✗ nein</span></td><td><span class="t05-ja">✓ ja</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose"><b>Entschluss:</b> Variante A, das Standardprodukt der Lärchwerk Informatik AG, konfiguriert und an die Bauverwaltungssoftware angebunden. Eine Variante «A, aber mit einem anderen Anbieter» wäre übrigens nicht exklusiv: Sie ist dieselbe Lösung mit anderem Lieferanten und gehört in die Beschaffung (Station 21), nicht in den Variantenvergleich. LB 3 F.8 erinnert auch daran: Ein Restrisiko bleibt immer, und es trägt die Person, die entscheidet.</p>
+    <div class="note"><b>Merke:</b> Diese Kriterien prüfen, ob eine Variante <i>realisierbar</i> ist. Welche der realisierbaren Varianten am meisten bringt, entscheidest du danach mit einer Wirtschaftlichkeitsrechnung oder Nutzwertanalyse (<a href="/lernseiten/pmgt/12-wirtschaftlichkeit">Station 12</a>).</div>
+  </section>
+
+  <!-- ===== 3 · Ziele ===== -->
+  <section id="ziele">
+    <span class="eyebrow">Schritt 3 · Ziele (LB 2 F.33, Swiss ICB 4.5.2.1)</span>
+    <h2>Ziele: Art, Gewichtung, SMART</h2>
+    <p class="prose">Die ICB beschreibt Anforderungen und Ziele als das «Warum» des Projekts: was erreicht werden muss, welcher Nutzen entstehen soll und welche Anforderungen der Stakeholder erfüllt werden müssen (Swiss ICB 4.5.2, sinngemäss). Ziele hängen in einer <b>Hierarchie</b>: Aus den Zielen der Organisation leitest du die Projektziele ab, aus diesen die Teilziele. In Wolkenried: Legislaturziel «Verwaltungsleistungen bis 2028 auch online» → Projektziel «Baugesuch online» → Teilziele wie Status, Zirkulation, Gebühren.</p>
+
+    <h3>Drei Zielarten</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Zielart</th><th>Beschreibt</th><th>Beispiel Onlineschalter</th></tr></thead>
+        <tbody>
+          <tr><th>Systemziel (inhaltliches Ziel)</th><td>Was das Ergebnis können oder bewirken soll: Produkt, Funktionen, Wirkung.</td><td>Bauwillige reichen ihr Gesuch online ein und sehen den Stand.</td></tr>
+          <tr><th>Prozessziel (Vorgehensziel)</th><td>Wie das Projekt abläuft: Termin, Kosten, Risiko, Vorgehen.</td><td>Abnahme spätestens Tag 40, Kosten höchstens CHF 180'000.</td></tr>
+          <tr><th>Mehrwertziel</th><td>Positive Nebenwirkungen, die über das Ergebnis hinausgehen: Wissen, Beziehungen, Erfahrung.</td><td>Das Bauamt kann nach dem Projekt weitere Formulare selbst einrichten.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">LB 2 F.33 nennt die drei Arten. Die Swiss ICB (Indikator 4.5.2.1) nennt dieselben drei Gruppen «inhaltliche Ziele», «Prozessziele» und «resultierender Nutzen» und gibt als Beispiele neues Wissen, gestärkte Beziehungen und Erfahrung mit Outsourcing.</p>
+
+    <h3>Gewichtung: Muss, Soll, Kann</h3>
+    <div class="grid2">
+      <div class="card stack">
+        <p><b>Muss-Ziel:</b> zwingend. Wird es verfehlt, ist das Projekt gescheitert. Muss-Ziele sind wenige und klar.</p>
+        <p><b>Soll-Ziel:</b> wichtig und angestrebt. Nicht jedes Soll-Ziel muss erreicht werden; sie werden untereinander gewichtet.</p>
+        <p><b>Kann-Ziel:</b> wünschbar. Wird umgesetzt, wenn Zeit und Geld reichen.</p>
+      </div>
+      <div class="card stack">
+        <p class="hint">Quelle: LB 2 F.33; Referat RJ (Zielkatalog) nach Gubelmann/Sommer S. 128–133.</p>
+        <p>Die Gewichtung hilft dir später bei Konflikten: Fehlt Geld, streichst du zuerst Kann-Ziele, dann Soll-Ziele. Die Priorität setzt die Auftraggeberin, nicht das Projektteam (Swiss ICB 4.5.2.3).</p>
+      </div>
+    </div>
+
+    <h3>SMART</h3>
+    <p class="prose">LB 2 F.33 verlangt, dass Ziele fünf Kriterien erfüllen. Die Swiss ICB nennt die SMART-Methode als Fertigkeit zur Zielformulierung.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Buchstabe</th><th>Heisst</th><th>Prüffrage</th></tr></thead>
+        <tbody>
+          <tr><th>S</th><td>spezifisch</td><td>Ist klar, wer oder was genau gemeint ist? Kann man es nur auf eine Art verstehen?</td></tr>
+          <tr><th>M</th><td>messbar</td><td>Gibt es eine Messgrösse und einen Zielwert, oder ein klares Ja-Nein-Kriterium?</td></tr>
+          <tr><th>A</th><td>akzeptiert</td><td>Tragen Auftraggeberin und Betroffene das Ziel mit?</td></tr>
+          <tr><th>R</th><td>realistisch</td><td>Ist es mit den Mitteln, in der Zeit und nach der Rechtslage erreichbar?</td></tr>
+          <tr><th>T</th><td>terminiert</td><td>Bis wann oder ab wann gilt es, und über welchen Zeitraum wird gemessen?</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Ergänzung: In anderen Büchern steht A auch für «attraktiv» oder «angemessen» und R für «relevant». Für die Prüfung gilt die Fassung aus LB 2 F.33: akzeptiert und realistisch.</p>
+    <div class="note"><b>Faustregel (Ergänzung):</b> Ein Ziel beschreibt einen <b>Zustand</b> («Bauwillige reichen online ein»), keine Tätigkeit («wir führen eine Plattform ein») und keine Lösung («mit der App von X»). Wer schon im Ziel die Lösung festlegt, verbaut sich die besseren Varianten.</div>
+
+    <p class="prose">Klick dich durch, wie aus einem unscharfen Wunsch Schritt für Schritt ein SMARTes Ziel wird:</p>
+    <div id="t05-stepper-smart"></div>
+
+    <h3>Der Zielkatalog des Onlineschalters</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Zielkatalog (Auszug, eigenes Beispiel)</caption>
+        <thead><tr><th>Nr.</th><th>Ziel</th><th>Art</th><th>Gewicht</th></tr></thead>
+        <tbody>
+          <tr><th>Z1</th><td>Ab der Abnahme reichen Bauwillige und Planungsbüros Baugesuche vollständig online ein; im ersten Jahr kommen mindestens 60 % der neuen Gesuche online.</td><td>System</td><td>Muss</td></tr>
+          <tr><th>Z2</th><td>Ein Jahr nach der Abnahme gehen höchstens halb so viele telefonische Statusanfragen ein wie 2026 (Basis rund 900, Ziel höchstens 450).</td><td>System</td><td>Muss</td></tr>
+          <tr><th>Z3</th><td>Abnahme spätestens Ende Tag 40, Projektkosten höchstens CHF 180'000.</td><td>Prozess</td><td>Muss</td></tr>
+          <tr><th>Z4</th><td>Ab der Abnahme werden Gebühren online nach Tarif berechnet und bezahlt; in den ersten drei Monaten stimmen mindestens 95 % der Rechnungen ohne Korrektur.</td><td>System</td><td>Soll</td></tr>
+          <tr><th>Z5</th><td>Bis drei Monate nach der Abnahme richtet das Bauamt ein weiteres Formular (Reklamegesuch) ohne Hilfe des Lieferanten ein.</td><td>Mehrwert</td><td>Kann</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Z3 passt zum Leitstand: Budget CHF 180'000, Abnahme Plan Tag 36, Terminziel Tag 40. Gezählt wird ab Tag 1 wie in Station 10; «Tag 40» heisst Ende des 40. Arbeitstags.</p>
+  </section>
+
+  <!-- ===== 4 · Anforderungen ===== -->
+  <section id="anforderungen">
+    <span class="eyebrow">Schritt 4 · Anforderungen (LB 2 F.33, Referate SG und RJ)</span>
+    <h2>Gute Anforderungen schreiben</h2>
+    <p class="prose">Eine <b>Anforderung</b> ist ein Bedürfnis eines Stakeholders oder eine Fähigkeit oder Eigenschaft, die das System haben muss (Referat SG). Im <b>Anforderungskatalog</b> beschreibst du die Anforderungen an das Projekt oder Produkt aus Sicht der Anwender, mit allen Rahmenbedingungen. LB 2 F.33 verlangt, sie zu quantifizieren, und nennt neun Qualitätskriterien. Danach folgt eine Machbarkeitsprüfung: Lassen sich die Anforderungen zusammen überhaupt erfüllen?</p>
+
+    <h3>Neun Qualitätskriterien</h3>
+    <p class="prose">Die Folie nennt nur die Begriffe. Erklärungen und Beispiele sind eigene Worte (Ergänzung):</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Qualitätskriterien für Anforderungen, mit Verstoss aus Wolkenried</caption>
+        <thead><tr><th>Kriterium</th><th>Heisst</th><th>Verstoss</th></tr></thead>
+        <tbody>
+          <tr><th>vollständig</th><td>Alle nötigen Angaben sind da, auch Rahmenbedingungen; der Katalog deckt alle Stakeholder ab.</td><td>«Gesuche können eingereicht werden.» Von wem, mit welchen Beilagen, in welchem Format?</td></tr>
+          <tr><th>eindeutig</th><td>Es gibt nur eine Lesart.</td><td>«Nach der Freigabe …» Freigabe durch wen, wofür?</td></tr>
+          <tr><th>widerspruchsfrei</th><td>Keine Anforderung widerspricht einer anderen.</td><td>A-03 erlaubt, Beilagen nachzureichen; A-07 verbietet, unvollständige Gesuche abzuschicken.</td></tr>
+          <tr><th>lösungsneutral</th><td>Sagt, was gebraucht wird, nicht wie oder womit.</td><td>«Einreichen über eine iPhone-App.»</td></tr>
+          <tr><th>redundanzfrei</th><td>Jede Anforderung steht nur einmal.</td><td>Die Statusanzeige steht in zwei Kapiteln; eine Stelle wird geändert, die andere nicht.</td></tr>
+          <tr><th>prüfbar</th><td>Man kann objektiv testen, ob sie erfüllt ist.</td><td>«Das System muss schnell sein.»</td></tr>
+          <tr><th>gültig</th><td>Die Berechtigten haben sie bestätigt; sie entspricht einem echten Bedürfnis und ist rechtlich zulässig.</td><td>Eine Funktion, die nur der Lieferant vorschlägt und im Bauamt niemand bestätigt hat.</td></tr>
+          <tr><th>aktuell</th><td>Sie entspricht dem heutigen Stand von Vorgaben und Bedürfnissen.</td><td>Gebührenberechnung nach dem Tarif 2019, der ab 2027 ersetzt wird.</td></tr>
+          <tr><th>bewertet</th><td>Sie hat eine Priorität (Muss, Soll, Kann) und ist nach Nutzen und Aufwand eingeschätzt.</td><td>120 Anforderungen, alle ohne Priorität.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Fachanforderung und Systemanforderung</h3>
+    <p class="prose">Das Referat SG unterscheidet zwei Ebenen. Die <b>Fachanforderung</b> sagt aus Sicht des Geschäfts, was gebraucht wird und warum: in der Sprache des Fachbereichs, möglichst lösungsneutral, oft noch unscharf. Die <b>System- oder Softwareanforderung</b> sagt, was das System leisten muss: konkret, nah an der Umsetzung, prüfbar und testbar.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th></th><th>Fachanforderung</th><th>Systemanforderung</th></tr></thead>
+        <tbody>
+          <tr><th>Leitfrage</th><td>Was braucht das Geschäft, und warum?</td><td>Was muss das System leisten?</td></tr>
+          <tr><th>Sprache</th><td>Fachsprache (Bauamt)</td><td>System- bzw. technische Sprache</td></tr>
+          <tr><th>Bezug zur Lösung</th><td>möglichst lösungsneutral</td><td>konkret, umsetzungsnah</td></tr>
+          <tr><th>Prüfbarkeit</th><td>oft noch unscharf</td><td>prüfbar und testbar</td></tr>
+          <tr><th>Wolkenried</th><td>Bauwillige wollen wissen, wo ihr Gesuch steht.</td><td>Das System muss den Status jedes Gesuchs mit einem von vier Werten anzeigen …</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Systemanforderungen schreibst du am besten nach einer <b>Satzschablone</b> (Referat SG). Ihre Teile:</p>
+    <div class="t05-schablone" role="group" aria-label="Satzschablone für Systemanforderungen">
+      <span class="t05-teil t05-sys"><small>System</small><b>Das System</b></span>
+      <span class="t05-teil t05-verb"><small>Verbindlichkeit</small><b>muss · soll · kann</b></span>
+      <span class="t05-teil t05-fkt"><small>Funktion</small><b>bereitstellen, anzeigen, übernehmen …</b></span>
+      <span class="t05-teil t05-obj"><small>Objekt mit prüfbarem Inhalt</small><b>was genau, wie viel, wie schnell</b></span>
+    </div>
+    <p class="prose">Ergänzung: Das Referat SG zeigt nur «muss». Üblich sind auch «soll» und «kann», passend zur Gewichtung der Ziele: «muss» = zwingend, «soll» = angestrebt, «kann» = wünschbar. Ausserdem unterscheidet man <b>funktionale Anforderungen</b> (was tut das System: Gesuch annehmen, Status anzeigen) von <b>Qualitätsanforderungen und Randbedingungen</b> (wie gut und unter welchen Vorgaben: Antwortzeit, mobil nutzbar, Datenschutzgesetz).</p>
+    <div id="t05-stepper-schablone"></div>
+
+    <h3>Vom Groben ins Detail: der HERMES-Weg</h3>
+    <p class="prose">Anforderungen entstehen nicht auf einmal. In HERMES werden sie von Phase zu Phase genauer (Referat SG):</p>
+    <ol class="t05-fluss">
+      <li><b>Initialisierung:</b> Grobanforderungen in der Studie.<p class="hint">Genug, um Varianten zu vergleichen und zu entscheiden.</p></li>
+      <li><b>Konzept:</b> Systemanforderungen, Detailstudie, Systemarchitektur.<p class="hint">Grundlage für die Beschaffung und das Pflichtenheft.</p></li>
+      <li><b>Realisierung:</b> Detailspezifikation, das System wird entwickelt.</li>
+      <li><b>Einführung:</b> Das System wird aktiviert.</li>
+    </ol>
+    <p class="prose">Die Module Geschäftsorganisation (Abläufe) und IT-System müssen dabei aufeinander abgestimmt sein. Ein neues System mit alten Abläufen bringt wenig, wie das gescheiterte PDF-Formular von 2023 zeigt.</p>
+
+    <h3>Anforderungskatalog ≠ Pflichtenheft</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th></th><th>Anforderungskatalog</th><th>Pflichtenheft</th></tr></thead>
+        <tbody>
+          <tr><th>Frage</th><td>Was und wofür?</td><td>Wie und womit?</td></tr>
+          <tr><th>Sicht</th><td>Anwender und Auftraggeber</td><td>Lösung (Auftragnehmer, Lieferant, IT)</td></tr>
+          <tr><th>Inhalt</th><td>Fachliche, funktionale und Qualitätsanforderungen mit Rahmenbedingungen, quantifiziert und priorisiert</td><td>Lösungsansätze und Systemanforderungen</td></tr>
+          <tr><th>Wolkenried</th><td>«Gesuchstellende sehen den Stand ihres Gesuchs.»</td><td>«Die Plattform zeigt den Status im Kundenportal; die Schnittstelle überträgt ihn alle 15 Minuten.»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Alle Beteiligten geben den Anforderungskatalog frei. Danach werden Änderungen nur noch über einen Änderungsantrag behandelt (Referat RJ). Ergänzung: In der deutschen Norm heisst das Dokument der Auftraggeberseite oft «Lastenheft», das der Auftragnehmerseite «Pflichtenheft». Die Swiss ICB spricht beim Dokumentieren von einem «Lastenheft» oder einem Product Backlog mit User Stories.</p>
+
+    <h3>Wer macht was?</h3>
+    <p class="prose">Anforderungen zu erheben ist Teamarbeit (Referat SG). Die Rollen und wer sie in Wolkenried übernimmt:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Rolle</th><th>Aufgabe</th><th>Wolkenried</th></tr></thead>
+        <tbody>
+          <tr><th>Auftraggeberin</th><td>entscheidet, setzt die Prioritäten</td><td>Franziska Bühlmann, Gemeinderätin</td></tr>
+          <tr><th>Projektleitung</th><td>koordiniert, plant die Erhebung</td><td>du</td></tr>
+          <tr><th>Anwender</th><td>bringen ihre Bedürfnisse ein</td><td>Bauwillige, Planungsbüros, Fachstellen, Martin Zgraggen und Thomas Ellinger im Bauamt</td></tr>
+          <tr><th>Anwendervertreterin</th><td>bringt abgestimmte fachliche Anforderungen ein, nimmt später ab</td><td>Seraina Caflisch, Fachverantwortliche Baugesuche</td></tr>
+          <tr><th>Geschäftsprozessverantwortlicher</th><td>verantwortet den Ablauf</td><td>Beat Imhof, Bauverwalter</td></tr>
+          <tr><th>Business Analyst</th><td>Brücke zwischen Fach und IT: erhebt, analysiert, strukturiert</td><td>Aylin Demir, Organisationsentwicklerin</td></tr>
+          <tr><th>IT-Architekt</th><td>verantwortet die Systemarchitektur</td><td>Luca Bernasconi, Informatik der Gemeinde</td></tr>
+          <tr><th>Entwickler</th><td>spezifiziert im Detail und setzt um</td><td>Dario Pfister und Elena Kovačević, Lärchwerk Informatik AG</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Erheben ===== -->
+  <section id="erheben">
+    <span class="eyebrow">Schritt 5 · Anforderungen erheben (Referate SG und RJ)</span>
+    <h2>Woher weisst du, was gebraucht wird?</h2>
+    <p class="prose">Der Grundprozess hat drei Schritte, die sich wiederholen: <b>ermitteln</b> (erheben), <b>analysieren</b> (strukturieren und dokumentieren) und <b>prüfen</b> (mit den Stakeholdern abstimmen) (Referat RJ). Die Swiss ICB betont dasselbe: Der Prozess läuft zu Beginn und danach in regelmässigen Abständen, weil sich die Sicht der Stakeholder ändert. Die wichtigste Quelle sind die Stakeholder selbst (<a href="/lernseiten/pmgt/14-stakeholder">Station 14</a>). Wer eine Gruppe vergisst, baut ein System, das in der Theorie funktioniert und im Betrieb scheitert.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Sechs Erhebungsmethoden (Referat SG, in eigenen Worten)</caption>
+        <thead><tr><th>Methode</th><th>Geeignet für</th><th>Stärke</th><th>Schwäche</th></tr></thead>
+        <tbody>
+          <tr><th>Interview</th><td>Expertenwissen, eine Sicht im Detail</td><td>Tiefe, Rückfragen möglich</td><td>braucht viel Zeit</td></tr>
+          <tr><th>Workshop</th><td>mehrere Stakeholder, Abstimmung</td><td>Konflikte werden früh sichtbar</td><td>braucht gute Moderation</td></tr>
+          <tr><th>Beobachtung</th><td>Routineabläufe, die niemand mehr erklären kann</td><td>zeigt den echten Ablauf</td><td>aufwendig; wer beobachtet wird, arbeitet anders</td></tr>
+          <tr><th>Dokumentenanalyse</th><td>bestehende Abläufe, Vorgaben, Altsysteme</td><td>günstig, gute Basis</td><td>Dokumente sind oft veraltet</td></tr>
+          <tr><th>Fragebogen</th><td>viele Personen</td><td>breite Datenbasis</td><td>wenig Tiefe</td></tr>
+          <tr><th>Prototyping</th><td>Oberflächen, unklare Wünsche</td><td>früh konkrete Rückmeldung</td><td>kann falsche Erwartungen wecken</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Die beste Methode gibt es nicht. Erst die <b>Kombination</b> ergibt ein vollständiges Bild: Das Interview zeigt die Regeln, die Beobachtung den echten Ablauf, der Workshop die Konflikte. Die Swiss ICB rät, für ein Gleichgewicht zwischen Stakeholdern oft Workshops statt Einzelgespräche zu wählen.</div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Erhebungsplan Onlineschalter (eigenes Beispiel)</caption>
+        <thead><tr><th>Methode</th><th>Mit wem</th><th>Um was zu erfahren</th></tr></thead>
+        <tbody>
+          <tr><th>Dokumentenanalyse</th><td>Baureglement, Gebührentarif, alte Formulare</td><td>Pflichtfelder, Fristen, Tarifregeln</td></tr>
+          <tr><th>Interview</th><td>Beat Imhof, Seraina Caflisch</td><td>Geschäftsregeln und Ausnahmen der Bewilligung</td></tr>
+          <tr><th>Beobachtung</th><td>Martin Zgraggen am Schalter, zwei Tage</td><td>wie er die Vollständigkeit wirklich prüft</td></tr>
+          <tr><th>Fragebogen</th><td>alle Planungsbüros im Architekturforum</td><td>Formate der Pläne, Wünsche an den Status</td></tr>
+          <tr><th>Workshop</th><td>Feuerpolizei, Umwelt, Tiefbau, Bauamt</td><td>Reihenfolge und Fristen der Zirkulation</td></tr>
+          <tr><th>Prototyping</th><td>fünf Bauwillige und zwei Planungsbüros (V04)</td><td>ob das Formular ohne Hilfe verständlich ist</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Typische Übersetzungsprobleme</h3>
+    <ul class="prose">
+      <li><b>Gleiches Wort, andere Bedeutung:</b> «Freigabe» heisst für das Bauamt «vollständig», für die Baukommission «bewilligt». Hilfe: ein gemeinsames Glossar.</li>
+      <li><b>Stilles Wissen:</b> «Das ist doch klar», und darum steht es nirgends. Hilfe: beobachten.</li>
+      <li><b>Lösung zu früh:</b> «Wir wollen eine App» statt des Bedürfnisses dahinter. Hilfe: erst das Bedürfnis, dann die Lösung.</li>
+    </ul>
+    <p class="hint">Quelle: Referat SG (Herausforderungen und Erfolgsfaktoren), Beispiele eigene.</p>
+  </section>
+
+  <!-- ===== 6 · SMART-Werkstatt ===== -->
+  <section id="werkstatt">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>SMART-Werkstatt: sechs unscharfe Ziele</h2>
+    <p class="prose">Diese sechs Ziele stammen aus dem ersten Entwurf des Projektantrags für den Onlineschalter. Tippe bei jedem Ziel die Buchstaben an, die <b>fehlen oder verletzt sind</b> (sie werden durchgestrichen). Dann prüft die Seite. A und R beurteilst du aus dem Hinweis unter dem Ziel:</p>
+    <ul class="prose">
+      <li><b>A fehlt</b>, wenn Auftraggeberin oder Betroffene das Ziel nicht mittragen.</li>
+      <li><b>R fehlt</b>, wenn das Ziel mit den Mitteln, in der Zeit oder nach der Rechtslage nicht erreichbar ist.</li>
+    </ul>
+    <div class="t05-liste" id="t05-smart"></div>
+    <div class="row">
+      <button type="button" class="btn primary" id="t05-smart-pruefen">Ziele prüfen</button>
+      <button type="button" class="btn" id="t05-smart-zurueck">Zurücksetzen</button>
+    </div>
+    <p class="t05-stand" id="t05-smart-stand" aria-live="polite"></p>
+    <p class="hint">Lösungen und SMART-Fassungen sind eigene Lösungen, nicht vom Dozenten bestätigt.</p>
+
+    <div id="t05-reflexion-smart"></div>
+
+    <div class="card stack">
+      <h3>Zielart-Sortierer</h3>
+      <p class="hint">Systemziel = was das Ergebnis kann oder bewirkt. Prozessziel = wie das Projekt abläuft (Termin, Kosten, Vorgehen). Mehrwertziel = positive Nebenwirkung wie Wissen oder Beziehungen.</p>
+      <div id="t05-sortierer-zielart"></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Anforderungs-Prüfer ===== -->
+  <section id="pruefer">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Anforderungs-Prüfer: acht Einträge aus dem Katalog</h2>
+    <p class="prose">Aylin Demir hat nach den ersten Interviews acht Anforderungen in den Anforderungskatalog des Onlineschalters geschrieben. Bevor die Anwendervertreterin den Katalog freigibt, prüfst du sie. Wähle bei jeder Anforderung den <b>wichtigsten</b> Fehler, oder «in Ordnung».</p>
+    <div class="t05-liste" id="t05-anf"></div>
+    <div class="row">
+      <button type="button" class="btn primary" id="t05-anf-pruefen">Anforderungen prüfen</button>
+      <button type="button" class="btn" id="t05-anf-zurueck">Zurücksetzen</button>
+    </div>
+    <p class="t05-stand" id="t05-anf-stand" aria-live="polite"></p>
+    <p class="hint">Beurteilungen und bessere Fassungen sind eigene Lösungen, nicht vom Dozenten bestätigt.</p>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst einordnen, rechnen, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zehn Übungen in acht Arten: zuordnen, wahr oder falsch, Einzelfrage, rechnen, Matrix, Fallentscheid, Schritt für Schritt und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest. Die Übungen 7 bis 10 spielen in einem anderen Wolkenried-Projekt: der Selbstausleihe der Gemeindebibliothek.</p>
+    <div id="t05-u-methode"></div>
+    <div id="t05-u-wf"></div>
+    <div id="t05-u-kriterium"></div>
+    <div id="t05-u-zahl"></div>
+    <div id="t05-u-matrix"></div>
+    <div id="t05-u-fall"></div>
+    <div id="t05-u-augez"></div>
+    <div id="t05-u-aek"></div>
+    <div id="t05-u-smart"></div>
+    <div id="t05-u-schablone"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine Problemerfassung aus Fallangaben, am Stück</h2>
+    <p class="prose">Eine Aufgabe im Stil der Aufgabe A2 der Fallstudie MOVE, mit eigenem Fall und eigenen Zahlen: Aus den Fallangaben eine Problemerfassung erstellen, mit Situationsanalyse, Lage nach AUGEZ, AEK, SMARTen Zielen und Anforderungen. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t05-film"></div>
+    <details class="sol"><summary>Die fertige Problemerfassung als Text</summary>
+      <div class="t05-fertig" id="t05-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>Lösung statt Ziel.</b> «Wir führen eine App ein» ist kein Ziel, sondern eine Lösung und eine Tätigkeit. Ein Ziel beschreibt den Zustand danach: Wer kann was, ab wann, wie viel.</div>
+    <div class="note falle"><b>Vage Wörter.</b> «Benutzerfreundlich», «schnell», «modern», «deutlich», «stabil» sind nicht messbar und nicht prüfbar. Ersetze sie durch eine Messgrösse mit Zielwert.</div>
+    <div class="note falle"><b>Termin vergessen.</b> Ein Ziel ohne «bis wann» oder «ab wann» ist nie verfehlt und darum nie erreicht. Das T fehlt in Prüfungsantworten am häufigsten.</div>
+    <div class="note falle"><b>Prozessziele vergessen.</b> Termin und Kosten sind auch Ziele, nämlich Prozessziele. Wer nur Systemziele nennt, lässt die halbe Zielart weg.</div>
+    <div class="note falle"><b>Alles ist Muss.</b> Wenn jedes Ziel ein Muss-Ziel ist, gibt es keinen Spielraum, wenn Geld oder Zeit knapp werden. Muss-Ziele sind wenige K.-o.-Kriterien.</div>
+    <div class="note falle"><b>Anforderungskatalog und Pflichtenheft verwechseln.</b> Der Katalog sagt, was und wofür (Sicht Anwender), das Pflichtenheft, wie und womit (Sicht Lösung). LB 2 F.33: Anforderungskatalog ≠ Pflichtenheft.</div>
+    <div class="note falle"><b>Technik in der Fachanforderung.</b> «Über eine iPhone-App» oder «mit Excel» verletzt die Lösungsneutralität. Die Technik gehört in die Systemanforderung oder das Pflichtenheft.</div>
+    <div class="note falle"><b>Symptom statt Problem.</b> «Das Telefon klingelt dauernd» ist ein Symptom. Das Problem ist, dass Gesuchstellende den Stand nur auf Nachfrage erfahren.</div>
+    <div class="note falle"><b>AUGEZ ohne Gegenseite.</b> «Wir haben keine Gegner» stimmt fast nie. Gemeint ist alles, was gegen das Projekt wirkt: Widerstände, Konkurrenz um Leute, Abhängigkeiten.</div>
+    <div class="note falle"><b>AEK ohne K.</b> Eine Liste von Fakten ist noch keine Analyse. Jede Erkenntnis braucht eine Konsequenz für das Projekt.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t05-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Die <b>Problemerfassung</b> beschreibt kurz Aufgabe, Ziel und Zweck und erste Lösungsansätze. Die <b>Situationsanalyse</b> klärt mit Leitfragen Anlass, Nutzen, Betroffene, Dringlichkeit, Risiken und die Nullvariante. Ergebnis: der Projektantrag.</li>
+      <li>Nach <b>FSO</b> beurteilst du die Lage mit den Faktoren <b>AUGEZ</b> (Auftrag, Umwelt, Gegenseite, eigene Mittel, Zeit) und der Kette <b>AEK</b> (Aussage → Erkenntnis → Konsequenz). Varianten prüfst du auf Angemessenheit, Machbarkeit, Tragbarkeit, Exklusivität, Vollständigkeit und Einfachheit.</li>
+      <li><b>Zielarten:</b> Systemziel (Ergebnis), Prozessziel (Termin, Kosten, Vorgehen), Mehrwertziel (Nebennutzen). <b>Gewichtung:</b> Muss (K.o.), Soll (angestrebt), Kann (wenn es reicht).</li>
+      <li><b>SMART:</b> spezifisch, messbar, akzeptiert, realistisch, terminiert. Ein Ziel beschreibt einen Zustand, keine Tätigkeit und keine Lösung.</li>
+      <li>Gute <b>Anforderungen</b> sind vollständig, eindeutig, widerspruchsfrei, lösungsneutral, redundanzfrei, prüfbar, gültig, aktuell und bewertet. Fachanforderung = was das Geschäft braucht; Systemanforderung = was das System muss, nach der Schablone «Das System muss …».</li>
+      <li><b>Erheben</b> heisst ermitteln, analysieren, prüfen, mit einer Kombination von Methoden. Der <b>Anforderungskatalog</b> (was, wofür) ist nicht das <b>Pflichtenheft</b> (wie, womit).</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t05-ziele">
+        <li><span class="icb">ICB 3.02</span> Anforderungen und Ziele (Swiss ICB 4.5.2, S. 94–97): Indikatoren 4.5.2.1 «Hierarchie der Projektziele» (inhaltliche Ziele, Prozessziele, resultierender Nutzen), 4.5.2.2 «Bedürfnisse und Anforderungen identifizieren und analysieren», 4.5.2.3 «Anforderungen und Abnahmekriterien priorisieren». Fertigkeiten: Workshops, Interviews, SMART.</li>
+        <li>Spickzettel: SMART mit den fünf Prüffragen, die drei Zielarten mit Beispiel, Muss/Soll/Kann, die neun Qualitätskriterien, die Satzschablone, die Tabelle der sechs Erhebungsmethoden, AUGEZ, AEK und die sechs Kriterien für Varianten.</li>
+        <li>Fundstellen Skript: LB 2 F.29 (Ziel der Problemerfassung), F.30–31 (Situationserfassung und Leitfragen), F.32 (Ziele und Lösungsansätze), F.33 (Zielarten, Muss/Soll/Kann, SMART, Qualitätskriterien, Anforderungskatalog ≠ Pflichtenheft), F.39 (Praxisbeispiel Problemerfassung); LB 3 F.6 (Problemerfassung nach FSO), F.7 (AUGEZ, AEK), F.8 (Varianten und Kriterien), F.9 (Detailkonzept); Referate SG und RJ zu Requirements (LB 3); Fallstudie MOVE, Aufgabe A2 (LB 2, Dok. 2.1).</li>
+        <li>Gubelmann/Sommer: Zielkatalog S. 128–133, Erhebungsmethoden S. 134–135, Anforderungskatalog S. 134–138, Pflichtenheft S. 138 (alles laut Referat RJ; das Skript selbst nennt für LB 2 kein Kapitel). Für den Leistungsumfang nennt LB 3 Kapitel 11, S. 142–155 (Station 06).</li>
+      </ul>
+    </div>
+    <footer>Station 05 des Lernpfads PMGT. Gemeinde Wolkenried, «Onlineschalter Wolkenried», «Online-Anmeldung Tagesstrukturen», «Gemeindewebseite» und «Selbstausleihe der Gemeindebibliothek» sowie alle Zahlen frei erfunden. Quellen: LB 2, LB 3, Referate SG und RJ, Swiss ICB 4.0, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ---------- Schritt 0: Problem, Ziel, Anforderung, Lösung ---------- */
+  L.sortierer("#t05-sortierer-bausteine", {
+    kategorien: ["Problem", "Ziel", "Anforderung", "Lösung"],
+    elemente: [
+      { html: "Das Bauamt beantwortet jede Woche rund 20 Anrufe, in denen nur nach dem Stand eines Gesuchs gefragt wird.", kategorie: "Problem", erklaerung: "Das beschreibt, was heute stört: der Ist-Zustand." },
+      { html: "Ein Jahr nach der Abnahme gehen höchstens halb so viele Statusanfragen ein wie heute.", kategorie: "Ziel", erklaerung: "Ein Zustand nach dem Projekt, mit Messgrösse und Termin." },
+      { html: "Gesuchstellende können den Stand ihres Gesuchs selbst einsehen.", kategorie: "Anforderung", erklaerung: "Eine Fähigkeit, die das Ergebnis haben muss, ohne festzulegen, wie." },
+      { html: "Die Gemeinde kauft die Plattform der Lärchwerk Informatik AG.", kategorie: "Lösung", erklaerung: "Das Womit: ein bestimmtes Produkt eines bestimmten Lieferanten." },
+      { html: "Planungsbüros reichen jedes Gesuch dreifach auf Papier ein; das Bauamt kopiert und verschickt die Dossiers.", kategorie: "Problem", erklaerung: "Der heutige Ablauf mit seinem Aufwand: Ausgangslage." },
+      { html: "Gesuchstellende können die Gebühr bezahlen, ohne an den Schalter zu kommen.", kategorie: "Anforderung", erklaerung: "Was gebraucht wird, lösungsneutral. Ob QR-Rechnung oder Kartenzahlung, entscheidet die Lösung." },
+      { html: "Die Schnittstelle wird mit dem Standardprotokoll des Herstellers programmiert.", kategorie: "Lösung", erklaerung: "Das legt die Technik fest: wie es gemacht wird." },
+      { html: "Die Projektkosten bleiben bei höchstens CHF 180'000.", kategorie: "Ziel", erklaerung: "Ein Prozessziel: Es beschreibt, wie das Projekt ablaufen soll, nämlich im Kostenrahmen." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper Problembeschreibung ---------- */
+  L.stepper("#t05-stepper-problem", {
+    titel: "Vom Ärger zur Problembeschreibung",
+    text: 'Seraina Caflisch klagt: <span data-link="sym">«Das Telefon klingelt den ganzen Tag.»</span> Die Zahlen: <span data-link="fakt">260 Gesuche pro Jahr, je drei Papierdossiers, rund 900 Statusanrufe</span>. Der Grund: <span data-link="urs">Gesuchstellende sehen nicht, wo ihr Gesuch steht, und die Dossiers gehen nacheinander per Post an die Fachstellen</span>. <span data-link="folge">Ohne Projekt wächst der Aufwand mit jedem Gesuch.</span>',
+    schritte: [
+      { html: '<b>Symptom:</b> <span data-link="sym">Das Telefon klingelt dauernd.</span>',
+        warum: "Das ist, was man spürt. Wer nur das Symptom behandelt, stellt vielleicht einfach eine zweite Person ans Telefon." },
+      { html: '<b>Fakten:</b> <span data-link="fakt">260 Gesuche × 3 Dossiers, rund 900 Statusanrufe pro Jahr</span>',
+        warum: "Zahlen, Daten, Fakten machen das Problem prüfbar und zeigen seine Grösse." },
+      { html: '<b>Ursache:</b> <span data-link="urs">kein sichtbarer Status, Zirkulation nacheinander auf Papier</span>',
+        warum: "Erst die Ursache zeigt, wo eine Lösung ansetzen muss." },
+      { html: '<b>Problem:</b> Gesuchstellende erfahren den Stand ihres Baugesuchs nur auf Nachfrage, und die Zirkulation der Papierdossiers bindet im Bauamt viel Zeit.',
+        warum: "Kurz, klar, ohne Lösung. Das Wort «App» kommt nicht vor: So bleiben alle Varianten offen." },
+      { html: '<b>Nullvariante:</b> <span data-link="folge">Der Aufwand wächst mit jedem Gesuch, das Wissen geht mit der Pensionierung verloren.</span>',
+        warum: "Die Schlussfrage von LB 2 F.31: Was ist die Konsequenz, wenn das Projekt nicht kommt? Sie ist der Massstab für jede Variante." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Aussage, Erkenntnis, Konsequenz ---------- */
+  L.sortierer("#t05-sortierer-aek", {
+    kategorien: ["Aussage", "Erkenntnis", "Konsequenz"],
+    elemente: [
+      { html: "Das Architekturforum hat 40 Mitglieder, die zusammen rund zwei Drittel der Gesuche einreichen.", kategorie: "Aussage", erklaerung: "Ein nachprüfbarer Fakt." },
+      { html: "Ohne die Planungsbüros erreicht der Onlineschalter kaum Wirkung.", kategorie: "Erkenntnis", erklaerung: "Die Bedeutung des Fakts für das Projekt." },
+      { html: "Zwei Planungsbüros testen den Prototyp der Formulare (V04).", kategorie: "Konsequenz", erklaerung: "Was das Projekt deshalb tut." },
+      { html: "Urs Ammann arbeitet 40 % im Projekt; der Monatsabschluss hat für ihn Vorrang.", kategorie: "Aussage", erklaerung: "Ein Fakt über die eigenen Mittel." },
+      { html: "Gegen Monatsende fehlt das Gebührenwissen im Projekt.", kategorie: "Erkenntnis", erklaerung: "Daraus folgt ein Ressourcenrisiko." },
+      { html: "Die Gebührenanbindung (V06) wird in die erste Monatshälfte gelegt.", kategorie: "Konsequenz", erklaerung: "Eine Massnahme in der Planung." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper SMART ---------- */
+  L.stepper("#t05-stepper-smart", {
+    titel: "Aus einem Wunsch wird ein SMARTes Ziel",
+    text: 'Bauverwalter Beat Imhof wünscht sich: «Der Onlineschalter soll <span data-link="s">die Statusanfragen</span> <span data-link="m">reduzieren</span>.» In der Situationsanalyse hast du <span data-link="basis">rund 900 Anrufe pro Jahr</span> gezählt. <span data-link="r">Zwei Nachbargemeinden mit Onlineschalter melden rund 60 % weniger Anrufe.</span>',
+    schritte: [
+      { html: '<b>S:</b> <span data-link="s">telefonische Statusanfragen beim Bauamt</span>',
+        warum: "Spezifisch: Welche Anfragen genau? Hier die Anrufe, mit denen jemand nur nach dem Stand fragt, nicht Fragen zum Baurecht." },
+      { html: '<b>M:</b> <span data-link="m">höchstens halb so viele</span> wie <span data-link="basis">2026 (rund 900)</span>, also höchstens 450',
+        warum: "Messbar: Basiswert und Zielwert. Gemessen mit der Telefonstatistik, wie die Basis." },
+      { html: '<b>A:</b> mit Beat Imhof und der Auftraggeberin vereinbart',
+        warum: "Akzeptiert: Der Bauverwalter hat das Ziel selbst gewünscht, die Auftraggeberin trägt es mit." },
+      { html: '<b>R:</b> −50 % bei <span data-link="r">Erfahrungswerten von rund −60 %</span>',
+        warum: "Realistisch: Das Ziel liegt unter dem, was Nachbargemeinden erreicht haben. Ehrgeizig, aber erreichbar." },
+      { html: '<b>T:</b> ein Jahr nach der Abnahme',
+        warum: "Terminiert: Bis wann gilt es? Ein Jahr gibt den Leuten Zeit, sich an den Onlineschalter zu gewöhnen." },
+      { html: "<b>Ziel Z2:</b> Ein Jahr nach der Abnahme gehen beim Bauamt höchstens halb so viele telefonische Statusanfragen ein wie 2026 (Basis rund 900, Ziel höchstens 450), gemessen mit der Telefonstatistik. <i>Systemziel, Muss.</i>",
+        warum: "Alle fünf Kriterien erfüllt. Zum Schluss gibst du Zielart und Gewichtung an, damit das Ziel in den Zielkatalog passt." }
+    ]
+  });
+
+  /* ---------- Schritt 4: Stepper Satzschablone ---------- */
+  L.stepper("#t05-stepper-schablone", {
+    titel: "Von der Fachanforderung zur Systemanforderung",
+    text: 'Seraina sagt im Interview: «<span data-link="wer">Bauwillige</span> sollen <span data-link="was">sehen, wo ihr Gesuch steht</span>. Heute rufen sie an, <span data-link="wann">weil der Stand oft tagelang nicht nachgeführt ist</span>.»',
+    schritte: [
+      { html: '<b>Fachanforderung:</b> <span data-link="wer">Gesuchstellende</span> können <span data-link="was">den Stand ihres Gesuchs selbst einsehen</span>.',
+        warum: "Aus Sicht des Bauamts, lösungsneutral. Sie gehört in den Anforderungskatalog." },
+      { html: '<b>Das System muss</b> …',
+        warum: "System und Verbindlichkeit. «Muss», weil das Ziel Z2 (weniger Statusanfragen) ein Muss-Ziel ist." },
+      { html: '<b>Das System muss</b> <span data-link="wer">angemeldeten Gesuchstellenden</span> <span data-link="was">den Status ihres Gesuchs anzeigen</span> …',
+        warum: "Wem und welche Funktion: anzeigen. «Angemeldet» klärt, dass niemand fremde Gesuche sieht (Datenschutz)." },
+      { html: '… mit einem von vier Werten: eingegangen, in Zirkulation, öffentliche Auflage, Entscheid …',
+        warum: "Das Objekt mit prüfbarem Inhalt: Was genau angezeigt wird, ist abschliessend aufgezählt. So ist die Anforderung eindeutig." },
+      { html: '… und <span data-link="wann">ihn spätestens einen Arbeitstag nach jeder Änderung im Bauamt nachführen</span>.',
+        warum: "Eine Qualitätsanforderung mit Zahl. Ohne sie wäre der Status vielleicht wieder tagelang alt, und das Telefon klingelt weiter." },
+      { html: '<b>Systemanforderung:</b> Das System muss angemeldeten Gesuchstellenden den Status ihres Gesuchs mit einem von vier Werten anzeigen (eingegangen, in Zirkulation, öffentliche Auflage, Entscheid) und ihn spätestens einen Arbeitstag nach jeder Änderung im Bauamt nachführen.',
+        warum: "Fertig: System, Verbindlichkeit, Funktion, Objekt, prüfbarer Inhalt. Ein Tester kann sie ohne Rückfrage prüfen." }
+    ]
+  });
+
+  /* ---------- Schritt 6: SMART-Werkstatt ---------- */
+  const KRIT = ["S", "M", "A", "R", "T"];
+  const KRIT_NAME = { S: "spezifisch", M: "messbar", A: "akzeptiert", R: "realistisch", T: "terminiert" };
+  const ZIELE = [
+    { text: "Der Onlineschalter soll benutzerfreundlich sein.",
+      kontext: "Steht so im Projektantrag. Die Auftraggeberin Franziska Bühlmann hat ihn unterschrieben, das Architekturforum findet das Ziel gut.",
+      fehlt: ["S", "M", "T"],
+      erkl: {
+        S: "Benutzerfreundlich für wen und wobei? Für Bauwillige beim Einreichen, für Fachstellen bei der Stellungnahme? Unklar.",
+        M: "Keine Messgrösse, kein Zielwert. Niemand kann am Schluss sagen, ob es erreicht ist.",
+        A: "Auftraggeberin und Architekturforum tragen es mit: akzeptiert.",
+        R: "Ein benutzerfreundlicher Schalter ist erreichbar. Das Problem ist die Unschärfe, nicht der Ehrgeiz.",
+        T: "Kein Zeitpunkt: ab wann, und wann wird gemessen?"
+      },
+      smart: "Ab der Abnahme reichen Bauwillige ein vollständiges Gesuch für ein Einfamilienhaus in höchstens 30 Minuten online ein. Geprüft im Pilotbetrieb mit 10 Testpersonen: mindestens 8 schaffen es ohne Anruf beim Bauamt. Mit Seraina Caflisch und dem Architekturforum vereinbart. <i>Systemziel, Soll.</i>" },
+    { text: "Ab der Abnahme gehen 100 % aller Baugesuche online ein.",
+      kontext: "Mit dem Bauamt abgesprochen. Rund ein Drittel der Gesuche reichen Privatpersonen ein, die nach dem kantonalen Baurecht weiterhin auf Papier einreichen dürfen.",
+      fehlt: ["R"],
+      erkl: {
+        S: "Klar: alle Baugesuche, online eingereicht.",
+        M: "100 % ist eine Zahl und messbar.",
+        A: "Mit dem Bauamt abgesprochen: akzeptiert.",
+        R: "Wer Papier einreichen darf, wird es zum Teil tun. 100 % sind darum nicht erreichbar.",
+        T: "«Ab der Abnahme» ist ein Zeitpunkt."
+      },
+      smart: "Im ersten Jahr nach der Abnahme gehen mindestens 60 % der neuen Baugesuche online ein; Papiergesuche bleiben möglich. <i>Systemziel, Muss.</i>" },
+    { text: "Das Bauamt soll durch den Onlineschalter deutlich entlastet werden, spätestens ein Jahr nach der Einführung.",
+      kontext: "Bauverwalter Beat Imhof hat das Ziel selbst vorgeschlagen. Die Plattform übernimmt Versand und Statusauskunft.",
+      fehlt: ["S", "M"],
+      erkl: {
+        S: "Entlastet wovon? Vom Kopieren, vom Versand, vom Telefon? Unklar.",
+        M: "«Deutlich» ist keine Zahl.",
+        A: "Der Bauverwalter hat es selbst vorgeschlagen: akzeptiert.",
+        R: "Die Plattform übernimmt genau diese Arbeiten: erreichbar.",
+        T: "«Spätestens ein Jahr nach der Einführung» ist terminiert."
+      },
+      smart: "Ein Jahr nach der Abnahme wendet das Bauamt pro Gesuch höchstens 1 Stunde für Kopieren, Versand und Statusauskünfte auf (heute rund 3 Stunden), gemessen mit der Zeiterfassung des Bauamts. <i>Systemziel, Soll.</i>" },
+    { text: "Bis Tag 40 übernimmt der Onlineschalter die Zirkulation an alle Fachstellen; die Fachstellen geben ihre Stellungnahmen nur noch digital ab.",
+      kontext: "Die Plattform kann die Zirkulation laut Plan bis Tag 15 abbilden (V10). Die Fachstellen wurden nicht gefragt; die Feuerpolizei lehnt in einer ersten Rückmeldung ab, auf Papierdossiers zu verzichten.",
+      fehlt: ["A"],
+      erkl: {
+        S: "Klar: Zirkulation an alle Fachstellen, Stellungnahmen digital.",
+        M: "«Nur noch digital» lässt sich als Ja-Nein oder als Anteil von 100 % messen.",
+        A: "Die Betroffenen wurden nicht gefragt und eine Fachstelle lehnt ab: nicht akzeptiert.",
+        R: "Technisch und zeitlich im Plan. Ob es klappt, hängt an der Akzeptanz, also an A.",
+        T: "«Bis Tag 40» ist terminiert."
+      },
+      smart: "Bis Tag 40 läuft die Zirkulation für Feuerpolizei, Umwelt und Tiefbau digital, mit Fristen, die die Fachstellen im Workshop zur Zirkulation (V10) selbst mitbestimmen. Die kantonalen Stellen folgen nach einer Vereinbarung mit dem Kanton. <i>Systemziel, Muss.</i>" },
+    { text: "Die Schnittstelle zur Bauverwaltungssoftware muss stabil laufen.",
+      kontext: "Steht im Fachkonzept, das der Projektausschuss genehmigt hat. Die Schnittstelle ist laut Plan bis Tag 14 fertig.",
+      fehlt: ["M", "T"],
+      erkl: {
+        S: "Klar, welche Sache gemeint ist: die Schnittstelle zur Bauverwaltungssoftware.",
+        M: "«Stabil» hat keine Messgrösse: Wie viele Fehler oder Ausfälle sind erlaubt?",
+        A: "Vom Projektausschuss genehmigt: akzeptiert.",
+        R: "Im Plan vorgesehen: erreichbar.",
+        T: "Kein Termin: ab wann muss sie stabil sein?"
+      },
+      smart: "Bis zur Vorabnahme (Tag 20) bestehen alle 50 Testfälle des Integrationstests ohne manuellen Eingriff, und im Pilotbetrieb geht kein Gesuch verloren. <i>Systemziel, Muss.</i>" },
+    { text: "Die Gebühren werden online nach Tarif berechnet und bezahlt; mindestens 95 % der Gebührenrechnungen stimmen ohne manuelle Korrektur.",
+      kontext: "Mit der Leiterin Finanzen Monika Steiner und der Auftraggeberin vereinbart. Die Anbindung ist im Plan (V06) und technisch erprobt.",
+      fehlt: ["T"],
+      erkl: {
+        S: "Klar: Gebühren nach Tarif, online berechnet und bezahlt.",
+        M: "95 % ohne Korrektur ist messbar.",
+        A: "Mit den Finanzen und der Auftraggeberin vereinbart: akzeptiert.",
+        R: "Im Plan und erprobt: erreichbar.",
+        T: "Ab wann, und über welchen Zeitraum werden die 95 % gemessen? Fehlt."
+      },
+      smart: "Ab der Abnahme (Plan Tag 36) werden die Gebühren online nach Tarif berechnet und bezahlt; in den ersten drei Monaten stimmen mindestens 95 % der Gebührenrechnungen ohne manuelle Korrektur. <i>Systemziel, Soll.</i>" }
+  ];
+
+  const smartBox = document.getElementById("t05-smart");
+  const smartStand = document.getElementById("t05-smart-stand");
+  const smartWahl = ZIELE.map(function () { return {}; });
+
+  ZIELE.forEach(function (z, i) {
+    const box = document.createElement("div");
+    box.className = "t05-fall";
+    box.innerHTML = "<h3>Ziel " + (i + 1) + "</h3>" +
+      '<p class="t05-zitat">«' + z.text + "»</p>" +
+      '<p class="hint"><b>Hinweis:</b> ' + z.kontext + "</p>";
+    const knoepfe = document.createElement("div");
+    knoepfe.className = "t05-knoepfe";
+    knoepfe.setAttribute("role", "group");
+    knoepfe.setAttribute("aria-label", "Ziel " + (i + 1) + ": Was fehlt?");
+    KRIT.forEach(function (k) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn t05-krit";
+      b.textContent = k;
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-label", KRIT_NAME[k] + " fehlt");
+      b.title = KRIT_NAME[k];
+      b.addEventListener("click", function () {
+        const an = b.getAttribute("aria-pressed") !== "true";
+        b.setAttribute("aria-pressed", an ? "true" : "false");
+        smartWahl[i][k] = an;
+        rm.className = "t05-rm";
+        rm.innerHTML = "";
+        smartStand.textContent = "";
+      });
+      knoepfe.appendChild(b);
+    });
+    const rm = document.createElement("div");
+    rm.className = "t05-rm";
+    rm.id = "t05-smart-rm-" + i;
+    rm.setAttribute("aria-live", "polite");
+    box.append(knoepfe, rm);
+    smartBox.appendChild(box);
+  });
+
+  document.getElementById("t05-smart-pruefen").addEventListener("click", function () {
+    let richtig = 0;
+    ZIELE.forEach(function (z, i) {
+      const rm = document.getElementById("t05-smart-rm-" + i);
+      let alleRichtig = true;
+      const zeilen = KRIT.map(function (k) {
+        const sollFehlen = z.fehlt.indexOf(k) >= 0;
+        const markiert = !!smartWahl[i][k];
+        const ok = sollFehlen === markiert;
+        if (!ok) alleRichtig = false;
+        return "<li>" + (ok ? '<span class="t05-gut">✓</span> ' : '<span class="t05-schlecht">✗</span> ') +
+          "<b>" + k + (sollFehlen ? " fehlt" : " erfüllt") + ":</b> " + z.erkl[k] + "</li>";
+      });
+      if (alleRichtig) richtig++;
+      rm.className = "t05-rm " + (alleRichtig ? "ok" : "bad");
+      rm.innerHTML = '<p><span class="marke">' + (alleRichtig ? "✓ Richtig erkannt." : "✗ Noch nicht ganz.") + "</span> Es fehlt: " + z.fehlt.join(", ") + ".</p>" +
+        "<ul>" + zeilen.join("") + "</ul>" +
+        '<p class="t05-besser"><b>SMART-Fassung:</b> ' + z.smart + "</p>";
+    });
+    smartStand.textContent = richtig + " von " + ZIELE.length + " Zielen richtig beurteilt" +
+      (richtig === ZIELE.length ? ". Stark. Jetzt formulierst du selbst eines um: unten." : ". Lies die Erklärungen und versuch es nochmals.");
+  });
+
+  document.getElementById("t05-smart-zurueck").addEventListener("click", function () {
+    ZIELE.forEach(function (z, i) {
+      smartWahl[i] = {};
+      const rm = document.getElementById("t05-smart-rm-" + i);
+      rm.className = "t05-rm";
+      rm.innerHTML = "";
+    });
+    smartBox.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+    smartStand.textContent = "";
+    const erster = smartBox.querySelector("button");
+    if (erster) erster.focus();
+  });
+
+  L.reflexion("#t05-reflexion-smart", {
+    titel: "Jetzt du: Ziel 1 SMART umformulieren",
+    icb: "ICB 3.02",
+    frage: "<p>Formuliere Ziel 1 «Der Onlineschalter soll benutzerfreundlich sein» als SMARTes Ziel. Gib Zielart und Gewichtung an und schreib in einem Satz, woran man A und R erkennt.</p>",
+    musterloesung:
+      "<p><b>Ziel:</b> Ab der Abnahme (spätestens Tag 40) reichen Bauwillige ein vollständiges Baugesuch für ein Einfamilienhaus ohne Hilfe in höchstens 30 Minuten online ein. Geprüft im Pilotbetrieb mit 10 Testpersonen ohne Vorkenntnisse: Mindestens 8 von 10 schaffen es ohne Anruf beim Bauamt.</p>" +
+      "<p><b>Zielart und Gewichtung:</b> Systemziel, Soll.</p>" +
+      "<p><b>A und R:</b> Mit der Anwendervertreterin Seraina Caflisch und dem Architekturforum vereinbart (akzeptiert). Erreichbar, weil die Formulare schon in V04 mit Bauwilligen getestet werden und der Wert 8 von 10 nicht Perfektion verlangt (realistisch).</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Andere Messgrössen sind ebenso richtig, etwa die Abbruchquote im Formular oder die Zahl der Rückfragen.</p>',
+    kriterien: [
+      { text: "S: klar, wer was tut (zum Beispiel Bauwillige reichen ein Gesuch ohne Hilfe ein)", punkte: 1 },
+      { text: "M: Messgrösse mit Zielwert (Minuten, Anteil, Anzahl)", punkte: 2 },
+      { text: "A: genannt, wer das Ziel mitträgt", punkte: 1 },
+      { text: "R: begründet, warum es erreichbar ist", punkte: 1 },
+      { text: "T: Termin oder Messzeitraum", punkte: 1 },
+      { text: "Zielart und Gewichtung angegeben", punkte: 1 }
+    ]
+  });
+
+  L.sortierer("#t05-sortierer-zielart", {
+    kategorien: ["Systemziel", "Prozessziel", "Mehrwertziel"],
+    elemente: [
+      { html: "Ab der Abnahme können Bauwillige Gesuche online einreichen.", kategorie: "Systemziel", erklaerung: "Was das Ergebnis kann." },
+      { html: "Die Abnahme erfolgt spätestens Ende Tag 40.", kategorie: "Prozessziel", erklaerung: "Ein Termin für das Projekt: Vorgehensziel." },
+      { html: "Die Projektkosten bleiben bei höchstens CHF 180'000.", kategorie: "Prozessziel", erklaerung: "Kosten sind ein Prozessziel." },
+      { html: "Nach dem Projekt kann das Bauamt weitere Formulare selbst einrichten.", kategorie: "Mehrwertziel", erklaerung: "Wissen, das im Projekt entsteht und darüber hinaus nützt." },
+      { html: "Die Zirkulation an die Fachstellen läuft digital mit Fristen und Erinnerungen.", kategorie: "Systemziel", erklaerung: "Eine Wirkung des Ergebnisses." },
+      { html: "Die Zusammenarbeit mit dem Architekturforum soll auch nach dem Projekt tragen.", kategorie: "Mehrwertziel", erklaerung: "Eine gestärkte Beziehung: positiver Nebennutzen." },
+      { html: "Jede Phase endet mit einer Freigabe; Risiken werden jede Woche überprüft.", kategorie: "Prozessziel", erklaerung: "So soll das Projekt ablaufen." },
+      { html: "Gebühren werden nach Tarif berechnet und lassen sich online bezahlen.", kategorie: "Systemziel", erklaerung: "Eine Funktion des Ergebnisses." }
+    ]
+  });
+
+  /* ---------- Schritt 7: Anforderungs-Prüfer ---------- */
+  const FEHLER = [
+    { id: "loesung", name: "nicht lösungsneutral" },
+    { id: "pruef", name: "nicht prüfbar" },
+    { id: "wider", name: "widersprüchlich" },
+    { id: "mehr", name: "mehrdeutig" },
+    { id: "ok", name: "in Ordnung" }
+  ];
+  const FNAME = {};
+  FEHLER.forEach(function (f) { FNAME[f.id] = f.name; });
+  const ANF = [
+    { nr: "A-01", text: "Bauwillige reichen ihr Gesuch über eine iPhone-App ein.", soll: "loesung",
+      erkl: "Die Anforderung legt Technik und Gerät fest und schliesst damit Android und Computer aus. Wie eingereicht wird, entscheidet die Lösung, nicht der Katalog.",
+      besser: "Bauwillige können ihr Gesuch ortsunabhängig und ohne Papier einreichen, auch mit dem Mobiltelefon." },
+    { nr: "A-02", text: "Die Benutzeroberfläche soll modern und intuitiv wirken.", soll: "pruef",
+      erkl: "«Modern» und «intuitiv» sind Eindrücke ohne Messgrösse. Kein Test kann sie bestätigen oder widerlegen.",
+      besser: "Mindestens 8 von 10 Testpersonen ohne Vorkenntnisse reichen im Test ein Gesuch ohne Hilfe in höchstens 30 Minuten ein." },
+    { nr: "A-05", text: "Nach der Freigabe erscheint das Gesuch im Amtsblatt.", soll: "mehr",
+      erkl: "«Freigabe» lässt mehrere Lesarten zu: Vollständigkeitsprüfung durch das Bauamt oder Entscheid der Baukommission? Je nachdem erscheint das Gesuch Wochen früher oder später.",
+      besser: "Sobald das Bauamt ein Gesuch als vollständig markiert, erstellt das System den Text für die öffentliche Auflage im Amtsblatt." },
+    { nr: "A-07", text: "Unvollständige Gesuche lassen sich nicht absenden.", zusatz: "Im Katalog steht schon A-03: «Gesuchstellende können fehlende Beilagen bis 10 Tage nach dem Einreichen nachliefern.»", soll: "wider",
+      erkl: "A-03 erlaubt, ein unvollständiges Gesuch einzureichen, A-07 verbietet es. Beides geht nicht. Wer gilt, entscheidet die Anwendervertreterin, nicht das Entwicklerteam.",
+      besser: "Fehlen Pflichtbeilagen, kann das Gesuch trotzdem abgeschickt werden; das System markiert es als unvollständig und erinnert nach 7 Tagen an die fehlenden Beilagen." },
+    { nr: "A-09", text: "Gesuchstellende sehen online den Stand ihres Gesuchs mit einem von vier Werten: eingegangen, in Zirkulation, öffentliche Auflage, Entscheid.", soll: "ok",
+      erkl: "Klar, wer was sieht, abschliessend aufgezählte Werte, keine Technik vorgegeben. Ein Test kann jeden Wert prüfen." },
+    { nr: "A-11", text: "Die Gebühren berechnet eine Excel-Tabelle der Finanzverwaltung, die Rechnung geht per E-Mail.", soll: "loesung",
+      erkl: "Werkzeug (Excel) und Kanal (E-Mail) sind vorgegeben. Das Bedürfnis dahinter, eine korrekte Gebühr ohne Gang an den Schalter, geht dabei unter.",
+      besser: "Die Gebühr wird nach dem geltenden Tarif berechnet; Gesuchstellende können sie bezahlen, ohne an den Schalter zu kommen." },
+    { nr: "A-14", text: "Das System muss auch bei vielen gleichzeitigen Benutzern genügend schnell sein.", soll: "pruef",
+      erkl: "Wie viele sind «viele», was ist «genügend schnell»? Ohne Zahlen gibt es keinen Lasttest, der sie prüft.",
+      besser: "Das System muss bei 50 gleichzeitig angemeldeten Personen jede Seite innert 2 Sekunden anzeigen." },
+    { nr: "A-15", text: "Das System muss jedes eingereichte Gesuch innert 2 Minuten mit einer Eingangsbestätigung quittieren, die Gesuchsnummer und Eingangsdatum enthält.", soll: "ok",
+      erkl: "Satzschablone sauber: System, muss, Funktion, Objekt mit prüfbarem Inhalt (2 Minuten, zwei Angaben). Keine Technik vorgegeben." }
+  ];
+
+  const anfBox = document.getElementById("t05-anf");
+  const anfStand = document.getElementById("t05-anf-stand");
+  const anfWahl = {};
+
+  ANF.forEach(function (a, i) {
+    const box = document.createElement("div");
+    box.className = "t05-fall";
+    box.innerHTML = "<h3>" + a.nr + "</h3>" +
+      '<p class="t05-zitat">«' + a.text + "»</p>" +
+      (a.zusatz ? '<p class="hint">' + a.zusatz + "</p>" : "");
+    const knoepfe = document.createElement("div");
+    knoepfe.className = "t05-knoepfe";
+    knoepfe.setAttribute("role", "group");
+    knoepfe.setAttribute("aria-label", a.nr + ": Fehlerart wählen");
+    FEHLER.forEach(function (f) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn t05-wahl";
+      b.textContent = f.name;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", function () {
+        anfWahl[i] = f.id;
+        knoepfe.querySelectorAll("button").forEach(function (x) {
+          x.setAttribute("aria-pressed", x === b ? "true" : "false");
+        });
+        rm.className = "t05-rm";
+        rm.innerHTML = "";
+        anfStand.textContent = "";
+      });
+      knoepfe.appendChild(b);
+    });
+    const rm = document.createElement("div");
+    rm.className = "t05-rm";
+    rm.id = "t05-anf-rm-" + i;
+    rm.setAttribute("aria-live", "polite");
+    box.append(knoepfe, rm);
+    anfBox.appendChild(box);
+  });
+
+  document.getElementById("t05-anf-pruefen").addEventListener("click", function () {
+    let richtig = 0, offen = 0;
+    ANF.forEach(function (a, i) {
+      const rm = document.getElementById("t05-anf-rm-" + i);
+      const w = anfWahl[i];
+      const besser = a.besser ? '<p class="t05-besser"><b>Besser:</b> «' + a.besser + "»</p>" : "";
+      if (!w) {
+        offen++;
+        rm.className = "t05-rm bad";
+        rm.innerHTML = '<p><span class="marke">?</span> Noch keine Wahl.</p>';
+        return;
+      }
+      if (w === a.soll) {
+        richtig++;
+        rm.className = "t05-rm ok";
+        rm.innerHTML = '<p><span class="marke">✓ Richtig: ' + FNAME[a.soll] + ".</span> " + a.erkl + "</p>" + besser;
+      } else {
+        rm.className = "t05-rm bad";
+        rm.innerHTML = '<p><span class="marke">✗ Nicht «' + FNAME[w] + "», sondern «" + FNAME[a.soll] + "».</span> " + a.erkl + "</p>" + besser;
+      }
+    });
+    anfStand.textContent = richtig + " von " + ANF.length + " richtig" +
+      (offen ? " · " + offen + " noch offen" : "") +
+      (richtig === ANF.length ? ". Der Katalog kann nach den Korrekturen zur Freigabe." : ".");
+  });
+
+  document.getElementById("t05-anf-zurueck").addEventListener("click", function () {
+    ANF.forEach(function (a, i) {
+      delete anfWahl[i];
+      const rm = document.getElementById("t05-anf-rm-" + i);
+      rm.className = "t05-rm";
+      rm.innerHTML = "";
+    });
+    anfBox.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+    anfStand.textContent = "";
+    const erster = anfBox.querySelector("button");
+    if (erster) erster.focus();
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t05-u-methode", {
+    frage: "Übung 1 · Welche Erhebungsmethode passt?",
+    kategorien: ["Interview", "Workshop", "Beobachtung", "Dokumentenanalyse", "Fragebogen", "Prototyping"],
+    elemente: [
+      { html: "Die Meinung aller 40 Planungsbüros im Architekturforum zur Online-Eingabe einholen.", kategorie: "Fragebogen", erklaerung: "Viele Personen, vergleichbare Antworten: Fragebogen." },
+      { html: "Herausfinden, wie Martin ein Gesuch auf Vollständigkeit prüft. Er macht es seit 30 Jahren «nach Gefühl».", kategorie: "Beobachtung", erklaerung: "Stilles Routinewissen erklärt niemand im Interview vollständig. Zuschauen zeigt den echten Ablauf." },
+      { html: "Gebührentarif, Baureglement und alte Formulare auf Pflichtfelder durchsehen.", kategorie: "Dokumentenanalyse", erklaerung: "Vorhandene Unterlagen auswerten: günstig und eine gute Basis." },
+      { html: "Feuerpolizei, Tiefbau und Umwelt sind sich uneinig, wer zuerst Stellung nimmt.", kategorie: "Workshop", erklaerung: "Mehrere Stakeholder mit einem Konflikt: gemeinsam an einen Tisch." },
+      { html: "Bauwillige können erst sagen, was sie wollen, wenn sie ein Formular vor sich sehen.", kategorie: "Prototyping", erklaerung: "Unklare Wünsche an eine Oberfläche: etwas Greifbares zeigen." },
+      { html: "Bauverwalter Beat Imhof erklärt Geschäftsregeln und Ausnahmen der Bewilligung.", kategorie: "Interview", erklaerung: "Expertenwissen einer Person im Detail, mit Rückfragen." }
+    ]
+  });
+
+  L.wahrFalsch("#t05-u-wf", {
+    titel: 'Übung 2 · Wahr oder falsch? <span class="icb">ICB 3.02</span>',
+    aussagen: [
+      { html: "Eine Fachanforderung beschreibt, was das Geschäft braucht, und legt noch keine Technik fest.", wahr: true,
+        erklaerung: "Fachanforderungen sind in der Sprache des Fachbereichs und möglichst lösungsneutral (Referat SG)." },
+      { html: "«Das System muss schnell sein» ist prüfbar, weil jeder weiss, was schnell heisst.", wahr: false,
+        erklaerung: "Ohne Zahl (zum Beispiel 2 Sekunden bei 50 Personen) gibt es keinen objektiven Test." },
+      { html: "Ein Projekt sollte möglichst viele Muss-Ziele haben, damit nichts vergessen geht.", wahr: false,
+        erklaerung: "Muss-Ziele sind K.-o.-Kriterien. Zu viele davon nehmen jeden Spielraum, wenn Geld oder Zeit knapp werden." },
+      { html: "Anforderungskatalog und Pflichtenheft sind zwei Namen für dasselbe Dokument.", wahr: false,
+        erklaerung: "LB 2 F.33: Anforderungskatalog ≠ Pflichtenheft. Der Katalog sagt was und wofür, das Pflichtenheft wie und womit." },
+      { html: "Mehrwertziele beschreiben positive Nebenwirkungen, etwa Wissen, das im Team entsteht.", wahr: true,
+        erklaerung: "Die Swiss ICB nennt sie «resultierender Nutzen»: neues Wissen, gestärkte Beziehungen, Erfahrung." },
+      { html: "Nach der Freigabe des Anforderungskatalogs werden Änderungen über einen Änderungsantrag behandelt.", wahr: true,
+        erklaerung: "So bleibt nachvollziehbar, was sich wann und warum geändert hat (Referat RJ; Änderungen in Station 20)." }
+    ]
+  });
+
+  L.auswahl("#t05-u-kriterium", {
+    frage: '<p><b>Übung 3</b> <span class="icb">ICB 3.02</span></p><p>Im Interview nennt der Bauverwalter: «Die Gebühr wird bei grösseren Bauvorhaben angepasst.» Welches Qualitätskriterium verletzt diese Anforderung vor allem?</p>',
+    optionen: ["lösungsneutral", "eindeutig", "redundanzfrei", "widerspruchsfrei"],
+    richtig: 1,
+    erklaerung: "«Grössere Bauvorhaben» und «angepasst» lassen viele Lesarten zu: ab welcher Bausumme, um wie viel, nach oben oder unten? Eine Technik ist nicht vorgegeben (lösungsneutral ist erfüllt), und über Doppelungen oder Widersprüche sagt der eine Satz nichts. Besser: «Ab einer Bausumme von CHF 1 Mio. gilt der Tarif B des Gebührenreglements.» (ICB 3.02, Anforderungen analysieren)"
+  });
+
+  L.zahlAufgabe("#t05-u-zahl", {
+    titel: "Übung 4 · Zielwert für die Messung",
+    frage: "<p>Ein Zwischenziel zu Z1 sagt: «Im ersten Halbjahr nach der Abnahme gehen mindestens 60 % der neuen Baugesuche online ein.» Wolkenried erwartet 260 Gesuche pro Jahr, gleichmässig verteilt. Wie viele Gesuche müssen im ersten Halbjahr mindestens online eingehen?</p>",
+    antwort: 78,
+    einheit: "Gesuche",
+    anzeige: "260 ÷ 2 × 0.6 = 78",
+    hinweise: ["Wie viele Gesuche kommen in einem halben Jahr?", "130 Gesuche im Halbjahr. Davon 60 %."],
+    loesungsweg: [
+      "Gesuche im Halbjahr: 260 ÷ 2 = 130",
+      "Mindestens online: 130 × 0.6 = 78",
+      "So wird aus einem Prozentziel eine Zahl, die das Bauamt nach sechs Monaten einfach abzählen kann. Genau das meint «messbar»."
+    ]
+  });
+
+  L.matrix("#t05-u-matrix", {
+    titel: "Übung 5 · Zielkatalog «Gemeindewebseite neu»",
+    icb: "ICB 3.02",
+    frage: "<p>Wolkenried erneuert seine Webseite. Ordne jedes Ziel nach Gewichtung (Zeile) und Zielart (Spalte) ein. Die Gewichtung steht jeweils im zweiten Satz.</p>",
+    zeilen: ["Muss", "Soll", "Kann"],
+    spalten: ["System", "Prozess", "Mehrwert"],
+    achseY: "Gewichtung",
+    achseX: "Zielart",
+    elemente: [
+      { html: "Ab 1. März 2027 sind alle 40 Formulare der Verwaltung online ausfüllbar. Der Gemeinderat verlangt das zwingend.", ziel: ["Muss", "System"],
+        erklaerung: "Was das Ergebnis kann (System), vom Gemeinderat zwingend verlangt (Muss)." },
+      { html: "Die Webseite ist bis 28. Februar 2027 online, Kosten höchstens CHF 45'000. Der Gemeinderat hat das als Bedingung beschlossen.", ziel: ["Muss", "Prozess"],
+        erklaerung: "Termin und Kosten sind Prozessziele; als Bedingung beschlossen heisst Muss." },
+      { html: "Die Seite erfüllt die Barrierefreiheit nach WCAG 2.1, Stufe AA. Angestrebt, bei Zeitnot dürfen einzelne alte PDF ausgenommen werden.", ziel: ["Soll", "System"],
+        erklaerung: "Eine Eigenschaft des Ergebnisses; angestrebt mit erlaubter Ausnahme heisst Soll." },
+      { html: "Die Anforderungen werden in zwei Workshops mit allen Abteilungen erhoben, bevor das Design beginnt. Wichtig, aber kein Abbruchgrund.", ziel: ["Soll", "Prozess"],
+        erklaerung: "Das beschreibt das Vorgehen (Prozess); wichtig, aber nicht zwingend (Soll)." },
+      { html: "Zwei Mitarbeitende der Kanzlei können danach künftige Webprojekte selbst begleiten. Schön, wenn es klappt.", ziel: ["Kann", "Mehrwert"],
+        erklaerung: "Wissen, das über das Projekt hinaus nützt (Mehrwert); «schön, wenn» heisst Kann." },
+      { html: "Die Gemeinde gewinnt eine Agentur als verlässliche Partnerin für spätere Projekte. Ein willkommener Nebeneffekt.", ziel: ["Kann", "Mehrwert"],
+        erklaerung: "Eine gestärkte Beziehung ist ein Mehrwertziel; als Nebeneffekt nur Kann." }
+    ]
+  });
+
+  L.auswahl("#t05-u-fall", {
+    frage: '<p><b>Übung 6 · Fallentscheid</b> <span class="icb">ICB 3.02</span> <span class="icb">ICB 2.03</span></p><p>In der ersten Sitzung sagt Gemeindepräsident Walter Inauen: «Wir brauchen eine App, wie die Nachbargemeinde. Schreiben Sie das als Muss in den Anforderungskatalog.» Was tust du als Projektleitung?</p>',
+    optionen: [
+      "Ich schreibe «App» als Muss-Anforderung in den Katalog. Der Präsident hat entschieden.",
+      "Ich überhöre den Wunsch. Anforderungen erhebt das Projektteam.",
+      "Ich frage nach dem Bedürfnis hinter dem Wunsch (wer soll was können, und warum), formuliere es lösungsneutral für den Katalog und prüfe die App als eine von mehreren Varianten. Die Priorität legt die Auftraggeberin fest.",
+      "Ich lasse das Team abstimmen, ob eine App nötig ist."
+    ],
+    richtig: 2,
+    erklaerung: "Der Wunsch nennt eine Lösung, kein Bedürfnis. Wer nachfragt, findet das Bedürfnis (etwa: Gesuche auch unterwegs einreichen und den Stand sehen) und hält damit alle Varianten offen. Folgen der anderen Optionen: Die App als Muss verbaut bessere Lösungen und verletzt die Lösungsneutralität. Überhören beschädigt die Beziehung zu einem einflussreichen Stakeholder. Eine Teamabstimmung ersetzt weder die Erhebung noch den Entscheid der Auftraggeberin (ICB 3.02 Anforderungen priorisieren, ICB 2.03 Kommunikation)."
+  });
+
+  L.schrittAufgabe("#t05-u-augez", {
+    titel: "Übung 7 · Lagebeurteilung nach AUGEZ",
+    aufgabe: "<p><b>Fall Gemeindebibliothek Wolkenried:</b> Der Gemeinderat beauftragt dich, bis 30. September 2027 eine Selbstausleihe mit erweiterten Öffnungszeiten einzuführen (Kredit CHF 85'000). Heute ist die Bibliothek 12 Stunden pro Woche offen, mit zwei Bibliothekarinnen (zusammen 130 %) und 14'000 Medien. Der Kanton zahlt 30 % der Kosten, wenn das Gesuch bis 31. März 2027 eingeht. Ältere Leserinnen und Leser wünschen weiterhin persönliche Beratung, die Bibliothekarinnen befürchten einen Stellenabbau. Die Informatik der Gemeinde (Luca Bernasconi) hat wenig Zeit. Beurteile die Lage nach AUGEZ. Überleg zuerst selbst, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "<b>A · Auftrag:</b> Selbstausleihe und erweiterte Öffnungszeiten bis 30.9.2027, Kredit CHF 85'000. Frei in der Lösung, gebunden an Kredit und Termin.",
+        warum: "Was genau erwartet wird, wo du frei und wo du gebunden bist." },
+      { html: "<b>U · Umwelt:</b> Kanton (Beitrag und Frist), Leserinnen und Leser (auch ältere), Schulen, Datenschutz bei Ausleihdaten.",
+        warum: "Wer von aussen wirkt. Geld und Recht gehören in jeden Faktor (LB 3 F.7)." },
+      { html: "<b>G · Gegenseite:</b> Angst der Bibliothekarinnen vor Stellenabbau, Wunsch nach persönlicher Beratung, knappe Zeit der Informatik.",
+        warum: "Was gegen das Projekt wirkt. Hier vor allem Widerstände und Konkurrenz um Ressourcen, keine Gegner." },
+      { html: "<b>E · Eigene Mittel:</b> CHF 85'000 (davon CHF 25'500 vom Kanton, wenn das Gesuch rechtzeitig kommt), zwei Bibliothekarinnen, wenig Informatik, ein Anbieter für Selbstausleihe.",
+        warum: "30 % von 85'000 = 25'500. Ohne Kantonsbeitrag trägt die Gemeinde alles." },
+      { html: "<b>Z · Zeit:</b> Gesuch an den Kanton bis 31.3.2027, Einführung bis 30.9.2027.",
+        warum: "Zwei Fristen. Die frühere entscheidet über die Finanzierung und gehört darum ganz nach vorn in den Plan." },
+      { html: "<b>Daraus eine AEK-Kette:</b> Aussage: Kantonsbeitrag nur bei Gesuch bis 31.3.2027. → Erkenntnis: Verpasste Frist kostet CHF 25'500. → Konsequenz: Gesuch als erstes Arbeitspaket, Termin als Meilenstein.",
+        warum: "AUGEZ sammelt die Lage, AEK macht daraus Konsequenzen für die Planung. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.auswahl("#t05-u-aek", {
+    frage: '<p><b>Übung 8</b> <span class="icb">ICB 3.02</span></p><p>Welcher Satz ist im Fall der Bibliothek eine <b>Erkenntnis</b> im Sinn der AEK-Methode?</p>',
+    optionen: [
+      "Die Bibliothek hat 14'000 Medien.",
+      "Wir reichen das Gesuch an den Kanton bis 31. März 2027 ein.",
+      "Verpasst die Gemeinde die Frist des Kantons, fehlen dem Projekt CHF 25'500.",
+      "Selbstausleihe ist modern."
+    ],
+    richtig: 2,
+    erklaerung: "Eine Erkenntnis verdichtet Fakten zu ihrer Bedeutung für das Projekt, meist zu einem Risiko. 14'000 Medien ist eine Aussage (Fakt), das Gesuch einreichen eine Konsequenz (Massnahme). «Modern» ist weder Fakt noch Erkenntnis, sondern eine Meinung (LB 3 F.7)."
+  });
+
+  L.reflexion("#t05-u-smart", {
+    titel: "Übung 9 · Offene Frage: zwei SMARTe Ziele",
+    icb: "ICB 3.02",
+    frage: "<p>Formuliere für die Selbstausleihe der Gemeindebibliothek (Fall aus Übung 7) <b>zwei SMARTe Ziele</b>: ein Systemziel und ein Prozessziel. Gib bei jedem die Gewichtung (Muss, Soll, Kann) an.</p>",
+    musterloesung:
+      "<p><b>Systemziel, Muss:</b> Ab 1. Oktober 2027 leihen eingeschriebene Leserinnen und Leser Medien ohne Personal aus und geben sie zurück, Montag bis Samstag von 7 bis 21 Uhr (heute 12 Stunden, neu 84 Stunden pro Woche). Im ersten Quartal laufen mindestens 70 % der Ausleihen über die Selbstausleihe. Mit den Bibliothekarinnen vereinbart: Die gewonnene Zeit fliesst in Beratung und Leseförderung, nicht in einen Stellenabbau.</p>" +
+      "<p><b>Prozessziel, Muss:</b> Das Gesuch um den Kantonsbeitrag ist bis 31. März 2027 eingereicht; die Selbstausleihe ist bis 30. September 2027 abgenommen, und die Kosten bleiben bei höchstens CHF 85'000.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. 7 bis 21 Uhr sind 14 Stunden, mal 6 Tage = 84 Stunden.</p>',
+    kriterien: [
+      { text: "Ein Systemziel (was das Ergebnis kann) und ein Prozessziel (Termin, Kosten, Vorgehen)", punkte: 2 },
+      { text: "Beide spezifisch: klar, wer was tut", punkte: 1 },
+      { text: "Beide messbar: Zahl oder klares Ja-Nein-Kriterium", punkte: 2 },
+      { text: "Beide terminiert", punkte: 2 },
+      { text: "Akzeptanz oder Realismus begründet (zum Beispiel Einbezug der Bibliothekarinnen)", punkte: 1 },
+      { text: "Gewichtung bei beiden angegeben", punkte: 1 }
+    ]
+  });
+
+  L.reflexion("#t05-u-schablone", {
+    titel: "Übung 10 · Vorlage: Satzschablone ausfüllen",
+    icb: "ICB 3.02",
+    frage: "<p>Die Bibliothekarinnen sagen: «Die Leute sollen wissen, bis wann sie ein Buch zurückbringen müssen.» Übersetze diese Fachanforderung in eine <b>Systemanforderung</b> nach der Satzschablone (System – Verbindlichkeit – Funktion – Objekt mit prüfbarem Inhalt).</p>",
+    musterloesung:
+      "<p><b>Systemanforderung:</b> Das System muss bei jeder Ausleihe eine Quittung mit Titel und Rückgabedatum ausgeben und die ausleihende Person drei Tage vor Ablauf der Frist benachrichtigen.</p>" +
+      "<p><b>Teile:</b> Das System (System) · muss (Verbindlichkeit) · ausgeben, benachrichtigen (Funktion) · Quittung mit Titel und Rückgabedatum, drei Tage vor Ablauf (Objekt mit prüfbarem Inhalt).</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Ob die Benachrichtigung per E-Mail oder SMS geht, legt die Lösung fest, nicht die Anforderung.</p>',
+    kriterien: [
+      { text: "Beginnt mit «Das System muss/soll/kann»", punkte: 1 },
+      { text: "Klare Funktion (Verb) und Objekt", punkte: 1 },
+      { text: "Prüfbarer Inhalt mit Zahl oder abschliessender Aufzählung", punkte: 2 },
+      { text: "Keine Technik oder kein Produkt vorgegeben", punkte: 1 },
+      { text: "Eindeutig: nur eine Lesart", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Bausteine der Problemerfassung; jede Szene zeigt eine Auswahl, Neues leuchtet auf.
+  const B = {
+    kopf: "<b>Problemerfassung</b> · Online-Anmeldung Tagesstrukturen Wolkenried",
+    prob: "<b>Problem:</b> Anmeldung, Abmeldung und Abrechnung laufen über Papier, Telefon und SMS. Das bindet im Sekretariat rund 120 Stunden pro Jahr (2 × 60), rund 15 % der Mahlzeiten verfallen, und 8 % der Rechnungen müssen korrigiert werden.",
+    sit1: "<b>Situation · Anlass und Nutzen:</b> Auslöser sind der Aufwand im Sekretariat und das Legislaturziel «Verwaltung online bis 2028». Nutzen: weniger Abtippen, weniger verfallene Mahlzeiten, weniger Korrekturen, Eltern melden rund um die Uhr.",
+    sit2: "<b>Situation · Betroffene, Dringlichkeit, Nullvariante:</b> Betroffen sind Eltern, Sekretariat, Betreuung, Küche und Finanzen. Dringend, weil das Anmeldefenster am 3. Mai 2027 öffnet. Ohne Projekt bleibt ein weiteres Schuljahr Papier.",
+    aA: "<b>A · Auftrag:</b> Online-Anmeldung mit Abmeldung und Abrechnung, Kredit CHF 60'000. Frei in der Lösung, gebunden an Kredit, Tarifreglement und Datenschutz.",
+    aU: "<b>U · Umwelt:</b> Eltern (rund 10 % ohne Computer oder mit wenig Deutsch), Küche, Finanzen, Datenschutzaufsicht des Kantons.",
+    aG: "<b>G · Gegenseite:</b> Betreuerinnen befürchten ständiges Umbuchen, die Küche braucht verlässliche Zahlen am Vortag, das Tagesgeschäft im Sekretariat konkurriert.",
+    aE: "<b>E · Eigene Mittel:</b> CHF 60'000, Schulsekretariat (2 Personen), Leitung Tagesstrukturen, Luca Bernasconi (Informatik), externer Anbieter möglich.",
+    aZ: "<b>Z · Zeit:</b> Anmeldefenster 3. Mai 2027, Schulbeginn August 2027. Rückwärts gerechnet: Abnahme bis 16. April 2027.",
+    k1: "<b>AEK 1:</b> Anmeldefenster am 3. Mai 2027 → Der Termin ist fix; ein Verzug kostet ein ganzes Schuljahr → Anmeldung zuerst (Muss), Abrechnung darf folgen (Soll), Abnahme bis 16. April 2027.",
+    k2: "<b>AEK 2:</b> Die Daten enthalten Allergien der Kinder → Gesundheitsdaten sind besonders schützenswert, Auflagen können verzögern → Schutzbedarfsanalyse sofort, Datenschutzaufsicht früh einbeziehen.",
+    k3: "<b>AEK 3:</b> Rund 10 % der Familien ohne Computer oder mit wenig Deutsch → Eine reine Online-Lösung schliesst sie aus → Das Sekretariat erfasst diese Anmeldungen weiter, Formular in einfacher Sprache.",
+    z1: "<b>Z1 (Systemziel, Muss):</b> Ab dem 3. Mai 2027 melden Eltern ihre Kinder online für das Schuljahr 2027/28 an; mindestens 90 % der Anmeldungen gehen online ein, die übrigen erfasst das Sekretariat.",
+    z2: "<b>Z2 (Systemziel, Soll):</b> Ab Schulbeginn August 2027 melden Eltern ihr Kind bis 8 Uhr am Vortag online ab; im ersten Semester sinkt der Anteil nicht gegessener Mahlzeiten von 15 % auf höchstens 5 %. Mit Küche und Leitung Tagesstrukturen vereinbart.",
+    z3: "<b>Z3 (Prozessziel, Muss):</b> Die Online-Anmeldung ist bis 16. April 2027 abgenommen; die Projektkosten bleiben bei höchstens CHF 60'000.",
+    fa: "<b>Fachanforderung:</b> Eltern können ihr Kind für einzelne Tage ohne Telefon und ohne Papier abmelden.",
+    sa: "<b>Systemanforderung:</b> Das System muss Abmeldungen, die bis 8.00 Uhr am Vortag eingehen, in die Bestellliste der Küche übernehmen, die um 9.00 Uhr erstellt wird.",
+    er: "<b>Erhebung:</b> Interview mit der Leitung Tagesstrukturen (Regeln, Ausnahmen) · Beobachtung im Sekretariat beim Abtippen · Dokumentenanalyse von Tarifreglement und Formular · Fragebogen an alle Familien · Workshop mit Betreuung, Küche und Sekretariat · Prototyp des Formulars mit fünf Eltern.",
+    chk: "<b>Prüfung:</b> jedes Ziel SMART ✓ · System- und Prozessziele ✓ · Gewichtung ✓ · Fachanforderung lösungsneutral, Systemanforderung nach Schablone und prüfbar ✓ · Gegenseite und Datenschutz berücksichtigt ✓"
+  };
+  const REIHE = ["kopf", "prob", "sit1", "sit2", "aA", "aU", "aG", "aE", "aZ", "k1", "k2", "k3", "z1", "z2", "z3", "fa", "sa", "er", "chk"];
+  function doku(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t05-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k];
+      return '<div class="t05-fb">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t05-film", {
+    phasen: ["1 · Sichten", "2 · Situation", "3 · AUGEZ", "4 · AEK", "5 · Ziele", "6 · Anforderungen", "7 · Prüfen"],
+    texte: [
+      'Gemeinde Wolkenried, Tagesstrukturen (Mittagstisch und Nachmittagsbetreuung). <span data-ph="ist">Rund 180 Kinder sind angemeldet. Eltern melden ihr Kind jedes Semester mit einem Papierformular an; das Schulsekretariat tippt die Formulare ab, rund 60 Stunden pro Semester.</span> <span data-ph="ab">Kurzfristige Abmeldungen kommen per Telefon oder SMS an die Betreuerinnen; rund 15 % der bestellten Mahlzeiten werden nicht gegessen.</span> <span data-ph="rech">Die Rechnungen gehen per Einzahlungsschein; rund 8 % müssen korrigiert werden.</span> <span data-ph="auftrag">Der Gemeinderat will eine Online-Anmeldung mit Abmeldung und Abrechnung, passend zum Legislaturziel «Verwaltung online bis 2028». Kredit CHF 60\'000.</span> <span data-ph="zeit">Das Anmeldefenster für das Schuljahr 2027/28 öffnet am 3. Mai 2027.</span> <span data-ph="umw">Die Daten enthalten Allergien und Betreuungszeiten der Kinder; rund 10 % der Familien haben keinen Computer oder sprechen kaum Deutsch.</span> <span data-ph="mittel">Mitarbeit: Schulsekretariat (2 Personen), Leitung Tagesstrukturen, Luca Bernasconi (Informatik), externer Anbieter möglich.</span> <span data-ph="gegen">Die Küche bestellt die Mahlzeiten am Vortag um 9 Uhr; zwei Betreuerinnen fürchten, dass Eltern online «alles kurzfristig umbuchen».</span> Aufgabe: Erstelle eine Problemerfassung mit Situationsanalyse, Lage nach AUGEZ, drei Erkenntnissen mit Konsequenzen, drei SMARTen Zielen mit Zielart und Gewichtung sowie je einer Fach- und Systemanforderung und den Erhebungsmethoden.'
+    ],
+    woerterbuch: [
+      "<b>Situationsfragen</b> Anlass · Nutzen · Betroffene · Dringlichkeit · Nullvariante",
+      "<b>AUGEZ</b> Auftrag · Umwelt · Gegenseite · eigene Mittel · Zeit",
+      "<b>AEK</b> Aussage → Erkenntnis → Konsequenz",
+      "<b>Zielart</b> System · Prozess · Mehrwert; <b>Gewicht</b> Muss · Soll · Kann",
+      "<b>SMART</b> spezifisch · messbar · akzeptiert · realistisch · terminiert",
+      "<b>Satzschablone</b> Das System muss + Funktion + Objekt"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Problemerfassung", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So baust du eine Problemerfassung aus Fallangaben: sichten, Situation beschreiben, Lage nach AUGEZ, Erkenntnisse mit AEK, Ziele, Anforderungen, zum Schluss prüfen." },
+      { ph: 0, hl: ["ist", "ab", "rech"], f: doku("kopf", ["kopf"]),
+        say: "Zuerst liest du den Fall und markierst die Fakten zum heutigen Zustand: Papierformulare, Abmeldungen per Telefon, Rechnungen mit Fehlern." },
+      { ph: 0, hl: ["ist", "ab", "rech"], f: doku("prob", ["prob"]),
+        say: "Daraus das Problem in zwei Sätzen, mit Zahlen und ohne Lösung: 60 Stunden pro Semester sind 120 pro Jahr, dazu 15 Prozent verfallene Mahlzeiten und 8 Prozent falsche Rechnungen." },
+      { ph: 1, hl: ["auftrag"], dict: 1, dh: [0], f: doku("sit1", ["sit1"]),
+        say: "Jetzt die Leitfragen der Situationsanalyse. Anlass und Nutzen: Was hat die Idee ausgelöst, was bringt sie, passt sie zur Strategie? Ja, zum Legislaturziel." },
+      { ph: 1, hl: ["zeit"], dh: [0], f: doku("sit2", ["sit2"]),
+        say: "Betroffene, Dringlichkeit und Nullvariante: Wer ist betroffen, warum jetzt, und was passiert ohne Projekt? Ohne Projekt bleibt ein weiteres Schuljahr Papier." },
+      { ph: 2, hl: ["auftrag"], dict: 2, dh: [1], f: doku("aA", ["aA"]),
+        say: "Die Lage nach AUGEZ. Auftrag: Was genau ist verlangt, wo bist du frei, wo gebunden? Frei in der Lösung, gebunden an Kredit, Tarif und Datenschutz." },
+      { ph: 2, hl: ["umw"], dh: [1], f: doku("aU", ["aU"]),
+        say: "Umwelt: Wer wirkt von aussen? Eltern, darunter Familien ohne Computer, die Küche, die Finanzen und die Datenschutzaufsicht." },
+      { ph: 2, hl: ["gegen"], dh: [1], f: doku("aG", ["aG"]),
+        say: "Gegenseite: kein Gegner, aber Widerstände. Die Betreuerinnen fürchten das Umbuchen, und die Küche braucht ihre Zahlen am Vortag." },
+      { ph: 2, hl: ["mittel"], dh: [1], f: doku("aE", ["aE"]),
+        say: "Eigene Mittel: 60'000 Franken, das Sekretariat, die Leitung Tagesstrukturen, ein wenig Informatik und vielleicht ein externer Anbieter." },
+      { ph: 2, hl: ["zeit"], dh: [1], f: doku("aZ", ["aZ"]),
+        say: "Zeit: Das Anmeldefenster öffnet am 3. Mai. Rückwärts gerechnet muss die Abnahme Mitte April stehen, sonst bleibt keine Zeit für Korrekturen." },
+      { ph: 3, hl: ["zeit"], dict: 3, dh: [2], f: doku("k1", ["k1"]),
+        say: "Jetzt verdichtest du mit AEK. Aussage: festes Anmeldefenster. Erkenntnis: Verzug kostet ein Schuljahr. Konsequenz: Anmeldung zuerst als Muss, die Abrechnung darf später folgen." },
+      { ph: 3, hl: ["umw"], dh: [2], f: doku("k2", ["k2"]),
+        say: "Zweite Kette: Allergien sind Gesundheitsdaten, also besonders schützenswert. Konsequenz: Schutzbedarfsanalyse sofort und die Datenschutzaufsicht früh einbeziehen." },
+      { ph: 3, hl: ["umw"], dh: [2], f: doku("k3", ["k3"]),
+        say: "Dritte Kette: Zehn Prozent der Familien kommen online nicht zurecht. Konsequenz: Das Sekretariat erfasst diese Anmeldungen weiter. Darum verlangt das Ziel auch nicht hundert Prozent." },
+      { ph: 4, dict: 5, dh: [3, 4], f: doku("z1", ["z1"]),
+        say: "Erstes Ziel, ein Systemziel und Muss: Online-Anmeldung ab dem 3. Mai, mindestens 90 Prozent online. Spezifisch, messbar, terminiert, und realistisch, weil zehn Prozent offline bleiben dürfen." },
+      { ph: 4, hl: ["ab", "gegen"], dh: [3, 4], f: doku("z2", ["z2"]),
+        say: "Zweites Ziel, ein Systemziel und Soll: Abmeldung bis 8 Uhr am Vortag, verfallene Mahlzeiten von 15 auf höchstens 5 Prozent. Mit Küche und Leitung vereinbart, also akzeptiert." },
+      { ph: 4, hl: ["auftrag", "zeit"], dh: [3, 4], f: doku("z3", ["z3"]),
+        say: "Drittes Ziel, ein Prozessziel und Muss: Abnahme bis 16. April, Kosten höchstens 60'000 Franken. Termin und Kosten sind auch Ziele, das vergessen viele." },
+      { ph: 5, hl: ["ab"], f: doku("fa", ["fa"]),
+        say: "Jetzt die Anforderungen. Die Fachanforderung sagt aus Sicht der Eltern, was sie brauchen, ohne Technik: einzelne Tage ohne Telefon und ohne Papier abmelden." },
+      { ph: 5, hl: ["gegen"], dict: 6, dh: [5], f: doku("sa", ["sa"]),
+        say: "Die Systemanforderung folgt der Schablone: Das System muss, plus Funktion, plus Objekt mit prüfbarem Inhalt. Die Zeiten 8 und 9 Uhr machen sie prüfbar und passen zur Küche." },
+      { ph: 5, f: doku("er", ["er"]),
+        say: "Wie kommst du zu allen Anforderungen? Mit einer Kombination: Interview, Beobachtung, Dokumentenanalyse, Fragebogen an alle Familien, Workshop für den Konflikt mit der Küche und ein Prototyp." },
+      { ph: 6, dh: [4], f: doku("er"),
+        say: "Zum Schluss prüfst du jedes Ziel mit SMART. Fehlt bei einem der Termin oder die Zahl? Nein, alle fünf Kriterien sind erfüllt." },
+      { ph: 6, dh: [3, 5], f: doku("chk", ["chk"]),
+        say: "Und die Mischung: System- und Prozessziele, je mit Gewichtung, eine lösungsneutrale Fachanforderung, eine prüfbare Systemanforderung. Gegenseite und Datenschutz sind berücksichtigt." },
+      { ph: 6, f: doku("chk"),
+        say: "Fertig. Die Problemerfassung ist kurz, mit Zahlen und ohne vorschnelle Lösung. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t05-film-loesung").innerHTML = doku("chk");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t05-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.02</span> «Bis 30. Juni 2027 sinkt die Bearbeitungszeit eines Baugesuchs deutlich.» Welches SMART-Kriterium fehlt?',
+        o: ["spezifisch", "messbar", "terminiert", "Keines, das Ziel ist SMART."], a: 1,
+        e: "«Deutlich» ist keine Zahl. Gegenstand (Bearbeitungszeit eines Baugesuchs) und Termin (30. Juni 2027) sind genannt. ICB 3.02, Fertigkeit Zielformulierung (SMART)." },
+      { q: '<span class="icb">ICB 3.02</span> «Die Projektkosten bleiben bei höchstens CHF 180\'000.» Welche Zielart ist das?',
+        o: ["Systemziel", "Prozessziel", "Mehrwertziel", "Kein Ziel, sondern eine Anforderung"], a: 1,
+        e: "Kosten und Termine beschreiben, wie das Projekt ablaufen soll: Prozessziel. Swiss ICB 4.5.2.1 (Hierarchie der Projektziele)." },
+      { q: '<span class="icb">ICB 3.02</span> Wird ein bestimmtes Ziel verfehlt, gilt das Projekt als gescheitert. Wie ist dieses Ziel gewichtet?',
+        o: ["Muss", "Soll", "Kann", "Mehrwert"], a: 0,
+        e: "Muss-Ziele sind zwingend, ein K.-o.-Kriterium. Soll-Ziele sind angestrebt, Kann-Ziele wünschbar. «Mehrwert» ist eine Zielart, keine Gewichtung. LB 2 F.33, ICB 3.02." },
+      { q: '<span class="icb">ICB 3.02</span> «Bauwillige reichen ihr Gesuch über eine iPhone-App ein.» Welches Qualitätskriterium verletzt diese Fachanforderung?',
+        o: ["redundanzfrei", "aktuell", "lösungsneutral", "bewertet"], a: 2,
+        e: "Sie legt Technik und Gerät fest, statt das Bedürfnis zu beschreiben. LB 2 F.33 (Qualitätskriterien), ICB 3.02 (Bedürfnisse und Anforderungen analysieren)." },
+      { q: '<span class="icb">ICB 3.02</span> Worin unterscheidet sich der Anforderungskatalog vom Pflichtenheft?',
+        o: ["Es gibt keinen Unterschied, nur einen anderen Namen.", "Der Katalog beschreibt, was und wofür, aus Sicht der Anwender; das Pflichtenheft beschreibt, wie und womit die Lösung es umsetzt.", "Der Katalog enthält nur Termine und Kosten.", "Das Pflichtenheft schreibt die Auftraggeberin, den Katalog der Lieferant."], a: 1,
+        e: "LB 2 F.33: Anforderungskatalog ≠ Pflichtenheft. Der Katalog ist die Sicht der Anwender (was, wofür), das Pflichtenheft die Sicht der Lösung (wie, womit). ICB 3.02, Anforderungen dokumentieren und vereinbaren." },
+      { q: '<span class="icb">ICB 3.02</span> Wofür steht das G in den Lagefaktoren AUGEZ?',
+        o: ["Gesetze", "Gegenseite", "Grenzen", "Gewichtung"], a: 1,
+        e: "Auftrag, Umwelt, Gegenseite, eigene Mittel, Zeit (LB 3 F.7). Im Projekt ist die Gegenseite alles, was gegen das Projekt wirkt: Widerstände, Konkurrenz um Ressourcen. Recht und Geld gehören in jeden Faktor. ICB 3.02 und 3.01 (Projektdesign)." },
+      { q: '<span class="icb">ICB 3.02</span> Eine Variante deckt nur das Einreichen des Gesuchs ab, nicht Status, Zirkulation und Gebühren. Welches Kriterium aus LB 3 F.8 erfüllt sie nicht?',
+        o: ["Exklusivität", "Einfachheit", "Vollständigkeit", "Machbarkeit"], a: 2,
+        e: "Vollständig ist eine Variante, wenn sie den ganzen Auftrag abdeckt. Einfach und machbar kann sie trotzdem sein. ICB 3.02 und 3.01 (Varianten im Projektdesign)." },
+      { q: '<span class="icb">ICB 3.02</span> In welcher HERMES-Phase werden laut Referat SG die Systemanforderungen erarbeitet?',
+        o: ["Initialisierung", "Konzept", "Realisierung", "Einführung"], a: 1,
+        e: "Initialisierung: Grobanforderungen in der Studie. Konzept: Systemanforderungen und Systemarchitektur. Realisierung: Detailspezifikation. ICB 3.02 (Anforderungen werden schrittweise konkretisiert)." },
+      { q: '<span class="icb">ICB 3.02</span> Wer ist in der Requirements-Analyse die Brücke zwischen Fachbereich und IT und erhebt, analysiert und strukturiert die Anforderungen?',
+        o: ["Business Analyst", "IT-Architekt", "Auftraggeberin", "Entwickler"], a: 0,
+        e: "Der Business Analyst übersetzt zwischen Fach und IT (Referat SG). Die Auftraggeberin entscheidet und priorisiert, der IT-Architekt verantwortet die Systemarchitektur. ICB 3.02 und 3.05 (Rollen)." },
+      { q: '<span class="icb">ICB 3.02</span> Ein Sachbearbeiter prüft Gesuche seit Jahrzehnten aus Routine und kann im Interview nicht erklären, wie. Welche Erhebungsmethode passt am besten?',
+        o: ["Fragebogen", "Dokumentenanalyse", "Beobachtung", "Prototyping"], a: 2,
+        e: "Beobachtung zeigt den echten Ablauf und macht stilles Wissen sichtbar. Ein Fragebogen hat zu wenig Tiefe, Dokumente sind oft veraltet. ICB 3.02, Fertigkeit Erfassung von Wissen." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

@@ -15,6 +15,8 @@ import {
   spielAbzeichenErfuellt,
   type SpielAbzeichenStatistik,
 } from "@/lib/spielstand"
+import { ipmaAchievementStats, type IpmaBadgeCondition } from "@/lib/ipma/achievements"
+import { gradedAnswers } from "@/lib/ipma/view"
 
 type BadgeDb = Pick<typeof prisma, "$transaction">
 
@@ -124,10 +126,22 @@ interface UserBadgeStats {
   spielStats: SpielAbzeichenStatistik
   /** Architektur-Leitstand: abgeschlossene Läufe mit neuem Startwert */
   archsimStats: ArchsimAbzeichenStatistik
+  /** IPMA-Prüfungssimulator: erfüllte Bedingungen ipma_* (Spezifikation 6.10) */
+  ipmaAchievements: Set<IpmaBadgeCondition>
 }
 
 async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
-  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns, spielStats, archsimStats] = await Promise.all([
+  const [
+    user,
+    totalReviews,
+    totalCardsCreated,
+    quizStats,
+    simulationRuns,
+    spielStats,
+    archsimStats,
+    ipmaAttempts,
+    ipmaItems,
+  ] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { streak: true },
@@ -148,6 +162,24 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
     }),
     ladeSpielAbzeichenStatistik(userId),
     ladeArchsimAbzeichenStatistik(userId),
+    prisma.ipmaAttempt.findMany({
+      where: { userId, status: "finished" },
+      select: { mode: true, variant: true, status: true, pointsQ: true, maxPointsQ: true, shownCount: true, passed: true },
+    }),
+    // Bewertete Antworten aller Versuche für die Beherrschung (Abzeichen «Landkarte komplett»)
+    prisma.ipmaAttemptItem.findMany({
+      where: { correct: { not: null }, attempt: { userId } },
+      select: {
+        type: true,
+        competence: true,
+        correct: true,
+        rasterPoints: true,
+        answeredAt: true,
+        selfAssessedAt: true,
+        aiAssessedAt: true,
+        attempt: { select: { startedAt: true } },
+      },
+    }),
   ])
 
   const totalQuizzes = quizStats.length
@@ -164,6 +196,10 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
     leitstandAchievements: achievementStats(simulationRuns),
     spielStats,
     archsimStats,
+    ipmaAchievements: ipmaAchievementStats(
+      ipmaAttempts,
+      gradedAnswers(ipmaItems, (index) => ipmaItems[index].attempt.startedAt),
+    ),
   }
 }
 
@@ -200,6 +236,14 @@ function evaluateCondition(condition: string, stats: UserBadgeStats): boolean {
     case "archsim_drei_sterne":
     case "archsim_alle_missionen":
       return archsimAbzeichenErfuellt(condition, stats.archsimStats, MISSION_IDS) ?? false
+    // IPMA-Prüfungssimulator (6.10): aus abgeschlossenen Versuchen und der Beherrschung berechnet
+    case "ipma_erste_pruefung":
+    case "ipma_bestanden":
+    case "ipma_souveraen":
+    case "ipma_kompass":
+    case "ipma_lueckenschliesser":
+    case "ipma_landkarte":
+      return stats.ipmaAchievements.has(condition)
     default:
       // Modellierspiele (avsw_spiel_*), siehe SPIEL_ABZEICHEN in lib/spielstand.ts
       return spielAbzeichenErfuellt(condition, stats.spielStats) ?? false

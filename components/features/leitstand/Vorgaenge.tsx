@@ -8,11 +8,13 @@
 // Auf schmalen Schirmen eine Karte je Vorgang. Detail mit Profil gegen Team und Besetzung.
 
 import { useState } from "react"
-import { AREAS, fitFor, forecast, type Scenario, type SimState, type TaskDef } from "@/lib/simulation/core"
+import { AREAS, areaLabelsOf, fitFor, forecast, type Scenario, type SimState, type TaskDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
-import { firstName, useLeitstand } from "./context"
-import { AREA_LABEL, AREA_NAME, STATUS_TEXT, PRIORITIES, chf, stunden } from "./format"
-import { fitInTeam, meanFit, teamOf } from "./logic"
+import { firstName, personName, useLeitstand } from "./context"
+import { DISPLAY_STATUS_ICON, DISPLAY_STATUS_TEXT, PRIORITIES, chf, stunden } from "./format"
+import { displayStatus, fitInTeam, meanFit, teamOf, type DisplayStatus } from "./logic"
+import Avatar from "./Avatar"
+import Icon from "./Icon"
 import PlanPruefung from "./PlanPruefung"
 
 export default function Vorgaenge() {
@@ -71,11 +73,10 @@ export default function Vorgaenge() {
                   isOpen={isOpen}
                   onToggle={() => setOpen(isOpen ? null : t.id)}
                   cells={{
-                    status: STATUS_TEXT[ts.status],
-                    statusKey: ts.status,
+                    statusKey: displayStatus(state, scenario, t.id),
                     progress,
                     rest: stunden(ts.remaining),
-                    team: team.map((pid) => firstName(scenario, pid)).join(", ") || "–",
+                    team,
                     teamMissing: team.length === 0 && ts.status !== "fertig",
                     fit: fit === null ? "–" : fit.toFixed(2),
                     fitLow: fit !== null && fit < 0.8,
@@ -105,11 +106,10 @@ function VorgangZeile({
   isOpen: boolean
   onToggle: () => void
   cells: {
-    status: string
-    statusKey: string
+    statusKey: DisplayStatus
     progress: number
     rest: string
-    team: string
+    team: string[]
     teamMissing: boolean
     fit: string
     fitLow: boolean
@@ -118,7 +118,7 @@ function VorgangZeile({
     float: string
   }
 }) {
-  const { state, run, readOnly } = useLeitstand()
+  const { state, scenario, run, readOnly } = useLeitstand()
   const ts = state.tasks[def.id]
   const detailId = `vorgang-${def.id}`
   return (
@@ -126,11 +126,22 @@ function VorgangZeile({
       <tr className={`${critical ? styles.kritisch : ""} ${isOpen ? styles.zeileOffen : ""}`}>
         <th scope="row" data-label="Vorgang">
           <span className={styles.vorgangId}>{def.id}</span> {def.name}
-          {critical && <span className={styles.kritischText}>kritisch</span>}
-          {def.milestone && <span className={styles.meilenstein}>◆ {def.milestone}</span>}
+          {critical && (
+            <span className={styles.kritischText}>
+              <Icon name="kritisch" size={12} /> kritisch
+            </span>
+          )}
+          {def.milestone && (
+            <span className={styles.meilenstein}>
+              <Icon name="meilenstein" size={12} /> {def.milestone}
+            </span>
+          )}
         </th>
         <td data-label="Status">
-          <span className={`${styles.statusChip} ${styles[`st_${cells.statusKey}`]}`}>{cells.status}</span>
+          <span className={`${styles.statusChip} ${styles[`st_${cells.statusKey}`]}`}>
+            <Icon name={DISPLAY_STATUS_ICON[cells.statusKey]} size={14} />
+            {DISPLAY_STATUS_TEXT[cells.statusKey]}
+          </span>
         </td>
         <td data-label="Fortschritt">
           <div
@@ -149,7 +160,20 @@ function VorgangZeile({
           {cells.rest}
         </td>
         <td data-label="Personen" className={cells.teamMissing ? styles.fehlt : undefined}>
-          {cells.teamMissing ? "■ unbesetzt" : cells.team}
+          {cells.teamMissing ? (
+            "■ unbesetzt"
+          ) : cells.team.length === 0 ? (
+            "–"
+          ) : (
+            <span className={styles.besetzungKurz}>
+              <span className={styles.avatarStapel}>
+                {cells.team.slice(0, 4).map((pid) => (
+                  <Avatar key={pid} name={personName(scenario, pid)} size={28} decorative />
+                ))}
+              </span>
+              <span>{cells.team.map((pid) => firstName(scenario, pid)).join(", ")}</span>
+            </span>
+          )}
         </td>
         <td data-label="Passung" className={`zahl ${cells.fitLow ? styles.warnText : ""}`}>
           {cells.fitLow ? "▲ " : ""}
@@ -211,6 +235,7 @@ export function VorgangDetail({ def }: { def: TaskDef }) {
   const cost = Object.entries(ts.hoursByPerson).reduce((s, [pid, h]) => s + h * (scenario.people.find((p) => p.id === pid)?.rate ?? 0), 0)
   const duration = ts.startTick !== null ? ((ts.endTick ?? state.tick - 1) + 1) / 2 - ts.startTick / 2 : null
   const bestQ = AREAS.map((_, k) => team.reduce((m, pid) => Math.max(m, state.people[pid].profile[k]), 0))
+  const areaLabels = areaLabelsOf(scenario)
 
   return (
     <div className={styles.detail}>
@@ -221,7 +246,7 @@ export function VorgangDetail({ def }: { def: TaskDef }) {
           <ul className={styles.profilListe}>
             {AREAS.map((a, k) => (
               <li key={a}>
-                <abbr title={AREA_NAME[a]}>{AREA_LABEL[a]}</abbr>
+                <abbr title={areaLabels[a].label}>{areaLabels[a].short}</abbr>
                 <span className={styles.profilSpur} aria-hidden="true">
                   <span className={styles.profilSoll} style={{ width: `${(def.profile[k] / 6) * 100}%` }} />
                   <span className={styles.profilIst} style={{ width: `${(bestQ[k] / 6) * 100}%` }} />
@@ -286,8 +311,9 @@ export function VorgangDetail({ def }: { def: TaskDef }) {
             const fit = fitInTeam(state, scenario, pid, def.id)
             return (
               <li key={pid} className={styles.besetzung}>
-                <span>
-                  <strong>{scenario.people.find((p) => p.id === pid)?.name}</strong> · Priorität {PRIORITIES[idx] ?? "?"} · Anteil{" "}
+                <Avatar name={personName(scenario, pid)} size={36} decorative />
+                <span className={styles.wachsen}>
+                  <strong>{personName(scenario, pid)}</strong> · Priorität {PRIORITIES[idx] ?? "?"} · Anteil{" "}
                   {Math.round(share * 100)} % · Passung{" "}
                   <span className={fit < 0.8 ? styles.warnText : undefined}>
                     {fit < 0.8 ? "▲ " : ""}

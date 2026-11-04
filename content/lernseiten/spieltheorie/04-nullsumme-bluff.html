@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nullsummenspiele und Unberechenbarkeit · SPIELTHEORIE</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="stylesheet" href="/lernpfad/st-spiel.css">
+  <link rel="next" href="/lernseiten/spieltheorie/05-zuege-und-drohungen" title="Zug um Zug: Drohungen und Selbstbindung">
+  <style>
+    .t04-ziele{margin:0; padding-left:1.3em}
+    .t04-ziele li{margin-bottom:4px}
+    .t04-vier{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px}
+    .t04-vier .concept .ex{font-family:var(--f-display)}
+    .t04-quelle{font-size:.82rem; color:var(--muted)}
+    .t04-kipp-werte{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin:0}
+    .t04-kipp-werte div{background:var(--st-pergament); color:var(--st-pergament-ink); border:1px solid var(--line); border-radius:10px; padding:8px 10px}
+    .t04-kipp-werte dt{font-size:.82rem; margin:0}
+    .t04-kipp-werte dd{margin:2px 0 0; font-family:var(--f-display); font-weight:800; font-size:1.25rem}
+    .t04-kipp-werte .t04-min{outline:3px solid var(--st-gold2); outline-offset:-3px}
+    .t04-kipp-svg{width:100%; height:auto; display:block}
+    .t04-kipp-svg .t04-linie-a{stroke:var(--st-rot); stroke-width:3; fill:none}
+    .t04-kipp-svg .t04-linie-b{stroke:var(--st-blau); stroke-width:3; fill:none; stroke-dasharray:7 4}
+    .t04-kipp-svg .t04-huelle{stroke:var(--st-gold2); stroke-width:7; fill:none; opacity:.45}
+    .t04-kipp-svg .t04-jetzt{stroke:var(--ink); stroke-width:1.5; stroke-dasharray:3 3}
+    .t04-kipp-svg .t04-best{fill:var(--st-gold); stroke:var(--st-pergament-ink); stroke-width:1.5}
+    .t04-kipp-svg .t04-du{fill:var(--ink)}
+    .t04-kipp-svg text{fill:var(--muted); font-size:10px}
+    .t04-legende{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.85rem; color:var(--muted)}
+    .t04-legende i{display:inline-block; width:22px; height:0; border-top:3px solid var(--st-rot); vertical-align:middle; margin-right:5px}
+    .t04-legende i.b{border-top:3px dashed var(--st-blau)}
+    .t04-legende i.h{border-top:7px solid var(--st-gold2); opacity:.6}
+    .t04-ssp-wahl{display:flex; flex-wrap:wrap; gap:8px}
+    .t04-ssp-wahl button{flex:1 1 90px; min-height:48px; font-size:1rem}
+    .t04-ssp-feld{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; text-align:center;
+      background:var(--st-pergament); color:var(--st-pergament-ink); border:2px solid var(--st-holz2); border-radius:12px; padding:10px}
+    .t04-ssp-feld .t04-hand{font-size:2.2rem; line-height:1.1}
+    .t04-ssp-feld small{display:block; font-size:.78rem}
+    .t04-ssp-feld .t04-vs{font-family:var(--f-display); font-weight:800}
+    .t04-ssp-verlauf{display:flex; flex-wrap:wrap; gap:4px; margin:0; padding:0; list-style:none}
+    .t04-ssp-verlauf li{min-width:26px; text-align:center; border-radius:6px; padding:1px 4px; font-size:.8rem; border:1px solid var(--line)}
+    .t04-ssp-verlauf li.s{background:var(--ok-bg); color:var(--ok)}
+    .t04-ssp-verlauf li.n{background:var(--bad-bg); color:var(--bad)}
+    .t04-penalty{display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px}
+    .t04-penalty div{border:1px solid var(--line); border-radius:10px; padding:8px 10px; background:var(--surface)}
+    .t04-penalty b{display:block; font-family:var(--f-display); font-size:1.15rem}
+  </style>
+</head>
+<body data-fach="spieltheorie" data-thema="04-nullsumme-bluff">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">Spieltheorie · Kapitel 4 · Grundlagen</span>
+    <h1>Nullsummenspiele und Unberechenbarkeit</h1>
+    <div data-st-szene="klippen" data-st-titel="Die Nebelklippen: Kapitänin Mara versteckt einen Schatz, Käpt'n Bors späht, Kasimir schaut zu" data-st-figuren="kapitaenin,papagei:froh,pirat:boese"></div>
+    <p class="lead">Manche Spiele kennen keine gemeinsame Lösung: Was du gewinnst, verliert die Gegenseite. Hier gibt es oft kein Feld, in dem beide zufrieden sind. Wer dann einen festen Plan hat, wird durchschaut. In diesem Kapitel lernst du, warum <b>Unberechenbarkeit</b> eine Strategie ist, wie du sie richtig dosierst und warum gute Feldherren seit jeher auf Täuschung setzen.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t04-ziele">
+        <li>Du erkennst Nullsummenspiele und weisst, warum Reden dort selten hilft.</li>
+        <li>Du siehst, wann ein Spiel kein Gleichgewicht in festen Zügen hat.</li>
+        <li>Du wendest die Vorsichtsregel an: den schlechtesten Fall jedes Plans vergleichen.</li>
+        <li>Du verstehst gemischte Strategien ohne Formel: Würfeln nach einem festen Verhältnis.</li>
+        <li>Du erklärst, warum die reichere Route <i>seltener</i> gefahren werden sollte, und wie Ablenkung im Krieg und im Alltag wirkt.</li>
+      </ul>
+    </div>
+    <div id="t04-kasimir"></div>
+  </header>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#spiel"><b>0</b>Spiel zuerst</a>
+    <a href="#woerter"><b>1</b>Wörterbuch</a>
+    <a href="#schritt"><b>2</b>Kein Gleichgewicht?</a>
+    <a href="#mischen"><b>3</b>Mischen</a>
+    <a href="#strategem"><b>4</b>Strategem-Ecke</a>
+    <a href="#alltag"><b>5</b>Alltag und Welt</a>
+    <a href="#uebungen"><b>6</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Spiel zuerst ===== -->
+  <section id="spiel" class="stack">
+    <span class="eyebrow">Schritt 0 · Spiel zuerst</span>
+    <h2>Wo versteckst du den Schatz?</h2>
+    <p class="prose">Du bist Kapitänin Mara. In den Nebelklippen gibt es zwei Höhlen, <b>A</b> und <b>B</b>. Jede Nacht versteckst du eine Kiste mit 4 Dublonen in einer davon. Käpt'n Bors schleicht in derselben Nacht los und durchsucht <i>eine</i> Höhle. Findet er die Kiste, gehört sie ihm. Sucht er in der falschen Höhle, bleibt sie deine.</p>
+    <p class="prose">Spiel mindestens acht Runden. Beobachte genau, wo Bors sucht. Findest du ein Muster?</p>
+    <div id="t04-schatz" class="card"></div>
+    <div id="t04-erkenntnis"></div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerter" class="stack">
+    <span class="eyebrow">Schritt 1 · Wörterbuch</span>
+    <h2>Die Sprache des reinen Konflikts</h2>
+    <p class="prose">Im Schatzspiel bekommen Mara und Bors zusammen immer genau 4 Dublonen. Was die eine mehr hat, hat der andere weniger. Solche Spiele heissen <b>Nullsummenspiele</b>: Der Kuchen bleibt gleich gross, es wird nur verteilt. Hier gibt es keinen Kompromiss, der beiden hilft. Und jede Information, die du verrätst, ist ein Geschenk an die Gegenseite.</p>
+    <div class="t04-vier">
+      <div class="concept"><span class="tag">Nullsumme</span><span class="ex">4 = 4 + 0 = 0 + 4</span><p>Was einer gewinnt, verliert der andere. Penalty, Schach, Wahlkampf um einen Sitz.</p></div>
+      <div class="concept"><span class="tag">Fester Plan</span><span class="ex">immer Höhle A</span><p>Eine <i>reine Strategie</i>: Du legst dich auf einen Zug fest. Im Konflikt ist das gefährlich.</p></div>
+      <div class="concept"><span class="tag">Mischen</span><span class="ex">mal A, mal B</span><p>Eine <i>gemischte Strategie</i>: Du würfelst nach einem festen Verhältnis, damit dich niemand durchschaut.</p></div>
+      <div class="concept"><span class="tag">Vorsichtsregel</span><span class="ex">schlechtester Fall</span><p>Für jeden Plan fragen: Was passiert im schlimmsten Fall? Dann den Plan mit dem besten schlechtesten Fall wählen.</p></div>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Weitere Begriffe für dieses Kapitel</caption>
+        <thead><tr><th>Begriff</th><th>Bedeutung in Alltagssprache</th></tr></thead>
+        <tbody>
+          <tr><td>Konstantsumme</td><td>Die Summe ist nicht null, aber immer gleich (hier 4 Dublonen). Es ist dasselbe wie Nullsumme: Mehr für dich heisst weniger für mich.</td></tr>
+          <tr><td>Maximin (Vorsichtsregel)</td><td>Das <b>Max</b>imum der <b>Min</b>ima: Unter allen schlechtesten Fällen den besten wählen. Schützt vor dem Schlimmsten, verschenkt aber Chancen.</td></tr>
+          <tr><td>Sattelpunkt</td><td>Ein Feld, auf das die Vorsichtsregeln beider Seiten zeigen. Dort lohnt sich Würfeln nicht, ein fester Plan genügt.</td></tr>
+          <tr><td>Ausrechenbarkeit</td><td>Dein Verhalten folgt einem Muster, das die Gegenseite erkennen kann: immer dasselbe, streng abwechselnd, «nach zweimal links kommt rechts».</td></tr>
+          <tr><td>im Schnitt</td><td>Was du über viele Runden pro Runde bekommst. Wer mischt, gewinnt nicht jede Runde, aber im Schnitt am meisten.</td></tr>
+          <tr><td>Finte, Ablenkung</td><td>Ein Zug, der die Gegenseite auf eine falsche Fährte lockt, damit sie ihre Kräfte am falschen Ort bündelt.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Im Nichtnullsummenspiel kann es klug sein, deine Absicht offen zu sagen (zum Beispiel, wo ihr euch treffen wollt). Im Nullsummenspiel ist das fast immer dumm: Wer seinen Zug verrät, verliert.</div>
+    <div id="t04-sort-nullsumme"></div>
+  </section>
+
+  <!-- ===== 2 · Kein Gleichgewicht ===== -->
+  <section id="schritt" class="stack">
+    <span class="eyebrow">Schritt 2 · Konzept Schritt für Schritt</span>
+    <h2>Das Karussell der besten Antworten</h2>
+    <p class="prose">Warum war das Schatzspiel so zappelig? Schau dir das Brett mit den Werkzeugen aus Kapitel 3 an. Beantworte zuerst alle Fragen nach den besten Antworten. Wechsle dann in den Modus «Gleichgewicht finden».</p>
+    <div id="t04-karussell"></div>
+    <div class="note tipp"><b>So liest du es:</b> Versteckt Mara in A, sucht Bors am besten in A. Sucht Bors in A, versteckt Mara am besten in B. Versteckt sie in B, sucht er in B. Sucht er in B, nimmt sie A. Die besten Antworten drehen sich <b>im Kreis</b>. Kein Feld bleibt stehen. Darum gibt es <b>kein Gleichgewicht in festen Zügen</b>. (Findest du kein Feld, drück «Prüfen», ohne eine Fahne zu setzen.)</div>
+
+    <h3>Die Vorsichtsregel: Was ist das Schlimmste, was passieren kann?</h3>
+    <div id="t04-gouverneur"></div>
+    <p class="prose">Nicht jedes Nullsummenspiel ist ein Karussell. Mara will Beute nach Goldbucht bringen. Sie hat drei Routen. Der Gouverneur kann nur eine Patrouille schicken, nach Norden oder nach Süden. Was Mara an Kisten durchbringt, fehlt dem Gouverneur (darum stehen bei ihm Minuszahlen).</p>
+    <div id="t04-vorsicht-schritte"></div>
+    <div id="t04-konvoi"></div>
+    <div class="st-zweispaltig">
+      <div class="card stack">
+        <h3>Mit Sattelpunkt</h3>
+        <p>Beim Konvoi zeigen beide Vorsichtsregeln auf dasselbe Feld: Hochsee gegen Patrouille Nord. Dort will keiner abweichen. Ein fester Plan genügt, Würfeln bringt nichts.</p>
+      </div>
+      <div class="card stack">
+        <h3>Ohne Sattelpunkt</h3>
+        <p>Beim Schatz ist der schlechteste Fall für <i>jeden</i> festen Plan 0 Dublonen. Die Vorsichtsregel hilft nicht weiter. Jetzt kommt der Trick: <b>Mischen</b>.</p>
+      </div>
+    </div>
+    <div id="t04-frage-vorsicht"></div>
+  </section>
+
+  <!-- ===== 3 · Mischen ===== -->
+  <section id="mischen" class="stack">
+    <span class="eyebrow">Schritt 3 · Simulation</span>
+    <h2>Schmuggel an der Küstenwache vorbei</h2>
+    <p class="prose">Jetzt bist du Schmugglerin. Jede Nacht fährst du durch die <b>Nordpassage</b> oder die <b>Südpassage</b>. Die Küstenwache kann nur eine bewachen. Sie ist klüger als Bors: Sie merkt sich nicht nur deinen letzten Zug, sondern deine Gewohnheiten, auch «nach zweimal Nord kommt Süd». Versuch, möglichst oft durchzukommen. Danach lass den Regler automatisch spielen: einmal mit 50 %, einmal mit 90 %.</p>
+    <div id="t04-mischer" class="card"></div>
+    <div id="t04-mischer-kasimir"></div>
+
+    <h3>Wenn die Routen nicht gleich viel wert sind</h3>
+    <p class="prose">Jetzt wird es spannend. Die <b>Goldküste</b> bringt dir pro Fahrt mehr Gold als die <b>Nebelbucht</b>, die immer 2 Gold bringt. Die Küstenwache weiss das auch. Wird sie erwischt, verlierst du die Ladung (0 Gold). Wie oft solltest du die reiche Route nehmen? Bewege die Regler und schau, was du <i>im Schnitt</i> pro Nacht bekommst, wenn die Küstenwache klug antwortet.</p>
+    <div class="card rechner stack" id="t04-kipp">
+      <div class="regler">
+        <label for="t04-beute">Beute an der Goldküste</label>
+        <input type="range" id="t04-beute" min="2" max="10" step="1" value="6">
+        <output for="t04-beute" id="t04-beute-wert">6 Gold</output>
+      </div>
+      <div class="regler">
+        <label for="t04-anteil">So oft fährst du die Goldküste</label>
+        <input type="range" id="t04-anteil" min="0" max="100" step="5" value="50">
+        <output for="t04-anteil" id="t04-anteil-wert">50 %</output>
+      </div>
+      <dl class="t04-kipp-werte" id="t04-kipp-werte" aria-live="polite"></dl>
+      <figure class="diagramm" style="margin:0">
+        <svg class="t04-kipp-svg" id="t04-kipp-svg" viewBox="0 0 320 180" role="img" aria-labelledby="t04-kipp-titel"><title id="t04-kipp-titel">Gold im Schnitt je nach Anteil Goldküste</title></svg>
+        <figcaption class="t04-legende"><span><i></i>Wache wartet immer an der Goldküste</span><span><i class="b"></i>Wache wartet immer in der Nebelbucht</span><span><i class="h"></i>Was dir bleibt (die Wache wählt das Schlechtere für dich)</span></figcaption>
+      </figure>
+      <div class="info" id="t04-kipp-ergebnis" aria-live="polite"></div>
+    </div>
+    <div class="note falle"><b>Überraschung:</b> Je reicher die Goldküste, desto <b>seltener</b> solltest du sie fahren. Klingt verkehrt? Die Küstenwache wartet dort viel öfter, weil sie dort mehr verhindert. Gerade deshalb ist die arme Route oft frei. Du mischst so, dass es der Küstenwache <b>egal</b> ist, wo sie wartet: Dann kann sie dich nicht ausnutzen.</div>
+
+    <h3>Stein, Schere, Papier gegen Bors</h3>
+    <p class="prose">Bors hat dazugelernt. Er merkt sich, welche Hand du nach welcher Hand zeigst, und spielt dagegen. Spiel 20 Runden. Bleibt dir ein Muster? Danach kannst du den Würfel für dich entscheiden lassen.</p>
+    <div class="card stack" id="t04-ssp">
+      <div class="st-tafel" id="t04-ssp-tafel" aria-live="polite"></div>
+      <div class="t04-ssp-feld" id="t04-ssp-feld" aria-hidden="true"></div>
+      <div class="t04-ssp-wahl" role="group" aria-label="Deine Hand">
+        <button type="button" class="btn primary" data-hand="0">✊ Stein</button>
+        <button type="button" class="btn primary" data-hand="1">✌ Schere</button>
+        <button type="button" class="btn primary" data-hand="2">✋ Papier</button>
+      </div>
+      <div class="info" id="t04-ssp-info" aria-live="polite"></div>
+      <ol class="t04-ssp-verlauf" id="t04-ssp-verlauf" aria-label="Verlauf: S gewonnen, N verloren, U unentschieden"></ol>
+      <div class="row">
+        <button type="button" class="btn" id="t04-ssp-wuerfel">🎲 20 Runden mit dem Würfel</button>
+        <button type="button" class="btn" id="t04-ssp-neu">↺ Neu</button>
+      </div>
+    </div>
+
+    <h3>Penalty: Die Profis mischen wirklich</h3>
+    <p class="prose">Beim Penalty wählen Schützin und Torhüterin praktisch gleichzeitig eine Ecke. Ein reines Nullsummenspiel. Fachleute haben tausende Penaltys aus Profiligen ausgewertet. Sinngemäss fanden sie:</p>
+    <div class="t04-penalty">
+      <div><b>Beide wechseln</b>Gute Schützen schiessen nicht immer in ihre Lieblingsecke, und gute Torhüter springen nicht immer auf dieselbe Seite.</div>
+      <div><b>Kein Muster</b>Was sie im letzten Penalty taten, sagt kaum etwas über den nächsten. Sie sind schwer auszurechnen.</div>
+      <div><b>Gleich gut</b>Die Torquote ist für beide Ecken ungefähr gleich hoch. Genau das sagt die Theorie für gutes Mischen voraus: Keine Ecke ist besser als die andere.</div>
+      <div><b>Starke Seite seltener</b>Wer eine starke Seite hat, nutzt sie nicht so oft, wie man denkt, weil der Torhüter dort lauert.</div>
+    </div>
+    <p class="t04-quelle">Sinngemäss nach Studien zu Penaltys in europäischen Profiligen (Verhaltensökonomie, ab etwa 2000). Rund drei von vier Penaltys werden verwandelt.</p>
+  </section>
+
+  <!-- ===== 4 · Strategem-Ecke ===== -->
+  <section id="strategem" class="stack">
+    <span class="eyebrow">Schritt 4 · Strategem-Ecke</span>
+    <h2>«Im Osten lärmen, im Westen angreifen»</h2>
+    <div class="st-strategem">
+      <span class="st-nr">Sun Tzu</span><b>Die Kunst des Krieges, Kapitel 1</b>
+      <p>Sinngemäss: Alle Kriegsführung beruht auf Täuschung. Kannst du angreifen, tu so, als könntest du es nicht. Bist du nah, lass den Gegner glauben, du seist fern. Bist du fern, lass ihn glauben, du seist nah.</p>
+    </div>
+    <div class="st-strategem">
+      <span class="st-nr">Strategem 6</span><b>Im Osten lärmen, im Westen angreifen</b>
+      <p>Mach dort viel Lärm, wo du nicht zuschlagen willst. Der Gegner zieht seine Kräfte dorthin, und du triffst ihn an der Stelle, die er entblösst hat.</p>
+    </div>
+    <p class="prose">Spieltheoretisch ist das ein Nullsummenspiel wie die Schmuggelfahrt: Der Angreifer wählt einen Ort, der Verteidiger kann nicht überall gleich stark sein. Die Ablenkung geht noch einen Schritt weiter als das Mischen. Du machst dich nicht nur unberechenbar, du schiebst die <b>Erwartung</b> der Gegenseite gezielt in die falsche Richtung.</p>
+    <div class="card stack">
+      <h3>Operation Fortitude, 1944</h3>
+      <p>Vor der Landung der Alliierten in Europa war klar: Irgendwo an der französischen Küste kommt der Angriff. Der kürzeste Weg führte über die Meerenge nach <b>Pas-de-Calais</b>. Die Alliierten wollten in der <b>Normandie</b> landen. Mit der Täuschung «Fortitude» bauten sie im Südosten Englands eine Armee auf, die es so nicht gab: Attrappen von Panzern und Landungsbooten, erfundener Funkverkehr, ein berühmter General als angeblicher Befehlshaber. Doppelagenten, die die deutsche Seite für ihre eigenen Spione hielt, meldeten passende Berichte.</p>
+      <p>Die Landung am 6. Juni 1944 kam in der Normandie. Weil die deutsche Führung sie zunächst für ein Ablenkungsmanöver hielt und den «eigentlichen» Angriff bei Calais erwartete, blieben dort noch wochenlang starke Kräfte stehen. Ein zweiter Teil der Täuschung liess einen Angriff in Norwegen erwarten und band auch dort Truppen.</p>
+    </div>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Was die Täuschung leistet</h3>
+        <p>Der Verteidiger verteilt seine Kräfte nach seiner <b>Erwartung</b>. Wer diese Erwartung lenkt, verändert die Auszahlungen, ohne einen Schuss abzugeben. Darum ist im Nullsummenspiel jede Information Gold wert, und jede falsche Information auch.</p>
+      </div>
+      <div class="card stack">
+        <h3>Die Grenze der Täuschung</h3>
+        <p>Täuschung wirkt nur, wenn sie nicht durchschaut wird. Wer immer im Osten lärmt und im Westen angreift, ist wieder berechenbar: Der Gegner verteidigt dann einfach den Westen. Darum gehört zur Finte die Mischung. Manchmal ist der Lärm im Osten echt.</p>
+      </div>
+    </div>
+    <div id="t04-strategem-frage"></div>
+  </section>
+
+  <!-- ===== 5 · Alltag und Welt ===== -->
+  <section id="alltag" class="stack">
+    <span class="eyebrow">Schritt 5 · Alltag und Welt</span>
+    <h2>Wo Unberechenbarkeit schützt</h2>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>🧾 Steuerkontrollen und Stichproben</h3>
+        <p>Die Steuerverwaltung kann nicht alle prüfen. Prüft sie nach einem festen Muster (zum Beispiel nur hohe Einkommen), weichen Schummler aus. Darum wählt sie einen Teil der Prüfungen <b>zufällig</b>. Gleiches gilt für Billettkontrollen im Zug und Lebensmittelkontrollen.</p>
+      </div>
+      <div class="card stack">
+        <h3>📝 Prüfungsfragen</h3>
+        <p>Fragt eine Dozentin jedes Jahr dieselben Kapitel, lernen alle nur diese. Wählt sie die Themen gemischt, lohnt es sich, alles zu lernen. Für dich heisst das umgekehrt: Wer auf «Das kommt sicher nicht» setzt, spielt einen festen Plan gegen eine Mischerin.</p>
+      </div>
+      <div class="card stack">
+        <h3>🚓 Verkehrskontrollen</h3>
+        <p>Stünde die Radarfalle immer am selben Ort, bremsten alle nur dort. Wechselnde Standorte machen jeden Strassenabschnitt «gefährlich». Manche Flughäfen verteilen ihre Sicherheitskontrollen mit Programmen, die nach spieltheoretischen Regeln würfeln (zum Beispiel Los Angeles seit 2007).</p>
+      </div>
+      <div class="card stack">
+        <h3>🎾 Sportanalysen</h3>
+        <p>Tennisprofis variieren den Aufschlag, Volleyballteams den Angriff, Fussballteams die Eckbälle. Videoanalysten suchen genau die Muster, die ein Team verraten. Wer seine Muster kennt, kann sie brechen.</p>
+      </div>
+      <div class="card stack">
+        <h3>💼 Verhandlung und Wettbewerb</h3>
+        <p>Rabattaktionen nach festem Kalender erziehen Kundschaft zum Warten. Firmen streuen ihre Aktionen deshalb oft. Im Wettbieten um Aufträge zeigt sich dasselbe: Wer immer gleich bietet, wird knapp unterboten.</p>
+      </div>
+      <div class="card stack">
+        <h3>🌍 Sicherheit und Militär</h3>
+        <p>Patrouillen, Konvois, Inspektionen: Überall, wo eine Seite schützen und die andere ausweichen will, ist ein festes Muster eine Schwachstelle. Das gilt auch für Cyberabwehr: Feste Wartungsfenster sind beliebte Angriffszeiten.</p>
+      </div>
+    </div>
+    <div class="note falle"><b>Falle:</b> Mischen heisst nicht «aus dem Bauch». Menschen sind schlechte Zufallsgeneratoren: Sie wechseln zu oft ab und vermeiden dreimal dasselbe. Wer wirklich unberechenbar sein will, nimmt einen Würfel, eine Münze oder eine Uhr (gerade Sekunde = links).</div>
+    <div class="note"><b>Und wo nicht?</b> Wo der Kuchen wachsen kann (Koordination, gemeinsame Termine, Fahrpläne), ist Unberechenbarkeit schädlich. Da willst du, dass alle deinen Zug kennen.</div>
+  </section>
+
+  <!-- ===== 6 · Übungen ===== -->
+  <section id="uebungen" class="stack">
+    <span class="eyebrow">Schritt 6 · Übungen</span>
+    <h2>Mischen oder festlegen?</h2>
+    <div id="t04-wf"></div>
+    <div id="t04-sort-mischen"></div>
+    <div id="t04-penaltybrett"></div>
+    <div id="t04-zahl"></div>
+    <div id="t04-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film" class="stack">
+    <span class="eyebrow">▶ Lösungsfilm</span>
+    <h2>Goldküste oder Nebelbucht?</h2>
+    <p class="prose">Ein ganzes Beispiel am Stück: Warum es kein Gleichgewicht in festen Zügen gibt, warum die Vorsichtsregel hier versagt und welches Mischverhältnis am meisten bringt.</p>
+    <div id="t04-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test" class="stack">
+    <span class="eyebrow">✓ Selbsttest</span>
+    <h2>Selbsttest</h2>
+    <div id="t04-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick" class="stack">
+    <span class="eyebrow">Σ Auf einen Blick</span>
+    <h2>Auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Im <b>Nullsummenspiel</b> ist dein Gewinn der Verlust der anderen. Information verraten ist dort fast immer ein Fehler.</li>
+      <li>Drehen sich die besten Antworten im Kreis, gibt es <b>kein Gleichgewicht in festen Zügen</b>. Wer berechenbar ist, wird ausgenutzt.</li>
+      <li>Die <b>Vorsichtsregel</b> vergleicht die schlechtesten Fälle. Zeigen beide Vorsichtsregeln auf dasselbe Feld (Sattelpunkt), genügt ein fester Plan.</li>
+      <li>Sonst hilft eine <b>gemischte Strategie</b>: zufällig nach einem festen Verhältnis. Ziel: Der Gegenseite soll es egal sein, wie sie antwortet.</li>
+      <li>Das Verhältnis hängt an den Auszahlungen: Die <b>reichere Option</b> wird stärker bewacht und darum <b>seltener</b> gespielt.</li>
+      <li>Sun Tzu und Strategem 6: <b>Täuschung</b> lenkt die Erwartung der Gegenseite. Sie wirkt nur, solange sie nicht selbst zum Muster wird.</li>
+    </ul>
+    <div class="st-pergament stack">
+      <h3>Checkliste für den Alltag</h3>
+      <ul class="st-checkliste">
+        <li>Ist das ein reiner Konflikt (Nullsumme), oder kann der Kuchen wachsen?</li>
+        <li>Was würde die Gegenseite tun, wenn sie meinen Plan genau kennte?</li>
+        <li>Habe ich ein Muster, das man ausnutzen kann? Wie sähe es von aussen aus?</li>
+        <li>Was ist mein schlechtester Fall bei jedem Plan?</li>
+        <li>Mische ich mit Würfel statt Bauchgefühl, und passt das Verhältnis zu den Auszahlungen?</li>
+        <li>Wo erwartet mich die Gegenseite, und kann ich diese Erwartung lenken?</li>
+      </ul>
+    </div>
+    <footer class="hint">Lernpfad Spieltheorie · Kapitel 4 · Eigene Beispiele. Sun Tzu und Strategem 6 sinngemäss wiedergegeben. Angaben zu Penalty-Studien und Operation Fortitude stark vereinfacht.</footer>
+  </section>
+
+</main>
+<script src="/lernpfad/lernpfad.js"></script>
+<script src="/lernpfad/st-spiel.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad, S = L.spiel;
+  const zt = (x) => L.zahlText(x, 2);
+
+  document.getElementById("t04-kasimir").innerHTML = S.sprecher("papagei", "Kasimir erklärt",
+    "<p>Krah! In den letzten Kapiteln gab es immer ein Feld, in dem alle zur Ruhe kamen. Heute nicht. Heute jagen sich Mara und Bors im Kreis wie zwei Möwen um einen Fisch. Ich zeige dir, wie du in so einem Spiel gewinnst: Nicht mit dem schlausten Plan, sondern damit, dass <b>niemand deinen Plan kennt</b>, nicht einmal du selbst vor dem Würfeln.</p>", { stimmung: "froh" });
+
+  // ---- 0 · Schatz verstecken ----
+  const SCHATZ = {
+    zeile: { name: "Mara (du)", figur: "kapitaenin", strategien: ["Höhle A", "Höhle B"] },
+    spalte: { name: "Bors", figur: "pirat", strategien: ["sucht in A", "sucht in B"] },
+    werte: [[[0, 4], [4, 0]], [[4, 0], [0, 4]]],
+    einheit: "Dublonen",
+    feldtexte: [["Bors findet die Kiste.", "Bors sucht in der leeren Höhle, die Kiste bleibt deine."],
+                ["Bors sucht in der leeren Höhle, die Kiste bleibt deine.", "Bors findet die Kiste."]]
+  };
+  S.spielbrett("#t04-schatz", Object.assign({}, SCHATZ, {
+    titel: "Der Schatz in den Nebelklippen",
+    modi: ["spielen", "lesen"], gegner: "gierig"
+  }));
+  document.getElementById("t04-erkenntnis").innerHTML = S.sprecher("papagei", "Kasimir",
+    "<p>Hast du Bors durchschaut? Er sucht <b>immer dort, wo du beim letzten Mal versteckt hast</b>. Wer das merkt, wechselt jede Nacht und gewinnt jedes Mal. Bors ist berechenbar, und Berechenbarkeit wird ausgenutzt. Aber Vorsicht: Wechselst du streng ab, hast <i>du</i> ein Muster. Ein klügerer Gegner würde es finden. Genau so einen triffst du in Schritt 3.</p><p>Und siehst du die Summe? In jedem Feld bekommen beide zusammen 4 Dublonen. Was du gewinnst, verliert Bors.</p>", { klein: true });
+
+  // ---- 1 · Sortierer Nullsumme ----
+  L.sortierer("#t04-sort-nullsumme", {
+    frage: "Nullsummenspiel oder kann der Kuchen wachsen?",
+    kategorien: ["Nullsumme", "Kuchen kann wachsen"],
+    elemente: [
+      { html: "Penalty im Fussball", kategorie: "Nullsumme", erklaerung: "Ein Tor für die Schützin ist ein Gegentor für die Torhüterin." },
+      { html: "Zwei Firmen entwickeln gemeinsam eine Batterie", kategorie: "Kuchen kann wachsen", erklaerung: "Gelingt die Entwicklung, gewinnen beide." },
+      { html: "Zwei Parteien kämpfen um den einzigen Sitz eines Wahlkreises", kategorie: "Nullsumme", erklaerung: "Der Sitz geht an genau eine Partei." },
+      { html: "Eine Lohnverhandlung, bei der eine Stelle besetzt werden soll", kategorie: "Kuchen kann wachsen", erklaerung: "Kommt keine Einigung zustande, verlieren beide: die Firma eine gute Kraft, du eine Stelle." },
+      { html: "Schach", kategorie: "Nullsumme", erklaerung: "Was für Weiss gut ist, ist für Schwarz schlecht." },
+      { html: "Zwei Staaten bauen gemeinsam eine Brücke über den Grenzfluss", kategorie: "Kuchen kann wachsen", erklaerung: "Die Brücke nützt beiden." },
+      { html: "Schmugglerin gegen Küstenwache", kategorie: "Nullsumme", erklaerung: "Jede durchgebrachte Ladung ist ein Verlust für die Küstenwache." }
+    ]
+  });
+
+  // ---- 2 · Karussell ----
+  S.spielbrett("#t04-karussell", Object.assign({}, SCHATZ, {
+    titel: "Schatzspiel: Wo bleibt das Gleichgewicht?",
+    zeile: { name: "Mara", figur: "kapitaenin", strategien: ["Höhle A", "Höhle B"] },
+    modi: ["antworten", "gleichgewicht", "lesen"],
+    erklaerung: "Die besten Antworten jagen sich im Kreis: A → A → B → B → A. Ein fester Plan wird immer bestraft."
+  }));
+
+  document.getElementById("t04-gouverneur").innerHTML = S.sprecher("gouverneur", "Gouverneur Albrecht",
+    "<p>Ich habe nur eine Patrouille übrig. Schicke ich sie nach Norden oder nach Süden? Ich nehme das, was mir im schlimmsten Fall am wenigsten schadet.</p>", { stimmung: "sorge" });
+
+  L.schrittAufgabe("#t04-vorsicht-schritte", {
+    titel: "Die Vorsichtsregel in drei Schritten",
+    aufgabe: "<p>Mara bringt Kisten durch: <b>Küstenroute</b> 2 (Patrouille Nord) oder 1 (Patrouille Süd). <b>Hochsee</b> 3 oder 4. <b>Riffpassage</b> 1 oder 6. Welche Route wählt eine vorsichtige Mara? Und wohin schickt ein vorsichtiger Gouverneur seine Patrouille?</p>",
+    schritte: [
+      { html: "Maras schlechtester Fall je Route: Küste <b>1</b>, Hochsee <b>3</b>, Riff <b>1</b>.", warum: "Für jede Route nimmst du die kleinere Zahl: Das passiert, wenn der Gouverneur genau richtig rät." },
+      { html: "Der beste schlechteste Fall ist <b>3</b>: Mara wählt die <b>Hochsee</b>.", warum: "Die Hochsee garantiert mindestens 3 Kisten, egal wohin die Patrouille fährt. Mehr kann Mara sich nicht sichern." },
+      { html: "Der Gouverneur fragt umgekehrt: Wie viele Kisten verliere ich höchstens? Nord: höchstens <b>3</b> (bei Hochsee). Süd: höchstens <b>6</b> (bei Riff). Er schickt die Patrouille nach <b>Norden</b>.", warum: "Für ihn ist jede Kiste ein Verlust. Er wählt die Spalte, in der sein schlimmster Verlust am kleinsten ist." },
+      { html: "Beide Vorsichtsregeln treffen sich im Feld <b>Hochsee / Nord</b>: Mara 3 Kisten. Das ist ein Sattelpunkt und zugleich das Gleichgewicht.", warum: "Weicht Mara ab, bekommt sie weniger (2 oder 1). Weicht der Gouverneur ab, verliert er mehr (4). Keiner will weg." }
+    ]
+  });
+
+  S.spielbrett("#t04-konvoi", {
+    titel: "Der Beutekonvoi",
+    frage: "<p>Prüf die Rechnung: Suche das Gleichgewicht. Spiel danach gegen einen vorsichtigen Gouverneur.</p>",
+    zeile: { name: "Mara", figur: "kapitaenin", strategien: ["Küstenroute", "Hochsee", "Riffpassage"] },
+    spalte: { name: "Gouverneur", figur: "gouverneur", strategien: ["Patrouille Nord", "Patrouille Süd"] },
+    werte: [[[2, -2], [1, -1]], [[3, -3], [4, -4]], [[1, -1], [6, -6]]],
+    einheit: "Kisten", einheit_eins: "Kiste",
+    modi: ["gleichgewicht", "lesen", "spielen"], gegner: "vorsichtig",
+    erklaerung: "Hier zeigen beide Vorsichtsregeln auf dasselbe Feld. Ein fester Plan genügt."
+  });
+
+  L.auswahl("#t04-frage-vorsicht", {
+    frage: "Im Schatzspiel (Kiste 4 Dublonen) wendet Mara die Vorsichtsregel auf ihre festen Pläne an. Was kommt heraus?",
+    optionen: ["Höhle A ist besser, weil dort der schlechteste Fall 4 ist", "Beide Höhlen haben als schlechtesten Fall 0. Die Regel hilft nicht", "Höhle B ist besser", "Mara sollte gar nichts verstecken"],
+    richtig: 1,
+    erklaerung: "Bei jedem festen Plan kann Bors richtig raten: schlechtester Fall 0 Dublonen, bei A wie bei B. Erst wenn Mara würfelt, kann Bors nicht mehr sicher richtig raten. Mit 50:50 findet er die Kiste im Schnitt nur jede zweite Nacht: Mara behält im Schnitt 2 Dublonen pro Nacht."
+  });
+
+  // ---- 3 · Mischer ----
+  S.mischer("#t04-mischer", {
+    titel: "Schmuggel an der Küstenwache vorbei",
+    frage: "<p>30 Nächte. Jede Nacht wählst du eine Passage. Die Küstenwache wartet dort, wo sie dich nach deinen bisherigen Gewohnheiten erwartet.</p>",
+    links: "Nordpassage", rechts: "Südpassage",
+    gegnerin: "Die Küstenwache",
+    runden: 30,
+    start: "Wähle Nacht für Nacht eine Passage. Die Küstenwache merkt sich deine Gewohnheiten.",
+    erklaerung: "Merke: Gegen eine lernende Gegenseite schützt dich nur echter Zufall. 50:50 ist hier richtig, weil beide Passagen gleich viel wert sind."
+  });
+  document.getElementById("t04-mischer-kasimir").innerHTML = S.sprecher("papagei", "Kasimir",
+    "<p>Was hast du gesehen? Mit 90 % Nordpassage wartet die Küstenwache fast immer im Norden: Du kommst nur selten durch. Mit 50 % kann sie raten, wie sie will: Sie erwischt dich nur etwa jede zweite Nacht. Mehr kann sie nicht erreichen, und weniger musst du nicht hinnehmen. Das ist der Sinn einer <b>gemischten Strategie</b>: Du garantierst dir einen Schnitt, den kein Gegner drücken kann.</p>", { klein: true });
+
+  // ---- 3 · Kipp-Regler (reiche vs. arme Route) ----
+  (function () {
+    const beute = document.getElementById("t04-beute"), anteil = document.getElementById("t04-anteil");
+    const beuteW = document.getElementById("t04-beute-wert"), anteilW = document.getElementById("t04-anteil-wert");
+    const werte = document.getElementById("t04-kipp-werte"), ergebnis = document.getElementById("t04-kipp-ergebnis");
+    const svg = document.getElementById("t04-kipp-svg");
+    const ARM = 2;
+    const B = 320, H = 180, X0 = 34, X1 = 308, Y0 = 150, Y1 = 14;
+    function rechne() {
+      const R = Number(beute.value), p = Number(anteil.value) / 100;
+      beuteW.textContent = R + " Gold"; anteilW.textContent = Math.round(p * 100) + " %";
+      const wacheReich = (1 - p) * ARM;     // Wache an der Goldküste: nur die armen Fahrten kommen durch
+      const wacheArm = p * R;               // Wache in der Nebelbucht: nur die reichen Fahrten kommen durch
+      const bleibt = Math.min(wacheReich, wacheArm);
+      const pBest = ARM / (R + ARM), wertBest = pBest * R, qBest = R / (R + ARM);
+      werte.innerHTML =
+        '<div class="' + (wacheReich <= wacheArm ? "t04-min" : "") + '"><dt>Wache immer an der Goldküste</dt><dd>' + zt(wacheReich) + " Gold</dd></div>" +
+        '<div class="' + (wacheArm <= wacheReich ? "t04-min" : "") + '"><dt>Wache immer in der Nebelbucht</dt><dd>' + zt(wacheArm) + " Gold</dd></div>" +
+        "<div><dt>Dir bleibt im Schnitt pro Nacht</dt><dd>" + zt(bleibt) + " Gold</dd></div>";
+      const ymax = Math.max(R, ARM);
+      const x = (q) => X0 + q * (X1 - X0), y = (v) => Y0 - (v / ymax) * (Y0 - Y1);
+      let s = '<title id="t04-kipp-titel">Gold im Schnitt je nach Anteil Goldküste</title>';
+      s += '<line class="achse" x1="' + X0 + '" y1="' + Y0 + '" x2="' + X1 + '" y2="' + Y0 + '"/><line class="achse" x1="' + X0 + '" y1="' + Y0 + '" x2="' + X0 + '" y2="' + Y1 + '"/>';
+      [0, 0.25, 0.5, 0.75, 1].forEach((q) => { s += '<text x="' + x(q) + '" y="' + (Y0 + 13) + '" text-anchor="middle">' + Math.round(q * 100) + " %</text>"; });
+      [0, ymax / 2, ymax].forEach((v) => { s += '<text x="' + (X0 - 4) + '" y="' + (y(v) + 3) + '" text-anchor="end">' + zt(v) + "</text>"; });
+      s += '<text x="' + ((X0 + X1) / 2) + '" y="' + (H - 2) + '" text-anchor="middle">Anteil Goldküste</text>';
+      s += '<polyline class="t04-huelle" points="' + x(0) + "," + y(0) + " " + x(pBest) + "," + y(wertBest) + " " + x(1) + "," + y(0) + '"/>';
+      s += '<line class="t04-linie-a" x1="' + x(0) + '" y1="' + y(ARM) + '" x2="' + x(1) + '" y2="' + y(0) + '"/>';
+      s += '<line class="t04-linie-b" x1="' + x(0) + '" y1="' + y(0) + '" x2="' + x(1) + '" y2="' + y(R) + '"/>';
+      s += '<line class="t04-jetzt" x1="' + x(p) + '" y1="' + Y0 + '" x2="' + x(p) + '" y2="' + Y1 + '"/>';
+      s += '<circle class="t04-du" cx="' + x(p) + '" cy="' + y(bleibt) + '" r="4.5"/>';
+      s += '<circle class="t04-best" cx="' + x(pBest) + '" cy="' + y(wertBest) + '" r="6"/>';
+      svg.innerHTML = s;
+      svg.setAttribute("aria-label", "Bei " + Math.round(p * 100) + " Prozent Goldküste bleiben dir im Schnitt " + zt(bleibt) + " Gold. Bestes Verhältnis etwa " + Math.round(pBest * 100) + " Prozent mit " + zt(wertBest) + " Gold.");
+      let urteil;
+      if (Math.abs(p - pBest) < 0.03) urteil = '<span class="marke">✓</span> Sehr nah am besten Verhältnis!';
+      else if (p > pBest) urteil = "Du fährst die Goldküste <b>zu oft</b>. Die Küstenwache wartet einfach dort.";
+      else urteil = "Du fährst die Goldküste <b>zu selten</b>. Die Küstenwache wartet in der Nebelbucht.";
+      ergebnis.innerHTML = urteil + " Am meisten bleibt dir bei etwa <b>" + Math.round(pBest * 100) + " %</b> Goldküste: im Schnitt <b>" + zt(wertBest) + " Gold</b> pro Nacht, egal wo die Wache wartet (goldener Punkt). Die kluge Küstenwache wartet dann ihrerseits in etwa <b>" + Math.round(qBest * 100) + " %</b> der Nächte an der Goldküste." +
+        (R === ARM ? " Bei gleicher Beute ist 50:50 richtig." : "");
+    }
+    beute.addEventListener("input", rechne);
+    anteil.addEventListener("input", rechne);
+    rechne();
+  })();
+
+  // ---- 3 · Stein, Schere, Papier ----
+  (function () {
+    const NAME = ["Stein", "Schere", "Papier"], ZEICHEN = ["✊", "✌", "✋"];
+    const RUNDEN = 20;
+    const schlaegt = (a, b) => (a === 0 && b === 1) || (a === 1 && b === 2) || (a === 2 && b === 0);
+    const konter = (h) => (h + 2) % 3; // Papier (2) schlägt Stein (0), Stein schlägt Schere, Schere schlägt Papier
+    const tafel = document.getElementById("t04-ssp-tafel"), feld = document.getElementById("t04-ssp-feld");
+    const info = document.getElementById("t04-ssp-info"), verlauf = document.getElementById("t04-ssp-verlauf");
+    const knoepfe = Array.from(document.querySelectorAll("#t04-ssp [data-hand]"));
+    let zuege, punkte;
+    function vorhersage() {
+      const n = zuege.length;
+      if (n < 2) return Math.floor(Math.random() * 3);
+      const z = [0, 0, 0];
+      const letzte = zuege[n - 1];
+      for (let i = 1; i < n; i++) if (zuege[i - 1] === letzte) z[zuege[i]] += 2;
+      zuege.slice(-6).forEach((h) => (z[h] += 1));
+      const max = Math.max(...z);
+      const kandidaten = [0, 1, 2].filter((h) => z[h] === max);
+      return kandidaten[Math.floor(Math.random() * kandidaten.length)];
+    }
+    function zeichne() {
+      tafel.innerHTML = '<span class="st-konto">Runde <b>' + zuege.length + " / " + RUNDEN + '</b></span><span class="st-konto">Du <b>' + punkte.du + '</b></span><span class="st-konto">Bors <b>' + punkte.bors + '</b></span><span class="st-konto">Unentschieden <b>' + punkte.u + "</b></span>";
+    }
+    function runde(h, still) {
+      if (zuege.length >= RUNDEN) return;
+      const b = konter(vorhersage());
+      zuege.push(h);
+      let erg, cls;
+      if (h === b) { punkte.u++; erg = "Unentschieden"; cls = "u"; }
+      else if (schlaegt(h, b)) { punkte.du++; erg = "Du gewinnst"; cls = "s"; }
+      else { punkte.bors++; erg = "Bors gewinnt"; cls = "n"; }
+      verlauf.insertAdjacentHTML("beforeend", '<li class="' + cls + '" title="' + NAME[h] + " gegen " + NAME[b] + '">' + (cls === "s" ? "S" : cls === "n" ? "N" : "U") + "</li>");
+      if (!still) {
+        feld.innerHTML = '<div><span class="t04-hand">' + ZEICHEN[h] + "</span><small>Du: " + NAME[h] + '</small></div><span class="t04-vs">gegen</span><div><span class="t04-hand">' + ZEICHEN[b] + "</span><small>Bors: " + NAME[b] + "</small></div>";
+        info.innerHTML = "Du zeigst " + NAME[h] + ", Bors zeigt " + NAME[b] + ": <b>" + erg + "</b>.";
+      }
+      zeichne();
+      if (zuege.length >= RUNDEN) fertig();
+    }
+    function fertig() {
+      const d = punkte.bors - punkte.du;
+      info.innerHTML = "<b>Ergebnis nach " + RUNDEN + " Runden:</b> Du " + punkte.du + ", Bors " + punkte.bors + ", unentschieden " + punkte.u + ". " +
+        (d >= 3 ? "Bors hat ein Muster bei dir gefunden. Typisch: Menschen wiederholen eine Hand nach einem Sieg oder wechseln nach einer Niederlage." :
+         d <= -3 ? "Stark! Bors hat dich falsch gelesen, oder du hast <i>sein</i> Muster ausgenutzt. Er spielt nämlich immer gegen deine häufigste Fortsetzung." :
+         "Ungefähr ausgeglichen: Bors fand kein brauchbares Muster. Mehr kann man gegen einen guten Gegner nicht erwarten.") +
+        " Gegen einen lernenden Gegner ist die sichere Mischung: jede Hand gleich oft, ohne Regel.";
+      knoepfe.forEach((k) => (k.disabled = true));
+      const w = document.getElementById("t04-ssp-wuerfel"); if (document.activeElement && document.activeElement.disabled) w.focus();
+    }
+    function neu() {
+      zuege = []; punkte = { du: 0, bors: 0, u: 0 };
+      verlauf.innerHTML = ""; feld.innerHTML = '<div><span class="t04-hand">?</span><small>Du</small></div><span class="t04-vs">gegen</span><div><span class="t04-hand">?</span><small>Bors</small></div>';
+      info.innerHTML = "Wähle deine Hand. Stein schlägt Schere, Schere schlägt Papier, Papier schlägt Stein.";
+      knoepfe.forEach((k) => (k.disabled = false));
+      zeichne();
+    }
+    knoepfe.forEach((k) => k.addEventListener("click", () => runde(Number(k.getAttribute("data-hand")))));
+    document.getElementById("t04-ssp-neu").addEventListener("click", neu);
+    document.getElementById("t04-ssp-wuerfel").addEventListener("click", () => {
+      neu();
+      for (let i = 0; i < RUNDEN; i++) runde(Math.floor(Math.random() * 3), true);
+      feld.innerHTML = '<div><span class="t04-hand">🎲</span><small>Würfel</small></div><span class="t04-vs">gegen</span><div><span class="t04-hand">' + S.figur("pirat", { groesse: 40 }) + "</span><small>Bors</small></div>";
+    });
+    neu();
+  })();
+
+  // ---- 4 · Strategem-Frage ----
+  L.auswahl("#t04-strategem-frage", {
+    frage: "Warum wäre Operation Fortitude gescheitert, wenn die Alliierten bei jeder Landung immer dort Lärm gemacht hätten, wo sie <i>nicht</i> angriffen?",
+    optionen: ["Weil Lärm teuer ist", "Weil die Täuschung dann selbst ein Muster wäre: Der Gegner hätte einfach den ruhigen Ort verteidigt", "Weil Sun Tzu Täuschung verbietet", "Weil der Gegner keinen Funk abhörte"],
+    richtig: 1,
+    erklaerung: "Eine Finte, die immer gleich funktioniert, ist berechenbar. Ablenkung wirkt nur, wenn die Gegenseite nicht weiss, ob der Lärm echt ist. Deshalb gehört zur Täuschung die Mischung."
+  });
+
+  // ---- 6 · Übungen ----
+  L.wahrFalsch("#t04-wf", {
+    titel: "Stimmt das?",
+    aussagen: [
+      { html: "In einem Nullsummenspiel kann ein Gespräch beiden Seiten helfen, mehr zu bekommen.", wahr: false, erklaerung: "Die Summe ist fest. Ein Gespräch kann höchstens verteilen oder täuschen, aber den Kuchen nicht vergrössern." },
+      { html: "Das Schatzspiel hat kein Gleichgewicht in festen Zügen.", wahr: true, erklaerung: "Die besten Antworten drehen sich im Kreis. In jedem Feld will einer der beiden wechseln." },
+      { html: "Gemischte Strategie heisst: Man entscheidet spontan aus dem Bauch.", wahr: false, erklaerung: "Gemischt heisst: zufällig nach einem festen Verhältnis. Das Bauchgefühl hat Muster, ein Würfel nicht." },
+      { html: "Die Vorsichtsregel wählt den Plan, dessen schlechtester Fall am besten ist.", wahr: true, erklaerung: "Genau: für jeden Plan den schlechtesten Fall suchen, dann den besten davon nehmen." },
+      { html: "Ist eine Route doppelt so viel wert, sollte die Schmugglerin sie doppelt so oft fahren.", wahr: false, erklaerung: "Im Gegenteil: Die reichere Route wird stärker bewacht. Bei 6 gegen 2 Gold fährt die kluge Schmugglerin die reiche Route nur etwa jede vierte Nacht." },
+      { html: "Gibt es einen Sattelpunkt, lohnt sich Mischen nicht.", wahr: true, erklaerung: "Am Sattelpunkt treffen sich die Vorsichtsregeln beider Seiten. Wer davon abweicht, verschlechtert sich." },
+      { html: "Gegen eine lernende Gegnerin ist strenges Abwechseln (links, rechts, links …) eine gute Mischung.", wahr: false, erklaerung: "Abwechseln ist ein Muster. Die Küstenwache aus Schritt 3 erkennt es nach wenigen Runden." }
+    ]
+  });
+
+  L.sortierer("#t04-sort-mischen", {
+    frage: "Lohnt sich hier Unberechenbarkeit, oder ist ein fester, bekannter Plan besser?",
+    kategorien: ["mischen", "fester Plan"],
+    elemente: [
+      { html: "Torhüterin beim Penalty", kategorie: "mischen", erklaerung: "Reiner Konflikt: Wer immer gleich springt, wird ausgerechnet." },
+      { html: "Zwei Freunde wollen sich in einer fremden Stadt treffen", kategorie: "fester Plan", erklaerung: "Koordination: Beide gewinnen, wenn der Treffpunkt klar ist. Verraten hilft hier!" },
+      { html: "Billettkontrolleure im Tram", kategorie: "mischen", erklaerung: "Feste Kontrollzeiten würden Schwarzfahrer anlocken." },
+      { html: "Der Fahrplan der Bahn", kategorie: "fester Plan", erklaerung: "Alle sollen wissen, wann der Zug fährt. Kein Konflikt mit den Fahrgästen." },
+      { html: "Pokerspielerin, die mit starken Karten erhöht", kategorie: "mischen", erklaerung: "Erhöht sie nur mit starken Karten, steigen alle aus. Darum blufft sie manchmal." },
+      { html: "Die Feuerwehr wählt den Weg zum Brand", kategorie: "fester Plan", erklaerung: "Das Feuer denkt nicht nach. Ohne Gegenspieler gibt es keinen Grund, unberechenbar zu sein: schnellster Weg." },
+      { html: "Aufschlag im Tennis", kategorie: "mischen", erklaerung: "Die Gegnerin stellt sich auf deine Lieblingsecke ein." },
+      { html: "Standort der Radarkontrolle", kategorie: "mischen", erklaerung: "Wechselnde Standorte machen jede Strecke zur möglichen Kontrollstrecke." }
+    ]
+  });
+
+  S.spielbrett("#t04-penaltybrett", {
+    titel: "Übung: Der Penalty",
+    frage: "<p>Tore von 10 Versuchen. Die Schützin trifft rechts unten etwas schlechter. Die Torhüterin springt nach links oder rechts (beides aus Sicht der Schützin). Gibt es ein Gleichgewicht in festen Zügen?</p>",
+    zeile: { name: "Schützin", figur: "matrose", strategien: ["links schiessen", "rechts schiessen"] },
+    spalte: { name: "Torhüterin", figur: "buerger", strategien: ["springt links", "springt rechts"] },
+    werte: [[[4, 6], [9, 1]], [[8, 2], [5, 5]]],
+    einheit: "Punkte", einheit_eins: "Punkt",
+    modi: ["gleichgewicht", "antworten", "lesen"],
+    erklaerung: "Wie beim Schatz drehen sich die besten Antworten im Kreis. Beide müssen mischen, und die Schützin wird ihre schwächere Seite trotzdem nutzen, nur seltener."
+  });
+
+  L.zahlAufgabe("#t04-zahl", {
+    titel: "Im Schnitt gerechnet",
+    frage: "<p>Die Küstenwache wartet <b>jede</b> Nacht an der Goldküste (6 Gold). Du fährst die Goldküste in einer von vier Nächten, sonst die Nebelbucht (2 Gold). Wie viel Gold bekommst du <b>im Schnitt pro Nacht</b>?</p>",
+    antwort: 1.5, toleranz: 0.01, einheit: "Gold",
+    hinweise: ["An der Goldküste wirst du immer erwischt: 0 Gold.", "In drei von vier Nächten fährst du die Nebelbucht. Dort ist es frei."],
+    loesungsweg: ["Goldküste (1 von 4 Nächten): erwischt, 0 Gold.", "Nebelbucht (3 von 4 Nächten): frei, je 2 Gold.", "Über vier Nächte: 0 + 2 + 2 + 2 = 6 Gold, also im Schnitt 6 geteilt durch 4 = 1.5 Gold pro Nacht.", "Prüfe: Wartete die Wache stattdessen immer in der Nebelbucht, bekämst du in einer von vier Nächten 6 Gold, also auch 1.5 im Schnitt. Genau darum ist «jede vierte Nacht» das beste Verhältnis."]
+  });
+
+  L.reflexion("#t04-reflexion", {
+    titel: "Dein Muster",
+    frage: "<p>Denk an eine Lage, in der jemand dein Verhalten ausnutzen könnte: Wann du lernst, wie du verhandelst, wann du im Spiel angreifst, welche Ausrede du benutzt. <b>Welches Muster</b> hast du? <b>Wer</b> könnte es ausnutzen? <b>Wie</b> würdest du sinnvoll mischen, und wo wäre ein fester Plan besser?</p>",
+    musterloesung: "<p><b>Beispiel Verhandlung im Nebenjob:</b> Ich gebe immer beim zweiten Gegenangebot nach. Mein Chef hat das gemerkt und macht absichtlich zwei Runden. Lösung: Ich lege vorher fest, wann ich nachgebe, und würfle, ob ich schon in der ersten Runde hart bleibe.</p><p><b>Wo fest besser ist:</b> Bei Abmachungen im Team. Dort will ich berechenbar sein, weil wir zusammen gewinnen.</p>",
+    kriterien: [
+      { text: "Konkretes eigenes Muster beschrieben", punkte: 1 },
+      { text: "Gegenseite und ihr Vorteil benannt", punkte: 1 },
+      { text: "Mischen mit Zufall statt Bauchgefühl vorgeschlagen", punkte: 1 },
+      { text: "Unterschieden, wo ein fester Plan besser ist (Nichtnullsumme)", punkte: 1 }
+    ]
+  });
+
+  // ---- Lösungsfilm ----
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const brett = (hl) => {
+    const c = (k, t) => "<td" + (hl === k ? ' class="lit"' : "") + ">" + t + "</td>";
+    return '<table class="tabelle"><thead><tr><th>Du ↓ · Wache →</th><th>wartet Goldküste</th><th>wartet Nebelbucht</th></tr></thead><tbody>' +
+      "<tr><th>Goldküste</th>" + c(0, "0") + c(1, "6") + "</tr><tr><th>Nebelbucht</th>" + c(2, "2") + c(3, "0") + "</tr></tbody></table>";
+  };
+  const mix = (zeilen, hl) => '<table class="tabelle"><thead><tr><th>Anteil Goldküste</th><th>Wache an Goldküste</th><th>Wache in Nebelbucht</th><th>dir bleibt</th></tr></thead><tbody>' +
+    zeilen.map((z, n) => "<tr" + (n === hl ? ' class="an"' : "") + "><td>" + z[0] + "</td><td>" + z[1] + "</td><td>" + z[2] + "</td><td><b>" + z[3] + "</b></td></tr>").join("") + "</tbody></table>";
+  const Z50 = ["50 %", "1", "3", "1"], Z10 = ["10 %", "1.8", "0.6", "0.6"], Z25 = ["25 %", "1.5", "1.5", "1.5"];
+  L.film("#t04-film", {
+    phasen: ["1 · Brett", "2 · Feste Pläne", "3 · Mischen", "4 · Lehre"],
+    texte: [
+      'Die <span data-ph="reich">Goldküste bringt 6 Gold</span>, die <span data-ph="arm">Nebelbucht 2 Gold</span>.',
+      'Die Küstenwache bewacht <span data-ph="wache">eine der beiden Routen</span>. Wer erwischt wird, <span data-ph="null">verliert die Ladung</span>.'
+    ],
+    woerterbuch: ["Goldküste: 6 Gold", "Nebelbucht: 2 Gold", "erwischt: 0 Gold", "Wache: eine Route pro Nacht"],
+    beschriftung: { woerterbuch: "Notizen", formel: "Tafel" },
+    szenen: [
+      { say: "Eine Schmugglerin, zwei Routen, eine Küstenwache. Wie oft fährst du die reiche Route? Wir lösen das in vier Schritten." },
+      { ph: 0, sent: 0, hl: ["reich", "arm"], dict: 2, say: "Die Goldküste bringt 6 Gold, die Nebelbucht nur 2. Das ist der einzige Unterschied zum Spiel in Schritt 3." },
+      { ph: 0, sent: 1, hl: ["wache", "null"], dict: 4, say: "Die Küstenwache bewacht pro Nacht eine Route. Wer ihr begegnet, verliert die Ladung. Was du durchbringst, fehlt der Krone: ein Nullsummenspiel." },
+      { ph: 0, f: NW(brett()), say: "Das Spielbrett zeigt dein Gold. Die Wache will, dass diese Zahl möglichst klein ist." },
+      { ph: 1, f: brett(0), say: "Fährst du immer die Goldküste? Dann wartet die Wache dort, und du bekommst nichts." },
+      { ph: 1, f: brett(3), say: "Fährst du darum immer die Nebelbucht, wartet die Wache eben dort. Wieder nichts. Die besten Antworten drehen sich im Kreis, kein Feld bleibt stehen." },
+      { ph: 1, f: brett(), say: "Die Vorsichtsregel für feste Pläne: Goldküste schlechtester Fall 0, Nebelbucht schlechtester Fall 0. Beide gleich schlecht. Feste Pläne helfen hier nicht." },
+      { ph: 2, f: NW(mix([Z50])), say: "Jetzt mischen. Halbe-halbe: Wartet die Wache an der Goldküste, kommst du in der Hälfte der Nächte mit 2 Gold durch. Im Schnitt 1 Gold. Wartet sie in der Nebelbucht, im Schnitt 3." },
+      { ph: 2, f: mix([Z50], 0), say: "Die Wache ist nicht dumm. Sie wartet an der Goldküste, und dir bleibt im Schnitt nur 1 Gold. Du fährst die reiche Route zu oft." },
+      { ph: 2, f: mix([Z50, Z10], 1), say: "Also nur jede zehnte Nacht Goldküste? Wartet die Wache an der Goldküste, bekommst du 1.8. Wartet sie in der Nebelbucht, nur 0.6. Sie wartet in der Nebelbucht: 0.6. Jetzt zu selten." },
+      { ph: 2, f: mix([Z50, Z10, Z25], 2), say: "Jede vierte Nacht Goldküste: Egal wo die Wache wartet, im Schnitt 1.5 Gold. Das ist mehr als bei jedem anderen Verhältnis." },
+      { ph: 2, f: mix([Z50, Z10, Z25], 2), say: "Der Trick: Du mischst so, dass es der Wache egal ist, wo sie wartet. Dann kann sie dich nicht mehr ausnutzen." },
+      { ph: 3, f: mix([Z50, Z10, Z25], 2), say: "Die Überraschung: Die reiche Route fährst du seltener als die arme. Weil die Wache dort hingehört, ist die arme Route oft frei." },
+      { ph: 3, say: "Und die Wache? Sie mischt auch. Sie wartet in drei von vier Nächten an der Goldküste. Dann ist es für dich egal, welche Route du nimmst: 1.5 Gold so oder so." },
+      { ph: 3, say: "Die Lehre: Unberechenbar heisst nicht halbe-halbe. Das Verhältnis hängt an den Auszahlungen. Und gewürfelt wird mit einem Würfel, nicht aus dem Bauch. Jetzt prüf dich im Selbsttest.", end: true }
+    ]
+  });
+
+  // ---- Selbsttest ----
+  L.selbsttest("#t04-selbsttest", {
+    fragen: [
+      { q: "Was kennzeichnet ein Nullsummenspiel?", o: ["Beide bekommen nichts", "Was einer gewinnt, verliert der andere", "Es gibt immer ein Unentschieden", "Es wird nur einmal gespielt"], a: 1, e: "Der Kuchen bleibt gleich gross. Ob die Summe 0 oder immer 4 Dublonen ist, spielt keine Rolle." },
+      { q: "Warum hat das Schatzspiel kein Gleichgewicht in festen Zügen?", o: ["Weil Bors zu dumm ist", "Weil die besten Antworten im Kreis laufen: In jedem Feld will einer wechseln", "Weil die Kiste zu klein ist", "Weil Mara zuerst zieht"], a: 1, e: "Findet Bors die Kiste, will Mara wechseln. Findet er sie nicht, will Bors wechseln. Kein Feld ist stabil." },
+      { q: "Beim Beutekonvoi bringt die Küstenroute 2 oder 1 Kiste, die Hochsee 3 oder 4, die Riffpassage 1 oder 6. Was wählt Mara nach der Vorsichtsregel?", o: ["Küstenroute", "Hochsee", "Riffpassage", "Es ist egal"], a: 1, e: "Schlechteste Fälle: 1, 3, 1. Der beste schlechteste Fall ist 3: Hochsee." },
+      { q: "Was ist eine gemischte Strategie?", o: ["Zwei Strategien gleichzeitig spielen", "Zufällig zwischen Zügen wählen, nach einem festen Verhältnis", "Immer abwechseln", "Nach Gefühl entscheiden"], a: 1, e: "Ein Würfel nach festem Verhältnis. Abwechseln und Gefühl erzeugen Muster." },
+      { q: "Goldküste 6 Gold, Nebelbucht 2 Gold. Wie oft fährt die kluge Schmugglerin die Goldküste?", o: ["Immer", "Etwa jede vierte Nacht", "Etwa drei von vier Nächten", "Nie"], a: 1, e: "Bei jeder vierten Nacht bringt sie im Schnitt 1.5 Gold durch, egal wo die Wache wartet. Die reiche Route wird stärker bewacht, also seltener gefahren." },
+      { q: "Und wie oft wartet die kluge Küstenwache an der Goldküste?", o: ["In etwa einer von vier Nächten", "Halbe-halbe", "In etwa drei von vier Nächten", "Immer"], a: 2, e: "Wartet sie in drei von vier Nächten an der Goldküste, bringt dir jede Route im Schnitt 1.5 Gold. Sie schützt das Wertvollere häufiger." },
+      { q: "Stein, Schere, Papier gegen einen lernenden Gegner: Was ist die sicherste Spielweise?", o: ["Immer Stein", "Streng abwechseln", "Jede Hand gleich oft, rein zufällig", "Nach einem Sieg dieselbe Hand wiederholen"], a: 2, e: "Jede Regel ist ein Muster, das ausgenutzt werden kann. Nur echter Zufall mit gleichen Anteilen schützt." },
+      { q: "Was meint Strategem 6 «Im Osten lärmen, im Westen angreifen»?", o: ["Laut sein schreckt den Gegner ab", "Die Erwartung des Gegners auf den falschen Ort lenken und am entblössten Ort zuschlagen", "Immer von Westen angreifen", "Zwei Angriffe gleichzeitig führen"], a: 1, e: "Ablenkung: Der Gegner bündelt seine Kräfte dort, wo er den Angriff erwartet." },
+      { q: "Was war das Ziel von Operation Fortitude 1944?", o: ["Die deutsche Führung glauben lassen, der Hauptangriff komme bei Pas-de-Calais (und in Norwegen)", "Die Normandie besonders laut anzukündigen", "Einen Waffenstillstand auszuhandeln", "Die eigenen Truppen zu üben"], a: 0, e: "Scheinarmee, Attrappen, Funkverkehr und Doppelagenten banden deutsche Truppen fern der Normandie." },
+      { q: "Warum wählt die Steuerverwaltung einen Teil der Prüfungen zufällig aus?", o: ["Weil sie zu wenig Personal hat", "Weil ein festes Prüfmuster Schummlern zeigt, wo sie sicher sind", "Weil Zufall gerechter aussieht", "Weil es das Gesetz so will"], a: 1, e: "Ein bekanntes Muster wird ausgenutzt. Zufällige Stichproben machen jeden Fall zu einem möglichen Prüffall." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

@@ -5,7 +5,9 @@
 // Anzeigehilfen des Leitstands: Zahlen (Schweizer Format), Ampeln, Bezeichnungen, Stationen.
 
 import pmgtFach from "@/content/lernseiten/pmgt/fach.json"
-import type { Ampel, AreaId, Channel, Rating, TaskStatus, TeamPhase } from "@/lib/simulation/core"
+import type { Ampel, Channel, Rating, TaskStatus, TeamPhase } from "@/lib/simulation/core"
+import type { IconName } from "./Icon"
+import type { DisplayStatus } from "./logic"
 
 /** CHF 168'400 (gerundet auf Franken, Apostroph als Tausendertrennzeichen) */
 export function chf(value: number): string {
@@ -38,20 +40,29 @@ export function tag(value: number): string {
 export const AMPEL_FORM: Record<Ampel, string> = { gruen: "●", gelb: "▲", rot: "■" }
 export const AMPEL_TEXT: Record<Ampel, string> = { gruen: "Grün", gelb: "Gelb", rot: "Rot" }
 
-export const AREA_LABEL: Record<AreaId, string> = { bau: "BAU", ent: "ENT", dat: "DAT", ux: "UX", kom: "KOM" }
-export const AREA_NAME: Record<AreaId, string> = {
-  bau: "Fachwissen Bau und Verwaltung",
-  ent: "Entwicklung",
-  dat: "Daten und Schnittstellen",
-  ux: "Benutzerführung",
-  kom: "Kommunikation und Schulung",
-}
+// Gebietskürzel und -namen je Szenario: areaLabelsOf (lib/simulation/labels.ts, K1 in 2.11.13)
 
 export const STATUS_TEXT: Record<TaskStatus, string> = {
   offen: "offen",
   bereit: "bereit",
   laufend: "läuft",
   fertig: "fertig",
+}
+
+/** Anzeige-Status mit Symbol (Text bleibt immer sichtbar) */
+export const DISPLAY_STATUS_TEXT: Record<DisplayStatus, string> = {
+  offen: "offen",
+  bereit: "bereit",
+  laufend: "läuft",
+  fertig: "fertig",
+  blockiert: "blockiert",
+}
+export const DISPLAY_STATUS_ICON: Record<DisplayStatus, IconName> = {
+  offen: "offen",
+  bereit: "bereit",
+  laufend: "laufend",
+  fertig: "fertig",
+  blockiert: "blockiert",
 }
 
 export const PHASE_TEXT: Record<TeamPhase, string> = {
@@ -61,7 +72,7 @@ export const PHASE_TEXT: Record<TeamPhase, string> = {
   leistung: "Leistung",
 }
 
-export const CHANNEL_ICON: Record<Channel, string> = { mail: "✉", anruf: "☎", besuch: "🚪", system: "⚙" }
+export const CHANNEL_SYMBOL: Record<Channel, IconName> = { mail: "mail", anruf: "anruf", besuch: "besuch", system: "system" }
 export const CHANNEL_TEXT: Record<Channel, string> = { mail: "Mail", anruf: "Anruf", besuch: "Besuch", system: "Mitteilung" }
 
 export const RATING_TEXT: Record<Rating, string> = { gut: "Gut entschieden", mittel: "Teilweise gut", schlecht: "Ungünstig" }

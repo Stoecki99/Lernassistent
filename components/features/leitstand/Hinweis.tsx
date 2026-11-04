@@ -6,6 +6,7 @@
 // Die Live-Region bleibt dauerhaft im DOM, damit Bildschirmleser neue Hinweise zuverlässig ansagen.
 
 import styles from "@/app/(leitstand)/leitstand.module.css"
+import Avatar from "./Avatar"
 
 export default function Hinweis({
   hint,
@@ -23,8 +24,8 @@ export default function Hinweis({
     <div aria-live="polite">
       {hint && (
         <aside className={styles.hinweis} aria-label="Hinweis">
-          <span className={styles.hinweisIcon} aria-hidden="true">
-            💡
+          <span className={styles.hinweisIcon}>
+            <Avatar name={coach} role="Coach" size={44} />
           </span>
           <div className={styles.hinweisText}>
             <strong>Tipp von {coach}</strong>

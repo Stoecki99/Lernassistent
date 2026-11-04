@@ -45,7 +45,7 @@ Muster wie Leitstand (`lib/leitstand.ts` wird für Körpergrenze 256 KB als Stro
 
 ## 4. Datenmodell
 
-`ArchitekturLauf { id, userId, missionId, missionVersion, engineVersion, seed, seedReused, status ("aktiv" | "abgeschlossen" | "abgebrochen" | "veraltet"), aktionen Json, aktionCount, modell Json?, tick, summary Json?, score?, stars?, scoreDetail Json? ({ score, kennzahlen, nachbesprechung, validierung }, ohne Zustand), pointsAwarded, createdAt, updatedAt, finishedAt? }`, `onDelete: Cascade`, Indizes `(userId, missionId, status)`, `(userId, missionId, score)`, `(userId, createdAt)`. Migration `20261101120000_add_architektur_lauf` mit Teil-Index `ArchitekturLauf_aktiv_eindeutig` auf `(userId, missionId) WHERE status = 'aktiv'` (von Prisma nicht abbildbar; schlägt `migrate dev` vor, ihn zu löschen, die Zeile entfernen) und den drei Abzeichen.
+`ArchitekturLauf { id, userId, missionId, missionVersion, engineVersion, seed, seedReused, status ("aktiv" | "abgeschlossen" | "abgebrochen" | "veraltet"), aktionen Json, aktionCount, modell Json?, tick, summary Json?, score?, stars?, scoreDetail Json? ({ score, kennzahlen, nachbesprechung, validierung }, ohne Zustand), pointsAwarded, createdAt, updatedAt, finishedAt? }`, `onDelete: Cascade`, Indizes `(userId, missionId, status)`, `(userId, missionId, score)`, `(userId, createdAt)`. Migration `20261104100000_add_architektur_lauf` mit Teil-Index `ArchitekturLauf_aktiv_eindeutig` auf `(userId, missionId) WHERE status = 'aktiv'` (von Prisma nicht abbildbar; schlägt `migrate dev` vor, ihn zu löschen, die Zeile entfernen) und den drei Abzeichen.
 
 ## 5. Sicherheit
 

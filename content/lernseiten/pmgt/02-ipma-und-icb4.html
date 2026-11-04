@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IPMA Level D und die ICB4 · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/03-hermes" title="HERMES: Phasen, Rollen, Ergebnisse">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t02-», nur Farben aus :root -->
+  <style>
+    .t02-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t02-ziele li{margin-bottom:3px}
+
+    /* Nummerierte Kette (Ablauf, Strategie) */
+    .t02-fluss{margin:0; padding:0; list-style:none; counter-reset:t02f; display:flex; flex-direction:column; gap:8px}
+    .t02-fluss > li{counter-increment:t02f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t02-fluss > li::before{content:counter(t02f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t02-fluss .hint{margin:2px 0 0}
+
+    /* Levels A–D als Treppe */
+    .t02-treppe{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px}
+    .t02-treppe li{display:flex; gap:10px; align-items:baseline; padding:8px 10px; border-radius:8px; background:var(--board); border-left:4px solid var(--line)}
+    .t02-treppe li.t02-an{border-left-color:var(--accent); background:var(--accent-soft)}
+    .t02-treppe li > span:first-child{font-weight:700; color:var(--accent); min-width:4.2em; flex:none}
+
+    /* Kompetenz-Landkarte */
+    .t02-zaehler{display:flex; flex-direction:column; gap:6px}
+    .t02-zaehler p{margin:0; font-weight:600}
+    .t02-balken{position:relative; height:14px; border-radius:7px; background:var(--board); border:1px solid var(--line); overflow:hidden}
+    .t02-balken-fuell{position:absolute; left:0; top:0; bottom:0; width:0; background:var(--ok); transition:width .4s}
+    .t02-balken-ziel{position:absolute; top:-2px; bottom:-2px; left:82.14%; border-left:2px dashed var(--ink)}
+    .t02-bereich{display:flex; flex-direction:column; gap:8px; border:1px solid var(--line); border-radius:12px; padding:10px 12px 12px; background:var(--surface)}
+    .t02-bereich h3{margin:0; font-size:1.05rem}
+    .t02-bereich > .hint{margin:0}
+    .t02-raster{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(8.2rem,100%),1fr)); gap:8px}
+    .t02-kachel{display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; min-height:4.6rem; padding:8px 10px;
+      border:1px solid var(--line); border-left:4px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); font:inherit; cursor:pointer}
+    .t02-kachel:hover{border-color:var(--accent)}
+    .t02-kachel .t02-nr{font-weight:700; color:var(--accent); font-size:.85rem}
+    .t02-kachel .t02-name{font-size:.93rem; line-height:1.25}
+    .t02-kachel .t02-marke{margin-top:auto; font-size:.78rem; color:var(--muted)}
+    .t02-kachel.t02-geuebt{border-left-color:var(--ok); background:var(--ok-bg)}
+    .t02-kachel.t02-geuebt .t02-marke{color:var(--ok); font-weight:700}
+    .t02-kachel[aria-pressed="true"]{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset}
+    .t02-detail{border-radius:10px; background:var(--board); padding:10px 12px; display:flex; flex-direction:column; gap:8px}
+    .t02-detail:empty{display:none}
+    .t02-detail h4{margin:0; font-size:1.05rem}
+    .t02-detail p{margin:0}
+    .t02-detail ul{margin:0; padding-left:1.2em}
+    .t02-detail li{margin-bottom:2px}
+    .t02-st-ok{color:var(--ok); font-weight:700}
+    .t02-legende{display:flex; flex-wrap:wrap; gap:12px; font-size:.9rem; color:var(--muted)}
+    .t02-legende span{display:inline-flex; align-items:center; gap:6px}
+    .t02-legende i{display:inline-block; width:14px; height:14px; border-radius:3px; border:1px solid var(--line); border-left:4px solid var(--line); background:var(--bg)}
+    .t02-legende i.t02-i-ok{border-left-color:var(--ok); background:var(--ok-bg)}
+
+    /* Lösungsfilm und Lösung: Antwortblöcke */
+    .t02-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t02-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t02-fb:last-child{border-bottom:0}
+    .t02-fb b{color:var(--accent)}
+    .t02-loesung-fertig{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t02-fluss > li{padding-left:40px}
+      .t02-fz{font-size:.93rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="02-ipma-und-icb4">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 1 · Grundlagen und Kontext</span>
+    <h1>IPMA Level D und die ICB4</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 1.01–1.05</span><span class="icb">ICB 2.01–2.10</span><span class="icb">ICB 3.01–3.13</span>
+    </p>
+    <p class="lead">Am Ende des Moduls kannst du die Prüfung zum IPMA Level D ablegen. Diese Station zeigt dir, was dich erwartet: welche Zertifikate es gibt, wie die ICB4 mit ihren 28 Kompetenzen aufgebaut ist, wie die Prüfung abläuft und wie du sie mit einem guten Open-Book-Ordner bestehst. Roter Faden ist die Gemeinde Wolkenried: Jasmin Huber, Applikationsbetreuerin im Projekt Onlineschalter, studiert neben der Arbeit und meldet sich zur Prüfung an.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t02-ziele">
+        <li>die wichtigsten Zertifizierungen im Projektmanagement (PMI, IPMA, HERMES, PRINCE2) nach Zweck, Voraussetzungen und Kosten einordnen,</li>
+        <li>die vier IPMA-Levels unterscheiden und erklären, wer in der Schweiz zertifiziert (VZPM, spm, ISO/IEC 17024),</li>
+        <li>den Aufbau der ICB4 erklären: drei Kompetenzbereiche, 28 Kompetenzen mit Nummer und Namen, Kompetenzindikatoren,</li>
+        <li>eine Situation aus einem Projekt der richtigen Kompetenz zuordnen und das begründen,</li>
+        <li>Format, Bestehensregel und Anmeldung der Prüfung Level D nennen und deine eigene Prüfungsstrategie für Open Book planen.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der IPMA-Prüfung kommen Fragen zur Struktur der ICB selbst (Bereiche, Nummern, Indikatoren) und viele Situationen, die du einer Kompetenz zuordnen musst. Wichtiger noch: Die Bestehensregel verlangt in mindestens 23 der 28 Kompetenzen eine richtige Antwort. Wer nur die Practice-Kompetenzen aus dem Unterricht lernt, fällt durch. Die Kompetenz-Landkarte in Schritt 6 zeigt dir, wo du stehst.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#zertifikate"><b>1</b>Zertifikate</a>
+    <a href="#ipma"><b>2</b>IPMA und VZPM</a>
+    <a href="#icb"><b>3</b>Aufbau ICB4</a>
+    <a href="#pruefung"><b>4</b>Prüfung Level D</a>
+    <a href="#strategie"><b>5</b>Strategie</a>
+    <a href="#landkarte"><b>6</b>Landkarte</a>
+    <a href="#zuordnen"><b>7</b>Zuordnen</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Denk an die Autoprüfung. Es gibt einen Lernfahrausweis und einen Führerausweis, eine Liste mit allem, was eine Fahrerin können muss, und Prüfpunkte, an denen die Expertin sieht, ob du es kannst. Genau so funktioniert eine Zertifizierung im Projektmanagement.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Zertifikat = Führerausweis</span><span class="ex">IPMA Level D</span><p>Eine unabhängige Stelle bestätigt, dass du etwas kannst. Es gibt Stufen, wie Lernfahrausweis und Führerausweis. Level D ist die Einstiegsstufe.</p></div>
+      <div class="concept"><span class="tag">Kompetenz = Kochen können</span><span class="ex">Wissen · Fertigkeit · Fähigkeit</span><p>Das Rezept kennen ist Wissen. Gemüse schneiden ist eine Fertigkeit. Ein ganzes Menü für Gäste rechtzeitig auf den Tisch bringen ist eine Fähigkeit. Erst alles zusammen ist Kompetenz.</p></div>
+      <div class="concept"><span class="tag">ICB4 = Lehrplan der Prüfung</span><span class="ex">3 Bereiche · 28 Kompetenzen</span><p>Die Individual Competence Baseline listet alles auf, was eine Person im Projektmanagement können soll. Die Prüfung fragt genau diese Liste ab, nichts anderes.</p></div>
+      <div class="concept"><span class="tag">Kompetenzindikator = Prüfpunkt</span><span class="ex">3.10.04 Bericht erstatten</span><p>Wie die Prüfpunkte der Fahrprüfung (Blinken, Spiegel, Vortritt): Sie zerlegen eine Kompetenz in beobachtbare Teile.</p></div>
+      <div class="concept"><span class="tag">Open Book = Kochbuch in der Küche</span><span class="ex">Register nach ICB-Nummer</span><p>Du darfst nachschlagen. Das hilft nur, wenn du die Seite in Sekunden findest. Wer erst suchen muss, verliert die Zeit, die er für die Antwort braucht.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Kontext, Menschen oder Praktiken?</h3>
+      <p class="hint">Die ICB teilt die 28 Kompetenzen in drei Bereiche. Frag dich: Geht es um das Umfeld des Projekts (Kontext, «Perspective»), um die Person und ihren Umgang mit anderen (Menschen, «People») oder um das Handwerk, die Methoden (Praktiken, «Practice»)? Alle Beispiele stammen aus dem Onlineschalter Wolkenried.</p>
+      <div id="t02-sortierer-bereich"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Zertifikate ===== -->
+  <section id="zertifikate">
+    <span class="eyebrow">Schritt 1 · Welche Zertifikate gibt es? (LB 1 F.24, Arbeitsblatt Zertifizierungen)</span>
+    <h2>Zertifizierungen im Überblick</h2>
+    <p class="prose">Claudia Wyss, Gemeindeschreiberin von Wolkenried, fragt Jasmin: «Welches Zertifikat bringt Ihnen und der Gemeinde am meisten?» Im Unterricht hast du dazu in Gruppen recherchiert (Arbeitsblatt Zertifizierungen: PMI, IPMA A–C, IPMA D, IPMA agil, HERMES, PRINCE2). Die Übersicht fasst das zusammen.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die wichtigsten Zertifizierungen (Kosten grob, Stand 2026 beim Anbieter prüfen)</caption>
+        <thead><tr><th>Zertifikat</th><th>Anbieter</th><th>Zweck</th><th>Voraussetzungen</th><th>Kosten grob</th></tr></thead>
+        <tbody>
+          <tr><th>PMI CAPM</th><td>Project Management Institute (USA)</td><td>Einstieg, Wissen nach dem PMI-Standard (PMBOK)</td><td>Abschluss Sekundarstufe II und 23 Stunden PM-Ausbildung</td><td>einige hundert US-Dollar</td></tr>
+          <tr><th>PMI PMP</th><td>PMI</td><td>erfahrene Projektleitung, weltweit verbreitet</td><td>mit Hochschulabschluss 36 Monate Projektleitung, dazu 35 Stunden Ausbildung (ohne Abschluss 60 Monate)</td><td>einige hundert US-Dollar, Mitglieder günstiger</td></tr>
+          <tr><th>PMI-ACP</th><td>PMI</td><td>agile Methoden (Scrum, Kanban und andere)</td><td>Ausbildung in agilen Praktiken und agile Projekterfahrung</td><td>einige hundert US-Dollar</td></tr>
+          <tr><th>IPMA Level D</th><td>IPMA, in der Schweiz VZPM</td><td>Wissen in allen 28 Kompetenzen der ICB4</td><td>keine Projekterfahrung nötig</td><td>CHF 900, für Studierende des Moduls CHF 440</td></tr>
+          <tr><th>IPMA Level C, B, A</th><td>IPMA, in der Schweiz VZPM</td><td>Projekte selbst leiten, von mittlerer Komplexität (C) bis zu Programmen und Portfolios (A)</td><td>mehrjährige nachgewiesene Erfahrung, je höher, desto mehr</td><td>deutlich teurer als Level D (Bericht, Assessment, Interview)</td></tr>
+          <tr><th>IPMA agil</th><td>IPMA, in der Schweiz VZPM</td><td>dieselben Levels mit Schwerpunkt agile Führung</td><td>wie die Levels</td><td>ähnlich wie die Levels</td></tr>
+          <tr><th>HERMES Foundation, Advanced</th><td>Methode des Bundes, Prüfung bei anerkannten Stellen</td><td>Foundation: die Methode kennen; Advanced: sie anwenden und anpassen</td><td>Advanced setzt Foundation voraus</td><td>einige hundert Franken je Stufe</td></tr>
+          <tr><th>PRINCE2 Foundation, Practitioner</th><td>britischer Standard (PeopleCert)</td><td>Foundation: Wissen; Practitioner: im Projekt anwenden</td><td>Practitioner setzt Foundation (oder ein gleichwertiges Zertifikat) voraus</td><td>einige hundert Franken je Prüfung, oft im Kurs inbegriffen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Ergänzung ohne Quelle in den Unterlagen: Das Arbeitsblatt ist eine Rechercheaufgabe und nennt keine Zahlen. Voraussetzungen und Preise sind gerundet und ändern sich; prüfe sie vor einem Entscheid beim Anbieter. Gesichert sind nur die Zahlen zu Level D aus LB 1 F.12 und LB 7 S.5.</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3>Zwei Denkschulen</h3>
+        <p><b>Methodenzertifikate</b> (HERMES, PRINCE2) prüfen, ob du eine bestimmte Methode beherrschst: Phasen, Rollen, Ergebnisse. <b>Kompetenzzertifikate</b> (IPMA, PMI) prüfen, ob du ein Projekt unabhängig von der Methode führen kannst. Die ICB schreibt ausdrücklich keine Methode vor (Swiss ICB, Kapitel 4).</p>
+      </div>
+      <div class="card stack">
+        <h3>Was passt zu Jasmin?</h3>
+        <p>Für Wolkenried ist HERMES wichtig, weil viele Verwaltungen und der Bund damit arbeiten. Jasmin hat aber noch keine Projektleitungserfahrung. IPMA Level D verlangt keine Erfahrung, deckt alle Kompetenzen ab und ist der erste Schritt zu Level C. Über das Modul zahlt sie CHF 440 statt CHF 900.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2 · IPMA und VZPM ===== -->
+  <section id="ipma">
+    <span class="eyebrow">Schritt 2 · Vier Levels, eine Zertifizierungsstelle (Swiss ICB S.19–20)</span>
+    <h2>Das IPMA-System: Level A bis D</h2>
+    <p class="prose">Die IPMA (International Project Management Association) zertifiziert weltweit nach demselben Vier-Level-System. Alle Levels prüfen <b>dieselben 28 Kompetenzen</b>. Der Unterschied liegt im Niveau: von der Kenntnis der Fakten (D) über das Anwenden und Beurteilen von Methoden (C, B) bis zum Weiterentwickeln von Methoden für viele Projekte (A). Neben Wissen, Fertigkeiten und Fähigkeiten zieht die Zertifizierung auch die Erfahrung bei (Swiss ICB 2.4.2, in eigenen Worten). Für Level D ist Erfahrung nicht zwingend vorausgesetzt (Digicomp); ab Level C musst du sie nachweisen (Ergänzung).</p>
+    <ol class="t02-treppe">
+      <li><span>Level A</span><span><b>Certified Projects Director</b>: führt Portfolios, Programme oder sehr komplexe Vorhaben und entwickelt das Projektmanagement einer Organisation weiter.</span></li>
+      <li><span>Level B</span><span><b>Certified Senior Project Manager</b>: leitet komplexe Projekte. Dein Dozent ist seit 2007 auf diesem Level zertifiziert (LB 1 F.5).</span></li>
+      <li><span>Level C</span><span><b>Certified Project Manager</b>: leitet Projekte mittlerer Komplexität selbständig.</span></li>
+      <li class="t02-an"><span>Level D</span><span><b>Certified Project Management Associate</b>: verfügt über breites <b>Wissen</b> in allen Kompetenzen und kann in Projekten mitarbeiten. Das ist deine Prüfung.</span></li>
+    </ol>
+    <p class="hint">Die Namen der Levels A–C sind eine Ergänzung (nicht in LB 1); den Namen für Level D nennt LB 1 F.12.</p>
+
+    <h3>Wer zertifiziert in der Schweiz?</h3>
+    <ol class="t02-fluss">
+      <li><b>IPMA</b> legt weltweit das System und den Standard fest, die ICB.</li>
+      <li><b>spm</b> (Swiss Project Management Association) ist der Berufsverband und die Schweizer Mitgliedorganisation der IPMA.</li>
+      <li><b>VZPM</b> (Verein zur Zertifizierung von Personen im Management) ist die Zertifizierungsstelle der spm. Bei ihm meldest du dich an, er führt die Prüfung durch.</li>
+      <li><b>ISO/IEC 17024</b> ist die Norm für Stellen, die Personen zertifizieren. Der VZPM hält sich daran.<p class="hint">Die Schweizerische Akkreditierungsstelle (SAS) überprüft das regelmässig. So bleibt das Zertifikat unabhängig und vergleichbar.</p></li>
+    </ol>
+    <div class="note"><b>Merke:</b> spm = Verband, VZPM = Zertifizierungsstelle, ISO/IEC 17024 = Norm, SAS = Aufsicht. In der Prüfung werden die vier gern vertauscht.</div>
+  </section>
+
+  <!-- ===== 3 · Aufbau ICB4 ===== -->
+  <section id="icb">
+    <span class="eyebrow">Schritt 3 · Der Lehrplan der Prüfung (Swiss ICB S.13, S.21–29, Anhang 3)</span>
+    <h2>Aufbau der ICB4: 3 Bereiche, 28 Kompetenzen</h2>
+    <p class="prose">Die IPMA versteht unter <b>Kompetenz</b> das Anwenden von Wissen, Fertigkeiten und Fähigkeiten, um gewünschte Ergebnisse zu erreichen (Swiss ICB 2.1, in eigenen Worten). Erfahrung gehört nicht zur Definition. Sie ist aber nötig, um Kompetenz zu zeigen und auszubauen. Die ICB4 ordnet die Kompetenzen in drei Bereiche, die zusammen das «Eye of Competence» bilden:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die drei Kompetenzbereiche der ICB4 für Projektmanagement</caption>
+        <thead><tr><th>Bereich</th><th>Nummern</th><th class="zahl">Anzahl</th><th>Worum es geht</th></tr></thead>
+        <tbody>
+          <tr><th>Kontext (Perspective)</th><td>1.01–1.05</td><td class="zahl">5</td><td>das Umfeld: Strategie, Regeln, Gesetze, informelle Macht, Kultur</td></tr>
+          <tr><th>Menschen (People)</th><td>2.01–2.10</td><td class="zahl">10</td><td>die Person («ich») und ihr Umgang mit anderen («ich und die anderen»)</td></tr>
+          <tr><th>Praktiken (Practice)</th><td>3.01–3.13</td><td class="zahl">13</td><td>das Handwerk: Methoden, Werkzeuge, Techniken</td></tr>
+          <tr class="an"><th>Total</th><td></td><td class="zahl">28</td><td>gleiche Liste für alle Levels A–D</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Jede Kompetenz hat denselben Aufbau</h3>
+    <ol class="t02-fluss">
+      <li><b>Definition und Zweck:</b> was die Kompetenz ist und wozu sie dient.</li>
+      <li><b>Beschreibung, Wissen, Fertigkeiten:</b> was du dafür wissen und können musst.</li>
+      <li><b>Kompetenzindikatoren</b> (Key Competence Indicators): drei bis sieben beobachtbare Teilkompetenzen, zum Beispiel 3.10.04 «Bericht über den Projektfortschritt erstatten».<p class="hint">Die Indikatoren zeigen, worauf eine Prüfungsfrage zielt. Anhang 3 der Swiss ICB listet alle auf: Kontext S.151–152, Menschen S.152–154, Praktiken S.154–156.</p></li>
+      <li><b>Messgrössen</b> (Measures): je Indikator einige Kriterien, an denen man die Leistung beurteilt.</li>
+    </ol>
+    <div class="note"><b>Zwei Nummernsysteme:</b> Die Prüfung und die Folien nennen die Kompetenz «3.10». Im Buch der Swiss ICB steht dieselbe Kompetenz im Kapitel 4.5.10 (Kontext = 4.3.x, Menschen = 4.4.x, Praktiken = 4.5.x). Schreib im Ordner beide Nummern auf das Register.</div>
+    <p class="prose">In der Prüfung musst du oft eine Situation der richtigen Kompetenz zuordnen. Klick dich durch ein Beispiel aus dem Onlineschalter. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil der Zuordnung leuchtet auf.</p>
+    <div id="t02-stepper-zuordnen"></div>
+    <div class="note falle"><b>Falle:</b> «Stakeholder» klingt passend, sobald Personen vorkommen. 3.12 Stakeholder meint aber das systematische Vorgehen: alle Beteiligten erfassen, nach Einfluss und Interesse bewerten, Strategie und Kommunikationsplan festlegen. Geht es um persönliche Ziele und Einfluss hinter den Kulissen, ist es 1.04 Macht und Interessen.</div>
+  </section>
+
+  <!-- ===== 4 · Prüfung Level D ===== -->
+  <section id="pruefung">
+    <span class="eyebrow">Schritt 4 · Format, Bestehensregel, Anmeldung (LB 1 F.12, F.29; LB 7 S.4–5)</span>
+    <h2>Die Prüfung IPMA Level D</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Steckbrief der Prüfung im Modul PMGT</caption>
+        <tbody>
+          <tr><th>Titel</th><td>Certified Project Management Associate (IPMA Level D)</td></tr>
+          <tr><th>Form</th><td>online, Open Book, 15 Teilnehmende pro Block; die Aufsicht läuft über Zoom (Digicomp)</td></tr>
+          <tr><th>Dauer</th><td>3 Stunden</td></tr>
+          <tr><th>Fragen</th><td>Die Musterprüfungen haben 60 Multiple-Choice-Fragen und 30 offene Fragen.</td></tr>
+          <tr><th>Termine</th><td>Mi 16.12.2026, Di 22.12.2026, Mi 23.12.2026, je 09.00 oder 13.30 Uhr</td></tr>
+          <tr><th>Gebühr</th><td>CHF 440 statt CHF 900 (siehe Hinweis unten)</td></tr>
+          <tr><th>Hilfsmittel</th><td>Open Book (LB 7 S.5). Was genau erlaubt ist, regelt der VZPM-Leitfaden «Online-Prüfungen IPMA Level B, C und D» (www.vzpm.ch, Downloads).</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Die Bestehensregel: zwei Hürden</h3>
+    <p class="prose">Du bestehst nur, wenn du <b>beide</b> Bedingungen erfüllst (Digicomp, <a href="https://digicomp.ch/zertifizierung/projektmanagement-zertifizierungen/ipma-zertifizierung/ipmavzpm-zertifizierung-level-d">IPMA/VZPM-Zertifizierung Level D</a>):</p>
+    <ol class="t02-fluss">
+      <li><b>Punkte:</b> mindestens 60&nbsp;% der möglichen Punkte.</li>
+      <li><b>Breite:</b> in mindestens 23 der 28 Kompetenzen mindestens eine richtige Antwort.<p class="hint">Das passt zur Swiss ICB (S.19–20): Geprüft werden 80&nbsp;% der 28 Kompetenzen. 80&nbsp;% von 28 sind 22.4, aufgerundet 23.</p></li>
+    </ol>
+    <div class="note"><b>Merke:</b> Du darfst in höchstens 5 Kompetenzen leer ausgehen. Darum lohnt es sich, jede Kompetenz mindestens in den Grundzügen zu kennen, auch die People- und Perspective-Kompetenzen, die im Unterricht kaum vorkommen.</div>
+    <p class="prose">Wie viele Punkte eine einzelne Frage gibt, steht in den Unterlagen nicht. Für die Beispiele auf dieser Seite gilt eine <b>Annahme</b>: Multiple Choice 1 Punkt, offene Frage 2 Punkte. Dann gibt es 60 + 30 × 2 = 120 Punkte. Klick dich durch die Auswertung von Jasmins Probeprüfung:</p>
+    <div id="t02-stepper-bestehen"></div>
+
+    <h3>Anmeldung in vier Schritten (LB 7 S.4–5)</h3>
+    <ol class="t02-fluss">
+      <li><b>In die Liste eintragen</b> und einen der sechs Termine wählen.</li>
+      <li><b>Entscheiden, ob du einen Prüfungssimulator kaufst.</b><p class="hint">LB 1 F.12 nennt dafür Fr. 95, LB 7 S.5 CHF 50. Kostenlos üben kannst du in Station 24 (IPMA-Prüfungssimulator, folgt).</p></li>
+      <li><b>Auf www.vzpm.ch ein Login erstellen.</b></li>
+      <li><b>Anmeldeunterlagen hochladen</b>, dazu eine Kopie der Studienbestätigung und des Ausweises.</li>
+    </ol>
+    <div class="note falle"><b>Widerspruch in den Unterlagen, wer zahlt:</b> Die Gebühr ist überall CHF 440 (LB 1 und LB 7: statt CHF 900). LB 1 F.12 nennt sie «Kosten für die Studierenden», die Modulbeschreibung sagt, die Kandidatin oder der Kandidat zahle selbst. LB 7 S.5 schreibt dagegen «Rechnung über Fachhochschule». Ob die FH nur die Rechnung stellt oder auch zahlt, ist offen. Kläre das vor der Anmeldung beim Dozenten.</div>
+
+    <h3>Pflichtliteratur</h3>
+    <p class="prose">Die Modulbeschreibung nennt als Pflichtliteratur für die Zertifizierung: Gubelmann, Josef; Sommer, Claus J.: <i>Zertifizierung nach IPMA (ICB4) – Ebenen D und C</i>. 6., überarbeitete Auflage, Compendio Bildungsmedien, Zürich 2021. Das Buch ist nach den ICB-Kompetenzen gegliedert. Die meisten Lernblöcke nennen die Kapitel dazu; die bekannten stehen im Register in Schritt 5. Für LB 1 nennt F.30 «Kapitel 1 – Einführung, S. 9–24».</p>
+  </section>
+
+  <!-- ===== 5 · Strategie ===== -->
+  <section id="strategie">
+    <span class="eyebrow">Schritt 5 · Open Book richtig nutzen</span>
+    <h2>Prüfungsstrategie für drei Stunden</h2>
+    <p class="prose">Open Book klingt bequem. In Wahrheit hast du pro Frage rund <b>2 Minuten</b>: 180 Minuten für 90 Fragen. Für Nachlesen bleibt keine Zeit. Der Ordner ist eine Gedächtnisstütze, kein Lehrbuch. Die Strategie unten ist eine eigene Empfehlung, nicht vom Dozenten bestätigt.</p>
+    <h3>Vor der Prüfung: den Ordner bauen</h3>
+    <ol class="t02-fluss">
+      <li><b>Register nach ICB-Nummer:</b> 28 Register, 1.01 bis 3.13, in der Reihenfolge der ICB. Auf jedes Register zusätzlich die Kapitelnummer der Swiss ICB (z. B. 4.5.10) und das Kapitel im Gubelmann/Sommer.</li>
+      <li><b>Pro Kompetenz eine Seite Spickzettel:</b> Definition in eigenen Worten, die Indikatoren als Stichworte, die wichtigsten Begriffe, Methoden und Formeln, ein Beispiel aus Wolkenried, Fundstellen (LB und Folie, Buchseite).</li>
+      <li><b>Vorne eine Übersicht:</b> die 28 Nummern mit Namen auf einer Seite (wie die Landkarte in Schritt 6) und die Bestehensregel.</li>
+      <li><b>Hinten Formeln und Tabellen:</b> Netzplan, Earned Value, Risikowert, NPV, Ampelregel.</li>
+    </ol>
+    <h3>In der Prüfung: Zeit einteilen</h3>
+    <ol class="t02-fluss">
+      <li><b>Zuerst alle Multiple-Choice-Fragen</b>, zügig, rund 1 Minute pro Frage. Unsichere markieren, nicht festbeissen.</li>
+      <li><b>Dann die offenen Fragen</b>, rund 3 bis 4 Minuten pro Frage. Antworte mit den Fachbegriffen der ICB, nenne die Kompetenz mit Nummer und begründe kurz.<p class="hint">Jede richtige Antwort zählt doppelt: für die Punkte und für die Breite (23 von 28). Eine leere offene Frage verschenkt beides.</p></li>
+      <li><b>Am Schluss Reserve</b> von rund 15 Minuten für markierte Fragen. Keine Frage leer lassen.</li>
+    </ol>
+    <details class="sol"><summary>Register-Vorlage: alle 28 Kompetenzen mit Fundstellen</summary>
+      <div class="stack">
+        <p class="hint">Die Spalte Gubelmann/Sommer nennt nur Kapitel, die in den Folien LB 1–7 stehen. Für die übrigen das Inhaltsverzeichnis des Buchs nehmen; das Buch ist nach den Kompetenzen gegliedert.</p>
+        <div class="tablebox">
+          <table class="tabelle">
+            <thead><tr><th>ICB</th><th>Kompetenz</th><th>Swiss ICB</th><th>Gubelmann/Sommer</th><th>Stationen</th></tr></thead>
+            <tbody id="t02-register"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 6 · Landkarte ===== -->
+  <section id="landkarte">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>Kompetenz-Landkarte: wo stehst du?</h2>
+    <p class="prose">Hier sind alle 28 Kompetenzen auf einen Blick. Tippe eine Kachel an (oder wähle sie mit Tab und Enter): Du siehst, worum es geht, die Indikatoren in Kurzform, die Stationen des Lernpfads dazu und eine Beispielfrage aus dem Onlineschalter. Sobald du eine passende Station als erledigt markiert hast, gilt die Kompetenz als <b>geübt</b> und die Kachel wird grün.</p>
+    <div class="card stack">
+      <div class="t02-zaehler">
+        <p id="t02-zaehler-text" aria-live="polite">Fortschritt wird geladen …</p>
+        <div class="t02-balken" aria-hidden="true"><div class="t02-balken-fuell" id="t02-balken"></div><div class="t02-balken-ziel"></div></div>
+        <div class="t02-legende"><span><i></i> offen</span><span><i class="t02-i-ok"></i> ✓ geübt (eine passende Station erledigt)</span><span>gestrichelt: Ziel 23</span></div>
+      </div>
+      <p class="hint">Diese Station und der Prüfungssimulator (Station 24) decken alle Kompetenzen im Überblick ab und zählen hier nicht. Stationen, die noch nicht erschienen sind, zeigt der Lernpfad als «folgt».</p>
+    </div>
+    <div class="stack" id="t02-karte"></div>
+  </section>
+
+  <!-- ===== 7 · Zuordnen ===== -->
+  <section id="zuordnen">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Zuordnungsspiel: Situation → Kompetenz</h2>
+    <p class="prose">Zehn Situationen aus dem Onlineschalter Wolkenried. Ordne jede der Kompetenz zu, die am besten passt. Die Abgrenzungen 1.04 gegen 3.12 und 2.09 gegen 3.09 sind klassische Fallen der Prüfung; die Erklärungen nach jeder Wahl zeigen den Unterschied.</p>
+    <div class="card stack">
+      <div id="t02-sortierer-situation"></div>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Einordnen, rechnen, entscheiden, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zehn Übungen in sechs Arten: zuordnen, wahr oder falsch, rechnen, Schritt für Schritt, Einzelfrage und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest.</p>
+    <div class="card stack"><div id="t02-u-zertifikat"></div></div>
+    <div id="t02-u-wf"></div>
+    <div id="t02-u-23"></div>
+    <div id="t02-u-punkte"></div>
+    <div id="t02-u-zeit"></div>
+    <div id="t02-u-bestehen"></div>
+    <div id="t02-u-mc"></div>
+    <div id="t02-u-fall"></div>
+    <div id="t02-u-reflexion"></div>
+    <div id="t02-u-vorlage"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Eine offene IPMA-Frage am Stück: fünf Situationen zuordnen</h2>
+    <p class="prose">Eine Aufgabe im Stil der offenen IPMA-Fragen (eigener Fall, eigene Situationen): Fünf Situationen aus der Sanierung des Hallenbads Wolkenried einer Kompetenz zuordnen, mit Indikator begründen und je eine Massnahme nennen. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t02-film"></div>
+    <details class="sol"><summary>Die fertige Antwort als Text</summary>
+      <div class="t02-loesung-fertig" id="t02-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>Nur auf Punkte lernen.</b> 60&nbsp;% der Punkte reichen nicht. Ohne richtige Antwort in mindestens 23 der 28 Kompetenzen bist du durchgefallen, auch mit 80&nbsp;% der Punkte.</div>
+    <div class="note falle"><b>Die Bereiche falsch zählen.</b> 5 Kontext, 10 Menschen, 13 Praktiken, zusammen 28. Nicht 29: Die 29 gilt für Programm- und Portfoliomanagement. Ältere Bücher und Webseiten zur ICB3 nennen noch andere Zahlen; gültig ist die ICB4.</div>
+    <div class="note falle"><b>Level D mit Erfahrung verwechseln.</b> Level D prüft Wissen und verlangt keine Projekterfahrung. Erfahrung wird ab Level C beurteilt.</div>
+    <div class="note falle"><b>spm, VZPM, IPMA und SAS vertauschen.</b> IPMA = internationaler Standard, spm = Schweizer Verband, VZPM = Zertifizierungsstelle, SAS = Akkreditierung nach ISO/IEC 17024.</div>
+    <div class="note falle"><b>1.04 Macht und Interessen statt 3.12 Stakeholder (und umgekehrt).</b> Informell und persönlich → 1.04. Systematisch analysieren, Strategie und Kommunikationsplan → 3.12.</div>
+    <div class="note falle"><b>3.04 Ablauf und Termine statt 3.10 Planung und Steuerung.</b> Terminplan erstellen und überwachen → 3.04. Projektmanagementplan, Soll-Ist über alle Dimensionen, Änderungen, Berichte, Phasenübergang → 3.10.</div>
+    <div class="note falle"><b>Kompetenz mit Rolle verwechseln.</b> Die ICB beschreibt Kompetenzen für alle, die im Projektmanagement arbeiten, nicht Aufgaben einer bestimmten Rolle. Sie schreibt auch keine Methode vor.</div>
+    <div class="note falle"><b>Open Book als Zeitpolster sehen.</b> Bei 2 Minuten pro Frage hilft nur ein Ordner mit Register nach ICB-Nummer. Wer im Buch blättert, wird nicht fertig.</div>
+    <div class="note falle"><b>Offene Fragen ohne Fachbegriffe.</b> «Ich würde mit allen reden» gibt wenig Punkte. Besser: Kompetenz mit Nummer, Fachbegriff (zum Beispiel Stakeholderanalyse, Kommunikationsplan), Begründung, Massnahme.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz oder die Fundstelle, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t02-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Zertifikate:</b> PMI (CAPM, PMP, ACP) und IPMA (A–D, auch agil) prüfen Kompetenzen, HERMES und PRINCE2 (Foundation, Advanced oder Practitioner) eine Methode.</li>
+      <li><b>IPMA Level D</b> = Certified Project Management Associate: Wissen in allen 28 Kompetenzen, keine Erfahrung nötig. In der Schweiz zertifiziert der <b>VZPM</b>, die Zertifizierungsstelle der <b>spm</b>, nach <b>ISO/IEC 17024</b>.</li>
+      <li><b>ICB4:</b> 5 Kontext (1.01–1.05), 10 Menschen (2.01–2.10), 13 Praktiken (3.01–3.13) = 28 Kompetenzen. Jede mit Kompetenzindikatoren und Messgrössen.</li>
+      <li><b>Prüfung:</b> online via Zoom, 3 Stunden, Open Book, Muster 60 MC + 30 offene Fragen. <b>Bestanden</b> mit mindestens 60&nbsp;% der Punkte <b>und</b> einer richtigen Antwort in mindestens 23 der 28 Kompetenzen.</li>
+      <li><b>Anmeldung:</b> Liste mit Termin (16., 22. oder 23.12.2026), Login bei VZPM, Studienbestätigung und Ausweis hochladen. Gebühr CHF 440; wer zahlt, ist in den Unterlagen widersprüchlich.</li>
+      <li><b>Strategie:</b> Ordner mit Register nach ICB-Nummer, eine Seite pro Kompetenz. Rund 2 Minuten pro Frage, zuerst MC, dann offene Fragen mit Fachbegriffen, Reserve am Schluss.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t02-ziele">
+        <li><b>Deckblatt:</b> die 28 Kompetenzen mit Nummer und Namen (Swiss ICB S.29) und die Bestehensregel: 60&nbsp;% der Punkte und mindestens eine richtige Antwort in 23 von 28 Kompetenzen (Digicomp; Swiss ICB S.19–20: 80&nbsp;% der 28).</li>
+        <li><b>Register 1.01–3.13</b> mit der Kapitelnummer der Swiss ICB (Kontext 4.3.x, Menschen 4.4.x, Praktiken 4.5.x) und den Kompetenzindikatoren aus Anhang 3 (S.151–156) als Stichworte. Vorlage: Register-Tabelle in Schritt 5.</li>
+        <li><b>Begriffe zur ICB:</b> Kompetenz = Wissen, Fertigkeiten, Fähigkeiten (Swiss ICB 2.1, S.13); Eye of Competence; Kompetenzindikator und Messgrösse (S.22); Projekt, Programm, Portfolio (S.22).</li>
+        <li><b>Zertifizierung:</b> Vier Levels, gleiche Kompetenzen, anderes Niveau (S.19); VZPM, spm, ISO/IEC 17024, SAS (S.20).</li>
+        <li>Fundstellen: LB 1 F.12 und F.29 (Level D, Termine, Kosten), F.24 (Gruppenarbeit Zertifizierungen), F.30 (Vorbereitungsauftrag); LB 7 S.4–5 (Anmeldung, Prüfungsformat); Arbeitsblatt Zertifizierungen; Modulbeschreibung (Pflichtliteratur, Gebühr).</li>
+        <li>Gubelmann/Sommer, 6. Auflage 2021: Kapitel 1 «Einführung», S. 9–24 (laut LB 1 F.30). Die Kapitel zu den einzelnen Kompetenzen, soweit die Folien sie nennen, stehen in der Register-Vorlage.</li>
+      </ul>
+    </div>
+    <footer>Station 02 des Lernpfads PMGT. Gemeinde Wolkenried, Onlineschalter und Hallenbad frei erfunden. Quellen: LB 1, LB 7, Swiss ICB 4.0, Arbeitsblatt Zertifizierungen, Modulbeschreibung, Digicomp (Bestehensregel), alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ---------- Stationen des Lernpfads (Titel aus fach.json) ---------- */
+  const STATIONEN = {
+    "01-projekte-und-projektmanagement": "Projekte und Projektmanagement",
+    "03-hermes": "HERMES: Phasen, Rollen, Ergebnisse",
+    "04-projektkontext": "Kontext: Strategie, Portfolio, Governance",
+    "05-ziele-und-anforderungen": "Problemerfassung, Ziele, Anforderungen",
+    "06-leistungsumfang-und-arbeitspakete": "Leistungsumfang, Lieferobjekte, Arbeitspakete",
+    "07-projektauftrag": "Initialisierung und Projektauftrag",
+    "08-vorgehensmodelle": "Vorgehensmodelle: Wasserfall bis Scrum",
+    "09-projektstrukturplan": "Projektstrukturplan",
+    "10-netzplan-und-gantt": "Netzplan, Gantt und kritischer Pfad",
+    "11-ressourcen-und-kosten": "Ressourcen und Kosten planen",
+    "12-wirtschaftlichkeit": "Wirtschaftlichkeit: NPV, IRR, Payback",
+    "13-chancen-und-risiken": "Chancen und Risiken",
+    "14-stakeholder": "Stakeholder",
+    "15-organisation-und-rollen": "Projektorganisation, Rollen, RACI",
+    "16-fuehrung-team-meetings": "Führung, Team und Meetings",
+    "17-persoenliche-kompetenzen": "Persönliche und soziale Kompetenzen",
+    "18-earned-value": "Projektcontrolling und Earned Value",
+    "19-statusbericht": "Statusbericht und Reporting",
+    "20-qualitaet-und-aenderungen": "Qualität, Änderungen, Abschluss",
+    "21-beschaffung-und-vertraege": "Beschaffung und Projektverträge",
+    "22-simulation-verstehen": "Die Projektsimulation verstehen"
+  };
+
+  /* ---------- Die 28 Kompetenzen ----------
+     text: Inhalt in eigenen Worten; ind: Indikatoren kurz (Swiss ICB Anhang 3, in eigenen Worten);
+     st: Stationen laut Konzept; buch: Gubelmann/Sommer laut Folien (leer = nicht genannt);
+     frage/antwort: Beispielfrage aus dem Onlineschalter (eigene Fragen). */
+  const K = [
+    { nr: "1.01", name: "Strategie", b: 0, kap: "4.3.1",
+      text: "Das Projekt dient einem Ziel der Organisation. Du zeigst, welchen Beitrag es an Mission, Vision und Strategie leistet, und prüfst laufend, ob die Begründung noch trägt.",
+      ind: ["Projekt auf Mission und Vision ausrichten", "Chancen für die Strategie erkennen und nutzen", "Projektbegründung laufend prüfen", "kritische Erfolgsfaktoren bestimmen", "Kennzahlen (KPI) festlegen und überprüfen"],
+      st: ["04-projektkontext", "12-wirtschaftlichkeit"], buch: "",
+      frage: "Der Gemeinderat streicht das Legislaturziel «Digitale Verwaltung». Was prüfst du zuerst für den Onlineschalter?",
+      antwort: "Ob die Projektbegründung noch besteht. Trägt sie nicht mehr, beantragst du bei der Auftraggeberin, das Projekt anzupassen oder abzubrechen (Indikator 1.01.03)." },
+    { nr: "1.02", name: "Governance, Strukturen und Prozesse", b: 0, kap: "4.3.2",
+      text: "Das Projekt lebt in einer Organisation mit Regeln: wer entscheidet, wie berichtet wird, wie Personal, Finanzen und Support funktionieren. Du richtest das Projekt danach aus und kennst den Unterschied zwischen Projekt, Programm und Portfolio.",
+      ind: ["Grundlagen von Projekt-, Programm- und Portfoliomanagement kennen", "mit Supportfunktionen (z. B. PMO) abstimmen", "mit Entscheidungs- und Berichtsstrukturen abstimmen", "mit Personalprozessen abstimmen", "mit Finanz- und Controllingprozessen abstimmen"],
+      st: ["03-hermes", "04-projektkontext", "15-organisation-und-rollen"], buch: "",
+      frage: "Wolkenried führt alle Digitalisierungsprojekte gemeinsam, um Personal und Geld optimal zu verteilen. Ist das ein Programm oder ein Portfolio?",
+      antwort: "Ein Portfolio: Die Projekte hängen nicht zwingend zusammen, werden aber gemeinsam geführt. Ein Programm verfolgt mit zusammenhängenden Projekten ein gemeinsames strategisches Ziel (Swiss ICB 3.1.4)." },
+    { nr: "1.03", name: "Compliance, Standards und Regulationen", b: 0, kap: "4.3.3",
+      text: "Gesetze, Vorschriften, Normen und Berufsregeln setzen dem Projekt Grenzen. Du findest heraus, welche gelten, hältst sie ein und nutzt passende Standards wie HERMES oder die ICB.",
+      ind: ["geltende Rechtsvorschriften erkennen und einhalten", "Vorschriften zu Sicherheit, Gesundheit, Umwelt einhalten", "Verhaltens- und Berufsregeln einhalten", "Nachhaltigkeit berücksichtigen", "professionelle Standards und Werkzeuge nutzen", "PM-Kompetenz der Organisation verbessern"],
+      st: ["03-hermes", "04-projektkontext"], buch: "",
+      frage: "Die Planbeilagen enthalten Personendaten. Was verlangt Kompetenz 1.03 von dir?",
+      antwort: "Klären, welche Datenschutzvorschriften gelten (mit der Datenschutzberatung), die Anforderungen in die Planung aufnehmen und ihre Einhaltung nachweisen (Indikator 1.03.01)." },
+    { nr: "1.04", name: "Macht und Interessen", b: 0, kap: "4.3.4",
+      text: "Neben den offiziellen Regeln wirken persönliche Ziele und informeller Einfluss. Du erkennst, wer hinter den Kulissen mitentscheidet und was die Leute persönlich antreibt, und nutzt dieses Wissen zum Wohl des Projekts.",
+      ind: ["persönliche Ambitionen und Interessen anderer beurteilen", "informellen Einfluss von Personen und Gruppen beurteilen", "Persönlichkeiten und Arbeitsstile einschätzen und nutzen"],
+      st: ["04-projektkontext", "14-stakeholder"], buch: "",
+      frage: "Worin unterscheidet sich 1.04 Macht und Interessen von 3.12 Stakeholder?",
+      antwort: "1.04 betrifft das Informelle: persönliche Ziele, Einfluss hinter den Kulissen. 3.12 ist das systematische Vorgehen: Stakeholder erfassen, nach Einfluss und Interesse bewerten, Strategie und Kommunikationsplan." },
+    { nr: "1.05", name: "Kultur und Werte", b: 0, kap: "4.3.5",
+      text: "Jede Organisation und jede Gesellschaft hat geschriebene und ungeschriebene Werte. Du verstehst sie und richtest das Projekt danach aus, etwa wie in einer Gemeinde entschieden und kommuniziert wird.",
+      ind: ["Kultur und Werte der Gesellschaft beurteilen", "Projekt mit Leitbild und offiziellen Werten abstimmen", "informelle Kultur der Organisation beurteilen"],
+      st: ["04-projektkontext", "17-persoenliche-kompetenzen"], buch: "",
+      frage: "Im Bauamt gilt ungeschrieben: «Was der Bauverwalter nicht gesehen hat, gilt nicht.» Welche Kompetenz ist gefragt?",
+      antwort: "1.05 Kultur und Werte (informelle Kultur, Indikator 1.05.03). Du planst Entwürfe so, dass Beat Imhof sie früh sieht, sonst scheitert die Umsetzung an der Kultur." },
+    { nr: "2.01", name: "Selbstreflexion und Selbstmanagement", b: 1, kap: "4.4.1",
+      text: "Du kennst deine Werte, Stärken, Schwächen und Grenzen, setzt dir Ziele, organisierst deine Arbeit und lernst laufend dazu.",
+      ind: ["Einfluss eigener Werte und Erfahrungen reflektieren", "Selbstvertrauen aus Stärken und Schwächen aufbauen", "eigene Motivation und Ziele klären", "eigene Arbeit situationsgerecht organisieren", "Verantwortung für das eigene Lernen übernehmen"],
+      st: ["17-persoenliche-kompetenzen"], buch: "",
+      frage: "Du merkst, dass du in Sitzungen gereizt reagierst, wenn du übermüdet bist. Was zeigt Kompetenz 2.01?",
+      antwort: "Das Muster erkennen, die Ursache reflektieren und die eigene Arbeit so organisieren, dass es nicht wieder vorkommt, zum Beispiel wichtige Sitzungen nicht nach langen Tagen ansetzen." },
+    { nr: "2.02", name: "Persönliche Integrität und Verlässlichkeit", b: 1, kap: "4.4.2",
+      text: "Du handelst nach ethischen Werten, stehst zu deinen Entscheidungen und hältst, was du zusagst. So entsteht Vertrauen.",
+      ind: ["ethische Werte anwenden", "nachhaltige Ergebnisse fördern", "Verantwortung für eigene Entscheide übernehmen", "widerspruchsfrei handeln und kommunizieren", "Aufgaben sorgfältig erfüllen"],
+      st: ["17-persoenliche-kompetenzen"], buch: "",
+      frage: "Die Auftraggeberin bittet dich, im Statusbericht Grün statt Gelb zu melden. Welche Kompetenz ist vor allem gefragt?",
+      antwort: "2.02 Persönliche Integrität: ehrlich nach der vereinbarten Regel berichten und die Auftraggeberin vorher einbinden (dazu 3.10, Bericht erstatten)." },
+    { nr: "2.03", name: "Persönliche Kommunikation", b: 1, kap: "4.4.3",
+      text: "Du gibst klare Informationen weiter, prüfst, ob sie richtig ankommen, und wählst Kanal und Form passend zur Zielgruppe.",
+      ind: ["klar informieren und gleiches Verständnis sichern", "offene Kommunikation fördern", "Kanal und Form passend wählen", "in virtuellen Teams kommunizieren", "Humor und Perspektivenwechsel einsetzen"],
+      st: ["16-fuehrung-team-meetings"], buch: "",
+      frage: "Elena arbeitet beim Lieferanten in einer anderen Stadt. Wie sicherst du, dass sie eine Änderung der Pflichtfelder richtig versteht?",
+      antwort: "Kurz per Video besprechen, sie in eigenen Worten zusammenfassen lassen und das Ergebnis schriftlich festhalten (Indikatoren 2.03.01 und 2.03.04)." },
+    { nr: "2.04", name: "Beziehungen und Engagement", b: 1, kap: "4.4.4",
+      text: "Du baust Beziehungen und Netzwerke auf, hörst zu, zeigst Empathie und gewinnst andere für das gemeinsame Ziel.",
+      ind: ["Beziehungen aufbauen und pflegen", "Netzwerke aufbauen und nutzen", "zuhören, Empathie zeigen", "andere ermutigen, Bedenken zu äussern", "Vision teilen, Engagement gewinnen"],
+      st: ["16-fuehrung-team-meetings"], buch: "",
+      frage: "Martin sagt in den Workshops kein Wort. Was tust du im Sinn von 2.04?",
+      antwort: "Ein Einzelgespräch führen, zuhören, nach seinen Bedenken fragen und ihn ermutigen, sein Wissen einzubringen (Indikatoren 2.04.03 und 2.04.04)." },
+    { nr: "2.05", name: "Führung", b: 1, kap: "4.4.5",
+      text: "Du gibst die Richtung vor, ergreifst die Initiative, coachst, setzt Einfluss angemessen ein und triffst Entscheidungen, die du auch durchsetzt und überprüfst.",
+      ind: ["Initiative ergreifen", "Verantwortung übernehmen (Ownership)", "Richtung geben, coachen, begleiten", "Macht und Einfluss angemessen einsetzen", "entscheiden, durchsetzen, überprüfen"],
+      st: ["16-fuehrung-team-meetings", "22-simulation-verstehen"], buch: "Kap. 23 «Führung», S. 270–279 (laut LB 7)",
+      frage: "Das Team diskutiert seit zwei Sitzungen über das Statusmodell, ohne Ergebnis. Was verlangt 2.05 von dir?",
+      antwort: "Entscheiden: die Optionen zusammenfassen, einen Entscheid treffen oder herbeiführen, ihn kommunizieren und später prüfen, ob er wirkt (Indikator 2.05.05)." },
+    { nr: "2.06", name: "Teamarbeit", b: 1, kap: "4.4.6",
+      text: "Du stellst das Team zusammen, förderst die Zusammenarbeit, delegierst Verantwortung und machst Fehler zu Lerngelegenheiten.",
+      ind: ["Team zusammenstellen und entwickeln", "Zusammenarbeit im Team fördern", "Entwicklung der Mitglieder unterstützen", "Aufgaben und Verantwortung delegieren", "aus Fehlern lernen"],
+      st: ["16-fuehrung-team-meetings"], buch: "Kap. 24 «Teamarbeit», S. 280–289 (laut LB 7)",
+      frage: "Das neue Team aus Verwaltung und Lieferant streitet in der zweiten Woche um Zuständigkeiten. In welcher Teamphase nach Tuckman steckt es?",
+      antwort: "In der Konfliktphase (Storming). Du klärst Rollen und Spielregeln, damit das Team in die Phase der Normen findet." },
+    { nr: "2.07", name: "Konflikte und Krisen", b: 1, kap: "4.4.7",
+      text: "Du erkennst Konflikte und Krisen früh, analysierst Ursachen und Folgen, vermittelst oder löst sie und gibst die Lehren weiter.",
+      ind: ["Konflikte und Krisen vorhersehen und verhindern", "Ursachen und Auswirkungen analysieren", "lösen oder vermitteln", "Lehren für die Zukunft weitergeben"],
+      st: ["17-persoenliche-kompetenzen"], buch: "",
+      frage: "Seraina und Dario streiten laut über das Statusmodell, die Sitzung kippt. Was tust du zuerst?",
+      antwort: "Die Sitzung unterbrechen und beide getrennt anhören: Ursachen und Interessen klären, bevor du vermittelst (Indikatoren 2.07.02 und 2.07.03)." },
+    { nr: "2.08", name: "Vielseitigkeit", b: 1, kap: "4.4.8",
+      text: "Du denkst konzeptionell und ganzheitlich, nutzt analytische und kreative Techniken und schaffst ein Umfeld, in dem neue Ideen entstehen.",
+      ind: ["offenes, kreatives Umfeld schaffen", "konzeptionell denken", "analytische Techniken anwenden", "kreative Techniken anwenden", "ganzheitliche Sicht fördern"],
+      st: ["17-persoenliche-kompetenzen"], buch: "",
+      frage: "Niemand findet eine Lösung, wie das Formular Gebühren bei Umbauten berechnen soll. Wie gehst du im Sinn von 2.08 vor?",
+      antwort: "Erst kreativ Ideen sammeln (z. B. Brainstorming mit Bauamt und Lieferant), dann die Ideen analytisch bewerten und eine auswählen (Indikatoren 2.08.03 und 2.08.04)." },
+    { nr: "2.09", name: "Verhandlungen", b: 1, kap: "4.4.9",
+      text: "Du klärst die Interessen aller Parteien, entwickelst Optionen und erreichst eine Einigung, die dem Projekt dient und für die anderen tragbar ist.",
+      ind: ["Interessen aller Parteien analysieren", "Optionen und Alternativen entwickeln", "Verhandlungsstrategie festlegen", "Einigung erzielen", "zusätzliche Möglichkeiten erkennen"],
+      st: ["17-persoenliche-kompetenzen"], buch: "",
+      frage: "Lärchwerk will für eine Zusatzfunktion CHF 8'000. Worauf konzentrierst du dich in der Verhandlung nach dem Harvard-Konzept?",
+      antwort: "Auf die Interessen hinter den Positionen: Was braucht die Gemeinde wirklich, was der Lieferant (Marge, Referenzkunde)? Daraus Optionen entwickeln, die beiden dienen." },
+    { nr: "2.10", name: "Ergebnisorientierung", b: 1, kap: "4.4.10",
+      text: "Du richtest jede Entscheidung auf den Projekterfolg aus, stimmst Bedürfnisse und Mittel ab, sorgst für ein gesundes Arbeitsumfeld und lieferst Ergebnisse, die angenommen werden.",
+      ind: ["Entscheide am Projekterfolg messen", "Bedürfnisse und Mittel abstimmen", "gesunde, sichere Arbeitsumgebung schaffen", "Projekt und Ergebnisse «verkaufen»", "Ergebnisse liefern, Akzeptanz gewinnen"],
+      st: ["01-projekte-und-projektmanagement", "17-persoenliche-kompetenzen"], buch: "",
+      frage: "Nach vier Wochen sieht im Bauamt noch niemand etwas vom Onlineschalter. Was schlägst du im Sinn von 2.10 vor?",
+      antwort: "Einen frühen sichtbaren Erfolg (Quick Win), zum Beispiel den Prototyp der Formulare im Bauamt vorführen. Das schafft Akzeptanz (Indikatoren 2.10.04 und 2.10.05)." },
+    { nr: "3.01", name: "Projektdesign", b: 2, kap: "4.5.1",
+      text: "Du skizzierst zu Beginn, wie das Projekt angelegt wird: Erfolgskriterien, Komplexität, Vorgehen (klassisch, agil, hybrid), Eigenleistung oder Einkauf.",
+      ind: ["Erfolgskriterien festlegen und prüfen", "Lessons Learned anderer Projekte nutzen", "Komplexität bestimmen", "Projektmanagement-Ansatz wählen und anpassen", "Konzept der Durchführung entwerfen und anpassen"],
+      st: ["01-projekte-und-projektmanagement", "03-hermes", "07-projektauftrag", "08-vorgehensmodelle"], buch: "Kap. 8 «Projektdesign», S. 89–104 (laut LB 4)",
+      frage: "Welche Entscheidung gehört zum Projektdesign: die Stundenschätzung für die Schnittstelle oder «HERMES klassisch mit zugekaufter Plattform»?",
+      antwort: "Die zweite. Das Projektdesign legt die Grundsätze fest (Vorgehen, Kauf oder Eigenbau). Die Schätzung gehört zu 3.04 Ablauf und Termine." },
+    { nr: "3.02", name: "Anforderungen und Ziele", b: 2, kap: "4.5.2",
+      text: "Du klärst, was die Stakeholder brauchen, formulierst prüfbare Ziele und priorisierst Anforderungen mit Abnahmekriterien.",
+      ind: ["Zielhierarchie festlegen", "Bedürfnisse und Anforderungen erheben", "Anforderungen und Abnahmekriterien priorisieren"],
+      st: ["05-ziele-und-anforderungen"], buch: "",
+      frage: "Ist «Der Onlineschalter soll benutzerfreundlich sein» ein gutes Ziel?",
+      antwort: "Nein, es ist nicht messbar. Besser: «Bis Ende Pilot reichen 8 von 10 Testpersonen ein Gesuch ohne Hilfe in höchstens 20 Minuten ein.»" },
+    { nr: "3.03", name: "Leistungsumfang und Lieferobjekte", b: 2, kap: "4.5.3",
+      text: "Du legst fest, was das Projekt liefert und was nicht, gliederst den Umfang im Projektstrukturplan und beschreibst die Arbeitspakete.",
+      ind: ["Lieferobjekte festlegen", "Leistungsumfang gliedern", "Arbeitspakete festlegen", "Umfang verwalten und aktuell halten"],
+      st: ["06-leistungsumfang-und-arbeitspakete", "09-projektstrukturplan"], buch: "Kap. 11 «Leistungsumfang und Lieferobjekte», S. 142–155 (laut LB 3)",
+      frage: "Gehört die Online-Hundeanmeldung zum Umfang des Onlineschalters Baugesuch?",
+      antwort: "Nein. Sie steht nicht im Auftrag. Du hältst sie im Leistungsumfang ausdrücklich als «nicht enthalten» fest, damit kein schleichender Mehrumfang entsteht." },
+    { nr: "3.04", name: "Ablauf und Termine", b: 2, kap: "4.5.4",
+      text: "Du bestimmst die Vorgänge, ihren Aufwand, ihre Dauer und Reihenfolge, erstellst Netzplan und Terminplan und überwachst die Termine.",
+      ind: ["Aktivitäten festlegen", "Aufwand und Dauer schätzen", "Vorgehen für Phasen oder Sprints festlegen", "Reihenfolge und Terminplan erstellen", "Fortschritt am Terminplan überwachen"],
+      st: ["08-vorgehensmodelle", "10-netzplan-und-gantt"], buch: "Kap. 21 «Ablauf und Termine», S. 238–257 (laut LB 4)",
+      frage: "Die Konfiguration der Gesuchsformulare hat Gesamtpuffer 0. Was heisst das?",
+      antwort: "Sie liegt auf dem kritischen Pfad. Jeder Tag Verzug verschiebt das Projektende um einen Tag." },
+    { nr: "3.05", name: "Organisation, Information und Dokumentation", b: 2, kap: "4.5.5",
+      text: "Du baust die Projektorganisation mit Rollen und Verantwortlichkeiten auf, legst fest, wer welche Informationen bekommt, und sorgst für Ablage und Dokumentation.",
+      ind: ["Informationsbedarf der Stakeholder klären", "Struktur, Rollen, Verantwortlichkeiten festlegen", "Infrastruktur, Prozesse, Informationssysteme aufbauen", "Organisation umsetzen, überwachen, anpassen"],
+      st: ["03-hermes", "15-organisation-und-rollen", "16-fuehrung-team-meetings", "19-statusbericht"], buch: "Kap. 9 «Organisation, Information und Dokumentation», S. 105–124 (laut LB 5)",
+      frage: "In der RACI-Matrix des Onlineschalters hat die Vorabnahme zwei «A». Was ist falsch?",
+      antwort: "Pro Aufgabe gibt es genau ein A (accountable). Sonst ist unklar, wer am Ende verantwortet. Du legst eine Person fest." },
+    { nr: "3.06", name: "Qualität", b: 2, kap: "4.5.6",
+      text: "Du planst, wie Qualität entsteht und geprüft wird (Reviews, Tests, Abnahme), und steuerst nach, wenn Ziele verfehlt werden.",
+      ind: ["Qualitätsplan entwickeln und überwachen", "Lieferobjekte gegen den Plan prüfen", "Qualitätsziele verifizieren, Massnahmen empfehlen", "Validierung der Ergebnisse planen", "Qualität über das ganze Projekt sichern"],
+      st: ["20-qualitaet-und-aenderungen"], buch: "",
+      frage: "Das Fachkonzept der Formulare liegt vor, programmiert ist noch nichts. Welche Prüfung passt?",
+      antwort: "Ein Review: Fachleute prüfen das Dokument. Ein Test braucht etwas Ausführbares." },
+    { nr: "3.07", name: "Kosten und Finanzierung", b: 2, kap: "4.5.7",
+      text: "Du schätzt die Kosten, erstellst das Budget, sicherst die Finanzierung und überwachst Abweichungen.",
+      ind: ["Projektkosten schätzen", "Budget erstellen", "Finanzierung sichern", "Finanz- und Berichtssystem einrichten", "Finanzen überwachen und korrigieren"],
+      st: ["11-ressourcen-und-kosten", "12-wirtschaftlichkeit", "18-earned-value"], buch: "Kap. 13 «Kosten und Finanzierung», S. 166–176 (laut LB 6)",
+      frage: "Der Gemeinderat bewilligt CHF 180'000, die Plankosten der Vorgänge (BAC) sind CHF 162'240. Wie heisst die Differenz, und wie hoch ist sie?",
+      antwort: "Die Reserve: 180'000 − 162'240 = CHF 17'760 für Massnahmen und Abweichungen (Zahlen wie im Leitstand und in Station 19)." },
+    { nr: "3.08", name: "Ressourcen", b: 2, kap: "4.5.8",
+      text: "Du planst Personen und Mittel nach Qualifikation und Menge, verhandelst sie mit der Linie, teilst sie zu und gleichst Überlastungen aus.",
+      ind: ["Ressourcen strategisch planen", "Qualität und Menge festlegen", "Quellen finden, Bereitstellung verhandeln", "Ressourcen zuteilen", "Verbrauch prüfen, korrigieren"],
+      st: ["11-ressourcen-und-kosten", "22-simulation-verstehen"], buch: "Kap. 17 «Ressourcen», S. 202–209 (laut LB 6)",
+      frage: "Martin arbeitet 60 % im Projekt, sein Chef im Bauamt will ihn trotzdem für das Tagesgeschäft. Was hilft vorbeugend?",
+      antwort: "Eine Ressourcenvereinbarung mit dem Linienvorgesetzten: wer, wie viel, wie lange (Indikator 3.08.03)." },
+    { nr: "3.09", name: "Beschaffung", b: 2, kap: "4.5.9",
+      text: "Du klärst, was eingekauft wird, wirkst bei Ausschreibung, Auswahl und Vertrag mit und überwachst, ob der Lieferant den Vertrag erfüllt.",
+      ind: ["Beschaffungsbedarf, Optionen und Verfahren klären", "bei der Auswahl der Lieferanten mitwirken", "bei Vertragsverhandlungen mitwirken", "Vertragserfüllung überwachen, Ansprüche geltend machen"],
+      st: ["21-beschaffung-und-vertraege"], buch: "",
+      frage: "Lärchwerk liefert die vereinbarte QR-Rechnung nur halb fertig. Was verlangt 3.09?",
+      antwort: "Die Vertragserfüllung überwachen: den Mangel schriftlich rügen und Nachbesserung nach Werkvertrag verlangen (Indikator 3.09.04)." },
+    { nr: "3.10", name: "Planung und Steuerung", b: 2, kap: "4.5.10",
+      text: "Du hältst alles zusammen: Projektmanagementplan, Soll-Ist-Vergleich, Korrekturmassnahmen, Berichte, Änderungen, Phasenübergänge und Abschluss.",
+      ind: ["Projekt starten, PM-Plan erstellen und genehmigen lassen", "Phasenübergang einleiten", "Leistung mit dem Plan vergleichen, korrigieren", "Bericht über den Fortschritt erstatten", "Änderungen beurteilen und genehmigen lassen", "Phase oder Projekt abschliessen"],
+      st: ["07-projektauftrag", "18-earned-value", "19-statusbericht", "22-simulation-verstehen"], buch: "",
+      frage: "Ende Woche 4 ist der SPI 0.86. Was heisst das?",
+      antwort: "Das Projekt hat 86 % der bis heute geplanten Arbeit erledigt, es ist hinter dem Plan. Das gehört mit Ursache und Massnahme in den Statusbericht." },
+    { nr: "3.11", name: "Chancen und Risiken", b: 2, kap: "4.5.11",
+      text: "Du erkennst Chancen und Risiken, bewertest Wahrscheinlichkeit und Auswirkung, wählst Strategien und Massnahmen und überwachst sie.",
+      ind: ["Struktur für das Risikomanagement aufbauen", "Chancen und Risiken erkennen", "Wahrscheinlichkeit und Auswirkung analysieren", "Strategien wählen, Massnahmen umsetzen", "Massnahmen überwachen"],
+      st: ["13-chancen-und-risiken"], buch: "",
+      frage: "Risiko «Aufwand der Schnittstelle unterschätzt»: Wahrscheinlichkeit 3, Auswirkung 4. Wie hoch ist der Risikowert?",
+      antwort: "3 × 4 = 12. In Wolkenried gilt das als hohes Risiko; es braucht eine Massnahme." },
+    { nr: "3.12", name: "Stakeholder", b: 2, kap: "4.5.12",
+      text: "Du erfasst alle Beteiligten, bewertest Einfluss und Interesse, legst eine Strategie und einen Kommunikationsplan fest und bindest Auftraggeber, Nutzer und Partner ein.",
+      ind: ["Stakeholder erfassen, Interessen und Einfluss analysieren", "Strategie und Kommunikationsplan erstellen", "Auftraggeber und Management einbinden", "Nutzer, Partner, Lieferanten einbinden", "Netzwerke und Allianzen pflegen"],
+      st: ["14-stakeholder"], buch: "Kap. 16 «Stakeholder», S. 187–201 (laut LB 5)",
+      frage: "Das Architekturforum (Verein der Planungsbüros) hat sehr hohes Interesse (5 von 5) und mittleren Einfluss (3 von 5). Seine Mitglieder sind die Hauptnutzer des Onlineschalters. Wie bindest du es ein?",
+      antwort: "Aktiv einbinden: Mitglieder in den Pilot holen und den Verein regelmässig informieren. So gewinnst du die Nutzer als Partner (Indikator 3.12.04)." },
+    { nr: "3.13", name: "Change und Transformation", b: 2, kap: "4.5.13",
+      text: "Du sorgst dafür, dass die Organisation die Veränderung annimmt. Erst dann entsteht der Nutzen, für den das Projekt gestartet wurde.",
+      ind: ["Veränderungsfähigkeit der Organisation beurteilen", "Veränderungsbedarf erkennen", "Veränderungsstrategie entwickeln", "Veränderung umsetzen"],
+      st: ["20-qualitaet-und-aenderungen"], buch: "",
+      frage: "Der Onlineschalter läuft, doch das Bauamt druckt weiter jedes Gesuch aus. Welche Kompetenz ist gefragt?",
+      antwort: "3.13 Change und Transformation: Gründe klären, die neuen Abläufe begleiten, Vorteile zeigen. Technisch fertig heisst noch nicht, dass der Nutzen eintritt." }
+  ];
+  const BEREICHE = [
+    { name: "Kontext (Perspective)", nrn: "1.01–1.05", hint: "Das Umfeld des Projekts: formelle Ziele und Regeln, informelle Macht und Kultur." },
+    { name: "Menschen (People)", nrn: "2.01–2.10", hint: "Die persönlichen und sozialen Kompetenzen: «ich» und «ich und die anderen»." },
+    { name: "Praktiken (Practice)", nrn: "3.01–3.13", hint: "Das Handwerk: Methoden, Werkzeuge und Techniken." }
+  ];
+
+  /* ---------- Schritt 0: Bereich zuordnen ---------- */
+  L.sortierer("#t02-sortierer-bereich", {
+    kategorien: ["Kontext", "Menschen", "Praktiken"],
+    elemente: [
+      { html: "Du prüfst, ob der Onlineschalter zur Strategie «Digitale Verwaltung» des Gemeinderats passt.", kategorie: "Kontext", erklaerung: "Strategie (1.01) betrifft das Umfeld des Projekts." },
+      { html: "Du erstellst den Netzplan mit allen 18 Vorgängen.", kategorie: "Praktiken", erklaerung: "Ablauf und Termine (3.04) ist Handwerk." },
+      { html: "Du merkst, dass du Kritik an deinem Plan persönlich nimmst, und arbeitest daran.", kategorie: "Menschen", erklaerung: "Selbstreflexion (2.01) betrifft dich als Person." },
+      { html: "Du klärst, welche Datenschutzvorschriften für Planbeilagen gelten.", kategorie: "Kontext", erklaerung: "Compliance (1.03): Gesetze und Vorschriften gehören zum Umfeld." },
+      { html: "Du vermittelst im Streit zwischen Seraina und Dario.", kategorie: "Menschen", erklaerung: "Konflikte und Krisen (2.07) ist eine soziale Kompetenz." },
+      { html: "Du bewertest das Risiko «Schnittstelle dauert länger» nach Wahrscheinlichkeit und Auswirkung.", kategorie: "Praktiken", erklaerung: "Chancen und Risiken (3.11) ist eine Methode." },
+      { html: "Du erkennst, dass im Bauamt ungeschrieben gilt: Ohne den Segen des Bauverwalters läuft nichts.", kategorie: "Kontext", erklaerung: "Kultur und Werte (1.05), hier die informelle Kultur der Organisation." },
+      { html: "Du schreibst den Statusbericht an den Projektausschuss.", kategorie: "Praktiken", erklaerung: "Planung und Steuerung (3.10), Indikator Bericht erstatten." }
+    ]
+  });
+
+  /* ---------- Schritt 3: Stepper Situation → Kompetenz ---------- */
+  L.stepper("#t02-stepper-zuordnen", {
+    titel: "Eine Situation aus dem Onlineschalter zuordnen",
+    text: 'Beat Imhof, der Bauverwalter, sagt im Projektausschuss Ja zum Zeitplan. <span data-link="inf">Im Gang lässt er Martin wissen, das Tagesgeschäft gehe vor</span>. Er <span data-link="mot">fürchtet, dass sein Amt mit dem Onlineschalter an Einfluss verliert</span>. Seither <span data-link="folge">fehlt Martin in den Workshops</span>.',
+    schritte: [
+      { html: 'Bereich: <b>Kontext (Perspective)</b> · <span data-link="inf">informeller Einfluss</span>',
+        warum: "Es geht nicht um eine Methode und nicht um dich als Person, sondern um das Umfeld: Was offiziell beschlossen ist, wird hinter den Kulissen unterlaufen." },
+      { html: 'Kompetenz: <b>1.04 Macht und Interessen</b> · <span data-link="mot">persönliches Interesse</span>',
+        warum: "Persönliche Ziele (Einfluss des Amts) und informelle Macht sind genau der Inhalt von 1.04. Die offizielle Organisation stimmt ja: Beat hat Ja gesagt." },
+      { html: 'Indikator: <b>1.04.02</b> informellen Einfluss von Personen beurteilen und für das Projekt nutzen',
+        warum: "Der Indikator sagt, was du tun sollst: den Einfluss erkennen, seine Wirkung abschätzen und ihn zum Wohl des Projekts nutzen, zum Beispiel indem du Beat als Gewinner des Projekts positionierst." },
+      { html: 'Abgrenzung: nicht <b>3.12 Stakeholder</b>, aber <span data-link="folge">Folge</span> für <b>3.08 Ressourcen</b>',
+        warum: "Die Stakeholderanalyse (3.12) hätte Beat als wichtig erfasst. Hier geht es aber um sein verdecktes Interesse. Die Folge, dass Martin fehlt, löst du über eine Ressourcenvereinbarung (3.08)." },
+      { html: 'Antwort in der Prüfung: <b>1.04 Macht und Interessen</b>, Indikator 1.04.02, Massnahme: Gespräch mit Beat über seine Sorgen, Nutzen für das Bauamt zeigen, Ressourcenvereinbarung für Martin',
+        warum: "So sieht eine vollständige Antwort aus: Nummer, Name, Begründung mit Indikator, Massnahme. Nachschlagen: Swiss ICB 4.3.4 und Stationen 04 und 14." }
+    ]
+  });
+
+  /* ---------- Schritt 4: Stepper Bestehensregel ---------- */
+  L.stepper("#t02-stepper-bestehen", {
+    titel: "Hat Jasmin bestanden?",
+    text: 'Jasmin macht eine Probeprüfung mit 60 MC- und 30 offenen Fragen (Annahme: <span data-link="max">120 Punkte möglich</span>). Sie erreicht <span data-link="pkt">74 Punkte</span> und hat in <span data-link="komp">24 Kompetenzen mindestens eine richtige Antwort</span>.',
+    schritte: [
+      { html: 'Anteil = <span data-link="pkt">74</span> ÷ <span data-link="max">120</span> = 0.617 = 61.7&nbsp;%',
+        warum: "Zuerst die erste Hürde: der Anteil der Punkte." },
+      { html: 'Hürde 1: 61.7&nbsp;% ≥ 60&nbsp;% ✓',
+        warum: "Knapp, aber erfüllt. Die Mindestpunktzahl wäre 0.6 × 120 = 72 Punkte." },
+      { html: 'Hürde 2: <span data-link="komp">24</span> ≥ 23 ✓',
+        warum: "In höchstens 5 Kompetenzen darf sie leer ausgehen. Sie hat in 4 Kompetenzen keine richtige Antwort." },
+      { html: 'Ergebnis: <b>bestanden</b>, weil beide Hürden erfüllt sind',
+        warum: "Beide Bedingungen gelten gleichzeitig. Eine allein reicht nie." },
+      { html: 'Gegenprobe: 74 Punkte, aber nur 22 Kompetenzen → <b>nicht bestanden</b>',
+        warum: "Mit gleich vielen Punkten, aber zu wenig Breite fällt sie durch. Darum zählt jede Kompetenz, auch die seltenen." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Register-Vorlage ---------- */
+  function stationKurz(slug) {
+    return "St. " + slug.slice(0, 2);
+  }
+  document.getElementById("t02-register").innerHTML = K.map(function (k) {
+    return "<tr><th>" + k.nr + "</th><td>" + k.name + "</td><td>" + k.kap + "</td><td>" + (k.buch || '<span class="hint">Inhaltsverzeichnis</span>') +
+      "</td><td>" + k.st.map(stationKurz).join(", ") + "</td></tr>";
+  }).join("");
+
+  /* ---------- Schritt 6: Kompetenz-Landkarte ---------- */
+  const karte = document.getElementById("t02-karte");
+  const zaehlerText = document.getElementById("t02-zaehler-text");
+  const balken = document.getElementById("t02-balken");
+  let erledigt = new Set();
+  let gewaehlt = null; // Nummer der offenen Kachel
+  const kacheln = {};
+  const details = [];
+
+  function istGeuebt(k) {
+    return k.st.some(function (s) { return erledigt.has(s); });
+  }
+
+  function detailHtml(k) {
+    const stationen = k.st.map(function (s) {
+      const ok = erledigt.has(s) ? ' <span class="t02-st-ok">✓ erledigt</span>' : "";
+      return '<li><a href="/lernseiten/pmgt/' + s + '">Station ' + s.slice(0, 2) + " · " + STATIONEN[s] + "</a>" + ok + "</li>";
+    }).join("");
+    return '<h4><span class="icb">ICB ' + k.nr + "</span> " + k.name + "</h4>" +
+      "<p>" + k.text + "</p>" +
+      "<p><b>Indikatoren kurz</b> (Swiss ICB " + k.kap + ", Anhang 3):</p><ul>" + k.ind.map(function (i) { return "<li>" + i + "</li>"; }).join("") + "</ul>" +
+      "<p><b>Stationen dazu:</b></p><ul>" + stationen + "</ul>" +
+      (k.buch ? "<p><b>Gubelmann/Sommer:</b> " + k.buch + "</p>" : "") +
+      '<details class="sol"><summary>Beispielfrage: ' + k.frage + '</summary><div class="stack"><p>' + k.antwort + '</p><p class="hint">Eigene Frage und Lösung, nicht vom Dozenten bestätigt.</p></div></details>';
+  }
+
+  function zeichneStatus() {
+    let n = 0;
+    K.forEach(function (k) {
+      const btn = kacheln[k.nr];
+      const g = istGeuebt(k);
+      if (g) n++;
+      btn.classList.toggle("t02-geuebt", g);
+      btn.querySelector(".t02-marke").textContent = g ? "✓ geübt" : "offen";
+      btn.setAttribute("aria-label", "ICB " + k.nr + " " + k.name + ", " + (g ? "geübt" : "offen"));
+    });
+    zaehlerText.textContent = n + " von 28 Kompetenzen geübt, Ziel ≥ 23" +
+      (n >= 23 ? " · Ziel erreicht" : " · es fehlen noch " + (23 - n));
+    balken.style.width = (n / 28 * 100).toFixed(1) + "%";
+    if (gewaehlt) {
+      const k = K.find(function (x) { return x.nr === gewaehlt; });
+      details[k.b].innerHTML = detailHtml(k);
+    }
+  }
+
+  BEREICHE.forEach(function (be, bi) {
+    const box = document.createElement("div");
+    box.className = "t02-bereich";
+    box.innerHTML = "<h3>" + be.name + " · " + be.nrn + "</h3><p class=\"hint\">" + be.hint + "</p>";
+    const raster = document.createElement("div");
+    raster.className = "t02-raster";
+    K.filter(function (k) { return k.b === bi; }).forEach(function (k) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "t02-kachel";
+      btn.setAttribute("aria-pressed", "false");
+      btn.setAttribute("aria-controls", "t02-detail-" + bi);
+      btn.innerHTML = '<span class="t02-nr">' + k.nr + '</span><span class="t02-name">' + k.name + '</span><span class="t02-marke">offen</span>';
+      btn.addEventListener("click", function () {
+        const zu = gewaehlt === k.nr;
+        Object.keys(kacheln).forEach(function (nr) { kacheln[nr].setAttribute("aria-pressed", "false"); });
+        details.forEach(function (d) { d.innerHTML = ""; });
+        if (zu) { gewaehlt = null; return; }
+        gewaehlt = k.nr;
+        btn.setAttribute("aria-pressed", "true");
+        details[bi].innerHTML = detailHtml(k);
+      });
+      kacheln[k.nr] = btn;
+      raster.appendChild(btn);
+    });
+    const detail = document.createElement("div");
+    detail.className = "t02-detail";
+    detail.id = "t02-detail-" + bi;
+    detail.setAttribute("aria-live", "polite");
+    details.push(detail);
+    box.append(raster, detail);
+    karte.appendChild(box);
+  });
+
+  function fortschrittLaden() {
+    L.fortschritt.laden().then(function (liste) {
+      erledigt = new Set(liste.filter(function (e) { return e && e.status === "erledigt"; }).map(function (e) { return e.thema; }));
+      zeichneStatus();
+    });
+  }
+  zeichneStatus();
+  fortschrittLaden();
+  // Wer in einem anderen Tab eine Station abschliesst, sieht die Karte beim Zurückkehren aktuell
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") fortschrittLaden();
+  });
+
+  /* ---------- Schritt 7: Zuordnungsspiel ---------- */
+  L.sortierer("#t02-sortierer-situation", {
+    frage: "Welche Kompetenz passt am besten?",
+    kategorien: ["1.03 Compliance", "1.04 Macht und Interessen", "2.07 Konflikte und Krisen", "2.09 Verhandlungen", "3.12 Stakeholder", "3.13 Change und Transformation"],
+    elemente: [
+      { html: "1 · Die kantonale Datenschutzstelle verlangt, dass Planbeilagen nach dem Entscheid aufbewahrt und später gelöscht werden. Du klärst, welche Fristen gelten.", kategorie: 0,
+        erklaerung: "Gesetzliche Vorgaben erkennen und einhalten: 1.03, Indikator 1.03.01." },
+      { html: "2 · Der Gemeindepräsident will den Onlineschalter an der Gemeindeversammlung als Sparprojekt vorführen und lässt durchblicken, dass er Mehrkosten blockiert.", kategorie: 1,
+        erklaerung: "Persönliche Ambition und informeller Einfluss: 1.04, Indikatoren 1.04.01 und 1.04.02." },
+      { html: "3 · Seraina und Dario reden seit dem Streit über das Statusmodell nur noch per E-Mail miteinander.", kategorie: 2,
+        erklaerung: "Ein Konflikt im Team, den du analysieren und lösen musst: 2.07." },
+      { html: "4 · Lärchwerk verlangt für eine Zusatzfunktion CHF 8'000. Du suchst mit dem Kundenverantwortlichen eine Lösung, mit der beide leben können.", kategorie: 3,
+        erklaerung: "Interessen klären, Optionen entwickeln, Einigung erzielen: 2.09. Die Vertragsüberwachung wäre 3.09, hier steht die Verhandlung im Vordergrund." },
+      { html: "5 · Du erstellst eine Liste aller Betroffenen, bewertest ihren Einfluss und ihr Interesse und planst, wer wann informiert wird.", kategorie: 4,
+        erklaerung: "Das systematische Vorgehen: Stakeholderanalyse und Kommunikationsplan, 3.12." },
+      { html: "6 · Martin fürchtet, dass das Onlineverfahren seine 30 Jahre Erfahrung entwertet. Du planst, wie das Bauamt die neuen Abläufe annimmt.", kategorie: 5,
+        erklaerung: "Die Organisation muss die Veränderung annehmen, sonst entsteht kein Nutzen: 3.13." },
+      { html: "7 · Das Formular muss den Standard eCH-0059 für barrierefreie Behördenwebseiten erfüllen. Du klärst, was er verlangt.", kategorie: 0,
+        erklaerung: "Einen Standard erkennen und einhalten: 1.03 (Standards und Regulationen)." },
+      { html: "8 · Der Bauverwalter stimmt im Projektausschuss zu, hält aber im Amt seine Leute zurück, weil er um seinen Einfluss fürchtet.", kategorie: 1,
+        erklaerung: "Offizielles Ja, inoffizielles Nein: 1.04 Macht und Interessen. 3.12 wäre die offizielle Analyse und der Kommunikationsplan." },
+      { html: "9 · Zwei Tage vor dem Go-live fällt die Testumgebung beim Lieferanten aus. Die Abnahmetests stehen still, der Termin ist in Gefahr. Du stellst sofort einen Krisenstab zusammen.", kategorie: 2,
+        erklaerung: "Eine plötzliche, bedrohliche Lage, die sofortiges Handeln verlangt: Krise, 2.07." },
+      { html: "10 · Du holst drei Planungsbüros des Architekturforums in den Pilot und informierst den Verein monatlich.", kategorie: 4,
+        erklaerung: "Nutzer und Partner einbinden, um Kooperation zu gewinnen: 3.12, Indikator 3.12.04." }
+    ]
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t02-u-zertifikat", {
+    frage: "Übung 1 · Zu welcher Zertifizierung gehört das?",
+    kategorien: ["IPMA", "PMI", "HERMES", "PRINCE2"],
+    elemente: [
+      { html: "Vier Levels von A bis D, alle prüfen dieselben 28 Kompetenzen.", kategorie: "IPMA", erklaerung: "Das Vier-Level-System der IPMA (Swiss ICB 2.4.1)." },
+      { html: "CAPM als Einstieg, PMP für erfahrene Projektleitende.", kategorie: "PMI", erklaerung: "Zertifikate des Project Management Institute." },
+      { html: "Foundation und Advanced, Methode der Bundesverwaltung.", kategorie: "HERMES", erklaerung: "HERMES ist die Projektmanagementmethode des Bundes." },
+      { html: "Foundation und Practitioner, britische Methode.", kategorie: "PRINCE2", erklaerung: "PRINCE2 stammt aus Grossbritannien." },
+      { html: "In der Schweiz führt der VZPM die Prüfung durch.", kategorie: "IPMA", erklaerung: "Der VZPM ist die Zertifizierungsstelle der spm, der Schweizer IPMA-Mitgliedorganisation." },
+      { html: "ACP für agile Methoden.", kategorie: "PMI", erklaerung: "PMI-ACP = Agile Certified Practitioner." },
+      { html: "Certified Project Management Associate.", kategorie: "IPMA", erklaerung: "Titel des IPMA Level D (LB 1 F.12)." },
+      { html: "Prüft eine Methode mit Phasen, Rollen und Ergebnissen, die viele Schweizer Verwaltungen nutzen.", kategorie: "HERMES", erklaerung: "HERMES ist in der Bundesverwaltung und in vielen Kantonen und Gemeinden verbreitet." }
+    ]
+  });
+
+  L.wahrFalsch("#t02-u-wf", {
+    titel: 'Übung 2 · Wahr oder falsch? <span class="icb">ICB alle</span>',
+    aussagen: [
+      { html: "Alle IPMA-Levels prüfen dieselben 28 Kompetenzen; der Unterschied liegt im Niveau.", wahr: true,
+        erklaerung: "So steht es in der Swiss ICB (S.19): gleiche Kompetenzen, anderer Komplexitätsgrad und andere Erwartungen." },
+      { html: "Für Level D brauchst du mehrere Jahre Projekterfahrung.", wahr: false,
+        erklaerung: "Level D prüft Wissen; Erfahrung ist nicht zwingend vorausgesetzt (Digicomp). Nachgewiesene Erfahrung verlangen erst die Levels C bis A." },
+      { html: "Die ICB schreibt vor, nach welcher Methode ein Projekt laufen muss, zum Beispiel HERMES.", wahr: false,
+        erklaerung: "Die ICB empfiehlt keine bestimmte Vorgehensweise, Methode oder Werkzeug (Swiss ICB Kapitel 4, S.27). Die Organisation wählt selbst." },
+      { html: "Die Kompetenz 3.10 steht in der Swiss ICB im Kapitel 4.5.10.", wahr: true,
+        erklaerung: "Kontext = 4.3.x, Menschen = 4.4.x, Praktiken = 4.5.x." },
+      { html: "Erfahrung ist Teil der IPMA-Definition von Kompetenz.", wahr: false,
+        erklaerung: "Kompetenz = Wissen, Fertigkeiten, Fähigkeiten. Erfahrung spielt nur indirekt eine Rolle (Swiss ICB 2.1)." },
+      { html: "Der VZPM arbeitet nach ISO/IEC 17024, und die Schweizerische Akkreditierungsstelle überprüft das.", wahr: true,
+        erklaerung: "Swiss ICB 2.4.3, S.20." }
+    ]
+  });
+
+  L.zahlAufgabe("#t02-u-23", {
+    titel: "Übung 3 · Woher kommt die 23?",
+    frage: "<p>Die Swiss ICB sagt: Das Zertifikat gibt es, wenn du in 80&nbsp;% der 28 Kompetenzen die verlangte Kompetenz nachweist. In wie vielen Kompetenzen brauchst du mindestens eine richtige Antwort? Ganze Zahl.</p>",
+    antwort: 23,
+    einheit: "Kompetenzen",
+    hinweise: ["Rechne 80 % von 28.", "0.8 × 28 = 22.4. Mit 22 hättest du weniger als 80 %."],
+    loesungsweg: [
+      "0.8 × 28 = 22.4",
+      "Kompetenzen zählt man ganz. 22 wären nur 22 ÷ 28 = 78.6 %, zu wenig.",
+      "Also aufrunden: 23 Kompetenzen (23 ÷ 28 = 82.1 %). Das ist die Regel «23 von 28», wie sie Digicomp nennt."
+    ]
+  });
+
+  L.zahlAufgabe("#t02-u-punkte", {
+    titel: "Übung 4 · Mindestpunktzahl",
+    frage: "<p>Nimm an, eine MC-Frage gibt 1 Punkt und eine offene Frage 2 Punkte. Die Prüfung hat 60 MC- und 30 offene Fragen. Wie viele Punkte brauchst du mindestens für die erste Hürde (60&nbsp;%)?</p>",
+    antwort: 72,
+    einheit: "Punkte",
+    hinweise: ["Zuerst das Maximum: 60 × 1 + 30 × 2.", "Maximum 120 Punkte. Davon 60 %."],
+    loesungsweg: [
+      "Maximum = 60 × 1 + 30 × 2 = 120 Punkte",
+      "Mindestens 60 %: 0.6 × 120 = 72 Punkte",
+      "Achtung: Die Punkte je Frage sind eine Annahme dieser Seite. Die Unterlagen nennen sie nicht. Die Hürde «60 %» gilt aber unabhängig davon."
+    ]
+  });
+
+  L.zahlAufgabe("#t02-u-zeit", {
+    titel: "Übung 5 · Zeitbudget planen",
+    frage: "<p>Du hast 180 Minuten. Für die 60 MC-Fragen planst du je 1 Minute, am Schluss willst du 15 Minuten Reserve. Wie viele Minuten bleiben pro offene Frage (30 Fragen)? Auf eine Stelle nach dem Punkt.</p>",
+    antwort: 3.5,
+    toleranz: 0.05,
+    einheit: "min",
+    hinweise: ["Zieh MC-Zeit und Reserve von 180 Minuten ab.", "180 − 60 − 15 = 105 Minuten für 30 offene Fragen."],
+    loesungsweg: [
+      "Zeit für offene Fragen = 180 − 60 × 1 − 15 = 105 Minuten",
+      "Pro offene Frage = 105 ÷ 30 = 3.5 Minuten",
+      "Zum Vergleich: Im Schnitt hast du 180 ÷ 90 = 2 Minuten pro Frage. Offene Fragen brauchen mehr, MC-Fragen weniger. Die Aufteilung ist eine eigene Empfehlung."
+    ]
+  });
+
+  L.schrittAufgabe("#t02-u-bestehen", {
+    titel: "Übung 6 · Drei Probeprüfungen auswerten",
+    aufgabe: "<p>Drei Mitarbeitende aus Wolkenried haben eine Probeprüfung gemacht (120 Punkte möglich). Wer hätte bestanden? Überleg zuerst selbst, dann deck Schritt für Schritt auf.</p><ul><li>Jasmin: 77 Punkte, richtige Antwort in 25 Kompetenzen</li><li>Luca: 94 Punkte, richtige Antwort in 21 Kompetenzen</li><li>Aylin: 70 Punkte, richtige Antwort in 27 Kompetenzen</li></ul>",
+    schritte: [
+      { html: "Grenze Punkte: 0.6 × 120 = 72 · Grenze Breite: 23 Kompetenzen", warum: "Erst beide Grenzen festhalten, dann jede Person gegen beide prüfen." },
+      { html: "Jasmin: 77 ≥ 72 ✓ · 25 ≥ 23 ✓ → <b>bestanden</b>", warum: "Beide Hürden erfüllt." },
+      { html: "Luca: 94 ≥ 72 ✓ · 21 ≥ 23 ✗ → <b>nicht bestanden</b>", warum: "Viele Punkte, aber zu schmal: In 7 Kompetenzen hat er nichts. Typisch für jemanden, der nur das Handwerk gelernt hat." },
+      { html: "Aylin: 70 ≥ 72 ✗ · 27 ≥ 23 ✓ → <b>nicht bestanden</b>", warum: "Breit, aber 2 Punkte zu wenig (70 ÷ 120 = 58.3 %)." }
+    ]
+  });
+
+  L.auswahl("#t02-u-mc", {
+    frage: '<p><b>Übung 7</b> <span class="icb">ICB alle</span></p><p>Welche Aussage über die ICB4 trifft zu?</p>',
+    optionen: [
+      "Sie hat für Projektmanagement 29 Kompetenzen in vier Bereichen.",
+      "Jede Kompetenz ist in Kompetenzindikatoren gegliedert, und diese haben Messgrössen.",
+      "Die Kompetenzen im Bereich Praktiken gelten nur für Projektleitende, nicht für Mitarbeitende.",
+      "Die Kompetenz «Verhandlungen» gehört zum Bereich Praktiken."
+    ],
+    richtig: 1,
+    erklaerung: "Kompetenz → Indikatoren → Messgrössen (Swiss ICB 3.1.3, 3.2). Die anderen sind falsch: 28 Kompetenzen in drei Bereichen (29 gilt für Programm- und Portfoliomanagement); die ICB beschreibt Kompetenzen für alle, die im Projektmanagement arbeiten, nicht für Rollen; Verhandlungen ist 2.09, Bereich Menschen."
+  });
+
+  L.auswahl("#t02-u-fall", {
+    frage: '<p><b>Übung 8 · Fallentscheid in der Prüfung</b> <span class="icb">ICB 2.01</span></p><p>Minute 125 von 180. Du hast alle MC-Fragen beantwortet, 6 davon markiert. Von den 30 offenen Fragen sind 14 offen. Bei der aktuellen Frage zu «Beschaffung» findest du im Ordner nichts. Was tust du?</p>',
+    optionen: [
+      "Im Gubelmann/Sommer das Kapitel zur Beschaffung suchen und lesen, bis du die Antwort hast.",
+      "Mit dem, was du weisst, kurz antworten: Kompetenz 3.09 nennen, Fachbegriffe wie Ausschreibung, Zuschlagskriterien und Vertrag verwenden. Dann weiter; am Schluss die markierten MC-Fragen.",
+      "Die Frage leer lassen und zurück zu den markierten MC-Fragen gehen.",
+      "Die restlichen offenen Fragen nur noch mit Stichworten ohne Begriffe füllen, damit du sicher fertig wirst."
+    ],
+    richtig: 1,
+    erklaerung: "Es bleiben 55 Minuten für 14 offene Fragen, also knapp 4 Minuten pro Frage. Lesen im Buch frisst diese Zeit. Leer lassen verschenkt Punkte und vielleicht die einzige Chance auf eine richtige Antwort in 3.09 (Hürde 23 von 28). Stichworte ohne Fachbegriffe geben kaum Punkte. Sich selbst und die Zeit führen gehört zu 2.01 Selbstmanagement (Indikator 2.01.04)."
+  });
+
+  L.reflexion("#t02-u-reflexion", {
+    titel: "Übung 9 · Offene Frage: Aufbau der ICB4",
+    icb: ["ICB 1.01–1.05", "ICB 2.01–2.10", "ICB 3.01–3.13"],
+    frage: "<p>Erkläre einem neuen Teammitglied in Wolkenried den Aufbau der ICB4: (a) die drei Kompetenzbereiche mit Anzahl Kompetenzen und je zwei Beispielen mit Nummer, (b) wie eine Kompetenz weiter gegliedert ist und (c) warum die Kontext-Kompetenzen für den Onlineschalter wichtig sind. Fünf bis acht Sätze.</p>",
+    musterloesung:
+      "<p><b>(a)</b> Die ICB4 beschreibt 28 Kompetenzen in drei Bereichen. Kontext (Perspective) mit 5 Kompetenzen, zum Beispiel 1.01 Strategie und 1.03 Compliance, Standards und Regulationen. Menschen (People) mit 10 Kompetenzen, zum Beispiel 2.05 Führung und 2.07 Konflikte und Krisen. Praktiken (Practice) mit 13 Kompetenzen, zum Beispiel 3.04 Ablauf und Termine und 3.11 Chancen und Risiken.</p>" +
+      "<p><b>(b)</b> Jede Kompetenz hat eine Definition, einen Zweck und eine Beschreibung mit Wissen und Fertigkeiten. Sie ist in Kompetenzindikatoren gegliedert, etwa 3.10.04 «Bericht über den Projektfortschritt erstatten», und jeder Indikator hat Messgrössen, an denen man die Leistung beurteilt.</p>" +
+      "<p><b>(c)</b> Der Onlineschalter steht nicht im luftleeren Raum: Er muss zur Strategie des Gemeinderats passen (1.01), Datenschutz und Gebührenrecht einhalten (1.03), und er verändert Macht und Gewohnheiten im Bauamt (1.04, 1.05). Wer das übersieht, liefert vielleicht eine technisch gute Lösung, die niemand will oder darf.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Quellen: Swiss ICB S.21–29, Anhang 3.</p>',
+    kriterien: [
+      { text: "Drei Bereiche mit richtiger Anzahl (5, 10, 13 = 28)", punkte: 2 },
+      { text: "Je Bereich zwei Beispiele mit richtiger Nummer und Namen", punkte: 2 },
+      { text: "Gliederung Kompetenz → Indikatoren → Messgrössen erklärt", punkte: 2 },
+      { text: "Bedeutung des Kontexts am Fall begründet (mindestens zwei Kompetenzen)", punkte: 2 },
+      { text: "Fachbegriffe der ICB verwendet, klar und knapp", punkte: 1 }
+    ]
+  });
+
+  L.reflexion("#t02-u-vorlage", {
+    titel: "Übung 10 · Vorlage ausfüllen: eine Registerseite für den Ordner",
+    icb: "ICB 1.04",
+    frage: "<p>Füll für deinen Open-Book-Ordner die Registerseite zu <b>1.04 Macht und Interessen</b> aus. Nutze die Vorlage aus Schritt 5: (1) Nummern (ICB und Swiss ICB), (2) Definition in eigenen Worten, (3) Indikatoren als Stichworte, (4) Abgrenzung zu einer verwandten Kompetenz, (5) ein Beispiel aus Wolkenried mit Massnahme, (6) Fundstellen.</p>",
+    hinweis: "Schreib in Stichworten, wie auf einem echten Spickzettel. Die Musterlösung zeigt eine mögliche Seite.",
+    musterloesung:
+      "<p><b>(1)</b> ICB 1.04 Macht und Interessen · Swiss ICB 4.3.4 · Bereich Kontext.</p>" +
+      "<p><b>(2)</b> Neben den offiziellen Regeln wirken persönliche Ziele und informeller Einfluss. Wer sie erkennt, kann sie für das Projekt nutzen statt von ihnen überrascht zu werden.</p>" +
+      "<p><b>(3)</b> 1.04.01 persönliche Ambitionen und Interessen Dritter · 1.04.02 informeller Einfluss von Personen und Gruppen · 1.04.03 Persönlichkeiten und Arbeitsstile.</p>" +
+      "<p><b>(4)</b> Abgrenzung: 3.12 Stakeholder = systematisch, offiziell (Analyse, Strategie, Kommunikationsplan). 1.04 = informell, persönlich, hinter den Kulissen. Verwandt auch 1.05 Kultur und Werte.</p>" +
+      "<p><b>(5)</b> Bauverwalter sagt im Ausschuss Ja, hält im Amt seine Leute zurück (Angst um Einfluss). Massnahme: Einzelgespräch, Nutzen für sein Amt zeigen, ihn als Gewinner sichtbar machen, Ressourcenvereinbarung.</p>" +
+      "<p><b>(6)</b> Swiss ICB 4.3.4 (ab S.45), Übersicht S.24, Anhang 3 S.152 · Stationen 04 und 14 · Gubelmann/Sommer: Inhaltsverzeichnis.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt.</p>',
+    kriterien: [
+      { text: "Nummer, Swiss-ICB-Kapitel und Bereich richtig", punkte: 1 },
+      { text: "Definition in eigenen Worten, kurz und treffend", punkte: 1 },
+      { text: "Alle drei Indikatoren als Stichworte", punkte: 2 },
+      { text: "Abgrenzung zu 3.12 (oder 1.05) richtig", punkte: 2 },
+      { text: "Beispiel mit passender Massnahme", punkte: 1 },
+      { text: "Fundstellen, die man in Sekunden findet", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Fünf Situationen der Hallenbad-Sanierung; jede Szene zeigt den Stand der Antwort, Neues leuchtet auf.
+  const A = {
+    s1: { b: "<b>1 · Kontext</b>", k: " → <b>1.03 Compliance, Standards und Regulationen</b>",
+      i: ". Begründung: Eine Vorschrift (Brandschutz) muss erkannt und eingehalten werden, Indikatoren 1.03.01 und 1.03.02 (Sicherheit).",
+      m: " Massnahme: Brandschutzfachperson beiziehen, Vorgaben als Muss-Anforderungen aufnehmen, Abnahme durch die Feuerpolizei einplanen." },
+    s2: { b: "<b>2 · Kontext</b>", k: " → <b>1.04 Macht und Interessen</b>",
+      i: ". Begründung: Ein persönliches Interesse (Trainingszeiten für den eigenen Club) wirkt über informellen Einfluss, Indikatoren 1.04.01 und 1.04.02.",
+      m: " Massnahme: Interessen offen ansprechen, Auftraggeber informieren, Trainingszeiten nur über das ordentliche Verfahren vergeben." },
+    s3: { b: "<b>3 · Menschen</b>", k: " → <b>2.07 Konflikte und Krisen</b>",
+      i: ". Begründung: Zwei Personen sind im Streit, die Zusammenarbeit leidet, Indikatoren 2.07.02 (Ursachen analysieren) und 2.07.03 (vermitteln).",
+      m: " Massnahme: getrennt anhören, dann gemeinsames Gespräch moderieren, Etappierung mit beiden festlegen." },
+    s4: { b: "<b>4 · Praktiken</b>", k: " → <b>3.09 Beschaffung</b>",
+      i: ". Begründung: Beschaffungsbedarf, Verfahren und Auswahlkriterien festlegen, Indikatoren 3.09.01 und 3.09.02.",
+      m: " Massnahme: Ausschreibung nach öffentlichem Beschaffungsrecht vorbereiten, Zuschlagskriterien mit Gewichtung vorab festlegen." },
+    s5: { b: "<b>5 · Praktiken</b>", k: " → <b>3.13 Change und Transformation</b>",
+      i: ". Begründung: Das System ist fertig, aber Personal und Gäste nehmen die Veränderung nicht an, Indikatoren 3.13.02 und 3.13.04.",
+      m: " Massnahme: Gründe erfragen, Personal schulen und begleiten, Vorteile für Gäste zeigen, Übergangsfrist für Bargeld festlegen." }
+  };
+  const TEILE = ["b", "k", "i", "m"];
+  // stand: { s1: 4, s2: 2, … } = wie viele Teile je Situation sichtbar; neu = [situation, teil]
+  function antwort(stand, neu) {
+    const zeilen = ["s1", "s2", "s3", "s4", "s5"].filter(function (s) { return stand[s]; }).map(function (s) {
+      return '<div class="t02-fb">' + TEILE.slice(0, stand[s]).map(function (t) {
+        return neu && neu[0] === s && neu[1] === t ? NW(A[s][t]) : A[s][t];
+      }).join("") + "</div>";
+    });
+    return '<div class="t02-fz">' + (zeilen.length ? zeilen.join("") : '<div class="t02-fb"><i>noch leer</i></div>') + "</div>";
+  }
+  const VOLL = { s1: 4, s2: 4, s3: 4, s4: 4, s5: 4 };
+
+  L.film("#t02-film", {
+    phasen: ["1 · Lesen", "2 · Bereich", "3 · Kompetenz", "4 · Begründen", "5 · Massnahme", "6 · Prüfen"],
+    texte: [
+      'Die Gemeinde Wolkenried saniert ihr Hallenbad. Ordne jede Situation einer ICB4-Kompetenz zu (Nummer und Name), begründe mit einem Kompetenzindikator und nenne eine Massnahme. ' +
+      '<span data-ph="s1">S1: Die kantonale Feuerpolizei verlangt neue Fluchtwege nach den Brandschutzvorschriften; im Projektteam kennt niemand die Vorgaben.</span> ' +
+      '<span data-ph="s2">S2: Der Präsident des Schwimmclubs sitzt in der Finanzkommission. Er deutet an, er unterstütze den Nachtragskredit nur, wenn sein Club bessere Trainingszeiten erhält.</span> ' +
+      '<span data-ph="s3">S3: Der Bauleiter und die Badmeisterin streiten seit Wochen über die Etappierung und reden nur noch über E-Mails miteinander.</span> ' +
+      '<span data-ph="s4">S4: Für die neue Lüftungsanlage musst du festlegen, wie der Auftrag vergeben wird und nach welchen Kriterien der Zuschlag erfolgt.</span> ' +
+      '<span data-ph="s5">S5: Nach der Wiedereröffnung meiden viele Stammgäste das neue Kartensystem an der Kasse, das Personal nimmt weiter Bargeld an.</span>'
+    ],
+    woerterbuch: [
+      "<b>Kontext</b> 1.01–1.05: Umfeld",
+      "<b>Menschen</b> 2.01–2.10: ich und die anderen",
+      "<b>Praktiken</b> 3.01–3.13: Handwerk",
+      "<b>Indikator</b> = Begründung",
+      "<b>Antwort</b> = Nummer + Name + Begründung + Massnahme"
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Antwort", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: antwort({}), say: "So löst du eine offene Zuordnungsfrage: lesen, Bereich bestimmen, Kompetenz wählen, mit Indikator begründen, Massnahme nennen, zum Schluss prüfen." },
+      { ph: 0, hl: ["s1", "s2", "s3", "s4", "s5"], f: antwort({}),
+        say: "Lies alle fünf Situationen einmal ganz. Markier in jeder das Schlüsselwort: Vorschrift, persönlicher Vorteil, Streit, Vergabe, Annahme durch die Leute." },
+      { ph: 1, dict: 3, dh: [0, 1, 2], f: antwort({}),
+        say: "Zuerst grob den Bereich. Geht es um das Umfeld, um Menschen oder um das Handwerk? Das halbiert die Suche im Ordner." },
+      { ph: 1, hl: ["s1"], dh: [0], f: antwort({ s1: 1 }, ["s1", "b"]),
+        say: "Situation 1: Eine Vorschrift von aussen gibt den Rahmen vor. Das ist Umfeld, also Kontext." },
+      { ph: 2, hl: ["s1"], f: antwort({ s1: 2 }, ["s1", "k"]),
+        say: "Im Kontext geht es um Vorschriften und Normen in der Kompetenz 1.03 Compliance, Standards und Regulationen." },
+      { ph: 3, hl: ["s1"], dict: 4, dh: [3], f: antwort({ s1: 3 }, ["s1", "i"]),
+        say: "Die Begründung holst du aus den Indikatoren: Rechtsvorschriften und Sicherheitsvorschriften erkennen und einhalten." },
+      { ph: 4, hl: ["s1"], f: antwort({ s1: 4 }, ["s1", "m"]),
+        say: "Massnahme: eine Fachperson beiziehen, die Vorgaben als Muss-Anforderungen aufnehmen und die Abnahme durch die Feuerpolizei einplanen." },
+      { ph: 1, hl: ["s2"], dh: [0], f: antwort({ s1: 4, s2: 1 }, ["s2", "b"]),
+        say: "Situation 2: Kein offizielles Verfahren, sondern ein persönlicher Vorteil im Hintergrund. Auch das ist Umfeld, also Kontext." },
+      { ph: 2, hl: ["s2"], f: antwort({ s1: 4, s2: 2 }, ["s2", "k"]),
+        say: "Persönliche Interessen und informeller Einfluss: Das ist 1.04 Macht und Interessen, nicht 3.12 Stakeholder." },
+      { ph: 3, hl: ["s2"], dh: [3], f: antwort({ s1: 4, s2: 3 }, ["s2", "i"]),
+        say: "Begründung mit den Indikatoren: persönliche Ambitionen beurteilen und informellen Einfluss beurteilen." },
+      { ph: 4, hl: ["s2"], f: antwort({ s1: 4, s2: 4 }, ["s2", "m"]),
+        say: "Massnahme: offen ansprechen, den Auftraggeber informieren und Trainingszeiten nur im ordentlichen Verfahren vergeben. Kein verdeckter Handel." },
+      { ph: 1, hl: ["s3"], dh: [1], f: antwort({ s1: 4, s2: 4, s3: 1 }, ["s3", "b"]),
+        say: "Situation 3: Zwei Menschen im Streit. Bereich Menschen." },
+      { ph: 2, hl: ["s3"], f: antwort({ s1: 4, s2: 4, s3: 2 }, ["s3", "k"]),
+        say: "Die passende Kompetenz ist 2.07 Konflikte und Krisen." },
+      { ph: 3, hl: ["s3"], dh: [3], f: antwort({ s1: 4, s2: 4, s3: 3 }, ["s3", "i"]),
+        say: "Begründung: Ursachen und Auswirkungen des Konflikts analysieren und vermitteln." },
+      { ph: 4, hl: ["s3"], f: antwort({ s1: 4, s2: 4, s3: 4 }, ["s3", "m"]),
+        say: "Massnahme: beide zuerst getrennt anhören, dann ein gemeinsames Gespräch moderieren und die Etappierung zusammen festlegen." },
+      { ph: 1, hl: ["s4"], dh: [2], f: antwort({ s1: 4, s2: 4, s3: 4, s4: 1 }, ["s4", "b"]),
+        say: "Situation 4: Ein Auftrag wird vergeben. Das ist eine Methode, also Praktiken." },
+      { ph: 2, hl: ["s4"], f: antwort({ s1: 4, s2: 4, s3: 4, s4: 2 }, ["s4", "k"]),
+        say: "Vergabe und Zuschlagskriterien gehören zu 3.09 Beschaffung. Verhandlungen, 2.09, wäre erst das Gespräch mit einem Anbieter." },
+      { ph: 3, hl: ["s4"], dh: [3], f: antwort({ s1: 4, s2: 4, s3: 4, s4: 3 }, ["s4", "i"]),
+        say: "Begründung: Beschaffungsbedarf und Verfahren klären und bei der Auswahl der Lieferanten mitwirken." },
+      { ph: 4, hl: ["s4"], f: antwort({ s1: 4, s2: 4, s3: 4, s4: 4 }, ["s4", "m"]),
+        say: "Massnahme: Ausschreibung nach öffentlichem Beschaffungsrecht vorbereiten und die gewichteten Kriterien vorab festlegen." },
+      { ph: 1, hl: ["s5"], dh: [2], f: antwort({ s1: 4, s2: 4, s3: 4, s4: 4, s5: 1 }, ["s5", "b"]),
+        say: "Situation 5: Das neue System ist da, aber die Leute nutzen es nicht. Bereich Praktiken." },
+      { ph: 2, hl: ["s5"], f: antwort({ s1: 4, s2: 4, s3: 4, s4: 4, s5: 2 }, ["s5", "k"]),
+        say: "Dafür steht 3.13 Change und Transformation: Erst wenn die Organisation die Veränderung annimmt, entsteht der Nutzen." },
+      { ph: 3, hl: ["s5"], dh: [3], f: antwort({ s1: 4, s2: 4, s3: 4, s4: 4, s5: 3 }, ["s5", "i"]),
+        say: "Begründung: Veränderungsbedarf erkennen und die Veränderung umsetzen." },
+      { ph: 4, hl: ["s5"], f: antwort(VOLL, ["s5", "m"]),
+        say: "Massnahme: Gründe erfragen, Personal schulen und begleiten, Vorteile zeigen und eine Übergangsfrist für Bargeld festlegen." },
+      { ph: 5, dict: 5, dh: [4], f: antwort(VOLL),
+        say: "Prüf zum Schluss: Hat jede Antwort Nummer, Name, Begründung und Massnahme? Ja. Kommen alle drei Bereiche vor? Ja, zweimal Kontext, einmal Menschen, zweimal Praktiken." },
+      { ph: 5, f: antwort(VOLL),
+        say: "Fertig. Fünf vollständige Antworten mit Fachbegriffen. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t02-film-loesung").innerHTML = antwort(VOLL);
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t02-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB alle</span> Wie viele Kompetenzen umfasst die ICB4 für Projektmanagement, und wie verteilen sie sich?',
+        o: ["28: 5 Kontext, 10 Menschen, 13 Praktiken", "28: 10 Kontext, 5 Menschen, 13 Praktiken", "29: 5 Kontext, 10 Menschen, 14 Praktiken", "30: je 10 pro Bereich"], a: 0,
+        e: "5 + 10 + 13 = 28 (Swiss ICB 3.2, S.23). 29 Kompetenzen gelten für Programm- und Portfoliomanagement." },
+      { q: '<span class="icb">ICB 1.03</span> Welche Kompetenz gehört zum Bereich Kontext (Perspective)?',
+        o: ["2.09 Verhandlungen", "1.03 Compliance, Standards und Regulationen", "3.12 Stakeholder", "3.09 Beschaffung"], a: 1,
+        e: "Kontext = 1.01–1.05: Strategie; Governance, Strukturen und Prozesse; Compliance, Standards und Regulationen; Macht und Interessen; Kultur und Werte (Swiss ICB S.29)." },
+      { q: '<span class="icb">ICB alle</span> Was bescheinigt IPMA Level D?',
+        o: ["Projekte mittlerer Komplexität selbständig zu leiten", "breites Wissen in allen Kompetenzen der ICB, ohne nachgewiesene Erfahrung", "Portfolios und Programme zu führen", "die Methode HERMES anwenden zu können"], a: 1,
+        e: "Level D = Certified Project Management Associate: Wissen (LB 1 F.12; Swiss ICB S.19). Projektleitung bestätigt Level C, Portfolios und Programme Level A, HERMES ein Methodenzertifikat." },
+      { q: '<span class="icb">ICB alle</span> Eine Kandidatin erreicht 70&nbsp;% der Punkte und hat in 22 Kompetenzen mindestens eine richtige Antwort. Ergebnis?',
+        o: ["Bestanden, weil 70&nbsp;% über 60&nbsp;% liegen", "Bestanden, weil 22 Kompetenzen rund 80&nbsp;% sind", "Nicht bestanden, weil mindestens 23 Kompetenzen nötig sind", "Nicht bestanden, weil 75&nbsp;% der Punkte nötig sind"], a: 2,
+        e: "Beide Hürden gelten: mindestens 60&nbsp;% der Punkte und in mindestens 23 von 28 Kompetenzen eine richtige Antwort (Digicomp; Swiss ICB S.20: 80&nbsp;% der 28). 22 ÷ 28 = 78.6&nbsp;%." },
+      { q: '<span class="icb">ICB 1.03</span> Wer führt in der Schweiz die IPMA-Zertifizierung durch?',
+        o: ["Die Schweizerische Akkreditierungsstelle (SAS)", "Der VZPM, die Zertifizierungsstelle der spm", "Jede Fachhochschule selbst", "Der Bund über das HERMES-Team"], a: 1,
+        e: "VZPM = Verein zur Zertifizierung von Personen im Management, Zertifizierungsstelle der spm; er arbeitet nach ISO/IEC 17024, die SAS prüft das (Swiss ICB 2.4.3, S.20)." },
+      { q: '<span class="icb">ICB alle</span> Was sind Kompetenzindikatoren?',
+        o: ["Kennzahlen wie SPI und CPI", "Die Noten der Prüfung je Kompetenz", "Beobachtbare Teilkompetenzen, in die eine Kompetenz gegliedert ist, je mit Messgrössen", "Die Seitenzahlen im Pflichtbuch"], a: 2,
+        e: "Jede Kompetenz ist in Indikatoren gegliedert, diese in Messgrössen (Swiss ICB 3.1.3, S.22), zum Beispiel 3.10.04 «Bericht über den Projektfortschritt erstatten»." },
+      { q: '<span class="icb">ICB 1.04</span> Der Bauverwalter stimmt im Projektausschuss zu, hält aber im Amt seine Leute zurück, weil er um seinen Einfluss fürchtet. Welche Kompetenz ist vor allem gefordert?',
+        o: ["3.12 Stakeholder", "1.04 Macht und Interessen", "3.05 Organisation, Information und Dokumentation", "2.03 Persönliche Kommunikation"], a: 1,
+        e: "Persönliche Interessen und informeller Einfluss hinter den Kulissen: 1.04, Indikatoren 1.04.01 und 1.04.02 (Swiss ICB 4.3.4). 3.12 wäre die systematische Stakeholderanalyse." },
+      { q: '<span class="icb">ICB alle</span> Wie definiert die IPMA «Kompetenz»?',
+        o: ["Wissen plus mindestens drei Jahre Erfahrung", "Die Anwendung von Wissen, Fertigkeiten und Fähigkeiten, um gewünschte Ergebnisse zu erreichen", "Die Summe aller Zertifikate einer Person", "Die Fähigkeit, eine bestimmte Methode fehlerfrei anzuwenden"], a: 1,
+        e: "Swiss ICB 2.1 (S.13), in eigenen Worten. Erfahrung ist nicht Teil der Definition, spielt aber indirekt eine Rolle." },
+      { q: '<span class="icb">ICB 3.04</span> <span class="icb">ICB 3.10</span> Du vergleichst Ende Woche 4 Kosten, Termine und Leistung mit dem Plan und leitest Korrekturmassnahmen ein. Welche Kompetenz steht im Vordergrund?',
+        o: ["3.04 Ablauf und Termine", "3.10 Planung und Steuerung", "3.07 Kosten und Finanzierung", "3.01 Projektdesign"], a: 1,
+        e: "Soll-Ist über alle Dimensionen und Korrekturmassnahmen: Indikator 3.10.03 (Swiss ICB 4.5.10). 3.04 und 3.07 betreffen nur eine Dimension." },
+      { q: '<span class="icb">ICB 2.01</span> Die Prüfung dauert 180 Minuten für 60 MC- und 30 offene Fragen. Welches Vorgehen ist am sinnvollsten?',
+        o: ["Jede Frage im Pflichtbuch nachschlagen, bevor du antwortest", "Zuerst die MC-Fragen zügig, Unsicheres markieren, dann die offenen Fragen mit Fachbegriffen, Reserve am Schluss", "Mit den offenen Fragen beginnen und die MC-Fragen in den letzten 10 Minuten raten", "Bei Unsicherheit Fragen leer lassen, damit keine Punkte abgezogen werden"], a: 1,
+        e: "Im Schnitt 2 Minuten pro Frage: Nachschlagen nur gezielt über das Register. Leere Antworten verschenken Punkte und gefährden die Hürde 23 von 28. Eigene Empfehlung; sich und die Zeit führen gehört zu 2.01 (Indikator 2.01.04)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

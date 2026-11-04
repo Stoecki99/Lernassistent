@@ -24,9 +24,17 @@ const JS_PFAD = "/lernpfad/lernpfad.js"
 /** Erweiterung für den Lernpfad PS (Simulator und Syntaxfärbung), siehe docs/lernpfad-powershell.md. */
 const PS_KONSOLE_PFAD = "/lernpfad/ps-konsole.js"
 const PS_KONSOLE_CSS_PFAD = "/lernpfad/ps-konsole.css"
+/** Spiel-Erweiterung für den Lernpfad Spieltheorie, siehe docs/lernpfad-spieltheorie.md. */
+const ST_SPIEL_PFAD = "/lernpfad/st-spiel.js"
+const ST_SPIEL_CSS_PFAD = "/lernpfad/st-spiel.css"
 /** Architektur-Engine für AVSW (Diagramme, Atlas, Editor, Spiel), siehe docs/lernpfad-architektur.md. */
 const ARCHITEKTUR_PFAD = "/lernpfad/architektur.js"
 const ARCHITEKTUR_CSS_PFAD = "/lernpfad/architektur.css"
+/** Erweiterungen aus /lernpfad/: CSS nach lernpfad.css, JS nach lernpfad.js */
+const ERWEITERUNGEN_CSS = [PS_KONSOLE_CSS_PFAD, ST_SPIEL_CSS_PFAD, ARCHITEKTUR_CSS_PFAD]
+const ERWEITERUNGEN_JS = [PS_KONSOLE_PFAD, ST_SPIEL_PFAD, ARCHITEKTUR_PFAD]
+/** Werte von <body data-sektion> mit eigenem Akzent in lernpfad.css (Abschnitt «Akzent pro Sektion»). */
+export const SEKTIONEN = ["logik", "wahrscheinlichkeit", "statistik", "abschluss"]
 
 /** Namen der Seiten auf oberster Ebene der App (inkl. Routen-Gruppen wie (dashboard)). */
 export function appSeiten(appPfad = path.join(process.cwd(), "app")): string[] {
@@ -370,15 +378,12 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
   if (!stylesheet) {
     fehler.push(`<link rel="stylesheet" href="${CSS_PFAD}"> fehlt.`)
   }
-  // ps-konsole.css überschreibt Farben aus lernpfad.css und gehört darum danach
-  const psStylesheet = startTags(quelle, "link").find(({ tag }) => istStylesheet(tag, PS_KONSOLE_CSS_PFAD))
-  if (psStylesheet && stylesheet && psStylesheet.index < stylesheet.index) {
-    fehler.push(`<link rel="stylesheet" href="${PS_KONSOLE_CSS_PFAD}"> gehört nach <link rel="stylesheet" href="${CSS_PFAD}">.`)
-  }
-  // architektur.css setzt Tokens und den AVSW-Akzent über lernpfad.css und gehört darum danach
-  const arStylesheet = startTags(quelle, "link").find(({ tag }) => istStylesheet(tag, ARCHITEKTUR_CSS_PFAD))
-  if (arStylesheet && stylesheet && arStylesheet.index < stylesheet.index) {
-    fehler.push(`<link rel="stylesheet" href="${ARCHITEKTUR_CSS_PFAD}"> gehört nach <link rel="stylesheet" href="${CSS_PFAD}">.`)
+  // Erweiterungs-CSS (ps-konsole.css, st-spiel.css, architektur.css) überschreibt Farben und Tokens aus lernpfad.css und gehört darum danach
+  for (const pfad of ERWEITERUNGEN_CSS) {
+    const erwStylesheet = startTags(quelle, "link").find(({ tag }) => istStylesheet(tag, pfad))
+    if (erwStylesheet && stylesheet && erwStylesheet.index < stylesheet.index) {
+      fehler.push(`<link rel="stylesheet" href="${pfad}"> gehört nach <link rel="stylesheet" href="${CSS_PFAD}">.`)
+    }
   }
 
   const body = startTags(quelle, "body")[0]
@@ -395,6 +400,19 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
         `<body data-thema="${slug}"> fehlt (gefunden: ${datenThema === null ? "nichts" : `«${kurz(datenThema)}»`}).`,
       )
     }
+    // Farb-Opt-in (Baukasten 1.2.0): data-sektion nur mit bekannten Werten, sonst fehlt der Akzent still
+    const datenSektion = attribut(body.tag, "data-sektion")
+    if (datenSektion !== null && !SEKTIONEN.includes(datenSektion)) {
+      fehler.push(`<body data-sektion="${kurz(datenSektion)}"> ist unbekannt (erlaubt: ${SEKTIONEN.join(", ")}).`)
+    }
+    // data-sektion wirkt nur zusammen mit data-farbig (Selektor body[data-farbig][data-sektion=…])
+    if (datenSektion !== null && !/\sdata-farbig(?=[\s=/>])/i.test(body.tag)) {
+      fehler.push(`<body data-sektion="${kurz(datenSektion)}"> wirkt nur zusammen mit data-farbig.`)
+    }
+    // MSTW: Farben sind Pflicht (docs/lernpfad-format.md, Abschnitt Gerüst)
+    if (fach === "mstw" && (datenSektion === null || !/\sdata-farbig(?=[\s=/>])/i.test(body.tag))) {
+      fehler.push(`<body> braucht im Fach mstw data-farbig und data-sektion (${SEKTIONEN.join(", ")}).`)
+    }
   }
 
   const skript = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), JS_PFAD))
@@ -404,15 +422,12 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
     fehler.push(`<script src="${JS_PFAD}"> gehört ans Ende von <body>, nicht in <head>.`)
   }
 
-  // Zusätzliche Skripte aus /lernpfad/ (z. B. ps-konsole.js) erweitern window.Lernpfad und brauchen lernpfad.js davor
-  const erweiterung = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), PS_KONSOLE_PFAD))
-  if (erweiterung && skript && erweiterung.index < skript.index) {
-    fehler.push(`<script src="${PS_KONSOLE_PFAD}"> gehört nach <script src="${JS_PFAD}">.`)
-  }
-  // architektur.js nutzt window.Lernpfad (Formeln, Kontext) und braucht lernpfad.js davor
-  const architektur = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), ARCHITEKTUR_PFAD))
-  if (architektur && skript && architektur.index < skript.index) {
-    fehler.push(`<script src="${ARCHITEKTUR_PFAD}"> gehört nach <script src="${JS_PFAD}">.`)
+  // Zusätzliche Skripte aus /lernpfad/ (ps-konsole.js, st-spiel.js, architektur.js) erweitern oder nutzen window.Lernpfad und brauchen lernpfad.js davor
+  for (const pfad of ERWEITERUNGEN_JS) {
+    const erweiterung = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), pfad))
+    if (erweiterung && skript && erweiterung.index < skript.index) {
+      fehler.push(`<script src="${pfad}"> gehört nach <script src="${JS_PFAD}">.`)
+    }
   }
 
   fehler.push(...externeRessourcen(quelle))

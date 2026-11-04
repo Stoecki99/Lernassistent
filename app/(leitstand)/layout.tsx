@@ -48,7 +48,7 @@ export default async function LeitstandLayout({ children }: { children: React.Re
           ) : (
             <UpgradePrompt
               title="Leitstand freischalten"
-              description="Der Leitstand, der Projektsimulator des Lernpfads PMGT, ist im Pro-Plan enthalten. Mit Pro planst, führst und steuerst du das Projekt Onlineschalter Wolkenried und erhältst Punkte, Sterne und Abzeichen."
+              description="Der Leitstand, der Projektsimulator des Lernpfads PMGT, ist im Pro-Plan enthalten. Mit Pro planst, führst und steuerst du Projekte der öffentlichen Verwaltung, etwa den Onlineschalter Wolkenried oder den Stipendien-Assistenten Hochmatt, und erhältst Punkte, Sterne und Abzeichen."
             />
           )}
         </main>

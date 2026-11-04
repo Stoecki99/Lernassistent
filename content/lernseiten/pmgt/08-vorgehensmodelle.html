@@ -1,0 +1,1645 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vorgehensmodelle: Wasserfall bis Scrum · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/09-projektstrukturplan" title="Projektstrukturplan">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t08-», nur Farben aus :root -->
+  <style>
+    .t08-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t08-ziele li{margin-bottom:3px}
+    .t08-quelle{font-size:.9rem; color:var(--muted); margin:6px 0 0}
+    .t08-erg{display:inline-block; font-size:.75rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase; padding:1px 7px; border-radius:999px; border:1px dashed var(--muted); color:var(--muted); vertical-align:middle; white-space:nowrap}
+
+    /* Wasserfall als Treppe */
+    .t08-kaskade{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; counter-reset:t08k}
+    .t08-kaskade li{counter-increment:t08k; background:var(--board); border:1px solid var(--line); border-radius:8px; padding:6px 10px; max-width:calc(100% - var(--t08-einzug, 0px)); margin-left:var(--t08-einzug, 0px)}
+    .t08-kaskade li::before{content:counter(t08k) " · "; font-weight:700; color:var(--accent)}
+    .t08-kaskade li .hint{display:block; margin:2px 0 0}
+
+    /* Phasenkette */
+    .t08-kette{display:flex; flex-wrap:wrap; gap:6px; margin:0; padding:0; list-style:none}
+    .t08-kette li{flex:1 1 7.5rem; min-width:0; background:var(--board); border-radius:8px; padding:8px 10px; border-top:4px solid var(--accent)}
+    .t08-kette li b{display:block}
+    .t08-kette li span{font-size:.9rem; color:var(--muted)}
+    .t08-kette li.t08-plan{border-top-color:var(--s1)}
+
+    /* Spiral-Quadranten */
+    .t08-quadranten{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(200px,100%),1fr)); gap:8px}
+    .t08-quadranten > div{border:1px solid var(--line); border-radius:10px; padding:8px 12px; background:var(--surface)}
+    .t08-quadranten b{color:var(--accent)}
+
+    /* Zwei-Spalten-Liste Scrum */
+    .t08-dreier{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(220px,100%),1fr)); gap:10px}
+    .t08-dreier > div{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface); min-width:0}
+    .t08-dreier h3{margin:0 0 6px; font-size:1.05rem}
+    .t08-dreier ul{margin:0; padding-left:1.15em}
+    .t08-dreier li{margin-bottom:4px}
+
+    /* Modell-Wähler */
+    .t08-reiter{display:flex; flex-wrap:wrap; gap:6px}
+    .t08-fall{display:flex; flex-direction:column; gap:10px}
+    .t08-steckbrief{background:var(--board); border-radius:10px; padding:10px 12px}
+    .t08-steckbrief ul{margin:4px 0 0; padding-left:1.2em}
+    .t08-krit{border:1px solid var(--line); border-radius:10px; padding:8px 12px 10px; margin:0; min-width:0; background:var(--surface)}
+    .t08-krit legend{font-weight:700; padding:0 4px}
+    .t08-krit .hint{margin:0 0 6px}
+    .t08-knoepfe{display:flex; flex-wrap:wrap; gap:6px}
+    .t08-knoepfe .btn[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft); font-weight:700}
+    .t08-rm{margin-top:6px; font-size:.95rem; line-height:1.5}
+    .t08-rm:empty{display:none}
+    .t08-rm.ok{border-left:3px solid var(--ok); padding-left:10px}
+    .t08-rm.bad{border-left:3px solid var(--bad); padding-left:10px}
+    .t08-rm.mittel{border-left:3px solid var(--free); padding-left:10px}
+    .t08-rm .marke{font-weight:700}
+    .t08-rm.ok .marke{color:var(--ok)}
+    .t08-rm.bad .marke{color:var(--bad)}
+    .t08-rm.mittel .marke{color:var(--free)}
+    .t08-feld{width:100%; min-height:5.5em; font:inherit; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px; box-sizing:border-box}
+    .t08-muster{background:var(--board); border-radius:10px; padding:10px 12px}
+    .t08-muster[hidden]{display:none}
+    .t08-stand{font-weight:600; margin:0}
+    .t08-stand:empty{display:none}
+
+    /* Mini-Sprint */
+    .t08-backlog{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+    .t08-eintrag{display:flex; gap:8px; align-items:center; border:1px solid var(--line); border-radius:10px; padding:6px 8px; background:var(--surface)}
+    .t08-eintrag.t08-ok{border-color:var(--ok)}
+    .t08-eintrag.t08-falsch{border-color:var(--bad)}
+    .t08-eintrag .t08-text{flex:1; min-width:0}
+    .t08-eintrag .t08-text b{display:block}
+    .t08-eintrag .t08-text span{display:block; font-size:.88rem; color:var(--muted)}
+    .t08-pos{font-weight:700; color:var(--accent); min-width:1.4em; text-align:right}
+    .t08-pfeile{display:flex; flex-direction:column; gap:4px}
+    .t08-pfeile .btn{padding:2px 10px; min-width:2.6rem}
+    .t08-wahl{display:flex; gap:8px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:6px 10px; background:var(--surface)}
+    .t08-wahl input{margin-top:4px; width:1.1rem; height:1.1rem; flex:none}
+    .t08-wahl label{flex:1; min-width:0}
+    .t08-summe{font-weight:700}
+    .t08-zahl{width:6.5rem; font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink)}
+    .t08-tafel td.t08-st-fertig{color:var(--ok); font-weight:700}
+    .t08-tafel td.t08-st-arbeit{color:var(--free); font-weight:700}
+    .t08-tafel td.t08-st-offen{color:var(--muted)}
+    .t08-ereignis{border-left:4px solid var(--accent); background:var(--board); border-radius:0 10px 10px 0; padding:10px 12px}
+    .t08-ereignis[hidden]{display:none}
+    .diagramm .t08-ideal{stroke-dasharray:6 5; stroke-width:2}
+    .diagramm .t08-beschr-stark{fill:var(--ink); font-weight:700}
+    .t08-schritt{border-left:3px solid var(--line); padding-left:12px}
+    .t08-schritt.t08-aktiv{border-left-color:var(--accent)}
+
+    /* Film-Antwort */
+    .t08-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t08-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t08-fb:last-child{border-bottom:0}
+    .t08-fb b{color:var(--accent)}
+    .t08-loesung{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t08-kaskade li{--t08-einzug:0px !important}
+      .t08-fz{font-size:.93rem}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="08-vorgehensmodelle">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 4 · Planen</span>
+    <h1>Vorgehensmodelle: Wasserfall bis Scrum</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.01</span><span class="icb">ICB 3.04</span>
+    </p>
+    <p class="lead">Bevor du planst, entscheidest du, <b>wie</b> das Projekt ablaufen soll: Stufe für Stufe wie ein Hausbau oder in kurzen Runden wie ein Garten, der jede Saison wächst. Hier lernst du die klassischen Modelle (Phasen, Wasserfall, V-Modell, Spirale), HERMES klassisch und agil, Scrum mit Rollen, Ereignissen und Artefakten sowie hybride Ansätze. Am Fall Wolkenried wählst du für vier Projekte das passende Vorgehen und spielst einen Mini-Sprint für den Onlineschalter durch.</p>
+    <div class="card stack">
+      <h2>Lernziele</h2>
+      <ul class="t08-ziele">
+        <li>Du erklärst das Phasenprinzip, die Regeln für Meilensteine und das Basis-Phasenkonzept.</li>
+        <li>Du beschreibst Wasserfall, V-Modell und Spiralmodell und ordnest jedem Test im V-Modell die passende Spezifikation zu.</li>
+        <li>Du unterscheidest Wasserfall und Scrum (Lernziel laut Modulbeschreibung) und kennst ihre Anwendungsbereiche.</li>
+        <li>Du ordnest die Scrum-Rollen, -Ereignisse und -Artefakte zu und findest ihre Entsprechung in HERMES agil.</li>
+        <li>Du wählst ein Vorgehensmodell anhand von fünf Kriterien und begründest den Entscheid.</li>
+        <li>Du kennst Kostenanteile, Schätzgenauigkeit und Fehlerkosten über die Phasen und weisst, warum frühe Sorgfalt zählt.</li>
+      </ul>
+      <p class="t08-quelle">Quellen: Skript LB 4 F.6–9 (Bildfolien Scrum, Wasserfall, Spirale, V-Modell), F.15–18 (Phasen, Basis-Phasenkonzept, Phasenkonzepte), F.24–29 (Bedeutung der Entscheide, Schätzgenauigkeit, Kostenanteile, Fehlerkosten, Planungsstrategien); HERMES-Referenzhandbuch 2021 (A.5, B.1, Tab. 1, Abb. 8, Rollen 6.4.3.1 und 6.4.3.9); Swiss ICB 4.5.1 «Projektdesign» und 4.5.4 «Ablauf und Termine»; Modulbeschreibung PMGT (Lernziel Wasserfall und Scrum). Scrum im Detail steht nicht auf den Folien: Dafür gilt der Scrum Guide 2020, als <span class="t08-erg">Ergänzung</span> gekennzeichnet. Alle Fälle und Zahlen sind eigene Beispiele.</p>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> Die Modulbeschreibung verlangt ausdrücklich, dass du das Wasserfallmodell von Scrum unterscheiden kannst und ihre Anwendungsbereiche kennst. In der IPMA-Prüfung kommen Fragen zum Projektdesign (<span class="icb">ICB 3.01</span>: Vorgehen wählen und begründen) und zu Phasen und Sprints (<span class="icb">ICB 3.04</span>). Typisch sind Zuordnungen (Rolle, Ereignis, Artefakt) und offene Fragen «Wähle ein Vorgehen für … und begründe». Genau das zeigt der Lösungsfilm.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#phasen"><b>1</b>Phasen</a>
+    <a href="#klassisch"><b>2</b>Klassische Modelle</a>
+    <a href="#hermes"><b>3</b>HERMES</a>
+    <a href="#scrum"><b>4</b>Scrum</a>
+    <a href="#hybrid"><b>5</b>Kanban und hybrid</a>
+    <a href="#auswahl"><b>6</b>Auswahl</a>
+    <a href="#waehler"><b>7</b>Modell-Wähler</a>
+    <a href="#sprint"><b>8</b>Mini-Sprint</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir zwei Vorhaben vor. Beim Hausbau planst du zuerst alles, holst die Baubewilligung, giesst das Fundament, stellst die Wände, deckst das Dach. Niemand ändert nach dem Dach noch den Keller. Beim Garten pflanzt du im Frühling ein Beet, schaust, was wächst, und entscheidest danach, was du nächstes Jahr anders machst. Beides sind gute Vorgehen, aber für verschiedene Aufgaben.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Vorgehensmodell = Bauanleitung</span><span class="ex">Wasserfall · Scrum · …</span><p>Legt fest, in welcher Reihenfolge und in welchen Schritten ein Projekt sein Ergebnis erarbeitet. Wie die Anleitung, die sagt: erst Fundament, dann Wände.</p></div>
+      <div class="concept"><span class="tag">Phase = Etappe</span><span class="ex">Konzept → Realisierung</span><p>Ein zeitlicher Abschnitt mit eigenem Inhalt und eigenem Ergebnis. Wie eine Etappe einer Velotour mit Ziel am Abend.</p></div>
+      <div class="concept"><span class="tag">Meilenstein = Kontrollposten</span><span class="ex">◆ Vorabnahme</span><p>Ein Zeitpunkt, an dem ein wichtiges Ergebnis vorliegt und jemand entscheidet, ob es weitergeht. Wie der Posten am OL, an dem du stempelst.</p></div>
+      <div class="concept"><span class="tag">Iteration = Runde</span><span class="ex">Sprint 1, 2, 3 …</span><p>Ein kurzer, fester Zeitabschnitt, der immer gleich abläuft und ein nutzbares Stück Ergebnis liefert (Inkrement). Wie eine Gartensaison: pflanzen, ernten, verbessern.</p></div>
+      <div class="concept"><span class="tag">Backlog = sortierte Wunschliste</span><span class="ex">wichtigstes zuoberst</span><p>Alles, was das Produkt noch braucht, geordnet nach Wichtigkeit. Wie der Einkaufszettel, auf dem Brot und Milch zuoberst stehen und die Gewürze zuunterst.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Etappen oder Runden?</h3>
+      <p class="hint">Frag dich: Wird das Ergebnis einmal am Stück nach festem Plan gebaut (sequenziell), oder in kurzen Runden, die jede ein nutzbares Stück liefern und den Plan anpassen (iterativ)?</p>
+      <div id="t08-sortierer-bausteine"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Phasen ===== -->
+  <section id="phasen">
+    <span class="eyebrow">Schritt 1 · Phasen und Meilensteine (LB 4 F.15–18, F.24–27)</span>
+    <h2>Das Phasenprinzip</h2>
+    <p class="prose">Eine <b>Projektphase</b> ist ein zeitlicher Abschnitt des Projekts, der sich inhaltlich von den anderen Abschnitten abgrenzt (LB 4 F.15, in eigenen Worten). Die vielen Phasenmodelle in Büchern und Firmen unterscheiden sich meist nur in den Namen und in der Grafik. Dahinter stehen dieselben fünf Prinzipien:</p>
+    <ol class="prose">
+      <li><b>Vor der Lösung die Ziele:</b> Erst klären, was erreicht werden soll, dann über das Wie reden.</li>
+      <li><b>Von der Breite in die Tiefe:</b> Zuerst das ganze Feld überblicken, dann einzelne Teile vertiefen.</li>
+      <li><b>Vom Groben ins Detail:</b> Zuerst die grobe Lösung, dann die Einzelheiten.</li>
+      <li><b>Vor dem Detail die Entscheidung:</b> Erst wenn die Variante gewählt ist, lohnt sich Detailarbeit.</li>
+      <li><b>Echte Varianten anbieten:</b> Zur Entscheidung gehören echte Alternativen, auch die Null-Variante («nichts tun»).</li>
+    </ol>
+    <h3>Gute Meilensteine</h3>
+    <p class="prose">Phasen enden an <b>Meilensteinen</b>. Laut LB 4 F.15 sind gute Meilensteine für alle verständlich, kontrollierbar (messbar oder klar prüfbar), wenige (rund <b>10 bis 25</b> im ganzen Projekt), in vernünftigen Abständen (etwa wöchentlich oder monatlich) und zeigen die Ereignisse, die für das Projektziel wirklich wichtig sind. In HERMES sind Meilensteine Entscheidungspunkte, sogenannte Quality Gates: Dort entscheidet die Steuerung, ob es weitergeht (HERMES Abb. 8, S.14).</p>
+
+    <h3>Das Basis-Phasenkonzept</h3>
+    <p class="prose">LB 4 F.16 zeigt ein Basis-Phasenkonzept mit sechs Phasen. Die ersten drei gehören zur Planung. In jeder davon entstehen mehrere Lösungsvarianten, und am Ende entscheidet man sich für eine. Danach wird umgesetzt, eingeführt und erhalten.</p>
+    <ol class="t08-kette">
+      <li class="t08-plan"><b>Vorstudie</b><span>Planung · Varianten, Entscheid</span></li>
+      <li class="t08-plan"><b>Grobkonzept</b><span>Planung · Varianten, Entscheid</span></li>
+      <li class="t08-plan"><b>Detailkonzept</b><span>Planung · Varianten, Entscheid</span></li>
+      <li><b>Realisierung</b><span>Lösung umsetzen</span></li>
+      <li><b>Einführung</b><span>an die Nutzer übergeben</span></li>
+      <li><b>Erhaltung</b><span>laufende Qualitätssicherung</span></li>
+    </ol>
+    <p class="prose">Andere Modelle zählen anders (LB 4 F.17): ein IT-Projekt mit sieben Phasen (Initialisierung, Vorstudie, Fachkonzept, IT-Konzept, Realisierung, Test, Einführung), eine Produktentwicklung mit fünf (Vorstudie, Grobkonzept, Detailkonzept, Realisierung, Einführung) oder ein Standard mit drei (Konzept, Realisierung, Einführung). Die Prinzipien bleiben gleich. F.17 trennt zudem das <b>Projekt</b> (Initialisierung, Planung, Durchführung, Abschluss) vom <b>System</b>, das länger lebt als das Projekt. F.18 nennt dazu drei Grundformen, wie man durch die Phasen geht: <b>sequenziell</b>, <b>iterativ</b> und <b>agil</b>.</p>
+    <p class="prose">Klick dich durch, wie der Onlineschalter Wolkenried durch das Basis-Phasenkonzept läuft und wie HERMES dieselben Etappen nennt. Fahr über ein unterstrichenes Satzstück oder tippe darauf: Die passende Phase leuchtet auf.</p>
+    <div id="t08-stepper-phasen"></div>
+
+    <h3>Kosten, Schätzgenauigkeit und Fehlerkosten über die Phasen</h3>
+    <p class="prose">Drei Folien zeigen, warum die frühen Phasen so wichtig sind, obwohl sie wenig kosten. F.26 gibt typische Werte für Produktentwicklungen:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Projektphasen und Kostenanteile (LB 4 F.26, typische Werte für Produktentwicklungen)</caption>
+        <thead><tr><th>Phase</th><th>Hauptaufgabe</th><th>Dokument</th><th class="zahl">Kostenanteil</th></tr></thead>
+        <tbody>
+          <tr><th>Definition</th><td>Ziele für Ergebnis, Termine und Kosten festlegen; Idee, Konzept, Machbarkeit</td><td>Projektantrag</td><td class="zahl">&lt; 1&nbsp;%</td></tr>
+          <tr><th>Planung</th><td>Spezifikation, Termin- und Ressourcenpläne; Grob- und Feinplanung</td><td>Projektauftrag</td><td class="zahl">&lt; 10&nbsp;%</td></tr>
+          <tr><th>Durchführung</th><td>steuern, kontrollieren, korrigieren; entwickeln, fertigen</td><td>Projektstatusbericht</td><td class="zahl">&gt; 80&nbsp;%</td></tr>
+          <tr><th>Abschluss</th><td>technisch und administrativ aufräumen, bewerten</td><td>Projektabschlussbericht</td><td class="zahl">&lt; 5&nbsp;%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">F.24 ergänzt: Zu Beginn ist die <b>Bedeutung der Entscheide</b> gross und der Bearbeitungsstand klein. Mit jeder Phase kehrt sich das um. Wer am Anfang nachlässig plant, zahlt später. F.25 zeigt die <b>Schätzgenauigkeit</b>: In der Vorstudie weicht eine Schätzung noch um 30 bis 50&nbsp;% ab, in Systembau und Einführung nur noch um unter 10&nbsp;%. F.27 zeigt die <b>Fehlerkosten</b>: Ein Fehler, den man in der Planung für 1 Franken behebt, kostet in jeder späteren Phase etwa zehnmal mehr, bei der Auslieferung rund 100'000 Franken.</p>
+    <div class="grid2">
+      <figure class="diagramm">
+        <svg viewBox="0 0 320 200" role="img" aria-labelledby="t08-sg-titel">
+          <title id="t08-sg-titel">Schätzgenauigkeit: Die Abweichung sinkt von rund 50 Prozent in der Vorstudie auf unter 10 Prozent in Systembau und Einführung.</title>
+          <line class="gitter" x1="40" y1="40" x2="310" y2="40"/>
+          <line class="gitter" x1="40" y1="88" x2="310" y2="88"/>
+          <line class="achse" x1="40" y1="160" x2="310" y2="160"/>
+          <line class="achse" x1="40" y1="20" x2="40" y2="160"/>
+          <text x="34" y="44" text-anchor="end">50 %</text>
+          <text x="34" y="92" text-anchor="end">30 %</text>
+          <text x="34" y="140" text-anchor="end">10 %</text>
+          <text x="34" y="164" text-anchor="end">0 %</text>
+          <path class="kurve s1" d="M40 40 C 100 95, 160 135, 305 155"/>
+          <line class="markierung" x1="40" y1="136" x2="310" y2="136"/>
+          <text x="67" y="176" text-anchor="middle">Vorstudie</text>
+          <text x="121" y="190" text-anchor="middle">Haupt­studie</text>
+          <text x="175" y="176" text-anchor="middle">Detail</text>
+          <text x="229" y="190" text-anchor="middle">Systembau</text>
+          <text x="283" y="176" text-anchor="middle">Einführung</text>
+        </svg>
+        <figcaption>Schätzgenauigkeit über die Projektdauer (eigene Zeichnung nach LB 4 F.25). Gestrichelt: 10-%-Grenze.</figcaption>
+      </figure>
+      <figure class="diagramm">
+        <svg viewBox="0 0 320 200" role="img" aria-labelledby="t08-fk-titel">
+          <title id="t08-fk-titel">Fehlerkosten je Phase auf logarithmischer Skala: Planung 1, Entwicklung 10, Vorbereitung 100, Fertigung 1000, Endprüfung 10000, Auslieferung 100000.</title>
+          <line class="achse" x1="20" y1="160" x2="312" y2="160"/>
+          <g class="s2">
+            <rect class="balken" x="26" y="137" width="38" height="23"/>
+            <rect class="balken" x="74" y="114" width="38" height="46"/>
+            <rect class="balken" x="122" y="91" width="38" height="69"/>
+            <rect class="balken" x="170" y="68" width="38" height="92"/>
+            <rect class="balken" x="218" y="45" width="38" height="115"/>
+            <rect class="balken" x="266" y="22" width="38" height="138"/>
+          </g>
+          <text x="45" y="131" text-anchor="middle">1</text>
+          <text x="93" y="108" text-anchor="middle">10</text>
+          <text x="141" y="85" text-anchor="middle">100</text>
+          <text x="189" y="62" text-anchor="middle">1'000</text>
+          <text x="237" y="39" text-anchor="middle">10'000</text>
+          <text x="285" y="16" text-anchor="middle">100'000</text>
+          <text x="45" y="176" text-anchor="middle">Planung</text>
+          <text x="93" y="190" text-anchor="middle">Entwickl.</text>
+          <text x="141" y="176" text-anchor="middle">Vorber.</text>
+          <text x="189" y="190" text-anchor="middle">Fertigung</text>
+          <text x="237" y="176" text-anchor="middle">Endprüf.</text>
+          <text x="285" y="190" text-anchor="middle">Ausliefer.</text>
+        </svg>
+        <figcaption>Fehlerkosten je Phase, logarithmisch: jede Stufe rund zehnmal teurer (eigene Zeichnung nach LB 4 F.27).</figcaption>
+      </figure>
+    </div>
+    <div class="note"><b>Merke:</b> Planung kostet weniger als 10&nbsp;% des Budgets, entscheidet aber über den Rest. Die Durchführung verbraucht über 80&nbsp;%. Ein Fehler, der im Fachkonzept des Onlineschalters eine Stunde Korrektur kostet, kann nach dem Go-live Wochen kosten: Daten korrigieren, Gesuchstellende informieren, neu testen. Daraus folgt: früh prüfen (Reviews), früh Rückmeldung holen (Prototypen) und nicht zu früh auf eine genaue Zahl festlegen.</div>
+  </section>
+
+  <!-- ===== 2 · Klassische Modelle ===== -->
+  <section id="klassisch">
+    <span class="eyebrow">Schritt 2 · Wasserfall, V-Modell, Spirale (LB 4 F.7–9)</span>
+    <h2>Die klassischen Vorgehensmodelle</h2>
+
+    <h3>Wasserfallmodell</h3>
+    <p class="prose">Im Wasserfall fliesst das Projekt Stufe für Stufe nach unten (LB 4 F.7, Quelle dort: Compendio). Jede Phase beginnt erst, wenn die vorherige fertig und abgenommen ist. Ein Rückschritt ist nur in die direkt vorangehende Phase vorgesehen, etwa wenn im Design eine Lücke in der Analyse auffällt.</p>
+    <ol class="t08-kaskade" aria-label="Wasserfall nach LB 4 F.7">
+      <li style="--t08-einzug:0px">Voruntersuchung</li>
+      <li style="--t08-einzug:14px">Analyse</li>
+      <li style="--t08-einzug:28px">Design</li>
+      <li style="--t08-einzug:42px">Realisierung</li>
+      <li style="--t08-einzug:56px">Abnahme</li>
+      <li style="--t08-einzug:70px">Einführung<span class="hint">Rückschritt jeweils nur zur vorherigen Stufe</span></li>
+    </ol>
+    <p class="prose">Die zweite Grafik auf F.7 verbindet die Phasen mit Meilensteinen: Akquisition (M0 Auftrag), Planung (M1 Projektplan), Spezifikation (M2), Realisierung (M3 Freigabe), Einführung (M4 Abnahme), Abschluss (M5, M6 Projektabschluss). Zu jedem Meilenstein gehören ein Phasenziel und ein Ergebnis, zum Beispiel Lastenheft und Pflichtenheft in der Planung.</p>
+    <div class="grid2">
+      <div class="card stack"><h4>Stärken</h4><ul class="t08-ziele"><li>klar, einfach zu steuern und zu berichten</li><li>Termin, Kosten und Umfang früh vereinbart: passt zu Festpreis und Ausschreibung</li><li>vollständige Dokumentation, gute Nachweise</li></ul></div>
+      <div class="card stack"><h4>Schwächen</h4><ul class="t08-ziele"><li>Nutzer sehen das Ergebnis erst spät</li><li>Änderungen werden teuer (Fehlerkosten, F.27)</li><li>setzt voraus, dass die Anforderungen am Anfang stimmen</li></ul></div>
+    </div>
+
+    <h3>V-Modell</h3>
+    <p class="prose">Das V-Modell (LB 4 F.9) ist ein Wasserfall, der in der Mitte abknickt. Links geht es von der groben Idee hinunter bis zum Code, rechts wieder hinauf bis zum Betrieb. Der Clou: Zu jeder Stufe links gehört eine Prüfstufe rechts auf gleicher Höhe, und die Testfälle dafür entstehen schon links, zusammen mit der Spezifikation. Unten geht es um <b>Verifikation</b> («Haben wir das Produkt richtig gebaut?», gegen die Spezifikation), oben um <b>Validierung</b> («Haben wir das richtige Produkt gebaut?», gegen den Zweck).</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>V-Modell: Spezifikation links, Prüfung rechts (nach LB 4 F.9)</caption>
+        <thead><tr><th>Ebene</th><th>Links: festlegen</th><th>Rechts: prüfen</th><th>Art</th></tr></thead>
+        <tbody>
+          <tr><th>1</th><td>Systemdurchführbarkeitskonzept</td><td>Betrieb</td><td>Validierung</td></tr>
+          <tr><th>2</th><td>Anforderungsdefinition</td><td>Pilotbetrieb, Einführung</td><td>Validierung</td></tr>
+          <tr><th>3</th><td>Systemspezifikation, Produktentwurf</td><td>Akzeptanztest, Systemtest</td><td>Verifikation</td></tr>
+          <tr><th>4</th><td>Komponentenentwurf</td><td>Integrationstest</td><td>Verifikation</td></tr>
+          <tr><th>5</th><td>Modulentwurf, Code</td><td>Einzeltest</td><td>Verifikation</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Am Onlineschalter: Die Schnittstelle zur Bauverwaltungssoftware ist eine Komponente. Ihr Entwurf legt fest, welche Daten in welche Richtung fliessen. Die Testfälle dafür schreibt Elena gleich mit, und im Integrationstest (V11) prüft das Team genau diese Fälle. Die Vorabnahme mit Bauamt und Fachstellen (V12) ist ein Akzeptanztest: Auf F.9 steht er neben dem Systemtest auf der Höhe der Systemspezifikation, ist also noch Verifikation. Erst der Pilot mit drei Planungsbüros (V17) validiert gegen die Anforderungen: Kann das Bauamt im echten Betrieb seine Arbeit damit tun?</p>
+
+    <h3>Spiralmodell</h3>
+    <p class="prose">Das Spiralmodell (LB 4 F.8) ist iterativ: Das Projekt dreht mehrere Runden, und jede Runde liefert einen besseren Prototyp, bis ein betriebsfähiges System steht. Der Abstand vom Zentrum zeigt die kumulierten Kosten. Jede Runde läuft durch vier Viertel:</p>
+    <div class="t08-quadranten">
+      <div><b>1 · Ziele bestimmen</b><br>Ziele, Alternativen und Rahmenbedingungen festlegen.</div>
+      <div><b>2 · Risiken bewerten</b><br>Alternativen bewerten, Risiken erkennen und beseitigen. Hier steht in jeder Runde eine Risikoanalyse, oft mit Prototyp.</div>
+      <div><b>3 · Entwickeln und prüfen</b><br>die nächste Produktstufe bauen und testen (Konzept, Entwurf, Code, Tests).</div>
+      <div><b>4 · Nächste Runde planen</b><br>Ergebnis im Review abnehmen lassen und die nächste Runde planen.</div>
+    </div>
+    <p class="prose">Die zweite Grafik auf F.8 zeigt dasselbe als Kegel: Von den Systemzielen über Machbarkeit, Spezifikation und Prototypen bis zum ersten Entwurf, zu Verbesserungen und schliesslich zur Ausserbetriebnahme. Das Spiralmodell passt, wenn das Risiko gross ist und man früh lernen muss, zum Beispiel bei neuer Technik. Es ist ein Vorläufer der agilen Methoden: kurze Runden, frühe Prototypen, Lernen aus jeder Runde. Das Modell stammt von Barry Boehm (1986) <span class="t08-erg">Ergänzung</span>.</p>
+    <div class="note falle"><b>Falle:</b> Iterativ heisst nicht automatisch agil. Auch die Spirale plant jede Runde zentral und dokumentiert viel. Agil (zum Beispiel Scrum) heisst zusätzlich: feste kurze Zeitfenster, ein selbstorganisiertes Team und eine Fachperson, die laufend priorisiert.</div>
+  </section>
+
+  <!-- ===== 3 · HERMES ===== -->
+  <section id="hermes">
+    <span class="eyebrow">Schritt 3 · HERMES klassisch und agil (LB 4 F.10–11, HERMES-Referenzhandbuch)</span>
+    <h2>HERMES: ein Rahmen für beide Welten</h2>
+    <p class="prose">HERMES kennst du aus <a href="/lernseiten/pmgt/03-hermes">Station 03</a>. Für diese Station zählt: HERMES ist eine «Hülle» um das Entwicklungsvorgehen (Referenzhandbuch A.5, S.10). <b>Initialisierung</b> am Anfang und <b>Abschluss</b> am Ende laufen immer gleich und immer klassisch. Dazwischen liegt die Lösungsentstehung, und dort gibt es zwei Wege (B.1 und Tab. 1, S.11 und S.21):</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>HERMES-Phasen klassisch und agil (Tab. 1, in eigenen Worten)</caption>
+        <thead><tr><th>Lebenszyklus</th><th>klassisch</th><th>agil</th></tr></thead>
+        <tbody>
+          <tr><th>Projektbeginn</th><td>Initialisierung</td><td>Initialisierung</td></tr>
+          <tr><th>Lösungsentstehung</th><td>Konzept → Realisierung → Einführung</td><td>Umsetzung (iterativ-inkrementell, nicht weiter in Phasen geteilt)</td></tr>
+          <tr><th>Projektende</th><td>Abschluss</td><td>Abschluss</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Damit hat ein klassisches HERMES-Projekt fünf Phasen, ein agiles drei. Ob klassisch oder agil, entscheidet die Steuerung am Ende der Initialisierung (Entscheid «weiteres Vorgehen»). HERMES verlangt, dass dieser Entscheid fachlich und vorgehenstechnisch begründet ist und nicht einfach einem Trend folgt (Kap. 1.1.2, S.19). Analog zu den Phasenfreigaben kann bei agilem Vorgehen innerhalb der Umsetzung eine optionale <b>Releasefreigabe</b> verlangt werden (Abb. 8, S.14). Nach aussen bleiben Berichte und Schnittstellen zur Stammorganisation gleich.</p>
+    <p class="prose">HERMES übersetzt die agilen Begriffe in die eigene Sprache. Diese Tabelle gehört in deinen Open-Book-Ordner:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>HERMES agil und Scrum: wer und was einander entspricht</caption>
+        <thead><tr><th>HERMES</th><th>Scrum</th><th>Fundstelle</th></tr></thead>
+        <tbody>
+          <tr><th>Anwendervertreter</th><td>Product Owner (mit weitergehenden Aufgaben)</td><td>Rolle 6.4.3.1, S.157</td></tr>
+          <tr><th>Iterationsleiter</th><td>Scrum Master (ohne fachliche oder disziplinarische Autorität)</td><td>Rolle 6.4.3.9, S.163</td></tr>
+          <tr><th>Entwicklungsteam (Gruppenrolle mit Anwendervertreter, Iterationsleiter und allen Entwicklern)</th><td>Scrum-Team (Product Owner, Scrum Master, Developers), selbstorganisiert</td><td>Rolle 6.4.3.6, S.162</td></tr>
+          <tr><th>Lösungsanforderungen</th><td>Product Backlog</td><td>Aufgabe 5.4.3.21, S.111</td></tr>
+          <tr><th>Detailspezifikation</th><td>Sprint Backlog</td><td>Aufgabe 5.4.3.15, S.105</td></tr>
+          <tr><th>Iteration</th><td>Sprint</td><td>Aufgaben 5.4.3.14–15</td></tr>
+          <tr><th>Iterationsreview, Iterationsrückblick</th><td>Sprint Review, Sprint Retrospektive</td><td>Aufgabe 5.4.3.14, S.104</td></tr>
+          <tr><th>Releaseplan, Releasefreigabe</th><td>(kein fester Begriff in Scrum)</td><td>Ergebnis 4.4.1.47, Abb. 8</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Auch im agilen HERMES-Projekt gibt es Auftraggeber und Projektleiter. Sie steuern und führen das Projekt wie im klassischen Vorgehen. Der Projektleiter darf aber nicht in die Selbstorganisation des Entwicklungsteams eingreifen (A.5). Er entlastet das Team von Aufgaben ausserhalb der Entwicklung, etwa Beschaffung, Berichte oder Stakeholder.</div>
+    <p class="prose">HERMES nennt auch die vier Leitsätze des Agilen Manifests (A.5, frei übersetzt), die agiles Arbeiten prägen: Menschen und Zusammenarbeit vor Prozessen und Werkzeugen, funktionierende Software vor umfassender Dokumentation, Zusammenarbeit mit dem Kunden vor Vertragsverhandlung, Reagieren auf Veränderung vor dem Befolgen eines Plans. Wichtig: «vor» heisst nicht «statt». Die rechten Dinge haben auch einen Wert, die linken aber einen grösseren.</p>
+  </section>
+
+  <!-- ===== 4 · Scrum ===== -->
+  <section id="scrum">
+    <span class="eyebrow">Schritt 4 · Scrum (LB 4 F.6, Scrum Guide 2020)</span>
+    <h2>Scrum: drei Rollen, fünf Ereignisse, drei Artefakte</h2>
+    <p class="prose">LB 4 F.6 nennt Scrum nur als Titel. Was Scrum genau festlegt, steht im Scrum Guide von Ken Schwaber und Jeff Sutherland (Fassung 2020, frei unter <a href="https://scrumguides.org" rel="noopener">scrumguides.org</a>) <span class="t08-erg">Ergänzung</span>. Scrum ist ein leichtgewichtiges Rahmenwerk: Ein kleines Team liefert in festen, kurzen Zeitfenstern (Sprints) jeweils ein nutzbares Stück Produkt und passt den Plan nach jedem Sprint an. Grundlage ist Empirie: Transparenz schaffen, regelmässig überprüfen, anpassen.</p>
+    <div class="t08-dreier">
+      <div>
+        <h3>Rollen (Verantwortlichkeiten)</h3>
+        <ul>
+          <li><b>Product Owner:</b> eine Person, kein Gremium. Verantwortet den Wert des Produkts, führt und ordnet das Product Backlog, entscheidet, was als Nächstes kommt.</li>
+          <li><b>Scrum Master:</b> sorgt dafür, dass Scrum gelebt wird, coacht, räumt Hindernisse weg, schützt das Team. Kein Chef.</li>
+          <li><b>Developers</b> (im Scrum Guide bis 2017 «Entwicklungsteam»; das HERMES-Entwicklungsteam umfasst dagegen auch Anwendervertreter und Iterationsleiter): planen den Sprint selbst, liefern das Inkrement, halten die Definition of Done ein.</li>
+        </ul>
+        <p class="hint">Scrum-Team: typisch 10 Personen oder weniger, ohne Hierarchie.</p>
+      </div>
+      <div>
+        <h3>Ereignisse</h3>
+        <ul>
+          <li><b>Sprint:</b> fester Rahmen von höchstens einem Monat, meist 2 Wochen. Alle anderen Ereignisse liegen darin. Das Sprint-Ziel bleibt fest.</li>
+          <li><b>Sprint Planning:</b> Was liefern wir (Sprint-Ziel, Einträge) und wie? Höchstens 8 h bei einem Monat.</li>
+          <li><b>Daily Scrum:</b> 15 Minuten täglich unter den Developers: Fortschritt zum Sprint-Ziel, Plan für heute, Hindernisse.</li>
+          <li><b>Sprint Review:</b> Inkrement den Stakeholdern zeigen, Rückmeldung holen, Product Backlog anpassen.</li>
+          <li><b>Sprint Retrospektive:</b> Wie arbeiten wir zusammen? Was verbessern wir im nächsten Sprint?</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Artefakte</h3>
+        <ul>
+          <li><b>Product Backlog:</b> geordnete Liste von allem, was das Produkt braucht. Verpflichtung: das Produktziel.</li>
+          <li><b>Sprint Backlog:</b> Sprint-Ziel, gewählte Einträge und Plan für den Sprint. Gehört den Developers.</li>
+          <li><b>Inkrement:</b> nutzbares Stück Produkt, das die <b>Definition of Done</b> erfüllt.</li>
+        </ul>
+        <p class="hint">Definition of Done: gemeinsame, verbindliche Beschreibung, wann ein Eintrag fertig ist (zum Beispiel getestet, dokumentiert, vom Product Owner abgenommen). Was sie nicht erfüllt, ist nicht fertig und geht zurück ins Product Backlog.</p>
+      </div>
+    </div>
+    <p class="prose">Klick dich durch einen Sprint im Gedankenexperiment: Angenommen, der Onlineschalter würde agil entwickelt. Seraina Caflisch, die Anwendervertreterin aus dem Bauamt, wäre Product Owner.</p>
+    <div id="t08-stepper-sprint"></div>
+    <div class="card stack">
+      <h3>Kurz üben: Rolle, Ereignis oder Artefakt?</h3>
+      <div id="t08-sortierer-scrum"></div>
+    </div>
+
+    <h3>Wasserfall und Scrum im Vergleich</h3>
+    <p class="prose">Das ist der Kern des Lernziels aus der Modulbeschreibung. Klassisch hält den Umfang fest und schätzt Zeit und Kosten. Agil hält Zeit (Sprintlänge) und Kosten (festes Team) fest und lässt den Umfang offen: Das Wichtigste kommt zuerst, der Rest, solange Zeit und Geld reichen <span class="t08-erg">Ergänzung</span>. LB 4 F.28 nennt dasselbe für die Planung «termintreue Planung»: Ressourcen und Endtermin fix, die Ergebnisse variabel.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Wasserfall (HERMES klassisch) und Scrum (HERMES agil)</caption>
+        <thead><tr><th>Merkmal</th><th>Wasserfall</th><th>Scrum</th></tr></thead>
+        <tbody>
+          <tr><th>Planung</th><td>am Anfang vollständig, Phase für Phase</td><td>grob für das Produkt, genau nur für den nächsten Sprint</td></tr>
+          <tr><th>Fest und variabel</th><td>Umfang fest, Zeit und Kosten geschätzt</td><td>Zeit und Team fest, Umfang variabel</td></tr>
+          <tr><th>Anforderungen</th><td>stabil, vorab im Pflichtenheft</td><td>entstehen und ändern sich laufend im Product Backlog</td></tr>
+          <tr><th>Ergebnis</th><td>einmal am Ende</td><td>nach jedem Sprint ein nutzbares Inkrement</td></tr>
+          <tr><th>Kunde</th><td>am Anfang (Anforderungen) und am Ende (Abnahme)</td><td>laufend, über Product Owner und Sprint Review</td></tr>
+          <tr><th>Änderungen</th><td>über Änderungsantrag, teuer</td><td>erwünscht, über das Product Backlog, nicht im laufenden Sprint</td></tr>
+          <tr><th>Führung</th><td>Projektleiter plant und verteilt Arbeit</td><td>selbstorganisiertes Team; Scrum Master ohne Weisungsrecht</td></tr>
+          <tr><th>Fortschritt</th><td>Meilensteine, Fertigstellungsgrad, Earned Value</td><td>fertige Inkremente, Burndown</td></tr>
+          <tr><th>Risiko</th><td>Fehler zeigen sich spät</td><td>Fehler zeigen sich früh; Gefahr, dass Gesamtumfang und Kosten ausufern</td></tr>
+          <tr><th>Passt für</th><td>klare Anforderungen, Festpreis, Bau, Infrastruktur, starke Regulierung</td><td>unklare oder wechselnde Anforderungen, Software, eng eingebundene Nutzer</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 5 · Kanban und hybrid ===== -->
+  <section id="hybrid">
+    <span class="eyebrow">Schritt 5 · Kanban und hybride Ansätze</span>
+    <h2>Kanban und hybride Ansätze</h2>
+    <h3>Kanban in Kürze <span class="t08-erg">Ergänzung</span></h3>
+    <p class="prose">Kanban kommt aus der Produktion bei Toyota und steht nicht auf den Folien. Die ICB nennt Kanban-Diagramme und Timeboxing aber als Wissen zu Ablauf und Termine (<span class="icb">ICB 3.04</span>, Swiss ICB 4.5.4). Kanban hat keine Sprints und keine festen Rollen. Die Arbeit fliesst über ein Board mit Spalten wie «offen», «in Arbeit», «Test», «fertig». Zwei Regeln tragen alles:</p>
+    <ul class="prose">
+      <li><b>WIP-Limit</b> (Work in Progress): In einer Spalte dürfen nur so viele Karten liegen wie vereinbart, etwa drei. Erst wenn eine fertig ist, darf eine neue nachrücken.</li>
+      <li><b>Pull statt Push:</b> Wer frei ist, holt sich die nächste Karte. Niemand schiebt Arbeit in eine volle Spalte.</li>
+    </ul>
+    <p class="prose">Gemessen wird die <b>Durchlaufzeit</b>: Wie lange braucht eine Karte von «offen» bis «fertig»? Kanban passt für laufende Arbeit mit vielen kleinen Aufträgen, zum Beispiel den Support des Onlineschalters nach der Einführung (Phase Erhaltung). Für ein Projekt mit festem Ziel und Termin ist es eher eine Ergänzung, etwa als Board für das Team.</p>
+
+    <h3>Hybride Ansätze</h3>
+    <p class="prose">In der Praxis mischen viele Projekte. Häufig sind drei Formen <span class="t08-erg">Ergänzung</span>:</p>
+    <ol class="prose">
+      <li><b>Klassischer Rahmen, agiler Kern:</b> Initialisierung, Freigaben, Budget und Berichte klassisch, die Entwicklung in Sprints. Genau so baut HERMES agil auf.</li>
+      <li><b>Getrennte Teile:</b> Infrastruktur oder Bau im Wasserfall, Software in Sprints, mit gemeinsamen Meilensteinen.</li>
+      <li><b>Erst erkunden, dann bauen:</b> Prototypen und kurze Runden, bis die Anforderungen klar sind, danach klassisch realisieren.</li>
+    </ol>
+    <div class="note falle"><b>Falle:</b> Hybrid heisst nicht «von beidem das Bequemste». Wer Sprints macht, aber jeden Eintrag vorab bis ins Detail spezifiziert und Änderungen wieder über den Gemeinderat führt, hat die Nachteile beider Welten. Lege fest, welcher Teil klassisch und welcher agil läuft, und wo sie sich treffen (Meilensteine, Releasefreigaben).</div>
+  </section>
+
+  <!-- ===== 6 · Auswahl ===== -->
+  <section id="auswahl">
+    <span class="eyebrow">Schritt 6 · Auswahlkriterien (ICB 3.01, ICB 3.04)</span>
+    <h2>Das passende Vorgehen wählen</h2>
+    <p class="prose">Die Wahl des Vorgehens gehört zum Projektdesign (<span class="icb">ICB 3.01</span>, Swiss ICB 4.5.1). Sie fällt <b>bevor</b> geplant wird, und sie wird im Projektverlauf regelmässig überprüft. Der Indikator 4.5.1.5 nennt ausdrücklich den Grundentscheid «Wasserfall oder iterativ». <span class="icb">ICB 3.04</span> (Indikator 4.5.4.3) verlangt, dass du je nach Ansatz Phasen oder Sprints festlegst; grössere Unsicherheit spricht für kürzere Abschnitte. In HERMES fällt der Entscheid in der Initialisierung (Studie, Entscheid «weiteres Vorgehen»).</p>
+    <p class="prose">Diese fünf Kriterien helfen dir. Keines entscheidet allein, und die Einteilung ist eine Faustregel <span class="t08-erg">Ergänzung</span>:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Fünf Kriterien für die Wahl des Vorgehens</caption>
+        <thead><tr><th>Kriterium</th><th>spricht für klassisch</th><th>spricht für agil</th></tr></thead>
+        <tbody>
+          <tr><th>Anforderungsstabilität</th><td>Anforderungen klar, vollständig und stabil</td><td>Anforderungen unklar oder ändern sich</td></tr>
+          <tr><th>Kundennähe</th><td>Nutzer nur punktuell verfügbar (Anforderungen, Abnahme)</td><td>Fachperson laufend verfügbar, Nutzer geben in jedem Zyklus Rückmeldung</td></tr>
+          <tr><th>Vertragsform</th><td>Werkvertrag mit Festpreis für einen festen Umfang</td><td>Vertrag nach Aufwand, mit Kostendach oder pro Sprint</td></tr>
+          <tr><th>Regulierung</th><td>viele Nachweise, Freigaben, Prüfprotokolle (Datenschutz, Sicherheit, Beschaffungsrecht)</td><td>wenig formale Vorgaben</td></tr>
+          <tr><th>Teamgrösse</th><td>gross, verteilt oder nur teilweise verfügbar (Linie, Teilpensum)</td><td>klein (bis rund 10), fest und voll verfügbar</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Dazu zwei Sonderfälle: Ist das System sicherheitskritisch und muss jede Stufe nachweislich geprüft werden, passt das <b>V-Modell</b>. Ist die Technik neu und das Risiko gross, helfen die Gedanken der <b>Spirale</b>: früh Prototypen bauen und Risiken pro Runde abbauen. Weist ein Projekt in beide Richtungen, ist ein <b>hybrider</b> Ansatz oft am ehrlichsten.</p>
+    <div class="note"><b>Merke für die Prüfung:</b> Eine gute Begründung nennt die Kriterien mit dem Fallbezug («Die Vereine wissen noch nicht, wie sie reservieren wollen, also sind die Anforderungen unklar») und zieht daraus den Schluss. «Agil ist moderner» ist keine Begründung. HERMES sagt es deutlich: begründet entscheiden, nicht Trends folgen.</div>
+  </section>
+
+  <!-- ===== 7 · Modell-Wähler ===== -->
+  <section id="waehler">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Modell-Wähler: vier Projekte der Gemeinde Wolkenried</h2>
+    <p class="prose">Die Gemeindeschreiberin Claudia Wyss legt dir vier Projektsteckbriefe vor. Lies einen Steckbrief, beantworte die fünf Kriterienfragen, wähle das Vorgehen und schreib kurz deine Begründung. «Prüfen» zeigt dir zu jedem Kriterium und zu deiner Wahl eine Rückmeldung und eine Musterbegründung (eigene Lösung, nicht vom Dozenten bestätigt).</p>
+    <div class="card stack">
+      <div class="t08-reiter" role="group" aria-label="Projekt wählen" id="t08-reiter"></div>
+      <div id="t08-fallbox"></div>
+      <p class="t08-stand" id="t08-waehler-stand" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Mini-Sprint ===== -->
+  <section id="sprint">
+    <span class="eyebrow">Schritt 8 · Themeneigene Interaktion</span>
+    <h2>Mini-Sprint: der Onlineschalter im Gedankenexperiment</h2>
+    <p class="prose">Wolkenried entwickelt den Onlineschalter klassisch (so spielst du ihn auch im <a href="/lernseiten/pmgt/23-leitstand">Leitstand</a>). Hier drehst du es um: Angenommen, der Gemeinderat hätte HERMES agil gewählt. Seraina Caflisch ist Product Owner, drei Developers der Lärchwerk Informatik AG (Dario, Elena, Jonas) bauen die Lösung. Du spielst einen Mini-Sprint von drei Arbeitstagen, gezählt ab Tag 1. Echte Sprints dauern länger; das Prinzip ist dasselbe.</p>
+
+    <div class="card stack t08-schritt t08-aktiv" id="t08-s1">
+      <h3>1 · Product Backlog ordnen</h3>
+      <p class="hint">Seraina hat jedem Eintrag einen Geschäftswert gegeben (10 = am wertvollsten). Regel: Höchster Wert zuerst, aber was einen anderen Eintrag voraussetzt, kommt nach diesem. Ordne mit ▲ und ▼, dann prüfe.</p>
+      <ol class="t08-backlog" id="t08-backlog"></ol>
+      <div class="row">
+        <button type="button" class="btn primary" id="t08-ordnung-pruefen">Reihenfolge prüfen</button>
+      </div>
+      <div class="t08-rm" id="t08-ordnung-rm" aria-live="polite"></div>
+    </div>
+
+    <div class="card stack t08-schritt" id="t08-s2">
+      <h3>2 · Kapazität rechnen</h3>
+      <p class="prose">Der Mini-Sprint dauert 3 Arbeitstage. Dario, Elena und Jonas arbeiten je 8 Stunden pro Tag, davon sind je 6 Stunden produktiv für Backlog-Einträge. Der Rest geht in Daily, Abstimmung und Support. Wie viele Stunden kann das Team im Sprint leisten?</p>
+      <div class="row">
+        <label for="t08-kap">Kapazität</label>
+        <input type="text" inputmode="decimal" id="t08-kap" class="t08-zahl" autocomplete="off">
+        <span>Stunden</span>
+        <button type="button" class="btn" id="t08-kap-pruefen">Prüfen</button>
+      </div>
+      <div class="t08-rm" id="t08-kap-rm" aria-live="polite"></div>
+    </div>
+
+    <div class="card stack t08-schritt" id="t08-s3">
+      <h3>3 · Sprint Planning</h3>
+      <p class="hint">Wähle die Einträge für das Sprint Backlog. Nimm von oben, solange die Kapazität reicht. Voraussetzungen müssen mit in den Sprint. Sprint-Ziel: «Bauwillige können ein Gesuch mit Planbeilagen online einreichen.»</p>
+      <div class="stack" id="t08-planung"></div>
+      <p>Geplant: <span class="t08-summe" id="t08-summe" aria-live="polite">0 von 54 Stunden</span></p>
+      <div class="row">
+        <button type="button" class="btn primary" id="t08-planen">Sprint starten</button>
+      </div>
+      <div class="t08-rm" id="t08-planung-rm" aria-live="polite"></div>
+    </div>
+
+    <div class="card stack t08-schritt" id="t08-s4">
+      <h3>4 · Drei Tage Sprint</h3>
+      <p class="hint">Das Team arbeitet pro Tag 18 Stunden ab, immer am obersten offenen Eintrag. Vor Tag 2 und Tag 3 ist Daily Scrum. Das Burndown-Diagramm zeigt die Reststunden am Ende jedes Tages; gestrichelt ist die Ideallinie.</p>
+      <figure class="diagramm">
+        <svg viewBox="0 0 320 210" role="img" aria-labelledby="t08-bd-titel" id="t08-burndown">
+          <title id="t08-bd-titel">Burndown des Mini-Sprints</title>
+        </svg>
+        <figcaption id="t08-bd-text">Noch kein Sprint geplant.</figcaption>
+      </figure>
+      <div class="tablebox">
+        <table class="tabelle t08-tafel">
+          <caption>Sprint Backlog</caption>
+          <thead><tr><th>Eintrag</th><th class="zahl">Rest h</th><th>Stand</th></tr></thead>
+          <tbody id="t08-tafel"><tr><td colspan="3" class="hint">Noch kein Sprint geplant.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="t08-ereignis" id="t08-daily2" hidden>
+        <p><b>Daily Scrum vor Tag 2.</b> Nach dem Daily steht Bauverwalter Beat Imhof im Teamraum: «Ich brauche dringend einen Export aller Gesuche als Excel-Liste für meine Monatsauswertung. Das ist doch schnell gemacht, oder? Etwa 10 Stunden.» Was geschieht?</p>
+        <div class="t08-knoepfe" role="group" aria-label="Entscheid zum Wunsch des Bauverwalters" id="t08-daily2-wahl"></div>
+        <div class="t08-rm" id="t08-daily2-rm" aria-live="polite"></div>
+      </div>
+      <div class="t08-ereignis" id="t08-daily3" hidden>
+        <p id="t08-daily3-text"></p>
+      </div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t08-tag" disabled>Tag 1 simulieren</button>
+        <button type="button" class="btn" id="t08-neu">Mini-Sprint neu starten</button>
+      </div>
+      <div class="t08-rm" id="t08-sim-rm" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst zuordnen, rechnen, entscheiden, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zehn Übungen in sieben Arten: zuordnen, Matrix, wahr oder falsch, rechnen, Schritt-Aufgabe, Fallentscheid und offene Frage. Die mit dem ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest.</p>
+    <div id="t08-u-vmodell"></div>
+    <div id="t08-u-wfscrum"></div>
+    <div id="t08-u-matrix"></div>
+    <div id="t08-u-wf"></div>
+    <div id="t08-u-kapazitaet"></div>
+    <div id="t08-u-burndown"></div>
+    <div id="t08-u-kosten"></div>
+    <div id="t08-u-fall"></div>
+    <div id="t08-u-hermes"></div>
+    <div id="t08-u-reflexion"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein Vorgehen wählen, begründen und planen, am Stück</h2>
+    <p class="prose">Eine Aufgabe im Stil einer offenen IPMA-Frage und der Modulschlussprüfung (eigener Fall, eigene Zahlen): Für ein neues Wolkenried-Projekt das Vorgehen wählen, anhand der Kriterien begründen, die Rollen besetzen, Kapazität und Anzahl Sprints rechnen und die Risiken des Vorgehens nennen. Drück auf «Abspielen». Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t08-film"></div>
+    <details class="sol"><summary>Die fertige Antwort als Text</summary>
+      <div class="t08-loesung" id="t08-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>«Agil ist besser» als Begründung.</b> Verlangt ist ein Entscheid aus den Merkmalen des Falls: Anforderungen, Kundennähe, Vertrag, Regulierung, Team. Ohne Fallbezug gibt es keine Punkte.</div>
+    <div class="note falle"><b>Scrum Master mit Projektleiter gleichsetzen.</b> Der Scrum Master (HERMES: Iterationsleiter) hat weder fachliche noch disziplinarische Autorität. Er sichert den Prozess. Was gebaut wird, entscheidet der Product Owner, wie, entscheiden die Developers.</div>
+    <div class="note falle"><b>Product Owner als Gremium.</b> Der Product Owner ist eine Person. Ein Ausschuss darf beraten, entscheidet aber nicht über die Reihenfolge im Product Backlog.</div>
+    <div class="note falle"><b>Neue Wünsche mitten in den Sprint.</b> Das Sprint-Ziel bleibt während des Sprints fest. Neue Wünsche gehen über den Product Owner ins Product Backlog und frühestens in den nächsten Sprint.</div>
+    <div class="note falle"><b>«Fast fertig» zählt.</b> Ein Eintrag, der die Definition of Done nicht erfüllt, ist nicht fertig. Er geht zurück ins Product Backlog und zählt nicht zum Inkrement.</div>
+    <div class="note falle"><b>Review und Retrospektive verwechseln.</b> Review: das Produkt (Inkrement) mit Stakeholdern ansehen. Retrospektive: die Zusammenarbeit im Team verbessern.</div>
+    <div class="note falle"><b>V-Modell falsch zuordnen.</b> Der Einzeltest prüft den Modulentwurf, der Integrationstest den Komponentenentwurf, der System- und Akzeptanztest die Systemspezifikation. Unten Verifikation, oben Validierung.</div>
+    <div class="note falle"><b>HERMES agil hat keine agile Initialisierung.</b> Initialisierung und Abschluss laufen immer klassisch, nur die Phase Umsetzung ist agil. Ein agiles HERMES-Projekt hat drei Phasen, ein klassisches fünf.</div>
+    <div class="note falle"><b>Kostenanteile vertauschen.</b> Definition unter 1&nbsp;%, Planung unter 10&nbsp;%, Durchführung über 80&nbsp;%, Abschluss unter 5&nbsp;% (LB 4 F.26). Die Planung ist billig, aber entscheidend.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst.</p>
+    <div id="t08-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Phasenprinzip:</b> vor der Lösung die Ziele, von der Breite in die Tiefe, vom Groben ins Detail, vor dem Detail die Entscheidung, echte Varianten mit Null-Variante. Rund <b>10 bis 25 Meilensteine</b>, prüfbar und verständlich.</li>
+      <li><b>Basis-Phasenkonzept:</b> Vorstudie, Grobkonzept, Detailkonzept (zusammen Planung), Realisierung, Einführung, Erhaltung. Kostenanteile: Definition &lt; 1&nbsp;%, Planung &lt; 10&nbsp;%, Durchführung &gt; 80&nbsp;%, Abschluss &lt; 5&nbsp;%. Schätzfehler sinkt von 30–50&nbsp;% auf unter 10&nbsp;%, Fehlerkosten steigen je Phase etwa um den Faktor 10.</li>
+      <li><b>Wasserfall:</b> Stufe für Stufe, Umfang fest. <b>V-Modell:</b> jede Spezifikation hat ihre Prüfstufe (unten Verifikation, oben Validierung). <b>Spirale:</b> Runden mit Risikoanalyse und Prototypen.</li>
+      <li><b>Scrum:</b> Rollen Product Owner, Scrum Master, Developers; Ereignisse Sprint, Sprint Planning, Daily Scrum, Sprint Review, Retrospektive; Artefakte Product Backlog, Sprint Backlog, Inkrement mit Definition of Done. Zeit und Team fest, Umfang variabel.</li>
+      <li><b>HERMES:</b> Initialisierung und Abschluss immer klassisch; dazwischen klassisch Konzept, Realisierung, Einführung oder agil Umsetzung. Anwendervertreter ≈ Product Owner, Iterationsleiter ≈ Scrum Master.</li>
+      <li><b>Wählen</b> nach Anforderungsstabilität, Kundennähe, Vertragsform, Regulierung und Teamgrösse, begründet mit dem Fall. Gemischte Lage: hybrid, mit klar festgelegten Übergängen.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t08-ziele">
+        <li><span class="icb">ICB 3.01</span> Projektdesign (Swiss ICB 4.5.1, S. 89–94): Vorgehen vor der Planung wählen und regelmässig überprüfen; Indikator 4.5.1.5 «Konzept für die Projektdurchführung» mit dem Grundentscheid «Wasserfall oder iterativ».</li>
+        <li><span class="icb">ICB 3.04</span> Ablauf und Termine (Swiss ICB 4.5.4, S. 100–103): Indikator 4.5.4.3 «Vorgehensweise für Termine und Phasen respektive Sprints festlegen»; Wissen: Phasen, Meilensteine, Timeboxing, Kanban-Diagramme, iterativer und agiler Entwicklungsprozess. Dazu ICB 3.03, Indikator 4.5.3.3: Im agilen Ansatz heisst das Arbeitspaket oft User-Story.</li>
+        <li>Tabellen dieser Station: Wasserfall gegen Scrum (Schritt 4), HERMES gegen Scrum (Schritt 3), fünf Auswahlkriterien (Schritt 6), V-Modell-Paare (Schritt 2), Kostenanteile (Schritt 1).</li>
+        <li>Fundstellen Skript: LB 4 F.6 (Scrum, nur Titel), F.7 (Wasserfall), F.8 (Spirale), F.9 (V-Modell), F.10–11 (HERMES), F.15 (Phasen, Meilensteine), F.16 (Basis-Phasenkonzept), F.17–18 (Phasenkonzepte; sequenziell, iterativ, agil), F.24 (Bedeutung der Entscheide), F.25 (Schätzgenauigkeit), F.26 (Kostenanteile), F.27 (Fehlerkosten), F.28–29 (Planungsstrategien).</li>
+        <li>HERMES-Referenzhandbuch 2021: A.5 (agiles Entwicklungsmanagement, S.10), B.1 und Abb. 4 (S.11), Abb. 8 Releasefreigabe (S.14), Tab. 1 (S.21), Kap. 1.1.2, S.19 (begründeter Entscheid klassisch oder agil), Rollen 6.4.3.1 Anwendervertreter (S.157), 6.4.3.6 Entwicklungsteam (S.162), 6.4.3.9 Iterationsleiter (S.163), Aufgaben 5.4.3.14–15 und 5.4.3.21.</li>
+        <li>Gubelmann/Sommer: Kapitel 8 «Projektdesign», S. 89–104, und Kapitel 21 «Ablauf und Termine», S. 238–257 (laut LB 4 F.4).</li>
+        <li>Weiterführend: Monsch, «Projekte agil managen», Compendio 2022 (laut Modulbeschreibung); Scrum Guide 2020 (scrumguides.org).</li>
+      </ul>
+    </div>
+    <footer>Station 08 des Lernpfads PMGT. Gemeinde Wolkenried, alle Projekte und Personen frei erfunden; die Lärchwerk Informatik AG ist ein fiktiver Lieferant. Quellen: LB 4, HERMES-Referenzhandbuch 2021, Swiss ICB 4.0, Modulbeschreibung PMGT, Scrum Guide 2020, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ---------- Schritt 0: Etappen oder Runden ---------- */
+  L.sortierer("#t08-sortierer-bausteine", {
+    kategorien: ["Etappen (sequenziell)", "Runden (iterativ)"],
+    elemente: [
+      { html: "Ein Einfamilienhaus bauen: Bewilligung, Fundament, Rohbau, Innenausbau", kategorie: 0, erklaerung: "Jede Etappe baut auf der vorherigen auf; den Keller ändert nach dem Dach niemand mehr." },
+      { html: "Den Gemeinde-Newsletter jeden Monat verbessern, je nach Rückmeldungen der Leserinnen", kategorie: 1, erklaerung: "Kurze, gleiche Runden, jede liefert ein nutzbares Ergebnis, und die nächste wird angepasst." },
+      { html: "Die neue Telefonanlage nach Offerte installieren und abnehmen", kategorie: 0, erklaerung: "Klares Standardprodukt, feste Schritte: bestellen, installieren, testen, abnehmen." },
+      { html: "Eine App für Vereine, die alle zwei Wochen ein neues Stück zum Ausprobieren erhält", kategorie: 1, erklaerung: "Inkrement für Inkrement, mit Rückmeldung nach jeder Runde: iterativ und agil." },
+      { html: "Ein Gemüsegarten, der jede Saison nach den Erfahrungen des Vorjahrs neu bepflanzt wird", kategorie: 1, erklaerung: "Pflanzen, ernten, lernen, anpassen: die Alltagsform einer Iteration." },
+      { html: "Den Wasserleitungsersatz in der Dorfstrasse ausführen", kategorie: 0, erklaerung: "Tiefbau mit Planung, Ausschreibung, Ausführung und Abnahme: klassische Etappen." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper Phasen ---------- */
+  L.stepper("#t08-stepper-phasen", {
+    titel: "Der Onlineschalter im Basis-Phasenkonzept",
+    text: 'Der Gemeinderat will Baugesuche online annehmen. Zuerst <span data-link="vs">klärt eine Studie, ob und wie das gehen soll, mit Varianten</span>. Dann <span data-link="gk">legt ein Fachkonzept fest, welche Funktionen der Schalter braucht</span>, und <span data-link="dk">die Lösungsarchitektur und das ISDS-Konzept regeln die Details</span>. Danach <span data-link="re">richtet die Lärchwerk Informatik AG die Plattform ein und bindet sie an</span>, <span data-link="ei">das Bauamt wird geschult und drei Planungsbüros testen im Pilot</span>. Zum Schluss <span data-link="er">betreut der Support den laufenden Betrieb</span>.',
+    schritte: [
+      { html: '<span data-link="vs"><b>Vorstudie</b></span> · HERMES: Initialisierung (Studie, Entscheid weiteres Vorgehen)',
+        warum: "Hier fällt auch der Entscheid, ob klassisch oder agil weitergeht. In Wolkenried: klassisch, weil Umfang und Kredit fest sind." },
+      { html: '<span data-link="vs">Vorstudie</span> → <span data-link="gk"><b>Grobkonzept</b></span> · HERMES: Konzept (Fachkonzept)',
+        warum: "Vom Groben ins Detail: zuerst die Funktionen (Gesuch einreichen, Status, Zirkulation, Gebühren), noch ohne technische Einzelheiten." },
+      { html: '<span data-link="vs">Vorstudie</span> → <span data-link="gk">Grobkonzept</span> → <span data-link="dk"><b>Detailkonzept</b></span> · HERMES: Konzept (Architektur, ISDS, Beschaffung)',
+        warum: "Vor dem Detail die Entscheidung: Erst nach der Wahl der Lösung lohnt sich die Detailarbeit. Damit endet die Planung." },
+      { html: '… → <span data-link="dk">Detailkonzept</span> → <span data-link="re"><b>Realisierung</b></span> · HERMES: Realisierung (V01–V14, Meilenstein Vorabnahme)',
+        warum: "Jetzt fliesst das meiste Geld: In der Durchführung liegen über 80 % der Kosten (F.26)." },
+      { html: '… → <span data-link="re">Realisierung</span> → <span data-link="ei"><b>Einführung</b></span> · HERMES: Einführung (V15–V18, Meilenstein Abnahme)',
+        warum: "Die Lösung geht an die Nutzer. Im Leitstand sind das die Tage 21 bis 40 (gezählt ab Tag 1; der Leitstand rechnet intern mit Zeitpunkten ab 0, zeigt aber dieselben Tage)." },
+      { html: '… → <span data-link="ei">Einführung</span> → <span data-link="er"><b>Erhaltung</b></span> · HERMES: Abschluss, danach Betrieb in der Linie',
+        warum: "Die Erhaltung gehört zum Lebenszyklus des Systems, nicht mehr zum Projekt. HERMES übergibt in der Phase Abschluss an die Betriebsorganisation." }
+    ]
+  });
+
+  /* ---------- Schritt 4: Stepper Sprint ---------- */
+  L.stepper("#t08-stepper-sprint", {
+    titel: "Ein Sprint am Onlineschalter (Gedankenexperiment)",
+    text: 'Seraina hat <span data-link="pb">alle Wünsche nach Wert geordnet</span>. Am Montag <span data-link="pl">wählt das Team, was es in zwei Wochen schafft</span>. <span data-link="da">Jeden Morgen stimmt es sich 15 Minuten ab</span>. Am Ende <span data-link="rv">zeigt es dem Bauamt und zwei Planungsbüros das fertige Stück</span> und <span data-link="re">bespricht, wie es besser zusammenarbeiten kann</span>.',
+    schritte: [
+      { html: '<span data-link="pb"><b>Product Backlog</b></span> · geordnet vom Product Owner (Seraina)',
+        warum: "Das Product Backlog ist das Artefakt mit allem, was der Schalter braucht. Nur der Product Owner ordnet es. HERMES nennt es Lösungsanforderungen." },
+      { html: '<span data-link="pb">Product Backlog</span> → <span data-link="pl"><b>Sprint Planning</b></span> → Sprint Backlog mit Sprint-Ziel',
+        warum: "Im Sprint Planning legen alle das Sprint-Ziel fest. Die Developers entscheiden, wie viel sie schaffen, und ziehen die obersten Einträge ins Sprint Backlog (HERMES: Detailspezifikation)." },
+      { html: '… → <span data-link="pl">Sprint Planning</span> → <span data-link="da"><b>Daily Scrum</b></span> (täglich, 15 min)',
+        warum: "Das Daily gehört den Developers: Fortschritt zum Sprint-Ziel, Plan bis morgen, Hindernisse. Der Scrum Master sorgt dafür, dass Hindernisse verschwinden." },
+      { html: '… → <span data-link="da">Daily Scrum</span> → <span data-link="rv"><b>Sprint Review</b></span> → Inkrement',
+        warum: "Im Review sehen die Stakeholder das Inkrement, also nur Einträge, die die Definition of Done erfüllen. Ihre Rückmeldungen ändern das Product Backlog." },
+      { html: '… → <span data-link="rv">Sprint Review</span> → <span data-link="re"><b>Retrospektive</b></span> → nächster Sprint',
+        warum: "Die Retrospektive schaut auf die Zusammenarbeit, nicht auf das Produkt. Danach beginnt sofort der nächste Sprint mit dem nächsten Planning." }
+    ]
+  });
+
+  L.sortierer("#t08-sortierer-scrum", {
+    kategorien: ["Rolle", "Ereignis", "Artefakt"],
+    elemente: [
+      { html: "Product Owner", kategorie: "Rolle", erklaerung: "Eine Person, verantwortet den Wert des Produkts und ordnet das Product Backlog." },
+      { html: "Sprint Review", kategorie: "Ereignis", erklaerung: "Am Ende des Sprints: Inkrement zeigen, Rückmeldung holen." },
+      { html: "Sprint Backlog", kategorie: "Artefakt", erklaerung: "Sprint-Ziel, gewählte Einträge und Plan der Developers." },
+      { html: "Scrum Master", kategorie: "Rolle", erklaerung: "Sichert den Prozess, coacht, räumt Hindernisse weg." },
+      { html: "Daily Scrum", kategorie: "Ereignis", erklaerung: "15 Minuten täglich unter den Developers." },
+      { html: "Inkrement", kategorie: "Artefakt", erklaerung: "Nutzbares Stück Produkt, das die Definition of Done erfüllt." },
+      { html: "Developers", kategorie: "Rolle", erklaerung: "Planen den Sprint selbst und liefern das Inkrement (HERMES: die Entwickler im Entwicklungsteam)." },
+      { html: "Sprint Retrospektive", kategorie: "Ereignis", erklaerung: "Verbessert die Zusammenarbeit für den nächsten Sprint." },
+      { html: "Product Backlog", kategorie: "Artefakt", erklaerung: "Geordnete Liste von allem, was das Produkt braucht (HERMES: Lösungsanforderungen)." }
+    ]
+  });
+
+  /* ---------- Schritt 7: Modell-Wähler ---------- */
+  const MODELLE = [
+    { id: "wf", name: "Wasserfall (HERMES klassisch)" },
+    { id: "v", name: "V-Modell" },
+    { id: "scrum", name: "Scrum (HERMES agil)" },
+    { id: "hy", name: "Hybrid" }
+  ];
+  // Kriterienfragen: Antwort 0 deutet auf klassisch, Antwort 1 auf agil
+  const KRIT = [
+    { id: "anf", name: "Anforderungsstabilität", frage: "Wie stehen die Anforderungen?", opt: ["klar und stabil", "unklar oder ändern sich"] },
+    { id: "kun", name: "Kundennähe", frage: "Wie eng sind Nutzer oder Fachperson eingebunden?", opt: ["punktuell (Anforderungen, Tests, Abnahme)", "laufend, Rückmeldung in jedem Zyklus"] },
+    { id: "ver", name: "Vertragsform", frage: "Wie ist der Lieferant beauftragt?", opt: ["Werkvertrag mit Festpreis", "nach Aufwand mit Kostendach"] },
+    { id: "reg", name: "Regulierung", frage: "Wie viele formale Nachweise und Freigaben braucht es?", opt: ["viele (Nachweise, Freigaben, Prüfprotokolle)", "wenige"] },
+    { id: "tea", name: "Teamgrösse", frage: "Wie sieht das Team aus?", opt: ["gross, wechselnd oder nur teilweise verfügbar", "klein, fest und voll verfügbar"] }
+  ];
+  const FAELLE = [
+    { id: "schalter", kurz: "Onlineschalter",
+      titel: "Onlineschalter Baugesuch",
+      steckbrief: "<ul>" +
+        "<li>Der Gemeinderat hat einen Kredit von CHF 180'000 bewilligt. Die Funktionen (Gesuch einreichen, Status, Zirkulation, Gebühren) stehen im abgenommenen Fachkonzept.</li>" +
+        "<li>Die Lärchwerk Informatik AG hat die Ausschreibung gewonnen: Werkvertrag mit Festpreis für die Plattform.</li>" +
+        "<li>Personendaten der Bauwilligen, ISDS-Konzept, Phasenfreigabe durch den Gemeinderat, Aufsicht der kantonalen Datenschutzstelle.</li>" +
+        "<li>Rund 12 Beteiligte, viele mit Teilpensum aus der Linie (Bauamt, Finanzen, Kanzlei).</li>" +
+        "<li>Planungsbüros testen einmal einen Prototyp der Formulare, das Bauamt macht die Vorabnahme, drei Büros den Pilot.</li></ul>",
+      soll: [0, 0, 0, 0, 0],
+      erkl: [
+        "Klar und stabil: Das Fachkonzept ist abgenommen, der Umfang ist bewilligt.",
+        "Punktuell: Prototyp-Test, Vorabnahme und Pilot sind einzelne Zeitpunkte, keine laufende Rückmeldung in jedem Zyklus.",
+        "Werkvertrag mit Festpreis nach Ausschreibung: Der Umfang muss vorab feststehen.",
+        "Viele: Datenschutz, Phasenfreigabe durch den Gemeinderat, öffentliches Beschaffungsrecht.",
+        "Gross und nur teilweise verfügbar: 12 Personen, viele mit Teilpensum aus der Linie."
+      ],
+      urteil: {
+        wf: ["ok", "Passt am besten. Alle fünf Kriterien sprechen für klassisch. Genau so läuft das Projekt im Leitstand: HERMES klassisch mit Realisierung und Einführung und der Phasenfreigabe durch den Gemeinderat."],
+        v: ["mittel", "Vertretbar, aber nicht nötig. Tests sind wichtig (Integrationstest, Vorabnahme), doch der Onlineschalter ist kein sicherheitskritisches System mit Prüfnachweis je Stufe. HERMES klassisch deckt die Tests ab."],
+        scrum: ["bad", "Passt nicht. Festpreis für einen festen Umfang, ein grosses Teilzeit-Team aus der Linie und Phasenfreigaben widersprechen dem variablen Umfang und dem festen Scrum-Team."],
+        hy: ["mittel", "Vertretbar, wenn ein Teil wirklich offen ist, etwa die Formulare in kurzen Zyklen mit Planungsbüros. Hier ist das Fachkonzept aber abgenommen; ein Prototyp-Test (V04) genügt. Der Rahmen bleibt klassisch."]
+      },
+      muster: "<p><b>Musterbegründung:</b> Die Anforderungen stehen im abgenommenen Fachkonzept, der Kredit ist fest, und Lärchwerk liefert zum Festpreis nach Ausschreibung. Datenschutz und Phasenfreigabe verlangen Nachweise und Entscheidpunkte. Das Team ist gross und arbeitet mit Teilpensum. Darum wähle ich HERMES klassisch (Wasserfall mit Phasen und Meilensteinen). Das Risiko später Rückmeldungen senke ich mit einem Prototyp-Test der Formulare (V04) und dem Pilot (V17).</p>"
+    },
+    { id: "verein", kurz: "Vereins-App",
+      titel: "App für Vereine",
+      steckbrief: "<ul>" +
+        "<li>Die 40 Vereine von Wolkenried sollen Hallen reservieren, ihre Anlässe in die Gemeindeagenda stellen und Mitteilungen erhalten. Was genau sie brauchen, wissen sie erst, wenn sie es ausprobieren.</li>" +
+        "<li>Die Sportkommission will alle zwei Wochen etwas Neues testen. Corinne Stalder (Leiterin Sport und Freizeit) kann 40&nbsp;% ihrer Zeit einsetzen und entscheidet über die Reihenfolge.</li>" +
+        "<li>Lärchwerk arbeitet nach Aufwand mit einem Kostendach von CHF 120'000.</li>" +
+        "<li>Es werden nur Kontaktdaten der Vereine gespeichert, kein besonderer Schutzbedarf.</li>" +
+        "<li>Vier Personen von Lärchwerk arbeiten fest und Vollzeit am Projekt.</li></ul>",
+      soll: [1, 1, 1, 1, 1],
+      erkl: [
+        "Unklar: Die Vereine wissen erst beim Ausprobieren, was sie brauchen.",
+        "Laufend: Test alle zwei Wochen, Fachperson mit 40 % verfügbar und entscheidungsbefugt.",
+        "Nach Aufwand mit Kostendach: Der Umfang kann sich innerhalb des Dachs bewegen.",
+        "Wenige: nur Kontaktdaten, kein besonderer Schutzbedarf.",
+        "Klein, fest und voll verfügbar: vier Personen Vollzeit."
+      ],
+      urteil: {
+        wf: ["bad", "Passt nicht. Wer ein vollständiges Pflichtenheft verlangt, schreibt Wünsche auf, die die Vereine noch gar nicht kennen. Die erste Rückmeldung käme erst nach Monaten."],
+        v: ["bad", "Passt nicht. Das V-Modell braucht stabile Spezifikationen auf jeder Stufe. Hier ändern sie sich laufend."],
+        scrum: ["ok", "Passt am besten. Alle fünf Kriterien sprechen für agil. Corinne Stalder wird Product Owner (HERMES: Anwendervertreterin), die vier Personen von Lärchwerk sind die Developers, die Sportkommission kommt in jedes Sprint Review."],
+        hy: ["mittel", "Vertretbar, aber unnötig schwer. HERMES agil bringt mit Initialisierung, Abschluss und optionaler Releasefreigabe schon genug klassischen Rahmen."]
+      },
+      muster: "<p><b>Musterbegründung:</b> Die Vereine wissen erst beim Ausprobieren, was sie brauchen, und wollen alle zwei Wochen testen. Mit Corinne Stalder gibt es eine entscheidungsbefugte Fachperson als Product Owner. Der Vertrag nach Aufwand mit Kostendach lässt den Umfang offen, der Schutzbedarf ist gering, und das Team ist klein und fest. Darum wähle ich Scrum innerhalb von HERMES agil: Initialisierung und Abschluss klassisch, Umsetzung in Sprints à 2 Wochen. Das Kostendach steuere ich über die Reihenfolge im Product Backlog.</p>"
+    },
+    { id: "telefon", kurz: "Telefonanlage",
+      titel: "Ersatz der Telefonanlage",
+      steckbrief: "<ul>" +
+        "<li>Die alte Telefonanlage der Verwaltung wird durch ein Standardprodukt ersetzt. Anschlüsse, Nummern und Funktionen sind bekannt und ändern sich nicht.</li>" +
+        "<li>Die Mitarbeitenden brauchen nur eine kurze Schulung vor der Umstellung.</li>" +
+        "<li>Ein Lieferant installiert zum Festpreis nach Offertvergleich (Werkvertrag).</li>" +
+        "<li>Die Weiterleitung an das Pikett von Feuerwehr und Werkhof muss nachweislich funktionieren. Die Feuerwehr verlangt ein Testprotokoll für jede Prüfstufe, vom Einzelgerät bis zum Gesamtsystem.</li>" +
+        "<li>Die Gemeinde-Informatik begleitet die Umstellung neben dem Tagesgeschäft, ein festes Projektteam gibt es nicht.</li></ul>",
+      soll: [0, 0, 0, 0, 0],
+      erkl: [
+        "Klar und stabil: Standardprodukt mit bekannten Anschlüssen und Funktionen.",
+        "Punktuell: nur Schulung vor der Umstellung.",
+        "Werkvertrag mit Festpreis nach Offertvergleich.",
+        "Viele: Testprotokoll für jede Prüfstufe wegen der Pikett-Weiterleitung.",
+        "Nur teilweise verfügbar: Informatik begleitet neben dem Tagesgeschäft, kein festes Team."
+      ],
+      urteil: {
+        wf: ["mittel", "Vertretbar: Alle Kriterien sprechen für klassisch. Der Wasserfall allein sagt aber nicht, wie jede Stufe nachgewiesen wird, und genau das verlangt die Feuerwehr."],
+        v: ["ok", "Passt am besten. Zu jeder Spezifikation gehört eine Prüfstufe: Gerät im Einzeltest, Zusammenspiel mit dem Netz im Integrationstest, Pikett-Weiterleitung im Systemtest, Betrieb nach der Umstellung. Das liefert genau die verlangten Protokolle."],
+        scrum: ["bad", "Passt nicht. Nichts ist unklar, es gibt kein festes Team und nichts, das man in Sprints schrittweise ausliefern könnte: Eine halbe Telefonanlage nützt niemandem."],
+        hy: ["bad", "Passt nicht. Es gibt keinen offenen Teil, der agil erkundet werden müsste."]
+      },
+      muster: "<p><b>Musterbegründung:</b> Anforderungen, Produkt und Preis stehen fest, die Mitarbeitenden sind nur zur Schulung eingebunden, und es gibt kein festes Team. Das spricht klar für ein klassisches Vorgehen. Weil die Pikett-Weiterleitung sicherheitsrelevant ist und für jede Stufe ein Testprotokoll verlangt wird, wähle ich das V-Modell: Zu jeder Spezifikation lege ich die Testfälle gleich mit fest, von der Geräte- bis zur Systemebene.</p>"
+    },
+    { id: "chatbot", kurz: "KI-Chatbot",
+      titel: "Pilot KI-Chatbot",
+      steckbrief: "<ul>" +
+        "<li>Ein Chatbot soll auf der Webseite Fragen der Einwohnerinnen und Einwohner beantworten (Öffnungszeiten, Abfall, Formulare). Welche Fragen kommen und wie gut er antwortet, weiss niemand.</li>" +
+        "<li>Die Einwohnerkontrolle testet jede Woche die Antworten und entscheidet, was als Nächstes verbessert wird.</li>" +
+        "<li>Lärchwerk arbeitet nach Aufwand mit einem Kostendach von CHF 40'000 für den Pilot.</li>" +
+        "<li>Die kantonale Datenschutzstelle will die Schutzbedarfsanalyse sehen, bevor echte Anfragen verarbeitet werden. Vor dem öffentlichen Betrieb entscheidet der Gemeinderat.</li>" +
+        "<li>Drei Personen von Lärchwerk arbeiten fest am Pilot.</li></ul>",
+      soll: [1, 1, 1, 0, 1],
+      erkl: [
+        "Unklar: Niemand weiss, welche Fragen kommen und wie gut der Bot antwortet.",
+        "Laufend: wöchentliche Tests und Entscheide der Einwohnerkontrolle.",
+        "Nach Aufwand mit Kostendach.",
+        "Viele: Datenschutzstelle vor echten Daten, Entscheid des Gemeinderats vor dem Betrieb.",
+        "Klein, fest und voll verfügbar: drei Personen fest."
+      ],
+      urteil: {
+        wf: ["bad", "Passt nicht. Ein vollständiges Pflichtenheft für einen Chatbot, dessen Fragen niemand kennt, wäre Raten auf Papier."],
+        v: ["bad", "Passt nicht. Die Spezifikationen lassen sich nicht vorab festlegen, also auch keine Testfälle je Stufe."],
+        scrum: ["mittel", "Vertretbar für die Entwicklung, aber nicht vollständig: Die Freigabe der Datenschutzstelle und der Entscheid des Gemeinderats brauchen feste Tore, die Scrum allein nicht kennt."],
+        hy: ["ok", "Passt am besten. Vier Kriterien sprechen für agil, die Regulierung für klassisch. Also: Entwicklung in kurzen Sprints mit der Einwohnerkontrolle, dazu klassische Meilensteine: Schutzbedarfsanalyse vor echten Daten und Freigabe durch den Gemeinderat vor dem Betrieb (in HERMES: Releasefreigabe)."]
+      },
+      muster: "<p><b>Musterbegründung:</b> Was der Chatbot können muss, zeigt sich erst im Test. Die Einwohnerkontrolle testet jede Woche, Lärchwerk arbeitet nach Aufwand mit Kostendach, das Team ist klein und fest: Die Entwicklung läuft agil in Sprints. Die Regulierung verlangt aber feste Tore: Die Datenschutzstelle prüft die Schutzbedarfsanalyse, bevor echte Anfragen verarbeitet werden, und der Gemeinderat gibt den öffentlichen Betrieb frei. Darum wähle ich einen hybriden Ansatz: agiler Kern, klassische Meilensteine. Auch der Gedanke des Spiralmodells passt: Risiken pro Runde mit Prototypen abbauen.</p>"
+    }
+  ];
+
+  const reiter = document.getElementById("t08-reiter");
+  const fallbox = document.getElementById("t08-fallbox");
+  const waehlerStand = document.getElementById("t08-waehler-stand");
+  const zustandFall = {};
+  const geloest = {};
+  FAELLE.forEach(function (f) { zustandFall[f.id] = { krit: {}, modell: null, text: "", geprueft: false }; });
+
+  function markeFuer(stufe) {
+    // Nur das Symbol: Der Urteilstext beginnt selbst mit «Passt am besten», «Vertretbar» oder «Passt nicht»
+    return stufe === "ok" ? "✓" : stufe === "mittel" ? "◐" : "✗";
+  }
+
+  function fallZeigen(id) {
+    const f = FAELLE.find(function (x) { return x.id === id; });
+    const z = zustandFall[id];
+    reiter.querySelectorAll("button").forEach(function (b) {
+      const an = b.dataset.fall === id;
+      b.classList.toggle("on", an);
+      b.setAttribute("aria-pressed", an ? "true" : "false");
+    });
+    fallbox.innerHTML = "";
+    const box = document.createElement("div");
+    box.className = "t08-fall";
+    box.innerHTML = "<h3>" + f.titel + "</h3><div class=\"t08-steckbrief\"><b>Steckbrief</b>" + f.steckbrief + "</div>";
+
+    KRIT.forEach(function (k, i) {
+      const fs = document.createElement("fieldset");
+      fs.className = "t08-krit";
+      fs.innerHTML = "<legend>" + k.name + "</legend><p class=\"hint\">" + k.frage + "</p>";
+      const kn = document.createElement("div");
+      kn.className = "t08-knoepfe";
+      k.opt.forEach(function (o, j) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn";
+        b.textContent = o;
+        b.setAttribute("aria-pressed", z.krit[k.id] === j ? "true" : "false");
+        b.addEventListener("click", function () {
+          z.krit[k.id] = j;
+          kn.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+          rm.className = "t08-rm"; rm.innerHTML = "";
+        });
+        kn.appendChild(b);
+      });
+      const rm = document.createElement("div");
+      rm.className = "t08-rm";
+      rm.setAttribute("aria-live", "polite");
+      rm.dataset.krit = String(i);
+      fs.append(kn, rm);
+      box.appendChild(fs);
+    });
+
+    const fsM = document.createElement("fieldset");
+    fsM.className = "t08-krit";
+    fsM.innerHTML = "<legend>Dein Vorgehen</legend>";
+    const knM = document.createElement("div");
+    knM.className = "t08-knoepfe";
+    MODELLE.forEach(function (m) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn";
+      b.textContent = m.name;
+      b.setAttribute("aria-pressed", z.modell === m.id ? "true" : "false");
+      b.addEventListener("click", function () {
+        z.modell = m.id;
+        knM.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        rmM.className = "t08-rm"; rmM.innerHTML = "";
+      });
+      knM.appendChild(b);
+    });
+    const rmM = document.createElement("div");
+    rmM.className = "t08-rm";
+    rmM.setAttribute("aria-live", "polite");
+    fsM.append(knM, rmM);
+    box.appendChild(fsM);
+
+    const lab = document.createElement("label");
+    lab.setAttribute("for", "t08-begr-" + id);
+    lab.textContent = "Deine Begründung (zwei bis vier Sätze; bleibt nur auf dieser Seite)";
+    const ta = document.createElement("textarea");
+    ta.id = "t08-begr-" + id;
+    ta.className = "t08-feld";
+    ta.value = z.text;
+    ta.addEventListener("input", function () { z.text = ta.value; });
+    box.append(lab, ta);
+
+    const row = document.createElement("div");
+    row.className = "row";
+    const bp = document.createElement("button");
+    bp.type = "button"; bp.className = "btn primary"; bp.textContent = "Prüfen";
+    const bz = document.createElement("button");
+    bz.type = "button"; bz.className = "btn"; bz.textContent = "Fall zurücksetzen";
+    row.append(bp, bz);
+    box.appendChild(row);
+
+    const muster = document.createElement("div");
+    muster.className = "t08-muster";
+    muster.hidden = true;
+    muster.innerHTML = f.muster + '<p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt.</p>';
+    box.appendChild(muster);
+    fallbox.appendChild(box);
+
+    function pruefen() {
+      let richtig = 0;
+      box.querySelectorAll(".t08-rm[data-krit]").forEach(function (rm) {
+        const i = Number(rm.dataset.krit);
+        const w = z.krit[KRIT[i].id];
+        if (w === undefined) {
+          rm.className = "t08-rm bad";
+          rm.innerHTML = '<span class="marke">?</span> Noch keine Antwort gewählt.';
+        } else if (w === f.soll[i]) {
+          richtig++;
+          rm.className = "t08-rm ok";
+          rm.innerHTML = '<span class="marke">✓ Richtig gelesen</span>, spricht für ' + (f.soll[i] === 0 ? "klassisch" : "agil") + ". " + f.erkl[i];
+        } else {
+          rm.className = "t08-rm bad";
+          rm.innerHTML = '<span class="marke">✗ Lies nochmals.</span> ' + f.erkl[i];
+        }
+      });
+      if (!z.modell) {
+        rmM.className = "t08-rm bad";
+        rmM.innerHTML = '<span class="marke">?</span> Noch kein Vorgehen gewählt.';
+      } else {
+        const u = f.urteil[z.modell];
+        rmM.className = "t08-rm " + u[0];
+        rmM.innerHTML = '<span class="marke">' + markeFuer(u[0]) + "</span> " + u[1];
+      }
+      muster.hidden = false;
+      z.geprueft = true;
+      geloest[id] = richtig === 5 && z.modell && f.urteil[z.modell][0] === "ok";
+      const n = Object.keys(geloest).filter(function (k) { return geloest[k]; }).length;
+      waehlerStand.textContent = f.titel + ": " + richtig + " von 5 Kriterien richtig gelesen" +
+        (z.modell ? (f.urteil[z.modell][0] === "ok" ? ", Vorgehen passt am besten." : ", Vorgehen: schau dir die Rückmeldung an.") : ".") +
+        " Vollständig gelöst: " + n + " von " + FAELLE.length + " Fällen.";
+    }
+    bp.addEventListener("click", pruefen);
+    bz.addEventListener("click", function () {
+      zustandFall[id] = { krit: {}, modell: null, text: "", geprueft: false };
+      delete geloest[id];
+      waehlerStand.textContent = "";
+      fallZeigen(id);
+      const erster = fallbox.querySelector(".t08-knoepfe button");
+      if (erster) erster.focus();
+    });
+    if (z.geprueft) pruefen();
+  }
+
+  FAELLE.forEach(function (f, i) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn";
+    b.dataset.fall = f.id;
+    b.textContent = (i + 1) + " · " + f.kurz;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function () { fallZeigen(f.id); });
+    reiter.appendChild(b);
+  });
+  fallZeigen(FAELLE[0].id);
+
+  /* ---------- Schritt 8: Mini-Sprint ---------- */
+  const KAPAZITAET = 54;          // 3 Personen × 6 h × 3 Tage
+  const PRO_TAG = 18;             // 3 Personen × 6 h
+  const EINTRAEGE = {
+    B1: { titel: "Gesuch online einreichen", text: "Als Bauwillige möchte ich das Formular online ausfüllen, damit ich nicht drei Dossiers drucken muss.", wert: 10, h: 16, braucht: null },
+    B2: { titel: "Planbeilagen als PDF hochladen", text: "Als Planungsbüro möchte ich Pläne hochladen, damit das Gesuch vollständig ist.", wert: 9, h: 12, braucht: "B1" },
+    B3: { titel: "Eingangsbestätigung per E-Mail", text: "Als Bauwilliger möchte ich eine Bestätigung, damit ich weiss, dass das Gesuch angekommen ist.", wert: 6, h: 4, braucht: "B1" },
+    B4: { titel: "Status des Gesuchs ansehen", text: "Als Bauwillige möchte ich den Stand sehen, damit ich nicht anrufen muss.", wert: 7, h: 14, braucht: "B1" },
+    B5: { titel: "Gebühren online bezahlen", text: "Als Bauwilliger möchte ich online zahlen, damit kein Einzahlungsschein nötig ist.", wert: 5, h: 16, braucht: null },
+    B6: { titel: "Zirkulation an die Fachstellen", text: "Als Bauamt möchte ich Gesuche digital an die Fachstellen schicken, damit nichts mehr kopiert wird.", wert: 8, h: 20, braucht: null },
+    B7: { titel: "Gestaltung im Gemeindelook", text: "Als Gemeindeschreiberin möchte ich Wappen und Farben, damit der Schalter offiziell wirkt.", wert: 2, h: 8, braucht: null }
+  };
+  const EMPFOHLEN = ["B1", "B2", "B6", "B4", "B3", "B5", "B7"];
+  const START = ["B5", "B1", "B7", "B3", "B6", "B2", "B4"];
+  let ordnung = START.slice();
+  let ordnungGeprueft = false;
+  let kapOk = false;
+  let auswahl = {};
+  let sprint = null;   // { reihe:[{k,titel,rest,plan}], tag, punkte:[{x,y}], start, entscheid }
+
+  const backlogEl = document.getElementById("t08-backlog");
+  const ordnungRm = document.getElementById("t08-ordnung-rm");
+  const kapFeld = document.getElementById("t08-kap");
+  const kapRm = document.getElementById("t08-kap-rm");
+  const planungEl = document.getElementById("t08-planung");
+  const summeEl = document.getElementById("t08-summe");
+  const planungRm = document.getElementById("t08-planung-rm");
+  const tagBtn = document.getElementById("t08-tag");
+  const simRm = document.getElementById("t08-sim-rm");
+  const tafel = document.getElementById("t08-tafel");
+  const svg = document.getElementById("t08-burndown");
+  const bdText = document.getElementById("t08-bd-text");
+  const daily2 = document.getElementById("t08-daily2");
+  const daily2Wahl = document.getElementById("t08-daily2-wahl");
+  const daily2Rm = document.getElementById("t08-daily2-rm");
+  const daily3 = document.getElementById("t08-daily3");
+  const daily3Text = document.getElementById("t08-daily3-text");
+
+  function schrittAktiv(n) {
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById("t08-s" + i).classList.toggle("t08-aktiv", i === n);
+    }
+  }
+
+  function backlogZeichnen(fokusK, fokusRichtung) {
+    backlogEl.innerHTML = "";
+    ordnung.forEach(function (k, i) {
+      const e = EINTRAEGE[k];
+      const li = document.createElement("li");
+      li.className = "t08-eintrag";
+      if (ordnungGeprueft) li.classList.add(EMPFOHLEN[i] === k ? "t08-ok" : "t08-falsch");
+      li.innerHTML = '<span class="t08-pos">' + (i + 1) + "</span>" +
+        '<div class="t08-text"><b>' + k + " · " + e.titel + "</b><span>Wert " + e.wert + " · " + e.h + " h" +
+        (e.braucht ? " · braucht " + e.braucht : "") + (ordnungGeprueft ? (EMPFOHLEN[i] === k ? " · ✓ richtig platziert" : " · ✗ gehört an Platz " + (EMPFOHLEN.indexOf(k) + 1)) : "") +
+        "</span><span>" + e.text + "</span></div>";
+      const pf = document.createElement("div");
+      pf.className = "t08-pfeile";
+      const auf = document.createElement("button");
+      auf.type = "button"; auf.className = "btn"; auf.textContent = "▲";
+      auf.setAttribute("aria-label", k + " " + e.titel + " nach oben");
+      auf.disabled = i === 0 || !!sprint;
+      auf.dataset.k = k; auf.dataset.r = "auf";
+      const ab = document.createElement("button");
+      ab.type = "button"; ab.className = "btn"; ab.textContent = "▼";
+      ab.setAttribute("aria-label", k + " " + e.titel + " nach unten");
+      ab.disabled = i === ordnung.length - 1 || !!sprint;
+      ab.dataset.k = k; ab.dataset.r = "ab";
+      auf.addEventListener("click", function () { verschieben(k, -1); });
+      ab.addEventListener("click", function () { verschieben(k, 1); });
+      pf.append(auf, ab);
+      li.appendChild(pf);
+      backlogEl.appendChild(li);
+    });
+    if (fokusK) {
+      let b = backlogEl.querySelector('button[data-k="' + fokusK + '"][data-r="' + fokusRichtung + '"]');
+      if (!b || b.disabled) b = backlogEl.querySelector('button[data-k="' + fokusK + '"]:not([disabled])');
+      if (b) b.focus();
+    }
+  }
+
+  function verschieben(k, d) {
+    const i = ordnung.indexOf(k), j = i + d;
+    if (j < 0 || j >= ordnung.length) return;
+    ordnung[i] = ordnung[j]; ordnung[j] = k;
+    ordnungGeprueft = false;
+    ordnungRm.className = "t08-rm"; ordnungRm.innerHTML = "";
+    backlogZeichnen(k, d < 0 ? "auf" : "ab");
+    planungZeichnen();
+  }
+
+  document.getElementById("t08-ordnung-pruefen").addEventListener("click", function () {
+    ordnungGeprueft = true;
+    const falsch = ordnung.filter(function (k, i) { return EMPFOHLEN[i] !== k; }).length;
+    const vorB1 = ordnung.slice(0, ordnung.indexOf("B1")).filter(function (k) { return EINTRAEGE[k].braucht === "B1"; });
+    if (falsch === 0) {
+      ordnungRm.className = "t08-rm ok";
+      ordnungRm.innerHTML = '<span class="marke">✓ Richtig.</span> Nach Wert absteigend: B1 (10), B2 (9), B6 (8), B4 (7), B3 (6), B5 (5), B7 (2). B2, B3 und B4 stehen nach B1, das sie voraussetzen. Weiter mit der Kapazität.';
+      schrittAktiv(2);
+    } else {
+      ordnungRm.className = "t08-rm bad";
+      ordnungRm.innerHTML = '<span class="marke">✗ ' + falsch + " von 7 Einträgen stehen noch nicht am richtigen Platz.</span> " +
+        (vorB1.length ? "Achtung: " + vorB1.join(", ") + " steht vor B1, das es voraussetzt. " : "") +
+        "Regel: höchster Geschäftswert zuoberst, Voraussetzungen davor. Du kannst trotzdem weiterplanen; der Sprint nimmt deine Reihenfolge.";
+    }
+    backlogZeichnen();
+    planungZeichnen();
+  });
+
+  document.getElementById("t08-kap-pruefen").addEventListener("click", function () {
+    const w = L.zahlLesen(kapFeld.value);
+    if (isNaN(w)) {
+      kapRm.className = "t08-rm bad";
+      kapRm.innerHTML = '<span class="marke">?</span> Gib eine Zahl ein.';
+      return;
+    }
+    if (w === KAPAZITAET) {
+      kapOk = true;
+      kapRm.className = "t08-rm ok";
+      kapRm.innerHTML = '<span class="marke">✓ Richtig: 54 Stunden.</span> 3 Personen × 6 produktive Stunden × 3 Tage = 54 h. Pro Tag schafft das Team 18 h.';
+      schrittAktiv(3);
+    } else {
+      kapOk = false;
+      kapRm.className = "t08-rm bad";
+      kapRm.innerHTML = '<span class="marke">✗ Nicht ' + L.zahlText(w, 1) + ".</span> " +
+        (w === 72 ? "Du hast mit 8 Stunden gerechnet. Produktiv für Backlog-Einträge sind nur 6 Stunden pro Person und Tag." :
+         w === 18 ? "Das ist die Leistung eines Tages. Der Sprint hat drei Tage." :
+         "Rechne Personen × produktive Stunden pro Tag × Tage.");
+    }
+  });
+
+  function planungZeichnen() {
+    planungEl.innerHTML = "";
+    ordnung.forEach(function (k) {
+      const e = EINTRAEGE[k];
+      const d = document.createElement("div");
+      d.className = "t08-wahl";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.id = "t08-cb-" + k;
+      cb.checked = !!auswahl[k];
+      cb.disabled = !!sprint;
+      cb.addEventListener("change", function () {
+        auswahl[k] = cb.checked;
+        planungRm.className = "t08-rm"; planungRm.innerHTML = "";
+        summeZeigen();
+      });
+      const lab = document.createElement("label");
+      lab.setAttribute("for", cb.id);
+      lab.innerHTML = "<b>" + k + " · " + e.titel + "</b> · " + e.h + " h" + (e.braucht ? " · braucht " + e.braucht : "");
+      d.append(cb, lab);
+      planungEl.appendChild(d);
+    });
+    summeZeigen();
+  }
+
+  function summe() {
+    return ordnung.reduce(function (s, k) { return s + (auswahl[k] ? EINTRAEGE[k].h : 0); }, 0);
+  }
+  function summeZeigen() {
+    const s = summe();
+    summeEl.textContent = s + " von " + KAPAZITAET + " Stunden" + (s > KAPAZITAET ? " (überbucht)" : "");
+  }
+
+  document.getElementById("t08-planen").addEventListener("click", function () {
+    if (sprint) return;
+    const gewaehlt = ordnung.filter(function (k) { return auswahl[k]; });
+    const s = summe();
+    const fehler = [];
+    const hinweise = [];
+    if (!kapOk) fehler.push("Rechne zuerst die Kapazität (Schritt 2).");
+    if (!gewaehlt.length) fehler.push("Wähle mindestens einen Eintrag.");
+    if (s > KAPAZITAET) fehler.push("Überbucht: " + s + " h geplant, nur " + KAPAZITAET + " h verfügbar. Ein Sprint Backlog, das nicht in die Kapazität passt, ist ein Versprechen, das das Team bricht.");
+    gewaehlt.forEach(function (k) {
+      const v = EINTRAEGE[k].braucht;
+      if (v && !auswahl[v]) fehler.push(k + " braucht " + v + ", aber " + v + " ist nicht im Sprint.");
+    });
+    // Höher geordneter Eintrag ausgelassen, obwohl er statt eines tieferen gepasst hätte
+    ordnung.forEach(function (u, iu) {
+      if (auswahl[u]) return;
+      const tiefer = ordnung.slice(iu + 1).filter(function (k) { return auswahl[k]; });
+      tiefer.forEach(function (t) {
+        if (s - EINTRAEGE[t].h + EINTRAEGE[u].h <= KAPAZITAET && hinweise.indexOf(u) < 0) hinweise.push(u);
+      });
+    });
+    const rest = KAPAZITAET - s;
+    const passtNoch = ordnung.filter(function (k) { return !auswahl[k] && EINTRAEGE[k].h <= rest; });
+    if (fehler.length) {
+      planungRm.className = "t08-rm bad";
+      planungRm.innerHTML = '<span class="marke">✗ So startet der Sprint nicht.</span> ' + fehler.join(" ");
+      return;
+    }
+    let txt = '<span class="marke">✓ Sprint geplant: ' + s + " h.</span> ";
+    if (hinweise.length) txt += "Hinweis: " + hinweise.join(", ") + " steht weiter oben im Product Backlog und hätte statt eines tieferen Eintrags Platz gehabt. Der Product Owner ordnet, die Developers nehmen von oben. ";
+    if (passtNoch.length) txt += "Es bleiben " + rest + " h frei; " + passtNoch.join(", ") + " hätte noch Platz. ";
+    if (!hinweise.length && !passtNoch.length) txt += "Von oben genommen, die Kapazität ist gut genutzt. ";
+    txt += "Jetzt läuft der Sprint: Tag 1 simulieren.";
+    planungRm.className = "t08-rm " + (hinweise.length ? "mittel" : "ok");
+    planungRm.innerHTML = txt;
+    sprint = {
+      reihe: gewaehlt.map(function (k) { return { k: k, titel: EINTRAEGE[k].titel, rest: EINTRAEGE[k].h, plan: EINTRAEGE[k].h }; }),
+      tag: 0, start: s, punkte: [{ x: 0, y: s }], entscheid: null, zusatz: 0
+    };
+    backlogZeichnen();
+    planungZeichnen();
+    tafelZeichnen();
+    burndownZeichnen();
+    tagBtn.disabled = false;
+    tagBtn.textContent = "Tag 1 simulieren";
+    schrittAktiv(4);
+    tagBtn.focus();
+  });
+
+  function restTotal() { return sprint.reihe.reduce(function (s, x) { return s + x.rest; }, 0); }
+
+  function tafelZeichnen() {
+    if (!sprint) {
+      tafel.innerHTML = '<tr><td colspan="3" class="hint">Noch kein Sprint geplant.</td></tr>';
+      return;
+    }
+    let inArbeit = false;
+    tafel.innerHTML = sprint.reihe.map(function (x) {
+      let st, cls;
+      if (x.rest === 0) { st = "✓ fertig"; cls = "t08-st-fertig"; }
+      else if (x.rest < x.plan && !inArbeit) { st = "◐ in Arbeit"; cls = "t08-st-arbeit"; inArbeit = true; }
+      else { st = "○ offen"; cls = "t08-st-offen"; }
+      return "<tr><th>" + x.k + " · " + x.titel + "</th><td class=\"zahl\">" + x.rest + "</td><td class=\"" + cls + "\">" + st + "</td></tr>";
+    }).join("");
+  }
+
+  const SVGNS = "http://www.w3.org/2000/svg";
+  function el(name, attrs, text) {
+    const e = document.createElementNS(SVGNS, name);
+    Object.keys(attrs).forEach(function (a) { e.setAttribute(a, attrs[a]); });
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function burndownZeichnen() {
+    // alles ausser <title> entfernen
+    Array.prototype.slice.call(svg.childNodes).forEach(function (n) { if (n.nodeName !== "title") svg.removeChild(n); });
+    const X0 = 44, X1 = 300, Y0 = 170, YT = 22;
+    let maxW = 60;
+    if (sprint) sprint.punkte.forEach(function (p) { maxW = Math.max(maxW, p.y); });
+    maxW = Math.ceil(maxW / 10) * 10;
+    const xs = function (d) { return X0 + d * (X1 - X0) / 3; };
+    const ys = function (v) { return Y0 - v * (Y0 - YT) / maxW; };
+    for (let v = 0; v <= maxW; v += 10) {
+      svg.appendChild(el("line", { "class": v === 0 ? "achse" : "gitter", x1: X0, y1: ys(v), x2: X1, y2: ys(v) }));
+      if (v % 20 === 0) svg.appendChild(el("text", { x: X0 - 6, y: ys(v) + 4, "text-anchor": "end" }, String(v)));
+    }
+    svg.appendChild(el("line", { "class": "achse", x1: X0, y1: YT - 6, x2: X0, y2: Y0 }));
+    ["Start", "Tag 1", "Tag 2", "Tag 3"].forEach(function (t, d) {
+      svg.appendChild(el("text", { x: xs(d), y: Y0 + 16, "text-anchor": "middle" }, t));
+    });
+    svg.appendChild(el("text", { x: X0 - 6, y: YT - 10, "text-anchor": "start" }, "Reststunden"));
+    if (!sprint) return;
+    const g1 = el("g", { "class": "s2" });
+    g1.appendChild(el("line", { "class": "kurve t08-ideal", x1: xs(0), y1: ys(sprint.start), x2: xs(3), y2: ys(0) }));
+    svg.appendChild(g1);
+    const g2 = el("g", { "class": "s1" });
+    g2.appendChild(el("polyline", { "class": "kurve", points: sprint.punkte.map(function (p) { return xs(p.x) + "," + ys(p.y); }).join(" ") }));
+    sprint.punkte.forEach(function (p) { g2.appendChild(el("circle", { "class": "punkt", cx: xs(p.x), cy: ys(p.y), r: 4 })); });
+    svg.appendChild(g2);
+    const letzt = sprint.punkte[sprint.punkte.length - 1];
+    svg.appendChild(el("text", { "class": "t08-beschr-stark", x: Math.min(xs(letzt.x) + 6, 304), y: ys(letzt.y) - 8, "text-anchor": letzt.x === 3 ? "end" : "start" }, letzt.y + " h"));
+    // Legende
+    svg.appendChild(el("line", { "class": "kurve t08-ideal", x1: 160, y1: 200, x2: 180, y2: 200, style: "color:var(--s2)" }));
+    svg.appendChild(el("text", { x: 184, y: 204 }, "ideal"));
+    svg.appendChild(el("line", { "class": "kurve", x1: 222, y1: 200, x2: 242, y2: 200, style: "color:var(--s1)" }));
+    svg.appendChild(el("text", { x: 246, y: 204 }, "Rest"));
+    const verlauf = sprint.punkte.map(function (p) { return p.y; }).join(", ");
+    document.getElementById("t08-bd-titel").textContent = "Burndown des Mini-Sprints: Reststunden " + verlauf + "; Ideallinie von " + sprint.start + " auf 0.";
+    bdText.textContent = "Reststunden im Verlauf: " + verlauf + ". Ideallinie von " + sprint.start + " h auf 0 h am Ende von Tag 3." + (sprint.zusatz ? " Der Sprung nach oben ist zusätzliche Arbeit, die während des Sprints dazukam." : "");
+  }
+
+  const ENTSCHEIDE = [
+    { id: "rein", text: "Das Team baut den Export noch in diesen Sprint ein.",
+      rm: ["bad", "✗ Nicht im Sinne von Scrum.", "Der Sprint ist geplant, das Sprint-Ziel steht. Neue Arbeit mitten im Sprint verdrängt zugesagte Einträge, und der Wunsch hat Seraina umgangen. Das Burndown springt um 10 h nach oben."] },
+    { id: "po", text: "Seraina nimmt den Wunsch ins Product Backlog auf und ordnet ihn für einen späteren Sprint ein.",
+      rm: ["ok", "✓ Richtig.", "Neue Wünsche gehen über den Product Owner ins Product Backlog. Seraina bespricht mit Beat Imhof den Wert und ordnet den Export ein. Das Sprint-Ziel bleibt geschützt; der Scrum Master erklärt dem Bauverwalter freundlich den Weg."] },
+    { id: "abbruch", text: "Der Sprint wird abgebrochen und mit dem Export neu geplant.",
+      rm: ["bad", "✗ Zu viel des Guten.", "Abbrechen darf nur der Product Owner, und nur, wenn das Sprint-Ziel hinfällig ist. Das ist es nicht. Die Neuplanung kostet an Tag 2 sechs Stunden, und der Export kommt trotzdem dazu."] }
+  ];
+  ENTSCHEIDE.forEach(function (e) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "btn"; b.textContent = e.text;
+    b.setAttribute("aria-pressed", "false");
+    b.dataset.id = e.id;
+    b.addEventListener("click", function () {
+      if (!sprint || sprint.tag !== 1) return;
+      sprint.entscheid = e.id;
+      daily2Wahl.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      daily2Rm.className = "t08-rm " + e.rm[0];
+      daily2Rm.innerHTML = '<span class="marke">' + e.rm[1] + "</span> " + e.rm[2];
+      tagBtn.disabled = false;
+    });
+    daily2Wahl.appendChild(b);
+  });
+
+  function arbeiten(kap) {
+    sprint.reihe.forEach(function (x) {
+      const w = Math.min(kap, x.rest);
+      x.rest -= w;
+      kap -= w;
+    });
+  }
+
+  tagBtn.addEventListener("click", function () {
+    if (!sprint || sprint.tag >= 3) return;
+    const d = sprint.tag + 1;
+    let kap = PRO_TAG;
+    let meldung = "";
+    if (d === 2) {
+      if (!sprint.entscheid) return;
+      if (sprint.entscheid !== "po") {
+        sprint.reihe.push({ k: "X", titel: "Excel-Export (Zusatz)", rest: 10, plan: 10 });
+        sprint.zusatz += 10;
+        sprint.punkte.push({ x: 1, y: restTotal() });
+        if (sprint.entscheid === "abbruch") kap = PRO_TAG - 6;
+      }
+      daily2Wahl.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+    }
+    if (d === 3) {
+      const offen = sprint.reihe.find(function (x) { return x.rest > 0; });
+      if (offen) {
+        offen.rest += 6;
+        offen.plan += 6;
+        sprint.zusatz += 6;
+        sprint.mehr = offen.titel;
+        sprint.punkte.push({ x: 2, y: restTotal() });
+        meldung = "Daily vor Tag 3: Elena meldet, dass «" + offen.titel + "» 6 Stunden mehr braucht als geschätzt. Das Team plant den Tag neu; das Sprint-Ziel bleibt.";
+      } else {
+        meldung = "Daily vor Tag 3: Alles im Sprint ist fertig. Das Team fragt Seraina, ob es einen kleinen Eintrag aus dem Product Backlog nachziehen soll.";
+      }
+      daily3Text.textContent = meldung;
+      daily3.hidden = false;
+    }
+    arbeiten(kap);
+    sprint.tag = d;
+    sprint.punkte.push({ x: d, y: restTotal() });
+    tafelZeichnen();
+    burndownZeichnen();
+    if (d === 1) {
+      simRm.className = "t08-rm";
+      simRm.innerHTML = "Tag 1 vorbei: noch " + restTotal() + " h. Lies das Daily vor Tag 2 und entscheide.";
+      daily2.hidden = false;
+      tagBtn.textContent = "Tag 2 simulieren";
+      tagBtn.disabled = true;
+      const b = daily2Wahl.querySelector("button");
+      if (b) b.focus();
+    } else if (d === 2) {
+      simRm.className = "t08-rm";
+      simRm.innerHTML = "Tag 2 vorbei: noch " + restTotal() + " h (Ideallinie: " + L.zahlText(sprint.start / 3, 1) + " h).";
+      tagBtn.textContent = "Tag 3 simulieren";
+      tagBtn.focus();
+    } else {
+      sprintEnde();
+    }
+  });
+
+  function sprintEnde() {
+    tagBtn.disabled = true;
+    tagBtn.textContent = "Sprint beendet";
+    const fertig = sprint.reihe.filter(function (x) { return x.rest === 0; });
+    const offen = sprint.reihe.filter(function (x) { return x.rest > 0; });
+    const zielErreicht = ["B1", "B2"].every(function (k) { return fertig.some(function (x) { return x.k === k; }); });
+    let t = '<span class="marke">' + (zielErreicht ? "✓ Sprint-Ziel erreicht." : "✗ Sprint-Ziel nicht erreicht.") + "</span> ";
+    t += "<b>Sprint Review:</b> Das Inkrement enthält " + (fertig.length ? fertig.map(function (x) { return x.k; }).join(", ") : "nichts") + ". ";
+    if (offen.length) {
+      t += "Nicht fertig: " + offen.map(function (x) { return x.k + " (noch " + x.rest + " h)"; }).join(", ") + ". Was die Definition of Done nicht erfüllt, zählt nicht zum Inkrement und geht zurück ins Product Backlog; Seraina ordnet es neu ein. ";
+    } else {
+      t += "Alles fertig. ";
+    }
+    if (!zielErreicht) t += "Das Sprint-Ziel verlangt B1 und B2. Im Review besprecht ihr, warum es nicht gereicht hat. ";
+    t += "<b>Retrospektive:</b> ";
+    if (sprint.entscheid === "po") t += "Das Team hält fest: " + (sprint.mehr ? "Die Schätzung für «" + sprint.mehr + "» war zu knapp, nächstes Mal Puffer für Unbekanntes einplanen. " : "") + "Der Weg für Zusatzwünsche über den Product Owner hat funktioniert.";
+    else t += "Das Team hält fest: Der Zusatzwunsch ging am Product Owner vorbei und hat zugesagte Arbeit verdrängt. Ab jetzt laufen alle Wünsche über Seraina, der Scrum Master schützt den Sprint.";
+    simRm.className = "t08-rm " + (zielErreicht && sprint.entscheid === "po" ? "ok" : "bad");
+    simRm.innerHTML = t;
+    document.getElementById("t08-neu").focus();
+  }
+
+  document.getElementById("t08-neu").addEventListener("click", function () {
+    ordnung = START.slice();
+    ordnungGeprueft = false;
+    kapOk = false;
+    auswahl = {};
+    sprint = null;
+    kapFeld.value = "";
+    [ordnungRm, kapRm, planungRm, daily2Rm, simRm].forEach(function (r) { r.className = "t08-rm"; r.innerHTML = ""; });
+    daily2.hidden = true;
+    daily3.hidden = true;
+    daily2Wahl.querySelectorAll("button").forEach(function (x) { x.disabled = false; x.setAttribute("aria-pressed", "false"); });
+    tagBtn.disabled = true;
+    tagBtn.textContent = "Tag 1 simulieren";
+    document.getElementById("t08-bd-titel").textContent = "Burndown des Mini-Sprints";
+    bdText.textContent = "Noch kein Sprint geplant.";
+    backlogZeichnen();
+    planungZeichnen();
+    tafelZeichnen();
+    burndownZeichnen();
+    schrittAktiv(1);
+    const b = backlogEl.querySelector("button:not([disabled])");
+    if (b) b.focus();
+  });
+
+  backlogZeichnen();
+  planungZeichnen();
+  burndownZeichnen();
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t08-u-vmodell", {
+    frage: "Übung 1 · V-Modell: Welche Spezifikation prüft dieser Test?",
+    kategorien: ["Modulentwurf", "Komponentenentwurf", "Systemspezifikation", "Anforderungsdefinition"],
+    elemente: [
+      { html: "Elena testet, ob ihre Funktion «Gebühr berechnen» für einen Umbau den richtigen Betrag liefert.", kategorie: 0, erklaerung: "Einzeltest einer einzelnen Funktion: prüft den Modulentwurf." },
+      { html: "Das Team prüft, ob Formular, Schnittstelle und Zahlung zusammen ein Gesuch durchreichen (V11).", kategorie: 1, erklaerung: "Integrationstest: Zusammenspiel der Komponenten, prüft den Komponentenentwurf." },
+      { html: "Das Bauamt prüft in der Vorabnahme (V12) mit einem Akzeptanztest, ob der Schalter alles kann, was im Pflichtenheft steht.", kategorie: 2, erklaerung: "Akzeptanztest: Auf LB 4 F.9 steht er zusammen mit dem Systemtest auf der Höhe der Systemspezifikation (Verifikation). Erst Pilotbetrieb und Betrieb validieren gegen die Anforderungen." },
+      { html: "Lärchwerk prüft das ganze System gegen das Pflichtenheft, inklusive Antwortzeiten.", kategorie: 2, erklaerung: "Systemtest: prüft die Systemspezifikation (Verifikation)." },
+      { html: "Die Feuerpolizei arbeitet im Pilot zwei Wochen mit echten Gesuchen und meldet, ob die Fristen passen.", kategorie: 3, erklaerung: "Pilotbetrieb: Validierung gegen die Anforderungen, nicht gegen technische Details." },
+      { html: "Jonas testet, ob die Upload-Komponente Dateien an die Ablage der Bauverwaltungssoftware übergibt.", kategorie: 1, erklaerung: "Übergabe zwischen zwei Komponenten: Integrationstest gegen den Komponentenentwurf." }
+    ]
+  });
+
+  L.sortierer("#t08-u-wfscrum", {
+    frage: 'Übung 2 · Wasserfall oder Scrum? <span class="icb">ICB 3.01</span>',
+    kategorien: ["Wasserfall", "Scrum"],
+    elemente: [
+      { html: "Der Umfang wird zu Beginn im Pflichtenheft festgelegt.", kategorie: 0, erklaerung: "Klassisch: Umfang fest, Zeit und Kosten geschätzt." },
+      { html: "Alle zwei Wochen gibt es ein nutzbares Stück Produkt.", kategorie: 1, erklaerung: "Inkrement am Ende jedes Sprints." },
+      { html: "Eine Fachperson ordnet laufend die Wunschliste nach Wert.", kategorie: 1, erklaerung: "Der Product Owner ordnet das Product Backlog." },
+      { html: "Änderungen laufen über einen Änderungsantrag an die Steuerung.", kategorie: 0, erklaerung: "Im klassischen Vorgehen werden Änderungen formell beantragt und entschieden." },
+      { html: "Die Nutzer sehen das Ergebnis erst in der Abnahme.", kategorie: 0, erklaerung: "Typische Schwäche des Wasserfalls: späte Rückmeldung." },
+      { html: "Zeit und Team sind fest, der Umfang bleibt offen.", kategorie: 1, erklaerung: "Agil: Was nicht in die Sprints passt, kommt später oder gar nicht." },
+      { html: "Der Projektleiter plant und verteilt die Arbeit.", kategorie: 0, erklaerung: "In Scrum planen die Developers ihre Arbeit selbst." },
+      { html: "Das Team bespricht nach jedem Zeitfenster, wie es besser zusammenarbeitet.", kategorie: 1, erklaerung: "Sprint Retrospektive." }
+    ]
+  });
+
+  L.matrix("#t08-u-matrix", {
+    titel: "Übung 3 · Unsicherheit einordnen",
+    icb: "ICB 3.01",
+    frage: "<p>Ordne die Projekte nach zwei Fragen ein: Wie klar sind die Anforderungen? Wie bekannt ist der Lösungsweg (Technik)? Die Feldnamen nennen das passende Vorgehen. Die Matrix lehnt sich an die Stacey-Matrix an <span class=\"t08-erg\">Ergänzung</span>, nicht in den Unterlagen.</p>",
+    zeilen: ["unklar", "klar"],
+    spalten: ["bekannt", "neu"],
+    achseY: "Anforderungen",
+    achseX: "Lösungsweg",
+    feldnamen: [["agil (Scrum)", "agil oder hybrid, mit Prototypen"], ["klassisch (Wasserfall, V-Modell)", "klassisch mit Prototyp oder Spirale"]],
+    stufen: [["mittel", "hoch"], ["tief", "mittel"]],
+    elemente: [
+      { html: "Ersatz der Telefonanlage durch ein Standardprodukt", ziel: ["klar", "bekannt"], erklaerung: "Funktionen und Technik bekannt: klassisch." },
+      { html: "App für Vereine auf der bewährten Plattform von Lärchwerk", ziel: ["unklar", "bekannt"], erklaerung: "Technik bewährt, aber was die Vereine wollen, zeigt sich erst beim Ausprobieren: agil." },
+      { html: "Pilot KI-Chatbot für Einwohnerfragen", ziel: ["unklar", "neu"], erklaerung: "Beides unsicher: agil mit Prototypen, wegen der Aufsicht hybrid mit festen Toren." },
+      { html: "Neue Schnittstelle zum kantonalen Gebäuderegister nach festem Standard, Technik für Lärchwerk neu", ziel: ["klar", "neu"], erklaerung: "Der Standard legt die Anforderungen fest, die Technik ist neu: klassisch, mit einem frühen technischen Prototyp (Gedanke der Spirale)." },
+      { html: "Ersatz der Strassenbeleuchtung durch LED nach Plan des Elektrizitätswerks", ziel: ["klar", "bekannt"], erklaerung: "Bauprojekt mit klaren Vorgaben und bekannter Technik: klassisch." }
+    ]
+  });
+
+  L.wahrFalsch("#t08-u-wf", {
+    titel: 'Übung 4 · Wahr oder falsch? <span class="icb">ICB 3.01</span> <span class="icb">ICB 3.04</span>',
+    aussagen: [
+      { html: "In HERMES läuft die Initialisierung auch bei agilem Vorgehen klassisch.", wahr: true,
+        erklaerung: "Initialisierung und Abschluss sind beiden Vorgehensweisen gemeinsam und klassisch; nur die Phase Umsetzung ist agil (HERMES B.1)." },
+      { html: "Der Scrum Master entscheidet, welche Einträge im nächsten Sprint umgesetzt werden.", wahr: false,
+        erklaerung: "Der Product Owner ordnet das Product Backlog, die Developers wählen im Sprint Planning, wie viel sie schaffen. Der Scrum Master sichert nur den Prozess." },
+      { html: "Laut LB 4 F.15 sollte ein Projekt rund 10 bis 25 Meilensteine haben.", wahr: true,
+        erklaerung: "Wenige, prüfbare Meilensteine in vernünftigen Abständen." },
+      { html: "Im V-Modell werden die Testfälle erst nach der Programmierung geschrieben.", wahr: false,
+        erklaerung: "Die Testfälle entstehen links zusammen mit der jeweiligen Spezifikation und werden rechts auf gleicher Höhe ausgeführt." },
+      { html: "Die Wahl des Vorgehens gehört zum Projektdesign und wird während des Projekts regelmässig überprüft.", wahr: true,
+        erklaerung: "ICB 3.01 Projektdesign: Ansatz vor der Planung wählen und im Verlauf überprüfen und anpassen." },
+      { html: "Ein Eintrag, der zu 90 % fertig ist, zählt im Sprint Review zum Inkrement.", wahr: false,
+        erklaerung: "Nur was die Definition of Done erfüllt, gehört zum Inkrement. Der Rest geht zurück ins Product Backlog." }
+    ]
+  });
+
+  L.zahlAufgabe("#t08-u-kapazitaet", {
+    titel: "Übung 5 · Kapazität eines Sprints",
+    frage: "<p>Das Team der Vereins-App plant einen Sprint von 2 Wochen (10 Arbeitstage). Vier Developers arbeiten Vollzeit, produktiv für Backlog-Einträge sind je 6 Stunden pro Tag. Eine Developerin hat in diesem Sprint 2 Tage Ferien. Wie viele Stunden stehen für das Sprint Backlog zur Verfügung?</p>",
+    antwort: 228,
+    einheit: "h",
+    hinweise: ["Zähle zuerst die Personentage: 4 Personen × 10 Tage, minus Ferientage.", "38 Personentage × 6 produktive Stunden."],
+    loesungsweg: [
+      "Personentage: 4 × 10 = 40, minus 2 Ferientage = 38",
+      "Kapazität: 38 × 6 h = 228 h",
+      "Im Sprint Planning nimmt das Team von oben aus dem Product Backlog, bis rund 228 h erreicht sind. Mehr zu planen hiesse, das Sprint-Ziel zu gefährden."
+    ]
+  });
+
+  L.zahlAufgabe("#t08-u-burndown", {
+    titel: "Übung 6 · Burndown lesen",
+    frage: "<p>Ein Sprint dauert 10 Arbeitstage und startet mit 200 Reststunden. Die Ideallinie sinkt gleichmässig auf 0. Am Ende von Tag 4 zeigt das Burndown noch 130 Reststunden. Um wie viele Stunden liegt das Team hinter der Ideallinie?</p>",
+    antwort: 10,
+    einheit: "h",
+    hinweise: ["Ideallinie: 200 h ÷ 10 Tage = 20 h pro Tag.", "Ideal nach Tag 4: 200 − 4 × 20."],
+    loesungsweg: [
+      "Ideal pro Tag: 200 ÷ 10 = 20 h",
+      "Ideal nach Tag 4: 200 − 4 × 20 = 120 h",
+      "Ist: 130 h. Abweichung: 130 − 120 = 10 h hinter der Ideallinie",
+      "Im Daily Scrum bespricht das Team, wie es das Sprint-Ziel trotzdem erreicht, oder spricht früh mit dem Product Owner über den Umfang."
+    ]
+  });
+
+  L.schrittAufgabe("#t08-u-kosten", {
+    titel: "Übung 7 · Kostenanteile und Schätzgenauigkeit",
+    aufgabe: "<p>Für ein neues Leitsystem im Werkhof Wolkenried rechnet die Vorstudie mit Gesamtkosten von CHF 600'000. Wie viel darf jede Phase nach den typischen Werten von LB 4 F.26 ungefähr kosten? Und wie breit ist die Schätzung, wenn sie in der Vorstudie um bis zu 50&nbsp;% abweichen kann (F.25)? Überleg zuerst selbst, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "Definition: unter 1&nbsp;% von 600'000 = unter CHF 6'000", warum: "Ziele festlegen und Projektantrag schreiben ist billig, aber folgenreich." },
+      { html: "Planung: unter 10&nbsp;% = unter CHF 60'000", warum: "Spezifikation, Termin- und Ressourcenpläne, Projektauftrag." },
+      { html: "Durchführung: über 80&nbsp;% = über CHF 480'000", warum: "Entwickeln, beschaffen, einführen: Hier fliesst fast alles Geld." },
+      { html: "Abschluss: unter 5&nbsp;% = unter CHF 30'000", warum: "Abschlussbericht, Übergabe, Aufräumen." },
+      { html: "Bandbreite: 600'000 ± 50&nbsp;% = CHF 300'000 bis 900'000", warum: "Darum nennt man in der Vorstudie eine Bandbreite statt einer genauen Zahl. Erst in Systembau und Einführung liegt die Abweichung unter 10&nbsp;%." }
+    ]
+  });
+
+  L.auswahl("#t08-u-fall", {
+    frage: '<p><b>Übung 8 · Fallentscheid</b> <span class="icb">ICB 3.04</span> <span class="icb">ICB 3.01</span></p><p>Im Projekt Vereins-App läuft Sprint 3. Am Mittwoch ruft der Gemeindepräsident Walter Inauen direkt bei einem Developer an: Bis Freitag soll die App auch die Belegung der Schulzimmer zeigen. Der Developer fragt dich als Projektleitung, was er tun soll. Was rätst du?</p>',
+    optionen: [
+      "Sofort umsetzen, der Gemeindepräsident hat Vorrang.",
+      "Den Wunsch an Corinne Stalder (Product Owner) geben; sie ordnet ihn im Product Backlog ein. Der Sprint läuft unverändert weiter, und du erklärst dem Gemeindepräsidenten den Weg.",
+      "Den Sprint abbrechen und neu planen.",
+      "Den Wunsch ablehnen, weil Änderungen in Scrum nicht vorgesehen sind."
+    ],
+    richtig: 1,
+    erklaerung: "Änderungen sind in Scrum erwünscht, aber über das Product Backlog und nicht im laufenden Sprint. Nur der Product Owner ordnet. Folgen der anderen Optionen: Sofort umsetzen bricht das Sprint-Ziel und umgeht den Product Owner. Abbrechen ist nur sinnvoll, wenn das Sprint-Ziel hinfällig ist. Ablehnen ist falsch, denn Scrum lebt von Änderungen. Als Projektleitung schützt du das Team und pflegst den Stakeholder (ICB 3.04 Sprints festlegen, ICB 3.01 gewähltes Vorgehen einhalten)."
+  });
+
+  L.auswahl("#t08-u-hermes", {
+    frage: '<p><b>Übung 9</b> <span class="icb">ICB 3.01</span></p><p>Wolkenried führt ein Projekt mit HERMES agil. Welche Rolle entspricht dem Scrum Master?</p>',
+    optionen: ["Projektleiter", "Anwendervertreter", "Iterationsleiter", "Auftraggeber"],
+    richtig: 2,
+    erklaerung: "Der Iterationsleiter ist Teil des Entwicklungsteams, sichert die Iterationen, räumt Hindernisse weg und hat weder fachliche noch disziplinarische Autorität (HERMES 6.4.3.9, S.163). Der Anwendervertreter entspricht dem Product Owner. Projektleiter und Auftraggeber steuern und führen das Projekt wie im klassischen Vorgehen."
+  });
+
+  L.reflexion("#t08-u-reflexion", {
+    titel: "Übung 10 · Offene Frage: Wasserfall oder Scrum?",
+    icb: ["ICB 3.01", "ICB 3.04"],
+    frage: "<p>Der Gemeinderat von Wolkenried fragt dich: «Worin unterscheiden sich das Wasserfallmodell und Scrum, und wann nehmen wir was?» Nenne vier Unterschiede und je einen typischen Anwendungsbereich mit Begründung. Sechs bis acht Sätze.</p>",
+    musterloesung:
+      "<p><b>Unterschiede:</b> (1) Planung: Der Wasserfall plant am Anfang alles und arbeitet die Phasen nacheinander ab; Scrum plant das Produkt grob und nur den nächsten Sprint genau. (2) Fest und variabel: Im Wasserfall ist der Umfang fest, Zeit und Kosten sind geschätzt; in Scrum sind Sprintlänge und Team fest, der Umfang ist variabel. (3) Ergebnis und Rückmeldung: Der Wasserfall liefert einmal am Ende, Scrum nach jedem Sprint ein nutzbares Inkrement, das die Stakeholder im Sprint Review prüfen. (4) Rollen und Führung: Im Wasserfall plant und verteilt der Projektleiter die Arbeit; in Scrum ordnet der Product Owner das Product Backlog, die Developers organisieren sich selbst, der Scrum Master sichert den Prozess. (5) Änderungen: im Wasserfall über Änderungsanträge und teuer, in Scrum erwünscht und über das Product Backlog.</p>" +
+      "<p><b>Anwendung:</b> Wasserfall, wenn die Anforderungen klar und stabil sind, ein Festpreis vereinbart ist oder viele Nachweise nötig sind, zum Beispiel beim Ersatz der Telefonanlage. Scrum, wenn die Anforderungen unklar sind und sich ändern, eine Fachperson laufend mitarbeitet und das Team klein und fest ist, zum Beispiel bei der App für die Vereine.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Grundlage: Modulbeschreibung (Lernziel), LB 4, HERMES Tab. 1, Scrum Guide 2020.</p>',
+    kriterien: [
+      { text: "Mindestens vier inhaltlich verschiedene Unterschiede genannt", punkte: 4 },
+      { text: "Fest und variabel korrekt (Umfang fest gegenüber Zeit und Team fest)", punkte: 1 },
+      { text: "Scrum-Begriffe richtig verwendet (Rolle, Ereignis oder Artefakt)", punkte: 1 },
+      { text: "Je ein Anwendungsbereich für Wasserfall und Scrum", punkte: 1 },
+      { text: "Anwendungsbereich mit Kriterium begründet (z. B. Anforderungsstabilität, Vertrag)", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  const A = {
+    kopf: "<b>Vorschlag Vorgehen</b> · Projekt «Hallen online» · an Gemeinderat Kurt Zwyssig (Ressort Sport)",
+    k1: "<b>Anforderungen:</b> unklar; die Vereine wissen erst beim Ausprobieren, wie sie reservieren wollen → spricht für agil",
+    k2: "<b>Kundennähe:</b> Sportkommission testet alle zwei Wochen, Corinne Stalder entscheidet → agil",
+    k3: "<b>Vertrag:</b> Lärchwerk nach Aufwand mit Kostendach CHF 100'000 → agil möglich",
+    k4: "<b>Regulierung:</b> nur Kontaktdaten der Vereine, kein besonderer Schutzbedarf → keine festen Prüftore nötig",
+    k5: "<b>Team:</b> drei Developers fest → klein und fest → agil",
+    m: "<b>Entscheid:</b> HERMES agil: Initialisierung klassisch, Umsetzung mit Scrum in Sprints à 2 Wochen, Abschluss klassisch. Nicht Wasserfall, weil der Umfang am Anfang nicht feststeht.",
+    r: "<b>Rollen:</b> Product Owner = Anwendervertreterin Corinne Stalder · Scrum Master = Iterationsleiter Pascal Odermatt · Developers: Ramon Gisler, Lea Fankhauser, Jonas Brunner · Projektleitung (du): Rahmen, Kostendach, Berichte, kein Eingriff in die Selbstorganisation",
+    c1: "<b>Kapazität je Sprint:</b> Ramon 10 × 6 = 60 h · Lea 10 × 6 = 60 h · Jonas (80&nbsp;%) 8 × 6 = 48 h · total 168 h",
+    c2: "<b>Anzahl Sprints:</b> 520 h ÷ 168 h = 3.1 → 4 Sprints (8 Wochen)",
+    c3: "<b>Kosten:</b> 4 × 168 h × CHF 140 = CHF 94'080 (nur Developers, Scrum Master pauschal), unter dem Kostendach von CHF 100'000 (Reserve CHF 5'920)",
+    rel: "<b>Releaseplan:</b> Release 1 nach Sprint 2 (Hallen ansehen und reservieren), Release 2 nach Sprint 4 (Rechnungen, Schlüssel); vor jedem Release Releasefreigabe durch den Auftraggeber",
+    ri: "<b>Risiken des Vorgehens:</b> Kostendach erreicht, bevor alle Wünsche umgesetzt sind → Product Owner ordnet streng nach Wert, der Umfang ist die Stellgrösse · Product Owner hat zu wenig Zeit → 40&nbsp;% ihres Pensums fest vereinbaren"
+  };
+  const REIHE = ["kopf", "k1", "k2", "k3", "k4", "k5", "m", "r", "c1", "c2", "c3", "rel", "ri"];
+  function antwort(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t08-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(A[k]) : A[k];
+      return '<div class="t08-fb">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t08-film", {
+    phasen: ["1 · Lesen", "2 · Kriterien", "3 · Entscheid", "4 · Rollen", "5 · Planen", "6 · Prüfen"],
+    texte: [
+      'Projekt «Hallen online»: Die Gemeinde Wolkenried will, dass <span data-ph="anf">die 40 Vereine Turnhallen und Mehrzweckhalle online reservieren. Wie genau, wissen die Vereine noch nicht; sie wollen es ausprobieren.</span> <span data-ph="kun">Die Sportkommission will alle zwei Wochen testen. Corinne Stalder, Leiterin Sport und Freizeit, setzt 40&nbsp;% ihrer Zeit ein und entscheidet über die Reihenfolge.</span> <span data-ph="ver">Die Lärchwerk Informatik AG arbeitet nach Aufwand, Satz CHF 140 pro Stunde, Kostendach CHF 100\'000.</span> <span data-ph="reg">Gespeichert werden nur Kontaktdaten der Vereine.</span> <span data-ph="tea">Entwickeln werden Ramon Gisler (100&nbsp;%), Lea Fankhauser (100&nbsp;%) und Jonas Brunner (80&nbsp;%); Pascal Odermatt von Lärchwerk ist ausgebildeter Scrum Master; seine Begleitung ist im Rahmenvertrag pauschal abgegolten.</span> <span data-ph="umf">Die erste Schätzung aller Wünsche: 520 Stunden. Produktiv sind 6 Stunden pro Person und Arbeitstag.</span> <span data-ph="auf">Wähle ein Vorgehen und begründe es mit fünf Kriterien. Besetze die Rollen. Rechne Kapazität je Sprint (2 Wochen), Anzahl Sprints und Kosten. Nenne zwei Risiken des Vorgehens.</span>'
+    ],
+    woerterbuch: [
+      "<b>5 Kriterien:</b> Anforderungen · Kunde · Vertrag · Regulierung · Team",
+      "<b>HERMES agil</b> = Initialisierung · Umsetzung · Abschluss",
+      "<b>PO</b> = Anwendervertreter · <b>SM</b> = Iterationsleiter",
+      "<b>Kapazität</b> = Personentage × produktive h",
+      "<b>Sprints</b> = Aufwand ÷ Kapazität, aufrunden",
+      "<b>Agil:</b> Zeit und Team fest, Umfang variabel"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Antwort", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So löst du eine offene Frage zum Vorgehen: Fall lesen, Kriterien prüfen, entscheiden, Rollen besetzen, planen und am Schluss prüfen, ob alles beantwortet ist." },
+      { ph: 0, hl: ["auf"], f: antwort("kopf", ["kopf"]),
+        say: "Zuerst liest du den Auftrag. Er hat vier Teile: Vorgehen mit Begründung, Rollen, Rechnung, Risiken. Jeden Teil wirst du am Ende abhaken." },
+      { ph: 0, hl: ["anf", "kun", "ver", "reg", "tea"], dict: 1, dh: [0], f: antwort("kopf"),
+        say: "Dann markierst du alles, was zu den fünf Kriterien passt: Anforderungen, Kundennähe, Vertrag, Regulierung und Team." },
+      { ph: 1, hl: ["anf"], dh: [0], f: antwort("k1", ["k1"]),
+        say: "Anforderungen: Die Vereine wissen noch nicht, wie sie reservieren wollen. Unklare Anforderungen sprechen für agil." },
+      { ph: 1, hl: ["kun"], dh: [0], f: antwort("k2", ["k2"]),
+        say: "Kundennähe: Die Sportkommission testet alle zwei Wochen, und Corinne Stalder kann entscheiden. Das ist laufende Mitarbeit, also agil." },
+      { ph: 1, hl: ["ver"], dh: [0], f: antwort("k3", ["k3"]),
+        say: "Vertrag: Aufwand mit Kostendach lässt den Umfang offen. Ein Festpreis für einen festen Umfang würde eher für klassisch sprechen." },
+      { ph: 1, hl: ["reg"], dh: [0], f: antwort("k4", ["k4"]),
+        say: "Regulierung: Nur Kontaktdaten, kein besonderer Schutzbedarf. Es braucht keine festen Prüftore zwischen den Sprints." },
+      { ph: 1, hl: ["tea"], dh: [0], f: antwort("k5", ["k5"]),
+        say: "Team: drei feste Developers, dazu Product Owner und Scrum Master. Klein und fest, das passt zu Scrum." },
+      { ph: 2, dict: 2, dh: [1], f: antwort("m", ["m"]),
+        say: "Alle fünf Kriterien zeigen in dieselbe Richtung. Du entscheidest dich für HERMES agil mit Scrum. Initialisierung und Abschluss bleiben klassisch." },
+      { ph: 2, f: antwort("m"),
+        say: "Wichtig: Du sagst auch, warum nicht Wasserfall. Ein Pflichtenheft für Wünsche, die noch niemand kennt, wäre Raten auf Papier." },
+      { ph: 3, hl: ["kun", "tea"], dict: 3, dh: [2], f: antwort("r", ["r"]),
+        say: "Jetzt die Rollen. Corinne Stalder wird Product Owner, in HERMES Anwendervertreterin. Pascal Odermatt wird Scrum Master, in HERMES Iterationsleiter. Ramon, Lea und Jonas sind die Developers." },
+      { ph: 3, f: antwort("r"),
+        say: "Und du als Projektleitung? Du hältst den Rahmen: Kostendach, Berichte, Stakeholder. In die Selbstorganisation des Teams greifst du nicht ein." },
+      { ph: 4, hl: ["tea", "umf"], dict: 4, dh: [3], f: antwort("c1", ["c1"]),
+        say: "Kapazität je Sprint: Zwei Wochen sind 10 Arbeitstage. Ramon und Lea je 10 mal 6 gleich 60 Stunden. Jonas arbeitet 80 Prozent, also 8 Tage mal 6 gleich 48. Zusammen 168 Stunden." },
+      { ph: 4, hl: ["umf"], dict: 5, dh: [4], f: antwort("c2", ["c2"]),
+        say: "Anzahl Sprints: 520 Stunden durch 168 ergibt 3.1. Du rundest auf: 4 Sprints, also 8 Wochen." },
+      { ph: 4, hl: ["ver"], f: antwort("c3", ["c3"]),
+        say: "Kosten: 4 Sprints mal 168 Stunden mal 140 Franken ergibt 94'080 Franken. Der Scrum Master ist pauschal abgegolten. Das liegt 5'920 Franken unter dem Kostendach." },
+      { ph: 4, dh: [1], f: antwort("rel", ["rel"]),
+        say: "Ein Releaseplan bündelt die Sprints: Release 1 nach Sprint 2 mit dem Reservieren, Release 2 nach Sprint 4. Vor jedem Release gibt der Auftraggeber frei." },
+      { ph: 4, dict: 6, dh: [5], f: antwort("ri", ["ri"]),
+        say: "Zwei Risiken des Vorgehens: Das Kostendach ist erreicht, bevor alle Wünsche umgesetzt sind. Dagegen ordnet der Product Owner streng nach Wert. Und der Product Owner hat zu wenig Zeit. Dagegen vereinbarst du ihr Pensum fest." },
+      { ph: 4, dh: [5], f: antwort("ri"),
+        say: "Merke: Bei agil sind Zeit und Team fest. Wenn etwas nicht reicht, wird der Umfang kleiner, nicht das Budget grösser." },
+      { ph: 5, hl: ["auf"], f: antwort("ri"),
+        say: "Jetzt hakst du den Auftrag ab. Vorgehen mit fünf Kriterien: erledigt. Rollen: erledigt." },
+      { ph: 5, hl: ["auf"], f: antwort("ri", ["c1", "c2", "c3"]),
+        say: "Rechnung mit Kapazität, Anzahl Sprints und Kosten: erledigt, mit Lösungsweg. Zwei Risiken mit Massnahme: erledigt." },
+      { ph: 5, f: antwort("ri", ["m"]),
+        say: "Fertig. Die Antwort begründet mit dem Fall statt mit Schlagworten. Genau das bringt in der IPMA-Prüfung die Punkte. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t08-film-loesung").innerHTML = antwort("ri");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t08-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.01</span> Wann wird in HERMES entschieden, ob die Lösung klassisch oder agil entsteht?',
+        o: ["Am Ende der Phase Konzept", "In der Initialisierung, beim Entscheid über das weitere Vorgehen", "Erst nach dem ersten Sprint", "Gar nicht, HERMES ist immer klassisch"], a: 1,
+        e: "Die Studie der Initialisierung legt für jede Variante fest, ob klassisch oder agil, begründet und nicht nach Trend (HERMES 1.1.2, S.19). ICB 3.01: Das Vorgehen wird vor der Planung gewählt." },
+      { q: '<span class="icb">ICB 3.04</span> Welche HERMES-Phase ist bei agilem Vorgehen wirklich agil?',
+        o: ["Initialisierung", "Konzept", "Umsetzung", "Abschluss"], a: 2,
+        e: "Agil läuft nur die Phase Umsetzung; Initialisierung und Abschluss bleiben klassisch (HERMES Tab. 1, S.21). ICB 3.04: Phasen bzw. Sprints festlegen." },
+      { q: '<span class="icb">ICB 3.04</span> Wer ordnet in Scrum das Product Backlog?',
+        o: ["Der Scrum Master", "Die Developers gemeinsam", "Der Product Owner", "Der Lenkungsausschuss"], a: 2,
+        e: "Der Product Owner ist eine Person und verantwortet Inhalt und Reihenfolge des Product Backlogs (in HERMES: Anwendervertreter). ICB 3.04 und ICB 3.03 (Leistungsumfang)." },
+      { q: '<span class="icb">ICB 3.04</span> Worum geht es in der Sprint Retrospektive?',
+        o: ["Das Inkrement den Stakeholdern zeigen", "Die Zusammenarbeit und Arbeitsweise des Teams verbessern", "Den nächsten Sprint planen", "Die Kosten mit dem Budget vergleichen"], a: 1,
+        e: "Die Retrospektive schaut auf das Wie der Zusammenarbeit. Das Produkt zeigt das Sprint Review. ICB 3.04 (Iterationen) und ICB 2.05 (Führung, Teamarbeit)." },
+      { q: '<span class="icb">ICB 3.04</span> Im V-Modell: Gegen welche Stufe prüft der Integrationstest?',
+        o: ["Anforderungsdefinition", "Systemspezifikation", "Komponentenentwurf", "Modulentwurf"], a: 2,
+        e: "Jede Prüfstufe liegt auf der Höhe ihrer Spezifikation: Einzeltest ↔ Modulentwurf, Integrationstest ↔ Komponentenentwurf, Systemtest ↔ Systemspezifikation (LB 4 F.9). ICB 3.04 Phasen, ICB 3.06 Qualität." },
+      { q: '<span class="icb">ICB 3.07</span> Welchen Kostenanteil hat die Phase Durchführung typischerweise (LB 4 F.26)?',
+        o: ["unter 1&nbsp;%", "unter 10&nbsp;%", "rund 50&nbsp;%", "über 80&nbsp;%"], a: 3,
+        e: "Definition unter 1&nbsp;%, Planung unter 10&nbsp;%, Durchführung über 80&nbsp;%, Abschluss unter 5&nbsp;%. ICB 3.07 Kosten und Finanzierung, im Zusammenhang mit den Phasen aus ICB 3.04." },
+      { q: '<span class="icb">ICB 3.01</span> Welches Modell stellt in jeder Runde eine Risikoanalyse und Prototypen ins Zentrum?',
+        o: ["Wasserfallmodell", "Spiralmodell", "V-Modell", "Kanban"], a: 1,
+        e: "Die Spirale dreht Runden mit Zielen, Risikoanalyse, Entwicklung und Planung der nächsten Runde (LB 4 F.8). ICB 3.01: Vorgehen nach Risiko und Unsicherheit wählen." },
+      { q: '<span class="icb">ICB 3.06</span> Was legt die Definition of Done fest?',
+        o: ["Das Datum, an dem das Projekt endet", "Wann ein Eintrag als fertig gilt und zum Inkrement zählen darf", "Welche Einträge in den nächsten Sprint kommen", "Wer im Team welche Aufgabe übernimmt"], a: 1,
+        e: "Die Definition of Done ist das gemeinsame Qualitätsversprechen: Was sie nicht erfüllt, ist nicht fertig. ICB 3.06 Qualität und ICB 3.04 Iterationen (Scrum Guide 2020, Ergänzung)." },
+      { q: '<span class="icb">ICB 3.01</span> Welche Aussage zu Wasserfall und Scrum stimmt?',
+        o: ["Im Wasserfall sind Zeit und Team fest, der Umfang variabel.", "In Scrum sind Sprintlänge und Team fest, der Umfang variabel.", "Scrum braucht kein Budget.", "Der Wasserfall liefert nach jeder Phase ein nutzbares Produkt."], a: 1,
+        e: "Agil hält Zeit und Team fest und priorisiert den Umfang; klassisch hält den Umfang fest und schätzt Zeit und Kosten (vgl. LB 4 F.28, termintreue Planung). ICB 3.01 Projektdesign." },
+      { q: '<span class="icb">ICB 3.01</span> Fester Kredit, Werkvertrag mit Festpreis nach Ausschreibung, abgenommenes Fachkonzept, Phasenfreigaben durch den Gemeinderat. Welches Vorgehen passt am besten?',
+        o: ["Scrum", "Kanban", "HERMES klassisch (Wasserfall mit Phasen)", "Ein reines Spiralmodell mit Prototypen"], a: 2,
+        e: "Stabile Anforderungen, Festpreis und viele Freigaben sprechen klar für klassisch. So läuft der Onlineschalter Wolkenried. ICB 3.01: Vorgehen aus Erfolgskriterien und Rahmenbedingungen ableiten und begründen." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

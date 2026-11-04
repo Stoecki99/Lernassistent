@@ -59,3 +59,12 @@ export function firstName(scenario: Scenario, id: string): string {
 export function taskName(scenario: Scenario, id: string): string {
   return scenario.tasks.find((t) => t.id === id)?.name ?? id
 }
+
+/** Rolle zu einem angezeigten Namen (Person oder Stakeholder), für Bild-Beschriftungen; nur der erste Satz. */
+export function roleOf(scenario: Scenario, name: string): string | undefined {
+  const person = scenario.people.find((p) => p.name === name)
+  if (person) return person.role
+  if (scenario.coach.name === name) return "Coach"
+  const stakeholder = scenario.stakeholders.find((s) => s.name === name)
+  return stakeholder ? stakeholder.role.split(". ")[0].replace(/\.$/, "") : undefined
+}

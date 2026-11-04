@@ -131,7 +131,7 @@ export interface SpielAbzeichenStatistik {
   dreiSterneLevels: number
 }
 
-/** Bedingungen (Badge.condition) der Spiel-Abzeichen; gleich wie Migration 20261101110000_add_spielstand und prisma/seed.ts */
+/** Bedingungen (Badge.condition) der Spiel-Abzeichen; gleich wie Migration 20261104090000_add_spielstand und prisma/seed.ts */
 export const SPIEL_ABZEICHEN: Record<string, (statistik: SpielAbzeichenStatistik) => boolean> = {
   avsw_spiel_fehlerfrei: (s) => s.dreiSterneLevels >= 1,
   avsw_spiel_sterne_10: (s) => s.sterneSumme >= 10,
