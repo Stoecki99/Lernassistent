@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Muster: Architektur modellieren · AVSW</title>
+  <!-- Farbschema vor dem Zeichnen setzen (kein Flackern im Dunkelmodus). Pflicht, unverändert übernehmen. -->
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <style>
+    .t00-galerie{display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:8px}
+    .t00-galerie figure{margin:0; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 6px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-size:.8rem; text-align:center}
+    .t00-galerie .pikto{width:2.2em; height:2.2em; color:var(--accent)}
+    .t00-galerie code{font-size:.75rem; color:var(--muted)}
+  </style>
+</head>
+<body data-fach="avsw" data-thema="_vorlage">
+<!-- VORLAGE für AVSW-Themenseiten: zeigt die Piktogramme und den Baustein «modellieren».
+     Alle anderen Bausteine (Stepper, Film, Selbsttest …) zeigt content/lernseiten/mstw/_vorlage.html. -->
+<main class="wrap">
+  <header class="stack">
+    <span class="eyebrow">AVSW · Vorlage · Modellieren</span>
+    <h1>Muster: Architektur modellieren</h1>
+    <p class="lead">Diese Seite zeigt die Piktogramme für verteilte Systeme und den Baustein «modellieren»: Du liest einen Anforderungstext, legst die passenden Bausteine auf die Fläche und verbindest sie.</p>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#piktogramme"><b>1</b>Piktogramme</a>
+    <a href="#modell"><b>2</b>Modellieren</a>
+    <a href="#verbinden"><b>3</b>Verbinden</a>
+  </nav>
+
+  <section id="piktogramme">
+    <span class="eyebrow">Baukasten · Lernpfad.piktogramm(art)</span>
+    <h2>Piktogramme</h2>
+    <p class="prose">Eigene, markenfreie Symbole. Sie übernehmen die Textfarbe und funktionieren hell und dunkel.</p>
+    <div class="t00-galerie" id="t00-galerie"></div>
+  </section>
+
+  <section id="modell">
+    <span class="eyebrow">Baukasten · Lernpfad.modellieren(el, cfg)</span>
+    <h2>Vom Text zur Architektur</h2>
+    <div id="t00-modell"></div>
+  </section>
+
+  <section id="verbinden">
+    <span class="eyebrow">Variante · vorgegeben: true</span>
+    <h2>Nur verbinden</h2>
+    <div id="t00-verbinden"></div>
+  </section>
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+
+  const galerie = document.getElementById("t00-galerie");
+  [["client", "Web-Client"], ["mobile", "Mobile App"], ["user", "Person"], ["gateway", "API-Gateway"], ["lb", "Load Balancer"],
+   ["service", "Service"], ["function", "Function"], ["db", "Datenbank"], ["cache", "Cache"], ["queue", "Queue"],
+   ["topic", "Topic"], ["storage", "Objektspeicher"], ["extern", "Fremdsystem"], ["container", "Container"], ["pod", "Pod"],
+   ["node", "Node"], ["cluster", "Cluster"], ["auth", "Identity"], ["cdn", "CDN"], ["monitor", "Monitoring"],
+   ["config", "Konfiguration"], ["code", "Code"]].forEach(([art, name]) => {
+    const f = document.createElement("figure");
+    f.innerHTML = L.piktogramm(art) + "<figcaption>" + name + "<br><code>" + art + "</code></figcaption>";
+    galerie.appendChild(f);
+  });
+
+  L.modellieren("#t00-modell", {
+    titel: "Webshop modellieren",
+    aufgabe: '<p>Kundinnen bestellen über den <span data-baustein="web">Browser</span>. Alle Anfragen laufen über ein <span data-baustein="gw">API-Gateway</span>. Der <span data-baustein="best">Bestellservice</span> speichert Bestellungen in seiner <span data-baustein="bestdb">eigenen Datenbank</span> und fragt den <span data-baustein="lager">Lagerservice</span> synchron, ob die Ware verfügbar ist. Nach dem Speichern veröffentlicht er das Event «Bestellung erstellt» auf einem <span data-baustein="broker">Message Broker</span>. Der <span data-baustein="mail">Mailservice</span> abonniert das Event und verschickt die Bestätigung.</p>',
+    schichten: [
+      { id: "client", name: "Client" },
+      { id: "zugang", name: "Zugang" },
+      { id: "dienste", name: "Dienste" },
+      { id: "daten", name: "Daten und Infrastruktur" }
+    ],
+    bausteine: [
+      { id: "web", name: "Web-Client", art: "client", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "zugang" },
+      { id: "best", name: "Bestellservice", art: "service", schicht: "dienste" },
+      { id: "lager", name: "Lagerservice", art: "service", schicht: "dienste" },
+      { id: "mail", name: "Mailservice", art: "service", schicht: "dienste" },
+      { id: "bestdb", name: "Bestell-DB", art: "db", schicht: "daten" },
+      { id: "broker", name: "Message Broker", art: "topic", schicht: "daten" },
+      { id: "cache", name: "Cache", art: "cache", schicht: "daten" },
+      { id: "cdn", name: "CDN", art: "cdn", schicht: "zugang" }
+    ],
+    loesung: {
+      bausteine: ["web", "gw", "best", "lager", "mail", "bestdb", "broker"],
+      verbindungen: [
+        { von: "web", nach: "gw", art: "sync", warum: "Der Browser ruft nur das Gateway auf, nie die Dienste direkt." },
+        { von: "gw", nach: "best", art: "sync", warum: "Das Gateway leitet die Bestellung an den zuständigen Dienst weiter." },
+        { von: "best", nach: "lager", art: "sync", warum: "«fragt synchron»: Der Bestellservice wartet auf die Antwort." },
+        { von: "best", nach: "bestdb", art: "daten", warum: "«eigene Datenbank»: Nur der Bestellservice greift darauf zu (database per service)." },
+        { von: "best", nach: "broker", art: "async", warum: "«veröffentlicht ein Event»: Der Bestellservice wartet nicht auf die Empfänger." },
+        { von: "broker", nach: "mail", art: "async", warum: "«abonniert»: Der Broker liefert das Event an alle Abonnenten aus." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> Verben im Text verraten die Verbindungsart. «fragt», «ruft auf» = synchron, «veröffentlicht», «abonniert», «benachrichtigt» = asynchron, «speichert», «liest» = Datenzugriff. Cache und CDN kommen im Text nicht vor, also gehören sie nicht ins Modell."
+  });
+
+  L.modellieren("#t00-verbinden", {
+    titel: "Kubernetes: Wer spricht mit wem?",
+    aufgabe: "<p>Verbinde die Teile so, wie eine Anfrage von aussen bis in den Container läuft.</p>",
+    vorgegeben: true,
+    verbindungsarten: [{ id: "weiter", name: "leitet weiter an" }],
+    bausteine: [
+      { id: "ing", name: "Ingress", art: "gateway" },
+      { id: "svc", name: "Service", art: "lb" },
+      { id: "pod", name: "Pod", art: "pod" },
+      { id: "ctr", name: "Container", art: "container" }
+    ],
+    loesung: {
+      bausteine: ["ing", "svc", "pod", "ctr"],
+      verbindungen: [
+        { von: "ing", nach: "svc", art: "weiter", warum: "Der Ingress routet HTTP-Anfragen nach Host und Pfad an einen Service." },
+        { von: "svc", nach: "pod", art: "weiter", warum: "Der Service verteilt die Last auf alle Pods mit passendem Label." },
+        { von: "pod", nach: "ctr", art: "weiter", warum: "Im Pod läuft der Container, der die Anfrage bearbeitet." }
+      ]
+    }
+  });
+})();
+</script>
+</body>
+</html>

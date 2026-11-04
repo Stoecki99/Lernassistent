@@ -123,6 +123,49 @@ const BADGES = [
     condition: "leitstand_null_fehler",
     points: 100,
   },
+  // IPMA-Prüfungssimulator, Spezifikation 6.10 (gleich wie Migration 20261102090000_ipma_modelle)
+  {
+    name: "Prüfungsluft",
+    description: "IPMA-Prüfungssimulator: erste Übungsprüfung abgeschlossen",
+    icon: "📝",
+    condition: "ipma_erste_pruefung",
+    points: 20,
+  },
+  {
+    name: "Bestanden",
+    description: "IPMA-Prüfungssimulator: Übungsprüfung unter Echtbedingungen bestanden",
+    icon: "🎓",
+    condition: "ipma_bestanden",
+    points: 50,
+  },
+  {
+    name: "Souverän",
+    description: "IPMA-Prüfungssimulator: Übungsprüfung unter Echtbedingungen mit mindestens 80 % und 26 Kompetenzen",
+    icon: "🏅",
+    condition: "ipma_souveraen",
+    points: 50,
+  },
+  {
+    name: "Kompass",
+    description: "IPMA-Prüfungssimulator: alle 28 Kompetenzen in einer Übungsprüfung nachgewiesen",
+    icon: "🧭",
+    condition: "ipma_kompass",
+    points: 50,
+  },
+  {
+    name: "Lückenschliesser",
+    description: "IPMA-Prüfungssimulator: 10 Runden «Lücken schliessen» abgeschlossen",
+    icon: "🔧",
+    condition: "ipma_lueckenschliesser",
+    points: 30,
+  },
+  {
+    name: "Landkarte komplett",
+    description: "IPMA-Prüfungssimulator: Beherrschung «sicher» in allen 28 Kompetenzen",
+    icon: "🗺️",
+    condition: "ipma_landkarte",
+    points: 50,
+  },
 ]
 
 async function seed() {

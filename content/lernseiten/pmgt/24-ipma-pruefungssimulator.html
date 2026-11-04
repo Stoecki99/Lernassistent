@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IPMA-Prüfungssimulator · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/25-modulpruefung-training" title="Training Modulschlussprüfung">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t24-», nur Farben aus :root -->
+  <style>
+    .t24-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t24-ziele li{margin-bottom:3px}
+
+    /* Startfeld mit den grossen Knöpfen */
+    .t24-start{border:2px solid var(--accent); border-radius:14px; padding:16px; background:var(--accent-soft); display:flex; flex-direction:column; gap:12px}
+    .t24-start h2, .t24-start h3{margin:0}
+    .t24-knoepfe{display:flex; flex-wrap:wrap; gap:12px}
+    .t24-gross{font-size:1.15rem; font-weight:700; padding:14px 22px; min-height:52px; border-radius:12px; text-decoration:none; flex:1 1 100%; text-align:center; justify-content:center}
+    .t24-klein{flex:1 1 200px; min-height:46px; text-decoration:none; text-align:center; justify-content:center; font-weight:600}
+    .t24-start .hint{margin:0}
+
+    /* Ampel-Marke: immer Form + Text, Farbe nur als Zusatz */
+    .t24-sym{display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:.92em; padding:1px 8px; border-radius:999px; border:1px solid currentColor; white-space:nowrap}
+    .t24-gruen{color:var(--ok); background:var(--ok-bg)}
+    .t24-gelb{color:var(--free); background:var(--free-bg)}
+    .t24-rot{color:var(--bad); background:var(--bad-bg)}
+
+    /* Nummerierte Kette */
+    .t24-fluss{margin:0; padding:0; list-style:none; counter-reset:t24f; display:flex; flex-direction:column; gap:8px}
+    .t24-fluss > li{counter-increment:t24f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t24-fluss > li::before{content:counter(t24f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t24-fluss .hint{margin:2px 0 0}
+
+    /* Vergleich schwache / starke Antwort */
+    .t24-vergleich{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(260px,100%),1fr)); gap:10px}
+    .t24-antwort{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface)}
+    .t24-antwort > b{display:block; margin-bottom:4px}
+    .t24-antwort p{margin:0 0 6px}
+    .t24-antwort.t24-schwach{border-left:4px solid var(--bad)}
+    .t24-antwort.t24-stark{border-left:4px solid var(--ok)}
+
+    /* Zeitplan-Rechner */
+    .t24-ergebnis{background:var(--board); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:6px}
+    .t24-ergebnis p{margin:0}
+    .t24-gross-zahl{font-family:var(--f-math); font-size:1.5rem; font-variant-numeric:tabular-nums}
+    .t24-zeile{display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline}
+
+    /* Lernplan-Planer */
+    .t24-felder{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(220px,100%),1fr)); gap:10px 16px}
+    .t24-feld{display:flex; flex-direction:column; gap:4px}
+    .t24-feld label{font-weight:600; font-size:.95rem}
+    .t24-feld select, .t24-feld input{font:inherit; font-size:1rem; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink); min-height:44px; max-width:100%}
+    .t24-wochen{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px}
+    .t24-woche{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface)}
+    .t24-woche h4{margin:0 0 4px; font-size:1rem}
+    .t24-woche ul{margin:0; padding-left:1.2em}
+    .t24-woche li{margin-bottom:3px}
+    .t24-woche.t24-up{border-left:4px solid var(--accent)}
+    .t24-woche.t24-pruefung{border:2px solid var(--accent); background:var(--accent-soft)}
+
+    /* Uhr im Lösungsfilm */
+    .t24-uhr{font-family:var(--f-body); display:flex; flex-direction:column; gap:4px; font-size:1rem; line-height:1.45}
+    .t24-uhr b{color:var(--accent)}
+
+    @media (max-width: 480px){
+      .t24-fluss > li{padding-left:40px}
+      .t24-gross{font-size:1.05rem; padding:12px 16px}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="24-ipma-pruefungssimulator">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · alle Lernblöcke · Prüfungsvorbereitung</span>
+    <h1>IPMA-Prüfungssimulator</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB alle</span><span class="icb">ICB 2.01</span>
+    </p>
+    <p class="lead">Im Dezember schreibst du die Prüfung IPMA Level D: 3 Stunden, 90 Fragen, alle 28 Kompetenzen. Der Prüfungssimulator lässt dich diese Prüfung vorher üben, so oft du willst, und zeigt dir, wo deine Lücken liegen. Diese Seite erklärt dir das Format, die Bestehensregel und den Simulator. Danach planst du deine Zeit in der Prüfung und deine Wochen bis zum Prüfungstag.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t24-ziele">
+        <li>das Format der Prüfung Level D und die Bestehensregel (60&nbsp;% und 23 von 28) erklären und an Beispielen anwenden,</li>
+        <li>sagen, was im Simulator gleich ist wie in der echten Prüfung und was angenommen ist,</li>
+        <li>die drei Modi Übungsprüfung, Training und Lücken schliessen gezielt einsetzen,</li>
+        <li>deine Prüfungszeit einteilen (rund 2 Minuten je Frage) und unterwegs nachsteuern,</li>
+        <li>einen Open-Book-Ordner mit Register nach ICB-Nummer aufbauen,</li>
+        <li>offene Fragen mit Fachbegriffen und Bezug zum Fall beantworten,</li>
+        <li>einen Lernplan bis zu deinem Prüfungstermin erstellen.</li>
+      </ul>
+    </div>
+    <div class="t24-start">
+      <h2>Prüfungssimulator</h2>
+      <p class="hint">Eigene Fragen zu allen 28 Kompetenzen der ICB4, Übungsprüfung im Format 60 + 30, Auswertung mit Kompetenz-Landkarte. Dein Verlauf ist im Konto gespeichert.</p>
+      <div class="t24-knoepfe">
+        <a class="btn primary t24-gross" href="/ipma">▶ Prüfungssimulator öffnen</a>
+        <a class="btn t24-klein" href="/ipma/training">◎ Training nach Kompetenz</a>
+        <a class="btn t24-klein" href="/ipma?start=exam">⏱ Übungsprüfung (3 h)</a>
+      </div>
+      <p class="hint"><b>Zugang:</b> Der Simulator steht allen eingeloggten Konten offen, ohne Kosten. Nur die Bewertung offener Fragen durch Claude ist im Pro-Abo enthalten (Pro und Admin). Sobald du deine erste Übungsprüfung abschliesst, meldet der Simulator diese Station als erledigt.</p>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#format"><b>1</b>Format</a>
+    <a href="#simulator"><b>2</b>Simulator</a>
+    <a href="#strategie"><b>3</b>Strategie</a>
+    <a href="#zeitplan"><b>4</b>Zeitplan</a>
+    <a href="#lernplan"><b>5</b>Lernplan</a>
+    <a href="#uebungen"><b>6</b>Übungen</a>
+    <a href="#film"><b>▶</b>Film</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Bausteine der Prüfungsvorbereitung</h2>
+    <p class="prose">Denk an eine Theateraufführung. Zuerst probst du einzelne Szenen, dann die schwierigen Stellen, und kurz vor der Premiere spielst du einmal alles am Stück, in Kostüm und ohne Unterbruch. Genau so ist der Prüfungssimulator aufgebaut.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Training = Szenenprobe</span><span class="ex">eine Kompetenz, sofort Rückmeldung</span><p>Du wählst eine oder mehrere Kompetenzen und siehst nach jeder Frage, ob sie richtig war und warum.</p></div>
+      <div class="concept"><span class="tag">Lücken schliessen = Nachprobe</span><span class="ex">12 Fragen aus 3 schwachen Kompetenzen</span><p>Der Simulator sucht deine drei schwächsten Kompetenzen und fragt dich gezielt dort ab, mit Wiederholung nach Plan.</p></div>
+      <div class="concept"><span class="tag">Übungsprüfung = Hauptprobe</span><span class="ex">60 MC + 30 offen, 3 h</span><p>Alles am Stück wie am Prüfungstag. Ob du richtig lagst, erfährst du erst nach der Abgabe.</p></div>
+      <div class="concept"><span class="tag">Landkarte = Wetterkarte</span><span class="ex">28 Felder ✓ / ✗</span><p>Ein Feld pro Kompetenz. Auf einen Blick siehst du, wo es sonnig ist und wo es regnet.</p></div>
+      <div class="concept"><span class="tag">Register = Inhaltsverzeichnis</span><span class="ex">1.01 … 3.13</span><p>Dein Open-Book-Ordner, geordnet nach ICB-Nummer. Er hilft nur, wenn du jede Seite in Sekunden findest.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Modus passt?</h3>
+      <p class="hint">Frag dich: Will ich etwas Bestimmtes üben, meine Schwächen angehen oder den Ernstfall proben?</p>
+      <div id="t24-sortierer-modus"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Format ===== -->
+  <section id="format">
+    <span class="eyebrow">Schritt 1 · Format und Bestehensregel (LB 1 F.12, F.29; LB 7 S.5; Swiss ICB S.19–20)</span>
+    <h2>Die echte Prüfung und der Simulator</h2>
+    <p class="prose">Die Prüfung zum IPMA Level D führt in der Schweiz der VZPM durch. Wie sie im Modul abläuft, steht in <a href="/lernseiten/pmgt/02-ipma-und-icb4#pruefung">Station 02</a>. Hier geht es um die Frage: Wie nah kommt der Simulator an die echte Prüfung heran? Die Spalte «Status» sagt dir, was belegt ist und was eine <b>Annahme</b> ist.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Echte Prüfung und Simulator im Vergleich</caption>
+        <thead><tr><th>Merkmal</th><th>Echte Prüfung</th><th>Simulator</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><th>Form</th><td>online, Aufsicht über Zoom</td><td>im Browser, ohne Aufsicht</td><td>ähnlich</td></tr>
+          <tr><th>Dauer</th><td>3 Stunden (LB 7 S.5)</td><td>3 Stunden, Echtbedingungen oder mit Pausen</td><td>gleich</td></tr>
+          <tr><th>Hilfsmittel</th><td>Open Book</td><td>Open Book, die App prüft nichts</td><td>gleich</td></tr>
+          <tr><th>Fragen</th><td>Musterprüfung: 60 Multiple Choice, 30 offen</td><td>60 MC, 30 offen; zuerst alle MC, dann alle offenen</td><td>gleich (Reihenfolge: Annahme)</td></tr>
+          <tr><th>Inhalt</th><td>alle 28 Kompetenzen der ICB4</td><td>je Kompetenz 2 MC + 1 offen, dazu 4 MC + 2 offen aus Practice</td><td>Annahme</td></tr>
+          <tr><th>Punkte je Frage</th><td>nicht bekannt</td><td>MC 1 Punkt, offen 2 Punkte, total 120</td><td>Annahme</td></tr>
+          <tr><th>Punktehürde</th><td>mindestens 60&nbsp;%</td><td>mindestens 72 von 120 Punkten</td><td>gleich</td></tr>
+          <tr><th>Breite</th><td>in mindestens 23 der 28 Kompetenzen mindestens eine richtige Antwort</td><td>gleich; offene Frage zählt als richtig ab 2 von 4 Rasterpunkten</td><td>Regel gleich, Schwelle: Annahme</td></tr>
+          <tr><th>Kompetenz der Frage</th><td>vermutlich nicht angegeben</td><td>in der Prüfung verborgen, im Training sichtbar</td><td>Annahme</td></tr>
+          <tr><th>Fragen selbst</th><td>Fragen des VZPM</td><td>eigene Fragen, Fälle aus der erfundenen Gemeinde Wolkenried</td><td>bewusst anders</td></tr>
+          <tr><th>Termine</th><td>Mi 16.12., Di 22.12. oder Mi 23.12.2026</td><td>jederzeit, so oft du willst</td><td>–</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Quellen: Dauer und Open Book LB 7 S.5; Termine LB 1 F.29; Bestehensregel Digicomp und Swiss ICB S.19–20 («80&nbsp;% der 28 Kompetenzen», aufgerundet 23); Format 60 + 30 aus der Musterprüfung laut Konzept. Die Annahmen stammen aus der Spezifikation des Simulators und sind konfigurierbar, sobald eine Musterprüfung mit Punkten vorliegt.</p>
+
+    <h3>Zwei Hürden, beide Pflicht</h3>
+    <ol class="t24-fluss">
+      <li><b>Punkte:</b> mindestens 60&nbsp;% der möglichen Punkte. Mit der Annahme 60 × 1 + 30 × 2 = 120 Punkte sind das 72 Punkte. Genau 60.0&nbsp;% reicht.</li>
+      <li><b>Breite:</b> eine Kompetenz ist <b>nachgewiesen</b>, wenn mindestens eine ihrer Fragen richtig ist. Du brauchst 23 von 28. Du darfst also in höchstens 5 Kompetenzen leer ausgehen.<p class="hint">Im Simulator: MC richtig, oder offene Frage mit mindestens 2 von 4 Rasterpunkten (Annahme).</p></li>
+    </ol>
+    <div class="note"><b>Merke:</b> Viele Punkte retten dich nicht, wenn sie aus zu wenigen Kompetenzen stammen. Wer nur Practice büffelt und die People-Kompetenzen auslässt, kann mit 80&nbsp;% der Punkte durchfallen.</div>
+    <div id="t24-wf-regel"></div>
+  </section>
+
+  <!-- ===== 2 · Simulator ===== -->
+  <section id="simulator">
+    <span class="eyebrow">Schritt 2 · So funktioniert der Simulator</span>
+    <h2>Vier Modi, eine Auswertung</h2>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Modi des Prüfungssimulators</caption>
+        <thead><tr><th>Modus</th><th>Fragen</th><th>Zeit</th><th>Rückmeldung</th></tr></thead>
+        <tbody>
+          <tr><th>Übungsprüfung</th><td>60 MC + 30 offen</td><td>3 h</td><td>erst nach der Abgabe</td></tr>
+          <tr><th>Kurzprüfung</th><td>14 MC + 6 offen aus 20 Kompetenzen</td><td>40 min</td><td>erst nach der Abgabe</td></tr>
+          <tr><th>Training</th><td>5 bis 30, Kompetenzen und Typ wählbar</td><td>keine</td><td>sofort je Frage</td></tr>
+          <tr><th>Lücken schliessen</th><td>12 aus deinen 3 schwächsten Kompetenzen</td><td>keine</td><td>sofort je Frage</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die <a href="/ipma?start=short">Kurzprüfung</a> ist eine Mini-Hauptprobe für einen Abend. Die Regel 23 von 28 gilt dort nicht, weil nur 20 Kompetenzen vorkommen; sie zeigt Punkte (Grenze 60&nbsp;%) und die geprüften Kompetenzen.</p>
+
+    <h3>Echtbedingungen oder mit Pausen</h3>
+    <p class="prose">Beim Start der Übungsprüfung wählst du eine von zwei Varianten:</p>
+    <div class="t24-vergleich">
+      <div class="t24-antwort"><b>Echtbedingungen (Vorgabe)</b><p>Die Uhr läuft auf dem Server 3 Stunden ab dem Start, auch wenn du die Seite schliesst. Nach Ablauf gibt der Browser automatisch ab. Nur hier gibt es die Abzeichen «Bestanden» und «Souverän».</p></div>
+      <div class="t24-antwort"><b>Mit Pausen</b><p>Ein Knopf «Pause» deckt die Fragen ab. Gezählt wird nur die aktive Zeit. Nach 180 aktiven Minuten erscheint «Zeit um». Gut, um die Prüfung auf zwei Abende zu verteilen. Das Ergebnis trägt den Vermerk «mit Pausen».</p></div>
+    </div>
+
+    <h3>Wie bewertet wird</h3>
+    <ol class="t24-fluss">
+      <li><b>MC-Fragen</b> bewertet der Server selbst: genau eine von vier Optionen ist richtig. Eine unbeantwortete Frage zählt als falsch.</li>
+      <li><b>Offene Fragen bewertest du selbst.</b> Nach der Abgabe siehst du deine Antwort neben der Musterlösung und ein Raster mit 4 Rasterpunkten. Je Kriterium wählst du, wie viele Punkte du erreicht hast. Bei 2 Punkten je offene Frage gibt jeder Rasterpunkt einen halben Punkt.<p class="hint">Die Selbstbewertung ist Pflicht. Erst wenn alle beantworteten offenen Fragen bewertet sind, schliesst du die Auswertung ab.</p></li>
+      <li><b>Claude als Zweitprüfer (nur Pro und Admin):</b> Nach deiner Selbstbewertung kannst du eine offene Antwort von Claude bewerten lassen. Du siehst beide Bewertungen je Kriterium nebeneinander, mit Begründung. Liegt die Bewertung von Claude vor, zählt sie. Free-Konten sehen statt des Knopfs einen Hinweis aufs Pro-Abo.</li>
+      <li><b>Auswertung:</b> Punkte mit Grenze 72, Anzahl nachgewiesener Kompetenzen mit Grenze 23, Ergebnis mit Grund («Punkte reichen, aber nur 21 Kompetenzen nachgewiesen»), Kompetenz-Landkarte, die Stationen, die du wiederholen solltest, und dein Verlauf über alle Übungsprüfungen.</li>
+    </ol>
+    <div class="note tipp"><b>Zuerst selbst urteilen:</b> Die Reihenfolge Selbstbewertung vor Claude ist Absicht. Wer zuerst selbst ehrlich bewertet und dann vergleicht, lernt, was eine volle Antwort ausmacht. Genau das brauchst du am Prüfungstag, wo dir niemand das Raster zeigt.</div>
+    <div id="t24-auswahl-modus"></div>
+  </section>
+
+  <!-- ===== 3 · Strategie ===== -->
+  <section id="strategie">
+    <span class="eyebrow">Schritt 3 · Prüfungsstrategie (eigene Empfehlung, nicht vom Dozenten bestätigt)</span>
+    <h2>So holst du in 180 Minuten das Maximum</h2>
+
+    <h3>Zeitbudget</h3>
+    <p class="prose">180 Minuten für 90 Fragen heisst: rund <b>2 Minuten je Frage</b> im Schnitt. MC-Fragen gehen schneller, offene brauchen länger. Ein Plan, der aufgeht:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Zeitplan für die Prüfung (eigene Empfehlung)</caption>
+        <thead><tr><th>Block</th><th class="zahl">Fragen</th><th class="zahl">Minuten je Frage</th><th class="zahl">Minuten</th><th>Uhr</th></tr></thead>
+        <tbody>
+          <tr><th>Multiple Choice</th><td class="zahl">60</td><td class="zahl">1</td><td class="zahl">60</td><td>0:00 bis 1:00</td></tr>
+          <tr><th>Offene Fragen</th><td class="zahl">30</td><td class="zahl">3.5</td><td class="zahl">105</td><td>1:00 bis 2:45</td></tr>
+          <tr><th>Reserve für markierte Fragen</th><td class="zahl">–</td><td class="zahl">–</td><td class="zahl">15</td><td>2:45 bis 3:00</td></tr>
+          <tr class="an"><th>Total</th><td class="zahl">90</td><td class="zahl">2 im Schnitt</td><td class="zahl">180</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Reihenfolge</h3>
+    <ol class="t24-fluss">
+      <li><b>Zuerst alle MC-Fragen,</b> zügig. Jede MC-Frage, die du in 30 Sekunden sicher weisst, schenkt dir Zeit für die offenen.</li>
+      <li><b>Unsichere markieren, nicht festbeissen.</b> Nach rund 2 Minuten wählst du die beste Option, markierst die Frage und gehst weiter.</li>
+      <li><b>Dann die offenen Fragen,</b> rund 3.5 Minuten je Frage. Halte dich an die Uhr: Wer eine Frage perfekt macht und drei leer lässt, verliert.</li>
+      <li><b>Am Schluss die Reserve</b> für markierte Fragen. Keine Frage bleibt leer.</li>
+    </ol>
+    <p class="hint">Im Simulator stehen die MC-Fragen ohnehin vorne (Positionen 1 bis 60). Ob die echte Prüfung genauso sortiert ist, ist nicht bekannt. Wenn nicht: beantworte trotzdem zuerst die MC-Fragen und spring dafür in der Übersicht.</p>
+
+    <h3>Open-Book-Register nach ICB-Nummer</h3>
+    <p class="prose">Open Book ist eine Gedächtnisstütze, kein Lehrbuch. Für Nachlesen bleibt keine Zeit. Dein Ordner muss so gebaut sein, dass du in 20 Sekunden auf der richtigen Seite bist.</p>
+    <ul class="prose">
+      <li><b>28 Register,</b> 1.01 bis 3.13 in der Reihenfolge der ICB. Auf jedem Register zusätzlich die Kapitelnummer der Swiss ICB (Kontext 4.3.x, Menschen 4.4.x, Praktiken 4.5.x) und die Seite.</li>
+      <li><b>Eine Seite je Kompetenz:</b> Kern in einem Satz (eigene Worte), Kompetenzindikatoren als Stichworte, die wichtigsten Methoden und Formeln, Fundstellen (LB, Gubelmann/Sommer, Station).</li>
+      <li><b>Deckblatt:</b> die 28 Kompetenzen auf einer Seite, die Bestehensregel und dein Zeitplan.</li>
+      <li><b>Stichwortliste A bis Z</b> hinten: «Eskalation → 2.07», «Earned Value → 3.10», «SMART → 3.02». So findest du die Kompetenz auch, wenn die Frage sie nicht nennt.</li>
+    </ul>
+    <p class="prose">Eine Vorlage mit allen 28 Registern und Fundstellen steht in <a href="/lernseiten/pmgt/02-ipma-und-icb4#strategie">Station 02</a>.</p>
+
+    <h3>Offene Fragen: Fachbegriff plus Fall</h3>
+    <p class="prose">Eine offene Frage im IPMA-Stil beschreibt meist eine Situation und fragt, wie du vorgehst. Punkte gibt es für <b>Fachbegriffe</b> und für den <b>Bezug zum Fall</b>. Ein Schema, das fast immer passt:</p>
+    <ol class="t24-fluss">
+      <li><b>Einordnen:</b> Um welche Kompetenz geht es? Nenne den Fachbegriff (z. B. «Konflikt», «Risiko», «Änderungsantrag»).</li>
+      <li><b>Analysieren:</b> Was sagt der Fall genau? Zahlen, Personen, Fristen aufgreifen.</li>
+      <li><b>Handeln:</b> zwei bis drei konkrete Schritte, in einer sinnvollen Reihenfolge.</li>
+      <li><b>Begründen und absichern:</b> warum, wer entscheidet, wie du nachfasst.</li>
+    </ol>
+    <div class="card stack">
+      <h3>Beispiel <span class="icb">ICB 2.07</span></h3>
+      <p class="prose">Im Projekt Onlineschalter Wolkenried streiten Seraina (Fachverantwortliche Baugesuche) und Luca (Informatik) seit zwei Wochen über die Gestaltung der Formulare. In den Sitzungen fallen spitze Bemerkungen, Luca hat ein Review abgesagt. Wie gehst du als Projektleiterin vor?</p>
+      <div class="t24-vergleich">
+        <div class="t24-antwort t24-schwach"><b>✗ Schwache Antwort</b><p>«Ich rede mit beiden und sage ihnen, dass sie sich zusammenreissen sollen. Teamarbeit ist wichtig.»</p><p class="hint">Kein Fachbegriff, kein Bezug zum Fall, keine Reihenfolge, kein Nachfassen. Etwa 1 von 4 Rasterpunkten.</p></div>
+        <div class="t24-antwort t24-stark"><b>✓ Starke Antwort</b><p>«Das ist ein Konflikt (ICB 2.07), der schon das Review gefährdet. Ich spreche zuerst einzeln mit Seraina und Luca und trenne Sach- und Beziehungsebene. Nach Glasl schätze ich die Stufe ein; spitze Bemerkungen und abgesagte Termine deuten auf eine frühe Stufe, die das Team noch selbst lösen kann. Dann moderiere ich ein gemeinsames Gespräch mit dem Ziel einer Formularlösung, die Fachstelle und Technik prüfen. Die Vereinbarung halte ich fest und frage nach einer Woche nach. Hilft das nicht, eskaliere ich an die Auftraggeberin.»</p><p class="hint">Fachbegriffe, Fallbezug (Review, Formulare), klare Schritte, Nachfassen und Eskalation. 4 von 4.</p></div>
+      </div>
+      <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Das Raster ist ein Beispiel im Stil des Simulators.</p>
+    </div>
+
+    <h3>Umgang mit Unsicherheit</h3>
+    <ul class="prose">
+      <li><b>Ausschlussverfahren:</b> Streich zuerst die Optionen, die sicher falsch sind. Aus zwei Optionen raten ist besser als aus vier.</li>
+      <li><b>Nie leer lassen:</b> Im Simulator kostet eine falsche MC-Antwort nichts, eine leere bringt sicher 0. Ob die echte Prüfung Abzüge für falsche Antworten kennt, nennen die Unterlagen nicht; die Annahme hier ist: nein. Dann lohnt sich Raten immer.</li>
+      <li><b>Offene Frage halb sicher?</b> Schreib die Fachbegriffe und zwei Schritte in Stichworten. Teilpunkte zählen, und schon 2 von 4 Rasterpunkten weisen die Kompetenz nach (Annahme des Simulators).</li>
+      <li><b>Blackout:</b> Register aufschlagen, Stichwortliste lesen, Frage markieren, weiter. Die nächste Frage holt dich zurück in den Takt.</li>
+    </ul>
+  </section>
+
+  <!-- ===== 4 · Zeitplan-Rechner ===== -->
+  <section id="zeitplan">
+    <span class="eyebrow">Schritt 4 · Ausprobieren</span>
+    <h2>Zeitplan-Rechner: Bin ich noch im Plan?</h2>
+    <p class="prose">Mitten in der Prüfung schaust du auf die Uhr. Stell ein, wie viele Fragen noch offen sind und wie viel Zeit bleibt. Der Rechner vergleicht mit dem Plan (MC 1 Minute, offene Frage 3.5 Minuten) und zeigt eine Ampel.</p>
+    <div class="card rechner">
+      <div class="regler">
+        <label for="t24-mc">MC-Fragen übrig</label>
+        <input type="range" id="t24-mc" min="0" max="60" step="1" value="60">
+        <output for="t24-mc" id="t24-mc-wert">60</output>
+      </div>
+      <div class="regler">
+        <label for="t24-offen">Offene Fragen übrig</label>
+        <input type="range" id="t24-offen" min="0" max="30" step="1" value="30">
+        <output for="t24-offen" id="t24-offen-wert">30</output>
+      </div>
+      <div class="regler">
+        <label for="t24-zeit">Restzeit in Minuten</label>
+        <input type="range" id="t24-zeit" min="0" max="180" step="5" value="180">
+        <output for="t24-zeit" id="t24-zeit-wert">180</output>
+      </div>
+      <div class="row" role="group" aria-label="Beispiele laden">
+        <button type="button" class="btn" data-t24-preset="60,30,180">Start</button>
+        <button type="button" class="btn" data-t24-preset="5,30,100">Nach 80 Minuten</button>
+        <button type="button" class="btn" data-t24-preset="0,22,60">Nach 2 Stunden</button>
+      </div>
+      <div class="t24-ergebnis" id="t24-zeit-ergebnis" aria-live="polite"></div>
+    </div>
+    <p class="hint">Ampel: <span class="t24-sym t24-gruen">● Grün</span> Restzeit reicht für den Plan. <span class="t24-sym t24-gelb">▲ Gelb</span> bis 15&nbsp;% zu wenig. <span class="t24-sym t24-rot">■ Rot</span> mehr als 15&nbsp;% zu wenig. Die Schwellen sind eine eigene Festlegung.</p>
+  </section>
+
+  <!-- ===== 5 · Lernplan ===== -->
+  <section id="lernplan">
+    <span class="eyebrow">Schritt 5 · Ausprobieren</span>
+    <h2>Lernplan-Planer: Deine Wochen bis zur Prüfung</h2>
+    <p class="prose">Ein guter Plan hat drei Phasen. Zuerst trainierst du die Kompetenzen der Reihe nach. Dann schliesst du deine Lücken. Am Schluss schreibst du zwei Übungsprüfungen unter Echtbedingungen, mit Zeit für die Auswertung dazwischen.</p>
+    <ol class="t24-fluss">
+      <li><b>Training nach Kompetenz:</b> alle 28 Kompetenzen, je eine Runde mit 10 Fragen (MC und offen). Schwache Kompetenzen wiederholst du mit der passenden Station.</li>
+      <li><b>Lücken schliessen:</b> mehrere Runden, bis die Landkarte kaum noch «Lücke» zeigt. Der Simulator wiederholt falsch beantwortete Fragen nach 1, 2, 4, 8 und 16 Tagen.</li>
+      <li><b>Zwei Übungsprüfungen unter Echtbedingungen:</b> die erste rund 12 Tage vor der Prüfung, die zweite rund 5 Tage vorher. Dazwischen wertest du aus und wiederholst die empfohlenen Stationen.</li>
+    </ol>
+    <div class="card stack">
+      <div class="t24-felder">
+        <div class="t24-feld">
+          <label for="t24-termin">Dein Prüfungstermin</label>
+          <select id="t24-termin">
+            <option value="2026-12-16">Mi 16.12.2026</option>
+            <option value="2026-12-22">Di 22.12.2026</option>
+            <option value="2026-12-23">Mi 23.12.2026</option>
+          </select>
+        </div>
+        <div class="t24-feld">
+          <label for="t24-ab">Du beginnst am</label>
+          <input type="date" id="t24-ab">
+        </div>
+      </div>
+      <div id="t24-plan" aria-live="polite"></div>
+      <p class="hint">Der Plan ist eine eigene Empfehlung. Rechne pro Woche mit 3 bis 5 Stunden, in der Woche einer Übungsprüfung mit einem freien Block von 3 Stunden am Stück. Nichts wird gespeichert.</p>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 6 · Selbst rechnen und formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Rechne mit der Annahme des Simulators: MC 1 Punkt, offene Frage 2 Punkte, 4 Rasterpunkte je offene Frage.</p>
+    <div id="t24-u-prozent"></div>
+    <div id="t24-u-raster"></div>
+    <div id="t24-u-unsicher"></div>
+    <div id="t24-u-register"></div>
+    <div id="t24-u-offen"></div>
+  </section>
+
+  <!-- ===== Film ===== -->
+  <section id="film">
+    <span class="eyebrow">Film · Eine Übungsprüfung am Stück</span>
+    <h2>Jasmins Hauptprobe, Stunde für Stunde</h2>
+    <p class="prose">Jasmin Huber, Applikationsbetreuerin im Projekt Onlineschalter, schreibt ihre erste Übungsprüfung unter Echtbedingungen. Der Verlauf und die Zahlen sind erfunden. Drück auf «Abspielen».</p>
+    <div id="t24-film"></div>
+  </section>
+
+  <!-- ===== Fallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Fallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>Festbeissen an einer MC-Frage.</b> Fünf Minuten für eine Frage fehlen dir später bei zwei offenen Fragen. Nach 2 Minuten: beste Option, markieren, weiter.</div>
+    <div class="note falle"><b>Offene Fragen zuletzt und ohne Zeit.</b> Eine leere offene Frage kostet 2 Punkte und vielleicht eine Kompetenz. Halte dich an den Zeitplan, damit für jede offene Frage Zeit bleibt.</div>
+    <div class="note falle"><b>Open Book als Lehrbuch.</b> Wer in der Prüfung erst nachliest, wird nicht fertig. Der Ordner ersetzt das Lernen nicht, er stützt nur das Gedächtnis.</div>
+    <div class="note falle"><b>Allgemeine Antwort ohne Fall.</b> «Kommunikation ist wichtig» bringt kaum Punkte. Nimm Personen, Zahlen und Fristen aus dem Fall auf und nenne den Fachbegriff.</div>
+    <div class="note falle"><b>Nur Practice lernen.</b> Die Regel 23 von 28 verlangt Breite. Wer die zehn People-Kompetenzen auslässt, fällt durch, egal wie viele Punkte er hat.</div>
+    <div class="note falle"><b>Zu grosszügig selbst bewerten.</b> Wer sich für jede ungefähre Antwort 4 von 4 gibt, hat im Simulator 80&nbsp;% und in der Prüfung 55&nbsp;%. Streng nach Raster bewerten; mit Pro zum Vergleich Claude fragen.</div>
+    <div class="note falle"><b>Nur «mit Pausen» üben.</b> Drei Stunden am Stück sind anstrengend. Mindestens eine Übungsprüfung schreibst du unter Echtbedingungen, sonst erlebst du die Müdigkeit erst am Prüfungstag.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · Prüfung und Simulator</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Werte, die nur im Simulator gelten, sind als Annahme gekennzeichnet.</p>
+    <div id="t24-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Prüfung IPMA Level D:</b> online, 3 Stunden, Open Book, Musterprüfung 60 MC + 30 offene Fragen. Termine 16., 22. oder 23.12.2026.</li>
+      <li><b>Bestehen:</b> mindestens 60&nbsp;% der Punkte <b>und</b> eine richtige Antwort in mindestens 23 der 28 Kompetenzen. Beides ist Pflicht.</li>
+      <li><b>Simulator:</b> gleiche Dauer und Fragenzahl; Punkte je Frage (MC 1, offen 2) und «offen richtig ab 2 von 4 Rasterpunkten» sind Annahmen. Für alle eingeloggten Konten, Claude-Bewertung nur Pro und Admin.</li>
+      <li><b>Modi:</b> Training (sofortige Rückmeldung), Lücken schliessen (3 schwächste Kompetenzen), Übungsprüfung (Echtbedingungen oder mit Pausen), Kurzprüfung (40 min).</li>
+      <li><b>Zeit:</b> rund 2 Minuten je Frage; MC 1 Minute, offene 3.5 Minuten, 15 Minuten Reserve. Zuerst MC, nie eine Frage leer lassen.</li>
+      <li><b>Offene Fragen:</b> einordnen, Fall analysieren, Schritte nennen, begründen. Fachbegriff plus Fallbezug.</li>
+      <li><b>Lernplan:</b> Training nach Kompetenz → Lücken schliessen → zwei Übungsprüfungen unter Echtbedingungen (rund 12 und 5 Tage vor der Prüfung).</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t24-ziele">
+        <li><b>Deckblatt:</b> Bestehensregel (60&nbsp;% und 23 von 28; Digicomp, Swiss ICB S.19–20), die 28 Kompetenzen mit Nummer (Swiss ICB S.29) und dein Zeitplan: 0:00 MC, 1:00 offene Fragen, 2:45 Reserve.</li>
+        <li><b>Register 1.01 bis 3.13</b> mit Swiss-ICB-Kapitel (4.3.x, 4.4.x, 4.5.x), Indikatoren aus Anhang 3 (S.151–156) als Stichworte und Fundstellen. Vorlage: <a href="/lernseiten/pmgt/02-ipma-und-icb4#strategie">Station 02</a>.</li>
+        <li><b>Stichwortliste A bis Z</b> mit Verweis auf die ICB-Nummer, ergänzt nach jeder Übungsprüfung um die Begriffe, die du gesucht hast.</li>
+        <li><b>Schema offene Frage:</b> einordnen (Kompetenz, Fachbegriff), Fall analysieren, 2–3 Schritte, begründen und nachfassen. <span class="icb">ICB 2.01</span> Selbstmanagement: Zeit einteilen, Prioritäten setzen (Swiss ICB 4.4.1).</li>
+        <li>Fundstellen: LB 1 F.12 und F.29 (Level D, Termine), LB 7 S.4–5 (Anmeldung, Format, Open Book). Gubelmann/Sommer, 6. Auflage 2021: Kapitel 1 «Einführung», S. 9–24 (laut LB 1 F.30).</li>
+      </ul>
+    </div>
+    <footer>Station 24 des Lernpfads PMGT. Strategie, Zeitplan und Lernplan sind eigene Empfehlungen, nicht vom Dozenten bestätigt. Punkte je Frage und Schwellen des Simulators sind Annahmen aus der Spezifikation (docs/ipma-pruefungssimulator-spezifikation.md). Gemeinde Wolkenried und alle Personen frei erfunden. Quellen: LB 1, LB 7, Swiss ICB 4.0, Digicomp, alles in eigenen Worten.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const AMPEL = {
+    gruen: '<span class="t24-sym t24-gruen">● Grün</span>',
+    gelb: '<span class="t24-sym t24-gelb">▲ Gelb</span>',
+    rot: '<span class="t24-sym t24-rot">■ Rot</span>'
+  };
+  const zt = (x, n) => L.zahlText(x, n === undefined ? 1 : n);
+
+  /* ---------- Schritt 0: Welcher Modus? ---------- */
+  L.sortierer("#t24-sortierer-modus", {
+    kategorien: ["Training", "Lücken schliessen", "Übungsprüfung"],
+    elemente: [
+      { html: "Du hast Station 13 gerade gelesen und willst Chancen und Risiken (3.11) üben.", kategorie: "Training", erklaerung: "Eine bestimmte Kompetenz mit sofortiger Rückmeldung: Training, z. B. /ipma/training?kompetenz=3.11." },
+      { html: "Die Landkarte zeigt «Lücke» bei 2.08, 2.09 und 1.04.", kategorie: "Lücken schliessen", erklaerung: "Der Simulator wählt die drei schwächsten Kompetenzen selbst und fragt dort gezielt ab." },
+      { html: "Zwölf Tage vor der Prüfung willst du wissen, ob du bestehen würdest.", kategorie: "Übungsprüfung", erklaerung: "Nur die volle Übungsprüfung prüft beide Hürden: 60 % und 23 von 28." },
+      { html: "Du willst nur offene Fragen zu den People-Kompetenzen schreiben.", kategorie: "Training", erklaerung: "Im Training wählst du Kompetenzen (auch ganze Bereiche) und den Typ: nur offene Fragen." },
+      { html: "Du hast eine Woche lang falsch beantwortete Fragen nicht wiederholt.", kategorie: "Lücken schliessen", erklaerung: "Lücken schliessen nimmt zuerst fällige Fragen, die du früher falsch hattest (Wiederholung nach 1, 2, 4, 8, 16 Tagen)." },
+      { html: "Du willst testen, ob du 3 Stunden konzentriert bleibst.", kategorie: "Übungsprüfung", erklaerung: "Das testet nur die Übungsprüfung unter Echtbedingungen." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Bestehensregel ---------- */
+  L.wahrFalsch("#t24-wf-regel", {
+    titel: "Bestehensregel: wahr oder falsch?",
+    aussagen: [
+      { html: "Wer 80&nbsp;% der Punkte holt, besteht immer.", wahr: false, erklaerung: "Falsch. Die Breite ist eine eigene Hürde: Mit nur 22 nachgewiesenen Kompetenzen fällst du auch mit 80 % durch." },
+      { html: "Eine Kompetenz ist nachgewiesen, sobald mindestens eine ihrer Fragen richtig ist.", wahr: true, erklaerung: "Wahr. Eine richtige Antwort genügt, egal ob MC oder offen." },
+      { html: "Bei 120 möglichen Punkten liegt die Punktehürde bei 72 Punkten.", wahr: true, erklaerung: "Wahr: 0.6 × 120 = 72. Die 120 Punkte beruhen auf der Annahme MC 1, offen 2." },
+      { html: "Mit genau 60.0&nbsp;% der Punkte verfehlst du die Punktehürde knapp.", wahr: false, erklaerung: "Falsch. Verlangt sind «mindestens 60 %». 72 von 120 reicht." },
+      { html: "Eine leere Frage kostet nur Punkte, aber nie die Breite.", wahr: false, erklaerung: "Falsch. Ist es die einzige richtig beantwortbare Frage einer Kompetenz, fehlt dir diese Kompetenz für die 23." },
+      { html: "Im Simulator zählt eine offene Frage mit 1 von 4 Rasterpunkten als richtig.", wahr: false, erklaerung: "Falsch. Richtig ist sie ab 2 von 4 Rasterpunkten (Annahme des Simulators). 1 Rasterpunkt gibt einen halben Punkt, weist die Kompetenz aber nicht nach." },
+      { html: "In der Kurzprüfung des Simulators gilt die Regel 23 von 28 nicht.", wahr: true, erklaerung: "Wahr. Sie prüft nur 20 Kompetenzen; gezeigt werden Punkte (Grenze 60 %) und die geprüften Kompetenzen." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Modus nach der Auswertung ---------- */
+  L.auswahl("#t24-auswahl-modus", {
+    frage: '<span class="icb">ICB 2.01</span> Deine erste Übungsprüfung: 79 von 120 Punkten, 21 von 28 Kompetenzen nachgewiesen. Was tust du als Nächstes?',
+    optionen: [
+      "Sofort die nächste Übungsprüfung, um zu sehen, ob es Zufall war.",
+      "Die empfohlenen Stationen wiederholen und dann «Lücken schliessen».",
+      "Nur noch Practice trainieren, weil dort die meisten Fragen sind.",
+      "Nichts, die Punkte reichen ja."
+    ],
+    richtig: 1,
+    erklaerung: "Die Punkte reichen (≥ 72), die Breite nicht (21 &lt; 23). Die Auswertung nennt die Stationen zu den nicht nachgewiesenen Kompetenzen. Erst wiederholen, dann gezielt mit «Lücken schliessen» üben. Eine neue Übungsprüfung ohne Lernen misst nur dasselbe nochmals."
+  });
+
+  /* ---------- Schritt 4: Zeitplan-Rechner ---------- */
+  const rMc = document.getElementById("t24-mc");
+  const rOf = document.getElementById("t24-offen");
+  const rZt = document.getElementById("t24-zeit");
+  const ergebnis = document.getElementById("t24-zeit-ergebnis");
+
+  function zeitRechnen() {
+    const mc = Number(rMc.value), of = Number(rOf.value), rest = Number(rZt.value);
+    document.getElementById("t24-mc-wert").textContent = mc;
+    document.getElementById("t24-offen-wert").textContent = of;
+    document.getElementById("t24-zeit-wert").textContent = rest;
+    const n = mc + of;
+    if (n === 0) {
+      ergebnis.innerHTML = "<p>" + AMPEL.gruen + " Alle Fragen bearbeitet.</p><p>Nutze die " + rest + " Minuten für markierte Fragen. Prüfe, dass keine Frage leer ist.</p>";
+      return;
+    }
+    if (rest === 0) {
+      ergebnis.innerHTML = "<p>" + AMPEL.rot + " Zeit abgelaufen.</p><p>Unter Echtbedingungen gibt der Simulator jetzt automatisch ab. " + n + " Fragen bleiben ohne Antwort und zählen 0. Darum: lieber jede Frage kurz beantworten als einzelne perfekt.</p>";
+      return;
+    }
+    const bedarf = mc * 1 + of * 3.5;
+    const q = rest / bedarf;
+    const schnitt = rest / n;
+    let stufe, rat;
+    if (q >= 1) {
+      stufe = "gruen";
+      rat = "Im Plan. Halte das Tempo: MC 1 Minute, offene Frage 3.5 Minuten. Die " + zt(rest - bedarf) + " Minuten Reserve sparst du für markierte Fragen.";
+    } else if (q >= 0.85) {
+      stufe = "gelb";
+      rat = "Knapp. MC zügiger beantworten, Unsichere markieren statt nachschlagen. So teilst du ein: MC je " + zt(q) + " Minuten, offene Frage je " + zt(3.5 * q) + " Minuten, keine Reserve.";
+    } else {
+      stufe = "rot";
+      rat = "Zu wenig Zeit. Jetzt zählt, dass keine Frage leer bleibt: MC nach bestem Wissen ohne Nachschlagen, offene Fragen in Stichworten (Fachbegriff, zwei Schritte). Pro Frage bleiben im Schnitt " + zt(schnitt) + " Minuten.";
+    }
+    ergebnis.innerHTML =
+      '<p class="t24-zeile"><span class="t24-gross-zahl">' + zt(schnitt) + " min</span> <span>je Frage im Schnitt (" + rest + " min für " + n + " Fragen)</span></p>" +
+      '<p class="t24-zeile"><span>Bedarf nach Plan: ' + mc + " × 1 + " + of + " × 3.5 = <b>" + zt(bedarf) + " min</b></span> " + AMPEL[stufe] + "</p>" +
+      "<p>" + rat + "</p>";
+  }
+  [rMc, rOf, rZt].forEach((r) => r.addEventListener("input", zeitRechnen));
+  document.querySelectorAll("[data-t24-preset]").forEach((b) => {
+    b.addEventListener("click", () => {
+      const w = b.getAttribute("data-t24-preset").split(",");
+      rMc.value = w[0]; rOf.value = w[1]; rZt.value = w[2];
+      zeitRechnen();
+    });
+  });
+  zeitRechnen();
+
+  /* ---------- Schritt 5: Lernplan-Planer ---------- */
+  const WT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+  const KOMP = ["1.01","1.02","1.03","1.04","1.05","2.01","2.02","2.03","2.04","2.05","2.06","2.07","2.08","2.09","2.10",
+    "3.01","3.02","3.03","3.04","3.05","3.06","3.07","3.08","3.09","3.10","3.11","3.12","3.13"];
+  const BEREICH = { "1": "Kontext", "2": "Menschen", "3": "Praktiken" };
+  const elTermin = document.getElementById("t24-termin");
+  const elAb = document.getElementById("t24-ab");
+  const elPlan = document.getElementById("t24-plan");
+
+  function tag(y, m, d) { return new Date(y, m, d, 12, 0, 0); }
+  function ausIso(s) {
+    const t = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+    return t ? tag(Number(t[1]), Number(t[2]) - 1, Number(t[3])) : null;
+  }
+  function iso(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function plus(d, n) { return tag(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function diff(a, b) { return Math.round((b - a) / 864e5); }
+  function kurz(d) { return WT[d.getDay()] + " " + d.getDate() + "." + (d.getMonth() + 1) + "."; }
+  function lang(d) { return kurz(d) + d.getFullYear(); }
+  function inBereich(d, a, b) { return d && diff(a, d) >= 0 && diff(d, b) >= 0; }
+  function ueberlappt(a1, b1, a2, b2) { return diff(a1, b2) >= 0 && diff(a2, b1) >= 0; }
+  function bereichText(liste) {
+    const b = [];
+    liste.forEach((k) => { const n = BEREICH[k[0]]; if (b.indexOf(n) < 0) b.push(n); });
+    return b.join(", ");
+  }
+
+  function planen() {
+    const pruefung = ausIso(elTermin.value);
+    const start = ausIso(elAb.value);
+    if (!start) { elPlan.innerHTML = '<p class="hint">Wähle ein gültiges Startdatum.</p>'; return; }
+    const total = diff(start, pruefung);
+    if (total < 0) { elPlan.innerHTML = "<p>Dieser Termin liegt vor deinem Startdatum. Wähle einen späteren Termin.</p>"; return; }
+    if (total === 0) { elPlan.innerHTML = "<p><b>Heute ist Prüfung.</b> Kein neuer Stoff mehr: Ordner bereitlegen, Deckblatt mit Zeitplan lesen, ruhig bleiben.</p>"; return; }
+
+    let up1 = null, up2 = null;
+    if (total >= 13) { up1 = plus(pruefung, -12); up2 = plus(pruefung, -5); }
+    else if (total >= 6) { up2 = plus(pruefung, -5); }
+    const ersteUp = up1 || up2 || pruefung;
+    const vorUp = diff(start, ersteUp);
+    const trainTage = (total >= 6 && vorUp >= 2) ? Math.max(1, Math.round(vorUp * 0.65)) : 0;
+    const trainEnde = trainTage > 0 ? plus(start, trainTage - 1) : null;
+
+    // Wochen von Montag bis Sonntag, beschnitten auf [start, pruefung]
+    const wochen = [];
+    let mo = plus(start, -((start.getDay() + 6) % 7));
+    while (diff(mo, pruefung) >= 0) {
+      const a = diff(mo, start) > 0 ? start : mo;
+      const so = plus(mo, 6);
+      const b = diff(so, pruefung) < 0 ? pruefung : so;
+      wochen.push({ a: a, b: b });
+      mo = plus(mo, 7);
+    }
+    // Kompetenzen auf die Trainingswochen verteilen
+    const trainWochen = trainEnde ? wochen.filter((w) => ueberlappt(w.a, w.b, start, trainEnde)) : [];
+    const k = trainWochen.length;
+
+    const html = ['<ol class="t24-wochen">'];
+    wochen.forEach((w, i) => {
+      const punkte = [];
+      let klasse = "t24-woche";
+      const ti = trainWochen.indexOf(w);
+      if (ti >= 0) {
+        const teil = KOMP.slice(Math.round(ti * 28 / k), Math.round((ti + 1) * 28 / k));
+        if (teil.length) {
+          punkte.push("<b>Training nach Kompetenz:</b> ICB " + teil[0] + (teil.length > 1 ? " bis " + teil[teil.length - 1] : "") +
+            " (" + bereichText(teil) + "), je eine Runde mit 10 Fragen. Was falsch ist: passende Station nachlesen, Register im Ordner ergänzen.");
+        }
+      }
+      // Lücken schliessen zwischen Training und erster Übungsprüfung
+      const lueckeA = trainEnde ? plus(trainEnde, 1) : start;
+      const lueckeB = plus(ersteUp, -1);
+      if (total >= 6 && diff(lueckeA, lueckeB) >= 0 && ueberlappt(w.a, w.b, lueckeA, lueckeB)) {
+        punkte.push("<b>Lücken schliessen:</b> 2 bis 3 Runden zu je 12 Fragen. Ziel: keine Kompetenz mehr mit «Lücke» auf der Landkarte.");
+      }
+      if (inBereich(up1, w.a, w.b)) {
+        klasse += " t24-up";
+        punkte.push("<b>Übungsprüfung 1 unter Echtbedingungen am " + kurz(up1) + "</b>, 3 Stunden am Stück mit Ordner. Danach selbst bewerten und die Auswertung lesen.");
+      }
+      if (up1 && up2 && ueberlappt(w.a, w.b, plus(up1, 1), plus(up2, -1))) {
+        punkte.push("<b>Auswerten:</b> die empfohlenen Stationen wiederholen, dann Lücken schliessen. Stichwortliste im Ordner um alles ergänzen, was du gesucht hast.");
+      }
+      if (inBereich(up2, w.a, w.b)) {
+        klasse += " t24-up";
+        punkte.push("<b>Übungsprüfung " + (up1 ? "2" : "") + " unter Echtbedingungen am " + kurz(up2) + "</b> Prüfe dabei auch deinen Zeitplan: MC bis 1:00, offene bis 2:45.");
+      }
+      if (up2 && ueberlappt(w.a, w.b, plus(up2, 1), plus(pruefung, -1))) {
+        punkte.push("<b>Endspurt:</b> letzte Lücken aus der Auswertung, Ordner fertig machen, höchstens noch eine Kurzprüfung. Keine neue Theorie.");
+      }
+      if (!up2 && total < 6 && ueberlappt(w.a, w.b, start, plus(pruefung, -1))) {
+        punkte.push("<b>Wenig Zeit:</b> keine volle Übungsprüfung mehr. Jeden Tag eine Kurzprüfung (40 min) oder Lücken schliessen, Ordner fertig machen.");
+      }
+      if (inBereich(pruefung, w.a, w.b)) {
+        klasse = "t24-woche t24-pruefung";
+        punkte.push("<b>Prüfung IPMA Level D am " + lang(pruefung) + ".</b> Am Vortag nur noch Ordner und Deckblatt durchsehen.");
+      }
+      const titel = "Woche " + (i + 1) + " · " + kurz(w.a) + (diff(w.a, w.b) > 0 ? " bis " + kurz(w.b) : "");
+      html.push('<li class="' + klasse + '"><h4>' + titel + "</h4><ul><li>" + punkte.join("</li><li>") + "</li></ul></li>");
+    });
+    html.push("</ol>");
+    const kopf = "<p><b>" + total + " Tage</b> bis zur Prüfung am " + lang(pruefung) + ", " + wochen.length + (wochen.length === 1 ? " Woche" : " Wochen") + "." +
+      (up1 ? " Zwei Übungsprüfungen passen hinein." : up2 ? " Es reicht noch für eine Übungsprüfung." : "") + "</p>";
+    elPlan.innerHTML = kopf + html.join("");
+  }
+  const heute = new Date();
+  elAb.value = iso(tag(heute.getFullYear(), heute.getMonth(), heute.getDate()));
+  elTermin.addEventListener("change", planen);
+  elAb.addEventListener("change", planen);
+  elAb.addEventListener("input", planen);
+  planen();
+
+  /* ---------- Schritt 6: Übungen ---------- */
+  L.zahlAufgabe("#t24-u-prozent", {
+    titel: "Prozent aus der Auswertung",
+    frage: '<p><span class="icb">ICB alle</span> Jasmin hat in ihrer Übungsprüfung 44 von 60 MC-Fragen richtig. Für die 30 offenen Fragen hat sie zusammen 60 von 120 Rasterpunkten. Wie viele Prozent der Punkte hat sie? Auf eine Stelle nach dem Punkt.</p>',
+    antwort: 74 / 120 * 100,
+    toleranz: 0.05,
+    einheit: "%",
+    anzeige: "74 ÷ 120 ≈ 61.7 %",
+    hinweise: [
+      "Ein Rasterpunkt ist bei 2 Punkten je offene Frage ein halber Punkt.",
+      "MC: 44 Punkte. Offen: 60 × 0.5 = 30 Punkte."
+    ],
+    loesungsweg: [
+      "MC: 44 × 1 = 44 Punkte",
+      "Offen: 60 Rasterpunkte × 2 ÷ 4 = 30 Punkte",
+      "Total 74 von 120 Punkten = 61.7 %. Die Punktehürde (72) ist geschafft. Ob sie besteht, hängt noch an der Breite (23 von 28).",
+      "Annahme: MC 1 Punkt, offene Frage 2 Punkte wie im Simulator."
+    ]
+  });
+
+  L.zahlAufgabe("#t24-u-raster", {
+    titel: "Wie viel brauchst du bei den offenen Fragen?",
+    frage: "<p>Du rechnest mit 40 richtigen MC-Fragen. Wie viele Rasterpunkte (von 120) brauchst du bei den offenen Fragen mindestens, um die Punktehürde von 72 Punkten zu schaffen?</p>",
+    antwort: 64,
+    einheit: "Rasterpunkte",
+    hinweise: [
+      "Wie viele Punkte fehlen nach den MC-Fragen noch bis 72?",
+      "Ein Punkt bei den offenen Fragen sind 2 Rasterpunkte."
+    ],
+    loesungsweg: [
+      "Fehlende Punkte: 72 − 40 = 32",
+      "Rasterpunkte: 32 × 2 = 64 von 120",
+      "Das sind im Schnitt gut 2 von 4 Rasterpunkten je offene Frage: Jede offene Frage halb richtig reicht knapp. Darum keine offene Frage leer lassen."
+    ]
+  });
+
+  L.auswahl("#t24-u-unsicher", {
+    frage: '<span class="icb">ICB 2.01</span> MC-Frage 37, du bist seit 2 Minuten dran und schwankst zwischen zwei Optionen. Die anderen zwei sind sicher falsch. Was tust du?',
+    optionen: [
+      "Im Ordner nachlesen, bis du sicher bist.",
+      "Die Frage leer lassen und am Schluss wiederkommen.",
+      "Die wahrscheinlichere der zwei Optionen wählen, markieren, weiter.",
+      "Eine der zwei falschen Optionen wählen, damit du ehrlich bleibst."
+    ],
+    richtig: 2,
+    erklaerung: "Mit dem Ausschlussverfahren hast du eine Chance von mindestens 50 %. Wählen und markieren: Bleibt am Schluss keine Zeit, ist die Frage trotzdem beantwortet. Leer lassen bringt sicher 0."
+  });
+
+  L.reflexion("#t24-u-register", {
+    titel: "Wie baust du dein Open-Book-Register auf?",
+    icb: ["ICB alle", "ICB 2.01"],
+    frage: "<p>Beschreibe, wie dein Open-Book-Ordner für die Prüfung aufgebaut ist: Ordnung, Inhalt je Kompetenz und wie du in der Prüfung in Sekunden die richtige Seite findest. Nenne auch, wie du den Ordner vor der Prüfung testest.</p>",
+    musterloesung:
+      "<p><b>Ordnung:</b> 28 Register nach ICB-Nummer 1.01 bis 3.13 in der Reihenfolge der ICB, auf jedem Register zusätzlich das Kapitel der Swiss ICB (z. B. 3.10 = 4.5.10) und die Seite.</p>" +
+      "<p><b>Je Kompetenz eine Seite:</b> Kern in einem Satz in eigenen Worten, die Kompetenzindikatoren als Stichworte, wichtige Methoden, Modelle und Formeln (z. B. bei 3.10 SPI = EV ÷ PV, CPI = EV ÷ AC), Fundstellen in LB, Gubelmann/Sommer und Station.</p>" +
+      "<p><b>Schnell finden:</b> vorne ein Deckblatt mit den 28 Kompetenzen, der Bestehensregel und dem Zeitplan; hinten eine Stichwortliste A bis Z mit Verweis auf die ICB-Nummer («Eskalation → 2.07»).</p>" +
+      "<p><b>Testen:</b> in jeder Übungsprüfung mit dem Ordner arbeiten und notieren, was ich gesucht und nicht gefunden habe; danach den Ordner ergänzen.</p>" +
+      '<p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Was im Ordner erlaubt ist, regelt der VZPM-Leitfaden für Online-Prüfungen.</p>',
+    kriterien: [
+      { text: "Register nach ICB-Nummer (28, 1.01 bis 3.13), mit Swiss-ICB-Kapitel", punkte: 1 },
+      { text: "Inhalt je Kompetenz: Kern, Indikatoren, Methoden oder Formeln", punkte: 1 },
+      { text: "Fundstellen (LB, Gubelmann/Sommer, Station, Swiss-ICB-Seite)", punkte: 1 },
+      { text: "Schnellzugriff: Deckblatt und Stichwortliste mit Verweis auf die Nummer", punkte: 1 },
+      { text: "Ordner in einer Übungsprüfung getestet und danach ergänzt", punkte: 1 }
+    ]
+  });
+
+  L.reflexion("#t24-u-offen", {
+    titel: "Offene Frage im IPMA-Stil: Fachbegriff plus Fall",
+    icb: "ICB 3.11",
+    frage: "<p>Im Projekt Onlineschalter Wolkenried meldet die Lärchwerk Informatik AG, dass die Schnittstelle zum Fachsystem des Bauamts schwieriger ist als gedacht. Noch ist nichts verspätet, aber der Vorgang hat nur 1 Tag Puffer. Wie gehst du als Projektleiter vor? Nimm dir 3.5 Minuten, wie in der Prüfung.</p>",
+    musterloesung:
+      "<p>Das ist ein <b>Risiko</b> (ICB 3.11): Es ist noch nicht eingetreten, hätte aber eine grosse Auswirkung, weil der Vorgang fast kritisch ist (1 Tag Puffer).</p>" +
+      "<p>Ich nehme es ins <b>Risikoregister</b> auf und bewerte <b>Eintrittswahrscheinlichkeit</b> und <b>Auswirkung</b> (z. B. hoch × hoch). Als Strategie wähle ich <b>vermindern</b>: früher Test der Schnittstelle mit echten Daten und eine zusätzliche Fachperson des Lieferanten. Ergänzend prüfe ich, ob der Vertrag eine Lieferfrist mit Folgen hat (<b>übertragen</b>).</p>" +
+      "<p>Ich bestimme eine verantwortliche Person, einen <b>Frühwarnindikator</b> (Testergebnis bis Ende Woche 2) und informiere die Auftraggeberin im nächsten Statusbericht. Das Register prüfe ich jede Woche.</p>" +
+      '<p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Raster mit 4 Rasterpunkten wie im Simulator: ab 2 Punkten gilt die Frage als richtig (Annahme).</p>',
+    kriterien: [
+      { text: "Fachbegriff: als Risiko eingeordnet, Register, Wahrscheinlichkeit und Auswirkung", punkte: 1 },
+      { text: "Passende Strategie (z. B. vermindern, übertragen) mit konkreter Massnahme", punkte: 1 },
+      { text: "Bezug zum Fall: 1 Tag Puffer, Lieferant, Schnittstelle zum Bauamt", punkte: 1 },
+      { text: "Verantwortung, Frühwarnung oder Information der Auftraggeberin", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  function uhr(zeit, zeilen) {
+    return '<div class="t24-uhr"><span><b>⏱ ' + zeit + "</b></span>" + zeilen.map((z) => "<span>" + z + "</span>").join("") + "</div>";
+  }
+  L.film("#t24-film", {
+    phasen: ["Vorher", "MC-Block", "Offene Fragen", "Reserve", "Auswertung"],
+    texte: [], woerterbuch: [],
+    beschriftung: { formel: "Stand" },
+    szenen: [
+      { say: "Jasmin schreibt ihre erste Übungsprüfung, zwölf Tage vor dem echten Termin. Schau zu, wie sie die drei Stunden einteilt." },
+      { ph: 0, f: uhr("–:––", [NW("Ordner offen: Deckblatt, Register 1.01 bis 3.13, Stichwortliste"), "Variante: Echtbedingungen"]), say: "Vor dem Start legt sie den Ordner bereit und wählt Echtbedingungen. Ab jetzt läuft die Uhr auf dem Server, auch wenn sie die Seite schliesst." },
+      { ph: 1, f: uhr("0:00", ["Frage 1 von 90 · Multiple Choice · 1 Punkt", NW("Plan: MC fertig bis 1:00")]), say: "Die ersten 60 Fragen sind Multiple Choice. Ihr Plan: eine Minute je Frage, fertig nach einer Stunde." },
+      { ph: 1, f: uhr("0:14", ["Frage 12: zwei Optionen sicher falsch", NW("gewählt: die wahrscheinlichere · ⚑ markiert")]), say: "Bei Frage 12 schwankt sie. Sie streicht zwei Optionen, wählt die wahrscheinlichere, markiert die Frage und geht weiter." },
+      { ph: 1, f: uhr("0:30", ["32 von 60 MC beantwortet", NW("Tempo: im Plan")]), say: "Nach einer halben Stunde hat sie 32 MC-Fragen beantwortet. Sie liegt leicht vor dem Plan." },
+      { ph: 1, f: uhr("0:58", ["60 von 60 MC beantwortet · 6 markiert", NW("weiter zu Frage 61")]), say: "Nach 58 Minuten ist der MC-Block fertig. Sechs Fragen sind markiert. Sie geht nicht zurück, sondern direkt zu den offenen Fragen." },
+      { ph: 2, f: uhr("1:00", ["Frage 61 · offen · 2 Punkte", NW("einordnen → Fall → Schritte → begründen")]), say: "Für jede offene Frage nimmt sie sich 3.5 Minuten und folgt ihrem Schema: Kompetenz und Fachbegriff, Fall analysieren, Schritte, Begründung." },
+      { ph: 2, f: uhr("1:22", ["Frage 67: Streit zwischen zwei Teammitgliedern", NW("Stichwortliste: Eskalation → 2.07 · 20 s")]), say: "Bei Frage 67 geht es um einen Streit im Team. Die Stichwortliste führt sie in 20 Sekunden zum Register 2.07, Konflikte und Krisen. Dort steht Glasl in drei Zeilen." },
+      { ph: 2, f: uhr("2:00", ["17 von 30 offen beantwortet", "13 übrig, 60 min Restzeit", NW("Bedarf 13 × 3.5 = 45.5 min · ● Grün")]), say: "Nach zwei Stunden rechnet sie kurz nach: 13 offene Fragen, 60 Minuten. Der Bedarf nach Plan ist 45.5 Minuten. Grün." },
+      { ph: 2, f: uhr("2:44", ["30 von 30 offen beantwortet", NW("16 min Reserve")]), say: "Nach 2 Stunden 44 Minuten sind alle Fragen beantwortet. Es bleiben 16 Minuten Reserve." },
+      { ph: 3, f: uhr("2:58", ["6 markierte MC geprüft, 1 Antwort geändert", "offene Fragen: keine leer", NW("abgegeben")]), say: "In der Reserve prüft sie die sechs markierten Fragen und ändert eine Antwort. Dann gibt sie ab, zwei Minuten vor Schluss." },
+      { ph: 4, f: uhr("Auswertung", ["Selbstbewertung: 30 offene Fragen nach Raster", NW("79 von 120 Punkten (65.8 %) · Grenze 72 ✓"), NW("24 von 28 Kompetenzen · Grenze 23 ✓"), "Ergebnis: bestanden"]), say: "Jetzt bewertet sie jede offene Frage selbst nach dem Raster. Ergebnis: 79 von 120 Punkten, also 65.8 Prozent, und 24 nachgewiesene Kompetenzen. Beide Hürden geschafft." },
+      { ph: 4, f: uhr("Auswertung", ["Landkarte: ✗ 1.03 · ✗ 2.08 · ✗ 2.09 · ✗ 3.09", NW("Empfehlung: Stationen 04, 17, 21 wiederholen"), NW("danach: Lücken schliessen")]), say: "Die Landkarte zeigt vier Lücken. Nur eine weitere, und die Breite wäre nicht mehr geschafft. Darum wiederholt sie die empfohlenen Stationen und übt mit «Lücken schliessen». Jetzt bist du dran: Prüf dich im Selbsttest.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t24-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB alle</span> Wie läuft die Prüfung IPMA Level D im Modul ab?',
+        o: ["90 Minuten, ohne Hilfsmittel, nur Multiple Choice", "3 Stunden online, Open Book, Multiple-Choice- und offene Fragen", "3 Stunden mündlich vor zwei Prüfenden", "Ein Tag Fallstudie in der Gruppe"],
+        a: 1, e: "Online via Zoom, 3 Stunden, Open Book (LB 7 S.5); die Musterprüfung hat 60 MC- und 30 offene Fragen." },
+      { q: '<span class="icb">ICB alle</span> Kandidat A hat 58&nbsp;% der Punkte und 26 nachgewiesene Kompetenzen. Ergebnis?',
+        o: ["Bestanden, weil die Breite übererfüllt ist", "Bestanden, weil 58 % auf 60 % gerundet wird", "Nicht bestanden, weil die Punktehürde fehlt", "Nicht bestanden, weil 26 zu wenig sind"],
+        a: 2, e: "Beide Hürden sind Pflicht. 26 von 28 reicht, 58 % nicht. Gerundet wird nicht: «mindestens 60 %»." },
+      { q: "Wann siehst du in der Übungsprüfung des Simulators, ob eine Antwort richtig war?",
+        o: ["Sofort nach jeder Frage", "Nach jedem Block von 10 Fragen", "Erst nach der Abgabe", "Gar nicht, nur die Gesamtpunkte"],
+        a: 2, e: "Wie in der echten Prüfung gibt es die Rückmeldung erst nach der Abgabe. Sofortige Rückmeldung gibt es im Training und in «Lücken schliessen»." },
+      { q: "Ab wann zählt eine offene Frage im Simulator als richtig, also als Nachweis der Kompetenz?",
+        o: ["Ab 1 von 4 Rasterpunkten", "Ab 2 von 4 Rasterpunkten (Annahme)", "Nur mit 4 von 4 Rasterpunkten", "Sobald überhaupt etwas geschrieben ist"],
+        a: 1, e: "Annahme des Simulators: mindestens 50 % der Rasterpunkte, also 2 von 4. Die echte Schwelle ist nicht bekannt." },
+      { q: "Wer kann offene Antworten von Claude bewerten lassen?",
+        o: ["Alle eingeloggten Konten, jederzeit", "Pro und Admin, nach der eigenen Selbstbewertung", "Nur Admin", "Niemand, Claude erzeugt nur neue Fragen"],
+        a: 1, e: "Der Simulator ist für alle eingeloggten Konten frei. Die Claude-Bewertung kostet Geld und ist im Pro-Abo enthalten, und zwar erst nach der Selbstbewertung." },
+      { q: "Was gilt für die Variante «Echtbedingungen»?",
+        o: ["Die Uhr läuft 3 Stunden ab dem Start weiter, auch wenn du die Seite schliesst", "Du kannst beliebig pausieren", "Es gibt nur 20 Fragen", "Die Kompetenz jeder Frage ist sichtbar"],
+        a: 0, e: "Die Uhr läuft auf dem Server. Pausen gibt es nur in der Variante «mit Pausen», 20 Fragen hat die Kurzprüfung, die Kompetenz sieht man nur im Training." },
+      { q: '<span class="icb">ICB 2.01</span> Wie viel Zeit hast du im Schnitt je Frage, und wie teilst du sie sinnvoll auf?',
+        o: ["1 Minute je Frage, alle gleich", "2 Minuten im Schnitt: MC rund 1 Minute, offene rund 3.5 Minuten, 15 Minuten Reserve", "3 Minuten je Frage, ohne Reserve", "Zuerst die offenen Fragen, MC am Schluss in 5 Minuten"],
+        a: 1, e: "180 ÷ 90 = 2 Minuten. 60 × 1 + 30 × 3.5 + 15 = 180 (eigene Empfehlung)." },
+      { q: '<span class="icb">ICB 2.07</span> Eine Frage beschreibt einen Streit zwischen Bauamt und Informatik, der sich zuspitzt. Welches Register schlägst du auf?',
+        o: ["3.12 Stakeholder", "2.06 Teamarbeit", "2.07 Konflikte und Krisen", "1.04 Macht und Interessen"],
+        a: 2, e: "Streit, der sich zuspitzt, ist ein Konflikt: Register 2.07 (Swiss ICB 4.4.7). Eine Stichwortliste «Eskalation → 2.07» spart dir die Suche." },
+      { q: "Wann planst du die Übungsprüfungen unter Echtbedingungen?",
+        o: ["Beide am Tag vor der Prüfung", "Rund 12 und 5 Tage vor der Prüfung, mit Auswertung dazwischen", "Gleich am Anfang, danach nur noch Training", "Gar nicht, das Training genügt"],
+        a: 1, e: "So bleibt nach jeder Übungsprüfung Zeit, Stationen zu wiederholen und Lücken zu schliessen. Der Vortag gehört dem Ordner, nicht einer 3-Stunden-Prüfung (eigene Empfehlung)." },
+      { q: "Was bringt bei einer offenen Frage am meisten Punkte?",
+        o: ["Ein langer Text mit allen Begriffen der ICB", "Fachbegriff plus Bezug zum Fall, konkrete Schritte und Begründung", "Ein wörtliches Zitat aus der Swiss ICB", "Eine kurze Ja-oder-Nein-Antwort"],
+        a: 1, e: "Raster belohnen Einordnung (Fachbegriff), Fallbezug und konkrete, begründete Schritte. Zitieren ohne Fallbezug bringt wenig." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

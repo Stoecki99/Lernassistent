@@ -6,6 +6,8 @@
 
 import { prisma } from "@/lib/prisma"
 import { achievementStats, prismaErrorCode } from "@/lib/leitstand"
+import { ipmaAchievementStats, type IpmaBadgeCondition } from "@/lib/ipma/achievements"
+import { gradedAnswers } from "@/lib/ipma/view"
 
 type BadgeDb = Pick<typeof prisma, "$transaction">
 
@@ -88,10 +90,12 @@ interface UserBadgeStats {
   hasPerfectQuiz: boolean
   /** Leitstand: achievements aller abgeschlossenen Läufe mit neuem Startwert (Spezifikation 4.7) */
   leitstandAchievements: Set<string>
+  /** IPMA-Prüfungssimulator: erfüllte Bedingungen ipma_* (Spezifikation 6.10) */
+  ipmaAchievements: Set<IpmaBadgeCondition>
 }
 
 async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
-  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns] = await Promise.all([
+  const [user, totalReviews, totalCardsCreated, quizStats, simulationRuns, ipmaAttempts, ipmaItems] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { streak: true },
@@ -110,6 +114,24 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
       where: { userId, status: "abgeschlossen", seedReused: false },
       select: { status: true, seedReused: true, scoreDetail: true },
     }),
+    prisma.ipmaAttempt.findMany({
+      where: { userId, status: "finished" },
+      select: { mode: true, variant: true, status: true, pointsQ: true, maxPointsQ: true, shownCount: true, passed: true },
+    }),
+    // Bewertete Antworten aller Versuche für die Beherrschung (Abzeichen «Landkarte komplett»)
+    prisma.ipmaAttemptItem.findMany({
+      where: { correct: { not: null }, attempt: { userId } },
+      select: {
+        type: true,
+        competence: true,
+        correct: true,
+        rasterPoints: true,
+        answeredAt: true,
+        selfAssessedAt: true,
+        aiAssessedAt: true,
+        attempt: { select: { startedAt: true } },
+      },
+    }),
   ])
 
   const totalQuizzes = quizStats.length
@@ -124,6 +146,10 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
     totalQuizzes,
     hasPerfectQuiz,
     leitstandAchievements: achievementStats(simulationRuns),
+    ipmaAchievements: ipmaAchievementStats(
+      ipmaAttempts,
+      gradedAnswers(ipmaItems, (index) => ipmaItems[index].attempt.startedAt),
+    ),
   }
 }
 
@@ -155,6 +181,14 @@ function evaluateCondition(condition: string, stats: UserBadgeStats): boolean {
     case "leitstand_risikoprofi":
     case "leitstand_null_fehler":
       return stats.leitstandAchievements.has(condition)
+    // IPMA-Prüfungssimulator (6.10): aus abgeschlossenen Versuchen und der Beherrschung berechnet
+    case "ipma_erste_pruefung":
+    case "ipma_bestanden":
+    case "ipma_souveraen":
+    case "ipma_kompass":
+    case "ipma_lueckenschliesser":
+    case "ipma_landkarte":
+      return stats.ipmaAchievements.has(condition)
     default:
       return false
   }

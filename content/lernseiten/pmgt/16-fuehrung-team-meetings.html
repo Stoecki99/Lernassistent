@@ -1,0 +1,1257 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Führung, Team und Meetings · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/17-persoenliche-kompetenzen" title="Persönliche und soziale Kompetenzen">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t16-», nur Farben aus :root -->
+  <style>
+    .t16-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t16-ziele li{margin-bottom:3px}
+    .t16-liste{margin:0; padding-left:1.2em}
+    .t16-liste li{margin-bottom:3px}
+
+    /* Ablauf als nummerierte Kette */
+    .t16-fluss{margin:0; padding:0; list-style:none; counter-reset:t16f; display:flex; flex-direction:column; gap:8px}
+    .t16-fluss > li{counter-increment:t16f; position:relative; padding:8px 12px 8px 44px; background:var(--board); border-radius:10px}
+    .t16-fluss > li::before{content:counter(t16f); position:absolute; left:10px; top:8px; width:24px; height:24px; border-radius:50%;
+      background:var(--accent); color:var(--surface); font-weight:700; font-size:.85rem; display:flex; align-items:center; justify-content:center}
+    .t16-fluss .hint{margin:2px 0 0}
+
+    /* Kacheln (Sitzungsarten, Phasen, Protokollarten) */
+    .t16-kacheln{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(230px,100%),1fr)); gap:10px}
+    .t16-kachel{border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface); min-width:0}
+    .t16-kachel b{display:block; margin-bottom:2px}
+    .t16-kachel p{margin:0 0 4px; font-size:.95rem}
+    .t16-kachel ul{margin:4px 0 0; padding-left:1.2em; font-size:.95rem}
+
+    /* Marke für Termin-Typen: immer Text, Farbe nur als Zusatz */
+    .t16-marke{display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:.88rem; padding:1px 8px; border-radius:999px;
+      border:1px solid var(--line); border-left:5px solid currentColor; background:var(--surface); white-space:nowrap}
+    .t16-k-kick{color:var(--s5)}
+    .t16-k-pss{color:var(--s1)}
+    .t16-k-pl{color:var(--s2)}
+    .t16-k-psa{color:var(--s4)}
+    .t16-k-phase{color:var(--bad)}
+    .t16-k-bi{color:var(--s3)}
+    .t16-marke span{color:var(--ink)}
+
+    /* Meeting-Planer */
+    .t16-palette{display:flex; flex-wrap:wrap; gap:8px}
+    .t16-typ{border-left:5px solid currentColor}
+    .t16-typ span{color:var(--ink)}
+    .t16-typ[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); border-left-color:currentColor; box-shadow:0 0 0 2px var(--accent)}
+    .t16-wochen{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(180px,100%),1fr)); gap:10px}
+    .t16-woche{border:1px solid var(--line); border-radius:10px; padding:10px; background:var(--surface); display:flex; flex-direction:column; gap:6px; min-width:0}
+    .t16-woche h4{margin:0; font-size:1rem}
+    .t16-woche .hint{margin:0}
+    .t16-fix{margin:0; padding:0; list-style:none; font-size:.86rem; color:var(--muted)}
+    .t16-fix li{padding:2px 0 2px 14px; position:relative}
+    .t16-fix li::before{content:"◆"; position:absolute; left:0; top:2px; font-size:.7rem; color:var(--muted)}
+    .t16-belegt{margin:0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:6px; min-height:30px}
+    .t16-belegt .t16-weg{font:inherit; font-size:.86rem; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--board);
+      border:1px solid var(--line); border-left:5px solid currentColor; cursor:pointer; color:inherit}
+    .t16-belegt .t16-weg span{color:var(--ink)}
+    .t16-ablegen{font-size:.9rem; padding:4px 10px}
+    .t16-regeln{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px}
+    .t16-regeln li{padding:6px 10px; border-radius:8px; background:var(--board); border-left:4px solid var(--line)}
+    .t16-regeln li.ok{border-left-color:var(--ok)}
+    .t16-regeln li.bad{border-left-color:var(--bad)}
+    .t16-regeln .marke{font-weight:700}
+    .t16-regeln li.ok .marke{color:var(--ok)}
+    .t16-regeln li.bad .marke{color:var(--bad)}
+    .t16-meldung{margin:0; font-weight:600}
+    .t16-meldung:empty{display:none}
+
+    /* Protokoll-Prüfer */
+    .t16-protokoll{background:var(--board); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:4px}
+    .t16-protokoll h4{margin:8px 0 2px; font-size:.95rem; color:var(--accent)}
+    .t16-seg{display:block; width:100%; text-align:left; background:transparent; border:1px dashed var(--line); border-radius:6px;
+      padding:5px 8px; font:inherit; font-size:.97rem; color:var(--ink); cursor:pointer; line-height:1.45}
+    .t16-seg:hover{background:var(--surface)}
+    .t16-seg[aria-pressed="true"]{border:2px solid var(--accent); background:var(--accent-soft)}
+    .t16-seg.treffer{border:2px solid var(--ok); background:var(--ok-bg)}
+    .t16-seg.verpasst{border:2px solid var(--bad); background:var(--bad-bg)}
+    .t16-seg.fehlalarm{border:2px dashed var(--free); background:var(--free-bg)}
+    .t16-seg .t16-tag{display:inline-block; font-weight:700; font-size:.82rem; margin-right:6px}
+    .t16-seg .t16-tag:empty{display:none}
+    .t16-seg.treffer .t16-tag{color:var(--ok)}
+    .t16-seg.verpasst .t16-tag{color:var(--bad)}
+    .t16-seg.fehlalarm .t16-tag{color:var(--free)}
+    .t16-auswertung{margin:0; padding-left:1.2em; font-size:.95rem}
+    .t16-auswertung li{margin-bottom:6px}
+
+    /* Dokument im Lösungsfilm und in der Lösung */
+    .t16-fz{font-family:var(--f-body); font-size:.98rem; line-height:1.5; white-space:normal; display:flex; flex-direction:column; gap:6px}
+    .t16-fb{padding:4px 0; border-bottom:1px dashed var(--line)}
+    .t16-fb:last-child{border-bottom:0}
+    .t16-fb b{color:var(--accent)}
+    .t16-fb ul{margin:2px 0 0; padding-left:1.2em}
+    .t16-dok{background:var(--board); border-radius:12px; padding:12px 14px}
+
+    @media (max-width: 480px){
+      .t16-fluss > li{padding-left:40px}
+      .t16-fz{font-size:.93rem}
+      .t16-protokoll{padding:10px}
+    }
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="16-fuehrung-team-meetings">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 5 · Organisation und Führung</span>
+    <h1>Führung, Team und Meetings</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 2.03</span><span class="icb">ICB 2.04</span><span class="icb">ICB 2.05</span><span class="icb">ICB 2.06</span><span class="icb">ICB 3.05</span>
+    </p>
+    <p class="lead">Ein Projekt führst du nicht mit dem Plan allein, sondern mit Menschen und in Sitzungen. Hier lernst du, einen Führungsrhythmus mit Projektstandsitzung, PL-Meeting und Lenkungsausschuss festzulegen, ein Meeting vorzubereiten, zu leiten und sauber zu protokollieren. Dazu kommen Teamphasen, Motivation, Führungsstile und Feedback. Roter Faden ist wieder der Onlineschalter Wolkenried.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t16-ziele">
+        <li>typische Projektfallen nennen und mit den drei Stellschrauben Ergebnisse, Zeit und Ressourcen argumentieren,</li>
+        <li>einen Führungsrhythmus für ein Projekt planen: Kick-off, Projektstandsitzung, PL-Meeting, Lenkungsausschuss, Phasenabschluss,</li>
+        <li>eine Entscheidung so vorbereiten, dass das zuständige Gremium rechtzeitig und auf guter Grundlage entscheidet,</li>
+        <li>ein Meeting vorbereiten, leiten und nachbereiten und ein Beschlussprotokoll mit Pendenzen (Was, Wer, Bis wann) schreiben,</li>
+        <li>Teamphasen erkennen, Führungsstile der Situation anpassen und Feedback nach Regeln geben.</li>
+      </ul>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der IPMA-Prüfung kommen Situationsfragen zu den People-Kompetenzen Kommunikation, Beziehungen, Führung und Teamarbeit (<span class="icb">ICB 2.03</span> bis <span class="icb">ICB 2.06</span>) und Fragen zu Sitzungen und Dokumentation (<span class="icb">ICB 3.05</span>). Die Modulbeschreibung nennt das Lernziel «Projektmeeting organisieren»; LB 7 S.9 verlangt einen Meetingplan. Genau das zeigt der Lösungsfilm. In der Projektsimulation entscheidest du über Kick-off, Gespräche und Teamanlässe.</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#projektfallen"><b>1</b>Fallen und PDCA</a>
+    <a href="#rhythmus"><b>2</b>Führungsrhythmus</a>
+    <a href="#kickoff"><b>3</b>Kick-off</a>
+    <a href="#meetings"><b>4</b>Meetings und Protokoll</a>
+    <a href="#team"><b>5</b>Team und Führung</a>
+    <a href="#planer"><b>6</b>Meeting-Planer</a>
+    <a href="#pruefer"><b>7</b>Protokoll-Prüfer</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Denk an einen Turnverein, der ein Dorffest organisiert. Der Vorstand trifft sich jeden Monat und entscheidet über Geld. Die Ressortleiter treffen sich jede Woche und stimmen ab, wer was bis wann erledigt. Nach jeder Sitzung steht im Protokoll, was beschlossen ist und wer was macht. Und am Anfang knirscht es im Team, bis jeder seine Rolle gefunden hat. Ein Projekt funktioniert genauso.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Führungsrhythmus = Fahrplan</span><span class="ex">jede Woche · alle 4 Wochen</span><p>Feste Sitzungen in festem Takt. Wie ein Fahrplan: Alle wissen, wann der nächste Zug fährt, und niemand muss jedes Treffen neu aushandeln.</p></div>
+      <div class="concept"><span class="tag">Sitzungsarten = Stockwerke</span><span class="ex">Team · Leitung · Steuerung</span><p>Im Team stimmst du die Arbeit ab, in der Steuerung entscheiden Auftraggeberin und Ausschuss. Wie im Haus: Im Keller wird repariert, im Büro oben unterschrieben.</p></div>
+      <div class="concept"><span class="tag">Beschluss = Handschlag</span><span class="ex">B7 · entschieden am Tag 18</span><p>Was in der Sitzung verbindlich entschieden wurde. Wie ein Handschlag auf dem Viehmarkt: Danach gilt es, und alle wissen es.</p></div>
+      <div class="concept"><span class="tag">Pendenz = Zettel am Kühlschrank</span><span class="ex">Was · Wer · Bis wann</span><p>Eine offene Aufgabe aus der Sitzung. Ohne Namen und Datum bleibt sie hängen, wie der Zettel «Milch kaufen», den niemand für sich liest.</p></div>
+      <div class="concept"><span class="tag">Teamphase = WG-Einzug</span><span class="ex">höflich · Streit · Regeln · Alltag</span><p>Ein neues Team wächst durch Phasen. Wie in einer neuen WG: zuerst höflich, dann Streit um den Abwasch, dann ein Ämtliplan, dann läuft es.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Information, Beschluss oder Pendenz?</h3>
+      <p class="hint">Frag dich: Ist das nur eine Mitteilung (Information), wurde etwas verbindlich entschieden (Beschluss), oder muss jemand noch etwas tun (Pendenz)? Alle Sätze stammen aus einer Projektstandsitzung zum Onlineschalter Wolkenried.</p>
+      <div id="t16-sortierer-ibp"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Projektfallen und PDCA ===== -->
+  <section id="projektfallen">
+    <span class="eyebrow">Schritt 1 · Projektfallen und Projektführung (LB 5 F.6, F.15–16)</span>
+    <h2>Zehn Projektfallen, drei Stellschrauben und der PDCA-Zyklus</h2>
+    <p class="prose">LB 5 F.6 nennt die zehn typischen Projektfallen aus dem Buch «Überleben im Projekt» von Klaus D. Tumuscheit. Die Folie gibt nur die Namen. Was jede Falle meint, steht unten in eigenen Worten, mit einem Beispiel aus Wolkenried. Die Deutungen sind eine Ergänzung dieser Station, nicht vom Dozenten bestätigt.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die zehn Projektfallen (Namen nach LB 5 F.6, Deutung in eigenen Worten)</caption>
+        <thead><tr><th>Falle</th><th>Was passiert</th><th>Beispiel Wolkenried</th></tr></thead>
+        <tbody>
+          <tr><th>1 · Optimismusfalle</th><td>Man plant, wie es laufen sollte, nicht wie es läuft.</td><td>Die Schnittstelle ist mit 128 Stunden geschätzt, braucht aber 160.</td></tr>
+          <tr><th>2 · Entscheidungs-Arthrose</th><td>Entscheide bleiben liegen, das Projekt wartet.</td><td>Niemand entscheidet, ob die Online-Zahlung in den Pilot kommt.</td></tr>
+          <tr><th>3 · Tyrannosaurus-Effekt</th><td>Eine mächtige Person greift von oben ein und wirft Pläne um.</td><td>Der Gemeindepräsident will den Schalter an der Gemeindeversammlung live zeigen, vor der Abnahme.</td></tr>
+          <tr><th>4 · Sozialkompetenzfalle</th><td>Die Projektleitung beherrscht die Methoden, aber nicht die Menschen.</td><td>Der Streit zwischen Seraina und Dario wird übersehen, bis Dario gehen will.</td></tr>
+          <tr><th>5 · Parkplatzfalle</th><td>Ins Projekt kommen die Leute, die gerade frei sind, nicht die, die es braucht.</td><td>Die Linie schickt statt der Fachfrau eine Aushilfe ohne Erfahrung.</td></tr>
+          <tr><th>6 · Expertenfalle</th><td>Fachleute verlieben sich in ihre Lösung und verlieren das Ziel aus dem Blick.</td><td>Dario will ein massgeschneidertes Formular statt des Standards programmieren.</td></tr>
+          <tr><th>7 · Quertreiberfalle</th><td>Jemand arbeitet verdeckt gegen das Projekt.</td><td>Eine Fachstelle stimmt in der Sitzung zu und nutzt danach weiter Papier.</td></tr>
+          <tr><th>8 · Werkzeugfalle</th><td>Man glaubt, ein Werkzeug ersetze Führung.</td><td>«Mit dem neuen Planungstool läuft das von selbst.»</td></tr>
+          <tr><th>9 · Sinnlose Sitzungen</th><td>Zu viele, zu lange Sitzungen ohne Ziel und Ergebnis.</td><td>Jede Woche zwei Stunden mit allen zwölf Personen (Übung 3 rechnet die Kosten).</td></tr>
+          <tr><th>10 · Ressourcenfalle</th><td>Zugesagte Leute sind nicht da, wenn man sie braucht.</td><td>Der Bauverwalter zieht Martin und Thomas für drei Tage ins Tagesgeschäft ab.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die Folie gibt auch die Antwort: Erfahrene Projektleitungen planen mit den realen Gegebenheiten und zeigen die Folgen für die <b>drei Stellschrauben</b>. F.6 nennt die erste «Ziele», F.16 «Ergebnisse», gemeint ist beide Male Umfang und Qualität:</p>
+    <div class="t16-kacheln">
+      <div class="t16-kachel"><b>Ergebnisse</b><p>Umfang und Qualität: Was liefert das Projekt, und wie gut?</p></div>
+      <div class="t16-kachel"><b>Zeit</b><p>Termine: Wann sind Meilensteine und Abnahme?</p></div>
+      <div class="t16-kachel"><b>Ressourcen</b><p>Kosten und Kapazitäten: Wie viel Geld und wie viele Stunden welcher Leute?</p></div>
+    </div>
+    <div class="note"><b>Merke:</b> Dreht jemand an einer Stellschraube, bewegen sich die anderen. Wünscht der Präsident einen früheren Termin, zeigst du ihm, was das für Umfang, Qualität oder Kosten heisst. Dann entscheidet er auf ehrlicher Grundlage. Das ist der Kern jeder Führungsentscheidung im Projekt (<span class="icb">ICB 2.05</span>, Indikator «Entscheidungen treffen»).</div>
+
+    <h3>Projektführung als Kreislauf: PDCA (LB 5 F.15)</h3>
+    <p class="prose">LB 5 F.15 ordnet die Instrumente der Projektführung dem Kreislauf <b>Plan – Do – Check – Act</b> zu. Die Folie nennt drei Blöcke. Das «Do», die eigentliche Arbeit an den Arbeitspaketen, liegt dazwischen:</p>
+    <div class="t16-kacheln">
+      <div class="t16-kachel"><b>Plan · Planung (Input)</b><ul><li>Planung der Planung (Metaplanung)</li><li>Projektstrukturplan und Ablaufplan</li><li>Arbeitspakete</li><li>Ressourcen- und Kostenplan</li><li>Phasenantrag</li></ul></div>
+      <div class="t16-kachel"><b>Do · Umsetzung</b><ul><li>Arbeitspakete abarbeiten</li><li>Ergebnisse abliefern</li></ul><p class="hint">Ergänzung: Die Folie nennt das «Do» nicht ausdrücklich.</p></div>
+      <div class="t16-kachel"><b>Check · Überprüfung (Projektdiagnose)</b><ul><li>Messgrundlagen: Projektauftrag, Teilprojektauftrag, Arbeitspaket</li><li>Statusbericht</li><li>Qualitätssicherung von Ergebnissen, Kosten, Zeit</li></ul></div>
+      <div class="t16-kachel"><b>Act · Steuerung (Output)</b><ul><li>Ziele anpassen</li><li>Ressourcen beschaffen</li><li>zusätzliche Arbeitspakete</li><li>abstimmen</li><li>Fortschritt kontrollieren</li></ul></div>
+    </div>
+    <p class="prose">F.16 zählt die <b>Instrumente der Projektführung</b> auf: Statusbericht (Erledigung der Arbeitspakete, Ressourceneinsatz), Ablieferung der Ergebnisse, Gespräche, Meetings (Projektstandsitzung, Entscheidungssitzung, Informationssitzung), Aufträge (Projektauftrag, Teilprojektauftrag, Arbeitspaket) und Risikobeurteilungen. Meetings sind also eines von sechs Instrumenten, nicht das einzige. Klick dich durch einen Zyklus am Onlineschalter:</p>
+    <div id="t16-stepper-pdca"></div>
+  </section>
+
+  <!-- ===== 2 · Führungsrhythmus ===== -->
+  <section id="rhythmus">
+    <span class="eyebrow">Schritt 2 · PSS, PL-Meeting, Lenkungsausschuss (LB 5 F.17–21)</span>
+    <h2>Der Führungsrhythmus: wer trifft sich wann wozu?</h2>
+    <p class="prose">Ein Projekt braucht Sitzungen auf zwei Ebenen: Das Team stimmt die Arbeit ab, die Steuerung entscheidet. LB 5 F.19–20 beschreibt drei Formate. Die Folie zum Steuerungsgremium nennt es «Projekt-Steuerungsausschuss (PSA)». Gemeint ist dasselbe Gremium, das HERMES Projektausschuss und viele Firmen Lenkungsausschuss nennen. In Wolkenried heisst es Projektausschuss, Vorsitz hat die Auftraggeberin Franziska Bühlmann.</p>
+    <div class="t16-kacheln">
+      <div class="t16-kachel"><b><span class="t16-marke t16-k-pss"><span>PSS</span></span> Projektstandsitzung</b>
+        <ul><li>feste Agenda, feste Termine</li><li>Grundlage: Statusbericht, Stand der Arbeitspakete</li><li>Abweichungen, Risiken, Planänderungen besprechen</li><li>Probleme an Schnittstellen erkennen</li><li>Massnahmen vorschlagen und entscheiden</li></ul></div>
+      <div class="t16-kachel"><b><span class="t16-marke t16-k-pl"><span>PL</span></span> PL-Meeting</b>
+        <ul><li>Sitzung der Projektleitung; wer teilnimmt, legt die Folie nicht fest (in Wolkenried: Projektleitung mit den Teilprojektleitungen, Festlegung dieser Station)</li><li>Inhalt und Fachtechnisches: Lösung, Konzept, fachliche Fragen</li><li>abwechselnd mit der PSS</li></ul></div>
+      <div class="t16-kachel"><b><span class="t16-marke t16-k-psa"><span>PSA</span></span> Projektausschuss</b>
+        <ul><li>Termine entlang der Entscheidungen</li><li>Grundlage: Statusbericht, Phasenbericht, Phasenantrag</li><li>Konzepte abnehmen, Phasen freigeben (Budget, Ressourcen)</li><li>Entscheide nach Kompetenzordnung, Anträge der Projektleitung, Änderungsanträge</li></ul></div>
+    </div>
+    <div class="note tipp"><b>Die Praxistipps der Folien (F.19–20), in eigenen Worten:</b>
+      <ul class="t16-ziele">
+        <li>PSS und PL-Meeting wechseln sich ab, im Wochen- oder Zweiwochenrhythmus.</li>
+        <li>Den Ausschuss leitet die Auftraggeberin, nicht die Projektleitung.</li>
+        <li>Die Projektleitung bereitet die Sitzung vor und schickt die <b>Unterlagen eine Woche vorher</b>.</li>
+        <li>Dazu kommt ein regelmässiges <b>bilaterales Gespräch</b> der Projektleitung mit der Auftraggeberin.</li>
+      </ul>
+    </div>
+    <p class="prose">In Wolkenried liegt die Phasenfreigabe laut Kompetenzordnung beim Gemeinderat, ebenso Budgetnachträge und Änderungen über CHF 5'000. Der Projektausschuss bereitet diese Entscheide vor und entscheidet alles darunter. Wer was entscheidet, legt die Projektorganisation fest (<a href="/lernseiten/pmgt/15-organisation-und-rollen">Station 15</a>).</p>
+
+    <h3>Statusbericht und ZDF in einem Satz (LB 5 F.17–18)</h3>
+    <p class="prose">Der Statusbericht ist die Grundlage für PSS und Ausschuss. Er geht entlang der Arbeitspakete, zeigt Zielerreichung (Qualität, Zeit), Ressourceneinsatz, Restaufwand, Risiken und Massnahmen (F.17). F.18 verlangt dafür <b>Zahlen, Daten, Fakten (ZDF)</b>: «60&nbsp;% erledigt, Plan 70&nbsp;%» statt «gut unterwegs». Wie du einen Statusbericht schreibst und Ampeln setzt, lernst du in <a href="/lernseiten/pmgt/19-statusbericht">Station 19</a>. Für diese Station reicht: Ohne aktuellen Bericht kann keine Sitzung sinnvoll entscheiden.</p>
+
+    <h3>Entscheidungen vorbereiten (LB 5 F.21)</h3>
+    <p class="prose">Die Folie zum Entscheidungsprozess stellt dir als Projektleitung drei Fragen. Gute Projektleitungen warten nicht, bis ein Gremium von selbst entscheidet. Sie planen die Entscheide wie Arbeitspakete:</p>
+    <ol class="t16-fluss">
+      <li><b>Welche Entscheidungen brauche ich bis wann?</b><p class="hint">Rückwärts vom Plan denken: Welcher Vorgang wartet auf welchen Entscheid?</p></li>
+      <li><b>Welche Grundlagen brauchen die Entscheider?</b><p class="hint">Optionen mit Folgen für die drei Stellschrauben, Empfehlung, Kosten, Risiken.</p></li>
+      <li><b>Welche Massnahmen beschleunigen den Entscheid?</b><p class="hint">Vorbesprechen, rechtzeitig verschicken, klarer Antrag zum Ankreuzen, Frist.</p></li>
+    </ol>
+    <p class="prose">Ein Beispiel aus dem Leitstand. Klick dich durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil leuchtet auf.</p>
+    <div id="t16-stepper-entscheid"></div>
+    <p class="hint">Eigene Lösung, nicht vom Dozenten bestätigt. Zahlen aus dem Leitstand: Pilot (V17) 128 Stunden mit 2 Personen = 8 Tage; mit 48 Stunden mehr 176 ÷ 16 = 11 Tage, also 3 Tage länger. Der Pilot liegt auf dem kritischen Pfad, darum Abnahme Tag 39 statt 36. Kosten 48 h × CHF 160 (Plansatz V17) = CHF 7'680.</p>
+  </section>
+
+  <!-- ===== 3 · Kick-off ===== -->
+  <section id="kickoff">
+    <span class="eyebrow">Schritt 3 · Die Startveranstaltung (LB 5 F.22)</span>
+    <h2>Das Kick-off: aus Einzelnen ein Team machen</h2>
+    <p class="prose">Das Kick-off ist die erste gemeinsame Sitzung aller Beteiligten. LB 5 F.22 zählt dreizehn Ziele auf. Zusammengefasst in eigenen Worten sind es vier Gruppen:</p>
+    <div class="t16-kacheln">
+      <div class="t16-kachel"><b>1 · Gemeinsames Bild</b><ul><li>Problem und Auftrag gleich verstehen</li><li>verschiedene Zielvorstellungen auf eine gemeinsame Zieldefinition bringen</li><li>Lösungswege besprechen und einen wählen</li></ul></div>
+      <div class="t16-kachel"><b>2 · Menschen und Rollen</b><ul><li>Vorwissen und Fähigkeiten der Mitglieder kennenlernen</li><li>Erwartungen aneinander aussprechen</li><li>Rollen, Verantwortung und Kompetenzen regeln</li></ul></div>
+      <div class="t16-kachel"><b>3 · Plan</b><ul><li>Aufwand und Termine absprechen</li><li>verbindliche Kontrollen vereinbaren (wer berichtet wann)</li></ul></div>
+      <div class="t16-kachel"><b>4 · Spielregeln</b><ul><li>Form der Zusammenarbeit</li><li>Informations- und Kommunikationsregeln und -mittel</li><li>Umgang mit Meinungsverschiedenheiten</li><li>Umgangsregeln: Pünktlichkeit, Verbindlichkeit, Zuhören</li></ul></div>
+    </div>
+    <p class="prose">So könnte das Kick-off des Onlineschalters am Tag 1 aussehen. Eingeladen sind das Kernteam, die Mitarbeitenden aus der Linie, das Team des Lieferanten Lärchwerk Informatik AG und die Datenschutzberaterin. Die Auftraggeberin eröffnet. Eigene Lösung, nicht vom Dozenten bestätigt:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Ablauf Kick-off Onlineschalter Wolkenried, Tag 1, 2 Stunden</caption>
+        <thead><tr><th>Zeit</th><th>Traktandum</th><th>Wer</th><th>Ziel nach F.22</th></tr></thead>
+        <tbody>
+          <tr><td class="zahl">0:00</td><td>Begrüssung: Warum braucht Wolkenried den Onlineschalter?</td><td>Franziska Bühlmann</td><td>gemeinsames Problemverständnis</td></tr>
+          <tr><td class="zahl">0:10</td><td>Auftrag, Ziele, Lieferobjekte, was nicht dazugehört</td><td>Projektleitung</td><td>eine Zieldefinition</td></tr>
+          <tr><td class="zahl">0:30</td><td>Vorstellungsrunde: Was bringe ich mit, was erwarte ich?</td><td>alle</td><td>Fähigkeiten, Erwartungen</td></tr>
+          <tr><td class="zahl">0:45</td><td>Organisation, Rollen, Kompetenzen, Linie und Lieferant</td><td>Projektleitung</td><td>Rollen, Verantwortung</td></tr>
+          <tr><td class="zahl">1:00</td><td>Pause</td><td></td><td>Kontakte knüpfen</td></tr>
+          <tr><td class="zahl">1:10</td><td>Plan: Vorabnahme Tag 20, Abnahme Tag 36, Führungsrhythmus</td><td>Projektleitung</td><td>Termine, Kontrollen</td></tr>
+          <tr><td class="zahl">1:25</td><td>Spielregeln: Kommunikation, Ablage, Änderungen, Konflikte</td><td>Aylin moderiert</td><td>Zusammenarbeit, Konfliktregeln</td></tr>
+          <tr><td class="zahl">1:45</td><td>Offene Fragen, nächste Schritte, Abschluss</td><td>Projektleitung</td><td>Verbindlichkeit</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Bezug zum Leitstand:</b> Am Morgen von Tag 1 fragt dich Seraina, wie das Kick-off aussehen soll. Ein zweistündiges Kick-off mit Linie und Lieferant, Rollen und Spielregeln hebt die Motivation aller. Wer nur Unterlagen per Mail verschickt, verliert Motivation, und die Streitphase im Team dauert länger. Die Teamphasen lernst du in Schritt 5.</div>
+  </section>
+
+  <!-- ===== 4 · Meetings und Protokoll ===== -->
+  <section id="meetings">
+    <span class="eyebrow">Schritt 4 · Vorbereiten, leiten, nachbereiten (Arbeitsblatt Protokollführung)</span>
+    <h2>Meetings, die etwas bewirken, und Protokolle, die gelten</h2>
+    <p class="prose">Die Swiss ICB zählt es zur Kompetenz <span class="icb">ICB 2.03</span> «Persönliche Kommunikation», Besprechungen zu leiten und zu moderieren, und zur Kompetenz <span class="icb">ICB 3.05</span> «Organisation, Information und Dokumentation», die Vorteile verschiedener Arten von Meetings zu erklären und wichtige Entscheidungen zu dokumentieren. Die Folien nennen dazu nur die Sitzungsformate. Die Checklisten hier sind eine Ergänzung dieser Station.</p>
+    <div class="t16-kacheln">
+      <div class="t16-kachel"><b>Vorbereiten</b><ul>
+        <li><b>Ziel:</b> Was soll am Ende entschieden oder geklärt sein?</li>
+        <li><b>Traktanden</b> mit Zeit und Verantwortlichen, das Wichtigste zuerst</li>
+        <li><b>Teilnehmende:</b> nur wer beiträgt oder entscheidet</li>
+        <li><b>Zeit und Ort</b>, bei Bedarf Video</li>
+        <li><b>Rollen:</b> Moderation, Protokoll, bei Bedarf Zeitwache</li>
+        <li><b>Unterlagen</b> rechtzeitig verschicken (Ausschuss: eine Woche vorher)</li></ul></div>
+      <div class="t16-kachel"><b>Leiten</b><ul>
+        <li>pünktlich beginnen, Ziel und Traktanden bestätigen</li>
+        <li>Pendenzen der letzten Sitzung prüfen</li>
+        <li>Diskussion führen, alle zu Wort kommen lassen</li>
+        <li>je Traktandum ein Ergebnis festhalten und laut bestätigen</li>
+        <li>Zeit einhalten, Nebenthemen auf eine Liste setzen</li>
+        <li>Abschluss: Beschlüsse und Pendenzen zusammenfassen, nächster Termin</li></ul></div>
+      <div class="t16-kachel"><b>Nachbereiten</b><ul>
+        <li>Protokoll innert ein bis zwei Arbeitstagen verschicken</li>
+        <li>Pendenzenliste nachführen</li>
+        <li>Protokoll nach der Namensregel ablegen (Vorlage 5.4: Projekt, Dokument, Datum)</li>
+        <li>Betroffene informieren, die nicht dabei waren</li></ul></div>
+    </div>
+
+    <h3>Drei Protokollarten</h3>
+    <p class="prose">Das Arbeitsblatt Protokollführung fragt nach den Arten von Protokollen und ihren Merkmalen. Die Antworten hier sind eine eigene Lösung, nicht vom Dozenten bestätigt:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Art</th><th>Was steht drin?</th><th>Wann passt es?</th><th>Aufwand</th></tr></thead>
+        <tbody>
+          <tr><th>Wortprotokoll</th><td>jede Aussage wörtlich, oft aus einer Aufnahme</td><td>Parlament, Gericht, rechtlich heikle Verhandlungen</td><td>sehr hoch</td></tr>
+          <tr><th>Verlaufsprotokoll</th><td>Ablauf der Diskussion zusammengefasst: wer welches Argument brachte, dann das Ergebnis</td><td>wenn später nachvollziehbar sein muss, wie es zum Entscheid kam (Vertragsverhandlung, Konflikt)</td><td>mittel</td></tr>
+          <tr><th>Ergebnis- oder Beschlussprotokoll</th><td>nur Ergebnisse: Informationen, Beschlüsse, Pendenzen</td><td>Projektstandsitzung, PL-Meeting, Ausschuss: der Normalfall im Projekt</td><td>tief</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Im Workshop kommt ein <b>Fotoprotokoll</b> dazu: Die Flipcharts und Pinnwände werden fotografiert und mit wenigen Sätzen ergänzt. Das Arbeitsblatt verwendet genau das für die Ergebnisse der Gruppenarbeit.</p>
+
+    <h3>Was in ein Beschlussprotokoll gehört</h3>
+    <ol class="t16-fluss">
+      <li><b>Kopf:</b> Projekt, Sitzungsart und Nummer, Datum, Zeit, Ort.</li>
+      <li><b>Anwesende, Entschuldigte, Verteiler:</b> Wer war dabei, wer fehlte, wer bekommt das Protokoll?</li>
+      <li><b>Rollen:</b> Moderation und Protokollführung, mit Namen.</li>
+      <li><b>Traktanden</b> in der Reihenfolge der Einladung.</li>
+      <li><b>Je Traktandum das Ergebnis:</b> Information, Beschluss (nummeriert, wer entscheidet was) oder «kein Entscheid, weil …».</li>
+      <li><b>Pendenzenliste:</b> Nummer, Was (prüfbar formuliert), Wer (eine Person), Bis wann (Datum oder Tag).</li>
+      <li><b>Nächste Sitzung</b> mit Datum und Ort, und am Anfang der nächsten Sitzung die Genehmigung dieses Protokolls.</li>
+    </ol>
+    <p class="prose">Und <b>wer schreibt</b>? Nicht die Person, die moderiert. Wer die Diskussion führt, kann nicht gleichzeitig sauber mitschreiben. In der PSS übernimmt das ein Teammitglied im Wechsel oder die Projektunterstützung (HERMES-Rolle), im Ausschuss oft die Projektunterstützung. Wichtig ist, dass es vor der Sitzung feststeht.</p>
+    <p class="prose">Klick dich durch, wie aus 20 Minuten Diskussion ein Beschluss und zwei Pendenzen werden:</p>
+    <div id="t16-stepper-protokoll"></div>
+
+    <details class="sol"><summary>Musterlösung zum Arbeitsblatt Protokollführung (eigene Lösung, nicht vom Dozenten bestätigt)</summary>
+      <div class="stack">
+        <p><b>A · Braucht es Protokolle, und wofür?</b> Ja. Das Protokoll macht Beschlüsse verbindlich, hält Pendenzen nachverfolgbar fest, informiert alle, die nicht dabei waren, und dient später als Nachweis, etwa bei Streit über einen Auftrag, bei der Abnahme oder in der Projektakte.</p>
+        <p><b>B1 · Arten:</b> Wort-, Verlaufs- und Ergebnis- oder Beschlussprotokoll (Tabelle oben), im Workshop das Fotoprotokoll.</p>
+        <p><b>B2 · Inhalte:</b> Kopf, Anwesende und Verteiler, Rollen, Traktanden, Ergebnisse je Traktandum, Pendenzen mit Was, Wer, Bis wann, nächste Sitzung.</p>
+        <p><b>B3 · Zweck des Protokolls einer Projektsitzung:</b> Verbindlichkeit schaffen und den Fortschritt steuern: Die Pendenzenliste ist der rote Faden von Sitzung zu Sitzung.</p>
+        <p><b>B4 · Darauf achtest du als Projektleitung:</b> Beschlüsse am Ende jedes Traktandums laut bestätigen lassen, neutral formulieren, keine Meinungen und kein Wortlaut, das Protokoll schnell verschicken, Pendenzen in der nächsten Sitzung prüfen, Ablage nach der Namensregel.</p>
+        <p><b>B5 · Wer verfasst es?</b> Eine vorher bestimmte Person, die nicht moderiert: im Wechsel im Team oder die Projektunterstützung. Die Projektleitung prüft und gibt frei.</p>
+        <p><b>B6 · Vorbereitung:</b> Protokollvorlage mit Kopf, Teilnehmerliste und Traktanden aus der Einladung vorbereiten, offene Pendenzen der letzten Sitzung einfügen, Rollen in der Einladung nennen.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Team und Führung ===== -->
+  <section id="team">
+    <span class="eyebrow">Schritt 5 · Teamarbeit, Motivation, Führung, Kommunikation (ICB 2.03–2.06)</span>
+    <h2>Team und Führung: Menschen durch das Projekt bringen</h2>
+    <p class="prose">Die Folien zu LB 5 behandeln Teams und Führung nur über Rollen und Sitzungen. LB 7 verweist auf das Pflichtbuch (Gubelmann/Sommer, Kapitel 23 Führung und 24 Teamarbeit). Die Swiss ICB verlangt in der Kompetenz <span class="icb">ICB 2.06</span> «Teamarbeit» Wissen über Modelle zum Lebenszyklus von Teams und in <span class="icb">ICB 2.05</span> «Führung», den Führungsstil an die Situation anzupassen. Die Modelle in diesem Schritt (Tuckman, Herzberg, Lewin, Hersey und Blanchard, Sender und Empfänger, Schulz von Thun) stehen nicht in den Folien. Sie sind eine Ergänzung dieser Station.</p>
+
+    <h3>Teamphasen nach Tuckman (Ergänzung)</h3>
+    <p class="prose">Der Psychologe Bruce Tuckman beschrieb 1965 vier Phasen, durch die fast jedes Team geht. 1977 kam eine fünfte dazu. Die Phasen sind kein Fahrplan mit festen Daten: Ein Team kann zurückfallen, zum Beispiel wenn neue Leute dazukommen.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Phase</th><th>So zeigt sie sich</th><th>Das tust du als Projektleitung</th></tr></thead>
+        <tbody>
+          <tr><th>Forming (Orientierung)</th><td>höflich, abwartend, unsicher; viele Fragen nach Rolle und Auftrag</td><td>Orientierung geben: Ziele, Rollen, Spielregeln, Kick-off. Eher anleiten.</td></tr>
+          <tr><th>Storming (Sturm)</th><td>Konflikte um Zuständigkeiten, Vorgehen, Einfluss; Kritik an der Leitung</td><td>Konflikte offen ansprechen und moderieren, nicht unterdrücken. Klar bleiben.</td></tr>
+          <tr><th>Norming (Normierung)</th><td>Regeln und Rollen sind akzeptiert, das Wir-Gefühl wächst</td><td>Regeln festhalten, Verantwortung übertragen, mehr beteiligen.</td></tr>
+          <tr><th>Performing (Leistung)</th><td>selbständig, lösungsorientiert, hilft sich gegenseitig</td><td>delegieren, Hindernisse aus dem Weg räumen, Erfolge sichtbar machen.</td></tr>
+          <tr><th>Adjourning (Auflösung)</th><td>Projekt endet, Abschied, Sorge um die Zeit danach</td><td>Ergebnisse würdigen, Lessons Learned, Übergabe, Abschlussanlass.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note tipp"><b>Bezug zum Leitstand:</b> Der Leitstand rechnet mit den vier ersten Phasen (Orientierung, Sturm, Normierung, Leistung). Ab Tag 6 wechselt das Team in den Sturm, und Seraina und Dario geraten aneinander. Ein moderiertes Klärungsgespräch oder Spielregeln im Teammeeting bringen das Team in die Normierung. Ist das Team müde, wirkt eine Retrospektive.</div>
+    <div class="card stack">
+      <h3>Teamphasen-Sortierer: Was beobachtest du im Onlineschalter?</h3>
+      <p class="hint">Ordne jede Beobachtung einer Phase zu. Achte auf das Verhalten, nicht auf die Woche.</p>
+      <div id="t16-sortierer-phasen"></div>
+    </div>
+
+    <h3>Motivation (Ergänzung)</h3>
+    <p class="prose">Die ICB nennt in <span class="icb">ICB 2.04</span> «Beziehungen und Engagement» Motivationstheorien und die intrinsische Motivation als Wissen. Zwei Grundgedanken reichen für die Prüfung:</p>
+    <ul class="prose">
+      <li><b>Von innen oder von aussen:</b> Intrinsische Motivation kommt aus der Aufgabe selbst (Freude, Sinn, Lernen). Extrinsische kommt von aussen (Lohn, Lob, Druck). Projektleitungen haben wenig Einfluss auf den Lohn, viel aber auf Sinn, Anerkennung und Verantwortung.</li>
+      <li><b>Herzberg:</b> Hygienefaktoren wie Arbeitsbedingungen, Lohn oder klare Abläufe verhindern Unzufriedenheit, motivieren aber nicht. Motivatoren wie Anerkennung, Verantwortung, Entwicklung und die Arbeit selbst motivieren.</li>
+    </ul>
+    <p class="prose">Die ICB rät, Menschen in Diskussionen und Entscheidungen einzubinden: Wer vorher gefragt wird, engagiert sich leichter (4.4.4). Im Leitstand hat jede Person zwei Bedürfnisse, etwa Anerkennung, Sicherheit, Autonomie, Entwicklung, Zugehörigkeit oder Klarheit. Martin braucht klare Aufträge und Sicherheit, Dario will technisch frei entscheiden, Jasmin will lernen. Ein Einzelgespräch wirkt bei Anerkennung und Klarheit besonders stark.</p>
+
+    <h3>Führungsstile und situatives Führen (Ergänzung)</h3>
+    <p class="prose">Kurt Lewin unterschied drei Stile: <b>autoritär</b> (die Leitung entscheidet allein), <b>kooperativ</b> oder demokratisch (die Leitung bezieht das Team ein) und <b>laissez-faire</b> (die Leitung lässt laufen). Keiner ist immer richtig. Paul Hersey und Ken Blanchard machen den Stil vom <b>Reifegrad</b> der geführten Person für eine bestimmte Aufgabe abhängig: Wie fähig ist sie, und wie willig oder sicher?</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Situatives Führen nach Hersey und Blanchard (Ergänzung, vereinfacht)</caption>
+        <thead><tr><th>Reifegrad für die Aufgabe</th><th>Stil</th><th>So führst du</th></tr></thead>
+        <tbody>
+          <tr><th>wenig fähig, wenig willig oder unsicher</th><td>S1 Unterweisen</td><td>klare Anweisungen, genau sagen was, wie, bis wann; eng kontrollieren</td></tr>
+          <tr><th>wenig fähig, aber willig</th><td>S2 Überzeugen</td><td>erklären und begründen, Fragen zulassen, weiterhin eng begleiten</td></tr>
+          <tr><th>fähig, aber wenig willig oder unsicher</th><td>S3 Beteiligen</td><td>gemeinsam entscheiden, ermutigen, zuhören, wenig Anweisung</td></tr>
+          <tr><th>fähig und willig</th><td>S4 Delegieren</td><td>Aufgabe und Verantwortung übergeben, Ergebnis vereinbaren, wenig eingreifen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Die ICB beschreibt dasselbe ohne Modellnamen: Wer führt, kennt verschiedene Stile und wählt je nach Person, Team und Lage. Dazu gehört auch, wie entschieden wird: im Konsens, mit Mehrheit, mit Kompromiss oder durch die Autorität der Leitung (<span class="icb">ICB 2.05</span>, Wissen). Und je reifer ein Team ist, desto grössere Aufgaben kann es übernehmen (<span class="icb">ICB 2.06</span>, Indikator «Delegieren»).</p>
+
+    <h3>Kommunikation und Feedback (Ergänzung)</h3>
+    <p class="prose">Das einfachste Modell: Ein <b>Sender</b> verschlüsselt eine Botschaft, ein <b>Empfänger</b> entschlüsselt sie. Unterwegs kann sie verloren gehen oder anders ankommen. Darum verlangt die ICB, dass du dir bestätigen lässt, dass die Botschaft wie gemeint verstanden wurde (<span class="icb">ICB 2.03</span>, Indikator 4.4.3.1). Friedemann Schulz von Thun zeigt, dass jede Nachricht vier Seiten hat. Ein Beispiel aus der PSS: «Der Testbericht ist immer noch nicht da.»</p>
+    <div class="t16-kacheln">
+      <div class="t16-kachel"><b>Sache</b><p>Der Bericht fehlt.</p></div>
+      <div class="t16-kachel"><b>Selbstkundgabe</b><p>Ich bin unter Druck.</p></div>
+      <div class="t16-kachel"><b>Beziehung</b><p>Auf dich ist kein Verlass.</p></div>
+      <div class="t16-kachel"><b>Appell</b><p>Liefere ihn heute!</p></div>
+    </div>
+    <p class="prose">Hört Jasmin vor allem die Beziehungsseite, fühlt sie sich angegriffen, obwohl du nur die Sache meintest. <b>Feedback-Regeln</b> stehen in der ICB als Wissen (<span class="icb">ICB 2.03</span>). Die gängigen Regeln, in eigenen Worten:</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h4>Feedback geben</h4>
+        <ul class="t16-liste">
+          <li>in Ich-Form sprechen: «Mir ist aufgefallen …»</li>
+          <li>beobachtbares Verhalten beschreiben, nicht die Person bewerten</li>
+          <li>konkret und zeitnah, Kritik unter vier Augen</li>
+          <li>Wirkung nennen und einen Wunsch formulieren</li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h4>Feedback nehmen</h4>
+        <ul class="t16-liste">
+          <li>zuhören, ausreden lassen</li>
+          <li>nachfragen, wenn etwas unklar ist</li>
+          <li>nicht rechtfertigen oder zurückschlagen</li>
+          <li>danken und selbst entscheiden, was du übernimmst</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note"><b>Merke:</b> Konflikte, Verhandlung, Integrität und Selbstmanagement gehören zu den übrigen People-Kompetenzen. Sie folgen in <a href="/lernseiten/pmgt/17-persoenliche-kompetenzen">Station 17</a>.</div>
+  </section>
+
+  <!-- ===== 6 · Meeting-Planer ===== -->
+  <section id="planer">
+    <span class="eyebrow">Schritt 6 · Themeneigene Interaktion</span>
+    <h2>Meeting-Planer: der Führungsrhythmus des Onlineschalters</h2>
+    <p class="prose">Du bist Projektleiterin oder Projektleiter des Onlineschalters. Erstelle den Meetingplan für die acht Wochen von Realisierung und Einführung, im Stil der Übung «Meetingplan» aus LB 7 S.9 (eigener Fall). Die Tage zählen ab Tag 1 wie in Station 10 und in der Anzeige des Leitstands: Woche 1 sind die Tage 1 bis 5. Der Leitstand rechnet intern mit Zeitpunkten ab 0; sein «Zeitpunkt 20» ist das Ende von Tag 20.</p>
+    <div class="card stack">
+      <h3>Die Regeln für Wolkenried</h3>
+      <p class="hint">Eigene Festlegung dieser Station, abgeleitet aus LB 5 F.19–22 und dem Berichtsplan aus Station 19.</p>
+      <ol class="t16-fluss">
+        <li><b>Kick-off</b> genau einmal, in Woche 1 (Vorgang V01, Tag 1–2). In Woche 1 gibt es daneben keine Teamsitzung.</li>
+        <li><b>Teamsitzungen:</b> In den Wochen 2 bis 8 genau eine pro Woche, PSS und PL-Meeting im Wechsel.</li>
+        <li><b>PSS in den Berichtswochen:</b> Der Statusbericht entsteht Ende Woche 4 und Ende Woche 8. In diesen Wochen tagt die PSS, damit Abweichungen und Massnahmen im Bericht stehen.</li>
+        <li><b>Projektausschuss (PSA):</b> Grundlage ist der Statusbericht, die Unterlagen kommen eine Woche vorher. Er tagt also in der Woche nach einem Bericht.</li>
+        <li><b>Phasenabschluss:</b> Die Realisierung endet mit der Vorabnahme am Tag 20. Der Gemeinderat gibt die Einführung frei, bevor sie am Tag 21 beginnt (Phasentor).</li>
+        <li><b>Bilaterales Gespräch</b> mit der Auftraggeberin: mindestens einmal in jedem Zweiwochenblock (1–2, 3–4, 5–6, 7–8) und in Woche 4, um den Statusbericht vorzubesprechen.</li>
+      </ol>
+    </div>
+    <div class="card stack" id="t16-planer">
+      <h3>Termine setzen</h3>
+      <p class="hint">Wähle oben einen Termin und tippe dann in einer Woche auf «＋ ablegen». Einen gesetzten Termin entfernst du, indem du ihn antippst.</p>
+      <div class="t16-palette" id="t16-palette" role="group" aria-label="Termin wählen"></div>
+      <p class="t16-meldung" id="t16-planer-meldung" aria-live="polite"></p>
+      <div class="t16-wochen" id="t16-wochen"></div>
+      <div class="row">
+        <button type="button" class="btn primary" id="t16-planer-pruefen">Plan prüfen</button>
+        <button type="button" class="btn" id="t16-planer-muster">Musterplan zeigen</button>
+        <button type="button" class="btn" id="t16-planer-leeren">Leeren</button>
+      </div>
+      <div id="t16-planer-ergebnis" aria-live="polite"></div>
+    </div>
+    <div class="note"><b>Warum der Projektausschuss erst in Woche 5 tagt:</b> Der Statusbericht Nr. 1 hat den Stichtag Tag 20 (Station 19). Mit der Regel «Unterlagen eine Woche vorher» tagt der Ausschuss am Freitag, Tag 25. Die Phasenfreigabe hängt nicht daran: Sie ist Sache des Gemeinderats auf Grund des Phasenberichts. Im Leitstand hält die Zeit am Ende der Woche 4 an, und der Gemeinderat entscheidet ohne Vorlauf. Der zweite Ausschuss nach dem Bericht Nr. 2 fällt in Woche 9 und beantragt den Projektabschluss. Der Berichtsplan in Station 19 setzt die PSS dagegen jeden Montag an. Beides passt zu F.19, die einen Wochen- oder Zweiwochenrhythmus erlaubt; der Planer hier übt den Wechsel mit dem PL-Meeting.</div>
+  </section>
+
+  <!-- ===== 7 · Protokoll-Prüfer ===== -->
+  <section id="pruefer">
+    <span class="eyebrow">Schritt 7 · Themeneigene Interaktion</span>
+    <h2>Protokoll-Prüfer: acht Fehler in einem Beschlussprotokoll</h2>
+    <p class="prose">Mittwoch, Woche 4. Das Protokoll der Projektstandsitzung liegt zur Freigabe auf deinem Tisch. Es enthält <b>acht Fehler</b>: fehlende Angaben, Meinungen statt Ergebnissen, Beschlüsse ohne Verantwortliche oder ausserhalb der Kompetenz, unvollständige Pendenzen. Tippe jede fehlerhafte Zeile an. Dann prüfen.</p>
+    <div class="t16-protokoll" id="t16-protokoll" role="group" aria-label="Beschlussprotokoll zum Prüfen"></div>
+    <div class="row">
+      <button type="button" class="btn primary" id="t16-pruefer-pruefen">Protokoll prüfen</button>
+      <button type="button" class="btn" id="t16-pruefer-zurueck">Zurücksetzen</button>
+    </div>
+    <p class="t16-meldung" id="t16-pruefer-stand" aria-live="polite"></p>
+    <div id="t16-pruefer-auswertung"></div>
+    <details class="sol"><summary>So wären die fehlerhaften Teile richtig (eigene Lösung, nicht vom Dozenten bestätigt)</summary>
+      <div class="t16-dok"><div class="t16-fz">
+        <div class="t16-fb"><b>Onlineschalter Wolkenried · Beschlussprotokoll Projektstandsitzung Nr. 2</b><br>Mittwoch, Tag 18 (Woche 4) · 9.00–10.15 · Sitzungszimmer Bauamt</div>
+        <div class="t16-fb"><b>Anwesend:</b> Projektleitung (Moderation), Luca Bernasconi, Aylin Demir (Protokoll), Seraina Caflisch, Dario Pfister · <b>Entschuldigt:</b> Elena Kovačević · <b>Verteiler:</b> Anwesende, Entschuldigte, Jonas Brunner (P8), Franziska Bühlmann zur Kenntnis</div>
+        <div class="t16-fb"><b>2 · Stand Teilprojekte:</b> Schnittstelle (V05) zu 75&nbsp;%: 120 von 160 Stunden geleistet, 40 Stunden Rest, fertig nach Prognose Tag 21. Gebührenmaske: Im Test fanden 3 von 5 Bauwilligen die Gebühr nicht (Rückmeldung Seraina), siehe P8.</div>
+        <div class="t16-fb"><b>B8:</b> Die Testdaten für den Integrationstest stellt Luca bis Tag 20 bereit.</div>
+        <div class="t16-fb"><b>B9 (statt Budgetbeschluss):</b> Die Projektleitung beantragt im Statusbericht Nr. 1 einen Budgetnachtrag für zusätzliche Entwicklerstunden zuhanden des Gemeinderats (Antrag mit Optionen und Folgen). Die PSS entscheidet kein Budget.</div>
+        <div class="t16-fb"><b>Pendenzen:</b><ul><li>P9 · Zweitschätzung Restaufwand Integrationstest · Elena · bis Tag 19</li><li>P10 · Schulungsunterlagen für Bauamt und Fachstellen im Entwurf an Seraina zur Prüfung · Aylin · bis Tag 19</li><li>P11 · Antrag Entwicklerstunden für den Statusbericht · Projektleitung · bis Tag 20</li></ul></div>
+      </div></div>
+    </details>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Einordnen, rechnen, entscheiden, formulieren</span>
+    <h2>Übungen</h2>
+    <p class="prose">Zehn Übungen in sieben Arten: zuordnen, wahr oder falsch, rechnen, Schritt für Schritt formulieren, Fallentscheide, Matrix und offene Fragen. Die mit ICB-Kennzeichen sind im Stil der IPMA-Prüfung: Einzelfragen mit genau einer richtigen Antwort und offene Fragen, die du nach einem Raster selbst bewertest. Die Übungen spielen im Onlineschalter und in anderen Projekten der Gemeinde Wolkenried.</p>
+    <div id="t16-u-sitzung"></div>
+    <div id="t16-u-wf"></div>
+    <div id="t16-u-kosten"></div>
+    <div id="t16-u-beschluss"></div>
+    <div id="t16-u-sturm"></div>
+    <div id="t16-u-situativ"></div>
+    <div id="t16-u-auftrag"></div>
+    <div id="t16-u-art"></div>
+    <div id="t16-u-protokoll"></div>
+    <div id="t16-u-kickoff"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein Projektmeeting organisieren, am Stück</h2>
+    <p class="prose">Eine Aufgabe im Stil der Modulschlussprüfung zum Lernziel «Projektmeeting organisieren» und der Übung «Meetingplan» aus LB 7 S.9, mit eigenem Fall: die neue Webseite der Gemeinde Wolkenried. Du legst den Führungsrhythmus fest, lädst zu einer Projektstandsitzung ein und schreibst aus den Notizen das Beschlussprotokoll. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern. Die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt.</p>
+    <div id="t16-film"></div>
+    <details class="sol"><summary>Die fertige Lösung als Text</summary>
+      <div class="t16-dok" id="t16-film-loesung"></div>
+    </details>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier verlieren viele Punkte</h2>
+    <div class="note falle"><b>PSS und PL-Meeting verwechseln.</b> Die PSS stimmt die Arbeitspakete ab: Stand, Abweichungen, Massnahmen. Das PL-Meeting behandelt Inhalt und Fachtechnisches. Beide wechseln sich ab.</div>
+    <div class="note falle"><b>Den Ausschuss ohne Vorlauf einberufen.</b> Die Unterlagen gehören eine Woche vor die Sitzung. Wer den Bericht am Vorabend verschickt, bekommt keine oder schlechte Entscheide.</div>
+    <div class="note falle"><b>Die PSS entscheidet über alles.</b> Budget, Umfang und Phasenfreigabe entscheidet das Gremium mit der Kompetenz. Das Team beantragt und bereitet vor.</div>
+    <div class="note falle"><b>Meinung statt Ergebnis im Beschlussprotokoll.</b> «Seraina findet …» ist kein Ergebnis. Ins Protokoll kommt, was daraus folgt: Information, Beschluss oder Pendenz.</div>
+    <div class="note falle"><b>Pendenz ohne Wer oder Bis wann.</b> «Wird erledigt» oder «Termin offen» heisst: Es passiert nichts. Eine Person, ein prüfbares Was, ein Datum.</div>
+    <div class="note falle"><b>Moderation und Protokoll in einer Hand.</b> Wer moderiert, schreibt nicht mit. Die Protokollführung steht vor der Sitzung fest.</div>
+    <div class="note falle"><b>Storming als Fehler sehen.</b> Streit nach dem Kick-off ist normal. Falsch ist, ihn zu ignorieren oder Leute sofort auszutauschen. Moderieren und Regeln vereinbaren.</div>
+    <div class="note falle"><b>Einen Führungsstil für alle.</b> Situativ heisst: je Person und Aufgabe. Dieselbe Person braucht bei einer neuen Aufgabe mehr Anleitung als bei einer vertrauten.</div>
+    <div class="note falle"><b>Tuckman als Folienstoff zitieren.</b> Teamphasen, Lewin, Hersey und Blanchard stehen nicht in den Folien von LB 5. In der Prüfung zählt die ICB-Kompetenz (2.05, 2.06) mit einer klaren Begründung.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen mit je genau einer richtigen Antwort. Die Erklärung nennt die ICB-Kompetenz, damit du im Open-Book-Ordner weisst, wo du nachschlägst. Tage zählen ab Tag 1, eine Woche hat fünf Arbeitstage.</p>
+    <div id="t16-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung · Open Book</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Projektfallen umschiffst du mit Realismus: Zeig bei jedem Wunsch die Folgen für die <b>drei Stellschrauben</b> Ergebnisse, Zeit und Ressourcen. Projektführung ist ein <b>PDCA-Kreislauf</b>: planen, umsetzen, mit Statusbericht prüfen, steuern.</li>
+      <li><b>Führungsrhythmus:</b> PSS (Arbeitspakete, Abweichungen, Massnahmen) und PL-Meeting (Inhalt, Fachtechnisches) im Wechsel, wöchentlich oder alle zwei Wochen. Der <b>Projektausschuss</b> tagt entlang der Entscheide, auf Grund des Statusberichts, mit Unterlagen eine Woche vorher, geleitet von der Auftraggeberin.</li>
+      <li><b>Entscheide vorbereiten:</b> Welche Entscheide bis wann? Welche Grundlagen? Was beschleunigt? Antrag mit Optionen, Folgen, Empfehlung und Frist an das Gremium mit der Kompetenz.</li>
+      <li><b>Kick-off:</b> gemeinsames Bild von Problem und Zielen, Rollen und Kompetenzen, Aufwand und Termine, Spielregeln für Zusammenarbeit, Information und Konflikte.</li>
+      <li><b>Meetings</b> mit Ziel, Traktanden, Teilnehmenden, Zeit und Rollen. <b>Beschlussprotokoll</b> mit Kopf, Anwesenden, Beschlüssen und <b>Pendenzen mit Was, Wer, Bis wann</b>; geschrieben von jemandem, der nicht moderiert.</li>
+      <li><b>Team und Führung:</b> Teams durchlaufen Phasen (Forming bis Adjourning). Führe situativ nach Fähigkeit und Willen der Person, gib Feedback in Ich-Form zu beobachtbarem Verhalten und lass dir das Verständnis bestätigen.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner:</b>
+      <ul class="t16-ziele">
+        <li><span class="icb">ICB 2.03</span> Persönliche Kommunikation (Swiss ICB 4.4.3, S.60–63): Indikator 4.4.3.1 gleiches Verständnis sicherstellen, Messgrösse «Leitet und moderiert Besprechungen»; Wissen Feedback-Regeln, Moderation.</li>
+        <li><span class="icb">ICB 2.04</span> Beziehungen und Engagement (4.4.4, S.63–67): Motivation, Einbinden in Entscheide, Vertrauen.</li>
+        <li><span class="icb">ICB 2.05</span> Führung (4.4.5, S.67–70): Stil der Situation anpassen, Entscheidungsfindung (Konsens, Mehrheit, Kompromiss, Autorität), Indikator 4.4.5.5 Entscheidungen treffen, durchsetzen, überprüfen.</li>
+        <li><span class="icb">ICB 2.06</span> Teamarbeit (4.4.6, S.71–74): Team zusammenstellen, Normen und Regeln, Delegieren, Lernen aus Fehlern; Team-Lebenszyklus (hier Tuckman, Ergänzung).</li>
+        <li><span class="icb">ICB 3.05</span> Organisation, Information und Dokumentation (4.5.5, S.104–107): Indikator 4.5.5.3 Arten von Meetings, Dokumentation wichtiger Entscheide; Kommunikationsplan in Vorlage 5.4.</li>
+        <li>Spickzettel: Tabelle PSS, PL-Meeting, Projektausschuss (Schritt 2), sieben Teile eines Beschlussprotokolls (Schritt 4), Tuckman- und Hersey-Blanchard-Tabelle (Schritt 5), die drei Fragen des Entscheidungsprozesses.</li>
+        <li>Fundstellen: LB 5 F.6 (Projektfallen, drei Stellschrauben), F.15 (PDCA), F.16 (Instrumente der Projektführung), F.17 (Projektstatusbericht), F.18 (ZDF), F.19 (Projektstandsitzung, Wechsel mit PL-Meeting), F.20 (Projekt-Steuerungsausschuss, Praxistipps), F.21 (Entscheidungsprozess), F.22 (Kick-off); Arbeitsblatt Protokollführung; LB 7 S.9 (Übung Meetingplan); Vorlage 5.4 (Kommunikationsplan, Ablage von Sitzungsprotokollen).</li>
+        <li>Gubelmann/Sommer: Kapitel 9 «Organisation, Information und Dokumentation», S. 105–124 (laut LB 5), Kapitel 23 «Führung», S. 270–279, und Kapitel 24 «Teamarbeit», S. 280–289 (laut LB 7).</li>
+      </ul>
+    </div>
+    <footer>Station 16 des Lernpfads PMGT. Fall «Onlineschalter Wolkenried» und «Neue Gemeindewebseite Wolkenried» frei erfunden. Quellen: LB 5, LB 7, Arbeitsblatt Protokollführung, Vorlage 5.4, Swiss ICB 4.0, alles in eigenen Worten. Modelle von Tuckman, Herzberg, Lewin, Hersey und Blanchard, Schulz von Thun als Ergänzung.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+
+  /* ---------- Schritt 0: Information, Beschluss oder Pendenz ---------- */
+  L.sortierer("#t16-sortierer-ibp", {
+    kategorien: ["Information", "Beschluss", "Pendenz"],
+    elemente: [
+      { html: "Die Vorabnahme ist weiterhin für Tag 20 geplant.", kategorie: "Information", erklaerung: "Eine Mitteilung zum Stand. Niemand entscheidet etwas, niemand muss etwas tun." },
+      { html: "Der Integrationstest startet am Tag 22. Verantwortlich: Elena.", kategorie: "Beschluss", erklaerung: "Das Team hat verbindlich festgelegt, wie es weitergeht, mit Verantwortlicher." },
+      { html: "Luca stellt die Testdaten bis Tag 20 bereit.", kategorie: "Pendenz", erklaerung: "Eine offene Aufgabe mit Was, Wer und Bis wann." },
+      { html: "Elena ist am Mittwoch entschuldigt.", kategorie: "Information", erklaerung: "Gehört in den Kopf des Protokolls (Entschuldigte), ist aber nur eine Mitteilung." },
+      { html: "Für den Pilot werden drei Planungsbüros angefragt.", kategorie: "Beschluss", erklaerung: "Eine Festlegung zum Vorgehen. Damit sie umgesetzt wird, braucht es zusätzlich eine Pendenz: Wer fragt die Büros bis wann an?" },
+      { html: "Aylin schickt den Entwurf des Merkblatts bis Tag 12 an Seraina.", kategorie: "Pendenz", erklaerung: "Was, Wer, Bis wann: eine vollständige Pendenz." }
+    ]
+  });
+
+  /* ---------- Schritt 1: Stepper PDCA ---------- */
+  L.stepper("#t16-stepper-pdca", {
+    titel: "Ein PDCA-Zyklus in Woche 3",
+    text: 'Der <span data-link="plan">Terminplan sieht die Schnittstelle (V05) von Tag 7 bis Tag 14 vor</span>. <span data-link="do">Elena programmiert, Luca führt das Teilprojekt</span>. Am Freitag, Tag 15, zeigt die <span data-link="check">Wochenmeldung: 104 Stunden geleistet, 56 Stunden Rest</span>. In der nächsten Projektstandsitzung <span data-link="act">beschliesst das Team Massnahmen</span>.',
+    schritte: [
+      { html: '<b>Plan:</b> <span data-link="plan">V05 Schnittstelle, 128 h, 2 Personen, Tag 7–14, 1 Tag Puffer</span>',
+        warum: "Plan heisst bei F.15 «Planung (Input)»: Arbeitspaket mit Aufwand, Dauer und Termin. Der Plan ist die Messgrundlage für alles, was folgt." },
+      { html: '<b>Do:</b> <span data-link="do">Arbeitspaket abarbeiten</span>, Stunden buchen',
+        warum: "Die Arbeit selbst. Die Folie nennt diesen Schritt nicht als eigenen Block; er liegt zwischen Planung und Überprüfung." },
+      { html: '<b>Check:</b> <span data-link="check">Fertigstellungsgrad = 104 ÷ (104 + 56) = 65&nbsp;%</span>, geplant waren 100&nbsp;% bis Tag 14',
+        warum: "Überprüfung oder Projektdiagnose: Ist gegen Plan messen, mit Zahlen, Daten, Fakten. Daraus entsteht der Statusbericht." },
+      { html: '<b>Act:</b> <span data-link="act">Zweitschätzung durch Elena, Hersteller über die Gemeinde mahnen, Integrationstest mit drei statt zwei Personen</span>',
+        warum: "Steuerung (Output): Massnahmen entscheiden. Genau dafür ist die Projektstandsitzung da (F.19: Vorschlag und Entscheid über Massnahmen)." },
+      { html: '<b>Plan (neu):</b> Schnittstelle Prognose Tag 21, Integrationstest und Vorabnahme verschoben',
+        warum: "Der Kreis schliesst sich: Der Plan wird nachgeführt, und der nächste Zyklus misst gegen den neuen Stand. Die Zahlen passen zu Station 19." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper Entscheidungsprozess ---------- */
+  L.stepper("#t16-stepper-entscheid", {
+    titel: "Eine Entscheidung vorbereiten (LB 5 F.21)",
+    text: 'Tag 10: Die Auftraggeberin wünscht zusätzlich eine <span data-link="was">Online-Terminreservation beim Bauamt</span>. Sie würde im <span data-link="frist">Pilot eingebaut, der an Tag 25 beginnt</span>. Laut Kompetenzordnung entscheidet der <span data-link="wer">Gemeinderat über Änderungen über CHF 5\'000</span>.',
+    schritte: [
+      { html: '<b>Welcher Entscheid, bis wann?</b> <span data-link="was">Terminreservation jetzt oder später?</span> Entscheid mit der Phasenfreigabe Ende Woche 4, <span data-link="frist">vor dem Pilot</span>.',
+        warum: "Rückwärts denken: Der Pilot braucht einen klaren Umfang. Wer den Entscheid nicht plant, bekommt ihn zu spät, und das Team wartet (Entscheidungs-Arthrose)." },
+      { html: '<b>Grundlagen:</b> Pilot +48 h, 3 Tage länger, Abnahme Prognose Tag 39 statt 36, Kosten +CHF 7\'680',
+        warum: "Der Gemeinderat braucht die Folgen für alle drei Stellschrauben. 48 h × CHF 160 = CHF 7'680. Vom Terminziel Tag 40 bleibt nur noch 1 Tag Reserve." },
+      { html: '<b>Zuständig:</b> <span data-link="wer">CHF 7\'680 &gt; CHF 5\'000 → Gemeinderat</span>; die Projektleitung beantragt, die Auftraggeberin vertritt den Antrag',
+        warum: "Die Kompetenzordnung bestimmt das Gremium. Die PSS oder die Projektleitung allein dürfen das nicht entscheiden." },
+      { html: '<b>Optionen und Empfehlung:</b> A jetzt einbauen (+CHF 7\'680, Abnahme Tag 39) · B für die Ausbaustufe 2 vormerken (jetzt CHF 0). Empfehlung: B',
+        warum: "Ein guter Antrag hat Optionen mit Folgen und eine begründete Empfehlung. B schützt Terminziel und Reserve, der Wunsch geht nicht verloren." },
+      { html: '<b>Beschleunigen:</b> bilateral mit Franziska Bühlmann vorbesprechen, Antrag eine Woche vorher einreichen (bis Tag 15), Entscheid zum Ankreuzen formulieren',
+        warum: "Vorbesprechen verhindert Überraschungen in der Sitzung. Die Unterlagen eine Woche vorher geben den Entscheidern Zeit zum Lesen (F.20)." }
+    ]
+  });
+
+  /* ---------- Schritt 4: Stepper Diskussion → Beschluss ---------- */
+  L.stepper("#t16-stepper-protokoll", {
+    titel: "Aus der Diskussion ins Beschlussprotokoll",
+    text: 'PSS am Mittwoch, Tag 18. Das Team diskutiert 20 Minuten über die zwei schweren Mängel (Gebühr bei Umbauten falsch, Upload über 20 MB bricht ab). <span data-link="streit">Seraina ärgert sich laut, dass die Gebühren falsch rechnen.</span> <span data-link="was">Dario sagt, er behebe beide Mängel bis nächsten Dienstag.</span> <span data-link="test">Seraina bietet an, danach als Anwendervertreterin nachzutesten.</span>',
+    schritte: [
+      { html: '<span data-link="streit"><s>Seraina ärgert sich …</s></span> → nicht ins Protokoll',
+        warum: "Ein Beschlussprotokoll hält Ergebnisse fest, nicht den Verlauf und keine Gefühle. Der Ärger ist berechtigt, aber er ist kein Ergebnis." },
+      { html: '<b>B10:</b> <span data-link="was">Die zwei schweren Mängel werden vor der Vorabnahme behoben.</span>',
+        warum: "Der Beschluss: was gilt ab jetzt. Nummeriert, damit spätere Sitzungen darauf verweisen können. B7 bis B9 hat dieselbe Sitzung schon gefasst (Protokoll-Prüfer in Schritt 7)." },
+      { html: '<b>P12</b> · <span data-link="was">Mängel Gebühr und Upload beheben · Dario · bis Tag 22</span>',
+        warum: "«Nächster Dienstag» wird zum Datum: Tag 18 ist Mittwoch der Woche 4, Dienstag der Woche 5 ist Tag 22. Eine Person ist verantwortlich." },
+      { html: '<b>P13</b> · <span data-link="test">Nachtest beider Mängel · Seraina · bis Tag 23</span>',
+        warum: "Der Nachtest ist eine eigene Pendenz mit eigener Person und eigenem Termin, einen Tag nach der Behebung." },
+      { html: 'Vorlesen: «B10, P12, P13. Einverstanden?» → alle nicken',
+        warum: "Am Ende jedes Traktandums liest die Protokollführerin Beschluss und Pendenzen vor. So gibt es später keinen Streit darüber, was beschlossen war." }
+    ]
+  });
+
+  /* ---------- Schritt 5: Teamphasen-Sortierer ---------- */
+  L.sortierer("#t16-sortierer-phasen", {
+    kategorien: ["Forming", "Storming", "Norming", "Performing", "Adjourning"],
+    elemente: [
+      { html: "Woche 1: Alle sind höflich, fragen nach ihrer Rolle und warten auf Vorgaben der Projektleitung.", kategorie: "Forming", erklaerung: "Orientierung: Man tastet sich ab und braucht Klarheit über Ziele und Rollen." },
+      { html: "Seraina und Dario streiten im Teammeeting über «Fachsprache gegen Technik».", kategorie: "Storming", erklaerung: "Konflikt um Vorgehen und Einfluss: typisch für den Sturm. Moderieren statt ignorieren." },
+      { html: "Martin fragt per Mail, was genau von ihm erwartet wird.", kategorie: "Forming", erklaerung: "Unsicherheit über die eigene Rolle zeigt Orientierung. Ein Gespräch mit klarem Auftrag hilft." },
+      { html: "Das Team vereinbart: Fachbegriffe kommen ins Glossar, Dario erklärt Technik ohne Kürzel.", kategorie: "Norming", erklaerung: "Gemeinsame Regeln entstehen und werden akzeptiert: Normierung." },
+      { html: "Thomas stellt die Prioritäten der Projektleitung vor allen offen in Frage.", kategorie: "Storming", erklaerung: "Kritik an der Leitung und Machtfragen gehören zum Sturm." },
+      { html: "Die PSS läuft nach fester Agenda, Pendenzen sind ohne Nachfragen erledigt.", kategorie: "Norming", erklaerung: "Abläufe und Spielregeln sitzen. Das Team ist auf dem Weg zur Leistung." },
+      { html: "Elena und Jasmin lösen einen Testfehler selbst und informieren danach nur kurz.", kategorie: "Performing", erklaerung: "Selbständig und lösungsorientiert: Leistungsphase. Jetzt delegieren." },
+      { html: "Im Integrationstest verteilt das Team die Arbeit selbst um, ohne dass die Projektleitung eingreift.", kategorie: "Performing", erklaerung: "Das Team steuert sich weitgehend selbst." },
+      { html: "Nach der Abnahme: Lessons-Learned-Workshop und Apéro.", kategorie: "Adjourning", erklaerung: "Abschluss und Abschied: Ergebnisse würdigen, Erfahrungen sichern." },
+      { html: "Jasmin fragt, in welchem Projekt sie nach der Übergabe weiterarbeiten kann.", kategorie: "Adjourning", erklaerung: "Die Sorge um die Zeit danach ist typisch für die Auflösung." }
+    ]
+  });
+
+  /* ---------- Schritt 6: Meeting-Planer ---------- */
+  const TYPEN = [
+    { id: "kick", kurz: "Kick-off", lang: "Kick-off" },
+    { id: "pss", kurz: "PSS", lang: "Projektstandsitzung (PSS)" },
+    { id: "pl", kurz: "PL", lang: "PL-Meeting" },
+    { id: "psa", kurz: "PSA", lang: "Projektausschuss (PSA)" },
+    { id: "phase", kurz: "Phase", lang: "Phasenabschluss (Gemeinderat)" },
+    { id: "bi", kurz: "Bilateral", lang: "Bilateral mit Auftraggeberin" }
+  ];
+  const TYP = {};
+  TYPEN.forEach(function (t) { TYP[t.id] = t; });
+  const FIX = {
+    1: ["V01 Kick-off und Detailplanung (Tag 1–2)"],
+    2: [],
+    3: [],
+    4: ["Vorabnahme, Ende Realisierung (Tag 20)", "Statusbericht Nr. 1 (Stichtag Tag 20)"],
+    5: ["Einführung beginnt (Phasentor Tag 21)"],
+    6: [],
+    7: [],
+    8: ["Abnahme (Plan Tag 36)", "Statusbericht Nr. 2 (Tag 40)"]
+  };
+  const MUSTER = {
+    1: ["kick"], 2: ["pss", "bi"], 3: ["pl"], 4: ["pss", "phase", "bi"],
+    5: ["pl", "psa"], 6: ["pss", "bi"], 7: ["pl"], 8: ["pss", "bi"]
+  };
+  const plan = {};
+  let gewaehlt = null;
+  const palette = document.getElementById("t16-palette");
+  const wochenBox = document.getElementById("t16-wochen");
+  const meldung = document.getElementById("t16-planer-meldung");
+  const ergebnis = document.getElementById("t16-planer-ergebnis");
+
+  function marke(id) {
+    return '<span class="t16-marke t16-k-' + id + '"><span>' + TYP[id].kurz + "</span></span>";
+  }
+
+  TYPEN.forEach(function (t) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "btn t16-typ t16-k-" + t.id;
+    b.dataset.typ = t.id;
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = "<span>" + t.lang + "</span>";
+    b.addEventListener("click", function () {
+      gewaehlt = gewaehlt === t.id ? null : t.id;
+      palette.querySelectorAll("button").forEach(function (x) {
+        x.setAttribute("aria-pressed", x.dataset.typ === gewaehlt ? "true" : "false");
+      });
+      meldung.textContent = gewaehlt ? "Gewählt: " + t.lang + ". Jetzt in einer Woche «＋ ablegen» antippen." : "";
+    });
+    palette.appendChild(b);
+  });
+
+  function wochenZeichnen(fokusWoche, fokusIndex) {
+    wochenBox.innerHTML = "";
+    for (let w = 1; w <= 8; w++) {
+      const karte = document.createElement("div");
+      karte.className = "t16-woche";
+      const fix = FIX[w].length ? '<ul class="t16-fix">' + FIX[w].map(function (f) { return "<li>" + f + "</li>"; }).join("") + "</ul>" : "";
+      karte.innerHTML = "<h4>Woche " + w + '</h4><p class="hint">Tag ' + ((w - 1) * 5 + 1) + "–" + (w * 5) + "</p>" + fix;
+      const liste = document.createElement("ul");
+      liste.className = "t16-belegt";
+      liste.setAttribute("aria-label", "Termine in Woche " + w);
+      (plan[w] || []).forEach(function (id, i) {
+        const li = document.createElement("li");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "t16-weg t16-k-" + id;
+        b.innerHTML = "<span>" + TYP[id].kurz + " ✕</span>";
+        b.setAttribute("aria-label", TYP[id].lang + " aus Woche " + w + " entfernen");
+        b.addEventListener("click", function () {
+          plan[w].splice(i, 1);
+          ergebnis.innerHTML = "";
+          meldung.textContent = TYP[id].lang + " aus Woche " + w + " entfernt.";
+          wochenZeichnen(w, -1);
+        });
+        li.appendChild(b);
+        liste.appendChild(li);
+      });
+      const ab = document.createElement("button");
+      ab.type = "button";
+      ab.className = "btn t16-ablegen";
+      ab.textContent = "＋ ablegen";
+      ab.setAttribute("aria-label", "Gewählten Termin in Woche " + w + " ablegen");
+      ab.dataset.woche = String(w);
+      ab.addEventListener("click", function () {
+        if (!gewaehlt) { meldung.textContent = "Wähle zuerst oben einen Termin."; return; }
+        plan[w] = plan[w] || [];
+        if (plan[w].indexOf(gewaehlt) >= 0) {
+          meldung.textContent = TYP[gewaehlt].lang + " steht in Woche " + w + " schon.";
+          return;
+        }
+        plan[w].push(gewaehlt);
+        ergebnis.innerHTML = "";
+        meldung.textContent = TYP[gewaehlt].lang + " in Woche " + w + " abgelegt.";
+        wochenZeichnen(w, -1);
+      });
+      karte.append(liste, ab);
+      wochenBox.appendChild(karte);
+    }
+    // Fokus behalten: auf den Ablegen-Knopf der bearbeiteten Woche
+    if (fokusWoche) {
+      const ziel = wochenBox.querySelector('.t16-ablegen[data-woche="' + fokusWoche + '"]');
+      if (ziel) ziel.focus();
+    }
+  }
+
+  function wochenMit(id) {
+    const r = [];
+    for (let w = 1; w <= 8; w++) if ((plan[w] || []).indexOf(id) >= 0) r.push(w);
+    return r;
+  }
+  function liste(ws) { return ws.length ? "Woche " + ws.join(", ") : "nirgends"; }
+
+  function pruefen() {
+    const regeln = [];
+    // R1 Kick-off
+    const kick = wochenMit("kick");
+    regeln.push(kick.length === 1 && kick[0] === 1
+      ? { ok: true, t: "Kick-off in Woche 1: Das Team startet mit gemeinsamen Zielen, Rollen und Spielregeln (F.22)." }
+      : { ok: false, t: "Kick-off: gesetzt in " + liste(kick) + ". Es gehört genau einmal an den Start, in Woche 1 (V01, Tag 1–2). Ein späteres Kick-off lässt das Team zu lange ohne gemeinsames Bild arbeiten." });
+    // R2 Teamsitzungen
+    const team = [];
+    let r2 = true, r2Text = [];
+    for (let w = 1; w <= 8; w++) {
+      const p = plan[w] || [];
+      const hatPss = p.indexOf("pss") >= 0, hatPl = p.indexOf("pl") >= 0;
+      const n = (hatPss ? 1 : 0) + (hatPl ? 1 : 0);
+      team[w] = hatPss && !hatPl ? "pss" : (hatPl && !hatPss ? "pl" : (n === 2 ? "beide" : null));
+      if (w === 1 && n > 0) { r2 = false; r2Text.push("Woche 1 braucht neben dem Kick-off keine Teamsitzung"); }
+      if (w >= 2 && n !== 1) { r2 = false; r2Text.push("Woche " + w + (n === 0 ? " hat keine Teamsitzung" : " hat PSS und PL-Meeting zugleich")); }
+    }
+    for (let w = 3; w <= 8; w++) {
+      if (team[w] && team[w - 1] && team[w] !== "beide" && team[w] === team[w - 1]) {
+        r2 = false; r2Text.push("Wochen " + (w - 1) + " und " + w + " haben zweimal " + TYP[team[w]].kurz + " hintereinander");
+      }
+    }
+    regeln.push(r2
+      ? { ok: true, t: "Teamsitzungen: jede Woche ab Woche 2 genau eine, PSS und PL-Meeting im Wechsel (F.19)." }
+      : { ok: false, t: "Teamsitzungen: " + r2Text.join("; ") + ". Regel: ab Woche 2 jede Woche genau eine, PSS und PL-Meeting im Wechsel (F.19)." });
+    // R3 PSS in Berichtswochen
+    const r3 = team[4] === "pss" && team[8] === "pss";
+    regeln.push(r3
+      ? { ok: true, t: "PSS in Woche 4 und 8: Abweichungen und Massnahmen aus der Sitzung kommen in den Statusbericht." }
+      : { ok: false, t: "Berichtswochen: In Woche 4 und 8 entsteht der Statusbericht. Dort gehört die PSS hin, sie bespricht Abweichungen und entscheidet Massnahmen (F.19). Mit dem Wechsel heisst das: PSS in Woche 2, 4, 6, 8, PL-Meeting in 3, 5, 7." });
+    // R4 Projektausschuss
+    const psa = wochenMit("psa");
+    let r4 = psa.length === 1 && psa[0] === 5, r4t;
+    if (r4) r4t = "Projektausschuss in Woche 5 (Freitag, Tag 25): eine Woche nach dem Statusbericht vom Tag 20. Die Mitglieder hatten die Unterlagen eine Woche vorher (F.20). Der nächste tagt in Woche 9 nach dem Bericht Nr. 2.";
+    else if (!psa.length) r4t = "Projektausschuss fehlt. Er tagt auf Grund des Statusberichts Nr. 1, mit Unterlagen eine Woche vorher: also in Woche 5.";
+    else {
+      const gruende = psa.map(function (w) {
+        if (w <= 3) return "Woche " + w + ": Es gibt noch keinen Statusbericht als Grundlage";
+        if (w === 4) return "Woche 4: Der Bericht entsteht erst am Tag 20, die Unterlagen kämen nicht eine Woche vorher";
+        if (w === 5) return "Woche 5 passt";
+        if (w === 8) return "Woche 8: Der Bericht Nr. 2 entsteht erst am Tag 40";
+        return "Woche " + w + ": Der Bericht vom Tag 20 ist dann schon " + (w - 4) + " Wochen alt";
+      });
+      r4t = "Projektausschuss in " + liste(psa) + ". " + gruende.join("; ") + ". Richtig ist genau einmal, Woche 5.";
+    }
+    regeln.push({ ok: r4, t: r4t });
+    // R5 Phasenabschluss
+    const ph = wochenMit("phase");
+    regeln.push(ph.length === 1 && ph[0] === 4
+      ? { ok: true, t: "Phasenabschluss in Woche 4: Vorabnahme am Tag 20, Freigabe der Einführung durch den Gemeinderat vor dem Phasentor Tag 21." }
+      : { ok: false, t: "Phasenabschluss in " + liste(ph) + ". Er gehört genau einmal ans Ende der Realisierung, Woche 4: Ohne Freigabe darf die Einführung am Tag 21 nicht beginnen, und vor der Vorabnahme gibt es nichts freizugeben." });
+    // R6 Bilateral
+    const bi = wochenMit("bi");
+    const bloecke = [[1, 2], [3, 4], [5, 6], [7, 8]];
+    const fehlBlock = bloecke.filter(function (b) { return bi.indexOf(b[0]) < 0 && bi.indexOf(b[1]) < 0; });
+    const r6 = !fehlBlock.length && bi.indexOf(4) >= 0;
+    let r6t = "Bilaterale Gespräche in " + liste(bi) + ".";
+    if (r6) r6t += " Jeder Zweiwochenblock hat eines, und in Woche 4 besprichst du den Statusbericht vor, bevor er an den Ausschuss geht: keine Überraschungen.";
+    else {
+      if (fehlBlock.length) r6t += " Ohne Gespräch: Wochen " + fehlBlock.map(function (b) { return b[0] + "–" + b[1]; }).join(", ") + ".";
+      if (bi.indexOf(4) < 0) r6t += " In Woche 4 fehlt das Gespräch, in dem du den Statusbericht mit der Auftraggeberin vorbesprichst.";
+      r6t += " Regel: regelmässig, mindestens alle zwei Wochen (F.20).";
+    }
+    regeln.push({ ok: r6, t: r6t });
+
+    const richtig = regeln.filter(function (r) { return r.ok; }).length;
+    ergebnis.innerHTML = '<p class="t16-meldung">' + richtig + " von " + regeln.length + " Regeln erfüllt" +
+      (richtig === regeln.length ? ". Dein Führungsrhythmus steht." : ".") + "</p>" +
+      '<ul class="t16-regeln">' + regeln.map(function (r) {
+        return '<li class="' + (r.ok ? "ok" : "bad") + '"><span class="marke">' + (r.ok ? "✓ " : "✗ ") + "</span>" + r.t + "</li>";
+      }).join("") + "</ul>";
+  }
+
+  document.getElementById("t16-planer-pruefen").addEventListener("click", pruefen);
+  document.getElementById("t16-planer-muster").addEventListener("click", function () {
+    for (let w = 1; w <= 8; w++) plan[w] = MUSTER[w].slice();
+    meldung.textContent = "Musterplan eingesetzt (eigene Lösung, nicht vom Dozenten bestätigt).";
+    wochenZeichnen(0);
+    pruefen();
+  });
+  document.getElementById("t16-planer-leeren").addEventListener("click", function () {
+    for (let w = 1; w <= 8; w++) plan[w] = [];
+    ergebnis.innerHTML = "";
+    meldung.textContent = "Plan geleert.";
+    wochenZeichnen(0);
+    const erster = palette.querySelector("button");
+    if (erster) erster.focus();
+  });
+  wochenZeichnen(0);
+
+  /* ---------- Schritt 7: Protokoll-Prüfer ---------- */
+  const PROTOKOLL = [
+    { h: "Kopf" },
+    { t: "Onlineschalter Wolkenried · Beschlussprotokoll Projektstandsitzung Nr. 2", f: false,
+      e: "Projekt, Sitzungsart und Nummer: vollständig." },
+    { t: "Datum: – · Zeit: 9.00–10.15 · Ort: Sitzungszimmer Bauamt", f: true,
+      e: "Das Datum fehlt. Ohne Datum lässt sich das Protokoll nicht ablegen (Vorlage 5.4: Datum im Dateinamen), und Fristen wie «bis nächste Woche» bleiben unklar." },
+    { t: "Anwesend: Projektleitung, Luca Bernasconi, Aylin Demir, Seraina Caflisch", f: true,
+      e: "Dario fehlt in der Liste, obwohl er unter Traktandum 2 die Meldung ergänzt und im Beschluss B9 vorkommt. Wer anwesend war, muss vollständig stehen: Es zeigt, wer die Beschlüsse mitgetragen hat." },
+    { t: "Entschuldigt: Elena Kovačević", f: false, e: "Korrekt: Wer fehlt, steht als entschuldigt und erhält das Protokoll." },
+    { t: "Moderation und Protokoll: Projektleitung", f: true,
+      e: "Doppelrolle. Wer moderiert, kann nicht gleichzeitig sauber mitschreiben. Die Protokollführung bestimmst du vor der Sitzung, zum Beispiel Aylin." },
+    { t: "Verteiler: Anwesende, Entschuldigte, Jonas Brunner (P8), Franziska Bühlmann (zur Kenntnis)", f: false, e: "Korrekt: Wer eine Pendenz hat, aber nicht dabei war, erhält das Protokoll, und die Auftraggeberin erhält es zur Kenntnis." },
+    { h: "Traktanden" },
+    { t: "1 Pendenzen · 2 Stand Teilprojekte · 3 Integrationstest · 4 Varia", f: false, e: "Traktandenliste wie in der Einladung: korrekt." },
+    { h: "1 · Pendenzen" },
+    { t: "P5 Testzugang beim Hersteller (Luca): erledigt.", f: false, e: "Pendenzen der letzten Sitzung werden geprüft und als erledigt markiert: korrekt." },
+    { h: "2 · Stand Teilprojekte" },
+    { t: "Information: Schnittstelle (V05) zu 75 % fertig: 120 von 160 Stunden geleistet, 40 Stunden Rest, fertig nach Prognose Tag 21 (schriftliche Meldung Elena, ergänzt von Dario).", f: false,
+      e: "Eine Information mit Zahlen, Daten, Fakten: korrekt. 120 ÷ 160 = 75 %. Die Prognose Tag 21 passt zum Statusbericht in Station 19." },
+    { t: "Seraina findet die Gebührenmaske für Bauwillige zu kompliziert.", f: true,
+      e: "Meinung statt Ergebnis. Ins Protokoll gehört, was daraus folgt: eine Information mit Fakten («im Test fanden 3 von 5 Bauwilligen die Gebühr nicht»), ein Beschluss oder eine Pendenz (hier P8)." },
+    { h: "3 · Integrationstest" },
+    { t: "B7: Der Integrationstest (V11) startet, sobald die Schnittstelle fertig ist, nach Prognose am Tag 22. Verantwortlich: Elena.", f: false,
+      e: "Ein vollständiger Beschluss mit Inhalt, Termin und Verantwortlicher. Dass Elena entschuldigt ist, schadet nicht: Sie erhält das Protokoll." },
+    { t: "B8: Die Testdaten für den Integrationstest werden bereitgestellt.", f: true,
+      e: "Beschluss ohne Verantwortliche und ohne Termin. Die Passivform «werden bereitgestellt» versteckt, wer es tut. Richtig: «Luca stellt die Testdaten bis Tag 20 bereit.»" },
+    { t: "B9: Das Projektbudget wird um CHF 8'000 erhöht, damit Dario zusätzliche Stunden leisten kann.", f: true,
+      e: "Ausserhalb der Kompetenz. Budgetnachträge entscheidet in Wolkenried der Gemeinderat, nicht die PSS. Die PSS kann nur beschliessen, einen Antrag vorzubereiten (LB 5 F.20: Entscheide nach Kompetenzordnung)." },
+    { h: "Pendenzen" },
+    { t: "P8 · Gebührenmaske mit fünf Bauwilligen nochmals testen · Jonas · bis Tag 23", f: false, e: "Was, Wer, Bis wann: vollständig." },
+    { t: "P9 · Zweitschätzung Restaufwand Integrationstest · Elena · Termin offen", f: true,
+      e: "Pendenz ohne Termin. «Offen» heisst in der Praxis: nie. Die Zweitschätzung braucht es vor dem Start des Integrationstests, also zum Beispiel bis Tag 19." },
+    { t: "P10 · Sich um die Schulungsunterlagen kümmern · Aylin · bis Tag 19", f: true,
+      e: "Das Was ist nicht prüfbar. Was genau ist am Tag 19 fertig? Besser: «Entwurf der Schulungsunterlagen an Seraina zur Prüfung»." },
+    { t: "Nächste PSS: Mittwoch, Tag 28, 9.00 Uhr, Sitzungszimmer Bauamt", f: false,
+      e: "Fester nächster Termin: korrekt. Im Rhythmus PSS und PL-Meeting im Wechsel liegt die nächste PSS zwei Wochen später, Tag 28 ist der Mittwoch der Woche 6." }
+  ];
+  const protokollBox = document.getElementById("t16-protokoll");
+  const prStand = document.getElementById("t16-pruefer-stand");
+  const prAusw = document.getElementById("t16-pruefer-auswertung");
+  const segKnoepfe = [];
+
+  PROTOKOLL.forEach(function (z) {
+    if (z.h) {
+      const h = document.createElement("h4");
+      h.textContent = z.h;
+      protokollBox.appendChild(h);
+      return;
+    }
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "t16-seg";
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = '<span class="t16-tag"></span><span class="t16-txt"></span>';
+    b.querySelector(".t16-txt").textContent = z.t;
+    b.addEventListener("click", function () {
+      if (b.dataset.geprueft) return;
+      b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true");
+      const n = segKnoepfe.filter(function (s) { return s.b.getAttribute("aria-pressed") === "true"; }).length;
+      prStand.textContent = n + " Zeile" + (n === 1 ? "" : "n") + " markiert.";
+    });
+    protokollBox.appendChild(b);
+    segKnoepfe.push({ b: b, z: z });
+  });
+
+  document.getElementById("t16-pruefer-pruefen").addEventListener("click", function () {
+    let treffer = 0, alarm = 0;
+    const punkte = [];
+    segKnoepfe.forEach(function (s, i) {
+      const markiert = s.b.getAttribute("aria-pressed") === "true";
+      const tag = s.b.querySelector(".t16-tag");
+      s.b.classList.remove("treffer", "verpasst", "fehlalarm");
+      s.b.dataset.geprueft = "1";
+      if (s.z.f && markiert) { treffer++; s.b.classList.add("treffer"); tag.textContent = "✓ gefunden"; punkte.push('<li><b>✓ Gefunden:</b> «' + s.z.t + "» " + s.z.e + "</li>"); }
+      else if (s.z.f) { s.b.classList.add("verpasst"); tag.textContent = "✗ übersehen"; punkte.push('<li><b>✗ Übersehen:</b> «' + s.z.t + "» " + s.z.e + "</li>"); }
+      else if (markiert) { alarm++; s.b.classList.add("fehlalarm"); tag.textContent = "? kein Fehler"; punkte.push('<li><b>? Kein Fehler:</b> «' + s.z.t + "» " + s.z.e + "</li>"); }
+      else tag.textContent = "";
+    });
+    prStand.textContent = treffer + " von 8 Fehlern gefunden" + (alarm ? ", " + alarm + " Fehlalarm" + (alarm === 1 ? "" : "e") : "") +
+      (treffer === 8 && !alarm ? ". Alle Fehler gefunden, ohne Fehlalarm." : ".");
+    prAusw.innerHTML = '<div class="card stack"><h3>Auswertung</h3><ul class="t16-auswertung">' + punkte.join("") + "</ul></div>";
+  });
+
+  document.getElementById("t16-pruefer-zurueck").addEventListener("click", function () {
+    segKnoepfe.forEach(function (s) {
+      s.b.classList.remove("treffer", "verpasst", "fehlalarm");
+      s.b.setAttribute("aria-pressed", "false");
+      delete s.b.dataset.geprueft;
+      s.b.querySelector(".t16-tag").textContent = "";
+    });
+    prStand.textContent = "";
+    prAusw.innerHTML = "";
+    if (segKnoepfe[0]) segKnoepfe[0].b.focus();
+  });
+
+  /* ---------- Übungen ---------- */
+  L.sortierer("#t16-u-sitzung", {
+    frage: "Übung 1 · In welche Sitzung gehört das Thema?",
+    kategorien: ["PSS", "PL-Meeting", "Projektausschuss"],
+    elemente: [
+      { html: "Die Schnittstelle ist 7 Tage hinter Plan. Welche Massnahme ergreifen wir?", kategorie: "PSS", erklaerung: "Abweichung eines Arbeitspakets und Massnahme: Kernaufgabe der Projektstandsitzung (F.19)." },
+      { html: "Wie bilden wir den Gebührentarif für Umbauten technisch in der Plattform ab?", kategorie: "PL-Meeting", erklaerung: "Inhalt und Fachtechnisches gehören ins PL-Meeting (F.19)." },
+      { html: "Änderungsantrag «Pilot mit zwei statt drei Planungsbüros» genehmigen", kategorie: "Projektausschuss", erklaerung: "Änderungsanträge entscheidet die Steuerung nach Kompetenzordnung (F.20)." },
+      { html: "Das Lösungskonzept für die Zirkulation an die Fachstellen abnehmen", kategorie: "Projektausschuss", erklaerung: "Konzepte abnehmen ist Aufgabe des Steuerungsgremiums (F.20)." },
+      { html: "Elena braucht die Testdaten von Luca früher. Wer liefert bis wann?", kategorie: "PSS", erklaerung: "Schnittstellen zwischen Arbeitspaketen erkennen und abstimmen (F.19)." },
+      { html: "Soll das Statusmodell drei oder fünf Stufen haben?", kategorie: "PL-Meeting", erklaerung: "Eine fachliche Lösungsfrage: PL-Meeting." },
+      { html: "Freigabe der Ressourcen für die nächste Phase", kategorie: "Projektausschuss", erklaerung: "Freigabe von Phasen mit Budget und Ressourcen (F.20). In Wolkenried beantragt der Ausschuss sie beim Gemeinderat." }
+    ]
+  });
+
+  L.wahrFalsch("#t16-u-wf", {
+    titel: 'Übung 2 · Wahr oder falsch? <span class="icb">ICB 3.05</span> <span class="icb">ICB 2.03</span>',
+    aussagen: [
+      { html: "Im Beschlussprotokoll steht, wer in der Diskussion welches Argument brachte.", wahr: false,
+        erklaerung: "Das ist ein Verlaufsprotokoll. Das Beschlussprotokoll hält nur Ergebnisse fest: Informationen, Beschlüsse, Pendenzen." },
+      { html: "Eine Pendenz braucht ein prüfbares Was, eine verantwortliche Person und einen Termin.", wahr: true,
+        erklaerung: "Was, Wer, Bis wann. Fehlt eines davon, lässt sich die Pendenz in der nächsten Sitzung nicht prüfen (ICB 3.05, Dokumentation wichtiger Entscheide)." },
+      { html: "Wer die Sitzung moderiert, sollte nicht gleichzeitig das Protokoll führen.", wahr: true,
+        erklaerung: "Moderieren und Mitschreiben zugleich überfordert. Die Protokollführung wird vorher bestimmt (eigene Lösung zum Arbeitsblatt Protokollführung)." },
+      { html: "Wenn es eilt, darf die PSS auch einen Budgetnachtrag beschliessen.", wahr: false,
+        erklaerung: "Entscheide fallen nach Kompetenzordnung (F.20). Eilt es, eskalierst du rasch an das zuständige Gremium; die Zuständigkeit ändert sich nicht." },
+      { html: "Die Unterlagen für den Steuerungsausschuss verschickt die Projektleitung eine Woche vor der Sitzung.", wahr: true,
+        erklaerung: "Praxistipp aus LB 5 F.20. So können die Mitglieder lesen, nachfragen und vorbereitet entscheiden." },
+      { html: "Für die wöchentliche Projektstandsitzung eignet sich ein Wortprotokoll am besten.", wahr: false,
+        erklaerung: "Viel zu aufwendig. Die PSS braucht ein Beschlussprotokoll mit Pendenzenliste." }
+    ]
+  });
+
+  L.zahlAufgabe("#t16-u-kosten", {
+    titel: "Übung 3 · Was kostet eine «sinnlose Sitzung»?",
+    frage: "<p>Projektfalle 9 sind sinnlose Sitzungen. Angenommen, du lädst im Onlineschalter jede Woche alle zwölf Teammitglieder zu einer zweistündigen Sitzung ein, acht Wochen lang. Die Stundensätze aus dem Leitstand: Seraina 100, Luca 105, Aylin 95, Martin 80, Thomas 100, Nadia 90, Jasmin 75, Urs 85, Dario 155, Elena 150, Jonas 135, Sabine 160 (CHF je Stunde). Was kosten diese Sitzungen zusammen? Auf ganze Franken.</p>",
+    antwort: 21280,
+    einheit: "CHF",
+    anzeige: "1'330 × 2 × 8 = 21'280",
+    hinweise: ["Rechne zuerst, was eine Stunde mit allen zwölf kostet: die Summe der Sätze.", "Die Summe ist CHF 1'330 je Stunde. Jetzt mal 2 Stunden und mal 8 Wochen."],
+    loesungsweg: [
+      "Summe der Sätze: 100 + 105 + 95 + 80 + 100 + 90 + 75 + 85 + 155 + 150 + 135 + 160 = CHF 1'330 je Stunde",
+      "Eine Sitzung: 1'330 × 2 h = CHF 2'660",
+      "Acht Wochen: 2'660 × 8 = CHF 21'280",
+      "Das ist mehr als die ganze Reserve des Projekts von CHF 17'760 (Kredit 180'000 minus BAC 162'240).",
+      "Zum Vergleich ein schlanker Rhythmus: 4 PSS zu 1 h mit 5 Personen (Projektleitung zu angenommen CHF 120, Luca, Aylin, Dario, Seraina = CHF 575) und 3 PL-Meetings zu 1 h mit 4 Personen (ohne Seraina = CHF 475): 4 × 575 + 3 × 475 = CHF 3'725. Der Satz der Projektleitung ist eine Annahme dieser Übung, der Leitstand nennt keinen."
+    ]
+  });
+
+  L.schrittAufgabe("#t16-u-beschluss", {
+    titel: "Übung 4 · Aus Notizen werden Beschluss und Pendenzen",
+    aufgabe: "<p>PSS am Mittwoch, Tag 28 (Woche 6). Deine Notiz: «Thomas: Fachstellen wollen keine Schulung, lieber ein Video. Längere Diskussion, Seraina skeptisch, dann alle einverstanden. Nadia macht ein Kurzvideo, fünf Minuten, bis nächsten Mittwoch. Thomas zeigt es an der Fachstellensitzung am Freitag danach und meldet zurück.» Formuliere zuerst selbst den Protokolleintrag, dann deck Schritt für Schritt auf.</p>",
+    schritte: [
+      { html: "Weglassen: «Längere Diskussion, Seraina skeptisch»", warum: "Verlauf und Stimmung gehören nicht ins Beschlussprotokoll. Wichtig ist nur, dass am Schluss alle einverstanden waren." },
+      { html: "<b>B13:</b> Die Fachstellen werden mit einem Kurzvideo von fünf Minuten geschult statt mit einer Präsenzschulung.", warum: "Der Beschluss sagt, was ab jetzt gilt. Er ändert den Umfang der Schulung: Ist das in der Kompetenz der PSS? Ja, solange Kosten und Termin der Schulung gleich bleiben." },
+      { html: "<b>P16</b> · Kurzvideo für Fachstellen (5 Minuten) erstellen · Nadia · bis Tag 33", warum: "«Nächsten Mittwoch» wird zum Tag: Tag 28 ist Mittwoch der Woche 6, eine Woche später ist Tag 33." },
+      { html: "<b>P17</b> · Video an der Fachstellensitzung zeigen, Rückmeldung an die Projektleitung · Thomas · bis Tag 35", warum: "Der Freitag nach Tag 33 ist Tag 35. Auch die Rückmeldung ist Teil der Pendenz, sonst weiss niemand, ob das Video gewirkt hat." }
+    ]
+  });
+
+  L.auswahl("#t16-u-sturm", {
+    frage: '<p><b>Übung 5 · Fallentscheid</b> <span class="icb">ICB 2.06</span> <span class="icb">ICB 2.05</span></p><p>Woche 2. Im Teammeeting geraten Seraina (Fachverantwortliche Baugesuche) und Dario (Entwickler des Lieferanten) heftig aneinander. Sie wirft ihm vor, er rede nur in Kürzeln und verstehe die Abläufe im Bauamt nicht. Er findet, sie blockiere jede technische Lösung. Die anderen schweigen. Was tust du?</p>',
+    optionen: [
+      "Nichts. Das gibt sich, wenn die Arbeit richtig läuft.",
+      "Ein moderiertes Klärungsgespräch mit beiden, danach im Team Spielregeln vereinbaren, etwa ein Glossar und Fachbegriffe ohne Kürzel.",
+      "Beim Lieferanten verlangen, dass Dario ersetzt wird.",
+      "Die Aufgaben so trennen, dass die beiden nicht mehr zusammenarbeiten müssen."
+    ],
+    richtig: 1,
+    erklaerung: "Der Streit zeigt die Storming-Phase. Sie ist normal, aber sie verschwindet nicht von selbst. Die Projektleitung macht den Konflikt besprechbar und führt das Team zu gemeinsamen Regeln (Norming). Folgen der anderen Optionen: Nichts tun lässt den Konflikt eskalieren, bis jemand geht. Ersetzen kostet Einarbeitung und Vertrauen beim Lieferanten. Trennen nimmt Druck weg, aber Fach und Technik müssen gerade bei den Formularen zusammenarbeiten. ICB 2.06 (Indikator 4.4.6.2: Massnahmen ergreifen, wenn die Zusammenarbeit gefährdet ist) und ICB 2.05 (Führung). Konfliktstufen folgen in Station 17."
+  });
+
+  L.matrix("#t16-u-situativ", {
+    titel: "Übung 6 · Situativ führen: Wer braucht welchen Stil?",
+    icb: "ICB 2.05",
+    frage: "<p>Ordne jede Person nach ihrem Reifegrad für die genannte Aufgabe ein: Wie fähig ist sie, und wie willig oder sicher? Das Feld zeigt den passenden Stil nach Hersey und Blanchard (Ergänzung, Tabelle in Schritt 5). Die Profile stammen aus dem Leitstand.</p>",
+    zeilen: ["hoch", "tief"],
+    spalten: ["tief", "hoch"],
+    achseY: "Wille, Sicherheit",
+    achseX: "Fähigkeit",
+    feldnamen: [["S2 Überzeugen", "S4 Delegieren"], ["S1 Unterweisen", "S3 Beteiligen"]],
+    elemente: [
+      { html: "Jasmin (24), neu im Projekt, sehr motiviert, kennt die Plattform kaum. Aufgabe: Testfälle schreiben.", ziel: ["hoch", "tief"], erklaerung: "Willig, aber noch wenig fähig: S2 Überzeugen. Erklären, warum und wie, Fragen zulassen, eng begleiten." },
+      { html: "Martin (61), skeptisch gegenüber Digitalem, braucht Sicherheit. Aufgabe: Formulare der Plattform testen.", ziel: ["tief", "tief"], erklaerung: "Für diese Aufgabe wenig fähig und unsicher: S1 Unterweisen. Klare Schritte, was bis wann, enge Begleitung. Beim Soll-Ablauf im Bauamt wäre er dagegen fähig." },
+      { html: "Elena, erfahrene Schnittstellenentwicklerin, engagiert, arbeitet präzise. Aufgabe: Schnittstelle bauen.", ziel: ["hoch", "hoch"], erklaerung: "Fähig und willig: S4 Delegieren. Ergebnis und Termin vereinbaren, sie macht den Weg selbst." },
+      { html: "Seraina, kennt jedes Dossier, misstraut aber der Technik. Aufgabe: Statusmodell der Plattform festlegen.", ziel: ["tief", "hoch"], erklaerung: "Fachlich sehr fähig, aber unsicher bei der Technik: S3 Beteiligen. Gemeinsam entscheiden, ihr Wissen würdigen, Bedenken ernst nehmen." },
+      { html: "Thomas, Bauinspektor und Fachautorität, Termine im Feld haben Vorrang. Aufgabe: Verteiler für die Zirkulation festlegen.", ziel: ["tief", "hoch"], erklaerung: "Fähig, aber wenig Bereitschaft, Zeit zu geben: S3 Beteiligen. Ihn einbinden, seine Autorität nutzen, die Aufgabe gut planbar machen." },
+      { html: "Dario, leitender Entwickler, technisch stark, will frei entscheiden. Aufgabe: Plattform einrichten.", ziel: ["hoch", "hoch"], erklaerung: "Fähig und willig: S4 Delegieren. Mit Autonomie motivierst du ihn am stärksten." }
+    ]
+  });
+
+  L.auswahl("#t16-u-auftrag", {
+    frage: '<p><b>Übung 7</b> <span class="icb">ICB 2.03</span></p><p>In der PSS sagst du zu Jonas: «Schau dir die Gebührenmaske noch einmal an.» Eine Woche später ist nichts passiert. Jonas dachte, es sei eine Anregung, keine Aufgabe. Was hättest du tun sollen?</p>',
+    optionen: [
+      "Den Satz lauter und bestimmter sagen.",
+      "Die Aufgabe mit Was und Bis wann formulieren, Jonas sie in eigenen Worten wiederholen lassen und als Pendenz ins Protokoll nehmen.",
+      "Ihm danach zusätzlich eine Mail mit demselben Satz schicken.",
+      "Die Aufgabe selbst erledigen, dann ist sie sicher gemacht."
+    ],
+    richtig: 1,
+    erklaerung: "Das Sender-Empfänger-Problem: Die Botschaft kam anders an als gemeint. Die ICB verlangt, dass du dir das gleiche Verständnis bestätigen lässt (ICB 2.03, Indikator 4.4.3.1). Mit Pendenz im Protokoll ist der Auftrag zusätzlich verbindlich (ICB 3.05). Lauter oder per Mail wiederholen ändert nichts an der Unklarheit; selbst erledigen schwächt das Team."
+  });
+
+  L.sortierer("#t16-u-art", {
+    frage: "Übung 8 · Welche Protokollart passt?",
+    kategorien: ["Wortprotokoll", "Verlaufsprotokoll", "Beschlussprotokoll", "Fotoprotokoll"],
+    elemente: [
+      { html: "Debatte im Kantonsrat, in der jedes Votum später zitierbar sein muss", kategorie: "Wortprotokoll", erklaerung: "Jede Aussage wörtlich: Parlamente führen Wortprotokolle." },
+      { html: "Verhandlung mit dem Lieferanten über eine Mehrkostenrechnung, bei der später nachvollziehbar sein muss, wer was zugestanden hat", kategorie: "Verlaufsprotokoll", erklaerung: "Der Weg zum Ergebnis ist wichtig, darum die Argumente in Kürze und dann das Ergebnis." },
+      { html: "Wöchentliche Projektstandsitzung", kategorie: "Beschlussprotokoll", erklaerung: "Der Normalfall im Projekt: nur Ergebnisse und Pendenzen." },
+      { html: "Workshop zur Benutzerführung mit Flipcharts und Pinnwänden", kategorie: "Fotoprotokoll", erklaerung: "Die Ergebnisse stehen auf Flipcharts. Fotos mit wenigen ergänzenden Sätzen genügen." },
+      { html: "Sitzung des Projektausschusses mit Entscheid über die Phasenfreigabe", kategorie: "Beschlussprotokoll", erklaerung: "Entscheide mit Auflagen und Pendenzen. Ein Beschlussprotokoll genügt, ergänzt um die Begründung wichtiger Entscheide." },
+      { html: "Mitarbeitergespräch nach einem Streit, bei dem beide Seiten ihre Sicht festgehalten haben wollen", kategorie: "Verlaufsprotokoll", erklaerung: "Die Sichtweisen sollen nachvollziehbar sein, nicht nur das Ergebnis." }
+    ]
+  });
+
+  L.reflexion("#t16-u-protokoll", {
+    titel: "Übung 9 · Offene Frage: Beschlussprotokoll schreiben",
+    icb: ["ICB 3.05", "ICB 2.03"],
+    frage: "<p>PL-Meeting zum Onlineschalter, Mittwoch, Tag 23 (Woche 5), 14.00–15.00, Sitzungszimmer Gemeindekanzlei. Anwesend: Projektleitung (Moderation), Luca Bernasconi, Aylin Demir (Protokoll), Dario Pfister. Entschuldigt: Seraina Caflisch. Deine Notizen:</p>" +
+      "<ul><li>Leserbrief im Wolkenrieder Boten: «Digital nur für Junge?». Längere Diskussion. Ergebnis: Martin begleitet jeden Dienstagmorgen am Schalter des Bauamts Bauwillige beim Online-Gesuch. Aylin klärt das bis Montag mit Beat Imhof.</li>" +
+      "<li>Nadia ist von Tag 27 bis 31 in den Ferien. Aylin übernimmt das Merkblatt, Übergabe 4 Stunden, bis Montag.</li>" +
+      "<li>Dario: Die Testumgebung des Lieferanten könnte ausfallen. Der Notfallplan mit zweiter Umgebung ist schon bestellt, nichts zu entscheiden.</li></ul>" +
+      "<p>Schreib das Beschlussprotokoll: Kopf, Anwesende, Verteiler, je Traktandum das Ergebnis und eine Pendenzenliste mit Was, Wer, Bis wann.</p>",
+    musterloesung:
+      "<p><b>Onlineschalter Wolkenried · Beschlussprotokoll PL-Meeting Nr. 2</b> · Mittwoch, Tag 23 (Woche 5), 14.00–15.00, Sitzungszimmer Gemeindekanzlei</p>" +
+      "<p><b>Anwesend:</b> Projektleitung (Moderation), Luca Bernasconi, Aylin Demir (Protokoll), Dario Pfister · <b>Entschuldigt:</b> Seraina Caflisch · <b>Verteiler:</b> Anwesende, Seraina Caflisch, Franziska Bühlmann zur Kenntnis</p>" +
+      "<p><b>1 · Leserbrief «Digital nur für Junge?»</b> B11: Das Bauamt bietet jeden Dienstagmorgen eine Begleitung beim Online-Gesuch am Schalter an; Martin Zgraggen übernimmt sie, vorbehaltlich der Zustimmung von Beat Imhof.</p>" +
+      "<p><b>2 · Ferien Nadia Rossi (Tag 27–31)</b> B12: Aylin Demir übernimmt das Merkblatt während der Abwesenheit.</p>" +
+      "<p><b>3 · Testumgebung</b> Information: Risiko Ausfall der Testumgebung beim Lieferanten; der Notfallplan mit zweiter Umgebung ist bestellt. Kein Entscheid nötig.</p>" +
+      "<p><b>Pendenzen:</b> P14 · Begleitangebot am Schalter mit Beat Imhof vereinbaren · Aylin · bis Tag 26 · P15 · Übergabe Merkblatt (4 h) · Nadia an Aylin · bis Tag 26</p>" +
+      "<p><b>Nächstes PL-Meeting:</b> Mittwoch, Tag 33 (Woche 7). Dazwischen PSS am Mittwoch, Tag 28.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt. Montag nach Tag 23 ist Tag 26. Die Nummern der Beschlüsse und Pendenzen laufen über das ganze Projekt weiter.</p>',
+    kriterien: [
+      { text: "Kopf vollständig: Projekt, Sitzungsart, Datum oder Tag, Zeit, Ort", punkte: 1 },
+      { text: "Anwesende, Entschuldigte und Verteiler, Rollen Moderation und Protokoll", punkte: 1 },
+      { text: "Je Traktandum ein Ergebnis (Beschluss oder Information), keine Diskussion und keine Meinungen", punkte: 2 },
+      { text: "Pendenzen mit prüfbarem Was, einer Person und einem Termin (Tag 26)", punkte: 2 },
+      { text: "Kompetenz beachtet: Martins Einsatz hängt von Beat Imhof (Linie) ab", punkte: 1 },
+      { text: "Nächste Sitzung genannt", punkte: 1 }
+    ]
+  });
+
+  L.reflexion("#t16-u-kickoff", {
+    titel: "Übung 10 · Offene Frage: Ein Kick-off planen",
+    icb: ["ICB 2.06", "ICB 2.05", "ICB 3.05"],
+    frage: "<p>Die Gemeinde Wolkenried startet das Projekt «Digitale Schule»: WLAN in zwei Schulhäusern und Tablets für alle Klassen. Beteiligt sind die Schulpflege als Auftraggeberin, die Schulleitungen, Lehrpersonen, der Informatikverantwortliche der Schule und ein externer Lieferant. Plane das Kick-off: Wen lädst du ein? Nenne mindestens fünf Ziele und skizziere einen Ablauf von zwei Stunden. Sechs bis zehn Sätze oder Stichworte.</p>",
+    musterloesung:
+      "<p><b>Einladen:</b> Schulpflege (Präsidium eröffnet), beide Schulleitungen, je eine Lehrperson pro Schulhaus als Anwendervertretung, Informatikverantwortlicher, Projektleitung des Lieferanten. Hauswarte nur für den Teil zur Installation oder später separat.</p>" +
+      "<p><b>Ziele (LB 5 F.22):</b> gemeinsames Verständnis von Problem und Auftrag; eine gemeinsame Zieldefinition; Lösungsweg festlegen; Rollen, Verantwortung und Kompetenzen klären; Erwartungen aussprechen; Aufwand und Termine abstimmen, besonders die Installation während der Schulferien; Informations- und Kommunikationsregeln; Umgang mit Meinungsverschiedenheiten und Spielregeln.</p>" +
+      "<p><b>Ablauf (2 h):</b> 0:00 Begrüssung durch die Schulpflege: Warum das Projekt? · 0:10 Auftrag, Ziele, Abgrenzung · 0:30 Vorstellungsrunde mit Erwartungen · 0:45 Organisation, Rollen, Kompetenzen · 1:00 Pause · 1:10 Meilensteine und Führungsrhythmus · 1:25 Spielregeln für Zusammenarbeit und Information · 1:45 offene Fragen, nächste Schritte.</p>" +
+      "<p><b>Danach:</b> Protokoll mit Rollen, Spielregeln und Pendenzen innert zwei Tagen an alle.</p>" +
+      '<p class="hint">Eigene Musterlösung, nicht vom Dozenten bestätigt.</p>',
+    kriterien: [
+      { text: "Teilnehmende sinnvoll gewählt: Auftraggeberin, Anwender, Lieferant, Fachleute", punkte: 1 },
+      { text: "Mindestens fünf Ziele aus F.22 (Verständnis, Ziele, Rollen, Termine, Spielregeln, Information, Konflikte)", punkte: 3 },
+      { text: "Ablauf mit Zeiten, der in zwei Stunden aufgeht", punkte: 2 },
+      { text: "Auftraggeberin eröffnet oder ist sichtbar beteiligt", punkte: 1 },
+      { text: "Nachbereitung: Protokoll oder Pendenzen erwähnt", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Bausteine der Lösung; jede Szene zeigt eine Auswahl, Neues leuchtet auf.
+  const B = {
+    r1: "<b>Rhythmus · Kick-off:</b> Woche 1, 2 Stunden, alle Beteiligten, Gemeindeschreiberin Claudia Wyss eröffnet.",
+    r2: "<b>Rhythmus · Teamsitzungen:</b> ab Woche 2 jede Woche eine, im Wechsel: PSS in Woche 2, 4, 6, 8, 10 (Mittwoch 9.00–10.00), PL-Meeting in Woche 3, 5, 7, 9.",
+    r3: "<b>Rhythmus · Steuerung:</b> Statusbericht Ende Woche 4 und 8 → Lenkungsausschuss in Woche 5 und 9 (Unterlagen eine Woche vorher). Phasenfreigabe durch den Gemeinderat Ende Woche 4 und 8.",
+    r4: "<b>Rhythmus · Bilateral:</b> Projektleiterin und Claudia Wyss alle zwei Wochen, 30 Minuten, in den Berichtswochen vor dem Versand.",
+    e1: "<b>Einladung PSS Nr. 3:</b> Mittwoch, Woche 6, 9.00–10.00, Sitzungszimmer Gemeindehaus, Agentur per Video. <b>Ziel:</b> Stand prüfen, Barrierefreiheitstest entscheiden, Umfang der Inhaltsmigration festlegen.",
+    e2: "<b>Teilnehmende:</b> Nadia Rossi (Moderation), Jasmin Huber (Protokoll), Severin Odermatt, Ladina Casutt, Fabienne Lüthi (Agentur Föhnwind).",
+    e3: "<b>Traktanden:</b><ul><li>1 · Protokoll und Pendenzen (10 Min.)</li><li>2 · Stand der Arbeitspakete (15 Min.)</li><li>3 · Entscheid Barrierefreiheitstest (15 Min., Nadia)</li><li>4 · Umfang Inhaltsmigration (15 Min., Ladina)</li><li>5 · Varia, nächste Sitzung (5 Min.)</li></ul>",
+    e4: "<b>Unterlagen</b> bis Montag, Woche 6: Wochenmeldungen, Offerte Barrierefreiheitstest, Seitenstatistik.",
+    p1: "<b>Protokoll · Kopf:</b> Neue Gemeindewebseite Wolkenried · Beschlussprotokoll PSS Nr. 3 · Mittwoch, Woche 6, 9.00–10.00 · Anwesend: Nadia Rossi (Moderation), Jasmin Huber (Protokoll), Severin Odermatt, Ladina Casutt, Fabienne Lüthi (Video) · Verteiler: Anwesende, Claudia Wyss zur Kenntnis.",
+    p2: "<b>1 · Pendenzen:</b> P5 Bildrechte Fotos Dorfplatz (Ladina): erledigt. P4 Testzugang für die Agentur (Severin): offen, neuer Termin Freitag, Woche 6.",
+    p3: "<b>2 · Stand:</b> Information: Startseite und Navigation fertig. Formular «Umzug melden» 2 Tage im Verzug, weil die Schnittstelle zur Einwohnerkontrolle noch nicht freigeschaltet ist (siehe P9).",
+    p4: "<b>3 · B5:</b> Der externe Barrierefreiheitstest wird beauftragt, CHF 2'400 aus dem Budget Qualitätssicherung. Verantwortlich Nadia (Kompetenz Projektleitung bis CHF 3'000).",
+    p5: "<b>4 · B6:</b> Migriert werden nur Seiten mit Besuchen in den letzten 12 Monaten. Verantwortlich: Ladina (Redaktion), Liste siehe P7.",
+    p6: "<b>5 · Varia:</b> Information: Fabienne Lüthi ist in Woche 8 abwesend (siehe P8).",
+    p7: "<b>Pendenzen:</b><ul><li>P4 · Testzugang für die Agentur freischalten · Severin · Freitag, Woche 6</li><li>P6 · Auftrag Barrierefreiheitstest erteilen · Nadia · Donnerstag, Woche 6</li><li>P7 · Liste der Seiten mit Besuchen in den letzten 12 Monaten · Jasmin · Montag, Woche 7</li><li>P8 · Stellvertretung der Agentur für Woche 8 benennen · Fabienne · Freitag, Woche 7</li><li>P9 · Freischaltung der Schnittstelle beim Anbieter der Einwohnerkontrolle einfordern · Nadia · Donnerstag, Woche 6</li></ul>",
+    p8: "<b>Nächste Sitzung:</b> PL-Meeting Mittwoch, Woche 7; nächste PSS Mittwoch, Woche 8, 9.00."
+  };
+  const REIHE = ["r1", "r2", "r3", "r4", "e1", "e2", "e3", "e4", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8"];
+  function dok(bis, neu) {
+    const n = REIHE.indexOf(bis);
+    return '<div class="t16-fz">' + REIHE.slice(0, n + 1).map(function (k) {
+      const inhalt = neu && neu.indexOf(k) >= 0 ? NW(B[k]) : B[k];
+      return '<div class="t16-fb">' + inhalt + "</div>";
+    }).join("") + "</div>";
+  }
+
+  L.film("#t16-film", {
+    phasen: ["1 · Sichten", "2 · Rhythmus", "3 · Einladung", "4 · Protokoll", "5 · Prüfen"],
+    texte: [
+      'Projekt «Neue Gemeindewebseite Wolkenried». <span data-ph="dauer">Laufzeit 10 Wochen: Konzept Woche 1–4, Realisierung Woche 5–8, Einführung Woche 9–10, Aufschaltung Ende Woche 10.</span> <span data-ph="sb">Statusbericht an den Lenkungsausschuss Ende Woche 4 und Ende Woche 8.</span> <span data-ph="la">Lenkungsausschuss unter Vorsitz der Gemeindeschreiberin Claudia Wyss (Auftraggeberin); die Unterlagen kommen eine Woche vor der Sitzung.</span> <span data-ph="gr">Phasenfreigaben gibt der Gemeinderat am Ende jeder Phase.</span> <span data-ph="team">Team: Nadia Rossi (Projektleiterin), Jasmin Huber (Applikationsbetreuerin), Severin Odermatt (Informatik), Ladina Casutt (Redaktion), Fabienne Lüthi (Agentur Föhnwind GmbH).</span> <span data-ph="kompetenz">Die Projektleiterin darf Aufträge bis CHF 3\'000 selbst vergeben.</span> ' +
+      'Notizen aus der PSS am Mittwoch, Woche 6: <span data-ph="n1">P5 Bildrechte (Ladina) erledigt; P4 Testzugang für die Agentur (Severin) noch offen, Firewall, neu bis Freitag.</span> <span data-ph="n2">Startseite fertig. Formular «Umzug melden» 2 Tage Verzug, Schnittstelle Einwohnerkontrolle nicht freigeschaltet; Nadia fragt beim Anbieter nach, bis Donnerstag.</span> <span data-ph="n3">Offerte Barrierefreiheitstest CHF 2\'400, im Budget Qualitätssicherung; alle dafür; Nadia erteilt den Auftrag bis Donnerstag.</span> <span data-ph="n4">Ladina: 640 alte Seiten, viele nie besucht. Lange Diskussion, Severin will alles übernehmen. Einigung: nur Seiten mit Besuchen in den letzten 12 Monaten; Jasmin liefert die Liste bis Montag.</span> <span data-ph="n5">Fabienne in Woche 8 in den Ferien, sie benennt bis Freitag nächster Woche eine Stellvertretung.</span> ' +
+      'Aufgabe: (a) Lege den Führungsrhythmus fest. (b) Lade zur PSS in Woche 6 ein. (c) Schreib aus den Notizen das Beschlussprotokoll.'
+    ],
+    woerterbuch: [
+      "<b>PSS</b> = Arbeitspakete, Abweichungen, Massnahmen",
+      "<b>PL-Meeting</b> = Inhalt, Fachtechnisches",
+      "<b>Ausschuss</b> = Unterlagen eine Woche vorher",
+      "<b>Einladung</b> = Ziel, Traktanden, Teilnehmende, Zeit, Rollen",
+      "<b>Beschluss</b> = was ab jetzt gilt",
+      "<b>Pendenz</b> = Was + Wer + Bis wann"
+    ],
+    beschriftung: { texte: "Die Fallangaben", text: "Aufgabe", woerterbuch: "Werkzeugkasten", formel: "Lösung", ende: "Weiter zu den Prüfungsfallen" },
+    selbsttest: "#fallen",
+    szenen: [
+      { ph: -1, sent: 0, dict: 0, f: "", say: "So organisierst du ein Projektmeeting in der Prüfung: zuerst den Rhythmus, dann die Einladung, dann das Protokoll. Am Schluss prüfst du alles." },
+      { ph: 0, hl: ["dauer", "sb", "la", "gr"], f: "",
+        say: "Zuerst markierst du alles, was den Rhythmus bestimmt: Phasen, Berichtstermine, Lenkungsausschuss und Phasenfreigaben." },
+      { ph: 0, hl: ["team", "kompetenz"], f: "",
+        say: "Dann die Menschen und die Kompetenzen. Die Projektleiterin darf bis 3'000 Franken selbst entscheiden. Das brauchst du im Protokoll." },
+      { ph: 1, hl: ["dauer", "team"], f: dok("r1", ["r1"]),
+        say: "Das Kick-off steht in Woche 1. Die Auftraggeberin eröffnet, alle Beteiligten sind dabei." },
+      { ph: 1, dict: 2, dh: [0, 1], f: dok("r2", ["r2"]),
+        say: "Ab Woche 2 gibt es jede Woche eine Teamsitzung, PSS und PL-Meeting im Wechsel. Die PSS liegt in den geraden Wochen, damit sie in den Berichtswochen 4 und 8 stattfindet." },
+      { ph: 1, hl: ["sb", "la", "gr"], dict: 3, dh: [2], f: dok("r3", ["r3"]),
+        say: "Der Bericht entsteht Ende Woche 4 und 8. Mit einer Woche Vorlauf tagt der Lenkungsausschuss in Woche 5 und 9. Die Phasen gibt der Gemeinderat am Ende jeder Phase frei." },
+      { ph: 1, hl: ["la"], f: dok("r4", ["r4"]),
+        say: "Dazu ein bilaterales Gespräch mit der Auftraggeberin alle zwei Wochen. In den Berichtswochen besprichst du den Bericht vor dem Versand." },
+      { ph: 2, hl: ["n3", "n4"], dict: 4, dh: [3], f: dok("e1", ["e1"]),
+        say: "Jetzt die Einladung zur PSS in Woche 6. Sie beginnt mit dem Ziel: Was soll am Ende entschieden sein? Hier der Test und die Migration." },
+      { ph: 2, hl: ["team"], dh: [3], f: dok("e2", ["e2"]),
+        say: "Teilnehmende mit Rollen. Nadia moderiert, Jasmin schreibt das Protokoll. So ist das vor der Sitzung geklärt." },
+      { ph: 2, dh: [3], f: dok("e3", ["e3"]),
+        say: "Die Traktanden mit Zeit und Verantwortlichen. Pendenzen zuerst, die Entscheide in der Mitte, Varia zum Schluss. Zusammen genau 60 Minuten." },
+      { ph: 2, f: dok("e4", ["e4"]),
+        say: "Die Unterlagen gehen zwei Tage vorher raus, damit alle die Offerte und die Statistik lesen können." },
+      { ph: 3, hl: ["team"], dict: 5, dh: [4], f: dok("p1", ["p1"]),
+        say: "Nach der Sitzung schreibt Jasmin das Protokoll. Zuerst der Kopf: Projekt, Sitzung, Nummer, Datum, Anwesende mit Rollen, Verteiler." },
+      { ph: 3, hl: ["n1"], f: dok("p2", ["p2"]),
+        say: "Traktandum 1: die Pendenzen der letzten Sitzung. Eine ist erledigt, eine bekommt einen neuen Termin." },
+      { ph: 3, hl: ["n2"], f: dok("p3", ["p3"]),
+        say: "Traktandum 2 ist eine Information mit Ursache. Was Nadia dagegen tut, kommt als Pendenz in die Liste." },
+      { ph: 3, hl: ["n3", "kompetenz"], dh: [4], f: dok("p4", ["p4"]),
+        say: "Traktandum 3 ist ein Beschluss. Er liegt mit 2'400 Franken in Nadias Kompetenz, also darf die PSS ihn fassen." },
+      { ph: 3, hl: ["n4"], dh: [4], f: dok("p5", ["p5"]),
+        say: "Traktandum 4: Die lange Diskussion und Severins Meinung lässt du weg. Ins Protokoll kommt nur die Einigung." },
+      { ph: 3, hl: ["n5"], f: dok("p6", ["p6"]),
+        say: "Varia: Fabiennes Ferien sind eine Information. Die Stellvertretung kommt als Pendenz." },
+      { ph: 3, dict: 6, dh: [5], f: dok("p7", ["p7"]),
+        say: "Jetzt die Pendenzenliste. Jede hat ein prüfbares Was, genau eine Person und einen Termin. Aus «bis Montag» wird Montag, Woche 7." },
+      { ph: 3, f: dok("p8", ["p8"]),
+        say: "Zum Schluss die nächsten Sitzungen. Nach dem Rhythmus kommt zuerst das PL-Meeting in Woche 7, dann die PSS in Woche 8." },
+      { ph: 4, dh: [0, 1, 2], f: dok("p8"),
+        say: "Prüfen, Teil eins: Wechseln sich PSS und PL-Meeting ab? Liegt der Ausschuss eine Woche nach jedem Bericht? Ja." },
+      { ph: 4, dh: [3, 4, 5], f: dok("p8"),
+        say: "Prüfen, Teil zwei: Hat die Einladung Ziel und Rollen? Hat jeder Beschluss eine Verantwortliche, jede Pendenz Wer und Bis wann? Ja." },
+      { ph: 4, f: dok("p8", ["p4", "p7"]),
+        say: "Fertig. Ein Rhythmus, auf den sich alle verlassen, eine Einladung mit Ziel und ein Protokoll, das gilt. Weiter zu den Prüfungsfallen.", end: true }
+    ]
+  });
+  // Endstand des Films = Lösung im Text
+  document.getElementById("t16-film-loesung").innerHTML = dok("p8");
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t16-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.05</span> Welche Protokollart hält nur Ergebnisse fest, also Informationen, Beschlüsse und Pendenzen?',
+        o: ["Wortprotokoll", "Verlaufsprotokoll", "Beschlussprotokoll", "Gedächtnisprotokoll"], a: 2,
+        e: "Das Beschluss- oder Ergebnisprotokoll ist der Normalfall in Projektsitzungen. Das Verlaufsprotokoll fasst zusätzlich die Diskussion zusammen, das Wortprotokoll gibt alles wörtlich wieder. ICB 3.05 (Dokumentation wichtiger Entscheide)." },
+      { q: '<span class="icb">ICB 2.06</span> Zwei Wochen nach dem Kick-off streiten Fachverantwortliche und Entwickler offen über Zuständigkeiten und Vorgehen. In welcher Teamphase nach Tuckman steckt das Team?',
+        o: ["Forming", "Storming", "Norming", "Adjourning"], a: 1,
+        e: "Offene Konflikte um Rollen und Vorgehen kennzeichnen das Storming. Die Projektleitung moderiert und führt zu gemeinsamen Regeln. ICB 2.06 (Team-Lebenszyklus); das Modell von Tuckman ist eine Ergänzung zu den Folien." },
+      { q: '<span class="icb">ICB 3.05</span> Der Projektausschuss tagt am Freitag, Tag 25. Die Unterlagen sollen eine Woche vorher bei den Mitgliedern sein. Bis wann müssen sie spätestens verschickt sein?',
+        o: ["Tag 18", "Tag 20", "Tag 24", "Tag 25"], a: 1,
+        e: "Eine Woche hat fünf Arbeitstage: 25 − 5 = Tag 20, der Freitag davor. Das passt zum Stichtag des Statusberichts Nr. 1. LB 5 F.20; ICB 3.05 (Informationsprozesse)." },
+      { q: '<span class="icb">ICB 2.05</span> Jasmin ist neu, sehr motiviert, kennt die Plattform aber kaum. Welcher Stil passt nach Hersey und Blanchard für die Aufgabe «Testfälle schreiben»?',
+        o: ["Delegieren", "Beteiligen", "Überzeugen: erklären, begründen, eng begleiten", "Laissez-faire"], a: 2,
+        e: "Willig, aber wenig fähig: Überzeugen (S2). Delegieren würde sie überfordern, Beteiligen passt zu fähigen, aber unsicheren Personen. ICB 2.05: Führungsstil an die Situation anpassen; das Modell ist eine Ergänzung." },
+      { q: '<span class="icb">ICB 2.03</span> Welche Rückmeldung folgt den Feedback-Regeln?',
+        o: ["«Du bist unzuverlässig.»",
+            "«Man sollte Termine halten.»",
+            "«Der Testbericht kam zweimal einen Tag nach der Frist. Ich konnte den Statusbericht darum nicht rechtzeitig abschliessen. Ich wünsche mir, dass du Verzug am Vortag meldest.»",
+            "«Alle im Team finden, dass du zu langsam bist.»"], a: 2,
+        e: "Beobachtbares Verhalten, Wirkung und Wunsch, in Ich-Form. Die anderen bewerten die Person, bleiben unpersönlich oder schieben andere vor. ICB 2.03 (Wissen: Feedback-Regeln)." },
+      { q: '<span class="icb">ICB 3.05</span> Welche Pendenz ist vollständig?',
+        o: ["«Formulare überarbeiten»", "«Elena: Zweitschätzung Restaufwand Integrationstest, bis Tag 19»", "«Bis Tag 19: Schnittstelle prüfen»", "«Luca kümmert sich darum»"], a: 1,
+        e: "Nur diese hat ein prüfbares Was, eine Person und einen Termin. ICB 3.05 (Planungs- und Steuerungsmechanismen, Dokumentation)." },
+      { q: '<span class="icb">ICB 3.05</span> Was unterscheidet nach LB 5 F.19 die Projektstandsitzung (PSS) vom PL-Meeting?',
+        o: ["Die PSS behandelt Fachtechnisches, das PL-Meeting die Arbeitspakete.",
+            "Die PSS stimmt die Arbeitspakete ab (Stand, Abweichungen, Massnahmen), das PL-Meeting behandelt Inhalt und Fachtechnisches.",
+            "Die PSS gibt Phasen frei, das PL-Meeting genehmigt Budgets.",
+            "Es gibt keinen Unterschied, nur zwei Namen."], a: 1,
+        e: "So steht es im Praxistipp der Folie: PSS für Arbeitspakete und Abstimmung, PL-Meeting für Inhalt und Fachtechnisches, im Wechsel. ICB 3.05 (Arten von Meetings)." },
+      { q: '<span class="icb">ICB 3.10</span> In welchen Schritt des PDCA-Zyklus gehört der Statusbericht nach LB 5 F.15?',
+        o: ["Plan", "Do", "Check", "Act"], a: 2,
+        e: "Der Statusbericht gehört zur Überprüfung (Projektdiagnose): Ist gegen Plan. Daraus folgen im Act die Steuerungsmassnahmen. ICB 3.10 (Planung und Steuerung)." },
+      { q: '<span class="icb">ICB 2.06</span> Was ist <b>kein</b> Ziel des Kick-offs nach LB 5 F.22?',
+        o: ["Spielregeln für die Zusammenarbeit festlegen", "Rollen, Verantwortung und Kompetenzen regeln", "Die Detailspezifikation aller Formulare abnehmen", "Die gegenseitigen Erwartungen formulieren"], a: 2,
+        e: "Das Kick-off schafft ein gemeinsames Bild, klärt Rollen und Spielregeln. Eine Detailspezifikation entsteht später und wird im Ausschuss oder durch die Anwendervertretung abgenommen. ICB 2.06 (Team zusammenstellen und entwickeln)." },
+      { q: '<span class="icb">ICB 2.05</span> Ein Problem übersteigt die Kompetenz der Projektleitung: Es braucht CHF 8\'000 mehr Budget. Was tust du nach dem Entscheidungsprozess aus LB 5 F.21?',
+        o: ["Die PSS beschliesst den Nachtrag, damit es schnell geht.",
+            "Ich bereite einen Antrag mit Optionen, Folgen, Empfehlung und Frist vor und lege ihn rechtzeitig dem zuständigen Gremium vor.",
+            "Ich warte bis zum Projektende und rechne dann ab.",
+            "Ich lasse den Lieferanten entscheiden."], a: 1,
+        e: "Welcher Entscheid bis wann, welche Grundlagen, was beschleunigt: Die Projektleitung bereitet vor, das zuständige Gremium entscheidet. ICB 2.05 (Indikator 4.4.5.5: Entscheidungen von Stakeholdern durch Analysen beeinflussen)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

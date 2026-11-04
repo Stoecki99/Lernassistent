@@ -34,6 +34,7 @@ KI-gestützte Lernplattform für Studierende. Karteikarten mit Spaced Repetition
 - Zod-basierte Validierung bei API-Ein-/Ausgaben
 - UI-Texte Deutsch (Schweizer Rechtschreibung, ss statt ß), Code-Namen Englisch
 - Ausnahme Lernpfad (`lib/lernseiten*`, `lib/validations/lernseite.ts`, `lib/validations/lernfortschritt.ts`, `components/features/lernseiten/`, `app/(lernpfad)/`, `app/api/lernfortschritt/`): deutsche Namen passend zum Inhaltsformat (`docs/lernpfad-format.md`, Baukasten `docs/lernpfad-baukasten.md`)
+- Ausnahme IPMA-Prüfungssimulator (`content/ipma/`, `lib/validations/ipma-pool.ts`): Feldnamen der Fragen-JSON deutsch (`frage`, `optionen`, `richtig` …) laut `docs/ipma-pruefungssimulator-spezifikation.md` (2.1–2.3); der übrige Code unter `lib/ipma/` bleibt englisch
 - Keine Umlaute in Variablen, Funktionen, CSS-Klassen, Dateinamen
 
 ### Commit-Konvention

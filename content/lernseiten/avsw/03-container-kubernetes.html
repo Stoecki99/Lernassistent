@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Container und Kubernetes · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/avsw/04-resilienz-konsistenz" title="Resilienz und Konsistenz">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t03-», nur Farben aus :root -->
+  <style>
+    .t03-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t03-ziele li{margin-bottom:2px}
+    .t03-tag{display:flex; align-items:center; gap:8px}
+    .t03-tag .pikto, .t03-pk-inline .pikto{color:var(--accent); width:1.7em; height:1.7em}
+    .concept .ex code{font-size:.82rem}
+
+    /* Wörterbuch */
+    .t03-wb td:first-child, .t03-wb th[scope="row"]{white-space:nowrap}
+    .t03-wb .pikto{color:var(--accent); margin-right:6px}
+    .t03-wb code{font-size:.82rem}
+    .t03-wb tr.t03-zw th{background:var(--board); text-transform:none; letter-spacing:0; font-size:.9rem; color:var(--ink)}
+
+    /* YAML-Text im Stepper (Satzkarte) */
+    .t03-yaml{display:block; white-space:pre; overflow-x:auto; font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+      font-size:.8rem; line-height:1.55; background:var(--board); border:1px solid var(--line); border-radius:10px; padding:10px 12px; tab-size:2}
+    .sentence .t03-yaml [data-link]{padding:0 1px}
+
+    /* Schichtenbild VM gegen Container */
+    .t03-stapel{margin:0; display:flex; flex-direction:column; gap:4px; padding:12px; border:1px solid var(--line); border-radius:12px; background:var(--surface); min-width:0}
+    .t03-stapel figcaption{font-weight:700; margin-bottom:2px}
+    .t03-stapel .hint{margin:4px 0 0}
+    .t03-reihe{display:flex; gap:4px}
+    .t03-reihe > *{flex:1 1 0; min-width:0}
+    .t03-l{display:block; padding:6px; border-radius:6px; text-align:center; font-size:.82rem; line-height:1.25; border:1px solid var(--line); overflow-wrap:anywhere}
+    .t03-app{background:var(--accent-soft); border-color:var(--accent); font-weight:600}
+    .t03-lib{background:var(--board)}
+    .t03-gast{background:var(--free-bg); border-color:var(--free)}
+    .t03-rt{background:var(--ok-bg); border-color:var(--ok); font-weight:600}
+    .t03-basis{background:var(--board); font-weight:600}
+    .t03-hw{background:var(--bg); border-style:double; border-width:3px}
+
+    /* Image-Layer */
+    .t03-layer{display:flex; flex-direction:column; gap:4px}
+    .t03-layer .t03-l{text-align:left; display:flex; justify-content:space-between; flex-wrap:wrap; gap:2px 10px}
+    .t03-layer small{color:var(--muted)}
+    .t03-schreib{border-style:dashed; border-color:var(--accent); background:var(--accent-soft)}
+    .t03-ro{background:var(--board)}
+    .t03-trenn{font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600; margin-top:4px}
+
+    /* Fluss-Leisten (Build, Push, Pull, Run und Kontrollschleife) */
+    .t03-fluss{display:flex; flex-wrap:wrap; align-items:center; gap:6px; list-style:none; margin:0; padding:0}
+    .t03-fluss li{display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface); font-size:.85rem; text-align:center; min-width:76px}
+    .t03-fluss li.t03-pfeil{border:0; background:none; padding:0 2px; min-width:0; color:var(--muted); font-size:.78rem}
+    .t03-fluss .pikto{color:var(--accent); width:1.8em; height:1.8em}
+    .t03-fluss code{font-size:.75rem}
+
+    /* Rolling Update */
+    .t03-ru{display:flex; flex-direction:column; gap:6px}
+    .t03-ru-z{display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:.9rem; padding:6px 8px; border-radius:8px; background:var(--board)}
+    .t03-ru-z > b{min-width:5.2em}
+    .t03-ru-z > span.hint{flex-basis:100%; margin:0}
+    .t03-v{display:inline-block; padding:2px 8px; border-radius:999px; border:1.5px solid var(--line); font-family:ui-monospace, Menlo, Consolas, monospace; font-size:.78rem; background:var(--surface)}
+    .t03-v2{background:var(--accent-soft); border-color:var(--accent)}
+    .t03-v.t03-start{border-style:dashed}
+    .t03-v.t03-stop{text-decoration:line-through; color:var(--muted)}
+
+    /* Architektur-Bilder (SVG), auch im Stepper und im Film */
+    .t03-bild{white-space:normal; font-family:var(--f-body); font-size:1rem; line-height:1.4}
+    .t03-svg{display:block; width:100%; height:auto; max-width:440px; margin:0 auto; overflow:visible}
+    .t03-labor-svg{max-width:520px}
+    .t03-svg text{fill:var(--ink); font-size:11.5px; font-family:var(--f-body)}
+    .t03-svg .t03-klein{font-size:9.5px; fill:var(--muted)}
+    .t03-svg .t03-fett{font-weight:700}
+    .t03-svg .t03-band{font-size:8.5px; letter-spacing:.08em; fill:var(--muted); font-weight:600; paint-order:stroke; stroke:var(--board); stroke-width:4px; stroke-linejoin:round}
+    .t03-pk{color:var(--accent)}
+    .t03-box rect{fill:var(--surface); stroke:var(--line); stroke-width:1.5}
+    .t03-box.t03-neu rect{fill:var(--lit); stroke:var(--accent); stroke-width:2.2}
+    .t03-frame rect{fill:none; stroke:var(--muted); stroke-width:1.3; stroke-dasharray:5 4}
+    .t03-frame.t03-neu rect{fill:var(--accent-soft); stroke:var(--accent); stroke-width:2}
+    .t03-svg rect.lit{fill:var(--lit); stroke:var(--accent); stroke-width:2.4}
+    .t03-svg text.lit{fill:var(--ink); font-weight:700; text-decoration:underline}
+    .t03-svg g.lit .t03-e{stroke-width:3.8}
+    .t03-e{fill:none; stroke-width:2.1; stroke-linecap:round}
+    .t03-e0{stroke:var(--s1)}
+    .t03-e1{stroke:var(--s2); stroke-dasharray:7 5}
+    .t03-e2{stroke:var(--s3); stroke-dasharray:1.5 4.5; stroke-width:2.7}
+    .t03-e3{stroke:var(--s4); stroke-dasharray:10 4 2 4}
+    .t03-m0{fill:var(--s1)} .t03-m1{fill:var(--s2)} .t03-m2{fill:var(--s3)} .t03-m3{fill:var(--s4)}
+    .t03-halo{stroke:var(--lit); stroke-width:9; stroke-linecap:round; fill:none}
+    .t03-hit{stroke:transparent; stroke-width:12; fill:none; pointer-events:stroke}
+    .t03-neuzeile{margin:6px 0 0; font-size:.95rem; color:var(--muted)}
+    .t03-neuzeile .nw{color:var(--ink); padding:0 4px}
+    .t03-leg{display:flex; flex-wrap:wrap; gap:4px 14px; font-size:.85rem; color:var(--muted); margin-top:6px}
+    .t03-leg span{display:inline-flex; align-items:center; gap:6px}
+    .t03-leg svg{width:34px; height:10px; flex:none}
+
+    /* Kubernetes-Labor */
+    .t03-labor .t03-clrahmen{fill:none; stroke:var(--muted); stroke-width:1.4; stroke-dasharray:6 4}
+    .t03-labor .t03-nrahmen{fill:var(--board); stroke:var(--line); stroke-width:1.5}
+    .t03-labor .t03-aus .t03-nrahmen{fill:var(--bad-bg); stroke:var(--bad); stroke-dasharray:5 4}
+    .t03-labor .t03-kasten{fill:var(--surface); stroke:var(--line); stroke-width:1.5}
+    .t03-labor .t03-pod rect{fill:var(--surface); stroke:var(--ok); stroke-width:1.8}
+    .t03-labor .t03-pod.t03-startet rect{fill:var(--accent-soft); stroke:var(--accent); stroke-dasharray:4 3}
+    .t03-labor .t03-pod.t03-kaputt rect{fill:var(--bad-bg); stroke:var(--bad)}
+    .t03-labor .t03-ok-t{fill:var(--ok)}
+    .t03-labor .t03-bad-t{fill:var(--bad)}
+    .t03-labor .t03-cprahmen{fill:var(--board); stroke:var(--line); stroke-width:1.5}
+    .t03-labor .t03-cpk rect{fill:var(--surface); stroke:var(--line); stroke-width:1.3}
+    .t03-labor .t03-cpk.t03-aktiv rect{fill:var(--lit); stroke:var(--accent); stroke-width:2.2}
+    .t03-labor .t03-rail{stroke:var(--accent); stroke-width:2; fill:none}
+    .t03-labor .t03-mk{fill:var(--accent)}
+    .t03-stand{font-weight:600}
+    .t03-log{margin:0; padding-left:1.2em; font-size:.9rem; color:var(--muted); display:flex; flex-direction:column; gap:3px}
+    .t03-log li:first-child{color:var(--ink)}
+    .t03-befehl{font-size:.9rem}
+    .t03-befehl code{overflow-wrap:anywhere}
+
+    /* Werkzeug-Tabelle */
+    .t03-wz td:first-child{width:2.4em}
+    .t03-wz .pikto{color:var(--accent); width:1.8em; height:1.8em}
+
+    @media (max-width: 480px){
+      .t03-l{font-size:.76rem; padding:5px 3px}
+      .t03-yaml{font-size:.74rem}
+    }
+  </style>
+</head>
+<body data-fach="avsw" data-thema="03-container-kubernetes">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">AVSW · Thema 3 · Container und Kubernetes</span>
+    <h1>Container und Kubernetes</h1>
+    <p class="lead">Microservices sind schön, aber jemand muss sie auch betreiben: auf vielen Rechnern, in vielen Kopien, ohne nachts aufzustehen. Hier lernst du, wie du eine Anwendung mit Docker in ein Image packst und wie Kubernetes daraus einen Betrieb macht, der sich selbst repariert. Am Schluss übersetzt du Anforderungstexte und YAML-Dateien in ein Kubernetes-Bild.</p>
+    <div class="note"><b>Hinweis:</b> Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt. Begriffe und Notation mit den Vorlesungsfolien abgleichen.</div>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t03-ziele">
+        <li>VM und Container unterscheiden und erklären, was Image, Layer, Container und Registry sind,</li>
+        <li>ein mehrstufiges Dockerfile und eine docker-compose.yml lesen und schreiben,</li>
+        <li>Control Plane und Worker Nodes eines Kubernetes-Clusters beschreiben,</li>
+        <li>für ein Problem das passende Kubernetes-Objekt wählen: Pod, Deployment, Service, Ingress, ConfigMap, Secret, PVC, StatefulSet, HPA,</li>
+        <li>aus einem Anforderungstext oder YAML ein Kubernetes-Bild modellieren.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#yaml"><b>2</b>YAML lesen</a>
+    <a href="#muster"><b>3</b>Muster</a>
+    <a href="#container"><b>4</b>Container</a>
+    <a href="#kubernetes"><b>5</b>Kubernetes</a>
+    <a href="#objekte"><b>6</b>Objekte</a>
+    <a href="#werkzeuge"><b>7</b>Werkzeuge</a>
+    <a href="#modellieren"><b>8</b>Modellieren</a>
+    <a href="#uebungen"><b>9</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine dieser Station</h2>
+    <p class="prose">Stell dir den Webshop «Gipfel» vor, der Wanderschuhe verkauft. Sein Code liegt im Git-Repository. Damit Kundinnen einkaufen können, muss dieser Code irgendwo <b>laufen</b>, und zwar zuverlässig. Dafür brauchst du fünf Begriffe. Lies die Karten von links nach rechts: Jede baut auf der vorherigen auf.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag t03-tag"><span data-t03-pikto="container"></span>Image = Bauplan</span><span class="ex"><code>gipfel/shop:1.4.2</code></span><p>Ein fertig gepacktes, unveränderliches Paket: dein Code, die Java-Laufzeit, alle Bibliotheken. Wie eine Klasse in Java: Sie beschreibt, läuft aber selbst nicht.</p></div>
+      <div class="concept"><span class="tag t03-tag"><span data-t03-pikto="container"></span>Container = laufende Kopie</span><span class="ex"><code>docker run gipfel/shop:1.4.2</code></span><p>Ein gestartetes Image, wie ein Objekt aus der Klasse. Aus einem Image startest du beliebig viele Container. Jeder ist vom Rest des Rechners abgeschirmt.</p></div>
+      <div class="concept"><span class="tag t03-tag"><span data-t03-pikto="pod"></span>Pod = Wohnung</span><span class="ex"><code>shop-web-7f9c-k2x4</code></span><p>Die kleinste Einheit, die Kubernetes startet. Wie eine WG: ein oder wenige Container teilen sich Adresse (IP) und Abstellraum (Volumes).</p></div>
+      <div class="concept"><span class="tag t03-tag"><span data-t03-pikto="service"></span>Deployment = Schichtleitung</span><span class="ex"><code>replicas: 3</code></span><p>Sorgt dafür, dass immer genau so viele Pods laufen wie bestellt. Fällt einer aus, startet es Ersatz. Wie eine Schichtleiterin, die bei einer Krankmeldung sofort jemanden einteilt.</p></div>
+      <div class="concept"><span class="tag t03-tag"><span data-t03-pikto="lb"></span>Service = Telefonzentrale</span><span class="ex"><code>shop-web:80</code></span><p>Eine feste Adresse vor wechselnden Pods. Wie die Hauptnummer eines Spitals: Du rufst immer dieselbe Nummer an und wirst mit einer freien Person verbunden.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Welcher Baustein ist gemeint?</h3>
+      <p class="hint">Frag dich: Ist es ein Bauplan, ein laufender Prozess, eine Hülle für Container, ein Auftrag «halte X am Laufen» oder eine feste Adresse?</p>
+      <div id="t03-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Begriffe festlegen</span>
+    <h2>Das Wörterbuch für Container und Kubernetes</h2>
+    <p class="prose">Die Tabelle gilt für die ganze Station. Das Piktogramm links benutzt du später auch in den Bildern und Modellierungsübungen. Englische Fachbegriffe bleiben englisch, weil sie so in YAML-Dateien und Fehlermeldungen stehen.</p>
+    <div class="card tablebox">
+      <table class="tabelle t03-wb">
+        <thead><tr><th>Begriff</th><th>Bedeutung</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr class="t03-zw"><th colspan="3">Container-Welt (Docker)</th></tr>
+          <tr><th scope="row"><span data-t03-pikto="container"></span>Image</th><td>Unveränderliches Paket aus Code, Laufzeit und Bibliotheken, aufgebaut aus Layern</td><td><code>ghcr.io/gipfel/shop:1.4.2</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="container"></span>Container</th><td>Laufende Instanz eines Images: ein abgeschirmter Prozess mit eigener beschreibbarer Schicht</td><td><code>docker run …</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="storage"></span>Layer</th><td>Eine Schicht im Image. Jede Dockerfile-Anweisung, die Dateien ändert, legt eine Schicht darüber.</td><td><code>COPY app.jar</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="code"></span>Dockerfile</th><td>Bauanleitung für ein Image, Zeile für Zeile</td><td><code>FROM</code>, <code>COPY</code>, <code>RUN</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="storage"></span>Registry</th><td>Ablage für Images. Du lädst hoch (<span lang="en">push</span>) und herunter (<span lang="en">pull</span>).</td><td>GitHub Container Registry, Docker Hub</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="code"></span>Tag</th><td>Versionsname eines Images, steht nach dem Doppelpunkt</td><td><code>:1.4.2</code> statt <code>:latest</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="code"></span>Docker Compose</th><td>Startet mehrere Container zusammen, beschrieben in einer YAML-Datei. Für die Entwicklung auf einem Rechner.</td><td>Shop + PostgreSQL</td></tr>
+          <tr class="t03-zw"><th colspan="3">Kubernetes: Aufbau</th></tr>
+          <tr><th scope="row"><span data-t03-pikto="cluster"></span>Cluster</th><td>Verbund von Rechnern, den Kubernetes wie einen einzigen grossen Rechner verwaltet</td><td>Cluster «prod»</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="cluster"></span>Control Plane</th><td>Das Gehirn des Clusters: API-Server, Scheduler, etcd, Controller Manager</td><td>läuft auf eigenen Nodes</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="gateway"></span>API-Server</th><td>Die einzige Tür in den Cluster. <code>kubectl</code> und alle Komponenten reden nur mit ihm.</td><td><code>kubectl apply -f …</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="db"></span>etcd</th><td>Verteilter Schlüssel-Wert-Speicher mit dem gesamten Soll- und Ist-Zustand</td><td>«shop-web: replicas 3»</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="lb"></span>Scheduler</th><td>Wählt für jeden neuen Pod eine passende Node (freie CPU, freier Speicher, Regeln)</td><td>Pod → node-b</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="config"></span>Controller</th><td>Kontrollschleife: vergleicht Soll mit Ist und handelt. Der Controller Manager bündelt viele davon.</td><td>ReplicaSet-Controller</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="node"></span>Worker Node</th><td>Rechner (VM oder Server), auf dem Pods laufen. Hat kubelet, Container-Runtime und kube-proxy.</td><td><code>node-a</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="node"></span>kubelet</th><td>Agent auf jeder Node. Startet die Container der Pods und führt die Probes aus.</td><td>meldet «Pod läuft»</td></tr>
+          <tr class="t03-zw"><th colspan="3">Kubernetes: Objekte</th></tr>
+          <tr><th scope="row"><span data-t03-pikto="pod"></span>Pod</th><td>Kleinste startbare Einheit: ein oder wenige Container mit gemeinsamer IP und gemeinsamen Volumes</td><td><code>shop-web-7f9c-k2x4</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="pod"></span>ReplicaSet</th><td>Hält eine feste Anzahl gleicher Pods am Laufen. Legst du fast nie selbst an.</td><td><code>shop-web-7f9c</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="service"></span>Deployment</th><td>Verwaltet ReplicaSets: Anzahl Pods, Rolling Update, Rollback</td><td><code>replicas: 3</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="code"></span>Label, Selector</th><td>Label = Etikett «Schlüssel=Wert» an einem Objekt. Selector = Filter, der Objekte über ihre Labels findet.</td><td><code>app=shop</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="lb"></span>Service</th><td>Feste Adresse und Lastverteilung für alle Pods, die zum Selector passen. Typen: ClusterIP, NodePort, LoadBalancer.</td><td><code>shop-web:80</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="gateway"></span>Ingress</th><td>Regeln für HTTP-Anfragen von aussen: welcher Host und Pfad zu welchem Service</td><td><code>shop.gipfel.ch/</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="config"></span>ConfigMap</th><td>Nicht geheime Einstellungen als Schlüssel-Wert-Paare</td><td><code>WAEHRUNG=CHF</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="auth"></span>Secret</th><td>Geheime Werte wie Passwörter und Tokens. Nur Base64-codiert, nicht automatisch verschlüsselt.</td><td>DB-Passwort</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="storage"></span>Volume, PVC</th><td>Volume = Speicher für einen Pod. PersistentVolumeClaim (PVC) = Bestellung von dauerhaftem Speicher, der Neustarts überlebt.</td><td><code>db-daten</code>, 10 GiB</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="db"></span>StatefulSet</th><td>Wie ein Deployment, aber mit festen Namen und eigenem Speicher pro Pod. Für Datenbanken.</td><td><code>shop-db-0</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="cluster"></span>Namespace</th><td>Abgetrennter Bereich für Namen, Rechte und Kontingente</td><td><code>dev</code>, <code>prod</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="monitor"></span>Probe</th><td>Gesundheitsprüfung durch das kubelet: Liveness (lebt er?), Readiness (bereit für Anfragen?), Startup</td><td><code>/actuator/health</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="monitor"></span>HPA</th><td>HorizontalPodAutoscaler: ändert die Anzahl Pods automatisch nach einer Messgrösse</td><td>CPU-Ziel 70 %</td></tr>
+          <tr><th scope="row"><span data-t03-pikto="config"></span>Helm</th><td>Paketmanager für Kubernetes. Ein Chart = YAML-Vorlagen + Werte.</td><td><code>helm install shop …</code></td></tr>
+          <tr><th scope="row"><span data-t03-pikto="code"></span>kubectl</th><td>Kommandozeile, die mit dem API-Server spricht</td><td><code>kubectl get pods</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Ein Deployment ist kein laufendes Ding, sondern ein <b>Auftrag</b>: «Halte drei Pods nach dieser Vorlage am Laufen.» Laufen tun nur Container, und die stecken in Pods.</div>
+  </section>
+
+  <!-- ===== 2 · YAML lesen (Stepper) ===== -->
+  <section id="yaml">
+    <span class="eyebrow">Schritt 2 · Von der YAML-Datei zum Bild</span>
+    <h2>YAML Zeile für Zeile in ein Bild übersetzen</h2>
+    <p class="prose">In Kubernetes beschreibst du alles in YAML-Dateien. Das Kubernetes-Bild ist dieselbe Information als Zeichnung. Klick dich mit «Weiter» durch. Fahre über eine unterstrichene YAML-Stelle oder tippe darauf: Der passende Teil im Bild leuchtet auf, und umgekehrt.</p>
+    <div id="t03-stepper-dep"></div>
+    <p class="prose">Bis jetzt laufen drei Pods, aber niemand erreicht sie. Die zweite Datei baut den Weg von aussen bis zu den Pods.</p>
+    <div id="t03-stepper-svc"></div>
+    <div class="t03-leg" id="t03-leg-stepper"></div>
+  </section>
+
+  <!-- ===== 3 · Muster ===== -->
+  <section id="muster">
+    <span class="eyebrow">Schritt 3 · Das Verfahren</span>
+    <h2>So zeichnest du jedes Kubernetes-Bild</h2>
+    <p class="prose">Egal ob die Aufgabe ein Anforderungstext oder eine YAML-Datei ist: Du gehst immer gleich vor. Substantive werden Bausteine, Verben werden Verbindungen.</p>
+    <div class="board">
+      <ol class="prose">
+        <li><b>Einstieg suchen.</b> Steht da eine Domain oder ein Pfad («unter shop.gipfel.ch»)? Dann beginnt der Weg beim Ingress.</li>
+        <li><b>Laufende Teile finden.</b> Jede Anwendung wird zu Pods. Zustandslos (Web, API) → Deployment. Mit eigenen Daten (Datenbank) → StatefulSet.</li>
+        <li><b>Services davor setzen.</b> Wer Pods anspricht, spricht einen Service an. Der Service findet die Pods über den Label-Selector.</li>
+        <li><b>Konfiguration zuordnen.</b> Nicht geheim → ConfigMap. Geheim (Passwort, Token, Schlüssel) → Secret. Pfeil «liest Konfig/Secret» vom Pod zur Quelle.</li>
+        <li><b>Daten sichern.</b> Was einen Neustart überleben muss → PersistentVolumeClaim. Pfeil «speichert in».</li>
+        <li><b>Kontrollieren.</b> Eine Anfrage von aussen bis zur Datenbank nachfahren. Alles, was im Text nicht vorkommt, fliegt raus.</li>
+      </ol>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Signalwörter im Anforderungstext</caption>
+        <thead><tr><th>Im Text steht …</th><th>Baustein oder Verbindung</th></tr></thead>
+        <tbody>
+          <tr><td>«erreichbar unter Domain/Pfad», «von aussen»</td><td>Ingress (HTTP) oder Service vom Typ LoadBalancer</td></tr>
+          <tr><td>«feste Adresse», «verteilt auf die Pods»</td><td>Service, Verbindung «leitet weiter an»</td></tr>
+          <tr><td>«drei Kopien», «Replicas», «soll immer laufen»</td><td>Deployment mit <code>replicas</code></td></tr>
+          <tr><td>«Datenbank mit eigenen Daten», «feste Namen»</td><td>StatefulSet + PVC</td></tr>
+          <tr><td>«Einstellungen», «Log-Level», «Feature-Schalter»</td><td>ConfigMap, Verbindung «liest Konfig/Secret»</td></tr>
+          <tr><td>«Passwort», «API-Schlüssel», «Zertifikat»</td><td>Secret, Verbindung «liest Konfig/Secret»</td></tr>
+          <tr><td>«speichert Dateien», «Daten bleiben erhalten»</td><td>PVC, Verbindung «speichert in»</td></tr>
+          <tr><td>«läuft nur auf Node X», «verteilt auf Nodes»</td><td>Node, Verbindung «läuft auf»</td></tr>
+          <tr><td>«skaliert automatisch bei Last»</td><td>HorizontalPodAutoscaler</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle 1: Der Service findet Pods nicht über den Namen des Deployments.</b> Er sucht ausschliesslich über Labels. Heisst das Deployment <code>shop-web</code>, tragen die Pods aber das Label <code>app: shop</code>, dann muss der Selector <code>app: shop</code> lauten. Ein Tippfehler im Label und der Service hat keine Ziele: Anfragen enden mit Fehler 503.</div>
+    <div class="note falle"><b>Falle 2: Einzelne Pods von Hand anlegen.</b> Einen Pod, den du direkt mit <code>kind: Pod</code> erzeugst, startet niemand neu, wenn er verschwindet. Für Self-Healing brauchst du immer ein Deployment oder StatefulSet darüber.</div>
+    <div class="note falle"><b>Falle 3: Daten im Container speichern.</b> Die beschreibbare Schicht eines Containers verschwindet mit ihm. Eine Datenbank ohne PVC ist nach jedem Neustart leer.</div>
+    <details class="sol"><summary>Warum zeigt der Pfeil vom Pod zur ConfigMap und nicht umgekehrt?</summary>
+      <div class="stack">
+        <p>Die ConfigMap ist passiv. Sie schickt nichts. Beim Start des Pods holt das kubelet die Werte und setzt sie als Umgebungsvariablen oder Dateien in den Container. Der Pod ist also der aktive Teil, der «liest».</p>
+        <p>Dasselbe gilt für «speichert in»: Der Pod schreibt in den PVC, nicht der PVC in den Pod.</p>
+      </div>
+    </details>
+    <details class="sol"><summary>Deployment oder StatefulSet: Wie entscheide ich?</summary>
+      <div class="stack">
+        <p>Frag: Ist es egal, welcher Pod eine Anfrage bekommt, und darf jeder Pod jederzeit durch einen neuen ersetzt werden? Dann Deployment. Typisch: Web-Frontend, REST-API, Worker.</p>
+        <p>Braucht jeder Pod seinen eigenen, festen Speicher und einen festen Namen (zum Beispiel Primär- und Replikat-Datenbank)? Dann StatefulSet. Die Pods heissen dann <code>shop-db-0</code>, <code>shop-db-1</code>, und jeder bekommt seinen eigenen PVC.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 4 · Container ===== -->
+  <section id="container">
+    <span class="eyebrow">Schritt 4 · Container mit Docker</span>
+    <h2>Container: abgeschirmte Prozesse statt ganzer Rechner</h2>
+    <p class="prose">Früher lief jede Anwendung auf eigenem Server oder in einer eigenen virtuellen Maschine (VM). Eine VM bringt ein komplettes Betriebssystem mit eigenem Kernel mit. Das ist sicher abgeschottet, aber schwer: Gigabytes gross, Start in Minuten. Ein Container teilt sich dagegen den Kernel des Host-Betriebssystems. Er bringt nur die Anwendung und ihre Bibliotheken mit. Der Linux-Kernel schirmt ihn ab (Namespaces für die Sicht, cgroups für CPU und Speicher).</p>
+    <div class="grid2">
+      <figure class="t03-stapel" aria-label="Schichtenbild virtuelle Maschinen">
+        <figcaption>Virtuelle Maschinen</figcaption>
+        <div class="t03-reihe"><span class="t03-l t03-app">Shop</span><span class="t03-l t03-app">Lager</span></div>
+        <div class="t03-reihe"><span class="t03-l t03-lib">Java 21, Bibliotheken</span><span class="t03-l t03-lib">Node 20, Bibliotheken</span></div>
+        <div class="t03-reihe"><span class="t03-l t03-gast">Gast-OS mit Kernel</span><span class="t03-l t03-gast">Gast-OS mit Kernel</span></div>
+        <span class="t03-l t03-basis">Hypervisor (z. B. VMware, KVM)</span>
+        <span class="t03-l t03-hw">Hardware (Server)</span>
+        <p class="hint">Jede VM: eigenes Betriebssystem, mehrere GB, Start in Minuten.</p>
+      </figure>
+      <figure class="t03-stapel" aria-label="Schichtenbild Container">
+        <figcaption>Container</figcaption>
+        <div class="t03-reihe"><span class="t03-l t03-app">Shop</span><span class="t03-l t03-app">Lager</span><span class="t03-l t03-app">Mail</span></div>
+        <div class="t03-reihe"><span class="t03-l t03-lib">Java 21</span><span class="t03-l t03-lib">Node 20</span><span class="t03-l t03-lib">Python</span></div>
+        <span class="t03-l t03-rt">Container-Runtime (containerd)</span>
+        <span class="t03-l t03-basis">Host-OS: ein gemeinsamer Linux-Kernel</span>
+        <span class="t03-l t03-hw">Hardware (Server oder VM)</span>
+        <p class="hint">Jeder Container: nur App und Bibliotheken, oft unter 300 MB, Start in Sekunden.</p>
+      </figure>
+    </div>
+    <div class="note falle"><b>Falle: «Ein Container ist eine kleine VM.»</b> Nein. Ein Container hat keinen eigenen Kernel. Darum startet er in Sekunden, darum läuft ein Linux-Container nicht direkt auf einem Windows-Kernel, und darum ist die Abschottung schwächer als bei einer VM. In der Cloud laufen Container meist <b>in</b> VMs: Die Worker Nodes sind VMs.</div>
+
+    <h3>Image, Layer, Container</h3>
+    <p class="prose">Ein Image besteht aus übereinandergelegten <b>Layern</b>. Jede Anweisung im Dockerfile, die Dateien ändert, legt einen neuen Layer darüber. Layer sind nur lesbar und werden geteilt: Zehn Container aus demselben Image brauchen die Java-Laufzeit nur einmal auf der Festplatte. Jeder Container bekommt obendrauf eine eigene, dünne <b>beschreibbare Schicht</b>. Wird der Container gelöscht, ist diese Schicht weg.</p>
+    <div class="card t03-layer" role="group" aria-label="Layer eines Images mit zwei Containern">
+      <div class="t03-reihe"><span class="t03-l t03-schreib">Container 1: beschreibbare Schicht <small>(Logs, temporäre Dateien)</small></span><span class="t03-l t03-schreib">Container 2: beschreibbare Schicht</span></div>
+      <span class="t03-trenn">Image ghcr.io/gipfel/shop:1.4.2 · nur lesen · von beiden geteilt</span>
+      <span class="t03-l t03-ro"><span>Layer 4: <code>COPY --from=build … app.jar</code></span><small>ca. 45 MB, ändert sich bei jedem Build</small></span>
+      <span class="t03-l t03-ro"><span>Layer 3: <code>RUN useradd --system shop</code></span><small>wenige kB</small></span>
+      <span class="t03-l t03-ro"><span>Layer 2: <code>WORKDIR /app</code></span><small>leer</small></span>
+      <span class="t03-l t03-ro"><span>Layer 1: Basis <code>eclipse-temurin:21-jre</code></span><small>ca. 200 MB, kommt aus dem Cache</small></span>
+    </div>
+    <div class="note tipp"><b>Tipp:</b> Docker baut nur Layer neu, die sich ab einer Änderung unterscheiden. Darum kopierst du zuerst die Abhängigkeitsliste (<code>pom.xml</code>, <code>package.json</code>) und erst danach den Quellcode. Dann kommen die Bibliotheken bei einer kleinen Code-Änderung aus dem Cache, und der Build dauert Sekunden statt Minuten.</div>
+
+    <h3>Vom Code zum laufenden Container</h3>
+    <ol class="t03-fluss" aria-label="Weg vom Code zum Container">
+      <li><span data-t03-pikto="code"></span>Code + Dockerfile</li>
+      <li class="t03-pfeil">→ <code>docker build</code></li>
+      <li><span data-t03-pikto="container"></span>Image</li>
+      <li class="t03-pfeil">→ <code>docker push</code></li>
+      <li><span data-t03-pikto="storage"></span>Registry</li>
+      <li class="t03-pfeil">→ <code>pull</code></li>
+      <li><span data-t03-pikto="node"></span>Server / Node</li>
+      <li class="t03-pfeil">→ <code>run</code></li>
+      <li><span data-t03-pikto="container"></span>Container</li>
+    </ol>
+    <p class="prose">In der Praxis baut die CI-Pipeline (GitHub Actions, GitLab CI) bei jedem Merge das Image und schiebt es in die Registry. Der Server baut nichts selbst, er holt nur fertige Images.</p>
+
+    <h3>Dockerfile mit zwei Stufen (multi-stage)</h3>
+    <p class="prose">Zum <b>Bauen</b> brauchst du JDK, Maven und den Quellcode. Zum <b>Ausführen</b> brauchst du nur eine Java-Laufzeit und die fertige JAR-Datei. Ein mehrstufiges Dockerfile trennt das: Stufe 1 baut, Stufe 2 übernimmt nur das Ergebnis. Das Endimage ist kleiner und enthält keine Build-Werkzeuge, die ein Angreifer nutzen könnte.</p>
+    <pre class="code" data-sprache="Dockerfile · Java/Spring Boot"><code><span class="c"># Stufe 1: bauen (JDK und Maven, wird später weggeworfen)</span>
+<span class="k">FROM</span> maven:3.9-eclipse-temurin-21 <span class="k">AS</span> build
+<span class="k">WORKDIR</span> /src
+<span class="k">COPY</span> pom.xml .
+<span class="k">RUN</span> mvn -q dependency:go-offline      <span class="c"># Abhängigkeiten: eigener Layer, meist aus dem Cache</span>
+<span class="k">COPY</span> src ./src
+<span class="k">RUN</span> mvn -q package -DskipTests
+
+<span class="c"># Stufe 2: ausführen (nur JRE, kein Maven, kein Quellcode)</span>
+<mark><span class="k">FROM</span> eclipse-temurin:21-jre</mark>
+<span class="k">WORKDIR</span> /app
+<span class="k">RUN</span> useradd --system shop
+<mark><span class="k">COPY</span> --from=build /src/target/shop.jar app.jar</mark>
+<span class="k">USER</span> shop                            <span class="c"># nicht als root laufen</span>
+<span class="k">EXPOSE</span> <span class="n">8080</span>
+<span class="k">ENV</span> SPRING_PROFILES_ACTIVE=<span class="s">prod</span>
+<span class="k">ENTRYPOINT</span> [<span class="s">"java"</span>, <span class="s">"-jar"</span>, <span class="s">"app.jar"</span>]</code></pre>
+    <p class="prose">Dasselbe Muster für einen Node-Dienst in TypeScript, etwa den Lagerservice:</p>
+    <pre class="code" data-sprache="Dockerfile · Node/TypeScript"><code><span class="k">FROM</span> node:20-alpine <span class="k">AS</span> build
+<span class="k">WORKDIR</span> /app
+<span class="k">COPY</span> package*.json ./
+<span class="k">RUN</span> npm ci
+<span class="k">COPY</span> . .
+<span class="k">RUN</span> npm run build &amp;&amp; npm prune --omit=dev   <span class="c"># Dev-Pakete entfernen</span>
+
+<span class="k">FROM</span> node:20-alpine
+<span class="k">WORKDIR</span> /app
+<span class="k">ENV</span> NODE_ENV=<span class="s">production</span>
+<span class="k">COPY</span> --from=build /app/node_modules ./node_modules
+<span class="k">COPY</span> --from=build /app/dist ./dist
+<span class="k">USER</span> node
+<span class="k">EXPOSE</span> <span class="n">3000</span>
+<span class="k">CMD</span> [<span class="s">"node"</span>, <span class="s">"dist/server.js"</span>]</code></pre>
+    <pre class="code" data-sprache="Shell · docker"><code><span class="c"># Image bauen und mit Version taggen</span>
+docker build -t ghcr.io/gipfel/shop:1.4.2 .
+docker image ls
+<span class="c"># in die Registry hochladen</span>
+docker push ghcr.io/gipfel/shop:1.4.2
+<span class="c"># Container starten: im Hintergrund, Port 8080 des Rechners → 8080 im Container</span>
+docker run -d --name shop -p 8080:8080 -e SPRING_PROFILES_ACTIVE=dev ghcr.io/gipfel/shop:1.4.2
+docker ps                 <span class="c"># laufende Container</span>
+docker logs -f shop       <span class="c"># Ausgabe mitlesen</span>
+docker stop shop &amp;&amp; docker rm shop</code></pre>
+
+    <h3>Mehrere Container zusammen: Docker Compose</h3>
+    <p class="prose">Für die Entwicklung willst du Shop und Datenbank mit einem Befehl starten. <code>docker compose up</code> liest dafür eine YAML-Datei. Die Container finden sich über ihren Dienstnamen: Der Shop erreicht die Datenbank unter dem Hostnamen <code>db</code>.</p>
+    <pre class="code" data-sprache="docker-compose.yml"><code><span class="k">services:</span>
+  <span class="k">shop:</span>
+    image: ghcr.io/gipfel/shop:1.4.2
+    ports:
+      - <span class="s">"8080:8080"</span>
+    environment:                         <span class="c"># Konfiguration über Umgebungsvariablen</span>
+      DB_URL: jdbc:postgresql://<mark>db</mark>:5432/shop
+      DB_PASSWORD: ${DB_PASSWORD}        <span class="c"># kommt aus der Datei .env, nicht ins Git</span>
+    depends_on:
+      - db
+  <span class="k">db:</span>
+    image: postgres:16
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - <mark>db-daten</mark>:/var/lib/postgresql/data  <span class="c"># Daten überleben docker compose down</span>
+<span class="k">volumes:</span>
+  db-daten:</code></pre>
+    <div class="note"><b>Compose oder Kubernetes?</b> Compose startet Container auf <b>einem</b> Rechner. Fällt der Rechner aus, steht alles. Kubernetes verteilt Container auf <b>viele</b> Rechner, ersetzt ausgefallene und skaliert. Compose für die Entwicklung, Kubernetes für den Betrieb.</div>
+
+    <h3>Gute Container-Anwendungen: Ideen aus der 12-Factor-App</h3>
+    <p class="prose">Die «Twelve-Factor App» ist eine Sammlung von Regeln für Anwendungen in der Cloud. Vier davon brauchst du ständig:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Regel</th><th>Bedeutung</th><th>Beispiel Gipfel-Shop</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Konfiguration über die Umgebung</th><td>Dasselbe Image läuft in dev, test und prod. Nur die Umgebungsvariablen unterscheiden sich.</td><td><code>DB_URL</code> aus ConfigMap, <code>DB_PASSWORD</code> aus Secret</td></tr>
+          <tr><th scope="row">Zustandslose Prozesse</th><td>Kein Warenkorb im Speicher des Pods. Zustand gehört in Datenbank oder Cache.</td><td>Warenkorb in Redis, nicht in der Session des Pods</td></tr>
+          <tr><th scope="row">Wegwerfbar</th><td>Schnell starten, sauber beenden. Jeder Pod kann jederzeit ersetzt werden.</td><td>Spring Boot reagiert auf SIGTERM</td></tr>
+          <tr><th scope="row">Logs auf die Standardausgabe</th><td>Keine Log-Dateien im Container. Die Plattform sammelt <code>stdout</code>.</td><td><code>kubectl logs shop-web-…</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <details class="sol"><summary>Warum ist ein Warenkorb im Arbeitsspeicher des Pods ein Problem?</summary>
+      <div class="stack">
+        <p>Der Service verteilt Anfragen auf drei Pods. Legt Anna den Schuh bei Pod 1 in den Warenkorb und landet die nächste Anfrage bei Pod 2, ist der Warenkorb leer. Und wird Pod 1 ersetzt, ist der Warenkorb ganz weg.</p>
+        <p>Darum: Pods zustandslos halten, Zustand in eine Datenbank oder einen Cache. Dann ist es egal, welcher Pod antwortet.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ===== 5 · Kubernetes-Architektur und Labor ===== -->
+  <section id="kubernetes">
+    <span class="eyebrow">Schritt 5 · Kubernetes-Architektur</span>
+    <h2>Ein Cluster, der sich selbst repariert</h2>
+    <p class="prose">Kubernetes (kurz K8s) verteilt Container auf viele Rechner. Du sagst nicht «starte Container X auf Server 3», sondern du beschreibst den gewünschten Zustand: «Vom Shop sollen drei Pods laufen.» Kubernetes sorgt dafür, dass es so ist und so bleibt.</p>
+    <div class="grid2">
+      <div class="card stack">
+        <h3><span class="t03-pk-inline" data-t03-pikto="cluster"></span> Control Plane: das Gehirn</h3>
+        <ul class="prose">
+          <li><b>API-Server:</b> die einzige Tür. <code>kubectl</code>, Controller und kubelets reden nur mit ihm.</li>
+          <li><b>etcd:</b> speichert den gesamten Zustand, also Soll und gemeldetes Ist.</li>
+          <li><b>Scheduler:</b> wählt für jeden neuen Pod eine Node mit genug Platz.</li>
+          <li><b>Controller Manager:</b> viele Kontrollschleifen, zum Beispiel der ReplicaSet-Controller, der Pods nachzählt.</li>
+        </ul>
+      </div>
+      <div class="card stack">
+        <h3><span class="t03-pk-inline" data-t03-pikto="node"></span> Worker Nodes: die Hände</h3>
+        <ul class="prose">
+          <li><b>kubelet:</b> Agent auf jeder Node. Startet die Container der zugeteilten Pods, prüft die Probes, meldet den Zustand.</li>
+          <li><b>Container-Runtime:</b> zum Beispiel containerd. Holt Images und startet Container.</li>
+          <li><b>kube-proxy:</b> setzt die Netzwerkregeln, damit Service-Adressen bei den Pods ankommen.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Deklarativ statt imperativ: der Soll-Ist-Abgleich</h3>
+    <p class="prose"><b>Imperativ</b> heisst: Du gibst Befehle («starte», «stoppe»). <b>Deklarativ</b> heisst: Du beschreibst das Ziel, und das System findet den Weg. Kubernetes arbeitet deklarativ. Jeder Controller läuft in einer Endlosschleife:</p>
+    <ol class="t03-fluss" aria-label="Kontrollschleife">
+      <li><span data-t03-pikto="monitor"></span>1 · Ist beobachten<br><small>«2 Pods laufen»</small></li>
+      <li class="t03-pfeil">→</li>
+      <li><span data-t03-pikto="db"></span>2 · mit Soll vergleichen<br><small>«3 bestellt»</small></li>
+      <li class="t03-pfeil">→</li>
+      <li><span data-t03-pikto="config"></span>3 · handeln<br><small>«1 Pod erstellen»</small></li>
+      <li class="t03-pfeil">↺ von vorn</li>
+    </ol>
+    <p class="prose">Daraus folgt das <b>Self-Healing</b>: Verschwindet ein Pod, ist Ist kleiner als Soll, und der Controller erstellt einen neuen. Du musst nichts tun. Probier es im Labor aus.</p>
+
+    <div class="card stack t03-labor" id="t03-labor">
+      <h3>Labor: Pods abstürzen lassen und skalieren</h3>
+      <p class="hint">Deployment <code>web</code> auf zwei Worker Nodes, höchstens drei Pods pro Node. Grün umrandet: bereit. Gestrichelt: startet, die Readiness-Probe ist noch nicht grün. Der Service schickt Anfragen nur an bereite Pods (Pfeile).</p>
+      <figure class="diagramm">
+        <div id="t03-labor-bild"></div>
+        <figcaption>Oben der Weg einer Anfrage: Browser → Ingress → Service → Pods. Unten die Control Plane. Leuchtet ein Teil gelb, arbeitet er gerade.</figcaption>
+      </figure>
+      <div class="row">
+        <button type="button" class="btn primary" id="t03-crash">Pod abstürzen lassen</button>
+        <button type="button" class="btn" id="t03-node" aria-pressed="false">Node 2 ausfallen lassen</button>
+        <button type="button" class="btn" id="t03-reset">Zurücksetzen</button>
+      </div>
+      <div class="regler">
+        <label for="t03-rep">Replicas (Soll)</label>
+        <input type="range" id="t03-rep" min="1" max="6" step="1" value="3">
+        <output for="t03-rep" id="t03-rep-wert">3</output>
+      </div>
+      <p class="t03-befehl">Entspricht: <code id="t03-lab-cmd">kubectl scale deployment/web --replicas=3</code></p>
+      <p class="t03-stand" id="t03-lab-stand" aria-live="polite"></p>
+      <ol class="t03-log" id="t03-lab-log" aria-label="Ereignisse, neuestes zuerst"></ol>
+    </div>
+    <div class="note"><b>Genau genommen:</b> Stürzt nur der Prozess <i>im</i> Container ab, startet das kubelet den Container im selben Pod neu (in <code>kubectl get pods</code> steigt die Spalte RESTARTS). Verschwindet der ganze Pod (gelöscht, Node weg, zu wenig Speicher), ersetzt ihn der ReplicaSet-Controller durch einen neuen Pod mit neuem Namen. Bei einem Node-Ausfall wartet Kubernetes in Wirklichkeit einige Minuten, bevor es Ersatz startet. Im Labor geht es schneller.</div>
+    <pre class="code" data-sprache="Shell · imperativ gegen deklarativ"><code><span class="c"># imperativ: Befehle, der Zustand steht nirgends in einer Datei</span>
+kubectl create deployment web --image=ghcr.io/gipfel/shop:1.4.2
+kubectl scale deployment/web --replicas=4
+
+<span class="c"># deklarativ: Soll-Zustand in Dateien (im Git), beliebig oft anwendbar</span>
+<mark>kubectl apply -f k8s/</mark>
+kubectl diff -f k8s/        <span class="c"># zeigt, was apply ändern würde</span></code></pre>
+    <div class="note falle"><b>Falle: imperativ und deklarativ mischen.</b> Skalierst du mit <code>kubectl scale</code> auf 4 Pods und steht in der YAML-Datei <code>replicas: 3</code>, setzt das nächste <code>kubectl apply</code> wieder auf 3 zurück. Die Datei im Git ist die Wahrheit. Darum ändern Teams den Cluster nur über Dateien (GitOps mit Werkzeugen wie Argo CD oder Flux).</div>
+  </section>
+
+  <!-- ===== 6 · Objekte im Detail ===== -->
+  <section id="objekte">
+    <span class="eyebrow">Schritt 6 · Die wichtigsten Objekte mit Code</span>
+    <h2>Pod, Deployment, Service, Ingress und Co.</h2>
+    <p class="prose">Jedes Objekt hat dieselbe Grundform: <code>apiVersion</code> (welche Schnittstelle), <code>kind</code> (welche Art Objekt), <code>metadata</code> (Name, Namespace, Labels) und <code>spec</code> (der Soll-Zustand). Kubernetes ergänzt selbst <code>status</code> (der Ist-Zustand).</p>
+
+    <h3>Deployment mit Probes und Ressourcen</h3>
+    <p class="prose">So sieht ein vollständiges Deployment für den Gipfel-Shop aus. Es legt ein ReplicaSet an, und das ReplicaSet legt die drei Pods an.</p>
+    <pre class="code" data-sprache="deployment.yaml"><code><span class="k">apiVersion:</span> apps/v1
+<span class="k">kind:</span> <mark>Deployment</mark>
+<span class="k">metadata:</span>
+  name: shop-web
+  namespace: shop
+<span class="k">spec:</span>
+  replicas: <span class="n">3</span>                           <span class="c"># Soll: drei Pods</span>
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: <span class="n">1</span>, maxUnavailable: <span class="n">0</span> }
+  selector:
+    matchLabels: { app: shop }           <span class="c"># welche Pods gehören mir?</span>
+  template:                              <span class="c"># Vorlage für jeden Pod</span>
+    metadata:
+      labels: { app: shop }
+    spec:
+      containers:
+        - name: shop
+          image: ghcr.io/gipfel/shop:<span class="n">1.4.2</span>
+          ports: [{ containerPort: <span class="n">8080</span> }]
+          envFrom:
+            - configMapRef: { name: shop-config }
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: db-zugang, key: password }
+          resources:
+            requests: { cpu: <span class="s">250m</span>, memory: <span class="s">512Mi</span> }   <span class="c"># reserviert, zählt für den Scheduler</span>
+            limits: { memory: <span class="s">768Mi</span> }                 <span class="c"># mehr = Container wird beendet</span>
+          <mark>readinessProbe:</mark>                  <span class="c"># bereit für Anfragen?</span>
+            httpGet: { path: /actuator/health/readiness, port: <span class="n">8080</span> }
+            periodSeconds: <span class="n">5</span>
+          <mark>livenessProbe:</mark>                   <span class="c"># lebt er noch?</span>
+            httpGet: { path: /actuator/health/liveness, port: <span class="n">8080</span> }
+            initialDelaySeconds: <span class="n">30</span>
+            periodSeconds: <span class="n">10</span></code></pre>
+
+    <h3>Probes: Liveness, Readiness, Startup</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Probe</th><th>Frage</th><th>Wenn sie fehlschlägt</th><th>Beispiel</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Readiness</th><td>Kann der Pod jetzt Anfragen annehmen?</td><td>Der Service nimmt ihn aus der Verteilung. <b>Kein</b> Neustart.</td><td>Spring Boot lädt noch den Produktkatalog</td></tr>
+          <tr><th scope="row">Liveness</th><td>Lebt der Prozess noch sinnvoll?</td><td>Das kubelet startet den Container neu.</td><td>Deadlock: Prozess läuft, antwortet aber nie</td></tr>
+          <tr><th scope="row">Startup</th><td>Ist der langsame Start fertig?</td><td>Bis sie grün ist, ruhen die anderen Probes.</td><td>Alte Java-Anwendung braucht 2 Minuten</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note falle"><b>Falle: Liveness und Readiness verwechseln.</b> Prüft die Liveness-Probe die Datenbank und ist die Datenbank kurz weg, startet Kubernetes alle Shop-Pods neu. Das hilft nicht und macht es schlimmer. Abhängigkeiten gehören höchstens in die Readiness-Probe. Die Liveness-Probe prüft nur: Lebt mein eigener Prozess?</div>
+
+    <h3>Rolling Update und Rollback</h3>
+    <p class="prose">Änderst du im Deployment das Image auf <code>1.5.0</code>, legt Kubernetes ein neues ReplicaSet an und tauscht die Pods schrittweise aus. Mit <code>maxSurge: 1</code> darf kurz ein Pod mehr laufen, mit <code>maxUnavailable: 0</code> sind nie weniger als drei bereit. Kundinnen merken nichts.</p>
+    <div class="t03-ru" role="list" aria-label="Ablauf eines Rolling Updates">
+      <div class="t03-ru-z" role="listitem"><b>Start</b><span class="t03-v">1.4.2</span><span class="t03-v">1.4.2</span><span class="t03-v">1.4.2</span></div>
+      <div class="t03-ru-z" role="listitem"><b>Schritt 1</b><span class="t03-v">1.4.2</span><span class="t03-v">1.4.2</span><span class="t03-v">1.4.2</span><span class="t03-v t03-v2 t03-start">1.5.0 startet</span><span class="hint">Neuer Pod startet zusätzlich (maxSurge 1).</span></div>
+      <div class="t03-ru-z" role="listitem"><b>Schritt 2</b><span class="t03-v t03-stop">1.4.2</span><span class="t03-v">1.4.2</span><span class="t03-v">1.4.2</span><span class="t03-v t03-v2">1.5.0</span><span class="hint">Erst wenn er bereit ist (Readiness), wird ein alter beendet.</span></div>
+      <div class="t03-ru-z" role="listitem"><b>Schritt 3</b><span class="t03-v t03-stop">1.4.2</span><span class="t03-v">1.4.2</span><span class="t03-v t03-v2">1.5.0</span><span class="t03-v t03-v2">1.5.0</span><span class="hint">Dasselbe Spiel, bis alle neu sind.</span></div>
+      <div class="t03-ru-z" role="listitem"><b>Ende</b><span class="t03-v t03-v2">1.5.0</span><span class="t03-v t03-v2">1.5.0</span><span class="t03-v t03-v2">1.5.0</span><span class="hint">Das alte ReplicaSet bleibt mit 0 Pods stehen: Daraus macht Kubernetes einen Rollback.</span></div>
+    </div>
+    <pre class="code" data-sprache="Shell · kubectl rollout"><code>kubectl set image deployment/shop-web shop=ghcr.io/gipfel/shop:1.5.0
+kubectl rollout status deployment/shop-web     <span class="c"># Fortschritt verfolgen</span>
+kubectl rollout history deployment/shop-web    <span class="c"># Versionen anzeigen</span>
+<mark>kubectl rollout undo deployment/shop-web</mark>       <span class="c"># zurück auf 1.4.2</span></code></pre>
+    <div class="note tipp"><b>Tipp:</b> Schreib in der Praxis die neue Version in die YAML-Datei und mach <code>kubectl apply</code>. <code>kubectl set image</code> ist imperativ und weicht vom Git-Stand ab. Und: Nutze nie <code>:latest</code>. Mit einem festen Tag weisst du, welche Version läuft, und ein Rollback hat ein klares Ziel.</div>
+
+    <h3>Service: feste Adresse vor wechselnden Pods</h3>
+    <p class="prose">Pods kommen und gehen, und jeder neue Pod hat eine neue IP-Adresse. Der Service gibt dir eine feste Adresse und einen DNS-Namen. Innerhalb des Namespaces erreichst du ihn einfach unter <code>shop-web</code>, von überall unter <code>shop-web.shop.svc.cluster.local</code>. Welche Pods dahinter stehen, bestimmt nur der Label-Selector.</p>
+    <pre class="code" data-sprache="service.yaml"><code><span class="k">apiVersion:</span> v1
+<span class="k">kind:</span> <mark>Service</mark>
+<span class="k">metadata:</span>
+  name: shop-web
+  namespace: shop
+<span class="k">spec:</span>
+  type: ClusterIP                <span class="c"># Standard: nur im Cluster erreichbar</span>
+  selector:
+    <mark>app: shop</mark>                    <span class="c"># alle Pods mit diesem Label</span>
+  ports:
+    - port: <span class="n">80</span>                   <span class="c"># an diesem Port hört der Service</span>
+      targetPort: <span class="n">8080</span>           <span class="c"># an diesen Port im Container leitet er weiter</span></code></pre>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <thead><tr><th>Typ</th><th>Erreichbar von</th><th>Typischer Einsatz</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">ClusterIP</th><td>nur innerhalb des Clusters</td><td>Datenbank, interne APIs (Bestellservice ruft Lagerservice)</td></tr>
+          <tr><th scope="row">NodePort</th><td>jede Node an einem festen Port (30000 bis 32767)</td><td>Tests, kleine Installationen ohne Cloud</td></tr>
+          <tr><th scope="row">LoadBalancer</th><td>Internet über einen Load Balancer der Cloud mit eigener IP</td><td>ein einzelner Dienst nach aussen, auch Nicht-HTTP (z. B. MQTT)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Ingress: ein Eingang für viele Services</h3>
+    <p class="prose">Ein LoadBalancer pro Dienst wird teuer. Ein <b>Ingress</b> ist eine Liste von HTTP-Regeln: Welcher Host und welcher Pfad geht an welchen Service. Ausgeführt werden die Regeln von einem Ingress-Controller (zum Beispiel NGINX oder Traefik), der selbst als Pod im Cluster läuft. Er übernimmt auch HTTPS.</p>
+    <pre class="code" data-sprache="ingress.yaml"><code><span class="k">apiVersion:</span> networking.k8s.io/v1
+<span class="k">kind:</span> <mark>Ingress</mark>
+<span class="k">metadata:</span>
+  name: gipfel
+  namespace: shop
+<span class="k">spec:</span>
+  tls:
+    - hosts: [shop.gipfel.ch]
+      secretName: gipfel-tls             <span class="c"># Zertifikat liegt in einem Secret</span>
+  rules:
+    - host: <mark>shop.gipfel.ch</mark>
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: { name: shop-api, port: { number: <span class="n">80</span> } }
+          - path: /
+            pathType: Prefix
+            backend:
+              service: { name: shop-web, port: { number: <span class="n">80</span> } }</code></pre>
+
+    <h3>ConfigMap und Secret: Konfiguration ausserhalb des Images</h3>
+    <p class="prose">Dasselbe Image läuft in dev und prod. Was sich unterscheidet, steht in einer ConfigMap (nicht geheim) oder in einem Secret (geheim). Der Pod liest beides beim Start als Umgebungsvariablen oder als Dateien.</p>
+    <pre class="code" data-sprache="config.yaml"><code><span class="k">apiVersion:</span> v1
+<span class="k">kind:</span> <mark>ConfigMap</mark>
+<span class="k">metadata:</span> { name: shop-config, namespace: shop }
+<span class="k">data:</span>
+  WAEHRUNG: <span class="s">"CHF"</span>
+  LOG_LEVEL: <span class="s">"INFO"</span>
+  DB_URL: <span class="s">"jdbc:postgresql://shop-db:5432/shop"</span>
+---
+<span class="k">apiVersion:</span> v1
+<span class="k">kind:</span> <mark>Secret</mark>
+<span class="k">metadata:</span> { name: db-zugang, namespace: shop }
+<span class="k">type:</span> Opaque
+<span class="k">stringData:</span>                      <span class="c"># Kubernetes speichert es Base64-codiert</span>
+  password: <span class="s">"bitte-nicht-ins-git"</span></code></pre>
+    <div class="note falle"><b>Falle: «Secret = verschlüsselt».</b> Ein Secret ist nur Base64-codiert. Wer das Objekt lesen darf, liest das Passwort. Schütze Secrets mit Zugriffsrechten (RBAC), schalte die Verschlüsselung in etcd ein und lege sie nie unverschlüsselt ins Git. Dafür gibt es Werkzeuge wie Sealed Secrets oder einen externen Tresor wie HashiCorp Vault.</div>
+
+    <h3>Daten, die bleiben: Volume, PVC und StatefulSet</h3>
+    <p class="prose">Ein <b>PersistentVolumeClaim</b> ist eine Bestellung: «Ich brauche 10 GiB Speicher, den ein Pod beschreiben darf.» Der Cluster liefert dazu ein PersistentVolume, in der Cloud zum Beispiel eine Netzwerk-Festplatte. Wird der Pod ersetzt, hängt Kubernetes denselben Speicher beim neuen Pod ein. Für Datenbanken nimmst du ein <b>StatefulSet</b>: Es gibt jedem Pod einen festen Namen und mit <code>volumeClaimTemplates</code> einen eigenen PVC.</p>
+    <pre class="code" data-sprache="statefulset.yaml (Ausschnitt)"><code><span class="k">apiVersion:</span> apps/v1
+<span class="k">kind:</span> <mark>StatefulSet</mark>
+<span class="k">metadata:</span> { name: shop-db, namespace: shop }
+<span class="k">spec:</span>
+  serviceName: shop-db
+  replicas: <span class="n">1</span>                       <span class="c"># Pod heisst shop-db-0</span>
+  selector: { matchLabels: { app: shop-db } }
+  template:
+    metadata: { labels: { app: shop-db } }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: db-zugang, key: password } }
+          volumeMounts:
+            - { name: <mark>db-daten</mark>, mountPath: /var/lib/postgresql/data }
+  <mark>volumeClaimTemplates:</mark>             <span class="c"># je Pod ein eigener PVC: db-daten-shop-db-0</span>
+    - metadata: { name: db-daten }
+      spec:
+        accessModes: [ReadWriteOnce]
+        resources: { requests: { storage: <span class="s">10Gi</span> } }</code></pre>
+
+    <h3>Namespace: Ordnung im Cluster</h3>
+    <p class="prose">Ein Namespace trennt Objekte: Im Namespace <code>dev</code> und im Namespace <code>prod</code> darf es je einen Service <code>shop-web</code> geben. Pro Namespace vergibst du Rechte («Team Shop darf nur in <code>shop</code> ändern») und Kontingente («höchstens 8 CPU»). Ein Namespace ist keine Netzwerk-Sperre: Ohne NetworkPolicy dürfen Pods über Namespace-Grenzen hinweg reden.</p>
+
+    <h3>HorizontalPodAutoscaler: Pods nach Last</h3>
+    <p class="prose">Am Black Friday reicht ein Shop-Pod nicht. Der HPA misst regelmässig die Auslastung (zum Beispiel CPU im Verhältnis zu <code>requests</code>) und passt <code>replicas</code> an. Die Grundformel lautet:</p>
+    <div class="board">
+      $$\text{Pods}_{\text{neu}} = \left\lceil \text{Pods}_{\text{jetzt}} \cdot \frac{\text{Auslastung}_{\text{jetzt}}}{\text{Auslastung}_{\text{Ziel}}} \right\rceil$$
+      <p>Beispiel: 3 Pods, 140 % CPU, Ziel 70 %: \(\lceil 3 \cdot 140 / 70 \rceil = 6\) Pods. Begrenzt durch <code>minReplicas</code> und <code>maxReplicas</code>.</p>
+    </div>
+    <pre class="code" data-sprache="hpa.yaml"><code><span class="k">apiVersion:</span> autoscaling/v2
+<span class="k">kind:</span> <mark>HorizontalPodAutoscaler</mark>
+<span class="k">metadata:</span> { name: shop-web, namespace: shop }
+<span class="k">spec:</span>
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: shop-web }
+  minReplicas: <span class="n">2</span>
+  maxReplicas: <span class="n">10</span>
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: <span class="n">70</span> }</code></pre>
+    <div class="note"><b>Merke:</b> Der HPA skaliert <b>horizontal</b>, also mehr Pods. Das klappt nur mit zustandslosen Pods. Eine Datenbank skalierst du so nicht. «Vertikal» hiesse: einem Pod mehr CPU und Speicher geben.</div>
+
+    <h3>kubectl: die wichtigsten Befehle</h3>
+    <pre class="code" data-sprache="Shell · kubectl"><code>kubectl apply -f k8s/                         <span class="c"># Soll-Zustand anwenden (deklarativ)</span>
+kubectl get pods -n shop -o wide             <span class="c"># Pods mit Node und IP</span>
+kubectl get deploy,svc,ingress -n shop
+kubectl describe pod shop-web-7f9c-k2x4 -n shop  <span class="c"># Ereignisse: warum Pending, warum Neustart?</span>
+kubectl logs -f deploy/shop-web -n shop       <span class="c"># Logs (stdout) mitlesen</span>
+kubectl get endpoints shop-web -n shop        <span class="c"># welche Pod-IPs stehen hinter dem Service?</span>
+kubectl port-forward svc/shop-web 8080:80 -n shop  <span class="c"># lokal testen ohne Ingress</span>
+kubectl delete pod shop-web-7f9c-k2x4 -n shop <span class="c"># Self-Healing beobachten</span></code></pre>
+
+    <h3>Helm: YAML als Paket</h3>
+    <p class="prose">Für dev, test und prod brauchst du fast dieselben YAML-Dateien, nur mit anderen Werten (Replicas, Domain, Image-Tag). Helm macht daraus ein <b>Chart</b>: Vorlagen mit Platzhaltern und eine Datei <code>values.yaml</code> mit den Werten. Ein Befehl installiert oder aktualisiert alles zusammen und kann auch zurückrollen.</p>
+    <div class="grid2">
+      <pre class="code" data-sprache="templates/deployment.yaml (Auszug)"><code>spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    spec:
+      containers:
+        - name: shop
+          image: "{{ .Values.image.repo }}:{{ .Values.image.tag }}"</code></pre>
+      <pre class="code" data-sprache="values-prod.yaml"><code>replicaCount: <span class="n">3</span>
+image:
+  repo: ghcr.io/gipfel/shop
+  tag: <span class="s">"1.4.2"</span>
+ingress:
+  host: shop.gipfel.ch</code></pre>
+    </div>
+    <pre class="code" data-sprache="Shell · helm"><code>helm install shop ./shop-chart -n shop -f values-prod.yaml
+helm upgrade shop ./shop-chart -n shop -f values-prod.yaml --set image.tag=1.5.0
+helm rollback shop 1 -n shop</code></pre>
+  </section>
+
+  <!-- ===== 7 · Werkzeuge ===== -->
+  <section id="werkzeuge">
+    <span class="eyebrow">Schritt 7 · Werkzeuge und wofür</span>
+    <h2>Welches Werkzeug macht was?</h2>
+    <p class="prose">Werkzeugnamen tauchen in Stelleninseraten und Prüfungen auf. Wichtig ist, dass du die Aufgabe dahinter kennst. Die Alternativen lösen dieselbe Aufgabe.</p>
+    <div class="card tablebox">
+      <table class="tabelle t03-wz">
+        <thead><tr><th><span class="sr-only">Piktogramm</span></th><th>Werkzeug</th><th>Wofür</th><th>Alternative</th></tr></thead>
+        <tbody>
+          <tr><td><span data-t03-pikto="container"></span></td><th scope="row">Docker</th><td>Images bauen, Container lokal starten</td><td>Podman, Buildah</td></tr>
+          <tr><td><span data-t03-pikto="code"></span></td><th scope="row">Docker Compose</th><td>mehrere Container auf einem Rechner zusammen starten</td><td>Podman Compose</td></tr>
+          <tr><td><span data-t03-pikto="storage"></span></td><th scope="row">Container-Registry</th><td>Images ablegen, versionieren, verteilen</td><td>GitHub Container Registry, Docker Hub, Harbor, Amazon ECR</td></tr>
+          <tr><td><span data-t03-pikto="container"></span></td><th scope="row">containerd</th><td>Container-Runtime auf jeder Node</td><td>CRI-O</td></tr>
+          <tr><td><span data-t03-pikto="cluster"></span></td><th scope="row">Kubernetes</th><td>Container auf vielen Rechnern betreiben, heilen, skalieren</td><td>Docker Swarm, HashiCorp Nomad, verwaltete Dienste wie AWS ECS</td></tr>
+          <tr><td><span data-t03-pikto="cluster"></span></td><th scope="row">Verwaltetes Kubernetes</th><td>Cluster mieten, die Control Plane betreibt der Anbieter</td><td>Google GKE, Azure AKS, Amazon EKS, Exoscale SKS</td></tr>
+          <tr><td><span data-t03-pikto="node"></span></td><th scope="row">kind, minikube</th><td>kleiner Test-Cluster auf dem Laptop</td><td>k3d, Docker Desktop</td></tr>
+          <tr><td><span data-t03-pikto="code"></span></td><th scope="row">kubectl</th><td>Kommandozeile für den API-Server</td><td>k9s (Terminal-Oberfläche), Lens</td></tr>
+          <tr><td><span data-t03-pikto="config"></span></td><th scope="row">Helm</th><td>YAML als Paket mit Werten installieren und aktualisieren</td><td>Kustomize</td></tr>
+          <tr><td><span data-t03-pikto="gateway"></span></td><th scope="row">Ingress-Controller (NGINX, Traefik)</th><td>HTTP-Regeln des Ingress ausführen, HTTPS</td><td>Gateway API, Cloud-Load-Balancer</td></tr>
+          <tr><td><span data-t03-pikto="code"></span></td><th scope="row">Argo CD, Flux</th><td>GitOps: Cluster gleicht sich laufend mit dem Git ab</td><td>CI-Pipeline mit <code>kubectl apply</code></td></tr>
+          <tr><td><span data-t03-pikto="monitor"></span></td><th scope="row">Prometheus, Grafana</th><td>Metriken sammeln und anzeigen, Alarme</td><td>Datadog, Grafana Cloud</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 8 · Modellieren ===== -->
+  <section id="modellieren">
+    <span class="eyebrow">Schritt 8 · Modellieren</span>
+    <h2>Vom Text zum Kubernetes-Bild</h2>
+    <p class="prose">Jetzt zeichnest du selbst. Die Übungen werden schwieriger. In den ersten beiden liegen die Bausteine schon, du verbindest nur. Danach wählst du die Bausteine selbst aus einer Liste mit Ablenkern. Bedienung: Baustein in der Liste antippen legt ihn hin. Verbindungsart wählen, dann Start und Ziel antippen.</p>
+    <div class="t03-leg" id="t03-leg-mod"></div>
+    <div id="t03-mod-1"></div>
+    <div id="t03-mod-2"></div>
+    <div id="t03-mod-3"></div>
+    <div id="t03-mod-4"></div>
+    <div id="t03-mod-5"></div>
+  </section>
+
+  <!-- ===== 9 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 9 · Selbst anwenden</span>
+    <h2>Übungen: Welches Objekt löst das Problem?</h2>
+    <div id="t03-a1"></div>
+    <div id="t03-a2"></div>
+    <div id="t03-a3"></div>
+    <div id="t03-a4"></div>
+    <div id="t03-a5"></div>
+    <div id="t03-wf"></div>
+    <div id="t03-zahl"></div>
+    <div id="t03-schritt"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein Anforderungstext wird zum Kubernetes-Bild</h2>
+    <p class="prose">Der Film löst die Übung «Webshop Gipfel» aus Schritt 8 am Stück. Drück auf «Abspielen». Gelb leuchtet immer das, was gerade neu dazukommt. Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t03-film"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Sitzt es?</h2>
+    <div id="t03-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Image</b> = unveränderlicher Bauplan aus Layern, <b>Container</b> = laufende Instanz. Container teilen sich den Kernel des Hosts, VMs nicht.</li>
+      <li><b>Mehrstufiges Dockerfile:</b> eine Stufe baut, die letzte Stufe enthält nur Laufzeit und Ergebnis. Images immer mit festem Tag, nie <code>:latest</code>.</li>
+      <li><b>Kubernetes ist deklarativ:</b> Du beschreibst das Soll, Controller gleichen laufend mit dem Ist ab. Daraus entsteht Self-Healing.</li>
+      <li><b>Anfrageweg:</b> Ingress (Host, Pfad) → Service (feste Adresse, Label-Selector) → Pods eines Deployments.</li>
+      <li><b>Konfiguration und Daten:</b> ConfigMap für Einstellungen, Secret für Geheimes (nur Base64), PVC für Daten, StatefulSet für Datenbanken.</li>
+      <li><b>Readiness</b> entscheidet über Traffic, <b>Liveness</b> über Neustart. Der <b>HPA</b> passt die Anzahl Pods an die Last an.</li>
+    </ul>
+    <footer>AVSW · Station 3. Eigene Beispiele, mit den Vorlesungsfolien abgleichen. Weiter geht es mit Resilienz und Konsistenz: Was passiert, wenn Aufrufe zwischen den Pods scheitern?</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const T = String.raw;
+
+  /* ---------- Piktogramme in statisches HTML einsetzen ---------- */
+  document.querySelectorAll("[data-t03-pikto]").forEach((s) => {
+    s.innerHTML = L.piktogramm(s.getAttribute("data-t03-pikto"));
+  });
+
+  /* ---------- Hilfen für Architektur-Bilder (SVG) ---------- */
+  const ART_NR = { weiter: 0, konfig: 1, speichert: 2, laeuft: 3 };
+  const ART_NAME = { weiter: "leitet weiter an", konfig: "liest Konfig/Secret", speichert: "speichert in", laeuft: "läuft auf" };
+  let svgZaehler = 0;
+
+  // Piktogramm als SVG-Gruppe (für Bilder, die selbst SVG sind)
+  function pkG(art, x, y, s) {
+    const innen = L.piktogramm(art).replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+    return '<g class="pikto t03-pk" transform="translate(' + x + " " + y + ") scale(" + (s / 24).toFixed(3) + ')">' + innen + "</g>";
+  }
+  // Schnittpunkt der Strecke Mitte → Ziel mit dem Rechteckrand (plus Abstand)
+  function randPunkt(r, zx, zy) {
+    const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    const dx = zx - cx, dy = zy - cy;
+    if (!dx && !dy) return [cx, cy];
+    const sx = dx ? (r.w / 2 + 3) / Math.abs(dx) : Infinity;
+    const sy = dy ? (r.h / 2 + 3) / Math.abs(dy) : Infinity;
+    const s = Math.min(sx, sy);
+    return [cx + dx * s, cy + dy * s];
+  }
+  const da = (k, v) => (v ? " " + k + '="' + v + '"' : "");
+
+  // cfg: { w, h, titel, baender:[{y,text}], rahmen:[{id,x,y,w,h,text,link,neu}],
+  //        boxen:[{id,x,y,w,h,art,name,sub,subLink,link,neu,zeilen:[{t,link}]}], kanten:[{von,nach,art,link,neu}] }
+  function bild(cfg) {
+    const id = "t03-b" + (++svgZaehler);
+    const alle = {};
+    (cfg.rahmen || []).forEach((r) => (alle[r.id] = r));
+    (cfg.boxen || []).forEach((b) => (alle[b.id] = b));
+    let s = '<svg class="t03-svg" viewBox="0 0 ' + cfg.w + " " + cfg.h + '" role="group" aria-label="' + cfg.titel + '"><defs>';
+    for (let i = 0; i < 4; i++) {
+      s += '<marker id="' + id + "-m" + i + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="t03-m' + i + '"/></marker>';
+    }
+    s += "</defs>";
+    (cfg.rahmen || []).forEach((r) => {
+      s += '<g class="t03-frame' + (r.neu ? " t03-neu" : "") + '"><rect x="' + r.x + '" y="' + r.y + '" width="' + r.w + '" height="' + r.h + '" rx="10"' + da("data-link", r.link) + "/>" +
+        '<text x="' + (r.x + 8) + '" y="' + (r.y + r.h - 6) + '" class="t03-klein">' + r.text + "</text></g>";
+    });
+    (cfg.kanten || []).forEach((k) => {
+      const a = alle[k.von], b = alle[k.nach];
+      if (!a || !b) return;
+      const n = ART_NR[k.art];
+      const p1 = randPunkt(a, b.x + b.w / 2, b.y + b.h / 2);
+      const p2 = randPunkt(b, a.x + a.w / 2, a.y + a.h / 2);
+      const l = 'x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '"';
+      s += "<g" + da("data-link", k.link) + ">" + (k.neu ? '<line class="t03-halo" ' + l + "/>" : "") +
+        (k.link ? '<line class="t03-hit" ' + l + "/>" : "") +
+        '<line class="t03-e t03-e' + n + '" ' + l + ' marker-end="url(#' + id + "-m" + n + ')"/></g>';
+    });
+    (cfg.boxen || []).forEach((b) => {
+      const cx = b.x + b.w / 2;
+      let t = '<g class="t03-box' + (b.neu ? " t03-neu" : "") + '"><rect x="' + b.x + '" y="' + b.y + '" width="' + b.w + '" height="' + b.h + '" rx="8"' + da("data-link", b.link) + "/>";
+      t += pkG(b.art, cx - 9, b.y + 4, 18);
+      t += '<text x="' + cx + '" y="' + (b.y + 34) + '" text-anchor="middle" class="t03-fett">' + b.name + "</text>";
+      let y = b.y + 46;
+      if (b.sub) { t += '<text x="' + cx + '" y="' + y + '" text-anchor="middle" class="t03-klein"' + da("data-link", b.subLink) + ">" + b.sub + "</text>"; y += 12; }
+      (b.zeilen || []).forEach((z) => {
+        t += '<text x="' + cx + '" y="' + y + '" text-anchor="middle" class="t03-klein"' + da("data-link", z.link) + ">" + z.t + "</text>";
+        y += 12;
+      });
+      s += t + "</g>";
+    });
+    // Bandbeschriftung zuletzt, mit Hintergrund-Rand: bleibt über Pfeilen lesbar
+    (cfg.baender || []).forEach((b) => { s += '<text x="4" y="' + b.y + '" class="t03-band">' + b.text + "</text>"; });
+    return s + "</svg>";
+  }
+
+  function legende(el, arten) {
+    const ziel = document.getElementById(el);
+    if (!ziel) return;
+    ziel.innerHTML = arten.map((a) =>
+      '<span><svg viewBox="0 0 34 10" aria-hidden="true"><line class="t03-e t03-e' + ART_NR[a] + '" x1="2" y1="5" x2="32" y2="5"/></svg>' + ART_NAME[a] + "</span>").join("");
+  }
+  legende("t03-leg-stepper", ["weiter", "konfig"]);
+  legende("t03-leg-mod", ["weiter", "konfig", "speichert", "laeuft"]);
+
+  // [[id|Text]] → Markierung für modellieren (data-baustein) oder Film (data-ph)
+  function markiere(text, attr) {
+    return text.replace(/\[\[([a-z0-9]+)\|([^\]]+)\]\]/g, '<span ' + attr + '="$1">$2</span>');
+  }
+
+  /* ---------- Sortierer ---------- */
+  L.sortierer("#t03-sortierer", {
+    kategorien: ["Image", "Container", "Pod", "Deployment", "Service"],
+    elemente: [
+      { html: "<code>ghcr.io/gipfel/shop:1.4.2</code> liegt unveränderlich in der Registry", kategorie: "Image", erklaerung: "Ein Image ist der fertige, unveränderliche Bauplan. Es liegt in der Registry und läuft nicht." },
+      { html: "Entsteht mit <code>docker build</code> aus einem Dockerfile", kategorie: "Image", erklaerung: "docker build erzeugt ein Image, Layer für Layer." },
+      { html: "Ein laufender Java-Prozess aus shop:1.4.2 mit eigener beschreibbarer Schicht", kategorie: "Container", erklaerung: "Ein gestartetes Image ist ein Container. Die beschreibbare Schicht gehört nur ihm." },
+      { html: "Wird mit <code>docker run</code> gestartet", kategorie: "Container", erklaerung: "docker run startet einen Container aus einem Image." },
+      { html: "Shop-Container und Log-Sammler teilen sich IP und reden über localhost", kategorie: "Pod", erklaerung: "Container im selben Pod teilen Netzwerk und Volumes. Ein zweiter Hilfscontainer heisst Sidecar." },
+      { html: "Kleinste Einheit, die der Scheduler einer Node zuteilt", kategorie: "Pod", erklaerung: "Kubernetes plant Pods, nicht einzelne Container." },
+      { html: "Hält drei Kopien am Laufen und tauscht die Version schrittweise aus", kategorie: "Deployment", erklaerung: "Das Deployment verwaltet über ReplicaSets die Anzahl Pods und das Rolling Update." },
+      { html: "Erstellt Ersatz, wenn ein Pod verschwindet", kategorie: "Deployment", erklaerung: "Self-Healing: Das ReplicaSet des Deployments zählt nach und ergänzt fehlende Pods." },
+      { html: "Bleibt unter <code>shop-web:80</code> erreichbar, obwohl Pods neue IPs bekommen", kategorie: "Service", erklaerung: "Der Service ist die feste Adresse. Er findet die aktuellen Pods über den Label-Selector." },
+      { html: "Verteilt Anfragen auf alle Pods mit dem Label <code>app=shop</code>", kategorie: "Service", erklaerung: "Lastverteilung über den Label-Selector ist die Kernaufgabe des Service." }
+    ]
+  });
+
+  /* ---------- Stepper: YAML ↔ Bild ---------- */
+  const SP = {
+    client: { id: "client", x: 108, y: 4, w: 84, h: 44, art: "client", name: "Browser" },
+    ing: { id: "ing", x: 108, y: 70, w: 84, h: 52, art: "gateway", name: "Ingress" },
+    svc: { id: "svc", x: 108, y: 140, w: 84, h: 52, art: "lb", name: "Service" },
+    cm: { id: "cm", x: 212, y: 140, w: 84, h: 52, art: "config", name: "ConfigMap", sub: "shop-config", link: "t03-y-cfg" }
+  };
+  const POD_X = [14, 110, 206];
+  function stepBild(st) {
+    // st: { rahmen, pods, labels, container, cm, svc, svcPort, sel, ing, backend, client, neu: [ids] }
+    const neu = (x) => (st.neu || []).indexOf(x) >= 0;
+    const boxen = [], kanten = [], rahmen = [];
+    if (st.rahmen) rahmen.push({ id: "dep", x: 4, y: 206, w: 292, h: 100, text: "Deployment shop-web" + (st.pods ? " · replicas: 3" : ""), link: "t03-y-dep", neu: neu("dep") });
+    if (st.pods) {
+      POD_X.forEach((x, i) => {
+        const z = [];
+        if (st.labels) z.push({ t: "app=shop", link: "t03-y-lab" });
+        if (st.container) { z.push({ t: "shop:1.4.2", link: "t03-y-img" }); z.push({ t: "Port 8080", link: "t03-y-cport" }); }
+        boxen.push({ id: "p" + i, x: x, y: 214, w: 80, h: 76, art: "pod", name: "Pod " + (i + 1), zeilen: z, link: "t03-y-rep", neu: neu("pods") });
+      });
+    }
+    if (st.cm) { boxen.push(Object.assign({}, SP.cm, { neu: neu("cm") })); kanten.push({ von: "dep", nach: "cm", art: "konfig", neu: neu("cm"), link: "t03-y-cfg" }); }
+    if (st.svc) boxen.push(Object.assign({}, SP.svc, { sub: st.svcPort ? "80 → 8080" : "shop-web", subLink: st.svcPort ? "t03-y-port" : null, link: "t03-y-svc", neu: neu("svc") }));
+    if (st.sel) POD_X.forEach((_, i) => kanten.push({ von: "svc", nach: "p" + i, art: "weiter", link: "t03-y-sel", neu: neu("sel") }));
+    if (st.ing) boxen.push(Object.assign({}, SP.ing, { sub: "shop.gipfel.ch /", subLink: "t03-y-host", link: "t03-y-ing", neu: neu("ing") }));
+    if (st.backend) kanten.push({ von: "ing", nach: "svc", art: "weiter", link: "t03-y-back", neu: neu("backend") });
+    if (st.client) { boxen.push(Object.assign({}, SP.client, { neu: neu("client") })); kanten.push({ von: "client", nach: "ing", art: "weiter", neu: neu("client") }); }
+    return '<div class="t03-bild">' + bild({ w: 300, h: 312, titel: "Kubernetes-Bild zur YAML-Datei", rahmen: rahmen, boxen: boxen, kanten: kanten }) + "</div>";
+  }
+
+  const YAML_DEP = '<span class="t03-yaml">apiVersion: apps/v1\n' +
+    '<span data-link="t03-y-dep">kind: Deployment</span>\n' +
+    'metadata:\n' +
+    '  <span data-link="t03-y-dep">name: shop-web</span>\n' +
+    'spec:\n' +
+    '  <span data-link="t03-y-rep">replicas: 3</span>\n' +
+    '  selector:\n' +
+    '    matchLabels:\n' +
+    '      <span data-link="t03-y-lab">app: shop</span>\n' +
+    '  template:\n' +
+    '    metadata:\n' +
+    '      labels:\n' +
+    '        <span data-link="t03-y-lab">app: shop</span>\n' +
+    '    spec:\n' +
+    '      containers:\n' +
+    '        - name: shop\n' +
+    '          <span data-link="t03-y-img">image: ghcr.io/gipfel/shop:1.4.2</span>\n' +
+    '          ports:\n' +
+    '            - <span data-link="t03-y-cport">containerPort: 8080</span>\n' +
+    '          envFrom:\n' +
+    '            - configMapRef:\n' +
+    '                <span data-link="t03-y-cfg">name: shop-config</span></span>';
+
+  L.stepper("#t03-stepper-dep", {
+    titel: "Datei 1: deployment.yaml",
+    text: YAML_DEP,
+    schritte: [
+      { html: stepBild({ rahmen: true, neu: ["dep"] }),
+        warum: "<b>kind: Deployment</b> sagt, welche Art Objekt das ist. <b>name</b> gibt ihm einen Namen. Im Bild ist das Deployment ein gestrichelter Rahmen: ein Auftrag, kein laufendes Ding." },
+      { html: stepBild({ rahmen: true, pods: true, neu: ["pods"] }),
+        warum: "<b>replicas: 3</b> ist der Soll-Zustand. Das Deployment legt ein ReplicaSet an, und das erzeugt drei Pods. In Wirklichkeit heissen sie zum Beispiel shop-web-7f9c-k2x4." },
+      { html: stepBild({ rahmen: true, pods: true, labels: true }),
+        warum: "Unter <b>template.metadata.labels</b> steht das Etikett, das jeder Pod bekommt: app=shop. Der <b>selector</b> oben muss genau dazu passen, sonst lehnt der API-Server das Deployment ab." },
+      { html: stepBild({ rahmen: true, pods: true, labels: true, container: true }),
+        warum: "Jeder Pod startet einen Container aus dem <b>image</b> mit festem Tag 1.4.2. <b>containerPort: 8080</b> sagt, wo die Anwendung im Container lauscht." },
+      { html: stepBild({ rahmen: true, pods: true, labels: true, container: true, cm: true, neu: ["cm"] }),
+        warum: "<b>envFrom.configMapRef</b>: Beim Start liest jeder Pod alle Einträge der ConfigMap shop-config als Umgebungsvariablen. Der Pfeil zeigt vom Lesenden zur Quelle (Art «liest Konfig/Secret»)." }
+    ]
+  });
+
+  const YAML_SVC = '<span class="t03-yaml">apiVersion: v1\n' +
+    '<span data-link="t03-y-svc">kind: Service</span>\n' +
+    'metadata:\n' +
+    '  <span data-link="t03-y-svc">name: shop-web</span>\n' +
+    'spec:\n' +
+    '  selector:\n' +
+    '    <span data-link="t03-y-sel">app: shop</span>\n' +
+    '  ports:\n' +
+    '    - <span data-link="t03-y-port">port: 80</span>\n' +
+    '      <span data-link="t03-y-port">targetPort: 8080</span>\n' +
+    '---\n' +
+    'apiVersion: networking.k8s.io/v1\n' +
+    '<span data-link="t03-y-ing">kind: Ingress</span>\n' +
+    'metadata:\n' +
+    '  name: gipfel\n' +
+    'spec:\n' +
+    '  rules:\n' +
+    '    - <span data-link="t03-y-host">host: shop.gipfel.ch</span>\n' +
+    '      http:\n' +
+    '        paths:\n' +
+    '          - <span data-link="t03-y-host">path: /</span>\n' +
+    '            pathType: Prefix\n' +
+    '            backend:\n' +
+    '              service:\n' +
+    '                <span data-link="t03-y-back">name: shop-web</span>\n' +
+    '                <span data-link="t03-y-back">port: { number: 80 }</span></span>';
+
+  const BASIS = { rahmen: true, pods: true, labels: true, container: true, cm: true };
+  const mit = (o) => Object.assign({}, BASIS, o);
+  L.stepper("#t03-stepper-svc", {
+    titel: "Datei 2: service.yaml und ingress.yaml",
+    text: YAML_SVC,
+    schritte: [
+      { html: stepBild(mit({ svc: true, neu: ["svc"] })),
+        warum: "<b>kind: Service</b> mit dem Namen shop-web. Ohne Angabe von <b>type</b> ist es ein ClusterIP-Service: nur im Cluster erreichbar, unter dem DNS-Namen shop-web." },
+      { html: stepBild(mit({ svc: true, sel: true, neu: ["sel"] })),
+        warum: "<b>selector app: shop</b> sucht alle Pods mit diesem Label. Darum zeigen die Pfeile auf alle drei Pods. Der Name des Deployments spielt dafür keine Rolle." },
+      { html: stepBild(mit({ svc: true, sel: true, svcPort: true })),
+        warum: "Der Service hört an <b>port 80</b> und leitet an <b>targetPort 8080</b> im Container weiter. Das muss zum containerPort aus Datei 1 passen." },
+      { html: stepBild(mit({ svc: true, sel: true, svcPort: true, ing: true, neu: ["ing"] })),
+        warum: "<b>kind: Ingress</b> mit einer Regel: Anfragen an <b>host shop.gipfel.ch</b> mit Pfad / (und allem darunter, pathType Prefix)." },
+      { html: stepBild(mit({ svc: true, sel: true, svcPort: true, ing: true, backend: true, neu: ["backend"] })),
+        warum: "Das <b>backend</b> der Regel ist der Service shop-web an Port 80. Also leitet der Ingress an den Service weiter, nie direkt an Pods." },
+      { html: stepBild(mit({ svc: true, sel: true, svcPort: true, ing: true, backend: true, client: true, neu: ["client"] })),
+        warum: "Fertig ist der ganze Anfrageweg: Browser → Ingress → Service → einer der drei Pods. Der Browser steht in keiner YAML-Datei. Er ist der Startpunkt, den du für das Bild ergänzt." }
+    ]
+  });
+
+  /* ---------- Labor: Self-Healing und Skalieren ---------- */
+  const LAB = { soll: 3, pods: [], nodeAus: false, nr: 0, pending: 0, log: [], aktiv: [], gen: 0 };
+  const NAMEN = ["k7f2", "m3q9", "p8x1", "r2d5", "t6h4", "w9c3", "b4n7", "z1s8", "h5v2", "c8j6", "f3l9", "q7y1"];
+  const KAP = 3;
+  const NODE_X = { "1": 14, "2": 164 };
+  const labBild = document.getElementById("t03-labor-bild");
+  const labStand = document.getElementById("t03-lab-stand");
+  const labLog = document.getElementById("t03-lab-log");
+  const labCmd = document.getElementById("t03-lab-cmd");
+  const bCrash = document.getElementById("t03-crash");
+  const bNode = document.getElementById("t03-node");
+  const bReset = document.getElementById("t03-reset");
+  const regler = document.getElementById("t03-rep");
+  const reglerWert = document.getElementById("t03-rep-wert");
+
+  function neuerName() {
+    const runde = Math.floor(LAB.nr / NAMEN.length);
+    const n = NAMEN[LAB.nr % NAMEN.length] + (runde ? String(runde) : "");
+    LAB.nr++;
+    return "web-" + n;
+  }
+  const podsAuf = (n) => LAB.pods.filter((p) => p.node === n);
+  function melden(t) { LAB.log.unshift(t); LAB.log = LAB.log.slice(0, 6); }
+  function spaeter(fn, ms) { const g = LAB.gen; window.setTimeout(() => { if (g === LAB.gen) fn(); }, ms); }
+  function cpAktiv(liste) {
+    LAB.aktiv = liste;
+    spaeter(() => { if (LAB.aktiv === liste) { LAB.aktiv = []; labZeichnen(); } }, 1500);
+  }
+
+  function abgleich() {
+    const lebend = LAB.pods.filter((p) => p.status !== "kaputt");
+    let diff = LAB.soll - lebend.length;
+    if (diff < 0) {
+      const weg = lebend.slice(diff);
+      LAB.pods = LAB.pods.filter((p) => weg.indexOf(p) < 0);
+      melden("Controller: Ist " + lebend.length + " ist mehr als Soll " + LAB.soll + ". Er beendet " + weg.map((p) => p.name).join(", ") + ".");
+      cpAktiv(["ctrl", "api"]);
+      diff = 0;
+    }
+    const neu = [];
+    while (diff > 0) {
+      const frei = ["1", "2"].filter((n) => !(n === "2" && LAB.nodeAus) && podsAuf(n).length < KAP)
+        .sort((a, b) => podsAuf(a).length - podsAuf(b).length);
+      if (!frei.length) break;
+      const p = { name: neuerName(), node: frei[0], status: "startet" };
+      LAB.pods.push(p);
+      neu.push(p);
+      diff--;
+    }
+    LAB.pending = diff;
+    if (neu.length) {
+      melden("Controller: Ist " + lebend.length + " ist weniger als Soll " + LAB.soll + ". Neu: " +
+        neu.map((p) => p.name + " (Scheduler wählt Node " + p.node + ")").join(", ") + ".");
+      cpAktiv(["ctrl", "sched", "api"]);
+      spaeter(() => {
+        const fertig = neu.filter((p) => LAB.pods.indexOf(p) >= 0 && p.status === "startet");
+        fertig.forEach((p) => (p.status = "bereit"));
+        if (fertig.length) melden("Readiness-Probe grün: " + fertig.map((p) => p.name).join(", ") + " bekommt jetzt Anfragen vom Service.");
+        labZeichnen();
+      }, 1600);
+    }
+    if (LAB.pending > 0) melden(LAB.pending + " Pod" + (LAB.pending > 1 ? "s bleiben" : " bleibt") + " Pending: Keine Node hat noch Platz. Der Scheduler wartet.");
+  }
+
+  function svgPod(p, x, y) {
+    const st = p.status === "bereit" ? '<text x="' + (x + 28) + '" y="' + (y + 29) + '" class="t03-klein t03-ok-t">✓ bereit</text>'
+      : p.status === "startet" ? '<text x="' + (x + 28) + '" y="' + (y + 29) + '" class="t03-klein">startet …</text>'
+      : '<text x="' + (x + 28) + '" y="' + (y + 29) + '" class="t03-klein t03-bad-t">✗ abgestürzt</text>';
+    const k = p.status === "startet" ? " t03-startet" : p.status === "kaputt" ? " t03-kaputt" : "";
+    return '<g class="t03-pod' + k + '"><rect x="' + x + '" y="' + y + '" width="120" height="36" rx="7"/>' + pkG("pod", x + 6, y + 10, 16) +
+      '<text x="' + (x + 28) + '" y="' + (y + 15) + '" class="t03-fett">' + p.name + "</text>" + st + "</g>";
+  }
+  function svgKasten(x, y, w, h, art, text) {
+    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="7" class="t03-kasten"/>' + pkG(art, x + 8, y + (h - 18) / 2, 18) +
+      '<text x="' + (x + 32) + '" y="' + (y + h / 2 + 4) + '" class="t03-fett">' + text + "</text>";
+  }
+
+  function labZeichnen() {
+    let s = '<svg class="t03-svg t03-labor-svg" viewBox="0 0 320 432" role="img" aria-labelledby="t03-lab-titel"><title id="t03-lab-titel">Kubernetes-Cluster mit Ingress, Service, zwei Worker Nodes mit Pods und der Control Plane. Den aktuellen Stand beschreibt der Text unter dem Bild.</title>';
+    s += '<defs><marker id="t03-lab-pf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="t03-mk"/></marker></defs>';
+    // Browser und Cluster-Rahmen
+    s += svgKasten(110, 6, 100, 32, "client", "Browser");
+    s += '<rect x="4" y="48" width="312" height="378" rx="12" class="t03-clrahmen"/>' + pkG("cluster", 10, 52, 14) + '<text x="28" y="63" class="t03-klein">Cluster</text>';
+    s += '<line x1="160" y1="38" x2="160" y2="53" class="t03-rail" marker-end="url(#t03-lab-pf)"/>';
+    s += svgKasten(110, 56, 100, 32, "gateway", "Ingress");
+    s += '<line x1="160" y1="88" x2="160" y2="101" class="t03-rail" marker-end="url(#t03-lab-pf)"/>';
+    s += svgKasten(110, 104, 100, 32, "lb", "Service web");
+    // Nodes
+    ["1", "2"].forEach((n) => {
+      const x = NODE_X[n];
+      const aus = n === "2" && LAB.nodeAus;
+      const tx = n === "1" ? x + 26 : x + 36;
+      s += '<g class="t03-node' + (aus ? " t03-aus" : "") + '"><rect x="' + x + '" y="152" width="142" height="164" rx="10" class="t03-nrahmen"/>' +
+        pkG("node", n === "1" ? x + 6 : x + 16, 156, 16) +
+        '<text x="' + tx + '" y="168" class="t03-fett">Node ' + n + " · " + (aus ? "NotReady" : "Ready") + "</text>" +
+        '<text x="' + tx + '" y="180" class="t03-klein">kubelet · containerd</text></g>';
+      const px = n === "1" ? x + 8 : x + 16;
+      podsAuf(n).forEach((p, i) => { s += svgPod(p, px, 190 + i * 42); });
+    });
+    // Schiene vom Service zu den bereiten Pods
+    ["1", "2"].forEach((n) => {
+      const bereit = podsAuf(n).map((p, i) => ({ p: p, cy: 190 + i * 42 + 18 })).filter((o) => o.p.status === "bereit");
+      if (!bereit.length) return;
+      const rx = n === "1" ? 150 : 170;
+      const zx = n === "1" ? 145 : 177;
+      const max = Math.max.apply(null, bereit.map((o) => o.cy));
+      s += '<path d="M' + rx + " 136 V" + max + '" class="t03-rail"/>';
+      bereit.forEach((o) => { s += '<path d="M' + rx + " " + o.cy + " H" + zx + '" class="t03-rail" marker-end="url(#t03-lab-pf)"/>'; });
+    });
+    // Control Plane
+    s += '<rect x="14" y="326" width="292" height="92" rx="10" class="t03-cprahmen"/>' + pkG("cluster", 20, 329, 14) + '<text x="38" y="340" class="t03-fett">Control Plane</text>';
+    [["api", 20, 348, "gateway", "API-Server"], ["sched", 162, 348, "lb", "Scheduler"], ["etcd", 20, 382, "db", "etcd"], ["ctrl", 162, 382, "config", "Controller Manager"]].forEach((c) => {
+      s += '<g class="t03-cpk' + (LAB.aktiv.indexOf(c[0]) >= 0 ? " t03-aktiv" : "") + '"><rect x="' + c[1] + '" y="' + c[2] + '" width="138" height="28" rx="6"/>' +
+        pkG(c[3], c[1] + 6, c[2] + 6, 16) + '<text x="' + (c[1] + 28) + '" y="' + (c[2] + 18) + '">' + c[4] + "</text></g>";
+    });
+    s += "</svg>";
+    labBild.innerHTML = s;
+
+    const bereit = LAB.pods.filter((p) => p.status === "bereit").length;
+    const startet = LAB.pods.filter((p) => p.status === "startet").length;
+    labStand.textContent = "Soll (replicas): " + LAB.soll + " · bereit: " + bereit + " · startet: " + startet + " · Pending: " + LAB.pending +
+      " · Der Service verteilt auf " + bereit + " Pod" + (bereit === 1 ? "" : "s") + ".";
+    labLog.innerHTML = "";
+    LAB.log.forEach((t) => { const li = document.createElement("li"); li.textContent = t; labLog.appendChild(li); });
+    labCmd.textContent = "kubectl scale deployment/web --replicas=" + LAB.soll;
+    bNode.textContent = LAB.nodeAus ? "Node 2 wieder starten" : "Node 2 ausfallen lassen";
+    bNode.setAttribute("aria-pressed", String(LAB.nodeAus));
+    bNode.classList.toggle("on", LAB.nodeAus);
+  }
+
+  function labStart() {
+    LAB.gen++;
+    LAB.soll = 3; LAB.nodeAus = false; LAB.nr = 0; LAB.pending = 0; LAB.log = []; LAB.aktiv = [];
+    LAB.pods = [
+      { name: neuerName(), node: "1", status: "bereit" },
+      { name: neuerName(), node: "2", status: "bereit" },
+      { name: neuerName(), node: "1", status: "bereit" }
+    ];
+    regler.value = "3";
+    reglerWert.textContent = "3";
+    melden("Start: Deployment web mit replicas: 3. Alle drei Pods sind bereit.");
+    labZeichnen();
+  }
+  bCrash.addEventListener("click", () => {
+    const p = LAB.pods.find((x) => x.status === "bereit");
+    if (!p) { melden("Gerade ist kein Pod bereit. Warte einen Moment."); labZeichnen(); return; }
+    p.status = "kaputt";
+    melden("Pod " + p.name + " auf Node " + p.node + " ist abgestürzt. Der Service schickt ihm keine Anfragen mehr.");
+    labZeichnen();
+    spaeter(() => {
+      LAB.pods = LAB.pods.filter((x) => x !== p);
+      abgleich();
+      labZeichnen();
+    }, 1200);
+  });
+  bNode.addEventListener("click", () => {
+    LAB.nodeAus = !LAB.nodeAus;
+    if (LAB.nodeAus) {
+      const weg = podsAuf("2");
+      LAB.pods = LAB.pods.filter((p) => p.node !== "2");
+      melden("Node 2 meldet sich nicht mehr (NotReady). Verloren: " + (weg.length ? weg.map((p) => p.name).join(", ") : "keine Pods") + ".");
+    } else {
+      melden("Node 2 ist wieder Ready. Der Scheduler darf sie wieder nutzen.");
+    }
+    abgleich();
+    labZeichnen();
+  });
+  regler.addEventListener("input", () => {
+    LAB.soll = Number(regler.value);
+    reglerWert.textContent = String(LAB.soll);
+    melden("Neues Soll: replicas: " + LAB.soll + ".");
+    abgleich();
+    labZeichnen();
+  });
+  bReset.addEventListener("click", labStart);
+  labStart();
+
+  /* ---------- Modellierungsübungen ---------- */
+  const A = {
+    weiter: { id: "weiter", name: "leitet weiter an" },
+    konfig: { id: "konfig", name: "liest Konfig/Secret" },
+    speichert: { id: "speichert", name: "speichert in" },
+    laeuft: { id: "laeuft", name: "läuft auf" }
+  };
+
+  // Übung 1 (vorgegeben): Anfrageweg mit zwei Pfaden
+  L.modellieren("#t03-mod-1", {
+    titel: "Übung 1 · Food-Delivery: zwei Pfade, ein Ingress",
+    aufgabe: markiere("<p>Die Food-Delivery-App «Lieferblitz» ist unter lieferblitz.ch erreichbar. Die [[app|Mobile App]] schickt alle Anfragen an den [[ing|Ingress]]. Der Ingress leitet Anfragen auf den Pfad /menu an den [[svcm|Service menu]] weiter und Anfragen auf /bestellung an den [[svcb|Service bestellung]]. Der Service menu leitet an die beiden Pods [[m1|menu-1]] und [[m2|menu-2]] weiter, der Service bestellung an den Pod [[b1|bestellung-1]].</p><p class=\"hint\">Die Bausteine liegen schon. Verbinde sie so, wie eine Anfrage läuft.</p>", "data-baustein"),
+    vorgegeben: true,
+    verbindungsarten: [A.weiter],
+    schichten: [{ id: "aussen", name: "Aussen" }, { id: "zugang", name: "Zugang" }, { id: "svc", name: "Services" }, { id: "pods", name: "Pods" }],
+    bausteine: [
+      { id: "app", name: "Mobile App", art: "mobile", schicht: "aussen" },
+      { id: "ing", name: "Ingress", art: "gateway", schicht: "zugang" },
+      { id: "svcm", name: "Service menu", art: "lb", schicht: "svc" },
+      { id: "svcb", name: "Service bestellung", art: "lb", schicht: "svc" },
+      { id: "m1", name: "Pod menu-1", art: "pod", schicht: "pods" },
+      { id: "m2", name: "Pod menu-2", art: "pod", schicht: "pods" },
+      { id: "b1", name: "Pod bestellung-1", art: "pod", schicht: "pods" }
+    ],
+    loesung: {
+      bausteine: ["app", "ing", "svcm", "svcb", "m1", "m2", "b1"],
+      verbindungen: [
+        { von: "app", nach: "ing", art: "weiter", warum: "«schickt alle Anfragen an den Ingress»: Der Ingress ist der einzige Eingang von aussen." },
+        { von: "ing", nach: "svcm", art: "weiter", warum: "Regel für den Pfad /menu: Der Ingress leitet an den Service menu weiter." },
+        { von: "ing", nach: "svcb", art: "weiter", warum: "Regel für den Pfad /bestellung: Der Ingress leitet an den Service bestellung weiter." },
+        { von: "svcm", nach: "m1", art: "weiter", warum: "Der Service menu verteilt auf alle passenden Pods, also auch auf menu-1." },
+        { von: "svcm", nach: "m2", art: "weiter", warum: "… und auf menu-2. Ein Service verteilt fast immer auf mehrere Pods." },
+        { von: "svcb", nach: "b1", art: "weiter", warum: "Der Service bestellung leitet an seinen einzigen Pod weiter." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> Ingress → Service → Pods. Der Ingress zeigt nie direkt auf Pods, sondern immer auf einen Service. Ein Ingress kann viele Services bedienen, je nach Host oder Pfad."
+  });
+
+  // Übung 2 (vorgegeben, Richtung egal): Deployment-Sicht aus kubectl-Ausgabe
+  L.modellieren("#t03-mod-2", {
+    titel: "Übung 2 · Deployment-Sicht: Welcher Pod läuft wo?",
+    aufgabe: '<p>Das Betriebsteam des Ticketing-Systems «Platzwahl» zeigt dir diese Ausgaben. Verbinde jeden Pod mit der Node, auf der er läuft. Die Richtung spielt keine Rolle.</p>' +
+      '<pre class="code" data-sprache="kubectl get pods -o wide (gekürzt)"><code>NAME              READY   STATUS    NODE\n' +
+      '<span data-baustein="w1">web-5d8-k2x4</span>      1/1     Running   node-a\n' +
+      '<span data-baustein="w2">web-5d8-p9q1</span>      1/1     Running   node-b\n' +
+      '<span data-baustein="w3">web-5d8-z7m3</span>      0/1     Pending   &lt;none&gt;\n' +
+      '<span data-baustein="api">api-6c1-h4t8</span>      1/1     Running   node-b\n' +
+      '<span data-baustein="db">db-0</span>              1/1     Running   node-a</code></pre>' +
+      '<pre class="code" data-sprache="kubectl get nodes"><code>NAME     STATUS\n<span data-baustein="na">node-a</span>   Ready\n<span data-baustein="nb">node-b</span>   Ready\n<span data-baustein="nc">node-c</span>   NotReady</code></pre>',
+    vorgegeben: true,
+    richtungEgal: true,
+    verbindungsarten: [A.laeuft],
+    schichten: [{ id: "web", name: "Pods des Deployments web" }, { id: "rest", name: "Weitere Pods" }, { id: "nodes", name: "Worker Nodes" }],
+    bausteine: [
+      { id: "w1", name: "web-5d8-k2x4", art: "pod", schicht: "web" },
+      { id: "w2", name: "web-5d8-p9q1", art: "pod", schicht: "web" },
+      { id: "w3", name: "web-5d8-z7m3 (Pending)", art: "pod", schicht: "web" },
+      { id: "api", name: "api-6c1-h4t8", art: "pod", schicht: "rest" },
+      { id: "db", name: "db-0", art: "db", schicht: "rest" },
+      { id: "na", name: "node-a", art: "node", schicht: "nodes" },
+      { id: "nb", name: "node-b", art: "node", schicht: "nodes" },
+      { id: "nc", name: "node-c (NotReady)", art: "node", schicht: "nodes" }
+    ],
+    loesung: {
+      bausteine: ["w1", "w2", "w3", "api", "db", "na", "nb", "nc"],
+      verbindungen: [
+        { von: "w1", nach: "na", art: "laeuft", warum: "Spalte NODE: web-5d8-k2x4 läuft auf node-a." },
+        { von: "w2", nach: "nb", art: "laeuft", warum: "Spalte NODE: web-5d8-p9q1 läuft auf node-b. Die web-Pods sind verteilt: Fällt eine Node aus, läuft der Shop weiter." },
+        { von: "api", nach: "nb", art: "laeuft", warum: "api-6c1-h4t8 läuft ebenfalls auf node-b. Auf einer Node laufen Pods verschiedener Deployments." },
+        { von: "db", nach: "na", art: "laeuft", warum: "db-0 (aus einem StatefulSet) läuft auf node-a." }
+      ]
+    },
+    erklaerung: "<b>Falle:</b> Der Pending-Pod und node-c bekommen <b>keine</b> Verbindung. Pending heisst: Der Scheduler hat noch keine Node gefunden (NODE &lt;none&gt;). Und auf eine Node mit NotReady plant er keine neuen Pods. Ursache herausfinden: <code>kubectl describe pod web-5d8-z7m3</code> zeigt unter Events zum Beispiel «Insufficient memory»."
+  });
+
+  // Übung 3 (frei): Webshop mit ConfigMap, Secret, PVC = Lösungsfilm
+  const GIPFEL_TEXT = [
+    "Der Outdoor-Webshop «Gipfel» soll in Kubernetes laufen. Kundinnen öffnen [[client|im Browser]] die Adresse shop.gipfel.ch. Ein [[ing|Ingress]] nimmt die Anfragen entgegen und leitet sie an den [[svcweb|Service shop-web]] weiter. Dieser leitet sie an die [[web|Web-Pods]] weiter, die ein Deployment mit drei Replicas betreibt.",
+    "Die Web-Pods lesen Währung und Log-Level aus der [[cm|ConfigMap shop-config]] und das Datenbank-Passwort aus dem [[sec|Secret db-zugang]].",
+    "Für jede Bestellung schicken die Web-Pods eine Anfrage an den [[svcdb|Service shop-db]], der sie an den [[db|Datenbank-Pod]] weiterleitet. Der Datenbank-Pod gehört zu einem StatefulSet, liest dasselbe Secret und speichert seine Daten in einem [[pvc|PersistentVolumeClaim db-daten]]."
+  ];
+  const GIPFEL_KANTEN = [
+    { von: "client", nach: "ing", art: "weiter", warum: "«öffnen im Browser … Ein Ingress nimmt die Anfragen entgegen»: Der Browser schickt seine Anfrage an den Ingress." },
+    { von: "ing", nach: "svcweb", art: "weiter", warum: "«leitet sie an den Service shop-web weiter»." },
+    { von: "svcweb", nach: "web", art: "weiter", warum: "«Dieser leitet sie an die Web-Pods weiter»: Der Service verteilt auf die drei Pods." },
+    { von: "web", nach: "svcdb", art: "weiter", warum: "«schicken eine Anfrage an den Service shop-db»: Pods reden mit der Datenbank immer über deren Service, nie direkt über eine Pod-IP." },
+    { von: "svcdb", nach: "db", art: "weiter", warum: "«der sie an den Datenbank-Pod weiterleitet»." },
+    { von: "web", nach: "cm", art: "konfig", warum: "«lesen Währung und Log-Level aus der ConfigMap»: nicht geheime Einstellungen." },
+    { von: "web", nach: "sec", art: "konfig", warum: "«das Datenbank-Passwort aus dem Secret»: Geheimes gehört ins Secret." },
+    { von: "db", nach: "sec", art: "konfig", warum: "«liest dasselbe Secret»: Auch die Datenbank braucht das Passwort, sonst passt es nicht zusammen." },
+    { von: "db", nach: "pvc", art: "speichert", warum: "«speichert seine Daten in einem PersistentVolumeClaim»: Die Daten überleben jeden Neustart des Pods." }
+  ];
+  L.modellieren("#t03-mod-3", {
+    titel: "Übung 3 · Webshop «Gipfel» mit Konfiguration und Daten",
+    aufgabe: markiere(GIPFEL_TEXT.map((t) => "<p>" + t + "</p>").join(""), "data-baustein"),
+    verbindungsarten: [A.weiter, A.konfig, A.speichert],
+    schichten: [{ id: "aussen", name: "Aussen" }, { id: "zugang", name: "Zugang" }, { id: "anw", name: "Anwendung" }, { id: "daten", name: "Konfiguration und Daten" }],
+    bausteine: [
+      { id: "client", name: "Browser", art: "client", schicht: "aussen" },
+      { id: "ing", name: "Ingress", art: "gateway", schicht: "zugang" },
+      { id: "svcweb", name: "Service shop-web", art: "lb", schicht: "zugang" },
+      { id: "web", name: "Web-Pods (Deployment)", art: "pod", schicht: "anw" },
+      { id: "hpa", name: "HorizontalPodAutoscaler", art: "monitor", schicht: "anw" },
+      { id: "svcdb", name: "Service shop-db", art: "lb", schicht: "anw" },
+      { id: "db", name: "DB-Pod (StatefulSet)", art: "db", schicht: "anw" },
+      { id: "cm", name: "ConfigMap shop-config", art: "config", schicht: "daten" },
+      { id: "sec", name: "Secret db-zugang", art: "auth", schicht: "daten" },
+      { id: "cache", name: "Redis-Cache", art: "cache", schicht: "daten" },
+      { id: "pvc", name: "PVC db-daten", art: "storage", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["client", "ing", "svcweb", "web", "svcdb", "db", "cm", "sec", "pvc"],
+      verbindungen: GIPFEL_KANTEN
+    },
+    erklaerung: "<b>Muster:</b> Erst den Anfrageweg von aussen nach innen (leitet weiter an), dann die Konfiguration (liest Konfig/Secret, Pfeil vom Pod weg), dann die Daten (speichert in). HPA und Cache kommen im Text nicht vor, also gehören sie nicht ins Bild. Der Lösungsfilm unten zeigt diese Übung Schritt für Schritt."
+  });
+
+  // Übung 4 (frei): YAML lesen und daraus das Bild verbinden
+  L.modellieren("#t03-mod-4", {
+    titel: "Übung 4 · Streaming: YAML lesen, Bild zeichnen",
+    aufgabe: '<p>Der Musik-Streamingdienst «Klangwelle» betreibt diese Objekte. Zeichne nur, was in den YAML-Dateien steht.</p>' +
+      '<pre class="code" data-sprache="klangwelle.yaml"><code>kind: Deployment\nmetadata: { name: <span data-baustein="kp">katalog</span> }\nspec:\n  replicas: 2\n  selector: { matchLabels: { app: katalog } }\n  template:\n    metadata: { labels: { app: katalog } }\n    spec:\n      containers:\n        - name: katalog\n          image: ghcr.io/klangwelle/katalog:3.1.0\n          envFrom:\n            - configMapRef: { name: <span data-baustein="cm">katalog-config</span> }\n            - secretRef: { name: <span data-baustein="sec">katalog-secret</span> }\n' +
+      '---\nkind: Deployment\nmetadata: { name: <span data-baustein="tp">transcoder</span> }\nspec:\n  replicas: 1\n  selector: { matchLabels: { app: transcoder } }\n  template:\n    metadata: { labels: { app: transcoder } }\n    spec:\n      containers:\n        - name: transcoder\n          image: ghcr.io/klangwelle/transcoder:1.0.4\n          volumeMounts:\n            - { name: audio, mountPath: /data }\n      volumes:\n        - name: audio\n          persistentVolumeClaim: { claimName: <span data-baustein="pvc">audio-daten</span> }\n' +
+      '---\nkind: Service\nmetadata: { name: <span data-baustein="svck">katalog</span> }\nspec:\n  selector: { app: katalog }\n  ports: [{ port: 80, targetPort: 8080 }]\n' +
+      '---\nkind: Ingress\nmetadata: { name: <span data-baustein="ing">klangwelle</span> }\nspec:\n  rules:\n    - host: klangwelle.ch\n      http:\n        paths:\n          - path: /katalog\n            pathType: Prefix\n            backend:\n              service: { name: katalog, port: { number: 80 } }</code></pre>',
+    verbindungsarten: [A.weiter, A.konfig, A.speichert],
+    schichten: [{ id: "zugang", name: "Zugang" }, { id: "pods", name: "Pods" }, { id: "daten", name: "Konfiguration und Daten" }],
+    bausteine: [
+      { id: "client", name: "Browser", art: "client", schicht: "zugang" },
+      { id: "ing", name: "Ingress klangwelle", art: "gateway", schicht: "zugang" },
+      { id: "svck", name: "Service katalog", art: "lb", schicht: "zugang" },
+      { id: "svct", name: "Service transcoder", art: "lb", schicht: "zugang" },
+      { id: "kp", name: "Katalog-Pods", art: "pod", schicht: "pods" },
+      { id: "tp", name: "Transcoder-Pod", art: "pod", schicht: "pods" },
+      { id: "hpa", name: "HorizontalPodAutoscaler", art: "monitor", schicht: "pods" },
+      { id: "cm", name: "ConfigMap katalog-config", art: "config", schicht: "daten" },
+      { id: "sec", name: "Secret katalog-secret", art: "auth", schicht: "daten" },
+      { id: "pvc", name: "PVC audio-daten", art: "storage", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["ing", "svck", "kp", "tp", "cm", "sec", "pvc"],
+      verbindungen: [
+        { von: "ing", nach: "svck", art: "weiter", warum: "backend des Ingress: service name katalog, Port 80." },
+        { von: "svck", nach: "kp", art: "weiter", warum: "selector app: katalog passt zum Label der Katalog-Pods (template.metadata.labels)." },
+        { von: "kp", nach: "cm", art: "konfig", warum: "envFrom.configMapRef katalog-config im Deployment katalog." },
+        { von: "kp", nach: "sec", art: "konfig", warum: "envFrom.secretRef katalog-secret im Deployment katalog." },
+        { von: "tp", nach: "pvc", art: "speichert", warum: "volumes.persistentVolumeClaim audio-daten, eingehängt unter /data: Der Transcoder schreibt dort seine Dateien." }
+      ]
+    },
+    erklaerung: "<b>Fallen:</b> Für den Transcoder gibt es keinen Service. Er ist ein Hintergrund-Worker und von aussen nicht erreichbar. Der Browser steht in keiner Datei, darum gehört er hier nicht ins Bild. Und der Service findet die Katalog-Pods über <code>selector app: katalog</code>, nicht über den Namen des Deployments."
+  });
+
+  // Übung 5 (frei, schwer): Spital, alle vier Verbindungsarten
+  L.modellieren("#t03-mod-5", {
+    titel: "Übung 5 · Spital: Terminbuchung mit Datenschutz",
+    aufgabe: markiere("<p>Das Spital Sonnenberg betreibt seine Terminbuchung im eigenen Cluster. Patientinnen buchen [[web|im Browser]] unter termine.sonnenberg.ch. Ein [[ing|Ingress]] leitet die Anfragen an den [[svct|Service termin]] weiter, und dieser leitet sie an die [[tp|Termin-Pods]] weiter (Deployment mit drei Replicas). Die Termin-Pods lesen Öffnungszeiten und Sprache aus der [[cm|ConfigMap termin-config]].</p><p>Für Angaben zur Person schicken die Termin-Pods eine Anfrage an den [[svcp|Service patient]], der sie an die [[pp|Patienten-Pods]] weiterleitet. Die Patienten-Pods lesen das Datenbank-Passwort aus dem [[sec|Secret patient-db]] und speichern Arztberichte als PDF in einem [[pvc|PersistentVolumeClaim berichte]]. Aus Datenschutzgründen laufen die Patienten-Pods nur auf dem [[node|Node node-sicher]] mit verschlüsselter Festplatte.</p><p>Einen HorizontalPodAutoscaler und einen Cache plant das Team erst für nächstes Jahr.</p>", "data-baustein"),
+    verbindungsarten: [A.weiter, A.konfig, A.speichert, A.laeuft],
+    schichten: [{ id: "aussen", name: "Aussen" }, { id: "zugang", name: "Zugang" }, { id: "anw", name: "Anwendung" }, { id: "konfig", name: "Konfiguration" }, { id: "infra", name: "Daten und Nodes" }],
+    bausteine: [
+      { id: "web", name: "Browser", art: "client", schicht: "aussen" },
+      { id: "ing", name: "Ingress", art: "gateway", schicht: "zugang" },
+      { id: "svct", name: "Service termin", art: "lb", schicht: "zugang" },
+      { id: "tp", name: "Termin-Pods", art: "pod", schicht: "anw" },
+      { id: "svcp", name: "Service patient", art: "lb", schicht: "anw" },
+      { id: "pp", name: "Patienten-Pods", art: "pod", schicht: "anw" },
+      { id: "hpa", name: "HorizontalPodAutoscaler", art: "monitor", schicht: "anw" },
+      { id: "cm", name: "ConfigMap termin-config", art: "config", schicht: "konfig" },
+      { id: "sec", name: "Secret patient-db", art: "auth", schicht: "konfig" },
+      { id: "pvc", name: "PVC berichte", art: "storage", schicht: "infra" },
+      { id: "node", name: "Node node-sicher", art: "node", schicht: "infra" },
+      { id: "cache", name: "Redis-Cache", art: "cache", schicht: "infra" },
+      { id: "broker", name: "Message Broker", art: "topic", schicht: "infra" }
+    ],
+    loesung: {
+      bausteine: ["web", "ing", "svct", "tp", "svcp", "pp", "cm", "sec", "pvc", "node"],
+      verbindungen: [
+        { von: "web", nach: "ing", art: "weiter", warum: "Patientinnen buchen im Browser unter termine.sonnenberg.ch: Die Anfrage geht an den Ingress." },
+        { von: "ing", nach: "svct", art: "weiter", warum: "«Ein Ingress leitet die Anfragen an den Service termin weiter»." },
+        { von: "svct", nach: "tp", art: "weiter", warum: "«dieser leitet sie an die Termin-Pods weiter»." },
+        { von: "tp", nach: "cm", art: "konfig", warum: "«lesen Öffnungszeiten und Sprache aus der ConfigMap»: nicht geheim." },
+        { von: "tp", nach: "svcp", art: "weiter", warum: "«schicken eine Anfrage an den Service patient»: Dienst zu Dienst immer über den Service." },
+        { von: "svcp", nach: "pp", art: "weiter", warum: "«der sie an die Patienten-Pods weiterleitet»." },
+        { von: "pp", nach: "sec", art: "konfig", warum: "«lesen das Datenbank-Passwort aus dem Secret»." },
+        { von: "pp", nach: "pvc", art: "speichert", warum: "«speichern Arztberichte als PDF in einem PersistentVolumeClaim»." },
+        { von: "pp", nach: "node", art: "laeuft", warum: "«laufen nur auf dem Node node-sicher»: in YAML mit einem nodeSelector oder einer Node-Affinity umgesetzt." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> Jedes Verb im Text ist eine Verbindung: «leitet weiter», «schicken eine Anfrage» → leitet weiter an; «lesen aus» → liest Konfig/Secret; «speichern in» → speichert in; «laufen auf» → läuft auf. «Plant erst für nächstes Jahr» heisst: gibt es noch nicht. HPA, Cache und Message Broker sind Ablenker."
+  });
+
+  /* ---------- Übungen ---------- */
+  L.auswahl("#t03-a1", {
+    frage: "Die Shop-Pods brauchen in dev die Währung EUR und das Log-Level DEBUG, in prod CHF und INFO. Ein neues Image soll es dafür nicht geben. Welches Objekt löst das?",
+    optionen: ["Secret", "ConfigMap", "PersistentVolumeClaim", "Ingress"],
+    richtig: 1,
+    erklaerung: "Nicht geheime Einstellungen pro Umgebung gehören in eine ConfigMap. Das Image bleibt gleich (12-Factor: Konfiguration über die Umgebung)."
+  });
+  L.auswahl("#t03-a2", {
+    frage: "Die PostgreSQL-Datenbank im Cluster ist nach jedem Neustart des Pods leer. Was fehlt?",
+    optionen: ["Mehr Replicas im Deployment", "Eine Liveness-Probe", "Ein PersistentVolumeClaim (am besten über ein StatefulSet)", "Ein Service vom Typ LoadBalancer"],
+    richtig: 2,
+    erklaerung: "Ohne PVC schreibt die Datenbank in die beschreibbare Schicht des Containers. Die verschwindet mit dem Container. Mehr Replicas würden das Problem nur vervielfachen."
+  });
+  L.auswahl("#t03-a3", {
+    frage: "Am Black Friday braucht der Shop statt 3 plötzlich 9 Pods, nachts reicht 1. Was setzt du ein?",
+    optionen: ["Einen HorizontalPodAutoscaler", "Ein StatefulSet", "Einen Namespace pro Tageszeit", "Einen NodePort-Service"],
+    richtig: 0,
+    erklaerung: "Der HPA misst die Auslastung und passt replicas zwischen minReplicas und maxReplicas an."
+  });
+  L.auswahl("#t03-a4", {
+    frage: "Nach jedem Rolling Update sehen Kundinnen für 20 Sekunden Fehler 502. Die neuen Pods bekommen Anfragen, bevor Spring Boot fertig gestartet ist. Was fehlt?",
+    optionen: ["Eine Liveness-Probe", "Eine Readiness-Probe", "Ein Secret", "Ein grösseres Image"],
+    richtig: 1,
+    erklaerung: "Die Readiness-Probe entscheidet, ob ein Pod Anfragen vom Service bekommt. Erst wenn sie grün ist, nimmt der Service den Pod auf und das Rolling Update beendet den nächsten alten Pod."
+  });
+  L.auswahl("#t03-a5", {
+    frage: "Team Shop und Team Lager teilen sich einen Cluster. Beide wollen einen Service namens <code>api</code>, und Team Lager soll die Objekte von Team Shop nicht ändern dürfen. Was trennt das?",
+    optionen: ["Zwei Ingress-Objekte", "Zwei Namespaces mit eigenen Rechten", "Zwei ConfigMaps", "Zwei Container im selben Pod"],
+    richtig: 1,
+    erklaerung: "Namen sind nur innerhalb eines Namespaces eindeutig. Rechte (RBAC) und Kontingente vergibst du pro Namespace."
+  });
+
+  L.wahrFalsch("#t03-wf", {
+    titel: "Wahr oder falsch?",
+    aussagen: [
+      { html: "Ein Pod kann mehrere Container enthalten, die sich dieselbe IP-Adresse teilen.", wahr: true,
+        erklaerung: "Container im selben Pod teilen Netzwerk und Volumes. Typisch ist ein Sidecar, zum Beispiel ein Log-Sammler." },
+      { html: "Ein Secret ist verschlüsselt, sobald es in Kubernetes gespeichert ist.", wahr: false,
+        erklaerung: "Ein Secret ist nur Base64-codiert. Verschlüsselung in etcd muss man separat einschalten, und Leserechte muss man einschränken." },
+      { html: "Bekommt ein Pod nach einem Neustart eine neue IP-Adresse, musst du den Service anpassen.", wahr: false,
+        erklaerung: "Der Service findet Pods über den Label-Selector und aktualisiert seine Ziele selbst. Genau dafür gibt es ihn." },
+      { html: "Hast du mit <code>kubectl scale</code> auf 5 Pods skaliert und steht in der Datei <code>replicas: 3</code>, setzt das nächste <code>kubectl apply</code> wieder auf 3.", wahr: true,
+        erklaerung: "Die Datei ist der deklarierte Soll-Zustand. Imperative Änderungen gehen beim nächsten apply verloren." },
+      { html: "etcd speichert den gesamten Zustand des Clusters.", wahr: true,
+        erklaerung: "etcd ist der Schlüssel-Wert-Speicher der Control Plane. Fällt er ohne Backup aus, ist der Cluster-Zustand weg." },
+      { html: "Zwei Container aus demselben Image teilen sich ihre beschreibbare Schicht.", wahr: false,
+        erklaerung: "Sie teilen nur die Layer des Images, die nur lesbar sind. Die beschreibbare Schicht hat jeder Container für sich." },
+      { html: "Schlägt die Readiness-Probe fehl, startet das kubelet den Container neu.", wahr: false,
+        erklaerung: "Neu gestartet wird bei der Liveness-Probe. Bei der Readiness-Probe nimmt der Service den Pod nur aus der Verteilung." }
+    ]
+  });
+
+  L.zahlAufgabe("#t03-zahl", {
+    titel: "Wie viele Pods will der HPA?",
+    frage: "Das Deployment shop-web hat 4 Pods. Ihre durchschnittliche CPU-Auslastung beträgt 80 % (bezogen auf requests). Der HPA hat das Ziel 60 % und maxReplicas 10. Auf wie viele Pods skaliert er? Gib eine ganze Zahl an.",
+    antwort: 6,
+    hinweise: [
+      T`Formel: $\text{Pods}_{\text{neu}} = \left\lceil \text{Pods}_{\text{jetzt}} \cdot \frac{\text{Ist}}{\text{Ziel}} \right\rceil$`,
+      "Die eckigen Klammern oben heissen: immer aufrunden."
+    ],
+    loesungsweg: [
+      T`$4 \cdot \frac{80}{60} = 5.33$`,
+      T`Aufrunden: $\lceil 5.33 \rceil = 6$. Das liegt unter maxReplicas 10, also 6 Pods.`,
+      T`Kontrolle: Verteilt sich dieselbe Last auf 6 Pods, ist jeder zu $\frac{4 \cdot 80}{6} \approx 53\,\%$ ausgelastet, also unter dem Ziel 60 %.`
+    ]
+  });
+
+  L.schrittAufgabe("#t03-schritt", {
+    titel: "Fehlersuche: Der Service antwortet mit 503",
+    aufgabe: '<p>Du hast das Deployment shop-web angewendet. Alle drei Pods sind <i>Running</i> und bereit. Trotzdem liefert der Ingress für shop.gipfel.ch nur «503 Service Unavailable». Der Service sieht so aus:</p>' +
+      '<pre class="code" data-sprache="service.yaml"><code>kind: Service\nmetadata: { name: shop-web }\nspec:\n  selector:\n    <mark>app: shop-web</mark>\n  ports: [{ port: 80, targetPort: 8080 }]</code></pre>' +
+      '<p>Die Pods tragen das Label <code>app: shop</code>. Wie findest du den Fehler, und wie behebst du ihn?</p>',
+    schritte: [
+      { html: '<pre class="code" data-sprache="Shell"><code>kubectl get endpoints shop-web\nNAME       ENDPOINTS   AGE\nshop-web   &lt;none&gt;      5m</code></pre>',
+        warum: "Zuerst prüfen, ob der Service überhaupt Ziele hat. «&lt;none&gt;» heisst: Kein Pod passt zum Selector." },
+      { html: "<p>Selector <code>app: shop-web</code> gegen Pod-Label <code>app: shop</code>: Die Werte sind verschieden.</p>",
+        warum: "Der Service sucht nur über Labels. Dass das Deployment shop-web heisst, hilft ihm nicht." },
+      { html: '<pre class="code" data-sprache="service.yaml"><code>  selector:\n    <mark>app: shop</mark></code></pre>',
+        warum: "Selector an das Label der Pods anpassen (oder umgekehrt), dann mit kubectl apply anwenden." },
+      { html: '<pre class="code" data-sprache="Shell"><code>kubectl get endpoints shop-web\nNAME       ENDPOINTS                                   AGE\nshop-web   10.1.0.12:8080,10.1.1.7:8080,10.1.2.4:8080   6m</code></pre>',
+        warum: "Kontrolle: Jetzt stehen drei Pod-IPs mit Port 8080 dahinter. Der Ingress bekommt Antworten." }
+    ]
+  });
+
+  /* ---------- Lösungsfilm: Anforderungstext → Kubernetes-Bild ---------- */
+  const FC = [4, 108, 212];
+  const FY = { aussen: 18, zugang: 100, anw: 184, daten: 268 };
+  const FB = {
+    client: { x: FC[1], y: FY.aussen, art: "client", name: "Browser", sub: "Kundin" },
+    ing: { x: FC[0], y: FY.zugang, art: "gateway", name: "Ingress", sub: "shop.gipfel.ch" },
+    svcweb: { x: FC[2], y: FY.zugang, art: "lb", name: "Service", sub: "shop-web" },
+    web: { x: FC[2], y: FY.anw, art: "pod", name: "Web-Pods", sub: "Deployment ×3" },
+    cm: { x: FC[2], y: FY.daten, art: "config", name: "ConfigMap", sub: "shop-config" },
+    sec: { x: FC[1], y: FY.daten, art: "auth", name: "Secret", sub: "db-zugang" },
+    svcdb: { x: FC[1], y: FY.anw, art: "lb", name: "Service", sub: "shop-db" },
+    db: { x: FC[0], y: FY.anw, art: "db", name: "DB-Pod", sub: "StatefulSet" },
+    pvc: { x: FC[0], y: FY.daten, art: "storage", name: "PVC", sub: "db-daten" }
+  };
+  const REIHE = ["client", "ing", "svcweb", "web", "cm", "sec", "svcdb", "db", "pvc"];
+  const NAMEN_F = { client: "Browser", ing: "Ingress", svcweb: "Service shop-web", web: "Web-Pods (Deployment)", cm: "ConfigMap shop-config", sec: "Secret db-zugang", svcdb: "Service shop-db", db: "DB-Pod (StatefulSet)", pvc: "PVC db-daten" };
+  function filmBild(nBoxen, nKanten, neuBox, neuKante, neuText) {
+    const boxen = REIHE.slice(0, nBoxen).map((id) => Object.assign({ id: id, w: 84, h: 52, neu: id === neuBox }, FB[id]));
+    const kanten = GIPFEL_KANTEN.slice(0, nKanten).map((k, i) => ({ von: k.von, nach: k.nach, art: k.art, neu: neuKante && i === nKanten - 1 }));
+    return '<div class="t03-bild">' + bild({
+      w: 300, h: 326, titel: "Kubernetes-Bild des Webshops Gipfel",
+      boxen: boxen, kanten: kanten
+    }) + (neuText ? '<p class="t03-neuzeile">Neu: <span class="nw">' + neuText + "</span></p>" : "") + "</div>";
+  }
+  const kText = (i) => NAMEN_F[GIPFEL_KANTEN[i].von] + " → " + NAMEN_F[GIPFEL_KANTEN[i].nach] + " (" + ART_NAME[GIPFEL_KANTEN[i].art] + ")";
+  const sB = (n, say, hl) => ({ ph: 0, dict: n, dh: [n - 1], hl: [hl || REIHE[n - 1]], f: filmBild(n, 0, REIHE[n - 1], false, NAMEN_F[REIHE[n - 1]]), say: say });
+  const sK = (ph, n, say, hl) => ({ ph: ph, hl: hl, dh: [], f: filmBild(9, n, null, true, kText(n - 1)), say: say });
+
+  L.film("#t03-film", {
+    phasen: ["1 · Bausteine", "2 · Anfrageweg", "3 · Konfiguration", "4 · Daten", "5 · Kontrolle"],
+    texte: GIPFEL_TEXT.map((t) => markiere(t, "data-ph")),
+    woerterbuch: REIHE.map((id) => L.piktogramm(FB[id].art) + " " + NAMEN_F[id]),
+    beschriftung: { texte: "Der Anforderungstext", text: "Abschnitt", woerterbuch: "Bausteine", formel: "Kubernetes-Bild" },
+    szenen: [
+      { ph: -1, sent: "all", dict: 0, f: "",
+        say: "So modellierst du jede solche Aufgabe: Erst alle Substantive als Bausteine sammeln. Dann den Anfrageweg von aussen nach innen verbinden. Dann Konfiguration, dann Daten. Zum Schluss alles gegen den Text prüfen." },
+      sB(1, "Wer startet die Anfrage? Kundinnen im Browser. Der Browser steht ganz oben, ausserhalb des Clusters."),
+      sB(2, "«Ein Ingress nimmt die Anfragen entgegen»: Er ist der Eingang in den Cluster für die Adresse shop.gipfel.ch."),
+      sB(3, "Der Service shop-web ist die feste Adresse vor den Web-Pods."),
+      sB(4, "«Deployment mit drei Replicas»: Das ergibt die Web-Pods. Ein Kästchen steht für alle drei, die Zahl schreiben wir dazu."),
+      sB(5, "«Währung und Log-Level» sind Einstellungen, nicht geheim. Darum eine ConfigMap."),
+      sB(6, "Ein Passwort ist geheim. Darum ein Secret, keine ConfigMap."),
+      sB(7, "Auch die Datenbank bekommt einen Service. So bleibt ihre Adresse fest, auch wenn ihr Pod ersetzt wird."),
+      sB(8, "«gehört zu einem StatefulSet»: Die Datenbank hat eigene Daten und einen festen Namen, zum Beispiel shop-db-0."),
+      sB(9, "«speichert seine Daten in einem PersistentVolumeClaim»: dauerhafter Speicher. Jetzt sind alle neun Bausteine da."),
+      { ph: 0, hl: [], dh: [], f: filmBild(9, 0, null, false, "nichts, und das ist richtig"),
+        say: "Ablenker prüfen: Ein Autoscaler oder ein Cache kommen im Text nicht vor. Was nicht im Text steht, kommt nicht ins Bild." },
+      sK(1, 1, "Jetzt die Verbindungen. Zuerst der Anfrageweg: Der Browser schickt die Anfrage an den Ingress.", ["client", "ing"]),
+      sK(1, 2, "«leitet sie an den Service shop-web weiter»: Der Ingress zeigt immer auf einen Service, nie direkt auf Pods.", ["ing", "svcweb"]),
+      sK(1, 3, "«Dieser leitet sie an die Web-Pods weiter»: Der Service findet die Pods über ihr Label.", ["svcweb", "web"]),
+      sK(1, 4, "«schicken eine Anfrage an den Service shop-db»: Die Web-Pods rufen die Datenbank über deren Service auf.", ["web", "svcdb"]),
+      sK(1, 5, "«der sie an den Datenbank-Pod weiterleitet»: Der Anfrageweg ist komplett, von aussen bis zur Datenbank.", ["svcdb", "db"]),
+      sK(2, 6, "Konfiguration: Die Web-Pods lesen die ConfigMap. Der Pfeil zeigt vom Lesenden zur Quelle, gestrichelt.", ["web", "cm"]),
+      sK(2, 7, "Die Web-Pods lesen auch das Secret mit dem Passwort.", ["web", "sec"]),
+      sK(2, 8, "«liest dasselbe Secret»: Auch der Datenbank-Pod braucht das Passwort. Ein Secret kann von mehreren Pods gelesen werden.", ["db", "sec"]),
+      sK(3, 9, "Daten: Der Datenbank-Pod speichert in den PVC, gepunktet. So überleben die Bestellungen jeden Neustart.", ["db", "pvc"]),
+      { ph: 4, hl: [], dh: [], f: filmBild(9, 9, null, false, "Kontrolle: 9 Bausteine, 9 Verbindungen"),
+        say: "Kontrolle: Neun Bausteine, neun Verbindungen. Jede Verbindung hat ein Verb im Text: leitet weiter, schicken, lesen, speichert. Fahr die Anfrage nach: Browser, Ingress, Service, Pods, Service, Datenbank." },
+      { ph: 4, f: filmBild(9, 9, null, false, ""),
+        say: "Das ist die Musterlösung von Übung 3. Probier sie dort selbst, falls du es noch nicht getan hast. Jetzt kannst du dich im Selbsttest prüfen.", end: true }
+    ]
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t03-selbsttest", {
+    fragen: [
+      { q: "Was teilen sich alle Container auf demselben Rechner?",
+        o: ["Ein Gast-Betriebssystem pro Container", "Den Kernel des Host-Betriebssystems", "Einen Hypervisor pro Container"], a: 1,
+        e: "Container haben keinen eigenen Kernel. Darum sind sie leicht und starten schnell. Gast-OS und Hypervisor gehören zu VMs." },
+      { q: "Welche Aussage über Image und Container stimmt?",
+        o: ["Aus einem Image kannst du viele Container starten.", "Ein Container ist unveränderlich, ein Image nicht.", "Jeder Container braucht ein eigenes Image."], a: 0,
+        e: "Image = Bauplan (unveränderlich), Container = laufende Instanz. Wie Klasse und Objekte." },
+      { q: "Wozu dient ein mehrstufiges Dockerfile?",
+        o: ["Damit das Image mehrere Anwendungen enthält", "Damit Build-Werkzeuge nicht im Laufzeit-Image landen", "Damit Docker mehrere Prozessoren nutzt"], a: 1,
+        e: "Die Build-Stufe enthält JDK und Maven. Die letzte Stufe übernimmt nur die fertige JAR: kleiner und sicherer." },
+      { q: "Ein Service soll die Pods des Deployments shop-web finden. Diese tragen das Label app: shop. Welcher Selector ist richtig?",
+        o: ["selector: { name: shop-web }", "selector: { app: shop-web }", "selector: { app: shop }"], a: 2,
+        e: "Typische Falle: Der Service sucht über die Labels der Pods, nicht über den Namen des Deployments." },
+      { q: "Ein Pod des Deployments verschwindet, weil seine Node ausfällt. Wer sorgt dafür, dass wieder drei Pods laufen?",
+        o: ["Der ReplicaSet-Controller in der Control Plane", "Der Service", "Der Ingress"], a: 0,
+        e: "Der Controller sieht Ist 2 statt Soll 3 und erstellt einen Pod. Der Scheduler wählt dafür eine Node, das kubelet dort startet ihn." },
+      { q: "Wo legst du das Datenbank-Passwort ab?",
+        o: ["Im Dockerfile als ENV", "In einem Secret", "In einer ConfigMap"], a: 1,
+        e: "Im Image wäre es für alle lesbar, die das Image holen. Eine ConfigMap ist für nicht geheime Werte gedacht." },
+      { q: "Die Readiness-Probe eines Pods schlägt fehl. Was passiert?",
+        o: ["Der Container wird neu gestartet.", "Der Pod bekommt keine Anfragen mehr vom Service.", "Der Pod wird auf eine andere Node verschoben."], a: 1,
+        e: "Readiness entscheidet über Traffic, Liveness über Neustart." },
+      { q: "Die Daten einer PostgreSQL im Cluster sollen jeden Neustart überleben. Was brauchst du?",
+        o: ["Mehr Replicas", "Einen PersistentVolumeClaim, am besten über ein StatefulSet", "Einen Service vom Typ NodePort"], a: 1,
+        e: "Ohne PVC landen die Daten in der beschreibbaren Schicht des Containers und sind beim nächsten Pod weg." },
+      { q: "Was bedeutet «deklarativ» bei Kubernetes?",
+        o: ["Du beschreibst den Soll-Zustand, Controller gleichen laufend mit dem Ist ab.", "Du gibst jeden Schritt als Befehl ein.", "Kubernetes führt eine YAML-Datei genau einmal aus."], a: 0,
+        e: "kubectl apply speichert das Soll. Die Kontrollschleifen sorgen dauerhaft dafür, dass das Ist passt: Self-Healing." },
+      { q: "Mehrere Services sollen unter einer Domain nach Pfad erreichbar sein (/menu, /bestellung). Was nimmst du?",
+        o: ["Einen Ingress", "Pro Service einen LoadBalancer", "Einen Namespace"], a: 0,
+        e: "Ein Ingress ist ein HTTP-Eingang mit Regeln nach Host und Pfad. LoadBalancer pro Service sind teurer und kennen keine Pfade." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

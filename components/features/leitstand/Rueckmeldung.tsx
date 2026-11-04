@@ -6,6 +6,7 @@
 
 import type { EventDef, OptionDef } from "@/lib/simulation/core"
 import styles from "@/app/(leitstand)/leitstand.module.css"
+import Avatar from "./Avatar"
 import { RATING_AMPEL, RATING_FORM, RATING_TEXT, splitFeedback, stationHref, stationNumber, stationTitle } from "./format"
 
 export default function Rueckmeldung({
@@ -32,7 +33,9 @@ export default function Rueckmeldung({
         <span className={`${styles.ampel} ${styles[`ampel_${ampel}`]}`}>
           <span aria-hidden="true">{RATING_FORM[option.rating]}</span> {RATING_TEXT[option.rating]}
         </span>
-        <span className={styles.rueckVon}>Rückmeldung von {coach}</span>
+        <span className={styles.rueckVon}>
+          <Avatar name={coach} role="Coach" size={32} decorative /> Rückmeldung von {coach}
+        </span>
       </div>
       {defaulted && (
         <p className={styles.rueckStandard}>

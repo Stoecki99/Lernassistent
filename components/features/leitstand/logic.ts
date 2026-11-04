@@ -190,3 +190,33 @@ export function shuffledOptions<T extends { id: string }>(seed: number, eventId:
 export function optionNumber(seed: number, eventId: string, options: Array<{ id: string }>, optionId: string): number {
   return shuffledOptions(seed, eventId, options).findIndex((o) => o.id === optionId) + 1
 }
+
+/** Anzeige-Status eines Vorgangs: wie im Rechenkern, dazu «blockiert» = im Lauf bearbeitbar oder laufend, aber niemand besetzt. */
+export type DisplayStatus = "offen" | "bereit" | "laufend" | "fertig" | "blockiert"
+
+export function displayStatus(state: SimState, scenario: Scenario, taskId: TaskId): DisplayStatus {
+  const status = state.tasks[taskId].status
+  if (state.phase !== "planung" && (status === "bereit" || status === "laufend") && teamOf(state, scenario, taskId).length === 0) return "blockiert"
+  return status
+}
+
+/**
+ * Auslastung einer Person zur Anzeige: im Lauf die bezahlten Projektstunden des letzten Tages (2 Takte) gegen das Pensum,
+ * in der Planung die Summe der Anteile ihrer Zuweisungen (100 % = ein Vorgang voll). null = nichts zu zeigen.
+ */
+export function personLoad(state: SimState, trace: Trace, scenario: Scenario, personId: PersonId): { percent: number; planned: boolean } | null {
+  const person = state.people[personId]
+  const def = scenario.people.find((p) => p.id === personId)
+  if (!person || !def || !person.available) return null
+  const series = trace.hours[personId] ?? []
+  const n = trace.ticks.length
+  if (state.tick === 0 || n < 2) {
+    const shares = person.assignments.reduce((sum, a) => sum + a.share, 0)
+    return { percent: Math.min(shares, 1) * 100, planned: true }
+  }
+  const back = Math.min(2, n - 1)
+  const hours = (series[n - 1] ?? 0) - (series[n - 1 - back] ?? 0)
+  const ticks = trace.ticks[n - 1] - trace.ticks[n - 1 - back]
+  const capacity = 4 * def.pensum * Math.max(1, ticks)
+  return { percent: (hours / Math.max(1e-9, capacity)) * 100, planned: false }
+}

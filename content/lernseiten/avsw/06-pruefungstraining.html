@@ -1,0 +1,1443 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prüfungstraining · AVSW</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <style>
+    /* Station 06: nur Klassen mit Präfix t06-, nur Farben aus :root */
+    .t06-ziele{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:4px}
+    .t06-ziele li::marker{color:var(--accent)}
+    .t06-liste{margin:0; padding-left:1.5em; display:flex; flex-direction:column; gap:8px}
+    .t06-liste li::marker{color:var(--accent); font-weight:700}
+    .t06-tabelle td a{white-space:nowrap}
+    .t06-pk{display:inline-flex; color:var(--accent)}
+    .t06-pk .pikto{width:1.6em; height:1.6em}
+    .t06-symtab td:first-child{font-family:var(--f-body); white-space:nowrap}
+    .t06-concept-pk{display:flex; gap:6px; color:var(--accent)}
+    .t06-concept-pk .pikto{width:1.8em; height:1.8em}
+    /* Architektur-Bild aus Piktogramm-Kästchen (Stepper, Film) */
+    .t06-arch{display:flex; flex-direction:column; gap:6px; font-family:var(--f-body); font-size:.9rem; line-height:1.3; white-space:normal; min-width:0; text-align:left}
+    .t06-band{display:flex; flex-direction:column; gap:4px; padding:6px 8px; border:1px dashed var(--line); border-radius:10px; min-width:0}
+    .t06-bname{font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600}
+    .t06-boxen{display:flex; flex-wrap:wrap; gap:6px}
+    .t06-box{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border:1.5px solid var(--line); border-radius:8px; background:var(--surface); color:var(--ink)}
+    .t06-box .pikto{color:var(--accent)}
+    .t06-weg{opacity:.55; text-decoration:line-through}
+    .t06-verb{list-style:none; margin:2px 0 0; padding:0; display:flex; flex-direction:column; gap:4px}
+    .t06-verb li{display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px}
+    .t06-linie{display:inline-block; width:24px; height:0; border-top:2.5px solid var(--accent); flex:none}
+    .t06-l-async{border-top-style:dashed}
+    .t06-l-daten{border-top-style:dotted}
+    .t06-art{font-size:.78rem; color:var(--muted)}
+    .t06-st{font-family:var(--f-body); font-size:1rem; line-height:1.6; white-space:normal}
+    /* Prüfungsmodus */
+    .t06-modus{display:flex; flex-wrap:wrap; gap:6px 12px; align-items:center}
+    .t06-badge{display:inline-flex; align-items:center; font-size:.8rem; font-weight:600; padding:2px 10px; border-radius:999px; border:1px solid currentColor; white-space:nowrap}
+    .t06-b-uebung{color:var(--muted)}
+    .t06-b-pruefung{color:var(--accent); background:var(--accent-soft)}
+    .t06-b-fertig{color:var(--ok); background:var(--ok-bg)}
+    .t06-b-gut{color:var(--ok); background:var(--ok-bg)}
+    .t06-b-mittel{color:var(--const)}
+    .t06-b-schwach{color:var(--bad); background:var(--bad-bg)}
+    .t06-b-offen{color:var(--muted)}
+    .t06-check{display:flex; gap:8px; align-items:center; font-weight:600; font-size:.95rem; cursor:pointer}
+    .t06-check input{width:20px; height:20px; accent-color:var(--accent); flex:none}
+    .t06-bestaetigen{background:var(--bad-bg); border-radius:10px; padding:10px 14px; display:flex; flex-direction:column; gap:8px; flex-basis:100%}
+    .t06-bestaetigen p{margin:0}
+    .t06-ansage{font-size:.92rem; color:var(--muted); min-height:1.4em}
+    /* Lösung zeigen: im Prüfungsmodus bis zur Abgabe ausgeblendet */
+    .t06-gesperrt .t06-loesungsknopf{display:none}
+    /* Klebende Leiste mit Zeit und Punkten */
+    .t06-leiste{position:sticky; bottom:env(safe-area-inset-bottom,0px); z-index:4; display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px;
+      padding:8px 12px; background:var(--surface); border:2px solid var(--accent); border-radius:12px; box-shadow:0 0 0 6px var(--bg); font-variant-numeric:tabular-nums}
+    .t06-uhr{font-family:var(--f-display); font-weight:700; font-size:1.05rem; white-space:nowrap}
+    .t06-uhr.t06-knapp{color:var(--bad)}
+    .t06-plan{font-size:.88rem; color:var(--muted)}
+    .t06-plan:empty{display:none}
+    .t06-stand{font-family:var(--f-display); font-weight:700; white-space:nowrap; margin-left:auto}
+    .t06-leiste .btn{min-height:34px; padding:4px 12px; font-size:.9rem}
+    /* Aufgaben der Übungsprüfung */
+    .t06-sprung{display:flex; flex-wrap:wrap; gap:6px}
+    .t06-sprung a{text-decoration:none; font-size:.88rem; padding:3px 10px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--accent); font-variant-numeric:tabular-nums}
+    .t06-sprung a:hover{border-color:var(--accent)}
+    .t06-aufgabe{border:1px solid var(--line); border-top:4px solid var(--accent); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:16px; background:var(--bg); scroll-margin-top:70px; min-width:0}
+    .t06-akopf{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:4px 12px}
+    .t06-akopf h3{scroll-margin-top:70px}
+    .t06-apunkte{font-family:var(--f-display); font-weight:700; font-size:1.1rem; font-variant-numeric:tabular-nums; color:var(--accent); white-space:nowrap}
+    .t06-kontext{background:var(--board); border-radius:12px; padding:12px 16px; display:flex; flex-direction:column; gap:8px; min-width:0}
+    .t06-kontext ul, .t06-frage ul{margin:0; padding-left:1.3em; display:flex; flex-direction:column; gap:4px}
+    .t06-kontext pre.code{background:var(--surface)}
+    .t06-teil{display:flex; flex-direction:column; gap:10px; padding-top:12px; border-top:1px dashed var(--line); min-width:0}
+    .t06-tkopf{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px}
+    .t06-tname{font-family:var(--f-display); font-weight:700; font-size:1.02rem}
+    .t06-pill{font-size:.8rem; padding:1px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:var(--surface); white-space:nowrap}
+    a.t06-pill{color:var(--accent); text-decoration:none; white-space:normal}
+    a.t06-pill:hover{border-color:var(--accent)}
+    .t06-frage{display:flex; flex-direction:column; gap:8px}
+    .t06-notizlabel{font-weight:600; font-size:.92rem}
+    .t06-notiz{font:inherit; width:100%; min-height:5.5em; padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); resize:vertical}
+    .t06-notiz:focus-visible{outline:2px solid var(--accent); outline-offset:1px}
+    .t06-raster{border:1px solid var(--line); border-radius:12px; padding:10px 14px 12px; margin:0; display:flex; flex-direction:column; gap:8px; background:var(--surface); min-width:0}
+    .t06-raster legend{font-weight:600; font-size:.92rem; padding:0 4px}
+    .t06-raster label{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:start; font-size:.95rem; cursor:pointer}
+    .t06-raster input{width:20px; height:20px; accent-color:var(--accent); margin:2px 0 0}
+    .t06-rp{font-weight:700; color:var(--accent); white-space:nowrap}
+    .t06-tstand{font-size:.92rem; font-weight:600; min-height:1.4em; color:var(--muted)}
+    .t06-tstand.t06-ok{color:var(--ok)}
+    .t06-tstand.t06-bad{color:var(--bad)}
+    .t06-tstand.t06-halb{color:var(--const)}
+    /* Auswertung */
+    .t06-gesamt{display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline}
+    .t06-gross{font-family:var(--f-display); font-size:2rem; font-weight:700; font-variant-numeric:tabular-nums; color:var(--accent)}
+    .t06-bar{height:10px; background:var(--line); border-radius:999px; overflow:hidden; min-width:60px}
+    .t06-bar > i{display:block; height:100%; background:var(--accent); border-radius:999px}
+    .t06-stliste{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px}
+    .t06-stliste li{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; align-items:center; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+    .t06-stliste .t06-bar{grid-column:1 / -1}
+    .t06-stliste .t06-sp{font-size:.88rem; color:var(--muted); font-variant-numeric:tabular-nums; grid-column:1 / -1}
+    /* Typische Fehler */
+    .t06-fehler{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(260px,100%),1fr)); gap:10px}
+    .t06-fehler .note{display:flex; flex-direction:column; gap:4px}
+    @media (max-width:560px){
+      .t06-aufgabe{padding:12px 0 16px; border-left:0; border-right:0; border-bottom:0; border-radius:0; background:transparent}
+      .t06-kontext{padding:10px 12px}
+      .t06-leiste{padding:6px 10px; gap:4px 10px}
+      .t06-uhr, .t06-stand{font-size:.95rem}
+      .t06-leiste .btn{padding:3px 10px; font-size:.85rem}
+      .t06-plan{flex-basis:100%; order:5; font-size:.82rem}
+      .t06-arch{font-size:.84rem}
+    }
+  </style>
+</head>
+<body data-fach="avsw" data-thema="06-pruefungstraining">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">AVSW · Modulschlussprüfung · Prüfungstraining</span>
+    <h1>Prüfungstraining: Architektur unter Zeitdruck</h1>
+    <p class="lead">Diese Station verbindet alle Themen des Lernpfads zu einer Übungsprüfung. Du lernst ein festes Verfahren, mit dem du jede Modellierungsaufgabe vom Anforderungstext zur Architektur löst, auch wenn die Zeit knapp ist. Dann löst du sieben Aufgaben mit 60 Punkten, auf Wunsch im Prüfungsmodus mit 60-Minuten-Timer. Am Schluss siehst du deine Punkte je Station und weisst, was du wiederholen solltest.</p>
+    <div class="note"><b>Hinweis:</b> Eigene Aufgaben und Lösungen, nicht vom Dozenten bestätigt. Prüfungsrahmen (Dauer, Punkte, Hilfsmittel) mit den Modulunterlagen abgleichen.</div>
+    <div class="card stack">
+      <b>Danach kannst du</b>
+      <ul class="t06-ziele prose">
+        <li>jede Aufgabe einem Thema und der passenden Station zuordnen,</li>
+        <li>eine Modellierungsaufgabe in sechs Schritten lösen: Akteure, Fachlichkeiten, Daten, Signalwörter, Infrastruktur nur wenn verlangt, Kontrolle,</li>
+        <li>Ablenker im Text erkennen und weglassen,</li>
+        <li>deine Zeit so einteilen, dass du Teilpunkte sicherst, auch wenn du nicht fertig wirst,</li>
+        <li>eine ganze Übungsprüfung unter Zeitdruck lösen und deine Lücken je Station erkennen.</li>
+      </ul>
+    </div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#woerterbuch"><b>1</b>Wörterbuch</a>
+    <a href="#schritte"><b>2</b>Schritt für Schritt</a>
+    <a href="#strategie"><b>3</b>Zeit und Punkte</a>
+    <a href="#modus"><b>4</b>Prüfungsmodus</a>
+    <a href="#uebungen"><b>5</b>Übungsprüfung</a>
+    <a href="#auswertung"><b>6</b>Auswertung</a>
+    <a href="#fehler"><b>7</b>Typische Fehler</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Fünf Begriffe für jede Prüfung</h2>
+    <p class="prose">Eine Prüfung ist ein Spiel mit Regeln. Wer die Regeln kennt, verschenkt keine Punkte. Diese fünf Begriffe brauchst du in der ganzen Station.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Übungsprüfung = Generalprobe</span><span class="ex">7 Aufgaben · 60 P. · 60 min</span><p>Eine Generalprobe im Theater läuft am Stück, mit Kostüm und ohne Unterbruch. Genau so löst du hier eine ganze Prüfung. Mini-Beispiel: Der Rahmen von 60 Punkten in 60 Minuten ist ein eigener Rahmen dieser Seite, nicht der Rahmen der echten Prüfung.</p></div>
+      <div class="concept"><span class="tag">Teilpunkte = Bewertungsraster</span><span class="ex">jedes richtige Element zählt</span><p>Punkte gibt es für Teile, nicht nur für das fertige Bild. Beim Kochwettbewerb zählen Zutaten, Zubereitung und Geschmack einzeln. Mini-Beispiel: Ein Modell mit 12 Bausteinen und 11 Verbindungen hat 23 Elemente. Jedes richtige Element bringt einen Anteil der Punkte.</p></div>
+      <div class="concept"><span class="tag">Signalwort = Wegweiser</span><span class="t06-concept-pk" data-t06-pikto="topic"></span><p>Ein Verb im Text verrät die Verbindungsart, so wie ein Wegweiser die Richtung. Mini-Beispiel: «veröffentlicht ein Event» heisst asynchron über einen Broker, «fragt synchron nach» heisst Request/Response.</p></div>
+      <div class="concept"><span class="tag">Ablenker = Köder</span><span class="t06-concept-pk" data-t06-pikto="cache"></span><p>Ein Ablenker ist ein Baustein, der im Text vorkommt oder naheliegt, aber nicht ins Modell gehört. Wie ein Köder an der Angel. Mini-Beispiel: «Ein Cache wurde diskutiert, aber verworfen.» Den Cache zeichnest du nicht.</p></div>
+      <div class="concept"><span class="tag">Zeitbudget = Sekunden pro Punkt</span><span class="ex">50 min : 60 P. = 50 s/P.</span><p>Ziehst du 10 Minuten für Einlesen und Kontrolle ab, bleiben 50 Minuten für 60 Punkte. Wer beim Wandern zu lange rastet, verpasst das letzte Postauto. Mini-Beispiel: Eine 12-Punkte-Aufgabe hat 10 Minuten.</p></div>
+    </div>
+    <div class="note"><b>Merke:</b> Bei Modellierungsaufgaben gibt es Punkte für jeden richtigen Baustein und jede richtige Verbindung. Leg zuerst alle sicheren Bausteine, dann die sicheren Verbindungen. Ein halbfertiges Modell bringt mehr als ein leeres Blatt.</div>
+    <div class="card stack">
+      <h3>Kurz üben: Welche Station hilft bei welcher Aufgabe?</h3>
+      <p class="hint">Ordne jede Aufgabenstellung der Station zu, in der du das Verfahren dazu gelernt hast.</p>
+      <div id="t06-sort"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Wörterbuch ===== -->
+  <section id="woerterbuch">
+    <span class="eyebrow">Schritt 1 · Wörterbuch</span>
+    <h2>Bausteine, Werkzeuge und Signalwörter</h2>
+    <p class="prose">Jeder Baustein hat ein Piktogramm, typische Wörter im Anforderungstext und ein Werkzeug, mit dem man ihn baut. Die Werkzeugnamen sind Beispiele, die Prüfung fragt nach dem Baustein, nicht nach dem Produkt.</p>
+    <div class="card tablebox">
+      <table class="tabelle t06-symtab">
+        <caption>Bausteine für Architekturbilder</caption>
+        <thead><tr><th>Bild</th><th>Baustein</th><th>Signal im Text</th><th>Werkzeug (Beispiel)</th><th>Alternative</th></tr></thead>
+        <tbody>
+          <tr><td><span class="t06-pk" data-t06-pikto="client"></span></td><td>Web-Client, Mobile App</td><td>«bestellen über die App», «im Browser»</td><td>React, Angular</td><td>Swift, Kotlin (App)</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="gateway"></span></td><td>API-Gateway</td><td>«alle Anfragen laufen über», «einziger Eingang»</td><td>Spring Cloud Gateway</td><td>Kong, NGINX</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="service"></span></td><td>Service (Microservice)</td><td>«der Bestellservice», «ist zuständig für»</td><td>Java mit Spring Boot</td><td>Node.js, Go, Python</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="db"></span></td><td>Datenbank</td><td>«speichert in seiner eigenen DB», «liest»</td><td>PostgreSQL</td><td>MongoDB, MySQL</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="topic"></span></td><td>Event-Broker (Topic)</td><td>«veröffentlicht ein Event», «abonniert»</td><td>Apache Kafka</td><td>RabbitMQ, NATS</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="queue"></span></td><td>Queue (Warteschlange)</td><td>«legt einen Auftrag ab», «holt ab», «genau ein Verarbeiter»</td><td>RabbitMQ</td><td>Amazon SQS</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="extern"></span></td><td>Fremdsystem</td><td>«externer Anbieter», «Schnittstelle von …»</td><td>Zahlungs- oder SMS-Anbieter</td><td>–</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="auth"></span></td><td>Identity-Dienst</td><td>«prüft das Login», «Token»</td><td>Keycloak</td><td>Auth0, Entra ID</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="pod"></span></td><td>Pod, Deployment, Service, Ingress</td><td>«Replikate», «Cluster», «Pfad /…»</td><td>Kubernetes</td><td>Docker Compose (ohne Cluster)</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="config"></span></td><td>ConfigMap, Secret</td><td>«liest die Adresse aus», «Passwort»</td><td>Kubernetes</td><td>Umgebungsvariablen, Vault</td></tr>
+          <tr><td><span class="t06-pk" data-t06-pikto="cache"></span></td><td>Cache</td><td>«hält häufig gelesene Daten im Speicher»</td><td>Redis</td><td>Memcached</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Vom Verb zur Verbindungsart</h3>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Signalwort im Text → Verbindungsart im Modell → Linie</caption>
+        <thead><tr><th>Signalwort</th><th>Verbindungsart</th><th>Linie</th></tr></thead>
+        <tbody>
+          <tr><td>«fragt (synchron)», «ruft auf», «leitet weiter», «wartet auf die Antwort»</td><td>synchron (Request/Response)</td><td><span class="t06-linie" aria-hidden="true"></span> voll</td></tr>
+          <tr><td>«veröffentlicht», «abonniert», «legt in eine Queue», «ohne zu warten»</td><td>asynchron (Nachricht/Event)</td><td><span class="t06-linie t06-l-async" aria-hidden="true"></span> gestrichelt</td></tr>
+          <tr><td>«speichert», «liest», «schreibt», «legt ab»</td><td>liest/schreibt Daten</td><td><span class="t06-linie t06-l-daten" aria-hidden="true"></span> gepunktet</td></tr>
+          <tr><td>«verwaltet», «läuft auf», «liest Konfig aus»</td><td>Deployment-Sicht: eigene Arten</td><td>je nach Aufgabe</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Richtung:</b> Der Pfeil zeigt vom Aufrufer zum Aufgerufenen. Bei Events zeigt er vom Sender zum Broker und vom Broker zum Empfänger, also in Richtung der Nachricht.</div>
+  </section>
+
+  <!-- ===== 2 · Schritt für Schritt ===== -->
+  <section id="schritte">
+    <span class="eyebrow">Schritt 2 · Schritt für Schritt</span>
+    <h2>Das Verfahren in sechs Schritten</h2>
+    <p class="prose">Mit diesem Verfahren löst du jede Modellierungsaufgabe, auch unter Zeitdruck. Es ist das Verfahren dieser Station, kein Rezept aus der Vorlesung.</p>
+    <ol class="t06-liste prose">
+      <li><b>Akteure:</b> Wer benutzt das System, und womit? Zeichne das Gerät (App, Browser), nicht die Person.</li>
+      <li><b>Fachlichkeiten:</b> Welche Dienste nennt der Text? Je eine Aufgabe, je ein Service. Dazu der Zugang (API-Gateway), falls genannt.</li>
+      <li><b>Daten:</b> Welche Datenbanken, Broker, Queues und Fremdsysteme kommen vor?</li>
+      <li><b>Signalwörter → Verbindungsart:</b> Geh den Text Satz für Satz durch. Jedes Verb wird zu genau einer Linie mit Art und Richtung.</li>
+      <li><b>Infrastruktur nur, wenn verlangt:</b> Load Balancer, CDN, Cache, Server zeichnest du nur, wenn der Text sie verlangt. «Diskutiert, aber verworfen» heisst: weglassen.</li>
+      <li><b>Kontrolle:</b> Hat jede Linie ein Signalwort im Text? Steht jeder Baustein im Text? Zeigen alle Pfeile richtig?</li>
+    </ol>
+    <h3>Kernbeispiel: Streaming-Plattform</h3>
+    <p class="prose">Klick dich mit «Weiter» durch. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil des Bildes leuchtet auf.</p>
+    <div id="t06-stepper"></div>
+  </section>
+
+  <!-- ===== 3 · Zeit und Punkte ===== -->
+  <section id="strategie">
+    <span class="eyebrow">Schritt 3 · Zeit und Punkte</span>
+    <h2>So sicherst du Teilpunkte</h2>
+    <p class="prose">Der Zeitplan gilt für die Übungsprüfung dieser Seite: 60 Minuten, 60 Punkte. Plane 4 Minuten zum Einlesen und 6 Minuten zur Kontrolle ein. Für die Aufgaben bleiben 50 Minuten, also 50 Sekunden pro Punkt. Der Timer im Prüfungsmodus zeigt dir laufend, wo du laut Plan stehen solltest.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Zeitplan der Übungsprüfung: Budget je Phase und Ende ab Start (Minuten:Sekunden)</caption>
+        <thead><tr><th>Phase</th><th class="zahl">Budget</th><th class="zahl">fertig nach</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Einlesen: alles überfliegen, Reihenfolge wählen</th><td class="zahl">4 min</td><td class="zahl">4:00</td></tr>
+          <tr><th scope="row">Aufgabe 1 · Architekturstile (8 P.)</th><td class="zahl">6 min 40 s</td><td class="zahl">10:40</td></tr>
+          <tr><th scope="row">Aufgabe 2 · Kommunikation (8 P.)</th><td class="zahl">6 min 40 s</td><td class="zahl">17:20</td></tr>
+          <tr><th scope="row">Aufgabe 3 · Modell aus Text (12 P.)</th><td class="zahl">10 min</td><td class="zahl">27:20</td></tr>
+          <tr><th scope="row">Aufgabe 4 · Nur verbinden (8 P.)</th><td class="zahl">6 min 40 s</td><td class="zahl">34:00</td></tr>
+          <tr><th scope="row">Aufgabe 5 · Kubernetes (10 P.)</th><td class="zahl">8 min 20 s</td><td class="zahl">42:20</td></tr>
+          <tr><th scope="row">Aufgabe 6 · Resilienz und Konsistenz (8 P.)</th><td class="zahl">6 min 40 s</td><td class="zahl">49:00</td></tr>
+          <tr><th scope="row">Aufgabe 7 · Modelle beurteilen (6 P.)</th><td class="zahl">5 min</td><td class="zahl">54:00</td></tr>
+          <tr><th scope="row">Kontrolle: Pfeile, leere Felder, Ablenker</th><td class="zahl">6 min</td><td class="zahl">60:00</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Modellierungsaufgabe unter Zeitdruck</h3>
+    <ul class="t06-liste prose">
+      <li><b>Erst markieren, dann zeichnen:</b> Unterstreiche beim ersten Lesen jedes Substantiv, das ein Baustein sein könnte, und kreise jedes Verb ein. Das dauert eine Minute und spart dir drei.</li>
+      <li><b>Zuerst alle Bausteine:</b> Sie sind sicher und schnell. Erst danach die Verbindungen, Satz für Satz.</li>
+      <li><b>Unsicher? Weglassen statt raten:</b> Eine falsche Linie oder ein Ablenker kostet in dieser Übungsprüfung einen Punkt-Anteil. Eine fehlende Linie kostet nur den eigenen Anteil.</li>
+      <li><b>Zeit um?</b> Geh zur nächsten Aufgabe. In der Kontrollphase kommst du zurück.</li>
+    </ul>
+    <div class="note falle"><b>Falle «alles zeichnen, was ich kenne»:</b> Ein Load Balancer vor jedem Dienst, ein Cache vor jeder Datenbank: Das ist gutes Allgemeinwissen, aber in einer Modellierungsaufgabe Ablenker. Zeichne, was der Text verlangt, nicht was du kennst.</div>
+    <div class="note falle"><b>Falle «Event als Aufruf»:</b> «veröffentlicht das Event, der Mailservice abonniert es» ist <i>keine</i> direkte Linie vom Bestellservice zum Mailservice. Die Nachricht läuft über den Broker: Sender → Broker → Empfänger, beide Linien asynchron.</div>
+    <div class="note falle"><b>Falle «Client direkt an die Datenbank»:</b> Steht im Text «alle Anfragen laufen über das Gateway», zieht der Client genau eine Linie: zum Gateway. Daten liest nur der Dienst, dem die Datenbank gehört.</div>
+    <details class="sol">
+      <summary>Im Text steht: «Ein Cache für Menüs wurde diskutiert, aber verworfen.» Gehört der Cache ins Modell?</summary>
+      <div class="stack"><p class="prose">Nein. Der Text nennt den Cache, entscheidet aber ausdrücklich dagegen. Das ist ein typischer Ablenker. Im Modell steht nur, was gebaut wird. Legst du den Cache trotzdem hin, zieht die Bewertung dieser Seite einen Anteil ab.</p></div>
+    </details>
+    <details class="sol">
+      <summary>Der Text sagt: «Der PDF-Service holt die Aufträge aus der Queue ab.» In welche Richtung zeigt der Pfeil?</summary>
+      <div class="stack"><p class="prose">Üblich ist die Richtung der Nachricht: Queue → PDF-Service. Technisch fragt der Verbraucher die Queue ab (Pull), darum lassen die Aufgaben dieser Seite bei «holt ab» und «abonniert» beide Richtungen gelten. Gleich bleibt die Art: asynchron.</p></div>
+    </details>
+  </section>
+
+  <!-- ===== 4 · Prüfungsmodus ===== -->
+  <section id="modus">
+    <span class="eyebrow">Schritt 4 · Prüfungsmodus</span>
+    <h2>Üben oder unter Prüfungsbedingungen</h2>
+    <p class="prose">Die Übungsprüfung unten läuft in zwei Modi. Im <b>Übungsmodus</b> arbeitest du ohne Zeit, die Seite zählt trotzdem deine Punkte. Im <b>Prüfungsmodus</b> setzt die Seite alle Aufgaben zurück, startet auf Wunsch einen 60-Minuten-Timer und blendet «Lösung zeigen» in den Modellierungsaufgaben bis zur Abgabe aus. Mit «Abgeben» oder bei Zeitablauf frieren die Punkte ein, und die Auswertung erscheint.</p>
+    <div class="card stack" id="t06-steuer">
+      <div class="t06-modus"><span class="t06-badge t06-b-uebung" id="t06-modus-badge">Übungsmodus</span><span id="t06-modus-text">Punkte werden gezählt, keine Zeitmessung.</span></div>
+      <label class="t06-check" for="t06-timer"><input type="checkbox" id="t06-timer" checked> Mit 60-Minuten-Timer</label>
+      <div class="row" id="t06-steuer-knoepfe">
+        <button type="button" class="btn primary" id="t06-start">Prüfung starten</button>
+        <button type="button" class="btn" id="t06-pause" disabled>Pause</button>
+        <button type="button" class="btn" id="t06-abgeben" disabled>Abgeben</button>
+        <button type="button" class="btn" id="t06-reset">Alles zurücksetzen</button>
+      </div>
+      <div class="t06-bestaetigen" id="t06-bestaetigen" hidden>
+        <p id="t06-bestaetigen-text">Fortfahren?</p>
+        <div class="row">
+          <button type="button" class="btn primary" id="t06-ja">Ja</button>
+          <button type="button" class="btn" id="t06-nein">Abbrechen</button>
+        </div>
+      </div>
+      <p class="t06-ansage" id="t06-ansage" aria-live="polite"></p>
+    </div>
+    <div class="note"><b>So zählen die Punkte:</b> Auswahl- und Kreuzfelder bewertet die Seite selbst; es zählt dein <b>erster Versuch</b>. Bei Modellierungsaufgaben zählt das <b>erste «Prüfen»</b>: Jeder richtige Baustein und jede richtige Verbindung bringt einen Anteil der Aufgabenpunkte, jeder überflüssige Baustein und jede Verbindung, die es so nicht gibt, zieht einen Anteil ab (nie unter 0). Prüfe also erst, wenn du fertig bist. Nicht geprüfte Modelle wertet die Seite bei der Abgabe aus. Wer vor dem ersten Prüfen «Lösung zeigen» drückt, bekommt 0 Punkte. Freie Antworten bewertest du selbst: Schreib deine Lösung zuerst auf, deck dann die Musterlösung auf und hake im Raster ehrlich ab.</div>
+  </section>
+
+  <!-- ===== 5 · Übungsprüfung ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 5 · Übungsprüfung</span>
+    <h2>Sieben Aufgaben, 60 Punkte</h2>
+    <p class="prose">Die Aufgaben decken alle fünf Stationen ab, mit Schwerpunkt Modellieren (Aufgaben 3 bis 5). Bei jeder Teilaufgabe steht, wie viele Punkte sie gibt und welche Station du bei Lücken wiederholst. Alle Aufgaben und Lösungen sind eigene, nicht vom Dozenten bestätigt.</p>
+    <nav class="t06-sprung" aria-label="Aufgaben der Übungsprüfung">
+      <a href="#t06-a1">A1 · 8 P.</a><a href="#t06-a2">A2 · 8 P.</a><a href="#t06-a3">A3 · 12 P.</a><a href="#t06-a4">A4 · 8 P.</a><a href="#t06-a5">A5 · 10 P.</a><a href="#t06-a6">A6 · 8 P.</a><a href="#t06-a7">A7 · 6 P.</a>
+    </nav>
+    <div id="t06-pruefung" class="stack"></div>
+    <div class="t06-leiste" id="t06-leiste">
+      <span class="t06-uhr" id="t06-uhr">Übungsmodus</span>
+      <span class="t06-plan" id="t06-plan"></span>
+      <span class="t06-stand"><span id="t06-summe">0</span> / 60 P.</span>
+      <a class="btn" href="#auswertung" id="t06-zur-auswertung">Auswertung</a>
+      <button type="button" class="btn primary" id="t06-abgeben2" hidden>Abgeben</button>
+    </div>
+  </section>
+
+  <!-- ===== 6 · Auswertung ===== -->
+  <section id="auswertung">
+    <span class="eyebrow">Schritt 6 · Auswertung</span>
+    <h2 id="t06-auswertung-titel" tabindex="-1">Punkte und nächste Schritte</h2>
+    <p class="prose">Die Auswertung rechnet laufend mit. Nach «Abgeben» oder bei Zeitablauf bleiben die Punkte fest. Eine Note rechnet die Seite nicht aus, denn der Notenschlüssel der echten Prüfung ist hier nicht bekannt.</p>
+    <div class="card stack" id="t06-gesamt"></div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Punkte je Aufgabe</caption>
+        <thead><tr><th>Aufgabe</th><th class="zahl">Punkte</th><th>Anteil</th></tr></thead>
+        <tbody id="t06-tab-aufgaben"></tbody>
+      </table>
+    </div>
+    <div class="card stack">
+      <h3>Stärken und Lücken je Station</h3>
+      <p class="hint">Gezählt werden nur Teilaufgaben, die du bearbeitet hast. Sitzt: mindestens 75 % dieser Punkte. Ausbaufähig: 50 bis 75 %. Wiederholen: unter 50 %. Die Links führen direkt zur Station.</p>
+      <div id="t06-stationen"></div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · Typische Fehler ===== -->
+  <section id="fehler">
+    <span class="eyebrow">Schritt 7 · Typische Fehler</span>
+    <h2>Wo Punkte verloren gehen</h2>
+    <p class="prose">Die meisten Punkte gehen nicht wegen fehlenden Wissens verloren, sondern wegen kleiner, immer gleicher Fehler. Jede Karte nennt den Fehler, die richtige Form und die Station zum Nachlesen.</p>
+    <div class="t06-fehler">
+      <div class="note falle"><b>Ablenker gezeichnet</b><span>Cache, CDN, Load Balancer oder eine «geplante» App gehören nur ins Modell, wenn der Text sie verlangt. «Erst geplant» und «verworfen» heisst: weglassen.</span><a href="/lernseiten/avsw/05-architektur-modellieren">Station 05</a></div>
+      <div class="note falle"><b>Client direkt an die Datenbank</b><span>Der Client spricht mit dem Gateway, das Gateway mit dem Dienst, der Dienst mit seiner Datenbank. Eine Abkürzung zur Datenbank umgeht jede Kapselung.</span><a href="/lernseiten/avsw/01-architekturstile">Station 01</a></div>
+      <div class="note falle"><b>Eine Datenbank für alle Dienste</b><span>Bei Microservices hat jeder Dienst seine eigene Datenbank (database per service). Eine geteilte Datenbank koppelt die Dienste wieder eng.</span><a href="/lernseiten/avsw/01-architekturstile">Station 01</a></div>
+      <div class="note falle"><b>Event als direkter Aufruf</b><span>«veröffentlicht» und «abonniert» heisst: zwei asynchrone Linien über den Broker. Eine direkte synchrone Linie vom Sender zum Empfänger ist falsch.</span><a href="/lernseiten/avsw/02-kommunikation">Station 02</a></div>
+      <div class="note falle"><b>Pfeil verkehrt herum</b><span>Der Pfeil zeigt vom Aufrufer zum Aufgerufenen. «Der Bestellservice fragt den Zahlungsservice» heisst Bestellservice → Zahlungsservice.</span><a href="/lernseiten/avsw/02-kommunikation">Station 02</a></div>
+      <div class="note falle"><b>Queue und Topic verwechselt</b><span>Queue: Jede Nachricht verarbeitet genau ein Verbraucher. Topic: Jeder Abonnent bekommt jede Nachricht. «Mehrere Dienste reagieren auf dasselbe Event» heisst Topic.</span><a href="/lernseiten/avsw/02-kommunikation">Station 02</a></div>
+      <div class="note falle"><b>Sichten vermischt</b><span>In die Deployment-Sicht gehören Ingress, Service, Pods, Deployment, ConfigMap. Fachliche Linien wie «Bestellservice fragt Zahlungsservice» gehören in die Container-Sicht.</span><a href="/lernseiten/avsw/03-container-kubernetes">Station 03</a></div>
+      <div class="note falle"><b>Passwort in der ConfigMap</b><span>Zugangsdaten gehören in ein Secret, nicht in eine ConfigMap und nie ins Image.</span><a href="/lernseiten/avsw/03-container-kubernetes">Station 03</a></div>
+      <div class="note falle"><b>Retry ohne Bedenken</b><span>Ein Retry braucht Timeout, Backoff und eine idempotente Operation. «Zahlung belasten» ohne Idempotenzschlüssel zweimal senden kann doppelt belasten.</span><a href="/lernseiten/avsw/04-resilienz-konsistenz">Station 04</a></div>
+      <div class="note falle"><b>Verteilte Transaktion statt Saga</b><span>Über Dienstgrenzen hinweg gibt es keine gemeinsame Transaktion. Eine Saga macht lokale Schritte und bei einem Fehler Kompensationen in umgekehrter Reihenfolge.</span><a href="/lernseiten/avsw/04-resilienz-konsistenz">Station 04</a></div>
+      <div class="note falle"><b>Zeit am Modell verloren</b><span>Hängst du länger als das Budget an einer Verbindung, lass sie weg und geh weiter. Zurück kommst du in der Kontrollphase.</span><a href="#strategie">Zeitplan</a></div>
+    </div>
+    <h3>Spiel Korrektor: Gibt diese Antwort volle Punkte?</h3>
+    <p class="prose">Hier liest du fremde Antworten wie eine Korrektorin. Kreuz «wahr» an, wenn die Antwort volle Punkte verdient, sonst «falsch».</p>
+    <div id="t06-korrektor"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Eine ganze Modellierungsaufgabe</span>
+    <h2>Terminbuchung im Spital am Stück</h2>
+    <p class="prose">Drück auf «Abspielen». Der Film löst eine Modellierungsaufgabe auf Prüfungsniveau mit dem Verfahren in sechs Schritten. Gelb leuchtet, was gerade neu dazukommt. Danach baust du dieselbe Architektur selbst nach.</p>
+    <div id="t06-film"></div>
+    <h3>Jetzt du: dieselbe Aufgabe selbst modellieren</h3>
+    <p class="prose">Diese Übung zählt nicht zur Übungsprüfung. Bau das Bild aus dem Film ohne Hilfe nach und prüfe dich.</p>
+    <div id="t06-film-modell"></div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest</span>
+    <h2>Bist du bereit für die Prüfung?</h2>
+    <div id="t06-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li><b>Sechs Schritte:</b> Akteure · Fachlichkeiten · Daten · Signalwörter → Verbindungsart · Infrastruktur nur wenn verlangt · Kontrolle.</li>
+      <li><b>Verben verraten die Art:</b> «fragt», «ruft auf», «leitet weiter» = synchron; «veröffentlicht», «abonniert», «legt in die Queue» = asynchron; «speichert», «liest» = Daten.</li>
+      <li><b>Ablenker weglassen:</b> Was «diskutiert, aber verworfen», «erst geplant» oder «nicht gefragt» ist, kommt nicht ins Modell.</li>
+      <li><b>Teilpunkte sichern:</b> zuerst alle sicheren Bausteine, dann die sicheren Verbindungen. Unsicheres lieber weglassen als raten. Zeitbudget dieser Übung: 50 Sekunden pro Punkt.</li>
+      <li><b>Prüfungsrahmen:</b> Dauer, Punkte und Hilfsmittel der echten Prüfung stehen in den Modulunterlagen. Die 60 Minuten und 60 Punkte hier sind ein Übungsrahmen.</li>
+    </ul>
+    <footer>Alle Aufgaben, das Kernbeispiel und der Lösungsfilm sind eigene Aufgaben mit eigenen Lösungen, nicht vom Dozenten bestätigt. Die Vorlesungsfolien lagen nicht vor; Begriffe und Notation mit den Folien und den Modulunterlagen abgleichen. Werkzeugnamen sind Beispiele, keine Empfehlung.</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  const reduziert = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- Hilfen ---------- */
+  function el(tag, klasse, html) {
+    const e = document.createElement(tag);
+    if (klasse) e.className = klasse;
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+  const pt = (x) => L.zahlText(x, 1) + " P.";
+  const halb = (x) => Math.round(x * 2) / 2;
+
+  // Statische Piktogramme in Tabellen und Karten
+  document.querySelectorAll("[data-t06-pikto]").forEach((s) => { s.innerHTML = L.piktogramm(s.getAttribute("data-t06-pikto")); });
+
+  const STATIONEN = {
+    "01-architekturstile": "Architekturstile: Monolith, SOA, Microservices",
+    "02-kommunikation": "Kommunikation: REST, gRPC und Messaging",
+    "03-container-kubernetes": "Container und Kubernetes",
+    "04-resilienz-konsistenz": "Resilienz und Konsistenz",
+    "05-architektur-modellieren": "Architektur modellieren"
+  };
+  const stUrl = (slug) => "/lernseiten/avsw/" + slug;
+  const stName = (slug) => "Station " + slug.slice(0, 2) + " · " + STATIONEN[slug];
+
+  /* ---------- Architektur-Bild als HTML (Stepper, Film) ----------
+     baender: [[Name, [[id, art, name, link?], …]], …]
+     verb:    [[von, nach, art, link?], …]   art: sync | async | daten
+     neu:     Schlüssel, die neu leuchten (id oder "von>nach")
+     weg:     ids, die durchgestrichen als Ablenker erscheinen */
+  const ART_TEXT = { sync: "synchron", async: "asynchron", daten: "liest/schreibt Daten" };
+  function arch(baender, verb, neu, weg) {
+    neu = neu || [];
+    weg = weg || [];
+    const namen = {};
+    baender.forEach((b) => b[1].forEach((x) => { namen[x[0]] = x[2]; }));
+    let h = '<div class="t06-arch">';
+    baender.forEach((b) => {
+      if (!b[1].length) return;
+      h += '<div class="t06-band"><span class="t06-bname">' + b[0] + '</span><div class="t06-boxen">' +
+        b[1].map((x) => {
+          const box = '<span class="t06-box' + (weg.indexOf(x[0]) >= 0 ? " t06-weg" : "") + '"' + (x[3] ? ' data-link="' + x[3] + '"' : "") + ">" +
+            L.piktogramm(x[1]) + "<span>" + x[2] + (weg.indexOf(x[0]) >= 0 ? " (weglassen)" : "") + "</span></span>";
+          return neu.indexOf(x[0]) >= 0 ? NW(box) : box;
+        }).join("") + "</div></div>";
+    });
+    if (verb.length) {
+      h += '<ul class="t06-verb" aria-label="Verbindungen">' + verb.map((v) => {
+        const inhalt = '<span class="t06-linie' + (v[2] === "sync" ? "" : " t06-l-" + v[2]) + '" aria-hidden="true"></span>' +
+          "<span" + (v[3] ? ' data-link="' + v[3] + '"' : "") + ">" + namen[v[0]] + " → " + namen[v[1]] + "</span>" +
+          '<span class="t06-art">' + ART_TEXT[v[2]] + "</span>";
+        return "<li>" + (neu.indexOf(v[0] + ">" + v[1]) >= 0 ? NW(inhalt) : inhalt) + "</li>";
+      }).join("") + "</ul>";
+    }
+    return h + "</div>";
+  }
+
+  /* ---------- Schritt 0: Sortierer ---------- */
+  L.sortierer("#t06-sort", {
+    kategorien: ["01 Stile", "02 Kommunikation", "03 Kubernetes", "04 Resilienz", "05 Modellieren"],
+    elemente: [
+      { html: "«Ein Team mit vier Personen startet ein neues Produkt, die Fachlichkeit ändert sich wöchentlich. Welcher Architekturstil passt?»", kategorie: 0,
+        erklaerung: "Stilwahl mit Teamgrösse und Reife der Fachlichkeit: Station 01. Hier spricht viel für einen modularen Monolithen." },
+      { html: "«Erkläre den Unterschied zwischen hoher Kohäsion und loser Kopplung.»", kategorie: 0,
+        erklaerung: "Kohäsion und Kopplung sind die Massstäbe für gute Schnitte: Station 01." },
+      { html: "«Mehrere Dienste sollen auf dieselbe Nachricht reagieren. Queue oder Topic?»", kategorie: 1,
+        erklaerung: "Messaging-Muster: Station 02. Mehrere Empfänger derselben Nachricht heisst Topic (Publish/Subscribe)." },
+      { html: "«Was bedeutet die Antwort 201 Created mit dem Header Location?»", kategorie: 1,
+        erklaerung: "HTTP-Statuscodes und REST: Station 02." },
+      { html: "«Wie findet der Service «bestellung» die passenden Pods?»", kategorie: 2,
+        erklaerung: "Labels und Selektoren in Kubernetes: Station 03." },
+      { html: "«Der Zahlungsdienst antwortet nicht mehr. Welches Muster verhindert, dass alle Aufrufe hängen bleiben?»", kategorie: 3,
+        erklaerung: "Timeout und Circuit Breaker: Station 04." },
+      { html: "«Die Kurier-Reservation scheitert nach der Zahlung. Beschreibe die Kompensationsschritte.»", kategorie: 3,
+        erklaerung: "Saga mit Kompensation: Station 04." },
+      { html: "«Zeichne aus dem Anforderungstext die Container-Sicht mit allen Verbindungen.»", kategorie: 4,
+        erklaerung: "Vom Text zum Modell: Station 05. Genau das übst du in den Aufgaben 3 und 4." },
+      { html: "«Welche C4-Sicht zeigt nur Personen und Fremdsysteme rund um dein System?»", kategorie: 4,
+        erklaerung: "C4-Sichten: Station 05. Das ist die Systemkontext-Sicht." }
+    ]
+  });
+
+  /* ---------- Schritt 2: Stepper Kernbeispiel ---------- */
+  const SB = {
+    tv: ["tv", "client", "Smart-TV-App", "tv"],
+    kat: ["kat", "service", "Katalogservice", "kat"],
+    wie: ["wie", "service", "Wiedergabeservice", "wie"],
+    emp: ["emp", "service", "Empfehlungsservice", "emp"],
+    db: ["db", "db", "Katalog-DB", "db"],
+    br: ["br", "topic", "Event-Broker", "br"],
+    cdn: ["cdn", "cdn", "CDN", "abl"]
+  };
+  const sBild = (dienste, daten, verb, neu, mitCdn) => '<div class="t06-st">' + arch([
+    ["Client", [SB.tv]],
+    ["Dienste", dienste.map((k) => SB[k])],
+    ["Daten", daten.map((k) => SB[k])],
+    ["Infrastruktur", mitCdn ? [SB.cdn] : []]
+  ], verb, neu, mitCdn ? ["cdn"] : []) + "</div>";
+  const V_TK = ["tv", "kat", "sync", "v1"], V_TW = ["tv", "wie", "sync", "v1b"], V_KD = ["kat", "db", "daten", "v2"],
+    V_WB = ["wie", "br", "async", "v3"], V_BE = ["br", "emp", "async", "v4"];
+  L.stepper("#t06-stepper", {
+    titel: "Streaming-Plattform modellieren",
+    text: 'Die <span data-link="tv">Smart-TV-App</span> <span data-link="v1">ruft den Katalogservice synchron auf</span>, um Filme anzuzeigen. Der <span data-link="kat">Katalogservice</span> <span data-link="v2">liest die Filmdaten aus seiner</span> <span data-link="db">Katalog-DB</span>. Während des Abspielens <span data-link="v1b">meldet die App dem Wiedergabeservice synchron</span>, wo der Film steht. Schaut jemand einen Film fertig, <span data-link="v3">veröffentlicht</span> der <span data-link="wie">Wiedergabeservice</span> das Event «Film beendet» auf einem <span data-link="br">Event-Broker</span>. Der <span data-link="emp">Empfehlungsservice</span> <span data-link="v4">abonniert</span> das Event. <span data-link="abl">Die Videodateien liefert ein CDN aus; es gehört nicht zur gefragten Dienst-Sicht.</span>',
+    schritte: [
+      { html: sBild([], [], [], ["tv"]),
+        warum: "Schritt 1, Akteure: Wer benutzt das System? Zuschauerinnen, und zwar mit der Smart-TV-App. Du zeichnest das Gerät, nicht die Person." },
+      { html: sBild(["kat", "wie", "emp"], [], [], ["kat", "wie", "emp"]),
+        warum: "Schritt 2, Fachlichkeiten: Der Text nennt drei Dienste mit je einer Aufgabe: Katalog, Wiedergabe, Empfehlungen. Ein Gateway nennt der Text nicht, also zeichnest du keines." },
+      { html: sBild(["kat", "wie", "emp"], ["db", "br"], [], ["db", "br"]),
+        warum: "Schritt 3, Daten: «seine Katalog-DB» ist die eigene Datenbank des Katalogservice. Der Event-Broker verteilt die Events." },
+      { html: sBild(["kat", "wie", "emp"], ["db", "br"], [V_TK, V_TW, V_KD], ["tv>kat", "tv>wie", "kat>db"]),
+        warum: "Schritt 4a, Signalwörter: «ruft synchron auf» und «meldet synchron» werden zu vollen Linien. «liest … aus seiner DB» wird zu einer Datenlinie." },
+      { html: sBild(["kat", "wie", "emp"], ["db", "br"], [V_TK, V_TW, V_KD, V_WB, V_BE], ["wie>br", "br>emp"]),
+        warum: "Schritt 4b: «veröffentlicht» und «abonniert» werden zu zwei gestrichelten Linien über den Broker. Der Wiedergabeservice kennt den Empfehlungsservice nicht." },
+      { html: sBild(["kat", "wie", "emp"], ["db", "br"], [V_TK, V_TW, V_KD, V_WB, V_BE], ["cdn"], true),
+        warum: "Schritt 5, Infrastruktur nur wenn verlangt: Das CDN kommt im Text vor, aber der Text sagt ausdrücklich, dass es nicht zur gefragten Sicht gehört. Also weglassen." },
+      { html: sBild(["kat", "wie", "emp"], ["db", "br"], [V_TK, V_TW, V_KD, V_WB, V_BE], []),
+        warum: "Schritt 6, Kontrolle: 6 Bausteine, 5 Linien. Jede Linie hat ein Signalwort im Text, jeder Baustein steht im Text, alle Pfeile zeigen vom Aufrufer oder Sender weg. Fertig." }
+    ]
+  });
+
+  /* ==========================================================================
+     Übungsprüfung: Daten. Arten: auswahl, wf (wahr/falsch), selbst (Raster), modell
+     ========================================================================== */
+  const HTTP = '<pre class="code" data-sprache="HTTP"><code><span class="c"># Anfrage</span>\n<span class="k">POST</span> /api/bestellungen HTTP/1.1\nHost: shop.beispiel.ch\nContent-Type: application/json\n\n{ <span class="s">"artikel"</span>: <span class="s">"A-1042"</span>, <span class="s">"menge"</span>: <span class="n">2</span> }\n\n<span class="c"># Antwort</span>\nHTTP/1.1 <mark>201 Created</mark>\n<mark>Location: /api/bestellungen/7781</mark>\nContent-Type: application/json\n\n{ <span class="s">"id"</span>: <span class="n">7781</span>, <span class="s">"status"</span>: <span class="s">"offen"</span> }</code></pre>';
+
+  const YAML = '<pre class="code" data-sprache="Kubernetes-YAML (Ausschnitt)"><code><span class="k">apiVersion</span>: apps/v1\n<span class="k">kind</span>: Deployment\n<span class="k">metadata</span>:\n  <span class="k">name</span>: bestellung\n<span class="k">spec</span>:\n  <span class="k">replicas</span>: <span class="n">3</span>\n  <span class="k">selector</span>:\n    <span class="k">matchLabels</span>:\n      <mark>app: bestellung</mark>\n  <span class="k">template</span>:\n    <span class="k">metadata</span>:\n      <span class="k">labels</span>:\n        <mark>app: bestellung</mark>\n    <span class="k">spec</span>:\n      <span class="k">containers</span>:\n        - <span class="k">name</span>: bestellung\n          <span class="k">image</span>: <span class="s">tavolo/bestellung:1.4</span>\n          <span class="k">ports</span>:\n            - <span class="k">containerPort</span>: <span class="n">8080</span>\n          <span class="k">envFrom</span>:\n            - <span class="k">configMapRef</span>:\n                <span class="k">name</span>: bestellung-konfig\n---\n<span class="k">apiVersion</span>: v1\n<span class="k">kind</span>: Service\n<span class="k">metadata</span>:\n  <span class="k">name</span>: bestellung\n<span class="k">spec</span>:\n  <span class="k">selector</span>:\n    <mark>app: bestellung</mark>\n  <span class="k">ports</span>:\n    - <span class="k">port</span>: <span class="n">80</span>\n      <span class="k">targetPort</span>: <span class="n">8080</span></code></pre>';
+
+  const JAVA = '<pre class="code" data-sprache="Java · Spring Boot mit Resilience4j"><code><span class="k">@CircuitBreaker</span>(name = <span class="s">"zahlung"</span>, fallbackMethod = <span class="s">"spaeterBezahlen"</span>)\n<span class="k">@Retry</span>(name = <span class="s">"zahlung"</span>)\n<span class="k">public</span> Zahlung autorisieren(Bestellung b) {\n  <span class="k">return</span> zahlungClient.autorisieren(b);   <span class="c">// HTTP-Aufruf mit Timeout</span>\n}\n\n<span class="k">Zahlung</span> spaeterBezahlen(Bestellung b, Throwable fehler) {\n  <span class="k">return</span> Zahlung.ausstehend(b);           <span class="c">// Fallback: Bestellung wartet</span>\n}</code></pre>' +
+    '<pre class="code" data-sprache="application.yml"><code><span class="k">resilience4j</span>:\n  <span class="k">circuitbreaker</span>:\n    <span class="k">instances</span>:\n      <span class="k">zahlung</span>:\n        <span class="k">slidingWindowSize</span>: <span class="n">20</span>\n        <mark><span class="k">failureRateThreshold</span>: <span class="n">50</span></mark>\n        <mark><span class="k">waitDurationInOpenState</span>: <span class="n">30s</span></mark>\n        <span class="k">permittedNumberOfCallsInHalfOpenState</span>: <span class="n">3</span>\n  <span class="k">retry</span>:\n    <span class="k">instances</span>:\n      <span class="k">zahlung</span>:\n        <span class="k">maxAttempts</span>: <span class="n">3</span>\n        <span class="k">waitDuration</span>: <span class="n">500ms</span></code></pre>';
+
+  /* --- Modell A3: Tavolo, frei aus längerem Text --- */
+  const MODELL_A3 = {
+    titel: "Tavolo: Container-Sicht aus dem Anforderungstext",
+    aufgabe: '<p><b>Tavolo</b> vermittelt Essenslieferungen in einer Schweizer Stadt. Kundinnen und Kunden bestellen über die <span data-baustein="app">Mobile App</span>. Restaurants pflegen ihre Menüs über ein <span data-baustein="portal">Web-Portal</span>. Beide Clients sprechen ausschliesslich mit einem <span data-baustein="gw">API-Gateway</span>. Das Gateway leitet Bestellungen synchron an den <span data-baustein="best">Bestellservice</span> weiter, Menüabfragen und Menüänderungen synchron an den <span data-baustein="menu">Menüservice</span>. Der Menüservice speichert die Menüs in seiner <span data-baustein="menudb">eigenen Menü-DB</span>, der Bestellservice jede Bestellung in seiner <span data-baustein="bestdb">eigenen Bestell-DB</span>.</p>' +
+      '<p>Bevor der Bestellservice eine Bestellung bestätigt, fragt er synchron beim <span data-baustein="zahl">Zahlungsservice</span> nach, ob die Zahlung autorisiert ist. Der Zahlungsservice ruft dafür die Schnittstelle eines <span data-baustein="psp">externen Zahlungsanbieters</span> auf. Nach dem Speichern veröffentlicht der Bestellservice das Event «Bestellung bestätigt» auf einem <span data-baustein="broker">Event-Broker</span>. Der <span data-baustein="liefer">Lieferservice</span> abonniert dieses Event und plant die Kurierfahrt. Der <span data-baustein="notif">Benachrichtigungsservice</span> abonniert es ebenfalls und verschickt eine Bestätigungs-E-Mail.</p>' +
+      '<p>Ein Cache für die Menüs wurde diskutiert, aber verworfen. Die Kurierinnen werden heute per Telefon disponiert; eine eigene Kurier-App ist erst für nächstes Jahr geplant. Wie viele Server und Load Balancer der Betrieb braucht, ist in dieser Aufgabe nicht gefragt.</p>',
+    schichten: [
+      { id: "client", name: "Clients" },
+      { id: "zugang", name: "Zugang" },
+      { id: "dienste", name: "Kerndienste" },
+      { id: "folge", name: "Folgedienste und Fremdsysteme" },
+      { id: "daten", name: "Daten und Messaging" }
+    ],
+    bausteine: [
+      { id: "app", name: "Mobile App", art: "mobile", schicht: "client" },
+      { id: "portal", name: "Web-Portal", art: "client", schicht: "client" },
+      { id: "kurier", name: "Kurier-App", art: "mobile", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "zugang" },
+      { id: "lb", name: "Load Balancer", art: "lb", schicht: "zugang" },
+      { id: "cdn", name: "CDN", art: "cdn", schicht: "zugang" },
+      { id: "best", name: "Bestellservice", art: "service", schicht: "dienste" },
+      { id: "menu", name: "Menüservice", art: "service", schicht: "dienste" },
+      { id: "zahl", name: "Zahlungsservice", art: "service", schicht: "dienste" },
+      { id: "liefer", name: "Lieferservice", art: "service", schicht: "folge" },
+      { id: "notif", name: "Benachrichtigungsservice", art: "service", schicht: "folge" },
+      { id: "psp", name: "Zahlungsanbieter (extern)", art: "extern", schicht: "folge" },
+      { id: "bestdb", name: "Bestell-DB", art: "db", schicht: "daten" },
+      { id: "menudb", name: "Menü-DB", art: "db", schicht: "daten" },
+      { id: "broker", name: "Event-Broker", art: "topic", schicht: "daten" },
+      { id: "cache", name: "Cache", art: "cache", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["app", "portal", "gw", "best", "menu", "zahl", "liefer", "notif", "psp", "bestdb", "menudb", "broker"],
+      verbindungen: [
+        { von: "app", nach: "gw", art: "sync", warum: "«Beide Clients sprechen ausschliesslich mit einem API-Gateway»: Die App ruft nur das Gateway auf." },
+        { von: "portal", nach: "gw", art: "sync", warum: "Dasselbe gilt für das Web-Portal der Restaurants." },
+        { von: "gw", nach: "best", art: "sync", warum: "«leitet Bestellungen synchron an den Bestellservice weiter»." },
+        { von: "gw", nach: "menu", art: "sync", warum: "«Menüabfragen und Menüänderungen synchron an den Menüservice»." },
+        { von: "menu", nach: "menudb", art: "daten", warum: "«speichert die Menüs in seiner eigenen Menü-DB»: database per service." },
+        { von: "best", nach: "bestdb", art: "daten", warum: "«jede Bestellung in seiner eigenen Bestell-DB»." },
+        { von: "best", nach: "zahl", art: "sync", warum: "«fragt synchron beim Zahlungsservice nach»: Der Bestellservice wartet auf die Antwort." },
+        { von: "zahl", nach: "psp", art: "sync", warum: "«ruft die Schnittstelle eines externen Zahlungsanbieters auf»: Aufruf mit Antwort." },
+        { von: "best", nach: "broker", art: "async", warum: "«veröffentlicht das Event»: Der Bestellservice wartet nicht auf die Empfänger." },
+        { von: "broker", nach: "liefer", art: "async", gerichtet: false, warum: "«Der Lieferservice abonniert dieses Event»: Der Broker liefert es aus (beide Richtungen zählen)." },
+        { von: "broker", nach: "notif", art: "async", gerichtet: false, warum: "«abonniert es ebenfalls»: Ein Event, zwei Abonnenten, darum ein Topic und keine Queue." }
+      ]
+    },
+    erklaerung: "<b>Ablenker:</b> Cache («verworfen»), Kurier-App («erst geplant»), Load Balancer («nicht gefragt») und CDN (nicht erwähnt) gehören nicht ins Modell. Lieferservice und Benachrichtigungsservice hängen nur am Broker, nicht direkt am Bestellservice."
+  };
+
+  /* --- Modell A4: Rheinklang, vorgegeben --- */
+  const MODELL_A4 = {
+    titel: "Rheinklang: Die nötigen Teile miteinander verbinden",
+    aufgabe: '<p>Für den Ticketverkauf der Konzertbühne «Rheinklang» liegen alle Bausteine schon auf der Fläche. Der <span data-baustein="web">Web-Client</span> ruft das <span data-baustein="gw">API-Gateway</span> auf. Das Gateway leitet Kaufanfragen synchron an den <span data-baustein="ticket">Ticketservice</span> weiter. Der Ticketservice reserviert den Platz, indem er in seine <span data-baustein="tdb">Ticket-DB</span> schreibt, und fragt anschliessend den <span data-baustein="zahl">Zahlungsservice</span> synchron, ob die Zahlung gelingt. Ist bezahlt, legt der Ticketservice einen Auftrag «PDF erstellen» in eine <span data-baustein="queue">Queue</span> und antwortet sofort, ohne auf das PDF zu warten. Der <span data-baustein="pdf">PDF-Service</span> holt die Aufträge aus der Queue ab, erstellt das Ticket als PDF und legt es im <span data-baustein="speicher">Objektspeicher</span> ab.</p>',
+    vorgegeben: true,
+    schichten: [
+      { id: "client", name: "Client" },
+      { id: "zugang", name: "Zugang" },
+      { id: "dienste", name: "Dienste" },
+      { id: "daten", name: "Daten und Messaging" }
+    ],
+    bausteine: [
+      { id: "web", name: "Web-Client", art: "client", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "zugang" },
+      { id: "ticket", name: "Ticketservice", art: "service", schicht: "dienste" },
+      { id: "zahl", name: "Zahlungsservice", art: "service", schicht: "dienste" },
+      { id: "pdf", name: "PDF-Service", art: "service", schicht: "dienste" },
+      { id: "tdb", name: "Ticket-DB", art: "db", schicht: "daten" },
+      { id: "queue", name: "Queue", art: "queue", schicht: "daten" },
+      { id: "speicher", name: "Objektspeicher", art: "storage", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["web", "gw", "ticket", "zahl", "pdf", "tdb", "queue", "speicher"],
+      verbindungen: [
+        { von: "web", nach: "gw", art: "sync", warum: "«ruft das API-Gateway auf»: Der Browser wartet auf die Antwort." },
+        { von: "gw", nach: "ticket", art: "sync", warum: "«leitet Kaufanfragen synchron weiter»." },
+        { von: "ticket", nach: "tdb", art: "daten", warum: "«indem er in seine Ticket-DB schreibt»: Datenzugriff auf die eigene Datenbank." },
+        { von: "ticket", nach: "zahl", art: "sync", warum: "«fragt den Zahlungsservice synchron»." },
+        { von: "ticket", nach: "queue", art: "async", warum: "«legt einen Auftrag in eine Queue und antwortet sofort, ohne zu warten»: asynchron." },
+        { von: "queue", nach: "pdf", art: "async", gerichtet: false, warum: "«holt die Aufträge aus der Queue ab»: Genau ein PDF-Service verarbeitet jeden Auftrag. Beide Richtungen zählen." },
+        { von: "pdf", nach: "speicher", art: "daten", warum: "«legt es im Objektspeicher ab»: Datei schreiben." }
+      ]
+    },
+    erklaerung: "<b>Muster:</b> Eine Queue verteilt Arbeit an genau einen Verarbeiter (hier: PDF erstellen). Der Ticketservice kann sofort antworten, auch wenn die PDF-Erstellung gerade langsam ist."
+  };
+
+  /* --- Modell A5: Kubernetes-Deployment-Sicht --- */
+  const MODELL_A5 = {
+    titel: "Tavolo im Cluster: Deployment-Sicht",
+    aufgabe: '<p>Der Bestellservice von Tavolo läuft in einem Kubernetes-Cluster. Zeichne die Deployment-Sicht. Anfragen von aussen kommen über einen <span data-baustein="ing">Ingress</span> herein. Er leitet alle Anfragen auf den Pfad /bestellungen an den <span data-baustein="svc">Service «bestellung»</span> weiter. Der Service leitet jede Anfrage an einen der <span data-baustein="pod">Pods</span> weiter. Das <span data-baustein="dep">Deployment «bestellung»</span> verwaltet die Pods: Es sorgt dafür, dass immer drei Replikate laufen. Die Pods lesen die Adresse der Datenbank aus der <span data-baustein="cm">ConfigMap «bestellung-konfig»</span> und das Datenbank-Passwort aus dem <span data-baustein="sec">Secret «bestellung-db»</span>.</p><p>Die Datenbank selbst läuft als verwalteter Dienst ausserhalb des Clusters und gehört nicht in diese Sicht. Automatisches Skalieren ist erst geplant. Auf welchen Nodes die Pods landen, entscheidet Kubernetes; das ist hier nicht gefragt.</p>',
+    schichten: [
+      { id: "eingang", name: "Eingang" },
+      { id: "workload", name: "Workload" },
+      { id: "konfig", name: "Konfiguration und Daten" }
+    ],
+    verbindungsarten: [
+      { id: "weiter", name: "leitet weiter an" },
+      { id: "verwaltet", name: "verwaltet" },
+      { id: "liest", name: "liest Konfig" }
+    ],
+    bausteine: [
+      { id: "ing", name: "Ingress", art: "gateway", schicht: "eingang" },
+      { id: "svc", name: "Service «bestellung»", art: "lb", schicht: "eingang" },
+      { id: "dep", name: "Deployment «bestellung»", art: "code", schicht: "workload" },
+      { id: "pod", name: "Pods (3 Replikate)", art: "pod", schicht: "workload" },
+      { id: "node", name: "Node", art: "node", schicht: "workload" },
+      { id: "hpa", name: "Autoscaler (HPA)", art: "monitor", schicht: "workload" },
+      { id: "cm", name: "ConfigMap", art: "config", schicht: "konfig" },
+      { id: "sec", name: "Secret", art: "auth", schicht: "konfig" },
+      { id: "db", name: "Datenbank", art: "db", schicht: "konfig" }
+    ],
+    loesung: {
+      bausteine: ["ing", "svc", "dep", "pod", "cm", "sec"],
+      verbindungen: [
+        { von: "ing", nach: "svc", art: "weiter", warum: "«leitet alle Anfragen auf den Pfad /bestellungen an den Service weiter»: Der Ingress routet nach Pfad." },
+        { von: "svc", nach: "pod", art: "weiter", warum: "«leitet jede Anfrage an einen der Pods weiter»: Der Service verteilt die Last über den Label-Selektor." },
+        { von: "dep", nach: "pod", art: "verwaltet", warum: "«verwaltet die Pods … immer drei Replikate»: Das Deployment ersetzt abgestürzte Pods (Self-Healing)." },
+        { von: "pod", nach: "cm", art: "liest", warum: "«lesen die Adresse der Datenbank aus der ConfigMap»." },
+        { von: "pod", nach: "sec", art: "liest", warum: "«das Datenbank-Passwort aus dem Secret»: Zugangsdaten gehören in ein Secret." }
+      ]
+    },
+    erklaerung: "<b>Ablenker:</b> Datenbank («ausserhalb des Clusters, nicht in dieser Sicht»), Autoscaler («erst geplant») und Node («nicht gefragt»). In der Deployment-Sicht zeigen die Linien Weiterleitung, Verwaltung und Konfiguration, keine fachlichen Aufrufe."
+  };
+
+  const AUFGABEN = [
+    { nr: 1, punkte: 8, titel: "Architekturstile", teile: [
+      { id: "1a", name: "a) Stil wählen", punkte: 2, station: "01-architekturstile", art: "auswahl",
+        kontext: "<p><b>a)</b> Ein Start-up mit vier Entwicklerinnen baut die erste Version eines Buchungssystems für Coiffeursalons. Die Fachlichkeit ändert sich noch fast jede Woche, ein eigenes Betriebsteam gibt es nicht.</p>",
+        cfg: { frage: "Welcher Architekturstil passt am besten für den Start?",
+          optionen: ["Microservices mit je eigener Datenbank und Kubernetes-Cluster", "Ein modularer Monolith mit klaren Modulgrenzen, später bei Bedarf aufteilbar", "SOA mit einem Enterprise Service Bus", "Für jede Funktion eine eigene Serverless-Function"],
+          richtig: 1,
+          erklaerung: "Kleines Team, unklare Fachlichkeit, kein Betrieb: Ein modularer Monolith ist einfach zu bauen und zu betreiben. Die Modulgrenzen erlauben später eine Aufteilung, wenn die Schnitte stabil sind. Microservices lohnen sich erst bei mehreren Teams und klaren Bounded Contexts." } },
+      { id: "1b", name: "b) Aussagen beurteilen", punkte: 4, station: "01-architekturstile", art: "wf",
+        cfg: { aussagen: [
+          { html: "Bei Microservices hat jeder Dienst idealerweise seine eigene Datenbank (database per service).", wahr: true, erklaerung: "So bleibt jeder Dienst unabhängig änderbar und deploybar." },
+          { html: "Hohe Kohäsion heisst: Ein Dienst hängt von vielen anderen Diensten ab.", wahr: false, erklaerung: "Das beschreibt starke Kopplung. Hohe Kohäsion heisst: Was fachlich zusammengehört, liegt im selben Dienst." },
+          { html: "Ein Bounded Context grenzt ab, wo ein Begriff wie «Kunde» eine bestimmte Bedeutung hat.", wahr: true, erklaerung: "Im Verkauf ist «Kunde» jemand mit Warenkorb, in der Buchhaltung jemand mit offenen Rechnungen. Jeder Context hat sein eigenes Modell." },
+          { html: "SOA und Microservices sind dasselbe; Microservices ist nur der neuere Name.", wahr: false, erklaerung: "Beide schneiden nach Diensten, aber SOA setzt oft auf einen zentralen Bus und geteilte Daten, Microservices auf kleine, unabhängig deploybare Dienste mit eigenen Daten." }
+        ] },
+        hinweis: "Punkte: je Kreuz 1 P. (erster Versuch zählt)." },
+      { id: "1c", name: "c) Nachteile von Microservices", punkte: 2, station: "01-architekturstile", art: "selbst",
+        frage: "<p>Nenne zwei Nachteile von Microservices gegenüber einem Monolithen, je mit einem konkreten Beispiel aus einem Webshop.</p>",
+        schritte: [
+          { html: "Netzwerk statt Methodenaufruf: Jeder Aufruf zwischen Diensten kann langsam sein oder scheitern. Beispiel: Der Bestellservice wartet auf den Lagerservice, der gerade neu startet.", warum: "Die «Fallacies of distributed computing»: Das Netz ist nicht zuverlässig und nicht schnell." },
+          { html: "Verteilte Daten: Keine gemeinsame Transaktion über Dienste hinweg. Beispiel: Bestellung gespeichert, aber Lagerbestand noch nicht reduziert; nötig sind Saga oder eventual consistency.", warum: "Database per service hat diesen Preis." },
+          { html: "Weitere gültige Nachteile: höherer Betriebsaufwand (viele Deployments, Monitoring, Tracing), schwierigeres Testen über Dienstgrenzen.", warum: "Jeder dieser Punkte zählt, wenn ein Beispiel dabei ist." }
+        ],
+        raster: [
+          { t: "1. Nachteil mit Beispiel (z. B. Netzwerkaufrufe: Latenz, Ausfälle)", p: 1 },
+          { t: "2. Nachteil mit Beispiel (z. B. verteilte Daten, Betriebsaufwand)", p: 1 }
+        ] }
+    ] },
+
+    { nr: 2, punkte: 8, titel: "Kommunikation", teile: [
+      { id: "2a", name: "a) HTTP-Antwort lesen", punkte: 2, station: "02-kommunikation", art: "auswahl",
+        kontext: "<p><b>a)</b> Ein Client legt im Webshop eine Bestellung an:</p>" + HTTP,
+        cfg: { frage: "Was sagt die Antwort aus?",
+          optionen: ["Die Anfrage war fehlerhaft; der Client soll sie an die Adresse in Location wiederholen.", "Die Bestellung wurde angelegt; ihre neue Adresse steht im Header Location.", "Die Bestellung ist in Arbeit; das Ergebnis kommt später per Event.", "Der Server leitet dauerhaft auf eine andere Adresse um."],
+          richtig: 1,
+          erklaerung: "201 Created heisst: Eine neue Ressource ist entstanden. Location nennt ihre Adresse; ein GET auf /api/bestellungen/7781 liefert sie. «In Arbeit» wäre 202 Accepted, eine dauerhafte Umleitung 301." } },
+      { id: "2b", name: "b) Muster wählen", punkte: 2, station: "02-kommunikation", art: "auswahl",
+        kontext: "<p><b>b)</b> Nach jeder Bestellung sollen Mailservice, Lagerservice und Buchhaltung informiert werden. Später kommen weitere Empfänger dazu, ohne dass der Bestellservice geändert werden soll.</p>",
+        cfg: { frage: "Welche Kommunikation passt?",
+          optionen: ["Der Bestellservice ruft alle drei Dienste nacheinander per REST auf.", "Eine Queue, aus der alle drei Dienste dieselbe Nachricht lesen", "Publish/Subscribe: Der Bestellservice veröffentlicht «Bestellung erstellt» auf einem Topic, jeder Empfänger abonniert es.", "gRPC-Streaming vom Bestellservice zu jedem Empfänger"],
+          richtig: 2,
+          erklaerung: "Mehrere Empfänger derselben Nachricht und neue Empfänger ohne Änderung beim Sender: Publish/Subscribe über ein Topic (z. B. Kafka). Bei einer Queue würde jede Nachricht nur von einem Verbraucher verarbeitet." } },
+      { id: "2c", name: "c) Aussagen beurteilen", punkte: 2, station: "02-kommunikation", art: "wf",
+        cfg: { aussagen: [
+          { html: "gRPC beschreibt die Schnittstelle in einer .proto-Datei und überträgt Protocol-Buffers-Nachrichten über HTTP/2.", wahr: true, erklaerung: "Aus der .proto-Datei erzeugt man Client- und Server-Code für viele Sprachen." },
+          { html: "Asynchron heisst: Der Sender wartet, bis der Empfänger geantwortet hat.", wahr: false, erklaerung: "Das ist synchron. Asynchron schickt der Sender die Nachricht ab und arbeitet weiter." },
+          { html: "Ein GET-Request darf in REST Daten auf dem Server ändern, solange er schnell ist.", wahr: false, erklaerung: "GET ist «safe»: Er liest nur. Ändern geht mit POST, PUT, PATCH oder DELETE." },
+          { html: "Bei einer Queue mit drei Verbrauchern verarbeitet genau einer von ihnen jede Nachricht.", wahr: true, erklaerung: "Competing consumers: Die Arbeit wird verteilt, nicht vervielfacht." }
+        ] },
+        hinweis: "Punkte: je Kreuz 0.5 P. (erster Versuch zählt)." },
+      { id: "2d", name: "d) Synchron oder asynchron?", punkte: 2, station: "02-kommunikation", art: "selbst",
+        frage: "<p>Nenne je einen Fall aus einem Webshop, in dem du synchron bzw. asynchron kommunizierst, und begründe kurz.</p>",
+        schritte: [
+          { html: "Synchron: Der Warenkorb fragt den Preisservice nach dem aktuellen Preis. Die Antwort wird sofort gebraucht, um sie anzuzeigen.", warum: "Synchron passt, wenn der Aufrufer ohne Antwort nicht weiterarbeiten kann." },
+          { html: "Asynchron: Nach der Bestellung wird ein Event veröffentlicht, der Mailservice verschickt die Bestätigung später. Die Kundin muss nicht auf die Mail warten.", warum: "Asynchron passt für Folgeaktionen. Fällt der Mailservice aus, kann trotzdem bestellt werden." }
+        ],
+        raster: [
+          { t: "Synchroner Fall mit Begründung (Antwort sofort nötig)", p: 1 },
+          { t: "Asynchroner Fall mit Begründung (Folgeaktion, entkoppelt)", p: 1 }
+        ] }
+    ] },
+
+    { nr: 3, punkte: 12, titel: "Modell aus einem Anforderungstext", teile: [
+      { id: "3a", name: "Container-Sicht modellieren", punkte: 12, station: "05-architektur-modellieren", art: "modell", cfg: MODELL_A3,
+        hinweis: "Punkte: 12 Elemente in der Lösung plus 11 Verbindungen = 23 Elemente. Jedes richtige Element bringt 12/23 P., jeder Ablenker und jede Verbindung, die es so nicht gibt, zieht so viel ab. Gerundet auf halbe Punkte." }
+    ] },
+
+    { nr: 4, punkte: 8, titel: "Nur verbinden: Ticketverkauf", teile: [
+      { id: "4a", name: "Verbindungen ziehen", punkte: 8, station: "02-kommunikation", art: "modell", cfg: MODELL_A4,
+        hinweis: "Punkte: Die Bausteine liegen schon, es zählen nur die 7 Verbindungen mit Richtung und Art. Je richtige Verbindung 8/7 P., je Verbindung, die es so nicht gibt, ebenso viel Abzug." }
+    ] },
+
+    { nr: 5, punkte: 10, titel: "Kubernetes", teile: [
+      { id: "5a", name: "a) Deployment-Sicht modellieren", punkte: 6, station: "03-container-kubernetes", art: "modell", cfg: MODELL_A5,
+        hinweis: "Punkte: 6 Bausteine plus 5 Verbindungen = 11 Elemente, je 6/11 P." },
+      { id: "5b", name: "b) Service und Pods", punkte: 2, station: "03-container-kubernetes", art: "auswahl",
+        kontext: "<p><b>b) und c)</b> Ausschnitt aus den Manifesten des Bestellservice:</p>" + YAML,
+        cfg: { frage: "Woran erkennt der Service «bestellung», an welche Pods er Anfragen schicken darf?",
+          optionen: ["An den Pod-IP-Adressen, die im Service eingetragen sind", "Am Label-Selektor app: bestellung, der zu den Labels der Pods passt", "Am Image-Namen tavolo/bestellung:1.4", "Am Namen des Deployments"],
+          richtig: 1,
+          erklaerung: "Der Service wählt Pods über Labels aus. Pods kommen und gehen mit neuen IP-Adressen; der Selektor findet immer die aktuellen." } },
+      { id: "5c", name: "c) Aussagen zum Manifest", punkte: 2, station: "03-container-kubernetes", art: "wf",
+        cfg: { aussagen: [
+          { html: "Stürzt einer der drei Pods ab, startet Kubernetes einen neuen, damit wieder drei laufen.", wahr: true, erklaerung: "replicas: 3 ist der Sollzustand. Das Deployment (über sein ReplicaSet) stellt ihn wieder her: Self-Healing." },
+          { html: "targetPort: 8080 ist der Port, auf dem der Container lauscht; port: 80 ist der Port des Service.", wahr: true, erklaerung: "Der Service nimmt auf 80 an und leitet an 8080 im Container weiter." },
+          { html: "Ein Image ist ein laufender Prozess, ein Container ist die unveränderliche Vorlage dafür.", wahr: false, erklaerung: "Umgekehrt: Das Image ist die Vorlage, der Container die laufende Instanz." },
+          { html: "Das Datenbank-Passwort gehört in die ConfigMap bestellung-konfig, damit alle Pods es lesen können.", wahr: false, erklaerung: "Zugangsdaten gehören in ein Secret. Auch ein Secret können die Pods lesen." }
+        ] },
+        hinweis: "Punkte: je Kreuz 0.5 P. (erster Versuch zählt)." }
+    ] },
+
+    { nr: 6, punkte: 8, titel: "Resilienz und Konsistenz", teile: [
+      { id: "6a", name: "a) Circuit Breaker", punkte: 2, station: "04-resilienz-konsistenz", art: "auswahl",
+        kontext: "<p><b>a)</b> Der Bestellservice ruft den Zahlungsservice mit Resilience4j auf:</p>" + JAVA,
+        cfg: { frage: "In den letzten 20 Aufrufen sind 12 gescheitert. Was passiert beim nächsten Aufruf?",
+          optionen: ["Der Retry versucht es endlos weiter, bis der Zahlungsservice antwortet.", "Der Circuit Breaker ist offen: Der Aufruf geht gar nicht erst raus, sondern landet sofort im Fallback. Nach 30 s lässt er im Zustand halb offen 3 Probeaufrufe durch.", "Der Circuit Breaker bleibt geschlossen, weil erst ab 100 % Fehlern geöffnet wird.", "Der Bestellservice stürzt ab, damit Kubernetes ihn neu startet."],
+          richtig: 1,
+          erklaerung: "12 von 20 sind 60 % und damit über der Schwelle von 50 %. Offen heisst: sofort scheitern, den kranken Dienst schonen, Threads nicht blockieren. Nach waitDurationInOpenState folgt halb offen mit Probeaufrufen." } },
+      { id: "6b", name: "b) Aussagen beurteilen", punkte: 2, station: "04-resilienz-konsistenz", art: "wf",
+        cfg: { aussagen: [
+          { html: "Bei einer Netzwerkpartition muss ein verteiltes System zwischen Konsistenz und Verfügbarkeit wählen (CAP).", wahr: true, erklaerung: "Partitionen lassen sich nicht ausschliessen. Dann bleibt die Wahl: antworten mit möglicherweise alten Daten (A) oder ablehnen (C)." },
+          { html: "Eventual consistency heisst: Die Daten werden nie konsistent.", wahr: false, erklaerung: "Sie werden konsistent, nur nicht sofort. Ohne neue Änderungen gleichen sich alle Kopien an." },
+          { html: "Ein Bulkhead trennt Ressourcen wie Thread-Pools je Abhängigkeit, damit ein langsamer Dienst nicht alle anderen blockiert.", wahr: true, erklaerung: "Wie die Schotten im Schiff: Ein Leck flutet nur ein Abteil." },
+          { html: "Ein Retry ist bei jeder Operation unbedenklich, auch bei «Zahlung belasten» ohne Idempotenzschlüssel.", wahr: false, erklaerung: "Ging die erste Anfrage durch und nur die Antwort verloren, belastet ein Retry doppelt. Retry nur bei idempotenten Operationen oder mit Idempotenzschlüssel." }
+        ] },
+        hinweis: "Punkte: je Kreuz 0.5 P. (erster Versuch zählt)." },
+      { id: "6c", name: "c) Saga mit Kompensation", punkte: 4, station: "04-resilienz-konsistenz", art: "selbst",
+        frage: "<p>Bei Tavolo laufen bei einer Bestellung drei Schritte in drei Diensten mit je eigener Datenbank: Bestellung anlegen (Bestellservice), Zahlung belasten (Zahlungsservice), Kurier reservieren (Lieferservice). Die Kurier-Reservation scheitert. Beschreibe eine Saga mit den nötigen Kompensationen und begründe, warum hier keine verteilte Transaktion (Two-Phase Commit) eingesetzt wird.</p>",
+        schritte: [
+          { html: "Jeder Schritt ist eine <b>lokale Transaktion</b> in einem Dienst; nach jedem Schritt folgt ein Event oder Befehl für den nächsten (Choreografie über Events oder Orchestrierung durch einen Saga-Orchestrator).", warum: "Eine Saga ersetzt die eine grosse Transaktion durch eine Folge kleiner." },
+          { html: "Kurier-Reservation scheitert → Event «Kurier nicht verfügbar». Kompensation 1: Der Zahlungsservice <b>erstattet die Zahlung zurück</b>.", warum: "Kompensationen laufen in umgekehrter Reihenfolge. Die Zahlung wird nicht gelöscht, sondern mit einer Gegenbuchung ausgeglichen." },
+          { html: "Kompensation 2: Der Bestellservice setzt die Bestellung auf <b>«storniert»</b> und informiert die Kundin.", warum: "Auch hier: neuer Zustand statt Löschen, damit alles nachvollziehbar bleibt." },
+          { html: "Kein 2PC: Alle Dienste müssten gleichzeitig verfügbar sein und Sperren halten; das koppelt sie eng und senkt die Verfügbarkeit. Viele Broker und Datenbanken unterstützen 2PC über Dienstgrenzen auch nicht.", warum: "Darum setzt man bei Microservices auf Saga und eventual consistency. Damit Events nicht verloren gehen, hilft das Outbox-Muster." }
+        ],
+        raster: [
+          { t: "Schritte als lokale Transaktionen je Dienst, verbunden über Events oder einen Orchestrator", p: 1 },
+          { t: "Kompensation: Zahlung zurückerstatten", p: 1 },
+          { t: "Kompensation: Bestellung stornieren (Status, nicht löschen)", p: 1 },
+          { t: "Begründung gegen 2PC (Kopplung, Sperren, Verfügbarkeit)", p: 1 }
+        ] }
+    ] },
+
+    { nr: 7, punkte: 6, titel: "Modelle beurteilen", teile: [
+      { id: "7a", name: "a) Passende Sicht", punkte: 2, station: "05-architektur-modellieren", art: "auswahl",
+        cfg: { frage: "Die Geschäftsleitung von Tavolo will auf einer Folie sehen, welche Personengruppen und Fremdsysteme mit Tavolo zu tun haben, ohne innere Dienste. Welche C4-Sicht wählst du?",
+          optionen: ["Systemkontext-Sicht", "Container-Sicht", "Komponenten-Sicht", "Deployment-Sicht"],
+          richtig: 0,
+          erklaerung: "Die Systemkontext-Sicht zeigt das System als eine Box mit Personen (Kundinnen, Restaurants, Kuriere) und Fremdsystemen (Zahlungsanbieter). Die Container-Sicht zeigt die Dienste und Datenbanken im Innern, die Deployment-Sicht, wo sie laufen." } },
+      { id: "7b", name: "b) Fehler im Modell finden", punkte: 4, station: "05-architektur-modellieren", art: "selbst",
+        frage: "<p>Ein Kollege modelliert ein Kinoticket-System. Im Text steht: «Der Web-Client spricht nur mit dem API-Gateway. Nach dem Kauf veröffentlicht der Ticketservice das Event «Ticket gekauft», das der Mailservice und der Statistikservice abonnieren.» Sein Modell zeigt eine Linie <i>Web-Client → Ticket-DB</i> (liest/schreibt Daten) und zwei synchrone Linien <i>Ticketservice → Mailservice</i> und <i>Ticketservice → Statistikservice</i>; einen Broker gibt es nicht. Nenne die zwei Probleme und je die Korrektur.</p>",
+        schritte: [
+          { html: "Problem 1: Der Client greift direkt auf die Datenbank zu. Das widerspricht «spricht nur mit dem Gateway» und umgeht den Dienst, dem die Daten gehören.", warum: "Daten gehören einem Dienst (database per service). Andere kommen nur über dessen Schnittstelle an sie heran." },
+          { html: "Korrektur 1: Web-Client → API-Gateway → Ticketservice (synchron), Ticketservice → Ticket-DB (Daten).", warum: "So bleibt die Datenbank gekapselt." },
+          { html: "Problem 2: Synchrone Direktaufrufe statt Events. Fällt der Statistikservice aus, scheitert der Ticketkauf; jeder neue Empfänger verlangt eine Änderung im Ticketservice.", warum: "Das Signalwort war «veröffentlicht … abonnieren»." },
+          { html: "Korrektur 2: Ticketservice → Event-Broker (asynchron), Broker → Mailservice und Broker → Statistikservice (asynchron).", warum: "Publish/Subscribe entkoppelt Sender und Empfänger zeitlich und fachlich." }
+        ],
+        raster: [
+          { t: "Problem 1 erkannt: Client direkt an der Datenbank", p: 1 },
+          { t: "Korrektur 1: über Gateway und Ticketservice", p: 1 },
+          { t: "Problem 2 erkannt: synchrone Direktaufrufe statt Event", p: 1 },
+          { t: "Korrektur 2: Broker mit zwei Abonnenten, asynchron", p: 1 }
+        ] }
+    ] }
+  ];
+
+  /* ==========================================================================
+     Prüfungs-Engine: Bausteine erzeugen, Punkte zählen, Timer, Auswertung
+     ========================================================================== */
+  const GESAMT = AUFGABEN.reduce((s, a) => s + a.punkte, 0);
+  const pruefungEl = document.getElementById("t06-pruefung");
+  const zustand = {};   // id → { punkte, versucht, hilfe, richtig, anzahlRichtig, netto, max, fehler }
+  const info = {};      // id → { t, a, mount, handle, stand, raster: [checkbox], notiz }
+  const alleTeile = [];
+  let modus = "uebung"; // uebung | pruefung | fertig
+  let eingefroren = false;
+
+  function neuerZustand() { return { punkte: 0, versucht: false, hilfe: false, richtig: false, anzahlRichtig: 0, netto: 0, max: 0, fehler: 0 }; }
+
+  function teilBauen(a, t, art) {
+    if (t.kontext) {
+      const k = el("div", "t06-kontext", t.kontext);
+      art.appendChild(k);
+    }
+    const box = el("div", "t06-teil");
+    box.id = "t06-t" + t.id;
+    box.appendChild(el("div", "t06-tkopf",
+      '<span class="t06-tname">' + t.name + '</span><span class="t06-pill">' + pt(t.punkte) + "</span>" +
+      '<a class="t06-pill" href="' + stUrl(t.station) + '">' + stName(t.station) + "</a>"));
+    art.appendChild(box);
+    zustand[t.id] = neuerZustand();
+    const i = info[t.id] = { t: t, a: a, raster: [], notiz: null };
+    alleTeile.push(t);
+
+    if (t.art === "selbst") {
+      box.appendChild(el("div", "t06-frage", t.frage));
+      const nid = "t06-notiz-" + t.id;
+      const nl = el("label", "t06-notizlabel", "Deine Lösung (Notizfeld, wird nicht gespeichert)");
+      nl.htmlFor = nid;
+      const nt = el("textarea", "t06-notiz");
+      nt.id = nid;
+      nt.rows = 4;
+      box.append(nl, nt);
+      i.notiz = nt;
+    }
+    const mount = el("div");
+    mount.id = "t06-b" + t.id;
+    box.appendChild(mount);
+    i.mount = mount;
+
+    if (t.art === "auswahl") {
+      i.handle = L.auswahl(mount, t.cfg);
+      mount.addEventListener("click", (e) => auswahlGeklickt(t, e));
+    } else if (t.art === "wf") {
+      i.handle = L.wahrFalsch(mount, t.cfg);
+      mount.addEventListener("click", (e) => wfGeklickt(t, e));
+    } else if (t.art === "modell") {
+      i.handle = L.modellieren(mount, t.cfg);
+      const lk = Array.prototype.find.call(mount.querySelectorAll("button"), (b) => b.textContent.trim() === "Lösung zeigen");
+      if (lk) lk.classList.add("t06-loesungsknopf");
+      mount.addEventListener("lernpfad:modell", (e) => modellGeprueft(t, e.detail));
+    } else {
+      i.handle = L.schrittAufgabe(mount, { titel: "Musterlösung Schritt für Schritt", schritte: t.schritte });
+      mount.addEventListener("click", () => window.setTimeout(() => selbstGeaendert(t), 0));
+      const fs = el("fieldset", "t06-raster");
+      fs.appendChild(el("legend", null, "Bewertungsraster: Hake ab, was deine Lösung enthält"));
+      t.raster.forEach((r) => {
+        const lab = el("label");
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.addEventListener("change", () => selbstGeaendert(t));
+        lab.append(cb, el("span", null, r.t), el("span", "t06-rp", pt(r.p)));
+        fs.appendChild(lab);
+        i.raster.push(cb);
+      });
+      box.appendChild(fs);
+    }
+    if (t.hinweis) box.appendChild(el("p", "hint", t.hinweis));
+    const stand = el("p", "t06-tstand");
+    stand.setAttribute("aria-live", "polite");
+    box.appendChild(stand);
+    i.stand = stand;
+    standZeigen(t);
+  }
+
+  AUFGABEN.forEach((a) => {
+    const art = el("article", "t06-aufgabe");
+    art.id = "t06-a" + a.nr;
+    art.setAttribute("aria-labelledby", "t06-a" + a.nr + "-titel");
+    art.innerHTML =
+      '<div class="t06-akopf"><div><span class="eyebrow">Aufgabe ' + a.nr + " · " + a.punkte + " Punkte</span>" +
+      '<h3 id="t06-a' + a.nr + '-titel" tabindex="-1">' + a.titel + "</h3></div>" +
+      '<span class="t06-apunkte" id="t06-a' + a.nr + '-stand">0 / ' + a.punkte + " P.</span></div>";
+    pruefungEl.appendChild(art);
+    a.teile.forEach((t) => teilBauen(a, t, art));
+    const fuss = el("div", "row");
+    const b = el("button", "btn", "Aufgabe " + a.nr + " zurücksetzen");
+    b.type = "button";
+    b.addEventListener("click", () => {
+      if (eingefroren) return;
+      a.teile.forEach(teilZuruecksetzen);
+      aktualisieren();
+    });
+    fuss.appendChild(b);
+    art.appendChild(fuss);
+  });
+
+  function auswahlGeklickt(t, e) {
+    const b = e.target.closest(".qopt");
+    if (!b) return;
+    const z = zustand[t.id];
+    if (eingefroren || z.versucht) return;
+    const idx = Array.prototype.indexOf.call(b.parentNode.children, b);
+    z.versucht = true;
+    z.richtig = idx === t.cfg.richtig;
+    z.punkte = z.richtig ? t.punkte : 0;
+    standZeigen(t);
+    aktualisieren();
+  }
+
+  function wfGeklickt(t, e) {
+    if (!e.target.closest(".btn.primary")) return; // nur «Auswerten»
+    const z = zustand[t.id];
+    if (eingefroren || z.versucht) return;
+    const zeilen = Array.from(info[t.id].mount.querySelectorAll(".wf-zeile"));
+    let richtig = 0, beantwortet = 0;
+    zeilen.forEach((zl, k) => {
+      const c = zl.querySelector("input:checked");
+      if (!c) return;
+      beantwortet++;
+      if ((c.value === "w") === !!t.cfg.aussagen[k].wahr) richtig++;
+    });
+    if (!beantwortet) return;
+    z.versucht = true;
+    z.anzahlRichtig = richtig;
+    z.punkte = richtig * t.punkte / zeilen.length;
+    standZeigen(t);
+    aktualisieren();
+  }
+
+  // Modell: Punkte aus dem Ereignis lernpfad:modell (detail.richtig / detail.gesamt), skaliert auf die Aufgabenpunkte.
+  // Abzug je überflüssigem Baustein und je Verbindung, die es so nicht gibt (sonst brächte «alles hinlegen» Punkte).
+  function modellGeprueft(t, d) {
+    const z = zustand[t.id], i = info[t.id];
+    if (eingefroren || z.versucht || !d) return;
+    const vorgegeben = t.cfg.vorgegeben === true;
+    const nBoxen = i.mount.querySelectorAll(".mod-box").length;
+    const nVerb = i.mount.querySelectorAll(".mod-v").length;
+    if (!d.loesungGezeigt && !nVerb && (vorgegeben || !nBoxen)) return; // leeres Modell zählt nicht als Versuch
+    z.versucht = true;
+    if (d.loesungGezeigt) {
+      z.hilfe = true;
+      z.punkte = 0;
+    } else {
+      const basis = vorgegeben ? t.cfg.loesung.bausteine.length : 0; // vorgegebene Bausteine bringen keine Punkte
+      const extraBoxen = i.mount.querySelectorAll(".mod-box.mod-falsch").length;
+      const extraVerb = Array.prototype.filter.call(i.mount.querySelectorAll(".mod-v.mod-falsch"), (li) => li.textContent.indexOf("gibt es so nicht") >= 0).length;
+      z.fehler = extraBoxen + extraVerb;
+      z.max = d.gesamt - basis;
+      z.anzahlRichtig = d.richtig - basis;
+      z.netto = Math.max(0, z.anzahlRichtig - z.fehler);
+      z.richtig = d.vollstaendig;
+      z.punkte = z.max > 0 ? halb(t.punkte * z.netto / z.max) : 0;
+    }
+    standZeigen(t);
+    aktualisieren();
+  }
+
+  function selbstGeaendert(t) {
+    const z = zustand[t.id], i = info[t.id];
+    if (eingefroren) return;
+    let p = 0, irgend = false;
+    i.raster.forEach((cb, k) => { if (cb.checked) { p += t.raster[k].p; irgend = true; } });
+    const aufgedeckt = i.mount.querySelectorAll(".sa-schritte li").length > 0;
+    z.punkte = p;
+    z.versucht = z.versucht || irgend || aufgedeckt;
+    standZeigen(t);
+    aktualisieren();
+  }
+
+  function standZeigen(t) {
+    const z = zustand[t.id], s = info[t.id].stand;
+    if (!s) return;
+    let text = "", klasse = "";
+    const von = " von " + pt(t.punkte);
+    const stufe = () => (z.punkte >= t.punkte ? "t06-ok" : z.punkte > 0 ? "t06-halb" : "t06-bad");
+    if (!z.versucht) {
+      text = t.art === "selbst" ? "Noch nicht bewertet: Lösung aufschreiben, Musterlösung aufdecken, Raster abhaken."
+        : t.art === "modell" ? "Noch nicht geprüft. Es zählt das erste «Prüfen»." : "Noch offen.";
+    } else if (t.art === "selbst") {
+      text = "Selbstbewertung: " + L.zahlText(z.punkte, 1) + von;
+      klasse = stufe();
+    } else if (t.art === "wf") {
+      text = (z.punkte >= t.punkte ? "✓ " : "✗ ") + L.zahlText(z.punkte, 1) + von + " (" + z.anzahlRichtig + " von " + t.cfg.aussagen.length + " Kreuzen richtig; der erste Versuch zählt)";
+      klasse = stufe();
+    } else if (t.art === "modell") {
+      if (z.hilfe) {
+        text = "Lösung vor dem ersten Prüfen gezeigt: 0" + von + " Weiter üben kannst du trotzdem.";
+        klasse = "t06-bad";
+      } else {
+        text = (z.punkte >= t.punkte ? "✓ " : "✗ ") + L.zahlText(z.punkte, 1) + von + " (" + z.anzahlRichtig + " von " + z.max + " Elementen richtig" +
+          (z.fehler ? ", " + z.fehler + " zu viel" : "") + "; das erste Prüfen zählt)";
+        klasse = stufe();
+      }
+    } else if (z.richtig) {
+      text = "✓ " + L.zahlText(z.punkte, 1) + von + " (erster Versuch)";
+      klasse = "t06-ok";
+    } else {
+      text = "✗ 0" + von + " Der erste Versuch zählt; üben kannst du weiter.";
+      klasse = "t06-bad";
+    }
+    if (eingefroren && z.versucht) text += " · Punkte fest";
+    s.className = "t06-tstand" + (klasse ? " " + klasse : "");
+    s.textContent = text;
+  }
+
+  function teilZuruecksetzen(t) {
+    const i = info[t.id];
+    i.raster.forEach((cb) => { cb.checked = false; });
+    if (i.notiz) i.notiz.value = "";
+    if (i.handle && typeof i.handle.zuruecksetzen === "function") i.handle.zuruecksetzen();
+    zustand[t.id] = neuerZustand();
+    standZeigen(t);
+  }
+
+  function rasterSperren(an) {
+    alleTeile.forEach((t) => info[t.id].raster.forEach((cb) => { cb.disabled = an; }));
+  }
+
+  /* ---------- Summen und Auswertung ---------- */
+  const summe = () => alleTeile.reduce((s, t) => s + (zustand[t.id].punkte || 0), 0);
+  const aufgabenSumme = (a) => a.teile.reduce((s, t) => s + (zustand[t.id].punkte || 0), 0);
+  const bearbeitet = () => alleTeile.filter((t) => zustand[t.id].versucht).length;
+
+  let geplant = false;
+  function aktualisieren() {
+    if (geplant) return;
+    geplant = true;
+    window.requestAnimationFrame(() => {
+      geplant = false;
+      AUFGABEN.forEach((a) => {
+        document.getElementById("t06-a" + a.nr + "-stand").textContent = L.zahlText(aufgabenSumme(a), 1) + " / " + a.punkte + " P.";
+      });
+      document.getElementById("t06-summe").textContent = L.zahlText(summe(), 1);
+      auswerten();
+    });
+  }
+
+  const prozent = (x, max) => (max > 0 ? Math.round(100 * x / max) : 0);
+  const balken = (x, max) => '<div class="t06-bar" aria-hidden="true"><i style="width:' + prozent(x, max) + '%"></i></div>';
+
+  function auswerten() {
+    const s = summe(), n = bearbeitet();
+    let zeit = "";
+    if (modus !== "uebung" && startZeit) zeit = " · Zeit: " + dauerText(verstrichenMs());
+    document.getElementById("t06-gesamt").innerHTML =
+      '<div class="t06-gesamt"><span class="t06-gross" id="t06-gesamt-zahl">' + L.zahlText(s, 1) + " / " + GESAMT + "</span><span>Punkte (" + prozent(s, GESAMT) + " %)</span></div>" +
+      balken(s, GESAMT) +
+      '<p class="hint">' + n + " von " + alleTeile.length + " Teilaufgaben bearbeitet" + zeit +
+      (modus === "fertig" ? " · abgegeben, Punkte fest" : modus === "pruefung" ? " · Prüfung läuft" : " · Übungsmodus") + "</p>";
+    document.getElementById("t06-tab-aufgaben").innerHTML = AUFGABEN.map((a) => {
+      const x = aufgabenSumme(a);
+      return '<tr><th scope="row"><a href="#t06-a' + a.nr + '">' + a.nr + "</a> · " + a.titel + '</th><td class="zahl">' + L.zahlText(x, 1) + " / " + a.punkte + "</td><td>" + balken(x, a.punkte) + "</td></tr>";
+    }).join("");
+    // Stationen: Quote nur über bearbeitete Teilaufgaben
+    const st = {};
+    alleTeile.forEach((t) => {
+      const z = zustand[t.id];
+      const add = (slug, max, erreicht) => {
+        if (!st[slug]) st[slug] = { maxTotal: 0, max: 0, erreicht: 0, versucht: false };
+        st[slug].maxTotal += max;
+        if (!z.versucht) return;
+        st[slug].max += max;
+        st[slug].erreicht += erreicht;
+        st[slug].versucht = true;
+      };
+      if (t.art === "selbst") {
+        t.raster.forEach((r, j) => add(r.st || t.station, r.p, info[t.id].raster[j].checked ? r.p : 0));
+      } else {
+        add(t.station, t.punkte, z.punkte || 0);
+      }
+    });
+    const gruppen = { schwach: [], mittel: [], gut: [], offen: [] };
+    let summeStationen = 0;
+    Object.keys(st).sort().forEach((slug) => {
+      const d = st[slug];
+      summeStationen += d.erreicht;
+      const q = d.max > 0 ? d.erreicht / d.max : 0;
+      const g = !d.versucht ? "offen" : q >= 0.75 ? "gut" : q >= 0.5 ? "mittel" : "schwach";
+      gruppen[g].push({ slug: slug, d: d, q: q });
+    });
+    const titel = { schwach: "Wiederholen", mittel: "Ausbaufähig", gut: "Sitzt", offen: "Noch nicht bearbeitet" };
+    let html = "";
+    ["schwach", "mittel", "gut", "offen"].forEach((g) => {
+      if (!gruppen[g].length) return;
+      gruppen[g].sort((x, y) => x.q - y.q);
+      html += '<h4 class="t06-tname">' + titel[g] + " (" + gruppen[g].length + ')</h4><ul class="t06-stliste">' + gruppen[g].map((e) =>
+        '<li data-t06-station="' + e.slug + '" data-t06-erreicht="' + e.d.erreicht + '"><a href="' + stUrl(e.slug) + '">' + stName(e.slug) + '</a><span class="t06-badge t06-b-' + g + '">' + titel[g] + "</span>" +
+        '<span class="t06-sp">' + (e.d.versucht
+          ? L.zahlText(e.d.erreicht, 1) + " von " + L.zahlText(e.d.max, 1) + " bearbeiteten P. (" + prozent(e.d.erreicht, e.d.max) + " %) · in der Übungsprüfung " + L.zahlText(e.d.maxTotal, 1) + " P."
+          : "in der Übungsprüfung " + L.zahlText(e.d.maxTotal, 1) + " P.") + "</span>" +
+        (e.d.versucht ? balken(e.d.erreicht, e.d.max) : "") + "</li>").join("") + "</ul>";
+    });
+    if (n) html += '<p class="hint" id="t06-stsumme">Summe über alle Stationen: ' + L.zahlText(summeStationen, 1) + " P. (gleich der Gesamtpunktzahl)</p>";
+    document.getElementById("t06-stationen").innerHTML = html ||
+      '<p class="hint">Noch keine Daten. Löse zuerst einige Aufgaben der Übungsprüfung.</p>';
+  }
+
+  /* ---------- Prüfungsmodus und Timer ---------- */
+  const DAUER = 60 * 60000;
+  const PLAN = [{ name: "Einlesen", min: 4 }].concat(
+    AUFGABEN.map((a) => ({ name: "Aufgabe " + a.nr, min: a.punkte * 50 / 60 })),
+    [{ name: "Kontrolle", min: 6 }]);
+  const bStart = document.getElementById("t06-start");
+  const bPause = document.getElementById("t06-pause");
+  const bAbgeben = document.getElementById("t06-abgeben");
+  const bAbgeben2 = document.getElementById("t06-abgeben2");
+  const bReset = document.getElementById("t06-reset");
+  const cbTimer = document.getElementById("t06-timer");
+  const ansage = document.getElementById("t06-ansage");
+  const uhr = document.getElementById("t06-uhr");
+  const planEl = document.getElementById("t06-plan");
+  const leiste = document.getElementById("t06-leiste");
+  const steuer = document.getElementById("t06-steuer");
+  const badge = document.getElementById("t06-modus-badge");
+  const modusText = document.getElementById("t06-modus-text");
+  const bestBox = document.getElementById("t06-bestaetigen");
+  const bestText = document.getElementById("t06-bestaetigen-text");
+  const bJa = document.getElementById("t06-ja");
+  let startZeit = 0, pauseSeit = 0, pausenSumme = 0, timerAn = true, intervall = null, warnungen = {};
+  let bestAktion = null, bestZurueck = null;
+
+  function verstrichenMs() {
+    if (!startZeit) return 0;
+    const jetzt = pauseSeit || Date.now();
+    return Math.max(0, jetzt - startZeit - pausenSumme);
+  }
+  function dauerText(ms) {
+    const s = Math.max(0, Math.round(ms / 1000));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sek = s % 60;
+    const zz = (x) => (x < 10 ? "0" : "") + x;
+    return h ? h + ":" + zz(m) + ":" + zz(sek) : m + ":" + zz(sek);
+  }
+  function planZeit(min) {
+    const s = Math.round(min * 60);
+    return Math.floor(s / 60) + ":" + (s % 60 < 10 ? "0" : "") + (s % 60);
+  }
+  function planText(ms) {
+    const min = ms / 60000;
+    let kum = 0;
+    for (let j = 0; j < PLAN.length; j++) {
+      kum += PLAN[j].min;
+      if (min < kum - 1e-9) return "Plan: " + PLAN[j].name + " bis " + planZeit(kum);
+    }
+    return "Plan: Zeit vorbei";
+  }
+
+  function tick() {
+    const ms = verstrichenMs();
+    if (timerAn) {
+      const rest = DAUER - ms;
+      if (rest <= 0) { abgeben("zeit"); return; }
+      uhr.textContent = "⏱ " + dauerText(rest) + (pauseSeit ? " · Pause" : " übrig");
+      uhr.classList.toggle("t06-knapp", rest <= 6 * 60000);
+      [[15, "Noch 15 Minuten."], [6, "Noch 6 Minuten. Zeit für die Kontrolle."], [2, "Noch 2 Minuten."]].forEach((w) => {
+        if (rest <= w[0] * 60000 && !warnungen[w[0]]) { warnungen[w[0]] = true; ansage.textContent = w[1]; }
+      });
+    } else {
+      uhr.textContent = "⏱ " + dauerText(ms) + (pauseSeit ? " · Pause" : " verstrichen");
+      uhr.classList.remove("t06-knapp");
+    }
+    planEl.textContent = planText(ms);
+  }
+
+  function modusZeigen() {
+    const texte = {
+      uebung: ["Übungsmodus", "t06-b-uebung", "Punkte werden gezählt, keine Zeitmessung."],
+      pruefung: ["Prüfung läuft", "t06-b-pruefung", (timerAn ? "60-Minuten-Timer läuft. Die Leiste unten zeigt Zeit, Plan und Punkte." : "Ohne Timer: Die Seite misst nur die verstrichene Zeit.") + " «Lösung zeigen» ist bis zur Abgabe ausgeblendet."],
+      fertig: ["Abgegeben", "t06-b-fertig", "Die Punkte sind fest. Die Auswertung steht unten. «Lösung zeigen» ist wieder verfügbar."]
+    }[modus];
+    badge.textContent = texte[0];
+    badge.className = "t06-badge " + texte[1];
+    modusText.textContent = texte[2];
+    pruefungEl.classList.toggle("t06-gesperrt", modus === "pruefung");
+    bStart.textContent = modus === "uebung" ? "Prüfung starten" : "Neue Prüfung starten";
+    bPause.disabled = modus !== "pruefung";
+    bPause.textContent = pauseSeit ? "Weiter" : "Pause";
+    bPause.setAttribute("aria-pressed", pauseSeit ? "true" : "false");
+    bAbgeben.disabled = modus !== "pruefung";
+    bAbgeben2.hidden = modus !== "pruefung";
+    cbTimer.disabled = modus === "pruefung";
+    if (modus === "uebung") { uhr.textContent = "Übungsmodus"; uhr.classList.remove("t06-knapp"); planEl.textContent = ""; }
+    if (modus === "fertig") { uhr.textContent = "Abgegeben · " + dauerText(verstrichenMs()); uhr.classList.remove("t06-knapp"); planEl.textContent = "Punkte fest"; }
+  }
+
+  function allesZuruecksetzen() {
+    eingefroren = false;
+    rasterSperren(false);
+    alleTeile.forEach(teilZuruecksetzen);
+    aktualisieren();
+  }
+
+  // Bestätigung: Die Box erscheint dort, wo geklickt wurde (Steuerung oben oder Leiste unten).
+  function fragen(text, aktion, ort, zurueck) {
+    bestText.textContent = text;
+    bestAktion = aktion;
+    bestZurueck = zurueck || bStart;
+    (ort || steuer).appendChild(bestBox);
+    bestBox.hidden = false;
+    bJa.focus();
+  }
+  bJa.addEventListener("click", () => {
+    bestBox.hidden = true;
+    steuer.insertBefore(bestBox, ansage);
+    const a = bestAktion;
+    bestAktion = null;
+    if (a) a();
+  });
+  document.getElementById("t06-nein").addEventListener("click", () => {
+    bestBox.hidden = true;
+    steuer.insertBefore(bestBox, ansage);
+    bestAktion = null;
+    const z = bestZurueck && !bestZurueck.hidden && !bestZurueck.disabled ? bestZurueck : bStart;
+    z.focus();
+  });
+
+  function pruefungStarten() {
+    allesZuruecksetzen();
+    modus = "pruefung";
+    timerAn = cbTimer.checked;
+    startZeit = Date.now();
+    pauseSeit = 0;
+    pausenSumme = 0;
+    warnungen = {};
+    window.clearInterval(intervall);
+    intervall = window.setInterval(tick, 1000);
+    modusZeigen();
+    tick();
+    aktualisieren();
+    ansage.textContent = timerAn ? "Prüfung gestartet: 60 Minuten. Viel Erfolg!" : "Prüfung gestartet, ohne Timer.";
+    const ziel = document.getElementById("t06-a1-titel");
+    document.getElementById("t06-a1").scrollIntoView({ behavior: reduziert ? "auto" : "smooth", block: "start" });
+    window.setTimeout(() => ziel.focus({ preventScroll: true }), reduziert ? 0 : 400);
+  }
+
+  function abgeben(grund) {
+    if (modus !== "pruefung") return;
+    if (pauseSeit) { pausenSumme += Date.now() - pauseSeit; pauseSeit = 0; }
+    if (grund === "zeit") startZeit = Date.now() - pausenSumme - DAUER; // genau 60:00 anzeigen
+    window.clearInterval(intervall);
+    intervall = null;
+    // Nicht geprüfte Modelle jetzt auswerten (vor dem Einfrieren)
+    alleTeile.forEach((t) => {
+      if (t.art === "modell" && !zustand[t.id].versucht && info[t.id].handle) info[t.id].handle.pruefen();
+    });
+    modus = "fertig";
+    eingefroren = true;
+    rasterSperren(true);
+    alleTeile.forEach(standZeigen);
+    modusZeigen();
+    aktualisieren();
+    ansage.textContent = grund === "zeit" ? "Die Zeit ist abgelaufen. Deine Punkte sind fest." : "Prüfung abgegeben. Deine Punkte sind fest.";
+    const ziel = document.getElementById("t06-auswertung-titel");
+    document.getElementById("auswertung").scrollIntoView({ behavior: reduziert ? "auto" : "smooth", block: "start" });
+    window.setTimeout(() => ziel.focus({ preventScroll: true }), reduziert ? 0 : 400);
+  }
+
+  const ABGEBEN_TEXT = () => "Wirklich abgeben? Danach sind die Punkte fest. Nicht geprüfte Modelle wertet die Seite jetzt aus. Bearbeitet: " + bearbeitet() + " von " + alleTeile.length + " Teilaufgaben.";
+  bStart.addEventListener("click", () => {
+    if (bearbeitet() > 0 || modus !== "uebung") fragen("Der Start setzt alle Aufgaben und Punkte zurück. Fortfahren?", pruefungStarten, steuer, bStart);
+    else pruefungStarten();
+  });
+  bPause.addEventListener("click", () => {
+    if (modus !== "pruefung") return;
+    if (pauseSeit) { pausenSumme += Date.now() - pauseSeit; pauseSeit = 0; ansage.textContent = "Weiter geht es."; }
+    else { pauseSeit = Date.now(); ansage.textContent = "Pause. Die Zeit steht still."; }
+    modusZeigen();
+    tick();
+  });
+  bAbgeben.addEventListener("click", () => fragen(ABGEBEN_TEXT(), () => abgeben("hand"), steuer, bAbgeben));
+  bAbgeben2.addEventListener("click", () => fragen(ABGEBEN_TEXT(), () => abgeben("hand"), leiste, bAbgeben2));
+  bReset.addEventListener("click", () => {
+    fragen("Alle Aufgaben, Notizen und Punkte werden zurückgesetzt, ein laufender Timer stoppt. Fortfahren?", () => {
+      window.clearInterval(intervall);
+      intervall = null;
+      modus = "uebung";
+      startZeit = 0;
+      pauseSeit = 0;
+      pausenSumme = 0;
+      allesZuruecksetzen();
+      modusZeigen();
+      ansage.textContent = "Alles zurückgesetzt. Übungsmodus.";
+      bReset.focus();
+    }, steuer, bReset);
+  });
+  modusZeigen();
+  aktualisieren();
+
+  /* ---------- Typische Fehler: Spiel Korrektor ---------- */
+  L.wahrFalsch("#t06-korrektor", {
+    titel: "Volle Punkte oder nicht?",
+    aussagen: [
+      { html: "Text: «Der Bestellservice veröffentlicht das Event, der Mailservice abonniert es.» Antwort: eine synchrone Linie Bestellservice → Mailservice.", wahr: false,
+        erklaerung: "Das Signalwort verlangt zwei asynchrone Linien über den Broker. Eine direkte synchrone Linie ist falsch." },
+      { html: "Text: «Ein Cache wurde diskutiert, aber verworfen.» Antwort: Modell ohne Cache.", wahr: true,
+        erklaerung: "Richtig erkannt: Der Cache ist ein Ablenker." },
+      { html: "Frage nach der Deployment-Sicht. Antwort: Ingress → Service → Pods, Deployment verwaltet die Pods, Pods lesen ConfigMap und Secret.", wahr: true,
+        erklaerung: "Alle Teile der Deployment-Sicht mit den passenden Beziehungen." },
+      { html: "Frage: «Warum keine verteilte Transaktion?» Antwort: «Weil Sagas moderner sind.»", wahr: false,
+        erklaerung: "Das ist keine Begründung. Erwartet sind Kopplung, Sperren und geringere Verfügbarkeit bei 2PC über Dienste hinweg." },
+      { html: "Frage: «Queue oder Topic für drei Empfänger derselben Nachricht?» Antwort: «Topic, weil jeder Abonnent jede Nachricht bekommt.»", wahr: true,
+        erklaerung: "Entscheid und Begründung stimmen." }
+    ]
+  });
+
+  /* ---------- Lösungsfilm: Spital ---------- */
+  const FB = {
+    web: ["web", "client", "Web-App"], gw: ["gw", "gateway", "API-Gateway"],
+    idp: ["idp", "auth", "Identity-Dienst"], term: ["term", "service", "Terminservice"], er: ["er", "service", "Erinnerungsservice"],
+    db: ["db", "db", "Termin-DB"], br: ["br", "topic", "Event-Broker"], sms: ["sms", "extern", "SMS-Anbieter (extern)"]
+  };
+  const FBAND = [["Client", ["web"]], ["Zugang", ["gw"]], ["Dienste", ["idp", "term", "er"]], ["Daten und Fremdsysteme", ["db", "br", "sms"]]];
+  // Jede Szene fügt höchstens eine Sache hinzu: b = Baustein, v = Verbindung.
+  const SZENEN_ROH = [
+    { ph: -1, dict: 0, say: "So modellierst du jede solche Aufgabe: zuerst die Akteure, dann die Fachlichkeiten, dann Daten und Fremdsysteme. Danach machst du aus jedem Verb eine Linie. Infrastruktur zeichnest du nur, wenn sie verlangt ist, und am Schluss kontrollierst du alles." },
+    { ph: 0, hl: ["pat"], say: "Wer benutzt das System? Patientinnen und Patienten. Du zeichnest aber nicht die Person, sondern ihr Werkzeug." },
+    { ph: 0, hl: ["web"], b: "web", dict: 1, dh: [0], say: "Das Werkzeug ist die Web-App. Sie kommt als Client ganz oben ins Bild." },
+    { ph: 1, hl: ["gw"], b: "gw", dict: 2, dh: [1], say: "«Alle Anfragen laufen über ein API-Gateway»: Das Gateway ist der einzige Eingang. Es kommt in die Zugangsschicht." },
+    { hl: ["term"], b: "term", dict: 3, dh: [2], say: "Erste Fachlichkeit: Der Terminservice nimmt die Buchungen an." },
+    { hl: ["idp"], b: "idp", say: "Zweite: Der Identity-Dienst prüft das Login. Auch er ist ein eigener Dienst." },
+    { hl: ["er"], b: "er", say: "Dritte: Der Erinnerungsservice schickt SMS. Drei Dienste, drei Aufgaben." },
+    { ph: 2, hl: ["db"], b: "db", dict: 4, dh: [3], say: "Jetzt die Daten. «Seine eigene Termin-DB» gehört nur dem Terminservice: database per service." },
+    { hl: ["br"], b: "br", dict: 5, dh: [4], say: "Der Event-Broker verteilt Events. Er gehört zur Infrastruktur für Nachrichten und steht im Text, also zeichnest du ihn." },
+    { hl: ["sms"], b: "sms", dict: 6, dh: [5], say: "Der SMS-Anbieter ist ein Fremdsystem. Du baust ihn nicht, aber du rufst ihn auf. Darum gehört er ins Bild, mit dem Piktogramm für extern." },
+    { ph: 3, hl: ["gw"], v: ["web", "gw", "sync"], dict: 7, dh: [6], say: "Jetzt Satz für Satz die Verben. «Alle Anfragen laufen über das Gateway»: Die Web-App ruft das Gateway auf und wartet. Synchron, volle Linie." },
+    { hl: ["vidp"], v: ["gw", "idp", "sync"], dh: [6], say: "«prüft bei jeder Anfrage synchron das Login»: Linie vom Gateway zum Identity-Dienst, synchron." },
+    { hl: ["vgt"], v: ["gw", "term", "sync"], dh: [6], say: "«leitet Buchungen synchron an den Terminservice weiter»: wieder synchron, Pfeil vom Gateway zum Terminservice." },
+    { hl: ["vdb"], v: ["term", "db", "daten"], dict: 8, dh: [7], say: "«speichert die Termine»: Das ist ein Datenzugriff. Gepunktete Linie vom Terminservice zur Termin-DB." },
+    { hl: ["vpub"], v: ["term", "br", "async"], dict: 9, dh: [8], say: "«veröffentlicht das Event Termin gebucht»: asynchron. Der Terminservice wartet nicht, wer das Event liest. Gestrichelt zum Broker." },
+    { hl: ["vsub"], v: ["br", "er", "async"], dh: [8], say: "«abonniert dieses Event»: Der Broker liefert es an den Erinnerungsservice. Gestrichelt. Achtung: keine direkte Linie vom Terminservice zum Erinnerungsservice." },
+    { hl: ["vsms"], v: ["er", "sms", "sync"], dh: [6], say: "«ruft die Schnittstelle eines externen SMS-Anbieters auf»: Aufruf mit Antwort, also synchron." },
+    { ph: 4, hl: ["abl1"], say: "Schritt fünf: Infrastruktur nur, wenn verlangt. Das Röntgenarchiv «spielt hier keine Rolle». Ablenker, weglassen." },
+    { hl: ["abl2"], say: "Auch Server und Load Balancer sind «nicht gefragt». Wer sie trotzdem zeichnet, verliert Punkte." },
+    { ph: 5, hl: [], say: "Kontrolle eins: Jeder der acht Bausteine steht im Text. Kein Baustein ohne Textstelle." },
+    { dict: 10, dh: [9], say: "Kontrolle zwei: Jede der sieben Linien hat ein Signalwort im Text. Kontrolle drei: Alle Pfeile zeigen vom Aufrufer oder Sender weg, beim Event in Richtung der Nachricht." },
+    { say: "Fertig: acht Bausteine, sieben Verbindungen. Genau dieses Bild baust du gleich unter dem Film selbst nach. Danach kannst du dich im Selbsttest prüfen.", end: true }
+  ];
+  const fBausteine = [], fVerb = [];
+  const fSzenen = SZENEN_ROH.map((r) => {
+    const neu = [];
+    if (r.b) { fBausteine.push(r.b); neu.push(r.b); }
+    if (r.v) { fVerb.push(r.v); neu.push(r.v[0] + ">" + r.v[1]); }
+    const f = fBausteine.length
+      ? arch(FBAND.map((b) => [b[0], b[1].filter((id) => fBausteine.indexOf(id) >= 0).map((id) => FB[id])]), fVerb.slice(), neu)
+      : '<span class="platzhalter">Noch leer. Lies zuerst den Text.</span>';
+    const s = { f: f, say: r.say, hl: r.hl || [] };
+    if (r.ph !== undefined) s.ph = r.ph;
+    if (r.dict !== undefined) s.dict = r.dict;
+    if (r.dh) s.dh = r.dh;
+    if (r.end) s.end = true;
+    return s;
+  });
+  fSzenen[0].sent = "all";
+  L.film("#t06-film", {
+    phasen: ["1 · Akteure", "2 · Fachlichkeiten", "3 · Daten", "4 · Verbindungen", "5 · Infrastruktur?", "6 · Kontrolle"],
+    texte: [
+      'Ein Regionalspital erneuert seine Terminbuchung. <span data-ph="pat">Patientinnen und Patienten</span> buchen Termine über eine <span data-ph="web">Web-App</span>. Alle Anfragen laufen über ein <span data-ph="gw">API-Gateway</span>. Das Gateway <span data-ph="vidp">prüft bei jeder Anfrage synchron das Login</span> beim <span data-ph="idp">Identity-Dienst</span> und <span data-ph="vgt">leitet Buchungen synchron</span> an den <span data-ph="term">Terminservice</span> weiter. Der Terminservice <span data-ph="vdb">speichert</span> die Termine in seiner <span data-ph="db">eigenen Termin-DB</span>. Ist ein Termin gebucht, <span data-ph="vpub">veröffentlicht</span> er das Event «Termin gebucht» auf einem <span data-ph="br">Event-Broker</span>. Der <span data-ph="er">Erinnerungsservice</span> <span data-ph="vsub">abonniert</span> dieses Event und <span data-ph="vsms">ruft am Vortag die Schnittstelle</span> eines <span data-ph="sms">externen SMS-Anbieters</span> auf. <span data-ph="abl1">Die Röntgenbilder liegen in einem eigenen Archiv, das hier keine Rolle spielt.</span> <span data-ph="abl2">Wie viele Server und Load Balancer das Spital betreibt, ist nicht gefragt.</span>'
+    ],
+    woerterbuch: [
+      "Client: das Gerät der Person (Web-App)",
+      "API-Gateway: einziger Eingang",
+      "Service: eine Fachlichkeit",
+      "eigene DB: database per service",
+      "Broker: verteilt Events",
+      "Fremdsystem: extern, nur aufgerufen",
+      "«ruft auf», «leitet weiter», «prüft synchron» → synchron",
+      "«speichert», «liest» → Daten",
+      "«veröffentlicht», «abonniert» → asynchron",
+      "Pfeil: vom Aufrufer zum Aufgerufenen"
+    ],
+    beschriftung: { texte: "Die Aufgabe", text: "Text", formel: "Architektur" },
+    szenen: fSzenen
+  });
+
+  L.modellieren("#t06-film-modell", {
+    titel: "Terminbuchung im Spital",
+    aufgabe: '<p>Ein Regionalspital erneuert seine Terminbuchung. Patientinnen und Patienten buchen Termine über eine <span data-baustein="web">Web-App</span>. Alle Anfragen laufen über ein <span data-baustein="gw">API-Gateway</span>. Das Gateway prüft bei jeder Anfrage synchron das Login beim <span data-baustein="idp">Identity-Dienst</span> und leitet Buchungen synchron an den <span data-baustein="term">Terminservice</span> weiter. Der Terminservice speichert die Termine in seiner <span data-baustein="db">eigenen Termin-DB</span>. Ist ein Termin gebucht, veröffentlicht er das Event «Termin gebucht» auf einem <span data-baustein="br">Event-Broker</span>. Der <span data-baustein="er">Erinnerungsservice</span> abonniert dieses Event und ruft am Vortag die Schnittstelle eines <span data-baustein="sms">externen SMS-Anbieters</span> auf. Die Röntgenbilder liegen in einem eigenen Archiv, das hier keine Rolle spielt. Wie viele Server und Load Balancer das Spital betreibt, ist nicht gefragt.</p>',
+    schichten: [
+      { id: "client", name: "Client" },
+      { id: "zugang", name: "Zugang" },
+      { id: "dienste", name: "Dienste" },
+      { id: "daten", name: "Daten und Fremdsysteme" }
+    ],
+    bausteine: [
+      { id: "web", name: "Web-App", art: "client", schicht: "client" },
+      { id: "mobile", name: "Mobile App", art: "mobile", schicht: "client" },
+      { id: "gw", name: "API-Gateway", art: "gateway", schicht: "zugang" },
+      { id: "lb", name: "Load Balancer", art: "lb", schicht: "zugang" },
+      { id: "idp", name: "Identity-Dienst", art: "auth", schicht: "dienste" },
+      { id: "term", name: "Terminservice", art: "service", schicht: "dienste" },
+      { id: "er", name: "Erinnerungsservice", art: "service", schicht: "dienste" },
+      { id: "db", name: "Termin-DB", art: "db", schicht: "daten" },
+      { id: "br", name: "Event-Broker", art: "topic", schicht: "daten" },
+      { id: "sms", name: "SMS-Anbieter (extern)", art: "extern", schicht: "daten" },
+      { id: "archiv", name: "Röntgenarchiv", art: "storage", schicht: "daten" }
+    ],
+    loesung: {
+      bausteine: ["web", "gw", "idp", "term", "er", "db", "br", "sms"],
+      verbindungen: [
+        { von: "web", nach: "gw", art: "sync", warum: "«Alle Anfragen laufen über ein API-Gateway»." },
+        { von: "gw", nach: "idp", art: "sync", warum: "«prüft bei jeder Anfrage synchron das Login»." },
+        { von: "gw", nach: "term", art: "sync", warum: "«leitet Buchungen synchron an den Terminservice weiter»." },
+        { von: "term", nach: "db", art: "daten", warum: "«speichert die Termine in seiner eigenen Termin-DB»." },
+        { von: "term", nach: "br", art: "async", warum: "«veröffentlicht das Event»." },
+        { von: "br", nach: "er", art: "async", gerichtet: false, warum: "«abonniert dieses Event» (beide Richtungen zählen)." },
+        { von: "er", nach: "sms", art: "sync", warum: "«ruft die Schnittstelle eines externen SMS-Anbieters auf»." }
+      ]
+    },
+    erklaerung: "<b>Wie im Film:</b> Röntgenarchiv («spielt keine Rolle»), Load Balancer («nicht gefragt») und Mobile App (nicht erwähnt) gehören nicht ins Modell."
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t06-selbsttest", {
+    fragen: [
+      { q: "Im Text steht: «Nach dem Speichern veröffentlicht der Bestellservice das Event «Bestellung bestätigt».» Welche Linie zeichnest du?",
+        o: ["Bestellservice → Event-Broker, asynchron", "Bestellservice → Lieferservice, synchron", "Event-Broker → Bestellservice, liest/schreibt Daten"], a: 0,
+        e: "«veröffentlicht» ist das Signalwort für asynchron. Die Nachricht geht vom Sender zum Broker." },
+      { q: "Der Text sagt: «Ein Cache für die Menüs wurde diskutiert, aber verworfen.» Was machst du mit dem Cache?",
+        o: ["Vor die Menü-DB legen, weil ein Cache die Leistung verbessert", "Weglassen, er ist ein Ablenker", "Als Fremdsystem einzeichnen"], a: 1,
+        e: "Stolperfalle: Im Modell steht, was gebaut wird. «Verworfen» heisst weglassen, sonst kostet es Punkte." },
+      { q: "«Der Bestellservice fragt synchron beim Zahlungsservice nach.» In welche Richtung zeigt der Pfeil?",
+        o: ["Zahlungsservice → Bestellservice", "Bestellservice → Zahlungsservice", "Die Richtung spielt bei synchronen Aufrufen keine Rolle"], a: 1,
+        e: "Der Pfeil zeigt vom Aufrufer zum Aufgerufenen. Wer fragt, ruft auf." },
+      { q: "Welche Sicht zeigt Ingress, Service, Pods und Deployment?",
+        o: ["Systemkontext-Sicht", "Deployment-Sicht", "Komponenten-Sicht"], a: 1,
+        e: "Wo und wie die Container laufen, zeigt die Deployment-Sicht. Die Systemkontext-Sicht zeigt nur Personen und Fremdsysteme." },
+      { q: "In einer Lösung steht eine Linie «Web-Client → Bestell-DB». Der Text sagt: «Alle Anfragen laufen über das Gateway.» Was stimmt?",
+        o: ["Die Linie ist in Ordnung, wenn sie als Datenzugriff markiert ist", "Die Linie ist falsch: Client → Gateway → Bestellservice → Bestell-DB", "Die Linie ist richtig, weil es schneller geht"], a: 1,
+        e: "Stolperfalle: Daten liest nur der Dienst, dem die Datenbank gehört. Der Client spricht nur mit dem Gateway." },
+      { q: "Wie viel Zeit planst du in dieser Übungsprüfung für eine 12-Punkte-Aufgabe ein (50 Sekunden pro Punkt)?",
+        o: ["etwa 6 Minuten", "etwa 10 Minuten", "etwa 15 Minuten"], a: 1,
+        e: "12 · 50 s = 600 s = 10 Minuten." },
+      { q: "Nach der Hälfte der Zeit für eine Modellierungsaufgabe hast du alle Bausteine gelegt, bist dir aber bei zwei Verbindungen unsicher. Was bringt am meisten Punkte?",
+        o: ["Die sicheren Verbindungen ziehen, die unsicheren weglassen und weitergehen", "Alle denkbaren Verbindungen ziehen, eine wird schon stimmen", "Das Modell löschen und neu anfangen"], a: 0,
+        e: "Raten kostet in dieser Bewertung Abzug. Sichere Teile bringen sichere Punkte, Zeit für den Rest bleibt in der Kontrollphase." },
+      { q: "Was weisst du aus dieser Station über Dauer, Punkte und Hilfsmittel der echten Modulschlussprüfung AVSW?",
+        o: ["60 Minuten, 60 Punkte, ohne Hilfsmittel", "Nichts Verbindliches: Der Rahmen steht in den Modulunterlagen", "90 Minuten, Open Book"], a: 1,
+        e: "Die 60 Minuten und 60 Punkte sind ein Übungsrahmen dieser Seite. Den echten Rahmen gleichst du mit den Modulunterlagen ab." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>

@@ -6,6 +6,7 @@
 // components/features/leitstand/Kennzahlen.tsx
 // Kennzahl-Kacheln (4.8): Wert, Ampel mit Form und Wort, Trendpfeil, Kleinkurve, Kurzhilfe.
 // 100 % entspricht dem Plan, mehr ist besser (1.5 «Kennzahl über 100 %»).
+// Jede Kachel trägt ein Symbol zusätzlich zum Wort. `kompakt`: schmale Leiste über den übrigen Ansichten.
 
 import { useState } from "react"
 import type { Ampel as AmpelWert, KpiPoint } from "@/lib/simulation/core"
@@ -13,6 +14,7 @@ import styles from "@/app/(leitstand)/leitstand.module.css"
 import { useLeitstand } from "./context"
 import { AMPEL_FORM, AMPEL_TEXT } from "./format"
 import Verlauf from "./charts/Verlauf"
+import Icon, { type IconName } from "./Icon"
 
 export function Ampel({ wert, kurz = false }: { wert: AmpelWert; kurz?: boolean }) {
   return (
@@ -30,6 +32,7 @@ function siAmpel(siPercent: number): AmpelWert {
 
 interface Kachel {
   key: string
+  icon: IconName
   label: string
   value: number
   ampel: AmpelWert
@@ -48,7 +51,7 @@ function trend(series: number[]): { symbol: string; text: string } {
   return { symbol: "→", text: "gleich" }
 }
 
-export default function Kennzahlen() {
+export default function Kennzahlen({ kompakt = false }: { kompakt?: boolean }) {
   const { kpis, state, scenario } = useLeitstand()
   const [help, setHelp] = useState<string | null>(null)
   const h = state.history
@@ -57,6 +60,7 @@ export default function Kennzahlen() {
   const kacheln: Kachel[] = [
     {
       key: "termine",
+      icon: "termin",
       label: "Termine",
       value: kpis.spi * 100,
       ampel: kpis.ampeln.termine,
@@ -66,6 +70,7 @@ export default function Kennzahlen() {
     },
     {
       key: "kosten",
+      icon: "kosten",
       label: "Kosten",
       value: kpis.cpi * 100,
       ampel: kpis.ampeln.kosten,
@@ -75,6 +80,7 @@ export default function Kennzahlen() {
     },
     {
       key: "qualitaet",
+      icon: "qualitaet",
       label: "Qualität",
       value: kpis.qi,
       ampel: kpis.ampeln.qualitaet,
@@ -84,6 +90,7 @@ export default function Kennzahlen() {
     },
     {
       key: "team",
+      icon: "motivation",
       label: "Motivation",
       value: kpis.teamMotivation,
       ampel: kpis.ampeln.team,
@@ -93,6 +100,7 @@ export default function Kennzahlen() {
     },
     {
       key: "stakeholder",
+      icon: "stakeholder",
       label: "Stakeholder",
       value: kpis.siPercent,
       ampel: siAmpel(kpis.siPercent),
@@ -102,6 +110,7 @@ export default function Kennzahlen() {
     },
     {
       key: "risiken",
+      icon: "risiko",
       label: "Risiko",
       value: kpis.rmi,
       ampel: kpis.ampeln.risiken,
@@ -110,6 +119,23 @@ export default function Kennzahlen() {
       detail: "Abdeckung und Prüfung",
     },
   ]
+
+  if (kompakt) {
+    return (
+      <ul className={styles.kpiStreifen} aria-label="Kennzahlen">
+        {kacheln.map((k) => (
+          <li key={k.key} className={`${styles.kpiMini} ${styles[`kpiMini_${k.ampel}`]}`}>
+            <span className={styles.kpiMiniSymbol}>
+              <Icon name={k.icon} size={16} />
+            </span>
+            <span className={styles.kpiMiniLabel}>{k.label}</span>
+            <strong className={styles.kpiMiniWert}>{Math.round(k.value)} %</strong>
+            <Ampel wert={k.ampel} kurz />
+          </li>
+        ))}
+      </ul>
+    )
+  }
 
   return (
     <div className={styles.kacheln} role="list" aria-label="Kennzahlen">
@@ -124,7 +150,12 @@ export default function Kennzahlen() {
             aria-label={`${k.label} ${Math.round(k.value)} Prozent, Ampel ${AMPEL_TEXT[k.ampel]}, Trend ${t.text}`}
           >
             <div className={styles.kachelKopf}>
-              <span className={styles.kachelLabel}>{k.label}</span>
+              <span className={styles.kachelLabel}>
+                <span className={styles.kachelSymbol}>
+                  <Icon name={k.icon} size={18} />
+                </span>
+                {k.label}
+              </span>
               <button
                 type="button"
                 className={styles.hilfeKnopf}

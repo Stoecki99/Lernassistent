@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projektstrukturplan · PMGT</title>
+  <script>(function(){try{var w=window.localStorage.getItem("lernpfad-theme"),r=document.documentElement;if(w==="hell")r.setAttribute("data-theme","light");else if(w==="dunkel")r.setAttribute("data-theme","dark");}catch(e){}})();</script>
+  <link rel="stylesheet" href="/lernpfad/lernpfad.css">
+  <link rel="next" href="/lernseiten/pmgt/10-netzplan-und-gantt" title="Netzplan, Gantt und kritischer Pfad">
+  <!-- Seiteneigene Stile: nur Klassen mit Präfix «t09-», nur Farben aus :root -->
+  <style>
+    .t09-ziele{margin:6px 0 0; padding-left:1.3em}
+    .t09-ziele li{margin-bottom:3px}
+    .t09-quelle{font-size:.9rem; color:var(--muted)}
+
+    /* Fliesstext in Tafeln, Stepper und Film (die Formelklasse .m setzt sonst STIX und nowrap) */
+    .t09-fz{font-family:var(--f-body); font-size:1rem; line-height:1.5; white-space:normal}
+    .t09-fz p{margin:0}
+    .t09-fz p + p, .t09-fz p + ul, .t09-fz ul + p, .t09-fz .tablebox + p{margin-top:8px}
+
+    /* Pläne, die auf dem PSP aufbauen */
+    .t09-plaene{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(210px,100%),1fr)); gap:8px; margin:0; padding:0; list-style:none}
+    .t09-plaene li{background:var(--board); border-radius:10px; padding:8px 12px; font-size:.95rem}
+    .t09-plaene b{display:block}
+
+    /* Code und Stunden in allen Bäumen */
+    .t09-code{font-family:var(--f-math); font-variant-numeric:tabular-nums; color:var(--accent); font-weight:700}
+    .t09-h{font-size:.85em; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap}
+    .t09-v{font-size:.8em; color:var(--muted); white-space:nowrap}
+    .t09-sbaum{font-size:.95rem}
+    .t09-typ{font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600}
+
+    /* PSP-Baukasten */
+    .t09-status{padding:10px 12px; border-radius:10px; background:var(--board); border-left:4px solid var(--accent); margin:0; line-height:1.5}
+    .t09-stapel{display:flex; flex-wrap:wrap; gap:8px}
+    .t09-karte{text-align:left; min-height:40px; line-height:1.3; max-width:100%}
+    .t09-karte .t09-v, .t09-karte .t09-h{margin-left:4px}
+    .t09-knoten{gap:2px 6px; padding:2px 4px 2px 8px; max-width:100%; align-items:center}
+    .t09-wahl{background:none; border:0; padding:6px 2px; font:inherit; color:inherit; text-align:left; cursor:pointer; min-height:36px; border-radius:6px; line-height:1.35}
+    .t09-wahl:hover{text-decoration:underline}
+    .t09-wahl[aria-pressed="true"]{font-weight:700}
+    .t09-gewaehlt{font-size:.78em; color:var(--accent); font-weight:700; white-space:nowrap; margin-left:4px}
+    .t09-weg{background:var(--surface); border:1px solid var(--line); border-radius:6px; min-width:34px; min-height:34px; color:var(--muted); cursor:pointer; font:inherit; line-height:1}
+    .t09-weg:hover{color:var(--bad); border-color:var(--bad)}
+    .t09-knoten.right{border:2px solid var(--ok)}
+    .t09-knoten.wrong{border:2px dashed var(--bad)}
+    .t09-summe{font-weight:600; margin:0}
+    .t09-befund{padding:12px 14px; border-radius:10px; background:var(--board); line-height:1.5}
+    .t09-befund:empty{display:none}
+    .t09-befund p{margin:0}
+    .t09-befund p + p, .t09-befund p + ul, .t09-befund ul + p{margin-top:8px}
+    .t09-befund ul{margin:0; padding-left:1.2em}
+    .t09-befund li{margin-bottom:4px}
+    .t09-befund .marke{margin-right:4px}
+    .t09-ok{color:var(--ok)}
+    .t09-bad{color:var(--bad)}
+    .t09-knoepfe{display:flex; flex-wrap:wrap; gap:8px}
+
+    /* Gliederungsarten im Vergleich */
+    .t09-art{display:grid; gap:10px}
+    .t09-art p{margin:0}
+
+    /* Film: Rohliste */
+    .t09-roh{margin:0; padding-left:1.3em}
+    .t09-roh li{margin-bottom:2px}
+    .t09-roh .t09-grund{font-size:.88em; color:var(--muted)}
+    .t09-zeile{margin-top:8px}
+    .t09-film-tab td, .t09-film-tab th{padding:3px 6px; font-size:.92rem}
+    .t09-check{margin:6px 0 0; padding:0; list-style:none}
+    .t09-check li{margin-bottom:3px}
+  </style>
+</head>
+<body data-fach="pmgt" data-thema="09-projektstrukturplan">
+<main class="wrap">
+
+  <!-- ===== Kopf ===== -->
+  <header class="stack">
+    <span class="eyebrow">PMGT · LB 4 und LB 3 · Planen</span>
+    <h1>Projektstrukturplan</h1>
+    <p class="icb-liste"><span class="sr-only">ICB-Kompetenzen dieser Station:</span>
+      <span class="icb">ICB 3.03</span><span class="icb">ICB 3.04</span>
+    </p>
+    <p class="lead">Bevor du Termine, Leute und Kosten planst, musst du wissen, was überhaupt zu tun ist. Der Projektstrukturplan (PSP) zerlegt das ganze Projekt von oben nach unten, bis Arbeitspakete übrig bleiben, die eine Person verantworten kann. Am Onlineschalter Wolkenried baust du selbst einen PSP, prüfst ihn mit der 100-%-Regel und siehst denselben Plan einmal nach Lieferobjekten und einmal nach Phasen gegliedert.</p>
+    <div class="note">
+      <b>Nach dieser Station kannst du:</b>
+      <ul class="t09-ziele">
+        <li>den Zweck eines PSP erklären und die Pläne nennen, die auf ihm aufbauen,</li>
+        <li>Projekt, Teilprojekt, Teilaufgabe und Arbeitspaket nach DIN 69901 unterscheiden,</li>
+        <li>einen PSP objekt-, funktions-, phasenorientiert oder gemischt gliedern und die Wahl begründen,</li>
+        <li>einen PSP kodieren und mit der 100-%-Regel prüfen,</li>
+        <li>den PSP vom Ablaufplan unterscheiden und aus Arbeitspaketen Vorgänge für den Netzplan ableiten.</li>
+      </ul>
+      <p class="t09-quelle">Quellen: Skript LB 4 F.13 (Begriffe nach DIN 69901), F.18 (Tätigkeiten der Planungsphase), F.19 (Projektplanung und Arbeitsauftrag), F.23 (Fallstudie WBS), F.5 (Fallstudie MOVE, Projektplan); LB 3 F.17 (Aufbau eines PSP, Basis der Planungen); Arbeitsblatt Projektstrukturplan Dok. 3.2 S.2 (Definition Arbeitspaket); Referate zu ICB 3.03 (Gruppen RJ und SG: Gliederungsprinzipien, PSP-Lexikon); Swiss ICB 4.5.3 «Leistungsumfang und Lieferobjekte» (S. 97–100) und 4.5.4.1 (S. 102); Gubelmann/Sommer Kap. 11 und Kap. 8 (laut LB 3 F.5 und LB 4 F.4). Alles in eigenen Worten, alle Fälle eigene Beispiele.</p>
+    </div>
+    <div class="note tipp"><b>Prüfungsbezug:</b> In der Modulschlussprüfung (90 min, Open Book) kann eine Fallstudie verlangen, dass du Arbeitspakete definierst und zu einem PSP gliederst, wie in der Fallstudie MOVE, Aufgabe B. Genau das zeigt der Lösungsfilm an einem eigenen Fall. In der IPMA-Prüfung (Level D) kommen Fragen zu Gliederungsarten, zur Vollständigkeit und zum Arbeitspaket als kleinster Einheit (<span class="icb">ICB 3.03</span>), dazu der Schritt vom Arbeitspaket zum Terminplan (<span class="icb">ICB 3.04</span>).</div>
+  </header>
+
+  <nav class="steps" aria-label="Abschnitte">
+    <a href="#grundlagen"><b>0</b>Bausteine</a>
+    <a href="#zweck"><b>1</b>Zweck</a>
+    <a href="#ebenen"><b>2</b>Ebenen</a>
+    <a href="#gliederung"><b>3</b>Gliederungsarten</a>
+    <a href="#regeln"><b>4</b>Kodierung und 100 %</a>
+    <a href="#bruecke"><b>5</b>Zum Netzplan</a>
+    <a href="#baukasten"><b>6</b>PSP-Baukasten</a>
+    <a href="#erkennen"><b>7</b>Gliederung erkennen</a>
+    <a href="#uebungen"><b>8</b>Übungen</a>
+    <a href="#film"><b>▶</b>Lösungsfilm</a>
+    <a href="#fallen"><b>!</b>Fallen</a>
+    <a href="#test"><b>✓</b>Selbsttest</a>
+    <a href="#blick"><b>Σ</b>Auf einen Blick</a>
+  </nav>
+
+  <!-- ===== 0 · Bausteine ===== -->
+  <section id="grundlagen">
+    <span class="eyebrow">Schritt 0 · Ohne Vorwissen</span>
+    <h2>Die fünf Bausteine eines Projektstrukturplans</h2>
+    <p class="prose">Stell dir vor, die Gemeinde organisiert das Dorffest. Niemand kann «das Dorffest» an einem Stück erledigen. Also teilt das OK die Arbeit auf: Festwirtschaft, Programm, Infrastruktur. Jeder Teil wird weiter zerlegt, bis kleine Aufgaben übrig bleiben, die eine Person oder ein Verein übernehmen kann. Genau das ist ein Projektstrukturplan.</p>
+    <div class="grid4">
+      <div class="concept"><span class="tag">Projektstrukturplan (PSP)</span><span class="ex">Baum aller Arbeit</span><p>Das ganze Projekt als Baum, von oben nach unten zerlegt. Wie ein Inhaltsverzeichnis: Es zeigt alles, was dazugehört, aber nicht, wann du was liest.</p></div>
+      <div class="concept"><span class="tag">Teilprojekt</span><span class="ex">Festwirtschaft</span><p>Ein grosser Teil des Projekts, oft mit eigener Leitung. Beim Dorffest führt der Turnverein die ganze Festwirtschaft selbst.</p></div>
+      <div class="concept"><span class="tag">Teilaufgabe</span><span class="ex">Infrastruktur</span><p>Ein Teil, den du weiter zerlegst: Infrastruktur heisst Zelt, Strom und Toiletten. Sie ist ein Zwischenknoten im Baum.</p></div>
+      <div class="concept"><span class="tag">Arbeitspaket</span><span class="ex">Festzelt aufstellen</span><p>Die kleinste Einheit, die du nicht weiter zerlegst. Sie hat ein klares Ergebnis und eine verantwortliche Person, hier den Werkhof.</p></div>
+      <div class="concept"><span class="tag">Kodierung</span><span class="ex">3.1 · 3.2 · 3.3</span><p>Jedes Element bekommt eine Nummer wie eine Adresse. 3.1 heisst: Ast 3, erstes Element darunter. Eine Reihenfolge ist das nicht.</p></div>
+    </div>
+    <div class="card stack">
+      <h3>Kurz üben: Teilaufgabe, Arbeitspaket oder gar nicht im PSP?</h3>
+      <p class="hint">Frag dich: Wird das noch weiter zerlegt (Teilaufgabe)? Ist es die kleinste Einheit mit einer verantwortlichen Stelle (Arbeitspaket)? Oder ist es gar keine Arbeit dieses Projekts, sondern eine Reihenfolge oder Tagesgeschäft?</p>
+      <div id="t09-sortierer"></div>
+    </div>
+  </section>
+
+  <!-- ===== 1 · Zweck ===== -->
+  <section id="zweck">
+    <span class="eyebrow">Schritt 1 · Wozu ein PSP?</span>
+    <h2>Teile und herrsche: das Fundament der Planung</h2>
+    <p class="prose">Das Skript stellt den PSP unter das Motto «Teile und herrsche» (LB 4 F.13). Die Norm DIN 69901 versteht darunter die Darstellung der Struktur eines Projekts. In eigenen Worten: Du kannst die Struktur nach dem Aufbau des Ergebnisses, nach dem Ablauf oder nach anderen Gesichtspunkten gliedern. Auf Englisch heisst der PSP <span lang="en">Work Breakdown Structure</span> (WBS, LB 4 F.23).</p>
+    <p class="prose">Die Swiss ICB beschreibt das Strukturieren des Leistungsumfangs so (4.5.3.2, in eigenen Worten): Du teilst den ganzen Projektinhalt systematisch in Teilaufgaben und Arbeitselemente auf. Der PSP enthält am Ende die <b>komplette</b> Aufgliederung, meist als Baum mit einer überschaubaren Zahl von Ebenen.</p>
+    <h3>Was auf dem PSP aufbaut</h3>
+    <p class="prose">LB 3 F.17 nennt den PSP die Basis für sieben Planungen. Am Onlineschalter Wolkenried heisst das:</p>
+    <ul class="t09-plaene">
+      <li><b>Aufwandplanung</b>Stunden je Arbeitspaket schätzen, zum Beispiel 128 h für die Schnittstelle.</li>
+      <li><b>Kapazitätsplanung</b>Wer hat wann Zeit? Linienvorgesetzte geben Leute frei (Station 11).</li>
+      <li><b>Kostenplanung</b>Stunden mal Satz je Paket. Alle Pakete zusammen ergeben die Plankosten von CHF 162'240.</li>
+      <li><b>Kalkulation</b>Kosten von unten nach oben zusammenzählen: Paket, Teilprojekt, Projekt.</li>
+      <li><b>Ablaufplanung</b>Welches Paket wartet auf welches? Daraus entsteht der Netzplan (Station 10).</li>
+      <li><b>Terminplanung</b>Dauer und Lage jedes Vorgangs, Meilensteine, Gantt-Diagramm.</li>
+      <li><b>Risikoabschätzung</b>Risiken je Paket erkennen, etwa die fehlende Schnittstellenbeschreibung (Station 13).</li>
+    </ul>
+    <p class="prose">Die Swiss ICB nennt den PSP zudem als Grundlage für die Projektorganisation (4.5.5): Aus den Teilprojekten werden Teilprojektleitungen, aus den Arbeitspaketen Arbeitsaufträge. Und das Skript ordnet «Projekt strukturieren und Ablauf darstellen» der Planungsphase zu, direkt nach den Zielen (LB 4 F.18).</p>
+    <div class="note"><b>Merke:</b> Der PSP sagt, <b>was</b> zu tun ist. Wann und in welcher Reihenfolge, sagen Ablauf- und Terminplan. Ohne vollständigen PSP planst du Termine und Kosten für ein Projekt, das du nicht ganz kennst.</div>
+    <div class="note falle"><b>Falle:</b> Zu LB 4 F.23 zeigt das Skript eine Karikatur: ein riesiger, sehr detaillierter Plan, in dem genau beim entscheidenden Schritt vor der Installation «ein Wunder geschieht». Ein guter PSP deckt solche Lücken auf, weil jedes Lieferobjekt ein Arbeitspaket braucht. Fein planen hilft nichts, wenn das Wichtigste fehlt.</div>
+  </section>
+
+  <!-- ===== 2 · Ebenen ===== -->
+  <section id="ebenen">
+    <span class="eyebrow">Schritt 2 · Begriffe und Ebenen</span>
+    <h2>Vom Projekt bis zum Arbeitspaket</h2>
+    <p class="prose">Die Begriffe stehen in LB 4 F.13, Teilaufgabe und Arbeitspaket mit Verweis auf die Norm DIN 69901. In eigenen Worten, mit dem Beispiel aus Wolkenried:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Die Elemente eines PSP</caption>
+        <thead><tr><th>Begriff</th><th>In eigenen Worten</th><th>Onlineschalter Wolkenried</th></tr></thead>
+        <tbody>
+          <tr><th>Projekt</th><td>die Gesamtaufgabe, die Wurzel des Baums</td><td>Onlineschalter Wolkenried</td></tr>
+          <tr><th>Teilprojekt</th><td>ein Teil des Projekts, der mit dem ganzen Projekt in Verbindung steht. Ergänzung: Meist hat er eine eigene Teilprojektleitung.</td><td>Schnittstelle und Daten (Leitung: Luca Bernasconi)</td></tr>
+          <tr><th>Teilaufgabe</th><td>ein Teil, den du im PSP weiter aufgliederst</td><td>Schulung (Unterlagen und Kurse)</td></tr>
+          <tr><th>Arbeitspaket</th><td>ein Teil, den du im PSP nicht weiter aufgliederst. Er kann auf jeder Ebene liegen.</td><td>Schnittstelle zur Bauverwaltungssoftware</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Das Arbeitsblatt Projektstrukturplan (Dok. 3.2 S.2) beschreibt das Arbeitspaket genauer. Zusammengefasst: Es ist die kleinste, klar abgegrenzte Einheit und immer das letzte Glied einer Kette im PSP. Es bündelt konkrete Tätigkeiten und gehört <b>einer verantwortlichen Person</b>, die der Projektleitung laufend über den Fortschritt berichtet. Darum ist es die Einheit, mit der du Zeit, Kosten, Qualität und Risiken planst und steuerst. Wie du ein Arbeitspaket beschreibst, zeigt <a href="/lernseiten/pmgt/06-leistungsumfang-und-arbeitspakete">Station 06</a>.</p>
+    <p class="prose">LB 3 F.17 zeigt den Aufbau: Unter der Gesamtaufgabe liegt die erste Strukturebene mit Teilprojekten und Teilaufgaben, darunter die zweite mit Arbeitspaketen oder weiteren Teilprojekten. Klick dich durch den Aufbau am Onlineschalter. Fahre über ein unterstrichenes Satzstück oder tippe darauf: Der passende Teil des Baums leuchtet auf.</p>
+    <div id="t09-stepper-ebenen"></div>
+    <div class="note"><b>Merke:</b> Ob etwas Teilaufgabe oder Arbeitspaket ist, entscheidet nicht die Ebene, sondern die Frage: Zerlegst du es weiter? 3.2 Merkblatt ist ein Arbeitspaket auf Ebene 2, 3.1.1 Schulungsunterlagen eines auf Ebene 3.</div>
+    <div class="note tipp"><b>Wann hörst du auf zu zerlegen?</b> Ergänzung aus der Praxis, nicht aus dem Skript: Ein Element ist fein genug, wenn eine Person dafür verantwortlich sein kann, das Ergebnis prüfbar ist und du den Aufwand schätzen kannst. Meist reichen drei bis vier Ebenen. Feiner wird es unübersichtlich, gröber kannst du weder schätzen noch steuern.</div>
+  </section>
+
+  <!-- ===== 3 · Gliederungsarten ===== -->
+  <section id="gliederung">
+    <span class="eyebrow">Schritt 3 · Gliederungsarten</span>
+    <h2>Dasselbe Projekt, vier Gliederungen</h2>
+    <p class="prose">Die Arbeit bleibt dieselbe, nur die Ordnung auf den oberen Ebenen ändert sich. Das Referat RJ zu ICB 3.03 nennt vier Prinzipien (F.11), das Referat SG vergleicht drei davon am selben Projekt (F.10–12). Die Swiss ICB spricht in 4.5.3.2 allgemein von verschiedenen Gliederungsprinzipien. Schalte um und vergleiche den Onlineschalter in allen vier Sichten.</p>
+    <div class="card stack">
+      <div class="modes" role="group" aria-label="Gliederungsart wählen">
+        <button type="button" class="btn on" aria-pressed="true" data-t09-art="objekt">Objektorientiert</button>
+        <button type="button" class="btn" aria-pressed="false" data-t09-art="funktion">Funktionsorientiert</button>
+        <button type="button" class="btn" aria-pressed="false" data-t09-art="phase">Phasenorientiert</button>
+        <button type="button" class="btn" aria-pressed="false" data-t09-art="gemischt">Gemischt</button>
+      </div>
+      <div class="t09-art" id="t09-art"></div>
+    </div>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Gliederungsarten im Vergleich</caption>
+        <thead><tr><th>Art</th><th>Gliedert nach</th><th>Stärke</th><th>Schwäche</th><th>Passt, wenn …</th></tr></thead>
+        <tbody>
+          <tr><th>objektorientiert</th><td>Lieferobjekten, Teilprodukten (Produktstrukturplan)</td><td>Fachbereich sieht sofort, was geliefert wird; Vollständigkeit am Produkt prüfbar</td><td>Ablauf und Phasen kaum sichtbar</td><td>das Ergebnis klar in Teile zerfällt (Bau, Software mit Modulen)</td></tr>
+          <tr><th>funktions- oder verrichtungsorientiert</th><td>Tätigkeitsarten wie Analyse, Gestaltung, Entwicklung, Test</td><td>passt zu Fachteams, klare Zuständigkeit je Funktion</td><td>Ergänzung: Schnittstellen zwischen den Funktionen, das Gesamtergebnis ist schwer zu sehen</td><td>Fachteams oder Abteilungen ihre Arbeit getrennt erledigen</td></tr>
+          <tr><th>phasenorientiert</th><td>Projektphasen, zum Beispiel HERMES</td><td>Ablauf, Phasenfreigaben und Verantwortung je Phase gut planbar</td><td>Lieferobjekte über mehrere Phasen verteilt und schlecht sichtbar</td><td>Freigaben je Phase im Zentrum stehen oder das Produkt noch unscharf ist</td></tr>
+          <tr><th>gemischt</th><td>zum Beispiel oben Phasen, darunter Objekte</td><td>Lieferobjekte und Ablauf sichtbar; eine Änderung lässt sich Objekt und Phase zuordnen (SG F.13)</td><td>Ergänzung: braucht klare Regeln, sonst entstehen Doppelungen</td><td>das Projekt grösser ist und beide Sichten zählen</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Merke:</b> Eine Gliederungsart ist nie «richtig» an sich. Du wählst sie aus dem konkreten Projekt und begründest die Wahl (SG F.13). In der Prüfung zählt die Begründung.</div>
+    <div class="note falle"><b>Falle:</b> Phasen und Funktionen verwechseln. Phasenorientiert heisst: Die oberste Ebene sind die Phasen eines Phasenmodells (Initialisierung, Konzept, Realisierung, Einführung). Funktionsorientiert heisst: Die oberste Ebene sind Arten von Tätigkeiten oder Fachfunktionen, die auch gleichzeitig laufen können.</div>
+  </section>
+
+  <!-- ===== 4 · Kodierung und 100-%-Regel ===== -->
+  <section id="regeln">
+    <span class="eyebrow">Schritt 4 · Kodierung und Vollständigkeit</span>
+    <h2>Jedes Element hat eine Adresse, und nichts fehlt</h2>
+    <h3>Kodierung</h3>
+    <p class="prose">Jedes Element bekommt einen Code. Üblich ist die numerische Kodierung mit Punkten, wie im PSP «AMC-Rollout» aus dem Referat zu ICB 3.03: Ebene 1 hat eine Zahl, Ebene 2 zwei, Ebene 3 drei.</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Was der Code 3.1.2 verrät</caption>
+        <thead><tr><th>Frage</th><th>Antwort aus dem Code</th></tr></thead>
+        <tbody>
+          <tr><th>Auf welcher Ebene?</th><td>Drei Zahlen, also Ebene 3</td></tr>
+          <tr><th>Wer ist das Elternelement?</th><td>Code ohne die letzte Zahl: 3.1 Schulung</td></tr>
+          <tr><th>Zu welchem Ast gehört es?</th><td>Erste Zahl: 3 Einführung und Kommunikation</td></tr>
+          <tr><th>Wann wird es ausgeführt?</th><td>Das verrät der Code <b>nicht</b>. Die Nummer ist eine Adresse, keine Reihenfolge.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose">Mit dem Code verknüpfst du alles, was zum Paket gehört: Stunden, Kosten, Berichte und den Arbeitsauftrag (LB 4 F.19 nennt ID und Bezeichnung des Arbeitspakets als Teil jedes Arbeitsauftrags). Das Verzeichnis aller Arbeitspakete mit ihren Beschreibungen heisst <b>PSP-Lexikon</b> (Referat RJ F.13, Swiss ICB 4.5.3). Ergänzung: Ist der PSP freigegeben, änderst du die Codes nicht mehr, sonst passen Buchungen und Berichte nicht mehr zusammen. Neue Pakete bekommen die nächste freie Nummer.</p>
+
+    <h3>Die 100-%-Regel</h3>
+    <p class="prose">Die Swiss ICB verlangt, dass die Struktur alle Teilprodukte enthält, die für das Ergebnis nötig sind (4.5.3.2), das Referat nennt das Vollständigkeit (RJ F.11). Prüfbar wird das mit der <b>100-%-Regel</b>. Sie ist eine Ergänzung aus der Praxis (unter anderem aus dem PMI-Standard für Projektstrukturpläne) und steht so nicht im Skript:</p>
+    <div class="board t09-fz" aria-label="Die 100-%-Regel in vier Punkten">
+      <ol class="t09-ziele">
+        <li><b>Kinder = Elternelement.</b> Die Elemente unter einem Knoten ergeben zusammen genau diesen Knoten, nicht 90 % und nicht 110 %.</li>
+        <li><b>Nichts fehlt.</b> Auch Projektführung, Tests, Schulung und Übergabe sind Arbeit und gehören hinein.</li>
+        <li><b>Nichts doppelt.</b> Jede Arbeit steht genau einmal im Baum, sonst planst und bezahlst du sie zweimal.</li>
+        <li><b>Nichts ausserhalb.</b> Was nicht zum Leistungsumfang gehört, bleibt draussen: Tagesgeschäft und alles, was ausdrücklich «out of scope» ist (Station 06).</li>
+      </ol>
+    </div>
+    <p class="prose">Luca Bernasconi leitet das Teilprojekt «Schnittstelle und Daten» und schickt dir seinen ersten Entwurf. Prüf ihn mit der Regel. Die Stunden sind die Planwerte aus dem Leitstand.</p>
+    <div id="t09-stepper-regel"></div>
+    <div class="note falle"><b>Falle:</b> Eine Summe ersetzt die Prüfung nicht. Fehlt ein Paket mit 32 Stunden und steht dafür eine doppelte Arbeit mit 32 Stunden im Plan, stimmt die Summe, der Inhalt aber nicht. Prüf zuerst den Inhalt, dann die Zahlen.</div>
+    <div class="note"><b>Merke:</b> Ergänzung aus der Praxis: Hat ein Element nur ein einziges Kind, gliedert es nichts. Entweder fehlt ein zweites Kind, oder das Element selbst ist schon das Arbeitspaket.</div>
+  </section>
+
+  <!-- ===== 5 · Vom PSP zum Netzplan ===== -->
+  <section id="bruecke">
+    <span class="eyebrow">Schritt 5 · Vom PSP zum Netzplan</span>
+    <h2>Erst das Was, dann das Wann</h2>
+    <p class="prose">Der PSP ist kein Ablaufplan. Er enthält keine Pfeile, keine Abhängigkeiten und keine Termine. Aus seinen Arbeitspaketen leitest du die Vorgänge ab, die du dann in eine Reihenfolge bringst (Swiss ICB 4.5.4.1: Aktivitäten aus den Arbeitspaketen ableiten). So entsteht der Weg zu Netzplan und Gantt:</p>
+    <ol class="t09-ziele prose">
+      <li><b>Lieferobjekte</b> festlegen (Station 06): Was muss am Ende vorliegen?</li>
+      <li><b>PSP</b> gliedern (diese Station): Welche Arbeit braucht es dafür, vollständig und ohne Doppelungen?</li>
+      <li><b>Arbeitspakete</b> beschreiben und als <b>Arbeitsauftrag</b> vergeben. LB 4 F.19 zeigt, was dafür zusammenkommt: das Paket mit ID und Bezeichnung, die Ausführenden mit ihrer Kapazität und die Eckdaten Aufwand und Zeitpunkt.</li>
+      <li><b>Vorgänge</b> mit Dauer und Vorgängern ableiten, dann <b>Netzplan und Gantt</b> rechnen (<a href="/lernseiten/pmgt/10-netzplan-und-gantt">Station 10</a>).</li>
+    </ol>
+    <p class="prose">Ein Arbeitspaket kann einen oder mehrere Vorgänge ergeben. Im Leitstand stehen die Arbeiten des Onlineschalters als Vorgänge V01 bis V18. Einige Pakete des PSP auf dieser Seite fassen zwei Vorgänge zusammen:</p>
+    <div class="card tablebox">
+      <table class="tabelle">
+        <caption>Vom Arbeitspaket zum Vorgang (Onlineschalter)</caption>
+        <thead><tr><th>Code</th><th>Arbeitspaket im PSP</th><th>Vorgänge im Leitstand</th><th>Vorgänger (erst jetzt festgelegt)</th></tr></thead>
+        <tbody>
+          <tr><th>1.3</th><td>Formulare und Zirkulation konfigurieren</td><td>V09 Formulare (4 T), V10 Zirkulation (2 T)</td><td>V09 nach V03 und V04; V10 nach V09</td></tr>
+          <tr><th>2.1</th><td>Schnittstelle zur Bauverwaltungssoftware</td><td>V05 (8 T)</td><td>nach V02 und V03</td></tr>
+          <tr><th>3.1.2</th><td>Schulung durchführen</td><td>V15 (3 T)</td><td>nach V12 und V13, frühestens in der Einführung</td></tr>
+          <tr><th>4.2</th><td>Integrationstest und Vorabnahme</td><td>V11 (3 T), V12 (2 T, Meilenstein Vorabnahme)</td><td>V11 nach V05 bis V08 und V10; V12 nach V11</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Zählweise: Diese Seite und Station 10 zählen ab Tag 1 (Realisierung Tag 1–20, Einführung Tag 21–40). Der Leitstand rechnet intern mit Zeitpunkten ab 0: Zeitpunkt 0 ist der Beginn von Tag 1, Zeitpunkt 20 das Ende von Tag 20.</p>
+    <div class="note"><b>Merke:</b> Die Schulung 3.1.2 hat eine kleinere Nummer als die Vorabnahme 4.2, läuft aber erst danach. Und die Schnittstelle 2.1 läuft gleichzeitig mit den Formularen 1.3. Reihenfolge und Abhängigkeiten stehen im Netzplan, nie im PSP.</div>
+  </section>
+
+  <!-- ===== 6 · PSP-Baukasten ===== -->
+  <section id="baukasten">
+    <span class="eyebrow">Schritt 6 · Ausprobieren</span>
+    <h2>PSP-Baukasten: Onlineschalter Wolkenried</h2>
+    <p class="prose">Hier baust du den PSP selbst. Im Stapel liegen 22 Karten: drei Teilprojekte, zwei Teilaufgaben, 14 Arbeitspakete und drei Störkarten, die nicht in den PSP gehören. Die Stunden sind die Planwerte aus dem Leitstand, zusammen 1'072 Stunden.</p>
+    <ol class="t09-ziele prose">
+      <li>Tippe im Baum ein <b>Elternelement</b> an (zu Beginn ist das Projekt gewählt).</li>
+      <li>Tippe im Stapel eine <b>Karte</b> an. Sie hängt unter dem gewählten Element, der Code entsteht von selbst.</li>
+      <li>Mit ✕ nimmst du ein Element samt allem darunter zurück in den Stapel.</li>
+      <li>Mit «Prüfen» kontrollierst du die 100-%-Regel: fehlende, doppelte und fremde Elemente, falsche Ebene, falscher Ast.</li>
+    </ol>
+    <p class="hint">Alles läuft mit der Tastatur: Tab zu einem Knopf, Enter wählt oder hängt ein. Dario Pfister leitet «Plattform und Formulare», Luca Bernasconi «Schnittstelle und Daten», Aylin Demir «Einführung und Kommunikation». Kick-off, Integrationstest und Vorabnahme behält die Projektleitung.</p>
+    <p class="hint">Eine Lücke ist Absicht: Die laufende Steuerung (Sitzungen, Berichte, Massnahmen) fehlt als Karte. Der Leitstand verbucht sie als Führungsstunden ausserhalb der Plankosten (BAC), nicht als Vorgang. In einem echten PSP gehört sie als eigenes Arbeitspaket unter die Projektführung, etwa «Projekt steuern und berichten».</p>
+
+    <div class="card stack">
+      <div class="modes" role="group" aria-label="Sicht auf den PSP">
+        <button type="button" class="btn on" aria-pressed="true" data-t09-sicht="objekt">Objektorientiert (bearbeiten)</button>
+        <button type="button" class="btn" aria-pressed="false" data-t09-sicht="phase">Phasenorientiert</button>
+        <button type="button" class="btn" aria-pressed="false" data-t09-sicht="gemischt">Gemischt</button>
+      </div>
+
+      <div id="t09-bk-objekt" class="stack">
+        <p class="t09-status" id="t09-status" aria-live="polite"></p>
+        <h3>Stapel</h3>
+        <div class="t09-stapel" id="t09-stapel" role="group" aria-label="Karten, die noch nicht im Plan sind"></div>
+        <h3>Dein PSP</h3>
+        <p class="t09-summe" id="t09-summe"></p>
+        <div id="t09-baum"></div>
+        <div class="t09-knoepfe">
+          <button type="button" class="btn primary" id="t09-pruefen">Prüfen (100-%-Regel)</button>
+          <button type="button" class="btn" id="t09-muster">Musterlösung einsetzen</button>
+          <button type="button" class="btn" id="t09-leeren">Zurücksetzen</button>
+        </div>
+        <div class="t09-befund" id="t09-befund" aria-live="polite" tabindex="-1"></div>
+      </div>
+
+      <div id="t09-bk-abgeleitet" class="stack" hidden>
+        <p class="t09-status" id="t09-abgeleitet-text"></p>
+        <div id="t09-abgeleitet-baum"></div>
+      </div>
+    </div>
+    <p class="hint">Die Musterlösung ist eine eigene Lösung, nicht vom Dozenten bestätigt. Vertretbare Varianten erkennt die Prüfung: «Gebühren und Online-Zahlung» passt auch unter «Plattform und Formulare», «Datenschutz und Informationssicherheit» und «Betrieb aufbauen und produktiv setzen» auch unter «Projektführung und Abnahme».</p>
+  </section>
+
+  <!-- ===== 7 · Gliederungsart erkennen ===== -->
+  <section id="erkennen">
+    <span class="eyebrow">Schritt 7 · Sortieren</span>
+    <h2>Welche Gliederungsart ist das?</h2>
+    <p class="prose">Sechs Ausschnitte aus PSPs der Gemeinde Wolkenried. Schau nur auf die oberste Ebene: Stehen dort Teile des Ergebnisses, Arten von Tätigkeiten, Phasen eines Phasenmodells oder Phasen mit Objekten darunter?</p>
+    <div class="card stack"><div id="t09-erkennen"></div></div>
+  </section>
+
+  <!-- ===== 8 · Übungen ===== -->
+  <section id="uebungen">
+    <span class="eyebrow">Schritt 8 · Selbst gliedern, rechnen und entscheiden</span>
+    <h2>Übungen</h2>
+    <p class="prose">Löse zuerst selbst, dann prüfst du. Tipps und Lösungsweg kannst du einzeln aufdecken. Die Musterlösungen der offenen Aufgaben sind eigene Lösungen, nicht vom Dozenten bestätigt.</p>
+    <div id="t09-ue-wf"></div>
+    <div id="t09-ue-stunden"></div>
+    <div id="t09-ue-kosten"></div>
+    <div class="card stack"><h3>IPMA-Stil: Was ist ein Arbeitspaket?</h3><div id="t09-ue-ap"></div></div>
+    <div class="card stack"><h3>Fallentscheid: Welche Gliederung für die Geschäftsverwaltung?</h3><div id="t09-ue-fall"></div></div>
+    <div class="card stack"><h3>IPMA-Stil: Was gehört nicht in den PSP?</h3><div id="t09-ue-nicht"></div></div>
+    <div id="t09-ue-fehler"></div>
+    <div id="t09-ue-zweck"></div>
+    <div id="t09-ue-velo"></div>
+  </section>
+
+  <!-- ===== Lösungsfilm ===== -->
+  <section id="film">
+    <span class="eyebrow">Lösungsfilm · Erst zuschauen, dann testen</span>
+    <h2>Ein PSP für den Umzug der Gemeindeverwaltung</h2>
+    <p class="prose">So sieht eine typische Aufgabe der Modulprüfung aus, im Stil der Fallstudie MOVE, Aufgabe B, aber mit eigenem Fall: Arbeitspakete definieren, gliedern, kodieren, auf Vollständigkeit prüfen und das Budget schätzen. Die Schätzungen sind eigene Annahmen, die Lösung ist eine eigene Lösung, nicht vom Dozenten bestätigt. Drück auf «Abspielen». Du kannst jederzeit pausieren, zurückspulen oder das Tempo ändern.</p>
+    <div id="t09-film"></div>
+  </section>
+
+  <!-- ===== Prüfungsfallen ===== -->
+  <section id="fallen">
+    <span class="eyebrow">Typische Prüfungsfallen</span>
+    <h2>Hier gehen die meisten Punkte verloren</h2>
+    <div class="note falle"><b>PSP und Ablaufplan vermischen.</b> Pfeile, «zuerst … dann …», Termine oder ein Ast «Ablauf» gehören nicht in den PSP. Er zeigt nur, was zu tun ist. Die Reihenfolge kommt im Netzplan.</div>
+    <div class="note falle"><b>Projektführung vergessen.</b> Planen, steuern, berichten und abschliessen ist Arbeit. Fehlt sie, ist der PSP nicht vollständig, und ihre Stunden fehlen im Budget. Dasselbe gilt für Tests, Schulung und Übergabe.</div>
+    <div class="note falle"><b>Doppelt planen.</b> «Umzugskisten packen» und «Akten verpacken» sind dieselbe Arbeit. Steht sie zweimal im Baum, steht sie auch zweimal im Budget.</div>
+    <div class="note falle"><b>Tagesgeschäft hineinnehmen.</b> Baugesuche prüfen oder Steuererklärungen erfassen läuft auch ohne Projekt. Das gehört nicht in den PSP, auch wenn dieselben Leute daran arbeiten.</div>
+    <div class="note falle"><b>Ein Arbeitspaket weiter zerlegen.</b> Ein Arbeitspaket ist die kleinste Einheit. Zerlegst du es weiter, ist es eine Teilaufgabe, und die Teile darunter sind die Arbeitspakete.</div>
+    <div class="note falle"><b>Den Code als Reihenfolge lesen.</b> 4.1 kann vor 2.2 laufen. Der Code zeigt Ebene und Elternelement, sonst nichts.</div>
+    <div class="note falle"><b>Gliederungsart ohne Begründung nennen.</b> In der Modulprüfung zählt der Satz «weil …»: objektorientiert, weil die Lieferobjekte klar sind; phasenorientiert, weil die Phasenfreigaben im Zentrum stehen.</div>
+    <div class="note falle"><b>Zu fein oder zu grob.</b> «Mail schreiben» ist kein Arbeitspaket, «Informatik» auch nicht. Ein Arbeitspaket hat ein prüfbares Ergebnis, eine verantwortliche Person und einen schätzbaren Aufwand.</div>
+  </section>
+
+  <!-- ===== Selbsttest ===== -->
+  <section id="test">
+    <span class="eyebrow">Selbsttest · IPMA-Stil</span>
+    <h2>Sitzt es?</h2>
+    <p class="prose">Zehn Fragen wie in der IPMA-Prüfung: je eine richtige Antwort, mit Bezug zur ICB in der Erklärung.</p>
+    <div id="t09-selbsttest"></div>
+  </section>
+
+  <!-- ===== Auf einen Blick ===== -->
+  <section id="blick">
+    <span class="eyebrow">Zusammenfassung</span>
+    <h2>Das Wichtigste auf einen Blick</h2>
+    <ul class="summary prose">
+      <li>Der <b>Projektstrukturplan</b> (PSP, WBS) zerlegt den ganzen Leistungsumfang von oben nach unten bis zu Arbeitspaketen. Er sagt, was zu tun ist, nicht wann.</li>
+      <li><b>DIN 69901:</b> Eine Teilaufgabe wird weiter aufgegliedert, ein Arbeitspaket nicht. Ein Arbeitspaket kann auf jeder Ebene liegen und hat eine verantwortliche Person.</li>
+      <li><b>Gliederungsarten:</b> objektorientiert (Lieferobjekte), funktions- oder verrichtungsorientiert (Tätigkeiten), phasenorientiert (Phasenmodell), gemischt (zum Beispiel oben Phasen, darunter Objekte). Die Wahl begründest du aus dem Projekt.</li>
+      <li><b>Kodierung</b> 3, 3.1, 3.1.2: Ebene und Elternelement sind ablesbar, eine Reihenfolge nicht. Nach der Freigabe bleiben die Codes stabil.</li>
+      <li><b>100-%-Regel</b> (Ergänzung): Kinder ergeben genau das Elternelement; nichts fehlt, nichts doppelt, nichts ausserhalb. Projektführung, Tests und Schulung gehören dazu. Meist reichen drei bis vier Ebenen.</li>
+      <li>Der PSP ist die <b>Basis</b> für Aufwand-, Kapazitäts-, Kosten-, Ablauf- und Terminplanung, Kalkulation und Risikoabschätzung. Aus den Arbeitspaketen leitest du die Vorgänge für den Netzplan ab.</li>
+    </ul>
+    <div class="note"><b>Für den Open-Book-Ordner</b> (Register <span class="icb">ICB 3.03</span> Leistungsumfang und Lieferobjekte):
+      <ul class="t09-ziele">
+        <li>Swiss ICB 4.5.3 (S. 97–100): Indikator 3.03.02 «Leistungsumfang strukturieren» (4.5.3.2: Gliederungsprinzipien, Baum mit überschaubarer Zahl von Ebenen, auch agil, dann weniger detailliert) und 3.03.03 «Arbeitspakete definieren» (4.5.3.3: kleinstes Element mit klaren Grenzen, Planungspaket, User Story, Control Account). Wissen: Projektstrukturplan, Produktstrukturplan, PSP-Lexikon.</li>
+        <li>Register <span class="icb">ICB 3.04</span>: Swiss ICB 4.5.4.1 (S. 102), Aktivitäten aus den Arbeitspaketen ableiten.</li>
+        <li>Begriffe nach DIN 69901 (LB 4 F.13), Aufbau des PSP und die sieben Planungen, die auf ihm aufbauen (LB 3 F.17), Definition Arbeitspaket (Arbeitsblatt Projektstrukturplan Dok. 3.2 S.2), Arbeitsauftrag aus der Projektplanung (LB 4 F.19), Fallstudie MOVE Aufgabe B (Dok. 2.1, LB 4 F.5).</li>
+        <li>Tabelle der vier Gliederungsarten mit Stärken, Schwächen und «Passt, wenn …» (Referate ICB 3.03: RJ F.11 und F.13, SG F.10–13).</li>
+        <li>Checkliste 100-%-Regel und Kodierungsschema dieser Seite (Ergänzung, als solche markieren).</li>
+        <li>Gubelmann/Sommer: Kap. 11 «Leistungsumfang und Lieferobjekte», S. 142–155 (laut LB 3 F.5); Kap. 8 «Projektdesign», S. 89–104, und Kap. 21 «Ablauf und Termine», S. 238–257 (laut LB 4 F.4).</li>
+      </ul>
+    </div>
+    <footer>Station 09 des Lernpfads PMGT. Alle PSPs, Zahlen und Fälle sind eigene Beispiele; Stunden und Plankosten des Onlineschalters stammen aus der Leitstand-Spezifikation und sind per Skript nachgerechnet. Musterlösungen sind eigene Lösungen, nicht vom Dozenten bestätigt. Weiter geht es mit «Netzplan, Gantt und kritischer Pfad».</footer>
+  </section>
+
+</main>
+
+<script src="/lernpfad/lernpfad.js"></script>
+<script>
+(function () {
+  "use strict";
+  const L = window.Lernpfad;
+  const NW = (s) => '<span class="nw">' + s + "</span>";
+  // Ganze Zahlen mit Hochkomma ab 1000, wie im Text der Seite (1'072)
+  const fmt = (x) => String(Math.round(x)).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+  const chf = (x) => "CHF " + fmt(x);
+
+  /* ---------- Baum als HTML (Baukasten-Klasse .baum) ----------
+     knoten: { t: Text (HTML), h: Zusatz rechts, k: Kinder, nw: neu, an: hervorgehoben, strich: gestrichen }
+     mitCode: Codes 1, 1.1, 1.1.1 automatisch setzen */
+  function baumHtml(wurzel, mitCode) {
+    function teil(n, code) {
+      let inhalt = (mitCode && code ? '<span class="t09-code">' + code + "</span> " : "") + n.t +
+        (n.h ? ' <span class="t09-h">' + n.h + "</span>" : "");
+      if (n.strich) inhalt = '<span class="strike">' + inhalt + "</span>";
+      if (n.nw) inhalt = NW(inhalt);
+      let h = "<li" + (n.an ? ' class="an"' : "") + '><span class="baum-knoten">' + inhalt + "</span>";
+      if (n.k && n.k.length) {
+        h += "<ul>" + n.k.map((c, i) => teil(c, (code ? code + "." : "") + (i + 1))).join("") + "</ul>";
+      }
+      return h + "</li>";
+    }
+    return '<ul class="baum t09-sbaum">' + teil(wurzel, "") + "</ul>";
+  }
+  const B = (t, k, extra) => Object.assign({ t: t, k: k || [] }, extra || {});
+
+  /* ---------- 0 · Sortierer Bausteine ---------- */
+  L.sortierer("#t09-sortierer", {
+    kategorien: ["Teilaufgabe", "Arbeitspaket", "Nicht im PSP"],
+    elemente: [
+      { html: "Infrastruktur, aufgeteilt in Zelt, Strom und Toiletten", kategorie: "Teilaufgabe", erklaerung: "Sie wird weiter zerlegt. Darum ist sie ein Zwischenknoten, eine Teilaufgabe." },
+      { html: "Festzelt mieten und aufstellen (verantwortlich: Werkhof)", kategorie: "Arbeitspaket", erklaerung: "Kleinste Einheit mit klarem Ergebnis und einer verantwortlichen Stelle." },
+      { html: "«Zuerst die Bewilligung, danach das Zelt»", kategorie: "Nicht im PSP", erklaerung: "Das ist eine Reihenfolge. Sie gehört in den Ablaufplan, nicht in den PSP." },
+      { html: "Programm, aufgeteilt in Bühne, Kinderprogramm und Umzug", kategorie: "Teilaufgabe", erklaerung: "Auch das Programm wird weiter zerlegt: Teilaufgabe." },
+      { html: "Bewilligung für die Strassensperrung einholen (verantwortlich: Gemeindekanzlei)", kategorie: "Arbeitspaket", erklaerung: "Ein Ergebnis (die Bewilligung), eine verantwortliche Stelle: Arbeitspaket." },
+      { html: "Die Strassen jeden Montag reinigen", kategorie: "Nicht im PSP", erklaerung: "Das ist Tagesgeschäft des Werkhofs. Es läuft auch ohne Dorffest und gehört nicht zum Projekt." },
+      { html: "Getränke einkaufen und Bar betreiben (verantwortlich: Turnverein)", kategorie: "Arbeitspaket", erklaerung: "Klar abgegrenzt, eine verantwortliche Stelle: Arbeitspaket." }
+    ]
+  });
+
+  /* ---------- 2 · Stepper Ebenen ---------- */
+  const W = "Onlineschalter Wolkenried";
+  L.stepper("#t09-stepper-ebenen", {
+    titel: "Top-down: vom Projekt zum Arbeitspaket",
+    text: 'Der Gemeinderat hat den <span data-link="p">Onlineschalter Baugesuch</span> beschlossen. <span data-link="tp">Drei Teilprojektleitungen</span> übernehmen Plattform und Formulare, Schnittstelle und Daten sowie Einführung und Kommunikation. <span data-link="pf">Kick-off, Integrationstest und Vorabnahme</span> behält die Projektleitung selbst. Zur Einführung gehört eine <span data-link="s">Schulung mit Unterlagen und Kursen</span>. Für die <span data-link="ap">Schnittstelle zur Bauverwaltungssoftware</span> ist Elena Kovačević von Lärchwerk Informatik AG verantwortlich.',
+    schritte: [
+      { html: '<div class="t09-fz">' + baumHtml(B('<span data-link="p">' + W + "</span>"), true) + "</div>",
+        warum: "Ganz oben steht das ganze Projekt, die Wurzel. Sie steht für 100 % der Arbeit, die der Auftrag verlangt." },
+      { html: '<div class="t09-fz">' + baumHtml(B('<span data-link="p">' + W + "</span>", [
+          B('<span data-link="tp">Plattform und Formulare</span>', [], { nw: true }),
+          B('<span data-link="tp">Schnittstelle und Daten</span>', [], { nw: true }),
+          B('<span data-link="tp">Einführung und Kommunikation</span>', [], { nw: true }),
+          B('<span data-link="pf">Projektführung und Abnahme</span>', [], { nw: true })]), true) + "</div>",
+        warum: "Ebene 1: drei Teilprojekte mit eigener Leitung und eine Teilaufgabe der Projektleitung. Teilprojekt und Teilaufgabe stehen auf derselben Ebene. Das Teilprojekt ist ein eigenständiger Teil mit eigener Leitung." },
+      { html: '<div class="t09-fz">' + baumHtml(B(W, [
+          B("Plattform und Formulare"), B("Schnittstelle und Daten"),
+          B("Einführung und Kommunikation", [
+            B('<span data-link="s">Schulung</span>', [], { nw: true }), B("Merkblatt und Webseite für Bauwillige", [], { nw: true }),
+            B("Pilotbetrieb mit drei Planungsbüros", [], { nw: true }), B("Betrieb aufbauen und produktiv setzen", [], { nw: true })]),
+          B("Projektführung und Abnahme")]), true) + "</div>",
+        warum: "Ebene 2 unter Teilprojekt 3. Die Schulung zerlegst du weiter, sie ist eine Teilaufgabe. Das Merkblatt zerlegst du nicht, es ist bereits ein Arbeitspaket." },
+      { html: '<div class="t09-fz">' + baumHtml(B(W, [
+          B("Plattform und Formulare"), B("Schnittstelle und Daten"),
+          B("Einführung und Kommunikation", [
+            B('<span data-link="s">Schulung</span>', [B("Schulungsunterlagen erstellen", [], { nw: true }), B("Schulung durchführen", [], { nw: true })]),
+            B("Merkblatt und Webseite für Bauwillige"), B("Pilotbetrieb mit drei Planungsbüros"), B("Betrieb aufbauen und produktiv setzen")]),
+          B("Projektführung und Abnahme")]), true) + "</div>",
+        warum: "Ebene 3. Jetzt liegen Arbeitspakete auf Ebene 2 (3.2) und auf Ebene 3 (3.1.1). Das ist erlaubt: Ein Arbeitspaket kann auf jeder Ebene liegen (DIN 69901, LB 4 F.13)." },
+      { html: '<div class="t09-fz">' + baumHtml(B(W, [
+          B("Plattform und Formulare"),
+          B("Schnittstelle und Daten", [B('<span data-link="ap">Schnittstelle zur Bauverwaltungssoftware</span>', [], { nw: true, h: "Elena · 128 h", an: true })]),
+          B("Einführung und Kommunikation", [B("Schulung", [B("Schulungsunterlagen erstellen"), B("Schulung durchführen")]),
+            B("Merkblatt und Webseite für Bauwillige"), B("Pilotbetrieb mit drei Planungsbüros"), B("Betrieb aufbauen und produktiv setzen")]),
+          B("Projektführung und Abnahme")]), true) + "</div>",
+        warum: "Hier hörst du auf zu zerlegen. Das Paket hat eine verantwortliche Person, ein prüfbares Ergebnis (Daten fliessen in beide Richtungen) und einen schätzbaren Aufwand. Noch feiner zu planen wäre Mikromanagement." }
+    ]
+  });
+
+  /* ---------- 3 · Gliederungsarten ---------- */
+  const ARTEN = {
+    objekt: {
+      baum: B(W, [
+        B("Plattform und Formulare", [B("Soll-Ablauf und Benutzerführung"), B("Plattform einrichten"), B("Formulare und Zirkulation")]),
+        B("Schnittstelle und Daten", [B("Schnittstelle"), B("Gebühren und Zahlung"), B("Stammdaten"), B("Datenschutz")]),
+        B("Einführung und Kommunikation", [B("Schulung"), B("Merkblatt und Webseite"), B("Pilotbetrieb"), B("Betrieb und Produktivsetzung")]),
+        B("Projektführung und Abnahme", [B("Kick-off und Detailplanung"), B("Integrationstest und Vorabnahme")])]),
+      text: "<p><b>Objektorientiert:</b> Ebene 1 sind die Teile des Ergebnisses. Bauamt und Fachstellen erkennen sofort, was sie bekommen. Ob alles da ist, prüfst du am Produkt: Hat jedes Lieferobjekt einen Ast?</p>"
+    },
+    funktion: {
+      baum: B(W, [
+        B("Festlegen und gestalten", [B("Soll-Ablauf und Benutzerführung"), B("Merkblatt und Webseite"), B("Schulungsunterlagen")]),
+        B("Einrichten und konfigurieren", [B("Plattform"), B("Formulare und Zirkulation"), B("Gebühren und Zahlung")]),
+        B("Entwickeln und integrieren", [B("Schnittstelle"), B("Stammdaten"), B("Datenschutz")]),
+        B("Testen und abnehmen", [B("Integrationstest und Vorabnahme"), B("Pilotbetrieb")]),
+        B("Einführen und übergeben", [B("Schulung durchführen"), B("Betrieb und Produktivsetzung")]),
+        B("Projekt führen", [B("Kick-off und Detailplanung"), B("Steuerung und Berichte")])]),
+      text: "<p><b>Funktions- oder verrichtungsorientiert:</b> Ebene 1 sind Arten von Tätigkeiten. Das passt, wenn Fachteams getrennt arbeiten, etwa die Entwickler von Lärchwerk für sich. Aber wer sieht noch, ob die Schnittstelle als Ganzes funktioniert? Sie ist über drei Äste verteilt.</p><p class=\"hint\">Zwei Pakete sind kürzer benannt als im Baukasten; «Steuerung und Berichte» ist die laufende Projektführung, die im Baukasten bewusst fehlt (Erklärung dort).</p>"
+    },
+    phase: {
+      baum: B(W, [
+        B("Realisierung (Tag 1–20)", [B("Kick-off und Detailplanung"), B("Soll-Ablauf und Benutzerführung"), B("Plattform einrichten"), B("Formulare und Zirkulation"),
+          B("Schnittstelle"), B("Gebühren und Zahlung"), B("Stammdaten"), B("Datenschutz"), B("Integrationstest und Vorabnahme"), B("Schulungsunterlagen"), B("Merkblatt und Webseite")]),
+        B("Einführung (Tag 21–40)", [B("Schulung durchführen"), B("Pilotbetrieb"), B("Betrieb und Produktivsetzung")])]),
+      text: "<p><b>Phasenorientiert:</b> Ebene 1 sind die HERMES-Phasen. Für die Phasenfreigabe durch den Gemeinderat nach Tag 20 ist das ideal: Er sieht genau, welche Arbeit in der Realisierung steckt. Dafür ist die Schulung zerrissen: Die Unterlagen stehen in der Realisierung, die Kurse in der Einführung.</p>"
+    },
+    gemischt: {
+      baum: B(W, [
+        B("Realisierung (Tag 1–20)", [B("Plattform und Formulare"), B("Schnittstelle und Daten"), B("Einführung vorbereiten"), B("Projektführung und Abnahme")]),
+        B("Einführung (Tag 21–40)", [B("Schulung durchführen"), B("Pilotbetrieb"), B("Betrieb und Produktivsetzung")])]),
+      text: "<p><b>Gemischt:</b> Ebene 1 sind die Phasen. In der Realisierung folgen auf Ebene 2 die Lieferobjekte, ihre Arbeitspakete sind hier weggelassen. In der Einführung stehen direkt die Arbeitspakete, weil dort nur noch die Einführung selbst geliefert wird. Der Gemeinderat sieht die Phasen, die Teilprojektleitungen ihre Objekte. Eine Änderung an der Schnittstelle ordnest du Objekt und Phase zu.</p>"
+    }
+  };
+  const artEl = document.getElementById("t09-art");
+  function artZeigen(a) {
+    artEl.innerHTML = ARTEN[a].text + '<div class="tablebox">' + baumHtml(ARTEN[a].baum, true) + "</div>";
+    document.querySelectorAll("[data-t09-art]").forEach((b) => {
+      const on = b.getAttribute("data-t09-art") === a;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+  }
+  document.querySelectorAll("[data-t09-art]").forEach((b) => b.addEventListener("click", () => artZeigen(b.getAttribute("data-t09-art"))));
+  artZeigen("objekt");
+
+  /* ---------- 4 · Stepper 100-%-Regel ---------- */
+  L.stepper("#t09-stepper-regel", {
+    titel: "Teilprojekt 2 «Schnittstelle und Daten» prüfen",
+    text: 'Lucas Entwurf: <span data-link="a">Schnittstelle zur Bauverwaltungssoftware (128 h)</span>, <span data-link="b">Stammdaten aufbereiten und übernehmen, inklusive laufende Gesuche (64 h)</span>, <span data-link="c">Laufende Gesuche migrieren (24 h)</span>, <span data-link="d">Baugesuche im Bauamt nachführen (40 h)</span>. Laut Auftrag gehören zum Teilprojekt auch <span data-link="e">Gebühren und Online-Zahlung</span> und <span data-link="f">Datenschutz und Informationssicherheit</span>.',
+    schritte: [
+      { html: '<div class="t09-fz"><p><span data-link="c">Laufende Gesuche migrieren (24 h)</span> → streichen</p></div>',
+        warum: "Nichts doppelt: Die laufenden Gesuche sind schon im Paket Stammdaten enthalten. Zweimal geplant heisst zweimal bezahlt." },
+      { html: '<div class="t09-fz"><p><span data-link="d">Baugesuche im Bauamt nachführen (40 h)</span> → streichen</p></div>',
+        warum: "Nichts ausserhalb: Das ist Tagesgeschäft des Bauamts. Es läuft auch ohne Onlineschalter." },
+      { html: '<div class="t09-fz"><p>ergänzen: <span data-link="e">Gebühren und Online-Zahlung (32 h)</span>, <span data-link="f">Datenschutz und Informationssicherheit (48 h)</span></p></div>',
+        warum: "Nichts fehlt: Beide stehen im Auftrag des Teilprojekts. Ohne sie wäre der Ast nicht 100 %." },
+      { html: '<div class="t09-fz">' + baumHtml(B("Schnittstelle und Daten", [
+          B('<span data-link="a">Schnittstelle zur Bauverwaltungssoftware</span>', [], { h: "128 h" }),
+          B('<span data-link="e">Gebühren und Online-Zahlung anbinden</span>', [], { h: "32 h", nw: true }),
+          B('<span data-link="b">Stammdaten aufbereiten und übernehmen</span>', [], { h: "64 h" }),
+          B('<span data-link="f">Datenschutz und Informationssicherheit umsetzen</span>', [], { h: "48 h", nw: true })], { h: "Σ 272 h" }), true).replace(/<span class="t09-code">(\d)<\/span>/g, '<span class="t09-code">2.$1</span>') + "</div>",
+        warum: "Neu kodiert, noch vor der Freigabe: 2.1 bis 2.4. Die Kinder ergeben zusammen 128 + 32 + 64 + 48 = 272 Stunden. Das ist der ganze Ast 2." },
+      { html: '<div class="t09-fz"><p>272 h · Plankosten: 24\'960 + 5\'280 + 7\'680 + 7\'920 = <b>CHF 45\'840</b></p><p>Projekt: 232 + 272 + 424 + 144 = <b>1\'072 h</b> · Plankosten <b>CHF 162\'240</b></p></div>',
+        warum: "Von unten nach oben aufgerollt: Kosten je Paket mit den Plansätzen aus dem Leitstand, dann je Teilprojekt, dann das Projekt. 1'072 Stunden sind der Planaufwand aller Vorgänge, CHF 162'240 die Plankosten (BAC), gleich wie in Station 19." }
+    ]
+  });
+
+  /* ---------- 6 · PSP-Baukasten ---------- */
+  // typ: TP = Teilprojekt, TA = Teilaufgabe, AP = Arbeitspaket, X = Störkarte; ph: R = Realisierung, E = Einführung
+  const EL = [
+    { id: "puf", name: "Plattform und Formulare", typ: "TP", eltern: ["root"] },
+    { id: "sud", name: "Schnittstelle und Daten", typ: "TP", eltern: ["root"] },
+    { id: "euk", name: "Einführung und Kommunikation", typ: "TP", eltern: ["root"] },
+    { id: "pfa", name: "Projektführung und Abnahme", typ: "TA", eltern: ["root"] },
+    { id: "sch", name: "Schulung", typ: "TA", eltern: ["euk"], erkl: "Die Schulung ist Teil der Einführung." },
+    { id: "soll", name: "Soll-Ablauf und Benutzerführung festlegen", v: "V02, V04", h: 112, ph: "R", typ: "AP", eltern: ["puf"], erkl: "Ablauf und Gestaltung der Formulare gehören zum Lieferobjekt Plattform und Formulare." },
+    { id: "plat", name: "Plattform einrichten", v: "V03", h: 24, ph: "R", typ: "AP", eltern: ["puf"], erkl: "Die Plattform ist der Kern des Teilprojekts Plattform und Formulare." },
+    { id: "form", name: "Formulare und Zirkulation konfigurieren", v: "V09, V10", h: 96, ph: "R", typ: "AP", eltern: ["puf"], erkl: "Formulare und Zirkulation werden in der Plattform konfiguriert." },
+    { id: "schn", name: "Schnittstelle zur Bauverwaltungssoftware", v: "V05", h: 128, ph: "R", typ: "AP", eltern: ["sud"], erkl: "Die Schnittstelle ist das Kernstück von Schnittstelle und Daten." },
+    { id: "geb", name: "Gebühren und Online-Zahlung anbinden", v: "V06", h: 32, ph: "R", typ: "AP", eltern: ["sud", "puf"], erkl: "Die Zahlung ist eine Anbindung an einen Zahlungsanbieter." },
+    { id: "stamm", name: "Stammdaten aufbereiten und übernehmen", v: "V07", h: 64, ph: "R", typ: "AP", eltern: ["sud"], erkl: "Stammdaten sind Daten, sie gehören zu Schnittstelle und Daten." },
+    { id: "isds", name: "Datenschutz und Informationssicherheit umsetzen", v: "V08", h: 48, ph: "R", typ: "AP", eltern: ["sud", "pfa"], erkl: "Datenschutz betrifft vor allem Daten und Berechtigungen." },
+    { id: "unter", name: "Schulungsunterlagen erstellen", v: "V13", h: 64, ph: "R", typ: "AP", eltern: ["sch"], erkl: "Unterlagen sind ein Teil der Schulung." },
+    { id: "schu", name: "Schulung durchführen (Bauamt und Fachstellen)", v: "V15", h: 48, ph: "E", typ: "AP", eltern: ["sch"], erkl: "Die Kurse sind ein Teil der Schulung." },
+    { id: "merk", name: "Merkblatt und Webseite für Bauwillige", v: "V14", h: 24, ph: "R", typ: "AP", eltern: ["euk"], erkl: "Information der Bevölkerung gehört zu Einführung und Kommunikation." },
+    { id: "pilot", name: "Pilotbetrieb mit drei Planungsbüros", v: "V17", h: 128, ph: "E", typ: "AP", eltern: ["euk"], erkl: "Der Pilot ist Teil der Einführung." },
+    { id: "prod", name: "Betrieb aufbauen und produktiv setzen", v: "V16, V18", h: 160, ph: "E", typ: "AP", eltern: ["euk", "pfa"], erkl: "Übergabe an den Betrieb ist Teil der Einführung." },
+    { id: "kick", name: "Kick-off und Detailplanung", v: "V01", h: 48, ph: "R", typ: "AP", eltern: ["pfa"], erkl: "Den Kick-off führt die Projektleitung." },
+    { id: "test", name: "Integrationstest und Vorabnahme", v: "V11, V12", h: 96, ph: "R", typ: "AP", eltern: ["pfa"], erkl: "Test und Vorabnahme prüfen alle Teilprojekte zusammen. Die Projektleitung führt sie mit der Anwendervertretung." },
+    { id: "tages", name: "Baugesuche im Tagesgeschäft prüfen", h: 40, typ: "X",
+      erkl: "Gehört nicht in den PSP: Das ist Tagesgeschäft des Bauamts. Es läuft auch ohne Projekt (nichts ausserhalb)." },
+    { id: "bamt", name: "Bauamt schulen", h: 24, typ: "X",
+      erkl: "Doppelt: Diese Arbeit steckt schon in «Schulung durchführen (Bauamt und Fachstellen)». Zweimal im Plan heisst zweimal bezahlt (nichts doppelt)." },
+    { id: "betr", name: "Plattform nach dem Go-live betreiben", h: 80, typ: "X",
+      erkl: "Ausserhalb des Leistungsumfangs: Den laufenden Betrieb nach der Übergabe zahlt die Gemeinde aus dem Betriebsbudget. Im Projekt steckt nur der Aufbau des Betriebs (nichts ausserhalb)." }
+  ];
+  const E = {};
+  EL.forEach((e) => { E[e.id] = e; });
+  const REIHE = ["kick", "schn", "euk", "form", "tages", "sch", "plat", "sud", "merk", "isds", "bamt", "prod", "puf", "unter", "test", "geb", "betr", "pilot", "stamm", "pfa", "schu", "soll"];
+  const MUSTER = { root: ["puf", "sud", "euk", "pfa"], puf: ["soll", "plat", "form"], sud: ["schn", "geb", "stamm", "isds"], euk: ["sch", "merk", "pilot", "prod"], sch: ["unter", "schu"], pfa: ["kick", "test"] };
+  const SOLL_H = 1072;
+  const TYPNAME = { TP: "Teilprojekt", TA: "Teilaufgabe", AP: "Arbeitspaket", X: "Störkarte" };
+
+  const bk = { kinder: { root: [] }, eltern: {}, wahl: "root", befund: null, sicht: "objekt" };
+  const elStatus = document.getElementById("t09-status");
+  const elStapel = document.getElementById("t09-stapel");
+  const elBaum = document.getElementById("t09-baum");
+  const elSumme = document.getElementById("t09-summe");
+  const elBefund = document.getElementById("t09-befund");
+
+  const imPlan = (id) => id === "root" || bk.eltern[id] !== undefined;
+  const nameVon = (id) => (id === "root" ? W : E[id].name);
+  const kinderVon = (id) => bk.kinder[id] || [];
+  function code(id) {
+    if (id === "root") return "0";
+    const p = bk.eltern[id];
+    const nr = kinderVon(p).indexOf(id) + 1;
+    return p === "root" ? String(nr) : code(p) + "." + nr;
+  }
+  const bez = (id) => (id === "root" ? "0 " + W : code(id) + " " + nameVon(id));
+  function stunden(id) {
+    const e = E[id];
+    let s = e && (e.typ === "AP" || e.typ === "X") ? e.h : 0;
+    kinderVon(id).forEach((c) => { s += stunden(c); });
+    return s;
+  }
+
+  function knotenHtml(id) {
+    const kids = kinderVon(id);
+    const gew = bk.wahl === id;
+    const b = bk.befund && bk.befund.knoten[id];
+    const c = code(id);
+    const e = E[id];
+    const hText = id === "root" || kids.length ? "Σ " + fmt(stunden(id)) + " h" : (e.h ? fmt(e.h) + " h" : "leer");
+    let h = "<li" + (gew ? ' class="an"' : "") + '><span class="baum-knoten t09-knoten' + (b ? (b.ok ? " right" : " wrong") : "") + '">';
+    if (b) h += '<span class="marke" aria-hidden="true">' + (b.ok ? "✓" : "✗") + "</span>";
+    h += '<button type="button" class="t09-wahl" data-wahl="' + id + '" aria-pressed="' + gew + '"><span class="t09-code">' + c + "</span> " + nameVon(id) +
+      ' <span class="t09-h">' + hText + "</span>" + (gew ? '<span class="t09-gewaehlt">◂ gewählt</span>' : "") +
+      (b ? '<span class="sr-only">' + (b.ok ? ", richtig" : ", falsch") + "</span>" : "") + "</button>";
+    if (id !== "root") h += '<button type="button" class="t09-weg" data-weg="' + id + '" aria-label="' + c + " " + nameVon(id) + ' entfernen">✕</button>';
+    h += "</span>";
+    if (kids.length) h += "<ul>" + kids.map(knotenHtml).join("") + "</ul>";
+    return h + "</li>";
+  }
+
+  function zeichnen(fokus) {
+    elBaum.innerHTML = '<div class="tablebox"><ul class="baum">' + knotenHtml("root") + "</ul></div>";
+    const offen = REIHE.filter((id) => !imPlan(id));
+    elStapel.innerHTML = offen.length
+      ? offen.map((id) => {
+          const e = E[id];
+          return '<button type="button" class="btn t09-karte" data-karte="' + id + '">' + e.name +
+            (e.v ? '<span class="t09-v">' + e.v + "</span>" : "") + (e.h ? '<span class="t09-h">' + e.h + " h</span>" : "") + "</button>";
+        }).join("")
+      : '<p class="hint">Der Stapel ist leer. Prüfe jetzt mit der 100-%-Regel.</p>';
+    const im = REIHE.length - offen.length;
+    const s = stunden("root");
+    elSumme.textContent = "Im Plan: " + im + " von " + REIHE.length + " Karten · Stunden im Plan: " + fmt(s) + " h · laut Auftrag: " + fmt(SOLL_H) + " h (" + Math.round((s / SOLL_H) * 100) + " %)";
+    befundZeigen();
+    if (bk.sicht !== "objekt") abgeleitetZeigen();
+    if (fokus) {
+      let ziel = null;
+      if (fokus.art === "wahl") ziel = elBaum.querySelector('[data-wahl="' + fokus.id + '"]');
+      if (fokus.art === "karte") {
+        const karten = elStapel.querySelectorAll("[data-karte]");
+        ziel = karten[Math.min(fokus.index, karten.length - 1)] || document.getElementById("t09-pruefen");
+      }
+      if (fokus.art === "befund") ziel = elBefund;
+      if (ziel) ziel.focus();
+    }
+  }
+
+  function einfuegen(id) {
+    const p = bk.wahl;
+    const index = REIHE.filter((x) => !imPlan(x)).indexOf(id);
+    bk.eltern[id] = p;
+    (bk.kinder[p] = bk.kinder[p] || []).push(id);
+    bk.kinder[id] = bk.kinder[id] || [];
+    bk.befund = null;
+    elStatus.innerHTML = "«" + E[id].name + "» hängt unter <b>" + bez(p) + "</b> und hat den Code <b>" + code(id) + "</b>. Gewählt bleibt " + bez(p) + ".";
+    zeichnen({ art: "karte", index: index });
+  }
+
+  function entfernen(id) {
+    const weg = [];
+    (function sammeln(x) { weg.push(x); kinderVon(x).forEach(sammeln); })(id);
+    const p = bk.eltern[id];
+    const altBez = bez(id);
+    bk.kinder[p] = kinderVon(p).filter((x) => x !== id);
+    weg.forEach((x) => { delete bk.eltern[x]; bk.kinder[x] = []; });
+    if (weg.indexOf(bk.wahl) >= 0) bk.wahl = p;
+    bk.befund = null;
+    elStatus.innerHTML = altBez + (weg.length > 1 ? " und " + (weg.length - 1) + " Element(e) darunter sind" : " ist") + " zurück im Stapel. Gewählt: <b>" + bez(bk.wahl) + "</b>.";
+    zeichnen({ art: "wahl", id: bk.wahl });
+  }
+
+  function waehlen(id) {
+    bk.wahl = id;
+    elStatus.innerHTML = "Elternelement: <b>" + bez(id) + "</b>. Tippe jetzt eine Karte im Stapel an, um sie darunter einzuhängen.";
+    zeichnen({ art: "wahl", id: id });
+  }
+
+  function pruefen() {
+    const k = {};
+    const fehler = [];
+    let richtig = 0;
+    // Reihenfolge wie im Baum, damit die Liste dem Baum folgt
+    const reihe = [];
+    (function lauf(id) { kinderVon(id).forEach((c) => { reihe.push(c); lauf(c); }); })("root");
+    reihe.forEach((id) => {
+      const e = E[id], p = bk.eltern[id], kids = kinderVon(id);
+      let ok = true, text = "";
+      if (e.typ === "X") {
+        ok = false; text = e.erkl + (kids.length ? " Was darunter hängt, gehört an einen anderen Ort." : "");
+      } else if (e.eltern.indexOf(p) < 0) {
+        ok = false;
+        const soll = e.eltern.map((x) => "«" + nameVon(x) + "»").join(" oder ");
+        if (p !== "root" && E[p].typ === "X") text = "Hängt unter einer Störkarte, die gar nicht in den PSP gehört. Gehört unter " + soll + ".";
+        else if (p !== "root" && E[p].typ === "AP") text = "Hängt unter einem Arbeitspaket. Ein Arbeitspaket wird nicht weiter aufgegliedert (DIN 69901). Gehört unter " + soll + ".";
+        else if (e.typ === "TP") text = "Falsche Ebene: Ein Teilprojekt hängt direkt am Projekt (Ebene 1).";
+        else if (e.id === "pfa") text = "Falsche Ebene: Die Teilaufgabe der Projektleitung hängt direkt am Projekt (Ebene 1).";
+        else if (p === "root") text = "Falsche Ebene: zu weit oben eingehängt. Gehört unter " + soll + ". " + (e.erkl || "");
+        else text = "Falscher Ast: steht unter «" + nameVon(p) + "», gehört unter " + soll + ". " + (e.erkl || "");
+      }
+      if (ok && e.typ === "AP" && kids.length) { ok = false; text = "Arbeitspaket mit Unterelementen: Ein Arbeitspaket ist die kleinste Einheit und wird nicht weiter aufgegliedert."; }
+      if (ok && (e.typ === "TP" || e.typ === "TA") && !kids.length) { ok = false; text = "Leer: Ohne Arbeitspakete fehlt der Inhalt dieses Elements (100-%-Regel)."; }
+      k[id] = { ok: ok, text: text };
+      if (ok) richtig++; else fehler.push(id);
+    });
+    const fehlend = EL.filter((e) => e.typ !== "X" && !imPlan(e.id)).map((e) => e.id);
+    bk.befund = { knoten: k, fehler: fehler, fehlend: fehlend, richtig: richtig };
+    zeichnen({ art: "befund" });
+  }
+
+  function befundZeigen() {
+    const b = bk.befund;
+    if (!b) { elBefund.innerHTML = ""; return; }
+    const proper = EL.filter((e) => e.typ !== "X").length;
+    const stoer = b.fehler.filter((id) => E[id].typ === "X").length;
+    const s = stunden("root");
+    if (!b.fehler.length && !b.fehlend.length) {
+      elBefund.innerHTML = '<p class="t09-ok"><span class="marke">✓</span><b>100-%-Regel erfüllt.</b></p><p>Alle ' + proper + " Elemente stehen am richtigen Ort: 14 Arbeitspakete mit zusammen " + fmt(s) +
+        " Stunden. Nichts fehlt, nichts ist doppelt, nichts liegt ausserhalb des Leistungsumfangs. Schalte jetzt oben auf «Phasenorientiert» und «Gemischt»: dieselben Arbeitspakete, anders gegliedert.</p>";
+      return;
+    }
+    let h = "<p><b>Stand:</b> " + b.richtig + " Element(e) am richtigen Ort · " + (b.fehler.length - stoer) + " am falschen Ort · " + b.fehlend.length + " fehlen · " + stoer + " Störkarte(n) im Plan.</p>";
+    if (b.fehler.length) {
+      h += "<ul>" + b.fehler.map((id) => '<li><span class="marke t09-bad">✗</span><b>' + code(id) + " " + nameVon(id) + "</b> (" + TYPNAME[E[id].typ] + "): " + bk.befund.knoten[id].text + "</li>").join("") + "</ul>";
+    }
+    if (b.fehlend.length) {
+      h += "<p><b>Es fehlt noch:</b> " + b.fehlend.map((id) => "«" + E[id].name + "»").join(", ") + ". Nach der 100-%-Regel gehört alle Arbeit des Auftrags in den PSP.</p>";
+    }
+    if (s === SOLL_H) h += "<p>Die Stunden stimmen mit dem Auftrag überein (" + fmt(SOLL_H) + " h), trotzdem ist der Plan nicht fertig. Eine Summe ersetzt die inhaltliche Prüfung nicht.</p>";
+    elBefund.innerHTML = h;
+  }
+
+  /* Abgeleitete Sichten: dieselben Arbeitspakete phasenorientiert oder gemischt */
+  function apsImPlan() {
+    const liste = [];
+    (function lauf(id) { kinderVon(id).forEach((c) => { if (E[c].typ === "AP") liste.push(c); lauf(c); }); })("root");
+    return liste;
+  }
+  function ebene1(id) {
+    let x = id;
+    while (bk.eltern[x] !== "root") x = bk.eltern[x];
+    return x;
+  }
+  const PHASEN = [{ ph: "R", t: "Realisierung (Periode 1, Tag 1–20)" }, { ph: "E", t: "Einführung (Periode 2, Tag 21–40)" }];
+  function abgeleitetZeigen() {
+    const aps = apsImPlan();
+    const txt = document.getElementById("t09-abgeleitet-text");
+    const ziel = document.getElementById("t09-abgeleitet-baum");
+    if (!aps.length) {
+      txt.innerHTML = "Noch keine Arbeitspakete im Plan. Häng in der objektorientierten Sicht Arbeitspakete ein oder setze die Musterlösung ein.";
+      ziel.innerHTML = "";
+      return;
+    }
+    const sum = (liste) => liste.reduce((a, id) => a + E[id].h, 0);
+    const blatt = (id) => B(E[id].name, [], { h: fmt(E[id].h) + " h" });
+    let wurzel;
+    if (bk.sicht === "phase") {
+      wurzel = B(W, PHASEN.map((p) => {
+        const l = aps.filter((id) => E[id].ph === p.ph);
+        return B(p.t, l.map(blatt), { h: "Σ " + fmt(sum(l)) + " h" });
+      }).filter((n) => n.k.length), { h: "Σ " + fmt(sum(aps)) + " h" });
+    } else {
+      wurzel = B(W, PHASEN.map((p) => {
+        const l = aps.filter((id) => E[id].ph === p.ph);
+        const gruppen = [];
+        l.forEach((id) => {
+          const g = ebene1(id);
+          const gName = g === id ? "(direkt am Projekt)" : nameVon(g);
+          let gr = gruppen.find((x) => x.name === gName);
+          if (!gr) { gr = { name: gName, ids: [] }; gruppen.push(gr); }
+          gr.ids.push(id);
+        });
+        return B(p.t, gruppen.map((gr) => B(gr.name, gr.ids.map(blatt), { h: "Σ " + fmt(sum(gr.ids)) + " h" })), { h: "Σ " + fmt(sum(l)) + " h" });
+      }).filter((n) => n.k.length), { h: "Σ " + fmt(sum(aps)) + " h" });
+    }
+    const stoer = Object.keys(bk.eltern).filter((id) => E[id].typ === "X").length;
+    const fehlt = EL.filter((e) => e.typ === "AP" && !imPlan(e.id)).length;
+    txt.innerHTML = (bk.sicht === "phase"
+      ? "<b>Phasenorientiert:</b> Ebene 1 sind die HERMES-Phasen, darunter dieselben Arbeitspakete. Teilprojekte und Teilaufgaben fallen weg, die Codes ändern sich. Für die Phasenfreigabe nach Tag 20 siehst du genau, was in der Realisierung steckt. Dafür sind Lieferobjekte zerrissen: Die Schulungsunterlagen stehen in der Realisierung, die Kurse in der Einführung."
+      : "<b>Gemischt:</b> Ebene 1 sind die Phasen, Ebene 2 die Teilprojekte und Teilaufgaben aus deinem Plan, darunter die Arbeitspakete. So sehen der Gemeinderat die Phasen und die Teilprojektleitungen ihre Objekte.") +
+      " " + aps.length + " Arbeitspakete, " + fmt(sum(aps)) + " Stunden, gleich viele wie in deinem objektorientierten Plan." +
+      (fehlt ? " Es fehlen noch " + fehlt + " Arbeitspakete." : "") + (stoer ? " Störkarten erscheinen hier nicht." : "");
+    ziel.innerHTML = '<div class="tablebox">' + baumHtml(wurzel, true) + "</div>";
+  }
+
+  function sichtSetzen(s) {
+    bk.sicht = s;
+    document.querySelectorAll("[data-t09-sicht]").forEach((b) => {
+      const on = b.getAttribute("data-t09-sicht") === s;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+    document.getElementById("t09-bk-objekt").hidden = s !== "objekt";
+    document.getElementById("t09-bk-abgeleitet").hidden = s === "objekt";
+    if (s !== "objekt") abgeleitetZeigen();
+  }
+
+  elBaum.addEventListener("click", (ev) => {
+    const w = ev.target.closest("[data-wahl]");
+    if (w) { waehlen(w.getAttribute("data-wahl")); return; }
+    const x = ev.target.closest("[data-weg]");
+    if (x) entfernen(x.getAttribute("data-weg"));
+  });
+  elStapel.addEventListener("click", (ev) => {
+    const k = ev.target.closest("[data-karte]");
+    if (k) einfuegen(k.getAttribute("data-karte"));
+  });
+  document.querySelectorAll("[data-t09-sicht]").forEach((b) => b.addEventListener("click", () => sichtSetzen(b.getAttribute("data-t09-sicht"))));
+  document.getElementById("t09-pruefen").addEventListener("click", pruefen);
+  document.getElementById("t09-muster").addEventListener("click", () => {
+    bk.kinder = { root: [] }; bk.eltern = {};
+    Object.keys(MUSTER).forEach((p) => { bk.kinder[p] = MUSTER[p].slice(); MUSTER[p].forEach((c) => { bk.eltern[c] = p; }); });
+    bk.wahl = "root"; bk.befund = null;
+    elStatus.innerHTML = "Musterlösung eingesetzt (eigene Lösung). Drei Störkarten bleiben im Stapel. Prüfe sie oder schalte auf die anderen Sichten.";
+    zeichnen({ art: "wahl", id: "root" });
+  });
+  document.getElementById("t09-leeren").addEventListener("click", () => {
+    bk.kinder = { root: [] }; bk.eltern = {}; bk.wahl = "root"; bk.befund = null;
+    elStatus.innerHTML = "Zurückgesetzt. Gewählt ist das Projekt <b>0 " + W + "</b>. Tippe eine Karte im Stapel an.";
+    zeichnen({ art: "wahl", id: "root" });
+  });
+  elStatus.innerHTML = "Gewählt ist das Projekt <b>0 " + W + "</b>. Tippe eine Karte im Stapel an, um sie darunter einzuhängen.";
+  zeichnen();
+
+  /* ---------- 7 · Gliederungsart erkennen ---------- */
+  L.sortierer("#t09-erkennen", {
+    kategorien: ["objektorientiert", "funktionsorientiert", "phasenorientiert", "gemischt"],
+    elemente: [
+      { html: "<b>Neubau Feuerwehrdepot</b><br>1 Rohbau · 2 Haustechnik · 3 Fahrzeughalle · 4 Umgebung", kategorie: "objektorientiert",
+        erklaerung: "Ebene 1 sind Teile des Bauwerks, also Lieferobjekte: objektorientiert." },
+      { html: "<b>Neue Geschäftsverwaltung</b><br>1 Initialisierung · 2 Konzept · 3 Realisierung · 4 Einführung", kategorie: "phasenorientiert",
+        erklaerung: "Ebene 1 sind die HERMES-Phasen: phasenorientiert." },
+      { html: "<b>Neue Website der Gemeinde</b><br>1 Analysieren · 2 Gestalten · 3 Programmieren · 4 Testen", kategorie: "funktionsorientiert",
+        erklaerung: "Ebene 1 sind Arten von Tätigkeiten, genau wie im Referat zu ICB 3.03: Analyse, Design, Entwicklung, Test. Das sind keine Phasen eines Phasenmodells und keine Teile des Ergebnisses: funktions- oder verrichtungsorientiert." },
+      { html: "<b>WLAN im Schulhaus</b><br>1 Konzept (1.1 Netz, 1.2 Geräte) · 2 Realisierung (2.1 Netz, 2.2 Geräte)", kategorie: "gemischt",
+        erklaerung: "Oben Phasen, darunter Objekte: gemischt." },
+      { html: "<b>Dorffest 2027</b><br>1 Festwirtschaft · 2 Bühne und Programm · 3 Infrastruktur · 4 Projektführung", kategorie: "objektorientiert",
+        erklaerung: "Die Äste sind Teile des Festes, die am Ende vorliegen. Die Projektführung als eigener Ast ändert daran nichts: objektorientiert." },
+      { html: "<b>Neue Telefonanlage im Gemeindehaus</b><br>1 Einkauf · 2 Elektroinstallation · 3 Informatikdienst · 4 Kommunikationsstelle", kategorie: "funktionsorientiert",
+        erklaerung: "Ebene 1 sind die beteiligten Fachfunktionen mit ihren Verrichtungen, nicht Teile der Anlage und keine Phasen: funktionsorientiert." }
+    ]
+  });
+
+  /* ---------- 8 · Übungen ---------- */
+  L.wahrFalsch("#t09-ue-wf", {
+    titel: "Übung 1 · Wahr oder falsch: Regeln des PSP",
+    aussagen: [
+      { html: "Im PSP stehen die Arbeitspakete in der Reihenfolge, in der sie ausgeführt werden.", wahr: false,
+        erklaerung: "Der PSP zeigt nur, was zu tun ist. Die Reihenfolge steht im Ablaufplan und im Netzplan." },
+      { html: "Ein Arbeitspaket kann auf jeder Ebene des PSP liegen.", wahr: true,
+        erklaerung: "So steht es in DIN 69901 (LB 4 F.13): nicht weiter aufgegliedert, auf beliebiger Detaillierungsebene." },
+      { html: "Die Arbeit der Projektleitung gehört nicht in den PSP, weil sie kein Lieferobjekt erzeugt.", wahr: false,
+        erklaerung: "Planen, steuern und abschliessen ist Arbeit mit Aufwand und Kosten. Nach der 100-%-Regel gehört sie hinein." },
+      { html: "Hat ein Teilprojekt laut Auftrag 400 h und seine Arbeitspakete zusammen ebenfalls 400 h, ist die 100-%-Regel für diesen Ast sicher erfüllt.", wahr: false,
+        erklaerung: "Die Summe kann stimmen, obwohl ein Paket fehlt und dafür ein anderes doppelt steht. Du prüfst immer auch den Inhalt." },
+      { html: "Denselben Leistungsumfang kannst du objekt- oder phasenorientiert gliedern; die Arbeitspakete bleiben dieselben.", wahr: true,
+        erklaerung: "Nur die oberen Ebenen ändern sich. Siehe die Sichten im PSP-Baukasten." },
+      { html: "Der Code 3.1.2 bezeichnet das zweite Element unter 3.1, und 3.1 ist das erste Element unter 3.", wahr: true,
+        erklaerung: "Jede Zahl ist eine Ebene. Die letzte Zahl ist die Stelle unter dem Elternelement." }
+    ]
+  });
+
+  L.zahlAufgabe("#t09-ue-stunden", {
+    titel: "Übung 2 · 100-%-Regel mit Stunden",
+    frage: "Teilprojekt 3 «Einführung und Kommunikation» umfasst laut Auftrag 424 h. Darunter stehen 3.1 Schulung (Teilaufgabe), 3.2 Merkblatt 24 h, 3.3 Pilotbetrieb 128 h und 3.4 Betrieb aufbauen und produktiv setzen 160 h. Unter 3.1 stehen 3.1.1 Schulungsunterlagen 64 h und 3.1.2 Schulung durchführen. Wie viele Stunden hat 3.1.2, wenn die 100-%-Regel gilt?",
+    antwort: 48, einheit: "h",
+    hinweise: ["Rechne zuerst aus, wie viele Stunden für die Teilaufgabe 3.1 bleiben.", "Die Kinder von 3.1 ergeben zusammen genau 3.1."],
+    loesungsweg: ["3.1 = 424 − 24 − 128 − 160 = 112 h", "3.1.2 = 112 − 64 = 48 h", "Kontrolle: 64 + 48 + 24 + 128 + 160 = 424 h ✓"]
+  });
+
+  L.zahlAufgabe("#t09-ue-kosten", {
+    titel: "Übung 3 · Kosten über den PSP aufrollen",
+    frage: '<p>Rechne die Plankosten von Teilprojekt 1 «Plattform und Formulare» (Zahlen aus dem Leitstand):</p><div class="tablebox"><table class="tabelle"><thead><tr><th>Code</th><th>Arbeitspaket</th><th>Stunden und Satz</th></tr></thead><tbody>' +
+      "<tr><td>1.1</td><td>Soll-Ablauf und Benutzerführung</td><td>64 h zu CHF 120 und 48 h zu CHF 150</td></tr>" +
+      "<tr><td>1.2</td><td>Plattform einrichten</td><td>24 h zu CHF 195</td></tr>" +
+      "<tr><td>1.3</td><td>Formulare und Zirkulation</td><td>96 h zu CHF 165</td></tr></tbody></table></div>",
+    antwort: 35400, einheit: "CHF",
+    hinweise: ["Rechne zuerst jedes Arbeitspaket: Stunden × Satz.", "Paket 1.1 hat zwei Sätze, rechne beide Teile und zähle sie zusammen."],
+    loesungsweg: ["1.1: 64 × 120 + 48 × 150 = 7'680 + 7'200 = CHF 14'880", "1.2: 24 × 195 = CHF 4'680", "1.3: 96 × 165 = CHF 15'840", "Teilprojekt 1: 14'880 + 4'680 + 15'840 = CHF 35'400"]
+  });
+
+  L.auswahl("#t09-ue-ap", {
+    frage: '<span class="icb">ICB 3.03</span> <b>Übung 4.</b> Welche Aussage beschreibt ein Arbeitspaket richtig?',
+    optionen: [
+      "Ein Element, das immer auf der untersten, dritten Ebene des PSP liegt",
+      "Eine Gruppe von Arbeitspaketen, die für das Reporting zusammengefasst wird",
+      "Das kleinste Element des PSP: Es wird nicht weiter aufgegliedert, hat klare Grenzen und eine verantwortliche Person",
+      "Eine Phase des Vorgehensmodells mit einem Meilenstein am Ende"
+    ],
+    richtig: 2,
+    erklaerung: "So beschreiben es DIN 69901 (LB 4 F.13), das Arbeitsblatt Projektstrukturplan (S.2) und die Swiss ICB 4.5.3.3. Die erste Option ist falsch, weil ein Arbeitspaket auf jeder Ebene liegen kann. Die zweite beschreibt einen Control Account, die vierte eine Phase."
+  });
+
+  L.auswahl("#t09-ue-fall", {
+    frage: '<span class="icb">ICB 3.03</span> <b>Übung 5.</b> Wolkenried führt eine elektronische Geschäftsverwaltung ein, nach HERMES. Der Gemeinderat gibt jede Phase einzeln frei und will pro Phase sehen, welche Arbeit und welche Kosten anfallen. Die vier Abteilungen wollen erkennen, wann ihr Ablagesystem, ihre Datenübernahme und ihre Schulung fertig sind. Welche Gliederung wählst du?',
+    optionen: [
+      "Objektorientiert nach Ablagesystem, Datenübernahme und Schulung",
+      "Phasenorientiert nach den HERMES-Phasen",
+      "Funktionsorientiert nach Analyse, Konfiguration, Test und Schulung",
+      "Gemischt: oben die HERMES-Phasen, darunter die Lieferobjekte je Abteilung"
+    ],
+    richtig: 3,
+    erklaerung: "Beide Sichten zählen: Der Gemeinderat braucht die Phasen für die Freigaben, die Abteilungen ihre Lieferobjekte. Das leistet nur die gemischte Gliederung (SG F.12–13). Rein objektorientiert fehlen die Phasen, rein phasenorientiert sind die Lieferobjekte über die Phasen verstreut, und funktionsorientiert zeigt weder Phasen noch Objekte. Eigene Lösung, nicht vom Dozenten bestätigt."
+  });
+
+  L.auswahl("#t09-ue-nicht", {
+    frage: '<span class="icb">ICB 3.04</span> <b>Übung 6.</b> Was gehört nicht in den PSP des Onlineschalters?',
+    optionen: [
+      "Die Teilaufgabe «Schulung»",
+      "Die Abhängigkeit «Die Schulung beginnt erst nach der Vorabnahme»",
+      "Das Arbeitspaket «Kick-off und Detailplanung»",
+      "Das Arbeitspaket «Merkblatt und Webseite für Bauwillige»"
+    ],
+    richtig: 1,
+    erklaerung: "Abhängigkeiten legst du erst bei der Ablaufplanung fest, wenn du aus den Arbeitspaketen Vorgänge ableitest (Swiss ICB 4.5.4.1). Im PSP haben sie nichts zu suchen. Die anderen drei sind Elemente des PSP."
+  });
+
+  const FEHLER_PSP = B("Neue Website der Gemeinde Wolkenried", [
+    B("Inhalte", [B("Texte schreiben"), B("Fotos beschaffen")]),
+    B("Technik", [B("Plattform einrichten", [B("Plattform einrichten")]), B("Formulare programmieren")]),
+    B("Ablauf", [B("Zuerst Texte, dann Gestaltung")]),
+    B("Gestaltung", [B("Layout entwerfen"), B("Texte schreiben"), B("Gemeindeblatt wöchentlich drucken")])]);
+  const FEHLER_LOESUNG = B("Neue Website der Gemeinde Wolkenried", [
+    B("Projektführung", [], { nw: true }),
+    B("Inhalte", [B("Texte schreiben"), B("Fotos beschaffen")]),
+    B("Gestaltung und Technik", [B("Layout entwerfen"), B("Plattform einrichten"), B("Formulare programmieren")]),
+    B("Test und Aufschaltung", [B("Website testen und abnehmen"), B("Website aufschalten")], { nw: true })]);
+  L.schrittAufgabe("#t09-ue-fehler", {
+    titel: "Übung 7 · Fehler im PSP finden",
+    aufgabe: "<p>Die Kanzlei schickt dir diesen PSP für die neue Website. Finde die Fehler und schreib einen korrigierten PSP mit Codes. Es sind fünf Fehler.</p>" + baumHtml(FEHLER_PSP, true),
+    schritte: [
+      { html: '<div class="t09-fz"><p>4.2 «Texte schreiben» → streichen</p></div>', warum: "Doppelt: Dieselbe Arbeit steht schon unter 1.1. Zweimal im PSP heisst zweimal im Budget." },
+      { html: '<div class="t09-fz"><p>2.1.1 → streichen, 2.1 «Plattform einrichten» ist das Arbeitspaket</p></div>', warum: "Ein Element mit einem einzigen, gleichen Kind gliedert nichts (Ergänzung aus der Praxis)." },
+      { html: '<div class="t09-fz"><p>Ast 3 «Ablauf» → streichen</p></div>', warum: "Eine Reihenfolge ist keine Arbeit. Sie gehört in den Ablaufplan, nicht in den PSP." },
+      { html: '<div class="t09-fz"><p>4.3 «Gemeindeblatt wöchentlich drucken» → streichen</p></div>', warum: "Das ist Tagesgeschäft der Kanzlei und läuft auch ohne neue Website." },
+      { html: '<div class="t09-fz"><p>ergänzen: Projektführung, Test und Abnahme, Aufschaltung</p></div>', warum: "Nichts fehlt: Ohne diese Arbeit ist der PSP nicht 100 %. Eine neue Website ohne Test und ohne Aufschaltung ist nicht fertig." },
+      { html: '<div class="t09-fz">' + baumHtml(FEHLER_LOESUNG, true) + "</div>",
+        warum: "Neu kodiert vor der Freigabe. Gestaltung hätte nach dem Streichen nur noch ein Kind gehabt, darum sind Gestaltung und Technik zusammengefasst. Eigene Lösung, nicht vom Dozenten bestätigt." }
+    ]
+  });
+
+  L.reflexion("#t09-ue-zweck", {
+    titel: "Übung 8 · IPMA-Stil: Wozu ein PSP?",
+    icb: ["ICB 3.03"],
+    frage: "<p>Eine neue Mitarbeiterin im Projektteam fragt dich: «Wozu brauchen wir einen Projektstrukturplan? Wir wissen doch, was zu tun ist.» Erkläre Zweck und Nutzen des PSP und nenne mindestens drei Planungen, die auf ihm aufbauen. Schreib vier bis sechs Sätze.</p>",
+    musterloesung:
+      "<p>Der PSP zerlegt den ganzen Leistungsumfang des Projekts von oben nach unten in Teilprojekte, Teilaufgaben und Arbeitspakete. So sehen alle dasselbe Bild davon, was zum Projekt gehört und was nicht.</p>" +
+      "<p>Weil er vollständig sein muss, deckt er vergessene Arbeit auf, zum Beispiel Tests, Schulung oder die Projektführung selbst. Doppelt geplante Arbeit fällt ebenfalls auf.</p>" +
+      "<p>Das Arbeitspaket ist die kleinste Einheit mit klaren Grenzen und einer verantwortlichen Person. Darüber vergebe ich Arbeit und messe den Fortschritt.</p>" +
+      "<p>Auf dem PSP bauen die Aufwand-, Kapazitäts-, Kosten-, Ablauf- und Terminplanung, die Kalkulation und die Risikoabschätzung auf (LB 3 F.17). Er ist auch die Grundlage für die Projektorganisation: Teilprojekte bekommen eine Leitung, Arbeitspakete eine verantwortliche Person.</p>",
+    kriterien: [
+      { text: "Zerlegung des ganzen Leistungsumfangs von oben nach unten erklärt", punkte: 1 },
+      { text: "Vollständigkeit und klare Grenzen als Nutzen genannt (nichts fehlt, nichts doppelt)", punkte: 1 },
+      { text: "Mindestens drei Planungen genannt, die auf dem PSP aufbauen", punkte: 2 },
+      { text: "Arbeitspaket als kleinste Einheit mit Verantwortung erwähnt", punkte: 1 },
+      { text: "Weiterer Nutzen genannt: gemeinsames Bild, Organisation oder Steuerung", punkte: 1 }
+    ]
+  });
+
+  const VELO = B("Veloverleih Bahnhof Wolkenried", [
+    B("Projektführung (Planung, Steuerung, Abschluss)"),
+    B("Standort und Bewilligung", [B("Standort mit Bahn und Werkhof klären"), B("Baubewilligung einholen")]),
+    B("Station und Ladeinfrastruktur", [B("Fundament und Unterstand bauen lassen"), B("Stromanschluss und Ladestationen installieren lassen")]),
+    B("Velos und Ausleihsystem", [B("20 E-Bikes beschaffen"), B("Ausleih-App einrichten und testen")]),
+    B("Betrieb", [B("Betriebsvertrag mit dem Velohändler abschliessen"), B("Wartung und Support regeln")]),
+    B("Eröffnung und Information", [B("Bevölkerung informieren"), B("Eröffnung durchführen")])]);
+  L.reflexion("#t09-ue-velo", {
+    titel: "Übung 9 · Modulprüfung: PSP für einen Fall gliedern",
+    icb: ["ICB 3.03", "ICB 3.04"],
+    frage: "<p>Im Stil der Fallstudie MOVE, Aufgabe B, mit eigenem Fall: Die Gemeinde richtet bis im Frühling am Bahnhof eine Verleihstation für 20 E-Bikes ein. Es braucht einen Standort mit Bewilligung, eine überdachte Station mit Ladeanschlüssen (ein Elektriker installiert sie), die Velos und ein Ausleihsystem mit App (von einem Anbieter), einen Vertrag mit dem örtlichen Velohändler für Wartung und Betrieb sowie eine Eröffnung mit Information der Bevölkerung. Den Betrieb nach der Eröffnung übernimmt der Velohändler.</p><p>Gliedere einen PSP mit zwei bis drei Ebenen, 8 bis 12 Arbeitspaketen und Codes. Begründe die Gliederungsart in einem Satz.</p>",
+    hinweis: "Schreib den PSP als eingerückte Liste mit Codes, zum Beispiel «2 Standort und Bewilligung», «2.1 …». Die Antwort bleibt nur auf dieser Seite.",
+    musterloesung:
+      "<p><b>Gliederungsart:</b> objektorientiert, weil die Lieferobjekte (Standort, Station, Velos mit System, Betriebsvertrag, Eröffnung) klar und gut abgrenzbar sind. Den Ablauf zeigt danach der Netzplan. Gemischt wäre auch vertretbar.</p>" +
+      baumHtml(VELO, true) +
+      "<p>Geprüft: Die Projektführung ist drin, jedes Lieferobjekt hat einen Ast, nichts ist doppelt. Der laufende Betrieb nach der Eröffnung ist nicht im PSP, weil ihn der Velohändler übernimmt; im Projekt steckt nur das Regeln des Betriebs. Keine Reihenfolge, keine Termine. Eigene Lösung, nicht vom Dozenten bestätigt.</p>",
+    kriterien: [
+      { text: "Gliederungsart genannt und mit dem Fall begründet", punkte: 1 },
+      { text: "Projektführung als Element enthalten", punkte: 1 },
+      { text: "Alle fünf Lieferobjekte des Falls abgedeckt (nichts fehlt)", punkte: 2 },
+      { text: "Nichts doppelt, kein Tagesgeschäft, kein laufender Betrieb, keine Reihenfolge", punkte: 1 },
+      { text: "Codes korrekt (1, 2, 2.1 …) und zwei bis drei Ebenen", punkte: 1 },
+      { text: "Arbeitspakete als prüfbare Ergebnisse formuliert (Tätigkeit und Gegenstand)", punkte: 1 }
+    ]
+  });
+
+  /* ---------- Lösungsfilm ---------- */
+  // Arbeitspakete des Umzugs (eigene Lösung, eigene Schätzungen)
+  const UMZ = [
+    { t: "Projektführung (Planung, Steuerung, Abschluss)", h: 48, f: 0, k: [] },
+    { t: "Arbeitsplätze", k: [{ t: "Neue Möbel beschaffen und montieren lassen", h: 16, f: 48000 }, { t: "Zügeln mit der Umzugsfirma", h: 24, f: 9600 }] },
+    { t: "Informatik und Telefonie", k: [{ t: "Netzwerk und Drucker einrichten", h: 32, f: 0 }, { t: "Telefonie umschalten", h: 8, f: 2400 }] },
+    { t: "Akten und Archiv", k: [{ t: "Akten aussortieren und verpacken", h: 64, f: 0 }, { t: "Archiv umziehen", h: 16, f: 0 }] },
+    { t: "Information", k: [{ t: "Personal informieren", h: 8, f: 0 }, { t: "Bevölkerung informieren", h: 8, f: 0 }] },
+    { t: "Alte Räume", k: [{ t: "Räumen und reinigen lassen", h: 8, f: 3000 }, { t: "Übergabe an den Vermieter", h: 4, f: 0 }] }
+  ];
+  const SATZ = 120;
+  const astH = (a) => (a.k.length ? a.k.reduce((s, x) => s + x.h, 0) : a.h);
+  const astF = (a) => (a.k.length ? a.k.reduce((s, x) => s + x.f, 0) : a.f);
+  const SUM_H = UMZ.reduce((s, a) => s + astH(a), 0);          // 236
+  const SUM_F = UMZ.reduce((s, a) => s + astF(a), 0);          // 63'000
+  const INTERN = SUM_H * SATZ;                                 // 28'320
+  const BUDGET = INTERN + SUM_F;                               // 91'320
+  if (SUM_H !== 236 || SUM_F !== 63000 || BUDGET !== 91320) console.error("[Station 09] Filmzahlen stimmen nicht.");
+
+  // Baum des Umzugs; stufe: wie viele Äste sichtbar; opt: { codes, stunden, neuAst, neuAp: [Astindizes], an: [Pfade "a" oder "a.b"] }
+  function umzugBaum(opt) {
+    const an = opt.an || [];
+    const kinder = UMZ.slice(0, opt.aeste).map((a, i) => {
+      const zeigK = opt.aps && opt.aps.indexOf(i) >= 0 ? a.k : [];
+      const hAst = opt.stunden ? (a.k.length ? "Σ " + astH(a) + " h" + (astF(a) ? " + " + chf(astF(a)) : "") : a.h + " h") : "";
+      return B(a.t, zeigK.map((x, j) => B(x.t, [], {
+        h: opt.stunden ? x.h + " h" + (x.f ? " + " + chf(x.f) : "") : "",
+        nw: (opt.neuAp || []).indexOf(i) >= 0, an: an.indexOf(i + "." + j) >= 0
+      })), { h: hAst, nw: (opt.neuAst || false) && i >= (opt.neuAstAb || 0), an: an.indexOf(String(i)) >= 0 });
+    });
+    return '<div class="t09-fz"><div class="tablebox">' + baumHtml(B("Umzug Gemeindeverwaltung", kinder, { h: opt.stunden ? "Σ " + SUM_H + " h" : "" }), opt.codes) + "</div></div>";
+  }
+  const ALLE = [0, 1, 2, 3, 4, 5];
+  const zeile = (s) => '<p class="t09-zeile">' + s + "</p>";
+
+  // Rohliste mit Prüfvermerken
+  const ROH = [
+    { t: "Neue Möbel bestellen" }, { t: "Umzugsfirma beauftragen und zügeln" }, { t: "Netzwerk und Drucker einrichten" },
+    { t: "Server ins Gemeindezentrum zügeln", weg: "ausserhalb: Die Server bleiben im kantonalen Rechenzentrum." },
+    { t: "Telefonnummern umschalten" }, { t: "Akten aussortieren und verpacken" },
+    { t: "Umzugskisten packen", weg: "doppelt: steckt in «Akten aussortieren und verpacken»." },
+    { t: "Archiv umziehen" }, { t: "Personal informieren" }, { t: "Bevölkerung über die Schalterschliessung informieren" },
+    { t: "Alte Räume räumen und reinigen" },
+    { t: "Steuererklärungen erfassen", weg: "Tagesgeschäft des Steueramts, kein Projekt." }
+  ];
+  // bis: Anzahl sichtbarer Zeilen; gestrichen: Indizes; neu: Indizes; plus: ergänzte Zeilen
+  function rohliste(bis, gestrichen, neu, plus, plusNeu) {
+    let h = '<div class="t09-fz"><p><b>Rohliste aus dem Text</b></p><ul class="t09-roh">';
+    ROH.slice(0, bis).forEach((r, i) => {
+      let z = r.t;
+      if (gestrichen.indexOf(i) >= 0) z = '<span class="strike">' + z + '</span> <span class="t09-grund">✗ ' + r.weg + "</span>";
+      h += "<li>" + (neu.indexOf(i) >= 0 ? NW(z) : z) + "</li>";
+    });
+    (plus || []).forEach((p) => { h += "<li>" + (plusNeu ? NW("＋ " + p) : "＋ " + p) + "</li>"; });
+    return h + "</ul></div>";
+  }
+  const PLUS = ["Projektführung: planen, steuern, abschliessen", "Übergabe der alten Räume an den Vermieter"];
+  const STRICH = [3, 6, 11];
+
+  const S = [];
+  const sz = (o) => S.push(o);
+  sz({ ph: -1, say: "Eine typische Aufgabe aus der Modulprüfung, im Stil von MOVE Aufgabe B, aber mit eigenem Fall. Wir lösen sie in fünf Schritten: Arbeit sammeln, prüfen, gliedern, kodieren und am Schluss Vollständigkeit und Budget." });
+  sz({ ph: 0, hl: ["ap"], f: '<div class="t09-fz"><p><b>Was muss am Ende vorliegen?</b></p><ul class="t09-roh">' +
+      ["eingerichtete Arbeitsplätze", "laufende Informatik und Telefonie", "umgezogene Akten und Archiv", "informiertes Personal und informierte Bevölkerung", "geräumte und übergebene alte Räume"].map((x) => "<li>" + NW(x) + "</li>").join("") + "</ul></div>",
+    say: "Frag zuerst nicht, was ihr tut, sondern was am Ende vorliegen muss. Das sind die Lieferobjekte: Arbeitsplätze, Informatik, Akten, Information und die alten Räume." });
+  sz({ ph: 0, hl: ["moebel", "firma", "it", "server", "tel"], f: rohliste(5, [], [0, 1, 2, 3, 4]),
+    say: "Jetzt sammelst du aus dem Text alle Arbeiten, noch ohne zu sortieren. Möbel, Umzugsfirma, Netzwerk und Drucker, Server, Telefonie." });
+  sz({ ph: 0, hl: ["akten", "info", "alt", "tages"], f: rohliste(12, [], [5, 6, 7, 8, 9, 10, 11]),
+    say: "Weiter: Akten, Kisten, Archiv, Personal, Bevölkerung, alte Räume und die Steuererklärungen. Die Rohliste ist bewusst zu lang. Jetzt prüfst du sie." });
+  sz({ ph: 1, hl: ["server"], f: rohliste(12, [3], []),
+    say: "Prüfe jede Zeile gegen den Text. Die Server stehen im Rechenzentrum des Kantons und bleiben dort. Server zügeln liegt ausserhalb des Leistungsumfangs, also streichen." });
+  sz({ ph: 1, hl: ["tages"], f: rohliste(12, [3, 11], []),
+    say: "Steuererklärungen erfassen ist Tagesgeschäft. Es läuft während des Umzugs weiter, gehört aber nicht zum Projekt." });
+  sz({ ph: 1, hl: ["akten"], f: rohliste(12, STRICH, []),
+    say: "Umzugskisten packen und Akten verpacken ist dieselbe Arbeit. Wer beides plant, plant und bezahlt sie doppelt. Eine Zeile reicht." });
+  sz({ ph: 1, hl: ["alt"], f: rohliste(12, STRICH, [], PLUS, true),
+    say: "Was fehlt? Der Text verlangt die Übergabe der alten Räume an den Vermieter. Und die Projektführung selbst: Planen, steuern und abschliessen ist auch Arbeit. Ohne sie ist der Plan nicht vollständig." });
+  sz({ ph: 2, f: '<div class="t09-fz">' + baumHtml(B(NW("Umzug Gemeindeverwaltung")), false) + "</div>",
+    say: "Jetzt gliedern. Die Lieferobjekte sind klar, darum gliederst du objektorientiert. Ganz oben steht das ganze Projekt." });
+  sz({ ph: 2, f: umzugBaum({ aeste: 6, neuAst: true, codes: false }),
+    say: "Ebene 1: ein Ast pro Lieferobjekt, dazu die Projektführung. Sechs Äste sind gut überschaubar." });
+  sz({ ph: 2, f: umzugBaum({ aeste: 6, aps: [1, 2], neuAp: [1, 2], codes: false }),
+    say: "Jetzt hängst du die Arbeitspakete ein. Unter Arbeitsplätze: Möbel beschaffen und Zügeln. Unter Informatik und Telefonie: Netzwerk und Drucker sowie Telefonie." });
+  sz({ ph: 2, f: umzugBaum({ aeste: 6, aps: [1, 2, 3, 4, 5], neuAp: [3, 4, 5], codes: false }),
+    say: "Akten und Archiv, Information und alte Räume bekommen je zwei Arbeitspakete. Elf Arbeitspakete aus der geprüften Rohliste, keines fehlt." });
+  sz({ ph: 2, f: umzugBaum({ aeste: 6, aps: ALLE, an: ["0"], codes: false }),
+    say: "Die Projektführung zerlegst du hier nicht weiter. Sie ist selbst ein Arbeitspaket auf Ebene 1. Das ist erlaubt: Ein Arbeitspaket kann auf jeder Ebene liegen." });
+  sz({ ph: 3, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true }),
+    say: "Jetzt kodieren. Jede Ebene bekommt eine Zahl, getrennt durch Punkte. Die Äste heissen 1 bis 6, die Pakete darunter 2.1, 2.2 und so weiter." });
+  sz({ ph: 3, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true, an: ["3.0", "1.1"] }) + zeile("4.1 Akten verpacken läuft <b>vor</b> 2.2 Zügeln, trotz höherer Nummer."),
+    say: "Der Code zeigt Ebene und Elternelement, aber keine Reihenfolge. Akten verpacken passiert vor dem Zügeln, obwohl 4.1 die höhere Nummer hat. Die Reihenfolge kommt erst im Netzplan." });
+  const CHECK = ["Nichts fehlt: jedes Lieferobjekt ein Ast, Projektführung und Übergabe drin", "Nichts doppelt: Kisten gestrichen", "Nichts ausserhalb: Server und Steuererklärungen gestrichen", "Kinder = Elternelement: jeder Ast besteht genau aus seinen Paketen"];
+  const check = (n, neu) => '<ul class="t09-check">' + CHECK.slice(0, n).map((c, i) => "<li>" + (i >= neu ? NW("✓ " + c) : "✓ " + c) + "</li>").join("") + "</ul>";
+  sz({ ph: 4, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true }) + check(1, 0),
+    say: "Jetzt die 100-%-Regel. Erstens: Fehlt etwas? Jedes Lieferobjekt hat einen Ast, die Projektführung und die Übergabe sind drin." });
+  sz({ ph: 4, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true }) + check(4, 1),
+    say: "Zweitens nichts doppelt, drittens nichts ausserhalb: Kisten, Server und Steuererklärungen sind draussen. Viertens besteht jeder Ast genau aus seinen Paketen." });
+  let tab = '<div class="t09-fz"><div class="tablebox"><table class="tabelle t09-film-tab"><thead><tr><th>Code</th><th>Arbeitspaket</th><th class="zahl">h</th><th class="zahl">Fremd CHF</th></tr></thead><tbody>';
+  UMZ.forEach((a, i) => {
+    if (!a.k.length) tab += "<tr><td>" + (i + 1) + "</td><td>" + a.t + '</td><td class="zahl">' + a.h + '</td><td class="zahl">–</td></tr>';
+    a.k.forEach((x, j) => { tab += "<tr><td>" + (i + 1) + "." + (j + 1) + "</td><td>" + x.t + '</td><td class="zahl">' + x.h + '</td><td class="zahl">' + (x.f ? fmt(x.f) : "–") + "</td></tr>"; });
+  });
+  tab += "</tbody></table></div></div>";
+  sz({ ph: 4, hl: ["satz"], f: tab,
+    say: "Jetzt schätzt du den Aufwand je Arbeitspaket in Stunden und schreibst die Offerten dazu. Die Stunden sind eigene Schätzungen. In der Prüfung begründest du sie kurz." });
+  sz({ ph: 4, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true, stunden: true }) + zeile("48 + 40 + 40 + 80 + 16 + 12 = " + NW("236 h")),
+    say: "Die Stunden rollst du von unten nach oben auf. Jeder Ast ist die Summe seiner Pakete: 48, 40, 40, 80, 16 und 12 Stunden. Zusammen 236 Stunden." });
+  sz({ ph: 4, hl: ["satz"], f: umzugBaum({ aeste: 6, aps: ALLE, codes: true, stunden: true }) + zeile("Intern: 236 h × CHF 120 = " + NW(chf(INTERN))),
+    say: "Interne Kosten: 236 Stunden mal 120 Franken ergibt 28'320 Franken." });
+  sz({ ph: 4, hl: ["moebel", "firma", "tel", "alt"], f: umzugBaum({ aeste: 6, aps: ALLE, codes: true, stunden: true }) + zeile("Intern: " + chf(INTERN)) +
+      zeile("Fremd: 48'000 + 9'600 + 2'400 + 3'000 = " + NW(chf(SUM_F))),
+    say: "Dazu kommen die Fremdleistungen aus den Offerten: Möbel 48'000, Umzugsfirma 9'600, Telefonie 2'400 und Reinigung 3'000 Franken. Zusammen 63'000 Franken." });
+  sz({ ph: 4, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true, stunden: true }) + zeile("Budget: 28'320 + 63'000 = " + NW(chf(BUDGET))),
+    say: "Budget: 28'320 plus 63'000 ergibt 91'320 Franken. Eine Risikoreserve kommt noch dazu, wie in Station 06." });
+  sz({ ph: 4, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true, stunden: true, an: ["3.0", "1.1", "2.0"] }) + zeile("Ausblick Netzplan: 4.1 Akten verpacken → 2.2 Zügeln → 3.1 Netzwerk einrichten"),
+    say: "Ausblick: Aus den Arbeitspaketen leitest du jetzt die Vorgänge und ihre Reihenfolge ab. Zuerst Akten verpacken, dann zügeln, dann Netzwerk und Drucker einrichten. Das ist der Netzplan aus Station 10." });
+  sz({ ph: 4, f: umzugBaum({ aeste: 6, aps: ALLE, codes: true, stunden: true }) +
+      zeile("<b>Ergebnis:</b> objektorientierter PSP · 6 Äste · 11 Arbeitspakete · 236 h · Budget " + chf(BUDGET) + " ohne Reserve"),
+    say: "Fertig: ein objektorientierter PSP mit sechs Ästen und elf Arbeitspaketen, 236 Stunden und ein Budget von 91'320 Franken ohne Reserve. Jetzt kannst du dich im Selbsttest prüfen.", end: true });
+
+  L.film("#t09-film", {
+    phasen: ["1 · Sammeln", "2 · Prüfen", "3 · Gliedern", "4 · Kodieren", "5 · 100 % und Budget"],
+    texte: [
+      'Die Gemeindeverwaltung Wolkenried zieht mit <span data-ph="ap">22 Arbeitsplätzen (Kanzlei, Bauamt, Steueramt)</span> vom alten Gemeindehaus ins renovierte Gemeindezentrum «Lindenhof». <span data-ph="moebel">14 bestehende Pulte werden weiterverwendet, 8 neue Arbeitsplätze bestellt (Offerte CHF 48\'000).</span> <span data-ph="firma">Eine Umzugsfirma zügelt an einem Samstag (Offerte CHF 9\'600).</span> <span data-ph="it">Netzwerk und Drucker richtet die Informatik der Gemeinde ein;</span> <span data-ph="server">die Server stehen im Rechenzentrum des Kantons und bleiben dort.</span> <span data-ph="tel">Der Telefonanbieter schaltet die Nummern um (CHF 2\'400).</span> <span data-ph="akten">Die Akten in den Büros werden aussortiert und verpackt, das Archiv im Keller zieht mit.</span> <span data-ph="info">Der Schalter bleibt zwei Tage geschlossen; Personal und Bevölkerung müssen das rechtzeitig wissen.</span> <span data-ph="alt">Die alten Räume werden geräumt, gereinigt (Reinigungsfirma CHF 3\'000) und dem Vermieter übergeben.</span> <span data-ph="tages">Das Tagesgeschäft läuft weiter, zum Beispiel erfasst das Steueramt die Steuererklärungen.</span> <span data-ph="satz">Interner Stundensatz CHF 120.</span>',
+      "<b>Aufgabe:</b> a) Definiere die Arbeitspakete. b) Gliedere sie in einen PSP mit Kodierung und begründe die Gliederungsart. c) Prüfe die 100-%-Regel. d) Schätze den Aufwand und rechne das Budget."
+    ],
+    woerterbuch: [],
+    beschriftung: { texte: "Die Aufgabe", text: "Teil", formel: "Lösung" },
+    szenen: S
+  });
+
+  /* ---------- Selbsttest ---------- */
+  L.selbsttest("#t09-selbsttest", {
+    fragen: [
+      { q: '<span class="icb">ICB 3.03</span> Nach DIN 69901 ist ein Arbeitspaket …',
+        o: ["ein Teil des Projekts, der im PSP nicht weiter aufgegliedert wird und auf jeder Ebene liegen kann",
+            "immer ein Element der untersten, dritten Ebene",
+            "ein Teil des Projekts, der im PSP weiter aufgegliedert wird",
+            "eine Phase mit einem Meilenstein am Ende"], a: 0,
+        e: "So steht es in LB 4 F.13. Die dritte Option beschreibt die Teilaufgabe. ICB 3.03, Indikator 3.03.03 «Arbeitspakete definieren» (Swiss ICB 4.5.3.3: kleinstes Element mit klaren Grenzen)." },
+      { q: '<span class="icb">ICB 3.03</span> Im PSP des Onlineschalters steht 3.1 Schulung, darunter 3.1.1 Schulungsunterlagen erstellen und 3.1.2 Schulung durchführen. Was ist 3.1?',
+        o: ["Ein Arbeitspaket", "Eine Teilaufgabe", "Ein Meilenstein", "Ein Vorgang im Netzplan"], a: 1,
+        e: "3.1 wird weiter aufgegliedert, also ist es eine Teilaufgabe (DIN 69901). Die Arbeitspakete sind 3.1.1 und 3.1.2. ICB 3.03, Indikator 3.03.02 «Leistungsumfang strukturieren»." },
+      { q: '<span class="icb">ICB 3.03</span> Ein PSP gliedert die neue Geschäftsverwaltung auf Ebene 1 in Initialisierung, Konzept, Realisierung und Einführung. Welche Gliederungsart ist das?',
+        o: ["objektorientiert", "funktionsorientiert", "phasenorientiert", "gemischt"], a: 2,
+        e: "Die oberste Ebene sind die Phasen eines Phasenmodells (HERMES). ICB 3.03: Gliederungsprinzipien des PSP kennen und unterscheiden (Swiss ICB 4.5.3.2)." },
+      { q: '<span class="icb">ICB 3.03</span> Welcher Vorteil gehört zum objektorientierten PSP?',
+        o: ["Die Phasenfreigaben sind direkt ablesbar.",
+            "Die Reihenfolge der Arbeiten ist sichtbar.",
+            "Jede Abteilung hat genau einen eigenen Ast.",
+            "Der Fachbereich sieht sofort, welche Teile geliefert werden, und die Vollständigkeit lässt sich am Produkt prüfen."], a: 3,
+        e: "Objektorientiert gliedert nach Lieferobjekten (SG F.10). Phasenfreigaben passen zum phasenorientierten PSP, Äste je Abteilung zum funktionsorientierten, eine Reihenfolge zeigt kein PSP. ICB 3.03: Unterschiede der Gliederungsprinzipien erklären." },
+      { q: '<span class="icb">ICB 3.03</span> Ein Teilprojekt umfasst laut Auftrag 300 h. Seine drei Arbeitspakete haben 120 h, 90 h und 60 h. Was folgt aus der 100-%-Regel?',
+        o: ["Alles in Ordnung, die 30 h sind eine willkommene Reserve.",
+            "Es fehlt Arbeit im Umfang von 30 h: Ein Paket fehlt oder ist zu knapp geschätzt. Das klärst du.",
+            "Die Arbeitspakete sind zu gross und müssen weiter zerlegt werden.",
+            "Das Teilprojekt wird ohne Prüfung auf 270 h gekürzt."], a: 1,
+        e: "120 + 90 + 60 = 270 h, also nur 90 % des Elternelements. Die Kinder müssen genau das Elternelement ergeben. Reserven versteckst du nicht in einem Ast, die plant man offen (Station 06). ICB 3.03, Vollständigkeit des PSP (Swiss ICB 4.5.3.2); die 100-%-Regel selbst ist eine Ergänzung aus der Praxis." },
+      { q: '<span class="icb">ICB 3.03</span> Was sagt der Code 2.3.1?',
+        o: ["Ebene 3; Elternelement ist 2.3, und dieses liegt unter Ast 2.",
+            "Das Paket kommt als 231. an die Reihe.",
+            "Ebene 1, drittes Paket von Teilprojekt 2.",
+            "Dauer 2 Wochen, 3 Personen, 1 Meilenstein."], a: 0,
+        e: "Jede Zahl ist eine Ebene, die letzte die Stelle unter dem Elternelement. Eine Reihenfolge oder Dauer steckt nicht im Code. ICB 3.03: PSP und PSP-Lexikon verwenden." },
+      { q: '<span class="icb">ICB 3.04</span> Was zeigt ein PSP nicht?',
+        o: ["Die Arbeitspakete des Projekts", "Die Reihenfolge und die Abhängigkeiten der Arbeiten", "Die Gliederung in Teilprojekte", "Den Umfang der Arbeit"], a: 1,
+        e: "Abhängigkeiten legst du erst fest, wenn du aus den Arbeitspaketen Vorgänge ableitest und den Netzplan erstellst. ICB 3.04, Indikator «Aktivitäten definieren» (Swiss ICB 4.5.4.1: Aktivitäten aus den Arbeitspaketen ableiten)." },
+      { q: '<span class="icb">ICB 3.03</span> Wofür ist der PSP laut LB 3 F.17 die Basis?',
+        o: ["Nur für den Projektauftrag",
+            "Ausschliesslich für die Kostenplanung",
+            "Für Aufwand-, Kapazitäts-, Kosten-, Ablauf- und Terminplanung, Kalkulation und Risikoabschätzung",
+            "Für die Wahl des Lieferanten"], a: 2,
+        e: "LB 3 F.17 nennt diese sieben Planungen. Die Swiss ICB ergänzt die Projektorganisation (4.5.5). ICB 3.03 mit Verbindungen zu ICB 3.04 (Termine), 3.07 (Kosten) und 3.11 (Risiken)." },
+      { q: '<span class="icb">ICB 3.03</span> Ein Team arbeitet agil mit Scrum. Was gilt laut Swiss ICB für den PSP?',
+        o: ["Er ist überflüssig, weil es ein Product Backlog gibt.",
+            "Er hilft auch hier für den Überblick, ist aber meist weniger detailliert; ein Arbeitspaket entspricht oft einer User Story.",
+            "Er muss detaillierter sein als bei einem Wasserfallprojekt.",
+            "Er ersetzt die Sprint-Planung."], a: 1,
+        e: "Swiss ICB 4.5.3.2: Strukturieren lohnt sich auch iterativ, mit weniger Detailtiefe. 4.5.3.3: Im agilen Software-Projekt heisst das Arbeitspaket meist User Story. ICB 3.03." },
+      { q: '<span class="icb">ICB 3.04</span> Der PSP des Onlineschalters ist freigegeben. Was ist der nächste Schritt zum Terminplan?',
+        o: ["Die Codes so ändern, dass sie die Reihenfolge zeigen",
+            "Den PSP phasenorientiert neu zeichnen",
+            "Direkt ein Gantt-Diagramm mit Wunschterminen zeichnen",
+            "Aus den Arbeitspaketen Vorgänge ableiten, Aufwand und Dauer schätzen und die Abhängigkeiten festlegen"], a: 3,
+        e: "Erst Vorgänge mit Aufwand, Dauer und Vorgängern, dann Netzplan und Gantt (Station 10). Codes bleiben nach der Freigabe stabil. ICB 3.04, Indikatoren 4.5.4.1 und 4.5.4.2 (Aktivitäten definieren, Aufwand und Dauer festlegen)." }
+    ]
+  });
+})();
+</script>
+</body>
+</html>
