@@ -131,6 +131,7 @@
     peer: { kategorie: "dienst", form: "komponente", stereotyp: "peer", pikto: "peer", name: "Peer", beispiele: "BitTorrent-Knoten" },
     plugin: { kategorie: "dienst", form: "komponente", stereotyp: "plug-in", pikto: "plugin", name: "Plug-in", beispiele: "Erweiterung im Microkernel" },
     monitor: { kategorie: "infrastruktur", form: "komponente", stereotyp: "monitoring", pikto: "monitor", name: "Monitoring", beispiele: "Prometheus, Grafana" },
+    netz: { kategorie: "infrastruktur", form: "bus", netz: true, stereotyp: "network", pikto: "netz", name: "Netz", beispiele: "LoRaWAN, LTE-M, Glasfaser, VPN" },
   };
 
   const ARTEN = {
@@ -167,8 +168,13 @@
     akteur: "client", web: "client", mobile: "client", gateway: "webapi", auth: "shared", cdn: "infra", lastverteiler: "infra", ingress: "infra",
     dienst: "business", monolith: "business", funktion: "business", orchestrator: "business", filter: "business", peer: "business", plugin: "business",
     queue: "async", topic: "async", broker: "async", bus: "async", mesh: "infra", monitor: "infra", knoten: "infra", cluster: "infra", pod: "infra",
-    container: "infra", artefakt: "infra", datenbank: "daten", nosql: "daten", cache: "daten", suche: "daten", speicher: "daten", extern: "extern",
+    container: "infra", artefakt: "infra", datenbank: "daten", nosql: "daten", cache: "daten", suche: "daten", speicher: "daten", extern: "extern", netz: "infra",
   };
+  // Netz (IoT: Field/Access/Service Network): eigener Typ oder Bus mit Stereotyp «network»
+  const istNetzEl = (e) => !!e && (e.typ === "netz" || (e.typ === "bus" && /network|netz/i.test(e.stereotyp || "")));
+  // Puffer: Message Broker, Queue, Topic, Bus (aber kein Netz), auch Komponenten, die als MOM/Broker benannt sind
+  const istPufferEl = (e) => !!e && !istNetzEl(e) && (kategorieVon(e.typ) === "messaging" ||
+    (/\b(MOM|Message Broker|Broker|Queue|Topic)\b/i.test(ohneTags(e.name) + " " + (e.stereotyp || "")) && !/adapter|receiver|sender|empf/i.test(ohneTags(e.name))));
 
   const kategorieVon = (typ) => (TYPEN[typ] ? TYPEN[typ].kategorie : null);
   const istGruppenTyp = (typ) => !!(TYPEN[typ] && TYPEN[typ].gruppe);
@@ -212,6 +218,7 @@
     peer: '<circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="18" r="2.6"/><path d="M8.6 6h6.8M8.6 18h6.8M6 8.6v6.8M18 8.6v6.8M7.9 7.9l8.2 8.2M16.1 7.9l-8.2 8.2"/>',
     plugin: '<path d="M4 9h3.5a2 2 0 1 1 4 0H15v3.5a2 2 0 1 1 0 4V20H4z"/>',
     monitor: '<rect x="2.5" y="4" width="19" height="14" rx="2"/><path d="M5.5 14l3.5-4 3 2.5 4.5-5.5 2 2"/><path d="M9 21h6"/>',
+    netz: '<path d="M2.5 9c3-3 6-3 9.5 0s6.5 3 9.5 0M2.5 15c3-3 6-3 9.5 0s6.5 3 9.5 0"/><circle cx="12" cy="12" r="1.4" class="pk-f"/>',
   };
   function piktoSvg(name, klasse) {
     const inhalt = PIKTO[name] || PIKTO.service;
@@ -338,8 +345,11 @@
         const id = no.id && ID_MUSTER.test(no.id) ? no.id : "notiz-" + (i + 1);
         if (nachId[id]) { f("Notiz-ID «" + id + "» kollidiert mit einem Element (übersprungen)."); return; }
         const an = no.an && nachId[String(no.an).split("#")[0]] ? String(no.an).split("#")[0] : null;
-        if (no.an && !an) f("Notiz «" + id + "»: Ziel «" + no.an + "» unbekannt.");
-        n.notizen.push({ id: id, text: no.text, an: an, in: no.in && nachId[no.in] ? no.in : an ? nachId[an].in || null : null,
+        // Ziel darf auch eine Verbindung sein: Notiz an der Linienmitte
+        const kante = !an && no.an ? n.verbindungen.find((v) => v.id === no.an) : null;
+        if (no.an && !an && !kante) f("Notiz «" + id + "»: Ziel «" + no.an + "» ist weder Element noch Verbindung.");
+        const heim = an ? nachId[an].in || null : kante ? nachId[kante.von].in || null : null;
+        n.notizen.push({ id: id, text: no.text, an: an, anKante: kante ? kante.id : null, in: no.in && nachId[no.in] ? no.in : heim,
           spalte: zahl(no.spalte), zeile: zahl(no.zeile) });
       });
       (m.einschraenkungen || []).forEach((x) => {
@@ -1437,6 +1447,13 @@
         const r = routen[k.id];
         if (r) gNotiz.appendChild(svgEl("path", { d: pfadD(r.punkte, 6) }, "ar-uml-anker"));
       });
+      (m.notizen || []).filter((no) => no.anKante && routen[no.anKante] && lay.notizLage[no.id]).forEach((no) => {
+        const rt = routen[no.anKante], r = lay.notizLage[no.id];
+        const p = punktAuf(rt.punkte, polyLaenge(rt.punkte) * 0.5);
+        const q = [klemmen(p[0], r.x, r.x + r.w), klemmen(p[1], r.y, r.y + r.h)];
+        gNotiz.appendChild(svgEl("path", { d: "M" + f1(q[0]) + " " + f1(q[1]) + "L" + f1(p[0]) + " " + f1(p[1]) }, "ar-uml-anker"));
+        gNotiz.appendChild(svgEl("circle", { cx: f1(p[0]), cy: f1(p[1]), r: 2.5 }, "ar-uml-anker-punkt"));
+      });
       Object.keys(lay.notizLage || {}).forEach((id) => {
         const r = lay.notizLage[id];
         const n = svgEl("g", { transform: "translate(" + f1(r.x) + " " + f1(r.y) + ")" }, "ar-notiz");
@@ -1659,8 +1676,15 @@
       const lx = b.lab.x - r.x, ly = b.lab.y - r.y;
       s += '<text class="ar-uml-sch" x="' + f1(lx) + '" y="' + f1(ly + 13.5) + '">' + esc(b.name) + "</text>";
     });
-    s += '<rect class="ar-form ar-uml-komp' + (e.rolle === "extern" ? " ar-gestrichelt" : "") + '" x="0" y="0" width="' + w + '" height="' + h + '" rx="4"/>';
-    s += UML_KOMPONENTE(w - 25, 8);
+    if (istNetzEl(e)) {
+      // Netz als Band (kein Softwarebaustein, darum ohne Komponentensymbol)
+      s += '<rect class="ar-form ar-uml-netz" x="0" y="0" width="' + w + '" height="' + h + '" rx="' + f1(Math.min(h / 2, 28)) + '"/>';
+      s += '<path class="ar-form-linie ar-fein" d="M16 ' + f1(h - 10) + "q" + f1((w - 32) / 8) + " -6 " + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + ' 0"/>';
+      s += piktoG("netz", 12, 8, 16);
+    } else {
+      s += '<rect class="ar-form ar-uml-komp' + (e.rolle === "extern" ? " ar-gestrichelt" : "") + '" x="0" y="0" width="' + w + '" height="' + h + '" rx="4"/>';
+      s += UML_KOMPONENTE(w - 25, 8);
+    }
     const zeilen = [];
     if (e.stereotyp) zeilen.push({ t: kuerzen(umlStereo(e), 12, 400, w - 60), px: 12, k: "ar-stereo", h: 16 });
     const n = umbrechen(ohneTags(e.name), 15, 650, w - 28, 2);
@@ -1720,9 +1744,15 @@
       const cw = breite();
       letzteBreite = cw;
       // Breite füllen; ist das Diagramm dafür zu breit, lesbar starten und in sich verschieben
-      let kk = Number.isFinite(opt.massstab) && opt.massstab > 0 ? klemmen(opt.massstab, 0.15, 3) : Math.max(Math.min(cw / inhalt.w, opt.kMax || 1.08), kMin());
       // Höhe folgt dem Inhalt (die Seite scrollt daran vorbei); sehr hohe Diagramme verschieben sich in sich
       const maxH = opt.hoehe || opt.maxHoehe || Math.max(1100, (window.innerHeight || 800) * 1.2);
+      const fit = Math.min(cw / inhalt.w, opt.kMax || 1.08);
+      let kk;
+      if (Number.isFinite(opt.massstab) && opt.massstab > 0) kk = klemmen(opt.massstab, 0.15, 3);
+      else if (opt.einpassen) kk = Math.min(fit, maxH / inhalt.h);
+      // breite Bildschirme (ab 1000 px Fenster): Inhalt bis etwa 1700 px (Massstab ≥ 0.7) einpassen statt abschneiden
+      else if (fit < kMin() && opt.kMin === undefined && (window.innerWidth || cw) >= 1000 && fit >= 0.7) kk = fit;
+      else kk = Math.max(fit, kMin());
       hoehe = klemmen(inhalt.h * kk, opt.minHoehe || 220, maxH);
       rahmen.style.height = Math.round(hoehe) + "px";
       vb.w = cw / kk; vb.h = hoehe / kk;
@@ -1948,7 +1978,7 @@
     el.append(kopf, buehne);
 
     const szene = szeneZeichnen(svg, m, lay, routen, labels, { uid: uid });
-    fl = zoomFlaeche(rahmen, svg, { inhalt: lay.box, hoehe: opt.hoehe, kMin: opt.kMin, massstab: opt.massstab });
+    fl = zoomFlaeche(rahmen, svg, { inhalt: lay.box, hoehe: opt.hoehe, kMin: opt.kMin, massstab: opt.massstab, einpassen: opt.einpassen === true });
 
     // Nachbarschaft
     const nachbarn = {};
@@ -2057,7 +2087,7 @@
     let ausfallModus = false;
     const ausfall = new Set();
     const manuellLangsam = new Set();
-    let analyse = { aus: new Set(), betroffen: {}, stau: {}, verloren: [] };
+    let analyse = { aus: new Set(), betroffen: {}, stau: {}, verloren: [], puffert: {}, ohneNachricht: {} };
     function analysieren() {
       const aus = new Set();
       const add = (id) => {
@@ -2067,34 +2097,51 @@
         m.verbindungen.forEach((v) => { if (v.art === "deploy" && v.nach === id) add(v.von); });
       };
       ausfall.forEach(add);
-      const betroffen = {}, stau = {}, verloren = [];
+      const betroffen = {}, stau = {}, verloren = [], puffert = {}, ohneNachricht = {};
       const liste = Array.from(aus);
+      const schN = (el, sch) => { if (!sch || !nachId[el]) return ""; const x = (nachId[el].schnittstellen || []).find((y) => y.id === sch); return x ? x.name : sch; };
+      const asyncKante = (v) => v.art === "async" || (v.art === "assoziation" && (
+        ASYNC_PROTOKOLL.test((v.label || "") + " " + (v.protokoll || "") + " " + schN(v.nach, v.nachSch) + " " + schN(v.von, v.vonSch)) ||
+        istPufferEl(nachId[v.von]) || istPufferEl(nachId[v.nach])));
+      const istSender = (id) => /sender|publisher|produzent|producer/i.test(ohneTags(nachId[id].name) + " " + (nachId[id].stereotyp || ""));
+      const istEmpfaenger = (id) => /receiv|empfäng|consumer|subscrib|konsum|abonn/i.test(ohneTags(nachId[id].name) + " " + (nachId[id].stereotyp || ""));
+      const istGateway = (id) => nachId[id].typ === "gateway" || /gateway/i.test(ohneTags(nachId[id].name));
       while (liste.length) {
         const x = liste.shift();
         m.verbindungen.forEach((v) => {
-          if (v.nach !== x || aus.has(v.von) || v.art === "deploy") return;
-          const a = v.von;
-          const asyncAsso = v.art === "assoziation" && (ASYNC_PROTOKOLL.test((v.label || "") + " " + (v.protokoll || "")) || kategorieVon(nachId[x].typ) === "messaging" || kategorieVon(nachId[a].typ) === "messaging");
-          if (asyncAsso) {
-            if (kategorieVon(nachId[a].typ) === "messaging") (stau[a] = stau[a] || []).push(x);
-            else if (kategorieVon(nachId[x].typ) === "messaging") { if (!betroffen[a]) { betroffen[a] = { wegen: x, art: "publish" }; liste.push(a); } }
-          } else if (SYNCHRON_ARTEN[v.art]) {
-            if (!betroffen[a]) { betroffen[a] = { wegen: x, art: v.art }; liste.push(a); }
-          } else if (v.art === "async") {
-            if (kategorieVon(nachId[a].typ) === "messaging") (stau[a] = stau[a] || []).push(x);
-            else if (kategorieVon(nachId[x].typ) === "messaging") { if (!betroffen[a]) { betroffen[a] = { wegen: x, art: "publish" }; liste.push(a); } }
-            else verloren.push(v);
+          if (v.art === "deploy" || (v.von !== x && v.nach !== x)) return;
+          const a = v.von === x ? v.nach : v.von; // die andere Seite
+          if (aus.has(a)) return;
+          if (istNetzEl(nachId[x])) {
+            // Netz fällt aus: Verbindung unterbrochen; ein Gateway puffert (Store and Forward)
+            if (istNetzEl(nachId[a])) return;
+            if (istGateway(a)) (puffert[a] = puffert[a] || []).push(x);
+            else if (!betroffen[a]) betroffen[a] = { wegen: x, art: "netz" };
+            return;
           }
+          if (asyncKante(v)) {
+            if (istPufferEl(nachId[a]) && !istPufferEl(nachId[x])) {
+              // Empfänger hinter dem Broker fällt aus: Nachrichten stauen sich, Sender laufen weiter (richtungsunabhängig)
+              if (!istSender(x)) (stau[a] = stau[a] || []).push(x);
+            } else if (istPufferEl(nachId[x])) {
+              // Broker fällt aus: Sender können nicht mehr senden, Empfänger bekommen nichts
+              const empf = istEmpfaenger(a) || (v.art === "async" && v.von === x);
+              if (empf) (ohneNachricht[a] = ohneNachricht[a] || []).push(x);
+              else if (!betroffen[a]) { betroffen[a] = { wegen: x, art: "publish" }; liste.push(a); }
+            } else if (v.nach === x) verloren.push(v);
+            return;
+          }
+          if (SYNCHRON_ARTEN[v.art] && v.nach === x && !betroffen[a]) { betroffen[a] = { wegen: x, art: v.art }; liste.push(a); }
         });
       }
-      analyse = { aus: aus, betroffen: betroffen, stau: stau, verloren: verloren };
+      analyse = { aus: aus, betroffen: betroffen, stau: stau, verloren: verloren, puffert: puffert, ohneNachricht: ohneNachricht };
     }
     function zustaendeZeichnen() {
       Object.keys(szene.elG).forEach((id) => {
         const g = szene.elG[id];
         const r = lay.el[id] || lay.gr[id];
         markenLeeren(g, "ar-zm");
-        const aus = analyse.aus.has(id), b = !!analyse.betroffen[id] || manuellLangsam.has(id), st = !!analyse.stau[id];
+        const aus = analyse.aus.has(id), b = !!analyse.betroffen[id] || manuellLangsam.has(id), st = !!analyse.stau[id] || !!analyse.puffert[id];
         g.classList.toggle("ar-ausfall", aus);
         g.classList.toggle("ar-langsam", b && !aus);
         g.classList.toggle("ar-stau", st && !aus);
@@ -2112,7 +2159,7 @@
         const g = szene.kantenG[v.id];
         if (!g) return;
         g.classList.toggle("ar-tot", analyse.aus.has(v.nach) || analyse.aus.has(v.von));
-        g.classList.toggle("ar-stauend", !!analyse.stau[v.von] && analyse.aus.has(v.nach));
+        g.classList.toggle("ar-stauend", (!!analyse.stau[v.von] && analyse.aus.has(v.nach)) || (!!analyse.stau[v.nach] && analyse.aus.has(v.von)));
       });
     }
     function ausfallBericht() {
@@ -2124,12 +2171,19 @@
       if (b.length) {
         h += '<p class="ar-af-zeile ar-af-langsam"><span class="ar-af-ikon" aria-hidden="true">!</span><span>Beeinträchtigt: ' + b.map((id) => {
           const x = analyse.betroffen[id];
-          return "<b>" + esc(name(id)) + "</b> " + (x.art === "publish" ? "(kann nicht an «" + esc(name(x.wegen)) + "» senden)" : "(wartet " + (x.art === "daten" ? "auf Daten von" : "synchron auf") + " «" + esc(name(x.wegen)) + "»)");
+          return "<b>" + esc(name(id)) + "</b> " + (x.art === "publish" ? "(kann nicht an «" + esc(name(x.wegen)) + "» senden)" : x.art === "netz" ? "(Verbindung über «" + esc(name(x.wegen)) + "» unterbrochen)" : "(wartet " + (x.art === "daten" ? "auf Daten von" : "synchron auf") + " «" + esc(name(x.wegen)) + "»)");
         }).join(", ") + ". Synchrone Aufrufe reichen den Fehler weiter nach oben.</span></p>";
       }
       Object.keys(analyse.stau).forEach((id) => {
         h += '<p class="ar-af-zeile ar-af-stau"><span class="ar-af-ikon" aria-hidden="true">▤</span><span>Nachrichten stauen sich im Broker <b>' + esc(name(id)) + "</b>. Wer an ihn sendet, arbeitet weiter: Der Puffer entkoppelt. Sobald " +
           analyse.stau[id].map((x) => "«" + esc(name(x)) + "»").join(", ") + " wieder läuft, werden die Nachrichten nachgeliefert.</span></p>";
+      });
+      Object.keys(analyse.puffert).forEach((id) => {
+        h += '<p class="ar-af-zeile ar-af-stau"><span class="ar-af-ikon" aria-hidden="true">▤</span><span><b>' + esc(name(id)) + "</b> puffert die Daten (Store and Forward), bis " +
+          analyse.puffert[id].map((x) => "«" + esc(name(x)) + "»").join(", ") + " wieder läuft. Danach liefert es nach.</span></p>";
+      });
+      Object.keys(analyse.ohneNachricht).forEach((id) => {
+        h += '<p class="ar-af-zeile"><span class="ar-af-ikon" aria-hidden="true">○</span><span><b>' + esc(name(id)) + "</b> läuft, bekommt aber keine Nachrichten mehr von «" + esc(name(analyse.ohneNachricht[id][0])) + "».</span></p>";
       });
       analyse.verloren.forEach((v) => {
         h += '<p class="ar-af-zeile ar-af-verloren"><span class="ar-af-ikon" aria-hidden="true">✗</span><span>Asynchron, aber ohne Puffer: Nachrichten von «' + esc(name(v.von)) + "» an «" + esc(name(v.nach)) + "» gehen verloren.</span></p>";
@@ -2537,7 +2591,8 @@
           zusatz = '<span class="ar-zusatz ar-zusatz-fehler">⚡ «' + esc(name(s.von)) + "» ist ausgefallen: Dieser Schritt findet nicht statt.</span>";
           punkte = null;
         } else if (an.aus.has(s.nach)) {
-          if (art === "async" && kategorieVon(nachId[s.von].typ) === "messaging") {
+          const pufferSchritt = (art === "async" || art === "assoziation") && istPufferEl(nachId[s.von]);
+          if (pufferSchritt) {
             stopp = 0.22; klasse = "ar-punkt-wartet";
             zusatz = '<span class="ar-zusatz ar-zusatz-stau">▤ «' + esc(name(s.nach)) + "» ist ausgefallen. Die Nachricht bleibt im Broker liegen und wird nachgeliefert, sobald der Empfänger wieder läuft.</span>";
           } else {
@@ -3888,6 +3943,14 @@
     });
     const nachId = {};
     palette.forEach((p) => (nachId[p.id] = p));
+    // vorgegeben: fest platzierte Elemente (Paket über «in» oder «paket») und Verbindungen
+    const vorgEl = (l.vorgegeben && Array.isArray(l.vorgegeben.elemente) ? l.vorgegeben.elemente : []).filter((e) => {
+      if (!e || !e.id || !ID_MUSTER.test(e.id) || !TYPEN[e.typ]) { f("Level «" + l.id + "»: vorgegebenes Element braucht gültige «id» und bekannten «typ»."); return false; }
+      if (nachId[e.id] || pIds.has(e.id)) { f("Level «" + l.id + "»: vorgegebenes Element «" + e.id + "» doppelt."); return false; }
+      return true;
+    }).map((e) => Object.assign({}, e, { in: e.in !== undefined ? e.in : e.paket !== undefined ? e.paket : null }));
+    vorgEl.forEach((e) => (nachId[e.id] = e));
+    const vorgV = l.vorgegeben && Array.isArray(l.vorgegeben.verbindungen) ? l.vorgegeben.verbindungen.filter(Boolean) : [];
     const loe = l.loesung || {};
     if (!Array.isArray(loe.elemente) || !Array.isArray(loe.verbindungen)) return f("Level «" + l.id + "»: «loesung» braucht «elemente» und «verbindungen».");
     const elemente = loe.elemente.map((x) => (typeof x === "string" ? { id: x } : x));
@@ -3898,7 +3961,9 @@
     const kennt = (ref) => { const t = String(ref || "").split("#"); return (nachId[t[0]] || pIds.has(t[0])) && (!t[1] || (nachId[t[0]] && (nachId[t[0]].schnittstellen || []).some((s) => s.id === t[1]))); };
     for (const v of loe.verbindungen) {
       if (!kennt(v.von) || !kennt(v.nach)) return f("Level «" + l.id + "»: Lösungs-Verbindung " + v.von + " → " + v.nach + " nennt Unbekanntes.");
+      for (const a of v.alternativen || []) if (!kennt(a.von) || !kennt(a.nach)) return f("Level «" + l.id + "»: Alternative " + a.von + " → " + a.nach + " nennt Unbekanntes.");
     }
+    vorgV.forEach((v) => { if (!kennt(v.von) || !kennt(v.nach)) f("Level «" + l.id + "»: vorgegebene Verbindung " + v.von + " → " + v.nach + " nennt Unbekanntes."); });
     (loe.beschreibungen || []).forEach((b) => { if (!nachId[b.id] && !pIds.has(b.id)) f("Level «" + l.id + "»: Beschreibung für unbekanntes «" + b.id + "»."); });
     return {
       id: l.id, uml: true, titel: l.titel || "Level", schwierigkeit: klemmen(Math.round(l.schwierigkeit || 2), 1, 3),
@@ -3907,6 +3972,8 @@
       loesung: { elemente: elemente, verbindungen: loe.verbindungen.map((v) => Object.assign({ art: "assoziation" }, v)), beschreibungen: loe.beschreibungen || [] },
       gewichte: Object.assign({}, UML_GEWICHTE, l.gewichte || {}), zielzeit: Number(l.zielzeit) > 0 ? Number(l.zielzeit) : 600,
       erklaerung: l.erklaerung || "", ablenker: palette.filter((p) => p.ablenker || p.falle).map((p) => p.id),
+      vorgegeben: { elemente: vorgEl, verbindungen: vorgV.filter((v) => kennt(v.von) && kennt(v.nach)) },
+      freieFlaeche: l.freieFlaeche === true || elemente.some((x) => x.paket === null),
     };
   }
 
@@ -3917,13 +3984,16 @@
       const t = String(v.nach).split("#");
       if (t[1]) (sch[t[0]] = sch[t[0]] || new Set()).add(t[1]);
     });
-    const elemente = L.loesung.elemente.map((x) => {
-      const p = L.palette.find((q) => q.id === x.id);
-      return { id: p.id, typ: p.typ, rolle: p.rolle, name: p.name, in: x.paket, stereotyp: x.stereotyp || "", technologie: p.technologie || "",
+    const vorg = (L.vorgegeben && L.vorgegeben.elemente) || [];
+    const elemente = vorg.filter((e) => !L.loesung.elemente.some((x) => x.id === e.id)).map((e) => ({ id: e.id, typ: e.typ, rolle: e.rolle, name: e.name, in: e.in || undefined, stereotyp: e.stereotyp || "", schnittstellen: e.schnittstellen || [] }))
+      .concat(L.loesung.elemente.map((x) => {
+      const p = L.palette.find((q) => q.id === x.id) || vorg.find((q) => q.id === x.id);
+      return { id: p.id, typ: p.typ, rolle: p.rolle, name: p.name, in: x.paket || (x.paket === null ? undefined : p.in || undefined), stereotyp: x.stereotyp || p.stereotyp || "", technologie: p.technologie || "",
         info: p.info ? { was: p.info } : undefined,
-        schnittstellen: (p.schnittstellen || []).filter((s) => (sch[p.id] && sch[p.id].has(s.id)) || s.immer) };
-    });
-    const verbindungen = L.loesung.verbindungen.map((v, k) => ({ id: "l" + (k + 1), von: v.von, nach: v.nach, art: v.art, protokoll: v.protokoll || "", format: v.format || "", label: v.label, info: v.warum || "" }));
+        schnittstellen: (p.schnittstellen || []).filter((s) => (sch[p.id] && sch[p.id].has(s.id)) || s.immer || vorg.some((q) => q.id === p.id)) };
+    }));
+    const verbindungen = ((L.vorgegeben && L.vorgegeben.verbindungen) || []).filter((v) => !L.loesung.verbindungen.some((w) => w.von === v.von && w.nach === v.nach))
+      .map((v, k) => ({ id: "f" + (k + 1), von: v.von, nach: v.nach, art: v.art || "assoziation", protokoll: v.protokoll || "", format: v.format || "", label: v.label })).concat(L.loesung.verbindungen.map((v, k) => ({ id: "l" + (k + 1), von: v.von, nach: v.nach, art: v.art, protokoll: v.protokoll || "", format: v.format || "", label: v.label, info: v.warum || "" })));
     const m = { notation: "uml-komponenten", titel: "", pakete: L.pakete, elemente: elemente, verbindungen: verbindungen };
     if (mitAblauf) m.ablaeufe = [{ id: "loesung", name: "Musterlösung Schritt für Schritt", schritte: L.loesung.verbindungen.filter((v) => v.warum).map((v) => ({ von: v.von, nach: v.nach, text: v.warum })) }];
     return m;
@@ -3933,16 +4003,29 @@
     opt = opt || {};
     const uid = neueId("uf");
     const live = ansage();
-    let m = { elemente: [], verbindungen: [] };
+    const FREI = ""; // Ablage ausserhalb der Pakete (Lösungs-Paket null)
+    const frei = L.freieFlaeche === true;
+    const vorg = L.vorgegeben || { elemente: [], verbindungen: [] };
+    const fest = new Set(vorg.elemente.map((e) => e.id));
+    const anfang = () => ({
+      elemente: vorg.elemente.map((e) => ({ id: e.id, typ: e.typ, rolle: e.rolle || ROLLE_VON_TYP[e.typ] || "extern", name: e.name, in: e.in || FREI, stereotyp: e.stereotyp || "", schnittstellen: kopie(e.schnittstellen || []), fest: true })),
+      verbindungen: vorg.verbindungen.map((v, i) => {
+        const t = String(v.nach).split("#");
+        return { id: "f" + (i + 1), von: String(v.von).split("#")[0], nach: t[0], nachSch: t[1] || null, art: v.art || "assoziation", protokoll: v.protokoll || "", format: v.format || "", fest: true };
+      }),
+    });
+    let m = anfang();
     let auswahl = null, kanteWahl = null, modus = null, markierung = null, geister = [];
     const verlauf = [];
     const beschreibungWahl = {};
     const palNach = {};
     L.palette.forEach((p) => (palNach[p.id] = p));
+    vorg.elemente.forEach((e) => (palNach[e.id] = e));
     const paketNach = {};
     L.pakete.forEach((p) => (paketNach[p.id] = p));
     const istPaket = (id) => !!paketNach[id];
-    const name = (id) => ohneTags((palNach[id] || paketNach[id] || { name: id }).name);
+    const istFest = (id) => fest.has(id);
+    const name = (id) => (id === FREI ? "freie Fläche" : ohneTags((palNach[id] || paketNach[id] || { name: id }).name));
 
     el.innerHTML = "";
     el.classList.add("ar-uml-feld");
@@ -4016,12 +4099,13 @@
     function modellVoll() {
       return {
         notation: "uml-komponenten", pakete: L.pakete,
-        elemente: m.elemente.map((e) => Object.assign({}, e)),
+        elemente: m.elemente.map((e) => { const k = Object.assign({}, e); if (!k.in) delete k.in; delete k.fest; return k; }),
         verbindungen: m.verbindungen.map((v) => ({ id: v.id, von: v.von, nach: v.nachSch ? v.nach + "#" + v.nachSch : v.nach, art: v.art, protokoll: v.protokoll, format: v.format, label: [v.protokoll, v.format].filter(Boolean).join(" · ") })),
       };
     }
     function setzen(item, paket) {
-      if (!istPaket(paket)) return;
+      if (!istPaket(paket) && !(frei && paket === FREI)) { if (paket === FREI) melden("Hier gibt es keine freie Fläche: Leg die Komponente in ein Paket."); return; }
+      if (istFest(item.id)) { melden("«" + ohneTags(item.name) + "» ist vorgegeben und bleibt, wo es ist."); return; }
       sichern();
       const da = m.elemente.find((e) => e.id === item.id);
       if (da) { da.in = paket; melden("«" + ohneTags(item.name) + "» liegt jetzt in «" + name(paket) + "»."); }
@@ -4038,6 +4122,8 @@
     }
     function entfernen() {
       if (kanteWahl) {
+        const kv = m.verbindungen.find((v) => v.id === kanteWahl);
+        if (kv && kv.fest) { melden("Diese Verbindung ist vorgegeben und bleibt."); return; }
         sichern();
         m.verbindungen = m.verbindungen.filter((v) => v.id !== kanteWahl);
         kanteWahl = null;
@@ -4047,6 +4133,7 @@
         return;
       }
       if (!auswahl || istPaket(auswahl)) { melden("Wähle zuerst eine Komponente oder Verbindung."); return; }
+      if (istFest(auswahl)) { melden("«" + name(auswahl) + "» ist vorgegeben und bleibt."); return; }
       sichern();
       const weg = auswahl;
       m.elemente = m.elemente.filter((e) => e.id !== weg);
@@ -4122,7 +4209,8 @@
         if (r.geist) szene.effekte.appendChild(svgEl("path", { d: pfadD(r.geist.punkte, 7) }, "ar-geist ar-tipp-geist"));
       });
       Object.keys(palKnoepfe).forEach((k) => palKnoepfe[k].classList.toggle("ar-liegt", m.elemente.some((e) => e.id === k)));
-      bWeg.disabled = !(kanteWahl || (auswahl && !istPaket(auswahl)));
+      bWeg.disabled = !((kanteWahl && !(m.verbindungen.find((v) => v.id === kanteWahl) || {}).fest) || (auswahl && !istPaket(auswahl) && !istFest(auswahl)));
+      Object.keys(szene.elG).forEach((id) => { if (istFest(id)) szene.elG[id].classList.add("ar-fest-uml"); });
       bUndo.disabled = !verlauf.length;
       listeZeichnen();
     }
@@ -4145,10 +4233,11 @@
         else if (ev.key === "Escape") { ev.preventDefault(); abbrechen(); }
         else if (modus && /^Arrow/.test(ev.key)) {
           ev.preventDefault();
-          const ids = Object.keys(szene.gruppenG);
+          const ids = Object.keys(szene.gruppenG).concat(frei ? [FREI] : []);
           const i = ids.indexOf(pid) + (ev.key === "ArrowDown" || ev.key === "ArrowRight" ? 1 : -1);
-          fokus(ids[(i + ids.length) % ids.length]);
-          melden("Paket «" + name(ids[(i + ids.length) % ids.length]) + "».");
+          const ziel = ids[(i + ids.length) % ids.length];
+          if (ziel === FREI) { rahmen.focus(); melden("Freie Fläche ausserhalb der Pakete. Enter legt hier ab."); }
+          else { fokus(ziel); melden("Paket «" + name(ziel) + "»."); }
         }
       });
     }
@@ -4173,7 +4262,7 @@
       });
       // in ein anderes Paket ziehen
       let start = null, geist = null;
-      g.addEventListener("pointerdown", (ev) => { if (ev.button > 0 || modus) return; start = { x: ev.clientX, y: ev.clientY, id: ev.pointerId }; });
+      g.addEventListener("pointerdown", (ev) => { if (ev.button > 0 || modus || istFest(id)) return; start = { x: ev.clientX, y: ev.clientY, id: ev.pointerId }; });
       g.addEventListener("pointermove", (ev) => {
         if (!start || start.id !== ev.pointerId) return;
         if (!geist && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 7) {
@@ -4193,7 +4282,7 @@
         g.dataset.gezogen = "1";
         const pid = paketUnter(ev);
         zielHervorheben(null);
-        if (pid) setzen(palNach[id], pid); else zeichnen();
+        if (pid !== null) setzen(palNach[id], pid); else zeichnen();
       };
       g.addEventListener("pointerup", ende);
       g.addEventListener("pointercancel", ende);
@@ -4204,6 +4293,7 @@
       if (g && svg.contains(g)) return g.getAttribute("data-id");
       const e = unter && unter.closest ? unter.closest(".ar-el") : null;
       if (e && svg.contains(e)) { const x = m.elemente.find((y) => y.id === e.getAttribute("data-id")); return x ? x.in : null; }
+      if (frei && unter && rahmen.contains(unter)) return FREI;
       return null;
     }
     function zielHervorheben(pid) { if (!szene) return; Object.keys(szene.gruppenG).forEach((k) => szene.gruppenG[k].classList.toggle("ar-ablage-ziel", k === pid)); }
@@ -4234,7 +4324,7 @@
         setTimeout(() => delete b.dataset.gezogen, 60);
         const pid = abbruch ? null : paketUnter(ev);
         zielHervorheben(null);
-        if (pid) setzen(p, pid); else melden("Nicht abgelegt: Zieh die Komponente auf ein Paket.");
+        if (pid !== null) setzen(p, pid); else melden("Nicht abgelegt: Zieh die Komponente auf ein Paket.");
       };
       b.addEventListener("pointerup", (ev) => ende(ev, false));
       b.addEventListener("pointercancel", (ev) => ende(ev, true));
@@ -4249,7 +4339,17 @@
       melden("Abgebrochen.");
       if (war && war.art === "platzieren") palKnoepfe[war.item.id].focus();
     }
-    svg.addEventListener("click", () => { if (modus) return; if (auswahl || kanteWahl) { auswahl = null; kanteWahl = null; zeichnen(); panelZeigen(); } });
+    svg.addEventListener("click", () => {
+      if (modus && modus.art === "platzieren" && frei) { setzen(modus.item, FREI); return; }
+      if (modus) return;
+      if (auswahl || kanteWahl) { auswahl = null; kanteWahl = null; zeichnen(); panelZeigen(); }
+    });
+    rahmen.addEventListener("keydown", (ev) => {
+      if (ev.target !== rahmen || !modus || modus.art !== "platzieren") return;
+      if (ev.key === "Enter" && frei) { ev.preventDefault(); setzen(modus.item, FREI); }
+      else if (ev.key === "Escape") { ev.preventDefault(); abbrechen(); }
+      else if (/^Arrow/.test(ev.key)) { ev.preventDefault(); ev.stopImmediatePropagation(); fokus(Object.keys(szene.gruppenG)[0]); }
+    }, true);
 
     // Eigenschaften
     function feld(lab, inhalt) {
@@ -4270,6 +4370,12 @@
       if (kanteWahl) {
         const v = m.verbindungen.find((x) => x.id === kanteWahl);
         if (!v) return;
+        if (v.fest) {
+          panel.appendChild(erzeugen("p", "ar-uf-titel", "Verbindung · vorgegeben"));
+          panel.appendChild(erzeugen("h4", null, esc(name(v.von)) + " → " + esc(name(v.nach))));
+          panel.appendChild(erzeugen("p", "hint", esc([v.protokoll, v.format].filter(Boolean).join(" · ") || "ohne Beschriftung") + ". Vorgegebene Verbindungen bleiben."));
+          return;
+        }
         panel.appendChild(erzeugen("p", "ar-uf-titel", "Verbindung"));
         panel.appendChild(erzeugen("h4", null, esc(name(v.von)) + ' <span aria-hidden="true">→</span><span class="sr-only">nach</span> ' + esc(name(v.nach))));
         const art = auswahlFeld([["assoziation", "Assoziation (Linie)"], ["abhaengigkeit", "Abhängigkeit (gestrichelt, Pfeil)"]], v.art);
@@ -4319,12 +4425,19 @@
         return;
       }
       const p = palNach[e.id];
-      panel.appendChild(erzeugen("p", "ar-uf-titel", "Komponente · " + esc(ROLLE[e.rolle].name)));
+      panel.appendChild(erzeugen("p", "ar-uf-titel", "Komponente · " + esc(ROLLE[e.rolle].name) + (istFest(e.id) ? " · vorgegeben" : "")));
       panel.appendChild(erzeugen("h4", null, esc(ohneTags(e.name))));
+      if (istFest(e.id)) {
+        panel.appendChild(erzeugen("p", "hint", "Vorgegeben: liegt fest in «" + esc(name(e.in)) + "»" + (e.stereotyp ? ", «" + esc(e.stereotyp) + "»" : "") + (e.schnittstellen.length ? ", bietet " + e.schnittstellen.map((x) => esc(x.name)).join(", ") : "") + ". Du kannst es verbinden."));
+        const vb0 = knopf("Verbinden …", "ar-klein");
+        vb0.addEventListener("click", () => verbindenStart(e.id));
+        panel.appendChild(vb0);
+        return;
+      }
       const st = auswahlFeld([["", "(kein Stereotyp)"]].concat((p.stereotypen || []).map((x) => [x, "«" + x + "»"])), e.stereotyp);
       st.addEventListener("change", () => { sichern(); e.stereotyp = st.value; geaendert(); melden("Stereotyp: " + (st.value ? "«" + st.value + "»" : "keiner") + "."); });
       panel.appendChild(feld("Stereotyp", st));
-      const pk = auswahlFeld(L.pakete.map((x) => [x.id, ohneTags(x.name)]), e.in);
+      const pk = auswahlFeld((frei ? [[FREI, "(freie Fläche, ausserhalb der Pakete)"]] : []).concat(L.pakete.map((x) => [x.id, ohneTags(x.name)])), e.in || FREI);
       pk.addEventListener("change", () => setzen(p, pk.value));
       panel.appendChild(feld("Paket", pk));
       // Schnittstellen
@@ -4419,29 +4532,36 @@
 
     // Bewertung nach Kriterien (Raster mit Teilpunkten, Fallen mit Abzug)
     function bewerten() {
-      const sol = L.loesung;
+      const sol0 = L.loesung;
       const g = L.gewichte;
       const krit = {};
       const marken = { el: {}, pk: {}, v: {} };
       const hinweise = { komponenten: [], pakete: [], stereotypen: [], verbindungen: [], beschriftungen: [], beschreibungen: [] };
-      const da = new Set(m.elemente.map((e) => e.id));
-      const sollIds = new Set(sol.elemente.map((x) => x.id));
+      // Vorgegebenes ist geschenkt: zählt weder als Punkt noch als Fehler
+      const teil = (ref) => { const t = String(ref).split("#"); return { el: t[0], sch: t[1] || null }; };
+      const festeV = m.verbindungen.filter((u) => u.fest);
+      const geschenkt = (v) => festeV.some((u) => [v].concat(v.alternativen || []).some((w) => { const a = teil(w.von), b2 = teil(w.nach); return u.von === a.el && u.nach === b2.el && (!b2.sch || u.nachSch === b2.sch); }));
+      const sol = { elemente: sol0.elemente.filter((x) => !istFest(x.id)), verbindungen: sol0.verbindungen.filter((v) => !geschenkt(v)), beschreibungen: sol0.beschreibungen || [] };
+      const eigene = m.elemente.filter((e) => !istFest(e.id));
+      const da = new Set(eigene.map((e) => e.id));
+      const sollIds = new Set(sol0.elemente.map((x) => x.id));
       // Komponenten
       const fehlt = sol.elemente.filter((x) => !da.has(x.id));
-      const extra = m.elemente.filter((e) => !sollIds.has(e.id));
+      const extra = eigene.filter((e) => !sollIds.has(e.id));
       const fallen = extra.filter((e) => palNach[e.id] && palNach[e.id].falle);
       const okK = sol.elemente.length - fehlt.length;
-      krit.komponenten = { ok: okK, n: sol.elemente.length, s: sol.elemente.length ? Math.max(0, (okK - 0.5 * (extra.length - fallen.length)) / sol.elemente.length) : 1 };
+      krit.komponenten = { ok: okK, n: sol.elemente.length, s: sol.elemente.length ? Math.max(0, (okK - 0.5 * (extra.length - fallen.length)) / sol.elemente.length) : 1, leer: !sol.elemente.length && !extra.length };
       if (fehlt.length) hinweise.komponenten.push((fehlt.length > 1 ? "Es fehlen " + fehlt.length + " Komponenten" : "Es fehlt 1 Komponente") + ". Was verlangt die Referenzarchitektur noch?");
       extra.filter((e) => !(palNach[e.id] && palNach[e.id].falle)).forEach((e) => { hinweise.komponenten.push("«" + esc(name(e.id)) + "» gehört nicht in dieses Modell."); marken.el[e.id] = { ok: false, t: "überflüssig" }; });
-      // Pakete und Stereotypen
+      // Pakete und Stereotypen (Lösungs-Paket null = ausserhalb der Pakete)
       let okP = 0, okS = 0;
       const nS = sol.elemente.filter((x) => x.stereotyp !== undefined && x.stereotyp !== "").length;
       sol.elemente.forEach((x) => {
-        const e = m.elemente.find((y) => y.id === x.id);
+        const e = eigene.find((y) => y.id === x.id);
         if (!e) return;
-        const pOk = !x.paket || e.in === x.paket;
-        if (pOk) okP++; else hinweise.pakete.push("«" + esc(name(x.id)) + "» gehört in «" + esc(name(x.paket)) + "», nicht in «" + esc(name(e.in)) + "».");
+        const pOk = x.paket === null ? !e.in : !x.paket || e.in === x.paket;
+        if (pOk) okP++;
+        else hinweise.pakete.push("«" + esc(name(x.id)) + "» gehört " + (x.paket === null ? "ausserhalb der Pakete" : "in «" + esc(name(x.paket)) + "»") + ", nicht " + (e.in ? "in «" + esc(name(e.in)) + "»" : "auf die freie Fläche") + ".");
         let sOk = true;
         if (x.stereotyp !== undefined && x.stereotyp !== "") {
           sOk = ohneGuillemets(e.stereotyp) === ohneGuillemets(x.stereotyp);
@@ -4449,38 +4569,44 @@
         }
         marken.el[x.id] = { ok: pOk && sOk, t: !pOk ? "falsches Paket" : !sOk ? "Stereotyp" : "richtig" };
       });
-      fehlt.forEach(() => { /* fehlende zählen als falsch platziert */ });
-      krit.pakete = { ok: okP, n: sol.elemente.length, s: sol.elemente.length ? okP / sol.elemente.length : 1 };
+      krit.pakete = { ok: okP, n: sol.elemente.length, s: sol.elemente.length ? okP / sol.elemente.length : 1, leer: !sol.elemente.length };
       krit.stereotypen = { ok: okS, n: nS, s: nS ? okS / nS : 1, leer: !nS };
-      // Verbindungen und Beschriftungen
-      const teil = (ref) => { const t = String(ref).split("#"); return { el: t[0], sch: t[1] || null }; };
-      const soll = sol.verbindungen.map((v) => ({ v: v, a: teil(v.von), b: teil(v.nach), gefunden: null }));
+      // Verbindungen: Varianten (alternativen) und gleiche Paare über Schnittstelle/Protokoll zuordnen
+      const soll = sol.verbindungen.map((v) => ({ v: v, varianten: [v].concat(v.alternativen || []).map((w) => ({ w: Object.assign({ art: v.art || "assoziation" }, w), a: teil(w.von), b: teil(w.nach) })), gefunden: null, variante: null }));
+      const passt = (u, x) => (x.a.el === u.von && x.b.el === u.nach) || (x.w.art !== "abhaengigkeit" && x.a.el === u.nach && x.b.el === u.von);
+      const guete = (u, x) => (x.b.sch ? (u.nachSch === x.b.sch ? 4 : 0) : 2) + (x.w.protokoll ? (ohneGuillemets(u.protokoll) === ohneGuillemets(x.w.protokoll) ? 2 : 0) : 1) + (x.w.art === u.art ? 1 : 0) + (x.a.el === u.von ? 0.5 : 0);
+      const nutzer = m.verbindungen.filter((u) => !u.fest);
+      const paare = [];
+      nutzer.forEach((u) => soll.forEach((t) => t.varianten.forEach((x) => { if (passt(u, x)) paare.push({ u: u, t: t, x: x, q: guete(u, x) }); })));
+      paare.sort((p1, p2) => p2.q - p1.q);
+      const vergeben = new Set();
+      paare.forEach((pp) => { if (vergeben.has(pp.u.id) || pp.t.gefunden) return; pp.t.gefunden = pp.u; pp.t.variante = pp.x; vergeben.add(pp.u.id); });
       let punkte = 0, extraV = 0;
-      m.verbindungen.forEach((u) => {
-        let t = soll.find((s) => !s.gefunden && ((s.a.el === u.von && s.b.el === u.nach) || (s.v.art !== "abhaengigkeit" && s.a.el === u.nach && s.b.el === u.von)));
+      nutzer.forEach((u) => {
+        const t = soll.find((s2) => s2.gefunden === u);
         if (!t) {
           extraV++;
           marken.v[u.id] = { ok: false, t: "gibt es so nicht" };
           hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "» gehört nicht ins Modell.");
           return;
         }
-        t.gefunden = u;
+        const x = t.variante;
         let p = 1;
-        if ((t.v.art || "assoziation") !== u.art) { p -= 0.5; hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: falsche Art (" + ARTEN[t.v.art || "assoziation"].name + " erwartet)."); }
-        if (t.b.sch && u.nachSch !== t.b.sch) { p -= 0.25; hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: Verbinde mit dem Ball «" + esc(schNameSoll(t.b.el, t.b.sch)) + "» (Socket am Aufrufer)."); }
+        if (x.w.art !== u.art) { p -= 0.5; hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: falsche Art (" + ARTEN[x.w.art].name + " erwartet)."); }
+        if (x.b.sch && u.nachSch !== x.b.sch) { p -= 0.25; hinweise.verbindungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: Verbinde mit dem Ball «" + esc(schNameSoll(x.b.el, x.b.sch)) + "» (Socket am Aufrufer)."); }
         punkte += p;
         marken.v[u.id] = { ok: p === 1, t: p === 1 ? "richtig" : "teilweise" };
       });
       const nV = soll.length;
-      const fehltV = soll.filter((s) => !s.gefunden);
+      const fehltV = soll.filter((s2) => !s2.gefunden);
       if (fehltV.length) hinweise.verbindungen.push((fehltV.length > 1 ? "Es fehlen " + fehltV.length + " Verbindungen" : "Es fehlt 1 Verbindung") + ".");
-      krit.verbindungen = { ok: Math.round(punkte * 10) / 10, n: nV, s: nV ? Math.max(0, (punkte - 0.5 * extraV) / nV) : 1 };
-      const mitProt = soll.filter((s) => s.v.protokoll);
+      krit.verbindungen = { ok: Math.round(punkte * 10) / 10, n: nV, s: nV ? Math.max(0, (punkte - 0.5 * extraV) / nV) : extraV ? 0 : 1, leer: !nV && !extraV };
+      const mitProt = soll.filter((s2) => (s2.variante ? s2.variante.w : s2.v).protokoll);
       let okB = 0;
-      mitProt.forEach((s) => {
-        if (!s.gefunden) return;
-        const u = s.gefunden;
-        const erl = [s.v.protokoll].concat(s.v.protokollAlternativen || []).map(ohneGuillemets);
+      mitProt.forEach((s2) => {
+        if (!s2.gefunden) return;
+        const u = s2.gefunden, w = s2.variante.w;
+        const erl = [w.protokoll].concat(w.protokollAlternativen || []).map(ohneGuillemets);
         if (erl.indexOf(ohneGuillemets(u.protokoll)) >= 0) okB++;
         else {
           hinweise.beschriftungen.push("«" + esc(name(u.von)) + " – " + esc(name(u.nach)) + "»: " + (u.protokoll ? "Protokoll «" + esc(u.protokoll) + "» passt nicht." : "Protokoll fehlt. Jede Verbindung wird beschriftet."));
@@ -4495,7 +4621,7 @@
       // Pakete: ✓, wenn alle erwarteten Komponenten darin richtig liegen
       L.pakete.forEach((p) => {
         const erwartet = sol.elemente.filter((x) => x.paket === p.id);
-        const drin = m.elemente.filter((e) => e.in === p.id);
+        const drin = eigene.filter((e) => e.in === p.id);
         if (!erwartet.length && !drin.length) return;
         marken.pk[p.id] = { ok: erwartet.every((x) => drin.some((e) => e.id === x.id)) && drin.every((e) => erwartet.some((x) => x.id === e.id)) };
       });
@@ -4503,7 +4629,7 @@
       let summe = 0, gew = 0;
       const liste = KRITERIEN.filter(([k]) => !(krit[k].leer) && (g[k] || 0) > 0).map(([k, t]) => {
         summe += krit[k].s * g[k]; gew += g[k];
-        return { id: k, name: t, ok: krit[k].ok, n: krit[k].n, s: krit[k].s, gewicht: g[k], punkte: Math.round(krit[k].s * g[k] * 10) / 10, hinweise: hinweise[k] };
+        return { id: k, name: t, ok: krit[k].ok, n: krit[k].n, erreicht: krit[k].ok, max: krit[k].n, s: krit[k].s, gewicht: g[k], punkte: Math.round(krit[k].s * g[k] * 10) / 10, hinweise: hinweise[k] };
       });
       const abzug = fallen.map((e) => ({ id: e.id, text: palNach[e.id].falle }));
       fallen.forEach((e) => (marken.el[e.id] = { ok: false, t: "Falle" }));
@@ -4513,7 +4639,7 @@
       return {
         uml: true, kriterien: liste, fallen: abzug, marken: marken, anteil: anteil === 1 && fehler ? 0.999 : anteil,
         richtig: Math.round(anteil * gew * 10), gesamt: Math.round(gew * 10), fehler: fehler,
-        fehlendeKomponenten: fehlt.map((x) => x.id), falschesPaket: sol.elemente.filter((x) => { const e = m.elemente.find((y) => y.id === x.id); return e && x.paket && e.in !== x.paket; }),
+        fehlendeKomponenten: fehlt.map((x) => x.id), falschesPaket: sol.elemente.filter((x) => { const e = eigene.find((y) => y.id === x.id); return e && (x.paket === null ? !!e.in : x.paket && e.in !== x.paket); }),
         fehlendeVerbindungen: fehltV.map((s) => s.v),
       };
     }
@@ -4553,7 +4679,7 @@
       markieren: (e) => { markierung = e ? e.marken : null; zeichnen(); },
       geist: (v) => { const t = String(v.nach).split("#"); geister.push({ von: String(v.von).split("#")[0], nach: t[0], nachSch: t[1] || null }); zeichnen(); },
       palettePuls: (id) => { const b = palKnoepfe[id]; if (!b) return; b.classList.remove("ar-puls"); void b.offsetWidth; b.classList.add("ar-puls"); },
-      zuruecksetzen: () => { sichern(); m = { elemente: [], verbindungen: [] }; Object.keys(beschreibungWahl).forEach((k) => delete beschreibungWahl[k]); auswahl = null; kanteWahl = null; geaendert(); },
+      zuruecksetzen: () => { sichern(); m = anfang(); Object.keys(beschreibungWahl).forEach((k) => delete beschreibungWahl[k]); auswahl = null; kanteWahl = null; geaendert(); },
       name: name,
     };
   }
@@ -4649,7 +4775,8 @@
         (serie > 1 ? '<span class="ar-hud-wert ar-serie">' + IKON.serie + "Serie ×" + serie + "</span>" : "") +
         (speicherStatus ? '<span class="ar-speicher ' + (speicherStatus === "gespeichert" ? "ar-ok-text" : "ar-warn-text") + '">' + (speicherStatus === "gespeichert" ? "✓ gespeichert" : "nicht gespeichert") + "</span>" : "");
     }
-    const frei = (i) => i === 0 || (best[levels[i - 1].id] && best[levels[i - 1].id].sterne >= 1);
+    // Prüfungsmodus: alle Levels offen (die Seite steuert die Reihenfolge)
+    const frei = (i) => pruefung || i === 0 || (best[levels[i - 1].id] && best[levels[i - 1].id].sterne >= 1);
 
     // Levelkarte: Pfad mit Stationen, Schlössern und Sternen
     let karteBreite = 0;
@@ -4806,6 +4933,8 @@
       const bReset = knopf("Neu beginnen");
       const bAufgeben = knopf("Lösung zeigen", "ar-leise-knopf");
       aktionen.append(bPruefen, bReset);
+      // einzelabgabe: false → die Seite gibt über abgeben() ab
+      if (cfg.einzelabgabe === false) { bPruefen.hidden = true; bAufgeben.hidden = true; }
       if (!pruefung) aktionen.appendChild(bAufgeben);
       ansichtFeld.appendChild(aktionen);
       const fb = erzeugen("div", "ar-sf-fb");
@@ -4813,7 +4942,7 @@
       ansichtFeld.appendChild(fb);
       lv.hudStatus = hudStatus;
       lv.uhr = setInterval(() => {
-        if (!lv || lv.fertig) return;
+        if (!lv || lv.fertig || lv.pause) return;
         lv.zeit = (Date.now() - lv.start) / 1000;
         const z = $(".ar-zeit", hud);
         if (z) { z.textContent = zeitText(lv.zeit); z.parentNode.parentNode.classList.toggle("ar-ueberzeit", lv.zeit > L.zielzeit); }
@@ -4944,7 +5073,7 @@
         return "Die Referenzarchitektur ist eingeblendet. Übertrage ihre Pakete und Rollen auf den Auftrag.";
       }
       if (stufe <= 1 && e.fehlendeKomponenten.length) { lv.uf.palettePuls(e.fehlendeKomponenten[0]); return "Dir fehlt «" + esc(lv.uf.name(e.fehlendeKomponenten[0])) + "». Die Komponente blinkt in der Palette."; }
-      if (stufe <= 1 && e.falschesPaket.length) { const x = e.falschesPaket[0]; return "«" + esc(lv.uf.name(x.id)) + "» liegt im falschen Paket. Richtig: «" + esc(lv.uf.name(x.paket)) + "»."; }
+      if (stufe <= 1 && e.falschesPaket.length) { const x = e.falschesPaket[0]; return "«" + esc(lv.uf.name(x.id)) + "» liegt im falschen Paket. Richtig: " + (x.paket === null ? "ausserhalb der Pakete" : "«" + esc(lv.uf.name(x.paket)) + "»") + "."; }
       if (e.fehlendeVerbindungen.length) {
         const v = e.fehlendeVerbindungen[0];
         lv.uf.geist(v);
@@ -4995,7 +5124,7 @@
       const L = lv.L;
       lv.fertig = true;
       clearInterval(lv.uhr);
-      const zeit = (Date.now() - lv.start) / 1000;
+      const zeit = ((lv.pause || Date.now()) - lv.start) / 1000;
       const perfekt = e.anteil === 1 && e.fehler === 0;
       let sterne = aufgegeben ? 0 : perfekt && lv.fehlversuche === 0 ? 3 : e.anteil >= 0.8 ? 2 : e.anteil >= 0.5 ? 1 : 0;
       const grundRoh = Math.round(40 * e.anteil);
@@ -5009,7 +5138,10 @@
       const alt = best[L.id];
       const verbessert = !alt || sterne > alt.sterne || xp > alt.xp;
       if (verbessert) best[L.id] = { sterne: Math.max(sterne, alt ? alt.sterne : 0), xp: Math.max(xp, alt ? alt.xp : 0) };
-      const erg = { levelId: L.id, sterne: sterne, xp: xp, richtig: e.richtig, gesamt: e.gesamt, anteil: e.anteil, loesungGezeigt: !!aufgegeben, zeit: Math.round(zeit), tipps: lv.tipps, fehlversuche: lv.fehlversuche, gespeichert: false };
+      const kriterien = e.uml ? e.kriterien.map((k) => ({ id: k.id, name: k.name, erreicht: k.ok, max: k.n, punkte: k.punkte, gewicht: k.gewicht }))
+        : [{ id: "modell", name: "Modell", erreicht: e.richtig, max: e.gesamt, punkte: e.richtig, gewicht: 1 }];
+      const fallenListe = e.uml ? e.fallen.map((x) => ({ id: x.id, text: x.text })) : [];
+      const erg = { levelId: L.id, sterne: sterne, xp: xp, richtig: e.richtig, gesamt: e.gesamt, anteil: e.anteil, loesungGezeigt: !!aufgegeben, zeit: Math.round(zeit), tipps: lv.tipps, fehlversuche: lv.fehlversuche, gespeichert: false, kriterien: kriterien, fallen: fallenListe };
       ergebnisse[L.id] = erg;
       ergebnisZeigen(L, e, erg, { grundRoh: grundRoh, grund: grund, zeitBonus: zeitBonus, serieBonus: serieBonus, tippKosten: tippKosten, zeit: zeit, aufgegeben: aufgegeben, verbessert: verbessert });
       const melden = (antwort) => {
@@ -5024,9 +5156,9 @@
             st.insertAdjacentHTML("afterend", '<p class="ar-erg-neu">Neues Abzeichen: ' + antwort.abzeichen.map((a) => esc((a && (a.icon ? a.icon + " " : "") + (a.name || "")) || "")).join(", ") + "</p>");
           }
         }
-        if (!verbessert && speichern) { gesamtZeigen(); el.dispatchEvent(new CustomEvent("architektur:spiel", { bubbles: true, detail: { spielId: cfg.spielId, levelId: L.id, sterne: sterne, xp: xp, richtig: e.richtig, gesamt: e.gesamt, loesungGezeigt: !!aufgegeben, gespeichert: false } })); return; }
+        if (!verbessert && speichern) { gesamtZeigen(); el.dispatchEvent(new CustomEvent("architektur:spiel", { bubbles: true, detail: { spielId: cfg.spielId, levelId: L.id, sterne: sterne, xp: xp, richtig: e.richtig, gesamt: e.gesamt, loesungGezeigt: !!aufgegeben, gespeichert: false, kriterien: kopie(kriterien), fallen: kopie(fallenListe) } })); return; }
         gesamtZeigen();
-        el.dispatchEvent(new CustomEvent("architektur:spiel", { bubbles: true, detail: { spielId: cfg.spielId, levelId: L.id, sterne: sterne, xp: xp, richtig: e.richtig, gesamt: e.gesamt, loesungGezeigt: !!aufgegeben, gespeichert: gesp } }));
+        el.dispatchEvent(new CustomEvent("architektur:spiel", { bubbles: true, detail: { spielId: cfg.spielId, levelId: L.id, sterne: sterne, xp: xp, richtig: e.richtig, gesamt: e.gesamt, loesungGezeigt: !!aufgegeben, gespeichert: gesp, kriterien: kopie(kriterien), fallen: kopie(fallenListe) } }));
       };
       if (verbessert && speichern) sichernApi(L.id, sterne, xp).then(melden);
       else melden({ ok: false, punkte: 0, abzeichen: [] });
@@ -5153,8 +5285,11 @@
       starten: (id) => levelStarten(id),
       levelkarte: zurKarte,
       abgeben: () => { if (!lv || lv.fertig) return null; abschliessen(bewerten(), false); return ergebnisse[lv.L.id]; },
-      ergebnis: (id) => (ergebnisse[id] ? Object.assign({}, ergebnisse[id]) : null),
+      ergebnis: (id) => (ergebnisse[id] ? kopie(ergebnisse[id]) : null),
       ergebnisse: () => kopie(ergebnisse),
+      // Spieluhr anhalten und weiterlaufen lassen (z. B. Übungsprüfung mit eigener Gesamtzeit)
+      pausiere: () => { if (lv && !lv.fertig && !lv.pause) lv.pause = Date.now(); return !!(lv && lv.pause); },
+      fortsetzen: () => { if (lv && lv.pause) { lv.start += Date.now() - lv.pause; lv.pause = null; } return !!lv && !lv.pause; },
       bestwerte: () => kopie(best),
     };
   }
