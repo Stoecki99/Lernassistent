@@ -101,6 +101,12 @@ export function treatedBeforeWindow(ctx: Ctx, riskId: string, tick: number): boo
   return def ? tick < windowTicks(def).from : false
 }
 
+/**
+ * Abschluss-Abzeichen eines Ernstfalls nach Szenario-ID (3.13). Ohne Eintrag gilt
+ * `leitstand_ernstfall` («Onlineschalter eröffnet», Wolkenried).
+ */
+export const MAIN_COMPLETION_BADGE: ReadonlyMap<string, string> = new Map([["hochmatt", "leitstand_hochmatt"]])
+
 /** Ergebnis ohne Phasenprüfung (intern; computeScore prüft die Phase) */
 export function scoreState(state: SimState, scenario: Scenario): RunResult {
   const ctx = getCtx(scenario)
@@ -145,7 +151,8 @@ export function scoreState(state: SimState, scenario: Scenario): RunResult {
   if (intro) {
     achievements.push("leitstand_einfuehrung")
   } else {
-    achievements.push("leitstand_ernstfall")
+    // Abschluss-Abzeichen je Szenario; die übrigen gelten szenarioübergreifend (3.13)
+    achievements.push(MAIN_COMPLETION_BADGE.get(scenario.id) ?? "leitstand_ernstfall")
     if (total >= 820) achievements.push("leitstand_drei_sterne")
     if (!aborted && endDay <= scenario.calendar.targetDay && state.finance.ac <= state.finance.budget - state.finance.budgetSupplements) {
       achievements.push("leitstand_punktlandung")

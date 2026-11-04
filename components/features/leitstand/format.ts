@@ -92,7 +92,8 @@ export const PRIORITIES = ["A", "B", "C", "D", "E", "F"] as const
 /** Abzeichen aus 3.13 (Name, Symbol, Bedingung) */
 export const ACHIEVEMENTS: Record<string, { name: string; icon: string; text: string }> = {
   leitstand_einfuehrung: { name: "Erster Schichtwechsel", icon: "🎛️", text: "Einführungslauf abgeschlossen" },
-  leitstand_ernstfall: { name: "Onlineschalter eröffnet", icon: "🏛️", text: "Ernstfall abgeschlossen" },
+  leitstand_ernstfall: { name: "Onlineschalter eröffnet", icon: "🏛️", text: "Ernstfall Wolkenried abgeschlossen" },
+  leitstand_hochmatt: { name: "Stipendien-Assistent eingeführt", icon: "🎓", text: "Ernstfall Hochmatt abgeschlossen" },
   leitstand_drei_sterne: { name: "Leitstand-Profi", icon: "⭐", text: "Ernstfall mit mindestens 820 Punkten" },
   leitstand_punktlandung: { name: "Punktlandung", icon: "🎯", text: "Bis Tag 40 und im Budget" },
   leitstand_klartext: { name: "Klartext", icon: "📣", text: "Alle Berichte mit Ehrlichkeit ab 85" },

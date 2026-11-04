@@ -6,11 +6,14 @@
 // Serverhilfen aus lib/leitstand.ts (verifyAndAppend, computePointsAward, achievementStats, checkRunVersion).
 // Ausfuehren: npm test
 
+import fs from "node:fs"
+import path from "node:path"
 import { test, describe } from "node:test"
 import assert from "node:assert/strict"
 import { ENGINE_VERSION, SCENARIO_IDS, loadScenario, replay, type Action } from "@/lib/simulation"
 import { CATALOG_IDS, SCENARIO_CATALOG } from "@/lib/simulation/catalog"
 import {
+  LEITSTAND_BADGE_CONDITIONS,
   LeitstandError,
   achievementStats,
   checkRunVersion,
@@ -22,6 +25,7 @@ import {
   type StoredRun,
 } from "@/lib/leitstand"
 import { appendActionsSchema, createRunSchema, MAX_ACTIONS_PER_RUN, runIdSchema } from "@/lib/validations/simulation"
+import { ACHIEVEMENTS } from "@/components/features/leitstand/format"
 import { miniScenario, playMini } from "./helpers/simulation-mini"
 
 const SEED = 4242
@@ -157,6 +161,27 @@ describe("achievementStats", () => {
       [...stats].sort(),
       ["leitstand_einfuehrung", "leitstand_ernstfall", "leitstand_klartext", "leitstand_null_fehler"],
     )
+  })
+
+  test("Abschluss-Abzeichen Hochmatt: in Liste, Anzeige, Seed und Migration", () => {
+    const conditions: readonly string[] = LEITSTAND_BADGE_CONDITIONS
+    assert.ok(conditions.includes("leitstand_ernstfall"))
+    assert.ok(conditions.includes("leitstand_hochmatt"))
+    for (const c of conditions) assert.ok(ACHIEVEMENTS[c], `Anzeige fehlt für ${c}`)
+    const seed = fs.readFileSync(path.join(process.cwd(), "prisma", "seed.ts"), "utf8")
+    const migration = fs.readFileSync(
+      path.join(process.cwd(), "prisma", "migrations", "20261104090000_leitstand_hochmatt_abzeichen", "migration.sql"),
+      "utf8",
+    )
+    for (const src of [seed, migration]) {
+      assert.ok(src.includes("leitstand_hochmatt"))
+      assert.ok(src.includes("Stipendien-Assistent eingeführt"))
+    }
+    assert.match(migration, /ON CONFLICT DO NOTHING/)
+    const stats = achievementStats([
+      { status: "abgeschlossen", seedReused: false, scoreDetail: { achievements: ["leitstand_hochmatt", "leitstand_klartext"] } },
+    ])
+    assert.deepEqual([...stats].sort(), ["leitstand_hochmatt", "leitstand_klartext"])
   })
 
   test("leere Liste ergibt leere Menge", () => {

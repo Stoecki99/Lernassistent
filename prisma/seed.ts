@@ -81,6 +81,14 @@ const BADGES = [
     condition: "leitstand_ernstfall",
     points: 75,
   },
+  // Abschluss Hochmatt (gleich wie Migration 20261104090000_leitstand_hochmatt_abzeichen)
+  {
+    name: "Stipendien-Assistent eingeführt",
+    description: "Leitstand: Ernstfall Hochmatt abgeschlossen",
+    icon: "🎓",
+    condition: "leitstand_hochmatt",
+    points: 75,
+  },
   {
     name: "Leitstand-Profi",
     description: "Leitstand: Ernstfall mit mindestens 820 Punkten",

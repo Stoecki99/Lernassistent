@@ -704,6 +704,20 @@ describe("Punkte (3.13)", () => {
     assert.ok(Number.isInteger(r.score.total))
     assert.ok(r.achievements.includes("leitstand_ernstfall"))
   })
+  test("Abschluss-Abzeichen je Szenario: Wolkenried «Onlineschalter eröffnet», Hochmatt eigenes", () => {
+    const { state } = playMini(1)
+    const base = miniScenario()
+    const wolkenried = computeScore(state, { ...base, id: "wolkenried" })
+    const hochmatt = computeScore(state, { ...base, id: "hochmatt" })
+    assert.ok(wolkenried.achievements.includes("leitstand_ernstfall"))
+    assert.ok(!wolkenried.achievements.includes("leitstand_hochmatt"))
+    assert.ok(hochmatt.achievements.includes("leitstand_hochmatt"))
+    assert.ok(!hochmatt.achievements.includes("leitstand_ernstfall"))
+    // Die übrigen Abzeichen gelten szenarioübergreifend: gleicher Lauf, gleiche Liste
+    const rest = (a: string[]) => a.filter((x) => x !== "leitstand_ernstfall" && x !== "leitstand_hochmatt")
+    assert.deepEqual(rest(hochmatt.achievements), rest(wolkenried.achievements))
+    assert.deepEqual(hochmatt.score, wolkenried.score)
+  })
 })
 
 describe("Fehler (SimError)", () => {

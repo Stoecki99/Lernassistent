@@ -55,10 +55,11 @@ export const MAX_BODY_BYTES = 256 * 1024
 
 export const NO_CACHE = { "Cache-Control": "private, no-store" } as const
 
-/** Die acht Abzeichen aus 3.13 (Badge.condition) */
+/** Die neun Abzeichen aus 3.13 (Badge.condition) */
 export const LEITSTAND_BADGE_CONDITIONS = [
   "leitstand_einfuehrung",
   "leitstand_ernstfall",
+  "leitstand_hochmatt",
   "leitstand_drei_sterne",
   "leitstand_punktlandung",
   "leitstand_klartext",

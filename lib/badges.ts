@@ -174,6 +174,7 @@ function evaluateCondition(condition: string, stats: UserBadgeStats): boolean {
     // Leitstand (3.13): der Rechenkern liefert die erfuellten Bedingungen je Lauf
     case "leitstand_einfuehrung":
     case "leitstand_ernstfall":
+    case "leitstand_hochmatt":
     case "leitstand_drei_sterne":
     case "leitstand_punktlandung":
     case "leitstand_klartext":
