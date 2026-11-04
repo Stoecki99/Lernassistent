@@ -1679,7 +1679,7 @@
     if (istNetzEl(e)) {
       // Netz als Band (kein Softwarebaustein, darum ohne Komponentensymbol)
       s += '<rect class="ar-form ar-uml-netz" x="0" y="0" width="' + w + '" height="' + h + '" rx="' + f1(Math.min(h / 2, 28)) + '"/>';
-      s += '<path class="ar-form-linie ar-fein" d="M16 ' + f1(h - 10) + "q" + f1((w - 32) / 8) + " -6 " + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + ' 0"/>';
+      if (!e.technologie) s += '<path class="ar-form-linie ar-fein" d="M16 ' + f1(h - 10) + "q" + f1((w - 32) / 8) + " -6 " + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + " 0t" + f1((w - 32) / 4) + ' 0"/>';
       s += piktoG("netz", 12, 8, 16);
     } else {
       s += '<rect class="ar-form ar-uml-komp' + (e.rolle === "extern" ? " ar-gestrichelt" : "") + '" x="0" y="0" width="' + w + '" height="' + h + '" rx="4"/>';
