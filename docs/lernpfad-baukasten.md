@@ -76,7 +76,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 Regeln:
 
 - `data-fach` = Fachordner (`mstw`, `pmgt`), `data-thema` = Dateiname ohne `.html` (der Slug aus `fach.json`). `data-fach` bestimmt auch Kopfleiste, Fortschritt und Akzentfarbe ([Abschnitt 7](#7-design-tokens)).
-- `data-farbig` (ohne Wert) schaltet die Farben je Sektion und Aufgabentyp ein, `data-sektion` wählt den Sektionsakzent: `logik`, `wahrscheinlichkeit`, `statistik` oder `abschluss` ([Abschnitt 7](#7-design-tokens)). MSTW setzt beides (01–06 `logik`, 07–13 `wahrscheinlichkeit`, 14–17 `statistik`, 18 `abschluss`), PMGT und PS lassen es weg. Ein anderer Wert für `data-sektion` ist ein Prüffehler.
+- `data-farbig` (ohne Wert) schaltet die Farben je Sektion und Aufgabentyp ein, `data-sektion` wählt den Sektionsakzent: `logik`, `wahrscheinlichkeit`, `statistik` oder `abschluss` ([Abschnitt 7](#7-design-tokens)). MSTW setzt beides (01–06 `logik`, 07–13 `wahrscheinlichkeit`, 14–17 `statistik`, 18 `abschluss`), PMGT und PS lassen es weg. Ein anderer Wert für `data-sektion` ist ein Prüffehler, ebenso `data-sektion` ohne `data-farbig` (der Akzent wirkt nur mit beidem). Im Fach `mstw` fehlt keines von beiden: Fehlt `data-farbig` oder `data-sektion`, meldet die Prüfung einen Fehler.
 - `<title>`: Titel der Station aus `fach.json`, dann ` · ` und das Kürzel in Grossbuchstaben (` · MSTW`, ` · PMGT`).
 - Theme-Startskript: die `<script>`-Zeile im `<head>` unverändert aus `_vorlage.html` übernehmen. Sie setzt das gespeicherte Farbschema (`html[data-theme]`), bevor die Seite gezeichnet wird; ohne sie flackert der Dunkelmodus beim Laden. Gesperrter Speicher bricht nichts. Die Prüfung verlangt sie.
 - `<link rel="next">`: nächste Station laut `pfad` in `fach.json`, `title` = deren Titel. Daraus baut die Abschluss-Box den Knopf «Nächste Station». Bei der letzten Station weglassen. Die Prüfung vergleicht `href` und `title` mit `fach.json`.
@@ -374,7 +374,7 @@ Neues Fach: drei Regeln in `lernpfad.css` ergänzen (hell, `prefers-color-scheme
 
 **Wahrheitstabelle:** `table.wahrheitstabelle`, Ergebnisspalte `.erg`, Werte `.w` (wahr) und `.f` (falsch), Zeile hervorheben `tr.an`. Knöpfe in Zellen sind vorgestylt (zum Umschalten von w/f).
 
-**Zahlentabelle:** `table.tabelle` (Wertetabellen, Verteilungen, Testschema), Zahlen rechtsbündig mit `.zahl`, Zeile hervorheben `tr.an`, `caption` als Beschriftung.
+**Zahlentabelle:** `table.tabelle` (Wertetabellen, Verteilungen, Testschema), Zahlen rechtsbündig mit `.zahl`, Zeile hervorheben `tr.an`, `caption` als Beschriftung. Spaltenköpfe stehen in Grossbuchstaben, Formeln darin (KaTeX) behalten ihre Schreibweise: σ bleibt σ, z bleibt z.
 
 **Rechner mit Schieberegler:**
 
@@ -787,7 +787,7 @@ document.getElementById("t10-netzplan").appendChild(k);
 
 ### 9.15 `Lernpfad.formelAufgabe(el, cfg)`
 
-Logikformel eintippen. Symbolleiste (Knöpfe fügen an der Cursorposition ein; mit der Tastatur ein Tabstopp, Pfeiltasten, Home/End), ASCII-Ersatz beim Tippen (`!` oder `~` → ¬, `&` → ∧, `|` → ∨, `->` → →, `<->` → ↔; auch `&&`, `||`, `/\`, `\/`, `=>`, `<=>`, `!=`, `forall`, `exists`, `1`/`0` für ⊤/⊥). Unter dem Feld steht die erkannte Formel mit Farbcode und klärenden Klammern. Syntaxfehler melden Stelle und Grund («Die Klammer «(» an Stelle 1 wird nicht geschlossen.»), der Cursor springt dorthin.
+Logikformel eintippen. Symbolleiste (Knöpfe fügen an der Cursorposition ein; mit der Tastatur ein Tabstopp, Pfeiltasten, Home/End), ASCII-Ersatz beim Tippen (während einer laufenden Komposition auf Bildschirmtastaturen oder mit IME erst bei `compositionend`; `!` oder `~` → ¬, `&` → ∧, `|` → ∨, `->` → →, `<->` → ↔; auch `&&`, `||`, `/\`, `\/`, `=>`, `<=>`, `!=`, `forall`, `exists`, `1`/`0` für ⊤/⊥). Unter dem Feld steht die erkannte Formel mit Farbcode und klärenden Klammern; folgt nach einem Quantor noch etwas, zeigt eine Klammer seine Reichweite (`∀x P(x) → Q(x)` erscheint als `(∀x P(x)) → Q(x)`). Syntaxfehler melden Stelle und Grund («Die Klammer «(» an Stelle 1 wird nicht geschlossen.»), der Cursor springt dorthin, auch nach einem Klick auf «Prüfen». Das Feld nimmt höchstens 300 Zeichen.
 
 Bindung: ¬ und Quantoren am stärksten, dann ∧, ∨, → (rechtsassoziativ), ↔. Ein Quantor bindet nur die nächste Teilformel: `∀x (P(x) → Q(x))` braucht die Klammer. Prädikate `P(x, y)`, Funktionen `f(x)`, Konstanten, Gleichheit `x = y`, `x ≠ y`; `∀x, y` = `∀x∀y`; Punkt oder Doppelpunkt nach der Variablen erlaubt.
 
@@ -824,7 +824,7 @@ Lernpfad.formelAufgabe("#f-2", {
 
 ### 9.16 `Lernpfad.tabellenAufgabe(el, cfg)`
 
-Tabelle mit vorgegebenen und leeren Zellen (Wahrheitstafel, Vierfeldertafel, Verteilung, Kontingenztafel). «Prüfen» markiert jede Eingabezelle mit ✓, ✗ oder – (leer) und zählt «7 von 9 richtig, 1 leer». «Lösung zeigen» trägt die fehlenden und falschen Werte gestrichelt ein. Die Tabelle scrollt in ihrem eigenen Behälter, die Seite bleibt bei 320 px ohne seitliches Scrollen. Jedes Feld hat einen Namen aus Zeile und Spalte (`aria-label`), der Zustand steht zusätzlich als Text für Screenreader.
+Tabelle mit vorgegebenen und leeren Zellen (Wahrheitstafel, Vierfeldertafel, Verteilung, Kontingenztafel). «Prüfen» markiert jede Eingabezelle mit ✓, ✗ oder – (leer) und zählt «7 von 9 richtig, 1 leer». «Lösung zeigen» trägt die fehlenden und falschen Werte gestrichelt ein. Die Tabelle scrollt in ihrem eigenen Behälter, die Seite bleibt bei 320 px ohne seitliches Scrollen. Jedes Feld hat einen Namen aus Zeile und Spalte (`aria-label`), der Zustand steht zusätzlich als Text für Screenreader. Formeln in Köpfen und Zeilenköpfen werden dafür vorgelesen statt als TeX: `$A \land \lnot B$` → «A und nicht B», `$\overline{D}$` → «nicht D», `$h_{1\cdot}$` → «h Index 1 Punkt», `$\le$` → «≤» (Makros aus `Lernpfad.makros` eingeschlossen). Ohne `zeilenKopf` nennt der Feldname die vorgegebenen Zellen vor dem ersten Feld der Zeile mit ihrem Spaltenkopf, bei Wahrheitstafeln also die Belegung («A = 1, B = 0, A und nicht B»).
 
 | Feld | Typ | Pflicht | Bedeutung |
 |------|-----|---------|-----------|
@@ -861,7 +861,7 @@ Rechenweg mit Lücken: Schritte nacheinander (z. B. μ, σ, z, Φ(z), Ergebnis),
 
 Felder eines Schritts: `label` (HTML, auch Formel), `antwort` (Zahl oder Zahl[]), `toleranz`, `einheit`, `anzeige` (Text beim Aufdecken und bei Folgefehlern), `hinweis` (HTML, ein Tipp), `erklaerung` (HTML, erscheint nach richtig oder aufgedeckt), `folgefehler` (optional, Funktion).
 
-**Folgefehler:** Ist ein Schritt falsch und hat der **nächste** Schritt `folgefehler`, erscheint «Mit meinem Wert weiterrechnen». `folgefehler(vorherigeEingaben)` bekommt die Werte aller früheren Schritte (eigene Eingaben; bei aufgedeckten Schritten der richtige Wert) und liefert den Wert, der mit diesen Vorwerten richtig wäre. Passt die Eingabe dazu: «✓ Folgerichtig gerechnet, aber Schritt 1 war falsch. Richtig wäre hier 0.5787.» Rückgabe: `{ zuruecksetzen(), stand() }` (`stand()` liefert je Schritt `"offen"`, `"richtig"`, `"folgerichtig"`, `"aufgedeckt"` oder `"weiter"`).
+**Folgefehler:** Ist ein Schritt falsch und hat der **nächste** Schritt `folgefehler`, erscheint «Mit meinem Wert weiterrechnen». `folgefehler(vorherigeEingaben)` bekommt die Werte aller früheren Schritte (eigene Eingaben; bei aufgedeckten Schritten der richtige Wert) und liefert den Wert, der mit diesen Vorwerten richtig wäre. Passt die Eingabe dazu: «✓ Folgerichtig gerechnet, aber Schritt 1 war falsch. Richtig wäre hier 0.5787.» Ändert die Person den falschen Wert, verschwindet «Mit meinem Wert weiterrechnen» bis zum nächsten «Prüfen». Rückgabe: `{ zuruecksetzen(), stand() }` (`stand()` liefert je Schritt `"offen"`, `"richtig"`, `"folgerichtig"`, `"aufgedeckt"` oder `"weiter"`).
 
 ```js
 Lernpfad.lueckenRechnung("#lr-1", {
@@ -877,7 +877,7 @@ Lernpfad.lueckenRechnung("#lr-1", {
 
 ### 9.18 `Lernpfad.kurzAntwort(el, cfg)`
 
-Kurze Antwort eintippen, drei Typen. Hinweise und Lösungsweg wie `zahlAufgabe`. Rückgabe: `{ zuruecksetzen() }`.
+Kurze Antwort eintippen, drei Typen. Hinweise und Lösungsweg wie `zahlAufgabe`. Das Feld nimmt höchstens 300 Zeichen. Rückgabe: `{ zuruecksetzen() }`.
 
 | Feld | Typ | Pflicht | Bedeutung |
 |------|-----|---------|-----------|
@@ -889,7 +889,7 @@ Kurze Antwort eintippen, drei Typen. Hinweise und Lösungsweg wie `zahlAufgabe`.
 | `format` | HTML | nein | ersetzt den Formathinweis unter dem Feld |
 
 - **`text`**: Vergleich ohne Gross-/Kleinschreibung, Leerzeichen, Anführungszeichen und Schlusspunkt. Bindestriche zählen: Varianten in `antwort` aufzählen.
-- **`menge`**: `{1, 3, 5}`, Reihenfolge und Doppelte egal, Zahlen nach Wert (`{0.5}` = `{1/2}`), verschachtelt `{{A, ¬B}, {C}}` (Klauselmengen), ¬ auch als `!` oder `~`, leere Menge `{}` oder `∅`, leere Klausel `□` (= `{}`), Tupel `(1, 2)` mit Reihenfolge. Rückmeldung nennt, wie viele Elemente fehlen oder zu viel sind; ohne Klammern kommt ein Formathinweis.
+- **`menge`**: `{1, 3, 5}`, Reihenfolge und Doppelte egal, Zahlen nach Wert (`{0.5}` = `{1/2}`), verschachtelt `{{A, ¬B}, {C}}` (Klauselmengen), ¬ auch als `!` oder `~`, leere Menge `{}` oder `∅`, leere Klausel `□` (= `{}`), Tupel `(1, 2)` mit Reihenfolge. Rückmeldung nennt, wie viele Elemente fehlen oder zu viel sind; ohne Klammern kommt ein Formathinweis. Das Komma trennt Elemente: `{0,5}` ist {0, 5}. Dezimalzahlen darum mit Punkt (`{0.5}`); steht bei einer falschen Antwort ein Komma direkt zwischen Ziffern, weist die Rückmeldung darauf hin.
 - **`hypothese`**: `H0: μ ≤ 50; H1: μ > 50` (getrennt mit `;`, Komma oder Zeilenumbruch, Reihenfolge egal). Zeichen auch als `<=`, `>=`, `!=`, `<>`; μ als `mu`, σ als `sigma`, `σ²` = `sigma^2`, `H₀`/`H_0`/`Ha`; Leerzeichen und Dezimalkomma egal; `50 ≥ μ` = `μ ≤ 50`. Hinweise: «H0 und H1 sind vertauscht», «Prüfe das Vergleichszeichen», fehlende Bezeichnung H0/H1.
 
 ```js
@@ -968,6 +968,8 @@ Die Bausteine erfüllen das bereits. Für eigenen Inhalt gilt dasselbe:
 - **Fokus behalten:** Wird ein Knopf deaktiviert oder ausgeblendet, setz den Fokus auf ein sinnvolles Nachbarelement. Ersetze nicht den Knopf, der gerade den Fokus hat.
 - **Fokusringe** nicht entfernen (`outline: none` ist verboten).
 - **Beschriftungen:** jedes Eingabefeld mit `<label for>`, Symbolknöpfe (◀, ▶) mit `aria-label`, SVG mit `role="img"` und `<title>`.
+- **Generierter Text:** Per CSS erzeugte Kennzeichen mit Zeichen (✎, ●) bekommen einen Alternativtext ohne Symbol (`content:"✎ Du bist dran" / "Du bist dran"`), sonst liest der Screenreader das Zeichen mit.
+- **Feldnamen ohne TeX:** `aria-label` aus Formeln nie roh übernehmen («A \land B»), sondern als Klartext («A und B»); `tabellenAufgabe` macht das selbst.
 - **Überschriften** in Reihenfolge: ein `h1`, `h2` pro Abschnitt, `h3` darunter.
 - **Sprache:** Fremdsprachige Begriffe sind selten; falls nötig `<span lang="en">p-value</span>`.
 

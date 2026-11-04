@@ -394,6 +394,14 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
     if (datenSektion !== null && !SEKTIONEN.includes(datenSektion)) {
       fehler.push(`<body data-sektion="${kurz(datenSektion)}"> ist unbekannt (erlaubt: ${SEKTIONEN.join(", ")}).`)
     }
+    // data-sektion wirkt nur zusammen mit data-farbig (Selektor body[data-farbig][data-sektion=…])
+    if (datenSektion !== null && !/\sdata-farbig(?=[\s=/>])/i.test(body.tag)) {
+      fehler.push(`<body data-sektion="${kurz(datenSektion)}"> wirkt nur zusammen mit data-farbig.`)
+    }
+    // MSTW: Farben sind Pflicht (docs/lernpfad-format.md, Abschnitt Gerüst)
+    if (fach === "mstw" && (datenSektion === null || !/\sdata-farbig(?=[\s=/>])/i.test(body.tag))) {
+      fehler.push(`<body> braucht im Fach mstw data-farbig und data-sektion (${SEKTIONEN.join(", ")}).`)
+    }
   }
 
   const skript = startTags(quelle, "script").find(({ tag }) => zeigtAuf(attribut(tag, "src"), JS_PFAD))

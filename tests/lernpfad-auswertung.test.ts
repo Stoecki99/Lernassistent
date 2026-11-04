@@ -74,11 +74,19 @@ describe("Logik-Parser", () => {
   test("Praedikatenlogik: Quantoren, Praedikate, Funktionen, Konstanten, Gleichheit", () => {
     assert.equal(text("∀x (P(x) → Q(x))"), "∀x (P(x) → Q(x))")
     assert.equal(text("∀x(P(x)->Q(x))"), "∀x (P(x) → Q(x))")
-    assert.equal(text("∃x. S(x) ∧ ¬L(x, a)"), "∃x S(x) ∧ ¬L(x, a)")
+    assert.equal(text("∃x. S(x) ∧ ¬L(x, a)"), "(∃x S(x)) ∧ ¬L(x, a)")
     assert.equal(text("∀x,y R(x,y)"), "∀x∀y R(x, y)")
     assert.equal(text("forall x exists y R(f(x), y)"), "∀x∃y R(f(x), y)")
     assert.equal(text("x != y"), "x ≠ y")
     assert.equal(text("f(x) = c"), "f(x) = c")
+  })
+
+  test("Reichweite eines Quantors wird mit Klammern sichtbar", () => {
+    assert.equal(text("∀x P(x) → Q(x)"), "(∀x P(x)) → Q(x)")
+    assert.equal(text("¬∀x P(x) → Q"), "¬(∀x P(x)) → Q")
+    assert.equal(text("A ∧ ∀x P(x) ∧ B"), "A ∧ (∀x P(x)) ∧ B")
+    assert.equal(text("A ∧ ∀x P(x)"), "A ∧ ∀x P(x)")
+    assert.equal(text("∀x∀y R(x,y) ∧ A"), "(∀x∀y R(x, y)) ∧ A")
   })
 
   test("verstaendliche Fehlermeldungen", () => {

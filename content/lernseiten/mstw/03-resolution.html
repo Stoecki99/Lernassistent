@@ -921,6 +921,7 @@
   let lbZaehler = 0;
   const STUFEN = { 1: "Aufwärmen", 2: "Prüfungsniveau", 3: "Knacknuss" };
   const LB_SYMBOLE = ["¬", "{", "}", ",", "∅"];
+  const LB_NAMEN = { "¬": "nicht", "{": "Mengenklammer auf", "}": "Mengenklammer zu", ",": "Komma", "∅": "leere Klausel" };
 
   function klauselLesen(text) {
     let t = String(text || "").trim();
@@ -945,11 +946,14 @@
         '<ol class="lr-schritte"></ol>' +
         '<div class="t03-lb-ende" hidden></div>' +
         '<p class="score lr-fazit" tabindex="-1" hidden></p>' +
+        '<p class="sr-only t03-lb-ansage" aria-live="polite"></p>' +
         '<div class="stepbar"><button type="button" class="btn t03-lb-reset">Zurücksetzen</button><span class="stepcount"></span></div>';
       const ol = el.querySelector(".lr-schritte");
       const ende = el.querySelector(".t03-lb-ende");
       const fazit = el.querySelector(".lr-fazit");
       const zahl = el.querySelector(".stepcount");
+      // Ansage für Screenreader: Tipp und neu geöffneter Schritt (wie ansageRegion im Baukasten)
+      const ansage = el.querySelector(".t03-lb-ansage");
       const zustand = cfg.schritte.map(function () { return "offen"; });
       let sichtbar = 1;
 
@@ -963,7 +967,7 @@
         li.hidden = k > 0;
         li.innerHTML =
           '<label class="lr-label" for="' + fid + '">' + s.label + "</label>" +
-          '<form class="fa-zeile" novalidate><input id="' + fid + '" class="kurz-feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="' + fid + '-fb">' +
+          '<form class="fa-zeile" novalidate><input id="' + fid + '" class="kurz-feld" type="text" maxlength="300" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="' + fid + '-fb">' +
           '<button type="submit" class="btn primary">Prüfen</button></form>' +
           '<div class="symbolleiste" role="toolbar" aria-label="Symbole einfügen" aria-controls="' + fid + '"></div>' +
           '<div class="row lr-knoepfe"><button type="button" class="btn t03-lb-tipp">Tipp</button><button type="button" class="btn t03-lb-auf">Aufdecken</button></div>' +
@@ -983,18 +987,22 @@
           b.className = "sym";
           b.textContent = z;
           b.tabIndex = j === 0 ? 0 : -1;
-          b.setAttribute("aria-label", z + " einfügen");
+          b.setAttribute("aria-label", LB_NAMEN[z] + " (" + z + ") einfügen");
           b.addEventListener("mousedown", function (e) { e.preventDefault(); });
           b.addEventListener("click", function () {
             const a = typeof t.feld.selectionStart === "number" ? t.feld.selectionStart : t.feld.value.length;
             const e2 = typeof t.feld.selectionEnd === "number" ? t.feld.selectionEnd : a;
             t.feld.focus();
             t.feld.setRangeText(z, a, e2, "end");
+            // wie beim Tippen: Fehlermarkierung und «richtig» zurücksetzen
+            t.feld.dispatchEvent(new Event("input", { bubbles: true }));
           });
           b.addEventListener("keydown", function (e) {
             let ziel = -1;
             if (e.key === "ArrowRight") ziel = (j + 1) % LB_SYMBOLE.length;
             else if (e.key === "ArrowLeft") ziel = (j - 1 + LB_SYMBOLE.length) % LB_SYMBOLE.length;
+            else if (e.key === "Home") ziel = 0;
+            else if (e.key === "End") ziel = LB_SYMBOLE.length - 1;
             if (ziel < 0) return;
             e.preventDefault();
             syms.forEach(function (x, i) { x.tabIndex = i === ziel ? 0 : -1; });
@@ -1007,6 +1015,10 @@
           t.tipp.innerHTML = "<b>Tipp:</b> " + s.hinweis;
           t.tipp.hidden = false;
           L.formeln(t.tipp);
+          // Knopf sperren, Fokus vorher ins Feld, damit er nicht verloren geht
+          if (document.activeElement === this) t.feld.focus();
+          this.disabled = true;
+          ansage.textContent = t.tipp.textContent;
         });
         t.knoepfe.querySelector(".t03-lb-auf").addEventListener("click", function () {
           t.feld.value = s.anzeige;
@@ -1065,6 +1077,7 @@
           teile[k + 1].li.hidden = false;
           L.formeln(teile[k + 1].li);
           if (hatteFokus) teile[k + 1].feld.focus();
+          ansage.textContent = "Schritt " + (k + 2) + " von " + cfg.schritte.length + " ist offen.";
         } else {
           const richtig = zustand.filter(function (x) { return x === "richtig"; }).length;
           const auf = zustand.filter(function (x) { return x === "aufgedeckt"; }).length;

@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad PMGT Welle 1 und Leitstand live; Lernpfad PS mit 13 Stationen live; Baukasten 1.2.0 auf Branch feat/lernpfad-mstw-ueberarbeitung)
+**Zuletzt aktualisiert:** 2026-11-04 (Lernpfad MSTW überarbeitet: alle 18 Stationen mit Eingabe-Aufgaben und Baukasten 1.2.0, Integrationstest und Code-Review eingearbeitet, auf Branch feat/lernpfad-mstw-ueberarbeitung)
 
 ---
 
@@ -24,7 +24,7 @@
 | 14. Lernpfad PMGT | Welle 1 live seit 01.11.2026 | 7 von 25 Stationen (10, 11, 13, 18, 19, 22, 23), Baukasten 1.1.0; Konzept im Vault «02 Projekte/Lernpfad PMGT» |
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
 | 16. Lernpfad PS | Live seit 01.11.2026 | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
-| 17. Lernpfad MSTW Überarbeitung | In Arbeit (Branch `feat/lernpfad-mstw-ueberarbeitung`) | Baukasten 1.2.0 fertig: Eingabe-Bausteine `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`, Stufen, Farben als Opt-in `body[data-farbig][data-sektion]`, Sektionsfarben in `fach.json` auf der Lernpfad-Seite, Tests `tests/lernpfad-auswertung.test.ts`. Offen: Probeseiten 03 und 12, dann Wellen Logik und Wahrscheinlichkeit/Statistik; Konzept im Vault «02 Projekte/Lernpfad MSTW Überarbeitung» |
+| 17. Lernpfad MSTW Überarbeitung | Fertig, bereit zum Merge (Branch `feat/lernpfad-mstw-ueberarbeitung`) | Baukasten 1.2.0 fertig: Eingabe-Bausteine `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`, Stufen, Farben als Opt-in `body[data-farbig][data-sektion]`, Sektionsfarben in `fach.json` auf der Lernpfad-Seite, Tests `tests/lernpfad-auswertung.test.ts`. Alle 18 Stationen überarbeitet (Eingabe-Aufgaben, eigene Beispiele, Sektionsfarben), Integrationstest und Code-Review bestanden; Konzept im Vault «02 Projekte/Lernpfad MSTW Überarbeitung» |
 
 ## Security-Fixes (alle angewendet)
 
@@ -55,7 +55,7 @@
 | Badge-Seed | Erledigt | Alle Badges geseeded |
 | App erreichbar | Ja | https://lernen.jan-stocker.cloud |
 
-## Offene Punkte (Stand 2026-11-01)
+## Offene Punkte (Stand 2026-11-04)
 
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
 - **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
@@ -66,9 +66,27 @@
 - **Alte Migrationen auf frischer Datenbank:** `prisma migrate deploy` scheitert (`20260405_add_contact_email` sortiert vor `20260405_add_contact_messages`). Produktion nicht betroffen, lokal `prisma db push` verwenden.
 - **Lernpfad PS, Simulator:** bekannte Lücken gegenüber pwsh (z. B. `Get-History`, `Remove-Item -Recurse` ohne `-Force`, `break` in `ForEach-Object`, Comment-based Help), Liste in `docs/lernpfad-powershell.md` Abschnitt 8. Keine Aufgabe baut darauf auf.
 - **Lernpfad PS, 360 px:** Inline-Code wie `-Confirm` bricht nach dem Bindestrich um (z. B. Lernziele Station 05). Kosmetisch.
-- **`.claude/settings.local.json` ist versioniert** und enthält neu sehr breite Freigaben (`Bash(bash:*)`, `git restore:*`) sowie Pfade zur alten OneDrive-Kopie. Nicht in den Lernpfad-Commit aufnehmen; Bereinigung und `.gitignore` entscheidet Jan.
+- **`.claude/settings.local.json` ist versioniert** und enthält neu sehr breite Freigaben (`Bash(bash:*)`, `git restore:*`) sowie Pfade zur alten OneDrive-Kopie. Nicht in den Lernpfad-Commit aufnehmen; Bereinigung und `.gitignore` entscheidet Jan. Ein Eintrag in `.gitignore` allein wirkt nicht, solange die Datei versioniert ist (`git rm --cached` nötig).
+- **Lernpfad MSTW, Station 18:** Die Punktezählung liest Klassen und Knopftexte der Bausteine aus dem DOM (`.rueckmeldung.ok`, `.tb-zelle.richtig`, `button.primary`, Text «Lösung»). Eine Änderung im Baukasten bricht die Wertung still. Ziel: Rückmeldung als Schnittstelle im Baukasten (`cfg.beiPruefen` oder Ereignis `lernpfad:geprueft`).
+- **Lernpfad MSTW, Station 03:** `lueckenBeweis` baut `lueckenRechnung` und die Symbolleiste nach und nutzt Baukasten-Klassen (`lr-schritt`, `kurz-feld`, `symbolleiste`) statt Präfix `t03-`. Ansage und Tipp-Sperre sind nachgerüstet; Ziel: `lueckenRechnung` mit Texteingabe-Schritten (z. B. `typ: "menge"`) und `symbolLeiste` öffentlich im Baukasten.
+- **Lernpfad MSTW, Junktoren:** `formelLesen` bindet ∧ stärker als ∨ und liest → rechtsassoziativ; im Modul binden ∧ und ∨ gleich stark. `A ∧ B ∨ C` gilt darum als gültige Formel. Auf Seite 01 offen erklärt. Idee: Option `strengeKlammern` in `formelAufgabe` (Entscheid Jan, ändert die Wertung).
+- **Lernpfad MSTW, Inhalt:** offene Ermessens- und Quellenfragen der Stationsagenten (07, 10 Formelsammlung, 11 bis 18) klärt Jan.
+- **Lernpfad MSTW, Station 10:** Die seitenlokale Regel gegen Grossbuchstaben in Tabellenkopf-Formeln ist seit der Baukasten-Regel `th .katex` überflüssig (harmlos).
 
 ## Changelog
+
+### 2026-11-04
+
+- **feat: Lernpfad MSTW überarbeitet** (Commits b8cf3f8, b684ba8, 92ce4c1, 34ba97c und Nacharbeit) — Baukasten 1.2.0 mit Eingabe-Bausteinen (`formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`), Stufen und Sektionsfarben; alle 18 Stationen von Aussagenlogik bis Prüfungstraining mit Eingabe-Aufgaben, eigenen Beispielen und Farben je Sektion. Lernpfad `/lernseiten/mstw`, Kurzlink `/MSTW`. Konzept: Vault `02 Projekte/Lernpfad MSTW Überarbeitung.md`
+- **test: Integrationstest bestanden** — 691 Tests, `tsc`, Lint (nur die 2 bekannten Warnungen), Inhaltsprüfung (MSTW 18 von 18), Produktions-Build und Docker-Build; Ende-zu-Ende: ohne Login 307 auf `/login`, eingeloggt alle 18 Stationen 200 ohne Konsolenfehler und CSP-Verstösse, Fortschritt und Selbsttest im Lernpfad sichtbar, kein waagrechter Scroll bei 360 px hell und dunkel
+- **fix: Formeln in Tabellenköpfen** — `.tabelle th` setzte KaTeX in Grossbuchstaben (σ wurde Σ, z wurde Z); neue Regel `th .katex{text-transform:none}` in `lernpfad.css`
+- **fix: Befunde aus dem Code-Review**:
+  - Inhaltsprüfung: im Fach `mstw` sind `data-farbig` und `data-sektion` jetzt Pflicht (Test ergänzt)
+  - `formelAufgabe`: kein ASCII-Ersatz während einer Komposition (Bildschirmtastatur, IME), ersetzt wird bei `compositionend`
+  - `kurzAntwort` (Typ `hypothese`): `<=` im Formathinweis als `&lt;=` maskiert
+  - Lernpfad-Seite: Sektionsfarbe im Dunkelmodus mit `var(--ink)` statt fest `#ffffff` aufgehellt (Kontrast weiterhin ≥ 5:1)
+  - Station 03 (`lueckenBeweis`): Ansage-Region für Tipp und neuen Schritt, Tipp-Knopf nach dem Klick gesperrt (Fokus geht ins Feld)
+  - `.gitignore`: `audit-report.html` und `CLAUDE.md.backup` ausgeschlossen
 
 ### 2026-11-01
 

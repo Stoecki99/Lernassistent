@@ -297,10 +297,13 @@
 
   // Formel als Liste von Teilen [text, art] mit klärenden Klammern.
   // art: "op", "q", "v" (Variable), "c" (Konstante), "fn", "p" (Prädikat), "a" (Aussagenvariable), "k" (⊤/⊥), ""
+  // «folgt»: Nach diesem Teil steht noch etwas auf gleicher Klammerebene. Ein Quantor bekommt dann
+  // Klammern, damit seine Reichweite sichtbar ist: (∀x P(x)) → Q(x).
   function formelTeile(baum) {
     const teile = [];
     const push = (text, art) => teile.push([text, art || ""]);
-    function klammerNoetig(kind, eltern, seite) {
+    function klammerNoetig(kind, eltern, seite, folgt) {
+      if (kind.t === "quant") return folgt;
       if (!BINAER[kind.t]) return false;
       if (eltern.t === "nicht" || eltern.t === "quant") return true;
       if (kind.t === eltern.t) {
@@ -310,9 +313,9 @@
       }
       return true;
     }
-    function teil(kind, eltern, seite, gebunden) {
-      if (klammerNoetig(kind, eltern, seite)) { push("("); f(kind, gebunden); push(")"); }
-      else f(kind, gebunden);
+    function teil(kind, eltern, seite, gebunden, folgt) {
+      if (klammerNoetig(kind, eltern, seite, folgt)) { push("("); f(kind, gebunden, false); push(")"); }
+      else f(kind, gebunden, folgt);
     }
     function term(t, gebunden) {
       if (t.t === "zahl") { push(t.n, "c"); return; }
@@ -325,7 +328,7 @@
       }
       push(t.n, gebunden.indexOf(t.n) >= 0 || /^[u-z]\d*'*$/.test(t.n) ? "v" : "c");
     }
-    function f(b, gebunden) {
+    function f(b, gebunden, folgt) {
       switch (b.t) {
         case "k": push(b.w ? "⊤" : "⊥", "k"); break;
         case "p":
@@ -339,23 +342,24 @@
         case "nicht":
           if (b.a.t === "gleich") { term(b.a.a, gebunden); push(" ≠ ", "op"); term(b.a.b, gebunden); break; }
           push("¬", "op");
-          teil(b.a, b, "a", gebunden);
+          teil(b.a, b, "a", gebunden, folgt);
           break;
         case "quant": {
           push(b.q === "A" ? "∀" : "∃", "q");
           push(b.v, "v");
           const innen = gebunden.concat([b.v]);
           if (b.a.t !== "quant") push(" ");
-          teil(b.a, b, "a", innen);
+          // Direkt verschachtelte Quantoren (∀x∀y) teilen sich die Klammer des äussersten
+          teil(b.a, b, "a", innen, b.a.t === "quant" ? false : folgt);
           break;
         }
         default:
-          teil(b.a, b, "a", gebunden);
+          teil(b.a, b, "a", gebunden, true);
           push(" " + BINAER[b.t] + " ", "op");
-          teil(b.b, b, "b", gebunden);
+          teil(b.b, b, "b", gebunden, folgt);
       }
     }
-    f(baum, []);
+    f(baum, [], false);
     return teile;
   }
 
@@ -471,6 +475,9 @@
     return aus;
   }
   function kanonisch(baum) {
+    // Aufwandsgrenze: verschachtelte Quantorblöcke vervielfachen die Reihenfolgen (bis 24 je Block).
+    // Ist das Budget aufgebraucht, gilt nur noch die geschriebene Reihenfolge, damit lange Eingaben den Tab nicht einfrieren.
+    let budget = 5000;
     function term(t, bindung) {
       if (t.t === "zahl") return "z:" + Number(t.n);
       if (!t.args.length && bindung.has(t.n)) return "#" + bindung.get(t.n);
@@ -491,7 +498,9 @@
           let rumpf = b;
           while (rumpf.t === "quant" && rumpf.q === b.q && vars.length < 4) { vars.push(rumpf.v); rumpf = rumpf.a; }
           let best = null;
-          permutationen(vars.map((_, k) => k)).forEach((p) => {
+          const reihen = budget > 0 ? permutationen(vars.map((_, k) => k)) : [vars.map((_, k) => k)];
+          budget -= reihen.length;
+          reihen.forEach((p) => {
             const neu = new Map(bindung);
             vars.forEach((v, k) => neu.set(v, tiefe + p[k]));
             const s = f(rumpf, tiefe + vars.length, neu);
@@ -2474,7 +2483,7 @@
       (cfg.frage ? '<div class="za-frage">' + cfg.frage + "</div>" : "") +
       '<form class="fa-form" novalidate>' +
       '<label for="' + id + '">Deine Formel</label>' +
-      '<div class="fa-zeile"><input id="' + id + '" class="formel-feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"' +
+      '<div class="fa-zeile"><input id="' + id + '" class="formel-feld" type="text" maxlength="300" autocomplete="off" autocapitalize="off" spellcheck="false"' +
       ' aria-describedby="' + id + '-hilfe ' + id + '-fb">' +
       '<button type="submit" class="btn primary">Prüfen</button></div></form>' +
       '<p class="hint" id="' + id + '-hilfe">Tastatur: ! oder ~ für ¬, &amp; für ∧, | für ∨, -&gt; für →, &lt;-&gt; für ↔' +
@@ -2499,18 +2508,26 @@
       return g;
     }
 
+    function ersetzenAmCursor() {
+      if (cfg.ersetzen === false) return;
+      const pos = feld.selectionStart;
+      const vorne = asciiErsetzen(feld.value.slice(0, pos));
+      const neu = vorne + asciiErsetzen(feld.value.slice(pos));
+      if (neu !== feld.value) {
+        feld.value = neu;
+        feld.setSelectionRange(vorne.length, vorne.length);
+      }
+    }
+
     feld.addEventListener("input", (e) => {
       if (feld.getAttribute("aria-invalid")) feld.removeAttribute("aria-invalid");
       feld.classList.remove("richtig");
-      if (cfg.ersetzen !== false && (!e.inputType || e.inputType.indexOf("insert") === 0)) {
-        const pos = feld.selectionStart;
-        const vorne = asciiErsetzen(feld.value.slice(0, pos));
-        const neu = vorne + asciiErsetzen(feld.value.slice(pos));
-        if (neu !== feld.value) {
-          feld.value = neu;
-          feld.setSelectionRange(vorne.length, vorne.length);
-        }
-      }
+      // Während einer Komposition (Bildschirmtastatur, IME) nicht eingreifen, sonst doppelte Zeichen; ersetzt wird bei compositionend
+      if (!e.isComposing && (!e.inputType || e.inputType.indexOf("insert") === 0)) ersetzenAmCursor();
+      vorschau();
+    });
+    feld.addEventListener("compositionend", () => {
+      ersetzenAmCursor();
       vorschau();
     });
 
@@ -2531,7 +2548,12 @@
       if (!g.ok) {
         feld.setAttribute("aria-invalid", "true");
         textMelden(rm, "leer", "Die Formel ist noch nicht lesbar: " + g.fehler);
-        if (typeof g.stelle === "number") feld.setSelectionRange(g.stelle, g.stelle);
+        if (typeof g.stelle === "number") {
+          // «stelle» zählt im getrimmten Text: führende Leerzeichen dazuzählen
+          const pos = Math.min(feld.value.length, g.stelle + feld.value.length - feld.value.trimStart().length);
+          feld.focus();
+          feld.setSelectionRange(pos, pos);
+        }
         return;
       }
       let ok = false, text;
@@ -2595,7 +2617,78 @@
     return { eingabe: false, html: z === undefined || z === null ? "" : String(z) };
   }
 
-  const formelLos = (html) => ohneTags(html).replace(/\$|\\[()[\]]/g, "").trim();
+  /* Formel als vorlesbarer Klartext für aria-label: «A \land \lnot B» → «A und nicht B».
+     Kein vollständiger TeX-Leser, nur die in Lernseiten üblichen Befehle; Unbekanntes bleibt als Name stehen. */
+  const TEX_WORTE = {
+    land: " und ", wedge: " und ", lor: " oder ", vee: " oder ", lnot: " nicht ", neg: " nicht ",
+    Rightarrow: " impliziert ", rightarrow: " impliziert ", to: " impliziert ", implies: " impliziert ", longrightarrow: " impliziert ",
+    Leftrightarrow: " genau dann, wenn ", leftrightarrow: " genau dann, wenn ", Longleftrightarrow: " genau dann, wenn ", iff: " genau dann, wenn ",
+    equiv: " äquivalent ", models: " folgt ", le: " ≤ ", leq: " ≤ ", ge: " ≥ ", geq: " ≥ ", lt: " < ", gt: " > ",
+    ne: " ≠ ", neq: " ≠ ", approx: " ungefähr ", sim: " verteilt nach ", mid: " gegeben ", cdot: " mal ", times: " mal ",
+    pm: " plus minus ", cap: " geschnitten ", cup: " vereinigt ", setminus: " ohne ", in: " Element von ", notin: " nicht Element von ",
+    subseteq: " Teilmenge von ", subset: " Teilmenge von ", emptyset: " leere Menge ", varnothing: " leere Menge ",
+    forall: " für alle ", exists: " es gibt ", top: " wahr ", bot: " falsch ", infty: " unendlich ",
+    sum: " Summe ", Sigma: " Summe ", Delta: " Delta ", Omega: " Omega ", Phi: " Phi ",
+    alpha: " alpha ", beta: " beta ", chi: " chi ", delta: " delta ", lambda: " lambda ", mu: " my ", omega: " omega ",
+    pi: " pi ", sigma: " sigma ", dots: " … ", cdots: " … ", ldots: " … ", checkmark: " ✓ ",
+  };
+  const TEX_RAHMEN = /\\(?:text|mathrm|mathbf|mathit|mathbb|mathcal|operatorname|textstyle|displaystyle)\s*\{([^{}]*)\}/g;
+
+  // Makros (auch seiteneigene aus Lernpfad.makros) einsetzen, höchstens ein Argument #1
+  function texMakros(t) {
+    for (let runde = 0; runde < 4; runde++) {
+      let neu = t;
+      Object.keys(makros).forEach((name) => {
+        const wert = makros[name];
+        const muster = name.replace(/\\/g, "\\\\") + "(?![A-Za-z])";
+        if (wert.indexOf("#1") >= 0) neu = neu.replace(new RegExp(muster + "\\s*\\{([^{}]*)\\}", "g"), (_, a) => wert.replace(/#1/g, a));
+        else neu = neu.replace(new RegExp(muster, "g"), () => wert);
+      });
+      if (neu === t) break;
+      t = neu;
+    }
+    return t;
+  }
+
+  function texLesbar(t) {
+    t = texMakros(t)
+      .replace(/\\(?:left|right|bigl|bigr|Bigl|Bigr|big|Big)(?![A-Za-z])\s*/g, "")
+      .replace(/\\[,;:! ]|\\q?quad(?![A-Za-z])/g, " ")
+      .replace(/\\\{/g, "⦃").replace(/\\\}/g, "⦄");
+    // Befehle mit Argumenten von innen nach aussen auflösen
+    for (let runde = 0; runde < 8; runde++) {
+      const vorher = t;
+      t = t
+        .replace(TEX_RAHMEN, "$1")
+        .replace(/\\(?:htmlClass|htmlData)\s*\{[^{}]*\}\s*\{([^{}]*)\}/g, "$1")
+        .replace(/\\overset\s*\{[^{}]*\}\s*\{([^{}]*)\}/g, "$1")
+        .replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, " $1 durch $2 ")
+        .replace(/\\d?binom\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, " $1 über $2 ")
+        .replace(/\\sqrt\s*\{([^{}]*)\}/g, " Wurzel aus $1 ")
+        .replace(/\\overline\s*\{([^{}]*)\}/g, " nicht $1 ")
+        .replace(/\\bar\s*\{([^{}]*)\}/g, " $1 quer ")
+        .replace(/\\hat\s*\{([^{}]*)\}/g, " $1 Dach ")
+        .replace(/_\s*\{([^{}]*)\}/g, (_, a) => " Index " + a.replace(/\\cdot(?![A-Za-z])/g, " Punkt ") + " ")
+        .replace(/\^\s*\{([^{}]*)\}/g, " hoch $1 ");
+      if (t === vorher) break;
+    }
+    return t
+      .replace(/_\s*\\cdot(?![A-Za-z])/g, " Index Punkt ")
+      .replace(/_\s*(\\?[A-Za-z0-9])/g, " Index $1")
+      .replace(/\^\s*(\\?[A-Za-z0-9])/g, " hoch $1")
+      .replace(/\\([A-Za-z]+)/g, (_, n) => (TEX_WORTE[n] !== undefined ? TEX_WORTE[n] : " " + n + " "))
+      .replace(/[{}]/g, "")
+      .replace(/⦃/g, "{").replace(/⦄/g, "}")
+      .replace(/\s+/g, " ")
+      .replace(/ ([,;)])/g, "$1").replace(/\( /g, "(")
+      .trim();
+  }
+
+  // Zelleninhalt (HTML mit $…$-Formeln) als Klartext fürs aria-label
+  const formelLos = (html) => {
+    const text = ohneTags(html);
+    return FORMEL_MUSTER.test(text) ? texLesbar(text.replace(/\$\$?|\\[()[\]]/g, "")) : text;
+  };
 
   function tabellenAufgabe(el, cfg) {
     el = elementHolen(el, "tabellenAufgabe");
@@ -2653,7 +2746,13 @@
     const felder = [];
     plaene.forEach((reihe, r) => {
       const tr = document.createElement("tr");
-      const zeilenName = cfg.zeilenKopf && reihe[0] && !reihe[0].eingabe ? formelLos(reihe[0].html) : "";
+      // Ohne Zeilenkopf: vorgegebene Zellen vor dem ersten Feld nennen, z. B. «A = 1, B = 0» bei Wahrheitstafeln
+      const ersteEingabe = reihe.findIndex((p) => p.eingabe);
+      const belegung = reihe.slice(0, Math.min(ersteEingabe, 4))
+        .map((p, k) => (p.eingabe || !p.html.trim() ? "" : spaltenName(k) + " = " + formelLos(p.html)))
+        .filter((x) => x && !/^Spalte \d+ = $/.test(x));
+      const zeilenName = cfg.zeilenKopf && reihe[0] && !reihe[0].eingabe ? formelLos(reihe[0].html)
+        : belegung.length ? belegung.join(", ") : "";
       reihe.forEach((p, k) => {
         if (!p.eingabe) {
           const kopfZelle = (cfg.zeilenKopf && k === 0) || p.kopf;
@@ -2911,6 +3010,9 @@
       });
       t.feld.addEventListener("input", () => {
         if (t.feld.getAttribute("aria-invalid")) t.feld.removeAttribute("aria-invalid");
+        // Wert geändert: «weiterrechnen» gilt erst wieder nach dem nächsten Prüfen
+        t.bWeiter.hidden = true;
+        t.wertFalsch = undefined;
       });
       if (t.bTipp) {
         t.bTipp.addEventListener("click", () => {
@@ -2970,12 +3072,12 @@
     menge: {
       ueberzeile: "Übung · Menge",
       symbole: ["{", "}", ",", "¬", "∅", "□"],
-      format: "Schreib die Menge mit geschweiften Klammern, zum Beispiel {1, 3, 5}. Reihenfolge egal. Für ¬ geht auch ! oder ~, die leere Menge als {} oder ∅.",
+      format: "Schreib die Menge mit geschweiften Klammern, zum Beispiel {1, 3, 5}. Reihenfolge egal. Dezimalzahlen mit Punkt (0.5), denn das Komma trennt Elemente. Für ¬ geht auch ! oder ~, die leere Menge als {} oder ∅.",
     },
     hypothese: {
       ueberzeile: "Übung · Hypothesen",
       symbole: ["μ", "σ", "≤", "≥", "≠", "<", ">", "="],
-      format: "Zum Beispiel H0: μ ≤ 50; H1: μ > 50. Statt ≤ geht auch <=, statt ≠ auch !=, statt μ auch mu.",
+      format: "Zum Beispiel H0: μ ≤ 50; H1: μ > 50. Statt ≤ geht auch &lt;=, statt ≠ auch !=, statt μ auch mu.",
     },
   };
 
@@ -3013,7 +3115,7 @@
       (cfg.frage ? '<div class="za-frage">' + cfg.frage + "</div>" : "") +
       '<form class="fa-form" novalidate>' +
       '<label for="' + id + '">Deine Antwort</label>' +
-      '<div class="fa-zeile"><input id="' + id + '" class="kurz-feld" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"' +
+      '<div class="fa-zeile"><input id="' + id + '" class="kurz-feld" type="text" maxlength="300" autocomplete="off" autocapitalize="off" spellcheck="false"' +
       ' aria-describedby="' + (format ? id + "-hilfe " : "") + id + '-fb">' +
       '<button type="submit" class="btn primary">Prüfen</button></div></form>' +
       (format ? '<p class="hint" id="' + id + '-hilfe">' + format + "</p>" : "") +
@@ -3033,6 +3135,8 @@
         const ist = mengeLesen(text, opt);
         if (!ist.ok) return { art: "leer", text: ist.fehler };
         if (soll.some((s) => s.wert === ist.wert)) return { art: "ok" };
+        // «{0,5}» liest sich als {0, 5}: auf den Dezimalpunkt hinweisen
+        const kommaHinweis = /\d,\d/.test(text) ? " Ein Komma ohne Leerzeichen zwischen Ziffern trennt zwei Elemente. Für Dezimalzahlen schreib einen Punkt, zum Beispiel 0.5." : "";
         const s0 = soll[0];
         if (s0.kinder && !ist.kinder) return { art: "bad", text: "Gesucht ist eine Menge. Schreib sie mit geschweiften Klammern." };
         if (s0.kinder && ist.kinder) {
@@ -3044,10 +3148,10 @@
           if (teile_.length) {
             let satz = teile_.join(", ") + ".";
             satz = satz.charAt(0).toUpperCase() + satz.slice(1);
-            return { art: "bad", text: satz };
+            return { art: "bad", text: satz + kommaHinweis };
           }
         }
-        return { art: "bad", text: "" };
+        return { art: "bad", text: kommaHinweis.trim() };
       }
       const ist = hypotheseLesen(text);
       if (!ist.ok) return { art: "leer", text: ist.fehler };

@@ -48,6 +48,8 @@
     .t10-spieltab td{min-width:0}
     /* Formeln im Tabellenkopf nicht in Grossbuchstaben setzen (x ≠ X, f ≠ F) */
     .tabelle.t10-formelkopf thead th{text-transform:none; letter-spacing:0; font-size:.98rem; color:var(--ink)}
+    /* Auch in den Tabellen der Eingabe-Bausteine: Formeln im Kopf nie in Grossbuchstaben (sonst f(x) = F(X)) */
+    main thead th .katex{text-transform:none; letter-spacing:0}
     .t10-feldzeile{display:flex; flex-direction:column; gap:4px; font-size:.92rem; font-weight:600}
     @media (max-width:420px){ .t10-klein{font-size:.88em} }
   </style>
@@ -70,7 +72,7 @@
         <li>die Rechenregeln für \(Y = aX + b\) anwenden.</li>
       </ul>
     </div>
-    <div class="note"><b>Prüfungsbezug:</b> In der Modulschlussprüfung brauchst du das hier in jeder Wahrscheinlichkeitsaufgabe: «mehr als 3 Tore» in \(1 - F(3)\) übersetzen, eine Dichte so bestimmen, dass die Fläche 1 ist, und Erwartungswert und Standardabweichung berechnen. Teilpunkte gibt es für die hingeschriebene Zufallsvariable, die Tabelle und den Rechenweg.</div>
+    <div class="note"><b>Prüfungsbezug:</b> In der Modulschlussprüfung brauchst du das hier in jeder Wahrscheinlichkeitsaufgabe: «mehr als 3 Tore» in \(1 - F(3)\) übersetzen, eine Dichte so bestimmen, dass die Fläche 1 ist, und Erwartungswert und Standardabweichung berechnen. Bei einigen Aufgaben ist der Lösungsweg verlangt, eine reine Taschenrechner-Antwort gibt dort keine Punkte. Schreib darum Zufallsvariable, Tabelle und Rechenweg hin.</div>
   </header>
 
   <nav class="steps" aria-label="Abschnitte">
@@ -148,7 +150,7 @@
     <h2>Von den Ergebnissen zur Verteilung</h2>
     <p class="prose">In eigenen Worten: Eine Zufallsvariable ist eine Abbildung, die jedem Ergebnis der Ergebnismenge genau eine reelle Zahl zuordnet. Zufällig ist nur, welches Ergebnis eintritt. Die Regel selbst steht fest.</p>
     <div class="board">$$X: \Omega \to \mathbb{R}, \qquad \omega \mapsto X(\omega)$$</div>
-    <p class="prose">\(X\) heisst <b>diskret</b>, wenn sie nur endlich viele oder abzählbar unendlich viele Werte annimmt (0, 1, 2, …). Anzahl Tore, Augensumme und Anzahl Unfälle pro Monat sind diskret. Eine Rendite kann jeden Wert in einem Intervall annehmen. Sie heisst <b>stetig</b> (siehe <a href="#stetig">Ausblick</a>).</p>
+    <p class="prose">\(X\) heisst <b>diskret</b>, wenn sie nur endlich viele oder abzählbar unendlich viele Werte annimmt (0, 1, 2, …). Anzahl Tore, Augensumme und Anzahl Unfälle pro Monat sind diskret. Kann eine Zufallsvariable dagegen jeden Wert in einem Intervall annehmen, etwa eine Rendite, heisst sie <b>stetig</b> (siehe <a href="#stetig">Ausblick</a>).</p>
     <p class="prose">Klick dich durch das Glücksrad-Beispiel. Fahre über einen unterstrichenen Satzteil oder tipp darauf: Der passende Teil der Rechnung leuchtet auf.</p>
     <div id="t10-stepper-rad"></div>
     <p class="prose">Daraus ergeben sich die beiden Funktionen, mit denen du ab jetzt arbeitest:</p>
@@ -247,6 +249,7 @@
     <span class="eyebrow">Schritt 6 · Lineare Transformation</span>
     <h2>Rechenregeln für Y = aX + b</h2>
     <p class="prose">Oft rechnest du aus \(X\) eine neue Grösse aus: Reingewinn = Auszahlung − Einsatz, Gewinn = Marge pro Stück · Stückzahl − Fixkosten. Das hat immer die Form \(Y = aX + b\). Dann musst du \(E(Y)\) und \(\sigma_Y\) nicht neu aus einer Tabelle rechnen.</p>
+    <p class="hint">Eigene Ergänzung: Die Unterlagen zu dieser Station führen die Regeln nicht als eigene Formeln auf. Sie folgen direkt aus den Formeln für \(E(X)\) und \(V(X)\) (Herleitung unten).</p>
     <div class="board">
       $$E(aX + b) = a \cdot E(X) + b$$
       $$V(aX + b) = a^2 \cdot V(X)$$
@@ -1034,8 +1037,11 @@
       const sp = stufen.reduce((s, x) => s + x.p, 0);
       if (!fehler && sp > 1 + 1e-9) fehler = "Die Wahrscheinlichkeiten ergeben zusammen " + zt(sp, 4) + ", mehr als 1.";
       const e = L.zahlLesen(einsatzF.value || "0"), g = L.zahlLesen(bankF.value || "0");
-      einsatzF.toggleAttribute("aria-invalid", !Number.isFinite(e));
-      bankF.toggleAttribute("aria-invalid", !Number.isFinite(g));
+      // aria-invalid braucht den Wert «true», sonst greifen weder Screenreader noch die Fehlerfarbe
+      [[einsatzF, e], [bankF, g]].forEach((paar) => {
+        if (Number.isFinite(paar[1])) paar[0].removeAttribute("aria-invalid");
+        else paar[0].setAttribute("aria-invalid", "true");
+      });
       if (!fehler && (!Number.isFinite(e) || !Number.isFinite(g))) fehler = "Bitte Einsatz und Anbietergewinn als Zahl eintragen.";
       return { stufen: stufen, rest: 1 - sp, e: e, g: g, fehler: fehler };
     }

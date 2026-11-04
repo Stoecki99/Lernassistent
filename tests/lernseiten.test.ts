@@ -316,6 +316,19 @@ describe("Pflicht-Geruest einer Themenseite", () => {
       pruefe({ bodyAttribute: 'data-fach="test" data-thema="01-erstes" data-farbig data-sektion="s1"' }),
       /data-sektion="s1"> ist unbekannt/,
     )
+    assert.match(
+      pruefe({ bodyAttribute: 'data-fach="test" data-thema="01-erstes" data-sektion="logik"' }),
+      /wirkt nur zusammen mit data-farbig/,
+    )
+  })
+
+  test("Fach mstw: data-farbig und data-sektion sind Pflicht", () => {
+    const mstw = (attribute: string) =>
+      pruefeThemaHtml(seite("mstw", "01-erstes", { bodyAttribute: `data-fach="mstw" data-thema="01-erstes"${attribute}` }), "mstw", "01-erstes").join("\n")
+    assert.equal(mstw(" data-farbig data-sektion=\"logik\""), "")
+    assert.match(mstw(""), /im Fach mstw data-farbig und data-sektion/)
+    assert.match(mstw(" data-farbig"), /im Fach mstw data-farbig und data-sektion/)
+    assert.match(mstw(" data-sektion=\"logik\""), /im Fach mstw data-farbig und data-sektion/)
   })
 
   test("meldet fehlendes lernpfad.css und lernpfad.js", () => {
