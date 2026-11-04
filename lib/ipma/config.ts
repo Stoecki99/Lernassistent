@@ -64,7 +64,7 @@ export const LEITNER_DAYS = [1, 2, 4, 8, 16] as const
  * AP2 schaltet die Stufe beim Meilenstein «Teil 1» bzw. «Teil 2» um.
  */
 export type PoolStage = "aufbau" | "teil1" | "teil2"
-export const POOL_STAGE: PoolStage = "aufbau"
+export const POOL_STAGE: PoolStage = "teil2"
 
 export const POOL_STAGE_MINIMUM: Record<PoolStage, { mc: number; offen: number } | null> = {
   aufbau: null,
