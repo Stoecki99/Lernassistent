@@ -1,6 +1,6 @@
 # STATUS.md — Aktueller Projektstatus
 
-**Zuletzt aktualisiert:** 2026-11-01 (Lernpfad AVSW Verteilte Softwarearchitekturen mit Baustein «modellieren»; Lernpfad PMGT Welle 1, Leitstand und Lernpfad PS live)
+**Zuletzt aktualisiert:** 2026-11-04 (Lernpfad AVSW nach Modulunterlagen neu: 12 Stationen, Architektur-Engine mit UML-Modulnotation, Modellierspiele, Spielstand im Konto, Architektur-Leitstand)
 
 ---
 
@@ -24,7 +24,7 @@
 | 14. Lernpfad PMGT | Welle 1 live seit 01.11.2026 | 7 von 25 Stationen (10, 11, 13, 18, 19, 22, 23), Baukasten 1.1.0; Konzept im Vault «02 Projekte/Lernpfad PMGT» |
 | 15. Leitstand | Live seit 01.11.2026 | Projektsimulator `/leitstand` (nur Pro und Admin), Rechenkern `lib/simulation/`, Szenarien Onlineschalter Wolkenried und Einführungslauf, Speicherung `SimulationRun`, Spezifikation `docs/leitstand-spezifikation.md` |
 | 16. Lernpfad PS | Live seit 01.11.2026 | 13 Stationen mit Konsolen-Simulator (`public/lernpfad/ps-konsole.*`), Kurzlink `/PS`; Konzept im Vault «02 Projekte/Lernpfad PS» |
-| 17. Lernpfad AVSW | Fertig, wartet auf Deploy | Verteilte Softwarearchitekturen, 6 Stationen mit 35 Modellierungsübungen, Kurzlink `/avsw`, Baukasten 1.2.0 (`modellieren`, `piktogramm`, `pre.code`) |
+| 17. Lernpfad AVSW | Fertig, wartet auf Deploy | Architekturen verteilter Softwaresysteme (nach Modulunterlagen), 12 Stationen in 3 Lernblöcken plus Fallstudie, Leitstand-Einführung und Prüfungstraining; Engine `public/lernpfad/architektur.js` (UML-Komponentendiagramme mit Paketen, Ball and Socket, Rollenfarben, Atlas, Abläufe, Ausfall, UML-Prüfungsspiel), Spielstand im Konto (`/api/spielstand`), Kurzlink `/avsw` |
 | 18. Architektur-Leitstand | Fertig, wartet auf Deploy | Simulator `/architektur-leitstand` (nur Pro und Admin), vier Missionen auf `lib/archsim/`, Engine `public/lernpfad/architektur.js`, Speicherung `ArchitekturLauf`, API `/api/archsim/runs`, Doku `docs/architektur-leitstand.md` |
 
 ## Security-Fixes (alle angewendet)
@@ -58,8 +58,8 @@
 
 ## Offene Punkte (Stand 2026-11-01)
 
-- **Architektur-Leitstand:** Anker (`#objekte`, `#messaging`, `#resilienz` …) in Lernzielen und Lehren stammen aus der alten AVSW-Gliederung; mit den neuen Stationsseiten abgleichen. Migration `20261101120000_add_architektur_lauf` vor dem Deploy nötig. Kein Eintrag in der Navigation (wie Leitstand); Einstieg über Station 11.
-- **AVSW-Inhalte nicht mit Folien abgeglichen:** Die Folien lagen beim Erstellen nicht vor. Alle Stationen tragen den Hinweis «Eigene Beispiele und Lösungen, nicht vom Dozenten bestätigt». Begriffe, Notation (C4/UML), Themenreihenfolge, Feld `vorlesung` (vorläufig «Thema 1–5») und Prüfungsrahmen mit den Modulunterlagen abgleichen.
+- **Deploy AVSW:** Migrationen `20261101110000_add_spielstand` und `20261101120000_add_architektur_lauf` laufen beim Deploy automatisch (`prisma migrate deploy` in der Pipeline).
+- **AVSW fachlich gegenlesen:** Inhalte beruhen auf den Modulunterlagen (Moduleinführung, Modulbeschrieb, Folien LB 2, Referenzkatalog, Cheatsheet, Timesoft) in eigenen Worten; Folien LB 1 und LB 3 lagen nicht vor. Offene Fragen: Stereotypen «Razor»/«JPA»/«JSF» (Cheatsheet) vs. «ASP.NET»/«EJB» (Katalog), Entra ID als EAI vs. MSP, Echtzeit-Konsum direkt vs. über Integration Middleware, Cross- vs. Multiplatform, «10 Punkte für den Broker» stammt nur aus dem Cheatsheet. Einige sehr breite Referenzdiagramme (Stationen 05, 07, 08) starten auf 1280 px nicht ganz eingepasst (Option `einpassen: true` verfügbar).
 - **Tests der Handler fehlen:** Route-Handler der Themenseiten und `/api/lernfortschritt` haben keine eigenen Tests (getestet sind Validierung und Inhaltsprüfung).
 - **KaTeX-Advisory GHSA-238p-pmpm-9mq7** (low, nur mit vorhandener Prototype-Pollution ausnutzbar): Update auf KaTeX 0.19 offen. `public/lernpfad/katex/` ist eine Kopie aus `node_modules/katex` und muss beim Update neu kopiert werden.
 - **Doppelte Statistik-Funktionen:** mehrere Themenseiten bringen eigene Fassungen von `erfc`, `invPhi`, `lnGamma`, `tCdf` u. a. mit. Kandidat für den Baukasten.
@@ -72,6 +72,14 @@
 - **`.claude/settings.local.json` ist versioniert** und enthält neu sehr breite Freigaben (`Bash(bash:*)`, `git restore:*`) sowie Pfade zur alten OneDrive-Kopie. Nicht in den Lernpfad-Commit aufnehmen; Bereinigung und `.gitignore` entscheidet Jan.
 
 ## Changelog
+
+### 2026-11-04
+
+- **feat: Lernpfad AVSW nach Modulunterlagen neu aufgebaut** — 12 Stationen nach den Lernblöcken des Moduls: 01 Grundlagen und Architektur-Atlas (ISO 25010, arc42, C4 mit Zoom, ATAM, Atlas mit 25 Stilen), 02 SOA und synchrone APIs (inkl. SoaML, API-Gateway, OAuth), 03 EDA und Message Broker, 04 Mehrschichtenarchitektur, 05 Microservices und Makroarchitektur (Variante 1/2, DDD, Docker, Kubernetes), 06 Clientseitige Architekturen, 07 Serverseitige Architekturen (skriptbasiert, .NET, Jakarta EE), 08 IoT, 09 Integrationsarchitektur (Verbindungsregeln, MSP, WfMS, DWH, Data Lake), 10 Fallstudie «Velomio AG» in 6 Etappen, 11 Architektur-Leitstand, 12 Prüfungstraining (Übungsprüfung «Curavia AG», 90 min, 3 Aufträge). Referenzarchitekturen als interaktive UML-Komponentendiagramme mit Steckbriefen und Abläufen, Modellierspiele im UML-Modus mit Bewertungsraster und Fallen. Eigene Darstellung und eigene Fälle (Urheberrecht, Repo öffentlich). Die erste AVSW-Fassung (6 Stationen, Baustein `modellieren`) ist ersetzt.
+- **feat: Architektur-Engine** (`public/lernpfad/architektur.js`/`.css`, Doku `docs/lernpfad-architektur.md`, Vertrag `docs/architektur-modell.md`) — UML-Notation mit Paketen, Ball and Socket, Rollenfarben, Notizen, `{xor}`; Atlas als Landkarte; animierte Abläufe; Ausfall-Modus mit Broker-Stau; Editor mit Drag and Drop und Tastatur; Modellierspiel mit Levelkarte, Sternen, XP, Tipps, Prüfungsmodus und Kriterienraster. Prüfregel zur Einbindungsreihenfolge.
+- **feat: Spielstand im Konto** — Modell `Spielstand`, API `/api/spielstand` (Bestwert je Feld, Punkte für XP-Zuwachs ÷ 10, Rate-Limit, Obergrenze 300 Levels je Fach), vier Abzeichen für die AVSW-Spiele. Migration `20261101110000_add_spielstand`.
+- **fix: Simulator** — Mission 3 zählt Resilienzmuster, Mission 4 mit Editor-Modell lösbar, Simulationswerte nur aus der Mission.
+- **test:** 849 Tests grün, `tsc` ohne Fehler, Produktions-Build erfolgreich, Browser-Durchlauf über alle AVSW-Seiten (1280/320 px, hell/dunkel) und MSTW, PMGT, PS ohne Fehler.
 
 ### 2026-11-01
 
