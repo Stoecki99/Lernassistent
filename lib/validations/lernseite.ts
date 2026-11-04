@@ -19,6 +19,8 @@ const hexColorRegex = /^#[0-9A-Fa-f]{6}$/
 const sektionSchema = z.strictObject({
   id: z.string().regex(/^[a-z0-9-]+$/, "Sektions-ID: nur a-z, 0-9 und Bindestrich."),
   titel: text,
+  /** Optional: Farbe der Sektion auf der Lernpfad-Seite (hell; dunkel wird sie aufgehellt). */
+  farbe: z.string().regex(hexColorRegex, "Sektionsfarbe als #RRGGBB.").optional(),
 })
 
 export const stationSchema = z.strictObject({

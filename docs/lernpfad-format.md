@@ -40,7 +40,7 @@ content/lernseiten/
   "farbe": "#1CB0F6",
   "semester": "HS26",
   "sektionen": [
-    { "id": "s1", "titel": "Sektion 1 · Logik" },
+    { "id": "s1", "titel": "Sektion 1 · Logik", "farbe": "#3b37b8" },
     { "id": "abschluss", "titel": "Prüfungsvorbereitung" }
   ],
   "pfad": [
@@ -62,6 +62,7 @@ content/lernseiten/
 | `farbe` | `#RRGGBB` |
 | `icon` | 1–10 Zeichen |
 | `sektionen[].id` | `a-z`, `0-9`, `-`; eindeutig |
+| `sektionen[].farbe` | optional, `#RRGGBB`: färbt auf der Lernpfad-Seite Sektionskopf und Stationspunkte (dunkel automatisch aufgehellt). Dunkel genug für weisse Schrift wählen (≥ 4.5:1), am besten gleich wie der helle Sektionsakzent in `lernpfad.css` (MSTW: Logik `#3b37b8`, Wahrscheinlichkeit `#0b6176`, Statistik `#7c2a99`, Abschluss `#7a1f5c`) |
 | `pfad` | mindestens eine Station; Reihenfolge = Reihenfolge im Lernpfad |
 | `pfad[].slug` | `NN-name` (zwei Ziffern, dann Teile aus `a-z0-9`, je mit einem Bindestrich), eindeutig |
 | `pfad[].sektion` | muss eine `id` aus `sektionen` sein |
@@ -110,6 +111,7 @@ Loader (`lib/lernseiten.ts`, nur serverseitig):
 ```
 
 - `data-fach` = Fachordner, `data-thema` = Dateiname ohne `.html`.
+- Farben (Baukasten 1.2.0, optional, MSTW Pflicht): `data-farbig` schaltet Farben je Sektion und Aufgabentyp ein, `data-sektion` = `logik`, `wahrscheinlichkeit`, `statistik` oder `abschluss`, z. B. `<body data-fach="mstw" data-thema="12-normalverteilung" data-farbig data-sektion="wahrscheinlichkeit">`. Details in `docs/lernpfad-baukasten.md`, Abschnitt 7.1.
 - Theme-Startskript im `<head>` (Zeile unverändert aus `_vorlage.html` übernehmen): setzt das gespeicherte Farbschema (`localStorage` «lernpfad-theme», Werte `hell`/`dunkel`) als `html[data-theme]`, bevor die Seite gezeichnet wird. Ohne das Script flackert der Dunkelmodus beim Laden. Gesperrter Speicher bricht nichts (try/catch).
 - `<link rel="next">`: nächste Station laut `pfad` in `fach.json`, `href="/lernseiten/<fach>/<slug>"`, `title` = deren Titel. Bei der letzten Station weglassen.
 - `lernpfad.js` steht am Ende von `<body>`, danach das seiteneigene Script.
@@ -125,7 +127,7 @@ Loader (`lib/lernseiten.ts`, nur serverseitig):
 - `fach.json` fehlt, ist kein gültiges JSON oder verletzt das Schema (inkl. doppelte Slugs, unbekannte Sektion)
 - Fachordner mit ungültigem Namen, Kürzel passt nicht zum Ordner, Ordner heisst wie eine App-Seite, ein Eintrag in `public/` oder `_next`
 - HTML-Datei, deren Name nicht `NN-name.html` ist oder die nicht im Pfad steht
-- Pflicht-Gerüst unvollständig: `<!doctype html>`, `lang="de-CH"`, `charset="utf-8"`, viewport, `<title>`, Theme-Startskript im `<head>` (Inline-Script mit «lernpfad-theme» und `data-theme`), `lernpfad.css`, `lernpfad.js` (am Ende von `<body>`), `data-fach` und `data-thema` passend zum Dateinamen
+- Pflicht-Gerüst unvollständig: `<!doctype html>`, `lang="de-CH"`, `charset="utf-8"`, viewport, `<title>`, Theme-Startskript im `<head>` (Inline-Script mit «lernpfad-theme» und `data-theme`), `lernpfad.css`, `lernpfad.js` (am Ende von `<body>`), `data-fach` und `data-thema` passend zum Dateinamen; `data-sektion` (falls gesetzt) mit einem anderen Wert als `logik`, `wahrscheinlichkeit`, `statistik`, `abschluss` oder ohne `data-farbig`
 - `<link rel="next">` passt nicht zum Pfad: fehlt, steht mehrfach, `href` zeigt nicht auf die nächste Station oder `title` ist nicht deren Titel; bei der letzten Station steht einer (auch einer zum Lernpfad)
 - externe Ressource in `src`, `href`, `srcset`, `poster` oder `data` von `script`, `link`, `img`, `iframe`, `source`, `video`, `audio`, `embed`, `object`, `track`, `base`, SVG-`image`/`use` sowie `url(…)` und `@import` in CSS
 - externe Adresse (`https://…`, `wss://…`, `//host…`) in einem Inline-Script als Argument von `fetch`, `import`/`from`, `.src =`, `src:`, `setAttribute("src"|"srcset"|"poster"|"data"|"xlink:href", …)`, `new Worker`/`WebSocket`/`EventSource`/`Audio`, `XMLHttpRequest.open`, `sendBeacon`, `importScripts` oder in `url(…)`. Kommentare im Script zählen nicht. Nicht gemeldet werden Adressen in gewöhnlichem Text, Links (`href`) und Namensräume wie `createElementNS("http://www.w3.org/2000/svg", …)`.

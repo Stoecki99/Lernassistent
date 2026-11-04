@@ -2,6 +2,8 @@
 
 Der Baukasten liefert Design und Bausteine für alle Themenseiten des Lernpfads. Jede Themenseite ist **eine fertige HTML-Datei**, die CSS und JavaScript aus `/lernpfad/` lädt. Vorbild für Aussehen und Bedienung ist die Lernseite «Psycho-Logisches» (schmale Lesespalte, Tafeln, Farbcode der Symbole, Lösungsfilm, Selbsttest).
 
+Version **1.2.0** (`Lernpfad.version`): neue Eingabe-Bausteine `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`, Stufen-Kennzeichen und Farben als Opt-in (`body[data-farbig]`, [Abschnitt 7](#7-design-tokens)). Alles rückwärtskompatibel: Seiten ohne `data-farbig` sehen aus wie mit 1.1.0.
+
 Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lernpfad-format.md`. Dieses Dokument ist der Vertrag für das Schreiben einer Themenseite.
 
 **Schnellstart:** Kopiere die Vorlage deines Fachs (`content/lernseiten/mstw/_vorlage.html` oder `content/lernseiten/pmgt/_vorlage.html`) nach `content/lernseiten/<fach>/<slug>.html`, passe Kopf und Inhalte an, prüfe in der Vorschau, arbeite die [Prüfliste](#13-prüfliste-vor-der-abgabe) ab.
@@ -16,7 +18,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 6. [Farbcode der Symbole](#6-farbcode-der-symbole)
 7. [Design-Tokens](#7-design-tokens)
 8. [CSS-Klassen](#8-css-klassen)
-9. [JavaScript: window.Lernpfad](#9-javascript-windowlernpfad) (inkl. `modellieren`, `piktogramm`)
+9. [JavaScript: window.Lernpfad](#9-javascript-windowlernpfad) (inkl. `modellieren`, `piktogramm`, `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`)
 10. [Fortschritt und Abschluss-Box](#10-fortschritt-und-abschluss-box)
 11. [Themeneigene Interaktionen](#11-themeneigene-interaktionen)
 12. [Barrierefreiheit](#12-barrierefreiheit)
@@ -30,7 +32,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 | `public/lernpfad/lernpfad.js` | Vanilla-JS ohne Abhängigkeiten, globales Objekt `window.Lernpfad` |
 | `public/lernpfad/fonts.css`, `fonts/` | Bricolage Grotesque (Titel), Source Sans 3 (Text), STIX Two Text (Formeln), selbst gehostet, SIL Open Font License 1.1 (`fonts/OFL.txt`) |
 | `public/lernpfad/katex/` | KaTeX 0.16 (CSS, JS, auto-render, woff2-Schriften), lädt `lernpfad.js` nur bei Bedarf |
-| `content/lernseiten/mstw/_vorlage.html` | Muster-Themenseite MSTW mit allen Bausteinen (keine Station) |
+| `content/lernseiten/mstw/_vorlage.html` | Muster-Themenseite MSTW mit allen Bausteinen, den Eingabe-Bausteinen 1.2.0 und den Farben (`data-farbig`, Sektionswahl zum Ausprobieren; keine Station) |
 | `content/lernseiten/pmgt/_vorlage.html` | Muster-Themenseite PMGT: alle Bausteine plus ICB-Kennzeichen, Matrix, Reflexion, Netzplan und Gantt (keine Station) |
 | `scripts/lernpfad-vorschau.mjs` | Lokaler Vorschau-Server ohne App und Login |
 | `public/lernpfad/ps-konsole.css`, `ps-konsole.js` | Erweiterung Lernpfad PS: Konsolen-Simulator, Syntaxfärbung, Ausgabeblöcke. Nur für PS-Seiten, Doku in `docs/lernpfad-powershell.md` |
@@ -54,7 +56,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
   <link rel="next" href="/lernseiten/mstw/09-kombinatorik" title="Kombinatorik">
   <style>/* optional: nur Klassen mit Themen-Präfix, z. B. .t08-… */</style>
 </head>
-<body data-fach="mstw" data-thema="08-laplace-bedingte-wahrscheinlichkeit">
+<body data-fach="mstw" data-thema="08-laplace-bedingte-wahrscheinlichkeit" data-farbig data-sektion="wahrscheinlichkeit">
 <main class="wrap">
   <header class="stack">…</header>
   <nav class="steps" aria-label="Abschnitte">…</nav>
@@ -76,6 +78,7 @@ Daten, Dateinamen, Prüfung, Auslieferung und Fortschritts-API regelt `docs/lern
 Regeln:
 
 - `data-fach` = Fachordner (`mstw`, `pmgt`), `data-thema` = Dateiname ohne `.html` (der Slug aus `fach.json`). `data-fach` bestimmt auch Kopfleiste, Fortschritt und Akzentfarbe ([Abschnitt 7](#7-design-tokens)).
+- `data-farbig` (ohne Wert) schaltet die Farben je Sektion und Aufgabentyp ein, `data-sektion` wählt den Sektionsakzent: `logik`, `wahrscheinlichkeit`, `statistik` oder `abschluss` ([Abschnitt 7](#7-design-tokens)). MSTW setzt beides (01–06 `logik`, 07–13 `wahrscheinlichkeit`, 14–17 `statistik`, 18 `abschluss`), PMGT und PS lassen es weg. Ein anderer Wert für `data-sektion` ist ein Prüffehler, ebenso `data-sektion` ohne `data-farbig` (der Akzent wirkt nur mit beidem). Im Fach `mstw` fehlt keines von beiden: Fehlt `data-farbig` oder `data-sektion`, meldet die Prüfung einen Fehler.
 - `<title>`: Titel der Station aus `fach.json`, dann ` · ` und das Kürzel in Grossbuchstaben (` · MSTW`, ` · PMGT`).
 - Theme-Startskript: die `<script>`-Zeile im `<head>` unverändert aus `_vorlage.html` übernehmen. Sie setzt das gespeicherte Farbschema (`html[data-theme]`), bevor die Seite gezeichnet wird; ohne sie flackert der Dunkelmodus beim Laden. Gesperrter Speicher bricht nichts. Die Prüfung verlangt sie.
 - `<link rel="next">`: nächste Station laut `pfad` in `fach.json`, `title` = deren Titel. Daraus baut die Abschluss-Box den Knopf «Nächste Station». Bei der letzten Station weglassen. Die Prüfung vergleicht `href` und `title` mit `fach.json`.
@@ -113,10 +116,13 @@ Bewährte Reihenfolge (wie Vorbild und Vorlage). Lass weg, was zum Thema nicht p
 | 2 · Schritt für Schritt | Beispiel von der Aufgabe zur Lösung | `stepper` mit Zuordnung |
 | 3 · Formel / Verfahren | Formel auf der Tafel, Fallen, Lösungen | `.board`, `.note.falle`, `details.sol` |
 | Ausprobieren | themeneigene Interaktion (Baum, Tafel, Rechner, Diagramm) | Hilfsklassen aus [8.11](#811-hilfsklassen-für-themeneigene-interaktionen) |
-| Übungen | selbst rechnen, einordnen, formulieren | `zahlAufgabe`, `wahrFalsch`, `schrittAufgabe`, `auswahl`, `matrix`, `reflexion` (offene Frage) |
+| «Du bist dran» | nach jedem Erklärblock 1–3 kurze Eingaben zum eben Gelernten | `div.dran` mit Eingabe-Bausteinen |
+| Übungen | 5–8 Eingabe-Aufgaben in drei Stufen (●○○ Aufwärmen, ●●○ Prüfungsniveau, ●●● Knacknuss); Wahr/Falsch und Auswahl ergänzen nur | `zahlAufgabe`, `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`, `schrittAufgabe`, `wahrFalsch`, `auswahl`, `matrix`, `reflexion` (offene Frage); Feld `stufe` |
 | ▶ Lösungsfilm | ganze Prüfungsaufgabe am Stück | `film` (endet mit Link `#test`) |
 | ✓ Selbsttest | 6–10 Fragen | `selbsttest` in `<section id="test">` |
 | Auf einen Blick | 4–6 Merksätze | `ul.summary.prose`, `footer` |
+
+**Viel selbst lösen (MSTW):** mindestens 8–12 Eingabe-Aufgaben pro Seite (`zahlAufgabe`, `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`; eine Tabelle oder Lückenrechnung zählt als eine). Jede mit Tipps und Lösungsweg. Eigene Zahlen und Alltagskontexte, keine nachgebauten Folienbeispiele. **Keine Folienverweise im Text** («Folie 12», «Skript Def. 2.3», «S2-V3»): Quellen nur knapp im `footer`; die `.eyebrow` im Kopf zeigt Sektion und Thema, nicht die Vorlesungsnummer.
 
 Jede `section` hat eine `id` (für Navigation und Film-Ende) und beginnt mit `.eyebrow` und `h2`. Fliesstext in `p.prose` (Zeilenlänge max. 66 Zeichen).
 
@@ -197,6 +203,10 @@ Alle Farben kommen aus Tokens auf `:root`. Hell und dunkel setzt `lernpfad.css` 
 | `--ok`, `--ok-bg` | richtig |
 | `--bad`, `--bad-bg` | falsch, Fallen |
 | `--s1` … `--s5` | Reihenfarben für Diagramme (blau, orange, grün, violett, Akzent) |
+| `--s1-soft` … `--s4-soft` | getönte Flächen zu `--s1` … `--s4` (nur mit `data-farbig`) |
+| `--dran`, `--dran-bg`, `--dran-ink` | Eingabe-Aufgaben, «Du bist dran» (Rand, Fläche, Text) |
+| `--film`, `--film-bg`, `--film-ink` | Lösungsfilm (Türkis) |
+| `--merk`, `--merk-bg` | Merksätze, «Auf einen Blick» (Gelb) |
 | `--f-display`, `--f-body`, `--f-math` | Schriften: Titel, Text, Formeln |
 
 **Akzent pro Fach.** `lernpfad.css` setzt `--accent` und `--accent-soft` je Fach über `body[data-fach="…"]`, hell und dunkel. Alles, was den Akzent nutzt (Links, Überzeilen, primäre Knöpfe, Navigation, Fokusringe, `--s5`), wechselt mit. Ohne eigenen Eintrag gilt der Standard (Weinrot, MSTW).
@@ -207,6 +217,44 @@ Alle Farben kommen aus Tokens auf `:root`. Hell und dunkel setzt `lernpfad.css` 
 | MSTW (Standard) | dunkel | `#e683c0` | `#3a2033` | 7.52 / 6.97 / 5.84 |
 | PMGT (Kachel `#FF9600`) | hell | `#a64b00` | `#fdebd6` | 5.38 / 5.79 / 4.97 |
 | PMGT | dunkel | `#ff9f40` | `#3d2610` | 9.24 / 8.56 / 6.93 |
+
+### 7.1 Farben als Opt-in: `body[data-farbig]` (1.2.0)
+
+Mit `data-farbig` am `<body>` bekommt die Seite einen Akzent je Sektion und Farben je Aufgabentyp. Ohne das Attribut gilt keine dieser Regeln (PMGT und PS bleiben unverändert). Auch hier nur Tokens, nie feste Farben.
+
+**Sektionsakzent** über `data-sektion` (setzt `--accent`, `--accent-soft` und `--s5`, hell und dunkel). Kontrast nachgerechnet nach WCAG, Akzent als Text:
+
+| `data-sektion` | Schema | `--accent` | `--accent-soft` | Kontrast auf `--bg` / `--surface` / `--accent-soft` |
+|----------------|--------|-----------|-----------------|------------------------------------------|
+| `logik` (Indigo, abgesetzt vom Variablen-Blau `--var`) | hell | `#3b37b8` | `#e7e6f8` | 8.04 / 8.66 / 7.04 |
+| `logik` | dunkel | `#a9a6ff` | `#25233f` | 8.61 / 7.98 / 6.89 |
+| `wahrscheinlichkeit` (Petrol, abgesetzt von `--fn`) | hell | `#0b6176` | `#dcf0f4` | 6.53 / 7.03 / 5.97 |
+| `wahrscheinlichkeit` | dunkel | `#5fc6dc` | `#0f2f37` | 9.52 / 8.82 / 7.15 |
+| `statistik` (Pflaume, abgesetzt von `--pred`) | hell | `#7c2a99` | `#f2e3f7` | 7.37 / 7.93 / 6.46 |
+| `statistik` | dunkel | `#d79af0` | `#34203d` | 8.77 / 8.14 / 6.88 |
+| `abschluss` (bisheriges MSTW-Weinrot) | hell | `#7a1f5c` | `#f3e3ee` | 8.96 / 9.64 / 7.82 |
+| `abschluss` | dunkel | `#e683c0` | `#3a2033` | 7.52 / 6.97 / 5.84 |
+
+**Aufgabentypen und Flächen** (nur mit `data-farbig`):
+
+| Was | Aussehen | Tokens |
+|-----|----------|--------|
+| Eingabe-Bausteine (`zahlAufgabe`, `schrittAufgabe`, `formelAufgabe`, `tabellenAufgabe`, `lueckenRechnung`, `kurzAntwort`) | Gelb-Orange: dicker Rand links, getönter Kopf, Kennzeichen «✎ Du bist dran» | `--dran`, `--dran-bg`, `--dran-ink` |
+| `.dran` (Kasten nach einem Erklärblock) | Gelb-Orange gerahmt und getönt; die Bausteine darin ohne eigenes Kennzeichen | `--dran`, `--dran-bg`, `--dran-ink` |
+| Lösungsfilm, Überzeile seines Abschnitts | Türkis | `--film`, `--film-bg`, `--film-ink` |
+| Selbsttest (`section#test`) | Grün: Rand links an jeder Frage, Überzeile | `--ok` |
+| `.note.falle` | Rot, Rand links | `--bad`, `--bad-bg` |
+| `.note` (Merke) und `ul.summary` | Gelb | `--merk`, `--merk-bg` |
+| `.concept` | im Wechsel getönt (1–4) mit Rand oben | `--s1` … `--s4`, `--s1-soft` … `--s4-soft` |
+| Überzeilen der Abschnitte (`main > section > .eyebrow`) | im Wechsel `--s1` … `--s4`, Strich links | `--s1` … `--s4` |
+| Nummern in `nav.steps` (`<b>`) | farbige Punkte im Wechsel | `--s1` … `--s4` |
+| Stufen `.stufe-1/2/3` | Punkte in `--dran-ink` (ohne Opt-in in `--accent`) | |
+
+Kontrast der neuen Tokens (hell / dunkel): `--dran-ink` auf `--dran-bg` 6.50 / 9.82, `--film-ink` auf `--bg` 6.96 / 12.19, `--s1` … `--s4` als Text auf ihrer Tönung mindestens 4.58 / 7.12, `--muted` auf allen Tönungen mindestens 5.50 / 5.72, `--accent` auf `--merk-bg` mindestens 6.51 / 5.74, `--surface` auf `--s1` … `--s4` (Navigationspunkte) mindestens 5.27 / 7.98. Ränder (`--dran`, `--film`) mindestens 3.9:1.
+
+Die Lernpfad-Seite der App (`/lernseiten/<fach>`) färbt Sektionskopf und Stationspunkte mit dem optionalen Feld `farbe` je Sektion in `fach.json` (siehe `docs/lernpfad-format.md`). Halte es gleich wie den hellen Sektionsakzent oben.
+
+### 7.2 Neues Fach
 
 Neues Fach: drei Regeln in `lernpfad.css` ergänzen (hell, `prefers-color-scheme: dark` mit `:root:not([data-theme="light"])`, `:root[data-theme="dark"]`), `--s5:var(--accent)` in der hellen Regel mitsetzen und den Kontrast nachrechnen (WCAG, mindestens 4.5:1 auf `--bg` und `--surface`; `.btn.primary` nutzt `--surface` als Schrift auf dem Akzent, also dasselbe Verhältnis).
 
@@ -294,6 +342,12 @@ Neues Fach: drei Regeln in `lernpfad.css` ergänzen (hell, `prefers-color-scheme
 | `.wf`, `.wf-zeile`, `.wf-wahl`, `.kreuz`, `.wf-erkl` | Wahr/Falsch mit Kreuzen |
 | `.sa-schritte`, `.sa-inhalt` | aufgedeckte Schritte der Schritt-Aufgabe |
 | `.marke` | ✓ / ✗ vor einer Rückmeldung |
+| `.eingabe` | alle Eingabe-Bausteine ab 1.2.0 (für die Farben) |
+| `.uebung-marken`, `.stufe`, `.stufe-1/2/3` | Überzeile mit Stufe; `<span class="stufe stufe-2">Prüfungsniveau</span>` zeigt ●●○ (Punkte nur fürs Auge, der Text sagt die Stufe). Die Bausteine setzen es über das Feld `stufe` selbst |
+| `.dran` | Kasten «✎ Du bist dran» nach einem Erklärblock, darin 1–3 Eingabe-Bausteine |
+| `.formel-feld`, `.kurz-feld`, `.symbolleiste`, `.sym`, `.fa-vorschau`, `.fa-anzeige`, `.fa-formel`, `.fa-atom` | Formel- und Kurzantwort-Eingabe mit Symbolleiste und erkannter Formel |
+| `.tb-box`, `.tb-tabelle`, `.tb-zelle` (`.richtig`, `.falsch`, `.gezeigt`), `.tb-feld`, `.tb-stand` | Tabelle ausfüllen (eigener Scroll-Behälter) |
+| `.lr-schritte`, `.lr-schritt` (`.lr-richtig`, `.lr-folgerichtig`, `.lr-aufgedeckt`, `.lr-weiter`), `.lr-label`, `.lr-tipp`, `.lr-erkl`, `.lr-fazit` | Rechenweg mit Lücken |
 
 ### 8.10 Abschluss-Box
 
@@ -322,7 +376,7 @@ Neues Fach: drei Regeln in `lernpfad.css` ergänzen (hell, `prefers-color-scheme
 
 **Wahrheitstabelle:** `table.wahrheitstabelle`, Ergebnisspalte `.erg`, Werte `.w` (wahr) und `.f` (falsch), Zeile hervorheben `tr.an`. Knöpfe in Zellen sind vorgestylt (zum Umschalten von w/f).
 
-**Zahlentabelle:** `table.tabelle` (Wertetabellen, Verteilungen, Testschema), Zahlen rechtsbündig mit `.zahl`, Zeile hervorheben `tr.an`, `caption` als Beschriftung.
+**Zahlentabelle:** `table.tabelle` (Wertetabellen, Verteilungen, Testschema), Zahlen rechtsbündig mit `.zahl`, Zeile hervorheben `tr.an`, `caption` als Beschriftung. Spaltenköpfe stehen in Grossbuchstaben, Formeln darin (KaTeX) behalten ihre Schreibweise: σ bleibt σ, z bleibt z.
 
 **Rechner mit Schieberegler:**
 
@@ -584,6 +638,7 @@ Rechenaufgabe mit Zahleneingabe, Prüfen, Tipps und schrittweisem Lösungsweg.
 | `toleranz` | Zahl oder `{ relativ }` | nein | absolute Abweichung (z. B. `0.0005`) oder relativ (`{ relativ: 0.01 }` = 1 %). Ohne: exakt |
 | `einheit` | Text | nein | z. B. `"CHF"`, `"%"` |
 | `anzeige` | Text | nein | Anzeige des genauen Werts in der Rückmeldung, z. B. `"1/6 ≈ 0.1667"` |
+| `stufe` | 1, 2 oder 3 | nein | Stufen-Kennzeichen im Kopf: ●○○ Aufwärmen, ●●○ Prüfungsniveau, ●●● Knacknuss (ab 1.2.0, auch bei `schrittAufgabe` und allen neuen Eingabe-Bausteinen) |
 | `hinweise` | HTML[] | nein | Tipps, einzeln aufdeckbar |
 | `loesungsweg` | HTML[] | nein | Lösungsschritte, einzeln oder ganz aufdeckbar |
 
@@ -627,6 +682,7 @@ Aufgabe zuerst selbst lösen, dann Schritt für Schritt aufdecken (je Schritt ei
 |------|-----|---------|-----------|
 | `titel` | HTML | nein | Titel |
 | `aufgabe` | HTML | nein | Aufgabenstellung |
+| `stufe` | 1, 2 oder 3 | nein | Stufen-Kennzeichen (wie `zahlAufgabe`) |
 | `schritte` | Objekt[] | ja | `{ html, warum }` |
 
 Rückgabe: `{ alleZeigen(), zuruecksetzen() }`.
@@ -763,14 +819,128 @@ Gibt ein eigenes Inline-SVG (24 × 24, `currentColor`, Klasse `.pikto`) als HTML
 
 Arten: `client`, `mobile`, `user`, `gateway`, `lb`, `service`, `function`, `db`, `cache`, `queue`, `topic`, `storage`, `extern`, `container`, `pod`, `node`, `cluster`, `auth`, `cdn`, `monitor`, `config`, `code`. Galerie in `content/lernseiten/avsw/_vorlage.html`.
 
-### 9.17 Hilfsfunktionen
+### 9.17 `Lernpfad.formelAufgabe(el, cfg)`
+
+Logikformel eintippen. Symbolleiste (Knöpfe fügen an der Cursorposition ein; mit der Tastatur ein Tabstopp, Pfeiltasten, Home/End), ASCII-Ersatz beim Tippen (während einer laufenden Komposition auf Bildschirmtastaturen oder mit IME erst bei `compositionend`; `!` oder `~` → ¬, `&` → ∧, `|` → ∨, `->` → →, `<->` → ↔; auch `&&`, `||`, `/\`, `\/`, `=>`, `<=>`, `!=`, `forall`, `exists`, `1`/`0` für ⊤/⊥). Unter dem Feld steht die erkannte Formel mit Farbcode und klärenden Klammern; folgt nach einem Quantor noch etwas, zeigt eine Klammer seine Reichweite (`∀x P(x) → Q(x)` erscheint als `(∀x P(x)) → Q(x)`). Syntaxfehler melden Stelle und Grund («Die Klammer «(» an Stelle 1 wird nicht geschlossen.»), der Cursor springt dorthin, auch nach einem Klick auf «Prüfen». Das Feld nimmt höchstens 300 Zeichen.
+
+Bindung: ¬ und Quantoren am stärksten, dann ∧, ∨, → (rechtsassoziativ), ↔. Ein Quantor bindet nur die nächste Teilformel: `∀x (P(x) → Q(x))` braucht die Klammer. Prädikate `P(x, y)`, Funktionen `f(x)`, Konstanten, Gleichheit `x = y`, `x ≠ y`; `∀x, y` = `∀x∀y`; Punkt oder Doppelpunkt nach der Variablen erlaubt.
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel`, `frage`, `stufe`, `hinweise`, `loesungsweg` | | nein | wie `zahlAufgabe` |
+| `modus` | `"aequivalent"` oder `"muster"` | nein | Standard `"aequivalent"` |
+| `loesung` / `loesungen` | Text / Text[] | ja | Formel(n) in derselben Schreibweise (ASCII oder Unicode) |
+| `form` | `"knf"`, `"dnf"`, `"nnf"`, `"horn"` | nein | nur `aequivalent`: verlangt zusätzlich die Form. Horn: Klauseln mit höchstens einem positiven Literal oder Implikationsform `A ∧ B → C`, `⊤ → A`, `A ∧ B → ⊥` |
+| `gegenbeispiel` | Boolean | nein | Standard `true`: bei falscher Antwort eine Belegung, bei der sich die Formeln unterscheiden |
+| `symbole` | Text[] | nein | eigene Symbolleiste; Standard `aequivalent`: ¬ ∧ ∨ → ↔ ( ) ⊤ ⊥, `muster`: ¬ ∧ ∨ → ↔ ∀ ∃ ( ) , |
+| `ersetzen` | Boolean | nein | `false` schaltet den ASCII-Ersatz beim Tippen ab (gelesen wird ASCII trotzdem) |
+
+**`aequivalent`** (nur Aussagenlogik): Wahrheitstafel über alle Variablen von Eingabe und Lösung, Schreibweise egal. Rückmeldungen: «✓ Richtig. … gleichwertig zur gesuchten und in KNF.», «✗ Gleichwertig, aber noch nicht in KNF.» mit Grund (Pfeil übrig, ¬ vor Klammer, falsch verschachtelt, mehrere positive Literale), «✗ Das stimmt noch nicht. Gegenbeispiel: Bei A = 1, B = 0 ergibt deine Formel 1, die gesuchte 0.»
+
+**`muster`** (Prädikatenlogik): Vergleich mit jeder akzeptierten Formel nach Normalisierung über den Syntaxbaum: Leerzeichen und überflüssige Klammern, Reihenfolge bei ∧, ∨, ↔ und =, `x ≠ y` = `¬(x = y)`, Umbenennung gebundener Variablen, Reihenfolge direkt aufeinanderfolgender gleicher Quantoren (`∀x∀y` = `∀y∀x`). Nicht gleich sind logisch äquivalente Umformungen (`¬∀x` vs. `∃x¬`): Liste sie in `loesungen`, wenn sie zählen sollen. Hinweise bei falscher Antwort: unbekanntes Prädikat, falsche Stelligkeit, ungebundene Variable, ∀ mit ∧ oder ∃ mit →.
+
+Rückgabe: `{ pruefen(), zuruecksetzen() }`.
+
+```js
+Lernpfad.formelAufgabe("#f-1", {
+  titel: "Implikation in KNF", stufe: 2,
+  frage: String.raw`<p>Forme $A \to (B \land C)$ in eine KNF um.</p>`,
+  loesung: "A -> (B & C)", form: "knf",
+  hinweise: [String.raw`$X \to Y \equiv \lnot X \lor Y$`],
+  loesungsweg: [String.raw`$(\lnot A \lor B) \land (\lnot A \lor C)$`]
+});
+Lernpfad.formelAufgabe("#f-2", {
+  titel: "Satz übersetzen", modus: "muster",
+  frage: "Jeder Student, der lernt, besteht. S(x), L(x), B(x)",
+  loesungen: ["∀x (S(x) ∧ L(x) → B(x))", "∀x (S(x) → (L(x) → B(x)))"]
+});
+```
+
+### 9.18 `Lernpfad.tabellenAufgabe(el, cfg)`
+
+Tabelle mit vorgegebenen und leeren Zellen (Wahrheitstafel, Vierfeldertafel, Verteilung, Kontingenztafel). «Prüfen» markiert jede Eingabezelle mit ✓, ✗ oder – (leer) und zählt «7 von 9 richtig, 1 leer». «Lösung zeigen» trägt die fehlenden und falschen Werte gestrichelt ein. Die Tabelle scrollt in ihrem eigenen Behälter, die Seite bleibt bei 320 px ohne seitliches Scrollen. Jedes Feld hat einen Namen aus Zeile und Spalte (`aria-label`), der Zustand steht zusätzlich als Text für Screenreader. Formeln in Köpfen und Zeilenköpfen werden dafür vorgelesen statt als TeX: `$A \land \lnot B$` → «A und nicht B», `$\overline{D}$` → «nicht D», `$h_{1\cdot}$` → «h Index 1 Punkt», `$\le$` → «≤» (Makros aus `Lernpfad.makros` eingeschlossen). Ohne `zeilenKopf` nennt der Feldname die vorgegebenen Zellen vor dem ersten Feld der Zeile mit ihrem Spaltenkopf, bei Wahrheitstafeln also die Belegung («A = 1, B = 0, A und nicht B»).
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel`, `frage`, `stufe`, `hinweise`, `loesungsweg` | | nein | wie `zahlAufgabe` |
+| `kopf` | HTML[] oder HTML[][] | nein | Kopfzeile(n); die letzte benennt die Spalten |
+| `zeilen` | Zelle[][] | ja | Zeilen mit Zellen (siehe unten) |
+| `zeilenKopf` | Boolean | nein | erste Zelle jeder Zeile als Zeilenkopf (`th`), benennt die Felder |
+| `beschriftung` | HTML | nein | `caption` |
+
+Zellen: Text oder Zahl = vorgegeben (HTML, Formeln erlaubt); `{ html, kopf: true }` = Zeilenkopf; Eingabe als Zahl `{ antwort, toleranz, anzeige }` (gleiche Eingabelogik wie `zahlAufgabe`: Komma, Brüche, Prozent; `antwort` auch als Liste) oder als Text `{ antwort: ["W", "1", "wahr"], typ: "text" }` (ohne Gross-/Kleinschreibung, Leerzeichen, Anführungszeichen). `anzeige` = Text bei «Lösung zeigen». Rückgabe: `{ pruefen(), loesungZeigen(), zuruecksetzen() }`.
+
+```js
+const W = { antwort: ["1", "W"], typ: "text" }, F = { antwort: ["0", "F"], typ: "text" };
+Lernpfad.tabellenAufgabe("#t-1", {
+  titel: "Wahrheitstafel",
+  kopf: ["$A$", "$B$", String.raw`$A \land \lnot B$`],
+  zeilen: [["1", "1", F], ["1", "0", W], ["0", "1", F], ["0", "0", F]]
+});
+Lernpfad.tabellenAufgabe("#t-2", {
+  kopf: ["$k$", "$P(X = k)$"], zeilenKopf: true,
+  zeilen: [["0", { antwort: 0.25, toleranz: 0.005 }], ["1", { antwort: 0.5, toleranz: 0.005 }]]
+});
+```
+
+### 9.19 `Lernpfad.lueckenRechnung(el, cfg)`
+
+Rechenweg mit Lücken: Schritte nacheinander (z. B. μ, σ, z, Φ(z), Ergebnis), jeder mit Zahleneingabe, Tipp, «Aufdecken» und Rückmeldung wie `zahlAufgabe`. Der nächste Schritt öffnet sich, sobald der vorherige stimmt oder aufgedeckt ist; der Fokus springt ins nächste Feld. Am Ende ein Fazit («Fertig: 3 von 5 selbst richtig, 1 folgerichtig, 1 aufgedeckt.»).
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel`, `stufe` | | nein | wie `zahlAufgabe` |
+| `aufgabe` | HTML | nein | Aufgabenstellung |
+| `schritte` | Objekt[] | ja | siehe unten |
+
+Felder eines Schritts: `label` (HTML, auch Formel), `antwort` (Zahl oder Zahl[]), `toleranz`, `einheit`, `anzeige` (Text beim Aufdecken und bei Folgefehlern), `hinweis` (HTML, ein Tipp), `erklaerung` (HTML, erscheint nach richtig oder aufgedeckt), `folgefehler` (optional, Funktion).
+
+**Folgefehler:** Ist ein Schritt falsch und hat der **nächste** Schritt `folgefehler`, erscheint «Mit meinem Wert weiterrechnen». `folgefehler(vorherigeEingaben)` bekommt die Werte aller früheren Schritte (eigene Eingaben; bei aufgedeckten Schritten der richtige Wert) und liefert den Wert, der mit diesen Vorwerten richtig wäre. Passt die Eingabe dazu: «✓ Folgerichtig gerechnet, aber Schritt 1 war falsch. Richtig wäre hier 0.5787.» Ändert die Person den falschen Wert, verschwindet «Mit meinem Wert weiterrechnen» bis zum nächsten «Prüfen». Rückgabe: `{ zuruecksetzen(), stand() }` (`stand()` liefert je Schritt `"offen"`, `"richtig"`, `"folgerichtig"`, `"aufgedeckt"` oder `"weiter"`).
+
+```js
+Lernpfad.lueckenRechnung("#lr-1", {
+  titel: "Standardisieren", stufe: 2,
+  aufgabe: String.raw`<p>$X \sim N(100, 15^2)$. Wie gross ist $P(X \le 118)$?</p>`,
+  schritte: [
+    { label: "$z$", antwort: 1.2, toleranz: 0.005, hinweis: String.raw`$z = (x - \mu) / \sigma$` },
+    { label: String.raw`$\Phi(z)$`, antwort: 0.8849, toleranz: 0.0005, erklaerung: "Aus der Φ-Tabelle." },
+    { label: String.raw`$P(X > 118)$`, antwort: 0.1151, toleranz: 0.0005, folgefehler: (v) => 1 - v[1] }
+  ]
+});
+```
+
+### 9.20 `Lernpfad.kurzAntwort(el, cfg)`
+
+Kurze Antwort eintippen, drei Typen. Hinweise und Lösungsweg wie `zahlAufgabe`. Das Feld nimmt höchstens 300 Zeichen. Rückgabe: `{ zuruecksetzen() }`.
+
+| Feld | Typ | Pflicht | Bedeutung |
+|------|-----|---------|-----------|
+| `titel`, `frage`, `stufe`, `hinweise`, `loesungsweg` | | nein | wie `zahlAufgabe` |
+| `typ` | `"text"`, `"menge"`, `"hypothese"` | nein | Standard `"text"` |
+| `antwort` | Text oder Text[] | ja | akzeptierte Antworten (jede Alternative einzeln) |
+| `grossKlein` | Boolean | nein | nur `menge`: Gross-/Kleinschreibung zählt (Standard: egal) |
+| `symbole` | Text[] | nein | eigene Symbolleiste; Standard `menge`: { } , ¬ ∅ □, `hypothese`: μ σ ≤ ≥ ≠ < > = |
+| `format` | HTML | nein | ersetzt den Formathinweis unter dem Feld |
+
+- **`text`**: Vergleich ohne Gross-/Kleinschreibung, Leerzeichen, Anführungszeichen und Schlusspunkt. Bindestriche zählen: Varianten in `antwort` aufzählen.
+- **`menge`**: `{1, 3, 5}`, Reihenfolge und Doppelte egal, Zahlen nach Wert (`{0.5}` = `{1/2}`), verschachtelt `{{A, ¬B}, {C}}` (Klauselmengen), ¬ auch als `!` oder `~`, leere Menge `{}` oder `∅`, leere Klausel `□` (= `{}`), Tupel `(1, 2)` mit Reihenfolge. Rückmeldung nennt, wie viele Elemente fehlen oder zu viel sind; ohne Klammern kommt ein Formathinweis. Das Komma trennt Elemente: `{0,5}` ist {0, 5}. Dezimalzahlen darum mit Punkt (`{0.5}`); steht bei einer falschen Antwort ein Komma direkt zwischen Ziffern, weist die Rückmeldung darauf hin.
+- **`hypothese`**: `H0: μ ≤ 50; H1: μ > 50` (getrennt mit `;`, Komma oder Zeilenumbruch, Reihenfolge egal). Zeichen auch als `<=`, `>=`, `!=`, `<>`; μ als `mu`, σ als `sigma`, `σ²` = `sigma^2`, `H₀`/`H_0`/`Ha`; Leerzeichen und Dezimalkomma egal; `50 ≥ μ` = `μ ≤ 50`. Hinweise: «H0 und H1 sind vertauscht», «Prüfe das Vergleichszeichen», fehlende Bezeichnung H0/H1.
+
+```js
+Lernpfad.kurzAntwort("#k-1", { typ: "menge", frage: "Klauselmenge von (A ∨ ¬B) ∧ C?", antwort: "{{A, ¬B}, {C}}" });
+Lernpfad.kurzAntwort("#k-2", { typ: "hypothese", frage: "…", antwort: ["H0: μ ≥ 500; H1: μ < 500", "H0: μ = 500; H1: μ < 500"] });
+Lernpfad.kurzAntwort("#k-3", { typ: "text", frage: "Name der Regel?", antwort: ["Modus ponens", "Abtrennungsregel"] });
+```
+
+### 9.21 Hilfsfunktionen
 
 | Funktion | Zweck |
 |----------|-------|
 | `Lernpfad.zahlLesen(text)` | liest «0,25», «1'234.5», «1/4», «−3» als Zahl, sonst `NaN` |
 | `Lernpfad.zahlText(wert, stellen)` | Zahl als Text mit Dezimalpunkt, höchstens `stellen` Nachkommastellen (Standard 4), ab 10 000 mit Hochkomma |
 | `Lernpfad.makros` | KaTeX-Makros (erweiterbar, siehe [Abschnitt 5](#5-formeln-katex)) |
-| `Lernpfad.version` | Version des Baukastens |
+| `Lernpfad.version` | Version des Baukastens (`"1.2.0"`) |
+| `Lernpfad.auswertung` | reine Prüflogik der Eingabe-Bausteine für eigene Interaktionen: `zahlBewerten(text, sollListe, toleranz)`, `formelLesen(text)` → `{ ok, baum }` oder `{ ok: false, fehler, stelle }`, `formelText(baum)`, `aequivalent(a, b)`, `formPruefen(baum, "knf")`, `musterVergleichen(baum, [baeume])`, `mengeLesen(text)`, `hypotheseLesen(text)`, `hypothesenVergleichen(ist, soll)`, `textNormal(text)`. Unter Node lädt `require("public/lernpfad/lernpfad.js")` nur diese Funktionen (Tests: `tests/lernpfad-auswertung.test.ts`) |
 
 ## 10. Fortschritt und Abschluss-Box
 
@@ -832,6 +1002,8 @@ Die Bausteine erfüllen das bereits. Für eigenen Inhalt gilt dasselbe:
 - **Fokus behalten:** Wird ein Knopf deaktiviert oder ausgeblendet, setz den Fokus auf ein sinnvolles Nachbarelement. Ersetze nicht den Knopf, der gerade den Fokus hat.
 - **Fokusringe** nicht entfernen (`outline: none` ist verboten).
 - **Beschriftungen:** jedes Eingabefeld mit `<label for>`, Symbolknöpfe (◀, ▶) mit `aria-label`, SVG mit `role="img"` und `<title>`.
+- **Generierter Text:** Per CSS erzeugte Kennzeichen mit Zeichen (✎, ●) bekommen einen Alternativtext ohne Symbol (`content:"✎ Du bist dran" / "Du bist dran"`), sonst liest der Screenreader das Zeichen mit.
+- **Feldnamen ohne TeX:** `aria-label` aus Formeln nie roh übernehmen («A \land B»), sondern als Klartext («A und B»); `tabellenAufgabe` macht das selbst.
 - **Überschriften** in Reihenfolge: ein `h1`, `h2` pro Abschnitt, `h3` darunter.
 - **Sprache:** Fremdsprachige Begriffe sind selten; falls nötig `<span lang="en">p-value</span>`.
 
@@ -844,12 +1016,15 @@ Die Bausteine erfüllen das bereits. Für eigenen Inhalt gilt dasselbe:
 - [ ] `npm run lernseiten:pruefen` meldet für die Seite keine Fehler.
 - [ ] Vorschau (`node scripts/lernpfad-vorschau.mjs --port <port>`): keine Fehler in der Konsole, keine `[Lernpfad]`-Meldungen.
 - [ ] Alle Formeln gesetzt (kein roher `$…$`-Text, keine roten KaTeX-Fehler).
-- [ ] Alle Bausteine durchgeklickt: Sortierer, Stepper (Zuordnung leuchtet), Übungen (richtige und falsche Eingabe), Film läuft bis zum Ende, Selbsttest vollständig beantwortet (Ergebnis in der Abschluss-Box).
+- [ ] MSTW: `<body data-farbig data-sektion="…">` passend zur Sektion (01–06 `logik`, 07–13 `wahrscheinlichkeit`, 14–17 `statistik`, 18 `abschluss`).
+- [ ] Mindestens 8–12 Eingabe-Aufgaben (Zahl, Formel, Tabelle, Lückenrechnung, Kurzantwort), nach jedem Erklärblock ein Kasten `.dran`, Übungen in drei Stufen (`stufe`); jede Aufgabe mit Tipps und Lösungsweg.
+- [ ] Keine Folienverweise im Text («Folie 12», «Skript Def. 2.3», «S2-V3», «LB4»), auch nicht in Tabellen, Übungen, Film und Selbsttest; Quellen nur knapp im `footer`.
+- [ ] Alle Bausteine durchgeklickt: Sortierer, Stepper (Zuordnung leuchtet), Übungen (richtige und falsche Eingabe, bei Formeln auch ein Syntaxfehler; Lückenrechnung mit Folgefehler und Aufdecken; Tabelle «Prüfen» und «Lösung zeigen»), Film läuft bis zum Ende, Selbsttest vollständig beantwortet (Ergebnis in der Abschluss-Box).
 - [ ] Reflexion: leer «Musterlösung zeigen» (Rückfrage erscheint), mit Text zeigen, Kriterien ankreuzen (Summe stimmt), Zurücksetzen.
 - [ ] Matrix: Karten per Tipp und per Tastatur ablegen (Enter, Pfeiltasten, Escape), «Prüfen» mit richtiger und falscher Zuordnung; Ziele stimmen fachlich.
 - [ ] Netzplan und Gantt: Zahlen nachgerechnet, kritische Knoten und Balken markiert, scrollen bei 320 px in `.tablebox` statt die Seite zu verbreitern.
 - [ ] PMGT: ICB-Kennzeichen im Kopf und bei den IPMA-Fragen, Akzentfarbe Orange (kommt von selbst über `data-fach="pmgt"`).
-- [ ] Hell und dunkel geprüft (Umschalter oben rechts); eigene Elemente gut lesbar.
+- [ ] Hell und dunkel geprüft (Umschalter oben rechts); eigene Elemente gut lesbar; mit `data-farbig` auch die Sektionsfarbe.
 - [ ] Bei 360 px und 320 px kein seitliches Scrollen, auch mit aufgedeckten Lösungen.
 - [ ] Mit der Tastatur bedienbar (Tab, Enter, Leertaste), Fokus immer sichtbar.
 - [ ] Eigene Klassen und IDs mit Präfix `t<NN>-`, nur Farben aus `:root`.

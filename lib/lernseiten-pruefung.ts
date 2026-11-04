@@ -29,6 +29,8 @@ const ST_SPIEL_CSS_PFAD = "/lernpfad/st-spiel.css"
 /** Erweiterungen aus /lernpfad/: CSS nach lernpfad.css, JS nach lernpfad.js */
 const ERWEITERUNGEN_CSS = [PS_KONSOLE_CSS_PFAD, ST_SPIEL_CSS_PFAD]
 const ERWEITERUNGEN_JS = [PS_KONSOLE_PFAD, ST_SPIEL_PFAD]
+/** Werte von <body data-sektion> mit eigenem Akzent in lernpfad.css (Abschnitt «Akzent pro Sektion»). */
+export const SEKTIONEN = ["logik", "wahrscheinlichkeit", "statistik", "abschluss"]
 
 /** Namen der Seiten auf oberster Ebene der App (inkl. Routen-Gruppen wie (dashboard)). */
 export function appSeiten(appPfad = path.join(process.cwd(), "app")): string[] {
@@ -393,6 +395,19 @@ export function pruefeThemaHtml(html: string, fach: string, slug: string): strin
       fehler.push(
         `<body data-thema="${slug}"> fehlt (gefunden: ${datenThema === null ? "nichts" : `«${kurz(datenThema)}»`}).`,
       )
+    }
+    // Farb-Opt-in (Baukasten 1.2.0): data-sektion nur mit bekannten Werten, sonst fehlt der Akzent still
+    const datenSektion = attribut(body.tag, "data-sektion")
+    if (datenSektion !== null && !SEKTIONEN.includes(datenSektion)) {
+      fehler.push(`<body data-sektion="${kurz(datenSektion)}"> ist unbekannt (erlaubt: ${SEKTIONEN.join(", ")}).`)
+    }
+    // data-sektion wirkt nur zusammen mit data-farbig (Selektor body[data-farbig][data-sektion=…])
+    if (datenSektion !== null && !/\sdata-farbig(?=[\s=/>])/i.test(body.tag)) {
+      fehler.push(`<body data-sektion="${kurz(datenSektion)}"> wirkt nur zusammen mit data-farbig.`)
+    }
+    // MSTW: Farben sind Pflicht (docs/lernpfad-format.md, Abschnitt Gerüst)
+    if (fach === "mstw" && (datenSektion === null || !/\sdata-farbig(?=[\s=/>])/i.test(body.tag))) {
+      fehler.push(`<body> braucht im Fach mstw data-farbig und data-sektion (${SEKTIONEN.join(", ")}).`)
     }
   }
 
