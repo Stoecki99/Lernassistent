@@ -5,12 +5,16 @@
 // Lernpfad eines Fachs: alle Stationen nach Sektion als Pfad, mit dem Fortschritt des
 // eingeloggten Kontos. Reihenfolge, Titel und Sektionen kommen aus fach.json (lib/lernseiten.ts),
 // der Fortschritt aus dem Modell Lernfortschritt (gleiche Daten wie GET /api/lernfortschritt).
+// Optionale Werkzeug-Karten (sektionen[].werkzeuge) stehen am Anfang ihrer Sektion; Pro-Zugang
+// und Leitstand-Bestwerte prueft die Seite serverseitig (hasLeitstandAccess, findBest).
 
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { ladeFach, type StationMitStatus } from "@/lib/lernseiten"
+import { ladeFach, type FachKurz, type StationMitStatus } from "@/lib/lernseiten"
+import { findBest, hasLeitstandAccess } from "@/lib/leitstand"
+import WerkzeugKarten, { type WerkzeugAnzeige } from "@/components/features/lernseiten/WerkzeugKarten"
 import styles from "../../lernpfad.module.css"
 
 export const dynamic = "force-dynamic"
@@ -71,6 +75,46 @@ async function ladeFortschritt(userId: string, fach: string): Promise<Map<string
   }
 }
 
+/**
+ * Werkzeug-Karten je Sektion mit Zugang und Bestwert. Pro-Zugang und Bestwerte fragt die Seite nur ab,
+ * wenn eine Karte sie braucht. Antwortet die Datenbank nicht, fehlen Hinweis und Bestwert still.
+ */
+async function ladeWerkzeuge(
+  user: { id: string; email?: string | null },
+  sektionen: FachKurz["sektionen"],
+): Promise<Map<string, WerkzeugAnzeige[]>> {
+  const alle = sektionen.flatMap((sektion) => sektion.werkzeuge ?? [])
+  let pro: boolean | null = null
+  const bestwerte = new Map<string, { punkte: number; sterne: number }>()
+
+  if (alle.some((w) => w.zugang === "pro" || w.szenario)) {
+    try {
+      pro = await hasLeitstandAccess({ id: user.id, email: user.email })
+      const szenarien = pro ? [...new Set(alle.flatMap((w) => (w.szenario ? [w.szenario] : [])))] : []
+      const gefunden = await Promise.all(szenarien.map((id) => findBest(prisma, user.id, id)))
+      szenarien.forEach((id, i) => {
+        const best = gefunden[i]
+        if (best) bestwerte.set(id, { punkte: best.score, sterne: best.stars })
+      })
+    } catch (error) {
+      console.error("[lernpfad/werkzeuge]", error)
+      pro = null
+    }
+  }
+
+  return new Map(
+    sektionen.map((sektion) => [
+      sektion.id,
+      (sektion.werkzeuge ?? []).map((werkzeug) => ({
+        ...werkzeug,
+        // Unbekannt (null) zeigt keinen Hinweis; der Leitstand prueft beim Oeffnen selbst
+        gesperrt: werkzeug.zugang === "pro" && pro === false,
+        bestwert: werkzeug.szenario ? (bestwerte.get(werkzeug.szenario) ?? null) : null,
+      })),
+    ]),
+  )
+}
+
 function zustandVon(station: StationMitStatus, eintrag: Eintrag | undefined): Zustand {
   // «erledigt» zeigen wir auch, falls die Datei inzwischen fehlt: die Zaehlung bleibt stimmig
   if (eintrag?.status === "erledigt") return "erledigt"
@@ -106,7 +150,10 @@ export default async function LernpfadPage({ params }: LernpfadPageProps) {
   }
 
   const { fach, pfad } = geladen
-  const fortschritt = await ladeFortschritt(user.id, fach.slug)
+  const [fortschritt, werkzeuge] = await Promise.all([
+    ladeFortschritt(user.id, fach.slug),
+    ladeWerkzeuge(user, fach.sektionen),
+  ])
 
   const stationen: StationAnzeige[] = pfad.map((station, index) => {
     const eintrag = fortschritt?.get(station.slug)
@@ -124,8 +171,12 @@ export default async function LernpfadPage({ params }: LernpfadPageProps) {
 
   const titel = KURZTITEL[fach.slug] ?? fach.titel
   const sektionen = fach.sektionen
-    .map((sektion) => ({ ...sektion, stationen: stationen.filter((s) => s.sektion === sektion.id) }))
-    .filter((sektion) => sektion.stationen.length > 0)
+    .map((sektion) => ({
+      ...sektion,
+      stationen: stationen.filter((s) => s.sektion === sektion.id),
+      werkzeuge: werkzeuge.get(sektion.id) ?? [],
+    }))
+    .filter((sektion) => sektion.stationen.length > 0 || sektion.werkzeuge.length > 0)
 
   return (
     <>
@@ -190,70 +241,77 @@ export default async function LernpfadPage({ params }: LernpfadPageProps) {
             style={farbe}
           >
             <span className="eyebrow">
-              {anzahl(sektion.stationen.length, "Station", "Stationen")} · {sektionErledigt} erledigt
+              {sektion.stationen.length > 0
+                ? `${anzahl(sektion.stationen.length, "Station", "Stationen")} · ${sektionErledigt} erledigt`
+                : anzahl(sektion.werkzeuge.length, "Werkzeug", "Werkzeuge")}
             </span>
             <h2 id={`sektion-${sektion.id}`}>{sektion.titel}</h2>
+            {sektion.werkzeuge.length > 0 && (
+              <WerkzeugKarten sektionTitel={sektion.titel} werkzeuge={sektion.werkzeuge} />
+            )}
             {/* role="list": Safari liest Listen ohne Aufzaehlungszeichen sonst nicht als Liste vor */}
-            <ol className={styles.pfad} role="list" start={sektion.stationen[0].nummer}>
-              {sektion.stationen.map((station) => {
-                const istWeiter = station.slug === weiter?.slug
-                const klassen = [
-                  styles.station,
-                  styles[station.zustand],
-                  station.verfuegbar ? styles.verfuegbar : "",
-                  istWeiter ? styles.aktuell : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")
-                const zustandText = ZUSTAND_TEXT[station.zustand]
-                return (
-                  <li key={station.slug} className={klassen}>
-                    <span className={styles.knoten} aria-hidden="true">
-                      {station.zustand === "erledigt" ? "✓" : station.nummer}
-                    </span>
-                    <div className={styles.karte}>
-                      {istWeiter && <span className={styles.hierWeiter}>Hier geht es weiter</span>}
-                      <h3 className={styles.stationTitel}>
-                        {station.verfuegbar ? (
-                          <a
-                            className={styles.stationLink}
-                            href={`/lernseiten/${fach.slug}/${station.slug}`}
-                            aria-current={istWeiter ? "step" : undefined}
+            {sektion.stationen.length > 0 && (
+              <ol className={styles.pfad} role="list" start={sektion.stationen[0].nummer}>
+                {sektion.stationen.map((station) => {
+                  const istWeiter = station.slug === weiter?.slug
+                  const klassen = [
+                    styles.station,
+                    styles[station.zustand],
+                    station.verfuegbar ? styles.verfuegbar : "",
+                    istWeiter ? styles.aktuell : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")
+                  const zustandText = ZUSTAND_TEXT[station.zustand]
+                  return (
+                    <li key={station.slug} className={klassen}>
+                      <span className={styles.knoten} aria-hidden="true">
+                        {station.zustand === "erledigt" ? "✓" : station.nummer}
+                      </span>
+                      <div className={styles.karte}>
+                        {istWeiter && <span className={styles.hierWeiter}>Hier geht es weiter</span>}
+                        <h3 className={styles.stationTitel}>
+                          {station.verfuegbar ? (
+                            <a
+                              className={styles.stationLink}
+                              href={`/lernseiten/${fach.slug}/${station.slug}`}
+                              aria-current={istWeiter ? "step" : undefined}
+                            >
+                              <span className="sr-only">Station {station.nummer}: </span>
+                              {station.titel}
+                            </a>
+                          ) : (
+                            <>
+                              <span className="sr-only">Station {station.nummer}: </span>
+                              {station.titel}
+                            </>
+                          )}
+                        </h3>
+                        <p className={styles.meta}>
+                          <span>Vorlesung {station.vorlesung}</span>
+                          <span>{station.dauer_min} min</span>
+                        </p>
+                        <p className={styles.kurz}>{station.kurz}</p>
+                        <p className={styles.zustand}>
+                          <span
+                            className={
+                              station.zustand === "folgt" ? `status ${styles.statusFolgt}` : `status ${station.zustand}`
+                            }
                           >
-                            <span className="sr-only">Station {station.nummer}: </span>
-                            {station.titel}
-                          </a>
-                        ) : (
-                          <>
-                            <span className="sr-only">Station {station.nummer}: </span>
-                            {station.titel}
-                          </>
-                        )}
-                      </h3>
-                      <p className={styles.meta}>
-                        <span>Vorlesung {station.vorlesung}</span>
-                        <span>{station.dauer_min} min</span>
-                      </p>
-                      <p className={styles.kurz}>{station.kurz}</p>
-                      <p className={styles.zustand}>
-                        <span
-                          className={
-                            station.zustand === "folgt" ? `status ${styles.statusFolgt}` : `status ${station.zustand}`
-                          }
-                        >
-                          <span aria-hidden="true">{zustandText.symbol}</span> {zustandText.text}
-                        </span>
-                        {station.quiz && (
-                          <span className={styles.quiz}>
-                            Selbsttest: {station.quiz.richtig} / {station.quiz.gesamt} richtig
+                            <span aria-hidden="true">{zustandText.symbol}</span> {zustandText.text}
                           </span>
-                        )}
-                      </p>
-                    </div>
-                  </li>
-                )
-              })}
-            </ol>
+                          {station.quiz && (
+                            <span className={styles.quiz}>
+                              Selbsttest: {station.quiz.richtig} / {station.quiz.gesamt} richtig
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ol>
+            )}
           </section>
         )
       })}

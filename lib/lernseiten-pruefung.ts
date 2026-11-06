@@ -443,7 +443,11 @@ function ignoriert(name: string): boolean {
  * Prueft alle Faecher unter `basis`.
  * `reserviert`: Namen, die nicht als Fachordner verwendet werden duerfen (siehe reservierteNamen).
  */
-export function pruefeAlleInhalte(basis = STANDARD_BASIS, reserviert: string[] = reservierteNamen()): PruefErgebnis {
+export function pruefeAlleInhalte(
+  basis = STANDARD_BASIS,
+  reserviert: string[] = reservierteNamen(),
+  seiten: string[] = appSeiten(),
+): PruefErgebnis {
   const fehler: string[] = []
   const hinweise: string[] = []
 
@@ -469,6 +473,18 @@ export function pruefeAlleInhalte(basis = STANDARD_BASIS, reserviert: string[] =
     }
     if (fach.kuerzel.toLowerCase() !== ordner) {
       fehler.push(`${ordner}: Kürzel «${fach.kuerzel}» passt nicht zum Ordnernamen.`)
+    }
+
+    // Werkzeug-Karten: der erste Pfadteil muss eine App-Seite sein (sonst fuehrt der Knopf ins Leere)
+    for (const sektion of fach.sektionen) {
+      for (const werkzeug of sektion.werkzeuge ?? []) {
+        const erster = werkzeug.href.slice(1).split(/[/?]/)[0]
+        if (erster !== "" && !seiten.includes(erster)) {
+          fehler.push(
+            `${ordner}/fach.json: Werkzeug «${werkzeug.titel}» (Sektion ${sektion.id}) zeigt auf ${werkzeug.href}, die Seite /${erster} gibt es nicht.`,
+          )
+        }
+      }
     }
 
     const slugs = new Set(fach.pfad.map((station) => station.slug))

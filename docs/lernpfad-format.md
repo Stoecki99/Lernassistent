@@ -63,6 +63,7 @@ content/lernseiten/
 | `icon` | 1–10 Zeichen |
 | `sektionen[].id` | `a-z`, `0-9`, `-`; eindeutig |
 | `sektionen[].farbe` | optional, `#RRGGBB`: färbt auf der Lernpfad-Seite Sektionskopf und Stationspunkte (dunkel automatisch aufgehellt). Dunkel genug für weisse Schrift wählen (≥ 4.5:1), am besten gleich wie der helle Sektionsakzent in `lernpfad.css` (MSTW: Logik `#3b37b8`, Wahrscheinlichkeit `#0b6176`, Statistik `#7c2a99`, Abschluss `#7a1f5c`) |
+| `sektionen[].werkzeuge` | optional, 1–8 Werkzeug-Karten am Anfang der Sektion (siehe «Werkzeug-Karten») |
 | `pfad` | mindestens eine Station; Reihenfolge = Reihenfolge im Lernpfad |
 | `pfad[].slug` | `NN-name` (zwei Ziffern, dann Teile aus `a-z0-9`, je mit einem Bindestrich), eindeutig |
 | `pfad[].sektion` | muss eine `id` aus `sektionen` sein |
@@ -70,6 +71,40 @@ content/lernseiten/
 | `pfad[].vorlesung`, `kurz`, `titel` | nicht leer |
 
 Unbekannte Felder sind ein Fehler (fängt Tippfehler wie `dauer` statt `dauer_min` ab). Schema: `lib/validations/lernseite.ts`.
+
+### Werkzeug-Karten
+
+Eine Sektion kann Karten zu App-Werkzeugen tragen, etwa zum Leitstand oder zum IPMA-Prüfungssimulator. Die Lernpfad-Seite zeigt sie am Anfang der Sektion, über den Stationen, mit Symbol, Kurztext und dem Knopf «Starten» oder «Öffnen». Eine Sektion nur mit Werkzeugen (ohne Stationen) ist erlaubt. Fehlt das Feld, ändert sich nichts.
+
+```json
+{
+  "id": "s6",
+  "titel": "Projektsimulation",
+  "werkzeuge": [
+    {
+      "titel": "Ernstfall: Onlineschalter Wolkenried",
+      "kurz": "Baugesuche gehen künftig online ein …",
+      "href": "/leitstand?start=ernstfall",
+      "icon": "🏛",
+      "hinweis": "Gemeinde",
+      "aktion": "starten",
+      "zugang": "pro",
+      "szenario": "wolkenried"
+    }
+  ]
+}
+```
+
+| Feld | Regel |
+|------|-------|
+| `titel` | nicht leer, höchstens 80 Zeichen |
+| `kurz` | nicht leer, höchstens 240 Zeichen |
+| `href` | nur interner Pfad: beginnt mit genau einem `/`, Teile aus `a-z`, `0-9`, `-`, optional `?name=wert&…` (dazu `_`). Keine externen Adressen, kein `//`, kein `..`, kein `#`. Der erste Pfadteil muss eine App-Seite sein (prüft `npm run lernseiten:pruefen`) |
+| `icon` | 1–10 Zeichen (Symbol oder Emoji) |
+| `hinweis` | optional, höchstens 120 Zeichen (z. B. «Zum Einstieg», «3 h · Open Book») |
+| `aktion` | optional, `starten` oder `oeffnen` (Standard): Beschriftung des Knopfs |
+| `zugang` | optional, `pro`: Ohne Pro (und ohne Admin) zeigt die Karte «Nur mit Pro»; sie bleibt sichtbar, der Knopf führt zur Seite selbst, die den Upgrade-Hinweis zeigt. Geprüft serverseitig mit `hasLeitstandAccess` (`lib/leitstand.ts`) |
+| `szenario` | optional, Szenario-ID aus `lib/simulation/catalog.ts` (`einfuehrung`, `wolkenried`, `hochmatt`): Die Karte zeigt den Bestwert des Kontos (Punkte und Sterne), falls es einen gibt |
 
 ## Pfad und Stationen
 

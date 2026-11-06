@@ -82,6 +82,10 @@
 
 ## Changelog
 
+### 2026-11-06
+
+- **Lernpfad: Werkzeug-Karten** (`sektionen[].werkzeuge` in fach.json, Schema `lib/validations/lernseite.ts`, Doku `docs/lernpfad-format.md`): Karten mit Symbol, Kurztext und Knopf «Starten»/«Öffnen» am Anfang einer Sektion; `href` nur interner Pfad (Zod-Regex, Ziel-Seite prüft `lernseiten:pruefen`), `zugang: "pro"` zeigt Free-Konten «Nur mit Pro» (serverseitig `hasLeitstandAccess`), `szenario` zeigt den Leitstand-Bestwert (`findBest`). PMGT: s6 mit drei Leitstand-Läufen und Übersicht, Prüfungsvorbereitung mit IPMA-Simulator, Übungsprüfung und Training. `/lernseiten` hat neu den Block «Simulatoren» (Leitstand, IPMA) statt eines weiteren Eintrags in der vollen Mobile-Leiste.
+
 ### 2026-11-04
 
 - **feat: IPMA-Fragenpool Teil 2** — 252 fachgeprüfte Fragen (je Kompetenz 6 MC + 3 offen), `POOL_STAGE` auf `teil2`; Fragen mit Überschneidung über `gruppe` gekoppelt; Inhalte zu Qualität, Beschaffung, Change und Krisen nach LB 10–13 abgleichen.

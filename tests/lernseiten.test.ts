@@ -10,8 +10,9 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { fachSchema } from "@/lib/validations/lernseite"
+import { fachSchema, werkzeugSchema } from "@/lib/validations/lernseite"
 import { ladeFaecher, ladeFach, ladeThemaHtml } from "@/lib/lernseiten"
+import { SCENARIO_CATALOG } from "@/lib/simulation/catalog"
 import {
   pruefeAlleInhalte,
   pruefeThemaHtml,
@@ -168,6 +169,107 @@ describe("fach.json-Schema", () => {
       assert.equal(ergebnis.success, false, String(falsch))
     }
     assert.match(JSON.stringify(fachSchema.safeParse(mitFarbe("blau")).error?.issues), /Sektionsfarbe/)
+  })
+})
+
+describe("Werkzeug-Karten (sektionen[].werkzeuge)", () => {
+  const werkzeug = (extra: Record<string, unknown> = {}) => ({
+    titel: "Leitstand",
+    kurz: "Projekt selbst leiten",
+    href: "/leitstand?start=ernstfall",
+    icon: "⚑",
+    ...extra,
+  })
+  const mitWerkzeugen = (werkzeuge: unknown) => ({
+    ...fach(),
+    sektionen: [
+      { id: "s1", titel: "Sektion 1", werkzeuge },
+      { id: "s2", titel: "Sektion 2" },
+    ],
+  })
+
+  test("Fach ohne Werkzeuge bleibt gueltig (rueckwaertskompatibel)", () => {
+    const ergebnis = fachSchema.safeParse(fach())
+    assert.equal(ergebnis.success, true)
+    assert.equal(ergebnis.data?.sektionen[0].werkzeuge, undefined)
+  })
+
+  test("gueltige Werkzeuge mit allen Feldern", () => {
+    const ergebnis = fachSchema.safeParse(
+      mitWerkzeugen([
+        werkzeug({ hinweis: "Zum Einstieg", aktion: "starten", zugang: "pro", szenario: "einfuehrung" }),
+        werkzeug({ href: "/ipma" }),
+        werkzeug({ href: "/ipma/training", aktion: "oeffnen" }),
+        werkzeug({ href: "/leitstand?start=hochmatt&modus=neu" }),
+      ]),
+    )
+    assert.equal(ergebnis.success, true, JSON.stringify(ergebnis.error?.issues))
+  })
+
+  test("href nur als interner Pfad", () => {
+    const falsch = [
+      "https://example.com",
+      "//example.com",
+      "/\\example.com",
+      "leitstand",
+      "/leitstand/",
+      "/../etc",
+      "/leit stand",
+      "/Leitstand",
+      "/leitstand#x",
+      "/leitstand?start=",
+      "/leitstand?start=a b",
+      "/leitstand?x=<script>",
+      "javascript:alert(1)",
+      "/a//b",
+      "",
+    ]
+    for (const href of falsch) {
+      assert.equal(werkzeugSchema.safeParse(werkzeug({ href })).success, false, href)
+    }
+    assert.match(
+      JSON.stringify(werkzeugSchema.safeParse(werkzeug({ href: "https://x.ch" })).error?.issues),
+      /interner Pfad/,
+    )
+  })
+
+  test("Pflichtfelder, unbekannte Felder und Werte", () => {
+    for (const feld of ["titel", "kurz", "href", "icon"]) {
+      const ohne: Record<string, unknown> = werkzeug()
+      delete ohne[feld]
+      assert.equal(werkzeugSchema.safeParse(ohne).success, false, feld)
+    }
+    assert.equal(werkzeugSchema.safeParse(werkzeug({ titel: " " })).success, false)
+    assert.equal(werkzeugSchema.safeParse(werkzeug({ link: "/x" })).success, false)
+    assert.equal(werkzeugSchema.safeParse(werkzeug({ aktion: "los" })).success, false)
+    assert.equal(werkzeugSchema.safeParse(werkzeug({ zugang: "free" })).success, false)
+    assert.equal(werkzeugSchema.safeParse(werkzeug({ icon: "x".repeat(11) })).success, false)
+    assert.match(
+      JSON.stringify(werkzeugSchema.safeParse(werkzeug({ szenario: "gibtesnicht" })).error?.issues),
+      /Leitstand-Szenario/,
+    )
+  })
+
+  test("Liste nicht leer und hoechstens acht Karten", () => {
+    assert.equal(fachSchema.safeParse(mitWerkzeugen([])).success, false)
+    assert.equal(fachSchema.safeParse(mitWerkzeugen(Array.from({ length: 9 }, () => werkzeug()))).success, false)
+    assert.equal(fachSchema.safeParse(mitWerkzeugen("nicht-liste")).success, false)
+  })
+
+  test("Gesamtpruefung meldet Ziel ohne App-Seite", () => {
+    testfach()
+    schreibe("test/fach.json", mitWerkzeugen([werkzeug(), werkzeug({ href: "/gibtesnicht?start=x" })]))
+    const ergebnis = pruefeAlleInhalte(basis, [], ["leitstand", "ipma"])
+    assert.equal(ergebnis.fehler.length, 1, ergebnis.fehler.join(" | "))
+    assert.match(ergebnis.fehler[0], /Werkzeug «Leitstand» \(Sektion s1\) zeigt auf \/gibtesnicht\?start=x/)
+  })
+
+  test("Loader gibt Werkzeuge mit den Sektionen weiter", () => {
+    testfach()
+    schreibe("test/fach.json", mitWerkzeugen([werkzeug()]))
+    const ergebnis = ladeFach("test", basis)
+    assert.equal(ergebnis?.fach.sektionen[0].werkzeuge?.[0].href, "/leitstand?start=ernstfall")
+    assert.equal(ergebnis?.fach.sektionen[1].werkzeuge, undefined)
   })
 })
 
@@ -702,5 +804,36 @@ describe("Spieltheorie fach.json im Repo", () => {
 
   test("Fachordner kollidiert nicht mit reservierten Namen", () => {
     assert.equal(reservierteNamen().includes("spieltheorie"), false)
+  })
+})
+
+describe("PMGT fach.json im Repo", () => {
+  test("Projektsimulation und Prüfungsvorbereitung haben Werkzeug-Karten", () => {
+    const ergebnis = ladeFach("pmgt")
+    assert.ok(ergebnis)
+    const werkzeuge = (id: string) => ergebnis.fach.sektionen.find((s) => s.id === id)?.werkzeuge?.map((w) => w.href)
+    assert.deepEqual(werkzeuge("s6"), [
+      "/leitstand?start=einfuehrung",
+      "/leitstand?start=ernstfall",
+      "/leitstand?start=hochmatt",
+      "/leitstand",
+    ])
+    assert.deepEqual(werkzeuge("abschluss"), ["/ipma", "/ipma?start=exam", "/ipma/training"])
+    // Leitstand nur mit Pro, Prüfungssimulator für alle
+    const s6 = ergebnis.fach.sektionen.find((s) => s.id === "s6")?.werkzeuge ?? []
+    assert.ok(s6.every((w) => w.zugang === "pro"))
+    const abschluss = ergebnis.fach.sektionen.find((s) => s.id === "abschluss")?.werkzeuge ?? []
+    assert.ok(abschluss.every((w) => w.zugang === undefined))
+  })
+
+  test("Startparameter passen zum Szenario-Verzeichnis", () => {
+    const ergebnis = ladeFach("pmgt")
+    assert.ok(ergebnis)
+    const s6 = ergebnis.fach.sektionen.find((s) => s.id === "s6")?.werkzeuge ?? []
+    for (const w of s6.filter((w) => w.szenario)) {
+      const eintrag = SCENARIO_CATALOG.find((e) => e.id === w.szenario)
+      assert.ok(eintrag, w.titel)
+      assert.equal(w.href, `/leitstand?start=${eintrag.start}`, w.titel)
+    }
   })
 })
