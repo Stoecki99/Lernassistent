@@ -62,7 +62,7 @@ export interface SolvedItem extends ClientItem {
   explanation?: string
   optionHints?: string[]
   modelAnswer?: string
-  rubric?: { criterion: string; points: number }[]
+  rubric?: { criterion: string; points: number }[] // Punkte in Schritten von 0.5, Summe 3 (Nachtrag 8.9)
   source: {
     lb?: string
     icbPage: number
@@ -71,12 +71,12 @@ export interface SolvedItem extends ClientItem {
     book?: string
     note?: string
   }
-  selfScores: number[]
+  selfScores: number[] // Punkte je Kriterium (Schritte von 0.5); gespeichert in Halbpunkten
   aiStatus: AiStatus
-  aiScores: number[]
+  aiScores: number[] // Punkte je Kriterium (Schritte von 0.5)
   aiFeedback: { kriterien: { nummer: number; punkte: number; begruendung: string }[]; gesamtkommentar: string; verdacht: boolean } | null
   scoreSource: ScoreSource | null
-  rasterPoints: number | null
+  rasterPoints: number | null // massgebende Punkte der offenen Frage (0 … points)
   correct: boolean | null
   pointsQ: number | null
   revised?: boolean // Version seit dem Versuch geändert

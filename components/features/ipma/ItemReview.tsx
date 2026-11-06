@@ -12,7 +12,7 @@ import { useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
 import AiAssessment from "./AiAssessment"
 import FeedbackPanel from "./FeedbackPanel"
-import { points } from "./format"
+import { competenceNumber, points } from "./format"
 import QuestionView from "./QuestionView"
 import SelfAssessment from "./SelfAssessment"
 
@@ -78,7 +78,7 @@ export default function ItemReview({ attemptId, items, canUseAi }: { attemptId: 
                 <span>{item.type === "mc" ? "Multiple Choice" : "Offen"}</span>
                 <span>{verdict(item)}</span>
                 <span className="hint">
-                  {item.pointsQ !== null ? points(item.pointsQ) : "0"} / {item.points} · Kompetenz {item.competence}
+                  {item.pointsQ !== null ? points(item.pointsQ) : "0"} / {item.points} · Kompetenz {competenceNumber(item.competence)}
                   {item.flagged ? " · ⚑" : ""}
                 </span>
               </summary>

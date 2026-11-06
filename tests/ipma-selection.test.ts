@@ -38,8 +38,16 @@ function isPermutation(order: readonly number[]): boolean {
   return order.length === 4 && [...order].sort().join() === "0,1,2,3"
 }
 
-describe("selectExam", () => {
-  const exam = selectExam(POOL, 12345, NONE, EXAM_CONFIG)
+/** Teil einer Kompetenz in einer Übungsprüfung: "mc", "offen" oder "beide" (darf nie vorkommen) */
+function partOf(items: readonly SelectedItem[], id: CompetenceId): { mc: number; offen: number } {
+  const mine = items.filter((i) => i.competence === id)
+  return { mc: mine.filter((i) => i.type === "mc").length, offen: mine.filter((i) => i.type === "offen").length }
+}
+
+describe("selectExam (Format Musterprüfung VZPM, Nachtrag 8.9)", () => {
+  // Übungsprüfung braucht je Kompetenz bis 5 MC bzw. 3 offene Fragen
+  const EXAM_POOL = miniPool(5, 3)
+  const exam = selectExam(EXAM_POOL, 12345, NONE, EXAM_CONFIG)
 
   test("Umfang: 60 MC auf 1–60, 30 offene auf 61–90", () => {
     assert.equal(exam.length, 90)
@@ -48,24 +56,41 @@ describe("selectExam", () => {
     assert.ok(exam.slice(60).every((i) => i.type === "offen"))
   })
 
-  test("Abdeckung: je Kompetenz ≥ 2 MC und ≥ 1 offen, Zusatzfragen nur aus Practice", () => {
+  test("Abdeckung: alle 28 Kompetenzen, je genau in einem Teil; 14 × MC (4–5), 14 × offen (2–3)", () => {
     for (const seed of [1, 2, 3, 99, 2147483646]) {
-      const items = selectExam(POOL, seed, NONE)
-      for (const id of COMPETENCE_IDS) {
-        const mine = items.filter((i) => i.competence === id)
-        const mc = mine.filter((i) => i.type === "mc").length
-        const offen = mine.filter((i) => i.type === "offen").length
-        assert.ok(mc >= 2 && offen >= 1 && mine.length >= 3, `${id}: ${mc} MC, ${offen} offen`)
-        if (getCompetence(id).area !== "practice") assert.deepEqual([mc, offen], [2, 1], id)
-      }
+      const items = selectExam(EXAM_POOL, seed, NONE)
+      const parts = COMPETENCE_IDS.map((id) => ({ id, ...partOf(items, id) }))
+      assert.equal(new Set(items.map((i) => i.competence)).size, 28, `Startwert ${seed}`)
+      for (const p of parts) assert.ok((p.mc === 0) !== (p.offen === 0), `${p.id}: ${p.mc} MC, ${p.offen} offen`)
+      const mcComps = parts.filter((p) => p.mc > 0)
+      const openComps = parts.filter((p) => p.offen > 0)
+      assert.equal(mcComps.length, 14)
+      assert.equal(openComps.length, 14)
+      assert.ok(mcComps.every((p) => p.mc === 4 || p.mc === 5))
+      assert.ok(openComps.every((p) => p.offen === 2 || p.offen === 3))
+      assert.equal(mcComps.filter((p) => p.mc === 5).length, 4)
+      assert.equal(openComps.filter((p) => p.offen === 3).length, 2)
+      // Je Bereich anteilig: Perspective 2–3, People 5, Practice 6–7 Kompetenzen im MC-Teil
+      const mcIn = (area: string) => mcComps.filter((p) => getCompetence(p.id).area === area).length
+      assert.ok([2, 3].includes(mcIn("perspective")), `Startwert ${seed}: Perspective ${mcIn("perspective")}`)
+      assert.equal(mcIn("people"), 5)
+      assert.equal(mcIn("perspective") + mcIn("practice"), 9)
     }
   })
 
+  test("Zufall: die Aufteilung der Kompetenzen wechselt mit dem Startwert", () => {
+    const splits = new Set(Array.from({ length: 20 }, (_, i) => {
+      const items = selectExam(EXAM_POOL, 500 + i, NONE)
+      return COMPETENCE_IDS.filter((id) => partOf(items, id).mc > 0).join()
+    }))
+    assert.ok(splits.size >= 10, `nur ${splits.size} verschiedene Aufteilungen`)
+  })
+
   test("keine Frage doppelt, keine zwei Fragen derselben Gruppe", () => {
-    const pool = miniPool(4, 2, (files) => {
-      for (const q of fileOf(files, "3.04").fragen.slice(0, 2)) q.gruppe = "netzplan-puffer"
+    const pool = miniPool(6, 3, (files) => {
+      for (const q of fileOf(files, "3.04").fragen.filter((x) => x.typ === "mc").slice(0, 2)) q.gruppe = "netzplan-puffer"
       for (const q of fileOf(files, "2.07").fragen.filter((x) => x.typ === "offen")) q.gruppe = "glasl-stufen"
-      fileOf(files, "2.07").fragen.push(rawOpen("2.07", 3))
+      fileOf(files, "2.07").fragen.push(rawOpen("2.07", 4), rawOpen("2.07", 5))
     })
     const grouped = new Set(pool.filter((q) => q.gruppe).map((q) => q.id))
     for (let seed = 1; seed <= 40; seed++) {
@@ -77,14 +102,14 @@ describe("selectExam", () => {
   })
 
   test("Determinismus: gleicher Startwert + Pool + Exposure → gleiches Ergebnis", () => {
-    const exposure = new Map<string, Exposure>([[POOL[0].id, { seenCount: 1, lastSeenAt: NOW }]])
+    const exposure = new Map<string, Exposure>([[EXAM_POOL[0].id, { seenCount: 1, lastSeenAt: NOW }]])
     for (const seed of [7, 4242, 987654321]) {
-      assert.deepEqual(selectExam(POOL, seed, exposure), selectExam(POOL, seed, exposure))
+      assert.deepEqual(selectExam(EXAM_POOL, seed, exposure), selectExam(EXAM_POOL, seed, exposure))
     }
   })
 
   test("Zufall: 10 Startwerte → verschiedene Auswahlen und Reihenfolgen", () => {
-    const runs = Array.from({ length: 10 }, (_, i) => selectExam(POOL, 1000 + i, NONE))
+    const runs = Array.from({ length: 10 }, (_, i) => selectExam(EXAM_POOL, 1000 + i, NONE))
     const sets = new Set(runs.map((r) => r.map((i) => i.questionId).sort().join()))
     const orders = new Set(runs.map((r) => r.map((i) => i.questionId).join()))
     assert.ok(sets.size >= 2, `nur ${sets.size} verschiedene Auswahlen`)
@@ -92,7 +117,7 @@ describe("selectExam", () => {
   })
 
   test("Optionen: Permutation, optionenFest bleibt [0,1,2,3], gleichmässig über 200 Startwerte (± 10 %)", () => {
-    const pool = miniPool(3, 2, (files) => { for (const q of fileOf(files, "1.01").fragen) if (q.typ === "mc") q.optionenFest = true })
+    const pool = miniPool(5, 3, (files) => { for (const q of fileOf(files, "1.01").fragen) if (q.typ === "mc") q.optionenFest = true })
     const cells = Array.from({ length: 4 }, () => [0, 0, 0, 0])
     let n = 0
     for (let seed = 1; seed <= 200; seed++) {
@@ -109,51 +134,43 @@ describe("selectExam", () => {
   })
 
   test("Exposure: nie gesehene Fragen vor gesehenen", () => {
-    const pool = miniPool(4, 2)
+    // Je Kompetenz 6 MC und 3 offen; gesehen: mc-01, mc-02, of-01 → 4 MC und 2 offene nie gesehen
+    const pool = miniPool(6, 3)
     const exposure = new Map<string, Exposure>()
-    for (const q of pool) if (q.id.endsWith("-01") || q.id.endsWith("-mc-02")) exposure.set(q.id, { seenCount: 1, lastSeenAt: NOW })
-    const items = selectExam(pool, 5, exposure)
-    for (const id of COMPETENCE_IDS) {
-      if (getCompetence(id).area === "practice") continue
-      const picked = items.filter((i) => i.competence === id).map((i) => i.questionId).sort()
-      assert.deepEqual(picked, [`${id}-mc-03`, `${id}-mc-04`, `${id}-of-02`], id)
-    }
-  })
-
-  test("Exposure: zweite Prüfung bei 4 MC + 2 offen wiederholt nur, was der Pool erzwingt", () => {
-    // Practice: 13 × 4 MC = 52 < 2 × 30 → mindestens 8 MC-Wiederholungen; 13 × 2 offen = 26 < 2 × 15 → 4.
-    // Perspective und People: nie eine Wiederholung (Abweichung zu 7.2, dort «keine Wiederholung»).
-    const pool = miniPool(4, 2)
-    for (const seed of [11, 22, 33]) {
-      const exposure = new Map<string, Exposure>()
-      const first = selectExam(pool, seed, exposure)
-      addExposure(exposure, first, NOW)
-      const second = selectExam(pool, seed + 1, exposure)
-      const firstIds = new Set(first.map((i) => i.questionId))
-      const repeated = second.filter((i) => firstIds.has(i.questionId))
-      assert.ok(repeated.every((i) => getCompetence(i.competence).area === "practice"), `Startwert ${seed}`)
-      assert.equal(repeated.filter((i) => i.type === "mc").length, 8, `Startwert ${seed}: MC`)
-      assert.equal(repeated.filter((i) => i.type === "offen").length, 4, `Startwert ${seed}: offen`)
+    for (const q of pool) if (/-(mc-0[12]|of-01)$/.test(q.id)) exposure.set(q.id, { seenCount: 1, lastSeenAt: NOW })
+    for (const seed of [5, 6, 7]) {
+      const items = selectExam(pool, seed, exposure)
+      for (const id of COMPETENCE_IDS) {
+        const picked = items.filter((i) => i.competence === id)
+        const seenCount = picked.filter((i) => exposure.has(i.questionId)).length
+        const unseenAvail = picked[0]?.type === "mc" ? 4 : 2
+        assert.equal(seenCount, Math.max(0, picked.length - unseenAvail), `Startwert ${seed}: ${id}`)
+      }
     }
   })
 
   test("Pool zu klein → POOL_TOO_SMALL mit Kompetenz in der Meldung; sonst nie", () => {
-    const noOpen = miniPool(3, 2, (files) => { fileOf(files, "3.04").fragen = fileOf(files, "3.04").fragen.filter((q) => q.typ === "mc") })
-    assert.throws(() => selectExam(noOpen, 1, NONE), (e: unknown) =>
-      e instanceof IpmaError && e.status === 422 && e.code === "POOL_TOO_SMALL" && e.message.includes("3.04"))
-    // Jede Practice-Kompetenz hat nur 1 offene: die 2 Zusatzfragen finden keinen Platz
-    const tight = miniPool(3, 1)
-    assert.throws(() => selectExam(tight, 1, NONE), (e: unknown) => e instanceof IpmaError && e.code === "POOL_TOO_SMALL")
-    // 1 offene nur in 3.04: die Zusatzfragen weichen auf andere Kompetenzen aus
-    const one304 = miniPool(3, 2, (files) => { fileOf(files, "3.04").fragen = fileOf(files, "3.04").fragen.filter((q) => q.id !== "3.04-of-02") })
-    for (let seed = 1; seed <= 50; seed++) {
-      assert.doesNotThrow(() => selectExam(POOL, seed, NONE))
-      assert.doesNotThrow(() => selectExam(one304, seed, NONE))
+    // 3.04 ohne offene Fragen: kommt immer in den MC-Teil, kein Fehler
+    const noOpen = miniPool(5, 3, (files) => { fileOf(files, "3.04").fragen = fileOf(files, "3.04").fragen.filter((q) => q.typ === "mc") })
+    for (let seed = 1; seed <= 30; seed++) {
+      const items = selectExam(noOpen, seed, NONE)
+      assert.ok(partOf(items, "3.04").mc >= 4, `Startwert ${seed}`)
     }
+    // 3.04 mit nur 1 MC und 1 offenen Frage: passt in keinen Teil
+    const tiny = miniPool(5, 3, (files) => {
+      fileOf(files, "3.04").fragen = fileOf(files, "3.04").fragen.filter((q) => q.id === "3.04-mc-01" || q.id === "3.04-of-01")
+    })
+    assert.throws(() => selectExam(tiny, 1, NONE), (e: unknown) =>
+      e instanceof IpmaError && e.status === 422 && e.code === "POOL_TOO_SMALL" && e.message.includes("3.04"))
+    // Je Kompetenz nur 3 MC: der MC-Teil braucht 4
+    assert.throws(() => selectExam(miniPool(3, 3), 1, NONE), (e: unknown) => e instanceof IpmaError && e.code === "POOL_TOO_SMALL")
+    // Nur je 4 MC und 2 offen: die Zusatzfragen finden keinen Platz
+    assert.throws(() => selectExam(miniPool(4, 2), 1, NONE), (e: unknown) => e instanceof IpmaError && e.code === "POOL_TOO_SMALL")
+    for (let seed = 1; seed <= 50; seed++) assert.doesNotThrow(() => selectExam(EXAM_POOL, seed, NONE))
   })
 
   test("nur geprüfte Fragen: entwurf und zurueckgezogen nie gewählt", () => {
-    const pool = miniPool(4, 3, (files) => {
+    const pool = miniPool(6, 4, (files) => {
       for (const f of files) {
         f.fragen[0].status = "entwurf"
         const lastOpen = f.fragen.filter((q) => q.typ === "offen").at(-1)

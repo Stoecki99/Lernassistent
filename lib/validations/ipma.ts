@@ -6,7 +6,11 @@
 // (IpmaAttempt.config, IpmaAttemptItem.aiFeedback) sowie das Ausgabeschema der Claude-Bewertung (4.3, AP5).
 
 import { z } from "zod"
-import { COMPETENCE_IDS, RASTER_TOTAL } from "../ipma/competences"
+import { COMPETENCE_IDS, HALVES_PER_POINT, LEGACY_RASTER_HALVES, RASTER_TOTAL, toHalves } from "../ipma/competences"
+
+/** Punkte in Schritten von 0.5 (Nachtrag 8.9) */
+const halfStep = (max: number) =>
+  z.number().min(0).max(max).refine((v) => Number.isInteger(v * HALVES_PER_POINT), "Punkte in Schritten von 0.5.")
 
 /** Höchstlänge einer offenen Antwort (4.3: auch Grenze für die Claude-Bewertung) */
 export const MAX_ANSWER_CHARS = 3000
@@ -43,9 +47,12 @@ export const saveItemSchema = z.object({
 }).strict().refine((v) => Object.keys(v).length > 0, "Keine Änderung.")
 export type SaveItemInput = z.output<typeof saveItemSchema>
 
-/** PUT /api/ipma/attempts/[id]/items/[position]/self (4.2, 6.6); Abgleich mit dem Raster im Server */
+/**
+ * PUT /api/ipma/attempts/[id]/items/[position]/self (4.2, 6.6): Punkte je Kriterium in Schritten von 0.5
+ * (Nachtrag 8.9); Abgleich mit dem Raster und Umrechnung in Halbpunkte im Server
+ */
 export const selfAssessSchema = z.object({
-  scores: z.array(z.number().int().min(0).max(RASTER_TOTAL)).min(2).max(4),
+  scores: z.array(halfStep(RASTER_TOTAL)).min(2).max(4),
 }).strict()
 
 /** POST /api/ipma/attempts/[id]/pause (6.6) */
@@ -60,15 +67,19 @@ export const attemptIdSchema = z.cuid({ message: "Ungültige Versuch-ID." })
 /** Position aus dem Pfad (1 … 90) */
 export const positionSchema = z.coerce.number({ error: "Ungültige Position." }).int().min(1).max(MAX_POSITION)
 
-/** Gespeicherter Schnappschuss IpmaAttempt.config (6.3) */
+/**
+ * Gespeicherter Schnappschuss IpmaAttempt.config (6.3). rasterMax fehlt in Versuchen der Konfiguration 1
+ * (vor Nachtrag 8.9): dann gelten 4 Halbpunkte (offene Frage 2 Punkte), damit alte Ergebnisse gleich bleiben.
+ */
 export const configSnapshotSchema = z.object({
   weights: z.object({ mc: z.number().int().min(1), offen: z.number().int().min(1) }),
+  rasterMax: z.number().int().min(1).max(12).default(LEGACY_RASTER_HALVES),
   passPercent: z.number().int().min(1).max(100),
   minCompetences: z.number().int().min(0).max(COMPETENCE_IDS.length),
-  openCorrectRaster: z.number().int().min(0).max(RASTER_TOTAL),
+  openCorrectRaster: z.number().int().min(0).max(12),
 })
 
-/** Gespeicherte Rückmeldung der Claude-Bewertung IpmaAttemptItem.aiFeedback (6.4; geschrieben von AP5) */
+/** Gespeicherte Rückmeldung der Claude-Bewertung IpmaAttemptItem.aiFeedback (6.4; AP5); punkte in Halbpunkten */
 export const aiFeedbackSchema = z.object({
   kriterien: z.array(z.object({ nummer: z.number().int(), punkte: z.number().int(), begruendung: z.string() })),
   gesamtkommentar: z.string(),
@@ -83,7 +94,7 @@ export const aiFeedbackSchema = z.object({
 export const gradeOutputSchema = z.object({
   kriterien: z.array(z.object({
     nummer: z.number().int().min(1).max(4),
-    punkte: z.number().int().min(0).max(RASTER_TOTAL),
+    punkte: halfStep(RASTER_TOTAL),
     begruendung: z.string().trim().min(1).max(800),
   }).strict()).min(2).max(4),
   gesamtkommentar: z.string().trim().max(1000),
@@ -93,15 +104,15 @@ export type GradeOutput = z.output<typeof gradeOutputSchema>
 
 /**
  * Abgleich mit dem Raster (4.3): gleiche Anzahl Kriterien, jede Nummer 1 … raster.length genau einmal,
- * Punkte ≤ Höchstwert des Kriteriums. Liefert die Punkte in Rasterreihenfolge oder null.
+ * Punkte ≤ Höchstwert des Kriteriums. Liefert die Punkte in Rasterreihenfolge als Halbpunkte oder null.
  */
 export function matchRaster(out: GradeOutput, raster: readonly { punkte: number }[]): number[] | null {
   if (out.kriterien.length !== raster.length) return null
   const scores: (number | undefined)[] = raster.map(() => undefined)
   for (const k of out.kriterien) {
     const i = k.nummer - 1
-    if (i < 0 || i >= raster.length || scores[i] !== undefined || k.punkte > raster[i].punkte) return null
-    scores[i] = k.punkte
+    if (i < 0 || i >= raster.length || scores[i] !== undefined || toHalves(k.punkte) > toHalves(raster[i].punkte)) return null
+    scores[i] = toHalves(k.punkte)
   }
   return scores.every((v): v is number => v !== undefined) ? scores : null
 }

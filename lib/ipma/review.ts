@@ -5,7 +5,7 @@
 // Wiederholung: Leitner-Fächer, Beherrschung je Kompetenz, schwächste Kompetenzen (Spezifikation 3.5, 4.4).
 // Reine Funktionen ohne Datenbank; Zeitpunkte in ms seit 1970.
 
-import { COMPETENCE_IDS, RASTER_TOTAL, type CompetenceId } from "./competences"
+import { COMPETENCE_IDS, RASTER_HALVES, type CompetenceId } from "./competences"
 import { EXAM_CONFIG, LEITNER_DAYS, type ExamConfig } from "./config"
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -31,17 +31,20 @@ export function isDue(state: LeitnerState | undefined, now: number): boolean {
   return state !== undefined && state.box >= 1 && state.dueAt !== null && state.dueAt <= now
 }
 
-/** Eine bewertete Antwort für die Beherrschung (4.4): MC 1/0, offen Rasterpunkte ÷ 4 */
+/** Eine bewertete Antwort für die Beherrschung (4.4): MC 1/0, offen Halbpunkte ÷ rasterMax */
 export interface GradedAnswer {
   competence: CompetenceId
   score: number // 0 … 1
   at: number // Zeitpunkt der Bewertung
 }
 
-/** Wert einer Antwort für die Beherrschung (4.4) */
-export function answerScore(item: { type: "mc" | "offen"; correctOption?: boolean; rasterPoints?: number | null }): number {
+/** Wert einer Antwort für die Beherrschung (4.4); rasterMax aus dem Schnappschuss des Versuchs (Halbpunkte) */
+export function answerScore(
+  item: { type: "mc" | "offen"; correctOption?: boolean; rasterPoints?: number | null },
+  rasterMax: number = RASTER_HALVES,
+): number {
   if (item.type === "mc") return item.correctOption ? 1 : 0
-  return Math.max(0, Math.min(RASTER_TOTAL, item.rasterPoints ?? 0)) / RASTER_TOTAL
+  return Math.max(0, Math.min(rasterMax, item.rasterPoints ?? 0)) / rasterMax
 }
 
 export type MasteryLevel = "secure" | "close" | "gap" | "untrained" // sicher, knapp, Lücke, noch nicht geübt

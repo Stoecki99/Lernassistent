@@ -37,6 +37,7 @@ import {
   checkAnswerWindow,
   checkRateLimit,
   computePointsAward,
+  readConfig,
   toClientItem,
   toSolvedItem,
   type IpmaDeps,
@@ -50,7 +51,7 @@ import type { McQuestion, PoolQuestion } from "@/lib/validations/ipma-pool"
 import { createFakeDb, fakeId, type FakeDb } from "./helpers/ipma-fake-db"
 import { miniSources } from "./helpers/ipma-mini"
 
-const POOL: Pool = buildPool(miniSources(3, 2), null)
+const POOL: Pool = buildPool(miniSources(5, 3), null)
 const START = new Date("2026-11-20T08:00:00.000Z")
 const FORBIDDEN_KEYS = [
   "correctOption", "richtig", "explanation", "erklaerung", "optionHints", "optionHinweise", "modelAnswer",
@@ -186,19 +187,33 @@ const lookup = (id: string) => POOL.byId.get(id) ?? null
 describe("toClientItem / toSolvedItem", () => {
   test("Anzeige ↔ Original: optionOrder [3,0,2,1], Original 2 = Anzeige 2; correctOption = Anzeige der richtigen", () => {
     const item = storedItem({ choice: 2 })
-    const client = toClientItem(item, MC, { weights: EXAM_CONFIG.weights, showCompetence: false })
+    const client = toClientItem(item, MC, { config: configSnapshot(), showCompetence: false })
     assert.equal(client.choice, 2)
     const mc = MC as McQuestion
     assert.deepEqual(client.options, [mc.optionen[3], mc.optionen[0], mc.optionen[2], mc.optionen[1]])
-    const solved = toSolvedItem(item, MC, { weights: EXAM_CONFIG.weights, catalog: new Map() })
+    const solved = toSolvedItem(item, MC, { config: configSnapshot(), catalog: new Map() })
     assert.equal(solved.correctOption, [3, 0, 2, 1].indexOf(mc.richtig))
     assert.equal(solved.questionId, MC.id)
   })
 
+  test("Punkte je Position: neu MC 1 / offen 3; alter Versuch (Schnappschuss ohne rasterMax) offen 2", () => {
+    const open = storedItem({ type: "offen", questionId: OPEN.id, competence: OPEN.kompetenz, optionOrder: [], locked: true,
+      selfScores: [3, 1], rasterPoints: 4, scoreSource: "self", pointsQ: 8 })
+    assert.equal(toClientItem(storedItem(), MC, { config: configSnapshot(), showCompetence: false }).points, 1)
+    assert.equal(toClientItem(open, OPEN, { config: configSnapshot(), showCompetence: false }).points, 3)
+    const legacy = readConfig({ weights: { mc: 1, offen: 2 }, passPercent: 60, minCompetences: 23, openCorrectRaster: 2 })
+    assert.equal(legacy.rasterMax, 4)
+    const solved = toSolvedItem(open, OPEN, { config: legacy, catalog: new Map() })
+    assert.equal(solved.points, 2)
+    assert.equal(solved.rasterPoints, 2) // 4 Halbpunkte = 2 Punkte
+    assert.deepEqual(solved.selfScores, [1.5, 0.5])
+    assert.deepEqual(solved.rubric?.map((r) => r.points), [1.5, 1.5])
+  })
+
   test("ClientItem enthält nur die Allow-Liste", () => {
-    const client = toClientItem(storedItem(), MC, { weights: EXAM_CONFIG.weights, showCompetence: false })
+    const client = toClientItem(storedItem(), MC, { config: configSnapshot(), showCompetence: false })
     assert.deepEqual(Object.keys(client).sort(), ["choice", "flagged", "locked", "options", "points", "position", "question", "text", "type"])
-    const training = toClientItem(storedItem(), MC, { weights: EXAM_CONFIG.weights, showCompetence: true })
+    const training = toClientItem(storedItem(), MC, { config: configSnapshot(), showCompetence: true })
     assert.equal(training.competence, MC.kompetenz)
   })
 
@@ -316,7 +331,7 @@ describe("Free-Konto: Simulator ohne 403, Claude-Bewertung 403", () => {
     const selfFirst = await call(handleAssess(req("POST"), params(id, 1), pro.deps))
     assert.equal(selfFirst.status, 422)
     assert.equal(selfFirst.body.code, "SELF_FIRST")
-    assert.equal((await call(handleSelfAssess(req("PUT", { scores: [2, 1] }), params(id, 1), pro.deps))).status, 200)
+    assert.equal((await call(handleSelfAssess(req("PUT", { scores: [1.5, 1] }), params(id, 1), pro.deps))).status, 200)
     const assess = await call(handleAssess(req("POST"), params(id, 1), pro.deps))
     assert.equal(assess.status, 502)
     assert.equal(assess.body.code, "AI_UNAVAILABLE")
@@ -492,18 +507,25 @@ describe("Gesperrt und Eingaben", () => {
     assert.equal((await call(handleSelfAssess(req("PUT", { scores: [1, 1] }), params(id, 61), ctx.deps))).status, 409)
     await call(handleSubmit(req("POST"), params(id), ctx.deps))
     const status = async (scores: number[], position = 61) => (await call(handleSelfAssess(req("PUT", { scores }), params(id, position), ctx.deps))).status
-    assert.equal(await status([3, 0]), 400) // Raster je Kriterium höchstens 2
+    assert.equal(await status([2, 0]), 400) // Raster je Kriterium höchstens 1.5
+    assert.equal(await status([0.25, 1]), 400) // nur Schritte von 0.5
     assert.equal(await status([1, 1, 1]), 400)
     assert.equal(await status([1, 1], 1), 422)
     assert.equal(await status([1, 1], 62), 422) // leere Antwort
-    assert.equal(await status([2, 1]), 200)
+    assert.equal(await status([1.5, 1]), 200)
     const view = await getView(ctx, id)
     const item = view.body.items[60] as SolvedItem
-    assert.equal(item.rasterPoints, 3)
+    assert.equal(item.points, 3)
+    assert.deepEqual(item.selfScores, [1.5, 1]) // ausgeliefert in Punkten, gespeichert in Halbpunkten
+    assert.deepEqual(ctx.fake.tables().ipmaAttemptItem.find((i) => i.attemptId === id && i.position === 61)?.selfScores, [3, 2])
+    assert.equal(item.rasterPoints, 2.5)
+    assert.equal(item.pointsQ, 10)
     assert.equal(item.scoreSource, "self")
     assert.equal(item.correct, true)
-    assert.equal(await status([1, 0]), 200) // bis zum Abschluss änderbar
-    assert.equal(((await getView(ctx, id)).body.items[60] as SolvedItem).rasterPoints, 1)
+    assert.equal(await status([1, 0]), 200) // bis zum Abschluss änderbar; 1 von 3 Punkten = nicht «richtig»
+    const changed = (await getView(ctx, id)).body.items[60] as SolvedItem
+    assert.equal(changed.rasterPoints, 1)
+    assert.equal(changed.correct, false)
   })
 })
 
@@ -553,22 +575,22 @@ describe("Abgabe, Abschluss, Punkte, Station 24", () => {
     assert.equal(s1.status, 200)
     assert.deepEqual(s2.body.items, s1.body.items)
     assert.equal(s1.body.result?.pointsQ, 240) // 60 MC richtig, 30 offene leer → 0
-    assert.equal(s1.body.result?.maxPointsQ, 480)
+    assert.equal(s1.body.result?.maxPointsQ, 600) // 150 Punkte (Musterprüfung VZPM)
     assert.equal(ctx.fake.tables().lernfortschritt[0]?.status, "begonnen")
 
     const f1 = await call<{ result: { pointsQ: number }; pointsAwarded: number; newBadges: unknown[] }>(handleFinish(req("POST"), params(id), ctx.deps))
     const f2 = await call<{ result: { pointsQ: number }; pointsAwarded: number; newBadges: unknown[] }>(handleFinish(req("POST"), params(id), ctx.deps))
     assert.equal(f1.status, 200)
-    assert.equal(f1.body.pointsAwarded, 50)
+    assert.equal(f1.body.pointsAwarded, 40)
     assert.deepEqual(f2.body.result, f1.body.result)
-    assert.equal(f2.body.pointsAwarded, 50)
+    assert.equal(f2.body.pointsAwarded, 40)
     assert.deepEqual(f2.body.newBadges, [])
     const user = () => ctx.fake.tables().user.find((u) => u.id === "user-a")
-    assert.equal(user()?.points, 50, "Punkte nur einmal")
+    assert.equal(user()?.points, 40, "Punkte nur einmal")
     const station = ctx.fake.tables().lernfortschritt.find((l) => l.thema === "24-ipma-pruefungssimulator")
     assert.equal(station?.status, "erledigt")
     assert.equal(station?.quizRichtig, 60)
-    assert.equal(station?.quizGesamt, 120)
+    assert.equal(station?.quizGesamt, 150)
     const states = ctx.fake.tables().ipmaQuestionState.filter((s) => s.userId === "user-a")
     assert.ok(states.some((s) => s.box === 1 && s.lastCorrect === true), "richtige MC in Fach 1")
     assert.ok(states.some((s) => s.box === 1 && s.lastCorrect === false), "leere offene Fragen in Fach 1 (falsch)")
@@ -579,7 +601,7 @@ describe("Abgabe, Abschluss, Punkte, Station 24", () => {
     await call(handleSubmit(req("POST"), params(worse), ctx.deps))
     const f3 = await call<{ pointsAwarded: number }>(handleFinish(req("POST"), params(worse), ctx.deps))
     assert.equal(f3.body.pointsAwarded, 0)
-    assert.equal(user()?.points, 50)
+    assert.equal(user()?.points, 40)
     const station2 = ctx.fake.tables().lernfortschritt.find((l) => l.thema === "24-ipma-pruefungssimulator")
     assert.equal(station2?.status, "erledigt")
     assert.equal(station2?.quizRichtig, 0)
@@ -660,7 +682,7 @@ describe("Abgabe, Abschluss, Punkte, Station 24", () => {
     assert.equal(overview.status, 200)
     assert.deepEqual(overview.body.active.map((a) => a.id), [id])
     assert.equal(overview.body.mastery.length, 28)
-    assert.equal(overview.body.pool["3.04"].mc, 3)
+    assert.equal(overview.body.pool["3.04"].mc, 5)
     assert.equal(overview.body.canUseAi, false)
     for (const key of ["optionOrder", "seed", "questionId", "erklaerung", "musterloesung"]) {
       assert.equal(JSON.stringify(overview.body).includes(`"${key}"`), false)

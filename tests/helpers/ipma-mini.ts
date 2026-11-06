@@ -45,8 +45,8 @@ export function rawOpen(competence: CompetenceId, n: number, status = "geprueft"
     frage: `Offene Testfrage ${tag}: Nenne zwei Punkte zum Testfall ${tag} und begründe sie.`,
     musterloesung: `Musterlösung zu ${tag}: Erster Punkt mit Begründung, zweiter Punkt mit Begründung, weitere richtige Varianten sind möglich.`,
     bewertungsraster: [
-      { kriterium: `Erster Punkt zu ${tag} genannt`, punkte: 2 },
-      { kriterium: `Zweiter Punkt zu ${tag} genannt`, punkte: 2 },
+      { kriterium: `Erster Punkt zu ${tag} genannt`, punkte: 1.5 },
+      { kriterium: `Zweiter Punkt zu ${tag} genannt`, punkte: 1.5 },
     ],
     fundstelle: { icb: { seite: c.icbPage, indikatoren: [`${competence}.01`] } },
     status,

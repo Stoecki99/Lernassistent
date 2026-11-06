@@ -17,7 +17,7 @@ import Dialog from "@/components/features/leitstand/Dialog"
 import { ipmaApi, IpmaApiError, beforeStorageKey, errorMessage, startErrorMessage, storeSession, type CreateAttemptBody } from "./api"
 import CompetenceMap, { type StationTitles } from "./CompetenceMap"
 import HistoryChart from "./HistoryChart"
-import { MIN_COMPETENCES, MODE_LABEL, PASS_PERCENT, TOTAL_COMPETENCES, VARIANT_LABEL, clockWords, dateTime, percent } from "./format"
+import { EXAM_POINTS, MIN_COMPETENCES, MODE_LABEL, OPEN_POINTS, PART_MINUTES, PASS_PERCENT, TOTAL_COMPETENCES, VARIANT_LABEL, clockWords, dateTime, percent } from "./format"
 
 type StartTarget = "exam" | "short" | null
 
@@ -170,10 +170,10 @@ export default function IpmaStart({ stations, start }: { stations: StationTitles
                 <strong>3 h</strong> Zeit
               </li>
               <li>
-                <strong>120</strong> Punkte
+                <strong>{EXAM_POINTS}</strong> Punkte
               </li>
             </ul>
-            <p className="hint">60 Multiple-Choice- und 30 offene Fragen, jede der 28 Kompetenzen mindestens dreimal. Rückmeldung erst nach der Abgabe. Open Book: Halte deinen Ordner mit Register nach ICB-Nummer bereit (Stationen 02 und 24).</p>
+            <p className="hint">Aufbau wie die Musterprüfung des VZPM: zuerst 60 Multiple-Choice-Fragen (Richtzeit {PART_MINUTES.mc} min), dann 30 offene Fragen (Richtzeit {PART_MINUTES.offen} min). Der MC-Teil prüft 14 Kompetenzen mit je 4–5 Fragen, der offene Teil die übrigen 14 mit je 2–3 Fragen; so kommt jede der 28 Kompetenzen vor. Rückmeldung erst nach der Abgabe. Open Book: Halte deinen Ordner mit Register nach ICB-Nummer bereit (Stationen 02 und 24).</p>
             {continueRow("exam", "Übungsprüfung")}
             <fieldset className={styles.wahl}>
               <legend>Zeit</legend>
@@ -263,17 +263,17 @@ export default function IpmaStart({ stations, start }: { stations: StationTitles
         <h2 id="regel-titel">So bestehst du</h2>
         <ol className={styles.regel}>
           <li>
-            Du brauchst mindestens <strong>{PASS_PERCENT} % der Punkte</strong>: Multiple Choice zählt 1 Punkt, eine offene Frage 2 Punkte (bewertet nach Raster).
+            Du brauchst mindestens <strong>{PASS_PERCENT} % der Punkte</strong>, also {EXAM_POINTS * PASS_PERCENT / 100} von {EXAM_POINTS}: Multiple Choice zählt 1 Punkt, eine offene Frage bis {OPEN_POINTS} Punkte (bewertet nach Raster in Schritten von 0.5). Falsche Antworten geben keinen Abzug.
           </li>
           <li>
             Zusätzlich musst du <strong>
               {MIN_COMPETENCES} der {TOTAL_COMPETENCES} Kompetenzen
             </strong>{" "}
-            nachweisen, das heisst je Kompetenz mindestens eine Frage richtig beantworten.
+            nachweisen, das heisst je Kompetenz mindestens eine Frage richtig beantworten. Eine offene Frage zählt hier als richtig ab der Hälfte der Punkte (1.5 von {OPEN_POINTS}).
           </li>
           <li>Bestanden ist die Übungsprüfung nur, wenn beide Regeln erfüllt sind. Die offenen Antworten bewertest du nach der Abgabe selbst nach dem Raster.</li>
         </ol>
-        <p className="hint">Die Regeln entsprechen dem Stand der Kursunterlagen; massgebend sind die Vorgaben der Zertifizierungsstelle.</p>
+        <p className="hint">Format, Punkte und Grenzen entsprechen der Musterprüfung 2023 des VZPM; massgebend sind die Vorgaben der Zertifizierungsstelle. Die offizielle Musterprüfung eignet sich als Generalprobe.</p>
       </section>
 
       <section aria-labelledby="landkarte-titel" className="card stack">

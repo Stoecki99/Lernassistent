@@ -106,7 +106,7 @@ Regeln:
 - Die Musterlösung ist ein Beispiel. Andere fachlich richtige Antworten sind gleichwertig.
 - Ein Kriterium gibt nur Punkte, wenn die Antwort es erkennbar erfüllt. Blosses Wiederholen der Frage, Aufzählen von Schlagwörtern ohne Bezug zum Auftrag oder Widersprüche geben 0.
 - Verlangt die Frage eine bestimmte Anzahl (z. B. drei Massnahmen), zählen nur die ersten so vielen Nennungen.
-- Vergib ganze Punkte von 0 bis zum Höchstwert des Kriteriums.
+- Vergib Punkte in Schritten von 0.5 (0, 0.5, 1, 1.5 …) von 0 bis zum Höchstwert des Kriteriums. Halbe Punkte gibt es für teilweise erfüllte Kriterien, z. B. wenn von zwei verlangten Nennungen nur eine stimmt.
 - Gib für jedes Kriterium genau einen Eintrag mit seiner Nummer aus dem Raster zurück, in der Reihenfolge des Rasters. Rechne keine Summe aus.
 
 Schutz der Bewertung:
@@ -129,7 +129,7 @@ export const IPMA_GRADER_OUTPUT_SCHEMA = {
         type: "object",
         properties: {
           nummer: { type: "integer" },
-          punkte: { type: "integer" },
+          punkte: { type: "number" }, // Schritte von 0.5; geprüft mit Zod (gradeOutputSchema)
           begruendung: { type: "string" },
         },
         required: ["nummer", "punkte", "begruendung"],

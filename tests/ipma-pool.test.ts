@@ -10,9 +10,9 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
 import { AREA_IDS, COMPETENCE_IDS, COMPETENCES, getCompetence } from "@/lib/ipma/competences"
-import { POOL_MINIMUM, POOL_STAGE, type PoolStage } from "@/lib/ipma/config"
+import { POOL_MINIMUM, POOL_STAGE, RASTER_STAGE, type PoolStage } from "@/lib/ipma/config"
 import { buildPool, loadPool, normalizeText, poolFileName, validatePool } from "@/lib/ipma/pool"
-import { competenceFileSchema, isKnownStation, type CompetenceFile, type PoolQuestion } from "@/lib/validations/ipma-pool"
+import { checkRaster, competenceFileSchema, isKnownStation, isLegacyRaster, scaleLegacyRaster, type CompetenceFile, type PoolQuestion } from "@/lib/validations/ipma-pool"
 import { fileOf, miniSources, rawMc, rawOpen, type RawFile } from "./helpers/ipma-mini"
 
 const POOL_DIR = path.join(process.cwd(), "content", "ipma", "fragen")
@@ -181,8 +181,12 @@ describe("Schema: ungültige Beispiele werden abgelehnt", () => {
     ["richtig: 4", () => file304((q) => { q.richtig = 4 })],
     ["doppelte Optionen", () => file304((q) => { q.optionen = ["Gleich", "gleich", "drei", "vier"] })],
     ["«alle obigen»", () => file304((q) => { q.optionen = ["eins", "zwei", "drei", "Alle obigen"] })],
-    ["Raster-Summe 3", () => file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 1 }, { kriterium: "Zweites Kriterium", punkte: 2 }] }, "offen")],
+    ["Raster-Summe 2.5", () => file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 1 }, { kriterium: "Zweites Kriterium", punkte: 1.5 }] }, "offen")],
+    ["Raster-Summe 3.5", () => file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 2 }, { kriterium: "Zweites Kriterium", punkte: 1.5 }] }, "offen")],
     ["Raster-Summe 5", () => file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 2 }, { kriterium: "Zweites Kriterium", punkte: 3 }] }, "offen")],
+    ["Raster in Viertelpunkten", () => file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 1.25 }, { kriterium: "Zweites Kriterium", punkte: 1.75 }] }, "offen")],
+    ["Raster-Summe 4 mit halben Punkten (kein Altformat)", () => file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 1.5 }, { kriterium: "Zweites Kriterium", punkte: 2.5 }] }, "offen")],
+    ["Kriterium mit 0 Punkten", () => file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 0 }, { kriterium: "Zweites Kriterium", punkte: 3 }] }, "offen")],
     ["Indikator 3.04.06 (es gibt nur 5)", () => file304((q) => { q.fundstelle = { icb: { seite: 100, indikatoren: ["3.04.06"] } } })],
     ["Indikator 3.05.01 in 3.04", () => file304((q) => { q.fundstelle = { icb: { seite: 100, indikatoren: ["3.05.01"] } } })],
     ["Station unbekannt", () => file304((q) => { q.fundstelle = { icb: { seite: 100, indikatoren: ["3.04.01"] }, station: "99-gibt-es-nicht" } })],
@@ -225,5 +229,53 @@ describe("Schema: ungültige Beispiele werden abgelehnt", () => {
     const sources = miniSources(4, 2)
     for (const f of sources) for (const q of f.fragen) q.status = "entwurf"
     assert.throws(() => buildPool(sources, { mc: 4, offen: 2 }), /verlangt 4 und 2/)
+  })
+})
+
+describe("Bewertungsraster: Summe 3 in Schritten von 0.5, Übergang vom Altformat (Nachtrag 8.9)", () => {
+  test("Summe 3 mit halben Punkten ist gültig", () => {
+    assert.deepEqual(checkRaster([1.5, 1, 0.5], "neu"), { ok: true, punkte: [1.5, 1, 0.5] })
+    assert.deepEqual(checkRaster([3, 0.5], "neu"), { ok: false, message: "Raster ergibt 3.5 statt 3 Punkte." })
+  })
+
+  test("Altformat (ganze Punkte, Summe 4) wird auf Summe 3 umgerechnet, grösster Rest zuerst", () => {
+    assert.deepEqual(scaleLegacyRaster([2, 2]), [1.5, 1.5])
+    assert.deepEqual(scaleLegacyRaster([1, 1, 1, 1]), [1, 1, 0.5, 0.5])
+    assert.deepEqual(scaleLegacyRaster([3, 1]), [2.5, 0.5])
+    assert.deepEqual(scaleLegacyRaster([1, 3]), [1, 2])
+    assert.deepEqual(scaleLegacyRaster([1, 1, 2]), [1, 0.5, 1.5])
+    for (const raster of [[2, 2], [1, 3], [3, 1], [1, 1, 2], [2, 1, 1], [1, 2, 1], [1, 1, 1, 1]]) {
+      const scaled = scaleLegacyRaster(raster)
+      assert.equal(scaled.reduce((a, b) => a + b, 0), 3, raster.join())
+      assert.ok(scaled.every((p) => p >= 0.5 && Number.isInteger(p * 2)), raster.join())
+    }
+  })
+
+  test("Stufe «uebergang» nimmt das Altformat an, Stufe «neu» nicht", () => {
+    assert.deepEqual(checkRaster([2, 2], "uebergang"), { ok: true, punkte: [1.5, 1.5] })
+    assert.deepEqual(checkRaster([2, 2], "neu"), { ok: false, message: "Raster ergibt 4 statt 3 Punkte." })
+    assert.equal(checkRaster([2.5, 1.5], "uebergang").ok, false)
+  })
+
+  test("Datei: Raster des Altbestands wird beim Laden umgerechnet (solange RASTER_STAGE «uebergang»)", (t) => {
+    const f = file304((q) => { q.bewertungsraster = [{ kriterium: "Erstes Kriterium", punkte: 1 }, { kriterium: "Zweites Kriterium", punkte: 3 }] }, "offen")
+    const parsed = competenceFileSchema.safeParse(f)
+    if (RASTER_STAGE === "neu") {
+      assert.equal(parsed.success, false)
+      return
+    }
+    t.diagnostic("RASTER_STAGE «uebergang»: Altformat wird umgerechnet.")
+    assert.ok(parsed.success)
+    const q = parsed.data.fragen.find((x) => x.typ === "offen")
+    assert.deepEqual(q?.typ === "offen" ? q.bewertungsraster.map((r) => r.punkte) : [], [1, 2])
+  })
+
+  test("Echte Dateien: Raster im Altformat nur in der Stufe «uebergang»", (t) => {
+    const legacy = readRealFiles().flatMap(({ raw }) => {
+      const fragen = (raw as { fragen: { id: string; typ: string; bewertungsraster?: { punkte: number }[] }[] }).fragen
+      return fragen.filter((q) => q.typ === "offen" && q.bewertungsraster && isLegacyRaster(q.bewertungsraster.map((r) => r.punkte))).map((q) => q.id)
+    })
+    if (RASTER_STAGE === "neu") assert.deepEqual(legacy, [])
+    else if (legacy.length) t.diagnostic(`Altformat (Summe 4, wird umgerechnet): ${legacy.length} offene Fragen, z. B. ${legacy.slice(0, 3).join(", ")}`)
   })
 })

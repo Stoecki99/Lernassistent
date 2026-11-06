@@ -6,7 +6,8 @@
 // Feldnamen deutsch wie im Inhaltsformat (Ausnahme in CLAUDE.md), Code-Namen englisch.
 
 import { z } from "zod"
-import { COMPETENCE_IDS, COMPETENCES, RASTER_TOTAL } from "../ipma/competences"
+import { COMPETENCE_IDS, COMPETENCES, HALVES_PER_POINT, LEGACY_RASTER_TOTAL, RASTER_HALVES, RASTER_TOTAL, fromHalves, toHalves } from "../ipma/competences"
+import { RASTER_STAGE, type RasterStage } from "../ipma/config"
 import fach from "../../content/lernseiten/pmgt/fach.json"
 
 // Abweichung zu 2.3: Die Stationen stehen in fach.json unter «pfad», nicht unter «stationen».
@@ -60,9 +61,57 @@ const mcSchema = z.object({
   optionHinweise: z.array(z.string().trim().max(300)).length(4).optional(),
 }).strict()
 
+/**
+ * Rechnet ein Raster des Altbestands (ganze Punkte, Summe 4) auf Summe 3 in Schritten von 0.5 um (Nachtrag 8.9):
+ * je Kriterium punkte × 6 / 4 Halbpunkte, abgerundet; die fehlenden Halbpunkte erhalten die Kriterien mit dem
+ * grössten Rest (Gleichstand: frühere zuerst). Jedes Kriterium behält mindestens 0.5 Punkte.
+ */
+export function scaleLegacyRaster(punkte: readonly number[]): number[] {
+  const exact = punkte.map((p) => (p * RASTER_HALVES) / LEGACY_RASTER_TOTAL)
+  const out = exact.map((v) => Math.floor(v))
+  let rest = RASTER_HALVES - out.reduce((s, v) => s + v, 0)
+  const byRest = exact.map((v, i) => ({ i, r: v - Math.floor(v) })).sort((a, b) => b.r - a.r || a.i - b.i)
+  for (const { i } of byRest) {
+    if (rest <= 0) break
+    out[i] += 1
+    rest -= 1
+  }
+  return out.map(fromHalves)
+}
+
+/** Raster im Altformat: nur ganze Punkte, Summe 4 */
+export function isLegacyRaster(punkte: readonly number[]): boolean {
+  return punkte.every((p) => Number.isInteger(p)) && punkte.reduce((s, p) => s + p, 0) === LEGACY_RASTER_TOTAL
+}
+
+/**
+ * Prüft die Kriterienpunkte eines Rasters (2.3, Nachtrag 8.9): Schritte von 0.5, Summe 3. In der Stufe
+ * «uebergang» gilt auch das Altformat (ganze Punkte, Summe 4); es wird mit scaleLegacyRaster umgerechnet.
+ * Liefert die gültigen Punkte (Summe 3) oder eine Fehlermeldung.
+ */
+export function checkRaster(
+  punkte: readonly number[],
+  stage: RasterStage = RASTER_STAGE,
+): { ok: true; punkte: number[] } | { ok: false; message: string } {
+  if (punkte.some((p) => p < 0.5 || !Number.isInteger(p * HALVES_PER_POINT))) {
+    return { ok: false, message: "Kriterienpunkte in Schritten von 0.5, mindestens 0.5." }
+  }
+  const sum = fromHalves(punkte.reduce((s, p) => s + toHalves(p), 0))
+  if (sum === RASTER_TOTAL) return { ok: true, punkte: [...punkte] }
+  if (stage === "uebergang" && isLegacyRaster(punkte)) return { ok: true, punkte: scaleLegacyRaster(punkte) }
+  return { ok: false, message: `Raster ergibt ${sum} statt ${RASTER_TOTAL} Punkte.` }
+}
+
 const rasterSchema = z.array(
-  z.object({ kriterium: text(10, 300), punkte: z.number().int().min(1).max(RASTER_TOTAL) }).strict(),
-).min(2).max(4)
+  z.object({ kriterium: text(10, 300), punkte: z.number().min(0.5).max(LEGACY_RASTER_TOTAL) }).strict(),
+).min(2).max(4).transform((raster, ctx) => {
+  const checked = checkRaster(raster.map((r) => r.punkte))
+  if (!checked.ok) {
+    ctx.addIssue({ code: "custom", message: checked.message })
+    return z.NEVER
+  }
+  return raster.map((r, i) => ({ kriterium: r.kriterium, punkte: checked.punkte[i] }))
+})
 
 const offenSchema = z.object({
   ...base,
@@ -113,7 +162,8 @@ export const competenceFileSchema = z.object({
       if (q.optionHinweise && q.optionHinweise[q.richtig] !== "")
         ctx.addIssue({ code: "custom", path, message: `${q.id}: Hinweis der richtigen Option muss leer sein.` })
     } else {
-      const sum = q.bewertungsraster.reduce((s, r) => s + r.punkte, 0)
+      // Nach checkRaster immer 3; Schutz, falls jemand das Rasterschema ändert
+      const sum = fromHalves(q.bewertungsraster.reduce((s, r) => s + toHalves(r.punkte), 0))
       if (sum !== RASTER_TOTAL)
         ctx.addIssue({ code: "custom", path, message: `${q.id}: Raster ergibt ${sum} statt ${RASTER_TOTAL} Punkte.` })
     }

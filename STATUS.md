@@ -86,6 +86,10 @@
 
 - **Lernpfad: Werkzeug-Karten** (`sektionen[].werkzeuge` in fach.json, Schema `lib/validations/lernseite.ts`, Doku `docs/lernpfad-format.md`): Karten mit Symbol, Kurztext und Knopf «Starten»/«Öffnen» am Anfang einer Sektion; `href` nur interner Pfad (Zod-Regex, Ziel-Seite prüft `lernseiten:pruefen`), `zugang: "pro"` zeigt Free-Konten «Nur mit Pro» (serverseitig `hasLeitstandAccess`), `szenario` zeigt den Leitstand-Bestwert (`findBest`). PMGT: s6 mit drei Leitstand-Läufen und Übersicht, Prüfungsvorbereitung mit IPMA-Simulator, Übungsprüfung und Training. `/lernseiten` hat neu den Block «Simulatoren» (Leitstand, IPMA) statt eines weiteren Eintrags in der vollen Mobile-Leiste.
 
+### 2026-11-06
+
+- **feat: IPMA-Prüfungssimulator nach Musterprüfung VZPM 2023 geeicht** (nur Format, keine Inhalte; Nachtrag 8.9 der Spezifikation) — offene Frage höchstens 3 Punkte in Schritten von 0.5, total 150 Punkte, Grenze 90; offen «richtig» ab 1.5 von 3; Übungsprüfung mit 14 Kompetenzen im MC-Teil (je 4–5) und den übrigen 14 im offenen Teil (je 2–3); Richtzeiten 75/105 min in der Oberfläche; internationale ICB-Nummer (4.x.x) neben der Swiss-Nummer; Claude-Bewertung mit halben Punkten; `CONFIG_VERSION` 2, alte Versuche bleiben über den Schnappschuss (`rasterMax` fehlt → 4 Halbpunkte) gültig. Stationen 02 und 24 korrigiert. **Offen:** Pool-Raster auf Summe 3 umstellen und danach `RASTER_STAGE` auf `"neu"` (bis dahin werden Raster mit Summe 4 beim Laden umgerechnet).
+
 ### 2026-11-04
 
 - **feat: IPMA-Fragenpool Teil 2** — 252 fachgeprüfte Fragen (je Kompetenz 6 MC + 3 offen), `POOL_STAGE` auf `teil2`; Fragen mit Überschneidung über `gruppe` gekoppelt; Inhalte zu Qualität, Beschaffung, Change und Krisen nach LB 10–13 abgleichen.

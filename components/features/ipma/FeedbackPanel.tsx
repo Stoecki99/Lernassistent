@@ -10,13 +10,14 @@
 
 import type { SolvedItem } from "@/lib/ipma/types"
 import styles from "@/app/(ipma)/ipma.module.css"
-import { LETTERS, points, stationHref, stationNumber } from "./format"
+import { internationalNumber } from "@/lib/ipma/competences"
+import { LETTERS, competenceNumber, points, stationHref, stationNumber } from "./format"
 
 export function SourceLine({ item }: { item: SolvedItem }) {
   const s = item.source
-  const parts: string[] = [`Kompetenz ${item.competence}`]
+  const parts: string[] = [`Kompetenz ${competenceNumber(item.competence)}`]
   if (s.icbPage > 0) parts.push(`Swiss ICB S. ${s.icbPage}`)
-  if (s.indicators.length) parts.push(`Indikatoren ${s.indicators.join(", ")}`)
+  if (s.indicators.length) parts.push(`Indikatoren ${s.indicators.map((k) => `${k} (${internationalNumber(k)})`).join(", ")}`)
   if (s.lb) parts.push(s.lb)
   if (s.book) parts.push(s.book)
   return (

@@ -46,7 +46,7 @@ export interface GradeUsage {
   cacheReadTokens: number
 }
 
-/** Gespeicherte Rückmeldung (IpmaAttemptItem.aiFeedback, aiFeedbackSchema) */
+/** Gespeicherte Rückmeldung (IpmaAttemptItem.aiFeedback, aiFeedbackSchema); punkte in Halbpunkten */
 export interface AiFeedbackData {
   kriterien: { nummer: number; punkte: number; begruendung: string }[]
   gesamtkommentar: string
@@ -61,7 +61,7 @@ export type GradeFailure =
   | "unavailable" // übrige API-Fehler, Verbindung, Zeitüberschreitung
 
 export type GradeResult =
-  | { ok: true; scores: number[]; feedback: AiFeedbackData; usage: GradeUsage }
+  | { ok: true; scores: number[]; feedback: AiFeedbackData; usage: GradeUsage } // scores in Halbpunkten
   | { ok: false; reason: GradeFailure; usage: GradeUsage }
 
 const NO_USAGE: GradeUsage = { inputTokens: 0, outputTokens: 0, cacheWriteTokens: 0, cacheReadTokens: 0 }
@@ -71,7 +71,7 @@ export function escapeAnswer(text: string): string {
   return text.slice(0, MAX_ANSWER_CHARS).replace(/</g, "‹").replace(/>/g, "›")
 }
 
-/** Variabler Teil der Anfrage (nach dem gecachten System-Prompt) */
+/** Variabler Teil der Anfrage (nach dem gecachten System-Prompt); Höchstwerte in Schritten von 0.5 */
 export function buildUserContent(input: GradeInput): string {
   const raster = input.raster
     .map((r, i) => `${i + 1}. ${r.kriterium} (höchstens ${r.punkte} ${r.punkte === 1 ? "Punkt" : "Punkte"})`)
@@ -116,7 +116,7 @@ function textOf(message: Anthropic.Message): string {
     .join("")
 }
 
-/** Ausgabe lesen und prüfen; die Summe rechnet der Aufrufer selbst aus den Punkten */
+/** Ausgabe lesen und prüfen; liefert Halbpunkte je Kriterium, die Summe rechnet der Aufrufer selbst */
 export function parseGradeOutput(
   text: string,
   raster: readonly { punkte: number }[],

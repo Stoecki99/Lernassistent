@@ -7,7 +7,7 @@
 import { prisma } from "@/lib/prisma"
 import { achievementStats, prismaErrorCode } from "@/lib/leitstand"
 import { ipmaAchievementStats, type IpmaBadgeCondition } from "@/lib/ipma/achievements"
-import { gradedAnswers } from "@/lib/ipma/view"
+import { gradedAnswers, readConfig } from "@/lib/ipma/view"
 
 type BadgeDb = Pick<typeof prisma, "$transaction">
 
@@ -129,7 +129,7 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
         answeredAt: true,
         selfAssessedAt: true,
         aiAssessedAt: true,
-        attempt: { select: { startedAt: true } },
+        attempt: { select: { startedAt: true, config: true } },
       },
     }),
   ])
@@ -148,7 +148,10 @@ async function getUserStatsForBadges(userId: string): Promise<UserBadgeStats> {
     leitstandAchievements: achievementStats(simulationRuns),
     ipmaAchievements: ipmaAchievementStats(
       ipmaAttempts,
-      gradedAnswers(ipmaItems, (index) => ipmaItems[index].attempt.startedAt),
+      gradedAnswers(
+        ipmaItems.map((i) => ({ ...i, rasterMax: readConfig(i.attempt.config).rasterMax })),
+        (index) => ipmaItems[index].attempt.startedAt,
+      ),
     ),
   }
 }

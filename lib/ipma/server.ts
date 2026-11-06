@@ -26,7 +26,7 @@ import {
 import { fortschrittSchreibdaten, type LernStatus } from "@/lib/validations/lernfortschritt"
 import type { CreateAttemptInput, SaveItemInput } from "@/lib/validations/ipma"
 import type { OpenQuestion } from "@/lib/validations/ipma-pool"
-import { COMPETENCE_IDS, RASTER_TOTAL, type CompetenceId } from "./competences"
+import { COMPETENCE_IDS, POINT_Q, toHalves, type CompetenceId } from "./competences"
 import { CONFIG_VERSION, EXAM_CONFIG, configSnapshot, type ExamConfig } from "./config"
 import { IpmaError } from "./errors"
 import { billableTokens, gradeOpenAnswer, totalTokens, type GradeFailure, type GraderClient } from "./grader"
@@ -46,6 +46,7 @@ import type {
 import {
   asMode,
   asStatus,
+  attemptRasterPoints,
   buildAttemptView,
   checkAnswerWindow,
   computePointsAward,
@@ -363,9 +364,10 @@ async function loadStates(db: Db, userId: string, questionIds?: readonly string[
 
 /** Bewertete Antworten aller Versuche eines Kontos (Beherrschung 4.4) */
 export async function loadMastery(db: Db, userId: string, cfg: ExamConfig = EXAM_CONFIG): Promise<Map<CompetenceId, Mastery>> {
-  const attempts = await db.ipmaAttempt.findMany({ where: { userId }, select: { id: true, startedAt: true } })
+  const attempts = await db.ipmaAttempt.findMany({ where: { userId }, select: { id: true, startedAt: true, config: true } })
   if (!attempts.length) return mastery([], cfg)
   const startedAt = new Map(attempts.map((a) => [a.id, a.startedAt]))
+  const rasterMax = new Map(attempts.map((a) => [a.id, readConfig(a.config).rasterMax]))
   const items = await db.ipmaAttemptItem.findMany({
     where: { attemptId: { in: attempts.map((a) => a.id) }, correct: { not: null } },
     select: {
@@ -379,7 +381,8 @@ export async function loadMastery(db: Db, userId: string, cfg: ExamConfig = EXAM
       aiAssessedAt: true,
     },
   })
-  const answers = gradedAnswers(items, (index) => startedAt.get(items[index].attemptId) ?? new Date(0))
+  const graded = items.map((i) => ({ ...i, rasterMax: rasterMax.get(i.attemptId) }))
+  const answers = gradedAnswers(graded, (index) => startedAt.get(items[index].attemptId) ?? new Date(0))
   return mastery(answers, cfg)
 }
 
@@ -461,7 +464,7 @@ async function viewOf(deps: IpmaDeps, user: IpmaUser, attempt: StoredAttempt, it
 
 function solvedOf(deps: IpmaDeps, attempt: StoredAttempt, item: StoredItem): SolvedItem {
   return toSolvedItem(item, deps.pool().byId.get(item.questionId) ?? null, {
-    weights: readConfig(attempt.config).weights,
+    config: readConfig(attempt.config),
     catalog: deps.catalog(),
   })
 }
@@ -675,7 +678,7 @@ export async function checkItem(deps: IpmaDeps, userId: string, id: string, posi
     correct = question?.typ === "mc" && item.choice !== null && item.choice === question.richtig
     data.correct = correct
     data.scoreSource = "mc"
-    data.pointsQ = correct ? cfg.weights.mc * RASTER_TOTAL : 0
+    data.pointsQ = correct ? cfg.weights.mc * POINT_Q : 0
   } else if (item.text === null || item.text.trim() === "") {
     correct = false
     data.correct = false
@@ -710,6 +713,7 @@ async function awardTrainingPoints(
 
 // ---------- Selbstbewertung (PUT items/[position]/self) ----------
 
+
 /**
  * Selbstbewertung einer offenen Antwort (4.2, 6.6): nur gesperrte, nicht leere offene Antworten; je Kriterium
  * 0 … Höchstwert des Rasters. Massgebend, solange keine Claude-Bewertung vorliegt. Prüfung: nur «submitted»,
@@ -740,17 +744,18 @@ export async function selfAssess(
   if (!exam && item.selfAssessedAt !== null) throw new IpmaError(409, "LOCKED", "Diese Antwort ist schon bewertet.")
   const question = deps.pool().byId.get(item.questionId) ?? null
   if (!question || question.typ !== "offen") throw new IpmaError(422, "NOT_OPEN", "Zu dieser Frage gibt es kein Raster mehr.")
-  const raster = question.bewertungsraster
-  if (scores.length !== raster.length || scores.some((s, i) => s > raster[i].punkte)) {
+  const raster = question.bewertungsraster.map((r) => toHalves(r.punkte))
+  const halves = scores.map(toHalves)
+  if (halves.length !== raster.length || halves.some((s, i) => s > raster[i])) {
     throw new IpmaError(400, "BAD_REQUEST", "Die Bewertung passt nicht zum Raster.")
   }
 
   const cfg = readConfig(attempt.config)
-  const total = scores.reduce((s, v) => s + v, 0)
+  const total = attemptRasterPoints(halves, raster, cfg)
   const correct = total >= cfg.openCorrectRaster
   const aiDone = item.aiStatus === "done"
   const data: Prisma.IpmaAttemptItemUpdateManyMutationInput = {
-    selfScores: [...scores],
+    selfScores: halves,
     selfAssessedAt: now,
     ...(aiDone ? {} : { rasterPoints: total, scoreSource: "self", correct, pointsQ: cfg.weights.offen * total }),
   }
@@ -919,7 +924,7 @@ export async function assessItem(deps: IpmaDeps, userId: string, id: string, pos
   // Punkte selbst summieren (4.3 Schritt 13), nie eine Summe von Claude übernehmen
   const cfg = readConfig(attempt.config)
   const scores = result.scores
-  const total = scores.reduce((sum, v) => sum + v, 0)
+  const total = attemptRasterPoints(scores, question.bewertungsraster.map((r) => toHalves(r.punkte)), cfg)
   const feedback: Prisma.InputJsonObject = {
     kriterien: result.feedback.kriterien.map((k) => ({ nummer: k.nummer, punkte: k.punkte, begruendung: k.begruendung })),
     gesamtkommentar: result.feedback.gesamtkommentar,
@@ -1045,7 +1050,7 @@ async function submitInternal(deps: IpmaDeps, userId: string, attempt: StoredAtt
     }
   }
   const scored: StoredItem[] = items.map((i) => {
-    if (mcRight.includes(i.position)) return { ...i, locked: true, correct: true, scoreSource: "mc", pointsQ: cfg.weights.mc * RASTER_TOTAL }
+    if (mcRight.includes(i.position)) return { ...i, locked: true, correct: true, scoreSource: "mc", pointsQ: cfg.weights.mc * POINT_Q }
     if (mcWrong.includes(i.position)) return { ...i, locked: true, correct: false, scoreSource: "mc", pointsQ: 0 }
     if (openEmpty.includes(i.position)) return { ...i, locked: true, correct: false, scoreSource: "self", rasterPoints: 0, pointsQ: 0 }
     return { ...i, locked: true }
@@ -1069,7 +1074,7 @@ async function submitInternal(deps: IpmaDeps, userId: string, attempt: StoredAtt
     })
     if (updated.count === 0) return false
     const where = (positions: number[]) => ({ attemptId: attempt.id, position: { in: positions } })
-    if (mcRight.length) await tx.ipmaAttemptItem.updateMany({ where: where(mcRight), data: { locked: true, correct: true, scoreSource: "mc", pointsQ: cfg.weights.mc * RASTER_TOTAL } })
+    if (mcRight.length) await tx.ipmaAttemptItem.updateMany({ where: where(mcRight), data: { locked: true, correct: true, scoreSource: "mc", pointsQ: cfg.weights.mc * POINT_Q } })
     if (mcWrong.length) await tx.ipmaAttemptItem.updateMany({ where: where(mcWrong), data: { locked: true, correct: false, scoreSource: "mc", pointsQ: 0 } })
     if (openEmpty.length) await tx.ipmaAttemptItem.updateMany({ where: where(openEmpty), data: { locked: true, correct: false, scoreSource: "self", rasterPoints: 0, pointsQ: 0 } })
     await tx.ipmaAttemptItem.updateMany({ where: { attemptId: attempt.id, locked: false }, data: { locked: true } })
@@ -1166,8 +1171,8 @@ export async function finishAttempt(deps: IpmaDeps, user: IpmaUser, id: string):
     }
     if (mode === "exam") {
       await markIpmaStation(tx, userId, "erledigt", {
-        richtig: Math.floor(result.pointsQ / RASTER_TOTAL),
-        gesamt: Math.floor(result.maxPointsQ / RASTER_TOTAL),
+        richtig: Math.floor(result.pointsQ / POINT_Q),
+        gesamt: Math.floor(result.maxPointsQ / POINT_Q),
       })
     }
     return { result, pointsAwarded }

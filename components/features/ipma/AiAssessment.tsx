@@ -18,6 +18,7 @@ import styles from "@/app/(ipma)/ipma.module.css"
 import Dialog from "@/components/features/leitstand/Dialog"
 import UpgradePrompt from "@/components/features/UpgradePrompt"
 import { ipmaApi, errorMessage } from "./api"
+import { score } from "./format"
 
 export default function AiAssessment({
   attemptId,
@@ -126,10 +127,10 @@ export default function AiAssessment({
                         {i + 1}. {r.criterion}
                       </th>
                       <td className="zahl">
-                        {item.selfScores[i] ?? "–"} / {r.points}
+                        {item.selfScores[i] !== undefined ? score(item.selfScores[i]) : "–"} / {score(r.points)}
                       </td>
                       <td className="zahl">
-                        {item.aiScores[i] ?? k?.punkte ?? "–"} / {r.points}
+                        {item.aiScores[i] !== undefined ? score(item.aiScores[i]) : k ? score(k.punkte) : "–"} / {score(r.points)}
                       </td>
                       <td>{k?.begruendung ?? ""}</td>
                     </tr>

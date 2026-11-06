@@ -5,7 +5,8 @@
 
 // components/features/ipma/SelfAssessment.tsx
 // Selbstbewertung einer offenen Antwort (Spezifikation 4.2, 6.8 SelfAssessment): eigene Antwort neben der
-// Musterlösung, je Rasterkriterium Schaltflächen 0 … max (aria-pressed, keine Schieberegler), Summe.
+// Musterlösung, je Rasterkriterium Schaltflächen 0 … max in Schritten von 0.5 (aria-pressed, keine
+// Schieberegler; Nachtrag 8.9), Summe in Punkten.
 // Prüfung: änderbar, solange abgegeben und nicht abgeschlossen; Training: genau einmal (Nachtrag 8.5 Nr. 5).
 // Speichern-Knopf mit aria-disabled (Fokus bleibt); verschwindet er nach dem Speichern (Training), erhält der
 // Titel des Rasters den Fokus.
@@ -14,7 +15,12 @@ import type { SolvedItem } from "@/lib/ipma/types"
 import { useEffect, useId, useRef, useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
 import { ipmaApi, errorMessage } from "./api"
-import { QUARTERS, points, selfScoresKey } from "./format"
+import { pointWord, score, selfScoresKey } from "./format"
+
+/** Wahlmöglichkeiten eines Kriteriums: 0, 0.5, … bis zum Höchstwert */
+function steps(max: number): number[] {
+  return Array.from({ length: Math.round(max * 2) + 1 }, (_, k) => k / 2)
+}
 
 const SOURCE_TEXT = { mc: "automatisch", self: "Selbstbewertung", ai: "Claude" } as const
 
@@ -73,7 +79,7 @@ export default function SelfAssessment({
       setSaved(true)
       focusAfterSave.current = true
       onSaved(next)
-      onAnnounce?.(`Selbstbewertung gespeichert: ${sum} von ${max} Rasterpunkten.`)
+      onAnnounce?.(`Selbstbewertung gespeichert: ${score(sum)} von ${score(max)} Punkten.`)
     } catch (e) {
       setError(errorMessage(e, "Die Selbstbewertung konnte nicht gespeichert werden."))
     } finally {
@@ -102,24 +108,24 @@ export default function SelfAssessment({
             {rubric.map((r, i) => (
               <li key={i} className={styles.rasterZeile}>
                 <span className={styles.rasterKriterium} id={`${id}-k${i}`}>
-                  {i + 1}. {r.criterion} <span className={styles.leise}>(höchstens {r.points})</span>
+                  {i + 1}. {r.criterion} <span className={styles.leise}>(höchstens {score(r.points)})</span>
                 </span>
                 {!empty && (
                   <span className={styles.punkteWahl} role="group" aria-labelledby={`${id}-k${i}`}>
-                    {Array.from({ length: r.points + 1 }, (_, p) => (
+                    {steps(r.points).map((p) => (
                       <button
                         key={p}
                         type="button"
                         className={styles.punktKnopf}
                         aria-pressed={scores[i] === p}
-                        aria-label={`${p} ${p === 1 ? "Punkt" : "Punkte"}`}
+                        aria-label={`${score(p)} ${pointWord(p)}`}
                         disabled={!editable || busy}
                         onClick={() => {
                           setSaved(false)
                           setScores((old) => old.map((s, j) => (j === i ? p : s)))
                         }}
                       >
-                        {p}
+                        {score(p)}
                       </button>
                     ))}
                   </span>
@@ -129,8 +135,9 @@ export default function SelfAssessment({
           </ul>
           {!empty && (
             <p className={styles.summe}>
-              Summe: {complete ? sum : "–"} von {max} Rasterpunkten
-              {complete ? ` = ${points((sum * item.points * QUARTERS) / Math.max(max, 1))} von ${item.points} Punkten` : ""}
+              Summe: {complete ? score(sum) : "–"} von {score(max)} Punkten
+              {/* Versuch vor Nachtrag 8.9 (offene Frage 2 Punkte): Umrechnung zeigen */}
+              {complete && max !== item.points ? ` = ${score(Math.round((sum * item.points * 2) / Math.max(max, 0.5)) / 2)} von ${score(item.points)} Punkten in diesem Versuch` : ""}
             </p>
           )}
           {!empty && editable && (
@@ -149,8 +156,7 @@ export default function SelfAssessment({
           )}
           {item.scoreSource && item.rasterPoints !== null && (
             <p className="hint">
-              Massgebend: {SOURCE_TEXT[item.scoreSource]} · {item.rasterPoints} von {max} Rasterpunkten
-              {item.pointsQ !== null ? ` · ${points(item.pointsQ)} ${item.pointsQ === QUARTERS ? "Punkt" : "Punkte"}` : ""}
+              Massgebend: {SOURCE_TEXT[item.scoreSource]} · {score(item.rasterPoints)} von {score(item.points)} Punkten
             </p>
           )}
         </div>

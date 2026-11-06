@@ -140,20 +140,18 @@ function finalize(chosen: readonly PoolQuestion[], rng: Rng, layout: "blocks" | 
 }
 
 /**
- * Kompetenzen für die Zusatzfragen der Übungsprüfung (3.2). Abweichung zu 6.5 (dort Fisher-Yates):
- * bevorzugt werden Kompetenzen mit den meisten nie gesehenen, dann den meisten verfügbaren Fragen dieses Typs;
- * Gleichstand per Zufall. So wiederholt die zweite Prüfung nur, was der Pool erzwingt, und eine Kompetenz mit
- * zu wenigen Fragen bekommt keine Zusatzfrage.
+ * Kompetenzen mit einer Zusatzfrage (3.2, Nachtrag 8.9): bevorzugt die mit den meisten nie gesehenen, dann den
+ * meisten verfügbaren Fragen dieses Typs; Gleichstand per Zufall. So wiederholt die zweite Prüfung nur, was der
+ * Pool erzwingt, und eine Kompetenz mit zu wenigen Fragen bekommt keine Zusatzfrage.
  */
 function pickExtras(
   eligible: readonly PoolQuestion[],
-  area: AreaId,
+  comps: readonly CompetenceId[],
   type: QuestionType,
   count: number,
   rng: Rng,
   exposure: Exposures,
 ): CompetenceId[] {
-  const comps = COMPETENCE_IDS.filter((id) => getCompetence(id).area === area)
   if (count < 0 || count > comps.length) throw new Error(`Zusatzfragen ${type}: ${count} passt nicht zu ${comps.length} Kompetenzen`)
   const rows = comps.map((id) => {
     const cands = candidates(eligible, id, type)
@@ -164,8 +162,45 @@ function pickExtras(
 }
 
 /**
- * Übungsprüfung (3.2, 6.5): je Kompetenz perCompetence (2 MC + 1 offen), dazu die Zusatzfragen aus extraArea
- * (4 MC + 2 offen); Positionen 1–60 MC, 61–90 offen, je Block gemischt.
+ * Teilt die 28 Kompetenzen in MC-Teil und offenen Teil (3.2, Nachtrag 8.9), wie die Musterprüfung des VZPM:
+ * `exam.mcCompetences` (14) Kompetenzen nur mit MC, die übrigen nur mit offenen Fragen. Je Bereich anteilig
+ * (Perspective 2–3, People 5, Practice 6–7 im MC-Teil; der Rest der Halbierung per Zufall), innerhalb des
+ * Bereichs per Zufall. Kompetenzen mit zu wenigen offenen Fragen kommen zuerst in den MC-Teil, solche mit zu
+ * wenigen MC-Fragen zuletzt.
+ */
+function splitCompetences(eligible: readonly PoolQuestion[], cfg: ExamConfig, rng: Rng): Set<CompetenceId> {
+  const total = COMPETENCE_IDS.length
+  const baseMc = Math.floor(cfg.exam.mc / cfg.exam.mcCompetences)
+  const baseOpen = Math.floor(cfg.exam.offen / (total - cfg.exam.mcCompetences))
+  // Anzahl MC-Kompetenzen je Bereich: abgerundet, Rest nach grösstem Bruchteil, Gleichstand per Zufall
+  const shares = AREA_IDS.map((area) => {
+    const size = COMPETENCE_IDS.filter((id) => getCompetence(id).area === area).length
+    const exact = (size * cfg.exam.mcCompetences) / total
+    return { area, n: Math.floor(exact), frac: exact - Math.floor(exact), r: rng.next() }
+  })
+  let rest = cfg.exam.mcCompetences - shares.reduce((s, x) => s + x.n, 0)
+  for (const x of shares.slice().sort((a, b) => b.frac - a.frac || a.r - b.r)) {
+    if (rest <= 0) break
+    x.n += 1
+    rest -= 1
+  }
+  const mcSet = new Set<CompetenceId>()
+  for (const { area, n } of shares) {
+    const rows = COMPETENCE_IDS.filter((id) => getCompetence(id).area === area).map((id) => {
+      const noOpen = candidates(eligible, id, "offen").length < baseOpen
+      const noMc = candidates(eligible, id, "mc").length < baseMc
+      return { id, rank: noOpen && !noMc ? 0 : noMc && !noOpen ? 2 : 1, r: rng.next() }
+    })
+    rows.sort((a, b) => a.rank - b.rank || a.r - b.r)
+    for (const row of rows.slice(0, n)) mcSet.add(row.id)
+  }
+  return mcSet
+}
+
+/**
+ * Übungsprüfung (3.2, 6.5, Nachtrag 8.9) wie die Musterprüfung des VZPM: 14 Kompetenzen im MC-Teil mit je 4
+ * oder 5 Fragen (60), die übrigen 14 im offenen Teil mit je 2 oder 3 Fragen (30); jede der 28 Kompetenzen kommt
+ * genau in einem Teil vor. Positionen 1–60 MC, 61–90 offen, je Block gemischt.
  * Wirft IpmaError 422 POOL_TOO_SMALL, wenn eine Kompetenz zu wenige geprüfte Fragen hat.
  */
 export function selectExam(
@@ -176,27 +211,30 @@ export function selectExam(
 ): SelectedItem[] {
   const rng = createRng(seed)
   const eligible = eligiblePool(pool)
-  const types: QuestionType[] = ["mc", "offen"]
-  const quota = new Map<CompetenceId, Record<QuestionType, number>>(
-    COMPETENCE_IDS.map((id) => [id, { mc: cfg.exam.perCompetence.mc, offen: cfg.exam.perCompetence.offen }]),
-  )
-  for (const t of types) {
-    const extra = cfg.exam[t] - COMPETENCE_IDS.length * cfg.exam.perCompetence[t]
-    for (const id of pickExtras(eligible, cfg.exam.extraArea, t, extra, rng, exposure)) {
+  const mcSet = splitCompetences(eligible, cfg, rng)
+  const part: Record<QuestionType, CompetenceId[]> = {
+    mc: COMPETENCE_IDS.filter((id) => mcSet.has(id)),
+    offen: COMPETENCE_IDS.filter((id) => !mcSet.has(id)),
+  }
+  const quota = new Map<CompetenceId, { type: QuestionType; need: number }>()
+  for (const t of ["mc", "offen"] as const) {
+    const comps = part[t]
+    const base = Math.floor(cfg.exam[t] / comps.length)
+    for (const id of comps) quota.set(id, { type: t, need: base })
+    for (const id of pickExtras(eligible, comps, t, cfg.exam[t] - base * comps.length, rng, exposure)) {
       const q = quota.get(id)
-      if (q) q[t] += 1
+      if (q) q.need += 1
     }
   }
   const chosen: PoolQuestion[] = []
   const usedGroups = new Set<string>()
   for (const id of COMPETENCE_IDS) {
-    for (const t of types) {
-      const need = quota.get(id)?.[t] ?? 0
-      const ranked = rankForExam(candidates(eligible, id, t), rng, exposure)
-      const picked = takeWithGroups(ranked, need, usedGroups)
-      if (picked.length < need) throw tooSmall(id, t)
-      chosen.push(...picked)
-    }
+    const q = quota.get(id)
+    if (!q) continue
+    const ranked = rankForExam(candidates(eligible, id, q.type), rng, exposure)
+    const picked = takeWithGroups(ranked, q.need, usedGroups)
+    if (picked.length < q.need) throw tooSmall(id, q.type)
+    chosen.push(...picked)
   }
   return finalize(chosen, rng, "blocks")
 }

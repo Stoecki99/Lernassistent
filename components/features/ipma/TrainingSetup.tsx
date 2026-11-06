@@ -13,7 +13,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import styles from "@/app/(ipma)/ipma.module.css"
 import Dialog from "@/components/features/leitstand/Dialog"
-import { AREAS, COMPETENCES, type CompetenceId } from "@/lib/ipma/competences"
+import { AREAS, COMPETENCES, internationalNumber, type CompetenceId } from "@/lib/ipma/competences"
 import { ipmaApi, IpmaApiError, errorMessage, startErrorMessage, type CreateAttemptBody } from "./api"
 import { LEVEL } from "./format"
 
@@ -116,7 +116,7 @@ export default function TrainingSetup({ preselect }: { preselect: CompetenceId[]
                       <label>
                         <input type="checkbox" checked={selected.has(c.id)} onChange={() => toggle(c.id)} />
                         <span>
-                          <strong>{c.id}</strong> {c.title}
+                          <strong>{c.id}</strong> <span className={styles.leise}>({internationalNumber(c.id)})</span> {c.title}
                           <small>
                             {n === null ? "" : `${n} ${n === 1 ? "Frage" : "Fragen"}`}
                             {m ? ` · ${LEVEL[m.level].word}` : ""}
@@ -139,7 +139,7 @@ export default function TrainingSetup({ preselect }: { preselect: CompetenceId[]
             [
               ["beide", "Beide", "Multiple Choice und offene Fragen"],
               ["mc", "Multiple Choice", "je 1 Punkt, sofort bewertet"],
-              ["offen", "Offen", "je 2 Punkte, Selbstbewertung nach Raster"],
+              ["offen", "Offen", "je bis 3 Punkte, Selbstbewertung nach Raster in Schritten von 0.5"],
             ] as const
           ).map(([value, label, help]) => (
             <label key={value} className={styles.wahlOption}>

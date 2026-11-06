@@ -11,7 +11,7 @@
 import type { ClientItem, SolvedItem } from "@/lib/ipma/types"
 import { useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
-import { isAnswered, isSolved } from "./format"
+import { PART_MINUTES, isAnswered, isSolved } from "./format"
 
 type Filter = "alle" | "offen" | "markiert"
 
@@ -41,11 +41,14 @@ export default function QuestionOverview({
   items,
   current,
   training,
+  fullExam = false,
   onJump,
 }: {
   items: (ClientItem | SolvedItem)[]
   current: number
   training: boolean
+  /** Übungsprüfung: Teile mit Richtzeit wie die Musterprüfung des VZPM (Nachtrag 8.9) */
+  fullExam?: boolean
   onJump: (index: number) => void
 }) {
   const [filter, setFilter] = useState<Filter>("alle")
@@ -58,8 +61,8 @@ export default function QuestionOverview({
   const groups = training
     ? [{ title: "Fragen", list: items }]
     : [
-        { title: "Multiple Choice", list: items.filter((i) => i.type === "mc") },
-        { title: "Offene Fragen", list: items.filter((i) => i.type === "offen") },
+        { title: fullExam ? `Teil 1: Multiple Choice · Richtzeit ${PART_MINUTES.mc} min` : "Multiple Choice", list: items.filter((i) => i.type === "mc") },
+        { title: fullExam ? `Teil 2: Offene Fragen · Richtzeit ${PART_MINUTES.offen} min` : "Offene Fragen", list: items.filter((i) => i.type === "offen") },
       ].filter((g) => g.list.length > 0)
 
   return (

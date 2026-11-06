@@ -7,10 +7,10 @@
 // NUR SERVER: sieht die Poolfragen mit Lösungen. lib/ipma/server.ts exportiert alles weiter.
 
 import type { IpmaAttempt, IpmaAttemptItem } from "@prisma/client"
-import { RASTER_TOTAL, isCompetenceId, type CompetenceId } from "./competences"
-import { EXAM_CONFIG, configSnapshot, type ConfigSnapshot, type Weights } from "./config"
+import { POINT_Q, fromHalves, isCompetenceId, type CompetenceId } from "./competences"
+import { EXAM_CONFIG, configSnapshot, type ConfigSnapshot } from "./config"
 import { IpmaError } from "./errors"
-import { nextLeitner, type GradedAnswer, type LeitnerState } from "./review"
+import { answerScore, nextLeitner, type GradedAnswer, type LeitnerState } from "./review"
 import { evaluateAttempt, type ScoredItem, type StationCatalog } from "./scoring"
 import type {
   AiStatus,
@@ -132,8 +132,13 @@ export function originalChoice(optionOrder: readonly number[], display: number):
 }
 
 export interface ItemOptions {
-  weights: Weights
+  config: ConfigSnapshot
   showCompetence: boolean
+}
+
+/** Höchstpunkte einer Position laut Schnappschuss: MC weights.mc, offen weights.offen × rasterMax ÷ 4 (3 bzw. alt 2) */
+export function itemPoints(type: QuestionType, cfg: ConfigSnapshot): number {
+  return type === "mc" ? cfg.weights.mc : (cfg.weights.offen * cfg.rasterMax) / POINT_Q
 }
 
 /**
@@ -145,7 +150,7 @@ export function toClientItem(item: StoredItem, question: PoolQuestion | null, op
   const out: ClientItem = {
     position: item.position,
     type,
-    points: type === "mc" ? opts.weights.mc : opts.weights.offen,
+    points: itemPoints(type, opts.config),
     question: question?.frage ?? MISSING_QUESTION,
     choice: type === "mc" ? displayChoice(item) : null,
     text: type === "offen" ? item.text : null,
@@ -159,20 +164,21 @@ export function toClientItem(item: StoredItem, question: PoolQuestion | null, op
   return out
 }
 
-/** Gespeicherte Claude-Rückmeldung (AP5) oder null */
+/** Gespeicherte Claude-Rückmeldung (AP5) oder null; Punkte für die Anzeige von Halbpunkten in Punkte */
 function readAiFeedback(json: unknown): SolvedItem["aiFeedback"] {
   if (json === null || json === undefined) return null
   const parsed = aiFeedbackSchema.safeParse(json)
-  return parsed.success ? parsed.data : null
+  if (!parsed.success) return null
+  return { ...parsed.data, kriterien: parsed.data.kriterien.map((k) => ({ ...k, punkte: fromHalves(k.punkte) })) }
 }
 
 /** Position mit freigegebener Lösung (6.6); Lösungsfelder einzeln aus der Poolfrage übernommen */
 export function toSolvedItem(
   item: StoredItem,
   question: PoolQuestion | null,
-  opts: { weights: Weights; catalog: StationCatalog },
+  opts: { config: ConfigSnapshot; catalog: StationCatalog },
 ): SolvedItem {
-  const base = toClientItem(item, question, { weights: opts.weights, showCompetence: false })
+  const base = toClientItem(item, question, { config: opts.config, showCompetence: false })
   const fundstelle = question?.fundstelle
   const slug = fundstelle?.station
   const station = slug ? opts.catalog.get(slug) : undefined
@@ -190,12 +196,13 @@ export function toSolvedItem(
     questionId: item.questionId,
     competence: competenceOf(item),
     source,
-    selfScores: [...item.selfScores],
+    // Gespeichert in Halbpunkten, ausgeliefert in Punkten (Schritte von 0.5; Nachtrag 8.9)
+    selfScores: item.selfScores.map(fromHalves),
     aiStatus: oneOf(AI_STATUSES, item.aiStatus, "none"),
-    aiScores: [...item.aiScores],
+    aiScores: item.aiScores.map(fromHalves),
     aiFeedback: readAiFeedback(item.aiFeedback),
     scoreSource: item.scoreSource === null ? null : oneOf(SCORE_SOURCES, item.scoreSource, "self"),
-    rasterPoints: item.rasterPoints,
+    rasterPoints: item.rasterPoints === null ? null : fromHalves(item.rasterPoints),
     correct: item.correct,
     pointsQ: item.pointsQ,
   }
@@ -282,6 +289,18 @@ export function computePointsAward(oldBestPercent: number | null, newPercent: nu
   return Math.min(MAX_POINTS_PER_EXAM, Math.max(0, improvement))
 }
 
+/**
+ * Massgebende Halbpunkte einer offenen Antwort im Massstab des Versuchs (Nachtrag 8.9): Summe der Kriterien.
+ * Passt die Rastersumme der Frage nicht zu rasterMax des Schnappschusses (Versuch vor der Umstellung auf
+ * 3 Punkte, Raster schon umgestellt), wird anteilig umgerechnet und gerundet, damit alte Versuche gültig bleiben.
+ */
+export function attemptRasterPoints(scores: readonly number[], rasterHalves: readonly number[], cfg: Pick<ConfigSnapshot, "rasterMax">): number {
+  const total = scores.reduce((s, v) => s + v, 0)
+  const max = rasterHalves.reduce((s, v) => s + v, 0)
+  if (max <= 0 || max === cfg.rasterMax) return Math.min(total, cfg.rasterMax)
+  return Math.min(cfg.rasterMax, Math.round((total * cfg.rasterMax) / max))
+}
+
 /** Bewertete Positionen für evaluateAttempt (4.4); Training und Lücken nur gesperrte Positionen */
 export function scoredItems(items: readonly StoredItem[], mode: AttemptMode): ScoredItem[] {
   const relevant = isExamMode(mode) ? items : items.filter((i) => i.locked)
@@ -327,16 +346,16 @@ export interface ViewContext {
 export function buildAttemptView(attempt: StoredAttempt, items: readonly StoredItem[], ctx: ViewContext): AttemptView {
   const mode = asMode(attempt.mode)
   const status = asStatus(attempt.status)
-  const weights = readConfig(attempt.config).weights
+  const config = readConfig(attempt.config)
   const sorted = items.slice().sort((a, b) => a.position - b.position)
-  const solved = (i: StoredItem) => toSolvedItem(i, ctx.lookup(i.questionId), { weights, catalog: ctx.catalog })
+  const solved = (i: StoredItem) => toSolvedItem(i, ctx.lookup(i.questionId), { config, catalog: ctx.catalog })
 
   let viewItems: AttemptView["items"] = []
   if (status === "active") {
     viewItems = sorted.map((i) =>
       !isExamMode(mode) && i.locked
         ? solved(i)
-        : toClientItem(i, ctx.lookup(i.questionId), { weights, showCompetence: !isExamMode(mode) }))
+        : toClientItem(i, ctx.lookup(i.questionId), { config, showCompetence: !isExamMode(mode) }))
   } else if (status === "submitted" || status === "finished") {
     viewItems = sorted.map(solved)
   }
@@ -383,8 +402,13 @@ export function toAttemptSummary(a: StoredAttempt): AttemptSummary {
   }
 }
 
-/** Bewertete Position für die Beherrschung (4.4) */
-export type GradedItem = Pick<StoredItem, "type" | "competence" | "correct" | "rasterPoints" | "answeredAt" | "selfAssessedAt" | "aiAssessedAt">
+/**
+ * Bewertete Position für die Beherrschung (4.4); rasterMax aus dem Schnappschuss ihres Versuchs (Halbpunkte,
+ * readConfig), ohne Angabe die aktuelle Konfiguration
+ */
+export type GradedItem = Pick<StoredItem, "type" | "competence" | "correct" | "rasterPoints" | "answeredAt" | "selfAssessedAt" | "aiAssessedAt"> & {
+  rasterMax?: number
+}
 
 /** Bewertete Antworten (correct gesetzt) für mastery(); Zeitpunkt der letzten Bewertung bzw. Antwort */
 export function gradedAnswers(items: readonly GradedItem[], fallbackAt: (index: number) => Date): GradedAnswer[] {
@@ -394,7 +418,7 @@ export function gradedAnswers(items: readonly GradedItem[], fallbackAt: (index: 
     const at = i.aiAssessedAt ?? i.selfAssessedAt ?? i.answeredAt ?? fallbackAt(index)
     const score = asType(i.type) === "mc"
       ? (i.correct ? 1 : 0)
-      : Math.max(0, Math.min(RASTER_TOTAL, i.rasterPoints ?? 0)) / RASTER_TOTAL
+      : answerScore({ type: "offen", rasterPoints: i.rasterPoints }, i.rasterMax ?? EXAM_CONFIG.rasterMax)
     out.push({ competence: competenceOf(i), score, at: at.getTime() })
   })
   return out

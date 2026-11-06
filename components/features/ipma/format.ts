@@ -6,8 +6,9 @@
 // Zeiten, Bezeichnungen. Rein, ohne React.
 
 import type { AttemptMode, AttemptVariant, ClientItem, MasteryLevelView, SolvedItem } from "@/lib/ipma/types"
+import { internationalNumber } from "@/lib/ipma/competences"
 
-/** Viertelpunkte je Punkt (RASTER_TOTAL in lib/ipma/competences.ts) */
+/** Viertelpunkte je Punkt (POINT_Q in lib/ipma/competences.ts) */
 export const QUARTERS = 4
 /** Bestehensgrenzen (EXAM_CONFIG: passPercent, minCompetences); nur Anzeige, entschieden wird auf dem Server */
 export const PASS_PERCENT = 60
@@ -15,6 +16,12 @@ export const MIN_COMPETENCES = 23
 export const TOTAL_COMPETENCES = 28
 /** Dauer der Übungsprüfung in Minuten (EXAM_CONFIG.exam.durationMin) für «mit Pausen» */
 export const EXAM_MINUTES = 180
+/** Richtzeiten je Teil in Minuten (EXAM_CONFIG.exam.partMinutes, Musterprüfung VZPM 2023) */
+export const PART_MINUTES = { mc: 75, offen: 105 } as const
+/** Höchstpunkte der Übungsprüfung: 60 MC × 1 + 30 offen × 3 (Musterprüfung VZPM 2023) */
+export const EXAM_POINTS = 150
+/** Höchstpunkte einer offenen Frage (RASTER_TOTAL) */
+export const OPEN_POINTS = 3
 
 const NUMBER = new Intl.NumberFormat("de-CH", { maximumFractionDigits: 2 })
 const PERCENT = new Intl.NumberFormat("de-CH", { maximumFractionDigits: 1 })
@@ -22,6 +29,21 @@ const PERCENT = new Intl.NumberFormat("de-CH", { maximumFractionDigits: 1 })
 /** Viertelpunkte als Punkte («78», «78.5») */
 export function points(quarters: number): string {
   return NUMBER.format(quarters / QUARTERS)
+}
+
+/** Punkte in Schritten von 0.5 («1.5», «3») */
+export function score(value: number): string {
+  return NUMBER.format(value)
+}
+
+/** «Punkt» oder «Punkte» zu einer Punktzahl */
+export function pointWord(value: number): string {
+  return value === 1 ? "Punkt" : "Punkte"
+}
+
+/** Swiss-Nummer mit internationaler ICB4-Nummer: «3.04 (4.5.4)» */
+export function competenceNumber(id: string): string {
+  return `${id} (${internationalNumber(id)})`
 }
 
 export function percent(value: number): string {

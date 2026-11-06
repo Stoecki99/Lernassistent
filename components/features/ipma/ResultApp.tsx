@@ -23,7 +23,7 @@ import { ipmaApi, IpmaApiError, beforeStorageKey, errorMessage, finishStorageKey
 import AiAssessAll from "./AiAssessAll"
 import AiAssessment from "./AiAssessment"
 import CompetenceMap, { type AttemptCompetence, type MasteryEntry, type StationTitles } from "./CompetenceMap"
-import { LEVEL, MODE_LABEL, dateTime, isSolved, needsSelfAssessment } from "./format"
+import { LEVEL, MODE_LABEL, competenceNumber, dateTime, isSolved, needsSelfAssessment, score } from "./format"
 import ItemReview from "./ItemReview"
 import ResultSummary from "./ResultSummary"
 import SelfAssessment from "./SelfAssessment"
@@ -257,8 +257,8 @@ export default function ResultApp({ attemptId, stations, timeUp }: { attemptId: 
                 }}>
                   <summary>
                     <strong>Frage {item.position}</strong>
-                    <span>{needsSelfAssessment(item) ? "○ noch nicht bewertet" : `✓ bewertet (${item.rasterPoints ?? 0} von 4 Rasterpunkten${item.scoreSource === "ai" ? ", Claude" : ""})`}</span>
-                    <span className="hint">Kompetenz {item.competence}</span>
+                    <span>{needsSelfAssessment(item) ? "○ noch nicht bewertet" : `✓ bewertet (${score(item.rasterPoints ?? 0)} von ${score(item.points)} Punkten${item.scoreSource === "ai" ? ", Claude" : ""})`}</span>
+                    <span className="hint">Kompetenz {competenceNumber(item.competence)}</span>
                   </summary>
                   <div className={styles.durchsichtInhalt}>
                     <p className={styles.frageText}>{item.question}</p>

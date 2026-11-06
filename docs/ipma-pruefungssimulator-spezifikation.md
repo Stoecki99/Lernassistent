@@ -1,11 +1,11 @@
 # IPMA-Prüfungssimulator · Spezifikation
 
-**Stand:** 01.11.2026 · Entwurf zur Freigabe durch Jan ✋
+**Stand:** 01.11.2026, nachgeführt 06.11.2026 (Nachtrag 8.9: Eichung nach Musterprüfung VZPM 2023) · Entwurf zur Freigabe durch Jan ✋
 **Gehört zu:** Lernpfad PMGT, Station 24 «IPMA-Prüfungssimulator» (Vault: `02 Projekte/Lernpfad PMGT.md`, Abschnitt «IPMA-Prüfungssimulator»)
 **Leserinnen und Leser:** Jan (Freigabe), danach die Agenten für Kern, Fragenpool (Autoren und Fachprüfung), Speicherung und API, Oberfläche, Claude-Bewertung und Integration.
 **Muster:** `docs/leitstand-spezifikation.md` (Aufbau, Architektur, Speicherung, Zugang, Tests, Arbeitspakete).
 
-Diese Spezifikation ist **verbindlich**. Werte, die als **Annahme** gekennzeichnet sind (Punkte je Frage, Schwelle «offene Frage richtig», Verteilung der Zusatzfragen), stehen an genau einer Stelle (`lib/ipma/config.ts`) und dürfen dort geändert werden, sobald bessere Angaben vorliegen (z. B. eine Musterprüfung). Typen, Schnittstellen, das Inhaltsformat und die Regeln gegen das Vorzeigen der Lösungen ändern nur mit Rückfrage bei Jan.
+Diese Spezifikation ist **verbindlich**. Werte, die als **Annahme** gekennzeichnet waren (Punkte je Frage, Schwelle «offene Frage richtig», Verteilung der Zusatzfragen), stehen an genau einer Stelle (`lib/ipma/config.ts`). **Seit Nachtrag 8.9 (06.11.2026) sind Format, Punkte, Richtzeiten und Aufteilung der Kompetenzen nach der Musterprüfung 2023 des VZPM geeicht;** wo ältere Abschnitte davon abweichen, gilt 8.9. Typen, Schnittstellen, das Inhaltsformat und die Regeln gegen das Vorzeigen der Lösungen ändern nur mit Rückfrage bei Jan.
 
 ## Inhalt
 
@@ -33,12 +33,13 @@ Der Prüfungssimulator lässt Studierende die **IPMA-Level-D-Prüfung unter echt
 | Merkmal | Wert | Quelle |
 |---|---|---|
 | Form | Online-Prüfung (via Zoom), 3 Stunden, Open Book | LB 7 S.5 |
-| Musterprüfung | 60 Multiple-Choice-Fragen und 30 offene Fragen | Konzept, LB 7 |
+| Musterprüfung | Teil MC: 60 Fragen, genau eine Antwort richtig, Richtzeit 75 min · Teil offen: 30 Fragen, Richtzeit 105 min · zuerst MC | Musterprüfung VZPM 2023 |
+| Abdeckung | MC-Teil: 14 Kompetenzen mit je 4–5 Fragen; offener Teil: die übrigen 14 mit je 1–3 Fragen; Nummerierung international (4.3.x, 4.4.x, 4.5.x; Indikator z. B. 4.5.4.2) | Musterprüfung VZPM 2023 |
 | Bestehen | mindestens 60 % der Gesamtpunkte **und** mindestens eine richtige Antwort in mindestens 23 der 28 Kompetenzen | Digicomp; Swiss ICB S.19–20 («80 % der 28 Kompetenzen») |
 | Niveau | Level D = Kenntnis der Fakten («von der blossen Kenntnis der Fakten» bei Level D bis zur Entwicklung neuer Methoden bei Level A) | Swiss ICB S.19 |
-| Punkte je Frage | **unbekannt** | – |
+| Punkte je Frage | MC 1 Punkt; offen höchstens 3 Punkte, bewertet in Schritten von 0.5 bzw. 1.0; keine Abzüge | Musterprüfung VZPM 2023 |
 
-> **Annahme (konfigurierbar):** MC-Frage 1 Punkt, offene Frage 2 Punkte. Eine Übungsprüfung hat damit 60 × 1 + 30 × 2 = **120 Punkte**, die Grenze liegt bei **72 Punkten**. Die Werte stehen in `lib/ipma/config.ts` (`EXAM_CONFIG.weights`) und werden mit jedem Versuch gespeichert, damit alte Ergebnisse bei einer Änderung gleich bleiben.
+> **Fakt (Nachtrag 8.9):** Eine Übungsprüfung hat 60 × 1 + 30 × 3 = **150 Punkte**, die Grenze liegt bei **90 Punkten**. Die Werte stehen in `lib/ipma/config.ts` (`EXAM_CONFIG`) und werden mit jedem Versuch gespeichert (`IpmaAttempt.config`), damit alte Ergebnisse (Annahme bis 06.11.2026: 120 Punkte, Grenze 72) gleich bleiben. Die Musterprüfung ist geschütztes VZPM-Material: Übernommen wird nur das Format, keine Frage, Antwort oder Formulierung.
 
 ### 1.2 Lernziele
 
@@ -90,9 +91,9 @@ Die Autoren bestätigen die Regel je Datei (Feld `herkunft: "eigen"`), die Fachp
 | Frage | Eintrag im Fragenpool, Typ `mc` (genau eine richtige von vier Optionen) oder `offen` (Freitext mit Musterlösung und Raster). |
 | Versuch | Eine Übungsprüfung, Kurzprüfung, Trainings- oder Lückenrunde. Prisma: `IpmaAttempt`. |
 | Position | Platz einer Frage im Versuch (1 … n). Prisma: `IpmaAttemptItem`. |
-| Rasterpunkte | Punkte im Bewertungsraster einer offenen Frage, Summe immer **4**. Werden auf das Gewicht der Frage umgerechnet. |
+| Rasterpunkte | Punkte im Bewertungsraster einer offenen Frage in Schritten von 0.5, Summe immer **3** (Nachtrag 8.9; vorher ganze Punkte, Summe 4). Gespeichert und gerechnet in **Halbpunkten** (ganzzahlig 0 … 6). |
 | Viertelpunkt | Interne Recheneinheit: 1 Punkt = 4 Viertelpunkte. Alle Summen und Grenzen werden ganzzahlig in Viertelpunkten gerechnet (keine Rundungsfehler). |
-| Nachgewiesen | Eine Kompetenz ist in einem Versuch nachgewiesen, wenn mindestens eine ihrer Fragen **richtig** ist (MC richtig; offene Frage mit mindestens 50 % der Rasterpunkte, Annahme). |
+| Nachgewiesen | Eine Kompetenz ist in einem Versuch nachgewiesen, wenn mindestens eine ihrer Fragen **richtig** ist (MC richtig; offene Frage mit mindestens der Hälfte der Punkte, also 1.5 von 3; Festlegung des Simulators, Nachtrag 8.9). |
 | Beherrschung | Anteil richtiger Antworten einer Kompetenz über die letzten 8 bewerteten Antworten (alle Modi). Grundlage für Landkarte und «Lücken schliessen». |
 | Fach | Kasten im Leitner-System (1–5) einer Frage für ein Konto. Grundlage für die Wiederholung in «Lücken schliessen». |
 | Startwert | Zahl, die die Auswahl und Reihenfolge der Fragen festlegt (`seed`). Gleicher Startwert + gleicher Pool + gleiche Vorgeschichte = gleiche Prüfung. |
@@ -134,7 +135,7 @@ Die Autoren bestätigen die Regel je Datei (Feld `herkunft: "eigen"`), die Fachp
 | `erklaerung` | string | MC ja, offen nein | 40–1'000 Zeichen: warum richtig, warum die anderen falsch |
 | `optionHinweise` | string[4] | nein | kurze Rückmeldung je Option für das Training (bei der richtigen leer) |
 | `musterloesung` | string | nur offen | 80–2'500 Zeichen; deckt jedes Rasterkriterium ab; nennt Varianten, die auch richtig sind |
-| `bewertungsraster` | `[{ kriterium, punkte }]` | nur offen | 2–4 Kriterien, `punkte` ganzzahlig 1–4, **Summe = 4** |
+| `bewertungsraster` | `[{ kriterium, punkte }]` | nur offen | 2–4 Kriterien, `punkte` in Schritten von 0.5 (mindestens 0.5), **Summe = 3** (Nachtrag 8.9; Übergang siehe dort) |
 | `umfang` | string | nein | Hinweis zur Länge, z. B. «3–5 Sätze» |
 | `fundstelle` | Objekt | ja | `{ lb?, icb: { seite, indikatoren[] }, station?, buch?, hinweis? }` |
 | `fundstelle.lb` | string | nein | Skript, z. B. `"LB 4 F.20–22"` oder `"LB 7 S.10"` |
@@ -223,9 +224,10 @@ const mcSchema = z.object({
   optionHinweise: z.array(z.string().trim().max(300)).length(4).optional(),
 }).strict()
 
+// Nachtrag 8.9: Schritte von 0.5, Summe 3; Übergangsregel checkRaster/scaleLegacyRaster in lib/validations/ipma-pool.ts
 const rasterSchema = z.array(
-  z.object({ kriterium: text(10, 300), punkte: z.number().int().min(1).max(RASTER_TOTAL) }).strict(),
-).min(2).max(4)
+  z.object({ kriterium: text(10, 300), punkte: z.number().min(0.5).max(LEGACY_RASTER_TOTAL) }).strict(),
+).min(2).max(4).transform(/* checkRaster: Summe 3, Altformat (Summe 4) in Stufe «uebergang» umgerechnet */)
 
 const offenSchema = z.object({
   ...base,
@@ -317,7 +319,7 @@ Paket B ist doppelt so gross wie A und bekommt deshalb zwei Autor-Agenten (2.01�
 **Offene Fragen:**
 
 1. Klarer Auftrag mit Mengenangabe («Nenne drei …», «Beschreibe zwei … und begründe eine»), passend zu 2 Punkten (rund 3–4 Minuten Schreibzeit).
-2. Raster mit 2–4 **prüfbaren** Kriterien, Summe 4; jedes Kriterium ist ohne Fachdiskussion entscheidbar.
+2. Raster mit 2–4 **prüfbaren** Kriterien, Summe 3 in Schritten von 0.5 (z. B. 0.5 je verlangte Nennung); jedes Kriterium ist ohne Fachdiskussion entscheidbar.
 3. Musterlösung erfüllt jedes Kriterium und nennt **mehr richtige Varianten**, als verlangt sind (die Bewertung braucht sie).
 4. Fall-Bezug (Wolkenried oder kurzer eigener Fall), damit nicht nur Begriffe aufgezählt werden.
 5. Keine Frage, deren Antwort wörtlich in der Musterlösung einer MC-Frage steht.
@@ -519,8 +521,8 @@ Die Beispiele gehen als erste Fragen in die Dateien (zuerst Status `entwurf`, di
 
 ### 3.2 Übungsprüfung
 
-- **Auswahl:** je Kompetenz **2 MC + 1 offene** Frage (56 MC + 28 offen), dazu **4 MC und 2 offene** Zusatzfragen aus Practice (Annahme: die Praxis-Kompetenzen wiegen in der Prüfung schwerer; `EXAM_CONFIG.extraArea`). Damit kommt jede Kompetenz **mindestens dreimal** vor (Auftrag: mindestens zweimal). Begründung: Bei nur zwei Fragen je Kompetenz entscheidet eine einzelne Fehlentscheidung über die Regel 23/28; drei Fragen machen die Landkarte aussagekräftiger.
-- **Reihenfolge:** zuerst die 60 MC-Fragen (Positionen 1–60), dann die 30 offenen (61–90), innerhalb jedes Blocks nach Startwert gemischt; Optionen nach Startwert gemischt (ausser `optionenFest`). Die Kompetenz einer Frage ist während der Prüfung **nicht** sichtbar (die echte Prüfung nennt sie vermutlich auch nicht; das Zuordnen gehört zum Lernziel LZ1).
+- **Auswahl (Nachtrag 8.9, wie die Musterprüfung des VZPM):** Startwert-gesteuert kommen **14 Kompetenzen in den MC-Teil** (je 4 oder 5 Fragen, total 60) und **die übrigen 14 in den offenen Teil** (je 2 oder 3 Fragen, total 30); jede der 28 Kompetenzen kommt genau in einem Teil vor. Aufteilung je Bereich anteilig (MC-Teil: Perspective 2–3, People 5, Practice 6–7). Bis 06.11.2026 galt: je Kompetenz 2 MC + 1 offen, dazu 4 MC + 2 offen aus Practice (Annahme).
+- **Reihenfolge:** zuerst die 60 MC-Fragen (Positionen 1–60), dann die 30 offenen (61–90), innerhalb jedes Blocks nach Startwert gemischt; Optionen nach Startwert gemischt (ausser `optionenFest`). Die Kompetenz einer Frage ist während der Prüfung **nicht** sichtbar (das Zuordnen gehört zum Lernziel LZ1). Nachtrag 8.9: Die Musterprüfung nennt bei jeder Frage den Kompetenzindikator; der Simulator weicht hier bewusst ab (offene Frage an Jan, siehe 8.9).
 - **Zeit:** 3 Stunden. Zwei Varianten beim Start:
   - **Echtbedingungen** (Vorgabe, empfohlen): `deadlineAt = startedAt + 180 min` auf dem Server. Die Uhr läuft weiter, auch wenn die Seite zu ist. Nach Ablauf gibt der Browser automatisch ab; der Server nimmt bis 30 s nach `deadlineAt` noch Antworten an und gibt einen abgelaufenen Versuch beim nächsten Zugriff selbst ab.
   - **Mit Pausen:** Knopf «Pause» deckt die Fragen ab; der Server misst die aktive Zeit aus den Zeitpunkten von Pause und Weiter (`activeSeconds`). Kein Zwang zur Abgabe; nach 180 aktiven Minuten erscheint der Hinweis «Zeit um» mit Abgabe-Knopf. Ergebnis mit Vermerk «mit Pausen».
@@ -559,13 +561,13 @@ Automatisch auf dem Server: richtig, wenn die gewählte Option (Originalindex ü
 
 ### 4.2 Offene Fragen
 
-**Selbstbewertung (alle Konten, Pflichtschritt):** Nach der Abgabe (Prüfung) bzw. nach «Prüfen» (Training) zeigt die Oberfläche die eigene Antwort neben der Musterlösung und das Raster. Je Kriterium wählt man 0 … `punkte` (ganzzahlig, Schaltflächen statt Schieberegler). Summe = Rasterpunkte (0–4). Unbeantwortete offene Fragen erhalten automatisch 0 und müssen nicht bewertet werden.
+**Selbstbewertung (alle Konten, Pflichtschritt):** Nach der Abgabe (Prüfung) bzw. nach «Prüfen» (Training) zeigt die Oberfläche die eigene Antwort neben der Musterlösung und das Raster. Je Kriterium wählt man 0 … `punkte` in Schritten von 0.5 (Schaltflächen statt Schieberegler). Summe = Punkte der Frage (0–3; Nachtrag 8.9). Unbeantwortete offene Fragen erhalten automatisch 0 und müssen nicht bewertet werden.
 
 **Claude-Bewertung (nur Pro und Admin, optional):** Knopf «Von Claude bewerten lassen» erst **nach** der Selbstbewertung (Lerneffekt: zuerst selbst urteilen, dann vergleichen). Die Oberfläche zeigt beide Bewertungen je Kriterium nebeneinander mit der Begründung von Claude. In einer Prüfung gibt es zusätzlich «Alle offenen Antworten bewerten lassen» (arbeitet die Fragen der Reihe nach ab, höchstens 3 gleichzeitig).
 
 **Massgebende Punkte:** Liegt eine Claude-Bewertung vor, gilt sie (strenger und realistischer); sonst die Selbstbewertung (`scoreSource`: `mc` \| `self` \| `ai`). Die Auswertung zeigt die Quelle je Frage und die Summe beider Bewertungen getrennt («Selbst: 46 · Claude: 41»). Offene Frage 4.
 
-**Punkte:** `weights.offen × Rasterpunkte` Viertelpunkte (Gewicht 2: je Rasterpunkt ein halber Punkt). **Richtig** (für «nachgewiesen» und das Fach): Rasterpunkte ≥ `openCorrectRaster` = 2 von 4 (Annahme, konfigurierbar).
+**Punkte:** `weights.offen × Halbpunkte` Viertelpunkte (Gewicht 2: ein Halbpunkt = ein halber Punkt; höchstens `rasterMax` = 6 Halbpunkte = 3 Punkte). **Richtig** (für «nachgewiesen» und das Fach): Halbpunkte ≥ `openCorrectRaster` = 3, also 1.5 von 3 Punkten (Nachtrag 8.9).
 
 ### 4.3 Claude-Bewertung im Detail
 
@@ -727,7 +729,7 @@ export function evaluateAttempt(items: ScoredItem[], cfg: ExamConfig, mode: Atte
 
 | Grösse | Anzeige |
 |---|---|
-| Gesamtpunkte | «78 von 120 Punkten (65 %) · Grenze 72» mit Balken und Markierung bei 60 % |
+| Gesamtpunkte | «98 von 150 Punkten (65.3 %) · Grenze 90» mit Balken und Markierung bei 60 % |
 | Kompetenzen | «25 von 28 nachgewiesen · Grenze 23» |
 | Ergebnis | «Bestanden» nur, wenn beide Regeln erfüllt; sonst Grund: «Punkte reichen, aber nur 21 Kompetenzen nachgewiesen» |
 | Nicht bewertet | Hinweis, wenn offene Fragen ohne Bewertung (zählen 0) |
@@ -736,7 +738,7 @@ Prozente werden nur für die Anzeige auf eine Stelle gerundet; entschieden wird 
 
 **Kompetenz-Landkarte:** 28 Felder in drei Gruppen (Perspective 5, People 10, Practice 13), Raster wie in Station 02. Je Feld: Nummer, Kurztitel, Zeichen und Wort (✓ nachgewiesen / ✗ nicht nachgewiesen), Anteil richtiger Antworten in diesem Versuch («2/3»). Klick oder Enter öffnet: Fragen dieser Kompetenz im Versuch, Beherrschung über alle Versuche, Stationen, Knopf «Diese Kompetenz trainieren». Farbe nie allein (6.8).
 
-**Beherrschung (über alle Versuche):** je Kompetenz die letzten 8 bewerteten Antworten (MC: 1/0; offen: Rasterpunkte ÷ 4); Mittelwert. Stufen: ≥ 0.75 «sicher», 0.5–0.75 «knapp», < 0.5 «Lücke», weniger als 3 Antworten «noch nicht geübt». Die Startseite `/ipma` zeigt die Landkarte nach Beherrschung.
+**Beherrschung (über alle Versuche):** je Kompetenz die letzten 8 bewerteten Antworten (MC: 1/0; offen: Halbpunkte ÷ `rasterMax` des Versuchs); Mittelwert. Stufen: ≥ 0.75 «sicher», 0.5–0.75 «knapp», < 0.5 «Lücke», weniger als 3 Antworten «noch nicht geübt». Die Startseite `/ipma` zeigt die Landkarte nach Beherrschung.
 
 **Stärken und Schwächen:** Stärken = bis 3 Kompetenzen mit dem höchsten Anteil (mindestens 2 Fragen, alle richtig zuerst). Schwächen = alle nicht nachgewiesenen, dann tiefster Anteil, höchstens 5.
 
@@ -842,17 +844,18 @@ Grundsatz: **Der Pool mit den Lösungen verlässt den Server nur Frage für Frag
 ### 6.3 Konfiguration
 
 ```ts
-// lib/ipma/config.ts
-export const CONFIG_VERSION = 1
+// lib/ipma/config.ts (Stand Nachtrag 8.9)
+export const CONFIG_VERSION = 2
 
-export interface Weights { mc: number; offen: number }   // ganzzahlig ≥ 1
+export interface Weights { mc: number; offen: number }   // mc: Punkte je MC; offen: Viertelpunkte je Halbpunkt
 export interface ExamConfig {
-  weights: Weights                  // ANNAHME: mc 1, offen 2
-  passPercent: number               // 60
+  weights: Weights                  // mc 1, offen 2
+  rasterMax: number                 // 6 Halbpunkte = offene Frage höchstens 3 Punkte
+  passPercent: number               // 60 (90 von 150)
   minCompetences: number            // 23
-  openCorrectRaster: number         // ANNAHME: 2 von 4 Rasterpunkten = «richtig»
-  exam: { mc: number; offen: number; perCompetence: { mc: number; offen: number };
-          extraArea: AreaId; durationMin: number; graceSeconds: number }
+  openCorrectRaster: number         // 3 Halbpunkte = 1.5 von 3 Punkten = «richtig»
+  exam: { mc: number; offen: number; mcCompetences: number; partMinutes: { mc: number; offen: number };
+          durationMin: number; graceSeconds: number }
   short: { mc: number; offen: number; perArea: Record<AreaId, number>; durationMin: number }
   training: { minCount: number; maxCount: number; defaultCount: number }
   gaps: { competences: number; perCompetence: number; masteryWindow: number; minAnswers: number }
@@ -860,10 +863,11 @@ export interface ExamConfig {
 
 export const EXAM_CONFIG: ExamConfig = {
   weights: { mc: 1, offen: 2 },
+  rasterMax: 6,
   passPercent: 60,
   minCompetences: 23,
-  openCorrectRaster: 2,
-  exam: { mc: 60, offen: 30, perCompetence: { mc: 2, offen: 1 }, extraArea: "practice", durationMin: 180, graceSeconds: 30 },
+  openCorrectRaster: 3,
+  exam: { mc: 60, offen: 30, mcCompetences: 14, partMinutes: { mc: 75, offen: 105 }, durationMin: 180, graceSeconds: 30 },
   short: { mc: 14, offen: 6, perArea: { perspective: 4, people: 7, practice: 9 }, durationMin: 40 },
   training: { minCount: 5, maxCount: 30, defaultCount: 10 },
   gaps: { competences: 3, perCompetence: 4, masteryWindow: 8, minAnswers: 3 },
@@ -872,7 +876,7 @@ export const LEITNER_DAYS = [1, 2, 4, 8, 16] as const   // Fach 1 … 5
 export const POOL_MINIMUM = { mc: 4, offen: 2 }          // Teil 1; ab Teil 2: { mc: 6, offen: 3 }
 ```
 
-Jeder Versuch speichert `configVersion` und eine Kopie von `weights`, `passPercent`, `minCompetences`, `openCorrectRaster` (`IpmaAttempt.config`). Die Auswertung rechnet immer mit der gespeicherten Kopie.
+Jeder Versuch speichert `configVersion` und eine Kopie von `weights`, `rasterMax`, `passPercent`, `minCompetences`, `openCorrectRaster` (`IpmaAttempt.config`). Fehlt `rasterMax` (Versuche der Version 1), liest `configSnapshotSchema` 4 Halbpunkte (offen 2 Punkte, 120 total). Die Auswertung rechnet immer mit der gespeicherten Kopie.
 
 ### 6.4 Speicherung (Prisma)
 
@@ -1285,15 +1289,15 @@ Alle Tests mit `npm test` (`tsx --test "tests/**/*.test.ts"`), ohne Datenbank, M
 
 | Fall | Erwartung |
 |---|---|
-| Höchstpunkte | 60 MC + 30 offen mit Gewicht 1/2 → `maxPointsQ = 480` (120 Punkte) |
-| Grenze genau | 72.0 Punkte (288 Viertelpunkte) → `passPoints = true` |
-| Knapp darunter | 71.5 Punkte (286) → `false` (59.6 %) |
+| Höchstpunkte | 60 MC × 1 + 30 offen × 3 → `maxPointsQ = 600` (150 Punkte; Nachtrag 8.9) |
+| Grenze genau | 90.0 Punkte (360 Viertelpunkte) → `passPoints = true` |
+| Knapp darunter | 89.5 Punkte (358) → `false` (59.7 %) |
 | Kompetenzen genau | 23 nachgewiesen und ≥ 60 % → bestanden; 22 → nicht bestanden, Grund «Kompetenzen» |
 | Je eine Regel verfehlt | 22 Kompetenzen mit 90 % → nicht bestanden, Grund «Kompetenzen»; 28 Kompetenzen mit 59.6 % → nicht bestanden, Grund «Punkte»; beide verfehlt → beide Gründe |
-| Offene Schwelle | Rasterpunkte 2 → richtig; 1 → falsch; nicht bewertet → 0 Punkte, nicht richtig, `unassessedOpen` zählt |
-| Kompetenz nur über offene Frage | MC beide falsch, offen 2/4 → nachgewiesen |
+| Offene Schwelle | 3 Halbpunkte (1.5 Punkte) → richtig; 2 → falsch; nicht bewertet → 0 Punkte, nicht richtig, `unassessedOpen` zählt |
+| Kompetenz nur über offene Frage | eine von zwei offenen mit 1.5 von 3 → nachgewiesen |
 | Massgebende Quelle | Claude-Bewertung ersetzt Selbstbewertung in Punkten; `sources` zeigt beide Summen |
-| Gewichte geändert | Gewichte 1/3 im Snapshot → Höchstpunkte 150, Grenze 90; alter Versuch mit 1/2 bleibt bei 120 |
+| Alter Schnappschuss | Version 1 (ohne `rasterMax`) → 120 Punkte, offen richtig ab 2 von 4 Halbpunkten; `attemptRasterPoints` rechnet neue Raster anteilig um |
 | Kurzprüfung | `passCompetences = null`, `passed` nur nach Punkten |
 | Stärken/Schwächen | Reihenfolge und Höchstzahl nach 4.4 |
 | Empfehlung | Stationen zusammengefasst, sortiert, höchstens 4, unveröffentlichte als `available: false` |
@@ -1475,11 +1479,38 @@ Danach geht der Simulator mit **Welle 2** am **So 29.11.** live (mit Fragenpool 
 | 9 | 6.8 Auswertung | Werte aus dem `sessionStorage` (Abschluss, Stand vorher) werden mit Zod geprüft (`z.enum` für Kompetenz und Stufe) | Fremde oder veraltete Daten im Speicher führen nicht zu Fehlern in der Anzeige. |
 | 10 | 1.3 Restrisiken | Selbstbewertung kann Höchstpunkte und Abzeichen ermöglichen; bewusst akzeptiert (siehe 1.3) | Persönliches Lernwerkzeug ohne Rangliste. |
 
+### 8.9 Nachtrag Eichung Musterprüfung VZPM 2023 (06.11.2026): Abweichungen und Ergänzungen
+
+Grundlage: offizielle Musterprüfung 2023 des VZPM (Teil MC und Teil offen, mit Antworten). **Urheberrecht:** geschütztes VZPM-Material. Übernommen ist nur das Format (Teile, Anzahl, Punkte, Richtzeiten, Bewertungsschritte, Aufteilung der Kompetenzen, Nummerierung); keine Frage, Antwort oder Formulierung steht im Repo.
+
+| Nr. | Stelle | Umsetzung | Begründung |
+|---|---|---|---|
+| 1 | 1.1, 6.3 Punkte | Offene Frage höchstens 3 Punkte (`rasterMax` 6 Halbpunkte), MC 1 Punkt; 150 Punkte, Grenze 90 (60 %). `CONFIG_VERSION` 2. Interne Einheit bleibt der Viertelpunkt (MC 4, offen 2 × Halbpunkte, höchstens 12) | Fakt aus der Musterprüfung ersetzt die Annahme (120 Punkte). Halbpunkte als ganze Zahlen passen in die bestehenden `Int`-Felder (`selfScores`, `aiScores`, `rasterPoints`), keine Migration. |
+| 2 | 1.5, 4.2 «richtig» | Offene Frage «richtig» für 23/28 und Leitner ab **1.5 von 3 Punkten** (`openCorrectRaster` 3 Halbpunkte) | Die Musterprüfung nennt keine eigene Schwelle. Die Hälfte entspricht der bisherigen Regel (2 von 4), verlangt einen substanziellen Teil der Antwort (z. B. 3 von 6 Nennungen zu 0.5) und ist bei Rastern in Schritten von 0.5 genau erreichbar; tiefer (0.5) würde jede Andeutung als Nachweis werten, höher (2 oder 3) die Breitenregel strenger machen als die Punkteregel (60 %). |
+| 3 | 6.3, 6.4 alte Versuche | `configSnapshotSchema.rasterMax` mit Vorgabe 4: Schnappschüsse der Version 1 rechnen weiter mit 2 Punkten je offene Frage (120 total, Grenze 72, richtig ab 2 von 4). Selbst- oder Claude-Bewertung eines alten Versuchs gegen ein schon umgestelltes Raster wird anteilig auf `rasterMax` umgerechnet (`attemptRasterPoints`, gerundet). Beherrschung: Halbpunkte ÷ `rasterMax` des eigenen Versuchs | Alte Ergebnisse bleiben gültig und vergleichbar. |
+| 4 | 3.2 Auswahl | `selectExam`: Startwert-gesteuert 14 Kompetenzen in den MC-Teil (je Bereich anteilig, Rest der Halbierung per Zufall), je 4 MC, 4 davon mit einer fünften; die übrigen 14 im offenen Teil, je 2 offen, 2 davon mit einer dritten. Zusatzfragen an Kompetenzen mit den meisten nie gesehenen Fragen. Kompetenzen ohne genügend offene Fragen kommen bevorzugt in den MC-Teil und umgekehrt. Kurzprüfung, Training und Lücken unverändert | Wie die Musterprüfung (dort offen 1–3 Fragen je Kompetenz; der Simulator nimmt 2–3, damit 30 offene Fragen auf 14 Kompetenzen aufgehen). |
+| 5 | 2.2, 2.3 Raster | Kriterienpunkte in Schritten von 0.5, mindestens 0.5, Summe 3 (`checkRaster`). **Übergang** über `RASTER_STAGE` in `lib/ipma/config.ts`: «uebergang» nimmt zusätzlich das Altformat (ganze Punkte, Summe 4) an und rechnet es beim Laden um (`scaleLegacyRaster`: × 6/4 in Halbpunkten, abgerundet, Rest nach grösstem Bruchteil, z. B. [2, 2] → [1.5, 1.5], [1, 1, 1, 1] → [1, 1, 0.5, 0.5]); «neu» erzwingt Summe 3 | Alle Tests bleiben heute grün; nach der Pool-Umstellung erzwingt das Schema die Summe 3. |
+| 6 | 4.2, 6.6 `self` | `scores` in Punkten (Schritte von 0.5, Zod `halfStep`); der Server rechnet in Halbpunkte um. `SolvedItem.selfScores`, `aiScores`, `rasterPoints`, `aiFeedback.kriterien[].punkte` werden in Punkten ausgeliefert, gespeichert in Halbpunkten | Die Oberfläche kennt keine Halbpunkte. |
+| 7 | 4.3 Claude | Prompt: Punkte in Schritten von 0.5; Ausgabeschema `punkte: number`; `gradeOutputSchema` prüft Schritte von 0.5 und ≤ 3, `matchRaster` liefert Halbpunkte | Gleiches Raster wie die Selbstbewertung. |
+| 8 | 6.8 Oberfläche | Selbstbewertung mit Schaltflächen 0, 0.5, … bis zum Höchstwert; Anzeigen «x von 3 Punkten». Übungsprüfung: Richtzeit je Teil im Kopf («Teil 1 · Multiple Choice · Richtzeit 75 min», «Teil 2 · Offene Fragen · Richtzeit 105 min») und in der Übersicht; Startseite mit 150 Punkten, Grenze 90 und Aufteilung der Kompetenzen. Internationale Nummer neben der Swiss-Nummer (Landkarte, Training, Fundstelle mit Indikatoren, Durchsicht): `internationalNumber` in `lib/ipma/competences.ts` | Wie die Musterprüfung nummeriert (4.3.x, 4.4.x, 4.5.x). |
+| 9 | 6.9 Station 02, 24 | Prüfungsformat korrigiert (Punkte, Richtzeiten, 150/90, Aufteilung, Nummerierung), «Annahme» entfernt, Rechenübungen neu gerechnet, Hinweis «Die offizielle Musterprüfung des VZPM eignet sich als Generalprobe» | – |
+
+**Anleitung für den Agenten Fragenpool (Umstellung der Raster):**
+
+1. In allen 28 Dateien `content/ipma/fragen/*.json` jedes `bewertungsraster` neu auf **Summe 3** setzen, Kriterien in Schritten von 0.5 (mindestens 0.5 je Kriterium, 2–4 Kriterien). Nicht mechanisch skalieren, sondern fachlich gewichten; typisch sind 0.5 je verlangte Nennung (z. B. sechs Nennungen à 0.5) oder 1.0 je Teilaufgabe. Musterlösung und `umfang` dazu passend prüfen.
+2. Bei jeder geänderten Frage `version` um 1 erhöhen (alte Versuche zeigen dann «überarbeitet»).
+3. Keine Inhalte aus der Musterprüfung des VZPM übernehmen, auch nicht sinngemäss (1.3).
+4. In `lib/ipma/config.ts` `RASTER_STAGE` von `"uebergang"` auf `"neu"` setzen.
+5. `npm test` muss grün sein: Der Test «Echte Dateien: Raster im Altformat nur in der Stufe uebergang» verlangt dann null Raster mit Summe 4; das Schema lehnt jede andere Summe als 3 ab. Bis dahin meldet der Test die Anzahl Altformat-Raster als Hinweis (Stand 06.11.2026: 84).
+6. Optional danach: die Übergangsfunktionen (`scaleLegacyRaster`, `isLegacyRaster`, Stufe «uebergang») entfernen und Tests nachführen.
+
+**Offene Punkte an Jan:** (a) Die Musterprüfung nennt bei jeder Frage den Kompetenzindikator; der Simulator verbirgt die Kompetenz in der Prüfung (Entscheid 9 Nr. 5). Soll die Übungsprüfung den Indikator (international) anzeigen? (b) In der Musterprüfung stehen die Fragen einer Kompetenz nicht gebündelt; der Simulator mischt je Teil ebenfalls.
+
 ---
 
 ## 9. Offene Fragen an Jan
 
-**Entschieden am 01.11.2026 (Spezifikation freigegeben):** 1 Simulator für alle eingeloggten Konten, Claude-Bewertung nur Pro und Admin · 2 MC 1 Punkt, offen 2 Punkte, genau eine richtige von vier Optionen · 3 beide Varianten, Echtbedingungen als Vorgabe, Abzeichen «Bestanden»/«Souverän» nur unter Echtbedingungen · 4 Claude-Bewertung gilt, sobald ausgelöst; Selbstbewertung bleibt Pflicht und steht daneben · 5 2 MC + 1 offen je Kompetenz, Kompetenz während der Prüfung verborgen · 6 Jan sieht die 6 Beispiele (2.7) und nach Teil 1 eine Stichprobe von 20 Fragen durch.
+**Entschieden am 01.11.2026 (Spezifikation freigegeben):** 1 Simulator für alle eingeloggten Konten, Claude-Bewertung nur Pro und Admin · 2 MC 1 Punkt, offen 2 Punkte (seit Nachtrag 8.9: offen 3 Punkte nach Musterprüfung VZPM), genau eine richtige von vier Optionen · 3 beide Varianten, Echtbedingungen als Vorgabe, Abzeichen «Bestanden»/«Souverän» nur unter Echtbedingungen · 4 Claude-Bewertung gilt, sobald ausgelöst; Selbstbewertung bleibt Pflicht und steht daneben · 5 2 MC + 1 offen je Kompetenz, Kompetenz während der Prüfung verborgen · 6 Jan sieht die 6 Beispiele (2.7) und nach Teil 1 eine Stichprobe von 20 Fragen durch.
 
 | Nr. | Frage | Empfehlung |
 |---|---|---|

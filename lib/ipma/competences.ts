@@ -38,8 +38,52 @@ export interface Competence {
   stations: string[] // Slugs, wichtigste zuerst (Empfehlung «wiederholen»)
 }
 
-/** Summe der Rasterpunkte jeder offenen Frage (1.5, 2.2) */
-export const RASTER_TOTAL = 4
+/** Viertelpunkte je Punkt: interne Recheneinheit aller Summen und Grenzen (1.5) */
+export const POINT_Q = 4
+
+/**
+ * Summe der Rasterpunkte jeder offenen Frage = Höchstpunkte einer offenen Frage (1.5, 2.2; Nachtrag 8.9).
+ * Kriterienpunkte in Schritten von 0.5 wie in der Musterprüfung des VZPM (2023).
+ */
+export const RASTER_TOTAL = 3
+
+/** Rastersumme des Altbestands (bis Nachtrag 8.9: ganze Rasterpunkte, Summe 4) */
+export const LEGACY_RASTER_TOTAL = 4
+
+/** Halbpunkte je Punkt: Rasterpunkte werden gespeichert und gerechnet in Halbpunkten (ganzzahlig) */
+export const HALVES_PER_POINT = 2
+
+/** Höchste Halbpunkte einer offenen Frage (3 Punkte = 6 Halbpunkte) */
+export const RASTER_HALVES = RASTER_TOTAL * HALVES_PER_POINT
+
+/** Höchste Halbpunkte einer offenen Frage in Versuchen vor Nachtrag 8.9 (Schnappschuss ohne rasterMax) */
+export const LEGACY_RASTER_HALVES = 4
+
+/** Punkte (Schritte von 0.5) → Halbpunkte (ganzzahlig) */
+export function toHalves(points: number): number {
+  return Math.round(points * HALVES_PER_POINT)
+}
+
+/** Halbpunkte → Punkte */
+export function fromHalves(halves: number): number {
+  return halves / HALVES_PER_POINT
+}
+
+/** Präfix der internationalen ICB4 je Bereich: Perspective 4.3, People 4.4, Practice 4.5 */
+const INTERNATIONAL_PREFIX: Record<string, string> = { "1": "4.3", "2": "4.4", "3": "4.5" }
+
+/**
+ * Internationale ICB4-Nummer zur Swiss-Nummer (Nachtrag 8.9): "1.01" → "4.3.1", "2.10" → "4.4.10",
+ * Indikator "3.04.02" → "4.5.4.2". Die Musterprüfung des VZPM nummeriert so.
+ */
+export function internationalNumber(swiss: string): string {
+  const [area, element, indicator] = swiss.split(".")
+  const prefix = INTERNATIONAL_PREFIX[area ?? ""]
+  if (!prefix || !element) return swiss
+  const parts = [prefix, String(Number(element))]
+  if (indicator) parts.push(String(Number(indicator)))
+  return parts.join(".")
+}
 
 /** Anhang 10.1; Stationen 02, 23 und 24 erscheinen nie in den Empfehlungen */
 export const COMPETENCES: readonly Competence[] = [

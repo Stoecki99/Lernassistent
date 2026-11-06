@@ -12,7 +12,7 @@ import type { MasteryLevelView, OverviewView } from "@/lib/ipma/types"
 import { useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
 import Dialog from "@/components/features/leitstand/Dialog"
-import { AREAS, COMPETENCES, type Competence, type CompetenceId } from "@/lib/ipma/competences"
+import { AREAS, COMPETENCES, internationalNumber, type Competence, type CompetenceId } from "@/lib/ipma/competences"
 import { LEVEL, stationHref, stationNumber, trainingHref } from "./format"
 
 export type MasteryEntry = OverviewView["mastery"][number]
@@ -102,10 +102,12 @@ export default function CompetenceMap(props: Props) {
                     <button
                       type="button"
                       className={`${styles.feld} ${styles[`stand_${f.state}`] ?? ""}`}
-                      aria-label={`${c.id} ${c.title}: ${f.detail}. Details öffnen`}
+                      aria-label={`${c.id} (international ${internationalNumber(c.id)}) ${c.title}: ${f.detail}. Details öffnen`}
                       onClick={() => setOpen(c)}
                     >
-                      <span className={styles.feldNr}>{c.id}</span>
+                      <span className={styles.feldNr}>
+                        {c.id} <span className={styles.leise}>{internationalNumber(c.id)}</span>
+                      </span>
                       <span className={styles.feldTitel} aria-hidden="true">
                         {c.title}
                       </span>
@@ -122,7 +124,7 @@ export default function CompetenceMap(props: Props) {
       })}
 
       {open && detail && (
-        <Dialog title={`${open.id} ${open.title}`} kicker={AREAS.find((a) => a.id === open.area)?.title} onEscape={() => setOpen(null)}>
+        <Dialog title={`${open.id} (${internationalNumber(open.id)}) ${open.title}`} kicker={AREAS.find((a) => a.id === open.area)?.title} onEscape={() => setOpen(null)}>
           <p>{open.summary}</p>
           <dl className="stack">
             {props.kind === "attempt" && (

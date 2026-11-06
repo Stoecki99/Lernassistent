@@ -3,9 +3,10 @@
 
 // lib/ipma/scoring.ts
 // Auswertung eines Versuchs in Viertelpunkten (Spezifikation 4.1, 4.2, 4.4). Reine Funktionen.
+// Offene Fragen: Rasterpunkte in Halbpunkten (0 … rasterMax des Schnappschusses; Nachtrag 8.9).
 
-import { COMPETENCE_IDS, RASTER_TOTAL, getCompetence, type CompetenceId } from "./competences"
-import type { ConfigSnapshot, Weights } from "./config"
+import { COMPETENCE_IDS, POINT_Q, getCompetence, type CompetenceId } from "./competences"
+import type { ConfigSnapshot } from "./config"
 import type { AttemptMode, AttemptResult, StationAdvice } from "./types"
 
 /** Bewertete Position für die Auswertung (4.4) */
@@ -13,9 +14,9 @@ export interface ScoredItem {
   type: "mc" | "offen"
   competence: CompetenceId
   correctOption?: boolean // MC
-  rasterPoints?: number | null // offen: massgebend 0 … 4, null = nicht bewertet
-  selfRasterPoints?: number | null // offen: Selbstbewertung (nur für sources)
-  aiRasterPoints?: number | null // offen: Claude-Bewertung (nur für sources)
+  rasterPoints?: number | null // offen: massgebend in Halbpunkten 0 … rasterMax, null = nicht bewertet
+  selfRasterPoints?: number | null // offen: Selbstbewertung in Halbpunkten (nur für sources)
+  aiRasterPoints?: number | null // offen: Claude-Bewertung in Halbpunkten (nur für sources)
 }
 
 /** Titel und Verfügbarkeit der Stationen (Server: lib/ipma/pool.ts loadStationCatalog) */
@@ -30,24 +31,29 @@ function sum(values: readonly number[]): number {
   return values.reduce((s, v) => s + v, 0)
 }
 
-function clampRaster(points: number | null | undefined): number {
-  return Math.max(0, Math.min(RASTER_TOTAL, Math.trunc(points ?? 0)))
+type ScoreConfig = Pick<ConfigSnapshot, "weights" | "rasterMax">
+
+function clampRaster(points: number | null | undefined, rasterMax: number): number {
+  return Math.max(0, Math.min(rasterMax, Math.trunc(points ?? 0)))
 }
 
-/** Erreichte Viertelpunkte einer Position (4.1, 4.2) */
-export function itemPointsQ(item: ScoredItem, w: Weights): number {
-  if (item.type === "mc") return item.correctOption ? w.mc * RASTER_TOTAL : 0
-  return w.offen * clampRaster(item.rasterPoints)
+/** Erreichte Viertelpunkte einer Position (4.1, 4.2): MC weights.mc × 4, offen weights.offen × Halbpunkte */
+export function itemPointsQ(item: ScoredItem, cfg: ScoreConfig): number {
+  if (item.type === "mc") return item.correctOption ? cfg.weights.mc * POINT_Q : 0
+  return cfg.weights.offen * clampRaster(item.rasterPoints, cfg.rasterMax)
 }
 
-/** Höchste Viertelpunkte einer Position (4.4) */
-export function itemMaxQ(item: ScoredItem, w: Weights): number {
-  return (item.type === "mc" ? w.mc : w.offen) * RASTER_TOTAL
+/** Höchste Viertelpunkte einer Position (4.4): MC 4, offen 2 × 6 = 12 (3 Punkte) */
+export function itemMaxQ(item: ScoredItem, cfg: ScoreConfig): number {
+  return item.type === "mc" ? cfg.weights.mc * POINT_Q : cfg.weights.offen * cfg.rasterMax
 }
 
-/** «Richtig» für «nachgewiesen» und das Leitner-Fach (1.5, 4.2): offen ab openCorrectRaster Rasterpunkten */
-export function isCorrect(item: ScoredItem, cfg: Pick<ConfigSnapshot, "openCorrectRaster">): boolean {
-  return item.type === "mc" ? item.correctOption === true : clampRaster(item.rasterPoints) >= cfg.openCorrectRaster
+/**
+ * «Richtig» für «nachgewiesen» und das Leitner-Fach (1.5, 4.2): offen ab openCorrectRaster Halbpunkten
+ * (seit Nachtrag 8.9: 3 = die Hälfte von 3 Punkten)
+ */
+export function isCorrect(item: ScoredItem, cfg: Pick<ConfigSnapshot, "openCorrectRaster" | "rasterMax">): boolean {
+  return item.type === "mc" ? item.correctOption === true : clampRaster(item.rasterPoints, cfg.rasterMax) >= cfg.openCorrectRaster
 }
 
 /**
@@ -85,8 +91,8 @@ export function evaluateAttempt(
   catalog: StationCatalog = new Map(),
 ): AttemptResult {
   const w = cfg.weights
-  const pointsQ = sum(items.map((i) => itemPointsQ(i, w)))
-  const maxPointsQ = sum(items.map((i) => itemMaxQ(i, w)))
+  const pointsQ = sum(items.map((i) => itemPointsQ(i, cfg)))
+  const maxPointsQ = sum(items.map((i) => itemMaxQ(i, cfg)))
   const passPoints = maxPointsQ > 0 && pointsQ * 100 >= maxPointsQ * cfg.passPercent
   const percent = maxPointsQ > 0 ? Math.round((pointsQ * 1000) / maxPointsQ) / 10 : 0
 
@@ -121,12 +127,12 @@ export function evaluateAttempt(
 
   const open = items.filter((i) => i.type === "offen")
   const unassessedOpen = open.filter((i) => i.rasterPoints === null || i.rasterPoints === undefined).length
-  const mcPointsQ = sum(items.filter((i) => i.type === "mc").map((i) => itemPointsQ(i, w)))
+  const mcPointsQ = sum(items.filter((i) => i.type === "mc").map((i) => itemPointsQ(i, cfg)))
   const selfPointsQ = mcPointsQ + sum(open.map((i) =>
-    w.offen * clampRaster(i.selfRasterPoints !== undefined ? i.selfRasterPoints : i.rasterPoints)))
+    w.offen * clampRaster(i.selfRasterPoints !== undefined ? i.selfRasterPoints : i.rasterPoints, cfg.rasterMax)))
   const hasAi = open.some((i) => i.aiRasterPoints !== null && i.aiRasterPoints !== undefined)
   const aiPointsQ = hasAi
-    ? mcPointsQ + sum(open.map((i) => w.offen * clampRaster(i.aiRasterPoints ?? i.selfRasterPoints ?? i.rasterPoints)))
+    ? mcPointsQ + sum(open.map((i) => w.offen * clampRaster(i.aiRasterPoints ?? i.selfRasterPoints ?? i.rasterPoints, cfg.rasterMax)))
     : null
 
   return {

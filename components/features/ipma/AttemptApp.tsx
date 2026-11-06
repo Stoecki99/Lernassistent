@@ -19,7 +19,7 @@ import { ipmaApi, IpmaApiError, errorMessage, finishStorageKey, storeSession } f
 import AiAssessment from "./AiAssessment"
 import ExamClock, { type ClockBase } from "./ExamClock"
 import FeedbackPanel from "./FeedbackPanel"
-import { EXAM_MINUTES, MODE_LABEL, VARIANT_LABEL, isAnswered, isSolved } from "./format"
+import { EXAM_MINUTES, MODE_LABEL, PART_MINUTES, VARIANT_LABEL, isAnswered, isSolved } from "./format"
 import QuestionOverview from "./QuestionOverview"
 import QuestionView from "./QuestionView"
 import SelfAssessment from "./SelfAssessment"
@@ -437,6 +437,11 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
           <span className={styles.stelle}>
             Frage {item?.position ?? 0} von {total}
           </span>
+          {view.mode === "exam" && item && (
+            <span className="hint">
+              {item.type === "mc" ? `Teil 1 · Multiple Choice · Richtzeit ${PART_MINUTES.mc} min` : `Teil 2 · Offene Fragen · Richtzeit ${PART_MINUTES.offen} min`}
+            </span>
+          )}
           {showClock && clockBase && <ExamClock base={clockBase} onExpire={onExpire} onAnnounce={announce} />}
           {training && (
             <span className="hint">
@@ -608,7 +613,7 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
 
       {dialog === "overview" && (
         <Dialog title="Übersicht" onEscape={() => setDialog(null)} wide>
-          <QuestionOverview items={items} current={index} training={training} onJump={go} />
+          <QuestionOverview items={items} current={index} training={training} fullExam={view.mode === "exam"} onJump={go} />
           <div className={styles.dialogKnoepfe}>
             <button type="button" className="btn" onClick={() => setDialog(null)}>
               Schliessen
