@@ -92,4 +92,4 @@ export const POOL_MINIMUM: { mc: number; offen: number } | null = POOL_STAGE_MIN
  * Der Agent für den Fragenpool stellt alle Raster um und schaltet danach auf "neu".
  */
 export type RasterStage = "uebergang" | "neu"
-export const RASTER_STAGE: RasterStage = "uebergang"
+export const RASTER_STAGE: RasterStage = "neu"
