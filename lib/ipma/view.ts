@@ -133,7 +133,6 @@ export function originalChoice(optionOrder: readonly number[], display: number):
 
 export interface ItemOptions {
   config: ConfigSnapshot
-  showCompetence: boolean
 }
 
 /** Höchstpunkte einer Position laut Schnappschuss: MC weights.mc, offen weights.offen × rasterMax ÷ 4 (3 bzw. alt 2) */
@@ -143,7 +142,8 @@ export function itemPoints(type: QuestionType, cfg: ConfigSnapshot): number {
 
 /**
  * Position ohne Lösung (6.6). Allow-Liste: jedes Feld einzeln, nie per Spread aus der Poolfrage.
- * Keine questionId (verrät die Kompetenz), kein optionOrder, keine Lösungsfelder; competence nur im Training.
+ * Keine questionId, kein optionOrder, keine Lösungsfelder. Die Kompetenz steht in allen Modi bei jeder Frage
+ * (Entscheid 5, seit 07.11.2026: wie der Kompetenzindikator der VZPM-Prüfung; Nachtrag 8.9).
  */
 export function toClientItem(item: StoredItem, question: PoolQuestion | null, opts: ItemOptions): ClientItem {
   const type = asType(item.type)
@@ -154,13 +154,13 @@ export function toClientItem(item: StoredItem, question: PoolQuestion | null, op
     question: question?.frage ?? MISSING_QUESTION,
     choice: type === "mc" ? displayChoice(item) : null,
     text: type === "offen" ? item.text : null,
+    competence: competenceOf(item),
     flagged: item.flagged,
     locked: item.locked,
   }
   if (type === "mc") {
     out.options = question?.typ === "mc" ? item.optionOrder.map((i) => question.optionen[i] ?? "") : []
   }
-  if (opts.showCompetence) out.competence = competenceOf(item)
   return out
 }
 
@@ -178,7 +178,7 @@ export function toSolvedItem(
   question: PoolQuestion | null,
   opts: { config: ConfigSnapshot; catalog: StationCatalog },
 ): SolvedItem {
-  const base = toClientItem(item, question, { config: opts.config, showCompetence: false })
+  const base = toClientItem(item, question, { config: opts.config })
   const fundstelle = question?.fundstelle
   const slug = fundstelle?.station
   const station = slug ? opts.catalog.get(slug) : undefined
@@ -194,7 +194,6 @@ export function toSolvedItem(
   const solved: SolvedItem = {
     ...base,
     questionId: item.questionId,
-    competence: competenceOf(item),
     source,
     // Gespeichert in Halbpunkten, ausgeliefert in Punkten (Schritte von 0.5; Nachtrag 8.9)
     selfScores: item.selfScores.map(fromHalves),
@@ -338,8 +337,8 @@ export interface ViewContext {
 
 /**
  * Antwort von GET /api/ipma/attempts/[id] (6.6, Regeln für Lösungen):
- * - active, exam/short: nur ClientItem ohne Kompetenz
- * - active, training/gaps: ClientItem mit Kompetenz, gesperrte Positionen als SolvedItem
+ * - active, exam/short: nur ClientItem (mit Kompetenz, ohne Lösungen; Entscheid 5 seit 07.11.2026)
+ * - active, training/gaps: ClientItem, gesperrte Positionen als SolvedItem
  * - submitted, finished: SolvedItem für alle Positionen und Ergebnis (submitted: vorläufig, aus den Positionen)
  * - aborted: nur Kopfdaten
  */
@@ -355,7 +354,7 @@ export function buildAttemptView(attempt: StoredAttempt, items: readonly StoredI
     viewItems = sorted.map((i) =>
       !isExamMode(mode) && i.locked
         ? solved(i)
-        : toClientItem(i, ctx.lookup(i.questionId), { config, showCompetence: !isExamMode(mode) }))
+        : toClientItem(i, ctx.lookup(i.questionId), { config }))
   } else if (status === "submitted" || status === "finished") {
     viewItems = sorted.map(solved)
   }

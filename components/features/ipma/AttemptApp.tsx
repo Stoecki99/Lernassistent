@@ -526,7 +526,6 @@ export default function AttemptApp({ attemptId }: { attemptId: string }) {
               total={total}
               headingRef={headingRef}
               readOnly={item.locked || isSolved(item)}
-              showCompetence={training}
               onChoice={(choice) => {
                 update(item.position, { choice })
                 sync.queue(item.position, { choice })

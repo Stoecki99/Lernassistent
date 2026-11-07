@@ -6,7 +6,7 @@
 // Zeiten, Bezeichnungen. Rein, ohne React.
 
 import type { AttemptMode, AttemptVariant, ClientItem, MasteryLevelView, SolvedItem } from "@/lib/ipma/types"
-import { internationalNumber } from "@/lib/ipma/competences"
+import { getCompetence, internationalNumber, isCompetenceId } from "@/lib/ipma/competences"
 
 /** Viertelpunkte je Punkt (POINT_Q in lib/ipma/competences.ts) */
 export const QUARTERS = 4
@@ -44,6 +44,11 @@ export function pointWord(value: number): string {
 /** Swiss-Nummer mit internationaler ICB4-Nummer: «3.04 (4.5.4)» */
 export function competenceNumber(id: string): string {
   return `${id} (${internationalNumber(id)})`
+}
+
+/** Kennzeichen über der Frage wie der Kompetenzindikator der VZPM-Prüfung: «3.04 (4.5.4) Ablauf und Termine» */
+export function competenceLabel(id: string): string {
+  return isCompetenceId(id) ? `${competenceNumber(id)} ${getCompetence(id).title}` : competenceNumber(id)
 }
 
 export function percent(value: number): string {

@@ -1051,8 +1051,8 @@ Alle Routen nach dem Muster des Leitstands (`app/api/simulation/runs/**`, `lib/l
 
 | Status / Modus | Was der Client je Position erhält |
 |---|---|
-| `active`, `exam`/`short` | `ClientItem`: `position`, `type`, `points` (Gewicht), `question`, `options` (in Anzeigereihenfolge, nur Texte), eigene `choice` (Anzeigeposition), `text`, `flagged`. **Keine** `competence`, kein `correctOption`, keine `erklaerung`, `optionHinweise`, `musterloesung`, `bewertungsraster`, `fundstelle`, kein `optionOrder`, kein `seed`, keine `questionId` (ID verrät die Kompetenz) |
-| `active`, `training`/`gaps`, nicht gesperrt | wie oben, zusätzlich `competence` |
+| `active`, `exam`/`short` | `ClientItem`: `position`, `type`, `points` (Gewicht), `question`, `options` (in Anzeigereihenfolge, nur Texte), eigene `choice` (Anzeigeposition), `text`, `flagged`, `competence` (seit 07.11.2026, Entscheid 9 Nr. 5 und Nachtrag 8.9 Nr. 10). Kein `correctOption`, keine `erklaerung`, `optionHinweise`, `musterloesung`, `bewertungsraster`, `fundstelle`, kein `optionOrder`, kein `seed`, keine `questionId` (ID verrät die Kompetenz) |
+| `active`, `training`/`gaps`, nicht gesperrt | wie oben |
 | `active`, `training`/`gaps`, gesperrt | `SolvedItem` nur für diese Position |
 | `submitted`, `finished` | `SolvedItem` für alle Positionen: zusätzlich `questionId`, `competence`, `correctOption` (Anzeigeposition), `explanation`, `optionHints`, `modelAnswer`, `rubric`, `source` (Fundstelle mit Stationstitel und Link), `selfScores`, `aiStatus`, `aiScores`, `aiFeedback`, `rasterPoints`, `correct`, `pointsQ` |
 | `aborted` | nur Kopfdaten, keine Fragen |
@@ -1067,7 +1067,7 @@ export interface ClientItem {
   points: number
   question: string
   options?: string[]
-  competence?: CompetenceId
+  competence: CompetenceId // in allen Modi (seit 07.11.2026, Nachtrag 8.9 Nr. 10)
   choice: number | null
   text: string | null
   flagged: boolean
@@ -1146,7 +1146,7 @@ export const attemptParamsSchema = z.object({ id: z.cuid(), position: z.coerce.n
 | `ExamApp` | Lädt `AttemptView`, hält Antworten, Autospeichern, Uhr, Navigation, Übersicht, Abgabe |
 | `useItemSync` | Speichert MC-Wahl sofort, Freitext 1.5 s nach der letzten Eingabe und beim Fragenwechsel; Sicherung im `localStorage` (mit Zod geprüft) bis zur Bestätigung; 429/5xx/offline → neuer Versuch nach 2 s, 4 s … 60 s; 401 → «Anmeldung abgelaufen», Sicherung bleibt; 409/422 `TIME_UP` → Seite neu laden (zeigt Abgabe) |
 | `ExamClock` | Restzeit aus `deadlineAt − (serverNow + vergangene Zeit)`; Warnung bei 30, 10 und 5 Minuten; bei 0 automatische Abgabe |
-| `QuestionView` | Frage, Typ und Punkte («Multiple Choice · 1 Punkt»), MC als Radiogruppe, offen als Textfeld mit Zeichenzähler, «Markieren» |
+| `QuestionView` | Frage, Typ und Punkte («Multiple Choice · 1 Punkt»), Kompetenz über der Frage in allen Modi («Kompetenz 3.04 (4.5.4) Ablauf und Termine», seit 07.11.2026), MC als Radiogruppe, offen als Textfeld mit Zeichenzähler, «Markieren» |
 | `QuestionOverview` | Raster aller Fragen (Nummer + Zustand als Zeichen und Text: ● beantwortet, ○ offen, ⚑ markiert), Filter, Sprung |
 | `SubmitDialog` | Zusammenfassung und Rückfrage vor der Abgabe |
 | `SelfAssessment` | Eigene Antwort ↔ Musterlösung, Raster mit Schaltflächen 0 … max je Kriterium, Summe |
@@ -1314,7 +1314,7 @@ Ohne Datenbank: Zod-Schemas, reine Serverhilfen (`toClientItem`, `toSolvedItem`,
 | Fremder Versuch | 404 (nicht 403) bei GET, PUT, check, self, assess, submit, finish, DELETE |
 | Unbekannte ID / kein cuid | 400 bzw. 404 |
 | Free-Konto und `assess` | 403 `PRO_REQUIRED`; Pro und Admin erlaubt |
-| **Keine Lösungen vor Abgabe** | `JSON.stringify(buildAttemptView(aktiverExamVersuch))` enthält keinen der Schlüssel `correctOption`, `richtig`, `explanation`, `erklaerung`, `optionHints`, `modelAnswer`, `musterloesung`, `rubric`, `bewertungsraster`, `source`, `fundstelle`, `optionOrder`, `seed`, `questionId`, `competence` und keinen Text aus `erklaerung` oder `musterloesung` der gewählten Fragen |
+| **Keine Lösungen vor Abgabe** | `JSON.stringify(buildAttemptView(aktiverExamVersuch))` enthält keinen der Schlüssel `correctOption`, `richtig`, `explanation`, `erklaerung`, `optionHints`, `modelAnswer`, `musterloesung`, `rubric`, `bewertungsraster`, `source`, `fundstelle`, `optionOrder`, `seed`, `questionId` und keinen Text aus `erklaerung` oder `musterloesung` der gewählten Fragen; `competence` ist seit 07.11.2026 erlaubt und bei jeder Position vorhanden |
 | Training | vor `check` keine Lösung; nach `check` genau für diese Position, alle anderen weiterhin ohne |
 | Anzeige ↔ Original | Wahl der Anzeigeposition 2 bei `optionOrder [3,0,2,1]` speichert Original 2; `correctOption` nach Abgabe = Anzeigeposition der richtigen |
 | Zeit | Speichern bei `deadlineAt + 31 s` → 422 `TIME_UP`; bei `+ 29 s` erlaubt; GET nach Ablauf gibt ab |
@@ -1494,6 +1494,7 @@ Grundlage: offizielle Musterprüfung 2023 des VZPM (Teil MC und Teil offen, mit 
 | 7 | 4.3 Claude | Prompt: Punkte in Schritten von 0.5; Ausgabeschema `punkte: number`; `gradeOutputSchema` prüft Schritte von 0.5 und ≤ 3, `matchRaster` liefert Halbpunkte | Gleiches Raster wie die Selbstbewertung. |
 | 8 | 6.8 Oberfläche | Selbstbewertung mit Schaltflächen 0, 0.5, … bis zum Höchstwert; Anzeigen «x von 3 Punkten». Übungsprüfung: Richtzeit je Teil im Kopf («Teil 1 · Multiple Choice · Richtzeit 75 min», «Teil 2 · Offene Fragen · Richtzeit 105 min») und in der Übersicht; Startseite mit 150 Punkten, Grenze 90 und Aufteilung der Kompetenzen. Internationale Nummer neben der Swiss-Nummer (Landkarte, Training, Fundstelle mit Indikatoren, Durchsicht): `internationalNumber` in `lib/ipma/competences.ts` | Wie die Musterprüfung nummeriert (4.3.x, 4.4.x, 4.5.x). |
 | 9 | 6.9 Station 02, 24 | Prüfungsformat korrigiert (Punkte, Richtzeiten, 150/90, Aufteilung, Nummerierung), «Annahme» entfernt, Rechenübungen neu gerechnet, Hinweis «Die offizielle Musterprüfung des VZPM eignet sich als Generalprobe» | – |
+| 10 | 6.6, 6.8, 7.4, 9 Nr. 5 Kompetenz (Entscheid Jan 07.11.2026) | Die Kompetenz steht in **allen Modi** bei jeder Frage, auch während Übungs- und Kurzprüfung: `ClientItem.competence` ist Pflichtfeld (`toClientItem` ohne `showCompetence`); `QuestionView` zeigt über der Frage «Kompetenz 3.04 (4.5.4) Ablauf und Termine» als gewöhnlichen, vorlesbaren Text (`competenceLabel` in `format.ts`); `QuestionOverview` nennt die Kompetenz im Namen und Tooltip jedes Felds. Lösungsfelder (`correctOption`, `explanation`, `optionHints`, `modelAnswer`, `rubric`, `source`) und `questionId` bleiben bis zur Abgabe bzw. zum «Prüfen» verborgen; Test 7.4 prüft das weiterhin, `competence` ist aus der Liste der verbotenen Schlüssel entfernt | Die echte VZPM-Prüfung zeigt bei jeder Frage den Kompetenzindikator; der Simulator übt unter denselben Bedingungen. Beantwortet den offenen Punkt (a). |
 
 **Anleitung für den Agenten Fragenpool (Umstellung der Raster):**
 
@@ -1504,13 +1505,13 @@ Grundlage: offizielle Musterprüfung 2023 des VZPM (Teil MC und Teil offen, mit 
 5. `npm test` muss grün sein: Der Test «Echte Dateien: Raster im Altformat nur in der Stufe uebergang» verlangt dann null Raster mit Summe 4; das Schema lehnt jede andere Summe als 3 ab. Bis dahin meldet der Test die Anzahl Altformat-Raster als Hinweis (Stand 06.11.2026: 84).
 6. Optional danach: die Übergangsfunktionen (`scaleLegacyRaster`, `isLegacyRaster`, Stufe «uebergang») entfernen und Tests nachführen.
 
-**Offene Punkte an Jan:** (a) Die Musterprüfung nennt bei jeder Frage den Kompetenzindikator; der Simulator verbirgt die Kompetenz in der Prüfung (Entscheid 9 Nr. 5). Soll die Übungsprüfung den Indikator (international) anzeigen? (b) In der Musterprüfung stehen die Fragen einer Kompetenz nicht gebündelt; der Simulator mischt je Teil ebenfalls.
+**Offene Punkte an Jan:** (a) ~~Die Musterprüfung nennt bei jeder Frage den Kompetenzindikator; der Simulator verbirgt die Kompetenz in der Prüfung (Entscheid 9 Nr. 5). Soll die Übungsprüfung den Indikator (international) anzeigen?~~ Entschieden am 07.11.2026: ja, in allen Modi (Nr. 10). (b) In der Musterprüfung stehen die Fragen einer Kompetenz nicht gebündelt; der Simulator mischt je Teil ebenfalls.
 
 ---
 
 ## 9. Offene Fragen an Jan
 
-**Entschieden am 01.11.2026 (Spezifikation freigegeben):** 1 Simulator für alle eingeloggten Konten, Claude-Bewertung nur Pro und Admin · 2 MC 1 Punkt, offen 2 Punkte (seit Nachtrag 8.9: offen 3 Punkte nach Musterprüfung VZPM), genau eine richtige von vier Optionen · 3 beide Varianten, Echtbedingungen als Vorgabe, Abzeichen «Bestanden»/«Souverän» nur unter Echtbedingungen · 4 Claude-Bewertung gilt, sobald ausgelöst; Selbstbewertung bleibt Pflicht und steht daneben · 5 2 MC + 1 offen je Kompetenz, Kompetenz während der Prüfung verborgen · 6 Jan sieht die 6 Beispiele (2.7) und nach Teil 1 eine Stichprobe von 20 Fragen durch.
+**Entschieden am 01.11.2026 (Spezifikation freigegeben):** 1 Simulator für alle eingeloggten Konten, Claude-Bewertung nur Pro und Admin · 2 MC 1 Punkt, offen 2 Punkte (seit Nachtrag 8.9: offen 3 Punkte nach Musterprüfung VZPM), genau eine richtige von vier Optionen · 3 beide Varianten, Echtbedingungen als Vorgabe, Abzeichen «Bestanden»/«Souverän» nur unter Echtbedingungen · 4 Claude-Bewertung gilt, sobald ausgelöst; Selbstbewertung bleibt Pflicht und steht daneben · 5 2 MC + 1 offen je Kompetenz, Kompetenz während der Prüfung verborgen (seit 07.11.2026: Kompetenz wird angezeigt wie im Original, Nachtrag 8.9 Nr. 10) · 6 Jan sieht die 6 Beispiele (2.7) und nach Teil 1 eine Stichprobe von 20 Fragen durch.
 
 | Nr. | Frage | Empfehlung |
 |---|---|---|
@@ -1518,7 +1519,7 @@ Grundlage: offizielle Musterprüfung 2023 des VZPM (Teil MC und Teil offen, mit 
 | 2 | **Punkte und Format:** MC 1 Punkt, offen 2 Punkte, MC immer mit genau einer richtigen von vier Optionen — passt das, bis eine Musterprüfung vorliegt? Kannst du über die FH oder den VZPM eine Musterprüfung beschaffen (nur zur Eichung, nicht zum Kopieren)? | **Ja, so starten**; Gewichte sind konfigurierbar und je Versuch gespeichert. Musterprüfung beschaffen lohnt sich vor allem für Punkte je Frage und den Anteil Mehrfachauswahl. |
 | 3 | **Pause in der Übungsprüfung:** nur Echtbedingungen, oder zusätzlich die Variante «mit Pausen»? | **Beides**, Echtbedingungen als Vorgabe. Abzeichen «Bestanden» und «Souverän» nur unter Echtbedingungen. |
 | 4 | **Massgebende Bewertung offener Fragen:** Gilt die Claude-Bewertung, sobald sie vorliegt, oder bleibt Claude nur Zweitmeinung? | **Claude gilt, wenn ausgelöst** (strenger, näher an der echten Prüfung); die Selbstbewertung bleibt Pflicht und wird daneben gezeigt. |
-| 5 | **Abdeckung je Prüfung:** je Kompetenz 2 MC + 1 offen (mindestens 3 Fragen statt 2), Zusatzfragen aus Practice, Kompetenz während der Prüfung verborgen? | **Ja.** Drei Fragen machen die Regel 23/28 weniger zufällig; das Verbergen übt das Zuordnen wie in der echten Prüfung. |
+| 5 | **Abdeckung je Prüfung:** je Kompetenz 2 MC + 1 offen (mindestens 3 Fragen statt 2), Zusatzfragen aus Practice, Kompetenz während der Prüfung verborgen? | **Ja.** Drei Fragen machen die Regel 23/28 weniger zufällig. **Seit 07.11.2026: Kompetenz wird angezeigt wie im Original** (die VZPM-Prüfung nennt bei jeder Frage den Kompetenzindikator; Nachtrag 8.9 Nr. 10). |
 | 6 | **Durchsicht der Fragen:** Prüfst du die 6 Beispiele (2.7) jetzt und nach Teil 1 eine Stichprobe von 20 Fragen, oder genügt die Fachprüfung durch die Agenten? | **Beispiele jetzt + Stichprobe 20 nach Teil 1** (rund 30 Minuten). Fängt systematische Fehler früh, bevor 252 Fragen nach demselben Muster entstehen. |
 
 ---

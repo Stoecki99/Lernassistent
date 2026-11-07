@@ -11,7 +11,7 @@
 import type { ClientItem, SolvedItem } from "@/lib/ipma/types"
 import { useId } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
-import { LETTERS, isSolved, typeLabel } from "./format"
+import { LETTERS, competenceLabel, isSolved, typeLabel } from "./format"
 
 export const MAX_TEXT = 3000
 
@@ -22,7 +22,6 @@ export default function QuestionView({
   readOnly,
   onChoice,
   onText,
-  showCompetence,
   hideHeading = false,
 }: {
   item: ClientItem | SolvedItem
@@ -31,14 +30,12 @@ export default function QuestionView({
   readOnly: boolean
   onChoice?: (choice: number | null) => void
   onText?: (text: string) => void
-  showCompetence?: boolean
   /** In der Durchsicht steht die Nummer schon in der Zusammenfassung */
   hideHeading?: boolean
 }) {
   const id = useId()
   const solved = isSolved(item) ? item : null
   const text = item.text ?? ""
-  const competence = item.competence
 
   return (
     <div className={styles.frage}>
@@ -48,10 +45,14 @@ export default function QuestionView({
         </h2>
         <span className="hint">
           {typeLabel(item)}
-          {showCompetence && competence ? ` · Kompetenz ${competence}` : ""}
           {item.flagged ? " · ⚑ markiert" : ""}
         </span>
       </div>
+
+      {/* Kompetenz in allen Modi wie in der VZPM-Prüfung (Entscheid 5 seit 07.11.2026); in der Durchsicht steht sie in der Zusammenfassung */}
+      <p className={styles.frageKompetenz} hidden={hideHeading}>
+        Kompetenz {competenceLabel(item.competence)}
+      </p>
 
       {item.type === "mc" ? (
         <fieldset className={styles.antworten}>

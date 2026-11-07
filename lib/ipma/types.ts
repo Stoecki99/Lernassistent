@@ -40,14 +40,14 @@ export interface StationAdvice {
   available: boolean
 }
 
-/** Position vor der Freigabe der Lösung (6.6): nie competence bei exam/short, nie Lösungen */
+/** Position vor der Freigabe der Lösung (6.6): Kompetenz in allen Modi (Entscheid 5 seit 07.11.2026), nie Lösungen */
 export interface ClientItem {
   position: number
   type: QuestionType
   points: number
   question: string
   options?: string[]
-  competence?: CompetenceId
+  competence: CompetenceId
   choice: number | null
   text: string | null
   flagged: boolean

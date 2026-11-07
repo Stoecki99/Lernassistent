@@ -56,8 +56,8 @@ const START = new Date("2026-11-20T08:00:00.000Z")
 const FORBIDDEN_KEYS = [
   "correctOption", "richtig", "explanation", "erklaerung", "optionHints", "optionHinweise", "modelAnswer",
   "musterloesung", "rubric", "bewertungsraster", "source", "fundstelle", "optionOrder", "seed", "questionId",
-  "competence",
 ]
+// Die Kompetenz ist seit 07.11.2026 auch vor der Abgabe erlaubt (Entscheid 5: wie der Kompetenzindikator der VZPM-Prüfung)
 
 // ---------- Hilfen ----------
 
@@ -187,7 +187,7 @@ const lookup = (id: string) => POOL.byId.get(id) ?? null
 describe("toClientItem / toSolvedItem", () => {
   test("Anzeige ↔ Original: optionOrder [3,0,2,1], Original 2 = Anzeige 2; correctOption = Anzeige der richtigen", () => {
     const item = storedItem({ choice: 2 })
-    const client = toClientItem(item, MC, { config: configSnapshot(), showCompetence: false })
+    const client = toClientItem(item, MC, { config: configSnapshot() })
     assert.equal(client.choice, 2)
     const mc = MC as McQuestion
     assert.deepEqual(client.options, [mc.optionen[3], mc.optionen[0], mc.optionen[2], mc.optionen[1]])
@@ -199,8 +199,8 @@ describe("toClientItem / toSolvedItem", () => {
   test("Punkte je Position: neu MC 1 / offen 3; alter Versuch (Schnappschuss ohne rasterMax) offen 2", () => {
     const open = storedItem({ type: "offen", questionId: OPEN.id, competence: OPEN.kompetenz, optionOrder: [], locked: true,
       selfScores: [3, 1], rasterPoints: 4, scoreSource: "self", pointsQ: 8 })
-    assert.equal(toClientItem(storedItem(), MC, { config: configSnapshot(), showCompetence: false }).points, 1)
-    assert.equal(toClientItem(open, OPEN, { config: configSnapshot(), showCompetence: false }).points, 3)
+    assert.equal(toClientItem(storedItem(), MC, { config: configSnapshot() }).points, 1)
+    assert.equal(toClientItem(open, OPEN, { config: configSnapshot() }).points, 3)
     const legacy = readConfig({ weights: { mc: 1, offen: 2 }, passPercent: 60, minCompetences: 23, openCorrectRaster: 2 })
     assert.equal(legacy.rasterMax, 4)
     const solved = toSolvedItem(open, OPEN, { config: legacy, catalog: new Map() })
@@ -210,11 +210,10 @@ describe("toClientItem / toSolvedItem", () => {
     assert.deepEqual(solved.rubric?.map((r) => r.points), [1.5, 1.5])
   })
 
-  test("ClientItem enthält nur die Allow-Liste", () => {
-    const client = toClientItem(storedItem(), MC, { config: configSnapshot(), showCompetence: false })
-    assert.deepEqual(Object.keys(client).sort(), ["choice", "flagged", "locked", "options", "points", "position", "question", "text", "type"])
-    const training = toClientItem(storedItem(), MC, { config: configSnapshot(), showCompetence: true })
-    assert.equal(training.competence, MC.kompetenz)
+  test("ClientItem enthält nur die Allow-Liste, mit Kompetenz", () => {
+    const client = toClientItem(storedItem(), MC, { config: configSnapshot() })
+    assert.deepEqual(Object.keys(client).sort(), ["choice", "competence", "flagged", "locked", "options", "points", "position", "question", "text", "type"])
+    assert.equal(client.competence, MC.kompetenz)
   })
 
   test("buildAttemptView eines aktiven Prüfungsversuchs: keine verbotenen Schlüssel und Texte", () => {
@@ -222,6 +221,7 @@ describe("toClientItem / toSolvedItem", () => {
     const view = buildAttemptView(storedAttempt(), items, { lookup, catalog: new Map(), now: START, canUseAi: false })
     const json = JSON.stringify(view)
     for (const key of FORBIDDEN_KEYS) assert.equal(json.includes(`"${key}"`), false, `Schlüssel ${key} vor der Abgabe`)
+    assert.deepEqual(view.items.map((i) => i.competence), [MC.kompetenz, OPEN.kompetenz], "Kompetenz in allen Modi")
     assert.equal(json.includes((MC as McQuestion).erklaerung), false)
     assert.equal(json.includes(OPEN.typ === "offen" ? OPEN.musterloesung : "-"), false)
     assert.equal(view.result, null)
@@ -388,6 +388,7 @@ describe("Keine Lösungen vor der Abgabe", () => {
       else assert.equal(res.text.includes(q.musterloesung), false)
       assert.equal(res.text.includes(q.id), false)
     }
+    assert.ok(res.body.items.every((i) => i.competence !== undefined), "Prüfung zeigt die Kompetenz")
     assert.equal(res.body.items[0].choice, 2)
     assert.equal(res.body.items[0].flagged, true)
     assert.equal(res.body.items[60].text, "Eine eigene Antwort.")

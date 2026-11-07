@@ -5,13 +5,14 @@
 
 // components/features/ipma/QuestionOverview.tsx
 // Übersicht aller Fragen (Spezifikation 3.2, 6.8 QuestionOverview): Nummer und Zustand als Zeichen und Text
-// (● beantwortet, ○ offen, ⚑ markiert; im Training ✓/✗ geprüft), Filter, Sprung, aria-current.
+// (● beantwortet, ○ offen, ⚑ markiert; im Training ✓/✗ geprüft), Kompetenz (Entscheid 5 seit 07.11.2026),
+// Filter, Sprung, aria-current.
 // Wird im Dialog (Blatt von unten auf schmalen Schirmen) gezeigt.
 
 import type { ClientItem, SolvedItem } from "@/lib/ipma/types"
 import { useState } from "react"
 import styles from "@/app/(ipma)/ipma.module.css"
-import { PART_MINUTES, isAnswered, isSolved } from "./format"
+import { PART_MINUTES, competenceLabel, isAnswered, isSolved } from "./format"
 
 type Filter = "alle" | "offen" | "markiert"
 
@@ -102,7 +103,8 @@ export default function QuestionOverview({
                         type="button"
                         className={cls}
                         aria-current={index === current ? "step" : undefined}
-                        aria-label={`Frage ${item.position}: ${s.words.join(", ")}`}
+                        aria-label={`Frage ${item.position}: ${s.words.join(", ")}, Kompetenz ${competenceLabel(item.competence)}`}
+                        title={`Kompetenz ${competenceLabel(item.competence)}`}
                         onClick={() => onJump(index)}
                       >
                         <span aria-hidden="true" className={styles.feldZeichen}>
